@@ -12,7 +12,20 @@ import SwiftData
 struct iDSACompanionApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Hero.self,
+            PersonalData.self,
+            Experience.self,
+            Attributes.self,
+            DerivedValues.self,
+            Talent.self,
+            CombatTechnique.self,
+            MeleeWeapon.self,
+            Armor.self,
+            Shield.self,
+            EquipmentItem.self,
+            Money.self,
+            Mount.self,
+            Language.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
