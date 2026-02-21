@@ -3,7 +3,8 @@
     "allow": [
       "Bash(xcodebuild:*)",
       "Bash(gem list:*)",
-      "Bash(ruby --version:*)"
+      "Bash(ruby --version:*)",
+      "Bash(grep:*)"
     ]
   }
 }

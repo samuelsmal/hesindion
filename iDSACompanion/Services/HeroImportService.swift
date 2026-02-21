@@ -76,8 +76,7 @@ struct HeroImportService {
                 disadvantages: dto.disadvantages,
                 generalSpecialAbilities: dto.specialAbilities.general,
                 combatSpecialAbilities: dto.specialAbilities.combat,
-                scripts: dto.scripts,
-                carryingCapacity: dto.carryingCapacity
+                scripts: dto.scripts
             )
             hero.personalData = makePersonalData(dto.personalData)
             hero.experience = makeExperience(dto.experience)
@@ -86,8 +85,8 @@ struct HeroImportService {
             hero.talents = makeTalents(dto.talents)
             hero.combatTechniques = makeCombatTechniques(dto.combatTechniques)
             hero.meleeWeapons = makeMeleeWeapons(from: dto.equipment)
-            hero.armor = makeArmor(from: dto.equipment)
-            hero.shield = makeShield(from: dto.equipment)
+            hero.armors = makeArmors(from: dto.equipment)
+            hero.shields = makeShields(from: dto.equipment)
             hero.equipment = makeEquipment(dto.equipment)
             hero.money = makeMoney(dto.money)
             hero.mount = dto.mount.map(makeMount)
@@ -112,7 +111,6 @@ struct HeroImportService {
         hero.generalSpecialAbilities = dto.specialAbilities.general
         hero.combatSpecialAbilities = dto.specialAbilities.combat
         hero.scripts = dto.scripts
-        hero.carryingCapacity = dto.carryingCapacity
 
         // Replace personal data
         if let old = hero.personalData { context.delete(old) }
@@ -142,13 +140,13 @@ struct HeroImportService {
         hero.meleeWeapons.forEach { context.delete($0) }
         hero.meleeWeapons = makeMeleeWeapons(from: dto.equipment)
 
-        // Replace armor
-        if let old = hero.armor { context.delete(old) }
-        hero.armor = makeArmor(from: dto.equipment)
+        // Replace armors
+        hero.armors.forEach { context.delete($0) }
+        hero.armors = makeArmors(from: dto.equipment)
 
-        // Replace shield
-        if let old = hero.shield { context.delete(old) }
-        hero.shield = makeShield(from: dto.equipment)
+        // Replace shields
+        hero.shields.forEach { context.delete($0) }
+        hero.shields = makeShields(from: dto.equipment)
 
         // Replace mount
         if let old = hero.mount { context.delete(old) }
@@ -230,16 +228,16 @@ struct HeroImportService {
         }
     }
 
-    private func makeArmor(from equipment: [EquipmentItemDTO]) -> Armor? {
-        equipment.first { $0.type == "Rüstung" }.flatMap { item in
+    private func makeArmors(from equipment: [EquipmentItemDTO]) -> [Armor] {
+        equipment.filter { $0.type == "Rüstung" }.compactMap { item in
             guard let pv = item.protectionValue, let ar = item.armorRating,
                   let enc = item.encumbrance, let weight = item.weight else { return nil }
             return Armor(name: item.name, protectionValue: pv, armorRating: ar, encumbrance: enc, weight: weight)
         }
     }
 
-    private func makeShield(from equipment: [EquipmentItemDTO]) -> Shield? {
-        equipment.first { $0.type == "Schild" }.flatMap { item in
+    private func makeShields(from equipment: [EquipmentItemDTO]) -> [Shield] {
+        equipment.filter { $0.type == "Schild" }.compactMap { item in
             guard let weight = item.weight else { return nil }
             return Shield(name: item.name, structure: 0, breakingFactor: 0, atMod: item.at ?? 0, paMod: item.pa ?? 0, weight: weight)
         }
@@ -254,11 +252,21 @@ struct HeroImportService {
     }
 
     private func makeMount(_ dto: MountDTO) -> Mount {
-        Mount(
+        let attrs = MountAttributes(
+            mu: dto.attributes.mu,
+            kl: dto.attributes.kl,
+            inValue: dto.attributes.inValue,
+            ch: dto.attributes.ch,
+            ff: dto.attributes.ff,
+            ge: dto.attributes.ge,
+            ko: dto.attributes.ko,
+            kk: dto.attributes.kk
+        )
+        return Mount(
             name: dto.name,
             size: dto.size,
             mountType: dto.mountType,
-            attributes: dto.attributes,
+            attributes: attrs,
             lifeEnergy: dto.lifeEnergy,
             initiative: dto.initiative,
             speed: dto.speed,

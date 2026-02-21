@@ -110,11 +110,31 @@ private struct AttributesBar: View {
     }
 }
 
+private struct GroupColorKey: EnvironmentKey {
+    static let defaultValue: Color = .yellow
+}
+private struct GroupTextColorKey: EnvironmentKey {
+    static let defaultValue: Color = .black
+}
+
+private extension EnvironmentValues {
+    var groupColor: Color {
+        get { self[GroupColorKey.self] }
+        set { self[GroupColorKey.self] = newValue }
+    }
+    var groupTextColor: Color {
+        get { self[GroupTextColorKey.self] }
+        set { self[GroupTextColorKey.self] = newValue }
+    }
+}
+
 // MARK: - CollapsibleSection
 
 private struct CollapsibleSection<Content: View>: View {
     let title: String
     @State private var isExpanded = true
+    @Environment(\.groupColor) private var groupColor
+    @Environment(\.groupTextColor) private var groupTextColor
     let content: Content
 
     init(_ title: String, @ViewBuilder content: () -> Content) {
@@ -130,22 +150,72 @@ private struct CollapsibleSection<Content: View>: View {
                 HStack {
                     Text(title)
                         .font(.system(.headline, weight: .black))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(groupTextColor)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(groupTextColor)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(Color.yellow)
+                .background(groupColor)
             }
             .buttonStyle(.plain)
 
             if isExpanded { content }
         }
         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+    }
+}
+
+// MARK: - CollapsibleGroup
+
+private struct CollapsibleGroup<Content: View>: View {
+    let title: String
+    let color: Color
+    let textColor: Color
+    @State private var isExpanded = true
+    let content: Content
+
+    init(_ title: String, color: Color, textColor: Color = .black, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.color = color
+        self.textColor = textColor
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack(spacing: 8) {
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundStyle(color)
+                    Text(title)
+                        .font(.system(.caption, weight: .black))
+                        .foregroundStyle(color)
+                        .fixedSize()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(color)
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundStyle(color)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                content
+            }
+        }
+        .environment(\.groupColor, color)
+        .environment(\.groupTextColor, textColor)
     }
 }
 
@@ -467,26 +537,52 @@ struct HeroDetailView: View {
 
                     if let attrs = hero.attributes {
                         SwiftUI.Section {
-                            VStack(spacing: 8) {
-                                experienceSection
-                                personalDataSection
-                                derivedValuesSection
-                                advantagesSection
-                                disadvantagesSection
-                                generalSpecialAbilitiesSection
-                                languagesSection
-                                scriptsSection
-                                talentsSection
-                                combatTechniquesSection
-                                combatSpecialAbilitiesSection
-                                equipmentSection
-                                meleeWeaponsSection
-                                shieldSection
-                                armorSection
-                                moneySection
-                                mountSection
+                            VStack(spacing: 0) {
+                                CollapsibleGroup("Personal Data", color: .groupPersonalData) {
+                                    VStack(spacing: 8) {
+                                        personalDataSection
+                                        experienceSection
+                                        derivedValuesSection
+                                        advantagesSection
+                                        disadvantagesSection
+                                        generalSpecialAbilitiesSection
+                                        languagesSection
+                                        scriptsSection
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                }
+
+                                CollapsibleGroup("Talents", color: .groupTalents, textColor: .white) {
+                                    VStack(spacing: 8) {
+                                        talentsSections
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                }
+
+                                CollapsibleGroup("Combat", color: .groupCombat) {
+                                    VStack(spacing: 8) {
+                                        combatTechniquesSection
+                                        combatSpecialAbilitiesSection
+                                        meleeWeaponsSection
+                                        armorSection
+                                        shieldSection
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                }
+
+                                CollapsibleGroup("Equipment", color: .groupEquipment, textColor: .white) {
+                                    VStack(spacing: 8) {
+                                        equipmentSection
+                                        moneySection
+                                        mountSection
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                }
                             }
-                            .padding(.horizontal, 16)
                             .padding(.bottom, 16)
                         } header: {
                             AttributesBar(attrs: attrs)
@@ -814,33 +910,26 @@ struct HeroDetailView: View {
 
     // MARK: - Section 9: Talents
 
-    @ViewBuilder private var talentsSection: some View {
-        if !hero.talents.isEmpty {
-            CollapsibleSection("Talents") {
-                let grouped = Dictionary(grouping: hero.talents, by: \.category)
-                let sortedCategories = grouped.keys.sorted()
-                ForEach(sortedCategories, id: \.self) { category in
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text(category)
-                                .font(.system(.body, weight: .bold))
-                            Spacer()
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.yellow.opacity(0.4))
+    private let talentCategoryOrder = [
+        "körpertalente", "gesellschaftstalente", "naturtalente",
+        "wissenstalente", "handwerkstalente"
+    ]
 
-                        ForEach(grouped[category] ?? [], id: \.persistentModelID) { talent in
-                            HStack {
-                                Text(talent.name).font(.body)
-                                Spacer()
-                                Text("\(talent.value)").font(.system(.body, design: .monospaced))
-                            }
-                            .padding(.leading, 24)
-                            .padding(.trailing, 12)
-                            .padding(.vertical, 6)
-                            Divider()
+    @ViewBuilder private var talentsSections: some View {
+        let grouped = Dictionary(grouping: hero.talents, by: \.category)
+        ForEach(talentCategoryOrder, id: \.self) { category in
+            if let items = grouped[category], !items.isEmpty {
+                CollapsibleSection(category) {
+                    ForEach(items, id: \.persistentModelID) { talent in
+                        HStack {
+                            Text(talent.name).font(.body)
+                            Spacer()
+                            Text("\(talent.value)").font(.system(.body, design: .monospaced))
                         }
+                        .padding(.leading, 24)
+                        .padding(.trailing, 12)
+                        .padding(.vertical, 6)
+                        Divider()
                     }
                 }
             }
@@ -909,7 +998,6 @@ struct HeroDetailView: View {
             ForEach(hero.armors, id: \.persistentModelID) { a in
                 weightRow(name: a.name, weight: a.weight)
             }
-
             capacityRow
         }
     }

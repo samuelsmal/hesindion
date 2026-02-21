@@ -15,24 +15,31 @@ Display sections in the following order:
       regardless of how far the user scrolls into the sections below.
     - Show each attribute (MU, KL, IN, CH, FF, GE, KO, KK) in a box: key above value in slightly
       smaller font.
-- **Everything else** — scrollable, in this order:
-    1. experience
-    2. personalData
+- **Everything else** — scrollable, grouped as defined in spec 007. Within each group, sections appear in this order:
+
+    **Personal Data group**
+    1. personalData
+    2. experience
     3. derivedValues
     4. advantages
     5. disadvantages
     6. generalSpecialAbilities
     7. languages
     8. scripts
-    9. talents — grouped by category
-    10. combatTechniques
-    11. combatSpecialAbilities
-    12. equipment *(see Equipment section below)*
-    13. meleeWeapons
-    14. shield
-    15. armor
-    16. money *(see Money section below)*
-    17. mount
+
+    **Talents group** — one collapsible section per talent category
+
+    **Combat group**
+    1. combatTechniques
+    2. combatSpecialAbilities
+    3. meleeWeapons
+    4. armors
+    5. shields
+
+    **Equipment group**
+    1. equipment *(see Equipment section below)*
+    2. money *(see Money section below)*
+    3. mount
 
 ## Row layout
 
@@ -57,14 +64,23 @@ English and German is fine).
 
 ## Equipment section
 
-Show the list of equipment items after combatSpecialAbilities.
+Show general equipment items (`EquipmentItem`) — swipe-to-delete enabled.
 
 At the **bottom of the equipment section**, show a carrying capacity indicator:
-- Display total weight and the threshold: e.g. `"12.25 / 30 kg"`
-- If `isOverloaded` is `true`, highlight this row as a warning (e.g. red text or warning icon).
+- Display total weight and the **total** threshold: e.g. `"37.25 / 100 st"`
+  (`totalCarryingCapacity` = hero's `carryingCapacity` + mount's `carryingCapacity`)
+- If a mount is present and has `carryingCapacity > 0`, show a secondary line in
+  light grey with the breakdown: `"30 + 70 = 100 st"` (heroCapacity + mountCapacity = totalCapacity)
+- If `isOverloaded` is `true`, highlight the primary row as a warning (red text / warning icon).
 
 Equipment items can be **deleted** by the user (e.g. swipe-to-delete). No adding or editing of
 equipment items is required for this spec.
+
+## Carrying capacity rules
+
+Both the hero's and the mount's carrying capacity are **derived** from their respective KK
+attribute: `carryingCapacity = KK * 2`. No separate field is stored or imported for either.
+`Hero.carryingThreshold` uses the combined total (`hero.carryingCapacity + mount.carryingCapacity`).
 
 ---
 

@@ -20,6 +20,9 @@ struct HeroListView: View {
                     importButton
                 }
                 .navigationTitle("Heroes")
+                .navigationDestination(for: Hero.self) { hero in
+                    HeroDetailView(hero: hero)
+                }
         } detail: {
             detailContent
         }
@@ -56,10 +59,12 @@ struct HeroListView: View {
             )
         } else {
             List(heroes, id: \.persistentModelID, selection: $selectedHero) { hero in
-                Text(hero.name)
-                    .font(.system(.title3, design: .default, weight: .bold))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
+                NavigationLink(value: hero) {
+                    Text(hero.name)
+                        .font(.system(.title3, design: .default, weight: .bold))
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                }
             }
             .listStyle(.plain)
         }

@@ -15,7 +15,6 @@ struct HeroDTO: Decodable {
     let combatTechniques: [CombatTechniqueDTO]
     let equipment: [EquipmentItemDTO]
     let money: MoneyDTO
-    let carryingCapacity: Int
     let mount: MountDTO?
 }
 
@@ -145,11 +144,33 @@ struct MoneyDTO: Decodable {
     let kreuzer: Int
 }
 
+struct MountAttributesDTO: Decodable {
+    let mu: Int
+    let kl: Int
+    let inValue: Int
+    let ch: Int
+    let ff: Int
+    let ge: Int
+    let ko: Int
+    let kk: Int
+
+    enum CodingKeys: String, CodingKey {
+        case mu = "MU"
+        case kl = "KL"
+        case inValue = "IN"
+        case ch = "CH"
+        case ff = "FF"
+        case ge = "GE"
+        case ko = "KO"
+        case kk = "KK"
+    }
+}
+
 struct MountDTO: Decodable {
     let name: String
     let size: Double
     let mountType: String
-    let attributes: MountAttributes
+    let attributes: MountAttributesDTO
     let lifeEnergy: Int
     let initiative: String
     let speed: Int

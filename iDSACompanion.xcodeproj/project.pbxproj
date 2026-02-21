@@ -6,13 +6,23 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		BA48A2052F4A000000E630FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BA48A1822F485F1D00E630FD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA48A1892F485F1D00E630FD;
+			remoteInfo = iDSACompanion;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		BA48A18A2F485F1D00E630FD /* iDSACompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iDSACompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA48A2002F4A000000E630FD /* iDSACompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iDSACompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BA48A19A2F485F2000E630FD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		BA48A19A2F485F2000E630FD /* Exceptions for "iDSACompanion" folder in "iDSACompanion" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -25,7 +35,7 @@
 		BA48A18C2F485F1D00E630FD /* iDSACompanion */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BA48A19A2F485F2000E630FD /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				BA48A19A2F485F2000E630FD /* Exceptions for "iDSACompanion" folder in "iDSACompanion" target */,
 			);
 			path = iDSACompanion;
 			sourceTree = "<group>";
@@ -185,16 +195,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXContainerItemProxy section */
-		BA48A2052F4A000000E630FD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BA48A1822F485F1D00E630FD /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = BA48A1892F485F1D00E630FD;
-			remoteInfo = iDSACompanion;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
 		BA48A2062F4A000000E630FD /* PBXTargetDependency */ = {

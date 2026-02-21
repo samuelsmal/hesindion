@@ -1,7 +1,7 @@
 ---
 name: implement-and-review
 description: "Use this agent when the user has provided a set of steps or a plan and wants both the implementation carried out and the result reviewed for correctness, quality, and adherence to project standards. This agent handles the full cycle of execution and self-critique.\\n\\nExamples:\\n\\n<example>\\nContext: The user is working on an iOS SwiftUI feature and has outlined steps to add a new inventory item model.\\nuser: \"Here are the steps to add a Weapon model to the inventory: 1) Create a Weapon @Model class with name, damage, weight properties. 2) Add a weapons relationship to the Character model. 3) Add a WeaponListView using @Query. 4) Wire it into the NavigationSplitView.\"\\nassistant: \"I'll use the implement-and-review agent to carry out these steps and review the result.\"\\n<commentary>\\nThe user has provided concrete implementation steps. The implement-and-review agent should execute each step and then critically review the output.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: The user has planned out a refactor of the dice-rolling logic.\\nuser: \"Steps: 1) Extract roll logic into a DiceRoller struct. 2) Replace inline roll calls in RollView with DiceRoller. 3) Add computed property for success threshold.\"\\nassistant: \"Let me launch the implement-and-review agent to implement these refactoring steps and verify the result.\"\\n<commentary>\\nA clear set of refactor steps has been provided. The agent should implement and then review for correctness and SwiftUI/SwiftData patterns.\\n</commentary>\\n</example>"
-model: haiku
+model: sonnet
 memory: project
 ---
 

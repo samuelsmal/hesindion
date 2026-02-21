@@ -35,6 +35,7 @@ struct HeroImportTests {
 
         // Identity
         #expect(hero.name == "Boronmir Siebenfeld von Ferdok")
+        // carryingCapacity is derived: KK * 2 = 15 * 2 = 30
         #expect(hero.carryingCapacity == 30)
 
         // Advantages / disadvantages
@@ -60,13 +61,15 @@ struct HeroImportTests {
         #expect(hero.meleeWeapons.contains { $0.name == "Rabenschnabel" })
 
         // Armor parsed from equipment
-        let armor = try #require(hero.armor)
+        #expect(hero.armors.count == 1)
+        let armor = try #require(hero.armors.first)
         #expect(armor.name == "Plattenrüstung")
         #expect(armor.protectionValue == 11)
         #expect(armor.encumbrance == 3)
 
         // Shield parsed from equipment
-        let shield = try #require(hero.shield)
+        #expect(hero.shields.count == 1)
+        let shield = try #require(hero.shields.first)
         #expect(shield.name == "Großschild")
 
         // Derived values

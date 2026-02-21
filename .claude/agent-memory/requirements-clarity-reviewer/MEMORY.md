@@ -71,3 +71,46 @@
 ## Spec 002 Inter-Spec Conflicts
 - Spec 000 says money is mutable; spec 002 says all fields are read-only -- contradiction, needs resolution
 - Spec 000 mandates carryingCapacity/totalWeight display and overload alert; spec 002 omits both entirely
+
+## Spec 003 Commands Patterns
+- Command registry (static list vs dynamic/SwiftData) never specified -- agents will need to choose
+- "Scroll to top then down" pull-to-reveal pattern is not a standard SwiftUI gesture; needs mechanism name
+- Multi-token search (e.g. "tal Selbst") implies a staged input model; spec never names the data structure
+- "Swipe up to dismiss" conflicts with existing codebase convention (swipe up in EditCurrentModal = confirm direction is different)
+- OK button in command modal conflicts with spec text calling it a "green checkbox-button" -- two different affordances
+- Commands that touch @Model data need mutation path specified (same gap as spec 002)
+- Long-press as alternative entry point is mentioned but only one example given; full list deferred to future specs
+- AP command modifies hero.experience.availableAP -- this path must be explicit for each specified command
+- "For all commands not specified just show the title" implies an extensible command enum or protocol -- never named
+
+## Spec 007 Section Grouping Patterns
+- "Group into X groups" is never sufficient -- must also specify the visual/behavioral container type
+- Nested CollapsibleSections need visual differentiation between outer (group) and inner (section) level;
+  if the same component is reused, agents will produce visually identical headers at both tiers
+- Reorganization specs must explicitly state "this supersedes spec NNN's section order" -- agents won't
+  infer supersession and may try to reconcile both orders simultaneously
+- Specs that reorganize sections must address whether moved sections are moved or duplicated; agents
+  will default to duplication (additive interpretation) unless deletion from old position is stated
+- DTO path notation (e.g. `specialAbilities.general`) must never appear in view-layer specs; use the
+  actual Swift model property name (`generalSpecialAbilities`) to prevent compilation errors
+- British vs American spelling mismatches (armour vs armors) in specs cause agent to write non-compiling
+  code; always use the exact Swift property name, not the DSA rule book spelling
+- Talent category order: TalentsContainerDTO has fixed 5-key order; alphabetical sort != DTO order;
+  specs must pin the display order explicitly
+- Group-level empty state (hide entire group if all children empty) is always missing from grouping specs
+- Interaction/mutability rules from a prior spec are never forward-referenced in reorganization specs;
+  agents implementing the new spec from scratch will omit them
+
+## Spec 008 Color System Patterns
+- When a spec introduces a shared design token (e.g. attribute colors), it must state the delivery mechanism:
+  Asset Catalog (.colorset) vs Swift enum/extension vs neither
+- "Apply in backgrounds OR borders depending on location" is not actionable without a mapping table that
+  defines which surfaces are backgrounds and which are borders for each UI location
+- Color accessibility is a hard requirement gap: luminance contrast ratios for text-over-color must be
+  specified; several DSA attribute colors (yellow #cac158, white KO) will fail WCAG AA for dark text
+- Dark mode behavior for hard-coded RGB colors must be specified -- they will not adapt automatically
+- Scope of "apply this" is always underspecified: every view, only HeroDetailView, or defined per feature spec
+- Black (#000000) and white (#ffffff) as assigned attribute colors conflict with Neo-Brutalist black borders
+  and yellow backgrounds -- no separation rule is stated
+- When a color spec is scope-limited to one view ("apply in HeroDetailView"), it should still specify whether
+  to update the shared component (AttributesBar) or add a new variant -- both exist as valid options

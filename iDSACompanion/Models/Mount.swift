@@ -24,17 +24,6 @@ struct MountAttributes: Codable {
     var ge: Int
     var ko: Int
     var kk: Int
-
-    enum CodingKeys: String, CodingKey {
-        case mu = "MU"
-        case kl = "KL"
-        case inValue = "IN"
-        case ch = "CH"
-        case ff = "FF"
-        case ge = "GE"
-        case ko = "KO"
-        case kk = "KK"
-    }
 }
 
 // MARK: - Model
@@ -51,6 +40,9 @@ final class Mount {
     var attacks: [MountAttack]
     var talents: [MountTalent]
     var specialAbilities: [String]
+
+    /// Derived from KK attribute per DSA rules.
+    var carryingCapacity: Int { attributes.kk * 2 }
 
     init(
         name: String,
