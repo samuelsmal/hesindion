@@ -1,0 +1,240 @@
+{
+  "talents": [
+    {
+      "name": "Fliegen",
+      "checks": ["MU", "IN", "GE"]
+    },
+    {
+      "name": "Gaukeleien",
+      "checks": ["MU", "CH", "FF"]
+    },
+    {
+      "name": "Klettern",
+      "checks": ["MU", "GE", "KK"]
+    },
+    {
+      "name": "Körperbeherrschung",
+      "checks": ["GE", "GE", "KO"]
+    },
+    {
+      "name": "Kraftakt",
+      "checks": ["KO", "KK", "KK"]
+    },
+    {
+      "name": "Reiten",
+      "checks": ["CH", "GE", "KK"]
+    },
+    {
+      "name": "Schwimmen",
+      "checks": ["GE", "KO", "KK"]
+    },
+    {
+      "name": "Selbstbeherrschung",
+      "checks": ["MU", "MU", "KO"]
+    },
+    {
+      "name": "Singen",
+      "checks": ["KL", "CH", "KO"]
+    },
+    {
+      "name": "Sinnesschärfe",
+      "checks": ["KL", "IN", "IN"]
+    },
+    {
+      "name": "Tanzen",
+      "checks": ["KL", "CH", "GE"]
+    },
+    {
+      "name": "Taschendiebstahl",
+      "checks": ["MU", "FF", "GE"]
+    },
+    {
+      "name": "Verbergen",
+      "checks": ["MU", "IN", "GE"]
+    },
+    {
+      "name": "Zechen",
+      "checks": ["KL", "KO", "KK"]
+    },
+    {
+      "name": "Bekehren & Überzeugen",
+      "checks": ["MU", "KL", "CH"]
+    },
+    {
+      "name": "Betören",
+      "checks": ["MU", "CH", "CH"]
+    },
+    {
+      "name": "Einschüchtern",
+      "checks": ["MU", "IN", "CH"]
+    },
+    {
+      "name": "Etikette",
+      "checks": ["KL", "IN", "CH"]
+    },
+    {
+      "name": "Gassenwissen",
+      "checks": ["KL", "IN", "CH"]
+    },
+    {
+      "name": "Menschenkenntnis",
+      "checks": ["KL", "IN", "CH"]
+    },
+    {
+      "name": "Überreden",
+      "checks": ["MU", "IN", "CH"]
+    },
+    {
+      "name": "Verkleiden",
+      "checks": ["IN", "CH", "GE"]
+    },
+    {
+      "name": "Willenskraft",
+      "checks": ["MU", "IN", "CH"]
+    },
+    {
+      "name": "Fährtensuchen",
+      "checks": ["MU", "IN", "GE"]
+    },
+    {
+      "name": "Fesseln",
+      "checks": ["KL", "FF", "KK"]
+    },
+    {
+      "name": "Fischen & Angeln",
+      "checks": ["FF", "GE", "KO"]
+    },
+    {
+      "name": "Orientierung",
+      "checks": ["KL", "IN", "IN"]
+    },
+    {
+      "name": "Pflanzenkunde",
+      "checks": ["KL", "FF", "KO"]
+    },
+    {
+      "name": "Tierkunde",
+      "checks": ["MU", "MU", "CH"]
+    },
+    {
+      "name": "Wildnisleben",
+      "checks": ["MU", "GE", "KO"]
+    },
+    {
+      "name": "Brett- & Glücksspiel",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Geographie",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Geschichtswissen",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Götter & Kulte",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Kriegskunst",
+      "checks": ["MU", "KL", "IN"]
+    },
+    {
+      "name": "Magiekunde",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Mechanik",
+      "checks": ["KL", "KL", "FF"]
+    },
+    {
+      "name": "Rechnen",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Rechtskunde",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Sagen & Legenden",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Sphärenkunde",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Sternkunde",
+      "checks": ["KL", "KL", "IN"]
+    },
+    {
+      "name": "Alchimie",
+      "checks": ["MU", "KL", "FF"]
+    },
+    {
+      "name": "Boote & Schiffe",
+      "checks": ["FF", "GE", "KK"]
+    },
+    {
+      "name": "Fahrzeuge",
+      "checks": ["CH", "FF", "KO"]
+    },
+    {
+      "name": "Handel",
+      "checks": ["KL", "IN", "CH"]
+    },
+    {
+      "name": "Heilkunde Gift",
+      "checks": ["MU", "KL", "IN"]
+    },
+    {
+      "name": "Heilkunde Krankheiten",
+      "checks": ["MU", "IN", "KO"]
+    },
+    {
+      "name": "Heilkunde Seele",
+      "checks": ["IN", "CH", "KO"]
+    },
+    {
+      "name": "Heilkunde Wunden",
+      "checks": ["KL", "FF", "FF"]
+    },
+    {
+      "name": "Holzbearbeitung",
+      "checks": ["FF", "GE", "KK"]
+    },
+    {
+      "name": "Lebensmittelbearbeitung",
+      "checks": ["IN", "FF", "FF"]
+    },
+    {
+      "name": "Lederbearbeitung",
+      "checks": ["FF", "GE", "KO"]
+    },
+    {
+      "name": "Malen & Zeichnen",
+      "checks": ["IN", "FF", "FF"]
+    },
+    {
+      "name": "Metallbearbeitung",
+      "checks": ["FF", "KO", "KK"]
+    },
+    {
+      "name": "Musizieren",
+      "checks": ["CH", "FF", "KO"]
+    },
+    {
+      "name": "Schlösserknacken",
+      "checks": ["IN", "FF", "FF"]
+    },
+    {
+      "name": "Steinbearbeitung",
+      "checks": ["FF", "FF", "KK"]
+    },
+    {
+      "name": "Stoffbearbeitung",
+      "checks": ["KL", "FF", "FF"]
+    }
+  ]
+}

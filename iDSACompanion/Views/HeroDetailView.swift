@@ -520,6 +520,7 @@ struct HeroDetailView: View {
     @State private var activeCommand: AppCommand?
     @State private var commandQuery = ""
     @FocusState private var searchFocused: Bool
+    @State private var activeTalentProbe: Talent? = nil
 
     var body: some View {
         ZStack {
@@ -626,6 +627,18 @@ struct HeroDetailView: View {
             if let cmd = activeCommand {
                 CommandModal(command: cmd, activeCommand: $activeCommand)
             }
+
+            if let talent = activeTalentProbe {
+                TalentProbeModal(talent: talent, hero: hero) { activeTalentProbe = nil }
+            }
+        }
+        .onChange(of: activeCommand?.id) { _, _ in
+            guard let cmd = activeCommand, cmd.name == "Probe" else { return }
+            if let name = cmd.subparameter,
+               let talent = hero.talents.first(where: { $0.name == name }) {
+                activeTalentProbe = talent
+            }
+            activeCommand = nil
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -929,6 +942,8 @@ struct HeroDetailView: View {
                         .padding(.leading, 24)
                         .padding(.trailing, 12)
                         .padding(.vertical, 6)
+                        .contentShape(Rectangle())
+                        .onLongPressGesture { activeTalentProbe = talent }
                         Divider()
                     }
                 }

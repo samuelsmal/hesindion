@@ -101,6 +101,27 @@
 - Interaction/mutability rules from a prior spec are never forward-referenced in reorganization specs;
   agents implementing the new spec from scratch will omit them
 
+## Spec 005 Talent Probe Patterns
+- Wireframe examples using a real talent name but illustrative (wrong) attribute abbreviations
+  cause a direct data conflict with the authoritative JSON table -- always flag this discrepancy
+- "Default to X" annotation combined with wireframe showing non-X values is a recurring ambiguity;
+  always ask which is authoritative: the prose rule or the rendered wireframe state
+- Attribute string key (e.g. "IN") vs Swift-safe property name (e.g. inValue) mismatch:
+  the JSON abbreviation set [MU,KL,IN,CH,FF,GE,KO,KK] maps to [mu,kl,inValue,ch,ff,ge,ko,kk] --
+  this must be stated in every spec that reads from Attributes by string key
+- Probe commands are display-only (no hero state mutation); CommandInput.execute closure
+  is semantically wrong for them -- specs must state the architectural alternative explicitly
+- New modal types that cannot fit CommandInput must specify whether to create a new @State
+  var or branch inside the existing activeCommand binding
+- Modal-over-modal (modifier edit inside probe modal) is an unresolved pattern in this codebase;
+  specs must prescribe inline stepper vs full overlay vs second @State binding
+- Failed check definition (negative remaining talent) is always missing; ceil() on negative
+  values does not produce QS 0 -- spec must define failure threshold and result display explicitly
+- Continuous animation (cycling numbers) requires: start trigger, stop trigger, indefinite vs
+  timed loop, and whether the final value is the last animated value or a new random call
+- Talent row long-press requires contentShape(Rectangle()) -- never assume tap target covers
+  the full HStack without it; this is a recurring tap-target gap in SwiftUI
+
 ## Spec 008 Color System Patterns
 - When a spec introduces a shared design token (e.g. attribute colors), it must state the delivery mechanism:
   Asset Catalog (.colorset) vs Swift enum/extension vs neither

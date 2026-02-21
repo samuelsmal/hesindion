@@ -41,4 +41,4 @@ The UI follows a **Neo-Brutalist** design theme.
 ## Code creation guidance
 
 - Create minimal and small pieces of code, favour composing
-
+- Try to find the sweet spot between small and large files, do some housekeeping from time to time.
