@@ -85,9 +85,9 @@ struct HeroImportService {
             hero.derivedValues = makeDerivedValues(dto.derivedValues)
             hero.talents = makeTalents(dto.talents)
             hero.combatTechniques = makeCombatTechniques(dto.combatTechniques)
-            hero.meleeWeapons = makeMeleeWeapons(dto.meleeWeapons)
-            hero.armor = makeArmor(dto.armor)
-            hero.shield = dto.shield.map(makeShield)
+            hero.meleeWeapons = makeMeleeWeapons(from: dto.equipment)
+            hero.armor = makeArmor(from: dto.equipment)
+            hero.shield = makeShield(from: dto.equipment)
             hero.equipment = makeEquipment(dto.equipment)
             hero.money = makeMoney(dto.money)
             hero.mount = dto.mount.map(makeMount)
@@ -140,15 +140,15 @@ struct HeroImportService {
 
         // Replace melee weapons
         hero.meleeWeapons.forEach { context.delete($0) }
-        hero.meleeWeapons = makeMeleeWeapons(dto.meleeWeapons)
+        hero.meleeWeapons = makeMeleeWeapons(from: dto.equipment)
 
         // Replace armor
         if let old = hero.armor { context.delete(old) }
-        hero.armor = makeArmor(dto.armor)
+        hero.armor = makeArmor(from: dto.equipment)
 
         // Replace shield
         if let old = hero.shield { context.delete(old) }
-        hero.shield = dto.shield.map(makeShield)
+        hero.shield = makeShield(from: dto.equipment)
 
         // Replace mount
         if let old = hero.mount { context.delete(old) }
@@ -197,11 +197,11 @@ struct HeroImportService {
             lebensenergie: dto.lebensenergie,
             astralenergie: dto.astralenergie,
             karmaenergie: dto.karmaenergie,
-            seelenkraft: dto.seelenkraft,
-            zaehigkeit: dto.zähigkeit,
+            seelenkraft: ResourceValue(base: dto.seelenkraft.value, bonus: dto.seelenkraft.bonus, max: dto.seelenkraft.max),
+            zaehigkeit: ResourceValue(base: dto.zähigkeit.value, bonus: dto.zähigkeit.bonus, max: dto.zähigkeit.max),
             ausweichen: dto.ausweichen,
             initiative: dto.initiative,
-            geschwindigkeit: dto.geschwindigkeit,
+            geschwindigkeit: ResourceValue(base: dto.geschwindigkeit.value, bonus: dto.geschwindigkeit.bonus, max: dto.geschwindigkeit.max),
             wundschwelle: dto.wundschwelle,
             schicksalspunkte: dto.schicksalspunkte
         )
@@ -221,20 +221,32 @@ struct HeroImportService {
         dtos.map { CombatTechnique(name: $0.name, value: $0.value, at: $0.at, pa: $0.pa) }
     }
 
-    private func makeMeleeWeapons(_ dtos: [MeleeWeaponDTO]) -> [MeleeWeapon] {
-        dtos.map { MeleeWeapon(name: $0.name, technique: $0.technique, damage: $0.damage, at: $0.at, pa: $0.pa, reach: $0.reach, weight: $0.weight) }
+    private func makeMeleeWeapons(from equipment: [EquipmentItemDTO]) -> [MeleeWeapon] {
+        equipment.filter { $0.type == "Nahkampfwaffe" }.compactMap { item in
+            guard let technique = item.technique, let damage = item.damage,
+                  let at = item.at, let pa = item.pa,
+                  let reach = item.reach, let weight = item.weight else { return nil }
+            return MeleeWeapon(name: item.name, technique: technique, damage: damage, at: at, pa: pa, reach: reach, weight: weight)
+        }
     }
 
-    private func makeArmor(_ dto: ArmorDTO) -> Armor {
-        Armor(name: dto.name, protectionValue: dto.protectionValue, armorRating: dto.armorRating, encumbrance: dto.encumbrance, weight: dto.weight)
+    private func makeArmor(from equipment: [EquipmentItemDTO]) -> Armor? {
+        equipment.first { $0.type == "Rüstung" }.flatMap { item in
+            guard let pv = item.protectionValue, let ar = item.armorRating,
+                  let enc = item.encumbrance, let weight = item.weight else { return nil }
+            return Armor(name: item.name, protectionValue: pv, armorRating: ar, encumbrance: enc, weight: weight)
+        }
     }
 
-    private func makeShield(_ dto: ShieldDTO) -> Shield {
-        Shield(name: dto.name, structure: dto.structure, breakingFactor: dto.breakingFactor, atMod: dto.atMod, paMod: dto.paMod, weight: dto.weight)
+    private func makeShield(from equipment: [EquipmentItemDTO]) -> Shield? {
+        equipment.first { $0.type == "Schild" }.flatMap { item in
+            guard let weight = item.weight else { return nil }
+            return Shield(name: item.name, structure: 0, breakingFactor: 0, atMod: item.at ?? 0, paMod: item.pa ?? 0, weight: weight)
+        }
     }
 
     private func makeEquipment(_ dtos: [EquipmentItemDTO]) -> [EquipmentItem] {
-        dtos.map { EquipmentItem(name: $0.name, value: $0.value, weight: $0.weight) }
+        dtos.filter { $0.type == "Ausrüstung" }.map { EquipmentItem(name: $0.name, value: $0.value ?? 0, weight: $0.weight ?? 0.0) }
     }
 
     private func makeMoney(_ dto: MoneyDTO) -> Money {
@@ -256,7 +268,7 @@ struct HeroImportService {
         )
     }
 
-    private func makeLanguages(_ dict: [String: String]) -> [Language] {
-        dict.map { Language(name: $0.key, level: $0.value) }
+    private func makeLanguages(_ dtos: [LanguageDTO]) -> [Language] {
+        dtos.map { Language(name: $0.language, level: $0.level) }
     }
 }

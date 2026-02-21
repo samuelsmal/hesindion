@@ -79,11 +79,11 @@
       "Wuchtschlag I"
     ]
   },
-  "languages": {
-    "Garethi": "MS",
-    "Bosparano": "II",
-    "Ologhaijan": "I"
-  },
+  "languages": [
+    {"language": "Garethi", "level": "MS" },
+    {"language": "Bosparano", "level": "II" },
+    {"language": "Ologhaijan", "level": "I" }
+  ],
   "scripts": ["Kusliker Zeichen"],
   "talents": {
     "körpertalente": [

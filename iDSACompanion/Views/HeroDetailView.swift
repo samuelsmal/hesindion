@@ -102,9 +102,10 @@ private struct AttributesBar: View {
             Text("\(value)")
                 .font(.system(.title3, weight: .black))
         }
+        .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(Color.yellow)
+        .background(Color.attributeBackground(for: label))
         .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
     }
 }
@@ -228,7 +229,7 @@ private struct EquipmentRow: View {
                 HStack {
                     Text(item.name).font(.body)
                     Spacer()
-                    Text(String(format: "%.2f kg", item.weight))
+                    Text(String(format: "%.2f st", item.weight))
                         .font(.system(.body, design: .monospaced))
                 }
                 .padding(.horizontal, 12)
@@ -252,17 +253,224 @@ private struct EquipmentRow: View {
     }
 }
 
+// MARK: - ScrollOffsetKey
+
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+// MARK: - CommandSearchOverlay
+
+private struct CommandSearchOverlay: View {
+    @Binding var query: String
+    @Binding var isVisible: Bool
+    @Binding var activeCommand: AppCommand?
+    let commands: [AppCommand]
+    var isFocused: FocusState<Bool>.Binding
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search field
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Color.black)
+                TextField("Befehl suchen…", text: $query)
+                    .focused(isFocused)
+                    .autocorrectionDisabled()
+                if !query.isEmpty {
+                    Button {
+                        query = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Color.black)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.yellow)
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+
+            // Results
+            let maxHeight = UIScreen.main.bounds.height / 3
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    if commands.isEmpty {
+                        Text("Keine Befehle gefunden")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                    } else {
+                        ForEach(commands) { cmd in
+                            Button {
+                                activeCommand = cmd
+                                query = ""
+                                isVisible = false
+                            } label: {
+                                VStack(spacing: 0) {
+                                    HStack {
+                                        Text(cmd.displayName)
+                                            .font(.body)
+                                            .foregroundStyle(Color.black)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    Divider()
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: maxHeight)
+            .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+        }
+        .padding(.horizontal, 16)
+        .gesture(
+            DragGesture().onEnded { value in
+                if value.translation.height < -50 {
+                    query = ""
+                    isVisible = false
+                }
+            }
+        )
+    }
+}
+
+// MARK: - CommandModal
+
+private struct CommandModal: View {
+    let command: AppCommand
+    @Binding var activeCommand: AppCommand?
+    @State private var amount: Int = 0
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+                .onTapGesture { activeCommand = nil }
+
+            VStack(spacing: 20) {
+                // Header
+                Text(command.displayName)
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(Color.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.yellow)
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+
+                // Input
+                if let input = command.input, case .integerAmount(let label, let min, let max, _) = input {
+                    VStack(spacing: 8) {
+                        if let max {
+                            Text("/ \(max)")
+                                .font(.system(.subheadline))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("\(amount)")
+                            .font(.system(.largeTitle, weight: .black))
+
+                        HStack(spacing: 16) {
+                            Button {
+                                amount = Swift.max(min, amount - 1)
+                            } label: {
+                                Text("−")
+                                    .font(.system(.title, weight: .bold))
+                                    .foregroundStyle(Color.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Color.yellow)
+                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                let cap = max.map { Swift.min($0, amount + 1) } ?? (amount + 1)
+                                amount = cap
+                            } label: {
+                                Text("+")
+                                    .font(.system(.title, weight: .bold))
+                                    .foregroundStyle(Color.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Color.yellow)
+                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .accessibilityLabel(label)
+                }
+
+                // Confirm
+                Button {
+                    if command.input != nil {
+                        command.execute(.integerAmount(amount))
+                    } else {
+                        command.execute(nil)
+                    }
+                    activeCommand = nil
+                } label: {
+                    Image(systemName: "checkmark")
+                        .font(.system(.title2, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.yellow)
+                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(32)
+            .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .padding(32)
+            .gesture(
+                DragGesture().onEnded { value in
+                    if value.translation.height < -50 { activeCommand = nil }
+                }
+            )
+        }
+        .onAppear {
+            if let input = command.input, case .integerAmount(_, _, _, let initial) = input {
+                amount = initial
+            }
+        }
+    }
+}
+
 // MARK: - HeroDetailView
 
 struct HeroDetailView: View {
     let hero: Hero
     @Environment(\.modelContext) private var modelContext
     @State private var activeEdit: ActiveEdit?
+    @State private var showCommandSearch = false
+    @State private var activeCommand: AppCommand?
+    @State private var commandQuery = ""
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         ZStack {
             ScrollView {
                 LazyVStack(pinnedViews: [.sectionHeaders]) {
+                    // Scroll offset anchor (zero-height)
+                    Color.clear.frame(height: 0)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(
+                                key: ScrollOffsetKey.self,
+                                value: geo.frame(in: .global).minY
+                            )
+                        })
+
                     // Name heading — scrolls away
                     Text(hero.name)
                         .font(.system(.largeTitle, design: .default, weight: .black))
@@ -303,13 +511,78 @@ struct HeroDetailView: View {
                     }
                 }
             }
+            .onPreferenceChange(ScrollOffsetKey.self) { offset in
+                if offset > 60 && !showCommandSearch {
+                    showCommandSearch = true
+                    commandQuery = ""
+                    searchFocused = true
+                }
+            }
 
             if let edit = activeEdit {
                 EditCurrentModal(edit: edit, activeEdit: $activeEdit)
             }
+
+            if showCommandSearch {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture { dismissSearch() }
+
+                VStack {
+                    CommandSearchOverlay(
+                        query: $commandQuery,
+                        isVisible: $showCommandSearch,
+                        activeCommand: $activeCommand,
+                        commands: filteredCommands,
+                        isFocused: $searchFocused
+                    )
+                    Spacer()
+                }
+            }
+
+            if let cmd = activeCommand {
+                CommandModal(command: cmd, activeCommand: $activeCommand)
+            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func dismissSearch() {
+        showCommandSearch = false
+        commandQuery = ""
+        searchFocused = false
+    }
+
+    private func normalize(_ s: String) -> String {
+        s.replacingOccurrences(of: "ä", with: "ae")
+         .replacingOccurrences(of: "ö", with: "oe")
+         .replacingOccurrences(of: "ü", with: "ue")
+         .replacingOccurrences(of: "ß", with: "ss")
+         .replacingOccurrences(of: "Ä", with: "ae")
+         .replacingOccurrences(of: "Ö", with: "oe")
+         .replacingOccurrences(of: "Ü", with: "ue")
+         .lowercased()
+    }
+
+    private var filteredCommands: [AppCommand] {
+        let all = hero.commandRegistry
+        guard !commandQuery.isEmpty else {
+            return all.sorted { $0.displayName < $1.displayName }
+        }
+        let tokens = commandQuery.split(separator: " ").map { normalize(String($0)) }
+        let t0 = tokens[0]
+        let t1 = tokens.count > 1 ? tokens[1] : nil
+        return all.compactMap { cmd -> (AppCommand, Double)? in
+            let normName = normalize(cmd.name)
+            guard normName.contains(t0) else { return nil }
+            if let t1 {
+                guard normalize(cmd.subparameter ?? "").contains(t1) else { return nil }
+            }
+            return (cmd, Double(t0.count) / Double(normName.count))
+        }
+        .sorted { $0.1 > $1.1 || ($0.1 == $1.1 && $0.0.displayName < $1.0.displayName) }
+        .map(\.0)
     }
 
     // MARK: - Section 1: Experience
@@ -338,7 +611,7 @@ struct HeroDetailView: View {
                 FieldRow(label: "gender", value: pd.gender)
                 FieldRow(label: "species", value: pd.species)
                 FieldRow(label: "height", value: "\(pd.height) cm")
-                FieldRow(label: "weight", value: "\(pd.weight) kg")
+                FieldRow(label: "weight", value: "\(pd.weight) st")
                 FieldRow(label: "hairColor", value: pd.hairColor)
                 FieldRow(label: "eyeColor", value: pd.eyeColor)
                 FieldRow(label: "culture", value: pd.culture)
@@ -355,106 +628,108 @@ struct HeroDetailView: View {
     @ViewBuilder private var derivedValuesSection: some View {
         if let dv = hero.derivedValues {
             CollapsibleSection("DerivedValues") {
-                // lebensenergie — interactive
                 if dv.lebensenergie.max > 0 {
                     interactiveDerivedRow(
                         label: "lebensenergie",
                         primary: "\(dv.lebensenergie.current) / \(dv.lebensenergie.max)",
-                        subfields: [
-                            ("base", "\(dv.lebensenergie.base)"),
-                            ("bonus", "\(dv.lebensenergie.bonus)"),
-                            ("purchased", "\(dv.lebensenergie.purchased)")
-                        ],
-                        maxVal: dv.lebensenergie.max,
-                        get: { dv.lebensenergie.current },
-                        set: { dv.lebensenergie.current = $0 }
-                    )
+                        subfields: []
+                    ) {
+                        activeCommand = AppCommand(
+                            id: UUID(),
+                            name: "lebensenergie",
+                            subparameter: nil,
+                            input: .integerAmount(
+                                label: "Aktuell",
+                                min: 0,
+                                max: dv.lebensenergie.max,
+                                initial: dv.lebensenergie.current
+                            ),
+                            execute: { result in
+                                if case .integerAmount(let v) = result {
+                                    dv.lebensenergie.current = v
+                                }
+                            }
+                        )
+                    }
                 }
-
-                // schicksalspunkte — interactive
                 if dv.schicksalspunkte.max > 0 {
                     interactiveDerivedRow(
                         label: "schicksalspunkte",
                         primary: "\(dv.schicksalspunkte.current) / \(dv.schicksalspunkte.max)",
-                        subfields: [("bonus", "\(dv.schicksalspunkte.bonus)")],
-                        maxVal: dv.schicksalspunkte.max,
-                        get: { dv.schicksalspunkte.current },
-                        set: { dv.schicksalspunkte.current = $0 }
-                    )
+                        subfields: []
+                    ) {
+                        activeCommand = AppCommand(
+                            id: UUID(),
+                            name: "schicksalspunkte",
+                            subparameter: nil,
+                            input: .integerAmount(
+                                label: "Aktuell",
+                                min: 0,
+                                max: dv.schicksalspunkte.max,
+                                initial: dv.schicksalspunkte.current
+                            ),
+                            execute: { result in
+                                if case .integerAmount(let v) = result {
+                                    dv.schicksalspunkte.current = v
+                                }
+                            }
+                        )
+                    }
                 }
-
-                // astralenergie — interactive, hidden when max == 0
                 if let ae = dv.astralenergie, ae.max > 0 {
                     interactiveDerivedRow(
                         label: "astralenergie",
                         primary: "\(ae.current) / \(ae.max)",
-                        subfields: [("bonus", "\(ae.bonus)")],
-                        maxVal: ae.max,
-                        get: { dv.astralenergie?.current ?? 0 },
-                        set: { dv.astralenergie?.current = $0 }
-                    )
+                        subfields: []
+                    ) {
+                        activeCommand = AppCommand(
+                            id: UUID(),
+                            name: "astralenergie",
+                            subparameter: nil,
+                            input: .integerAmount(
+                                label: "Aktuell",
+                                min: 0,
+                                max: ae.max,
+                                initial: ae.current
+                            ),
+                            execute: { result in
+                                if case .integerAmount(let v) = result {
+                                    dv.astralenergie?.current = v
+                                }
+                            }
+                        )
+                    }
                 }
-
-                // karmaenergie — interactive, hidden when max == 0
                 if let ke = dv.karmaenergie, ke.max > 0 {
                     interactiveDerivedRow(
                         label: "karmaenergie",
                         primary: "\(ke.current) / \(ke.max)",
-                        subfields: [("bonus", "\(ke.bonus)")],
-                        maxVal: ke.max,
-                        get: { dv.karmaenergie?.current ?? 0 },
-                        set: { dv.karmaenergie?.current = $0 }
-                    )
+                        subfields: []
+                    ) {
+                        activeCommand = AppCommand(
+                            id: UUID(),
+                            name: "karmaenergie",
+                            subparameter: nil,
+                            input: .integerAmount(
+                                label: "Aktuell",
+                                min: 0,
+                                max: ke.max,
+                                initial: ke.current
+                            ),
+                            execute: { result in
+                                if case .integerAmount(let v) = result {
+                                    dv.karmaenergie?.current = v
+                                }
+                            }
+                        )
+                    }
                 }
-
-                // Read-only rows
-                if dv.seelenkraft.max > 0 {
-                    SubfieldBlock(label: "seelenkraft", subfields: [
-                        ("base", "\(dv.seelenkraft.base)"),
-                        ("bonus", "\(dv.seelenkraft.bonus)"),
-                        ("max", "\(dv.seelenkraft.max)")
-                    ])
-                }
-
-                if dv.zaehigkeit.max > 0 {
-                    SubfieldBlock(label: "zähigkeit", subfields: [
-                        ("base", "\(dv.zaehigkeit.base)"),
-                        ("bonus", "\(dv.zaehigkeit.bonus)"),
-                        ("max", "\(dv.zaehigkeit.max)")
-                    ])
-                }
-
-                if dv.ausweichen.max > 0 {
-                    SubfieldBlock(label: "ausweichen", subfields: [
-                        ("value", "\(dv.ausweichen.value)"),
-                        ("bonus", "\(dv.ausweichen.bonus)"),
-                        ("max", "\(dv.ausweichen.max)")
-                    ])
-                }
-
-                if dv.initiative.max > 0 {
-                    SubfieldBlock(label: "initiative", subfields: [
-                        ("value", "\(dv.initiative.value)"),
-                        ("bonus", "\(dv.initiative.bonus)"),
-                        ("max", "\(dv.initiative.max)")
-                    ])
-                }
-
-                if dv.geschwindigkeit.max > 0 {
-                    SubfieldBlock(label: "geschwindigkeit", subfields: [
-                        ("base", "\(dv.geschwindigkeit.base)"),
-                        ("bonus", "\(dv.geschwindigkeit.bonus)"),
-                        ("max", "\(dv.geschwindigkeit.max)")
-                    ])
-                }
-
-                if dv.wundschwelle.max > 0 {
-                    SubfieldBlock(label: "wundschwelle", subfields: [
-                        ("value", "\(dv.wundschwelle.value)"),
-                        ("bonus", "\(dv.wundschwelle.bonus)"),
-                        ("max", "\(dv.wundschwelle.max)")
-                    ])
-                }
+                if dv.seelenkraft.max > 0 { FieldRow(label: "seelenkraft", value: "\(dv.seelenkraft.max)") }
+                if dv.zaehigkeit.max > 0 { FieldRow(label: "zähigkeit", value: "\(dv.zaehigkeit.max)") }
+                if dv.ausweichen.max > 0 { FieldRow(label: "ausweichen", value: "\(dv.ausweichen.max)") }
+                if dv.initiative.max > 0 { FieldRow(label: "initiative", value: "\(dv.initiative.max)") }
+                if dv.geschwindigkeit.max > 0 { FieldRow(label: "geschwindigkeit", value: "\(dv.geschwindigkeit.max)") }
+                if dv.wundschwelle.max > 0 { FieldRow(label: "wundschwelle", value: "\(dv.wundschwelle.max)") }
             }
         }
     }
@@ -463,9 +738,7 @@ struct HeroDetailView: View {
         label: String,
         primary: String,
         subfields: [(String, String)],
-        maxVal: Int,
-        get: @escaping () -> Int,
-        set: @escaping (Int) -> Void
+        onLongPress: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
             HStack {
@@ -476,9 +749,7 @@ struct HeroDetailView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .contentShape(Rectangle())
-            .onLongPressGesture {
-                activeEdit = ActiveEdit(label: label, max: maxVal, getCurrent: get, setCurrent: set)
-            }
+            .onLongPressGesture { onLongPress() }
 
             ForEach(subfields, id: \.0) { key, val in
                 HStack {
@@ -642,11 +913,43 @@ struct HeroDetailView: View {
             ForEach(hero.equipment, id: \.persistentModelID) { item in
                 EquipmentRow(item: item) { modelContext.delete(item) }
             }
+            ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+                weightRow(name: w.name, weight: w.weight)
+            }
+            ForEach(hero.shields, id: \.persistentModelID) { s in
+                weightRow(name: s.name, weight: s.weight)
+            }
+            ForEach(hero.armors, id: \.persistentModelID) { a in
+                weightRow(name: a.name, weight: a.weight)
+            }
 
-            let total = hero.totalEquipmentWeight
-            let threshold = hero.carryingThreshold
+            capacityRow
+        }
+    }
+
+    private func weightRow(name: String, weight: Double) -> some View {
+        VStack(spacing: 0) {
             HStack {
-                let label = String(format: "%.2f / %d kg", total, Int(threshold))
+                Text(name).font(.body)
+                Spacer()
+                Text(String(format: "%.2f st", weight))
+                    .font(.system(.body, design: .monospaced))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            Divider()
+        }
+    }
+
+    @ViewBuilder private var capacityRow: some View {
+        let total = hero.totalEquipmentWeight
+        let totalCap = hero.totalCarryingCapacity
+        let heroCap = hero.carryingCapacity
+        let mountCap = hero.mount?.carryingCapacity ?? 0
+
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                let label = String(format: "%.2f / %d st", total, totalCap)
                 if hero.isOverloaded {
                     Text("⚠ " + label).foregroundStyle(.red)
                 } else {
@@ -654,10 +957,15 @@ struct HeroDetailView: View {
                 }
                 Spacer()
             }
-            .font(.system(.body, design: .monospaced))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            if mountCap > 0 {
+                Text("\(heroCap) + \(mountCap) = \(totalCap) st")
+                    .foregroundStyle(.secondary)
+                    .font(.system(.caption, design: .monospaced))
+            }
         }
+        .font(.system(.body, design: .monospaced))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Section 13: MeleeWeapons
@@ -672,38 +980,44 @@ struct HeroDetailView: View {
                         ("AT", "\(w.at)"),
                         ("PA", "\(w.pa)"),
                         ("reach", w.reach),
-                        ("weight", String(format: "%.2f kg", w.weight))
+                        ("weight", String(format: "%.2f st", w.weight))
                     ])
                 }
             }
         }
     }
 
-    // MARK: - Section 14: Shield
+    // MARK: - Section 14: Shields
 
     @ViewBuilder private var shieldSection: some View {
-        if let s = hero.shield {
-            CollapsibleSection("Shield") {
-                FieldRow(label: "name", value: s.name)
-                FieldRow(label: "structure", value: "\(s.structure)")
-                FieldRow(label: "breakingFactor", value: "\(s.breakingFactor)")
-                FieldRow(label: "atMod", value: "\(s.atMod)")
-                FieldRow(label: "paMod", value: "\(s.paMod)")
-                FieldRow(label: "weight", value: String(format: "%.2f kg", s.weight))
+        if !hero.shields.isEmpty {
+            CollapsibleSection("Shields") {
+                ForEach(hero.shields, id: \.persistentModelID) { s in
+                    SubfieldBlock(label: s.name, subfields: [
+                        ("structure", "\(s.structure)"),
+                        ("breakingFactor", "\(s.breakingFactor)"),
+                        ("atMod", "\(s.atMod)"),
+                        ("paMod", "\(s.paMod)"),
+                        ("weight", String(format: "%.2f st", s.weight))
+                    ])
+                }
             }
         }
     }
 
-    // MARK: - Section 15: Armor
+    // MARK: - Section 15: Armors
 
     @ViewBuilder private var armorSection: some View {
-        if let a = hero.armor {
-            CollapsibleSection("Armor") {
-                FieldRow(label: "name", value: a.name)
-                FieldRow(label: "protectionValue", value: "\(a.protectionValue)")
-                FieldRow(label: "armorRating", value: "\(a.armorRating)")
-                FieldRow(label: "encumbrance", value: "\(a.encumbrance)")
-                FieldRow(label: "weight", value: String(format: "%.2f kg", a.weight))
+        if !hero.armors.isEmpty {
+            CollapsibleSection("Armors") {
+                ForEach(hero.armors, id: \.persistentModelID) { a in
+                    SubfieldBlock(label: a.name, subfields: [
+                        ("protectionValue", "\(a.protectionValue)"),
+                        ("armorRating", "\(a.armorRating)"),
+                        ("encumbrance", "\(a.encumbrance)"),
+                        ("weight", String(format: "%.2f st", a.weight))
+                    ])
+                }
             }
         }
     }

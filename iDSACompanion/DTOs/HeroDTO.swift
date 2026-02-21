@@ -13,9 +13,6 @@ struct HeroDTO: Decodable {
     let scripts: [String]
     let talents: TalentsContainerDTO
     let combatTechniques: [CombatTechniqueDTO]
-    let meleeWeapons: [MeleeWeaponDTO]
-    let armor: ArmorDTO
-    let shield: ShieldDTO?
     let equipment: [EquipmentItemDTO]
     let money: MoneyDTO
     let carryingCapacity: Int
@@ -69,11 +66,11 @@ struct DerivedValuesDTO: Decodable {
     let lebensenergie: LifeEnergyValue
     let astralenergie: MutableResourceValue?
     let karmaenergie: MutableResourceValue?
-    let seelenkraft: ResourceValue
-    let zähigkeit: ResourceValue
+    let seelenkraft: ComputedValue
+    let zähigkeit: ComputedValue
     let ausweichen: ComputedValue
     let initiative: ComputedValue
-    let geschwindigkeit: ResourceValue
+    let geschwindigkeit: ComputedValue
     let wundschwelle: ComputedValue
     let schicksalspunkte: MutableResourceValue
 
@@ -124,37 +121,21 @@ struct CombatTechniqueDTO: Decodable {
     let pa: Int?
 }
 
-struct MeleeWeaponDTO: Decodable {
-    let name: String
-    let technique: String
-    let damage: String
-    let at: Int
-    let pa: Int
-    let reach: String
-    let weight: Double
-}
-
-struct ArmorDTO: Decodable {
-    let name: String
-    let protectionValue: Int
-    let armorRating: Int
-    let encumbrance: Int
-    let weight: Double
-}
-
-struct ShieldDTO: Decodable {
-    let name: String
-    let structure: Int
-    let breakingFactor: Int
-    let atMod: Int
-    let paMod: Int
-    let weight: Double
-}
-
 struct EquipmentItemDTO: Decodable {
     let name: String
-    let value: Int
-    let weight: Double
+    let type: String
+    let value: Int?
+    let weight: Double?
+    // Weapon / shield fields
+    let technique: String?
+    let damage: String?
+    let at: Int?
+    let pa: Int?
+    let reach: String?
+    // Armor fields
+    let protectionValue: Int?
+    let armorRating: Int?
+    let encumbrance: Int?
 }
 
 struct MoneyDTO: Decodable {
