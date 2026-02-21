@@ -23,32 +23,38 @@ struct ComputedValue: Codable {
     var max: Int
 }
 
+struct MutableResourceValue: Codable {
+    var current: Int
+    var bonus: Int
+    var max: Int
+}
+
 // MARK: - Model
 
 @Model
 final class DerivedValues {
     var lebensenergie: LifeEnergyValue
-    var astralenergie: LifeEnergyValue?
-    var karmaenergie: LifeEnergyValue?
+    var astralenergie: MutableResourceValue?
+    var karmaenergie: MutableResourceValue?
     var seelenkraft: ResourceValue
     var zaehigkeit: ResourceValue
     var ausweichen: ComputedValue
     var initiative: ComputedValue
     var geschwindigkeit: ResourceValue
     var wundschwelle: ComputedValue
-    var schicksalspunkte: ComputedValue
+    var schicksalspunkte: MutableResourceValue
 
     init(
         lebensenergie: LifeEnergyValue,
-        astralenergie: LifeEnergyValue?,
-        karmaenergie: LifeEnergyValue?,
+        astralenergie: MutableResourceValue?,
+        karmaenergie: MutableResourceValue?,
         seelenkraft: ResourceValue,
         zaehigkeit: ResourceValue,
         ausweichen: ComputedValue,
         initiative: ComputedValue,
         geschwindigkeit: ResourceValue,
         wundschwelle: ComputedValue,
-        schicksalspunkte: ComputedValue
+        schicksalspunkte: MutableResourceValue
     ) {
         self.lebensenergie = lebensenergie
         self.astralenergie = astralenergie

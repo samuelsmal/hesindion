@@ -9,7 +9,7 @@ struct HeroDTO: Decodable {
     let advantages: [String]
     let disadvantages: [String]
     let specialAbilities: SpecialAbilitiesDTO
-    let languages: [String: String]
+    let languages: [LanguageDTO]
     let scripts: [String]
     let talents: TalentsContainerDTO
     let combatTechniques: [CombatTechniqueDTO]
@@ -20,6 +20,11 @@ struct HeroDTO: Decodable {
     let money: MoneyDTO
     let carryingCapacity: Int
     let mount: MountDTO?
+}
+
+struct LanguageDTO: Decodable {
+    let language: String
+    let level: String
 }
 
 struct PersonalDataDTO: Decodable {
@@ -62,15 +67,15 @@ struct AttributesDTO: Decodable {
 // Derived value shapes — reuse the model value types for decoding
 struct DerivedValuesDTO: Decodable {
     let lebensenergie: LifeEnergyValue
-    let astralenergie: LifeEnergyValue?
-    let karmaenergie: LifeEnergyValue?
+    let astralenergie: MutableResourceValue?
+    let karmaenergie: MutableResourceValue?
     let seelenkraft: ResourceValue
     let zähigkeit: ResourceValue
     let ausweichen: ComputedValue
     let initiative: ComputedValue
     let geschwindigkeit: ResourceValue
     let wundschwelle: ComputedValue
-    let schicksalspunkte: ComputedValue
+    let schicksalspunkte: MutableResourceValue
 
     enum CodingKeys: String, CodingKey {
         case lebensenergie

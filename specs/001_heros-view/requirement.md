@@ -113,6 +113,7 @@ The JSON/YAML schema (see `hero.json` and `hero.yaml`) maps to these top-level e
 
 ## Dependencies
 
+- Spec 000 (data model hero) - required for importing data
 - Spec 002 (hero detail view) — navigation target on hero selection
 - **Yams** SPM package — required for YAML parsing
 

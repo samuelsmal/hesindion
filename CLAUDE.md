@@ -37,3 +37,8 @@ The UI follows a **Neo-Brutalist** design theme.
 
 - Main actor isolation is enabled by default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`)
 - `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY` is enabled
+
+## Code creation guidance
+
+- Create minimal and small pieces of code, favour composing
+

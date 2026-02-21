@@ -47,4 +47,21 @@ final class Hero {
         self.equipment = []
         self.languages = []
     }
+
+    var totalEquipmentWeight: Double {
+        let equipmentWeight = equipment.reduce(0.0) { $0 + $1.weight }
+        let weaponWeight    = meleeWeapons.reduce(0.0) { $0 + $1.weight }
+        let armorWeight     = armor?.weight ?? 0.0
+        let shieldWeight    = shield?.weight ?? 0.0
+        return equipmentWeight + weaponWeight + armorWeight + shieldWeight
+    }
+
+    var carryingThreshold: Double {
+        let mountBonus = Double((mount?.attributes.kk ?? 0) * 2)
+        return Double(carryingCapacity) + mountBonus
+    }
+
+    var isOverloaded: Bool {
+        totalEquipmentWeight > carryingThreshold
+    }
 }

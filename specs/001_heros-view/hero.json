@@ -41,15 +41,15 @@
       "max": 33,
       "current": 33
     },
-    "astralenergie": null,
-    "karmaenergie": null,
-    "seelenkraft": { "base": 2, "bonus": 0, "max": 2 },
-    "zähigkeit": { "base": 2, "bonus": 0, "max": 2 },
-    "ausweichen": { "value": 7, "bonus": 0, "max": 7 },
-    "initiative": { "value": 14, "bonus": 0, "max": 14 },
-    "geschwindigkeit": { "base": 8, "bonus": 0, "max": 8 },
-    "wundschwelle": { "value": 7, "bonus": 0, "max": 7 },
-    "schicksalspunkte": { "value": 3, "bonus": 0, "max": 3 }
+    "astralenergie":    { "current": 0, "bonus": 0, "max": 0 },
+    "karmaenergie":     { "current": 0, "bonus": 0, "max": 0 },
+    "schicksalspunkte": { "current": 3, "bonus": 0, "max": 3 },
+    "seelenkraft":      { "value": 2,  "bonus": 0, "max": 2 },
+    "zähigkeit":        { "value": 2,  "bonus": 0, "max": 2 },
+    "ausweichen":       { "value": 7,  "bonus": 0, "max": 7 },
+    "initiative":       { "value": 14, "bonus": 0, "max": 14 },
+    "geschwindigkeit":  { "value": 8,  "bonus": 0, "max": 8 },
+    "wundschwelle":     { "value": 7,  "bonus": 0, "max": 7 }
   },
   "advantages": [
     "Beidhändig",
@@ -172,34 +172,14 @@
     { "name": "Zweihandhiebwaffen", "value": 6, "at": 8, "pa": 5 },
     { "name": "Zweihandschwerter", "value": 6, "at": 8, "pa": 5 }
   ],
-  "meleeWeapons": [
-    { "name": "Rabenschnabel", "technique": "Hiebwaffen", "damage": "1W6+5", "at": 14, "pa": 7, "reach": "Mittel", "weight": 1.5 },
-    { "name": "Langschwert", "technique": "Schwerter", "damage": "1W6+4", "at": 14, "pa": 8, "reach": "Mittel", "weight": 1.0 },
-    { "name": "Großschild", "technique": "Schilde", "damage": "1W6+1", "at": 5, "pa": 13, "reach": "Kurz", "weight": 6.0 }
-  ],
-  "armor": {
-    "name": "Plattenrüstung",
-    "protectionValue": 11,
-    "armorRating": 6,
-    "encumbrance": 3,
-    "weight": 25.0
-  },
-  "shield": {
-    "name": "Großschild",
-    "structure": 30,
-    "breakingFactor": 10,
-    "atMod": -6,
-    "paMod": 3,
-    "weight": 6.0
-  },
   "equipment": [
-    { "name": "Großschild", "value": 100, "weight": 6.0 },
-    { "name": "Langschwert", "value": 200, "weight": 1.0 },
-    { "name": "Plattenrüstung", "value": 750, "weight": 25.0 },
-    { "name": "Rabenschnabel", "value": 105, "weight": 1.5 },
-    { "name": "Schwertscheide", "value": 12, "weight": 0.75 },
-    { "name": "Unterkleidung für Metallrüstungen", "value": 12, "weight": 2.5 },
-    { "name": "Waffenpflegeset (Schleifstein, Tücher)", "value": 1, "weight": 1.0 }
+    { "name": "Großschild", "value": 100, "type": "Schild", "damage": "1W6+1", "at": 5, "pa": 13, "reach": "Kurz", "weight": 6.0 },
+    { "name": "Langschwert", "type": "Nahkampfwaffe", "technique": "Schwerter", "damage": "1W6+4", "at": 14, "pa": 8, "reach": "Mittel", "weight": 1.0, "value": 200},
+    { "name": "Plattenrüstung", "value": 750, "weight": 25.0, "type": "Rüstung", "protectionValue": 11, "armorRating": 6, "encumbrance": 3 },
+    { "name": "Rabenschnabel", "value": 105, "type": "Nahkampfwaffe", "technique": "Hiebwaffen", "damage": "1W6+5", "at": 14, "pa": 7, "reach": "Mittel", "weight": 1.5 },
+    { "name": "Schwertscheide", "value": 12, "weight": 0.75, "type": "Ausrüstung" },
+    { "name": "Unterkleidung für Metallrüstungen", "value": 12, "weight": 2.5, "type": "Ausrüstung"},
+    { "name": "Waffenpflegeset (Schleifstein, Tücher)", "value": 1, "weight": 1.0 , "type": "Ausrüstung"}
   ],
   "money": {
     "dukaten": 9,
