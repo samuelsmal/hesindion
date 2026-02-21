@@ -253,13 +253,6 @@ private struct EquipmentRow: View {
     }
 }
 
-// MARK: - ScrollOffsetKey
-
-private struct ScrollOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
-}
-
 // MARK: - CommandSearchOverlay
 
 private struct CommandSearchOverlay: View {
@@ -462,15 +455,6 @@ struct HeroDetailView: View {
         ZStack {
             ScrollView {
                 LazyVStack(pinnedViews: [.sectionHeaders]) {
-                    // Scroll offset anchor (zero-height)
-                    Color.clear.frame(height: 0)
-                        .background(GeometryReader { geo in
-                            Color.clear.preference(
-                                key: ScrollOffsetKey.self,
-                                value: geo.frame(in: .global).minY
-                            )
-                        })
-
                     // Name heading — scrolls away
                     Text(hero.name)
                         .font(.system(.largeTitle, design: .default, weight: .black))
@@ -511,8 +495,11 @@ struct HeroDetailView: View {
                     }
                 }
             }
-            .onPreferenceChange(ScrollOffsetKey.self) { offset in
-                if offset > 60 && !showCommandSearch {
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y + geo.contentInsets.top
+            } action: { _, y in
+                // y == 0 at rest; goes negative when overscrolled past the top
+                if y < -120 && !showCommandSearch {
                     showCommandSearch = true
                     commandQuery = ""
                     searchFocused = true
