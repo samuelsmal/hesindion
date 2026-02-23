@@ -12,6 +12,7 @@ struct HeroDetailView: View {
     @State private var commandQuery = ""
     @FocusState private var searchFocused: Bool
     @State private var activeTalentProbe: Talent? = nil
+    @State private var showCombatMode = false
 
     var body: some View {
         ZStack {
@@ -122,9 +123,19 @@ struct HeroDetailView: View {
             if let talent = activeTalentProbe {
                 TalentProbeModal(talent: talent, hero: hero) { activeTalentProbe = nil }
             }
+
+            if showCombatMode {
+                CombatModeModal(hero: hero) { showCombatMode = false }
+            }
         }
         .onChange(of: activeCommand?.id) { _, _ in
-            guard let cmd = activeCommand, cmd.name == "Probe" else { return }
+            guard let cmd = activeCommand else { return }
+            if cmd.name == "Kampf" {
+                showCombatMode = true
+                activeCommand = nil
+                return
+            }
+            guard cmd.name == "Probe" else { return }
             if let name = cmd.subparameter,
                let talent = hero.talents.first(where: { $0.name == name }) {
                 activeTalentProbe = talent
@@ -460,10 +471,8 @@ struct HeroDetailView: View {
                         HStack(spacing: 12) {
                             Text("AT").font(.system(.caption, weight: .bold))
                             Text("\(ct.at)").font(.system(.caption, design: .monospaced))
-                            if let pa = ct.pa {
-                                Text("PA").font(.system(.caption, weight: .bold))
-                                Text("\(pa)").font(.system(.caption, design: .monospaced))
-                            }
+                            Text("PA").font(.system(.caption, weight: .bold))
+                            Text("\(ct.pa)").font(.system(.caption, design: .monospaced))
                             Spacer()
                         }
                         .padding(.leading, 24)
@@ -563,6 +572,8 @@ struct HeroDetailView: View {
                         ("reach", w.reach),
                         ("weight", String(format: "%.2f st", w.weight))
                     ])
+                    .contentShape(Rectangle())
+                    .onLongPressGesture { showCombatMode = true }
                 }
             }
         }
@@ -577,10 +588,12 @@ struct HeroDetailView: View {
                     SubfieldBlock(label: s.name, subfields: [
                         ("structure", "\(s.structure)"),
                         ("breakingFactor", "\(s.breakingFactor)"),
-                        ("atMod", "\(s.atMod)"),
-                        ("paMod", "\(s.paMod)"),
+                        ("AT", "\(s.at)"),
+                        ("PA", "\(s.pa)"),
                         ("weight", String(format: "%.2f st", s.weight))
                     ])
+                    .contentShape(Rectangle())
+                    .onLongPressGesture { showCombatMode = true }
                 }
             }
         }

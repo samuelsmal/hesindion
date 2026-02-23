@@ -216,7 +216,7 @@ struct HeroImportService {
     }
 
     private func makeCombatTechniques(_ dtos: [CombatTechniqueDTO]) -> [CombatTechnique] {
-        dtos.map { CombatTechnique(name: $0.name, value: $0.value, at: $0.at, pa: $0.pa) }
+        dtos.map { CombatTechnique(name: $0.name, value: $0.value, at: $0.at, pa: $0.pa ?? 0) }
     }
 
     private func makeMeleeWeapons(from equipment: [EquipmentItemDTO]) -> [MeleeWeapon] {
@@ -239,7 +239,7 @@ struct HeroImportService {
     private func makeShields(from equipment: [EquipmentItemDTO]) -> [Shield] {
         equipment.filter { $0.type == "Schild" }.compactMap { item in
             guard let weight = item.weight else { return nil }
-            return Shield(name: item.name, structure: 0, breakingFactor: 0, atMod: item.at ?? 0, paMod: item.pa ?? 0, weight: weight)
+            return Shield(name: item.name, structure: 0, breakingFactor: 0, at: item.at ?? 0, pa: item.pa ?? 0, weight: weight)
         }
     }
 

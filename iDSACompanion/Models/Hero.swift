@@ -207,6 +207,14 @@ extension Hero {
             ))
         }
 
+        commands.append(AppCommand(
+            id: UUID(),
+            name: "Kampf",
+            subparameter: nil,
+            input: nil,
+            execute: { _ in }
+        ))
+
         return commands
     }
 }
