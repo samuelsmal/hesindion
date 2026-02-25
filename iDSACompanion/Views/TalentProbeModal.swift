@@ -139,13 +139,15 @@ struct TalentProbeModal: View {
 
     private func modBox(index: Int) -> some View {
         let mod = modifiers[index]
+        let locked = finalRolls != nil
         return Text(mod >= 0 ? "+\(mod)" : "\(mod)")
             .font(.system(.body, weight: .bold))
+            .foregroundStyle(locked ? Color.secondary : Color.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color(UIColor.systemBackground))
             .contentShape(Rectangle())
-            .onLongPressGesture { editingModifierIndex = index }
+            .onLongPressGesture(perform: locked ? {} : { editingModifierIndex = index })
     }
 
     private func diceBox(value: Int, isAnimating: Bool) -> some View {

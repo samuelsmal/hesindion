@@ -465,7 +465,8 @@ private struct CombatExecutionView: View {
     }
 
     private var modifierBox: some View {
-        HStack(spacing: 0) {
+        let locked = finalRoll != nil
+        return HStack(spacing: 0) {
             Button {
                 modifier -= 1
             } label: {
@@ -474,9 +475,10 @@ private struct CombatExecutionView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(combatAccent)
+                    .background(locked ? Color.gray : combatAccent)
             }
             .buttonStyle(.plain)
+            .disabled(locked)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
 
             Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
@@ -495,9 +497,10 @@ private struct CombatExecutionView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(combatAccent)
+                    .background(locked ? Color.gray : combatAccent)
             }
             .buttonStyle(.plain)
+            .disabled(locked)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
         }
         .frame(maxWidth: .infinity)
