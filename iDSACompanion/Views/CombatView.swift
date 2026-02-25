@@ -56,6 +56,8 @@ private struct CombatRootView: View {
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
+    @State private var roundNumber: Int = 1
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -80,6 +82,60 @@ private struct CombatRootView: View {
             .frame(maxWidth: .infinity)
             .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+
+            // Neuer Kampf
+            Button { roundNumber = 1 } label: {
+                Text("Neuer Kampf")
+                    .font(.system(.body, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.black)
+                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            // INI + round counter
+            HStack(spacing: 0) {
+                // INI box
+                VStack(spacing: 2) {
+                    Text("INI")
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("\(hero.derivedValues?.initiative.value ?? 0)")
+                        .font(.system(.title3, weight: .black))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 64)
+                .padding(.vertical, 8)
+                .background(Color(white: 0.18))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                // Round counter
+                Text("Runde \(roundNumber)")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+
+                // Next round button
+                Button { roundNumber += 1 } label: {
+                    Image(systemName: "arrow.right")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 52)
+                        .padding(.vertical, 10)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
 
             if hero.derivedValues != nil {
                 lpBar
