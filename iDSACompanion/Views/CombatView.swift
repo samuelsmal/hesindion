@@ -388,6 +388,20 @@ private struct CombatExecutionView: View {
             }
             .padding(16)
 
+            if computedOutcome != nil {
+                Button { step = .root } label: {
+                    Text("Neue Aktion")
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+            }
+
             Spacer()
         }
         .onAppear { startAnimation() }
