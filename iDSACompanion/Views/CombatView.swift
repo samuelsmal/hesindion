@@ -108,6 +108,7 @@ private struct CombatRootView: View {
                     roundNumber = 1
                     showInitiativeSheet = false
                 }
+                .presentationCornerRadius(0)
             }
 
             // INI + round counter
