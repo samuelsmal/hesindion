@@ -117,8 +117,7 @@ private struct CombatRootView: View {
                 Text("Runde \(roundNumber)")
                     .font(.system(.title3, weight: .black))
                     .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
                     .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
 
@@ -128,7 +127,7 @@ private struct CombatRootView: View {
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 52)
-                        .padding(.vertical, 10)
+                        .frame(maxHeight: .infinity)
                         .background(combatAccent)
                         .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
                 }
