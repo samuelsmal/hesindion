@@ -12,45 +12,40 @@ private enum CombatStep {
     case execution(CombatAction, name: String, attributeValue: Int)
 }
 
-// MARK: - CombatModeModal (orchestrator)
+private let combatAccent = Color.groupCombat
 
-struct CombatModeModal: View {
+// MARK: - CombatView (full-screen orchestrator)
+
+struct CombatView: View {
     let hero: Hero
     var onDismiss: () -> Void
 
     @State private var step: CombatStep = .root
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { onDismiss() }
-
-            VStack(spacing: 0) {
-                switch step {
-                case .root:
-                    CombatRootView(hero: hero, step: $step, onDismiss: onDismiss)
-                case .weaponSelection(let action):
-                    CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
-                case .execution(let action, let name, let attrValue):
-                    CombatExecutionView(
-                        action: action,
-                        weaponName: name,
-                        attributeValue: attrValue,
-                        step: $step,
-                        onDismiss: onDismiss
-                    )
-                }
+        VStack(spacing: 0) {
+            switch step {
+            case .root:
+                CombatRootView(hero: hero, step: $step, onDismiss: onDismiss)
+            case .weaponSelection(let action):
+                CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
+            case .execution(let action, let name, let attrValue):
+                CombatExecutionView(
+                    action: action,
+                    weaponName: name,
+                    attributeValue: attrValue,
+                    step: $step,
+                    onDismiss: onDismiss
+                )
             }
-            .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
-            .padding(24)
-            .gesture(DragGesture().onEnded { v in
-                if v.translation.height < -50 {
-                    if case .root = step { onDismiss() } else { step = .root }
-                }
-            })
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(UIColor.systemBackground))
+        .gesture(DragGesture().onEnded { v in
+            if v.translation.height > 80 {
+                if case .root = step { onDismiss() } else { step = .root }
+            }
+        })
     }
 }
 
@@ -67,14 +62,23 @@ private struct CombatRootView: View {
             HStack {
                 Text("Kampf")
                     .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
                 Spacer()
                 Text(hero.name)
                     .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.yellow)
+            .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             if hero.derivedValues != nil {
@@ -95,6 +99,8 @@ private struct CombatRootView: View {
                 }
             }
             .padding(16)
+
+            Spacer()
         }
     }
 
@@ -104,7 +110,6 @@ private struct CombatRootView: View {
             let current = dv.lebensenergie.current
             let max = dv.lebensenergie.max
             HStack(spacing: 0) {
-                // Decrease button
                 Button {
                     guard dv.lebensenergie.current > 0 else { return }
                     dv.lebensenergie.current -= 1
@@ -113,11 +118,10 @@ private struct CombatRootView: View {
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.black)
                         .frame(width: 44)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 14)
                 }
                 .buttonStyle(.plain)
 
-                // Bar
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle()
@@ -135,9 +139,8 @@ private struct CombatRootView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
-                .frame(height: 44)
+                .frame(height: 48)
 
-                // Increase button
                 Button {
                     guard dv.lebensenergie.current < dv.lebensenergie.max else { return }
                     dv.lebensenergie.current += 1
@@ -146,12 +149,13 @@ private struct CombatRootView: View {
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.black)
                         .frame(width: 44)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 14)
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+            .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 1))
         }
     }
 
@@ -165,7 +169,6 @@ private struct CombatRootView: View {
     }
 
     private func lpTextColor(current: Int, max: Int) -> Color {
-        // Dark bar colours need white text; yellow bar needs black
         if max > 0 && current >= max * 3 / 4 { return .black }
         return .white
     }
@@ -174,10 +177,10 @@ private struct CombatRootView: View {
         Button(action: action) {
             Text(label)
                 .font(.system(.body, weight: .black))
-                .foregroundStyle(.black)
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.yellow)
+                .padding(.vertical, 16)
+                .background(combatAccent)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
         }
         .buttonStyle(.plain)
@@ -205,14 +208,32 @@ private struct CombatWeaponSelectionView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
+                Button { step = .root } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
                 Text(headerLabel)
                     .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+
                 Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.yellow)
+            .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             ScrollView {
@@ -225,7 +246,6 @@ private struct CombatWeaponSelectionView: View {
                         let val = action == .angriff ? s.at : s.pa
                         weaponRow(name: s.name, statValue: val)
                     }
-                    // Raufen
                     let rauferVal = action == .angriff ? (raufen?.at ?? 0) : (raufen?.pa ?? 0)
                     weaponRow(name: "Raufen", statValue: rauferVal)
                 }
@@ -248,7 +268,7 @@ private struct CombatWeaponSelectionView: View {
                     .foregroundStyle(.black)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
@@ -276,16 +296,16 @@ private struct CombatExecutionView: View {
 
     private var attrLabel: String {
         switch action {
-        case .angriff: "AT"
-        case .parieren: "PA"
+        case .angriff:   "AT"
+        case .parieren:  "PA"
         case .ausweichen: "AW"
         }
     }
 
     private var actionLabel: String {
         switch action {
-        case .angriff: "Angriff"
-        case .parieren: "Parieren"
+        case .angriff:   "Angriff"
+        case .parieren:  "Parieren"
         case .ausweichen: "Ausweichen"
         }
     }
@@ -296,32 +316,52 @@ private struct CombatExecutionView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(actionLabel)
-                    .font(.system(.headline, weight: .black))
+                Button {
+                    step = action == .ausweichen ? .root : .weaponSelection(action)
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
                 Spacer()
-                Text(weaponName)
-                    .font(.system(.headline, weight: .black))
+
+                VStack(spacing: 1) {
+                    Text(actionLabel)
+                        .font(.system(.headline, weight: .black))
+                        .foregroundStyle(.white)
+                    Text(weaponName)
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.yellow)
+            .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             VStack(spacing: 0) {
-                // Attribute value row
                 HStack(spacing: 0) {
                     labelBox(attrLabel)
                     valueBox("\(attributeValue)")
                 }
 
-                // Modifier row
                 HStack(spacing: 0) {
                     labelBox("Mod")
                     modifierBox
                 }
 
-                // Dice row
                 HStack(spacing: 0) {
                     labelBox("W20")
                     diceBox
@@ -329,14 +369,12 @@ private struct CombatExecutionView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { rollDice() }
 
-                // Result row (effective value + rolled — visible only after roll)
                 HStack(spacing: 0) {
                     labelBox("Ergebnis")
                     valueBox(finalRoll != nil ? "\(effectiveValue)" : "—")
                 }
                 .opacity(finalRoll != nil ? 1 : 0.3)
 
-                // Confirm roll row (only shown for crits)
                 if let fr = finalRoll, needsConfirm(fr) {
                     HStack(spacing: 0) {
                         labelBox("Bestät.")
@@ -344,12 +382,13 @@ private struct CombatExecutionView: View {
                     }
                 }
 
-                // Outcome bar
                 if let outcome = computedOutcome {
                     outcomeBar(outcome)
                 }
             }
             .padding(16)
+
+            Spacer()
         }
         .onAppear { startAnimation() }
         .onDisappear {
@@ -365,7 +404,7 @@ private struct CombatExecutionView: View {
             .font(.system(.caption, weight: .bold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(Color(UIColor.secondarySystemBackground))
+            .background(combatAccent.opacity(0.12))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
     }
 
@@ -386,10 +425,10 @@ private struct CombatExecutionView: View {
             } label: {
                 Text("−")
                     .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(Color.yellow)
+                    .background(combatAccent)
             }
             .buttonStyle(.plain)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
@@ -407,10 +446,10 @@ private struct CombatExecutionView: View {
             } label: {
                 Text("+")
                     .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(Color.yellow)
+                    .background(combatAccent)
             }
             .buttonStyle(.plain)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
@@ -426,7 +465,7 @@ private struct CombatExecutionView: View {
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(isAnimating ? Color.yellow.opacity(0.3) : Color(UIColor.systemBackground))
+            .background(isAnimating ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
     }
 
@@ -441,7 +480,7 @@ private struct CombatExecutionView: View {
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(isAnimating ? Color.yellow.opacity(0.3) : Color(UIColor.systemBackground))
+            .background(isAnimating ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
     }
 
@@ -464,9 +503,7 @@ private struct CombatExecutionView: View {
         return fr <= effectiveValue ? .erfolg : .misserfolg
     }
 
-    private func needsConfirm(_ roll: Int) -> Bool {
-        roll == 1 || roll == 20
-    }
+    private func needsConfirm(_ roll: Int) -> Bool { roll == 1 || roll == 20 }
 
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
         Text(outcomeText(outcome))
@@ -521,16 +558,12 @@ private struct CombatExecutionView: View {
         animationTask?.cancel()
         let rolled = Int.random(in: 1...20)
         finalRoll = rolled
-        if needsConfirm(rolled) {
-            startConfirmAnimation()
-        }
+        if needsConfirm(rolled) { startConfirmAnimation() }
     }
 
     private func startConfirmAnimation() {
         confirmAnimTask = Task { @MainActor in
-            // Brief delay so the first roll is visible
             do { try await Task.sleep(nanoseconds: 500_000_000) } catch { return }
-            // Animate confirmation roll
             var count = 0
             while !Task.isCancelled && count < 10 {
                 displayRoll = Int.random(in: 1...20)

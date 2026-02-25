@@ -124,9 +124,9 @@ struct HeroDetailView: View {
                 TalentProbeModal(talent: talent, hero: hero) { activeTalentProbe = nil }
             }
 
-            if showCombatMode {
-                CombatModeModal(hero: hero) { showCombatMode = false }
-            }
+        }
+        .fullScreenCover(isPresented: $showCombatMode) {
+            CombatView(hero: hero) { showCombatMode = false }
         }
         .onChange(of: activeCommand?.id) { _, _ in
             guard let cmd = activeCommand else { return }
