@@ -169,8 +169,8 @@ private struct CombatRootView: View {
     }
 
     private func lpTextColor(current: Int, max: Int) -> Color {
-        if max > 0 && current >= max * 3 / 4 { return .black }
-        return .white
+        if max > 0 && current >= max * 3 / 4 { return .white }
+        return .black
     }
 
     private func actionButton(_ label: String, action: @escaping () -> Void) -> some View {
