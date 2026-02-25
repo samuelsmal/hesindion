@@ -173,11 +173,20 @@ struct HeroDetailView: View {
         let t1 = tokens.count > 1 ? tokens[1] : nil
         return all.compactMap { cmd -> (AppCommand, Double)? in
             let normName = normalize(cmd.name)
-            guard normName.contains(t0) else { return nil }
+            let normSub  = normalize(cmd.subparameter ?? "")
             if let t1 {
-                guard normalize(cmd.subparameter ?? "").contains(t1) else { return nil }
+                // Two tokens: name must match first, subparameter must match second
+                guard normName.contains(t0), normSub.contains(t1) else { return nil }
+                return (cmd, Double(t0.count) / Double(normName.count))
             }
-            return (cmd, Double(t0.count) / Double(normName.count))
+            // Single token: match name OR subparameter
+            if normName.contains(t0) {
+                return (cmd, Double(t0.count) / Double(normName.count))
+            }
+            if !normSub.isEmpty, normSub.contains(t0) {
+                return (cmd, 0.5 * Double(t0.count) / Double(normSub.count))
+            }
+            return nil
         }
         .sorted { $0.1 > $1.1 || ($0.1 == $1.1 && $0.0.displayName < $1.0.displayName) }
         .map(\.0)
