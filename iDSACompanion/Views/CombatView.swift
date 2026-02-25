@@ -123,7 +123,7 @@ private struct CombatRootView: View {
                         .foregroundStyle(.white)
                 }
                 .frame(width: 64)
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
                 .background(Color(white: 0.18))
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
 
