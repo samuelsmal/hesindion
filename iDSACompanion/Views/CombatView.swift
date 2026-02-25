@@ -352,34 +352,19 @@ private struct CombatExecutionView: View {
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    labelBox(attrLabel)
-                    valueBox("\(attributeValue)")
-                }
+                valueBox("\(attributeValue)")
 
-                HStack(spacing: 0) {
-                    labelBox("Mod")
-                    modifierBox
-                }
+                modifierBox
 
-                HStack(spacing: 0) {
-                    labelBox("W20")
-                    diceBox
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { rollDice() }
+                diceBox
+                    .contentShape(Rectangle())
+                    .onTapGesture { rollDice() }
 
-                HStack(spacing: 0) {
-                    labelBox("Ergebnis")
-                    valueBox(finalRoll != nil ? "\(effectiveValue)" : "—")
-                }
-                .opacity(finalRoll != nil ? 1 : 0.3)
+                valueBox(finalRoll != nil ? "\(effectiveValue)" : "—")
+                    .opacity(finalRoll != nil ? 1 : 0.3)
 
                 if let fr = finalRoll, needsConfirm(fr) {
-                    HStack(spacing: 0) {
-                        labelBox("Bestät.")
-                        confirmBox
-                    }
+                    confirmBox
                 }
 
                 if let outcome = computedOutcome {
@@ -412,15 +397,6 @@ private struct CombatExecutionView: View {
     }
 
     // MARK: - Box helpers
-
-    private func labelBox(_ text: String) -> some View {
-        Text(text)
-            .font(.system(.caption, weight: .bold))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(combatAccent.opacity(0.12))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
-    }
 
     private func valueBox(_ text: String) -> some View {
         Text(text)
