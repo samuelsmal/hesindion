@@ -35,7 +35,7 @@ final class Mount {
     var mountType: String
     var attributes: MountAttributes
     var lifeEnergy: Int
-    var initiative: String
+    var initiative: Int
     var speed: Int
     var attacks: [MountAttack]
     var talents: [MountTalent]
@@ -50,7 +50,7 @@ final class Mount {
         mountType: String,
         attributes: MountAttributes,
         lifeEnergy: Int,
-        initiative: String,
+        initiative: Int,
         speed: Int,
         attacks: [MountAttack],
         talents: [MountTalent],

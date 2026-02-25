@@ -172,7 +172,7 @@ struct MountDTO: Decodable {
     let mountType: String
     let attributes: MountAttributesDTO
     let lifeEnergy: Int
-    let initiative: String
+    let initiative: Int
     let speed: Int
     let attacks: [MountAttack]
     let talents: [MountTalent]

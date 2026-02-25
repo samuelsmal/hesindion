@@ -57,6 +57,8 @@ private struct CombatRootView: View {
     var onDismiss: () -> Void
 
     @State private var roundNumber: Int = 1
+    @State private var rolledInitiative: Int? = nil
+    @State private var showInitiativeSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -84,7 +86,7 @@ private struct CombatRootView: View {
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             // Neuer Kampf
-            Button { roundNumber = 1 } label: {
+            Button { showInitiativeSheet = true } label: {
                 Text("Neuer Kampf")
                     .font(.system(.body, weight: .black))
                     .foregroundStyle(.white)
@@ -96,6 +98,17 @@ private struct CombatRootView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
             .padding(.top, 12)
+            .sheet(isPresented: $showInitiativeSheet) {
+                CombatInitiativeSheet(
+                    heroBaseINI: hero.derivedValues?.initiative.value ?? 0,
+                    mountBaseINI: hero.mount.map { $0.initiative },
+                    mountName: hero.mount?.name
+                ) { result in
+                    rolledInitiative = result
+                    roundNumber = 1
+                    showInitiativeSheet = false
+                }
+            }
 
             // INI + round counter
             HStack(spacing: 0) {
@@ -104,7 +117,7 @@ private struct CombatRootView: View {
                     Text("INI")
                         .font(.system(.caption, weight: .bold))
                         .foregroundStyle(.white)
-                    Text("\(hero.derivedValues?.initiative.value ?? 0)")
+                    Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
                         .font(.system(.title3, weight: .black))
                         .foregroundStyle(.white)
                 }
@@ -622,6 +635,129 @@ private struct CombatExecutionView: View {
             }
             guard !Task.isCancelled else { return }
             confirmRoll = Int.random(in: 1...20)
+        }
+    }
+}
+
+// MARK: - CombatInitiativeSheet
+
+private struct CombatInitiativeSheet: View {
+    let heroBaseINI: Int
+    let mountBaseINI: Int?
+    let mountName: String?
+    var onConfirm: (Int) -> Void
+
+    @State private var selectedBase: Int? = nil
+    @State private var d6Display: Int = 1
+    @State private var d6Result: Int? = nil
+    @State private var animTask: Task<Void, Never>? = nil
+
+    private var total: Int? {
+        guard let base = selectedBase, let d6 = d6Result else { return nil }
+        return base + d6
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            Text("Neue Initiative")
+                .font(.system(.headline, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+
+            VStack(spacing: 12) {
+                // Base selector
+                Text("Basis wählen")
+                    .font(.system(.subheadline, weight: .bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 8) {
+                    baseButton(label: "Held", value: heroBaseINI)
+                    if let mountINI = mountBaseINI {
+                        baseButton(label: mountName ?? "Reittier", value: mountINI)
+                    }
+                }
+
+                // Dice + result
+                if let base = selectedBase {
+                    VStack(spacing: 8) {
+                        // D6 box
+                        Text("\(d6Result ?? d6Display)")
+                            .font(.system(.largeTitle, weight: .black))
+                            .fontDesign(.monospaced)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(d6Result == nil ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                        Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
+                            .font(.system(.title3, weight: .black))
+                            .fontDesign(.monospaced)
+                            .opacity(d6Result == nil ? 0.4 : 1)
+
+                        if let t = total {
+                            Button {
+                                animTask?.cancel()
+                                onConfirm(t)
+                            } label: {
+                                Text("Bestätigen  →  INI \(t)")
+                                    .font(.system(.body, weight: .black))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(combatAccent)
+                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(16)
+        }
+        .onDisappear { animTask?.cancel() }
+    }
+
+    private func baseButton(label: String, value: Int) -> some View {
+        let isSelected = selectedBase == value
+        return Button {
+            selectedBase = value
+            d6Result = nil
+            startD6Animation()
+        } label: {
+            VStack(spacing: 2) {
+                Text(label)
+                    .font(.system(.caption, weight: .bold))
+                Text("\(value)")
+                    .font(.system(.title3, weight: .black))
+            }
+            .foregroundStyle(isSelected ? .white : .black)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: isSelected ? 3 : 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func startD6Animation() {
+        animTask?.cancel()
+        animTask = Task { @MainActor in
+            var count = 0
+            while !Task.isCancelled && count < 12 {
+                d6Display = Int.random(in: 1...6)
+                do {
+                    try await Task.sleep(nanoseconds: 120_000_000)
+                } catch { return }
+                count += 1
+            }
+            guard !Task.isCancelled else { return }
+            d6Result = Int.random(in: 1...6)
         }
     }
 }

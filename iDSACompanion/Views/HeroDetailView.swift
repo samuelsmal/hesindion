@@ -668,7 +668,7 @@ struct HeroDetailView: View {
                 FieldRow(label: "type", value: m.mountType)
                 FieldRow(label: "size", value: String(format: "%.1f", m.size))
                 FieldRow(label: "lifeEnergy", value: "\(m.lifeEnergy)")
-                FieldRow(label: "initiative", value: m.initiative)
+                FieldRow(label: "initiative", value: "\(m.initiative)")
                 FieldRow(label: "speed", value: "\(m.speed)")
 
                 SubfieldBlock(label: "attributes", subfields: [
