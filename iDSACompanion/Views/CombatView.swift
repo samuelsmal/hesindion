@@ -211,42 +211,40 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
 
-                HStack(spacing: 8) {
-                    // Parieren — secondary (outline)
-                    Button {
-                        step = .weaponSelection(.parieren)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "shield.fill")
-                            Text("Parieren")
-                        }
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(combatAccent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                // Parieren — secondary (outline)
+                Button {
+                    step = .weaponSelection(.parieren)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "shield.fill")
+                        Text("Parieren")
                     }
-                    .buttonStyle(.plain)
-
-                    // Ausweichen — tertiary (outline)
-                    Button {
-                        let aw = hero.derivedValues?.ausweichen.value ?? 0
-                        step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "figure.walk")
-                            Text("Ausweichen")
-                        }
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(combatAccent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
-                    }
-                    .buttonStyle(.plain)
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
                 }
+                .buttonStyle(.plain)
+
+                // Ausweichen — tertiary (outline)
+                Button {
+                    let aw = hero.derivedValues?.ausweichen.value ?? 0
+                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.walk")
+                        Text("Ausweichen")
+                    }
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
 
@@ -275,7 +273,7 @@ private struct CombatRootView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(Color.white)
+                            .fill(current == 0 ? Color.black : Color.white)
 
                         let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
                         Rectangle()
@@ -316,6 +314,7 @@ private struct CombatRootView: View {
     }
 
     private func lpTextColor(current: Int, max: Int) -> Color {
+        if current == 0 { return .white }
         if max > 0 && current >= max * 3 / 4 { return .white }
         return .black
     }
@@ -501,26 +500,18 @@ private struct CombatExecutionView: View {
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             VStack(spacing: 8) {
-                // Row 1: AT/PA/AW value + Modifier side by side
-                HStack(spacing: 8) {
-                    valueBox("\(attributeValue)", label: attrLabel)
-                    modifierBox
-                }
+                // Row 1: AT/PA/AW value
+                valueBox("\(attributeValue)", label: attrLabel)
 
-                // Row 2: Dice box
+                // Row 2: Modifier
+                modifierBox
+
+                // Row 3: Dice box
                 diceBox
                     .contentShape(Rectangle())
                     .onTapGesture { rollDice() }
 
-                // Row 3: Effective value
-                valueBox(
-                    finalRoll != nil ? "\(effectiveValue)" : "—",
-                    label: "Effektiv",
-                    dark: finalRoll != nil
-                )
-                .opacity(finalRoll != nil ? 1 : 0.3)
-
-                // Row 4: Confirm (only for 1/20 rolls)
+                // Row 3: Confirm (only for 1/20 rolls)
                 if let fr = finalRoll, needsConfirm(fr) {
                     confirmBox
                 }
@@ -585,11 +576,10 @@ private struct CombatExecutionView: View {
                 Button {
                     modifier -= 1
                 } label: {
-                    Text("−")
+                    Image(systemName: "arrow.down")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(locked ? Color.gray : combatAccent)
                 }
                 .buttonStyle(.plain)
@@ -599,7 +589,7 @@ private struct CombatExecutionView: View {
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
                     .font(.system(.title3, weight: .black))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 44)
+                    .frame(minWidth: 64)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
                     .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
@@ -607,17 +597,17 @@ private struct CombatExecutionView: View {
                 Button {
                     modifier += 1
                 } label: {
-                    Text("+")
+                    Image(systemName: "arrow.up")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(locked ? Color.gray : combatAccent)
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
             }
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
             Text("Mod")
                 .font(.system(.caption2, weight: .bold))
