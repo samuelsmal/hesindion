@@ -109,45 +109,54 @@ struct CommandModal: View {
 
                 // Input
                 if let input = command.input, case .integerAmount(let label, let min, let max, _) = input {
-                    VStack(spacing: 8) {
-                        if let max {
-                            Text("/ \(max)")
-                                .font(.system(.subheadline))
-                                .foregroundStyle(.secondary)
+                    if command.name == "lebensenergie", let max {
+                        LPBarView(current: amount, max: max) {
+                            amount = Swift.max(min, amount - 1)
+                        } onIncrement: {
+                            amount = Swift.min(max, amount + 1)
                         }
-                        Text("\(amount)")
-                            .font(.system(.largeTitle, weight: .black))
-
-                        HStack(spacing: 16) {
-                            Button {
-                                amount = Swift.max(min, amount - 1)
-                            } label: {
-                                Text("−")
-                                    .font(.system(.title, weight: .bold))
-                                    .foregroundStyle(Color.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.yellow)
-                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                        .accessibilityLabel(label)
+                    } else {
+                        VStack(spacing: 8) {
+                            if let max {
+                                Text("/ \(max)")
+                                    .font(.system(.subheadline))
+                                    .foregroundStyle(.secondary)
                             }
-                            .buttonStyle(.plain)
+                            Text("\(amount)")
+                                .font(.system(.largeTitle, weight: .black))
 
-                            Button {
-                                let cap = max.map { Swift.min($0, amount + 1) } ?? (amount + 1)
-                                amount = cap
-                            } label: {
-                                Text("+")
-                                    .font(.system(.title, weight: .bold))
-                                    .foregroundStyle(Color.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.yellow)
-                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            HStack(spacing: 16) {
+                                Button {
+                                    amount = Swift.max(min, amount - 1)
+                                } label: {
+                                    Text("−")
+                                        .font(.system(.title, weight: .bold))
+                                        .foregroundStyle(Color.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(Color.yellow)
+                                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    let cap = max.map { Swift.min($0, amount + 1) } ?? (amount + 1)
+                                    amount = cap
+                                } label: {
+                                    Text("+")
+                                        .font(.system(.title, weight: .bold))
+                                        .foregroundStyle(Color.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(Color.yellow)
+                                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .accessibilityLabel(label)
                     }
-                    .accessibilityLabel(label)
                 }
 
                 // Confirm

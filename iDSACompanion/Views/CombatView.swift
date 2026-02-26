@@ -255,68 +255,18 @@ private struct CombatRootView: View {
     @ViewBuilder
     private var lpBar: some View {
         if let dv = hero.derivedValues {
-            let current = dv.lebensenergie.current
-            let max = dv.lebensenergie.max
-            HStack(spacing: 0) {
-                Button {
-                    guard dv.lebensenergie.current > 0 else { return }
-                    dv.lebensenergie.current -= 1
-                } label: {
-                    Text("▼")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 48)
-                        .background(combatAccent)
-                }
-                .buttonStyle(.plain)
-
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(current == 0 ? Color.black : Color.white)
-
-                        let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
-                        Rectangle()
-                            .fill(lpBarColor(current: current, max: max))
-                            .frame(width: geo.size.width * fraction)
-
-                        Text("LP   \(current) / \(max)")
-                            .font(.system(.body, weight: .black))
-                            .foregroundStyle(lpTextColor(current: current, max: max))
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 48)
-
-                Button {
-                    guard dv.lebensenergie.current < dv.lebensenergie.max else { return }
-                    dv.lebensenergie.current += 1
-                } label: {
-                    Text("▲")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 48)
-                        .background(combatAccent)
-                }
-                .buttonStyle(.plain)
+            LPBarView(
+                current: dv.lebensenergie.current,
+                max: dv.lebensenergie.max
+            ) {
+                guard dv.lebensenergie.current > 0 else { return }
+                dv.lebensenergie.current -= 1
+            } onIncrement: {
+                guard dv.lebensenergie.current < dv.lebensenergie.max else { return }
+                dv.lebensenergie.current += 1
             }
             .padding(.horizontal, 16)
         }
-    }
-
-    private func lpBarColor(current: Int, max: Int) -> Color {
-        if current == 0 { return Color(red: 0, green: 0, blue: 0) }
-        if current <= 5 { return Color(red: 0x8B / 255.0, green: 0x00 / 255.0, blue: 0x00 / 255.0) }
-        if max > 0 && current < max / 4 { return Color(red: 0xCC / 255.0, green: 0x22 / 255.0, blue: 0x00 / 255.0) }
-        if max > 0 && current < max / 2 { return Color(red: 0xE0 / 255.0, green: 0x70 / 255.0, blue: 0x00 / 255.0) }
-        if max > 0 && current < max * 3 / 4 { return Color(red: 0xD4 / 255.0, green: 0xC0 / 255.0, blue: 0x00 / 255.0) }
-        return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
-    }
-
-    private func lpTextColor(current: Int, max: Int) -> Color {
-        if current == 0 { return .white }
-        if max > 0 && current >= max * 3 / 4 { return .white }
-        return .black
     }
 
 }
