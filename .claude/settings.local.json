@@ -4,7 +4,9 @@
       "Bash(xcodebuild:*)",
       "Bash(gem list:*)",
       "Bash(ruby --version:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git commit:*)",
+      "Bash(git add:*)"
     ]
   }
 }

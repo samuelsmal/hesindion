@@ -14,6 +14,23 @@ private enum CombatStep {
 
 private let combatAccent = Color.groupCombat
 
+private func combatSectionLabel(_ title: String) -> some View {
+    HStack(spacing: 8) {
+        Rectangle()
+            .frame(height: 2)
+            .foregroundStyle(combatAccent)
+        Text(title)
+            .font(.system(.caption, weight: .black))
+            .foregroundStyle(combatAccent)
+            .fixedSize()
+        Rectangle()
+            .frame(height: 2)
+            .foregroundStyle(combatAccent)
+    }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 8)
+}
+
 // MARK: - CombatView (full-screen orchestrator)
 
 struct CombatView: View {
@@ -22,13 +39,23 @@ struct CombatView: View {
 
     @State private var step: CombatStep = .root
 
+    private var stepID: String {
+        switch step {
+        case .root: "root"
+        case .weaponSelection: "weaponSelection"
+        case .execution: "execution"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             switch step {
             case .root:
                 CombatRootView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .leading))
             case .weaponSelection(let action):
                 CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             case .execution(let action, let name, let attrValue):
                 CombatExecutionView(
                     action: action,
@@ -37,8 +64,10 @@ struct CombatView: View {
                     step: $step,
                     onDismiss: onDismiss
                 )
+                .transition(.move(edge: .trailing))
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: stepID)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(UIColor.systemBackground))
         .gesture(DragGesture().onEnded { v in
@@ -85,19 +114,61 @@ private struct CombatRootView: View {
             .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
-            // Neuer Kampf
-            Button { showInitiativeSheet = true } label: {
-                Text("Neuer Kampf")
-                    .font(.system(.body, weight: .black))
+            // INITIATIVE section
+            combatSectionLabel("INITIATIVE")
+
+            // INI + round counter + Neu button
+            HStack(spacing: 0) {
+                // INI box
+                VStack(spacing: 2) {
+                    Text("INI")
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
+                        .font(.system(.title3, weight: .black))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 64, maxHeight: .infinity)
+                .background(Color(white: 0.18))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                // Round counter
+                Text("Runde \(roundNumber)")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                // Next round button
+                Button { roundNumber += 1 } label: {
+                    Image(systemName: "arrow.right")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 52)
+                        .frame(maxHeight: .infinity)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                // Neuer Kampf compact button
+                Button { showInitiativeSheet = true } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "dice.fill")
+                            .font(.system(.caption, weight: .bold))
+                        Text("Neu")
+                            .font(.system(.caption, weight: .black))
+                    }
                     .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .frame(width: 64)
+                    .frame(maxHeight: .infinity)
                     .background(Color.black)
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, 16)
-            .padding(.top, 12)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: hero.derivedValues?.initiative.value ?? 0,
@@ -111,63 +182,71 @@ private struct CombatRootView: View {
                 .presentationCornerRadius(0)
             }
 
-            // INI + round counter
-            HStack(spacing: 0) {
-                // INI box
-                VStack(spacing: 2) {
-                    Text("INI")
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(.white)
-                    Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
-                        .font(.system(.title3, weight: .black))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 64)
-                .padding(.vertical, 4)
-                .background(Color(white: 0.18))
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
-
-                // Round counter
-                Text("Runde \(roundNumber)")
-                    .font(.system(.title3, weight: .black))
-                    .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
-
-                // Next round button
-                Button { roundNumber += 1 } label: {
-                    Image(systemName: "arrow.right")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 52)
-                        .frame(maxHeight: .infinity)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
             if hero.derivedValues != nil {
+                // LEBENSPUNKTE section
+                combatSectionLabel("LEBENSPUNKTE")
                 lpBar
             }
 
-            // Action buttons
-            VStack(spacing: 0) {
-                actionButton("Angriff") {
+            // AKTION section
+            combatSectionLabel("AKTION")
+
+            VStack(spacing: 8) {
+                // Angriff — primary (filled)
+                Button {
                     step = .weaponSelection(.angriff)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bolt.fill")
+                        Text("Angriff")
+                    }
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                 }
-                actionButton("Parieren") {
-                    step = .weaponSelection(.parieren)
-                }
-                actionButton("Ausweichen") {
-                    let aw = hero.derivedValues?.ausweichen.value ?? 0
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw)
+                .buttonStyle(.plain)
+
+                HStack(spacing: 8) {
+                    // Parieren — secondary (outline)
+                    Button {
+                        step = .weaponSelection(.parieren)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "shield.fill")
+                            Text("Parieren")
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(combatAccent)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+
+                    // Ausweichen — tertiary (outline)
+                    Button {
+                        let aw = hero.derivedValues?.ausweichen.value ?? 0
+                        step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "figure.walk")
+                            Text("Ausweichen")
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(combatAccent)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding(16)
+            .padding(.horizontal, 16)
 
             Spacer()
         }
@@ -185,9 +264,9 @@ private struct CombatRootView: View {
                 } label: {
                     Text("▼")
                         .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.black)
-                        .frame(width: 44)
-                        .padding(.vertical, 14)
+                        .foregroundStyle(.white)
+                        .frame(width: 44, maxHeight: .infinity)
+                        .background(combatAccent)
                 }
                 .buttonStyle(.plain)
 
@@ -195,7 +274,6 @@ private struct CombatRootView: View {
                     ZStack(alignment: .leading) {
                         Rectangle()
                             .fill(Color.white)
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
 
                         let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
                         Rectangle()
@@ -216,15 +294,13 @@ private struct CombatRootView: View {
                 } label: {
                     Text("▲")
                         .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.black)
-                        .frame(width: 44)
-                        .padding(.vertical, 14)
+                        .foregroundStyle(.white)
+                        .frame(width: 44, maxHeight: .infinity)
+                        .background(combatAccent)
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 1))
         }
     }
 
@@ -242,19 +318,6 @@ private struct CombatRootView: View {
         return .black
     }
 
-    private func actionButton(_ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(.body, weight: .black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
-        }
-        .buttonStyle(.plain)
-        .padding(.bottom, 8)
-    }
 }
 
 // MARK: - CombatWeaponSelectionView
@@ -307,40 +370,55 @@ private struct CombatWeaponSelectionView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
-                        let val = action == .angriff ? w.at : w.pa
-                        weaponRow(name: w.name, statValue: val)
+                    let statLabel = action == .angriff ? "AT" : "PA"
+
+                    if !hero.meleeWeapons.isEmpty {
+                        combatSectionLabel("NAHKAMPFWAFFEN (\(statLabel))")
+                        ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+                            let val = action == .angriff ? w.at : w.pa
+                            weaponRow(name: w.name, statLabel: statLabel, statValue: val)
+                        }
                     }
-                    ForEach(hero.shields, id: \.persistentModelID) { s in
-                        let val = action == .angriff ? s.at : s.pa
-                        weaponRow(name: s.name, statValue: val)
+
+                    if !hero.shields.isEmpty {
+                        combatSectionLabel("SCHILDE (\(statLabel))")
+                        ForEach(hero.shields, id: \.persistentModelID) { s in
+                            let val = action == .angriff ? s.at : s.pa
+                            weaponRow(name: s.name, statLabel: statLabel, statValue: val)
+                        }
                     }
+
+                    combatSectionLabel("WAFFENLOS")
                     let rauferVal = action == .angriff ? (raufen?.at ?? 0) : (raufen?.pa ?? 0)
-                    weaponRow(name: "Raufen", statValue: rauferVal)
+                    weaponRow(name: "Raufen", statLabel: statLabel, statValue: rauferVal)
                 }
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
         }
     }
 
-    private func weaponRow(name: String, statValue: Int) -> some View {
+    private func weaponRow(name: String, statLabel: String, statValue: Int) -> some View {
         Button {
             step = .execution(action, name: name, attributeValue: statValue)
         } label: {
             HStack {
                 Text(name)
                     .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
-                Text("\(statValue)")
-                    .font(.system(.body, design: .monospaced, weight: .black))
-                    .foregroundStyle(.black)
+                Text("\(statLabel) \(statValue)")
+                    .font(.system(.caption, design: .monospaced, weight: .black))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(white: 0.18))
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 14)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
         }
         .buttonStyle(.plain)
         .padding(.bottom, 4)
@@ -420,18 +498,27 @@ private struct CombatExecutionView: View {
             .background(combatAccent)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
-            VStack(spacing: 0) {
-                valueBox("\(attributeValue)")
+            VStack(spacing: 8) {
+                // Row 1: AT/PA/AW value + Modifier side by side
+                HStack(spacing: 8) {
+                    valueBox("\(attributeValue)", label: attrLabel)
+                    modifierBox
+                }
 
-                modifierBox
-
+                // Row 2: Dice box
                 diceBox
                     .contentShape(Rectangle())
                     .onTapGesture { rollDice() }
 
-                valueBox(finalRoll != nil ? "\(effectiveValue)" : "—")
-                    .opacity(finalRoll != nil ? 1 : 0.3)
+                // Row 3: Effective value
+                valueBox(
+                    finalRoll != nil ? "\(effectiveValue)" : "—",
+                    label: "Effektiv",
+                    dark: finalRoll != nil
+                )
+                .opacity(finalRoll != nil ? 1 : 0.3)
 
+                // Row 4: Confirm (only for 1/20 rolls)
                 if let fr = finalRoll, needsConfirm(fr) {
                     confirmBox
                 }
@@ -444,13 +531,16 @@ private struct CombatExecutionView: View {
 
             if computedOutcome != nil {
                 Button { step = .root } label: {
-                    Text("Neue Aktion")
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Neue Aktion")
+                    }
+                    .font(.system(.body, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
@@ -467,68 +557,96 @@ private struct CombatExecutionView: View {
 
     // MARK: - Box helpers
 
-    private func valueBox(_ text: String) -> some View {
-        Text(text)
-            .font(.system(.title3, weight: .black))
-            .fontDesign(.monospaced)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+    private func valueBox(_ text: String, label: String? = nil, dark: Bool = false) -> some View {
+        VStack(spacing: 0) {
+            Text(text)
+                .font(.system(.title3, weight: .black))
+                .fontDesign(.monospaced)
+                .foregroundStyle(dark ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(dark ? Color(white: 0.18) : Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            if let label {
+                Text(label)
+                    .font(.system(.caption2, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+            }
+        }
     }
 
     private var modifierBox: some View {
         let locked = finalRoll != nil
-        return HStack(spacing: 0) {
-            Button {
-                modifier -= 1
-            } label: {
-                Text("−")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(locked ? Color.gray : combatAccent)
-            }
-            .buttonStyle(.plain)
-            .disabled(locked)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Button {
+                    modifier -= 1
+                } label: {
+                    Text("−")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(locked ? Color.gray : combatAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
 
-            Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
-                .font(.system(.title3, weight: .black))
-                .fontDesign(.monospaced)
-                .frame(minWidth: 44)
-                .padding(.vertical, 10)
-                .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
-
-            Button {
-                modifier += 1
-            } label: {
-                Text("+")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
+                Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(minWidth: 44)
                     .padding(.vertical, 10)
-                    .background(locked ? Color.gray : combatAccent)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                Button {
+                    modifier += 1
+                } label: {
+                    Text("+")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(locked ? Color.gray : combatAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
             }
-            .buttonStyle(.plain)
-            .disabled(locked)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+            .frame(maxWidth: .infinity)
+            Text("Mod")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
         }
-        .frame(maxWidth: .infinity)
     }
 
     private var diceBox: some View {
         let isAnimating = finalRoll == nil
         let display = finalRoll ?? displayRoll
-        return Text("\(display)")
-            .font(.system(.title3, weight: .black))
-            .fontDesign(.monospaced)
+        return VStack(spacing: 0) {
+            VStack(spacing: 2) {
+                Text("\(display)")
+                    .font(.system(.largeTitle, weight: .black))
+                    .fontDesign(.monospaced)
+                if isAnimating {
+                    Text("Antippen zum Würfeln")
+                        .font(.system(.caption2, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(isAnimating ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+            .padding(.vertical, 14)
+            .background(isAnimating ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            Text("W20")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
     }
 
     private var confirmBox: some View {
@@ -537,13 +655,19 @@ private struct CombatExecutionView: View {
             if let cr = confirmRoll { return "\(cr)" }
             return "\(displayRoll)"
         }()
-        return Text(display)
-            .font(.system(.title3, weight: .black))
-            .fontDesign(.monospaced)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(isAnimating ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+        return VStack(spacing: 0) {
+            Text(display)
+                .font(.system(.title3, weight: .black))
+                .fontDesign(.monospaced)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(isAnimating ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            Text("Bestätigung")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
     }
 
     // MARK: - Outcome
@@ -568,19 +692,20 @@ private struct CombatExecutionView: View {
     private func needsConfirm(_ roll: Int) -> Bool { roll == 1 || roll == 20 }
 
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
-        Text(outcomeText(outcome))
-            .font(.system(.body, weight: .bold))
+        let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
+        return Text(outcomeText(outcome))
+            .font(.system(isCritical ? .title3 : .body, weight: .bold))
             .foregroundStyle(outcomeTextColor(outcome))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, isCritical ? 14 : 10)
             .background(outcomeBackground(outcome))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
     }
 
     private func outcomeText(_ outcome: CombatOutcome) -> String {
         switch outcome {
-        case .kritischerErfolg: return "Kritischer Erfolg!"
-        case .kritischerPatzer: return "Kritischer Patzer!"
+        case .kritischerErfolg: return "!!! Kritischer Erfolg!"
+        case .kritischerPatzer: return "!!! Kritischer Patzer!"
         case .erfolg:           return "Erfolg"
         case .misserfolg:       return "Misserfolg"
         }
@@ -669,11 +794,9 @@ private struct CombatInitiativeSheet: View {
                 .background(combatAccent)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 // Base selector
-                Text("Basis wählen")
-                    .font(.system(.subheadline, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                combatSectionLabel("BASIS")
 
                 HStack(spacing: 8) {
                     baseButton(label: "Held", value: heroBaseINI)
@@ -681,22 +804,41 @@ private struct CombatInitiativeSheet: View {
                         baseButton(label: mountName ?? "Reittier", value: mountINI)
                     }
                 }
+                .padding(.horizontal, 16)
 
                 // Dice + result
                 if let base = selectedBase {
                     VStack(spacing: 8) {
                         // D6 box
-                        Text("\(d6Result ?? d6Display)")
-                            .font(.system(.largeTitle, weight: .black))
-                            .fontDesign(.monospaced)
+                        VStack(spacing: 0) {
+                            VStack(spacing: 2) {
+                                Text("\(d6Result ?? d6Display)")
+                                    .font(.system(.largeTitle, weight: .black))
+                                    .fontDesign(.monospaced)
+                                if d6Result == nil {
+                                    Text("Würfeln...")
+                                        .font(.system(.caption2, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(d6Result == nil ? combatAccent.opacity(0.15) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                            .padding(.vertical, 14)
+                            .background(d6Result == nil ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            Text("W6")
+                                .font(.system(.caption2, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 2)
+                        }
 
+                        // Calculation box
                         Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
                             .font(.system(.title3, weight: .black))
                             .fontDesign(.monospaced)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
                             .opacity(d6Result == nil ? 0.4 : 1)
 
                         if let t = total {
@@ -710,16 +852,18 @@ private struct CombatInitiativeSheet: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                             }
                             .buttonStyle(.plain)
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
                 }
 
                 Spacer()
             }
-            .padding(16)
+            .padding(.bottom, 16)
         }
         .onDisappear { animTask?.cancel() }
     }
@@ -741,7 +885,7 @@ private struct CombatInitiativeSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: isSelected ? 3 : 1))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: isSelected ? 3 : 2))
         }
         .buttonStyle(.plain)
     }

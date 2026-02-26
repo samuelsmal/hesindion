@@ -203,7 +203,7 @@
       "KK": 25
     },
     "lifeEnergy": 75,
-    "initiative": "14+1W6",
+    "initiative": 14,
     "speed": 12,
     "attacks": [
       { "name": "Niederreiten", "at": 15, "damage": "2W6+6", "reach": "Mittel" },

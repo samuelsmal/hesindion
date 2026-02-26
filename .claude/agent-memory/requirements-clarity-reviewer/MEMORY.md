@@ -122,6 +122,37 @@
 - Talent row long-press requires contentShape(Rectangle()) -- never assume tap target covers
   the full HStack without it; this is a recurring tap-target gap in SwiftUI
 
+## Spec 006 Combat Mode Patterns
+- Combat modal is a new full-screen-style overlay, NOT a CommandModal -- the existing AppCommand/CommandInput
+  architecture cannot accommodate it; spec must state whether to introduce a new @State var in HeroDetailView
+  (e.g. `showCombatMode: Bool`) or a new AppCommand subtype
+- "Swipe up to dismiss" is already the gesture for TalentProbeModal and CommandModal, so it is consistent --
+  but the spec must confirm the threshold (currently 50pt in codebase) rather than leaving it unspecified
+- Shields have only modifier fields (atMod, paMod), not standalone AT/PA values -- the spec lists them in
+  the weapon selection list but never explains how their AT/PA is computed for the execution modal
+- "Raufen" AT value comes from CombatTechnique (hero.combatTechniques), NOT from a weapon; the technique
+  name must be specified (DSA standard is "Raufen") so the lookup can be coded deterministically
+- The LP modifier stepper (▲/▼ on the progress bar) mutates hero.derivedValues.lebensenergie.current
+  directly through SwiftData -- this mutation path must be explicit; the codebase pattern is
+  `dv.lebensenergie.current = v` inside the execute closure
+- Progress bar colour table has no "full health" row (current >= 3/4 * max or current == max) --
+  the fallback colour is unspecified; an AI agent will choose arbitrarily
+- The colour table predicate order matters for evaluation (first match wins vs. independent checks) --
+  never stated; combined with the overlapping ranges (current <= 5 AND current < 1/4 * max both match LP=3),
+  this is a silent ambiguity
+- "PA" in the execution modal title is spelled "PT" in spec text and "PA" in the AT/PA column labels --
+  inconsistent; DSA standard is "PA"
+- The single-dice critical success/failure rule is not specified: for three dice it is 2-of-3; for one dice
+  the threshold must be stated explicitly (is it always on 1 or 20, or does a different rule apply?)
+- Whether the modifier stepper in combat mode is the same component as the talent probe modifier overlay
+  (modifierEditOverlay) or a new inline stepper is never stated -- this is a recurring modal-over-modal gap
+- Long-press entry point conflicts with the existing long-press on talent rows (opens probe); the spec
+  must confirm the gesture handler lives on the weapon/shield row in HeroDetailView, not globally
+- No empty state for the weapon/shield selection list -- what shows if hero has no meleeWeapons and no shields?
+  "Raufen" alone, or a different fallback message?
+- Ausweichen button is listed in the main wireframe but has no flow specification at all -- it is
+  a completely unspecified action; agent will render a dead button or skip it entirely
+
 ## Spec 008 Color System Patterns
 - When a spec introduces a shared design token (e.g. attribute colors), it must state the delivery mechanism:
   Asset Catalog (.colorset) vs Swift enum/extension vs neither
