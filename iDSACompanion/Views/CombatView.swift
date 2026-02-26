@@ -128,7 +128,8 @@ private struct CombatRootView: View {
                         .font(.system(.title3, weight: .black))
                         .foregroundStyle(.white)
                 }
-                .frame(width: 64, maxHeight: .infinity)
+                .padding(.vertical, 8)
+                .frame(width: 64)
                 .background(Color(white: 0.18))
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
 
@@ -168,6 +169,7 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
             }
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 16)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
@@ -220,7 +222,7 @@ private struct CombatRootView: View {
                         }
                         .font(.system(.body, weight: .black))
                         .foregroundStyle(combatAccent)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
                         .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
@@ -238,7 +240,7 @@ private struct CombatRootView: View {
                         }
                         .font(.system(.body, weight: .black))
                         .foregroundStyle(combatAccent)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
                         .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
@@ -265,7 +267,7 @@ private struct CombatRootView: View {
                     Text("▼")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(width: 44, maxHeight: .infinity)
+                        .frame(width: 44, height: 48)
                         .background(combatAccent)
                 }
                 .buttonStyle(.plain)
@@ -295,7 +297,7 @@ private struct CombatRootView: View {
                     Text("▲")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(width: 44, maxHeight: .infinity)
+                        .frame(width: 44, height: 48)
                         .background(combatAccent)
                 }
                 .buttonStyle(.plain)
