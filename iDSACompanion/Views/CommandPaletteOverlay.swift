@@ -1,5 +1,188 @@
 import SwiftUI
 
+// MARK: - RegenerierenSheet
+
+struct RegenerierenSheet: View {
+    let hero: Hero
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var d6Display: Int = 1
+    @State private var d6Result: Int? = nil
+    @State private var userModifier: Int = 0
+    @State private var animTask: Task<Void, Never>? = nil
+
+    private var baseMod: Int { hero.verbessertRegenerationLEBonus }
+    private var totalMod: Int { baseMod + userModifier }
+    private var healing: Int { Swift.max(0, (d6Result ?? 0) + totalMod) }
+    private var currentLE: Int { hero.derivedValues?.lebensenergie.current ?? 0 }
+    private var maxLE: Int { hero.derivedValues?.lebensenergie.max ?? 0 }
+    private var newLE: Int { Swift.min(currentLE + healing, maxLE) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("Regenerieren")
+                .font(.system(.headline, weight: .black))
+                .foregroundStyle(Color.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.yellow)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+
+            VStack(spacing: 8) {
+                diceBox
+                    .contentShape(Rectangle())
+                    .onTapGesture { rollDie() }
+
+                modifierBox
+
+                if d6Result != nil {
+                    resultBox
+                    confirmButton
+                }
+            }
+            .padding(16)
+
+            Spacer()
+        }
+        .onAppear { startAnimation() }
+        .onDisappear { animTask?.cancel() }
+    }
+
+    // MARK: - Subviews
+
+    private var diceBox: some View {
+        let isRolled = d6Result != nil
+        let display = d6Result ?? d6Display
+        return VStack(spacing: 0) {
+            VStack(spacing: 2) {
+                Text("\(display)")
+                    .font(.system(.largeTitle, weight: .black))
+                    .fontDesign(.monospaced)
+                if !isRolled {
+                    Text("Antippen zum Würfeln")
+                        .font(.system(.caption2, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(!isRolled ? Color.yellow.opacity(0.25) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            Text("W6")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    private var modifierBox: some View {
+        let locked = d6Result != nil
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Button { userModifier -= 1 } label: {
+                    Image(systemName: "arrow.down")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(locked ? Color.white : Color.black)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(locked ? Color.gray : Color.yellow)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                VStack(spacing: 2) {
+                    Text(totalMod >= 0 ? "+\(totalMod)" : "\(totalMod)")
+                        .font(.system(.title3, weight: .black))
+                        .fontDesign(.monospaced)
+                    if baseMod > 0 {
+                        Text("Verb. Regen. +\(baseMod)")
+                            .font(.system(.caption2))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(minWidth: 64)
+                .padding(.vertical, 10)
+                .background(Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+
+                Button { userModifier += 1 } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(locked ? Color.white : Color.black)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(locked ? Color.gray : Color.yellow)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            Text("Mod")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    private var resultBox: some View {
+        let d6 = d6Result ?? 0
+        let formulaStr: String
+        if totalMod > 0 {
+            formulaStr = "W6(\(d6)) + \(totalMod) = \(healing)"
+        } else if totalMod < 0 {
+            formulaStr = "W6(\(d6)) \(totalMod) = \(healing)"
+        } else {
+            formulaStr = "W6 = \(d6)"
+        }
+        return VStack(spacing: 4) {
+            Text(formulaStr)
+                .font(.system(.body, weight: .black))
+                .fontDesign(.monospaced)
+            Text("\(currentLE) + \(healing) → \(newLE) / \(maxLE) LP")
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Color(UIColor.systemBackground))
+        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+    }
+
+    private var confirmButton: some View {
+        Button {
+            hero.derivedValues?.lebensenergie.current = newLE
+            dismiss()
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.system(.title2, weight: .bold))
+                .foregroundStyle(Color.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.yellow)
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Animation & Rolling
+
+    private func startAnimation() {
+        animTask = Task { @MainActor in
+            while !Task.isCancelled && d6Result == nil {
+                d6Display = Int.random(in: 1...6)
+                do { try await Task.sleep(nanoseconds: 120_000_000) } catch { break }
+            }
+        }
+    }
+
+    private func rollDie() {
+        guard d6Result == nil else { return }
+        animTask?.cancel()
+        d6Result = Int.random(in: 1...6)
+    }
+}
+
 // MARK: - CommandSearchOverlay
 
 struct CommandSearchOverlay: View {

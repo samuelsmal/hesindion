@@ -13,6 +13,7 @@ struct HeroDetailView: View {
     @FocusState private var searchFocused: Bool
     @State private var activeTalentProbe: Talent? = nil
     @State private var showCombatMode = false
+    @State private var showRegenerierenSheet = false
 
     var body: some View {
         ZStack {
@@ -128,10 +129,20 @@ struct HeroDetailView: View {
         .fullScreenCover(isPresented: $showCombatMode) {
             CombatView(hero: hero) { showCombatMode = false }
         }
+        .sheet(isPresented: $showRegenerierenSheet) {
+            RegenerierenSheet(hero: hero)
+                .presentationCornerRadius(0)
+                .presentationDetents([.medium])
+        }
         .onChange(of: activeCommand?.id) { _, _ in
             guard let cmd = activeCommand else { return }
             if cmd.name == "Kampf" {
                 showCombatMode = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Regenerieren" {
+                showRegenerierenSheet = true
                 activeCommand = nil
                 return
             }

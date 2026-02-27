@@ -69,6 +69,12 @@ final class Hero {
     var isOverloaded: Bool {
         totalEquipmentWeight > carryingThreshold
     }
+
+    /// +1 if the hero has "Verbesserte Regeneration (Lebensenergie)", +2 if it's level II.
+    var verbessertRegenerationLEBonus: Int {
+        guard let adv = advantages.first(where: { $0.contains("Verbesserte Regeneration (Lebensenergie)") }) else { return 0 }
+        return adv.contains("II") ? 2 : 1
+    }
 }
 
 // MARK: - AppCommand
@@ -116,6 +122,13 @@ extension Hero {
                             dv.lebensenergie.current = v
                         }
                     }
+                ))
+                commands.append(AppCommand(
+                    id: UUID(),
+                    name: "Regenerieren",
+                    subparameter: nil,
+                    input: nil,
+                    execute: { _ in }
                 ))
             }
 
