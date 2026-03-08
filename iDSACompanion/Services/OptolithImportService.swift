@@ -121,7 +121,7 @@ struct OptolithImportService {
         // Parse items
         let belongingsJSON = root["belongings"] as? [String: Any] ?? [:]
         let itemsJSON = belongingsJSON["items"] as? [String: Any] ?? [:]
-        let items = parseItems(itemsJSON, ctValues: ctValues)
+        let items = parseItems(itemsJSON, ctValues: ctValues, attributes: attributes)
 
         // Parse money
         let purseJSON = belongingsJSON["purse"] as? [String: Any] ?? [:]
@@ -553,7 +553,7 @@ struct OptolithImportService {
         var equipment: [EquipmentItem]
     }
 
-    private func parseItems(_ json: [String: Any], ctValues: [String: Int]) -> ItemsResult {
+    private func parseItems(_ json: [String: Any], ctValues: [String: Int], attributes: Attributes) -> ItemsResult {
         var weapons: [MeleeWeapon] = []
         var armors: [Armor] = []
         var shields: [Shield] = []
@@ -579,8 +579,18 @@ struct OptolithImportService {
                 if ctId == "CT_10" {
                     let stp = intFromAny(item["stp"]) ?? 0
                     let ctVal = ctValues[ctId] ?? 6
-                    let baseAT = Int(ceil(Double(ctVal) / 2.0))
-                    let basePA = ctVal / 2
+                    let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
+                    let muBonus = Self.eigenschaftsbonus(attributes.mu)
+                    let baseAT = ctVal + muBonus
+                    let primaryAttrValue: Int
+                    if let d = detail {
+                        let v1 = d.primaryAttr1.map { attributes.value(for: $0) } ?? 8
+                        let v2 = d.primaryAttr2.map { attributes.value(for: $0) } ?? 8
+                        primaryAttrValue = max(v1, v2)
+                    } else {
+                        primaryAttrValue = 8
+                    }
+                    let basePA = ctVal / 2 + Self.eigenschaftsbonus(primaryAttrValue)
                     let atMod = intFromAny(item["at"]) ?? 0
                     let paMod = intFromAny(item["pa"]) ?? 0
                     let damage = formatDamage(item)
@@ -596,8 +606,18 @@ struct OptolithImportService {
                     ))
                 } else {
                     let ctVal = ctValues[ctId] ?? 6
-                    let baseAT = Int(ceil(Double(ctVal) / 2.0))
-                    let basePA = ctVal / 2
+                    let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
+                    let muBonus = Self.eigenschaftsbonus(attributes.mu)
+                    let baseAT = ctVal + muBonus
+                    let primaryAttrValue: Int
+                    if let d = detail {
+                        let v1 = d.primaryAttr1.map { attributes.value(for: $0) } ?? 8
+                        let v2 = d.primaryAttr2.map { attributes.value(for: $0) } ?? 8
+                        primaryAttrValue = max(v1, v2)
+                    } else {
+                        primaryAttrValue = 8
+                    }
+                    let basePA = ctVal / 2 + Self.eigenschaftsbonus(primaryAttrValue)
                     let atMod = intFromAny(item["at"]) ?? 0
                     let paMod = intFromAny(item["pa"]) ?? 0
                     let damage = formatDamage(item)
