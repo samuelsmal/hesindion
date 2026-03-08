@@ -12,7 +12,6 @@ struct TalentProbeModal: View {
     @State private var displayRolls = [Int](repeating: 1, count: 3)
     @State private var finalRolls: [Int]? = nil
     @State private var animationTask: Task<Void, Never>? = nil
-    @State private var editingModifierIndex: Int? = nil
 
     private var probeData: (keys: [String], values: [Int])? {
         guard let attrs = hero.attributes else { return nil }
@@ -30,7 +29,7 @@ struct TalentProbeModal: View {
                 if let data = probeData {
                     probeContent(data: data)
                 } else {
-                    Text("Unbekanntes Talent")
+                    Text(L("unknownTalent"))
                         .padding()
                 }
             }
@@ -42,10 +41,6 @@ struct TalentProbeModal: View {
                     if value.translation.height < -50 { onDismiss() }
                 }
             )
-
-            if let idx = editingModifierIndex {
-                modifierEditOverlay(index: idx)
-            }
         }
         .onAppear { startAnimation() }
         .onDisappear { animationTask?.cancel() }
@@ -55,7 +50,7 @@ struct TalentProbeModal: View {
 
     private var headerView: some View {
         HStack {
-            Text("Probe")
+            Text(L("probe"))
                 .font(.system(.headline, weight: .black))
             Spacer()
             Text(talent.name)
@@ -65,9 +60,9 @@ struct TalentProbeModal: View {
                 .font(.system(.headline, weight: .black))
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, DSALayout.headerVerticalPadding)
         .frame(maxWidth: .infinity)
-        .background(Color.yellow)
+        .background(Color.groupPersonalData)
         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
     }
 
@@ -140,14 +135,34 @@ struct TalentProbeModal: View {
     private func modBox(index: Int) -> some View {
         let mod = modifiers[index]
         let locked = finalRolls != nil
-        return Text(mod >= 0 ? "+\(mod)" : "\(mod)")
-            .font(.system(.body, weight: .bold))
-            .foregroundStyle(locked ? Color.secondary : Color.primary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Color(UIColor.systemBackground))
-            .contentShape(Rectangle())
-            .onLongPressGesture(perform: locked ? {} : { editingModifierIndex = index })
+        return HStack(spacing: 0) {
+            Button { modifiers[index] -= 1 } label: {
+                Text("−")
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(locked ? .secondary : .primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .buttonStyle(.plain)
+            .disabled(locked)
+
+            Text(mod >= 0 ? "+\(mod)" : "\(mod)")
+                .font(.system(.body, weight: .bold))
+                .foregroundStyle(locked ? Color.secondary : Color.primary)
+                .frame(minWidth: 28)
+
+            Button { modifiers[index] += 1 } label: {
+                Text("+")
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(locked ? .secondary : .primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .buttonStyle(.plain)
+            .disabled(locked)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .background(Color(UIColor.systemBackground))
+        .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
     }
 
     private func diceBox(value: Int, isAnimating: Bool) -> some View {
@@ -156,7 +171,8 @@ struct TalentProbeModal: View {
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(isAnimating ? Color.yellow.opacity(0.3) : Color(UIColor.systemBackground))
+            .background(isAnimating ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
     }
 
     private func resultBox(value: Int) -> some View {
@@ -166,6 +182,7 @@ struct TalentProbeModal: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
     }
 
     // MARK: - Summary Bar
@@ -249,7 +266,7 @@ struct TalentProbeModal: View {
             while !Task.isCancelled {
                 displayRolls = (0..<3).map { _ in Int.random(in: 1...20) }
                 do {
-                    try await Task.sleep(nanoseconds: 200_000_000)
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch {
                     break
                 }
@@ -263,55 +280,4 @@ struct TalentProbeModal: View {
         finalRolls = (0..<3).map { _ in Int.random(in: 1...20) }
     }
 
-    // MARK: - Modifier Edit Overlay
-
-    @ViewBuilder
-    private func modifierEditOverlay(index: Int) -> some View {
-        ZStack {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { editingModifierIndex = nil }
-
-            VStack(spacing: 20) {
-                let mod = modifiers[index]
-                Text(probeData?.keys[index] ?? "Modifikator \(index + 1)")
-                    .font(.system(.headline, weight: .black))
-
-                Text(mod >= 0 ? "+\(mod)" : "\(mod)")
-                    .font(.system(.largeTitle, weight: .black))
-
-                HStack(spacing: 16) {
-                    Button {
-                        modifiers[index] -= 1
-                    } label: {
-                        Text("−")
-                            .font(.system(.title, weight: .bold))
-                            .foregroundStyle(Color.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.yellow)
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        modifiers[index] += 1
-                    } label: {
-                        Text("+")
-                            .font(.system(.title, weight: .bold))
-                            .foregroundStyle(Color.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.yellow)
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(24)
-            .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
-            .padding(32)
-        }
-    }
 }

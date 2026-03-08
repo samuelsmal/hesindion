@@ -20,12 +20,12 @@ struct RegenerierenSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Regenerieren")
+            Text(L("regeneration"))
                 .font(.system(.headline, weight: .black))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.yellow)
+                .background(Color.groupPersonalData)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             VStack(spacing: 8) {
@@ -59,14 +59,14 @@ struct RegenerierenSheet: View {
                     .font(.system(.largeTitle, weight: .black))
                     .fontDesign(.monospaced)
                 if !isRolled {
-                    Text("Antippen zum Würfeln")
+                    Text(L("tapToRoll"))
                         .font(.system(.caption2, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(!isRolled ? Color.yellow.opacity(0.25) : Color(UIColor.systemBackground))
+            .background(!isRolled ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
             Text("W6")
                 .font(.system(.caption2, weight: .bold))
@@ -84,7 +84,7 @@ struct RegenerierenSheet: View {
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(locked ? Color.white : Color.black)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : Color.yellow)
+                        .background(locked ? Color.gray : Color.groupPersonalData)
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
@@ -95,7 +95,7 @@ struct RegenerierenSheet: View {
                         .font(.system(.title3, weight: .black))
                         .fontDesign(.monospaced)
                     if baseMod > 0 {
-                        Text("Verb. Regen. +\(baseMod)")
+                        Text("\(L("improvedRegen")) +\(baseMod)")
                             .font(.system(.caption2))
                             .foregroundStyle(.secondary)
                     }
@@ -110,7 +110,7 @@ struct RegenerierenSheet: View {
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(locked ? Color.white : Color.black)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : Color.yellow)
+                        .background(locked ? Color.gray : Color.groupPersonalData)
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
@@ -118,7 +118,7 @@ struct RegenerierenSheet: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
-            Text("Mod")
+            Text(L("modifier"))
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
@@ -159,7 +159,7 @@ struct RegenerierenSheet: View {
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.yellow)
+                .background(Color.groupPersonalData)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
         }
         .buttonStyle(.plain)
@@ -171,7 +171,7 @@ struct RegenerierenSheet: View {
         animTask = Task { @MainActor in
             while !Task.isCancelled && d6Result == nil {
                 d6Display = Int.random(in: 1...6)
-                do { try await Task.sleep(nanoseconds: 120_000_000) } catch { break }
+                do { try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval) } catch { break }
             }
         }
     }
@@ -189,8 +189,14 @@ struct CommandSearchOverlay: View {
     @Binding var query: String
     @Binding var isVisible: Bool
     @Binding var activeCommand: AppCommand?
+    @Binding var sidebarSelection: SidebarSelection?
     let commands: [AppCommand]
     var isFocused: FocusState<Bool>.Binding
+
+    private var ruleResults: [RuleSearchResult] {
+        guard query.count >= 2 else { return [] }
+        return RulesDatabase.shared.search(query: query, limit: 10)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -198,7 +204,7 @@ struct CommandSearchOverlay: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color.black)
-                TextField("Befehl suchen…", text: $query)
+                TextField(L("searchRules"), text: $query)
                     .focused(isFocused)
                     .autocorrectionDisabled()
                 if !query.isEmpty {
@@ -213,21 +219,15 @@ struct CommandSearchOverlay: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.yellow)
+            .background(Color.groupPersonalData)
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             // Results
+            let rules = ruleResults
             let maxHeight = UIScreen.main.bounds.height / 3
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if commands.isEmpty {
-                        Text("Keine Befehle gefunden")
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                    } else {
+                    if !commands.isEmpty {
                         ForEach(commands) { cmd in
                             Button {
                                 activeCommand = cmd
@@ -249,6 +249,44 @@ struct CommandSearchOverlay: View {
                             .buttonStyle(.plain)
                         }
                     }
+
+                    if !rules.isEmpty {
+                        if !commands.isEmpty {
+                            sectionHeader(L("rulebook"))
+                        }
+                        ForEach(rules) { rule in
+                            Button {
+                                sidebarSelection = .rule(rule.id)
+                                query = ""
+                                isVisible = false
+                            } label: {
+                                VStack(spacing: 0) {
+                                    HStack {
+                                        Text(rule.name)
+                                            .font(.body)
+                                            .foregroundStyle(Color.black)
+                                        Spacer()
+                                        Text(ruleCategoryLabel(rule.category))
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    Divider()
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    if commands.isEmpty && rules.isEmpty {
+                        Text(L("noResults"))
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                    }
                 }
             }
             .frame(maxHeight: maxHeight)
@@ -264,6 +302,20 @@ struct CommandSearchOverlay: View {
                 }
             }
         )
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(.caption, weight: .black))
+            .foregroundStyle(Color.black)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity))
+    }
+
+    private func ruleCategoryLabel(_ category: String) -> String {
+        L("cat.\(category)")
     }
 }
 
@@ -287,7 +339,7 @@ struct CommandModal: View {
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(Color.yellow)
+                    .background(Color.groupPersonalData)
                     .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
                 // Input
@@ -318,7 +370,7 @@ struct CommandModal: View {
                                         .foregroundStyle(Color.black)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
-                                        .background(Color.yellow)
+                                        .background(Color.groupPersonalData)
                                         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                                 }
                                 .buttonStyle(.plain)
@@ -332,7 +384,7 @@ struct CommandModal: View {
                                         .foregroundStyle(Color.black)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
-                                        .background(Color.yellow)
+                                        .background(Color.groupPersonalData)
                                         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                                 }
                                 .buttonStyle(.plain)
@@ -356,7 +408,7 @@ struct CommandModal: View {
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color.yellow)
+                        .background(Color.groupPersonalData)
                         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                 }
                 .buttonStyle(.plain)

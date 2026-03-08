@@ -4,11 +4,18 @@ import UniformTypeIdentifiers
 
 private let yamlType = UTType(importedAs: "public.yaml")
 
+enum SidebarSelection: Hashable {
+    case rulebook
+    case hero(PersistentIdentifier)
+    case rule(String)
+}
+
 struct HeroListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Hero.name) private var heroes: [Hero]
 
-    @State private var selectedHero: Hero?
+    @State private var selection: SidebarSelection? = nil
+    @State private var previousSelection: SidebarSelection? = nil
     @State private var isShowingFilePicker = false
     @State private var importError: String?
     @State private var isShowingError = false
@@ -19,12 +26,15 @@ struct HeroListView: View {
                 .safeAreaInset(edge: .bottom) {
                     importButton
                 }
-                .navigationTitle("Heroes")
-                .navigationDestination(for: Hero.self) { hero in
-                    HeroDetailView(hero: hero)
-                }
+                .navigationTitle("iDSA")
+                .toolbarTitleDisplayMode(.inlineLarge)
         } detail: {
             detailContent
+        }
+        .onChange(of: selection) { oldValue, newValue in
+            if case .rule = newValue, oldValue != nil {
+                previousSelection = oldValue
+            }
         }
         .fileImporter(
             isPresented: $isShowingFilePicker,
@@ -51,39 +61,92 @@ struct HeroListView: View {
 
     @ViewBuilder
     private var sidebarContent: some View {
-        if heroes.isEmpty {
-            ContentUnavailableView(
-                "No Heroes Yet",
-                systemImage: "person.3",
-                description: Text("Import a JSON or YAML file to add your first hero.")
-            )
-        } else {
-            List(heroes, id: \.persistentModelID, selection: $selectedHero) { hero in
-                NavigationLink(value: hero) {
-                    Text(hero.name)
-                        .font(.system(.title3, design: .default, weight: .bold))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
-                }
+        List(selection: $selection) {
+            Section {
+                Label(L("rulebook"), systemImage: "book.closed")
+                    .font(.system(.title3, design: .default, weight: .bold))
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+                    .tag(SidebarSelection.rulebook)
+                    .listRowBackground(
+                        selection == .rulebook
+                            ? Color.groupRulebook.opacity(0.15)
+                            : Color(UIColor.systemBackground)
+                    )
+            } header: {
+                sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
             }
-            .listStyle(.plain)
+
+            Section {
+                if heroes.isEmpty {
+                    Text(L("importHint"))
+                        .foregroundStyle(.secondary)
+                        .listRowBackground(Color(UIColor.systemBackground))
+                } else {
+                    ForEach(heroes, id: \.persistentModelID) { hero in
+                        Text(hero.name)
+                            .font(.system(.title3, design: .default, weight: .bold))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                            .tag(SidebarSelection.hero(hero.persistentModelID))
+                            .listRowBackground(
+                                selection == .hero(hero.persistentModelID)
+                                    ? Color.groupPersonalData.opacity(0.15)
+                                    : Color(UIColor.systemBackground)
+                            )
+                    }
+                }
+            } header: {
+                sidebarSectionHeader(L("heroes"), color: .groupPersonalData)
+            }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(UIColor.systemBackground))
+    }
+
+    private func sidebarSectionHeader(_ title: String, color: Color) -> some View {
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(color)
+                .frame(height: DSALayout.secondaryBorder)
+            Text(title)
+                .font(.system(.subheadline, weight: .black))
+                .textCase(.uppercase)
+                .foregroundStyle(color)
+                .padding(.horizontal, 8)
+            Rectangle()
+                .fill(color)
+                .frame(height: DSALayout.secondaryBorder)
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Detail
 
     @ViewBuilder
     private var detailContent: some View {
-        if let hero = selectedHero {
-            HeroDetailView(hero: hero)
-        } else {
+        switch selection {
+        case .rulebook:
+            RulebookView(sidebarSelection: $selection)
+        case .hero(let id):
+            if let hero = heroes.first(where: { $0.persistentModelID == id }) {
+                HeroDetailView(hero: hero, sidebarSelection: $selection)
+            }
+        case .rule(let ruleId):
+            RuleDetailView(
+                ruleId: ruleId,
+                sidebarSelection: $selection,
+                previousSelection: previousSelection
+            )
+        case nil:
             ContentUnavailableView(
-                heroes.isEmpty ? "No Heroes" : "Select a Hero",
+                heroes.isEmpty ? L("noHeroes") : "Auswahl treffen",
                 systemImage: "shield",
                 description: Text(
                     heroes.isEmpty
-                        ? "Import a JSON or YAML file using the button below to get started."
-                        : "Choose a hero from the list to view their character sheet."
+                        ? L("importHint")
+                        : L("selectHint")
                 )
             )
         }
@@ -95,11 +158,11 @@ struct HeroListView: View {
         Button {
             isShowingFilePicker = true
         } label: {
-            Label("Import Hero", systemImage: "square.and.arrow.down")
+            Label(L("importHero"), systemImage: "square.and.arrow.down")
                 .font(.system(.body, design: .default, weight: .bold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.yellow)
+                .background(Color.groupPersonalData)
                 .foregroundStyle(Color.black)
                 .overlay(
                     Rectangle()

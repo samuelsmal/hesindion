@@ -52,37 +52,40 @@
     "wundschwelle":     { "value": 7,  "bonus": 0, "max": 7 }
   },
   "advantages": [
-    "Beidhändig",
-    "Hohe Lebenskraft II",
-    "Reich V",
-    "Schnell wieder auf den Beinen",
-    "Verbesserte Regeneration (Lebensenergie) II",
-    "Zäher Hund"
+    {"name": "Beidhändig", "level": 1, "aspect": null},
+    {"name": "Hohe Lebenskraft", "level": 2, "aspect": null},
+    {"name": "Reich", "level": 5, "aspect": null},
+    {"name": "Schnell wieder auf den Beinen", "level": 1, "aspect": null},
+    {"name": "Verbesserte Regeneration", "level": 2, "aspect": "Lebensenergie"},
+    {"name": "Zäher Hund", "level": 1, "aspect": null},
   ],
   "disadvantages": [
-    "Persönlichkeitsschwächen (Unheimlich)",
-    "Prinzipientreue II (Ordensregeln, Boronkirche)",
-    "Schlafwandler",
-    "Verpflichtungen (Orden II, Sippenmitglied gegenüber der Sippe: Familienverpflichtung I)"
+    {"name": "Persönlichkeitsschwächen", "level": 1, "aspect": "Unheimlich"},
+    {"name": "Prinzipientreue", "level": 2, "aspect": "Ordensregeln, Boronkirche"},
+    {"name": "Schlafwandler", "level": 1, "aspect": null},
+    {"name": "Verpflichtungen", "level": 2, "aspect": "Orden"},
+    {"name": "Verpflichtungen", "level": 1, "aspect": "Sippenmitglied gegenüber der Sippe: Familienverpflichtung"},
   ],
   "specialAbilities": {
-    "general": ["Ortskenntnis (Greifenfurt)"],
+    "general": [
+      {"name": "Ortskenntnis", "level": 1, "aspect": "Greifenfurt"}
+    ],
     "combat": [
-      "Aufmerksamkeit",
-      "Belastungsgewöhnung I",
-      "Berittener Kampf",
-      "Finte I",
-      "Golgariten-Stil",
-      "Schildspalter",
-      "Verteidigungshaltung",
-      "Vorstoß",
-      "Wuchtschlag I"
+      {"name": "Aufmerksamkeit", "level": 1, "aspect": null},
+      {"name": "Belastungsgewöhnung", "level": 1, "aspect": null},
+      {"name": "Berittener Kampf", "level": 1, "aspect": null},
+      {"name": "Finte", "level": 1, "aspect": null},
+      {"name": "Golgariten-Stil", "level": 1, "aspect": null},
+      {"name": "Schildspalter", "level": 1, "aspect": null},
+      {"name": "Verteidigungshaltung", "level": 1, "aspect": null},
+      {"name": "Vorstoß", "level": 1, "aspect": null},
+      {"name": "Wuchtschlag", "level": 1, "aspect": null},
     ]
   },
   "languages": [
     {"language": "Garethi", "level": "MS" },
-    {"language": "Bosparano", "level": "II" },
-    {"language": "Ologhaijan", "level": "I" }
+    {"language": "Bosparano", "level": "2" },
+    {"language": "Ologhaijan", "level": "1" }
   ],
   "scripts": ["Kusliker Zeichen"],
   "talents": {
@@ -176,7 +179,7 @@
     { "name": "Großschild", "value": 100, "type": "Schild", "damage": "1W6+1", "at": 5, "pa": 13, "reach": "Kurz", "weight": 6.0 },
     { "name": "Langschwert", "type": "Nahkampfwaffe", "technique": "Schwerter", "damage": "1W6+4", "at": 14, "pa": 8, "reach": "Mittel", "weight": 1.0, "value": 200},
     { "name": "Plattenrüstung", "value": 750, "weight": 25.0, "type": "Rüstung", "protectionValue": 11, "armorRating": 6, "encumbrance": 3 },
-    { "name": "Rabenschnabel", "value": 105, "type": "Nahkampfwaffe", "technique": "Hiebwaffen", "damage": "1W6+5", "at": 14, "pa": 7, "reach": "Mittel", "weight": 1.5 },
+    { "name": "Rabenschnabel", "value": 105, "type": "Nahkampfwaffe", "technique": "Hiebwaffen", "damage": "1W6+4", "at": 14, "pa": 7, "reach": "Mittel", "weight": 1.5 },
     { "name": "Schwertscheide", "value": 12, "weight": 0.75, "type": "Ausrüstung" },
     { "name": "Unterkleidung für Metallrüstungen", "value": 12, "weight": 2.5, "type": "Ausrüstung"},
     { "name": "Waffenpflegeset (Schleifstein, Tücher)", "value": 1, "weight": 1.0 , "type": "Ausrüstung"}

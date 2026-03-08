@@ -6,6 +6,10 @@ extension Color {
     static let groupTalents      = Color(red: 0x1d / 255, green: 0x4e / 255, blue: 0xd8 / 255)
     static let groupCombat       = Color(red: 0xdc / 255, green: 0x26 / 255, blue: 0x26 / 255)
     static let groupEquipment    = Color(red: 0x16 / 255, green: 0xa3 / 255, blue: 0x4a / 255)
+    static let groupRulebook     = Color(red: 0x7c / 255, green: 0x3a / 255, blue: 0xed / 255)
+
+    /// Dark accent background used for stat badges and INI boxes.
+    static let dsaDark = Color(white: 0.18)
 
     static let attrMU = Color(red: 0xc5 / 255, green: 0x47 / 255, blue: 0x47 / 255)
     static let attrKL = Color(red: 0xa8 / 255, green: 0x5b / 255, blue: 0xd4 / 255)

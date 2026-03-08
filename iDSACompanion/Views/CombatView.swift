@@ -9,7 +9,7 @@ private enum CombatAction {
 private enum CombatStep {
     case root
     case weaponSelection(CombatAction)
-    case execution(CombatAction, name: String, attributeValue: Int)
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?)
 }
 
 private let combatAccent = Color.groupCombat
@@ -56,18 +56,19 @@ struct CombatView: View {
             case .weaponSelection(let action):
                 CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue):
+            case .execution(let action, let name, let attrValue, let dmgFormula):
                 CombatExecutionView(
                     action: action,
                     weaponName: name,
                     attributeValue: attrValue,
+                    damageFormula: dmgFormula,
                     step: $step,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: stepID)
+        .animation(DSAAnimation.standard, value: stepID)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(UIColor.systemBackground))
         .gesture(DragGesture().onEnded { v in
@@ -93,7 +94,7 @@ private struct CombatRootView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Kampf")
+                Text(L("combat"))
                     .font(.system(.headline, weight: .black))
                     .foregroundStyle(.white)
                 Spacer()
@@ -115,7 +116,7 @@ private struct CombatRootView: View {
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             // INITIATIVE section
-            combatSectionLabel("INITIATIVE")
+            combatSectionLabel(L("initiative.label"))
 
             // INI + round counter + Neu button
             HStack(spacing: 0) {
@@ -130,7 +131,7 @@ private struct CombatRootView: View {
                 }
                 .padding(.vertical, 8)
                 .frame(width: 64)
-                .background(Color(white: 0.18))
+                .background(Color.dsaDark)
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
 
                 // Round counter
@@ -158,7 +159,7 @@ private struct CombatRootView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "dice.fill")
                             .font(.system(.caption, weight: .bold))
-                        Text("Neu")
+                        Text(L("new"))
                             .font(.system(.caption, weight: .black))
                     }
                     .foregroundStyle(.white)
@@ -186,12 +187,12 @@ private struct CombatRootView: View {
 
             if hero.derivedValues != nil {
                 // LEBENSPUNKTE section
-                combatSectionLabel("LEBENSPUNKTE")
+                combatSectionLabel(L("lifePoints.label"))
                 lpBar
             }
 
             // AKTION section
-            combatSectionLabel("AKTION")
+            combatSectionLabel(L("action.label"))
 
             VStack(spacing: 8) {
                 // Angriff — primary (filled)
@@ -200,7 +201,7 @@ private struct CombatRootView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "bolt.fill")
-                        Text("Angriff")
+                        Text(L("attack"))
                     }
                     .font(.system(.title3, weight: .black))
                     .foregroundStyle(.white)
@@ -217,7 +218,7 @@ private struct CombatRootView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "shield.fill")
-                        Text("Parieren")
+                        Text(L("parry"))
                     }
                     .font(.system(.title3, weight: .black))
                     .foregroundStyle(combatAccent)
@@ -231,11 +232,11 @@ private struct CombatRootView: View {
                 // Ausweichen — tertiary (outline)
                 Button {
                     let aw = hero.derivedValues?.ausweichen.value ?? 0
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw)
+                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFormula: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.walk")
-                        Text("Ausweichen")
+                        Text(L("dodge"))
                     }
                     .font(.system(.title3, weight: .black))
                     .foregroundStyle(combatAccent)
@@ -327,7 +328,7 @@ private struct CombatWeaponSelectionView: View {
                         combatSectionLabel("NAHKAMPFWAFFEN (\(statLabel))")
                         ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
                             let val = action == .angriff ? w.at : w.pa
-                            weaponRow(name: w.name, statLabel: statLabel, statValue: val)
+                            weaponRow(name: w.name, statLabel: statLabel, statValue: val, damageFormula: w.damage)
                         }
                     }
 
@@ -339,9 +340,9 @@ private struct CombatWeaponSelectionView: View {
                         }
                     }
 
-                    combatSectionLabel("WAFFENLOS")
+                    combatSectionLabel(L("unarmed.label"))
                     let rauferVal = action == .angriff ? (raufen?.at ?? 0) : (raufen?.pa ?? 0)
-                    weaponRow(name: "Raufen", statLabel: statLabel, statValue: rauferVal)
+                    weaponRow(name: "Raufen", statLabel: statLabel, statValue: rauferVal, damageFormula: "1W6")
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
@@ -349,9 +350,9 @@ private struct CombatWeaponSelectionView: View {
         }
     }
 
-    private func weaponRow(name: String, statLabel: String, statValue: Int) -> some View {
+    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String? = nil) -> some View {
         Button {
-            step = .execution(action, name: name, attributeValue: statValue)
+            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil)
         } label: {
             HStack {
                 Text(name)
@@ -363,7 +364,7 @@ private struct CombatWeaponSelectionView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(white: 0.18))
+                    .background(Color.dsaDark)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -382,6 +383,7 @@ private struct CombatExecutionView: View {
     let action: CombatAction
     let weaponName: String
     let attributeValue: Int
+    let damageFormula: String?
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
@@ -391,6 +393,11 @@ private struct CombatExecutionView: View {
     @State private var confirmRoll: Int? = nil
     @State private var animationTask: Task<Void, Never>? = nil
     @State private var confirmAnimTask: Task<Void, Never>? = nil
+
+    // Damage rolling state
+    @State private var damageDisplayRolls: [Int] = []
+    @State private var damageFinalRolls: [Int]? = nil
+    @State private var damageAnimTask: Task<Void, Never>? = nil
 
     private var attrLabel: String {
         switch action {
@@ -468,22 +475,26 @@ private struct CombatExecutionView: View {
 
                 if let outcome = computedOutcome {
                     outcomeBar(outcome)
+
+                    if isHit(outcome), let formula = damageFormula, let parsed = parseDamage(formula) {
+                        damageSection(parsed: parsed)
+                    }
                 }
             }
             .padding(16)
 
-            if computedOutcome != nil {
+            if showNeueAktion {
                 Button { step = .root } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.counterclockwise")
-                        Text("Neue Aktion")
+                        Text(L("newAction"))
                     }
                     .font(.system(.body, weight: .black))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
@@ -495,6 +506,7 @@ private struct CombatExecutionView: View {
         .onDisappear {
             animationTask?.cancel()
             confirmAnimTask?.cancel()
+            damageAnimTask?.cancel()
         }
     }
 
@@ -508,7 +520,7 @@ private struct CombatExecutionView: View {
                 .foregroundStyle(dark ? .white : .primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(dark ? Color(white: 0.18) : Color(UIColor.systemBackground))
+                .background(dark ? Color.dsaDark : Color(UIColor.systemBackground))
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
             if let label {
                 Text(label)
@@ -559,7 +571,7 @@ private struct CombatExecutionView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
-            Text("Mod")
+            Text(L("modifier"))
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
@@ -575,14 +587,14 @@ private struct CombatExecutionView: View {
                     .font(.system(.largeTitle, weight: .black))
                     .fontDesign(.monospaced)
                 if isAnimating {
-                    Text("Antippen zum Würfeln")
+                    Text(L("tapToRoll"))
                         .font(.system(.caption2, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(isAnimating ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+            .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
             Text("W20")
                 .font(.system(.caption2, weight: .bold))
@@ -603,9 +615,9 @@ private struct CombatExecutionView: View {
                 .fontDesign(.monospaced)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(isAnimating ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+                .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
                 .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
-            Text("Bestätigung")
+            Text(L("confirmation"))
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
@@ -676,10 +688,16 @@ private struct CombatExecutionView: View {
             while !Task.isCancelled {
                 displayRoll = Int.random(in: 1...20)
                 do {
-                    try await Task.sleep(nanoseconds: 200_000_000)
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch { break }
             }
         }
+    }
+
+    private var showNeueAktion: Bool {
+        guard computedOutcome != nil else { return false }
+        guard let outcome = computedOutcome, isHit(outcome), damageFormula != nil else { return computedOutcome != nil }
+        return damageFinalRolls != nil
     }
 
     private func rollDice() {
@@ -697,13 +715,101 @@ private struct CombatExecutionView: View {
             while !Task.isCancelled && count < 10 {
                 displayRoll = Int.random(in: 1...20)
                 do {
-                    try await Task.sleep(nanoseconds: 150_000_000)
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch { return }
                 count += 1
             }
             guard !Task.isCancelled else { return }
             confirmRoll = Int.random(in: 1...20)
         }
+    }
+
+    // MARK: - Damage
+
+    private struct ParsedDamage {
+        let count: Int
+        let sides: Int
+        let bonus: Int
+    }
+
+    private func parseDamage(_ formula: String) -> ParsedDamage? {
+        // Matches formats like "1W6", "2W6+4", "1W6-1"
+        let pattern = /(\d+)W(\d+)([+-]\d+)?/
+        guard let match = formula.firstMatch(of: pattern) else { return nil }
+        let count = Int(match.1) ?? 1
+        let sides = Int(match.2) ?? 6
+        let bonus = match.3.flatMap { Int($0) } ?? 0
+        return ParsedDamage(count: count, sides: sides, bonus: bonus)
+    }
+
+    private func isHit(_ outcome: CombatOutcome) -> Bool {
+        outcome == .erfolg || outcome == .kritischerErfolg
+    }
+
+    private func damageSection(parsed: ParsedDamage) -> some View {
+        VStack(spacing: 0) {
+            combatSectionLabel("SCHADEN")
+
+            let isAnimating = damageFinalRolls == nil
+            let rolls = damageFinalRolls ?? damageDisplayRolls
+
+            // Individual dice
+            HStack(spacing: 6) {
+                ForEach(0..<parsed.count, id: \.self) { i in
+                    Text(i < rolls.count ? "\(rolls[i])" : "-")
+                        .font(.system(.title3, weight: .black))
+                        .fontDesign(.monospaced)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                }
+            }
+
+            // Formula + total
+            if let finalRolls = damageFinalRolls {
+                let diceSum = finalRolls.reduce(0, +)
+                let total = max(0, diceSum + parsed.bonus)
+                let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
+
+                Text("\(diceSum)\(bonusStr) = \(total) TP")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .padding(.top, 6)
+            }
+
+            if isAnimating {
+                Text(L("tapToRoll"))
+                    .font(.system(.caption2, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { rollDamage(parsed: parsed) }
+        .onAppear { startDamageAnimation(parsed: parsed) }
+    }
+
+    private func startDamageAnimation(parsed: ParsedDamage) {
+        damageAnimTask?.cancel()
+        damageAnimTask = Task { @MainActor in
+            while !Task.isCancelled {
+                damageDisplayRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { break }
+            }
+        }
+    }
+
+    private func rollDamage(parsed: ParsedDamage) {
+        guard damageFinalRolls == nil else { return }
+        damageAnimTask?.cancel()
+        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
     }
 }
 
@@ -728,7 +834,7 @@ private struct CombatInitiativeSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            Text("Neue Initiative")
+            Text(L("newInitiative"))
                 .font(.system(.headline, weight: .black))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -765,7 +871,7 @@ private struct CombatInitiativeSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(d6Result == nil ? combatAccent.opacity(0.12) : Color(UIColor.systemBackground))
+                            .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
                             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                             Text("W6")
                                 .font(.system(.caption2, weight: .bold))
@@ -839,7 +945,7 @@ private struct CombatInitiativeSheet: View {
             while !Task.isCancelled && count < 12 {
                 d6Display = Int.random(in: 1...6)
                 do {
-                    try await Task.sleep(nanoseconds: 120_000_000)
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch { return }
                 count += 1
             }

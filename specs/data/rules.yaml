@@ -1,0 +1,235 @@
+# Hand-authored mechanical effects for rules that need structured automation.
+# Referenced by source data IDs. All metadata (names, descriptions, costs)
+# lives in the source YAML and is imported into rules.db directly.
+#
+# Effect schema:
+#   type:        modifier | damageModifier | opponentModifier | restriction |
+#                incapacitated | narrative | stateGain | recovery | negation | damageRedirect
+#   attribute:   at | pa | aw | ini | gs | be | le | ae | tp | all | talent | <skill name>
+#   value:       numeric modifier (null for non-numeric)
+#   scope:       all | combat | movement | socialTalents | derived | <custom>
+#   target:      for damageRedirect (e.g. shieldSP)
+#   condition:   optional trigger condition
+#   description: for narrative/complex effects
+
+conditions:
+  - id: COND_1  # Belastung
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: at, value: -1, scope: combat }
+          - { type: modifier, attribute: pa, value: -1, scope: combat }
+          - { type: modifier, attribute: ini, value: -1, scope: combat }
+          - { type: modifier, attribute: gs, value: -1, scope: combat }
+          - { type: modifier, attribute: talent, value: -1, scope: movement }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: at, value: -2, scope: combat }
+          - { type: modifier, attribute: pa, value: -2, scope: combat }
+          - { type: modifier, attribute: ini, value: -2, scope: combat }
+          - { type: modifier, attribute: gs, value: -2, scope: combat }
+          - { type: modifier, attribute: talent, value: -2, scope: movement }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: at, value: -3, scope: combat }
+          - { type: modifier, attribute: pa, value: -3, scope: combat }
+          - { type: modifier, attribute: ini, value: -3, scope: combat }
+          - { type: modifier, attribute: gs, value: -3, scope: combat }
+          - { type: modifier, attribute: talent, value: -3, scope: movement }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all }
+
+  - id: COND_2  # Betäubung
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: all, value: -1, scope: all }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: all, value: -2, scope: all }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: all, value: -3, scope: all }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all }
+
+  - id: COND_4  # Furcht
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: all, value: -1, scope: all }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: all, value: -2, scope: all }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: all, value: -3, scope: all }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all, description: "Flucht oder Handlungsunfähig" }
+
+  - id: COND_5  # Paralyse
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: all, value: -1, scope: all }
+          - { type: modifier, attribute: gs, value: -1, scope: all }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: all, value: -2, scope: all }
+          - { type: modifier, attribute: gs, value: -2, scope: all }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: all, value: -3, scope: all }
+          - { type: modifier, attribute: gs, value: -3, scope: all }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all }
+
+  - id: COND_6  # Schmerz
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: all, value: -1, scope: all }
+          - { type: modifier, attribute: gs, value: -1, scope: all }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: all, value: -2, scope: all }
+          - { type: modifier, attribute: gs, value: -2, scope: all }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: all, value: -3, scope: all }
+          - { type: modifier, attribute: gs, value: -3, scope: all }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all }
+
+  - id: COND_7  # Verwirrung
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: all, value: -1, scope: all }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: all, value: -2, scope: all }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: all, value: -3, scope: all }
+      - level: 4
+        effects:
+          - { type: incapacitated, scope: all }
+
+advantages:
+  - id: ADV_5  # Beidhändig
+    effects:
+      - { type: negation, attribute: offHandPenalty, scope: all }
+
+  - id: ADV_25  # Hohe Lebenskraft
+    effects:
+      - { type: modifier, attribute: le, value: 1, scope: derived, description: "per level" }
+
+  - id: ADV_36  # Reich
+    effects:
+      - { type: narrative, description: "+250 Silbertaler starting money per level" }
+
+  - id: ADV_44  # Verbesserte Regeneration (Lebensenergie)
+    effects:
+      - { type: recovery, attribute: le, value: 1, scope: all, description: "per level per regeneration cycle" }
+
+  - id: ADV_49  # Zäher Hund
+    effects:
+      - { type: modifier, attribute: painLevel, value: -1, scope: all, description: "ignore highest Schmerz level (not at IV)" }
+
+  - id: ADV_75  # Schnell wieder auf den Beinen
+    effects:
+      - { type: recovery, attribute: duration, value: 0.5, scope: all, condition: "anaesthesia or intoxicated", description: "half recovery time" }
+
+disadvantages:
+  - id: DISADV_33  # Persönlichkeitsschwächen
+    effects:
+      - { type: modifier, attribute: talent, value: -1, scope: socialTalents, description: "except Einschüchtern and Willenskraft" }
+
+  - id: DISADV_34  # Prinzipientreue
+    effects:
+      - { type: modifier, attribute: all, value: -1, scope: all, condition: "principles violated", description: "duration >= 1 hour" }
+
+  - id: DISADV_35  # Schlafwandler
+    effects:
+      - { type: stateGain, attribute: anaesthesia, value: 1, scope: all, condition: "sleepwalked last night", description: "lasts 24 hours" }
+      - { type: recovery, attribute: le, value: -1, scope: all, condition: "sleepwalking night" }
+
+  - id: DISADV_50  # Verpflichtungen
+    effects:
+      - { type: narrative, description: "must obey commands from obligating party or face consequences" }
+
+combatAbilities:
+  - id: SA_40  # Aufmerksamkeit
+    effects:
+      - { type: modifier, attribute: sinnesschaerfe, value: 2, scope: combat, condition: "ambush detection" }
+
+  - id: SA_41  # Belastungsgewöhnung
+    effects:
+      - { type: modifier, attribute: be, value: -2, scope: combat, description: "per level, reduces effective BE for INI/GS" }
+
+  - id: SA_43  # Berittener Kampf
+    effects:
+      - { type: modifier, attribute: be, value: -1, scope: combat, condition: "mounted", description: "armour BE reduced while mounted" }
+
+  - id: SA_48  # Finte
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: at, value: -1, scope: combat }
+          - { type: opponentModifier, attribute: pa, value: -2, scope: combat }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: at, value: -2, scope: combat }
+          - { type: opponentModifier, attribute: pa, value: -4, scope: combat }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: at, value: -3, scope: combat }
+          - { type: opponentModifier, attribute: pa, value: -6, scope: combat }
+
+  - id: SA_59  # Schildspalter
+    effects:
+      - { type: negation, attribute: shieldPaBonus, scope: combat }
+      - { type: damageRedirect, target: shieldSP, scope: combat }
+
+  - id: SA_65  # Verteidigungshaltung
+    effects:
+      - { type: modifier, attribute: pa, value: 4, scope: combat }
+      - { type: modifier, attribute: aw, value: 4, scope: combat }
+      - { type: restriction, attribute: at, scope: combat, description: "no attacks this round" }
+
+  - id: SA_66  # Vorstoß
+    effects:
+      - { type: modifier, attribute: at, value: 2, scope: combat }
+      - { type: restriction, attribute: defense, scope: combat, description: "no defense this round" }
+
+  - id: SA_67  # Wuchtschlag
+    effects:
+      - level: 1
+        effects:
+          - { type: modifier, attribute: at, value: -2, scope: combat }
+          - { type: damageModifier, value: 2, scope: combat }
+      - level: 2
+        effects:
+          - { type: modifier, attribute: at, value: -4, scope: combat }
+          - { type: damageModifier, value: 4, scope: combat }
+      - level: 3
+        effects:
+          - { type: modifier, attribute: at, value: -6, scope: combat }
+          - { type: damageModifier, value: 6, scope: combat }
+
+  - id: SA_661  # Golgariten-Stil
+    effects:
+      - { type: modifier, attribute: at, value: 2, scope: combat, condition: "mounted vs foot fighter" }
+      - { type: modifier, attribute: pa, value: 1, scope: combat, condition: "mounted" }
+
+generalAbilities:
+  - id: SA_22  # Ortskenntnis
+    effects:
+      - { type: modifier, attribute: Gassenwissen, value: 1, scope: all, condition: "at known location" }
+      - { type: modifier, attribute: Orientierung, value: 1, scope: all, condition: "at known location" }

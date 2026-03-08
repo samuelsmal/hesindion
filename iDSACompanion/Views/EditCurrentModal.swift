@@ -43,7 +43,7 @@ struct EditCurrentModal: View {
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.yellow)
+                            .background(Color.groupPersonalData)
                             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
@@ -57,7 +57,7 @@ struct EditCurrentModal: View {
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.yellow)
+                            .background(Color.groupPersonalData)
                             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                     }
                     .buttonStyle(.plain)

@@ -6,7 +6,11 @@
       "Bash(ruby --version:*)",
       "Bash(grep:*)",
       "Bash(git commit:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:dsa.ulisses-regelwiki.de)",
+      "WebSearch",
+      "Bash(xcrun simctl:*)",
+      "Bash(sqlite3:*)"
     ]
   }
 }

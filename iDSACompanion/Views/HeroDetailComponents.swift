@@ -70,7 +70,7 @@ struct CollapsibleSection<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+                withAnimation(DSAAnimation.standard) { isExpanded.toggle() }
             } label: {
                 HStack {
                     Text(title)
@@ -113,7 +113,7 @@ struct CollapsibleGroup<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+                withAnimation(DSAAnimation.standard) { isExpanded.toggle() }
             } label: {
                 HStack(spacing: 8) {
                     Rectangle()
@@ -153,7 +153,7 @@ struct FieldRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top) {
-                Text(label)
+                Text(L(label))
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if !value.isEmpty {
@@ -265,48 +265,3 @@ struct LPBarView: View {
     }
 }
 
-// MARK: - EquipmentRow (swipe-to-delete)
-
-struct EquipmentRow: View {
-    let item: EquipmentItem
-    let onDelete: () -> Void
-
-    @State private var offset: CGFloat = 0
-    private let threshold: CGFloat = -80
-
-    var body: some View {
-        ZStack(alignment: .trailing) {
-            Color.red
-            Text("Delete")
-                .font(.system(.body, weight: .bold))
-                .foregroundStyle(.white)
-                .padding(.trailing, 20)
-                .opacity(offset < -40 ? 1 : 0)
-
-            VStack(spacing: 0) {
-                HStack {
-                    Text(item.name).font(.body)
-                    Spacer()
-                    Text(String(format: "%.2f st", item.weight))
-                        .font(.system(.body, design: .monospaced))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(UIColor.systemBackground))
-                .offset(x: max(offset, threshold))
-                Divider()
-            }
-        }
-        .gesture(
-            DragGesture()
-                .onChanged { v in if v.translation.width < 0 { offset = v.translation.width } }
-                .onEnded { v in
-                    if v.translation.width < threshold {
-                        onDelete()
-                    } else {
-                        withAnimation { offset = 0 }
-                    }
-                }
-        )
-    }
-}

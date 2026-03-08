@@ -5,6 +5,7 @@ import SwiftData
 
 struct HeroDetailView: View {
     let hero: Hero
+    @Binding var sidebarSelection: SidebarSelection?
     @Environment(\.modelContext) private var modelContext
     @State private var activeEdit: ActiveEdit?
     @State private var showCommandSearch = false
@@ -24,7 +25,7 @@ struct HeroDetailView: View {
                         .font(.system(.largeTitle, design: .default, weight: .black))
                         .padding(20)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.yellow)
+                        .background(Color.groupPersonalData)
                         .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
@@ -32,7 +33,7 @@ struct HeroDetailView: View {
                     if let attrs = hero.attributes {
                         SwiftUI.Section {
                             VStack(spacing: 0) {
-                                CollapsibleGroup("Personal Data", color: .groupPersonalData) {
+                                CollapsibleGroup(L("groupPersonalData"), color: .groupPersonalData) {
                                     VStack(spacing: 8) {
                                         personalDataSection
                                         experienceSection
@@ -47,7 +48,7 @@ struct HeroDetailView: View {
                                     .padding(.vertical, 8)
                                 }
 
-                                CollapsibleGroup("Talents", color: .groupTalents, textColor: .white) {
+                                CollapsibleGroup(L("groupTalents"), color: .groupTalents, textColor: .white) {
                                     VStack(spacing: 8) {
                                         talentsSections
                                     }
@@ -55,7 +56,7 @@ struct HeroDetailView: View {
                                     .padding(.vertical, 8)
                                 }
 
-                                CollapsibleGroup("Combat", color: .groupCombat) {
+                                CollapsibleGroup(L("groupCombat"), color: .groupCombat) {
                                     VStack(spacing: 8) {
                                         combatTechniquesSection
                                         combatSpecialAbilitiesSection
@@ -67,7 +68,7 @@ struct HeroDetailView: View {
                                     .padding(.vertical, 8)
                                 }
 
-                                CollapsibleGroup("Equipment", color: .groupEquipment, textColor: .white) {
+                                CollapsibleGroup(L("groupEquipment"), color: .groupEquipment, textColor: .white) {
                                     VStack(spacing: 8) {
                                         equipmentSection
                                         moneySection
@@ -110,6 +111,7 @@ struct HeroDetailView: View {
                         query: $commandQuery,
                         isVisible: $showCommandSearch,
                         activeCommand: $activeCommand,
+                        sidebarSelection: $sidebarSelection,
                         commands: filteredCommands,
                         isFocused: $searchFocused
                     )
@@ -207,7 +209,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var experienceSection: some View {
         if let exp = hero.experience {
-            CollapsibleSection("Experience") {
+            CollapsibleSection(L("experience")) {
                 FieldRow(label: "level", value: exp.level)
                 FieldRow(label: "totalAP", value: "\(exp.totalAP)")
                 FieldRow(label: "availableAP", value: "\(exp.availableAP)")
@@ -220,7 +222,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var personalDataSection: some View {
         if let pd = hero.personalData {
-            CollapsibleSection("PersonalData") {
+            CollapsibleSection(L("personalData")) {
                 FieldRow(label: "name", value: pd.name)
                 FieldRow(label: "family", value: pd.family)
                 FieldRow(label: "birthplace", value: pd.birthplace)
@@ -245,7 +247,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var derivedValuesSection: some View {
         if let dv = hero.derivedValues {
-            CollapsibleSection("DerivedValues") {
+            CollapsibleSection(L("derivedValues")) {
                 if dv.lebensenergie.max > 0 {
                     interactiveDerivedRow(
                         label: "lebensenergie",
@@ -356,18 +358,14 @@ struct HeroDetailView: View {
         label: String,
         primary: String,
         subfields: [(String, String)],
-        onLongPress: @escaping () -> Void
+        onEdit: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
-            HStack {
-                Text(label).font(.body)
-                Spacer()
-                Text(primary).font(.system(.body, design: .monospaced))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .onLongPressGesture { onLongPress() }
+            SwipeActionRow(
+                label: label,
+                value: primary,
+                actions: [SwipeAction(icon: "pencil", color: .groupPersonalData) { onEdit() }]
+            )
 
             ForEach(subfields, id: \.0) { key, val in
                 HStack {
@@ -387,9 +385,10 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var advantagesSection: some View {
         if !hero.advantages.isEmpty {
-            CollapsibleSection("Advantages") {
+            CollapsibleSection(L("advantages")) {
                 ForEach(hero.advantages, id: \.self) { item in
-                    FieldRow(label: item, value: "")
+                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                    Divider()
                 }
             }
         }
@@ -399,9 +398,10 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var disadvantagesSection: some View {
         if !hero.disadvantages.isEmpty {
-            CollapsibleSection("Disadvantages") {
+            CollapsibleSection(L("disadvantages")) {
                 ForEach(hero.disadvantages, id: \.self) { item in
-                    FieldRow(label: item, value: "")
+                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                    Divider()
                 }
             }
         }
@@ -411,19 +411,27 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var generalSpecialAbilitiesSection: some View {
         if !hero.generalSpecialAbilities.isEmpty {
-            CollapsibleSection("GeneralSpecialAbilities") {
+            CollapsibleSection(L("generalSpecialAbilities")) {
                 ForEach(hero.generalSpecialAbilities, id: \.self) { item in
-                    FieldRow(label: item, value: "")
+                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                    Divider()
                 }
             }
         }
+    }
+
+    private func lookupActions(for name: String) -> [SwipeAction] {
+        guard let rule = RulesDatabase.shared.lookupByName(name) else { return [] }
+        return [SwipeAction(icon: "book.closed", color: .groupRulebook) {
+            sidebarSelection = .rule(rule.id)
+        }]
     }
 
     // MARK: - Section 7: Languages
 
     @ViewBuilder private var languagesSection: some View {
         if !hero.languages.isEmpty {
-            CollapsibleSection("Languages") {
+            CollapsibleSection(L("languages")) {
                 ForEach(hero.languages, id: \.persistentModelID) { lang in
                     FieldRow(label: lang.name, value: lang.level)
                 }
@@ -435,7 +443,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var scriptsSection: some View {
         if !hero.scripts.isEmpty {
-            CollapsibleSection("Scripts") {
+            CollapsibleSection(L("scripts")) {
                 ForEach(hero.scripts, id: \.self) { item in
                     FieldRow(label: item, value: "")
                 }
@@ -456,16 +464,11 @@ struct HeroDetailView: View {
             if let items = grouped[category], !items.isEmpty {
                 CollapsibleSection(category) {
                     ForEach(items, id: \.persistentModelID) { talent in
-                        HStack {
-                            Text(talent.name).font(.body)
-                            Spacer()
-                            Text("\(talent.value)").font(.system(.body, design: .monospaced))
-                        }
-                        .padding(.leading, 24)
-                        .padding(.trailing, 12)
-                        .padding(.vertical, 6)
-                        .contentShape(Rectangle())
-                        .onLongPressGesture { activeTalentProbe = talent }
+                        SwipeActionRow(
+                            label: talent.name,
+                            value: "\(talent.value)",
+                            actions: talentActions(for: talent)
+                        )
                         Divider()
                     }
                 }
@@ -473,20 +476,31 @@ struct HeroDetailView: View {
         }
     }
 
+    private func talentActions(for talent: Talent) -> [SwipeAction] {
+        var actions: [SwipeAction] = []
+        if let rule = RulesDatabase.shared.lookupByName(talent.name) {
+            actions.append(SwipeAction(icon: "book.closed", color: .groupRulebook) {
+                sidebarSelection = .rule(rule.id)
+            })
+        }
+        actions.append(SwipeAction(icon: "dice.fill", color: .groupCombat) {
+            activeTalentProbe = talent
+        })
+        return actions
+    }
+
     // MARK: - Section 10: CombatTechniques
 
     @ViewBuilder private var combatTechniquesSection: some View {
         if !hero.combatTechniques.isEmpty {
-            CollapsibleSection("CombatTechniques") {
+            CollapsibleSection(L("combatTechniques")) {
                 ForEach(hero.combatTechniques, id: \.persistentModelID) { ct in
                     VStack(spacing: 0) {
-                        HStack {
-                            Text(ct.name).font(.body)
-                            Spacer()
-                            Text("\(ct.value)").font(.system(.body, design: .monospaced))
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        SwipeActionRow(
+                            label: ct.name,
+                            value: "\(ct.value)",
+                            actions: lookupActions(for: ct.name)
+                        )
 
                         HStack(spacing: 12) {
                             Text("AT").font(.system(.caption, weight: .bold))
@@ -509,9 +523,10 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var combatSpecialAbilitiesSection: some View {
         if !hero.combatSpecialAbilities.isEmpty {
-            CollapsibleSection("CombatSpecialAbilities") {
+            CollapsibleSection(L("combatSpecialAbilities")) {
                 ForEach(hero.combatSpecialAbilities, id: \.self) { item in
-                    FieldRow(label: item, value: "")
+                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                    Divider()
                 }
             }
         }
@@ -520,9 +535,14 @@ struct HeroDetailView: View {
     // MARK: - Section 12: Equipment
 
     @ViewBuilder private var equipmentSection: some View {
-        CollapsibleSection("Equipment") {
+        CollapsibleSection(L("equipment")) {
             ForEach(hero.equipment, id: \.persistentModelID) { item in
-                EquipmentRow(item: item) { modelContext.delete(item) }
+                SwipeActionRow(
+                    label: item.name,
+                    value: String(format: "%.2f st", item.weight),
+                    actions: [SwipeAction(icon: "trash", color: .red) { modelContext.delete(item) }]
+                )
+                Divider()
             }
             ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
                 weightRow(name: w.name, weight: w.weight)
@@ -582,18 +602,20 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var meleeWeaponsSection: some View {
         if !hero.meleeWeapons.isEmpty {
-            CollapsibleSection("MeleeWeapons") {
+            CollapsibleSection(L("meleeWeapons")) {
                 ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
-                    SubfieldBlock(label: w.name, subfields: [
-                        ("technique", w.technique),
-                        ("damage", w.damage),
-                        ("AT", "\(w.at)"),
-                        ("PA", "\(w.pa)"),
-                        ("reach", w.reach),
-                        ("weight", String(format: "%.2f st", w.weight))
-                    ])
-                    .contentShape(Rectangle())
-                    .onLongPressGesture { showCombatMode = true }
+                    SwipeActionRow(
+                        actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
+                    ) {
+                        SubfieldBlock(label: w.name, subfields: [
+                            ("technique", w.technique),
+                            ("damage", w.damage),
+                            ("AT", "\(w.at)"),
+                            ("PA", "\(w.pa)"),
+                            ("reach", w.reach),
+                            ("weight", String(format: "%.2f st", w.weight))
+                        ])
+                    }
                 }
             }
         }
@@ -603,17 +625,19 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var shieldSection: some View {
         if !hero.shields.isEmpty {
-            CollapsibleSection("Shields") {
+            CollapsibleSection(L("shields")) {
                 ForEach(hero.shields, id: \.persistentModelID) { s in
-                    SubfieldBlock(label: s.name, subfields: [
-                        ("structure", "\(s.structure)"),
-                        ("breakingFactor", "\(s.breakingFactor)"),
-                        ("AT", "\(s.at)"),
-                        ("PA", "\(s.pa)"),
-                        ("weight", String(format: "%.2f st", s.weight))
-                    ])
-                    .contentShape(Rectangle())
-                    .onLongPressGesture { showCombatMode = true }
+                    SwipeActionRow(
+                        actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
+                    ) {
+                        SubfieldBlock(label: s.name, subfields: [
+                            ("structure", "\(s.structure)"),
+                            ("breakingFactor", "\(s.breakingFactor)"),
+                            ("AT", "\(s.at)"),
+                            ("PA", "\(s.pa)"),
+                            ("weight", String(format: "%.2f st", s.weight))
+                        ])
+                    }
                 }
             }
         }
@@ -623,7 +647,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var armorSection: some View {
         if !hero.armors.isEmpty {
-            CollapsibleSection("Armors") {
+            CollapsibleSection(L("armor")) {
                 ForEach(hero.armors, id: \.persistentModelID) { a in
                     SubfieldBlock(label: a.name, subfields: [
                         ("protectionValue", "\(a.protectionValue)"),
@@ -640,7 +664,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var moneySection: some View {
         if let m = hero.money {
-            CollapsibleSection("Money") {
+            CollapsibleSection(L("money")) {
                 moneyRow("dukaten",    get: { m.dukaten },    set: { m.dukaten = $0 })
                 moneyRow("silbertaler", get: { m.silbertaler }, set: { m.silbertaler = $0 })
                 moneyRow("heller",     get: { m.heller },     set: { m.heller = $0 })
@@ -655,17 +679,13 @@ struct HeroDetailView: View {
         set: @escaping (Int) -> Void
     ) -> some View {
         VStack(spacing: 0) {
-            HStack {
-                Text(label).font(.body)
-                Spacer()
-                Text("\(get())").font(.system(.body, design: .monospaced))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .onLongPressGesture {
-                activeEdit = ActiveEdit(label: label, max: Int.max - 1, getCurrent: get, setCurrent: set)
-            }
+            SwipeActionRow(
+                label: label,
+                value: "\(get())",
+                actions: [SwipeAction(icon: "pencil", color: .groupEquipment) {
+                    activeEdit = ActiveEdit(label: label, max: Int.max - 1, getCurrent: get, setCurrent: set)
+                }]
+            )
             Divider()
         }
     }
@@ -674,13 +694,13 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var mountSection: some View {
         if let m = hero.mount {
-            CollapsibleSection("Mount") {
-                FieldRow(label: "name", value: m.name)
-                FieldRow(label: "type", value: m.mountType)
-                FieldRow(label: "size", value: String(format: "%.1f", m.size))
-                FieldRow(label: "lifeEnergy", value: "\(m.lifeEnergy)")
-                FieldRow(label: "initiative", value: "\(m.initiative)")
-                FieldRow(label: "speed", value: "\(m.speed)")
+            CollapsibleSection(L("mount")) {
+                FieldRow(label: "mountName", value: m.name)
+                FieldRow(label: "mountType", value: m.mountType)
+                FieldRow(label: "mountSize", value: String(format: "%.1f", m.size))
+                FieldRow(label: "mountLifeEnergy", value: "\(m.lifeEnergy)")
+                FieldRow(label: "mountInitiative", value: "\(m.initiative)")
+                FieldRow(label: "mountSpeed", value: "\(m.speed)")
 
                 SubfieldBlock(label: "attributes", subfields: [
                     ("MU", "\(m.attributes.mu)"),
@@ -696,7 +716,7 @@ struct HeroDetailView: View {
                 if !m.attacks.isEmpty {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("attacks").font(.system(.body, weight: .semibold))
+                            Text(L("mountAttacks")).font(.system(.body, weight: .semibold))
                             Spacer()
                         }
                         .padding(.horizontal, 12)
@@ -715,7 +735,7 @@ struct HeroDetailView: View {
                 if !m.talents.isEmpty {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("talents").font(.system(.body, weight: .semibold))
+                            Text(L("mountTalents")).font(.system(.body, weight: .semibold))
                             Spacer()
                         }
                         .padding(.horizontal, 12)
@@ -738,7 +758,7 @@ struct HeroDetailView: View {
                 if !m.specialAbilities.isEmpty {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("specialAbilities").font(.system(.body, weight: .semibold))
+                            Text(L("mountSpecialAbilities")).font(.system(.body, weight: .semibold))
                             Spacer()
                         }
                         .padding(.horizontal, 12)
@@ -754,9 +774,140 @@ struct HeroDetailView: View {
     }
 }
 
+// MARK: - SwipeActionRow
+
+struct SwipeAction {
+    let icon: String
+    let color: Color
+    let action: () -> Void
+}
+
+private struct SwipeActionRow<Content: View>: View {
+    let actions: [SwipeAction]
+    let content: Content
+
+    @State private var offset: CGFloat = 0
+    @State private var settled: Bool = false
+    @State private var dragDirection: DragDirection = .undecided
+
+    private var revealWidth: CGFloat { CGFloat(actions.count) * 56 }
+    private let triggerThreshold: CGFloat = 120
+
+    private enum DragDirection { case undecided, horizontal, vertical }
+
+    /// Convenience initializer for simple label/value rows.
+    init(label: String, value: String, actions: [SwipeAction]) where Content == DefaultSwipeContent {
+        self.actions = actions
+        self.content = DefaultSwipeContent(label: label, value: value)
+    }
+
+    /// Generic initializer for arbitrary content.
+    init(actions: [SwipeAction], @ViewBuilder content: () -> Content) {
+        self.actions = actions
+        self.content = content()
+    }
+
+    var body: some View {
+        if actions.isEmpty {
+            foregroundContent
+        } else {
+            ZStack(alignment: .trailing) {
+                // Background action buttons
+                HStack(spacing: 0) {
+                    Spacer()
+                    ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                        Button {
+                            withAnimation(DSAAnimation.standard) { offset = 0 }
+                            settled = false
+                            action.action()
+                        } label: {
+                            Image(systemName: action.icon)
+                                .font(.system(.title3, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 56)
+                        }
+                        .buttonStyle(.plain)
+                        .background(action.color)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(actions.last?.color ?? .gray)
+
+                foregroundContent
+                    .offset(x: offset)
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 16)
+                            .onChanged { value in
+                                guard !settled else { return }
+                                if dragDirection == .undecided {
+                                    let dx = abs(value.translation.width)
+                                    let dy = abs(value.translation.height)
+                                    if dx > dy * 1.5 && value.translation.width < 0 {
+                                        dragDirection = .horizontal
+                                    } else if dy > dx {
+                                        dragDirection = .vertical
+                                    }
+                                }
+                                if dragDirection == .horizontal {
+                                    offset = min(0, value.translation.width)
+                                }
+                            }
+                            .onEnded { value in
+                                defer { dragDirection = .undecided }
+                                guard !settled, dragDirection == .horizontal else { return }
+                                if -offset > triggerThreshold, let last = actions.last {
+                                    withAnimation(DSAAnimation.standard) { offset = 0 }
+                                    last.action()
+                                } else if -offset > revealWidth / 2 {
+                                    withAnimation(DSAAnimation.standard) { offset = -revealWidth }
+                                    settled = true
+                                } else {
+                                    withAnimation(DSAAnimation.standard) { offset = 0 }
+                                }
+                            }
+                    )
+            }
+            .clipped()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if settled {
+                    withAnimation(DSAAnimation.standard) { offset = 0 }
+                    settled = false
+                }
+            }
+        }
+    }
+
+    private var foregroundContent: some View {
+        content
+            .frame(maxWidth: .infinity)
+            .background(Color(UIColor.systemBackground))
+    }
+}
+
+/// Default content for SwipeActionRow label/value variant.
+struct DefaultSwipeContent: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(L(label)).font(.body)
+            Spacer()
+            if !value.isEmpty {
+                Text(value).font(.system(.body, design: .monospaced))
+            }
+        }
+        .padding(.leading, 24)
+        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
+    @Previewable @State var selection: SidebarSelection? = nil
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
         for: Hero.self, PersonalData.self, Experience.self, Attributes.self,
@@ -767,7 +918,7 @@ struct HeroDetailView: View {
     let hero = Hero(name: "Boronmir Siebenfeld von Ferdok")
     container.mainContext.insert(hero)
     return NavigationStack {
-        HeroDetailView(hero: hero)
+        HeroDetailView(hero: hero, sidebarSelection: $selection)
     }
     .modelContainer(container)
 }
