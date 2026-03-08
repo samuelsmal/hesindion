@@ -458,13 +458,23 @@ struct OptolithImportService {
     // MARK: - Talents
 
     private func parseTalents(_ json: [String: Any]) -> [Talent] {
-        json.compactMap { key, value -> Talent? in
-            guard let val = intFromAny(value) else { return nil }
+        var talentsByRuleId: [String: Talent] = [:]
+        for (key, value) in json {
+            guard let val = intFromAny(value) else { continue }
             let name = rules.lookup(id: key)?.name ?? key
             let category = Self.talentCategory(for: key)
-            return Talent(ruleId: key, name: name, value: val, category: category)
+            talentsByRuleId[key] = Talent(ruleId: key, name: name, value: val, category: category)
         }
-        .sorted { $0.name < $1.name }
+        // Fill in all 59 standard talents with value 0 if not present in import
+        for num in 1...59 {
+            let ruleId = "TAL_\(num)"
+            if talentsByRuleId[ruleId] == nil {
+                let name = rules.lookup(id: ruleId)?.name ?? ruleId
+                let category = Self.talentCategory(for: ruleId)
+                talentsByRuleId[ruleId] = Talent(ruleId: ruleId, name: name, value: 0, category: category)
+            }
+        }
+        return talentsByRuleId.values.sorted { $0.name < $1.name }
     }
 
     // MARK: - Combat Techniques
