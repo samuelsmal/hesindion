@@ -189,15 +189,8 @@ struct CommandSearchOverlay: View {
     @Binding var query: String
     @Binding var isVisible: Bool
     @Binding var activeCommand: AppCommand?
-    @Binding var sidebarSelection: SidebarSelection?
-    @Binding var lookupRuleId: String?
     let commands: [AppCommand]
     var isFocused: FocusState<Bool>.Binding
-
-    private var ruleResults: [RuleSearchResult] {
-        guard query.count >= 2 else { return [] }
-        return RulesDatabase.shared.search(query: query, limit: 10)
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -205,7 +198,7 @@ struct CommandSearchOverlay: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color.black)
-                TextField(L("searchRules"), text: $query)
+                TextField(L("searchCommands"), text: $query)
                     .focused(isFocused)
                     .autocorrectionDisabled()
                 if !query.isEmpty {
@@ -224,7 +217,6 @@ struct CommandSearchOverlay: View {
             .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
 
             // Results
-            let rules = ruleResults
             let maxHeight = UIScreen.main.bounds.height / 3
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -249,38 +241,7 @@ struct CommandSearchOverlay: View {
                             }
                             .buttonStyle(.plain)
                         }
-                    }
-
-                    if !rules.isEmpty {
-                        if !commands.isEmpty {
-                            sectionHeader(L("rulebook"))
-                        }
-                        ForEach(rules) { rule in
-                            Button {
-                                lookupRuleId = rule.id
-                                query = ""
-                                isVisible = false
-                            } label: {
-                                VStack(spacing: 0) {
-                                    HStack {
-                                        Text(rule.name)
-                                            .font(.body)
-                                            .foregroundStyle(Color.black)
-                                        Spacer()
-                                        Text(ruleCategoryLabel(rule.category))
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 10)
-                                    Divider()
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-
-                    if commands.isEmpty && rules.isEmpty {
+                    } else if !query.isEmpty {
                         Text(L("noResults"))
                             .font(.body)
                             .foregroundStyle(.secondary)
@@ -305,19 +266,6 @@ struct CommandSearchOverlay: View {
         )
     }
 
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.system(.caption, weight: .black))
-            .foregroundStyle(Color.black)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity))
-    }
-
-    private func ruleCategoryLabel(_ category: String) -> String {
-        L("cat.\(category)")
-    }
 }
 
 // MARK: - CommandModal

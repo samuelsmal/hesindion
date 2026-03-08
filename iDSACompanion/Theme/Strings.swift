@@ -113,6 +113,7 @@ enum DSAStrings {
         "ruleLoadError":        "The rule could not be loaded.",
         "effects":              "Effects",
         "searchRules":          "Search rules…",
+        "searchCommands":       "Search commands…",
         "noResults":            "No results",
         // HeroList
         "heroes":               "Heroes",
@@ -257,6 +258,7 @@ enum DSAStrings {
         "ruleLoadError":        "Die Regel konnte nicht geladen werden.",
         "effects":              "Effekte",
         "searchRules":          "Regel suchen…",
+        "searchCommands":       "Befehl suchen…",
         "noResults":            "Keine Ergebnisse",
         // HeroList
         "heroes":               "Helden",

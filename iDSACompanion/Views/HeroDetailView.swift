@@ -112,8 +112,6 @@ struct HeroDetailView: View {
                         query: $commandQuery,
                         isVisible: $showCommandSearch,
                         activeCommand: $activeCommand,
-                        sidebarSelection: $sidebarSelection,
-                        lookupRuleId: $lookupRuleId,
                         commands: filteredCommands,
                         isFocused: $searchFocused
                     )
