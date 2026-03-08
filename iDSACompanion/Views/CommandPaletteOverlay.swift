@@ -26,7 +26,7 @@ struct RegenerierenSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             VStack(spacing: 8) {
                 diceBox
@@ -67,7 +67,7 @@ struct RegenerierenSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(!isRolled ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             Text("W6")
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -88,7 +88,7 @@ struct RegenerierenSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 VStack(spacing: 2) {
                     Text(totalMod >= 0 ? "+\(totalMod)" : "\(totalMod)")
@@ -103,7 +103,7 @@ struct RegenerierenSheet: View {
                 .frame(minWidth: 64)
                 .padding(.vertical, 10)
                 .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 Button { userModifier += 1 } label: {
                     Image(systemName: "arrow.up")
@@ -114,7 +114,7 @@ struct RegenerierenSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
@@ -146,7 +146,7 @@ struct RegenerierenSheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 
     private var confirmButton: some View {
@@ -160,7 +160,7 @@ struct RegenerierenSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
         }
         .buttonStyle(.plain)
     }
@@ -214,7 +214,7 @@ struct CommandSearchOverlay: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color.groupPersonalData)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             // Results
             let maxHeight = UIScreen.main.bounds.height / 3
@@ -231,7 +231,7 @@ struct CommandSearchOverlay: View {
                                     HStack {
                                         Text(cmd.displayName)
                                             .font(.body)
-                                            .foregroundStyle(Color.black)
+                                            .foregroundStyle(.primary)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                     .padding(.horizontal, 12)
@@ -253,7 +253,7 @@ struct CommandSearchOverlay: View {
             }
             .frame(maxHeight: maxHeight)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
         }
         .padding(.horizontal, 16)
         .gesture(
@@ -289,7 +289,7 @@ struct CommandModal: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color.groupPersonalData)
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
                 // Input
                 if let input = command.input, case .integerAmount(let label, let min, let max, _) = input {
@@ -320,7 +320,7 @@ struct CommandModal: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                                 }
                                 .buttonStyle(.plain)
 
@@ -334,7 +334,7 @@ struct CommandModal: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -358,13 +358,13 @@ struct CommandModal: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupPersonalData)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
             }
             .padding(32)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in

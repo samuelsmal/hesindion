@@ -50,7 +50,7 @@ struct RulebookView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.groupRulebook)
             .foregroundStyle(.white)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             .padding(.horizontal, 16)
             .padding(.top, 16)
     }

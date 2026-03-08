@@ -35,7 +35,7 @@ struct RuleDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.groupRulebook)
                         .foregroundStyle(.white)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
 
@@ -95,7 +95,7 @@ struct RuleDetailView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color.groupRulebook.opacity(0.2))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
     }
 
     private func effectRow(_ effect: RuleEffect) -> some View {
@@ -131,7 +131,7 @@ struct RuleDetailView: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.groupRulebook.opacity(0.08))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
     }
 
     private func spellMetaBlock(_ spell: SpellDetail, isLiturgy: Bool) -> some View {
@@ -163,7 +163,7 @@ struct RuleDetailView: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.groupRulebook.opacity(0.08))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.tertiaryBorder))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.tertiaryBorder))
     }
 
     private func spellMetaRow(_ label: String, _ value: String) -> some View {

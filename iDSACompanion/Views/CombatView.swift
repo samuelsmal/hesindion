@@ -113,7 +113,7 @@ private struct CombatRootView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             // INITIATIVE section
             combatSectionLabel(L("initiative.label"))
@@ -132,7 +132,7 @@ private struct CombatRootView: View {
                 .padding(.vertical, 8)
                 .frame(width: 64)
                 .background(Color.dsaDark)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 // Round counter
                 Text("Runde \(roundNumber)")
@@ -140,7 +140,7 @@ private struct CombatRootView: View {
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 // Next round button
                 Button { roundNumber += 1 } label: {
@@ -150,7 +150,7 @@ private struct CombatRootView: View {
                         .frame(width: 52)
                         .frame(maxHeight: .infinity)
                         .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
 
@@ -165,8 +165,8 @@ private struct CombatRootView: View {
                     .foregroundStyle(.white)
                     .frame(width: 64)
                     .frame(maxHeight: .infinity)
-                    .background(Color.black)
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .background(Color.dsaDark)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
             }
@@ -211,7 +211,7 @@ private struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
 
@@ -321,7 +321,7 @@ private struct CombatWeaponSelectionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -373,7 +373,7 @@ private struct CombatWeaponSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
         }
         .buttonStyle(.plain)
         .padding(.bottom, 4)
@@ -457,7 +457,7 @@ private struct CombatExecutionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             VStack(spacing: 8) {
                 // Row 1: AT/PA/AW value
@@ -497,7 +497,7 @@ private struct CombatExecutionView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
@@ -524,7 +524,7 @@ private struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(dark ? Color.dsaDark : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             if let label {
                 Text(label)
                     .font(.system(.caption2, weight: .bold))
@@ -549,7 +549,7 @@ private struct CombatExecutionView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
                     .font(.system(.title3, weight: .black))
@@ -557,7 +557,7 @@ private struct CombatExecutionView: View {
                     .frame(minWidth: 64)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 Button {
                     modifier += 1
@@ -570,7 +570,7 @@ private struct CombatExecutionView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
@@ -598,7 +598,7 @@ private struct CombatExecutionView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             Text("W20")
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -619,7 +619,7 @@ private struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             Text(L("confirmation"))
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -656,7 +656,7 @@ private struct CombatExecutionView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, isCritical ? 14 : 10)
             .background(outcomeBackground(outcome))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 
     private func outcomeText(_ outcome: CombatOutcome) -> String {
@@ -673,13 +673,13 @@ private struct CombatExecutionView: View {
         case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
         case .kritischerPatzer: return .groupCombat
         case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
-        case .misserfolg:       return .black
+        case .misserfolg:       return .dsaDark
         }
     }
 
     private func outcomeTextColor(_ outcome: CombatOutcome) -> Color {
         switch outcome {
-        case .kritischerErfolg: return .black
+        case .kritischerErfolg: return .primary
         default:                return .white
         }
     }
@@ -765,7 +765,7 @@ private struct CombatExecutionView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
             }
 
@@ -781,7 +781,7 @@ private struct CombatExecutionView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                     .padding(.top, 6)
             }
 
@@ -843,7 +843,7 @@ private struct CombatInitiativeSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             VStack(spacing: 0) {
                 // Base selector
@@ -875,7 +875,7 @@ private struct CombatInitiativeSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                             Text("W6")
                                 .font(.system(.caption2, weight: .bold))
                                 .foregroundStyle(.secondary)
@@ -889,7 +889,7 @@ private struct CombatInitiativeSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                             .opacity(d6Result == nil ? 0.4 : 1)
 
                         if let t = total {
@@ -903,7 +903,7 @@ private struct CombatInitiativeSheet: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                             }
                             .buttonStyle(.plain)
                         }
@@ -932,11 +932,11 @@ private struct CombatInitiativeSheet: View {
                 Text("\(value)")
                     .font(.system(.title3, weight: .black))
             }
-            .foregroundStyle(isSelected ? .white : .black)
+            .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: isSelected ? 3 : 2))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
         }
         .buttonStyle(.plain)
     }

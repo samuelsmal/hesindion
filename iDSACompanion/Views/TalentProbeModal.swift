@@ -34,7 +34,7 @@ struct TalentProbeModal: View {
                 }
             }
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             .padding(24)
             .gesture(
                 DragGesture().onEnded { value in
@@ -63,7 +63,7 @@ struct TalentProbeModal: View {
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .frame(maxWidth: .infinity)
         .background(Color.groupPersonalData)
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
     }
 
     // MARK: - Probe Content
@@ -129,7 +129,7 @@ struct TalentProbeModal: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color.attributeBackground(for: key))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 1))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
     }
 
     private func modBox(index: Int) -> some View {
@@ -161,7 +161,7 @@ struct TalentProbeModal: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
     }
 
     private func diceBox(value: Int, isAnimating: Bool) -> some View {
@@ -171,7 +171,7 @@ struct TalentProbeModal: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(isAnimating ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
     }
 
     private func resultBox(value: Int) -> some View {
@@ -181,7 +181,7 @@ struct TalentProbeModal: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
     }
 
     // MARK: - Summary Bar
@@ -209,7 +209,7 @@ struct TalentProbeModal: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(resultBackground(result))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 
     // MARK: - Result Computation
@@ -240,20 +240,20 @@ struct TalentProbeModal: View {
         switch result {
         case .kritischerPatzer: return .groupCombat
         case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
-        case .qs(let n) where n == 0: return .black
+        case .qs(let n) where n == 0: return .dsaDark
         case .qs(let n) where n == 1: return Color(red: 0x1a / 255.0, green: 0x5c / 255.0, blue: 0x2e / 255.0)
         case .qs(let n) where n == 2: return Color(red: 0x1e / 255.0, green: 0x7a / 255.0, blue: 0x3c / 255.0)
         case .qs(let n) where n == 3: return Color(red: 0x22 / 255.0, green: 0x91 / 255.0, blue: 0x3c / 255.0)
         case .qs(let n) where n == 4: return Color(red: 0x28 / 255.0, green: 0xa7 / 255.0, blue: 0x45 / 255.0)
         case .qs(let n) where n == 5: return Color(red: 0x4c / 255.0, green: 0xaf / 255.0, blue: 0x50 / 255.0)
         case .qs(let n) where n == 6: return Color(red: 0x8b / 255.0, green: 0xc3 / 255.0, blue: 0x4a / 255.0)
-        default: return .black
+        default: return .dsaDark
         }
     }
 
     private func resultTextColor(_ result: ProbeResult) -> Color {
         switch result {
-        case .qs(let n) where n >= 4: return .black
+        case .qs(let n) where n >= 4: return .primary
         default: return .white
         }
     }

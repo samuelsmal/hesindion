@@ -29,7 +29,7 @@ struct AttributesBar: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color.attributeBackground(for: label))
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 2))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 }
 
@@ -39,7 +39,7 @@ private struct GroupColorKey: EnvironmentKey {
     static let defaultValue: Color = .yellow
 }
 private struct GroupTextColorKey: EnvironmentKey {
-    static let defaultValue: Color = .black
+    static let defaultValue: Color = .primary
 }
 
 extension EnvironmentValues {
@@ -90,7 +90,7 @@ struct CollapsibleSection<Content: View>: View {
 
             if isExpanded { content }
         }
-        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
     }
 }
 
@@ -103,7 +103,7 @@ struct CollapsibleGroup<Content: View>: View {
     @State private var isExpanded = true
     let content: Content
 
-    init(_ title: String, color: Color, textColor: Color = .black, @ViewBuilder content: () -> Content) {
+    init(_ title: String, color: Color, textColor: Color = .primary, @ViewBuilder content: () -> Content) {
         self.title = title
         self.color = color
         self.textColor = textColor
@@ -226,7 +226,7 @@ struct LPBarView: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(current == 0 ? Color.black : Color.white)
+                        .fill(current == 0 ? Color.dsaDark : Color(UIColor.systemGray5))
                     let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
                     Rectangle()
                         .fill(barColor)
@@ -251,7 +251,7 @@ struct LPBarView: View {
     }
 
     private var barColor: Color {
-        if current == 0 { return .black }
+        if current == 0 { return .dsaDark }
         if current <= 5 { return Color(red: 0x8B/255.0, green: 0x00/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max / 4 { return Color(red: 0xCC/255.0, green: 0x22/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max / 2 { return Color(red: 0xE0/255.0, green: 0x70/255.0, blue: 0x00/255.0) }
@@ -262,7 +262,7 @@ struct LPBarView: View {
     private var textColor: Color {
         if current == 0 { return .white }
         if max > 0 && current >= max * 3 / 4 { return .white }
-        return .black
+        return .primary
     }
 }
 

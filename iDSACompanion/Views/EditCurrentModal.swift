@@ -44,7 +44,7 @@ struct EditCurrentModal: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupPersonalData)
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
 
@@ -58,14 +58,14 @@ struct EditCurrentModal: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupPersonalData)
-                            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(24)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in

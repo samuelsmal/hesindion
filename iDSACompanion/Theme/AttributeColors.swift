@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 extension Color {
     // Group divider colours (neo-brutalist, fixed — no dark mode adaptation)
@@ -8,16 +9,19 @@ extension Color {
     static let groupEquipment    = Color(red: 0x16 / 255, green: 0xa3 / 255, blue: 0x4a / 255)
     static let groupRulebook     = Color(red: 0x7c / 255, green: 0x3a / 255, blue: 0xed / 255)
 
+    /// Adaptive border for neo-brutalist strokes — black in light mode, white in dark mode.
+    static let dsaBorder = Color(UIColor.label)
+
     /// Dark accent background used for stat badges and INI boxes.
     static let dsaDark = Color(white: 0.18)
 
     static let attrMU = Color(red: 0xc5 / 255, green: 0x47 / 255, blue: 0x47 / 255)
     static let attrKL = Color(red: 0xa8 / 255, green: 0x5b / 255, blue: 0xd4 / 255)
     static let attrIN = Color(red: 0x33 / 255, green: 0x9b / 255, blue: 0x5b / 255)
-    static let attrCH = Color(red: 0x00 / 255, green: 0x00 / 255, blue: 0x00 / 255)
+    static let attrCH = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.22, alpha: 1) : .black })
     static let attrFF = Color(red: 0xca / 255, green: 0xc1 / 255, blue: 0x58 / 255)
     static let attrGE = Color(red: 0x53 / 255, green: 0x98 / 255, blue: 0xbb / 255)
-    static let attrKO = Color(red: 0xff / 255, green: 0xff / 255, blue: 0xff / 255)
+    static let attrKO = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.82, alpha: 1) : .white })
     static let attrKK = Color(red: 0xc2 / 255, green: 0x8e / 255, blue: 0x46 / 255)
 
     static func attributeBackground(for label: String) -> Color {
