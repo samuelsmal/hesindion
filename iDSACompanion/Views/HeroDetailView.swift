@@ -62,6 +62,7 @@ struct HeroDetailView: View {
                                         combatTechniquesSection
                                         combatSpecialAbilitiesSection
                                         meleeWeaponsSection
+                                        rangedWeaponsSection
                                         armorSection
                                         shieldSection
                                     }
@@ -644,11 +645,33 @@ struct HeroDetailView: View {
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
                         SubfieldBlock(label: w.name, subfields: [
-                            ("combatTechnique", w.combatTechniqueId),
+                            ("combatTechnique", RulesDatabase.shared.lookup(id: w.combatTechniqueId)?.name ?? w.combatTechniqueId),
                             ("damage", w.damage),
                             ("AT", "\(w.at)"),
                             ("PA", "\(w.pa)"),
                             ("reach", w.reach),
+                            ("weight", String(format: "%.2f st", w.weight))
+                        ])
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Section 13b: RangedWeapons
+
+    @ViewBuilder private var rangedWeaponsSection: some View {
+        if !hero.rangedWeapons.isEmpty {
+            CollapsibleSection(L("rangedWeapons")) {
+                ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+                    SwipeActionRow(
+                        actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
+                    ) {
+                        SubfieldBlock(label: w.name, subfields: [
+                            ("combatTechnique", RulesDatabase.shared.lookup(id: w.combatTechniqueId)?.name ?? w.combatTechniqueId),
+                            ("damage", w.damage),
+                            ("FK", "\(w.at)"),
+                            ("range", w.range),
                             ("weight", String(format: "%.2f st", w.weight))
                         ])
                     }
