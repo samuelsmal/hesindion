@@ -45,6 +45,12 @@ struct SpellDetail {
     let target: String?
 }
 
+struct CombatTechniqueDetail {
+    let primaryAttr1: String?
+    let primaryAttr2: String?
+    let hasNoParry: Bool
+}
+
 final class RulesDatabase: @unchecked Sendable {
     static let shared = RulesDatabase()
 
@@ -204,6 +210,40 @@ final class RulesDatabase: @unchecked Sendable {
 
         guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
         return col_text(stmt, 0)
+    }
+
+    func lookupCombatTechniqueDetail(ruleId: String) -> CombatTechniqueDetail? {
+        let sql = """
+            SELECT d.primary_attr_1, d.primary_attr_2, r.has_no_parry
+            FROM combat_technique_details d
+            JOIN rules r ON r.id = d.rule_id
+            WHERE d.rule_id = ?
+            """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+
+        sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
+
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return CombatTechniqueDetail(
+            primaryAttr1: col_text_opt(stmt, 0),
+            primaryAttr2: col_text_opt(stmt, 1),
+            hasNoParry: (sqlite3_column_int(stmt, 2) != 0)
+        )
+    }
+
+    func allCombatTechniqueIds() -> [String] {
+        let sql = "SELECT id FROM rules WHERE category = 'combat_technique' ORDER BY id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+
+        var ids: [String] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            ids.append(col_text(stmt, 0))
+        }
+        return ids
     }
 
     private func lookupSpellDetail(ruleId: String) -> SpellDetail? {
