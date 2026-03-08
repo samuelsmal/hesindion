@@ -20,6 +20,7 @@ struct iDSACompanionApp: App {
             Talent.self,
             CombatTechnique.self,
             MeleeWeapon.self,
+            RangedWeapon.self,
             Armor.self,
             Shield.self,
             EquipmentItem.self,

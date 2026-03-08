@@ -186,6 +186,7 @@ struct OptolithImportService {
             hero.talents = talents
             hero.combatTechniques = combatTechniques
             hero.meleeWeapons = items.weapons
+            hero.rangedWeapons = items.rangedWeapons
             hero.armors = items.armors
             hero.shields = items.shields
             hero.equipment = items.equipment
@@ -260,6 +261,9 @@ struct OptolithImportService {
 
         hero.shields.forEach { context.delete($0) }
         hero.shields = items.shields
+
+        hero.rangedWeapons.forEach { context.delete($0) }
+        hero.rangedWeapons = items.rangedWeapons
 
         hero.equipment.forEach { context.delete($0) }
         hero.equipment = items.equipment
@@ -550,6 +554,7 @@ struct OptolithImportService {
         var weapons: [MeleeWeapon]
         var armors: [Armor]
         var shields: [Shield]
+        var rangedWeapons: [RangedWeapon]
         var equipment: [EquipmentItem]
     }
 
@@ -557,6 +562,7 @@ struct OptolithImportService {
         var weapons: [MeleeWeapon] = []
         var armors: [Armor] = []
         var shields: [Shield] = []
+        var rangedWeapons: [RangedWeapon] = []
         var equipment: [EquipmentItem] = []
 
         for (_, value) in json {
@@ -633,6 +639,36 @@ struct OptolithImportService {
                     ))
                 }
 
+            case 2:
+                // Ranged weapon
+                guard let ctId = item["combatTechnique"] as? String else {
+                    let price = intFromAny(item["price"]) ?? 0
+                    equipment.append(EquipmentItem(name: name, value: price, weight: weight))
+                    continue
+                }
+                let ctVal = ctValues[ctId] ?? 6
+                let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
+                let primaryAttrValue: Int
+                if let d = detail {
+                    let v1 = d.primaryAttr1.map { attributes.value(for: $0) } ?? 8
+                    let v2 = d.primaryAttr2.map { attributes.value(for: $0) } ?? 8
+                    primaryAttrValue = max(v1, v2)
+                } else {
+                    primaryAttrValue = 8
+                }
+                let baseFK = ctVal + Self.eigenschaftsbonus(primaryAttrValue)
+                let atMod = intFromAny(item["at"]) ?? 0
+                let damage = formatDamage(item)
+                let range = formatRange(item)
+                rangedWeapons.append(RangedWeapon(
+                    name: name,
+                    combatTechniqueId: ctId,
+                    damage: damage,
+                    at: baseFK + atMod,
+                    range: range,
+                    weight: weight
+                ))
+
             case 4:
                 // Armor
                 let pro = intFromAny(item["pro"]) ?? 0
@@ -640,13 +676,13 @@ struct OptolithImportService {
                 armors.append(Armor(name: name, protectionValue: pro, encumbrance: enc, weight: weight))
 
             default:
-                // General equipment (gr=2 ranged, gr=3 ammunition, gr=5 general, etc.)
+                // General equipment (gr=3 ammunition, gr=5 general, etc.)
                 let price = intFromAny(item["price"]) ?? 0
                 equipment.append(EquipmentItem(name: name, value: price, weight: weight))
             }
         }
 
-        return ItemsResult(weapons: weapons, armors: armors, shields: shields, equipment: equipment)
+        return ItemsResult(weapons: weapons, armors: armors, shields: shields, rangedWeapons: rangedWeapons, equipment: equipment)
     }
 
     private func formatDamage(_ item: [String: Any]) -> String {
@@ -666,6 +702,14 @@ struct OptolithImportService {
             parts.append("\(flat)")
         }
         return parts.joined()
+    }
+
+    private func formatRange(_ item: [String: Any]) -> String {
+        let close = intFromAny(item["range1"]) ?? 0
+        let medium = intFromAny(item["range2"]) ?? 0
+        let far = intFromAny(item["range3"]) ?? 0
+        if close == 0 && medium == 0 && far == 0 { return "—" }
+        return "\(close)/\(medium)/\(far)"
     }
 
     // MARK: - Money

@@ -27,7 +27,7 @@ struct HeroDetailView: View {
                         .padding(20)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.groupPersonalData)
-                        .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
 
@@ -581,6 +581,9 @@ struct HeroDetailView: View {
             ForEach(hero.shields, id: \.persistentModelID) { s in
                 weightRow(name: s.name, weight: s.weight)
             }
+            ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+                weightRow(name: w.name, weight: w.weight)
+            }
             ForEach(hero.armors, id: \.persistentModelID) { a in
                 weightRow(name: a.name, weight: a.weight)
             }
@@ -916,8 +919,8 @@ struct DefaultSwipeContent: View {
     let container = try! ModelContainer(
         for: Hero.self, PersonalData.self, Experience.self, Attributes.self,
             DerivedValues.self, Talent.self, CombatTechnique.self, MeleeWeapon.self,
-            Armor.self, Shield.self, EquipmentItem.self, Money.self, Pet.self, Language.self,
-            HeroSpell.self,
+            RangedWeapon.self, Armor.self, Shield.self, EquipmentItem.self, Money.self,
+            Pet.self, Language.self, HeroSpell.self,
         configurations: config
     )
     let hero = Hero(name: "Boronmir Siebenfeld von Ferdok")

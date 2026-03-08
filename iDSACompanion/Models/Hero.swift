@@ -20,6 +20,7 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var talents: [Talent]
     @Relationship(deleteRule: .cascade) var combatTechniques: [CombatTechnique]
     @Relationship(deleteRule: .cascade) var meleeWeapons: [MeleeWeapon]
+    @Relationship(deleteRule: .cascade) var rangedWeapons: [RangedWeapon]
     @Relationship(deleteRule: .cascade) var armors: [Armor]
     @Relationship(deleteRule: .cascade) var shields: [Shield]
     @Relationship(deleteRule: .cascade) var equipment: [EquipmentItem]
@@ -52,6 +53,7 @@ final class Hero {
         self.talents = []
         self.combatTechniques = []
         self.meleeWeapons = []
+        self.rangedWeapons = []
         self.armors = []
         self.shields = []
         self.equipment = []
@@ -64,9 +66,10 @@ final class Hero {
     var totalEquipmentWeight: Double {
         let equipmentWeight = equipment.reduce(0.0) { $0 + $1.weight }
         let weaponWeight    = meleeWeapons.reduce(0.0) { $0 + $1.weight }
+        let rangedWeight    = rangedWeapons.reduce(0.0) { $0 + $1.weight }
         let armorWeight     = armors.reduce(0.0) { $0 + $1.weight }
         let shieldWeight    = shields.reduce(0.0) { $0 + $1.weight }
-        return equipmentWeight + weaponWeight + armorWeight + shieldWeight
+        return equipmentWeight + weaponWeight + rangedWeight + armorWeight + shieldWeight
     }
 
     /// Derived from KK attribute per DSA rules.
