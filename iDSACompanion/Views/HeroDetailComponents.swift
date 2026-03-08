@@ -163,7 +163,8 @@ struct FieldRow: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, 24)
+            .padding(.trailing, 12)
             .padding(.vertical, 8)
             Divider()
         }

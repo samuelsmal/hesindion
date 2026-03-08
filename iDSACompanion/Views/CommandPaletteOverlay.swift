@@ -190,6 +190,7 @@ struct CommandSearchOverlay: View {
     @Binding var isVisible: Bool
     @Binding var activeCommand: AppCommand?
     @Binding var sidebarSelection: SidebarSelection?
+    @Binding var lookupRuleId: String?
     let commands: [AppCommand]
     var isFocused: FocusState<Bool>.Binding
 
@@ -256,7 +257,7 @@ struct CommandSearchOverlay: View {
                         }
                         ForEach(rules) { rule in
                             Button {
-                                sidebarSelection = .rule(rule.id)
+                                lookupRuleId = rule.id
                                 query = ""
                                 isVisible = false
                             } label: {

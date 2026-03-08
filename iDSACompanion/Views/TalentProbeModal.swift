@@ -138,29 +138,28 @@ struct TalentProbeModal: View {
         return HStack(spacing: 0) {
             Button { modifiers[index] -= 1 } label: {
                 Text("−")
-                    .font(.system(.caption, weight: .bold))
+                    .font(.system(.caption2, weight: .bold))
                     .foregroundStyle(locked ? .secondary : .primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
             .disabled(locked)
 
             Text(mod >= 0 ? "+\(mod)" : "\(mod)")
-                .font(.system(.body, weight: .bold))
+                .font(.system(.caption, weight: .bold))
                 .foregroundStyle(locked ? Color.secondary : Color.primary)
-                .frame(minWidth: 28)
+                .frame(minWidth: 20)
 
             Button { modifiers[index] += 1 } label: {
                 Text("+")
-                    .font(.system(.caption, weight: .bold))
+                    .font(.system(.caption2, weight: .bold))
                     .foregroundStyle(locked ? .secondary : .primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
             .disabled(locked)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
         .background(Color(UIColor.systemBackground))
         .overlay(Rectangle().stroke(Color.black, lineWidth: DSALayout.secondaryBorder))
     }

@@ -13,6 +13,7 @@ struct HeroDetailView: View {
     @State private var commandQuery = ""
     @FocusState private var searchFocused: Bool
     @State private var activeTalentProbe: Talent? = nil
+    @State private var lookupRuleId: String?
     @State private var showCombatMode = false
     @State private var showRegenerierenSheet = false
 
@@ -112,6 +113,7 @@ struct HeroDetailView: View {
                         isVisible: $showCommandSearch,
                         activeCommand: $activeCommand,
                         sidebarSelection: $sidebarSelection,
+                        lookupRuleId: $lookupRuleId,
                         commands: filteredCommands,
                         isFocused: $searchFocused
                     )
@@ -135,6 +137,19 @@ struct HeroDetailView: View {
             RegenerierenSheet(hero: hero)
                 .presentationCornerRadius(0)
                 .presentationDetents([.medium])
+        }
+        .sheet(isPresented: Binding(
+            get: { lookupRuleId != nil },
+            set: { if !$0 { lookupRuleId = nil } }
+        )) {
+            if let ruleId = lookupRuleId {
+                RuleDetailView(
+                    ruleId: ruleId,
+                    sidebarSelection: .constant(nil),
+                    previousSelection: nil
+                )
+                .presentationCornerRadius(0)
+            }
         }
         .onChange(of: activeCommand?.id) { _, _ in
             guard let cmd = activeCommand else { return }
@@ -423,7 +438,7 @@ struct HeroDetailView: View {
     private func lookupActions(for name: String) -> [SwipeAction] {
         guard let rule = RulesDatabase.shared.lookupByName(name) else { return [] }
         return [SwipeAction(icon: "book.closed", color: .groupRulebook) {
-            sidebarSelection = .rule(rule.id)
+            lookupRuleId = rule.id
         }]
     }
 
@@ -480,7 +495,7 @@ struct HeroDetailView: View {
         var actions: [SwipeAction] = []
         if let rule = RulesDatabase.shared.lookupByName(talent.name) {
             actions.append(SwipeAction(icon: "book.closed", color: .groupRulebook) {
-                sidebarSelection = .rule(rule.id)
+                lookupRuleId = rule.id
             })
         }
         actions.append(SwipeAction(icon: "dice.fill", color: .groupCombat) {
@@ -565,7 +580,8 @@ struct HeroDetailView: View {
                 Text(String(format: "%.2f st", weight))
                     .font(.system(.body, design: .monospaced))
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, 24)
+            .padding(.trailing, 12)
             .padding(.vertical, 8)
             Divider()
         }
@@ -594,7 +610,8 @@ struct HeroDetailView: View {
             }
         }
         .font(.system(.body, design: .monospaced))
-        .padding(.horizontal, 12)
+        .padding(.leading, 24)
+        .padding(.trailing, 12)
         .padding(.vertical, 8)
     }
 
