@@ -26,6 +26,10 @@ struct OptolithImportService {
 
     private let rules = RulesDatabase.shared
 
+    private static func eigenschaftsbonus(_ attributeValue: Int) -> Int {
+        max(0, Int(floor(Double(attributeValue - 8) / 3.0)))
+    }
+
     // MARK: - Public API
 
     func importHero(from url: URL, context: ModelContext) throws {
@@ -89,7 +93,7 @@ struct OptolithImportService {
 
         // Parse combat techniques
         let ctJSON = root["ct"] as? [String: Any] ?? [:]
-        let combatTechniques = parseCombatTechniques(ctJSON)
+        let combatTechniques = parseCombatTechniques(ctJSON, attributes: attributes)
 
         // Build CT value lookup for weapon computation
         let ctValues = buildCTValueLookup(ctJSON)
@@ -479,13 +483,33 @@ struct OptolithImportService {
 
     // MARK: - Combat Techniques
 
-    private func parseCombatTechniques(_ json: [String: Any]) -> [CombatTechnique] {
-        json.compactMap { key, value -> CombatTechnique? in
-            guard let val = intFromAny(value) else { return nil }
-            let name = rules.lookup(id: key)?.name ?? key
-            let atValue = Int(ceil(Double(val) / 2.0))
-            let paValue = val / 2  // rounds down
-            return CombatTechnique(ruleId: key, name: name, value: val, at: atValue, pa: paValue)
+    private func parseCombatTechniques(_ json: [String: Any], attributes: Attributes) -> [CombatTechnique] {
+        let allCTIds = rules.allCombatTechniqueIds()
+        let muBonus = Self.eigenschaftsbonus(attributes.mu)
+
+        return allCTIds.compactMap { ctId -> CombatTechnique? in
+            let name = rules.lookup(id: ctId)?.name ?? ctId
+            let ktw = (json[ctId]).flatMap { intFromAny($0) } ?? 6
+            let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
+
+            let atValue = ktw + muBonus
+
+            let paValue: Int
+            if detail?.hasNoParry == true {
+                paValue = 0
+            } else {
+                let primaryAttrValue: Int
+                if let d = detail {
+                    let v1 = d.primaryAttr1.map { attributes.value(for: $0) } ?? 8
+                    let v2 = d.primaryAttr2.map { attributes.value(for: $0) } ?? 8
+                    primaryAttrValue = max(v1, v2)
+                } else {
+                    primaryAttrValue = 8
+                }
+                paValue = ktw / 2 + Self.eigenschaftsbonus(primaryAttrValue)
+            }
+
+            return CombatTechnique(ruleId: ctId, name: name, value: ktw, at: atValue, pa: paValue)
         }
         .sorted { $0.name < $1.name }
     }
