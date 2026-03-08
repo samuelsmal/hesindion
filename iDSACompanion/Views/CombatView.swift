@@ -175,8 +175,11 @@ private struct CombatRootView: View {
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: hero.derivedValues?.initiative.value ?? 0,
-                    mountBaseINI: hero.mount.map { $0.initiative },
-                    mountName: hero.mount?.name
+                    mountBaseINI: hero.pets.first.flatMap { pet in
+                        // Parse base INI from free-text like "14+1W6"
+                        Int(pet.initiative.split(separator: "+").first ?? "")
+                    },
+                    mountName: hero.pets.first?.name
                 ) { result in
                     rolledInitiative = result
                     roundNumber = 1

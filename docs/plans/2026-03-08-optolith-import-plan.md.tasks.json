@@ -1,0 +1,17 @@
+{
+  "planPath": "docs/plans/2026-03-08-optolith-import-plan.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Create HeroTrait Codable struct", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Create HeroSpell model", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Create Pet model (replaces Mount)", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Update existing models", "status": "pending", "blockedBy": [1, 2, 3]},
+    {"id": 5, "subject": "Task 5: Create OptolithImportService", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 6: Update ModelContainer registrations", "status": "pending", "blockedBy": [4]},
+    {"id": 7, "subject": "Task 7: Wire HeroListView to OptolithImportService", "status": "pending", "blockedBy": [5, 6]},
+    {"id": 8, "subject": "Task 8: Update HeroDetailView for model changes", "status": "pending", "blockedBy": [4, 6]},
+    {"id": 9, "subject": "Task 9: Verify CommandPaletteOverlay compiles", "status": "pending", "blockedBy": [4]},
+    {"id": 10, "subject": "Task 10: Rewrite and run tests", "status": "pending", "blockedBy": [5, 7]},
+    {"id": 11, "subject": "Task 11: Build verification and cleanup", "status": "pending", "blockedBy": [8, 9, 10]}
+  ],
+  "lastUpdated": "2026-03-08T00:00:00Z"
+}

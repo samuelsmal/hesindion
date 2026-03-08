@@ -44,7 +44,7 @@ struct HeroListView: View {
             case .success(let url):
                 handleURL(url)
             case .failure:
-                showError(HeroImportError.fileReadFailed.errorDescription!)
+                showError(OptolithImportError.fileReadFailed.errorDescription!)
             }
         }
         .onOpenURL { url in
@@ -178,7 +178,7 @@ struct HeroListView: View {
 
     private func handleURL(_ url: URL) {
         do {
-            try HeroImportService().importHero(from: url, context: modelContext)
+            try OptolithImportService().importHero(from: url, context: modelContext)
         } catch {
             showError(error.localizedDescription)
         }
@@ -195,7 +195,7 @@ struct HeroListView: View {
     let container = try! ModelContainer(
         for: Hero.self, PersonalData.self, Experience.self, Attributes.self,
             DerivedValues.self, Talent.self, CombatTechnique.self, MeleeWeapon.self,
-            Armor.self, Shield.self, EquipmentItem.self, Money.self, Mount.self, Language.self,
+            Armor.self, Shield.self, EquipmentItem.self, Money.self, Pet.self, Language.self, HeroSpell.self,
         configurations: config
     )
     return HeroListView()

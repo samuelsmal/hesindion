@@ -24,8 +24,9 @@ struct iDSACompanionApp: App {
             Shield.self,
             EquipmentItem.self,
             Money.self,
-            Mount.self,
+            Pet.self,
             Language.self,
+            HeroSpell.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

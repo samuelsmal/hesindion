@@ -4,10 +4,13 @@ import SwiftData
 @Model
 final class Hero {
     var name: String
-    var advantages: [String]
-    var disadvantages: [String]
-    var generalSpecialAbilities: [String]
-    var combatSpecialAbilities: [String]
+    var avatar: Data?
+    var advantages: [HeroTrait]
+    var disadvantages: [HeroTrait]
+    var generalSpecialAbilities: [HeroTrait]
+    var combatSpecialAbilities: [HeroTrait]
+    var cantrips: [HeroTrait]
+    var blessings: [HeroTrait]
     var scripts: [String]
 
     @Relationship(deleteRule: .cascade) var personalData: PersonalData?
@@ -21,22 +24,30 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var shields: [Shield]
     @Relationship(deleteRule: .cascade) var equipment: [EquipmentItem]
     @Relationship(deleteRule: .cascade) var money: Money?
-    @Relationship(deleteRule: .cascade) var mount: Mount?
+    @Relationship(deleteRule: .cascade) var pets: [Pet]
     @Relationship(deleteRule: .cascade) var languages: [Language]
+    @Relationship(deleteRule: .cascade) var spells: [HeroSpell]
+    @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
 
     init(
         name: String,
-        advantages: [String] = [],
-        disadvantages: [String] = [],
-        generalSpecialAbilities: [String] = [],
-        combatSpecialAbilities: [String] = [],
+        avatar: Data? = nil,
+        advantages: [HeroTrait] = [],
+        disadvantages: [HeroTrait] = [],
+        generalSpecialAbilities: [HeroTrait] = [],
+        combatSpecialAbilities: [HeroTrait] = [],
+        cantrips: [HeroTrait] = [],
+        blessings: [HeroTrait] = [],
         scripts: [String] = []
     ) {
         self.name = name
+        self.avatar = avatar
         self.advantages = advantages
         self.disadvantages = disadvantages
         self.generalSpecialAbilities = generalSpecialAbilities
         self.combatSpecialAbilities = combatSpecialAbilities
+        self.cantrips = cantrips
+        self.blessings = blessings
         self.scripts = scripts
         self.talents = []
         self.combatTechniques = []
@@ -44,7 +55,10 @@ final class Hero {
         self.armors = []
         self.shields = []
         self.equipment = []
+        self.pets = []
         self.languages = []
+        self.spells = []
+        self.liturgies = []
     }
 
     var totalEquipmentWeight: Double {
@@ -59,7 +73,7 @@ final class Hero {
     var carryingCapacity: Int { (attributes?.kk ?? 0) * 2 }
 
     var totalCarryingCapacity: Int {
-        carryingCapacity + (mount?.carryingCapacity ?? 0)
+        carryingCapacity + pets.reduce(0) { $0 + $1.carryingCapacity }
     }
 
     var carryingThreshold: Double {
@@ -72,8 +86,8 @@ final class Hero {
 
     /// +1 if the hero has "Verbesserte Regeneration (Lebensenergie)", +2 if it's level II.
     var verbessertRegenerationLEBonus: Int {
-        guard let adv = advantages.first(where: { $0.contains("Verbesserte Regeneration (Lebensenergie)") }) else { return 0 }
-        return adv.contains("II") ? 2 : 1
+        guard let adv = advantages.first(where: { $0.ruleId == "ADV_44" }) else { return 0 }
+        return (adv.tier ?? 1) >= 2 ? 2 : 1
     }
 }
 

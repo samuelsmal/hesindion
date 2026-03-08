@@ -73,7 +73,7 @@ struct HeroDetailView: View {
                                     VStack(spacing: 8) {
                                         equipmentSection
                                         moneySection
-                                        mountSection
+                                        petsSection
                                     }
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 8)
@@ -401,8 +401,8 @@ struct HeroDetailView: View {
     @ViewBuilder private var advantagesSection: some View {
         if !hero.advantages.isEmpty {
             CollapsibleSection(L("advantages")) {
-                ForEach(hero.advantages, id: \.self) { item in
-                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                ForEach(hero.advantages, id: \.self) { trait in
+                    SwipeActionRow(label: traitDisplay(trait), value: "", actions: lookupActions(for: trait))
                     Divider()
                 }
             }
@@ -414,8 +414,8 @@ struct HeroDetailView: View {
     @ViewBuilder private var disadvantagesSection: some View {
         if !hero.disadvantages.isEmpty {
             CollapsibleSection(L("disadvantages")) {
-                ForEach(hero.disadvantages, id: \.self) { item in
-                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                ForEach(hero.disadvantages, id: \.self) { trait in
+                    SwipeActionRow(label: traitDisplay(trait), value: "", actions: lookupActions(for: trait))
                     Divider()
                 }
             }
@@ -427,12 +427,30 @@ struct HeroDetailView: View {
     @ViewBuilder private var generalSpecialAbilitiesSection: some View {
         if !hero.generalSpecialAbilities.isEmpty {
             CollapsibleSection(L("generalSpecialAbilities")) {
-                ForEach(hero.generalSpecialAbilities, id: \.self) { item in
-                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                ForEach(hero.generalSpecialAbilities, id: \.self) { trait in
+                    SwipeActionRow(label: traitDisplay(trait), value: "", actions: lookupActions(for: trait))
                     Divider()
                 }
             }
         }
+    }
+
+    private func traitDisplay(_ trait: HeroTrait) -> String {
+        var result = trait.name
+        if let tier = trait.tier {
+            result += " (Stufe \(tier))"
+        }
+        if let sid = trait.sid {
+            result += ": \(sid)"
+        }
+        return result
+    }
+
+    private func lookupActions(for trait: HeroTrait) -> [SwipeAction] {
+        guard let rule = RulesDatabase.shared.lookup(id: trait.ruleId) else { return [] }
+        return [SwipeAction(icon: "book.closed", color: .groupRulebook) {
+            lookupRuleId = rule.id
+        }]
     }
 
     private func lookupActions(for name: String) -> [SwipeAction] {
@@ -539,8 +557,8 @@ struct HeroDetailView: View {
     @ViewBuilder private var combatSpecialAbilitiesSection: some View {
         if !hero.combatSpecialAbilities.isEmpty {
             CollapsibleSection(L("combatSpecialAbilities")) {
-                ForEach(hero.combatSpecialAbilities, id: \.self) { item in
-                    SwipeActionRow(label: item, value: "", actions: lookupActions(for: item))
+                ForEach(hero.combatSpecialAbilities, id: \.self) { trait in
+                    SwipeActionRow(label: traitDisplay(trait), value: "", actions: lookupActions(for: trait))
                     Divider()
                 }
             }
@@ -591,7 +609,7 @@ struct HeroDetailView: View {
         let total = hero.totalEquipmentWeight
         let totalCap = hero.totalCarryingCapacity
         let heroCap = hero.carryingCapacity
-        let mountCap = hero.mount?.carryingCapacity ?? 0
+        let petsCap = hero.pets.reduce(0) { $0 + $1.carryingCapacity }
 
         VStack(alignment: .leading, spacing: 2) {
             HStack {
@@ -603,8 +621,8 @@ struct HeroDetailView: View {
                 }
                 Spacer()
             }
-            if mountCap > 0 {
-                Text("\(heroCap) + \(mountCap) = \(totalCap) st")
+            if petsCap > 0 {
+                Text("\(heroCap) + \(petsCap) = \(totalCap) st")
                     .foregroundStyle(.secondary)
                     .font(.system(.caption, design: .monospaced))
             }
@@ -625,7 +643,7 @@ struct HeroDetailView: View {
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
                         SubfieldBlock(label: w.name, subfields: [
-                            ("technique", w.technique),
+                            ("combatTechnique", w.combatTechniqueId),
                             ("damage", w.damage),
                             ("AT", "\(w.at)"),
                             ("PA", "\(w.pa)"),
@@ -648,10 +666,11 @@ struct HeroDetailView: View {
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
                         SubfieldBlock(label: s.name, subfields: [
-                            ("structure", "\(s.structure)"),
-                            ("breakingFactor", "\(s.breakingFactor)"),
+                            ("damage", s.damage),
                             ("AT", "\(s.at)"),
                             ("PA", "\(s.pa)"),
+                            ("reach", s.reach),
+                            ("SP", "\(s.structurePoints)"),
                             ("weight", String(format: "%.2f st", s.weight))
                         ])
                     }
@@ -668,7 +687,6 @@ struct HeroDetailView: View {
                 ForEach(hero.armors, id: \.persistentModelID) { a in
                     SubfieldBlock(label: a.name, subfields: [
                         ("protectionValue", "\(a.protectionValue)"),
-                        ("armorRating", "\(a.armorRating)"),
                         ("encumbrance", "\(a.encumbrance)"),
                         ("weight", String(format: "%.2f st", a.weight))
                     ])
@@ -707,83 +725,54 @@ struct HeroDetailView: View {
         }
     }
 
-    // MARK: - Section 17: Mount
+    // MARK: - Section 17: Pets
 
-    @ViewBuilder private var mountSection: some View {
-        if let m = hero.mount {
-            CollapsibleSection(L("mount")) {
-                FieldRow(label: "mountName", value: m.name)
-                FieldRow(label: "mountType", value: m.mountType)
-                FieldRow(label: "mountSize", value: String(format: "%.1f", m.size))
-                FieldRow(label: "mountLifeEnergy", value: "\(m.lifeEnergy)")
-                FieldRow(label: "mountInitiative", value: "\(m.initiative)")
-                FieldRow(label: "mountSpeed", value: "\(m.speed)")
-
-                SubfieldBlock(label: "attributes", subfields: [
-                    ("MU", "\(m.attributes.mu)"),
-                    ("KL", "\(m.attributes.kl)"),
-                    ("IN", "\(m.attributes.inValue)"),
-                    ("CH", "\(m.attributes.ch)"),
-                    ("FF", "\(m.attributes.ff)"),
-                    ("GE", "\(m.attributes.ge)"),
-                    ("KO", "\(m.attributes.ko)"),
-                    ("KK", "\(m.attributes.kk)")
-                ])
-
-                if !m.attacks.isEmpty {
+    @ViewBuilder private var petsSection: some View {
+        if !hero.pets.isEmpty {
+            CollapsibleSection(L("pets")) {
+                ForEach(hero.pets, id: \.persistentModelID) { pet in
                     VStack(spacing: 0) {
                         HStack {
-                            Text(L("mountAttacks")).font(.system(.body, weight: .semibold))
+                            Text(pet.name).font(.system(.body, weight: .semibold))
                             Spacer()
+                            Text(pet.type).font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
 
-                        ForEach(m.attacks, id: \.name) { attack in
-                            SubfieldBlock(label: attack.name, subfields: [
-                                ("AT", "\(attack.at)"),
-                                ("damage", attack.damage),
-                                ("reach", attack.reach)
-                            ])
-                        }
-                    }
-                }
+                        SubfieldBlock(label: L("attributes"), subfields: [
+                            ("MU", "\(pet.attributes.mu)"),
+                            ("KL", "\(pet.attributes.kl)"),
+                            ("IN", "\(pet.attributes.inValue)"),
+                            ("CH", "\(pet.attributes.ch)"),
+                            ("FF", "\(pet.attributes.ff)"),
+                            ("GE", "\(pet.attributes.ge)"),
+                            ("KO", "\(pet.attributes.ko)"),
+                            ("KK", "\(pet.attributes.kk)")
+                        ])
 
-                if !m.talents.isEmpty {
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text(L("mountTalents")).font(.system(.body, weight: .semibold))
-                            Spacer()
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        SubfieldBlock(label: L("combat"), subfields: [
+                            ("LE", "\(pet.lifeEnergy)"),
+                            ("INI", pet.initiative),
+                            ("GS", "\(pet.speed)"),
+                            ("AT", pet.attack),
+                            ("TP", pet.damage),
+                            ("RW", pet.reach),
+                            ("AK", "\(pet.actions)")
+                        ])
 
-                        ForEach(m.talents, id: \.name) { t in
-                            HStack {
-                                Text(t.name).font(.body)
-                                Spacer()
-                                Text("\(t.value)").font(.system(.body, design: .monospaced))
-                            }
-                            .padding(.leading, 24)
-                            .padding(.trailing, 12)
-                            .padding(.vertical, 6)
-                            Divider()
+                        if !pet.talents.isEmpty {
+                            FieldRow(label: "talents", value: pet.talents)
                         }
-                    }
-                }
+                        if !pet.skills.isEmpty {
+                            FieldRow(label: "skills", value: pet.skills)
+                        }
+                        if !pet.notes.isEmpty {
+                            FieldRow(label: "notes", value: pet.notes)
+                        }
 
-                if !m.specialAbilities.isEmpty {
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text(L("mountSpecialAbilities")).font(.system(.body, weight: .semibold))
-                            Spacer()
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-
-                        ForEach(m.specialAbilities, id: \.self) { ability in
-                            FieldRow(label: ability, value: "")
-                        }
+                        Divider()
                     }
                 }
             }
@@ -929,7 +918,8 @@ struct DefaultSwipeContent: View {
     let container = try! ModelContainer(
         for: Hero.self, PersonalData.self, Experience.self, Attributes.self,
             DerivedValues.self, Talent.self, CombatTechnique.self, MeleeWeapon.self,
-            Armor.self, Shield.self, EquipmentItem.self, Money.self, Mount.self, Language.self,
+            Armor.self, Shield.self, EquipmentItem.self, Money.self, Pet.self, Language.self,
+            HeroSpell.self,
         configurations: config
     )
     let hero = Hero(name: "Boronmir Siebenfeld von Ferdok")
