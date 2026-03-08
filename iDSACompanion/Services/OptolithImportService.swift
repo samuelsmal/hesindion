@@ -413,7 +413,12 @@ struct OptolithImportService {
                 let tier = intFromAny(inst["tier"])
                 let sid = stringFromAny(inst["sid"])
                 let sid2 = stringFromAny(inst["sid2"])
-                let displaySid = sid2 ?? sid
+                let resolvedSid: String? = if let rawSid = sid, let numericSid = Int(rawSid) {
+                    rules.lookupSelectOption(ruleId: key, sid: numericSid) ?? sid
+                } else {
+                    sid
+                }
+                let displaySid = sid2 ?? resolvedSid
 
                 let trait = HeroTrait(ruleId: key, name: ruleName, tier: tier, sid: displaySid)
 

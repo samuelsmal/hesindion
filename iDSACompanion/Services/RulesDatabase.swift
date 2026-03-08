@@ -192,6 +192,20 @@ final class RulesDatabase: @unchecked Sendable {
         )
     }
 
+    func lookupSelectOption(ruleId: String, sid: Int, locale: String = "de-DE") -> String? {
+        let sql = "SELECT name FROM select_options WHERE rule_id = ? AND sid = ? AND locale = ?"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+
+        sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
+        sqlite3_bind_int(stmt, 2, Int32(sid))
+        sqlite3_bind_text(stmt, 3, locale, -1, SQLITE_TRANSIENT)
+
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return col_text(stmt, 0)
+    }
+
     private func lookupSpellDetail(ruleId: String) -> SpellDetail? {
         let sql = """
             SELECT check_attr_1, check_attr_2, check_attr_3,

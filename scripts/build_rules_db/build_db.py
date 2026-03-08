@@ -138,6 +138,14 @@ def create_schema(conn: sqlite3.Connection):
         CREATE INDEX IF NOT EXISTS idx_spell_details_property ON spell_details(property);
         CREATE INDEX IF NOT EXISTS idx_spell_details_group ON spell_details(group_id);
 
+        CREATE TABLE IF NOT EXISTS select_options (
+            rule_id TEXT NOT NULL REFERENCES rules(id),
+            sid     INTEGER NOT NULL,
+            locale  TEXT NOT NULL REFERENCES locales(code),
+            name    TEXT NOT NULL,
+            PRIMARY KEY (rule_id, sid, locale)
+        );
+
         CREATE VIRTUAL TABLE IF NOT EXISTS rules_fts USING fts5(
             rule_id,
             name,
@@ -221,6 +229,18 @@ def import_states(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {len(data)} states")
 
 
+def _import_select_options(conn: sqlite3.Connection, rule_id: str, de_entry: dict):
+    for opt in de_entry.get("selectOptions", []):
+        sid = opt.get("id")
+        name = opt.get("name")
+        if sid is not None and name and isinstance(sid, int):
+            conn.execute(
+                """INSERT OR REPLACE INTO select_options (rule_id, sid, locale, name)
+                   VALUES (?, ?, 'de-DE', ?)""",
+                (rule_id, sid, name),
+            )
+
+
 def _import_prerequisites(conn: sqlite3.Connection, rule_id: str, univ: dict):
     for prereq in univ.get("increasablePrerequisites", []):
         ref_id = prereq["id"]
@@ -292,6 +312,7 @@ def import_advantages(conn: sqlite3.Connection, source: Path):
             (rule_id, entry.get("name", ""), entry.get("rules", "")),
         )
         _import_prerequisites(conn, rule_id, univ)
+        _import_select_options(conn, rule_id, entry)
 
     conn.commit()
     print(f"  Imported {len(de_data)} advantages")
@@ -319,6 +340,7 @@ def import_disadvantages(conn: sqlite3.Connection, source: Path):
             (rule_id, entry.get("name", ""), entry.get("rules", "")),
         )
         _import_prerequisites(conn, rule_id, univ)
+        _import_select_options(conn, rule_id, entry)
 
     conn.commit()
     print(f"  Imported {len(de_data)} disadvantages")
@@ -412,6 +434,7 @@ def import_special_abilities(conn: sqlite3.Connection, source: Path):
         )
 
         _import_prerequisites(conn, rule_id, univ)
+        _import_select_options(conn, rule_id, entry)
 
         ct_list = univ.get("combatTechniques", [])
         if isinstance(ct_list, list):
@@ -726,6 +749,46 @@ def import_blessings(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {len(de_data)} blessings")
 
 
+def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
+    """Extract language (SA_29) and script (SA_27) select options into LANG_/SCRIPT_ entries."""
+    de_data = load_yaml(source / "de-DE" / "SpecialAbilities.yaml")
+
+    lang_count = 0
+    script_count = 0
+
+    for entry in de_data:
+        if entry["id"] == "SA_29":
+            for opt in entry.get("selectOptions", []):
+                rule_id = f"LANG_{opt['id']}"
+                conn.execute(
+                    "INSERT OR REPLACE INTO rules (id, category) VALUES (?, 'special_ability')",
+                    (rule_id,),
+                )
+                conn.execute(
+                    """INSERT OR REPLACE INTO rules_i18n (rule_id, locale, name)
+                       VALUES (?, 'de-DE', ?)""",
+                    (rule_id, opt["name"]),
+                )
+                lang_count += 1
+
+        elif entry["id"] == "SA_27":
+            for opt in entry.get("selectOptions", []):
+                rule_id = f"SCRIPT_{opt['id']}"
+                conn.execute(
+                    "INSERT OR REPLACE INTO rules (id, category) VALUES (?, 'special_ability')",
+                    (rule_id,),
+                )
+                conn.execute(
+                    """INSERT OR REPLACE INTO rules_i18n (rule_id, locale, name)
+                       VALUES (?, 'de-DE', ?)""",
+                    (rule_id, opt["name"]),
+                )
+                script_count += 1
+
+    conn.commit()
+    print(f"  Imported {lang_count} languages, {script_count} scripts")
+
+
 def import_effects(conn: sqlite3.Connection, effects_path: Path):
     with open(effects_path, "r", encoding="utf-8") as f:
         doc = yaml.safe_load(f)
@@ -831,6 +894,8 @@ def main():
     import_combat_techniques(conn, args.source)
     print("Importing special abilities...")
     import_special_abilities(conn, args.source)
+    print("Importing languages and scripts...")
+    import_languages_and_scripts(conn, args.source)
     print("Importing skills...")
     import_skills(conn, args.source)
 
