@@ -84,12 +84,15 @@ struct HeroListView: View {
                         .listRowBackground(Color(UIColor.systemBackground))
                 } else {
                     ForEach(heroes, id: \.persistentModelID) { hero in
-                        Text(hero.name)
-                            .font(.system(.title3, design: .default, weight: .bold))
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 4)
-                            .tag(SidebarSelection.hero(hero.persistentModelID))
-                            .listRowBackground(
+                        HStack(spacing: 12) {
+                            heroAvatar(hero)
+                            Text(hero.name)
+                                .font(.system(.title3, design: .default, weight: .bold))
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                        .tag(SidebarSelection.hero(hero.persistentModelID))
+                        .listRowBackground(
                                 selection == .hero(hero.persistentModelID)
                                     ? Color.groupPersonalData.opacity(0.15)
                                     : Color(UIColor.systemBackground)
@@ -120,6 +123,32 @@ struct HeroListView: View {
                 .frame(height: DSALayout.secondaryBorder)
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func heroAvatar(_ hero: Hero) -> some View {
+        let size: CGFloat = 36
+        if let data = hero.avatar, let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(width: size, height: size)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.dsaBorder, lineWidth: 2)
+                )
+        } else {
+            Image(systemName: "person.fill")
+                .font(.system(size: 16))
+                .frame(width: size, height: size)
+                .background(Color.groupPersonalData.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.dsaBorder, lineWidth: 2)
+                )
+        }
     }
 
     // MARK: - Detail
@@ -163,10 +192,10 @@ struct HeroListView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .foregroundStyle(Color.black)
+                .foregroundStyle(.primary)
                 .overlay(
                     Rectangle()
-                        .stroke(Color.black, lineWidth: 3)
+                        .stroke(Color.dsaBorder, lineWidth: 3)
                 )
         }
         .padding(.horizontal, 16)
