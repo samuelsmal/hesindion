@@ -158,6 +158,23 @@ enum DSAStrings {
         "spellRange":           "Range",
         "spellDuration":        "Duration",
         "spellTarget":          "Target",
+        // Damage & Armor
+        "takeDamage":           "Take Damage",
+        "takeDamage.label":     "TAKE DAMAGE",
+        "tp":                   "TP",
+        "rs":                   "RS",
+        "equip":                "Equip",
+        "unequip":              "Unequip",
+        "armorSelection":       "Armor Selection",
+        "armorSelection.label": "ARMOR",
+        "continue":             "Continue",
+        "confirm":              "Confirm",
+        "noArmor":              "No armor available",
+        "equipped":             "Equipped",
+        "protectionValue":      "RS",
+        "encumbrance":          "BE",
+        "lpLost":               "LP lost",
+        "absorbed":             "Armor absorbs all damage",
     ]
 
     private static let translations: [String: String] = [
@@ -304,6 +321,23 @@ enum DSAStrings {
         "spellRange":           "Reichweite",
         "spellDuration":        "Wirkungsdauer",
         "spellTarget":          "Zielkategorie",
+        // Damage & Armor
+        "takeDamage":           "Schaden nehmen",
+        "takeDamage.label":     "SCHADEN NEHMEN",
+        "tp":                   "TP",
+        "rs":                   "RS",
+        "equip":                "Anlegen",
+        "unequip":              "Ablegen",
+        "armorSelection":       "Rüstungsauswahl",
+        "armorSelection.label": "RÜSTUNG",
+        "continue":             "Weiter",
+        "confirm":              "Bestätigen",
+        "noArmor":              "Keine Rüstung vorhanden",
+        "equipped":             "Angelegt",
+        "protectionValue":      "RS",
+        "encumbrance":          "BE",
+        "lpLost":               "LP verloren",
+        "absorbed":             "Rüstung absorbiert allen Schaden",
     ]
 }
 
