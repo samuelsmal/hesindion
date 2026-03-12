@@ -92,6 +92,51 @@ final class Hero {
         guard let adv = advantages.first(where: { $0.ruleId == "ADV_44" }) else { return 0 }
         return (adv.tier ?? 1) >= 2 ? 2 : 1
     }
+
+    /// Sum of RS from all equipped armor pieces.
+    var totalRS: Int {
+        armors.filter(\.isEquipped).reduce(0) { $0 + $1.protectionValue }
+    }
+
+    /// Sum of BE from all equipped armor pieces.
+    var totalEquippedBE: Int {
+        armors.filter(\.isEquipped).reduce(0) { $0 + $1.encumbrance }
+    }
+
+    /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 2.
+    var belastungsgewoehnungLevel: Int {
+        combatSpecialAbilities.first(where: { $0.ruleId == "SA_41" })?.tier ?? 0
+    }
+
+    /// Effective BE after Belastungsgewöhnung reduction.
+    var effectiveBE: Int {
+        max(0, totalEquippedBE - 2 * belastungsgewoehnungLevel)
+    }
+
+    /// Belastung penalty applied to AT, PA, AW, INI, GS. Equals negative effectiveBE.
+    var belastungPenalty: Int {
+        -effectiveBE
+    }
+
+    /// Sum of direct INI modifiers from equipped armor (independent of BE).
+    var armorIniModifier: Int {
+        armors.filter(\.isEquipped).reduce(0) { $0 + $1.iniModifier }
+    }
+
+    /// Sum of direct GS modifiers from equipped armor (independent of BE).
+    var armorGsModifier: Int {
+        armors.filter(\.isEquipped).reduce(0) { $0 + $1.gsModifier }
+    }
+
+    /// Total INI penalty: Belastung + direct armor modifiers.
+    var totalIniPenalty: Int {
+        belastungPenalty + armorIniModifier
+    }
+
+    /// Total GS penalty: Belastung + direct armor modifiers.
+    var totalGsPenalty: Int {
+        belastungPenalty + armorGsModifier
+    }
 }
 
 // MARK: - AppCommand
