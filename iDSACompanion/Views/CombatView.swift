@@ -71,7 +71,7 @@ struct CombatView: View {
                 CombatLoadoutWeaponView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .loadoutShield:
-                Text("Loadout Shield placeholder")
+                CombatLoadoutShieldView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .root:
                 CombatRootView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
@@ -330,6 +330,101 @@ private struct CombatLoadoutWeaponView: View {
                     Text(detail)
                         .font(.system(.caption, design: .monospaced, weight: .bold))
                         .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(combatAccent)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 4)
+    }
+}
+
+// MARK: - CombatLoadoutShieldView
+
+private struct CombatLoadoutShieldView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .loadoutWeapon } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(L("selectShield"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    // No shield option
+                    loadoutRow(name: L("noShield"), detail: "", note: nil, isSelected: hero.selectedShieldName == nil) {
+                        hero.selectedShieldName = nil
+                        step = .root
+                    }
+
+                    ForEach(hero.shields, id: \.persistentModelID) { s in
+                        loadoutRow(name: s.name, detail: "AT \(s.at) / PA \(s.pa)", note: s.note.isEmpty ? nil : s.note, isSelected: hero.selectedShieldName == s.name) {
+                            hero.selectedShieldName = s.name
+                            step = .root
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+            }
+        }
+    }
+
+    private func loadoutRow(name: String, detail: String, note: String?, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    if !detail.isEmpty {
+                        Text(detail)
+                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
+                    if let note {
+                        Text(note)
+                            .font(.system(.caption2))
+                            .foregroundStyle(combatAccent)
+                    }
                 }
                 Spacer()
                 if isSelected {

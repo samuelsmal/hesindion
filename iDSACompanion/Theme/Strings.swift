@@ -106,6 +106,8 @@ enum DSAStrings {
         "action.label":         "ACTION",
         "unarmed.label":        "UNARMED",
         "selectWeapon":         "Select Weapon",
+        "selectShield":         "Select Shield",
+        "noShield":             "No Shield",
         // Rulebook
         "rulebook":             "Rulebook",
         "backToHero":           "Back to Hero",
@@ -270,6 +272,8 @@ enum DSAStrings {
         "action.label":         "AKTION",
         "unarmed.label":        "WAFFENLOS",
         "selectWeapon":         "Waffe wählen",
+        "selectShield":         "Schild wählen",
+        "noShield":             "Kein Schild",
         // Rulebook
         "rulebook":             "Regelbuch",
         "backToHero":           "Zurück zum Helden",
