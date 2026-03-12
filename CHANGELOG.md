@@ -1,0 +1,46 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased]
+
+### Added
+
+- Armor equip/unequip system with `isEquipped` toggle (swipe-left in hero detail, toggle in combat)
+- Belastung (encumbrance) system: effective BE, Belastungsgewöhnung support, penalties on AT/PA/AW/INI/GS
+- Belastung penalty display as separate modifiers on combat stats (e.g., "AT 12 (-1)")
+- Combat flow: armor selection → initiative roll → combat root (replaces direct-to-root)
+- "Schaden nehmen" combat action: TP input → RS calculation → LP reduction with confirm
+- Armor management during combat via shield button and modal sheet
+- INI/GS direct modifiers on armor model (parsed from Optolith `iniMod`/`movMod`)
+- 17 new DE/EN localization strings for damage and armor system
+- Adaptive border colors and combat technique AT/PA design docs
+- Ranged weapons UI with combat technique ID-to-name resolution
+- RangedWeapon model and ranged weapons import
+- Attribute-by-ID resolver to Attributes model
+- Combat technique detail lookup in RulesDatabase
+- Full set of 59 standard talents included on import (missing ones default)
+- Hero avatar display in sidebar list rows
+- Direct Optolith export import (replacing custom hero JSON import)
+- Rule lookup sheet, app icon variants, and UI polish
+- Rules system with spells, liturgies, and rulebook UI
+- Regenerieren command to restore Lebensenergie via 1W6 roll
+- Combat section labels, step transitions, and expanded combat spec
+
+### Fixed
+
+- Initiative re-roll sheet now includes Belastung penalty in base INI
+- Weapon AT/PA calculations to use DSA 5 formulas
+- AT/PA calculation and listing of all combat techniques
+- Numeric select-option IDs resolved to names during hero import
+- Button heights in combat root view
+- LP bar display at zero value
+
+### Changed
+
+- Parieren/Ausweichen moved to own rows
+- LP bar pattern reused in hero view Lebensenergie modal
+- INI row height reduced by halving vertical padding
+- Added Makefile, fixed UIFileSharingEnabled, and simplified command palette
