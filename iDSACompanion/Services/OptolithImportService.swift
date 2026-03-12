@@ -673,7 +673,9 @@ struct OptolithImportService {
                 // Armor
                 let pro = intFromAny(item["pro"]) ?? 0
                 let enc = intFromAny(item["enc"]) ?? 0
-                armors.append(Armor(name: name, protectionValue: pro, encumbrance: enc, weight: weight))
+                let iniMod = intFromAny(item["iniMod"]) ?? 0
+                let movMod = intFromAny(item["movMod"]) ?? 0
+                armors.append(Armor(name: name, protectionValue: pro, encumbrance: enc, weight: weight, iniModifier: iniMod, gsModifier: movMod))
 
             default:
                 // General equipment (gr=3 ammunition, gr=5 general, etc.)
