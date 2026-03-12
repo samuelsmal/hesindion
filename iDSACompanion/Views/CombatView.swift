@@ -85,6 +85,7 @@ struct CombatView: View {
                     weaponName: name,
                     attributeValue: attrValue,
                     damageFormula: dmgFormula,
+                    note: note,
                     step: $step,
                     onDismiss: onDismiss
                 )
@@ -1250,6 +1251,7 @@ private struct CombatExecutionView: View {
     let weaponName: String
     let attributeValue: Int
     let damageFormula: String?
+    let note: String?
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
@@ -1325,6 +1327,13 @@ private struct CombatExecutionView: View {
             VStack(spacing: 8) {
                 // Row 1: AT/PA/AW value
                 valueBox("\(attributeValue)", label: attrLabel)
+
+                if let note, !note.isEmpty {
+                    Text(note)
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(combatAccent)
+                        .padding(.top, 2)
+                }
 
                 // Row 2: Modifier
                 modifierBox
