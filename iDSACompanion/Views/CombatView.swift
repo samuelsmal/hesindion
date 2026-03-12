@@ -774,13 +774,45 @@ private struct CombatRootView: View {
                 }
             }
 
+            // Loadout display
+            if let weaponName = hero.selectedWeaponName {
+                HStack(spacing: 8) {
+                    Image(systemName: "hammer.fill")
+                        .font(.system(.caption, weight: .bold))
+                    Text(weaponName)
+                        .font(.system(.caption, design: .monospaced, weight: .black))
+                    if let shieldName = hero.selectedShieldName {
+                        Text("+")
+                            .font(.system(.caption, weight: .bold))
+                            .foregroundStyle(.secondary)
+                        Image(systemName: "shield.fill")
+                            .font(.system(.caption, weight: .bold))
+                        Text(shieldName)
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                    }
+                    Spacer()
+                }
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+
             // AKTION section
             combatSectionLabel(L("action.label"))
 
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
                 Button {
-                    step = .weaponSelection(.angriff)
+                    if hero.selectedShield != nil {
+                        step = .weaponSelection(.angriff)
+                    } else if let w = hero.selectedWeapon {
+                        step = .execution(.angriff, name: w.name, attributeValue: w.at, damageFormula: w.damage, note: nil)
+                    } else if hero.selectedWeaponName == "Raufen" {
+                        let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+                        step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
+                    } else {
+                        step = .weaponSelection(.angriff)
+                    }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "bolt.fill")
@@ -797,7 +829,16 @@ private struct CombatRootView: View {
 
                 // Parieren -- secondary (outline)
                 Button {
-                    step = .weaponSelection(.parieren)
+                    if hero.selectedShield != nil {
+                        step = .weaponSelection(.parieren)
+                    } else if let w = hero.selectedWeapon {
+                        step = .execution(.parieren, name: w.name, attributeValue: w.pa, damageFormula: nil, note: nil)
+                    } else if hero.selectedWeaponName == "Raufen" {
+                        let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+                        step = .execution(.parieren, name: "Raufen", attributeValue: raufen?.pa ?? 0, damageFormula: nil, note: nil)
+                    } else {
+                        step = .weaponSelection(.parieren)
+                    }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "shield.fill")
@@ -842,6 +883,19 @@ private struct CombatRootView: View {
                     .padding(.vertical, 16)
                     .background(Color.dsaDark)
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+
+                // Change loadout
+                Button { step = .loadoutWeapon } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text(L("changeLoadout"))
+                    }
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
             }

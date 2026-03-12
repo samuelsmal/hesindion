@@ -178,6 +178,7 @@ enum DSAStrings {
         "encumbrance":          "BE",
         "lpLost":               "LP lost",
         "absorbed":             "Armor absorbs all damage",
+        "changeLoadout":        "Change Loadout",
     ]
 
     private static let translations: [String: String] = [
@@ -344,6 +345,7 @@ enum DSAStrings {
         "encumbrance":          "BE",
         "lpLost":               "LP verloren",
         "absorbed":             "Rüstung absorbiert allen Schaden",
+        "changeLoadout":        "Ausrüstung wechseln",
     ]
 }
 
