@@ -13,7 +13,7 @@
 ### Task 1: Create HeroTrait Codable struct
 
 **Files:**
-- Create: `iDSACompanion/Models/HeroTrait.swift`
+- Create: `Hesindion/Models/HeroTrait.swift`
 
 **Step 1: Create the file**
 
@@ -31,7 +31,7 @@ struct HeroTrait: Codable, Hashable {
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Models/HeroTrait.swift
+git add Hesindion/Models/HeroTrait.swift
 git commit -m "feat: add HeroTrait Codable struct for structured advantages/disadvantages/abilities"
 ```
 
@@ -40,7 +40,7 @@ git commit -m "feat: add HeroTrait Codable struct for structured advantages/disa
 ### Task 2: Create HeroSpell model
 
 **Files:**
-- Create: `iDSACompanion/Models/HeroSpell.swift`
+- Create: `Hesindion/Models/HeroSpell.swift`
 
 **Step 1: Create the file**
 
@@ -65,7 +65,7 @@ final class HeroSpell {
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Models/HeroSpell.swift
+git add Hesindion/Models/HeroSpell.swift
 git commit -m "feat: add HeroSpell model for spells and liturgies"
 ```
 
@@ -74,8 +74,8 @@ git commit -m "feat: add HeroSpell model for spells and liturgies"
 ### Task 3: Create Pet model (replaces Mount)
 
 **Files:**
-- Create: `iDSACompanion/Models/Pet.swift`
-- Delete: `iDSACompanion/Models/Mount.swift`
+- Create: `Hesindion/Models/Pet.swift`
+- Delete: `Hesindion/Models/Mount.swift`
 
 **Step 1: Create Pet.swift**
 
@@ -162,13 +162,13 @@ final class Pet {
 **Step 2: Delete Mount.swift**
 
 ```bash
-git rm iDSACompanion/Models/Mount.swift
+git rm Hesindion/Models/Mount.swift
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Models/Pet.swift
+git add Hesindion/Models/Pet.swift
 git commit -m "feat: replace Mount with Pet model supporting free-text fields and avatar"
 ```
 
@@ -177,12 +177,12 @@ git commit -m "feat: replace Mount with Pet model supporting free-text fields an
 ### Task 4: Update existing models
 
 **Files:**
-- Modify: `iDSACompanion/Models/Hero.swift`
-- Modify: `iDSACompanion/Models/Talent.swift`
-- Modify: `iDSACompanion/Models/CombatTechnique.swift`
-- Modify: `iDSACompanion/Models/MeleeWeapon.swift`
-- Modify: `iDSACompanion/Models/Shield.swift`
-- Modify: `iDSACompanion/Models/Armor.swift`
+- Modify: `Hesindion/Models/Hero.swift`
+- Modify: `Hesindion/Models/Talent.swift`
+- Modify: `Hesindion/Models/CombatTechnique.swift`
+- Modify: `Hesindion/Models/MeleeWeapon.swift`
+- Modify: `Hesindion/Models/Shield.swift`
+- Modify: `Hesindion/Models/Armor.swift`
 
 **Step 1: Update Talent — add ruleId**
 
@@ -387,7 +387,7 @@ var totalCarryingCapacity: Int {
 **Step 7: Commit**
 
 ```bash
-git add -A iDSACompanion/Models/
+git add -A Hesindion/Models/
 git commit -m "feat: update all models for Optolith import format"
 ```
 
@@ -396,9 +396,9 @@ git commit -m "feat: update all models for Optolith import format"
 ### Task 5: Create OptolithImportService with static maps
 
 **Files:**
-- Create: `iDSACompanion/Services/OptolithImportService.swift`
-- Delete: `iDSACompanion/DTOs/HeroDTO.swift`
-- Delete: `iDSACompanion/Services/HeroImportService.swift`
+- Create: `Hesindion/Services/OptolithImportService.swift`
+- Delete: `Hesindion/DTOs/HeroDTO.swift`
+- Delete: `Hesindion/Services/HeroImportService.swift`
 
 **Step 1: Create OptolithImportService.swift**
 
@@ -475,14 +475,14 @@ Weapon AT/PA computation:
 **Step 2: Delete old import files**
 
 ```bash
-git rm iDSACompanion/DTOs/HeroDTO.swift
-git rm iDSACompanion/Services/HeroImportService.swift
+git rm Hesindion/DTOs/HeroDTO.swift
+git rm Hesindion/Services/HeroImportService.swift
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Services/OptolithImportService.swift
+git add Hesindion/Services/OptolithImportService.swift
 git commit -m "feat: add OptolithImportService for direct Optolith JSON import"
 ```
 
@@ -491,10 +491,10 @@ git commit -m "feat: add OptolithImportService for direct Optolith JSON import"
 ### Task 6: Update ModelContainer registrations
 
 **Files:**
-- Modify: `iDSACompanion/iDSACompanionApp.swift`
-- Modify: `iDSACompanion/ContentView.swift`
+- Modify: `Hesindion/HesindionApp.swift`
+- Modify: `Hesindion/ContentView.swift`
 
-**Step 1: Update schema in iDSACompanionApp.swift**
+**Step 1: Update schema in HesindionApp.swift**
 
 Replace `Mount.self` with `Pet.self`, add `HeroSpell.self`:
 
@@ -525,7 +525,7 @@ Same changes — replace `Mount.self` with `Pet.self`, add `HeroSpell.self`.
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/iDSACompanionApp.swift iDSACompanion/ContentView.swift iDSACompanion/Views/HeroListView.swift
+git add Hesindion/HesindionApp.swift Hesindion/ContentView.swift Hesindion/Views/HeroListView.swift
 git commit -m "fix: update ModelContainer registrations for new model types"
 ```
 
@@ -534,7 +534,7 @@ git commit -m "fix: update ModelContainer registrations for new model types"
 ### Task 7: Update HeroListView to use OptolithImportService
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroListView.swift`
+- Modify: `Hesindion/Views/HeroListView.swift`
 
 **Step 1: Replace HeroImportService with OptolithImportService**
 
@@ -555,7 +555,7 @@ Update the error reference at line 47 from `HeroImportError` to `OptolithImportE
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroListView.swift
+git add Hesindion/Views/HeroListView.swift
 git commit -m "fix: wire HeroListView to OptolithImportService"
 ```
 
@@ -564,7 +564,7 @@ git commit -m "fix: wire HeroListView to OptolithImportService"
 ### Task 8: Update HeroDetailView for model changes
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
 
 **Step 1: Update advantages/disadvantages/specialAbilities sections**
 
@@ -601,7 +601,7 @@ Replace `Mount.self` with `Pet.self`, add `HeroSpell.self`.
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift
+git add Hesindion/Views/HeroDetailView.swift
 git commit -m "fix: update HeroDetailView for HeroTrait and Pet model changes"
 ```
 
@@ -610,7 +610,7 @@ git commit -m "fix: update HeroDetailView for HeroTrait and Pet model changes"
 ### Task 9: Update CommandPaletteOverlay for verbessertRegenerationLEBonus
 
 **Files:**
-- Modify: `iDSACompanion/Views/CommandPaletteOverlay.swift`
+- Modify: `Hesindion/Views/CommandPaletteOverlay.swift`
 
 **Step 1: Verify the reference**
 
@@ -623,7 +623,7 @@ Line 14 uses `hero.verbessertRegenerationLEBonus` — this is a computed propert
 ### Task 10: Update and run tests
 
 **Files:**
-- Modify: `iDSACompanionTests/HeroImportTests.swift`
+- Modify: `HesindionTests/HeroImportTests.swift`
 
 **Step 1: Rewrite tests for Optolith format**
 
@@ -714,13 +714,13 @@ struct HeroImportTests {
 **Step 2: Build and run tests**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator test
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator test
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanionTests/HeroImportTests.swift
+git add HesindionTests/HeroImportTests.swift
 git commit -m "test: rewrite import tests for Optolith format"
 ```
 
@@ -731,7 +731,7 @@ git commit -m "test: rewrite import tests for Optolith format"
 **Step 1: Full build**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 2: Fix any remaining compilation errors**
@@ -748,7 +748,7 @@ Check for stray references to:
 **Step 3: Run tests**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator test
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator test
 ```
 
 **Step 4: Final commit**

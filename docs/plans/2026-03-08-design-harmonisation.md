@@ -13,9 +13,9 @@
 ### Task 0: Extract design tokens into DSALayout and extend DSAAnimation
 
 **Files:**
-- Create: `iDSACompanion/Theme/Layout.swift`
-- Modify: `iDSACompanion/Theme/Animations.swift`
-- Modify: `iDSACompanion/Theme/AttributeColors.swift`
+- Create: `Hesindion/Theme/Layout.swift`
+- Modify: `Hesindion/Theme/Animations.swift`
+- Modify: `Hesindion/Theme/AttributeColors.swift`
 
 **Step 1: Create `Layout.swift` with layout constants**
 
@@ -63,11 +63,11 @@ feat: extract design tokens into DSALayout, DSAAnimation, and Color extensions
 ### Task 1: Unify Color.yellow to Color.groupPersonalData
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
-- Modify: `iDSACompanion/Views/TalentProbeModal.swift`
-- Modify: `iDSACompanion/Views/CommandPaletteOverlay.swift`
-- Modify: `iDSACompanion/Views/EditCurrentModal.swift`
-- Modify: `iDSACompanion/Views/HeroListView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/TalentProbeModal.swift`
+- Modify: `Hesindion/Views/CommandPaletteOverlay.swift`
+- Modify: `Hesindion/Views/EditCurrentModal.swift`
+- Modify: `Hesindion/Views/HeroListView.swift`
 
 Replace every occurrence of `Color.yellow` with `Color.groupPersonalData` in:
 
@@ -102,7 +102,7 @@ fix: unify Color.yellow to Color.groupPersonalData across all views
 ### Task 2: Fix RegenerierenSheet dice timing
 
 **Files:**
-- Modify: `iDSACompanion/Views/CommandPaletteOverlay.swift`
+- Modify: `Hesindion/Views/CommandPaletteOverlay.swift`
 
 **Step 1: Replace hardcoded 120ms with DSAAnimation constant**
 
@@ -126,14 +126,14 @@ fix: use DSAAnimation.diceTumbleInterval in RegenerierenSheet
 ### Task 3: Apply design tokens across all views
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
-- Modify: `iDSACompanion/Views/TalentProbeModal.swift`
-- Modify: `iDSACompanion/Views/CommandPaletteOverlay.swift`
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
-- Modify: `iDSACompanion/Views/HeroDetailComponents.swift`
-- Modify: `iDSACompanion/Views/RulebookView.swift`
-- Modify: `iDSACompanion/Views/RuleDetailView.swift`
-- Modify: `iDSACompanion/Views/HeroListView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/TalentProbeModal.swift`
+- Modify: `Hesindion/Views/CommandPaletteOverlay.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroDetailComponents.swift`
+- Modify: `Hesindion/Views/RulebookView.swift`
+- Modify: `Hesindion/Views/RuleDetailView.swift`
+- Modify: `Hesindion/Views/HeroListView.swift`
 
 **Step 1: Replace `Color(white: 0.18)` with `Color.dsaDark`**
 
@@ -172,7 +172,7 @@ refactor: apply DSALayout and DSAAnimation tokens across all views
 ### Task 4: Add borders to TalentProbeModal boxes
 
 **Files:**
-- Modify: `iDSACompanion/Views/TalentProbeModal.swift`
+- Modify: `Hesindion/Views/TalentProbeModal.swift`
 
 The dice boxes, modifier boxes, and result boxes in TalentProbeModal currently have no border, unlike their CombatView counterparts.
 
@@ -212,7 +212,7 @@ fix: add Neo-Brutalist borders to TalentProbeModal boxes
 ### Task 5: Translate English section headers to German
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
 
 **Step 1: Replace all English CollapsibleSection/CollapsibleGroup titles**
 
@@ -251,8 +251,8 @@ fix: translate all English section headers to German
 ### Task 6: Extend SwipeActionRow to support right-side edit actions and merge EquipmentRow
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift` (SwipeActionRow lives here)
-- Modify: `iDSACompanion/Views/HeroDetailComponents.swift` (delete EquipmentRow)
+- Modify: `Hesindion/Views/HeroDetailView.swift` (SwipeActionRow lives here)
+- Modify: `Hesindion/Views/HeroDetailComponents.swift` (delete EquipmentRow)
 
 **Step 1: Add a delete action variant to SwipeAction**
 
@@ -289,8 +289,8 @@ refactor: merge EquipmentRow into SwipeActionRow with delete action
 ### Task 7: Replace long-press with swipe actions for derived values
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
-- Delete: `iDSACompanion/Views/EditCurrentModal.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
+- Delete: `Hesindion/Views/EditCurrentModal.swift`
 
 This is the biggest change. Currently, `interactiveDerivedRow` uses `onLongPressGesture` to open `EditCurrentModal` (a full overlay with +/- buttons). We replace this with swipe-to-reveal edit actions.
 
@@ -378,7 +378,7 @@ refactor: replace all long-press interactions with swipe-to-action
 ### Task 8: Fix RuleDetailView system color usage
 
 **Files:**
-- Modify: `iDSACompanion/Views/RuleDetailView.swift`
+- Modify: `Hesindion/Views/RuleDetailView.swift`
 
 **Step 1: Replace `Color(UIColor.secondarySystemBackground)` with a fixed Neo-Brutalist color**
 
@@ -406,7 +406,7 @@ fix: replace system adaptive color with fixed Neo-Brutalist color in RuleDetailV
 **Step 1: Build the project**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 2: Fix any build errors**

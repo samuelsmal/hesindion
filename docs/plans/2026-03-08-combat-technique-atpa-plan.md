@@ -13,7 +13,7 @@
 ### Task 1: Add combat technique detail lookup to RulesDatabase
 
 **Files:**
-- Modify: `iDSACompanion/Services/RulesDatabase.swift`
+- Modify: `Hesindion/Services/RulesDatabase.swift`
 
 **Step 1: Add `CombatTechniqueDetail` struct and lookup method**
 
@@ -73,13 +73,13 @@ func allCombatTechniqueIds() -> [String] {
 
 **Step 3: Build and verify compilation**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Services/RulesDatabase.swift
+git add Hesindion/Services/RulesDatabase.swift
 git commit -m "feat: add combat technique detail lookup to RulesDatabase"
 ```
 
@@ -88,7 +88,7 @@ git commit -m "feat: add combat technique detail lookup to RulesDatabase"
 ### Task 2: Add attribute-by-ID resolver to Attributes
 
 **Files:**
-- Modify: `iDSACompanion/Models/Attributes.swift`
+- Modify: `Hesindion/Models/Attributes.swift`
 
 **Step 1: Add `value(for:)` method**
 
@@ -112,13 +112,13 @@ func value(for attrId: String) -> Int {
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Models/Attributes.swift
+git add Hesindion/Models/Attributes.swift
 git commit -m "feat: add attribute-by-ID resolver to Attributes model"
 ```
 
@@ -127,8 +127,8 @@ git commit -m "feat: add attribute-by-ID resolver to Attributes model"
 ### Task 3: Fix parseCombatTechniques to use DSA 5 formulas and list all CTs
 
 **Files:**
-- Modify: `iDSACompanion/Services/OptolithImportService.swift:482-491` (parseCombatTechniques)
-- Modify: `iDSACompanion/Services/OptolithImportService.swift:91-92` (call site)
+- Modify: `Hesindion/Services/OptolithImportService.swift:482-491` (parseCombatTechniques)
+- Modify: `Hesindion/Services/OptolithImportService.swift:91-92` (call site)
 
 **Step 1: Add eigenschaftsbonus helper**
 
@@ -190,13 +190,13 @@ let combatTechniques = parseCombatTechniques(ctJSON, attributes: attributes)
 
 **Step 4: Build and verify**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 5: Commit**
 
 ```bash
-git add iDSACompanion/Services/OptolithImportService.swift
+git add Hesindion/Services/OptolithImportService.swift
 git commit -m "feat: fix AT/PA calculation and list all combat techniques"
 ```
 
@@ -205,8 +205,8 @@ git commit -m "feat: fix AT/PA calculation and list all combat techniques"
 ### Task 4: Fix weapon AT/PA in parseItems
 
 **Files:**
-- Modify: `iDSACompanion/Services/OptolithImportService.swift:532-606` (parseItems)
-- Modify: `iDSACompanion/Services/OptolithImportService.swift:120` (call site)
+- Modify: `Hesindion/Services/OptolithImportService.swift:532-606` (parseItems)
+- Modify: `Hesindion/Services/OptolithImportService.swift:120` (call site)
 
 **Step 1: Update parseItems signature**
 
@@ -267,13 +267,13 @@ let items = parseItems(itemsJSON, ctValues: ctValues, attributes: attributes)
 
 **Step 5: Build and verify**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 6: Commit**
 
 ```bash
-git add iDSACompanion/Services/OptolithImportService.swift
+git add Hesindion/Services/OptolithImportService.swift
 git commit -m "feat: fix weapon AT/PA to use DSA 5 formulas"
 ```
 
@@ -282,10 +282,10 @@ git commit -m "feat: fix weapon AT/PA to use DSA 5 formulas"
 ### Task 5: Add RangedWeapon model and import
 
 **Files:**
-- Create: `iDSACompanion/Models/RangedWeapon.swift`
-- Modify: `iDSACompanion/Models/Hero.swift:22` (add relationship)
-- Modify: `iDSACompanion/Services/OptolithImportService.swift` (ItemsResult, parseItems case 2, replaceHeroData)
-- Modify: `iDSACompanion/iDSACompanionApp.swift` (add to ModelContainer schema if needed)
+- Create: `Hesindion/Models/RangedWeapon.swift`
+- Modify: `Hesindion/Models/Hero.swift:22` (add relationship)
+- Modify: `Hesindion/Services/OptolithImportService.swift` (ItemsResult, parseItems case 2, replaceHeroData)
+- Modify: `Hesindion/HesindionApp.swift` (add to ModelContainer schema if needed)
 
 **Step 1: Create RangedWeapon model**
 
@@ -419,13 +419,13 @@ ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
 
 **Step 9: Build and verify**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 10: Commit**
 
 ```bash
-git add iDSACompanion/Models/RangedWeapon.swift iDSACompanion/Models/Hero.swift iDSACompanion/Services/OptolithImportService.swift iDSACompanion/Views/HeroDetailView.swift
+git add Hesindion/Models/RangedWeapon.swift Hesindion/Models/Hero.swift Hesindion/Services/OptolithImportService.swift Hesindion/Views/HeroDetailView.swift
 git commit -m "feat: add RangedWeapon model and import ranged weapons"
 ```
 
@@ -434,8 +434,8 @@ git commit -m "feat: add RangedWeapon model and import ranged weapons"
 ### Task 6: Resolve combatTechniqueId to name in UI
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift:644` (melee weapons section)
-- Modify: `iDSACompanion/Views/HeroDetailView.swift` (add ranged weapons section)
+- Modify: `Hesindion/Views/HeroDetailView.swift:644` (melee weapons section)
+- Modify: `Hesindion/Views/HeroDetailView.swift` (add ranged weapons section)
 
 **Step 1: Fix melee weapon display**
 
@@ -482,17 +482,17 @@ Find where `meleeWeaponsSection` is referenced in the main body and add `rangedW
 
 **Step 4: Add localization key**
 
-In `iDSACompanion/Theme/Strings.swift`, add `"rangedWeapons"` key with value `"Fernkampfwaffen"`.
+In `Hesindion/Theme/Strings.swift`, add `"rangedWeapons"` key with value `"Fernkampfwaffen"`.
 
 **Step 5: Build and verify**
 
-Run: `xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build 2>&1 | tail -5`
+Run: `xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 6: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift iDSACompanion/Theme/Strings.swift
+git add Hesindion/Views/HeroDetailView.swift Hesindion/Theme/Strings.swift
 git commit -m "feat: resolve CT IDs to names and add ranged weapons UI"
 ```
 

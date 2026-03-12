@@ -38,7 +38,7 @@ Players need to manage multiple DSA hero sheets on their device. This screen is 
 
 5. **Open via System (document handler)**
    - The app registers as a document handler for `.json`, `.yaml`, and `.yml` files
-   - When a user taps such a file in the Files app or any share sheet, iOS offers iDSACompanion as an option to open it
+   - When a user taps such a file in the Files app or any share sheet, iOS offers Hesindion as an option to open it
    - Opening a file this way triggers the same import logic as the in-app file picker (same upsert behaviour, same error handling)
    - After a successful open-via-system import the app navigates to the hero list (or directly to the newly imported hero if spec 002 is available)
 
@@ -51,7 +51,7 @@ Players need to manage multiple DSA hero sheets on their device. This screen is 
 - As a player, I want to see all my heroes at a glance so I can quickly switch between characters
 - As a player, I want to import a hero from a JSON or YAML file so I don't have to enter data manually
 - As a player, I want to import YAML files exported directly from Optolith without converting them first
-- As a player, I want to tap a `.json` or `.yaml` hero file in the Files app and have iDSACompanion open and import it directly, without navigating inside the app first
+- As a player, I want to tap a `.json` or `.yaml` hero file in the Files app and have Hesindion open and import it directly, without navigating inside the app first
 - As a player, I want re-importing an updated hero sheet to preserve my in-game equipment and money
 - As a player, I want clear error messages when an import fails so I know what went wrong
 
@@ -65,9 +65,9 @@ Players need to manage multiple DSA hero sheets on their device. This screen is 
 - File format detection: inspect the lowercased file extension — `.yaml` / `.yml` → YAML path; `.json` → JSON path; anything else → unsupported format error
 - Hero name uniqueness must be enforced at the SwiftData layer (check before insert)
 - The following Info.plist keys must be set to `YES` (via `INFOPLIST_KEY_*` build settings in `project.pbxproj`):
-  - `UIFileSharingEnabled` — exposes the app's `Documents/` directory in the Files app under **On My iPhone → iDSACompanion**
+  - `UIFileSharingEnabled` — exposes the app's `Documents/` directory in the Files app under **On My iPhone → Hesindion**
   - `LSSupportsOpeningDocumentsInPlace` — allows the file picker to open files directly from their location without copying them first
-- **Document type declarations** must be added via a supplementary `Info.plist` file (because `CFBundleDocumentTypes` is a complex nested array that cannot be expressed via `INFOPLIST_KEY_*` build settings). Set `INFOPLIST_FILE = iDSACompanion/Info.plist` in the target build settings while **keeping `GENERATE_INFOPLIST_FILE = YES`** — Xcode merges the supplementary file with the auto-generated content at build time, so all existing `INFOPLIST_KEY_*` settings continue to work and the supplementary file only needs to contain the two new top-level keys below. The required entries are:
+- **Document type declarations** must be added via a supplementary `Info.plist` file (because `CFBundleDocumentTypes` is a complex nested array that cannot be expressed via `INFOPLIST_KEY_*` build settings). Set `INFOPLIST_FILE = Hesindion/Info.plist` in the target build settings while **keeping `GENERATE_INFOPLIST_FILE = YES`** — Xcode merges the supplementary file with the auto-generated content at build time, so all existing `INFOPLIST_KEY_*` settings continue to work and the supplementary file only needs to contain the two new top-level keys below. The required entries are:
   - **`CFBundleDocumentTypes`** — two entries, one for JSON (`public.json`, extensions `json`) and one for YAML (`public.yaml`, extensions `yaml yml`). Both with `CFBundleTypeRole = Viewer` and `LSHandlerRank = Alternate` (the app is not the primary system handler, but offers itself as an option)
   - **`UTImportedTypeDeclarations`** — one entry declaring `public.yaml` (conforming to `public.data`, extensions `yaml yml`, MIME type `application/yaml`) so that the type is known to the system on devices where it is not yet built-in
 - **External file handling** in SwiftUI: attach `.onOpenURL { url in … }` to the root `WindowGroup` scene. When the system delivers a file URL, read the file data (with security-scoped resource access), run it through `HeroImportService`, and show a result alert — same logic as the in-app picker
@@ -99,8 +99,8 @@ The JSON/YAML schema (see `hero.json` and `hero.yaml`) maps to these top-level e
 5. Re-importing the same file with updated attributes updates those attributes
 6. Importing a malformed JSON or YAML file shows an error message and leaves the hero list unchanged
 7. Importing a file with an unrecognised extension shows an appropriate error message
-8. Tapping a `.json` hero file in Files app presents iDSACompanion as an option; selecting it imports the hero
-9. Tapping a `.yaml` / `.yml` hero file in Files app presents iDSACompanion as an option; selecting it imports the hero
+8. Tapping a `.json` hero file in Files app presents Hesindion as an option; selecting it imports the hero
+9. Tapping a `.yaml` / `.yml` hero file in Files app presents Hesindion as an option; selecting it imports the hero
 10. Tapping a hero row navigates to the detail view (spec 002) showing that hero
 11. Hero names are unique — importing a hero with a new name creates a new record
 

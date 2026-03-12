@@ -1,4 +1,4 @@
-# iDSACompanion
+# Hesindion
 
 This is a simple iOS application that helps with using a DSA character during the game sessions.
 

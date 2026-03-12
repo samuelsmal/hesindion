@@ -10,7 +10,19 @@
       "WebFetch(domain:dsa.ulisses-regelwiki.de)",
       "WebSearch",
       "Bash(xcrun simctl:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(xcrun devicectl:*)",
+      "Bash(make deploy:*)",
+      "Bash(python3 -c \"\nimport json\nwith open\\('docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json'\\) as f:\n    data = json.load\\(f\\)\nprint\\('=== Attributes ==='\\)\nfor a in data.get\\('attr', {}\\).get\\('values', []\\):\n    print\\(f'  {a[\\\\\"id\\\\\"]}: {a[\\\\\"value\\\\\"]}'\\)\nprint\\(\\)\nprint\\('=== Combat Techniques ==='\\)\nfor k,v in data.get\\('ct', {}\\).items\\(\\):\n    print\\(f'  {k}: {v}'\\)\nprint\\(\\)\nprint\\('=== Items \\(weapons/shields\\) ==='\\)\nitems = data.get\\('belongings', {}\\).get\\('items', {}\\)\nfor k,v in items.items\\(\\):\n    if isinstance\\(v, dict\\) and v.get\\('gr'\\) in [1,2]:\n        print\\(f'  {v.get\\(\\\\\"name\\\\\"\\)} gr={v.get\\(\\\\\"gr\\\\\"\\)} ct={v.get\\(\\\\\"combatTechnique\\\\\"\\)} at={v.get\\(\\\\\"at\\\\\"\\)} pa={v.get\\(\\\\\"pa\\\\\"\\)} reach={v.get\\(\\\\\"reach\\\\\"\\)}'\\)\n\")",
+      "WebFetch(domain:dsaforum.de)",
+      "Bash(python3 -c \"\nimport json, sqlite3\n\ndb = sqlite3.connect\\('Hesindion/Resources/rules.db'\\)\nc = db.cursor\\(\\)\n\nwith open\\('docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json'\\) as f:\n    data = json.load\\(f\\)\n\nactivatables = data.get\\('activatable', {}\\)\nfor k, v in sorted\\(activatables.items\\(\\)\\):\n    c.execute\\('SELECT i.name FROM rules_i18n i WHERE i.rule_id = ? AND i.locale = ?', \\(k, 'de-DE'\\)\\)\n    row = c.fetchone\\(\\)\n    name = row[0] if row else '?'\n    print\\(f'{k} \\({name}\\): {v}'\\)\n\ndb.close\\(\\)\n\")",
+      "Bash(python3 -c \"\nimport json\nwith open\\('docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json'\\) as f:\n    data = json.load\\(f\\)\nitems = data.get\\('belongings', {}\\).get\\('items', {}\\)\nfor k,v in items.items\\(\\):\n    if isinstance\\(v, dict\\) and v.get\\('gr'\\) == 1 and v.get\\('combatTechnique'\\) == 'CT_10':\n        print\\(json.dumps\\(v, indent=2\\)\\)\n\")",
+      "WebFetch(domain:de.wiki-aventurica.de)",
+      "Bash(git mv:*)",
+      "Bash(sed -i '' 's/Hesindion/Hesindion/g' Hesindion/HesindionApp.swift && sed -i '' 's/Hesindion/Hesindion/g' Hesindion/ContentView.swift && sed -i '' 's/Hesindion/Hesindion/g' HesindionTests/HeroImportTests.swift && grep -r 'Hesindion' Hesindion/ HesindionTests/ || echo \"No matches found — clean.\")",
+      "Bash(/usr/bin/grep -rl 'Hesindion' --include='*.md' --include='*.json' . | /usr/bin/grep -v '.xcodeproj' | /usr/bin/grep -v '.build' | /usr/bin/grep -v '.git/' | while read f; do echo \"Updating: $f\"; sed -i '' 's/Hesindion/Hesindion/g' \"$f\"; done)",
+      "Bash(/usr/bin/grep -r 'iDSACompanion' . --include='*.swift' --include='*.pbxproj' --include='*.xcscheme' --include='*.plist' --include='*.md' --include='*.json' | /usr/bin/grep -v '.git/' | /usr/bin/grep -v '.build/' || echo \"CLEAN: No remaining occurrences of iDSACompanion found.\")",
+      "Bash(sed -i '' 's/iDSACompanion/Hesindion/g' Hesindion.xcodeproj/xcuserdata/SamuelvonBaussnern.xcuserdatad/xcschemes/xcschememanagement.plist && /usr/bin/grep -c 'iDSACompanion' Hesindion.xcodeproj/xcuserdata/SamuelvonBaussnern.xcuserdatad/xcschemes/xcschememanagement.plist)"
     ]
   }
 }

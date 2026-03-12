@@ -58,7 +58,7 @@ Kritischer Erfolg uses a more saturated / vivid green than QS 6 to visually stan
 # Modal Architecture
 
 - Implement a new `TalentProbeModal` view in its own file
-  (`iDSACompanion/Views/TalentProbeModal.swift`).
+  (`Hesindion/Views/TalentProbeModal.swift`).
 - The modal is opened by:
   - Selecting "Probe: \<TalentName\>" from the command palette, **or**
   - Long-pressing directly on a talent row in `HeroDetailView`.

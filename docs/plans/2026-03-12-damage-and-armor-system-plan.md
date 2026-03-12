@@ -13,7 +13,7 @@
 ### Task 1: Extend Armor Model
 
 **Files:**
-- Modify: `iDSACompanion/Models/Armor.swift`
+- Modify: `Hesindion/Models/Armor.swift`
 
 **Step 1: Add new properties to Armor**
 
@@ -42,13 +42,13 @@ final class Armor {
 
 **Step 2: Build and verify no compile errors**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Models/Armor.swift
+git add Hesindion/Models/Armor.swift
 git commit -m "feat: add isEquipped, iniModifier, gsModifier to Armor model"
 ```
 
@@ -57,7 +57,7 @@ git commit -m "feat: add isEquipped, iniModifier, gsModifier to Armor model"
 ### Task 2: Add Belastung Computed Properties to Hero
 
 **Files:**
-- Modify: `iDSACompanion/Models/Hero.swift`
+- Modify: `Hesindion/Models/Hero.swift`
 
 **Step 1: Add computed properties**
 
@@ -112,13 +112,13 @@ var totalGsPenalty: Int {
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Models/Hero.swift
+git add Hesindion/Models/Hero.swift
 git commit -m "feat: add RS, BE, and Belastung computed properties to Hero"
 ```
 
@@ -127,7 +127,7 @@ git commit -m "feat: add RS, BE, and Belastung computed properties to Hero"
 ### Task 3: Add Localization Strings
 
 **Files:**
-- Modify: `iDSACompanion/Theme/Strings.swift`
+- Modify: `Hesindion/Theme/Strings.swift`
 
 **Step 1: Add new string keys**
 
@@ -177,13 +177,13 @@ German:
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Theme/Strings.swift
+git add Hesindion/Theme/Strings.swift
 git commit -m "feat: add damage and armor localization strings"
 ```
 
@@ -192,7 +192,7 @@ git commit -m "feat: add damage and armor localization strings"
 ### Task 4: Update OptolithImportService for Armor Fields
 
 **Files:**
-- Modify: `iDSACompanion/Services/OptolithImportService.swift`
+- Modify: `Hesindion/Services/OptolithImportService.swift`
 
 **Step 1: Update armor parsing in parseItems**
 
@@ -212,13 +212,13 @@ Note: Optolith uses `iniMod` for INI modifier and `movMod` for GS modifier on ar
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Services/OptolithImportService.swift
+git add Hesindion/Services/OptolithImportService.swift
 git commit -m "feat: parse iniMod and movMod for armor in Optolith import"
 ```
 
@@ -227,7 +227,7 @@ git commit -m "feat: parse iniMod and movMod for armor in Optolith import"
 ### Task 5: Add Armor Equip/Unequip in HeroDetailView
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
 
 **Step 1: Update armorSection**
 
@@ -274,13 +274,13 @@ Replace the current `armorSection` (~lines 706-720) with swipe-to-toggle equip/u
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift
+git add Hesindion/Views/HeroDetailView.swift
 git commit -m "feat: add swipe-to-equip armor toggle in hero detail view"
 ```
 
@@ -289,7 +289,7 @@ git commit -m "feat: add swipe-to-equip armor toggle in hero detail view"
 ### Task 6: Show Belastung Penalties on Stats in HeroDetailView
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
 
 **Step 1: Update combat technique display**
 
@@ -320,13 +320,13 @@ For GS: if `hero.totalGsPenalty != 0`, show `"GS \(value) (\(hero.totalGsPenalty
 
 **Step 3: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift
+git add Hesindion/Views/HeroDetailView.swift
 git commit -m "feat: display Belastung penalties on AT/PA/AW/INI/GS"
 ```
 
@@ -335,7 +335,7 @@ git commit -m "feat: display Belastung penalties on AT/PA/AW/INI/GS"
 ### Task 7: Add Combat Armor Selection Step
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Add armorSelection to CombatStep enum**
 
@@ -432,7 +432,7 @@ Continue to next task.
 **Step 6: Commit (partial — enum changes only)**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add armorSelection, initiativeRoll, takeDamage to CombatStep"
 ```
 
@@ -441,7 +441,7 @@ git commit -m "feat: add armorSelection, initiativeRoll, takeDamage to CombatSte
 ### Task 8: Implement CombatArmorSelectionView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Add CombatArmorSelectionView**
 
@@ -559,13 +559,13 @@ private struct CombatArmorSelectionView: View {
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: May still fail if CombatInitiativeRollView and CombatTakeDamageView don't exist yet. Continue.
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add CombatArmorSelectionView"
 ```
 
@@ -574,7 +574,7 @@ git commit -m "feat: add CombatArmorSelectionView"
 ### Task 9: Extract Initiative Roll as a Combat Step
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Create CombatInitiativeRollView**
 
@@ -777,13 +777,13 @@ Pass `rolledInitiative` binding to both `CombatInitiativeRollView` and `CombatRo
 
 **Step 3: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: May still fail until CombatTakeDamageView exists. Continue.
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add CombatInitiativeRollView with Belastung-adjusted INI"
 ```
 
@@ -792,7 +792,7 @@ git commit -m "feat: add CombatInitiativeRollView with Belastung-adjusted INI"
 ### Task 10: Implement CombatTakeDamageView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Add CombatTakeDamageView**
 
@@ -951,13 +951,13 @@ private struct CombatTakeDamageView: View {
 
 **Step 2: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add CombatTakeDamageView with TP input and RS calculation"
 ```
 
@@ -966,7 +966,7 @@ git commit -m "feat: add CombatTakeDamageView with TP input and RS calculation"
 ### Task 11: Add "Schaden nehmen" Button and Armor Management to CombatRootView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Add "Schaden nehmen" button**
 
@@ -1114,13 +1114,13 @@ private struct CombatArmorManagementSheet: View {
 
 **Step 4: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 5: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add Schaden nehmen button and armor management to combat root"
 ```
 
@@ -1129,7 +1129,7 @@ git commit -m "feat: add Schaden nehmen button and armor management to combat ro
 ### Task 12: Show Belastung Penalties in Combat View
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Update weapon rows in CombatWeaponSelectionView**
 
@@ -1181,13 +1181,13 @@ In the Ausweichen button label, show penalty if non-zero.
 
 **Step 3: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: display Belastung penalties on combat weapon and dodge stats"
 ```
 
@@ -1196,7 +1196,7 @@ git commit -m "feat: display Belastung penalties on combat weapon and dodge stat
 ### Task 13: Wire Up Initiative State Between Combat Steps
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Pass initiative through CombatView**
 
@@ -1212,13 +1212,13 @@ The `CombatRootView` currently has its own `@State private var rolledInitiative:
 
 **Step 3: Build and verify**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -5`
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: wire initiative state between combat armor/initiative/root steps"
 ```
 
@@ -1228,7 +1228,7 @@ git commit -m "feat: wire initiative state between combat armor/initiative/root 
 
 **Step 1: Full build**
 
-Run: `xcodebuild build -scheme iDSACompanion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -20`
+Run: `xcodebuild build -scheme Hesindion -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' -quiet 2>&1 | tail -20`
 Expected: BUILD SUCCEEDED
 
 **Step 2: Manual testing checklist**

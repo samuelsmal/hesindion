@@ -15,7 +15,7 @@
 ### Task 1: Add category listing and name lookup to RulesDatabase
 
 **Files:**
-- Modify: `iDSACompanion/Services/RulesDatabase.swift`
+- Modify: `Hesindion/Services/RulesDatabase.swift`
 
 **Step 1: Add categories() method**
 
@@ -96,7 +96,7 @@ func lookupByName(_ name: String, locale: String = "de-DE") -> RuleDetail? {
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Services/RulesDatabase.swift
+git add Hesindion/Services/RulesDatabase.swift
 git commit -m "feat: add category listing and name lookup to RulesDatabase"
 ```
 
@@ -105,8 +105,8 @@ git commit -m "feat: add category listing and name lookup to RulesDatabase"
 ### Task 2: Create SidebarSelection enum and refactor HeroListView
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroListView.swift`
-- Modify: `iDSACompanion/ContentView.swift` (no changes needed — it just wraps HeroListView)
+- Modify: `Hesindion/Views/HeroListView.swift`
+- Modify: `Hesindion/ContentView.swift` (no changes needed — it just wraps HeroListView)
 
 **Step 1: Add SidebarSelection enum**
 
@@ -214,7 +214,7 @@ The old code used `NavigationLink(value: hero)` with `.navigationDestination`. R
 **Step 7: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroListView.swift
+git add Hesindion/Views/HeroListView.swift
 git commit -m "feat: refactor HeroListView into two-section sidebar with SidebarSelection"
 ```
 
@@ -223,8 +223,8 @@ git commit -m "feat: refactor HeroListView into two-section sidebar with Sidebar
 ### Task 3: Create RulebookView with category browsing and search
 
 **Files:**
-- Create: `iDSACompanion/Views/RulebookView.swift`
-- Modify: `iDSACompanion/Theme/AttributeColors.swift` (add groupRulebook color)
+- Create: `Hesindion/Views/RulebookView.swift`
+- Modify: `Hesindion/Theme/AttributeColors.swift` (add groupRulebook color)
 
 **Step 1: Add groupRulebook color**
 
@@ -336,7 +336,7 @@ struct RulebookView: View {
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/RulebookView.swift iDSACompanion/Theme/AttributeColors.swift
+git add Hesindion/Views/RulebookView.swift Hesindion/Theme/AttributeColors.swift
 git commit -m "feat: add RulebookView with category browsing and search"
 ```
 
@@ -345,7 +345,7 @@ git commit -m "feat: add RulebookView with category browsing and search"
 ### Task 4: Create RuleDetailView as full detail pane
 
 **Files:**
-- Create: `iDSACompanion/Views/RuleDetailView.swift`
+- Create: `Hesindion/Views/RuleDetailView.swift`
 
 **Step 1: Create RuleDetailView**
 
@@ -508,7 +508,7 @@ struct RuleDetailView: View {
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Views/RuleDetailView.swift
+git add Hesindion/Views/RuleDetailView.swift
 git commit -m "feat: add RuleDetailView as full detail pane with back navigation"
 ```
 
@@ -517,7 +517,7 @@ git commit -m "feat: add RuleDetailView as full detail pane with back navigation
 ### Task 5: Refactor TalentSwipeRow into generic SwipeActionRow
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift` (lines 758-840)
+- Modify: `Hesindion/Views/HeroDetailView.swift` (lines 758-840)
 
 **Step 1: Create SwipeActionRow**
 
@@ -708,7 +708,7 @@ Since combat techniques have sub-rows (AT/PA), wrap the existing layout in a Swi
 **Step 7: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift
+git add Hesindion/Views/HeroDetailView.swift
 git commit -m "feat: refactor TalentSwipeRow into SwipeActionRow with lookup support"
 ```
 
@@ -717,8 +717,8 @@ git commit -m "feat: refactor TalentSwipeRow into SwipeActionRow with lookup sup
 ### Task 6: Wire deep-linking from hero detail to rule book
 
 **Files:**
-- Modify: `iDSACompanion/Views/HeroDetailView.swift`
-- Modify: `iDSACompanion/Views/HeroListView.swift`
+- Modify: `Hesindion/Views/HeroDetailView.swift`
+- Modify: `Hesindion/Views/HeroListView.swift`
 
 **Step 1: Add sidebarSelection binding to HeroDetailView**
 
@@ -741,7 +741,7 @@ Already handled in Task 2's detailContent switch. Verify the back button works.
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/HeroDetailView.swift iDSACompanion/Views/HeroListView.swift
+git add Hesindion/Views/HeroDetailView.swift Hesindion/Views/HeroListView.swift
 git commit -m "feat: wire deep-linking from hero swipe-lookup to rule detail"
 ```
 
@@ -752,7 +752,7 @@ git commit -m "feat: wire deep-linking from hero swipe-lookup to rule detail"
 **Step 1: Build**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 2: Fix any build errors**

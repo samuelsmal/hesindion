@@ -6,13 +6,15 @@ Instructions for AI coding agents working on this repository.
 
 iOS companion app for DSA (Das Schwarze Auge / The Dark Eye) tabletop RPG sessions. Features include dice rolling, ability checks, and inventory tracking. Built with SwiftUI and SwiftData.
 
+**Rules reference:** All DSA 5 rules can be looked up at https://dsa.ulisses-regelwiki.de/ — use this for verifying game mechanics (combat formulas, AT/PA, special abilities, etc.).
+
 ## Build & Run
 
-This is an Xcode project (no SPM package, no CocoaPods). Open `iDSACompanion.xcodeproj` in Xcode.
+This is an Xcode project (no SPM package, no CocoaPods). Open `Hesindion.xcodeproj` in Xcode.
 
 ```bash
 # Build from command line
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 
 # No test target or linter is configured yet
 ```
@@ -24,7 +26,7 @@ xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesim
 ## Architecture
 
 - **SwiftUI** for all UI with **SwiftData** for persistence
-- App entry point: `iDSACompanion/iDSACompanionApp.swift` — sets up the `ModelContainer` and injects it via environment
+- App entry point: `Hesindion/HesindionApp.swift` — sets up the `ModelContainer` and injects it via environment
 - Data models use the `@Model` macro (SwiftData)
 - Views use `@Query` for reactive data fetching and `@Environment(\.modelContext)` for mutations
 - `NavigationSplitView` used for iPad-compatible two-pane layout

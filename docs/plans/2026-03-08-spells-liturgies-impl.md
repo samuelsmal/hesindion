@@ -479,7 +479,7 @@ git commit -m "feat(rules-db): add liturgical chant and blessing imports"
 
 **Files:**
 - Regenerate: `scripts/build_rules_db/rules.db`
-- Regenerate: `iDSACompanion/Resources/rules.db`
+- Regenerate: `Hesindion/Resources/rules.db`
 
 **Step 1: Run the build script**
 
@@ -494,7 +494,7 @@ python3 build_db.py \
 Note: The actual path to `dsa_companion_data` needs to be determined. Check the Makefile:
 
 ```bash
-cat /Users/SamuelvonBaussnern/proj/50_priv/iDSACompanion/Makefile
+cat /Users/SamuelvonBaussnern/proj/50_priv/Hesindion/Makefile
 ```
 
 **Step 2: Verify counts**
@@ -518,7 +518,7 @@ sqlite3 rules.db "SELECT COUNT(*) FROM spell_details"
 **Step 3: Copy to Resources**
 
 ```bash
-cp rules.db ../../iDSACompanion/Resources/rules.db
+cp rules.db ../../Hesindion/Resources/rules.db
 ```
 
 **Step 4: Commit**
@@ -530,7 +530,7 @@ Do NOT commit `rules.db` files (they are in `.gitignore`). Just commit the scrip
 ### Task 6: Update `RulesDatabase.swift` — add spell detail fields to `RuleDetail`
 
 **Files:**
-- Modify: `iDSACompanion/Services/RulesDatabase.swift`
+- Modify: `Hesindion/Services/RulesDatabase.swift`
 
 **Step 1: Add `SpellDetail` struct and update `RuleDetail`**
 
@@ -611,7 +611,7 @@ Update the `RuleDetail` constructor to pass `spellDetail: spellDetail`.
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Services/RulesDatabase.swift
+git add Hesindion/Services/RulesDatabase.swift
 git commit -m "feat: add SpellDetail struct and query to RulesDatabase"
 ```
 
@@ -620,7 +620,7 @@ git commit -m "feat: add SpellDetail struct and query to RulesDatabase"
 ### Task 7: Update `RuleDetailView.swift` — render spell metadata
 
 **Files:**
-- Modify: `iDSACompanion/Views/RuleDetailView.swift`
+- Modify: `Hesindion/Views/RuleDetailView.swift`
 
 **Step 1: Add spell metadata block**
 
@@ -681,7 +681,7 @@ private func spellMetaRow(_ label: String, _ value: String) -> some View {
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/RuleDetailView.swift
+git add Hesindion/Views/RuleDetailView.swift
 git commit -m "feat: render spell metadata block in RuleDetailView"
 ```
 
@@ -690,7 +690,7 @@ git commit -m "feat: render spell metadata block in RuleDetailView"
 ### Task 8: Update `RulebookView.swift` — add spell/liturgy categories
 
 **Files:**
-- Modify: `iDSACompanion/Views/RulebookView.swift`
+- Modify: `Hesindion/Views/RulebookView.swift`
 
 **Step 1: Add new categories to `categoryOrder`**
 
@@ -705,7 +705,7 @@ private let categoryOrder = [
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Views/RulebookView.swift
+git add Hesindion/Views/RulebookView.swift
 git commit -m "feat: add spell and liturgy categories to rulebook view"
 ```
 
@@ -714,7 +714,7 @@ git commit -m "feat: add spell and liturgy categories to rulebook view"
 ### Task 9: Update `Strings.swift` — add i18n keys
 
 **Files:**
-- Modify: `iDSACompanion/Theme/Strings.swift`
+- Modify: `Hesindion/Theme/Strings.swift`
 
 **Step 1: Add English strings**
 
@@ -761,7 +761,7 @@ In the German dictionary, after the existing `cat.*` / `cats.*` entries:
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Theme/Strings.swift
+git add Hesindion/Theme/Strings.swift
 git commit -m "feat: add spell/liturgy i18n strings"
 ```
 
@@ -772,7 +772,7 @@ git commit -m "feat: add spell/liturgy i18n strings"
 **Step 1: Build the project**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 2: Fix any compilation errors**

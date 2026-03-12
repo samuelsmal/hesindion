@@ -1081,13 +1081,13 @@ git commit -m "refactor: normalize rules.yaml to unified effect schema with sour
 ## Task 9: Add Swift RulesDatabase service
 
 **Files:**
-- Create: `iDSACompanion/Services/RulesDatabase.swift`
+- Create: `Hesindion/Services/RulesDatabase.swift`
 - Modify: Xcode project to add `rules.db` to bundle resources
 
 **Step 1: Copy rules.db into Xcode project**
 
 ```bash
-cp scripts/build_rules_db/rules.db iDSACompanion/Resources/rules.db
+cp scripts/build_rules_db/rules.db Hesindion/Resources/rules.db
 ```
 
 Add `rules.db` to the Xcode project's "Copy Bundle Resources" build phase.
@@ -1230,13 +1230,13 @@ final class RulesDatabase {
 **Step 3: Verify it compiles**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Services/RulesDatabase.swift iDSACompanion/Resources/rules.db
+git add Hesindion/Services/RulesDatabase.swift Hesindion/Resources/rules.db
 git commit -m "feat: add RulesDatabase service for SQLite rule lookups"
 ```
 
@@ -1245,7 +1245,7 @@ git commit -m "feat: add RulesDatabase service for SQLite rule lookups"
 ## Task 10: Add Swift Rule model and search integration
 
 **Files:**
-- Modify: `iDSACompanion/Views/CommandPaletteOverlay.swift`
+- Modify: `Hesindion/Views/CommandPaletteOverlay.swift`
 
 **Step 1: Add a "Regel nachschlagen" command to the command palette**
 
@@ -1258,12 +1258,12 @@ When a rule search result is tapped, show a sheet with the full rule detail from
 **Step 3: Verify build and test manually**
 
 ```bash
-xcodebuild -project iDSACompanion.xcodeproj -scheme iDSACompanion -sdk iphonesimulator build
+xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CommandPaletteOverlay.swift
+git add Hesindion/Views/CommandPaletteOverlay.swift
 git commit -m "feat: add rule search to command palette"
 ```

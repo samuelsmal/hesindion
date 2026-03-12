@@ -1,10 +1,10 @@
-PROJECT = iDSACompanion.xcodeproj
-SCHEME = iDSACompanion
+PROJECT = Hesindion.xcodeproj
+SCHEME = Hesindion
 SDK = iphonesimulator
 CONFIG = Debug
 DEVICE_NAME = iPhone 17 Pro
 DERIVED_DATA = .build
-BUNDLE_ID = org.savoba.iDSACompanion
+BUNDLE_ID = org.savoba.Hesindion
 
 SAMPLE_HEROS = docs/sample_heros
 

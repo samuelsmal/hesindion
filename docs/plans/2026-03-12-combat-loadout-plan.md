@@ -15,7 +15,7 @@
 ### Task 1: Add `paModifier` and `note` fields to Shield model
 
 **Files:**
-- Modify: `iDSACompanion/Models/Shield.swift`
+- Modify: `Hesindion/Models/Shield.swift`
 
 **Step 1: Add fields to Shield model**
 
@@ -49,7 +49,7 @@ final class Shield {
 **Step 2: Commit**
 
 ```bash
-git add iDSACompanion/Models/Shield.swift
+git add Hesindion/Models/Shield.swift
 git commit -m "feat: add paModifier and note fields to Shield model"
 ```
 
@@ -58,7 +58,7 @@ git commit -m "feat: add paModifier and note fields to Shield model"
 ### Task 2: Update shield import to populate new fields
 
 **Files:**
-- Modify: `iDSACompanion/Services/OptolithImportService.swift` (lines 584–612)
+- Modify: `Hesindion/Services/OptolithImportService.swift` (lines 584–612)
 
 **Step 1: Store paModifier and map template to note**
 
@@ -96,13 +96,13 @@ private static func shieldNote(for template: String) -> String {
 **Step 2: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Services/OptolithImportService.swift
+git add Hesindion/Services/OptolithImportService.swift
 git commit -m "feat: populate shield paModifier and note during import"
 ```
 
@@ -111,7 +111,7 @@ git commit -m "feat: populate shield paModifier and note during import"
 ### Task 3: Add loadout persistence fields to Hero model
 
 **Files:**
-- Modify: `iDSACompanion/Models/Hero.swift`
+- Modify: `Hesindion/Models/Hero.swift`
 
 **Step 1: Add selectedWeaponName and selectedShieldName**
 
@@ -145,13 +145,13 @@ var passiveShieldPABonus: Int {
 **Step 2: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Models/Hero.swift
+git add Hesindion/Models/Hero.swift
 git commit -m "feat: add loadout persistence fields to Hero model"
 ```
 
@@ -160,7 +160,7 @@ git commit -m "feat: add loadout persistence fields to Hero model"
 ### Task 4: Add loadout selection step to CombatView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Add new CombatStep cases**
 
@@ -234,13 +234,13 @@ if hero.selectedWeaponName != nil {
 **Step 6: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 7: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: add loadout step cases to CombatView flow"
 ```
 
@@ -249,7 +249,7 @@ git commit -m "feat: add loadout step cases to CombatView flow"
 ### Task 5: Build CombatLoadoutWeaponView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Create the weapon selection view**
 
@@ -362,13 +362,13 @@ Add `"selectWeapon" = "Waffe wählen";` to `Localizable.strings`.
 **Step 3: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift iDSACompanion/Resources/Localizable.strings
+git add Hesindion/Views/CombatView.swift Hesindion/Resources/Localizable.strings
 git commit -m "feat: add CombatLoadoutWeaponView"
 ```
 
@@ -377,7 +377,7 @@ git commit -m "feat: add CombatLoadoutWeaponView"
 ### Task 6: Build CombatLoadoutShieldView
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift`
+- Modify: `Hesindion/Views/CombatView.swift`
 
 **Step 1: Create the shield selection view**
 
@@ -486,13 +486,13 @@ Add to `Localizable.strings`:
 **Step 3: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift iDSACompanion/Resources/Localizable.strings
+git add Hesindion/Views/CombatView.swift Hesindion/Resources/Localizable.strings
 git commit -m "feat: add CombatLoadoutShieldView"
 ```
 
@@ -501,7 +501,7 @@ git commit -m "feat: add CombatLoadoutShieldView"
 ### Task 7: Modify CombatRootView — show loadout and change equipment button
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift` (CombatRootView, lines ~520–620)
+- Modify: `Hesindion/Views/CombatView.swift` (CombatRootView, lines ~520–620)
 
 **Step 1: Show current loadout at top of action section**
 
@@ -586,13 +586,13 @@ Add localization: `"changeLoadout" = "Ausrüstung wechseln";`
 **Step 4: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 5: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift iDSACompanion/Resources/Localizable.strings
+git add Hesindion/Views/CombatView.swift Hesindion/Resources/Localizable.strings
 git commit -m "feat: show loadout in combat root with change button"
 ```
 
@@ -601,7 +601,7 @@ git commit -m "feat: show loadout in combat root with change button"
 ### Task 8: Rewrite CombatWeaponSelectionView for loadout-aware choices
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift` (CombatWeaponSelectionView, lines ~917–1027)
+- Modify: `Hesindion/Views/CombatView.swift` (CombatWeaponSelectionView, lines ~917–1027)
 
 **Step 1: Rewrite for simplified attack/parry choice**
 
@@ -735,13 +735,13 @@ private struct CombatWeaponSelectionView: View {
 **Step 2: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: rewrite weapon selection for loadout-aware attack/parry choice"
 ```
 
@@ -750,7 +750,7 @@ git commit -m "feat: rewrite weapon selection for loadout-aware attack/parry cho
 ### Task 9: Update CombatExecutionView to show shield note
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift` (CombatExecutionView, lines ~1029–1160)
+- Modify: `Hesindion/Views/CombatView.swift` (CombatExecutionView, lines ~1029–1160)
 
 **Step 1: Add note parameter**
 
@@ -785,13 +785,13 @@ if let note, !note.isEmpty {
 **Step 3: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "feat: display shield note in combat execution view"
 ```
 
@@ -800,7 +800,7 @@ git commit -m "feat: display shield note in combat execution view"
 ### Task 10: Update Ausweichen to pass note parameter
 
 **Files:**
-- Modify: `iDSACompanion/Views/CombatView.swift` (CombatRootView, line ~599)
+- Modify: `Hesindion/Views/CombatView.swift` (CombatRootView, line ~599)
 
 **Step 1: Add nil note to Ausweichen execution**
 
@@ -813,13 +813,13 @@ step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFor
 **Step 2: Build and verify**
 
 ```bash
-xcodebuild -scheme iDSACompanion -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme Hesindion -destination 'generic/platform=iOS Simulator' build
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add iDSACompanion/Views/CombatView.swift
+git add Hesindion/Views/CombatView.swift
 git commit -m "fix: pass note parameter to Ausweichen execution step"
 ```
 

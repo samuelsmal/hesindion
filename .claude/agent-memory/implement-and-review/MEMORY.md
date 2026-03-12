@@ -1,4 +1,4 @@
-# iDSACompanion Agent Memory
+# Hesindion Agent Memory
 
 See topic files for details. Key references:
 - patterns.md — API quirks, SwiftUI patterns, project conventions
@@ -14,7 +14,7 @@ Earlier memory note about it not compiling was wrong — do not add `.fontDesign
 
 ## PBXFileSystemSynchronizedRootGroup
 The project uses `PBXFileSystemSynchronizedRootGroup` (not traditional PBXGroup+PBXFileReference).
-New Swift files placed in the correct subdirectory of `iDSACompanion/` are automatically picked up.
+New Swift files placed in the correct subdirectory of `Hesindion/` are automatically picked up.
 No pbxproj edits needed for new source files.
 
 ## @ViewBuilder limitations
@@ -36,7 +36,7 @@ Helden) and its detail pane switches on `SidebarSelection`:
 `.navigationDestination(for:)` is NOT used — tag-based selection drives navigation.
 
 ## RulesDatabase
-`RulesDatabase.shared` (in `iDSACompanion/Services/RulesDatabase.swift`) is a singleton backed by SQLite.
+`RulesDatabase.shared` (in `Hesindion/Services/RulesDatabase.swift`) is a singleton backed by SQLite.
 Key methods: `lookup(id:locale:) -> RuleDetail?`, `search(query:locale:limit:) -> [RuleSearchResult]`,
 `rulesByCategory(_:locale:) -> [RuleSearchResult]`, `categories() -> [String]`.
 `locale` defaults to `"de-DE"` in all methods.

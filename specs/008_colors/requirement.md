@@ -26,7 +26,7 @@ are based on the attributes.
 
 ## Delivery
 
-Create `iDSACompanion/Theme/AttributeColors.swift` — a `Color` extension with:
+Create `Hesindion/Theme/AttributeColors.swift` — a `Color` extension with:
 
 - One static property per attribute (e.g. `Color.attrMU`, `Color.attrCH`)
 - A lookup helper `Color.attributeBackground(for label: String) -> Color` mapping abbreviation

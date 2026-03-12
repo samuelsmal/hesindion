@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed project from iDSACompanion to Hesindion (after Hesinde, DSA goddess of wisdom)
+
 ### Added
 
 - Combat loadout system: select main weapon + shield at combat start, persists across sessions
