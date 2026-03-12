@@ -8,11 +8,16 @@ BUNDLE_ID = org.savoba.iDSACompanion
 
 SAMPLE_HEROS = docs/sample_heros
 
+# Physical device (Karl)
+PHYSICAL_DEVICE_NAME = Karl
+PHYSICAL_DEVICE_ID = $(shell xcrun devicectl list devices 2>/dev/null | grep '$(PHYSICAL_DEVICE_NAME)' | awk '{print $$3}')
+
+# Simulator
 DEVICE_ID = $(shell xcrun simctl list devices available | grep '$(DEVICE_NAME)' | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
 APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).app
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run clean share-heros
+.PHONY: build boot install launch run clean share-heros deploy
 
 build:
 	xcodebuild \
@@ -44,6 +49,17 @@ share-heros: boot
 	@mkdir -p "$(APP_DATA)/Documents"
 	cp "$(SAMPLE_HEROS)/"*.json "$(APP_DATA)/Documents/"
 	@echo "Copied sample heros to $(APP_DATA)/Documents/"
+
+deploy:
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS,name=$(PHYSICAL_DEVICE_NAME)' \
+		build
+	xcrun devicectl device install app --device '$(PHYSICAL_DEVICE_ID)' '$(DERIVED_DATA)/Build/Products/$(CONFIG)-iphoneos/$(SCHEME).app'
+	xcrun devicectl device process launch --device '$(PHYSICAL_DEVICE_ID)' $(BUNDLE_ID)
 
 clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -sdk $(SDK) clean
