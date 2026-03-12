@@ -9,9 +9,11 @@ private enum CombatAction {
 private enum CombatStep {
     case armorSelection
     case initiativeRoll
+    case loadoutWeapon
+    case loadoutShield
     case root
     case weaponSelection(CombatAction)
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?)
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?)
     case takeDamage
 }
 
@@ -47,6 +49,8 @@ struct CombatView: View {
         switch step {
         case .armorSelection: "armorSelection"
         case .initiativeRoll: "initiativeRoll"
+        case .loadoutWeapon: "loadoutWeapon"
+        case .loadoutShield: "loadoutShield"
         case .root: "root"
         case .weaponSelection: "weaponSelection"
         case .execution: "execution"
@@ -63,13 +67,19 @@ struct CombatView: View {
             case .initiativeRoll:
                 CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
+            case .loadoutWeapon:
+                Text("Loadout Weapon placeholder")
+                    .transition(.move(edge: .trailing))
+            case .loadoutShield:
+                Text("Loadout Shield placeholder")
+                    .transition(.move(edge: .trailing))
             case .root:
                 CombatRootView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .leading))
             case .weaponSelection(let action):
                 CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note):
                 CombatExecutionView(
                     action: action,
                     weaponName: name,
@@ -94,6 +104,10 @@ struct CombatView: View {
                     onDismiss()
                 case .initiativeRoll:
                     step = .armorSelection
+                case .loadoutWeapon:
+                    step = .initiativeRoll
+                case .loadoutShield:
+                    step = .loadoutWeapon
                 case .root:
                     onDismiss()
                 case .takeDamage:
@@ -347,7 +361,11 @@ private struct CombatInitiativeRollView: View {
                             Button {
                                 animTask?.cancel()
                                 rolledInitiative = t
-                                step = .root
+                                if hero.selectedWeaponName != nil {
+                                    step = .root
+                                } else {
+                                    step = .loadoutWeapon
+                                }
                             } label: {
                                 Text("\(L("confirm"))  \u{2192}  INI \(t)")
                                     .font(.system(.body, weight: .black))
@@ -597,7 +615,7 @@ private struct CombatRootView: View {
                 // Ausweichen -- tertiary (outline)
                 Button {
                     let aw = hero.derivedValues?.ausweichen.value ?? 0
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFormula: nil)
+                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFormula: nil, note: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.walk")
@@ -994,7 +1012,7 @@ private struct CombatWeaponSelectionView: View {
 
     private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String? = nil) -> some View {
         Button {
-            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil)
+            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: nil)
         } label: {
             HStack {
                 Text(name)
