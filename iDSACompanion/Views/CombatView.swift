@@ -514,7 +514,7 @@ private struct CombatRootView: View {
             .padding(.horizontal, 16)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
-                    heroBaseINI: hero.derivedValues?.initiative.value ?? 0,
+                    heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
                     mountBaseINI: hero.pets.first.flatMap { pet in
                         Int(pet.initiative.split(separator: "+").first ?? "")
                     },
