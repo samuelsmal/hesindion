@@ -189,7 +189,7 @@ struct SubfieldBlock: View {
             ForEach(subfields, id: \.0) { key, val in
                 VStack(spacing: 0) {
                     HStack {
-                        Text(key).font(.body).foregroundStyle(.secondary)
+                        Text(L(key)).font(.body).foregroundStyle(.secondary)
                         Spacer()
                         Text(val).font(.system(.body, design: .monospaced))
                     }
@@ -231,7 +231,7 @@ struct LPBarView: View {
                     Rectangle()
                         .fill(barColor)
                         .frame(width: geo.size.width * fraction)
-                    Text("LP   \(current) / \(max)")
+                    Text("\(L("lifePoints.short"))   \(current) / \(max)")
                         .font(.system(.body, weight: .black))
                         .foregroundStyle(textColor)
                         .frame(maxWidth: .infinity)

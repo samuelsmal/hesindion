@@ -50,10 +50,10 @@ struct HeroListView: View {
         .onOpenURL { url in
             handleURL(url)
         }
-        .alert("Import Error", isPresented: $isShowingError) {
-            Button("OK", role: .cancel) {}
+        .alert(L("importError"), isPresented: $isShowingError) {
+            Button(L("ok"), role: .cancel) {}
         } message: {
-            Text(importError ?? "An unknown error occurred.")
+            Text(importError ?? L("unknownError"))
         }
     }
 

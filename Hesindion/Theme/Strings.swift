@@ -90,6 +90,7 @@ enum DSAStrings {
         "combat":               "Combat",
         "round":                "Round",
         "lifePoints":           "Life Points",
+        "lifePoints.short":     "LP",
         "action":               "Action",
         "attack":               "Attack",
         "parry":                "Parry",
@@ -179,6 +180,30 @@ enum DSAStrings {
         "lpLost":               "LP lost",
         "absorbed":             "Armor absorbs all damage",
         "changeLoadout":        "Change Loadout",
+        // Subfield labels (weapons, armor)
+        "combatTechnique":      "Combat Technique",
+        "damage":               "Damage",
+        "reach":                "Reach",
+        "range":                "Range",
+        "structurePoints":      "SP",
+        // Combat section labels
+        "meleeWeapons.label":   "MELEE WEAPONS",
+        "basis.label":          "BASICS",
+        "damage.label":         "DAMAGE",
+        "mainWeapon":           "MAIN WEAPON",
+        "shieldOption":         "SHIELD",
+        "hero":                 "Hero",
+        // Misc UI
+        "current":              "Current",
+        "tierPrefix":           "Level",
+        "rolling":              "Rolling...",
+        "confirmIni":           "Confirm  →  INI",
+        "roundPrefix":          "Round",
+        "apPrefix":             "AP",
+        "levelsPrefix":         "Levels",
+        "importError":          "Import Error",
+        "unknownError":         "An unknown error occurred.",
+        "ok":                   "OK",
     ]
 
     private static let translations: [String: String] = [
@@ -257,6 +282,7 @@ enum DSAStrings {
         "combat":               "Kampf",
         "round":                "Runde",
         "lifePoints":           "Lebenspunkte",
+        "lifePoints.short":     "LP",
         "action":               "Aktion",
         "attack":               "Angriff",
         "parry":                "Parieren",
@@ -346,6 +372,30 @@ enum DSAStrings {
         "lpLost":               "LP verloren",
         "absorbed":             "Rüstung absorbiert allen Schaden",
         "changeLoadout":        "Ausrüstung wechseln",
+        // Subfield labels (weapons, armor)
+        "combatTechnique":      "Kampftechnik",
+        "damage":               "Schaden",
+        "reach":                "Reichweite",
+        "range":                "Reichweite",
+        "structurePoints":      "SP",
+        // Combat section labels
+        "meleeWeapons.label":   "NAHKAMPFWAFFEN",
+        "basis.label":          "BASIS",
+        "damage.label":         "SCHADEN",
+        "mainWeapon":           "HAUPTWAFFE",
+        "shieldOption":         "SCHILD",
+        "hero":                 "Held",
+        // Misc UI
+        "current":              "Aktuell",
+        "tierPrefix":           "Stufe",
+        "rolling":              "Würfeln...",
+        "confirmIni":           "Bestätigen  →  INI",
+        "roundPrefix":          "Runde",
+        "apPrefix":             "AP",
+        "levelsPrefix":         "Stufen",
+        "importError":          "Importfehler",
+        "unknownError":         "Ein unbekannter Fehler ist aufgetreten.",
+        "ok":                   "OK",
     ]
 }
 

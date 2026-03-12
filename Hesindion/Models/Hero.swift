@@ -196,7 +196,7 @@ extension Hero {
                     name: "lebensenergie",
                     subparameter: nil,
                     input: .integerAmount(
-                        label: "Aktuell",
+                        label: L("current"),
                         min: 0,
                         max: dv.lebensenergie.max,
                         initial: dv.lebensenergie.current
@@ -222,7 +222,7 @@ extension Hero {
                     name: "schicksalspunkte",
                     subparameter: nil,
                     input: .integerAmount(
-                        label: "Aktuell",
+                        label: L("current"),
                         min: 0,
                         max: dv.schicksalspunkte.max,
                         initial: dv.schicksalspunkte.current
@@ -241,7 +241,7 @@ extension Hero {
                     name: "astralenergie",
                     subparameter: nil,
                     input: .integerAmount(
-                        label: "Aktuell",
+                        label: L("current"),
                         min: 0,
                         max: ae.max,
                         initial: ae.current
@@ -260,7 +260,7 @@ extension Hero {
                     name: "karmaenergie",
                     subparameter: nil,
                     input: .integerAmount(
-                        label: "Aktuell",
+                        label: L("current"),
                         min: 0,
                         max: ke.max,
                         initial: ke.current

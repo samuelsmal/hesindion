@@ -43,10 +43,10 @@ struct RuleDetailView: View {
                         HStack(spacing: 8) {
                             metaBadge(categoryLabel(rule.category))
                             if let cost = rule.cost {
-                                metaBadge("AP: \(cost)")
+                                metaBadge("\(L("apPrefix")): \(cost)")
                             }
                             if let levels = rule.levels {
-                                metaBadge("Stufen: \(levels)")
+                                metaBadge("\(L("levelsPrefix")): \(levels)")
                             }
                         }
 
@@ -101,7 +101,7 @@ struct RuleDetailView: View {
     private func effectRow(_ effect: RuleEffect) -> some View {
         HStack(alignment: .top, spacing: 8) {
             if let level = effect.level {
-                Text("Stufe \(level)")
+                Text("\(L("tierPrefix")) \(level)")
                     .font(.system(.caption, weight: .bold))
                     .frame(width: 56, alignment: .leading)
             }

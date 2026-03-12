@@ -291,7 +291,7 @@ private struct CombatLoadoutWeaponView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     if !hero.meleeWeapons.isEmpty {
-                        combatSectionLabel("NAHKAMPFWAFFEN")
+                        combatSectionLabel(L("meleeWeapons.label"))
                         ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
                             loadoutRow(name: w.name, detail: "AT \(w.at) / PA \(w.pa)", isSelected: hero.selectedWeaponName == w.name) {
                                 hero.selectedWeaponName = w.name
@@ -510,12 +510,12 @@ private struct CombatInitiativeRollView: View {
 
             VStack(spacing: 0) {
                 // Base selector
-                combatSectionLabel("BASIS")
+                combatSectionLabel(L("basis.label"))
 
                 HStack(spacing: 8) {
-                    baseButton(label: "Held", value: heroBaseINI)
+                    baseButton(label: L("hero"), value: heroBaseINI)
                     if let mINI = mountBaseINI {
-                        baseButton(label: mountName ?? "Reittier", value: mINI)
+                        baseButton(label: mountName ?? L("mount"), value: mINI)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -693,7 +693,7 @@ private struct CombatRootView: View {
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
                 // Round counter
-                Text("Runde \(roundNumber)")
+                Text("\(L("roundPrefix")) \(roundNumber)")
                     .font(.system(.title3, weight: .black))
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1232,7 +1232,7 @@ private struct CombatWeaponSelectionView: View {
 
                     // Main weapon option
                     if let w = hero.selectedWeapon {
-                        combatSectionLabel("HAUPTWAFFE (\(statLabel))")
+                        combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
                         let val = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
                         weaponRow(
                             name: w.name,
@@ -1243,7 +1243,7 @@ private struct CombatWeaponSelectionView: View {
                         )
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        combatSectionLabel("HAUPTWAFFE (\(statLabel))")
+                        combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
                         let val = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
                         weaponRow(
                             name: "Raufen",
@@ -1256,7 +1256,7 @@ private struct CombatWeaponSelectionView: View {
 
                     // Shield option
                     if let s = hero.selectedShield {
-                        combatSectionLabel("SCHILD (\(statLabel))")
+                        combatSectionLabel("\(L("shieldOption")) (\(statLabel))")
                         let val = action == .angriff ? s.at : s.pa
                         weaponRow(
                             name: s.name,
@@ -1693,7 +1693,7 @@ private struct CombatExecutionView: View {
 
     private func damageSection(parsed: ParsedDamage) -> some View {
         VStack(spacing: 0) {
-            combatSectionLabel("SCHADEN")
+            combatSectionLabel(L("damage.label"))
 
             let isAnimating = damageFinalRolls == nil
             let rolls = damageFinalRolls ?? damageDisplayRolls
@@ -1789,12 +1789,12 @@ private struct CombatInitiativeSheet: View {
 
             VStack(spacing: 0) {
                 // Base selector
-                combatSectionLabel("BASIS")
+                combatSectionLabel(L("basis.label"))
 
                 HStack(spacing: 8) {
-                    baseButton(label: "Held", value: heroBaseINI)
+                    baseButton(label: L("hero"), value: heroBaseINI)
                     if let mountINI = mountBaseINI {
-                        baseButton(label: mountName ?? "Reittier", value: mountINI)
+                        baseButton(label: mountName ?? L("mount"), value: mountINI)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -1809,7 +1809,7 @@ private struct CombatInitiativeSheet: View {
                                     .font(.system(.largeTitle, weight: .black))
                                     .fontDesign(.monospaced)
                                 if d6Result == nil {
-                                    Text("Würfeln...")
+                                    Text(L("rolling"))
                                         .font(.system(.caption2, weight: .semibold))
                                         .foregroundStyle(.secondary)
                                 }
@@ -1839,7 +1839,7 @@ private struct CombatInitiativeSheet: View {
                                 animTask?.cancel()
                                 onConfirm(t)
                             } label: {
-                                Text("Bestätigen  →  INI \(t)")
+                                Text("\(L("confirmIni")) \(t)")
                                     .font(.system(.body, weight: .black))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
