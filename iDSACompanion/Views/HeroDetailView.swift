@@ -360,9 +360,15 @@ struct HeroDetailView: View {
                 }
                 if dv.seelenkraft.max > 0 { FieldRow(label: "seelenkraft", value: "\(dv.seelenkraft.max)") }
                 if dv.zaehigkeit.max > 0 { FieldRow(label: "zähigkeit", value: "\(dv.zaehigkeit.max)") }
-                if dv.ausweichen.max > 0 { FieldRow(label: "ausweichen", value: "\(dv.ausweichen.max)") }
-                if dv.initiative.max > 0 { FieldRow(label: "initiative", value: "\(dv.initiative.max)") }
-                if dv.geschwindigkeit.max > 0 { FieldRow(label: "geschwindigkeit", value: "\(dv.geschwindigkeit.max)") }
+                if dv.ausweichen.max > 0 {
+                    FieldRow(label: "ausweichen", value: hero.belastungPenalty != 0 ? "\(dv.ausweichen.max) (\(hero.belastungPenalty))" : "\(dv.ausweichen.max)")
+                }
+                if dv.initiative.max > 0 {
+                    FieldRow(label: "initiative", value: hero.totalIniPenalty != 0 ? "\(dv.initiative.max) (\(hero.totalIniPenalty))" : "\(dv.initiative.max)")
+                }
+                if dv.geschwindigkeit.max > 0 {
+                    FieldRow(label: "geschwindigkeit", value: hero.totalGsPenalty != 0 ? "\(dv.geschwindigkeit.max) (\(hero.totalGsPenalty))" : "\(dv.geschwindigkeit.max)")
+                }
                 if dv.wundschwelle.max > 0 { FieldRow(label: "wundschwelle", value: "\(dv.wundschwelle.max)") }
             }
         }
@@ -536,9 +542,17 @@ struct HeroDetailView: View {
 
                         HStack(spacing: 12) {
                             Text("AT").font(.system(.caption, weight: .bold))
-                            Text("\(ct.at)").font(.system(.caption, design: .monospaced))
+                            if hero.belastungPenalty != 0 {
+                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                            } else {
+                                Text("\(ct.at)").font(.system(.caption, design: .monospaced))
+                            }
                             Text("PA").font(.system(.caption, weight: .bold))
-                            Text("\(ct.pa)").font(.system(.caption, design: .monospaced))
+                            if ct.pa > 0 && hero.belastungPenalty != 0 {
+                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                            } else {
+                                Text("\(ct.pa)").font(.system(.caption, design: .monospaced))
+                            }
                             Spacer()
                         }
                         .padding(.leading, 24)
