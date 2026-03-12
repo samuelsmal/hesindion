@@ -1198,10 +1198,6 @@ private struct CombatWeaponSelectionView: View {
         action == .angriff ? "Angriff" : "Parieren"
     }
 
-    private var raufen: CombatTechnique? {
-        hero.combatTechniques.first(where: { $0.name == "Raufen" })
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -1212,15 +1208,11 @@ private struct CombatWeaponSelectionView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
-
                 Spacer()
-
                 Text(headerLabel)
                     .font(.system(.headline, weight: .black))
                     .foregroundStyle(.white)
-
                 Spacer()
-
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
                         .font(.system(.body, weight: .bold))
@@ -1238,25 +1230,42 @@ private struct CombatWeaponSelectionView: View {
                 VStack(spacing: 0) {
                     let statLabel = action == .angriff ? "AT" : "PA"
 
-                    if !hero.meleeWeapons.isEmpty {
-                        combatSectionLabel("NAHKAMPFWAFFEN (\(statLabel))")
-                        ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
-                            let val = action == .angriff ? w.at : w.pa
-                            weaponRow(name: w.name, statLabel: statLabel, statValue: val, damageFormula: w.damage)
-                        }
+                    // Main weapon option
+                    if let w = hero.selectedWeapon {
+                        combatSectionLabel("HAUPTWAFFE (\(statLabel))")
+                        let val = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
+                        weaponRow(
+                            name: w.name,
+                            statLabel: statLabel,
+                            statValue: val,
+                            damageFormula: action == .angriff ? w.damage : nil,
+                            note: nil
+                        )
+                    } else if hero.selectedWeaponName == "Raufen" {
+                        let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+                        combatSectionLabel("HAUPTWAFFE (\(statLabel))")
+                        let val = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
+                        weaponRow(
+                            name: "Raufen",
+                            statLabel: statLabel,
+                            statValue: val,
+                            damageFormula: action == .angriff ? "1W6" : nil,
+                            note: nil
+                        )
                     }
 
-                    if !hero.shields.isEmpty {
-                        combatSectionLabel("SCHILDE (\(statLabel))")
-                        ForEach(hero.shields, id: \.persistentModelID) { s in
-                            let val = action == .angriff ? s.at : s.pa
-                            weaponRow(name: s.name, statLabel: statLabel, statValue: val)
-                        }
+                    // Shield option
+                    if let s = hero.selectedShield {
+                        combatSectionLabel("SCHILD (\(statLabel))")
+                        let val = action == .angriff ? s.at : s.pa
+                        weaponRow(
+                            name: s.name,
+                            statLabel: statLabel,
+                            statValue: val,
+                            damageFormula: action == .angriff ? s.damage : nil,
+                            note: action == .parieren && !s.note.isEmpty ? s.note : nil
+                        )
                     }
-
-                    combatSectionLabel(L("unarmed.label"))
-                    let rauferVal = action == .angriff ? (raufen?.at ?? 0) : (raufen?.pa ?? 0)
-                    weaponRow(name: "Raufen", statLabel: statLabel, statValue: rauferVal, damageFormula: "1W6")
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
@@ -1264,14 +1273,21 @@ private struct CombatWeaponSelectionView: View {
         }
     }
 
-    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String? = nil) -> some View {
+    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String?, note: String?) -> some View {
         Button {
-            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: nil)
+            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: action == .parieren ? note : nil)
         } label: {
             HStack {
-                Text(name)
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    if let note, !note.isEmpty {
+                        Text(note)
+                            .font(.system(.caption2, weight: .medium))
+                            .foregroundStyle(combatAccent)
+                    }
+                }
                 Spacer()
                 HStack(spacing: 4) {
                     Text("\(statLabel) \(statValue)")
