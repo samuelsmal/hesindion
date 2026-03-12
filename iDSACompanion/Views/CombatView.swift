@@ -7,9 +7,12 @@ private enum CombatAction {
 }
 
 private enum CombatStep {
+    case armorSelection
+    case initiativeRoll
     case root
     case weaponSelection(CombatAction)
     case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?)
+    case takeDamage
 }
 
 private let combatAccent = Color.groupCombat
@@ -37,21 +40,31 @@ struct CombatView: View {
     let hero: Hero
     var onDismiss: () -> Void
 
-    @State private var step: CombatStep = .root
+    @State private var step: CombatStep = .armorSelection
+    @State private var rolledInitiative: Int? = nil
 
     private var stepID: String {
         switch step {
+        case .armorSelection: "armorSelection"
+        case .initiativeRoll: "initiativeRoll"
         case .root: "root"
         case .weaponSelection: "weaponSelection"
         case .execution: "execution"
+        case .takeDamage: "takeDamage"
         }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             switch step {
+            case .armorSelection:
+                CombatArmorSelectionView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .leading))
+            case .initiativeRoll:
+                CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             case .root:
-                CombatRootView(hero: hero, step: $step, onDismiss: onDismiss)
+                CombatRootView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .leading))
             case .weaponSelection(let action):
                 CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
@@ -66,6 +79,9 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
+            case .takeDamage:
+                CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
@@ -73,9 +89,332 @@ struct CombatView: View {
         .background(Color(UIColor.systemBackground))
         .gesture(DragGesture().onEnded { v in
             if v.translation.height > 80 {
-                if case .root = step { onDismiss() } else { step = .root }
+                switch step {
+                case .armorSelection:
+                    onDismiss()
+                case .initiativeRoll:
+                    step = .armorSelection
+                case .root:
+                    onDismiss()
+                case .takeDamage:
+                    step = .root
+                default:
+                    step = .root
+                }
             }
         })
+    }
+}
+
+// MARK: - CombatArmorSelectionView
+
+private struct CombatArmorSelectionView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text(L("armorSelection"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            if hero.armors.isEmpty {
+                VStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "shield.slash")
+                        .font(.system(.largeTitle))
+                        .foregroundStyle(.secondary)
+                    Text(L("noArmor"))
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(hero.armors, id: \.persistentModelID) { armor in
+                            armorRow(armor)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
+                }
+            }
+
+            // Summary bar
+            HStack(spacing: 16) {
+                HStack(spacing: 4) {
+                    Text(L("rs"))
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("\(hero.totalRS)")
+                        .font(.system(.body, weight: .black))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.white)
+                }
+                HStack(spacing: 4) {
+                    Text(L("encumbrance"))
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("\(hero.effectiveBE)")
+                        .font(.system(.body, weight: .black))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.white)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.dsaDark)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+            // Continue button
+            Button { step = .initiativeRoll } label: {
+                Text(L("continue"))
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func armorRow(_ armor: Armor) -> some View {
+        Button {
+            armor.isEquipped.toggle()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(armor.name)
+                        .font(.system(.body, weight: armor.isEquipped ? .bold : .regular))
+                        .foregroundStyle(.primary)
+                    Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
+                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - CombatInitiativeRollView
+
+private struct CombatInitiativeRollView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    @Binding var rolledInitiative: Int?
+    var onDismiss: () -> Void
+
+    @State private var selectedBase: Int? = nil
+    @State private var d6Display: Int = 1
+    @State private var d6Result: Int? = nil
+    @State private var animTask: Task<Void, Never>? = nil
+
+    private var heroBaseINI: Int {
+        (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty
+    }
+
+    private var mountBaseINI: Int? {
+        hero.pets.first.flatMap { pet in
+            Int(pet.initiative.split(separator: "+").first ?? "")
+        }
+    }
+
+    private var mountName: String? {
+        hero.pets.first?.name
+    }
+
+    private var total: Int? {
+        guard let base = selectedBase, let d6 = d6Result else { return nil }
+        return base + d6
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .armorSelection } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(L("newInitiative"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            VStack(spacing: 0) {
+                // Base selector
+                combatSectionLabel("BASIS")
+
+                HStack(spacing: 8) {
+                    baseButton(label: "Held", value: heroBaseINI)
+                    if let mINI = mountBaseINI {
+                        baseButton(label: mountName ?? "Reittier", value: mINI)
+                    }
+                }
+                .padding(.horizontal, 16)
+
+                // Dice + result
+                if let base = selectedBase {
+                    VStack(spacing: 8) {
+                        // D6 box
+                        VStack(spacing: 0) {
+                            VStack(spacing: 2) {
+                                Text("\(d6Result ?? d6Display)")
+                                    .font(.system(.largeTitle, weight: .black))
+                                    .fontDesign(.monospaced)
+                                if d6Result == nil {
+                                    Text(L("tapToRoll"))
+                                        .font(.system(.caption2, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .contentShape(Rectangle())
+                            .onTapGesture { tapDice() }
+                            Text("W6")
+                                .font(.system(.caption2, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 2)
+                        }
+
+                        // Calculation box
+                        Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
+                            .font(.system(.title3, weight: .black))
+                            .fontDesign(.monospaced)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .opacity(d6Result == nil ? 0.4 : 1)
+
+                        if let t = total {
+                            Button {
+                                animTask?.cancel()
+                                rolledInitiative = t
+                                step = .root
+                            } label: {
+                                Text("\(L("confirm"))  \u{2192}  INI \(t)")
+                                    .font(.system(.body, weight: .black))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(combatAccent)
+                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                }
+
+                Spacer()
+            }
+            .padding(.bottom, 16)
+        }
+        .onDisappear { animTask?.cancel() }
+    }
+
+    private func baseButton(label: String, value: Int) -> some View {
+        let isSelected = selectedBase == value
+        return Button {
+            selectedBase = value
+            d6Result = nil
+            startD6Animation()
+        } label: {
+            VStack(spacing: 2) {
+                Text(label)
+                    .font(.system(.caption, weight: .bold))
+                Text("\(value)")
+                    .font(.system(.title3, weight: .black))
+            }
+            .foregroundStyle(isSelected ? .white : .primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func tapDice() {
+        if d6Result == nil && animTask != nil {
+            // Animation running: stop it and set result
+            animTask?.cancel()
+            d6Result = Int.random(in: 1...6)
+        }
+    }
+
+    private func startD6Animation() {
+        animTask?.cancel()
+        animTask = Task { @MainActor in
+            var count = 0
+            while !Task.isCancelled && count < 12 {
+                d6Display = Int.random(in: 1...6)
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { return }
+                count += 1
+            }
+            guard !Task.isCancelled else { return }
+            d6Result = Int.random(in: 1...6)
+        }
     }
 }
 
@@ -84,11 +423,12 @@ struct CombatView: View {
 private struct CombatRootView: View {
     let hero: Hero
     @Binding var step: CombatStep
+    @Binding var rolledInitiative: Int?
     var onDismiss: () -> Void
 
     @State private var roundNumber: Int = 1
-    @State private var rolledInitiative: Int? = nil
     @State private var showInitiativeSheet = false
+    @State private var showArmorSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -176,7 +516,6 @@ private struct CombatRootView: View {
                 CombatInitiativeSheet(
                     heroBaseINI: hero.derivedValues?.initiative.value ?? 0,
                     mountBaseINI: hero.pets.first.flatMap { pet in
-                        // Parse base INI from free-text like "14+1W6"
                         Int(pet.initiative.split(separator: "+").first ?? "")
                     },
                     mountName: hero.pets.first?.name
@@ -192,13 +531,36 @@ private struct CombatRootView: View {
                 // LEBENSPUNKTE section
                 combatSectionLabel(L("lifePoints.label"))
                 lpBar
+
+                // Armor management button
+                Button { showArmorSheet = true } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "shield.fill")
+                            .font(.system(.caption, weight: .bold))
+                        Text("\(L("rs")) \(hero.totalRS)")
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.dsaDark)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .sheet(isPresented: $showArmorSheet) {
+                    CombatArmorManagementSheet(hero: hero)
+                        .presentationCornerRadius(0)
+                }
             }
 
             // AKTION section
             combatSectionLabel(L("action.label"))
 
             VStack(spacing: 8) {
-                // Angriff — primary (filled)
+                // Angriff -- primary (filled)
                 Button {
                     step = .weaponSelection(.angriff)
                 } label: {
@@ -215,7 +577,7 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Parieren — secondary (outline)
+                // Parieren -- secondary (outline)
                 Button {
                     step = .weaponSelection(.parieren)
                 } label: {
@@ -232,7 +594,7 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Ausweichen — tertiary (outline)
+                // Ausweichen -- tertiary (outline)
                 Button {
                     let aw = hero.derivedValues?.ausweichen.value ?? 0
                     step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFormula: nil)
@@ -247,6 +609,21 @@ private struct CombatRootView: View {
                     .padding(.vertical, 16)
                     .background(Color(UIColor.systemBackground))
                     .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+
+                // Schaden nehmen -- dark
+                Button { step = .takeDamage } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "heart.slash.fill")
+                        Text(L("takeDamage"))
+                    }
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.dsaDark)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
             }
@@ -273,6 +650,268 @@ private struct CombatRootView: View {
         }
     }
 
+}
+
+// MARK: - CombatArmorManagementSheet
+
+private struct CombatArmorManagementSheet: View {
+    let hero: Hero
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text(L("armorSelection"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            if hero.armors.isEmpty {
+                VStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "shield.slash")
+                        .font(.system(.largeTitle))
+                        .foregroundStyle(.secondary)
+                    Text(L("noArmor"))
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(hero.armors, id: \.persistentModelID) { armor in
+                            armorRow(armor)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
+                }
+            }
+
+            // Summary bar
+            HStack(spacing: 16) {
+                HStack(spacing: 4) {
+                    Text(L("rs"))
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("\(hero.totalRS)")
+                        .font(.system(.body, weight: .black))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.white)
+                }
+                HStack(spacing: 4) {
+                    Text(L("encumbrance"))
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("\(hero.effectiveBE)")
+                        .font(.system(.body, weight: .black))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.white)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.dsaDark)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        }
+    }
+
+    private func armorRow(_ armor: Armor) -> some View {
+        Button {
+            armor.isEquipped.toggle()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(armor.name)
+                        .font(.system(.body, weight: armor.isEquipped ? .bold : .regular))
+                        .foregroundStyle(.primary)
+                    Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
+                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - CombatTakeDamageView
+
+private struct CombatTakeDamageView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    @State private var tpInput: Int = 0
+    @State private var confirmed: Bool = false
+
+    private var rs: Int { hero.totalRS }
+    private var effectiveDamage: Int { max(0, tpInput - rs) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .root } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(L("takeDamage"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            VStack(spacing: 16) {
+                // TP input stepper
+                combatSectionLabel(L("tp"))
+
+                HStack(spacing: 0) {
+                    Button {
+                        if tpInput > 0 { tpInput -= 1 }
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(confirmed ? Color.gray : combatAccent)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(confirmed || tpInput <= 0)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                    Text("\(tpInput)")
+                        .font(.system(.largeTitle, weight: .black))
+                        .fontDesign(.monospaced)
+                        .frame(minWidth: 80)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                    Button {
+                        tpInput += 1
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(confirmed ? Color.gray : combatAccent)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(confirmed)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
+
+                // Calculation display
+                VStack(spacing: 4) {
+                    Text("\(tpInput) \(L("tp")) \u{2212} \(rs) \(L("rs")) = \(effectiveDamage)")
+                        .font(.system(.title3, weight: .black))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.white)
+                    if effectiveDamage == 0 {
+                        Text(L("absorbed"))
+                            .font(.system(.caption, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                    } else {
+                        Text("\(effectiveDamage) \(L("lpLost"))")
+                            .font(.system(.caption, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.dsaDark)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .padding(.horizontal, 16)
+
+                if !confirmed {
+                    // Confirm button
+                    Button {
+                        if let dv = hero.derivedValues {
+                            dv.lebensenergie.current = max(0, dv.lebensenergie.current - effectiveDamage)
+                        }
+                        confirmed = true
+                    } label: {
+                        Text(L("confirm"))
+                            .font(.system(.title3, weight: .black))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(combatAccent)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                } else {
+                    // Neue Aktion button
+                    Button { step = .root } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(L("newAction"))
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                }
+            }
+
+            Spacer()
+        }
+    }
 }
 
 // MARK: - CombatWeaponSelectionView
@@ -362,12 +1001,19 @@ private struct CombatWeaponSelectionView: View {
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(.primary)
                 Spacer()
-                Text("\(statLabel) \(statValue)")
-                    .font(.system(.caption, design: .monospaced, weight: .black))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.dsaDark)
+                HStack(spacing: 4) {
+                    Text("\(statLabel) \(statValue)")
+                        .font(.system(.caption, design: .monospaced, weight: .black))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.dsaDark)
+                    if hero.belastungPenalty != 0 {
+                        Text("(\(hero.belastungPenalty))")
+                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
