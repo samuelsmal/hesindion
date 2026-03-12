@@ -13,9 +13,15 @@
 
 **AT (Attacke):** `KtW + Eigenschaftsbonus(MU)`
 
-**PA (Parade):** `floor(KtW / 2) + Eigenschaftsbonus(max(primaryAttr1, primaryAttr2))`
+**PA (Parade):** `ceil(KtW / 2) + Eigenschaftsbonus(max(primaryAttr1, primaryAttr2))`
+
+**PA (Schilde, active parry):** `ceil(KtW / 2) + Eigenschaftsbonus(primaryAttr) + 2 × shield PA-mod` — when actively parrying with the Schilde combat technique, the shield's PA bonus is doubled.
+
+**PA (main weapon + shield, passive bonus):** `weapon PA + shield PA-mod (single)` — when parrying with the main weapon while carrying a shield/parrying weapon, the shield's PA bonus is added once (not doubled). If multiple shields/parrying weapons are carried, only the highest PA bonus counts.
 
 **FK (Fernkampf):** Same as AT but using the ranged CT's primary attribute instead of MU. Ranged CTs have no PA (`has_no_parry` flag in rules.db).
+
+**Rules reference:** https://dsa.ulisses-regelwiki.de/
 
 **AW (Ausweichen):** `floor(GE / 2)`
 

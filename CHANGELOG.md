@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Combat loadout system: select main weapon + shield at combat start, persists across sessions
+- Passive shield PA bonus on main weapon parade (single modifier per DSA 5 rules)
+- Active shield parry with doubled PA bonus
+- Shield-specific combat notes (e.g., Großschild "+1 PA vs. Fernkampf")
+- Loadout-aware Angriff/Parieren: skip weapon list when no shield, simplified choice when shield equipped
+- "Ausrüstung wechseln" button to change loadout mid-combat
 - Armor equip/unequip system with `isEquipped` toggle (swipe-left in hero detail, toggle in combat)
 - Belastung (encumbrance) system: effective BE, Belastungsgewöhnung support, penalties on AT/PA/AW/INI/GS
 - Belastung penalty display as separate modifiers on combat stats (e.g., "AT 12 (-1)")
@@ -31,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- PA rounding: use ceil(KtW/2) instead of floor per DSA 5 rules
 - Initiative re-roll sheet now includes Belastung penalty in base INI
 - Weapon AT/PA calculations to use DSA 5 formulas
 - AT/PA calculation and listing of all combat techniques

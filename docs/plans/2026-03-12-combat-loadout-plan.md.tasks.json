@@ -1,0 +1,17 @@
+{
+  "planPath": "docs/plans/2026-03-12-combat-loadout-plan.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Add paModifier and note fields to Shield model", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Update shield import to populate new fields", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Add loadout persistence fields to Hero model", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Add loadout selection step to CombatView", "status": "pending", "blockedBy": [3]},
+    {"id": 5, "subject": "Task 5: Build CombatLoadoutWeaponView", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 6: Build CombatLoadoutShieldView", "status": "pending", "blockedBy": [4]},
+    {"id": 7, "subject": "Task 7: Modify CombatRootView for loadout display and actions", "status": "pending", "blockedBy": [5, 6]},
+    {"id": 8, "subject": "Task 8: Rewrite CombatWeaponSelectionView for loadout-aware choices", "status": "pending", "blockedBy": [7]},
+    {"id": 9, "subject": "Task 9: Update CombatExecutionView to show shield note", "status": "pending", "blockedBy": [4]},
+    {"id": 10, "subject": "Task 10: Update Ausweichen to pass note parameter", "status": "pending", "blockedBy": [4]},
+    {"id": 11, "subject": "Task 11: Update docs and changelog", "status": "pending", "blockedBy": [8, 9, 10]}
+  ],
+  "lastUpdated": "2026-03-12T00:00:00Z"
+}
