@@ -709,11 +709,32 @@ struct HeroDetailView: View {
         if !hero.armors.isEmpty {
             CollapsibleSection(L("armor")) {
                 ForEach(hero.armors, id: \.persistentModelID) { a in
-                    SubfieldBlock(label: a.name, subfields: [
-                        ("protectionValue", "\(a.protectionValue)"),
-                        ("encumbrance", "\(a.encumbrance)"),
-                        ("weight", String(format: "%.2f st", a.weight))
-                    ])
+                    SwipeActionRow(
+                        actions: [
+                            SwipeAction(
+                                icon: a.isEquipped ? "xmark.circle.fill" : "checkmark.circle.fill",
+                                color: a.isEquipped ? .red : .green
+                            ) {
+                                a.isEquipped.toggle()
+                            }
+                        ]
+                    ) {
+                        HStack {
+                            SubfieldBlock(label: a.name, subfields: [
+                                ("protectionValue", "RS \(a.protectionValue)"),
+                                ("encumbrance", "BE \(a.encumbrance)"),
+                                ("weight", String(format: "%.2f st", a.weight))
+                            ])
+                            if a.isEquipped {
+                                Text(L("equipped"))
+                                    .font(.system(.caption2, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.groupCombat)
+                            }
+                        }
+                    }
                 }
             }
         }
