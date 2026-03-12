@@ -68,7 +68,7 @@ struct CombatView: View {
                 CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .loadoutWeapon:
-                Text("Loadout Weapon placeholder")
+                CombatLoadoutWeaponView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .loadoutShield:
                 Text("Loadout Shield placeholder")
@@ -241,6 +241,110 @@ private struct CombatArmorSelectionView: View {
             .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - CombatLoadoutWeaponView
+
+private struct CombatLoadoutWeaponView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    private var raufen: CombatTechnique? {
+        hero.combatTechniques.first(where: { $0.name == "Raufen" })
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .initiativeRoll } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(L("selectWeapon"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    if !hero.meleeWeapons.isEmpty {
+                        combatSectionLabel("NAHKAMPFWAFFEN")
+                        ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+                            loadoutRow(name: w.name, detail: "AT \(w.at) / PA \(w.pa)", isSelected: hero.selectedWeaponName == w.name) {
+                                hero.selectedWeaponName = w.name
+                                advanceToShieldOrRoot()
+                            }
+                        }
+                    }
+
+                    combatSectionLabel(L("unarmed.label"))
+                    loadoutRow(name: "Raufen", detail: "AT \(raufen?.at ?? 0) / PA \(raufen?.pa ?? 0)", isSelected: hero.selectedWeaponName == "Raufen") {
+                        hero.selectedWeaponName = "Raufen"
+                        advanceToShieldOrRoot()
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+            }
+        }
+    }
+
+    private func advanceToShieldOrRoot() {
+        if hero.shields.isEmpty {
+            hero.selectedShieldName = nil
+            step = .root
+        } else {
+            step = .loadoutShield
+        }
+    }
+
+    private func loadoutRow(name: String, detail: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(detail)
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(combatAccent)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 4)
     }
 }
 

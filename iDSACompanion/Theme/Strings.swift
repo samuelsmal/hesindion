@@ -105,6 +105,7 @@ enum DSAStrings {
         "lifePoints.label":     "LIFE POINTS",
         "action.label":         "ACTION",
         "unarmed.label":        "UNARMED",
+        "selectWeapon":         "Select Weapon",
         // Rulebook
         "rulebook":             "Rulebook",
         "backToHero":           "Back to Hero",
@@ -268,6 +269,7 @@ enum DSAStrings {
         "lifePoints.label":     "LEBENSPUNKTE",
         "action.label":         "AKTION",
         "unarmed.label":        "WAFFENLOS",
+        "selectWeapon":         "Waffe wählen",
         // Rulebook
         "rulebook":             "Regelbuch",
         "backToHero":           "Zurück zum Helden",
