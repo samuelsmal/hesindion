@@ -30,6 +30,11 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var spells: [HeroSpell]
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
 
+    // MARK: - Loadout persistence
+
+    var selectedWeaponName: String?
+    var selectedShieldName: String?
+
     init(
         name: String,
         avatar: Data? = nil,
@@ -136,6 +141,23 @@ final class Hero {
     /// Total GS penalty: Belastung + direct armor modifiers.
     var totalGsPenalty: Int {
         belastungPenalty + armorGsModifier
+    }
+
+    // MARK: - Loadout computed helpers
+
+    var selectedWeapon: MeleeWeapon? {
+        guard let name = selectedWeaponName else { return nil }
+        return meleeWeapons.first { $0.name == name }
+    }
+
+    var selectedShield: Shield? {
+        guard let name = selectedShieldName else { return nil }
+        return shields.first { $0.name == name }
+    }
+
+    /// Passive shield PA bonus applied to main weapon parade.
+    var passiveShieldPABonus: Int {
+        selectedShield?.paModifier ?? 0
     }
 }
 
