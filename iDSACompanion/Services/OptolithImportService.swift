@@ -510,7 +510,7 @@ struct OptolithImportService {
                 } else {
                     primaryAttrValue = 8
                 }
-                paValue = ktw / 2 + Self.eigenschaftsbonus(primaryAttrValue)
+                paValue = (ktw + 1) / 2 + Self.eigenschaftsbonus(primaryAttrValue)
             }
 
             return CombatTechnique(ruleId: ctId, name: name, value: ktw, at: atValue, pa: paValue)
@@ -596,16 +596,20 @@ struct OptolithImportService {
                     } else {
                         primaryAttrValue = 8
                     }
-                    let basePA = ctVal / 2 + Self.eigenschaftsbonus(primaryAttrValue)
+                    let basePA = (ctVal + 1) / 2 + Self.eigenschaftsbonus(primaryAttrValue)
                     let atMod = intFromAny(item["at"]) ?? 0
                     let paMod = intFromAny(item["pa"]) ?? 0
                     let damage = formatDamage(item)
                     let reach = Self.reachMap[intFromAny(item["reach"]) ?? 1] ?? "Kurz"
+                    let template = item["template"] as? String ?? ""
+                    let note = Self.shieldNote(for: template)
                     shields.append(Shield(
                         name: name,
                         damage: damage,
                         at: baseAT + atMod,
-                        pa: basePA + paMod,
+                        pa: basePA + 2 * paMod,
+                        paModifier: paMod,
+                        note: note,
                         reach: reach,
                         structurePoints: stp,
                         weight: weight
@@ -623,7 +627,7 @@ struct OptolithImportService {
                     } else {
                         primaryAttrValue = 8
                     }
-                    let basePA = ctVal / 2 + Self.eigenschaftsbonus(primaryAttrValue)
+                    let basePA = (ctVal + 1) / 2 + Self.eigenschaftsbonus(primaryAttrValue)
                     let atMod = intFromAny(item["at"]) ?? 0
                     let paMod = intFromAny(item["pa"]) ?? 0
                     let damage = formatDamage(item)
@@ -914,6 +918,13 @@ struct OptolithImportService {
         "EL_1": "Unerfahren", "EL_2": "Durchschnittlich", "EL_3": "Erfahren",
         "EL_4": "Kompetent", "EL_5": "Meisterlich", "EL_6": "Brilliant", "EL_7": "Legendär",
     ]
+
+    private static func shieldNote(for template: String) -> String {
+        switch template {
+        case "ITEMTPL_29": return "+1 PA vs. Fernkampf"
+        default: return ""
+        }
+    }
 
     private static let reachMap: [Int: String] = [1: "Kurz", 2: "Mittel", 3: "Lang"]
 
