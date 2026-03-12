@@ -273,7 +273,7 @@ struct HeroDetailView: View {
                             name: "lebensenergie",
                             subparameter: nil,
                             input: .integerAmount(
-                                label: "Aktuell",
+                                label: L("current"),
                                 min: 0,
                                 max: dv.lebensenergie.max,
                                 initial: dv.lebensenergie.current
@@ -297,7 +297,7 @@ struct HeroDetailView: View {
                             name: "schicksalspunkte",
                             subparameter: nil,
                             input: .integerAmount(
-                                label: "Aktuell",
+                                label: L("current"),
                                 min: 0,
                                 max: dv.schicksalspunkte.max,
                                 initial: dv.schicksalspunkte.current
@@ -321,7 +321,7 @@ struct HeroDetailView: View {
                             name: "astralenergie",
                             subparameter: nil,
                             input: .integerAmount(
-                                label: "Aktuell",
+                                label: L("current"),
                                 min: 0,
                                 max: ae.max,
                                 initial: ae.current
@@ -345,7 +345,7 @@ struct HeroDetailView: View {
                             name: "karmaenergie",
                             subparameter: nil,
                             input: .integerAmount(
-                                label: "Aktuell",
+                                label: L("current"),
                                 min: 0,
                                 max: ke.max,
                                 initial: ke.current
@@ -443,7 +443,7 @@ struct HeroDetailView: View {
     private func traitDisplay(_ trait: HeroTrait) -> String {
         var result = trait.name
         if let tier = trait.tier {
-            result += " (Stufe \(tier))"
+            result += " (\(L("tierPrefix")) \(tier))"
         }
         if let sid = trait.sid {
             result += ": \(sid)"
@@ -492,8 +492,8 @@ struct HeroDetailView: View {
     // MARK: - Section 9: Talents
 
     private let talentCategoryOrder = [
-        "körpertalente", "gesellschaftstalente", "naturtalente",
-        "wissenstalente", "handwerkstalente"
+        "Körpertalente", "Gesellschaftstalente", "Naturtalente",
+        "Wissenstalente", "Handwerkstalente"
     ]
 
     @ViewBuilder private var talentsSections: some View {

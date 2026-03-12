@@ -338,9 +338,9 @@ struct OptolithImportService {
         default: sex
         }
 
-        let species = rules.lookup(id: raceId)?.name ?? raceId
-        let culture = rules.lookup(id: cultureId)?.name ?? cultureId
-        let profession = rules.lookup(id: professionId)?.name ?? professionId
+        let species = rules.lookup(id: raceId)?.name ?? Self.speciesMap[raceId] ?? raceId
+        let culture = rules.lookup(id: cultureId)?.name ?? Self.cultureMap[cultureId] ?? cultureId
+        let profession = rules.lookup(id: professionId)?.name ?? Self.professionMap[professionId] ?? professionId
 
         return PersonalData(
             name: heroName,
@@ -867,14 +867,14 @@ struct OptolithImportService {
     /// TAL_43..TAL_59 = Handwerkstalente
     private static func talentCategory(for id: String) -> String {
         guard let numStr = id.split(separator: "_").last, let num = Int(numStr) else {
-            return "handwerkstalente"
+            return "Handwerkstalente"
         }
         switch num {
-        case 1...14: return "körpertalente"
-        case 15...22: return "gesellschaftstalente"
-        case 23...29: return "naturtalente"
-        case 30...42: return "wissenstalente"
-        default: return "handwerkstalente"
+        case 1...14: return "Körpertalente"
+        case 15...22: return "Gesellschaftstalente"
+        case 23...29: return "Naturtalente"
+        case 30...42: return "Wissenstalente"
+        default: return "Handwerkstalente"
         }
     }
 
@@ -943,5 +943,69 @@ struct OptolithImportService {
 
     private static let socialStatusMap: [Int: String] = [
         1: "Unfrei", 2: "Frei", 3: "Niederadel", 4: "Hochadel",
+    ]
+
+    private static let speciesMap: [String: String] = [
+        "R_1": "Menschen", "R_2": "Elfen", "R_3": "Halbelfen", "R_4": "Zwerge",
+    ]
+
+    private static let cultureMap: [String: String] = [
+        "C_1": "Andergaster", "C_2": "Aranier", "C_3": "Bornländer",
+        "C_4": "Fjarninger", "C_5": "Horasier", "C_6": "Zyklopeninsulaner",
+        "C_7": "Maraskaner", "C_8": "Mittelreicher", "C_9": "Moha",
+        "C_10": "Norbarden", "C_11": "Nivesen", "C_12": "Nostrier",
+        "C_13": "Südaventurier", "C_14": "Svelltaler", "C_15": "Thorwaler",
+        "C_16": "Trollzacker", "C_17": "Ambosszwerge", "C_18": "Brillantzwerge",
+        "C_19": "Erzzwerge", "C_20": "Hügelzwerge", "C_21": "Auelfen",
+        "C_22": "Firnelfen", "C_23": "Waldelfen", "C_24": "Ferkina",
+        "C_25": "Gjalskerländer",
+    ]
+
+    private static let professionMap: [String: String] = [
+        "P_1": "Akademie-Magier", "P_2": "Alchimist",
+        "P_3": "Borongeweihter", "P_4": "Efferdgeweihter",
+        "P_5": "Firungeweihter", "P_6": "Hesindegeweihter",
+        "P_7": "Ingerimmgeweihter", "P_8": "Perainegeweihter",
+        "P_9": "Phexgeweihter", "P_10": "Praiosgeweihter",
+        "P_11": "Rahjageweihter", "P_12": "Rondrageweihter",
+        "P_13": "Travia-Geweihter", "P_14": "Tsakgeweihter",
+        "P_15": "Durro-Dûn", "P_16": "Gildenloser Magier",
+        "P_17": "Hexe", "P_18": "Schelm",
+        "P_19": "Scharfschütze", "P_20": "Krieger",
+        "P_21": "Ritter", "P_22": "Söldner",
+        "P_23": "Gardist", "P_24": "Stammeskrieger",
+        "P_25": "Schwertgeselle", "P_26": "Kundschafter",
+        "P_27": "Jäger", "P_28": "Waldläufer",
+        "P_29": "Händler", "P_30": "Barde",
+        "P_31": "Gauner", "P_32": "Einbrecher",
+        "P_33": "Bettler", "P_34": "Gladiator",
+        "P_35": "Medicus", "P_36": "Gelehrter",
+        "P_37": "Kartograph", "P_38": "Grenzjäger",
+        "P_39": "Wildnisführer", "P_40": "Pirat",
+        "P_41": "Fischer", "P_42": "Seefahrer",
+        "P_43": "Handwerker", "P_44": "Bauer",
+        "P_45": "Diener", "P_46": "Wundarzt",
+        "P_47": "Magiedilettant (Halbzauberer)",
+        "P_48": "Magiedilettant (Viertelzauberer)",
+        "P_49": "Animist", "P_50": "Geode",
+        "P_51": "Zauberweber", "P_52": "Kristallomant",
+        "P_53": "Qabalyamagier", "P_54": "Zauberbarde",
+        "P_55": "Zaubertänzer",
+        "P_100": "Bannstrahler", "P_101": "Magier",
+        "P_102": "Borbaradianer",
+        "P_103": "Kor-Geweihter", "P_104": "Gravesh-Priester",
+        "P_105": "Namenloser Geweihter",
+        "P_106": "Swafnir-Geweihter", "P_107": "Ifirn-Geweihter",
+        "P_108": "Golgarit", "P_109": "Ordenskrieger",
+        "P_110": "Maraskaner Derwisch", "P_111": "Gjalskerländer Tierkrieger",
+        "P_112": "Hazaqi", "P_113": "Sharisad",
+        "P_114": "Zibilja", "P_115": "Fakir",
+        "P_116": "Sangara",
+        "P_120": "Lanisto", "P_121": "Ferkina-Krieger",
+        "P_122": "Kopfgeldjäger",
+        "P_123": "Abdecker", "P_124": "Henker",
+        "P_125": "Adersin", "P_126": "Amazone",
+        "P_127": "Basarer", "P_128": "Eremit",
+        "P_129": "Fuhrmann", "P_130": "Prospektor",
     ]
 }
