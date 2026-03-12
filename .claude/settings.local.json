@@ -19,10 +19,7 @@
       "Bash(python3 -c \"\nimport json\nwith open\\('docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json'\\) as f:\n    data = json.load\\(f\\)\nitems = data.get\\('belongings', {}\\).get\\('items', {}\\)\nfor k,v in items.items\\(\\):\n    if isinstance\\(v, dict\\) and v.get\\('gr'\\) == 1 and v.get\\('combatTechnique'\\) == 'CT_10':\n        print\\(json.dumps\\(v, indent=2\\)\\)\n\")",
       "WebFetch(domain:de.wiki-aventurica.de)",
       "Bash(git mv:*)",
-      "Bash(sed -i '' 's/Hesindion/Hesindion/g' Hesindion/HesindionApp.swift && sed -i '' 's/Hesindion/Hesindion/g' Hesindion/ContentView.swift && sed -i '' 's/Hesindion/Hesindion/g' HesindionTests/HeroImportTests.swift && grep -r 'Hesindion' Hesindion/ HesindionTests/ || echo \"No matches found — clean.\")",
-      "Bash(/usr/bin/grep -rl 'Hesindion' --include='*.md' --include='*.json' . | /usr/bin/grep -v '.xcodeproj' | /usr/bin/grep -v '.build' | /usr/bin/grep -v '.git/' | while read f; do echo \"Updating: $f\"; sed -i '' 's/Hesindion/Hesindion/g' \"$f\"; done)",
-      "Bash(/usr/bin/grep -r 'iDSACompanion' . --include='*.swift' --include='*.pbxproj' --include='*.xcscheme' --include='*.plist' --include='*.md' --include='*.json' | /usr/bin/grep -v '.git/' | /usr/bin/grep -v '.build/' || echo \"CLEAN: No remaining occurrences of iDSACompanion found.\")",
-      "Bash(sed -i '' 's/iDSACompanion/Hesindion/g' Hesindion.xcodeproj/xcuserdata/SamuelvonBaussnern.xcuserdatad/xcschemes/xcschememanagement.plist && /usr/bin/grep -c 'iDSACompanion' Hesindion.xcodeproj/xcuserdata/SamuelvonBaussnern.xcuserdatad/xcschemes/xcschememanagement.plist)"
+      "Bash(git rm:*)"
     ]
   }
 }
