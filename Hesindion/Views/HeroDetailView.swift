@@ -266,22 +266,26 @@ struct HeroDetailView: View {
     @ViewBuilder private var personalDataSection: some View {
         if let pd = hero.personalData {
             CollapsibleSection(L("personalData")) {
-                FieldRow(label: "name", value: pd.name)
-                FieldRow(label: "family", value: pd.family)
-                FieldRow(label: "birthplace", value: pd.birthplace)
-                FieldRow(label: "birthdate", value: pd.birthdate)
-                FieldRow(label: "age", value: "\(pd.age)")
-                FieldRow(label: "gender", value: pd.gender)
-                FieldRow(label: "species", value: pd.species)
-                FieldRow(label: "height", value: "\(pd.height) cm")
-                FieldRow(label: "weight", value: "\(pd.weight) st")
-                FieldRow(label: "hairColor", value: pd.hairColor)
-                FieldRow(label: "eyeColor", value: pd.eyeColor)
-                FieldRow(label: "culture", value: pd.culture)
-                FieldRow(label: "socialStatus", value: pd.socialStatus)
-                FieldRow(label: "profession", value: pd.profession)
-                FieldRow(label: "title", value: pd.title)
-                FieldRow(label: "characteristics", value: pd.characteristics)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], alignment: .leading, spacing: 0) {
+                    FieldRow(label: "name", value: pd.name)
+                    FieldRow(label: "family", value: pd.family)
+                    FieldRow(label: "birthplace", value: pd.birthplace)
+                    FieldRow(label: "birthdate", value: pd.birthdate)
+                    FieldRow(label: "age", value: "\(pd.age)")
+                    FieldRow(label: "gender", value: pd.gender)
+                    FieldRow(label: "species", value: pd.species)
+                    FieldRow(label: "height", value: "\(pd.height) cm")
+                    FieldRow(label: "weight", value: "\(pd.weight) st")
+                    FieldRow(label: "hairColor", value: pd.hairColor)
+                    FieldRow(label: "eyeColor", value: pd.eyeColor)
+                    FieldRow(label: "culture", value: pd.culture)
+                    FieldRow(label: "socialStatus", value: pd.socialStatus)
+                    FieldRow(label: "profession", value: pd.profession)
+                    FieldRow(label: "title", value: pd.title)
+                }
+                if !pd.characteristics.isEmpty {
+                    FieldRow(label: "characteristics", value: pd.characteristics)
+                }
             }
         }
     }
