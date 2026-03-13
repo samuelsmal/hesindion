@@ -123,6 +123,7 @@ struct CombatView: View {
                     step: $step,
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
+                    mountedActive: mountedActive,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -930,6 +931,7 @@ private struct CombatAttackChoiceView: View {
     @Binding var step: CombatStep
     @Binding var dualAttackPenaltyActive: Bool
     @Binding var twoHandedGripActive: Bool
+    let mountedActive: Bool
     var onDismiss: () -> Void
 
     private var isDualWield: Bool { hero.isDualWielding }
@@ -978,9 +980,15 @@ private struct CombatAttackChoiceView: View {
                         dualWieldOptions
                     } else if canUseTwoHanded {
                         gripOptions
+                    } else if mountedActive {
+                        heroSingleAttackOption
                     } else {
                         // Shouldn't reach here, but handle gracefully
                         Color.clear.onAppear { proceedSingleAttack() }
+                    }
+
+                    if mountedActive, let mount = hero.pets.first {
+                        mountAttackSection(mount: mount)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -996,7 +1004,7 @@ private struct CombatAttackChoiceView: View {
 
     private var dualWieldOptions: some View {
         VStack(spacing: 8) {
-            combatSectionLabel(L("attack"))
+            combatSectionLabel(mountedActive ? L("heroAttacksGroup") : L("attack"))
 
             // Single weapon attack (no penalty)
             choiceButton(
@@ -1026,7 +1034,7 @@ private struct CombatAttackChoiceView: View {
 
     private var gripOptions: some View {
         VStack(spacing: 8) {
-            combatSectionLabel(L("attack"))
+            combatSectionLabel(mountedActive ? L("heroAttacksGroup") : L("attack"))
 
             choiceButton(
                 title: L("oneHanded"),
@@ -1067,6 +1075,144 @@ private struct CombatAttackChoiceView: View {
         let total = existing + bonus
         if total == 0 { return base }
         return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+    }
+
+    // MARK: - Hero single attack (mounted, no dual-wield / two-hand)
+
+    private var heroSingleAttackOption: some View {
+        VStack(spacing: 8) {
+            combatSectionLabel(L("heroAttacksGroup"))
+
+            if let w = hero.selectedWeapon {
+                choiceButton(
+                    title: w.name,
+                    subtitle: "AT \(w.at) · TP \(w.damage)",
+                    icon: "hand.raised.fill"
+                ) {
+                    proceedSingleAttack()
+                }
+            } else if hero.selectedWeaponName == "Raufen" {
+                let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+                choiceButton(
+                    title: "Raufen",
+                    subtitle: "AT \(raufen?.at ?? 0) · TP 1W6",
+                    icon: "hand.raised.fill"
+                ) {
+                    proceedSingleAttack()
+                }
+            }
+        }
+    }
+
+    // MARK: - Mount attack section
+
+    private func mountAttackSection(mount: Pet) -> some View {
+        VStack(spacing: 8) {
+            combatSectionLabel(L("mountAttacksGroup"))
+
+            // Regular mount attacks (Hufschlag, Tritt, etc.)
+            ForEach(mount.attacks, id: \.name) { attack in
+                let mightyBlowNote: String? = {
+                    guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
+                    let kk = mount.attributes.kk
+                    let penalty = (kk - 20) / 2
+                    if penalty > 0 {
+                        return String(format: L("mightyBlow"), penalty)
+                    } else {
+                        return L("mightyBlowNoPenalty")
+                    }
+                }()
+
+                choiceButton(
+                    title: "\(mount.name): \(attack.name)",
+                    subtitle: "AT \(attack.at) · TP \(attack.damage)",
+                    icon: "pawprint.fill"
+                ) {
+                    step = .execution(
+                        .angriff,
+                        name: "\(mount.name): \(attack.name)",
+                        attributeValue: attack.at,
+                        damageFormula: attack.damage,
+                        note: mightyBlowNote,
+                        modifierLines: nil
+                    )
+                }
+            }
+
+            // Niederreiten
+            niederreitenButton(mount: mount)
+
+            // Sturmangriff zu Pferd (requires Berittener Kampf)
+            sturmangriffZuPferdButton(mount: mount)
+
+            // Mount special skills note
+            if !mount.specialSkills.isEmpty {
+                Text("\u{24D8} \(mount.specialSkills)")
+                    .font(.system(.caption2, weight: .medium))
+                    .foregroundStyle(combatAccent)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 2)
+            }
+        }
+    }
+
+    private func niederreitenButton(mount: Pet) -> some View {
+        let niederreitenAT = mount.attacks.first?.at ?? 0
+        let niederreitenAttack = mount.attacks.first { $0.name == "Niederreiten" }
+        let niederreitenDamage = niederreitenAttack?.damage ?? mount.damage
+
+        let mightyBlowNote: String? = {
+            guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
+            let kk = mount.attributes.kk
+            let penalty = (kk - 20) / 2
+            if penalty > 0 {
+                return String(format: L("mightyBlow"), penalty)
+            } else {
+                return L("mightyBlowNoPenalty")
+            }
+        }()
+        let niederreitenNote = [L("niederreiten.info"), mightyBlowNote]
+            .compactMap { $0 }
+            .joined(separator: "\n")
+
+        return choiceButton(
+            title: L("niederreiten"),
+            subtitle: "AT \(niederreitenAT) · TP \(niederreitenDamage)",
+            icon: "figure.equestrian.sports"
+        ) {
+            let successStep = CombatStep.execution(
+                .angriff,
+                name: "\(mount.name): \(L("niederreiten"))",
+                attributeValue: niederreitenAT,
+                damageFormula: niederreitenDamage,
+                note: niederreitenNote,
+                modifierLines: nil
+            )
+            step = .mountPreCheck(onSuccess: successStep)
+        }
+    }
+
+    @ViewBuilder
+    private func sturmangriffZuPferdButton(mount: Pet) -> some View {
+        if hero.hasBerittenerKampf, let w = hero.selectedWeapon {
+            let damageBonus = hero.sturmangriffDamageBonus
+            let bonusLabel = damageBonus >= 0 ? "+\(damageBonus)" : "\(damageBonus)"
+            choiceButton(
+                title: L("sturmangriffPferd"),
+                subtitle: "\(w.name) · AT \(w.at) · TP \(w.damage) \(bonusLabel)",
+                icon: "bolt.fill"
+            ) {
+                let successStep = CombatStep.announcement(
+                    .angriff,
+                    name: w.name,
+                    baseAT: w.at,
+                    damageFormula: w.damage,
+                    isOffHand: false,
+                    secondAttack: nil
+                )
+                step = .mountPreCheck(onSuccess: successStep)
+            }
+        }
     }
 
     private func choiceButton(title: String, subtitle: String?, icon: String, action: @escaping () -> Void) -> some View {
