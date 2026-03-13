@@ -18,6 +18,7 @@ private enum CombatStep {
     case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
+    case mountDamage
     case takeDamage
 }
 
@@ -71,6 +72,7 @@ struct CombatView: View {
         case .execution: "execution"
         case .dualAttackSecond: "dualAttackSecond"
         case .mountPreCheck: "mountPreCheck"
+        case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
         }
     }
@@ -194,6 +196,16 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
+            case .mountDamage:
+                if let mount = hero.pets.first {
+                    CombatMountDamageView(
+                        hero: hero,
+                        mount: mount,
+                        step: $step,
+                        onDismiss: onDismiss
+                    )
+                    .transition(.move(edge: .trailing))
+                }
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
@@ -221,6 +233,8 @@ struct CombatView: View {
                     step = .weaponSelection(action)
                 case .mountPreCheck:
                     step = .attackChoice
+                case .mountDamage:
+                    step = .root
                 case .takeDamage:
                     step = .root
                 default:
@@ -1656,6 +1670,26 @@ private struct CombatRootView: View {
                         .font(.system(.caption, design: .monospaced, weight: .bold))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button {
+                        step = .mountDamage
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.heart.fill")
+                                .font(.system(.caption, weight: .bold))
+                            Text(L("mountTakesDamage"))
+                                .font(.system(.caption, design: .monospaced, weight: .black))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 // Schmerz indicator
@@ -3229,6 +3263,279 @@ private struct CombatMountPreCheckView: View {
 
                     Button {
                         step = onSuccess
+                    } label: {
+                        Text(L("yes"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, 32)
+    }
+}
+
+// MARK: - CombatMountDamageView
+
+private struct CombatMountDamageView: View {
+    let hero: Hero
+    let mount: Pet
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    @State private var spAmount: Int = 1
+    @State private var damageApplied = false
+    @State private var showingProbeModal = false
+    @State private var probeSucceeded: Bool? = nil
+
+    private var penalty: Int { spAmount / 5 }
+
+    private var reitenTalent: Talent? {
+        hero.talents.first { $0.name == "Reiten" }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .root } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                Text(L("mountTakesDamage"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            Spacer()
+
+            if !damageApplied {
+                spInputPhase
+            } else {
+                reitenCheckPhase
+            }
+
+            Spacer()
+        }
+        .overlay {
+            if showingProbeModal, let talent = reitenTalent {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in probeSucceeded = succeeded },
+                    initialModifier: -penalty
+                )
+            }
+        }
+    }
+
+    // MARK: - SP Input Phase
+
+    private var spInputPhase: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "bolt.heart.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(combatAccent)
+
+            Text(mount.name)
+                .font(.system(.title3, weight: .bold))
+
+            // SP stepper
+            VStack(spacing: 4) {
+                HStack(spacing: 0) {
+                    Button {
+                        if spAmount > 1 { spAmount -= 1 }
+                    } label: {
+                        Text("−")
+                            .font(.system(.title, weight: .bold))
+                            .foregroundStyle(Color.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent.opacity(0.3))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("\(spAmount)")
+                        .font(.system(.largeTitle, weight: .black))
+                        .fontDesign(.monospaced)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                    Button {
+                        spAmount += 1
+                    } label: {
+                        Text("+")
+                            .font(.system(.title, weight: .bold))
+                            .foregroundStyle(Color.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent.opacity(0.3))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Text(L("mountDamage.sp"))
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+
+            // Penalty display
+            if penalty > 0 {
+                Text(String(format: L("mountDamage.penalty"), penalty))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(combatAccent)
+            } else {
+                Text(L("mountDamage.noPenalty"))
+                    .font(.system(.caption, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            // Apply button
+            Button {
+                // Deduct LP from mount
+                mount.currentLifeEnergy = max(0, mount.currentLifeEnergy - spAmount)
+                withAnimation(DSAAnimation.standard) {
+                    damageApplied = true
+                }
+            } label: {
+                Text(L("mountDamage.apply"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 32)
+    }
+
+    // MARK: - Reiten Check Phase
+
+    private var reitenCheckPhase: some View {
+        VStack(spacing: 16) {
+            if let talent = reitenTalent {
+                if let succeeded = probeSucceeded {
+                    // Result
+                    Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+
+                    Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
+                        .font(.system(.title3, weight: .bold))
+                        .multilineTextAlignment(.center)
+
+                    if !succeeded {
+                        Text(L("mountDamage.sturz"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(Color.groupCombat)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.groupCombat.opacity(0.1))
+                            .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+                    }
+
+                    Button {
+                        step = .root
+                    } label: {
+                        Text(L("continue"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(succeeded ? combatAccent : Color.dsaDark)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    // Prompt to roll
+                    Image(systemName: "dice.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(combatAccent)
+
+                    Text(L("reitenCheck"))
+                        .font(.system(.title3, weight: .bold))
+                        .multilineTextAlignment(.center)
+
+                    if penalty > 0 {
+                        Text(String(format: L("mountDamage.penalty"), penalty))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(combatAccent)
+                    }
+
+                    Button {
+                        showingProbeModal = true
+                    } label: {
+                        Text(L("rollReitenCheck"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                // No Reiten talent — manual confirmation
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(combatAccent)
+
+                Text(L("reitenCheckPrompt"))
+                    .font(.system(.title3, weight: .bold))
+                    .multilineTextAlignment(.center)
+
+                if penalty > 0 {
+                    Text(String(format: L("mountDamage.penalty"), penalty))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(combatAccent)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        probeSucceeded = false
+                    } label: {
+                        Text(L("no"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        probeSucceeded = true
                     } label: {
                         Text(L("yes"))
                             .font(.system(.body, weight: .bold))

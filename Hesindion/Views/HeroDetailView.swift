@@ -18,6 +18,7 @@ struct HeroDetailView: View {
     @State private var showCombatMode = false
     @State private var showRegenerierenSheet = false
     @State private var showNotes = false
+    @State private var showMountDamageSheet = false
 
     var body: some View {
         ZStack {
@@ -116,6 +117,13 @@ struct HeroDetailView: View {
                 .presentationCornerRadius(0)
                 .presentationDetents([.medium])
         }
+        .sheet(isPresented: $showMountDamageSheet) {
+            if let mount = hero.pets.first {
+                MountDamageSheet(hero: hero, mount: mount)
+                    .presentationCornerRadius(0)
+                    .presentationDetents([.large])
+            }
+        }
         .sheet(isPresented: Binding(
             get: { lookupRuleId != nil },
             set: { if !$0 { lookupRuleId = nil } }
@@ -138,6 +146,11 @@ struct HeroDetailView: View {
             }
             if cmd.name == "Regenerieren" {
                 showRegenerierenSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Reittier: Schaden" {
+                showMountDamageSheet = true
                 activeCommand = nil
                 return
             }

@@ -379,3 +379,238 @@ struct CommandModal: View {
         }
     }
 }
+
+// MARK: - MountDamageSheet
+
+struct MountDamageSheet: View {
+    let hero: Hero
+    let mount: Pet
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var spAmount: Int = 1
+    @State private var damageApplied = false
+    @State private var showingProbeModal = false
+    @State private var probeSucceeded: Bool? = nil
+
+    private var penalty: Int { spAmount / 5 }
+
+    private var reitenTalent: Talent? {
+        hero.talents.first { $0.name == "Reiten" }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text(L("mountTakesDamage"))
+                .font(.system(.headline, weight: .black))
+                .foregroundStyle(Color.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.groupCombat)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            VStack(spacing: 16) {
+                if !damageApplied {
+                    spInput
+                } else {
+                    reitenCheckContent
+                }
+            }
+            .padding(16)
+
+            Spacer()
+        }
+        .overlay {
+            if showingProbeModal, let talent = reitenTalent {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in probeSucceeded = succeeded },
+                    initialModifier: -penalty
+                )
+            }
+        }
+    }
+
+    private var spInput: some View {
+        VStack(spacing: 12) {
+            Text(mount.name)
+                .font(.system(.title3, weight: .bold))
+
+            HStack(spacing: 0) {
+                Button { if spAmount > 1 { spAmount -= 1 } } label: {
+                    Text("−")
+                        .font(.system(.title, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.groupCombat.opacity(0.3))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                Text("\(spAmount)")
+                    .font(.system(.largeTitle, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                Button { spAmount += 1 } label: {
+                    Text("+")
+                        .font(.system(.title, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.groupCombat.opacity(0.3))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text(L("mountDamage.sp"))
+                .font(.system(.caption, weight: .bold))
+                .foregroundStyle(.secondary)
+
+            if penalty > 0 {
+                Text(String(format: L("mountDamage.penalty"), penalty))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(Color.groupCombat)
+            } else {
+                Text(L("mountDamage.noPenalty"))
+                    .font(.system(.caption, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            Button {
+                mount.currentLifeEnergy = max(0, mount.currentLifeEnergy - spAmount)
+                withAnimation { damageApplied = true }
+            } label: {
+                Text(L("mountDamage.apply"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.groupCombat)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var reitenCheckContent: some View {
+        if let talent = reitenTalent {
+            if let succeeded = probeSucceeded {
+                resultView(succeeded: succeeded)
+            } else {
+                rollPromptView
+            }
+        } else {
+            manualCheckView
+        }
+    }
+
+    private func resultView(succeeded: Bool) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+
+            Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
+                .font(.system(.title3, weight: .bold))
+
+            if !succeeded {
+                Text(L("mountDamage.sturz"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(Color.groupCombat)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.groupCombat.opacity(0.1))
+                    .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+            }
+
+            Button { dismiss() } label: {
+                Image(systemName: "checkmark")
+                    .font(.system(.title2, weight: .bold))
+                    .foregroundStyle(Color.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.groupCombat)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var rollPromptView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "dice.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(Color.groupCombat)
+
+            Text(L("reitenCheck"))
+                .font(.system(.title3, weight: .bold))
+
+            if penalty > 0 {
+                Text(String(format: L("mountDamage.penalty"), penalty))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(Color.groupCombat)
+            }
+
+            Button { showingProbeModal = true } label: {
+                Text(L("rollReitenCheck"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.groupCombat)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var manualCheckView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(Color.groupCombat)
+
+            Text(L("reitenCheckPrompt"))
+                .font(.system(.title3, weight: .bold))
+
+            if penalty > 0 {
+                Text(String(format: L("mountDamage.penalty"), penalty))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(Color.groupCombat)
+            }
+
+            HStack(spacing: 12) {
+                Button { probeSucceeded = false } label: {
+                    Text(L("no"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                Button { probeSucceeded = true } label: {
+                    Text(L("yes"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.groupCombat)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}

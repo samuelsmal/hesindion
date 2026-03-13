@@ -443,6 +443,16 @@ extension Hero {
             ))
         }
 
+        if hasMount {
+            commands.append(AppCommand(
+                id: UUID(),
+                name: "Reittier: Schaden",
+                subparameter: nil,
+                input: nil,
+                execute: { _ in }
+            ))
+        }
+
         commands.append(AppCommand(
             id: UUID(),
             name: "Kampf",

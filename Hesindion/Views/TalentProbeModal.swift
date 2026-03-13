@@ -8,9 +8,19 @@ struct TalentProbeModal: View {
     let hero: Hero
     var onDismiss: () -> Void
     var onRolled: ((Bool) -> Void)? = nil
+    var initialModifier: Int = 0
 
-    @State private var modifiers = [0, 0, 0]
+    @State private var modifiers: [Int]
     @State private var displayRolls = [Int](repeating: 1, count: 3)
+
+    init(talent: Talent, hero: Hero, onDismiss: @escaping () -> Void, onRolled: ((Bool) -> Void)? = nil, initialModifier: Int = 0) {
+        self.talent = talent
+        self.hero = hero
+        self.onDismiss = onDismiss
+        self.onRolled = onRolled
+        self.initialModifier = initialModifier
+        _modifiers = State(initialValue: [initialModifier, initialModifier, initialModifier])
+    }
     @State private var finalRolls: [Int]? = nil
     @State private var animationTask: Task<Void, Never>? = nil
 
