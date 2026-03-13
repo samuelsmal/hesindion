@@ -1835,61 +1835,6 @@ private struct CombatRootView: View {
             }
             .padding(.horizontal, 16)
 
-            // Mount attacks
-            if mountedActive, let mount = hero.pets.first, !mount.attacks.isEmpty {
-                combatSectionLabel(L("mountAttacks.label"))
-
-                VStack(spacing: 4) {
-                    ForEach(mount.attacks, id: \.name) { attack in
-                        Button {
-                            let mightyBlowNote: String? = {
-                                guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
-                                let kk = mount.attributes.kk
-                                let penalty = (kk - 20) / 2
-                                if penalty > 0 {
-                                    return String(format: L("mightyBlow"), penalty)
-                                } else {
-                                    return L("mightyBlowNoPenalty")
-                                }
-                            }()
-                            step = .execution(.angriff, name: "\(mount.name): \(attack.name)", attributeValue: attack.at, damageFormula: attack.damage, note: mightyBlowNote, modifierLines: nil)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(attack.name)
-                                        .font(.system(.body, weight: .semibold))
-                                        .foregroundStyle(.primary)
-                                    Text("TP \(attack.damage) · RW \(attack.reach)")
-                                        .font(.system(.caption2, weight: .medium))
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Text("AT \(attack.at)")
-                                    .font(.system(.caption, design: .monospaced, weight: .black))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.dsaDark)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    if !mount.specialSkills.isEmpty {
-                        Text("\u{24D8} \(mount.specialSkills)")
-                            .font(.system(.caption2, weight: .medium))
-                            .foregroundStyle(combatAccent)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 2)
-                    }
-                }
-                .padding(.horizontal, 16)
-            }
             } // inner VStack
             } // ScrollView
         }
