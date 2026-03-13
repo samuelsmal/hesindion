@@ -14,7 +14,7 @@ private enum CombatStep {
     case root
     case attackChoice               // pre-attack: one/both weapons, one/two-handed
     case weaponSelection(CombatAction)
-    case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?)
+    case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?, isMountCharge: Bool)
     case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
@@ -137,7 +137,7 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .announcement(let action, let name, let baseAT, let dmgFormula, let isOffHand, let secondAttack):
+            case .announcement(let action, let name, let baseAT, let dmgFormula, let isOffHand, let secondAttack, let isMountCharge):
                 CombatAnnouncementView(
                     hero: hero,
                     action: action,
@@ -146,6 +146,7 @@ struct CombatView: View {
                     damageFormula: dmgFormula,
                     isOffHand: isOffHand,
                     mountedActive: mountedActive,
+                    isMountCharge: isMountCharge,
                     secondAttack: secondAttack,
                     step: $step,
                     activeManeuver: $activeManeuver,
@@ -214,7 +215,7 @@ struct CombatView: View {
                     onDismiss()
                 case .attackChoice:
                     step = .root
-                case .announcement(let action, _, _, _, _, _):
+                case .announcement(let action, _, _, _, _, _, _):
                     step = .weaponSelection(action)
                 case .mountPreCheck:
                     step = .attackChoice
@@ -244,6 +245,7 @@ private struct CombatAnnouncementView: View {
     let damageFormula: String?
     let isOffHand: Bool
     let mountedActive: Bool
+    let isMountCharge: Bool
     let secondAttack: (name: String, at: Int, damage: String?)?
     @Binding var step: CombatStep
     @Binding var activeManeuver: CombatManeuver
@@ -350,7 +352,8 @@ private struct CombatAnnouncementView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // Maneuver selection
+                    // Maneuver selection (hidden for mount charge — auto-selected)
+                    if !isMountCharge {
                     combatSectionLabel(L("announcement.label"))
 
                     ForEach(availableManeuvers, id: \.self) { maneuver in
@@ -387,6 +390,22 @@ private struct CombatAnnouncementView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                    } // end if !isMountCharge
+
+                    // Mount charge info
+                    if isMountCharge {
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundStyle(combatAccent)
+                            Text(L("sturmangriffPferd.info"))
+                                .font(.system(.caption, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(combatAccent.opacity(0.1))
+                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -404,6 +423,11 @@ private struct CombatAnnouncementView: View {
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             }
             .buttonStyle(.plain)
+        }
+        .onAppear {
+            if isMountCharge {
+                selectedManeuver = .sturmangriff
+            }
         }
     }
 
@@ -1059,10 +1083,10 @@ private struct CombatAttackChoiceView: View {
     private func proceedSingleAttack() {
         if let w = hero.selectedWeapon {
             let damage = twoHandedGripActive ? adjustDamage(w.damage, bonus: 1) : w.damage
-            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: damage, isOffHand: false, secondAttack: nil)
+            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
         } else if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-            step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil)
+            step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
         }
     }
 
@@ -1208,7 +1232,8 @@ private struct CombatAttackChoiceView: View {
                     baseAT: w.at,
                     damageFormula: w.damage,
                     isOffHand: false,
-                    secondAttack: nil
+                    secondAttack: nil,
+                    isMountCharge: true
                 )
                 step = .mountPreCheck(onSuccess: successStep)
             }
@@ -1688,10 +1713,10 @@ private struct CombatRootView: View {
                     } else if hasShield {
                         step = .weaponSelection(.angriff)
                     } else if let w = hero.selectedWeapon {
-                        step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil)
+                        step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil)
+                        step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
                     } else {
                         step = .loadoutEquipment
                     }
@@ -2282,10 +2307,11 @@ private struct CombatWeaponSelectionView: View {
                     baseAT: statValue,
                     damageFormula: damageFormula,
                     isOffHand: isOffHand,
-                    secondAttack: (name: otherName, at: otherAT, damage: otherDmg)
+                    secondAttack: (name: otherName, at: otherAT, damage: otherDmg),
+                    isMountCharge: false
                 )
             } else if action == .angriff {
-                step = .announcement(.angriff, name: name, baseAT: statValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil)
+                step = .announcement(.angriff, name: name, baseAT: statValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil, isMountCharge: false)
             } else {
                 step = .execution(action, name: name, attributeValue: statValue, damageFormula: nil, note: action == .parieren ? note : nil)
             }
