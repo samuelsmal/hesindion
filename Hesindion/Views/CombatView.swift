@@ -1303,6 +1303,41 @@ private struct CombatRootView: View {
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
 
+    private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
+        var lines: [ModifierLine] = []
+
+        let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
+        if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
+
+        if hero.schmerzPenalty != 0 {
+            let level = hero.effectiveSchmerzLevel
+            lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
+        }
+
+        // Golgariten PA bonus (parry only, not dodge)
+        if !isAusweichen && hero.golgaritenActive(mounted: mountedActive) {
+            lines.append(ModifierLine(value: 1, source: L("source.golgariten")))
+        }
+
+        // Plänkler AW bonus (dodge only)
+        if isAusweichen && plaenklerActive && plaenklerBonus == .aw {
+            lines.append(ModifierLine(value: 1, source: L("source.plaenkler")))
+        }
+
+        // Mounted dodge penalty
+        if isAusweichen && mountedActive {
+            lines.append(ModifierLine(value: -2, source: L("source.mounted")))
+        }
+
+        // Dual-attack penalty
+        if dualAttackPenaltyActive {
+            let penalty = hero.dualAttackPenalty
+            if penalty != 0 { lines.append(ModifierLine(value: penalty, source: L("source.dualAttack"))) }
+        }
+
+        return lines
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -1520,12 +1555,16 @@ private struct CombatRootView: View {
                     if isDualWield || hero.selectedShield != nil {
                         step = .weaponSelection(.parieren)
                     } else if let w = hero.selectedWeapon {
-                        let paValue = w.pa + hero.passiveShieldPABonus + (twoHandedGripActive ? -1 : 0) + (dualAttackPenaltyActive ? hero.dualAttackPenalty : 0)
-                        step = .execution(.parieren, name: w.name, attributeValue: paValue, damageFormula: nil, note: nil)
+                        let mods = buildDefenseModifiers(isAusweichen: false)
+                        let basePA = w.pa + hero.passiveShieldPABonus + (twoHandedGripActive ? -1 : 0)
+                        let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
+                        step = .execution(.parieren, name: w.name, attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        let paValue = (raufen?.pa ?? 0) + (dualAttackPenaltyActive ? hero.dualAttackPenalty : 0)
-                        step = .execution(.parieren, name: "Raufen", attributeValue: paValue, damageFormula: nil, note: nil)
+                        let mods = buildDefenseModifiers(isAusweichen: false)
+                        let basePA = raufen?.pa ?? 0
+                        let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
+                        step = .execution(.parieren, name: "Raufen", attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
                     } else {
                         step = .weaponSelection(.parieren)
                     }
@@ -1546,9 +1585,10 @@ private struct CombatRootView: View {
 
                 // Ausweichen -- tertiary (outline)
                 Button {
-                    let aw = hero.derivedValues?.ausweichen.value ?? 0
-                    let penalty = dualAttackPenaltyActive ? hero.dualAttackPenalty : 0
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw + penalty, damageFormula: nil, note: nil)
+                    let mods = buildDefenseModifiers(isAusweichen: true)
+                    let baseAW = hero.derivedValues?.ausweichen.value ?? 0
+                    let effectiveAW = baseAW + mods.reduce(0) { $0 + $1.value }
+                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: effectiveAW, damageFormula: nil, note: nil, modifierLines: mods)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.walk")
