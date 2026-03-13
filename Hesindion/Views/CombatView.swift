@@ -1363,6 +1363,8 @@ private struct CombatRootView: View {
             .background(combatAccent)
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
+            ScrollView {
+            VStack(spacing: 0) {
             // INITIATIVE section
             combatSectionLabel(L("initiative.label"))
 
@@ -1657,7 +1659,17 @@ private struct CombatRootView: View {
                 VStack(spacing: 4) {
                     ForEach(mount.attacks, id: \.name) { attack in
                         Button {
-                            step = .execution(.angriff, name: "\(mount.name): \(attack.name)", attributeValue: attack.at, damageFormula: attack.damage, note: nil, modifierLines: nil)
+                            let mightyBlowNote: String? = {
+                                guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
+                                let kk = mount.attributes.kk
+                                let penalty = (kk - 20) / 2
+                                if penalty > 0 {
+                                    return String(format: L("mightyBlow"), penalty)
+                                } else {
+                                    return L("mightyBlowNoPenalty")
+                                }
+                            }()
+                            step = .execution(.angriff, name: "\(mount.name): \(attack.name)", attributeValue: attack.at, damageFormula: attack.damage, note: mightyBlowNote, modifierLines: nil)
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -1695,8 +1707,8 @@ private struct CombatRootView: View {
                 }
                 .padding(.horizontal, 16)
             }
-
-            Spacer()
+            } // inner VStack
+            } // ScrollView
         }
     }
 

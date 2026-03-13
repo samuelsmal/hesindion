@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Mächtiger Schlag reminder for mount attacks: when the mount has "Mächtiger Schlag" in its special skills, an info banner shows during attack execution explaining the Kraftakt check rule, including the calculated penalty from the mount's KK
 - SwiftData VersionedSchema and SchemaMigrationPlan for safe schema migrations
 - Modifier breakdown for defense actions: Parieren and Ausweichen now compute and display labeled modifier lines (Belastung, Schmerz, Golgariten-Stil PA bonus, Plänkler-Formation AW bonus, mounted dodge penalty, dual-attack penalty) with an effective total, matching the attack announcement breakdown
 - Vorstoß defense lock: Parieren and Ausweichen buttons disabled (grey) when Vorstoß active this round, with warning note below
