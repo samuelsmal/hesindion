@@ -8,12 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Moved mount attacks from combat root view to attack selection screen
 - "Ausruestung wechseln" button restyled with teal accent for better visual distinction
 - Weapon and shield selection merged into single loadout step
 - Renamed project from iDSACompanion to Hesindion (after Hesinde, DSA goddess of wisdom)
 
 ### Added
 
+- Niederreiten and Sturmangriff zu Pferd as selectable attacks in the attack choice screen
+- Galopp confirmation and Reiten (Kampfmanöver) check flow before mounted charge attacks
+- Mount attacks (regular, Niederreiten, Sturmangriff zu Pferd) grouped in attack choice view alongside hero attacks
 - Mächtiger Schlag reminder for mount attacks: when the mount has "Mächtiger Schlag" in its special skills, an info banner shows during attack execution explaining the Kraftakt check rule, including the calculated penalty from the mount's KK
 - SwiftData VersionedSchema and SchemaMigrationPlan for safe schema migrations
 - Modifier breakdown for defense actions: Parieren and Ausweichen now compute and display labeled modifier lines (Belastung, Schmerz, Golgariten-Stil PA bonus, Plänkler-Formation AW bonus, mounted dodge penalty, dual-attack penalty) with an effective total, matching the attack announcement breakdown
