@@ -33,6 +33,44 @@ struct AttributesBar: View {
     }
 }
 
+// MARK: - AttributesColumn
+
+struct AttributesColumn: View {
+    let attrs: Attributes
+
+    var body: some View {
+        VStack(spacing: 0) {
+            attrCell("MU", attrs.mu)
+            attrCell("KL", attrs.kl)
+            attrCell("IN", attrs.inValue)
+            attrCell("CH", attrs.ch)
+            attrCell("FF", attrs.ff)
+            attrCell("GE", attrs.ge)
+            attrCell("KO", attrs.ko)
+            attrCell("KK", attrs.kk)
+        }
+        .frame(width: 80)
+        .overlay(alignment: .trailing) {
+            Rectangle()
+                .frame(width: 3)
+                .foregroundStyle(Color.dsaBorder)
+        }
+    }
+
+    private func attrCell(_ label: String, _ value: Int) -> some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.system(.caption, weight: .bold))
+            Text("\(value)")
+                .font(.system(.title3, weight: .black))
+        }
+        .foregroundStyle(Color.attributeForeground(for: label))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.attributeBackground(for: label))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+    }
+}
+
 // MARK: - Group Environment Keys
 
 private struct GroupColorKey: EnvironmentKey {
