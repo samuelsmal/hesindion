@@ -1708,7 +1708,7 @@ private struct CombatRootView: View {
                         return !excluded.contains(w.combatTechniqueId)
                     }()
 
-                    if isDualWield || canTwoHand {
+                    if isDualWield || canTwoHand || mountedActive {
                         step = .attackChoice
                     } else if hasShield {
                         step = .weaponSelection(.angriff)
