@@ -9,11 +9,12 @@ private enum CombatAction {
 private enum CombatStep {
     case armorSelection
     case initiativeRoll
-    case loadoutWeapon
-    case loadoutShield
+    case loadoutEquipment           // merged from loadoutWeapon + loadoutShield
     case root
+    case attackChoice               // pre-attack: one/both weapons, one/two-handed
     case weaponSelection(CombatAction)
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?)
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, secondAttack: (name: String, at: Int, damage: String?)? = nil)
+    case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     case takeDamage
 }
 
@@ -44,16 +45,20 @@ struct CombatView: View {
 
     @State private var step: CombatStep = .armorSelection
     @State private var rolledInitiative: Int? = nil
+    @State private var dualAttackPenaltyActive: Bool = false
+    @State private var twoHandedGripActive: Bool = false
+    @State private var roundNumber: Int = 1
 
     private var stepID: String {
         switch step {
         case .armorSelection: "armorSelection"
         case .initiativeRoll: "initiativeRoll"
-        case .loadoutWeapon: "loadoutWeapon"
-        case .loadoutShield: "loadoutShield"
+        case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
+        case .attackChoice: "attackChoice"
         case .weaponSelection: "weaponSelection"
         case .execution: "execution"
+        case .dualAttackSecond: "dualAttackSecond"
         case .takeDamage: "takeDamage"
         }
     }
@@ -67,25 +72,59 @@ struct CombatView: View {
             case .initiativeRoll:
                 CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
-            case .loadoutWeapon:
-                CombatLoadoutWeaponView(hero: hero, step: $step, onDismiss: onDismiss)
-                    .transition(.move(edge: .trailing))
-            case .loadoutShield:
-                CombatLoadoutShieldView(hero: hero, step: $step, onDismiss: onDismiss)
+            case .loadoutEquipment:
+                CombatLoadoutEquipmentView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .root:
-                CombatRootView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
-                    .transition(.move(edge: .leading))
+                CombatRootView(
+                    hero: hero,
+                    step: $step,
+                    rolledInitiative: $rolledInitiative,
+                    roundNumber: $roundNumber,
+                    dualAttackPenaltyActive: $dualAttackPenaltyActive,
+                    twoHandedGripActive: $twoHandedGripActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .leading))
+            case .attackChoice:
+                CombatAttackChoiceView(
+                    hero: hero,
+                    step: $step,
+                    dualAttackPenaltyActive: $dualAttackPenaltyActive,
+                    twoHandedGripActive: $twoHandedGripActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .weaponSelection(let action):
-                CombatWeaponSelectionView(action: action, hero: hero, step: $step, onDismiss: onDismiss)
-                    .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note):
+                CombatWeaponSelectionView(
+                    action: action,
+                    hero: hero,
+                    step: $step,
+                    dualAttackPenaltyActive: dualAttackPenaltyActive,
+                    twoHandedGripActive: twoHandedGripActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let secondAttack):
                 CombatExecutionView(
                     action: action,
                     weaponName: name,
                     attributeValue: attrValue,
                     damageFormula: dmgFormula,
                     note: note,
+                    secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
+                    step: $step,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
+            case .dualAttackSecond(let name, let attrValue, let dmgFormula):
+                CombatExecutionView(
+                    action: .angriff,
+                    weaponName: name,
+                    attributeValue: attrValue,
+                    damageFormula: dmgFormula,
+                    note: L("dualAttackPenalty"),
+                    secondAttackStep: nil,
                     step: $step,
                     onDismiss: onDismiss
                 )
@@ -105,12 +144,12 @@ struct CombatView: View {
                     onDismiss()
                 case .initiativeRoll:
                     step = .armorSelection
-                case .loadoutWeapon:
+                case .loadoutEquipment:
                     step = .initiativeRoll
-                case .loadoutShield:
-                    step = .loadoutWeapon
                 case .root:
                     onDismiss()
+                case .attackChoice:
+                    step = .root
                 case .takeDamage:
                     step = .root
                 default:
@@ -118,6 +157,10 @@ struct CombatView: View {
                 }
             }
         })
+        .onChange(of: roundNumber) { _, _ in
+            dualAttackPenaltyActive = false
+            twoHandedGripActive = false
+        }
     }
 }
 
@@ -245,15 +288,50 @@ private struct CombatArmorSelectionView: View {
     }
 }
 
-// MARK: - CombatLoadoutWeaponView
+// MARK: - CombatLoadoutEquipmentView
 
-private struct CombatLoadoutWeaponView: View {
+private struct CombatLoadoutEquipmentView: View {
     let hero: Hero
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
+    /// Tracks selected item names (max 2).
+    @State private var selected: Set<String> = []
+
     private var raufen: CombatTechnique? {
         hero.combatTechniques.first(where: { $0.name == "Raufen" })
+    }
+
+    /// All selectable items: weapons, shields, and Raufen.
+    private var allItems: [(name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)] {
+        var items: [(String, String, String?, Bool, Bool, Bool)] = []
+        for w in hero.meleeWeapons {
+            let twoHandedTechniques = ["CT_7", "CT_14"] // Zweihandschwerter, Stangenwaffen
+            let isTwoHanded = twoHandedTechniques.contains(w.combatTechniqueId)
+            items.append((w.name, "AT \(w.at) / PA \(w.pa)", nil, false, false, isTwoHanded))
+        }
+        for s in hero.shields {
+            items.append((s.name, "AT \(s.at) / PA \(s.pa)", s.note.isEmpty ? nil : s.note, true, false, false))
+        }
+        items.append(("Raufen", "AT \(raufen?.at ?? 0) / PA \(raufen?.pa ?? 0)", nil, false, true, false))
+        return items
+    }
+
+    private func canSelect(_ item: (name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)) -> Bool {
+        if selected.contains(item.name) { return true } // can always deselect
+        if item.isRaufen { return selected.isEmpty } // Raufen = both hands free
+        if item.isTwoHandedOnly { return selected.isEmpty } // two-handed weapon needs both hands
+        if selected.count >= 2 { return false }
+        if selected.count == 1 {
+            let currentItem = allItems.first { selected.contains($0.name) }
+            if currentItem?.isRaufen == true { return false }
+            if currentItem?.isTwoHandedOnly == true { return false }
+            // Can't pick two weapons without Beidhaendig
+            if !item.isShield && currentItem?.isShield == false && !hero.hasBeidhaendig { return false }
+            // Can't pick two shields
+            if item.isShield && currentItem?.isShield == true { return false }
+        }
+        return true
     }
 
     var body: some View {
@@ -269,7 +347,7 @@ private struct CombatLoadoutWeaponView: View {
 
                 Spacer()
 
-                Text(L("selectWeapon"))
+                Text(L("selectEquipment"))
                     .font(.system(.headline, weight: .black))
                     .foregroundStyle(.white)
 
@@ -292,89 +370,149 @@ private struct CombatLoadoutWeaponView: View {
                 VStack(spacing: 0) {
                     if !hero.meleeWeapons.isEmpty {
                         combatSectionLabel(L("meleeWeapons.label"))
-                        ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
-                            loadoutRow(name: w.name, detail: "AT \(w.at) / PA \(w.pa)", isSelected: hero.selectedWeaponName == w.name) {
-                                hero.selectedWeaponName = w.name
-                                advanceToShieldOrRoot()
-                            }
+                        ForEach(allItems.filter({ !$0.isShield && !$0.isRaufen }), id: \.name) { item in
+                            equipmentRow(item)
+                        }
+                    }
+
+                    if !hero.shields.isEmpty {
+                        combatSectionLabel(L("shields.label"))
+                        ForEach(allItems.filter(\.isShield), id: \.name) { item in
+                            equipmentRow(item)
                         }
                     }
 
                     combatSectionLabel(L("unarmed.label"))
-                    loadoutRow(name: "Raufen", detail: "AT \(raufen?.at ?? 0) / PA \(raufen?.pa ?? 0)", isSelected: hero.selectedWeaponName == "Raufen") {
-                        hero.selectedWeaponName = "Raufen"
-                        advanceToShieldOrRoot()
+                    ForEach(allItems.filter(\.isRaufen), id: \.name) { item in
+                        equipmentRow(item)
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
+
+            // Continue button
+            Button {
+                applySelection()
+                step = .root
+            } label: {
+                Text(L("continue"))
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(selected.isEmpty ? Color.gray : combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+            .disabled(selected.isEmpty)
         }
+        .onAppear { loadCurrentSelection() }
     }
 
-    private func advanceToShieldOrRoot() {
-        if hero.shields.isEmpty {
-            hero.selectedShieldName = nil
-            step = .root
-        } else {
-            step = .loadoutShield
-        }
-    }
+    private func equipmentRow(_ item: (name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)) -> some View {
+        let isSelected = selected.contains(item.name)
+        let enabled = canSelect(item)
+        return Button {
+            if isSelected {
+                selected.remove(item.name)
+            } else {
+                if item.isRaufen || item.isTwoHandedOnly {
+                    selected.removeAll()
+                }
+                selected.insert(item.name)
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundStyle(isSelected ? combatAccent : .secondary)
 
-    private func loadoutRow(name: String, detail: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(name)
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(detail)
+                    Text(item.name)
+                        .font(.system(.body, weight: isSelected ? .bold : .regular))
+                        .foregroundStyle(enabled ? .primary : .tertiary)
+                    Text(item.detail)
                         .font(.system(.caption, design: .monospaced, weight: .bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(enabled ? .secondary : .tertiary)
+                    if let note = item.note {
+                        Text(note)
+                            .font(.system(.caption2))
+                            .foregroundStyle(combatAccent)
+                    }
                 }
                 Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(combatAccent)
-                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
         }
         .buttonStyle(.plain)
+        .disabled(!enabled)
         .padding(.bottom, 4)
+    }
+
+    private func loadCurrentSelection() {
+        selected.removeAll()
+        if let name = hero.selectedWeaponName { selected.insert(name) }
+        if let name = hero.selectedOffHandName { selected.insert(name) }
+        // Legacy: also check selectedShieldName
+        if let name = hero.selectedShieldName, !selected.contains(name) { selected.insert(name) }
+    }
+
+    private func applySelection() {
+        let items = allItems
+        let selectedItems = items.filter { selected.contains($0.name) }
+
+        // Determine main weapon and off-hand
+        let mainWeapon = selectedItems.first { !$0.isShield && !$0.isRaufen } ?? selectedItems.first { $0.isRaufen }
+        let offHand = selectedItems.first { $0.name != mainWeapon?.name }
+
+        hero.selectedWeaponName = mainWeapon?.name
+        hero.selectedOffHandName = offHand?.name
+        // Keep selectedShieldName in sync for backwards compat
+        hero.selectedShieldName = offHand?.isShield == true ? offHand?.name : nil
     }
 }
 
-// MARK: - CombatLoadoutShieldView
+// MARK: - CombatAttackChoiceView
 
-private struct CombatLoadoutShieldView: View {
+private struct CombatAttackChoiceView: View {
     let hero: Hero
     @Binding var step: CombatStep
+    @Binding var dualAttackPenaltyActive: Bool
+    @Binding var twoHandedGripActive: Bool
     var onDismiss: () -> Void
+
+    private var isDualWield: Bool { hero.isDualWielding }
+    private var hasShield: Bool { hero.selectedShield != nil }
+
+    /// Check if current weapon is eligible for two-handed grip.
+    /// Not applicable to Dolche (CT_1) or Fechtwaffen (CT_3).
+    private var canUseTwoHanded: Bool {
+        guard !isDualWield, !hasShield else { return false }
+        guard let w = hero.selectedWeapon else { return false }
+        let excluded = ["CT_1", "CT_3"] // Dolche, Fechtwaffen
+        return !excluded.contains(w.combatTechniqueId)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = .loadoutWeapon } label: {
+                Button { step = .root } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
-
                 Spacer()
-
-                Text(L("selectShield"))
+                Text(L("attack"))
                     .font(.system(.headline, weight: .black))
                     .foregroundStyle(.white)
-
                 Spacer()
-
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
                         .font(.system(.body, weight: .bold))
@@ -389,58 +527,129 @@ private struct CombatLoadoutShieldView: View {
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             ScrollView {
-                VStack(spacing: 0) {
-                    // No shield option
-                    loadoutRow(name: L("noShield"), detail: "", note: nil, isSelected: hero.selectedShieldName == nil) {
-                        hero.selectedShieldName = nil
-                        step = .root
-                    }
-
-                    ForEach(hero.shields, id: \.persistentModelID) { s in
-                        loadoutRow(name: s.name, detail: "AT \(s.at) / PA \(s.pa)", note: s.note.isEmpty ? nil : s.note, isSelected: hero.selectedShieldName == s.name) {
-                            hero.selectedShieldName = s.name
-                            step = .root
-                        }
+                VStack(spacing: 8) {
+                    if isDualWield {
+                        dualWieldOptions
+                    } else if canUseTwoHanded {
+                        gripOptions
+                    } else {
+                        // Shouldn't reach here, but handle gracefully
+                        Color.clear.onAppear { proceedSingleAttack() }
                     }
                 }
                 .padding(.horizontal, 16)
+                .padding(.top, 8)
                 .padding(.bottom, 16)
+            }
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Dual-wield options
+
+    private var dualWieldOptions: some View {
+        VStack(spacing: 8) {
+            combatSectionLabel(L("attack"))
+
+            // Single weapon attack (no penalty)
+            choiceButton(
+                title: L("singleAttack"),
+                subtitle: nil,
+                icon: "1.circle.fill"
+            ) {
+                dualAttackPenaltyActive = false
+                step = .weaponSelection(.angriff)
+            }
+
+            // Both weapons attack (with penalty)
+            let penalty = hero.dualAttackPenalty
+            let penaltyText = penalty == 0 ? nil : "\(penalty) AT, \(penalty) \(L("parry"))/\(L("dodge"))"
+            choiceButton(
+                title: L("dualAttack"),
+                subtitle: penaltyText,
+                icon: "2.circle.fill"
+            ) {
+                dualAttackPenaltyActive = true
+                step = .weaponSelection(.angriff)
             }
         }
     }
 
-    private func loadoutRow(name: String, detail: String, note: String?, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    // MARK: - Grip options (single weapon, no shield)
+
+    private var gripOptions: some View {
+        VStack(spacing: 8) {
+            combatSectionLabel(L("attack"))
+
+            choiceButton(
+                title: L("oneHanded"),
+                subtitle: nil,
+                icon: "hand.raised.fill"
+            ) {
+                twoHandedGripActive = false
+                proceedSingleAttack()
+            }
+
+            choiceButton(
+                title: L("twoHanded"),
+                subtitle: nil,
+                icon: "hands.clap.fill"
+            ) {
+                twoHandedGripActive = true
+                proceedSingleAttack()
+            }
+        }
+    }
+
+    private func proceedSingleAttack() {
+        if let w = hero.selectedWeapon {
+            let damage = twoHandedGripActive ? adjustDamage(w.damage, bonus: 1) : w.damage
+            step = .execution(.angriff, name: w.name, attributeValue: w.at, damageFormula: damage, note: nil)
+        } else if hero.selectedWeaponName == "Raufen" {
+            let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+            step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
+        }
+    }
+
+    /// Adjusts a damage formula like "1W6+2" by adding a bonus.
+    private func adjustDamage(_ formula: String, bonus: Int) -> String {
+        let pattern = /^(\d+W\d+)([+-]\d+)?$/
+        guard let match = formula.firstMatch(of: pattern) else { return formula }
+        let base = String(match.1)
+        let existing = match.2.flatMap { Int($0) } ?? 0
+        let total = existing + bonus
+        if total == 0 { return base }
+        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+    }
+
+    private func choiceButton(title: String, subtitle: String?, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(.title3, weight: .bold))
+                    .foregroundStyle(combatAccent)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(name)
-                        .font(.system(.body, weight: .semibold))
+                    Text(title)
+                        .font(.system(.body, weight: .bold))
                         .foregroundStyle(.primary)
-                    if !detail.isEmpty {
-                        Text(detail)
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(.caption, weight: .semibold))
                             .foregroundStyle(.secondary)
-                    }
-                    if let note {
-                        Text(note)
-                            .font(.system(.caption2))
-                            .foregroundStyle(combatAccent)
                     }
                 }
                 Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(combatAccent)
-                }
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
         }
         .buttonStyle(.plain)
-        .padding(.bottom, 4)
     }
 }
 
@@ -564,7 +773,7 @@ private struct CombatInitiativeRollView: View {
                                 if hero.selectedWeaponName != nil {
                                     step = .root
                                 } else {
-                                    step = .loadoutWeapon
+                                    step = .loadoutEquipment
                                 }
                             } label: {
                                 Text("\(L("confirm"))  \u{2192}  INI \(t)")
@@ -613,7 +822,6 @@ private struct CombatInitiativeRollView: View {
 
     private func tapDice() {
         if d6Result == nil && animTask != nil {
-            // Animation running: stop it and set result
             animTask?.cancel()
             d6Result = Int.random(in: 1...6)
         }
@@ -642,9 +850,11 @@ private struct CombatRootView: View {
     let hero: Hero
     @Binding var step: CombatStep
     @Binding var rolledInitiative: Int?
+    @Binding var roundNumber: Int
+    @Binding var dualAttackPenaltyActive: Bool
+    @Binding var twoHandedGripActive: Bool
     var onDismiss: () -> Void
 
-    @State private var roundNumber: Int = 1
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
 
@@ -781,13 +991,14 @@ private struct CombatRootView: View {
                         .font(.system(.caption, weight: .bold))
                     Text(weaponName)
                         .font(.system(.caption, design: .monospaced, weight: .black))
-                    if let shieldName = hero.selectedShieldName {
+                    if let offHandName = hero.selectedOffHandName {
                         Text("+")
                             .font(.system(.caption, weight: .bold))
                             .foregroundStyle(.secondary)
-                        Image(systemName: "shield.fill")
+                        let isShield = hero.selectedShield != nil
+                        Image(systemName: isShield ? "shield.fill" : "hammer.fill")
                             .font(.system(.caption, weight: .bold))
-                        Text(shieldName)
+                        Text(offHandName)
                             .font(.system(.caption, design: .monospaced, weight: .black))
                     }
                     Spacer()
@@ -803,7 +1014,18 @@ private struct CombatRootView: View {
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
                 Button {
-                    if hero.selectedShield != nil {
+                    let isDualWield = hero.isDualWielding
+                    let hasShield = hero.selectedShield != nil
+                    let canTwoHand: Bool = {
+                        guard !isDualWield, !hasShield else { return false }
+                        guard let w = hero.selectedWeapon else { return false }
+                        let excluded = ["CT_1", "CT_3"]
+                        return !excluded.contains(w.combatTechniqueId)
+                    }()
+
+                    if isDualWield || canTwoHand {
+                        step = .attackChoice
+                    } else if hasShield {
                         step = .weaponSelection(.angriff)
                     } else if let w = hero.selectedWeapon {
                         step = .execution(.angriff, name: w.name, attributeValue: w.at, damageFormula: w.damage, note: nil)
@@ -811,7 +1033,7 @@ private struct CombatRootView: View {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
                     } else {
-                        step = .weaponSelection(.angriff)
+                        step = .attackChoice
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -829,13 +1051,16 @@ private struct CombatRootView: View {
 
                 // Parieren -- secondary (outline)
                 Button {
-                    if hero.selectedShield != nil {
+                    let isDualWield = hero.isDualWielding
+                    if isDualWield || hero.selectedShield != nil {
                         step = .weaponSelection(.parieren)
                     } else if let w = hero.selectedWeapon {
-                        step = .execution(.parieren, name: w.name, attributeValue: w.pa, damageFormula: nil, note: nil)
+                        let paValue = w.pa + hero.passiveShieldPABonus + (twoHandedGripActive ? -1 : 0) + (dualAttackPenaltyActive ? hero.dualAttackPenalty : 0)
+                        step = .execution(.parieren, name: w.name, attributeValue: paValue, damageFormula: nil, note: nil)
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        step = .execution(.parieren, name: "Raufen", attributeValue: raufen?.pa ?? 0, damageFormula: nil, note: nil)
+                        let paValue = (raufen?.pa ?? 0) + (dualAttackPenaltyActive ? hero.dualAttackPenalty : 0)
+                        step = .execution(.parieren, name: "Raufen", attributeValue: paValue, damageFormula: nil, note: nil)
                     } else {
                         step = .weaponSelection(.parieren)
                     }
@@ -856,7 +1081,8 @@ private struct CombatRootView: View {
                 // Ausweichen -- tertiary (outline)
                 Button {
                     let aw = hero.derivedValues?.ausweichen.value ?? 0
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw, damageFormula: nil, note: nil)
+                    let penalty = dualAttackPenaltyActive ? hero.dualAttackPenalty : 0
+                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: aw + penalty, damageFormula: nil, note: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.walk")
@@ -886,16 +1112,19 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Change loadout
-                Button { step = .loadoutWeapon } label: {
+                // Change loadout -- visually distinct (teal)
+                Button { step = .loadoutEquipment } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(.body, weight: .bold))
                         Text(L("changeLoadout"))
+                            .font(.system(.body, weight: .bold))
                     }
-                    .font(.system(.caption, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 14)
+                    .background(Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)) // teal
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
             }
@@ -1192,17 +1421,23 @@ private struct CombatWeaponSelectionView: View {
     let action: CombatAction
     let hero: Hero
     @Binding var step: CombatStep
+    let dualAttackPenaltyActive: Bool
+    let twoHandedGripActive: Bool
     var onDismiss: () -> Void
 
     private var headerLabel: String {
-        action == .angriff ? "Angriff" : "Parieren"
+        switch action {
+        case .angriff: return L("attack")
+        case .parieren: return L("selectParryWeapon")
+        case .ausweichen: return L("dodge")
+        }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = .root } label: {
+                Button { step = dualAttackPenaltyActive && action == .angriff ? .attackChoice : .root } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
@@ -1229,28 +1464,48 @@ private struct CombatWeaponSelectionView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     let statLabel = action == .angriff ? "AT" : "PA"
+                    let dualPenalty = dualAttackPenaltyActive ? hero.dualAttackPenalty : 0
 
                     // Main weapon option
                     if let w = hero.selectedWeapon {
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let val = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
+                        let baseVal = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
+                        let val = baseVal + dualPenalty + (action == .parieren && twoHandedGripActive ? -1 : 0)
                         weaponRow(
                             name: w.name,
                             statLabel: statLabel,
                             statValue: val,
                             damageFormula: action == .angriff ? w.damage : nil,
-                            note: nil
+                            note: nil,
+                            isOffHand: false
                         )
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let val = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
+                        let baseVal = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
+                        let val = baseVal + dualPenalty
                         weaponRow(
                             name: "Raufen",
                             statLabel: statLabel,
                             statValue: val,
                             damageFormula: action == .angriff ? "1W6" : nil,
-                            note: nil
+                            note: nil,
+                            isOffHand: false
+                        )
+                    }
+
+                    // Off-hand weapon (dual-wield)
+                    if let offW = hero.selectedOffHandWeapon {
+                        combatSectionLabel("\(L("offHandWeapon")) (\(statLabel))")
+                        let baseVal = action == .angriff ? offW.at : offW.pa
+                        let val = baseVal + dualPenalty + hero.offHandPenalty
+                        weaponRow(
+                            name: offW.name,
+                            statLabel: statLabel,
+                            statValue: val,
+                            damageFormula: action == .angriff ? offW.damage : nil,
+                            note: hero.offHandPenalty != 0 ? "\(L("offHandPenalty")): \(hero.offHandPenalty)" : nil,
+                            isOffHand: true
                         )
                     }
 
@@ -1263,7 +1518,8 @@ private struct CombatWeaponSelectionView: View {
                             statLabel: statLabel,
                             statValue: val,
                             damageFormula: action == .angriff ? s.damage : nil,
-                            note: action == .parieren && !s.note.isEmpty ? s.note : nil
+                            note: action == .parieren && !s.note.isEmpty ? s.note : nil,
+                            isOffHand: false
                         )
                     }
                 }
@@ -1273,9 +1529,28 @@ private struct CombatWeaponSelectionView: View {
         }
     }
 
-    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String?, note: String?) -> some View {
+    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
         Button {
-            step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: action == .parieren ? note : nil)
+            if dualAttackPenaltyActive && action == .angriff {
+                // Determine the other weapon for the second attack
+                let otherWeapon: MeleeWeapon? = isOffHand ? hero.selectedWeapon : hero.selectedOffHandWeapon
+                let otherName = otherWeapon?.name ?? "?"
+                let otherBaseAT = otherWeapon?.at ?? 0
+                let otherOffHandPenalty = isOffHand ? 0 : hero.offHandPenalty
+                let otherAT = otherBaseAT + hero.dualAttackPenalty + otherOffHandPenalty
+                let otherDmg = otherWeapon?.damage
+
+                step = .execution(
+                    .angriff,
+                    name: name,
+                    attributeValue: statValue,
+                    damageFormula: damageFormula,
+                    note: L("dualAttackPenalty"),
+                    secondAttack: (name: otherName, at: otherAT, damage: otherDmg)
+                )
+            } else {
+                step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: action == .parieren ? note : nil)
+            }
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -1322,10 +1597,12 @@ private struct CombatExecutionView: View {
     let attributeValue: Int
     let damageFormula: String?
     let note: String?
+    let secondAttackStep: CombatStep?
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
     @State private var modifier: Int = 0
+    @State private var vorteilhaftePosition: Bool = false
     @State private var displayRoll: Int = 1
     @State private var finalRoll: Int? = nil
     @State private var confirmRoll: Int? = nil
@@ -1353,7 +1630,7 @@ private struct CombatExecutionView: View {
         }
     }
 
-    private var effectiveValue: Int { attributeValue + modifier }
+    private var effectiveValue: Int { attributeValue + modifier + (vorteilhaftePosition ? 2 : 0) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1408,6 +1685,33 @@ private struct CombatExecutionView: View {
                 // Row 2: Modifier
                 modifierBox
 
+                // Vorteilhafte Position toggle
+                Button {
+                    guard finalRoll == nil else { return }
+                    vorteilhaftePosition.toggle()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
+                            .font(.system(.body, weight: .semibold))
+                            .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
+                        Text(L("advantageousPosition"))
+                            .font(.system(.caption, weight: .bold))
+                            .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
+                        Spacer()
+                        if vorteilhaftePosition {
+                            Text("+2")
+                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .foregroundStyle(combatAccent)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
+                }
+                .buttonStyle(.plain)
+                .disabled(finalRoll != nil)
+
                 // Row 3: Dice box
                 diceBox
                     .contentShape(Rectangle())
@@ -1429,20 +1733,63 @@ private struct CombatExecutionView: View {
             .padding(16)
 
             if showNeueAktion {
-                Button { step = .root } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text(L("newAction"))
+                if let secondStep = secondAttackStep, computedOutcome != .kritischerPatzer {
+                    // Second dual-wield attack
+                    Button { step = secondStep } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.fill")
+                            Text(L("dualAttack") + " 2")
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
-                    .font(.system(.body, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
+                    // Fumble -- second attack lost
+                    Text(L("fumbleSecondLost"))
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.dsaDark)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .padding(.horizontal, 16)
+
+                    Button { step = .root } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(L("newAction"))
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                } else {
+                    Button { step = .root } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(L("newAction"))
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
             }
 
             Spacer()

@@ -8,10 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- "Ausruestung wechseln" button restyled with teal accent for better visual distinction
+- Weapon and shield selection merged into single loadout step
 - Renamed project from iDSACompanion to Hesindion (after Hesinde, DSA goddess of wisdom)
 
 ### Added
 
+- Combined equipment loadout view (weapons + shields in one screen with checkboxes)
+- Dual-wielding support for heroes with Beidhaendig (ADV_5) advantage
+- Pre-attack choice: "Eine Waffe" vs "Beide Waffen" for dual-wield heroes
+- Two-handed grip option (+1 TP, -1 PA) for eligible one-handed weapons
+- Vorteilhafte Position per-roll toggle (+2 AT/PA/AW) on combat execution screen
+- Off-hand penalty display and calculation for dual-wield combat
+- Dual-attack penalty tracking per combat round (resets on round advance)
+- Dual-attack second strike flow with fumble handling (Patzer cancels second attack)
 - Combat loadout system: select main weapon + shield at combat start, persists across sessions
 - Passive shield PA bonus on main weapon parade (single modifier per DSA 5 rules)
 - Active shield parry with doubled PA bonus
