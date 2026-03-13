@@ -8,6 +8,7 @@ private enum CombatAction {
 
 private enum CombatStep {
     case armorSelection
+    case combatSetup
     case initiativeRoll
     case loadoutEquipment           // merged from loadoutWeapon + loadoutShield
     case root
@@ -48,10 +49,16 @@ struct CombatView: View {
     @State private var dualAttackPenaltyActive: Bool = false
     @State private var twoHandedGripActive: Bool = false
     @State private var roundNumber: Int = 1
+    @State private var plaenklerActive: Bool = false
+    @State private var plaenklerBonus: PlaenklerBonus = .at
+    @State private var mountedActive: Bool = false
+    @State private var vorstossActiveThisRound: Bool = false
+    @State private var activeManeuver: CombatManeuver = .normal
 
     private var stepID: String {
         switch step {
         case .armorSelection: "armorSelection"
+        case .combatSetup: "combatSetup"
         case .initiativeRoll: "initiativeRoll"
         case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
@@ -69,6 +76,16 @@ struct CombatView: View {
             case .armorSelection:
                 CombatArmorSelectionView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .leading))
+            case .combatSetup:
+                CombatSetupView(
+                    hero: hero,
+                    step: $step,
+                    plaenklerActive: $plaenklerActive,
+                    plaenklerBonus: $plaenklerBonus,
+                    mountedActive: $mountedActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .initiativeRoll:
                 CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
@@ -142,8 +159,10 @@ struct CombatView: View {
                 switch step {
                 case .armorSelection:
                     onDismiss()
-                case .initiativeRoll:
+                case .combatSetup:
                     step = .armorSelection
+                case .initiativeRoll:
+                    step = hero.needsCombatSetup ? .combatSetup : .armorSelection
                 case .loadoutEquipment:
                     step = .initiativeRoll
                 case .root:
@@ -160,6 +179,133 @@ struct CombatView: View {
         .onChange(of: roundNumber) { _, _ in
             dualAttackPenaltyActive = false
             twoHandedGripActive = false
+            vorstossActiveThisRound = false
+            activeManeuver = .normal
+        }
+    }
+}
+
+// MARK: - CombatSetupView
+
+private struct CombatSetupView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    @Binding var plaenklerActive: Bool
+    @Binding var plaenklerBonus: PlaenklerBonus
+    @Binding var mountedActive: Bool
+    var onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .armorSelection } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                Text(L("combatSetup"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Plänkler-Formation
+                    if hero.hasPlaenklerFormation {
+                        combatSectionLabel(L("formation.label"))
+
+                        Button { plaenklerActive.toggle() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: plaenklerActive ? "checkmark.square.fill" : "square")
+                                    .font(.system(.title3, weight: .semibold))
+                                    .foregroundStyle(plaenklerActive ? combatAccent : .secondary)
+                                Text(L("plaenkler"))
+                                    .font(.system(.body, weight: plaenklerActive ? .bold : .regular))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .background(plaenklerActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(plaenklerActive ? combatAccent : Color.dsaBorder, lineWidth: plaenklerActive ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+
+                        if plaenklerActive {
+                            HStack(spacing: 8) {
+                                ForEach(PlaenklerBonus.allCases, id: \.self) { bonus in
+                                    let isSelected = plaenklerBonus == bonus
+                                    Button { plaenklerBonus = bonus } label: {
+                                        Text(bonus == .at ? L("plaenklerAT") : L("plaenklerAW"))
+                                            .font(.system(.caption, weight: .bold))
+                                            .foregroundStyle(isSelected ? .white : .primary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 10)
+                                            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+                        }
+                    }
+
+                    // Mount toggle
+                    if hero.hasMount {
+                        combatSectionLabel(L("mount.label"))
+
+                        let mountName = hero.pets.first?.name ?? L("mount")
+                        Button { mountedActive.toggle() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: mountedActive ? "checkmark.square.fill" : "square")
+                                    .font(.system(.title3, weight: .semibold))
+                                    .foregroundStyle(mountedActive ? combatAccent : .secondary)
+                                Text("\(L("mounted")) (\(mountName))")
+                                    .font(.system(.body, weight: mountedActive ? .bold : .regular))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .background(mountedActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(mountedActive ? combatAccent : Color.dsaBorder, lineWidth: mountedActive ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+                    }
+                }
+                .padding(.bottom, 16)
+            }
+
+            // Continue
+            Button { step = .initiativeRoll } label: {
+                Text(L("continue"))
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
         }
     }
 }
@@ -245,7 +391,7 @@ private struct CombatArmorSelectionView: View {
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
             // Continue button
-            Button { step = .initiativeRoll } label: {
+            Button { step = hero.needsCombatSetup ? .combatSetup : .initiativeRoll } label: {
                 Text(L("continue"))
                     .font(.system(.title3, weight: .black))
                     .foregroundStyle(.white)
@@ -687,7 +833,7 @@ private struct CombatInitiativeRollView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = .armorSelection } label: {
+                Button { step = hero.needsCombatSetup ? .combatSetup : .armorSelection } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white)
