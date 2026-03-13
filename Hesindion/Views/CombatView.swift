@@ -89,10 +89,16 @@ struct CombatView: View {
                 )
                 .transition(.move(edge: .trailing))
             case .initiativeRoll:
-                CombatInitiativeRollView(hero: hero, step: $step, rolledInitiative: $rolledInitiative, onDismiss: onDismiss)
-                    .transition(.move(edge: .trailing))
+                CombatInitiativeRollView(
+                    hero: hero,
+                    step: $step,
+                    rolledInitiative: $rolledInitiative,
+                    mountedActive: mountedActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .loadoutEquipment:
-                CombatLoadoutEquipmentView(hero: hero, step: $step, onDismiss: onDismiss)
+                CombatLoadoutEquipmentView(hero: hero, step: $step, mountedActive: mountedActive, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
             case .root:
                 CombatRootView(
@@ -102,6 +108,10 @@ struct CombatView: View {
                     roundNumber: $roundNumber,
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
+                    vorstossActiveThisRound: $vorstossActiveThisRound,
+                    mountedActive: mountedActive,
+                    plaenklerActive: plaenklerActive,
+                    plaenklerBonus: plaenklerBonus,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .leading))
@@ -716,6 +726,7 @@ private struct CombatArmorSelectionView: View {
 private struct CombatLoadoutEquipmentView: View {
     let hero: Hero
     @Binding var step: CombatStep
+    let mountedActive: Bool
     var onDismiss: () -> Void
 
     /// Tracks selected item names (max 2).
@@ -731,7 +742,8 @@ private struct CombatLoadoutEquipmentView: View {
         for w in hero.meleeWeapons {
             let twoHandedTechniques = ["CT_7", "CT_14"] // Zweihandschwerter, Stangenwaffen
             let isTwoHanded = twoHandedTechniques.contains(w.combatTechniqueId)
-            items.append((w.name, "AT \(w.at) / PA \(w.pa)", nil, false, false, isTwoHanded))
+            let mountedNote: String? = (mountedActive && isTwoHanded) ? "(\(L("mounted")))" : nil
+            items.append((w.name, "AT \(w.at) / PA \(w.pa)", mountedNote, false, false, isTwoHanded))
         }
         for s in hero.shields {
             items.append((s.name, "AT \(s.at) / PA \(s.pa)", s.note.isEmpty ? nil : s.note, true, false, false))
@@ -742,6 +754,7 @@ private struct CombatLoadoutEquipmentView: View {
 
     private func canSelect(_ item: (name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)) -> Bool {
         if selected.contains(item.name) { return true } // can always deselect
+        if mountedActive && item.isTwoHandedOnly { return false } // two-handed weapons not usable when mounted
         if item.isRaufen { return selected.isEmpty } // Raufen = both hands free
         if item.isTwoHandedOnly { return selected.isEmpty } // two-handed weapon needs both hands
         if selected.count >= 2 { return false }
@@ -1080,6 +1093,7 @@ private struct CombatInitiativeRollView: View {
     let hero: Hero
     @Binding var step: CombatStep
     @Binding var rolledInitiative: Int?
+    let mountedActive: Bool
     var onDismiss: () -> Void
 
     @State private var selectedBase: Int? = nil
@@ -1216,6 +1230,12 @@ private struct CombatInitiativeRollView: View {
             }
             .padding(.bottom, 16)
         }
+        .onAppear {
+            if mountedActive, let mINI = mountBaseINI {
+                selectedBase = mINI
+                startD6Animation()
+            }
+        }
         .onDisappear { animTask?.cancel() }
     }
 
@@ -1274,6 +1294,10 @@ private struct CombatRootView: View {
     @Binding var roundNumber: Int
     @Binding var dualAttackPenaltyActive: Bool
     @Binding var twoHandedGripActive: Bool
+    @Binding var vorstossActiveThisRound: Bool
+    let mountedActive: Bool
+    let plaenklerActive: Bool
+    let plaenklerBonus: PlaenklerBonus
     var onDismiss: () -> Void
 
     @State private var showInitiativeSheet = false
@@ -1380,6 +1404,26 @@ private struct CombatRootView: View {
                 // LEBENSPUNKTE section
                 combatSectionLabel(L("lifePoints.label"))
                 lpBar
+
+                // Schmerz indicator
+                if hero.effectiveSchmerzLevel > 0 {
+                    let level = hero.effectiveSchmerzLevel
+                    let label = level >= 4 ? L("schmerz.IV") : L("schmerz.\(String(repeating: "I", count: level))")
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(.caption, weight: .bold))
+                        Text("\(label) (\(hero.schmerzPenalty))")
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.groupCombat)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 // Armor management button
                 Button { showArmorSheet = true } label: {
@@ -1491,13 +1535,14 @@ private struct CombatRootView: View {
                         Text(L("parry"))
                     }
                     .font(.system(.title3, weight: .black))
-                    .foregroundStyle(combatAccent)
+                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
+                .disabled(vorstossActiveThisRound)
 
                 // Ausweichen -- tertiary (outline)
                 Button {
@@ -1510,13 +1555,27 @@ private struct CombatRootView: View {
                         Text(L("dodge"))
                     }
                     .font(.system(.title3, weight: .black))
-                    .foregroundStyle(combatAccent)
+                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
+                .disabled(vorstossActiveThisRound)
+
+                // Vorstoß warning
+                if vorstossActiveThisRound {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(.caption2, weight: .bold))
+                        Text(L("noDefenseWarning"))
+                            .font(.system(.caption2, weight: .bold))
+                    }
+                    .foregroundStyle(combatAccent)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                }
 
                 // Schaden nehmen -- dark
                 Button { step = .takeDamage } label: {
@@ -1550,6 +1609,52 @@ private struct CombatRootView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
+
+            // Mount attacks
+            if mountedActive, let mount = hero.pets.first, !mount.attacks.isEmpty {
+                combatSectionLabel(L("mountAttacks.label"))
+
+                VStack(spacing: 4) {
+                    ForEach(mount.attacks, id: \.name) { attack in
+                        Button {
+                            step = .execution(.angriff, name: "\(mount.name): \(attack.name)", attributeValue: attack.at, damageFormula: attack.damage, note: nil, modifierLines: nil)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(attack.name)
+                                        .font(.system(.body, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("TP \(attack.damage) · RW \(attack.reach)")
+                                        .font(.system(.caption2, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text("AT \(attack.at)")
+                                    .font(.system(.caption, design: .monospaced, weight: .black))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.dsaDark)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    if !mount.specialSkills.isEmpty {
+                        Text("\u{24D8} \(mount.specialSkills)")
+                            .font(.system(.caption2, weight: .medium))
+                            .foregroundStyle(combatAccent)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 2)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
 
             Spacer()
         }

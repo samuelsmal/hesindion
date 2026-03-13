@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Vorstoß defense lock: Parieren and Ausweichen buttons disabled (grey) when Vorstoß active this round, with warning note below
+- Schmerz indicator in combat root view: badge showing pain level and penalty when effectiveSchmerzLevel > 0
+- Mount attacks section in combat root: when mounted, show pet attack list with AT values; each attack skips the announcement step
+- Two-handed weapon selection disabled when mounted (greyed out with "Beritten" note in loadout view)
+- Auto-select mount INI base on initiative screen when mounted mode is active
 - Modifier breakdown in combat execution view: labeled rows show base AT/PA/AW, each situational modifier (Belastung, Schmerz, Vorteilhafte Position, maneuver, dual-wield, off-hand) and manual zusätzlich adjustment, with a dark "Effektiv" total bar; falls back to simple value box for defense paths without a full breakdown
 - Announcement step between weapon selection and execution: maneuver selection (Normal, Finte, Wuchtschlag, Vorstoß, Schildspalter, Sturmangriff) with Vorteilhafte Position toggle and full AT/damage modifier pre-calculation
 - Combat setup step between armor selection and initiative: Plänkler-Formation toggle (AT or AW bonus) and mounted toggle for eligible heroes
