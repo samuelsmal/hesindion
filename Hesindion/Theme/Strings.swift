@@ -554,6 +554,7 @@ enum DSAStrings {
         "ok":                   "OK",
         "yes":                  "Ja",
         "no":                   "Nein",
+        "pets":                 "Tiere",
     ]
 }
 
