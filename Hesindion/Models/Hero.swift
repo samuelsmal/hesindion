@@ -30,6 +30,10 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var spells: [HeroSpell]
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
 
+    // MARK: - Notes
+
+    var notes: String = ""
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?

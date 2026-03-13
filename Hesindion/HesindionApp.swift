@@ -12,7 +12,7 @@ import SwiftData
 struct HesindionApp: App {
     var sharedModelContainer: ModelContainer = {
         do {
-            let schema = Schema(versionedSchema: SchemaV1.self)
+            let schema = Schema(versionedSchema: SchemaV2.self)
             let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             return try ModelContainer(
                 for: schema,

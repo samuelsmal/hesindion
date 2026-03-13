@@ -17,17 +17,45 @@ struct HeroDetailView: View {
     @State private var lookupRuleId: String?
     @State private var showCombatMode = false
     @State private var showRegenerierenSheet = false
+    @State private var showNotes = false
 
     var body: some View {
         ZStack {
-            if let attrs = hero.attributes, sizeClass == .regular {
-                HStack(spacing: 0) {
-                    AttributesColumn(attrs: attrs)
-                    ScrollView {
-                        LazyVStack {
-                            nameHeading
-                            groupsContent
+            ContentWithNotesLayout(hero: hero, showNotes: $showNotes) {
+                if let attrs = hero.attributes, sizeClass == .regular {
+                    HStack(spacing: 0) {
+                        AttributesColumn(attrs: attrs)
+                        ScrollView {
+                            LazyVStack {
+                                nameHeading
+                                groupsContent
+                            }
+                            .adaptiveContentWidth()
                         }
+                        .onScrollGeometryChange(for: CGFloat.self) { geo in
+                            geo.contentOffset.y + geo.contentInsets.top
+                        } action: { _, y in
+                            if y < -120 && !showCommandSearch {
+                                showCommandSearch = true
+                                commandQuery = ""
+                                searchFocused = true
+                            }
+                        }
+                    }
+                } else {
+                    ScrollView {
+                        LazyVStack(pinnedViews: [.sectionHeaders]) {
+                            nameHeading
+                            if let attrs = hero.attributes {
+                                SwiftUI.Section {
+                                    groupsContent
+                                } header: {
+                                    AttributesBar(attrs: attrs)
+                                        .padding(.horizontal, 16)
+                                }
+                            }
+                        }
+                        .adaptiveContentWidth()
                     }
                     .onScrollGeometryChange(for: CGFloat.self) { geo in
                         geo.contentOffset.y + geo.contentInsets.top
@@ -37,29 +65,6 @@ struct HeroDetailView: View {
                             commandQuery = ""
                             searchFocused = true
                         }
-                    }
-                }
-            } else {
-                ScrollView {
-                    LazyVStack(pinnedViews: [.sectionHeaders]) {
-                        nameHeading
-                        if let attrs = hero.attributes {
-                            SwiftUI.Section {
-                                groupsContent
-                            } header: {
-                                AttributesBar(attrs: attrs)
-                                    .padding(.horizontal, 16)
-                            }
-                        }
-                    }
-                }
-                .onScrollGeometryChange(for: CGFloat.self) { geo in
-                    geo.contentOffset.y + geo.contentInsets.top
-                } action: { _, y in
-                    if y < -120 && !showCommandSearch {
-                        showCommandSearch = true
-                        commandQuery = ""
-                        searchFocused = true
                     }
                 }
             }
@@ -142,6 +147,17 @@ struct HeroDetailView: View {
                 activeTalentProbe = talent
             }
             activeCommand = nil
+        }
+        .toolbar {
+            if sizeClass == .regular {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation { showNotes.toggle() }
+                    } label: {
+                        Image(systemName: showNotes ? "note.text.badge.plus" : "note.text")
+                    }
+                }
+            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

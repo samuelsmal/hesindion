@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Adaptive content width modifier for iPad: proportional margins (~6% per side) with 700pt max-width cap, standard 16pt padding on iPhone
+- Notes panel ("Notizen") sidebar toggleable via toolbar button on iPad in both hero detail and combat views
+- Hero.notes property persisted via SwiftData with SchemaV2 lightweight migration
+- ContentWithNotesLayout wrapper for consistent notes panel integration across views
 - Adaptive attributes column fixed to left side in iPad landscape mode
 - Inline probe attribute abbreviations (e.g., KL, CH, GE) in talent rows
 - Personal data fields display in responsive grid layout (2-3 columns)
@@ -17,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Combat view: replaced per-element horizontal padding with adaptive content width modifier for consistent iPad margins
 - Mount combat: Reiten check now uses the full talent probe modal with dice rolls instead of a simple Yes/No dialog
 - Moved mount attacks from combat root view to attack selection screen
 - "Ausruestung wechseln" button restyled with teal accent for better visual distinction

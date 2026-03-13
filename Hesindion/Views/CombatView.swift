@@ -36,7 +36,6 @@ private func combatSectionLabel(_ title: String) -> some View {
             .frame(height: 2)
             .foregroundStyle(combatAccent)
     }
-    .padding(.horizontal, 16)
     .padding(.vertical, 8)
 }
 
@@ -46,6 +45,8 @@ struct CombatView: View {
     let hero: Hero
     var onDismiss: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var showNotes = false
     @State private var step: CombatStep = .armorSelection
     @State private var rolledInitiative: Int? = nil
     @State private var dualAttackPenaltyActive: Bool = false
@@ -75,6 +76,7 @@ struct CombatView: View {
     }
 
     var body: some View {
+        ContentWithNotesLayout(hero: hero, showNotes: $showNotes) {
         VStack(spacing: 0) {
             switch step {
             case .armorSelection:
@@ -232,6 +234,23 @@ struct CombatView: View {
             vorstossActiveThisRound = false
             activeManeuver = .normal
         }
+        .overlay(alignment: .topTrailing) {
+            if sizeClass == .regular {
+                Button {
+                    withAnimation(DSAAnimation.standard) {
+                        showNotes.toggle()
+                    }
+                } label: {
+                    Image(systemName: "note.text")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(showNotes ? combatAccent : .white)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 48)
+                .padding(.top, 15)
+            }
+        }
+        } // ContentWithNotesLayout
     }
 }
 
@@ -407,7 +426,7 @@ private struct CombatAnnouncementView: View {
                         .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
                     }
                 }
-                .padding(.horizontal, 16)
+                .adaptiveContentWidth()
                 .padding(.top, 8)
                 .padding(.bottom, 16)
             }
@@ -569,7 +588,6 @@ private struct CombatSetupView: View {
                             .overlay(Rectangle().stroke(plaenklerActive ? combatAccent : Color.dsaBorder, lineWidth: plaenklerActive ? 3 : 2))
                         }
                         .buttonStyle(.plain)
-                        .padding(.horizontal, 16)
 
                         if plaenklerActive {
                             HStack(spacing: 8) {
@@ -587,7 +605,6 @@ private struct CombatSetupView: View {
                                     .buttonStyle(.plain)
                                 }
                             }
-                            .padding(.horizontal, 16)
                             .padding(.top, 4)
                         }
                     }
@@ -613,9 +630,9 @@ private struct CombatSetupView: View {
                             .overlay(Rectangle().stroke(mountedActive ? combatAccent : Color.dsaBorder, lineWidth: mountedActive ? 3 : 2))
                         }
                         .buttonStyle(.plain)
-                        .padding(.horizontal, 16)
                     }
                 }
+                .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
 
@@ -681,7 +698,7 @@ private struct CombatArmorSelectionView: View {
                             armorRow(armor)
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .adaptiveContentWidth()
                     .padding(.top, 8)
                     .padding(.bottom, 16)
                 }
@@ -858,7 +875,7 @@ private struct CombatLoadoutEquipmentView: View {
                         equipmentRow(item)
                     }
                 }
-                .padding(.horizontal, 16)
+                .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
 
@@ -1015,7 +1032,7 @@ private struct CombatAttackChoiceView: View {
                         mountAttackSection(mount: mount)
                     }
                 }
-                .padding(.horizontal, 16)
+                .adaptiveContentWidth()
                 .padding(.top, 8)
                 .padding(.bottom, 16)
             }
@@ -1174,7 +1191,6 @@ private struct CombatAttackChoiceView: View {
                 Text("\u{24D8} \(mount.specialSkills)")
                     .font(.system(.caption2, weight: .medium))
                     .foregroundStyle(combatAccent)
-                    .padding(.horizontal, 16)
                     .padding(.top, 2)
             }
         }
@@ -1345,7 +1361,6 @@ private struct CombatInitiativeRollView: View {
                         baseButton(label: mountName ?? L("mount"), value: mINI)
                     }
                 }
-                .padding(.horizontal, 16)
 
                 // Dice + result
                 if let base = selectedBase {
@@ -1405,12 +1420,12 @@ private struct CombatInitiativeRollView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 16)
                     .padding(.top, 12)
                 }
 
                 Spacer()
             }
+            .adaptiveContentWidth()
             .padding(.bottom, 16)
         }
         .onAppear {
@@ -1604,7 +1619,6 @@ private struct CombatRootView: View {
                 .buttonStyle(.plain)
             }
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
@@ -1637,12 +1651,10 @@ private struct CombatRootView: View {
                         guard mount.currentLifeEnergy < mount.lifeEnergy else { return }
                         mount.currentLifeEnergy += 1
                     }
-                    .padding(.horizontal, 16)
 
                     Text(mount.name)
                         .font(.system(.caption, design: .monospaced, weight: .bold))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
@@ -1661,7 +1673,6 @@ private struct CombatRootView: View {
                     .padding(.vertical, 6)
                     .background(Color.groupCombat)
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                    .padding(.horizontal, 16)
                     .padding(.top, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -1681,7 +1692,6 @@ private struct CombatRootView: View {
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 16)
                 .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .sheet(isPresented: $showArmorSheet) {
@@ -1710,7 +1720,6 @@ private struct CombatRootView: View {
                     Spacer()
                 }
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
 
@@ -1854,9 +1863,9 @@ private struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
 
             } // inner VStack
+            .adaptiveContentWidth()
             } // ScrollView
         }
     }
@@ -1874,7 +1883,6 @@ private struct CombatRootView: View {
                 guard dv.lebensenergie.current < dv.lebensenergie.max else { return }
                 dv.lebensenergie.current += 1
             }
-            .padding(.horizontal, 16)
         }
     }
 
@@ -2076,7 +2084,6 @@ private struct CombatTakeDamageView: View {
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 16)
 
                 // Calculation display
                 VStack(spacing: 4) {
@@ -2098,7 +2105,6 @@ private struct CombatTakeDamageView: View {
                 .padding(.vertical, 14)
                 .background(Color.dsaDark)
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                .padding(.horizontal, 16)
 
                 if !confirmed {
                     // Confirm button
@@ -2117,7 +2123,6 @@ private struct CombatTakeDamageView: View {
                             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
                 } else {
                     // Neue Aktion button
                     Button { step = .root } label: {
@@ -2133,9 +2138,9 @@ private struct CombatTakeDamageView: View {
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
                 }
             }
+            .adaptiveContentWidth()
 
             Spacer()
         }
@@ -2250,7 +2255,7 @@ private struct CombatWeaponSelectionView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
+                .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
         }
@@ -2440,8 +2445,6 @@ private struct CombatExecutionView: View {
                         damageSection(parsed: parsed)
                     }
                 }
-            }
-            .padding(16)
 
             if showNeueAktion {
                 if let secondStep = secondAttackStep, computedOutcome != .kritischerPatzer {
@@ -2459,7 +2462,6 @@ private struct CombatExecutionView: View {
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
                 } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
                     // Fumble -- second attack lost
                     Text(L("fumbleSecondLost"))
@@ -2469,7 +2471,6 @@ private struct CombatExecutionView: View {
                         .padding(.vertical, 14)
                         .background(Color.dsaDark)
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                        .padding(.horizontal, 16)
 
                     Button { step = .root } label: {
                         HStack(spacing: 6) {
@@ -2484,7 +2485,6 @@ private struct CombatExecutionView: View {
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
                 } else {
                     Button { step = .root } label: {
                         HStack(spacing: 6) {
@@ -2499,9 +2499,11 @@ private struct CombatExecutionView: View {
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
                 }
             }
+            }
+            .adaptiveContentWidth()
+            .padding(.vertical, 16)
 
             Spacer()
         }
@@ -3086,11 +3088,14 @@ private struct CombatMountPreCheckView: View {
 
             Spacer()
 
-            if !galoppConfirmed {
-                galoppCheck
-            } else {
-                reitenCheck
+            VStack {
+                if !galoppConfirmed {
+                    galoppCheck
+                } else {
+                    reitenCheck
+                }
             }
+            .adaptiveContentWidth()
 
             Spacer()
         }

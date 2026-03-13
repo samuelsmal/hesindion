@@ -13,4 +13,8 @@ enum DSALayout {
     static let secondaryBorder: CGFloat = 2
     /// Tertiary border width — compact/detail elements.
     static let tertiaryBorder: CGFloat = 1
+    /// Maximum content width on iPad.
+    static let iPadMaxContentWidth: CGFloat = 700
+    /// Proportional content fraction on iPad (1.0 - 2×0.06).
+    static let iPadProportionalFraction: CGFloat = 0.88
 }

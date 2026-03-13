@@ -1,0 +1,14 @@
+{
+  "planPath": "docs/plans/2026-03-13-ipad-margins-notes.md",
+  "tasks": [
+    {"id": 1, "subject": "Step 1: Adaptive Width ViewModifier + Layout constants", "status": "completed", "lastUpdated": "2026-03-13T21:44:00Z"},
+    {"id": 2, "subject": "Step 2: Apply adaptive width to HeroDetailView", "status": "completed", "blockedBy": [1], "lastUpdated": "2026-03-13T21:45:00Z"},
+    {"id": 3, "subject": "Step 3: Apply adaptive width to CombatView", "status": "completed", "blockedBy": [1], "lastUpdated": "2026-03-13T21:48:00Z"},
+    {"id": 4, "subject": "Step 4: Data Model — Hero.notes + SchemaV2 migration", "status": "completed", "lastUpdated": "2026-03-13T21:44:00Z"},
+    {"id": 5, "subject": "Step 5: Notes Panel Component", "status": "completed", "lastUpdated": "2026-03-13T21:44:00Z"},
+    {"id": 6, "subject": "Step 6: Integrate Notes into HeroDetailView", "status": "completed", "blockedBy": [2, 4, 5], "lastUpdated": "2026-03-13T21:46:00Z"},
+    {"id": 7, "subject": "Step 7: Integrate Notes into CombatView", "status": "completed", "blockedBy": [3, 4, 5], "lastUpdated": "2026-03-13T21:48:00Z"},
+    {"id": 8, "subject": "Step 8: Documentation — CHANGELOG", "status": "completed", "blockedBy": [6, 7], "lastUpdated": "2026-03-13T21:49:00Z"}
+  ],
+  "lastUpdated": "2026-03-13T21:49:00Z"
+}
