@@ -17,6 +17,7 @@ private enum CombatStep {
     case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?)
     case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
+    indirect case mountPreCheck(onSuccess: CombatStep)
     case takeDamage
 }
 
@@ -68,6 +69,7 @@ struct CombatView: View {
         case .announcement: "announcement"
         case .execution: "execution"
         case .dualAttackSecond: "dualAttackSecond"
+        case .mountPreCheck: "mountPreCheck"
         case .takeDamage: "takeDamage"
         }
     }
@@ -180,6 +182,14 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
+            case .mountPreCheck(let onSuccess):
+                CombatMountPreCheckView(
+                    hero: hero,
+                    onSuccess: onSuccess,
+                    step: $step,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss)
                     .transition(.move(edge: .trailing))
@@ -205,6 +215,8 @@ struct CombatView: View {
                     step = .root
                 case .announcement(let action, _, _, _, _, _):
                     step = .weaponSelection(action)
+                case .mountPreCheck:
+                    step = .attackChoice
                 case .takeDamage:
                     step = .root
                 default:
@@ -2888,5 +2900,139 @@ private struct CombatInitiativeSheet: View {
             guard !Task.isCancelled else { return }
             d6Result = Int.random(in: 1...6)
         }
+    }
+}
+
+// MARK: - CombatMountPreCheckView
+
+private struct CombatMountPreCheckView: View {
+    let hero: Hero
+    let onSuccess: CombatStep
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+
+    @State private var galoppConfirmed = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button { step = .attackChoice } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                Text(L("reitenCheck"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            Spacer()
+
+            if !galoppConfirmed {
+                galoppCheck
+            } else {
+                reitenCheck
+            }
+
+            Spacer()
+        }
+    }
+
+    private var galoppCheck: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "figure.equestrian.sports")
+                .font(.system(size: 48))
+                .foregroundStyle(combatAccent)
+
+            Text(L("galoppConfirm"))
+                .font(.system(.title3, weight: .bold))
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 12) {
+                Button {
+                    step = .attackChoice
+                } label: {
+                    Text(L("no"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    withAnimation(DSAAnimation.standard) {
+                        galoppConfirmed = true
+                    }
+                } label: {
+                    Text(L("yes"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 32)
+    }
+
+    private var reitenCheck: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(combatAccent)
+
+            Text(L("reitenCheckPrompt"))
+                .font(.system(.title3, weight: .bold))
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 12) {
+                Button {
+                    step = .attackChoice
+                } label: {
+                    Text(L("no"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    step = onSuccess
+                } label: {
+                    Text(L("yes"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 32)
     }
 }
