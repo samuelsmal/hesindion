@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Schmerz (pain) tracking: raw level from LP thresholds, Zäher Hund (ADV_49) reduction, penalty computation
+- Combat ability detection helpers: Aufmerksamkeit, Golgariten-Stil, Berittener Kampf, Finte, Wuchtschlag, Vorstoß, Schildspalter, Plänkler-Formation
+- Mount detection and Sturmangriff damage bonus computation
+- Combat setup screen flag (needsCombatSetup) for Plänkler-Formation and mounted heroes
 - Combined equipment loadout view (weapons + shields in one screen with checkboxes)
 - Dual-wielding support for heroes with Beidhaendig (ADV_5) advantage
 - Pre-attack choice: "Eine Waffe" vs "Beide Waffen" for dual-wield heroes

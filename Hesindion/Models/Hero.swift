@@ -196,6 +196,104 @@ final class Hero {
     var isDualWielding: Bool {
         selectedWeaponName != nil && selectedOffHandWeapon != nil
     }
+
+    // MARK: - Schmerz (Pain)
+
+    /// Raw Schmerz level from LP thresholds (0–4+).
+    var schmerzLevel: Int {
+        guard let dv = derivedValues else { return 0 }
+        let current = dv.lebensenergie.current
+        let maxLP = dv.lebensenergie.max
+        guard maxLP > 0 else { return 0 }
+        var level = 0
+        if current <= (maxLP * 3) / 4 { level = 1 }
+        if current <= maxLP / 2 { level = 2 }
+        if current <= maxLP / 4 { level = 3 }
+        if current <= 5 { level += 1 }
+        return level
+    }
+
+    /// True if hero has Zäher Hund (ADV_49).
+    var hasZaeherHund: Bool {
+        advantages.contains { $0.ruleId == "ADV_49" }
+    }
+
+    /// Effective Schmerz after Zäher Hund reduction.
+    var effectiveSchmerzLevel: Int {
+        let raw = schmerzLevel
+        if raw >= 4 { return 4 }
+        return hasZaeherHund ? max(0, raw - 1) : raw
+    }
+
+    /// Penalty from Schmerz, applied to all checks.
+    var schmerzPenalty: Int { -effectiveSchmerzLevel }
+
+    // MARK: - Combat Ability Detection
+
+    var hasAufmerksamkeit: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_40" }
+    }
+
+    var hasGolgaritenStil: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_661" }
+    }
+
+    var hasBerittenerKampf: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_43" }
+    }
+
+    /// Finte tier (0 if not owned). SA_48.
+    var finteTier: Int {
+        combatSpecialAbilities.first { $0.ruleId == "SA_48" }?.tier ?? 0
+    }
+
+    /// Wuchtschlag tier (0 if not owned). SA_67.
+    var wuchtschlagTier: Int {
+        combatSpecialAbilities.first { $0.ruleId == "SA_67" }?.tier ?? 0
+    }
+
+    /// True if hero has Vorstoß (SA_66).
+    var hasVorstoss: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_66" }
+    }
+
+    /// True if hero has Schildspalter (SA_59).
+    var hasSchildspalter: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_59" }
+    }
+
+    /// True if hero has Plänkler-Formation (SA_884).
+    var hasPlaenklerFormation: Bool {
+        combatSpecialAbilities.contains { $0.ruleId == "SA_884" }
+    }
+
+    /// Whether Golgariten-Stil conditions are met (mounted + Rabenschnabel + Großschild).
+    func golgaritenActive(mounted: Bool) -> Bool {
+        guard mounted, hasGolgaritenStil else { return false }
+        let hasRabenschnabel = selectedWeapon?.name == "Rabenschnabel"
+        let hasGrossschild = selectedShield?.name == "Großschild"
+        return hasRabenschnabel && hasGrossschild
+    }
+
+    /// Horse GS for Sturmangriff damage.
+    var mountGS: Int {
+        pets.first?.speed ?? 0
+    }
+
+    /// Sturmangriff bonus damage: +2 + (horse GS / 2).
+    var sturmangriffDamageBonus: Int {
+        2 + (mountGS / 2)
+    }
+
+    /// True if hero has a mount (pet with initiative).
+    var hasMount: Bool {
+        pets.first.map { !$0.initiative.isEmpty } ?? false
+    }
+
+    /// Whether combat setup screen is needed.
+    var needsCombatSetup: Bool {
+        hasPlaenklerFormation || hasMount
+    }
 }
 
 // MARK: - AppCommand
