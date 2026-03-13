@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Adaptive attributes column fixed to left side in iPad landscape mode
+- Inline probe attribute abbreviations (e.g., KL, CH, GE) in talent rows
+- Personal data fields display in responsive grid layout (2-3 columns)
+- Ctrl+K keyboard shortcut to open command palette
+
 ### Changed
 
 - Moved mount attacks from combat root view to attack selection screen
