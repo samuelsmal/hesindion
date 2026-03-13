@@ -7,6 +7,7 @@ struct HeroDetailView: View {
     let hero: Hero
     @Binding var sidebarSelection: SidebarSelection?
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var activeEdit: ActiveEdit?
     @State private var showCommandSearch = false
     @State private var activeCommand: AppCommand?
@@ -19,83 +20,47 @@ struct HeroDetailView: View {
 
     var body: some View {
         ZStack {
-            ScrollView {
-                LazyVStack(pinnedViews: [.sectionHeaders]) {
-                    // Name heading — scrolls away
-                    Text(hero.name)
-                        .font(.system(.largeTitle, design: .default, weight: .black))
-                        .padding(20)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.groupPersonalData)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-
-                    if let attrs = hero.attributes {
-                        SwiftUI.Section {
-                            VStack(spacing: 0) {
-                                CollapsibleGroup(L("groupPersonalData"), color: .groupPersonalData) {
-                                    VStack(spacing: 8) {
-                                        personalDataSection
-                                        experienceSection
-                                        derivedValuesSection
-                                        advantagesSection
-                                        disadvantagesSection
-                                        generalSpecialAbilitiesSection
-                                        languagesSection
-                                        scriptsSection
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                }
-
-                                CollapsibleGroup(L("groupTalents"), color: .groupTalents, textColor: .white) {
-                                    VStack(spacing: 8) {
-                                        talentsSections
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                }
-
-                                CollapsibleGroup(L("groupCombat"), color: .groupCombat) {
-                                    VStack(spacing: 8) {
-                                        combatTechniquesSection
-                                        combatSpecialAbilitiesSection
-                                        meleeWeaponsSection
-                                        rangedWeaponsSection
-                                        armorSection
-                                        shieldSection
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                }
-
-                                CollapsibleGroup(L("groupEquipment"), color: .groupEquipment, textColor: .white) {
-                                    VStack(spacing: 8) {
-                                        equipmentSection
-                                        moneySection
-                                        petsSection
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                }
-                            }
-                            .padding(.bottom, 16)
-                        } header: {
-                            AttributesBar(attrs: attrs)
-                                .padding(.horizontal, 16)
+            if let attrs = hero.attributes, sizeClass == .regular {
+                HStack(spacing: 0) {
+                    AttributesColumn(attrs: attrs)
+                    ScrollView {
+                        LazyVStack {
+                            nameHeading
+                            groupsContent
+                        }
+                    }
+                    .onScrollGeometryChange(for: CGFloat.self) { geo in
+                        geo.contentOffset.y + geo.contentInsets.top
+                    } action: { _, y in
+                        if y < -120 && !showCommandSearch {
+                            showCommandSearch = true
+                            commandQuery = ""
+                            searchFocused = true
                         }
                     }
                 }
-            }
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.y + geo.contentInsets.top
-            } action: { _, y in
-                // y == 0 at rest; goes negative when overscrolled past the top
-                if y < -120 && !showCommandSearch {
-                    showCommandSearch = true
-                    commandQuery = ""
-                    searchFocused = true
+            } else {
+                ScrollView {
+                    LazyVStack(pinnedViews: [.sectionHeaders]) {
+                        nameHeading
+                        if let attrs = hero.attributes {
+                            SwiftUI.Section {
+                                groupsContent
+                            } header: {
+                                AttributesBar(attrs: attrs)
+                                    .padding(.horizontal, 16)
+                            }
+                        }
+                    }
+                }
+                .onScrollGeometryChange(for: CGFloat.self) { geo in
+                    geo.contentOffset.y + geo.contentInsets.top
+                } action: { _, y in
+                    if y < -120 && !showCommandSearch {
+                        showCommandSearch = true
+                        commandQuery = ""
+                        searchFocused = true
+                    }
                 }
             }
 
@@ -217,6 +182,70 @@ struct HeroDetailView: View {
         }
         .sorted { $0.1 > $1.1 || ($0.1 == $1.1 && $0.0.displayName < $1.0.displayName) }
         .map(\.0)
+    }
+
+    // MARK: - Extracted Layout Components
+
+    @ViewBuilder private var nameHeading: some View {
+        Text(hero.name)
+            .font(.system(.largeTitle, design: .default, weight: .black))
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.groupPersonalData)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+    }
+
+    @ViewBuilder private var groupsContent: some View {
+        VStack(spacing: 0) {
+            CollapsibleGroup(L("groupPersonalData"), color: .groupPersonalData) {
+                VStack(spacing: 8) {
+                    personalDataSection
+                    experienceSection
+                    derivedValuesSection
+                    advantagesSection
+                    disadvantagesSection
+                    generalSpecialAbilitiesSection
+                    languagesSection
+                    scriptsSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+
+            CollapsibleGroup(L("groupTalents"), color: .groupTalents, textColor: .white) {
+                VStack(spacing: 8) {
+                    talentsSections
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+
+            CollapsibleGroup(L("groupCombat"), color: .groupCombat) {
+                VStack(spacing: 8) {
+                    combatTechniquesSection
+                    combatSpecialAbilitiesSection
+                    meleeWeaponsSection
+                    rangedWeaponsSection
+                    armorSection
+                    shieldSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+
+            CollapsibleGroup(L("groupEquipment"), color: .groupEquipment, textColor: .white) {
+                VStack(spacing: 8) {
+                    equipmentSection
+                    moneySection
+                    petsSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+        }
+        .padding(.bottom, 16)
     }
 
     // MARK: - Section 1: Experience
