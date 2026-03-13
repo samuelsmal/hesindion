@@ -245,6 +245,15 @@ enum DSAStrings {
         "schmerz.III":          "Pain III",
         "schmerz.IV":           "Incapacitated",
         "chargeBonus":          "Charge bonus",
+        "galoppConfirm":        "Is your mount in gallop?",
+        "reitenCheck":          "Reiten (Kampfmanöver) Check",
+        "reitenCheckPrompt":    "Did the Reiten check succeed?",
+        "niederreiten":         "Trample",
+        "niederreiten.info":    "Trample can only be defended by dodging.",
+        "sturmangriffPferd":    "Mounted Charge",
+        "sturmangriffPferd.info": "Mounted Charge cannot be parried with weapons — only shield parry or dodge.",
+        "mountAttacksGroup":    "MOUNT ATTACKS",
+        "heroAttacksGroup":     "YOUR ATTACKS",
         // Subfield labels (weapons, armor)
         "combatTechnique":      "Combat Technique",
         "damage":               "Damage",
@@ -269,6 +278,8 @@ enum DSAStrings {
         "importError":          "Import Error",
         "unknownError":         "An unknown error occurred.",
         "ok":                   "OK",
+        "yes":                  "Yes",
+        "no":                   "No",
     ]
 
     private static let translations: [String: String] = [
@@ -502,6 +513,15 @@ enum DSAStrings {
         "schmerz.III":          "Schmerz III",
         "schmerz.IV":           "Handlungsunfähig",
         "chargeBonus":          "Sturmangriffsbonus",
+        "galoppConfirm":        "Ist dein Reittier im Galopp?",
+        "reitenCheck":          "Reiten (Kampfmanöver)-Probe",
+        "reitenCheckPrompt":    "Wurde die Reiten-Probe bestanden?",
+        "niederreiten":         "Niederreiten",
+        "niederreiten.info":    "Niederreiten kann nur durch Ausweichen verteidigt werden.",
+        "sturmangriffPferd":    "Sturmangriff zu Pferd",
+        "sturmangriffPferd.info": "Sturmangriff zu Pferd kann nicht mit Waffen pariert werden — nur Schildparade oder Ausweichen.",
+        "mountAttacksGroup":    "REITTIER-ANGRIFFE",
+        "heroAttacksGroup":     "EIGENE ANGRIFFE",
         // Subfield labels (weapons, armor)
         "combatTechnique":      "Kampftechnik",
         "damage":               "Schaden",
@@ -526,6 +546,8 @@ enum DSAStrings {
         "importError":          "Importfehler",
         "unknownError":         "Ein unbekannter Fehler ist aufgetreten.",
         "ok":                   "OK",
+        "yes":                  "Ja",
+        "no":                   "Nein",
     ]
 }
 
