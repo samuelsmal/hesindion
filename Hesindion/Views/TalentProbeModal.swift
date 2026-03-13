@@ -10,6 +10,7 @@ struct TalentProbeModal: View {
     var onRolled: ((Bool) -> Void)? = nil
     var initialModifier: Int = 0
 
+    @Environment(\.modelContext) private var modelContext
     @State private var modifiers: [Int]
     @State private var displayRolls = [Int](repeating: 1, count: 3)
 
@@ -326,15 +327,22 @@ struct TalentProbeModal: View {
         animationTask?.cancel()
         let rolls = (0..<3).map { _ in Int.random(in: 1...20) }
         finalRolls = rolls
-        if let onRolled, let data = probeData {
+        if let data = probeData {
             let result = computeResult(rolls: rolls, attrValues: data.values, mods: modifiers)
+            let qs: Int
             let succeeded: Bool
             switch result {
-            case .kritischerPatzer: succeeded = false
-            case .kritischerErfolg: succeeded = true
-            case .qs(let n): succeeded = n > 0
+            case .kritischerPatzer: qs = 0; succeeded = false
+            case .kritischerErfolg: qs = 6; succeeded = true
+            case .qs(let n): qs = n; succeeded = n > 0
             }
-            onRolled(succeeded)
+            onRolled?(succeeded)
+            let entry = LogEntry.create(
+                kind: "talentCheck",
+                payload: TalentCheckPayload(talentName: talent.name, qualityLevel: qs, succeeded: succeeded),
+                hero: hero
+            )
+            modelContext.insert(entry)
         }
     }
 

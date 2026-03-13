@@ -5,6 +5,7 @@ import SwiftUI
 struct RegenerierenSheet: View {
     let hero: Hero
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @State private var d6Display: Int = 1
     @State private var d6Result: Int? = nil
@@ -151,6 +152,15 @@ struct RegenerierenSheet: View {
 
     private var confirmButton: some View {
         Button {
+            let actualHealing = newLE - currentLE
+            if actualHealing > 0 {
+                let entry = LogEntry.create(
+                    kind: "rest",
+                    payload: RestPayload(lpRestored: actualHealing, duration: nil),
+                    hero: hero
+                )
+                modelContext.insert(entry)
+            }
             hero.derivedValues?.lebensenergie.current = newLE
             dismiss()
         } label: {
@@ -386,6 +396,7 @@ struct MountDamageSheet: View {
     let hero: Hero
     let mount: Pet
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @State private var spAmount: Int = 1
     @State private var damageApplied = false
@@ -485,6 +496,12 @@ struct MountDamageSheet: View {
 
             Button {
                 mount.currentLifeEnergy = max(0, mount.currentLifeEnergy - spAmount)
+                let entry = LogEntry.create(
+                    kind: "mountLPChange",
+                    payload: MountLPChangePayload(petName: mount.name, lpChange: -spAmount),
+                    hero: hero
+                )
+                modelContext.insert(entry)
                 withAnimation { damageApplied = true }
             } label: {
                 Text(L("mountDamage.apply"))
