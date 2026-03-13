@@ -1,0 +1,13 @@
+{
+  "planPath": "docs/plans/2026-03-13-reiterkampf-impl.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Add localized strings for Reiterkampf", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add mountPreCheck CombatStep and view", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Add mount attacks to CombatAttackChoiceView", "status": "pending", "blockedBy": [1, 2]},
+    {"id": 4, "subject": "Task 4: Auto-select Sturmangriff maneuver for mounted charge", "status": "pending", "blockedBy": [3]},
+    {"id": 5, "subject": "Task 5: Remove mount attacks from CombatRootView", "status": "pending", "blockedBy": [3]},
+    {"id": 6, "subject": "Task 6: Always show attack choice when mounted", "status": "pending", "blockedBy": [3]},
+    {"id": 7, "subject": "Task 7: Build, test, update CHANGELOG", "status": "pending", "blockedBy": [3, 4, 5, 6]}
+  ],
+  "lastUpdated": "2026-03-13T00:00:00Z"
+}
