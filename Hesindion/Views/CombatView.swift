@@ -15,7 +15,7 @@ private enum CombatStep {
     case attackChoice               // pre-attack: one/both weapons, one/two-handed
     case weaponSelection(CombatAction)
     case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?)
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, secondAttack: (name: String, at: Int, damage: String?)? = nil)
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     case takeDamage
 }
@@ -144,13 +144,14 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let secondAttack):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack):
                 CombatExecutionView(
                     action: action,
                     weaponName: name,
                     attributeValue: attrValue,
                     damageFormula: dmgFormula,
                     note: note,
+                    modifierLines: modifierLines,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
                     step: $step,
                     onDismiss: onDismiss
@@ -163,6 +164,7 @@ struct CombatView: View {
                     attributeValue: attrValue,
                     damageFormula: dmgFormula,
                     note: L("dualAttackPenalty"),
+                    modifierLines: nil,
                     secondAttackStep: nil,
                     step: $step,
                     onDismiss: onDismiss
@@ -399,6 +401,7 @@ private struct CombatAnnouncementView: View {
             attributeValue: effectiveAT,
             damageFormula: effectiveDamage,
             note: note,
+            modifierLines: modifiers,
             secondAttack: secondAttack
         )
     }
@@ -2017,12 +2020,12 @@ private struct CombatExecutionView: View {
     let attributeValue: Int
     let damageFormula: String?
     let note: String?
+    let modifierLines: [ModifierLine]?
     let secondAttackStep: CombatStep?
     @Binding var step: CombatStep
     var onDismiss: () -> Void
 
     @State private var modifier: Int = 0
-    @State private var vorteilhaftePosition: Bool = false
     @State private var displayRoll: Int = 1
     @State private var finalRoll: Int? = nil
     @State private var confirmRoll: Int? = nil
@@ -2050,7 +2053,7 @@ private struct CombatExecutionView: View {
         }
     }
 
-    private var effectiveValue: Int { attributeValue + modifier + (vorteilhaftePosition ? 2 : 0) }
+    private var effectiveValue: Int { attributeValue + modifier }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -2092,45 +2095,26 @@ private struct CombatExecutionView: View {
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
             VStack(spacing: 8) {
-                // Row 1: AT/PA/AW value
-                valueBox("\(attributeValue)", label: attrLabel)
+                // Row 1: modifier breakdown or simple value
+                modifierBreakdown
 
-                if let note, !note.isEmpty {
-                    Text(note)
-                        .font(.system(.caption2, weight: .bold))
-                        .foregroundStyle(combatAccent)
-                        .padding(.top, 2)
-                }
-
-                // Row 2: Modifier
+                // Manual modifier stepper (ZUSÄTZLICH)
                 modifierBox
 
-                // Vorteilhafte Position toggle
-                Button {
-                    guard finalRoll == nil else { return }
-                    vorteilhaftePosition.toggle()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
-                            .font(.system(.body, weight: .semibold))
-                            .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
-                        Text(L("advantageousPosition"))
-                            .font(.system(.caption, weight: .bold))
-                            .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
-                        Spacer()
-                        if vorteilhaftePosition {
-                            Text("+2")
-                                .font(.system(.caption, design: .monospaced, weight: .black))
-                                .foregroundStyle(combatAccent)
-                        }
+                // Maneuver reminder note
+                if let note, !note.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(.caption2, weight: .bold))
+                        Text(note)
+                            .font(.system(.caption2, weight: .bold))
                     }
+                    .foregroundStyle(combatAccent)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
+                    .padding(.vertical, 6)
+                    .background(combatAccent.opacity(0.1))
+                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
                 }
-                .buttonStyle(.plain)
-                .disabled(finalRoll != nil)
 
                 // Row 3: Dice box
                 diceBox
@@ -2287,6 +2271,89 @@ private struct CombatExecutionView: View {
                 .font(.system(.caption2, weight: .bold))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
+        }
+    }
+
+    // MARK: - Modifier breakdown
+
+    /// The raw base value (weapon AT/PA/AW) before any situation modifiers are applied.
+    /// attributeValue already includes the lines sum, so subtract it back to recover the base.
+    private var baseValue: Int {
+        let linesSum = modifierLines?.reduce(0) { $0 + $1.value } ?? 0
+        return attributeValue - linesSum
+    }
+
+    @ViewBuilder
+    private var modifierBreakdown: some View {
+        if let lines = modifierLines, !lines.isEmpty {
+            VStack(spacing: 0) {
+                combatSectionLabel(L("calculation.label"))
+
+                // Base value row
+                HStack {
+                    Text("\(attrLabel) \(baseValue)")
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                    Spacer()
+                    Text(L("source.basis"))
+                        .font(.system(.caption2, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+
+                // Modifier lines
+                ForEach(lines) { line in
+                    HStack {
+                        Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
+                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .foregroundStyle(line.value > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
+                        Spacer()
+                        Text(line.source)
+                            .font(.system(.caption2, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+                }
+
+                // Manual modifier row (only when non-zero)
+                if modifier != 0 {
+                    HStack {
+                        Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
+                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .foregroundStyle(modifier > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
+                        Spacer()
+                        Text(L("source.additional"))
+                            .font(.system(.caption2, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+                }
+
+                // Effective total row
+                HStack {
+                    Text("\(attrLabel) \(effectiveValue)")
+                        .font(.system(.body, design: .monospaced, weight: .black))
+                    Spacer()
+                    Text("Effektiv")
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.dsaDark)
+                .foregroundStyle(.white)
+            }
+        } else {
+            // Fallback: simple display (for defense/dodge without full breakdown)
+            valueBox("\(attributeValue)", label: attrLabel)
         }
     }
 
