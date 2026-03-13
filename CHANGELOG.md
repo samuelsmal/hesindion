@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Announcement step between weapon selection and execution: maneuver selection (Normal, Finte, Wuchtschlag, Vorstoß, Schildspalter, Sturmangriff) with Vorteilhafte Position toggle and full AT/damage modifier pre-calculation
 - Combat setup step between armor selection and initiative: Plänkler-Formation toggle (AT or AW bonus) and mounted toggle for eligible heroes
 - Vorstoß and active maneuver state reset on round advance
 - Schmerz penalty warning and modifier applied to talent probe results in TalentProbeModal

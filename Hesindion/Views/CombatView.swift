@@ -14,6 +14,7 @@ private enum CombatStep {
     case root
     case attackChoice               // pre-attack: one/both weapons, one/two-handed
     case weaponSelection(CombatAction)
+    case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?)
     case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, secondAttack: (name: String, at: Int, damage: String?)? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     case takeDamage
@@ -64,6 +65,7 @@ struct CombatView: View {
         case .root: "root"
         case .attackChoice: "attackChoice"
         case .weaponSelection: "weaponSelection"
+        case .announcement: "announcement"
         case .execution: "execution"
         case .dualAttackSecond: "dualAttackSecond"
         case .takeDamage: "takeDamage"
@@ -122,6 +124,26 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
+            case .announcement(let action, let name, let baseAT, let dmgFormula, let isOffHand, let secondAttack):
+                CombatAnnouncementView(
+                    hero: hero,
+                    action: action,
+                    weaponName: name,
+                    baseAT: baseAT,
+                    damageFormula: dmgFormula,
+                    isOffHand: isOffHand,
+                    mountedActive: mountedActive,
+                    secondAttack: secondAttack,
+                    step: $step,
+                    activeManeuver: $activeManeuver,
+                    vorstossActiveThisRound: $vorstossActiveThisRound,
+                    dualAttackPenaltyActive: dualAttackPenaltyActive,
+                    twoHandedGripActive: twoHandedGripActive,
+                    plaenklerActive: plaenklerActive,
+                    plaenklerBonus: plaenklerBonus,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .execution(let action, let name, let attrValue, let dmgFormula, let note, let secondAttack):
                 CombatExecutionView(
                     action: action,
@@ -169,6 +191,8 @@ struct CombatView: View {
                     onDismiss()
                 case .attackChoice:
                     step = .root
+                case .announcement(let action, _, _, _, _, _):
+                    step = .weaponSelection(action)
                 case .takeDamage:
                     step = .root
                 default:
@@ -182,6 +206,256 @@ struct CombatView: View {
             vorstossActiveThisRound = false
             activeManeuver = .normal
         }
+    }
+}
+
+// MARK: - CombatAnnouncementView
+
+private struct CombatAnnouncementView: View {
+    let hero: Hero
+    let action: CombatAction
+    let weaponName: String
+    let baseAT: Int
+    let damageFormula: String?
+    let isOffHand: Bool
+    let mountedActive: Bool
+    let secondAttack: (name: String, at: Int, damage: String?)?
+    @Binding var step: CombatStep
+    @Binding var activeManeuver: CombatManeuver
+    @Binding var vorstossActiveThisRound: Bool
+    let dualAttackPenaltyActive: Bool
+    let twoHandedGripActive: Bool
+    let plaenklerActive: Bool
+    let plaenklerBonus: PlaenklerBonus
+    var onDismiss: () -> Void
+
+    @State private var vorteilhaftePosition: Bool = false
+    @State private var selectedManeuver: CombatManeuver = .normal
+
+    private var golgaritenForced: Bool {
+        hero.golgaritenActive(mounted: mountedActive)
+    }
+
+    private var availableManeuvers: [CombatManeuver] {
+        var maneuvers: [CombatManeuver] = [.normal]
+        if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
+        if hero.wuchtschlagTier > 0 { maneuvers.append(.wuchtschlag(tier: hero.wuchtschlagTier)) }
+        if hero.hasVorstoss { maneuvers.append(.vorstoss) }
+        if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
+        if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
+        return maneuvers
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .weaponSelection(action) } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                VStack(spacing: 1) {
+                    Text(L("announcement"))
+                        .font(.system(.headline, weight: .black))
+                        .foregroundStyle(.white)
+                    Text(weaponName)
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    // Vorteilhafte Position
+                    if golgaritenForced {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.square.fill")
+                                .font(.system(.body, weight: .semibold))
+                                .foregroundStyle(combatAccent)
+                            Text("\(L("advantageousPosition")) (\(L("mounted")))")
+                                .font(.system(.caption, weight: .bold))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text("+2")
+                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .foregroundStyle(combatAccent)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(combatAccent.opacity(0.1))
+                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    } else {
+                        Button {
+                            vorteilhaftePosition.toggle()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
+                                    .font(.system(.body, weight: .semibold))
+                                    .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
+                                Text(L("advantageousPosition"))
+                                    .font(.system(.caption, weight: .bold))
+                                    .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
+                                Spacer()
+                                if vorteilhaftePosition {
+                                    Text("+2")
+                                        .font(.system(.caption, design: .monospaced, weight: .black))
+                                        .foregroundStyle(combatAccent)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Maneuver selection
+                    combatSectionLabel(L("announcement.label"))
+
+                    ForEach(availableManeuvers, id: \.self) { maneuver in
+                        let isSelected = selectedManeuver == maneuver
+                        Button { selectedManeuver = maneuver } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                                    .font(.system(.body, weight: .semibold))
+                                    .foregroundStyle(isSelected ? combatAccent : .secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack {
+                                        Text(maneuver.displayName)
+                                            .font(.system(.body, weight: isSelected ? .bold : .regular))
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        if maneuver.atModifier != 0 {
+                                            Text("AT \(maneuver.atModifier > 0 ? "+" : "")\(maneuver.atModifier)")
+                                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                                .foregroundStyle(maneuver.atModifier > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
+                                        }
+                                    }
+                                    if let info = maneuver.infoText() {
+                                        Text(info)
+                                            .font(.system(.caption2, weight: .medium))
+                                            .foregroundStyle(maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
+                                    }
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
+            }
+
+            // Continue
+            Button { proceed() } label: {
+                Text(L("continue"))
+                    .font(.system(.title3, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func proceed() {
+        activeManeuver = selectedManeuver
+        if selectedManeuver.preventsDefense {
+            vorstossActiveThisRound = true
+        }
+
+        let modifiers = buildModifierLines()
+        let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }
+        let effectiveDamage = adjustedDamage()
+        let note = selectedManeuver.infoText()
+
+        step = .execution(
+            action,
+            name: weaponName,
+            attributeValue: effectiveAT,
+            damageFormula: effectiveDamage,
+            note: note,
+            secondAttack: secondAttack
+        )
+    }
+
+    private func buildModifierLines() -> [ModifierLine] {
+        var lines: [ModifierLine] = []
+
+        let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
+        if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
+
+        if hero.schmerzPenalty != 0 {
+            let level = hero.effectiveSchmerzLevel
+            lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
+        }
+
+        if golgaritenForced || vorteilhaftePosition {
+            lines.append(ModifierLine(value: 2, source: L("source.vorteilhaft")))
+        }
+
+        if golgaritenForced {
+            lines.append(ModifierLine(value: 2, source: L("source.golgariten")))
+        }
+
+        if plaenklerActive && plaenklerBonus == .at {
+            lines.append(ModifierLine(value: 1, source: L("source.plaenkler")))
+        }
+
+        if selectedManeuver.atModifier != 0 {
+            lines.append(ModifierLine(value: selectedManeuver.atModifier, source: selectedManeuver.sourceLabel))
+        }
+
+        if dualAttackPenaltyActive {
+            let penalty = hero.dualAttackPenalty
+            if penalty != 0 { lines.append(ModifierLine(value: penalty, source: L("source.dualAttack"))) }
+        }
+
+        if isOffHand && hero.offHandPenalty != 0 {
+            lines.append(ModifierLine(value: hero.offHandPenalty, source: L("source.offHand")))
+        }
+
+        return lines
+    }
+
+    private func adjustedDamage() -> String? {
+        guard var formula = damageFormula else { return nil }
+        var bonus = selectedManeuver.damageBonus
+        if twoHandedGripActive { bonus += 1 }
+        if selectedManeuver == .sturmangriff { bonus += hero.sturmangriffDamageBonus }
+        if bonus == 0 { return formula }
+        let pattern = /^(\d+W\d+)([+-]\d+)?$/
+        guard let match = formula.firstMatch(of: pattern) else { return formula }
+        let base = String(match.1)
+        let existing = match.2.flatMap { Int($0) } ?? 0
+        let total = existing + bonus
+        if total == 0 { return base }
+        formula = total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+        return formula
     }
 }
 
@@ -749,10 +1023,10 @@ private struct CombatAttackChoiceView: View {
     private func proceedSingleAttack() {
         if let w = hero.selectedWeapon {
             let damage = twoHandedGripActive ? adjustDamage(w.damage, bonus: 1) : w.damage
-            step = .execution(.angriff, name: w.name, attributeValue: w.at, damageFormula: damage, note: nil)
+            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: damage, isOffHand: false, secondAttack: nil)
         } else if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-            step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
+            step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil)
         }
     }
 
@@ -1172,10 +1446,10 @@ private struct CombatRootView: View {
                     } else if hasShield {
                         step = .weaponSelection(.angriff)
                     } else if let w = hero.selectedWeapon {
-                        step = .execution(.angriff, name: w.name, attributeValue: w.at, damageFormula: w.damage, note: nil)
+                        step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil)
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
+                        step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil)
                     } else {
                         step = .loadoutEquipment
                     }
@@ -1684,16 +1958,18 @@ private struct CombatWeaponSelectionView: View {
                 let otherAT = otherBaseAT + hero.dualAttackPenalty + otherOffHandPenalty
                 let otherDmg = otherWeapon?.damage
 
-                step = .execution(
+                step = .announcement(
                     .angriff,
                     name: name,
-                    attributeValue: statValue,
+                    baseAT: statValue,
                     damageFormula: damageFormula,
-                    note: L("dualAttackPenalty"),
+                    isOffHand: isOffHand,
                     secondAttack: (name: otherName, at: otherAT, damage: otherDmg)
                 )
+            } else if action == .angriff {
+                step = .announcement(.angriff, name: name, baseAT: statValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil)
             } else {
-                step = .execution(action, name: name, attributeValue: statValue, damageFormula: action == .angriff ? damageFormula : nil, note: action == .parieren ? note : nil)
+                step = .execution(action, name: name, attributeValue: statValue, damageFormula: nil, note: action == .parieren ? note : nil)
             }
         } label: {
             HStack {
