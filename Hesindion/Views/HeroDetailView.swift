@@ -94,6 +94,15 @@ struct HeroDetailView: View {
             }
 
         }
+        .onKeyPress(characters: .init(charactersIn: "k"), phases: .down) { keyPress in
+            guard keyPress.modifiers.contains(.control) else { return .ignored }
+            if !showCommandSearch {
+                showCommandSearch = true
+                commandQuery = ""
+                searchFocused = true
+            }
+            return .handled
+        }
         .fullScreenCover(isPresented: $showCombatMode) {
             CombatView(hero: hero) { showCombatMode = false }
         }
