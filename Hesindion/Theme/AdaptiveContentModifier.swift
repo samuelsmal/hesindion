@@ -6,9 +6,8 @@ struct AdaptiveContentWidth: ViewModifier {
     func body(content: Content) -> some View {
         if sizeClass == .regular {
             content
-                .containerRelativeFrame(.horizontal) { width, _ in
-                    min(width * DSALayout.iPadProportionalFraction, DSALayout.iPadMaxContentWidth)
-                }
+                .frame(maxWidth: DSALayout.iPadMaxContentWidth)
+                .frame(maxWidth: .infinity)
         } else {
             content
                 .padding(.horizontal, DSALayout.horizontalPadding)
