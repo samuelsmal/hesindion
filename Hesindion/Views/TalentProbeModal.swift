@@ -89,6 +89,42 @@ struct TalentProbeModal: View {
                 }
             }
 
+            // Schmerz penalty warning
+            if hero.schmerzPenalty != 0 {
+                let level = hero.effectiveSchmerzLevel
+                let label = level >= 4 ? L("schmerz.IV") : L("schmerz.\(String(repeating: "I", count: level))")
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(Color.groupCombat)
+                    Text("\(label): \(hero.schmerzPenalty) \(L("source.schmerz"))")
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(Color.groupCombat)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.groupCombat.opacity(0.1))
+                .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+            }
+
+            // Aufmerksamkeit hint for Sinnenschärfe (TAL_8)
+            if hero.hasAufmerksamkeit && talent.ruleId == "TAL_8" {
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(Color.groupPersonalData)
+                    Text(L("aufmerksamkeitHint"))
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(Color.groupPersonalData)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.groupPersonalData.opacity(0.1))
+                .overlay(Rectangle().stroke(Color.groupPersonalData, lineWidth: 2))
+            }
+
             // Dice row (tap to roll)
             HStack(spacing: 0) {
                 ForEach(0..<3, id: \.self) { i in
@@ -225,9 +261,10 @@ struct TalentProbeModal: View {
         let twenties = rolls.filter { $0 == 20 }.count
         if ones >= 2 { return .kritischerPatzer }
         if twenties >= 2 { return .kritischerErfolg }
+        let schmerzMod = hero.schmerzPenalty
         var remaining = talent.value
         for i in 0..<3 {
-            let excess = rolls[i] - (attrValues[i] + mods[i])
+            let excess = rolls[i] - (attrValues[i] + mods[i] + schmerzMod)
             if excess > 0 { remaining -= excess }
         }
         if remaining <= 0 { return .qs(0) }
