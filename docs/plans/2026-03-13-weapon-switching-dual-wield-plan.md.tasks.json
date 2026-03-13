@@ -1,0 +1,17 @@
+{
+  "planPath": "docs/plans/2026-03-13-weapon-switching-dual-wield-plan.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Add selectedOffHandName to Hero model", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add new localization strings", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Update CombatStep enum and CombatView orchestrator", "status": "pending", "blockedBy": [1, 2]},
+    {"id": 4, "subject": "Task 4: Replace loadout views with CombatLoadoutEquipmentView", "status": "pending", "blockedBy": [1, 2, 3]},
+    {"id": 5, "subject": "Task 5: Add CombatAttackChoiceView", "status": "pending", "blockedBy": [3]},
+    {"id": 6, "subject": "Task 6: Update CombatRootView for new bindings and styled loadout button", "status": "pending", "blockedBy": [3, 4]},
+    {"id": 7, "subject": "Task 7: Update CombatWeaponSelectionView for dual-wield", "status": "pending", "blockedBy": [3, 6]},
+    {"id": 8, "subject": "Task 8: Add Vorteilhafte Position toggle to CombatExecutionView", "status": "pending", "blockedBy": [3]},
+    {"id": 9, "subject": "Task 9: Handle dual-attack second strike flow", "status": "pending", "blockedBy": [7, 8]},
+    {"id": 10, "subject": "Task 10: Update CHANGELOG and architecture docs", "status": "pending", "blockedBy": [9]},
+    {"id": 11, "subject": "Task 11: Manual testing checklist", "status": "pending", "blockedBy": [10]}
+  ],
+  "lastUpdated": "2026-03-13T00:00:00Z"
+}
