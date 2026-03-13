@@ -531,11 +531,13 @@ struct HeroDetailView: View {
             if let items = grouped[category], !items.isEmpty {
                 CollapsibleSection(category) {
                     ForEach(items, id: \.persistentModelID) { talent in
-                        SwipeActionRow(
-                            label: talent.name,
-                            value: "\(talent.value)",
-                            actions: talentActions(for: talent)
-                        )
+                        SwipeActionRow(actions: talentActions(for: talent)) {
+                            TalentSwipeContent(
+                                name: talent.name,
+                                value: talent.value,
+                                probeKeys: TalentProbeAttributes.checks[talent.name]
+                            )
+                        }
                         Divider()
                     }
                 }
@@ -991,6 +993,36 @@ struct DefaultSwipeContent: View {
             if !value.isEmpty {
                 Text(value).font(.system(.body, design: .monospaced))
             }
+        }
+        .padding(.leading, 24)
+        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+    }
+}
+
+/// Talent row content showing name, probe abbreviations, and value.
+struct TalentSwipeContent: View {
+    let name: String
+    let value: Int
+    let probeKeys: [String]?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(L(name)).font(.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let keys = probeKeys {
+                ForEach(keys, id: \.self) { key in
+                    Text(key)
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(Color.attributeForeground(for: key))
+                        .frame(width: 32, height: 24)
+                        .background(Color.attributeBackground(for: key).opacity(0.7))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+                }
+            }
+            Text("\(value)")
+                .font(.system(.body, design: .monospaced))
+                .frame(width: 36, alignment: .trailing)
         }
         .padding(.leading, 24)
         .padding(.trailing, 12)
