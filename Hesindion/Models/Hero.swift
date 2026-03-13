@@ -29,6 +29,7 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var languages: [Language]
     @Relationship(deleteRule: .cascade) var spells: [HeroSpell]
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
+    @Relationship(deleteRule: .cascade, inverse: \LogEntry.hero) var logEntries: [LogEntry] = []
 
     // MARK: - Notes
 
