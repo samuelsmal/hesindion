@@ -1,12 +1,12 @@
 {
   "planPath": "docs/plans/2026-03-13-ipad-layout-plan.md",
   "tasks": [
-    {"id": 1, "subject": "Task 1: Add AttributesColumn view", "status": "pending"},
-    {"id": 2, "subject": "Task 2: Wire adaptive attributes layout into HeroDetailView", "status": "pending", "blockedBy": [1]},
-    {"id": 3, "subject": "Task 3: Add probe abbreviations to talent rows", "status": "pending"},
-    {"id": 4, "subject": "Task 4: Personal data grid layout", "status": "pending"},
-    {"id": 5, "subject": "Task 5: Ctrl+K keyboard shortcut", "status": "pending"},
-    {"id": 6, "subject": "Task 6: Integration verification and CHANGELOG", "status": "pending", "blockedBy": [1, 2, 3, 4, 5]}
+    {"id": 1, "subject": "Task 1: Add AttributesColumn view", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Wire adaptive attributes layout into HeroDetailView", "status": "completed", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Add probe abbreviations to talent rows", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Personal data grid layout", "status": "completed"},
+    {"id": 5, "subject": "Task 5: Ctrl+K keyboard shortcut", "status": "completed"},
+    {"id": 6, "subject": "Task 6: Integration verification and CHANGELOG", "status": "completed", "blockedBy": [1, 2, 3, 4, 5]}
   ],
   "lastUpdated": "2026-03-13T00:00:00Z"
 }
