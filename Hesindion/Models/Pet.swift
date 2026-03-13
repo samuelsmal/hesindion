@@ -28,7 +28,7 @@ final class Pet {
     var type: String
     var attributes: PetAttributes
     var lifeEnergy: Int
-    var currentLifeEnergy: Int
+    var currentLifeEnergy: Int = 0
     var spirit: Int
     var toughness: Int
     var initiative: String
@@ -40,8 +40,8 @@ final class Pet {
     var talents: String
     var skills: String
     var notes: String
-    var attacks: [PetAttack]
-    var specialSkills: String
+    var attacks: [PetAttack] = []
+    var specialSkills: String = ""
 
     var carryingCapacity: Int { attributes.kk * 2 }
 

@@ -12,13 +12,7 @@ import SwiftData
 struct HesindionApp: App {
     var sharedModelContainer: ModelContainer = {
         do {
-            let schema = Schema(versionedSchema: SchemaV2.self)
-            let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            return try ModelContainer(
-                for: schema,
-                migrationPlan: HesindionMigrationPlan.self,
-                configurations: [configuration]
-            )
+            return try ModelContainer(for: Hero.self)
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
