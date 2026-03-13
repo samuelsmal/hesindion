@@ -7,6 +7,9 @@ Hesindion/Resources/rules.db
 # Claude Code local settings
 .claude/settings.local.json
 
+# Worktrees
+.worktrees/
+
 # Build artifacts
 build/
 .build/
