@@ -34,6 +34,7 @@ final class Hero {
 
     var selectedWeaponName: String?
     var selectedShieldName: String?
+    var selectedOffHandName: String?
 
     init(
         name: String,
@@ -151,6 +152,9 @@ final class Hero {
     }
 
     var selectedShield: Shield? {
+        if let name = selectedOffHandName, let shield = shields.first(where: { $0.name == name }) {
+            return shield
+        }
         guard let name = selectedShieldName else { return nil }
         return shields.first { $0.name == name }
     }
@@ -158,6 +162,39 @@ final class Hero {
     /// Passive shield PA bonus applied to main weapon parade.
     var passiveShieldPABonus: Int {
         selectedShield?.paModifier ?? 0
+    }
+
+    /// Off-hand weapon (only if off-hand is a melee weapon, not a shield).
+    var selectedOffHandWeapon: MeleeWeapon? {
+        guard let name = selectedOffHandName else { return nil }
+        return meleeWeapons.first { $0.name == name }
+    }
+
+    /// True if hero has the Beidhändig advantage (ADV_5), removing the -4 off-hand penalty.
+    var hasBeidhaendig: Bool {
+        advantages.contains { $0.ruleId == "ADV_5" }
+    }
+
+    /// Level of Beidhändiger Kampf SA. Each level reduces the -2 dual-attack penalty by 1.
+    /// TODO: Confirm correct SA ruleId for "Beidhändiger Kampf" once identified in Optolith data.
+    var beidhaendigerKampfLevel: Int {
+        let sa = combatSpecialAbilities.first { $0.name.contains("Beidhändiger Kampf") }
+        return sa?.tier ?? 0
+    }
+
+    /// Dual-attack penalty: base -2, reduced by Beidhändiger Kampf level.
+    var dualAttackPenalty: Int {
+        max(0, 2 - beidhaendigerKampfLevel) * -1
+    }
+
+    /// Off-hand penalty: -4 unless hero has Beidhändig (ADV_5).
+    var offHandPenalty: Int {
+        hasBeidhaendig ? 0 : -4
+    }
+
+    /// True if the current loadout is dual-wielding (two weapons, no shield in off-hand).
+    var isDualWielding: Bool {
+        selectedWeaponName != nil && selectedOffHandWeapon != nil
     }
 }
 
