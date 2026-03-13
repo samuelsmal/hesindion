@@ -12,11 +12,13 @@ iOS companion app for DSA (Das Schwarze Auge / The Dark Eye) tabletop RPG sessio
 
 This is an Xcode project (no SPM package, no CocoaPods). Open `Hesindion.xcodeproj` in Xcode.
 
-```bash
-# Build from command line
-xcodebuild -project Hesindion.xcodeproj -scheme Hesindion -sdk iphonesimulator build
+Use `Makefile` targets for all simulator and device operations. If a needed target is missing, add it to the Makefile following the existing patterns rather than running raw commands.
 
-# No test target or linter is configured yet
+```bash
+make run          # Build, install, and launch on iPhone simulator
+make run-ipad     # Build, install, and launch on iPad simulator
+make deploy       # Build and deploy to physical device (Karl)
+make clean        # Clean build artifacts
 ```
 
 - **Deployment target:** iOS 26.0+

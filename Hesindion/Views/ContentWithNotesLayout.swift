@@ -7,20 +7,21 @@ struct ContentWithNotesLayout<Content: View>: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    var body: some View {
-        if sizeClass == .regular && showNotes {
-            HStack(spacing: 0) {
-                content
-                    .frame(maxWidth: .infinity)
+    private var isVisible: Bool {
+        sizeClass == .regular && showNotes
+    }
 
-                NotesPanelView(hero: hero)
-                    .containerRelativeFrame(.horizontal) { width, _ in
-                        min(width * 0.38, 400)
-                    }
-            }
-            .transition(.move(edge: .trailing))
-        } else {
+    var body: some View {
+        HStack(spacing: 0) {
             content
+                .frame(maxWidth: .infinity)
+
+            if sizeClass == .regular {
+                NotesPanelView(hero: hero)
+                    .frame(width: isVisible ? nil : 0)
+                    .frame(maxWidth: isVisible ? 400 : 0)
+                    .clipped()
+            }
         }
     }
 }
