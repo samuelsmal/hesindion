@@ -28,6 +28,7 @@ final class Pet {
     var type: String
     var attributes: PetAttributes
     var lifeEnergy: Int
+    var currentLifeEnergy: Int
     var spirit: Int
     var toughness: Int
     var initiative: String
@@ -52,6 +53,7 @@ final class Pet {
         type: String,
         attributes: PetAttributes,
         lifeEnergy: Int,
+        currentLifeEnergy: Int? = nil,
         spirit: Int,
         toughness: Int,
         initiative: String,
@@ -73,6 +75,7 @@ final class Pet {
         self.type = type
         self.attributes = attributes
         self.lifeEnergy = lifeEnergy
+        self.currentLifeEnergy = currentLifeEnergy ?? lifeEnergy
         self.spirit = spirit
         self.toughness = toughness
         self.initiative = initiative

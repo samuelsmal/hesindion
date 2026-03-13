@@ -193,12 +193,12 @@ struct FieldRow: View {
             HStack(alignment: .top) {
                 Text(L(label))
                     .font(.body)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 8)
                 if !value.isEmpty {
                     Text(value)
                         .font(.system(.body, design: .monospaced))
                         .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(.leading, 24)
@@ -247,6 +247,7 @@ struct LPBarView: View {
     let current: Int
     let max: Int
     var accent: Color = Color.groupCombat
+    var label: String = "lifePoints.short"
     let onDecrement: () -> Void
     let onIncrement: () -> Void
 
@@ -269,7 +270,7 @@ struct LPBarView: View {
                     Rectangle()
                         .fill(barColor)
                         .frame(width: geo.size.width * fraction)
-                    Text("\(L("lifePoints.short"))   \(current) / \(max)")
+                    Text("\(L(label))   \(current) / \(max)")
                         .font(.system(.body, weight: .black))
                         .foregroundStyle(textColor)
                         .frame(maxWidth: .infinity)

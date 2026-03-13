@@ -272,11 +272,18 @@ struct HeroDetailView: View {
 
     // MARK: - Section 2: PersonalData
 
+    private var personalDataColumns: [GridItem] {
+        if sizeClass == .regular {
+            return [GridItem(.flexible()), GridItem(.flexible())]
+        } else {
+            return [GridItem(.flexible())]
+        }
+    }
+
     @ViewBuilder private var personalDataSection: some View {
         if let pd = hero.personalData {
             CollapsibleSection(L("personalData")) {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], alignment: .leading, spacing: 0) {
-                    FieldRow(label: "name", value: pd.name)
+                LazyVGrid(columns: personalDataColumns, alignment: .leading, spacing: 0) {
                     FieldRow(label: "family", value: pd.family)
                     FieldRow(label: "birthplace", value: pd.birthplace)
                     FieldRow(label: "birthdate", value: pd.birthdate)
@@ -292,6 +299,7 @@ struct HeroDetailView: View {
                     FieldRow(label: "profession", value: pd.profession)
                     FieldRow(label: "title", value: pd.title)
                 }
+                .lineLimit(1)
                 if !pd.characteristics.isEmpty {
                     FieldRow(label: "characteristics", value: pd.characteristics)
                 }
@@ -844,6 +852,19 @@ struct HeroDetailView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
 
+                        LPBarView(
+                            current: pet.currentLifeEnergy,
+                            max: pet.lifeEnergy,
+                            accent: .groupEquipment
+                        ) {
+                            guard pet.currentLifeEnergy > 0 else { return }
+                            pet.currentLifeEnergy -= 1
+                        } onIncrement: {
+                            guard pet.currentLifeEnergy < pet.lifeEnergy else { return }
+                            pet.currentLifeEnergy += 1
+                        }
+                        .padding(.horizontal, 12)
+
                         SubfieldBlock(label: L("attributes"), subfields: [
                             ("MU", "\(pet.attributes.mu)"),
                             ("KL", "\(pet.attributes.kl)"),
@@ -856,7 +877,7 @@ struct HeroDetailView: View {
                         ])
 
                         SubfieldBlock(label: L("combat"), subfields: [
-                            ("LE", "\(pet.lifeEnergy)"),
+                            ("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)"),
                             ("INI", pet.initiative),
                             ("GS", "\(pet.speed)"),
                             ("AT", pet.attack),

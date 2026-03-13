@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Inline probe attribute abbreviations (e.g., KL, CH, GE) in talent rows
 - Personal data fields display in responsive grid layout (2-3 columns)
 - Ctrl+K keyboard shortcut to open command palette
+- LP (Lebenspunkte) bar for all pets in hero detail view
+- Mount LP bar in combat view when mounted combat is active
 
 ### Changed
 

@@ -1,0 +1,11 @@
+{
+  "planPath": "docs/plans/2026-03-13-pet-lp-bars.md",
+  "tasks": [
+    {"id": 2, "subject": "Task 1: Add currentLifeEnergy to Pet model", "status": "pending"},
+    {"id": 3, "subject": "Task 2: Add label parameter to LPBarView", "status": "pending", "blockedBy": [2]},
+    {"id": 4, "subject": "Task 3: Add LP bars to pets section in HeroDetailView", "status": "pending", "blockedBy": [2, 3]},
+    {"id": 5, "subject": "Task 4: Add mount LP bar to CombatView", "status": "pending", "blockedBy": [2, 3]},
+    {"id": 6, "subject": "Task 5: Update CHANGELOG", "status": "pending", "blockedBy": [4, 5]}
+  ],
+  "lastUpdated": "2026-03-13T00:00:00Z"
+}

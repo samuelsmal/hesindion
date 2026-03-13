@@ -1134,8 +1134,8 @@ private struct CombatAttackChoiceView: View {
         VStack(spacing: 8) {
             combatSectionLabel(L("mountAttacksGroup"))
 
-            // Regular mount attacks (Hufschlag, Tritt, etc.)
-            ForEach(mount.attacks, id: \.name) { attack in
+            // Regular mount attacks (Hufschlag, Tritt, etc.) — exclude Niederreiten (has dedicated button below)
+            ForEach(mount.attacks.filter { $0.name != "Niederreiten" }, id: \.name) { attack in
                 let mightyBlowNote: String? = {
                     guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
                     let kk = mount.attributes.kk
@@ -1624,6 +1624,27 @@ private struct CombatRootView: View {
                 // LEBENSPUNKTE section
                 combatSectionLabel(L("lifePoints.label"))
                 lpBar
+
+                if mountedActive, let mount = hero.pets.first {
+                    LPBarView(
+                        current: mount.currentLifeEnergy,
+                        max: mount.lifeEnergy,
+                        accent: Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)
+                    ) {
+                        guard mount.currentLifeEnergy > 0 else { return }
+                        mount.currentLifeEnergy -= 1
+                    } onIncrement: {
+                        guard mount.currentLifeEnergy < mount.lifeEnergy else { return }
+                        mount.currentLifeEnergy += 1
+                    }
+                    .padding(.horizontal, 16)
+
+                    Text(mount.name)
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 // Schmerz indicator
                 if hero.effectiveSchmerzLevel > 0 {
