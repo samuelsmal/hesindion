@@ -3029,6 +3029,12 @@ private struct CombatMountPreCheckView: View {
     var onDismiss: () -> Void
 
     @State private var galoppConfirmed = false
+    @State private var probeSucceeded: Bool? = nil
+    @State private var showingProbeModal = false
+
+    private var reitenTalent: Talent? {
+        hero.talents.first { $0.name == "Reiten" }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -3066,6 +3072,16 @@ private struct CombatMountPreCheckView: View {
             }
 
             Spacer()
+        }
+        .overlay {
+            if showingProbeModal, let talent = reitenTalent {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in probeSucceeded = succeeded }
+                )
+            }
         }
     }
 
@@ -3114,40 +3130,90 @@ private struct CombatMountPreCheckView: View {
 
     private var reitenCheck: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(combatAccent)
+            if let talent = reitenTalent {
+                if let succeeded = probeSucceeded {
+                    Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
 
-            Text(L("reitenCheckPrompt"))
-                .font(.system(.title3, weight: .bold))
-                .multilineTextAlignment(.center)
+                    Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
+                        .font(.system(.title3, weight: .bold))
+                        .multilineTextAlignment(.center)
 
-            HStack(spacing: 12) {
-                Button {
-                    step = .attackChoice
-                } label: {
-                    Text(L("no"))
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    Button {
+                        if succeeded {
+                            step = onSuccess
+                        } else {
+                            step = .attackChoice
+                        }
+                    } label: {
+                        Text(succeeded ? L("continue") : L("back"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(succeeded ? combatAccent : Color.dsaDark)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Image(systemName: "dice.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(combatAccent)
+
+                    Text(L("reitenCheck"))
+                        .font(.system(.title3, weight: .bold))
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        showingProbeModal = true
+                    } label: {
+                        Text(L("rollReitenCheck"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+            } else {
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(combatAccent)
 
-                Button {
-                    step = onSuccess
-                } label: {
-                    Text(L("yes"))
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                Text(L("reitenCheckPrompt"))
+                    .font(.system(.title3, weight: .bold))
+                    .multilineTextAlignment(.center)
+
+                HStack(spacing: 12) {
+                    Button {
+                        step = .attackChoice
+                    } label: {
+                        Text(L("no"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        step = onSuccess
+                    } label: {
+                        Text(L("yes"))
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(combatAccent)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 32)

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Mount combat: Reiten check now uses the full talent probe modal with dice rolls instead of a simple Yes/No dialog
 - Moved mount attacks from combat root view to attack selection screen
 - "Ausruestung wechseln" button restyled with teal accent for better visual distinction
 - Weapon and shield selection merged into single loadout step

@@ -1,0 +1,10 @@
+{
+  "planPath": "docs/plans/2026-03-13-reiten-probe-in-combat.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Add onRolled callback to TalentProbeModal", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Replace Yes/No Reiten check with TalentProbeModal in combat", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Add localization strings for Reiten probe in combat", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Update CHANGELOG", "status": "pending", "blockedBy": [1, 2, 3]}
+  ],
+  "lastUpdated": "2026-03-13T00:00:00Z"
+}

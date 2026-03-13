@@ -7,6 +7,7 @@ struct TalentProbeModal: View {
     let talent: Talent
     let hero: Hero
     var onDismiss: () -> Void
+    var onRolled: ((Bool) -> Void)? = nil
 
     @State private var modifiers = [0, 0, 0]
     @State private var displayRolls = [Int](repeating: 1, count: 3)
@@ -313,7 +314,18 @@ struct TalentProbeModal: View {
     private func roll() {
         guard finalRolls == nil else { return }
         animationTask?.cancel()
-        finalRolls = (0..<3).map { _ in Int.random(in: 1...20) }
+        let rolls = (0..<3).map { _ in Int.random(in: 1...20) }
+        finalRolls = rolls
+        if let onRolled, let data = probeData {
+            let result = computeResult(rolls: rolls, attrValues: data.values, mods: modifiers)
+            let succeeded: Bool
+            switch result {
+            case .kritischerPatzer: succeeded = false
+            case .kritischerErfolg: succeeded = true
+            case .qs(let n): succeeded = n > 0
+            }
+            onRolled(succeeded)
+        }
     }
 
 }
