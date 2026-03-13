@@ -26,7 +26,7 @@ struct HeroListView: View {
                 .safeAreaInset(edge: .bottom) {
                     importButton
                 }
-                .navigationTitle("iDSA")
+                .navigationTitle("Hesindion")
                 .toolbarTitleDisplayMode(.inlineLarge)
         } detail: {
             detailContent
