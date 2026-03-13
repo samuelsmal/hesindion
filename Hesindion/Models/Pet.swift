@@ -12,6 +12,13 @@ struct PetAttributes: Codable, Hashable {
     var kk: Int
 }
 
+struct PetAttack: Codable, Hashable {
+    var name: String
+    var at: Int
+    var damage: String
+    var reach: String
+}
+
 @Model
 final class Pet {
     var petId: String
@@ -32,6 +39,8 @@ final class Pet {
     var talents: String
     var skills: String
     var notes: String
+    var attacks: [PetAttack]
+    var specialSkills: String
 
     var carryingCapacity: Int { attributes.kk * 2 }
 
@@ -53,7 +62,9 @@ final class Pet {
         actions: Int,
         talents: String,
         skills: String,
-        notes: String
+        notes: String,
+        attacks: [PetAttack] = [],
+        specialSkills: String = ""
     ) {
         self.petId = petId
         self.name = name
@@ -73,5 +84,7 @@ final class Pet {
         self.talents = talents
         self.skills = skills
         self.notes = notes
+        self.attacks = attacks
+        self.specialSkills = specialSkills
     }
 }

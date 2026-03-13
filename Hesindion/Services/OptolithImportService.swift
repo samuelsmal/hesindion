@@ -768,7 +768,22 @@ struct OptolithImportService {
                 actions: intFromAny(pet["actions"]) ?? 1,
                 talents: pet["talents"] as? String ?? "",
                 skills: pet["skills"] as? String ?? "",
-                notes: pet["notes"] as? String ?? ""
+                notes: pet["notes"] as? String ?? "",
+                attacks: parsePetAttacks(notes: pet["notes"] as? String ?? ""),
+                specialSkills: pet["skills"] as? String ?? ""
+            )
+        }
+    }
+
+    /// Parses attack entries from pet notes. Format: "Name: AT \d+ TP \d+W\d+[+-]\d+ RW (kurz|mittel|lang)"
+    private func parsePetAttacks(notes: String) -> [PetAttack] {
+        let pattern = /([A-ZÄÖÜa-zäöüß]+):\s*AT\s+(\d+)\s+TP\s+(\d+W\d+(?:[+-]\d+)?)\s+RW\s+(kurz|mittel|lang)/
+        return notes.matches(of: pattern).map { match in
+            PetAttack(
+                name: String(match.1),
+                at: Int(match.2) ?? 0,
+                damage: String(match.3),
+                reach: String(match.4)
             )
         }
     }
