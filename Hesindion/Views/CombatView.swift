@@ -326,8 +326,6 @@ private struct CombatLoadoutEquipmentView: View {
             let currentItem = allItems.first { selected.contains($0.name) }
             if currentItem?.isRaufen == true { return false }
             if currentItem?.isTwoHandedOnly == true { return false }
-            // Can't pick two weapons without Beidhaendig
-            if !item.isShield && currentItem?.isShield == false && !hero.hasBeidhaendig { return false }
             // Can't pick two shields
             if item.isShield && currentItem?.isShield == true { return false }
         }
@@ -1033,7 +1031,7 @@ private struct CombatRootView: View {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         step = .execution(.angriff, name: "Raufen", attributeValue: raufen?.at ?? 0, damageFormula: "1W6", note: nil)
                     } else {
-                        step = .attackChoice
+                        step = .loadoutEquipment
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -1950,10 +1948,10 @@ private struct CombatExecutionView: View {
 
     private func outcomeText(_ outcome: CombatOutcome) -> String {
         switch outcome {
-        case .kritischerErfolg: return "!!! Kritischer Erfolg!"
-        case .kritischerPatzer: return "!!! Kritischer Patzer!"
-        case .erfolg:           return "Erfolg"
-        case .misserfolg:       return "Misserfolg"
+        case .kritischerErfolg: return L("criticalSuccess")
+        case .kritischerPatzer: return L("criticalFumble")
+        case .erfolg:           return L("success")
+        case .misserfolg:       return L("failure")
         }
     }
 
