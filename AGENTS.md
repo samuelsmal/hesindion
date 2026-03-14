@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 Instructions for AI coding agents working on this repository.
 
