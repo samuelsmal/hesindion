@@ -47,8 +47,10 @@ struct CombatView: View {
     var onDismiss: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.modelContext) private var modelContext
     @State private var showNotes = false
     @State private var step: CombatStep = .armorSelection
+    @State private var combatId = UUID()
     @State private var rolledInitiative: Int? = nil
     @State private var dualAttackPenaltyActive: Bool = false
     @State private var twoHandedGripActive: Bool = false
@@ -202,12 +204,14 @@ struct CombatView: View {
                         hero: hero,
                         mount: mount,
                         step: $step,
-                        onDismiss: onDismiss
+                        onDismiss: onDismiss,
+                        combatId: combatId,
+                        roundNumber: roundNumber
                     )
                     .transition(.move(edge: .trailing))
                 }
             case .takeDamage:
-                CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss)
+                CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
             }
         }
@@ -2039,7 +2043,10 @@ private struct CombatTakeDamageView: View {
     let hero: Hero
     @Binding var step: CombatStep
     var onDismiss: () -> Void
+    let combatId: UUID
+    let roundNumber: Int
 
+    @Environment(\.modelContext) private var modelContext
     @State private var tpInput: Int = 0
     @State private var confirmed: Bool = false
 
@@ -2146,6 +2153,21 @@ private struct CombatTakeDamageView: View {
                         if let dv = hero.derivedValues {
                             dv.lebensenergie.current = max(0, dv.lebensenergie.current - effectiveDamage)
                         }
+                        let entry = LogEntry.create(
+                            kind: "combatAction",
+                            payload: CombatActionPayload(
+                                combatId: combatId,
+                                round: roundNumber,
+                                action: .damageTaken,
+                                weaponName: nil,
+                                rollValue: nil,
+                                damageDealt: nil,
+                                damageTaken: effectiveDamage,
+                                lpChange: -effectiveDamage
+                            ),
+                            hero: hero
+                        )
+                        modelContext.insert(entry)
                         confirmed = true
                     } label: {
                         Text(L("confirm"))
@@ -3287,7 +3309,10 @@ private struct CombatMountDamageView: View {
     let mount: Pet
     @Binding var step: CombatStep
     var onDismiss: () -> Void
+    let combatId: UUID
+    let roundNumber: Int
 
+    @Environment(\.modelContext) private var modelContext
     @State private var spAmount: Int = 1
     @State private var damageApplied = false
     @State private var showingProbeModal = false
@@ -3419,6 +3444,27 @@ private struct CombatMountDamageView: View {
             Button {
                 // Deduct LP from mount
                 mount.currentLifeEnergy = max(0, mount.currentLifeEnergy - spAmount)
+                let entry = LogEntry.create(
+                    kind: "combatAction",
+                    payload: CombatActionPayload(
+                        combatId: combatId,
+                        round: roundNumber,
+                        action: .damageTaken,
+                        weaponName: nil,
+                        rollValue: nil,
+                        damageDealt: nil,
+                        damageTaken: spAmount,
+                        lpChange: 0
+                    ),
+                    hero: hero
+                )
+                modelContext.insert(entry)
+                let mountEntry = LogEntry.create(
+                    kind: "mountLPChange",
+                    payload: MountLPChangePayload(petName: mount.name, lpChange: -spAmount),
+                    hero: hero
+                )
+                modelContext.insert(mountEntry)
                 withAnimation(DSAAnimation.standard) {
                     damageApplied = true
                 }
