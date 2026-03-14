@@ -145,9 +145,12 @@ enum DSAStrings {
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unknown Talent",
-        // Regeneration
+        // Regeneration & Healing
         "regeneration":         "Regeneration",
         "improvedRegen":        "Improved Regen.",
+        "healing":              "Healing",
+        "healingSourcePlaceholder": "Source (e.g. Potion, Balm...)",
+        "mountHealing":         "Mount: Healing",
         // Rule categories (singular)
         "cat.advantage":        "Advantage",
         "cat.disadvantage":     "Disadvantage",
@@ -422,9 +425,12 @@ enum DSAStrings {
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unbekanntes Talent",
-        // Regeneration
+        // Regeneration & Healing
         "regeneration":         "Regenerieren",
         "improvedRegen":        "Verb. Regen.",
+        "healing":              "Heilung",
+        "healingSourcePlaceholder": "Quelle (z.B. Heiltrank, Balsam...)",
+        "mountHealing":         "Reittier: Heilung",
         // Rule categories (singular)
         "cat.advantage":        "Vorteil",
         "cat.disadvantage":     "Nachteil",
