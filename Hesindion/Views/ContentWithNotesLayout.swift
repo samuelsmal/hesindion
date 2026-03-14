@@ -43,9 +43,7 @@ struct SplitContentLayout<Content: View>: View {
             }
         }
         .overlay(alignment: .trailing) {
-            if activePanel == nil {
-                panelToggleButtons
-            }
+            panelToggleButtons
         }
     }
 
