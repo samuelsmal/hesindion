@@ -19,6 +19,8 @@ struct HeroDetailView: View {
     @State private var showRegenerierenSheet = false
     @State private var showNotes = false
     @State private var showMountDamageSheet = false
+    @State private var showHeilungSheet = false
+    @State private var showMountHealingSheet = false
 
     var body: some View {
         ZStack {
@@ -124,6 +126,18 @@ struct HeroDetailView: View {
                     .presentationDetents([.large])
             }
         }
+        .sheet(isPresented: $showHeilungSheet) {
+            HeilungSheet(hero: hero)
+                .presentationCornerRadius(0)
+                .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showMountHealingSheet) {
+            if let mount = hero.pets.first {
+                MountHealingSheet(hero: hero, mount: mount)
+                    .presentationCornerRadius(0)
+                    .presentationDetents([.medium])
+            }
+        }
         .sheet(isPresented: Binding(
             get: { lookupRuleId != nil },
             set: { if !$0 { lookupRuleId = nil } }
@@ -151,6 +165,16 @@ struct HeroDetailView: View {
             }
             if cmd.name == "Reittier: Schaden" {
                 showMountDamageSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Heilung" {
+                showHeilungSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Reittier: Heilung" {
+                showMountHealingSheet = true
                 activeCommand = nil
                 return
             }

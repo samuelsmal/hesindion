@@ -354,6 +354,13 @@ extension Hero {
                     input: nil,
                     execute: { _ in }
                 ))
+                commands.append(AppCommand(
+                    id: UUID(),
+                    name: "Heilung",
+                    subparameter: nil,
+                    input: nil,
+                    execute: { _ in }
+                ))
             }
 
             if dv.schicksalspunkte.max > 0 {
@@ -448,6 +455,13 @@ extension Hero {
             commands.append(AppCommand(
                 id: UUID(),
                 name: "Reittier: Schaden",
+                subparameter: nil,
+                input: nil,
+                execute: { _ in }
+            ))
+            commands.append(AppCommand(
+                id: UUID(),
+                name: "Reittier: Heilung",
                 subparameter: nil,
                 input: nil,
                 execute: { _ in }
