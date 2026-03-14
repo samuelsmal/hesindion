@@ -22,6 +22,10 @@ struct HeroDetailView: View {
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
 
+    private var colorScheme: HeroColorScheme {
+        HeroColorScheme.scheme(for: hero)
+    }
+
     var body: some View {
         ZStack {
             SplitContentLayout(hero: hero, activePanel: $activePanel) {
@@ -242,7 +246,7 @@ struct HeroDetailView: View {
             .font(.system(.largeTitle, design: .default, weight: .black))
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.groupPersonalData)
+            .background(colorScheme.groupColor(at: 0))
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -250,7 +254,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var groupsContent: some View {
         VStack(spacing: 0) {
-            CollapsibleGroup(L("groupPersonalData"), color: .groupPersonalData) {
+            CollapsibleGroup(L("groupPersonalData"), color: colorScheme.groupColor(at: 0), textColor: colorScheme.textColor) {
                 VStack(spacing: 8) {
                     personalDataSection
                     experienceSection
@@ -265,7 +269,7 @@ struct HeroDetailView: View {
                 .padding(.vertical, 8)
             }
 
-            CollapsibleGroup(L("groupTalents"), color: .groupTalents, textColor: .white) {
+            CollapsibleGroup(L("groupTalents"), color: colorScheme.groupColor(at: 1), textColor: colorScheme.textColor) {
                 VStack(spacing: 8) {
                     talentsSections
                 }
@@ -286,7 +290,7 @@ struct HeroDetailView: View {
                 .padding(.vertical, 8)
             }
 
-            CollapsibleGroup(L("groupEquipment"), color: .groupEquipment, textColor: .white) {
+            CollapsibleGroup(L("groupEquipment"), color: colorScheme.groupColor(at: 3), textColor: colorScheme.textColor) {
                 VStack(spacing: 8) {
                     equipmentSection
                     moneySection
