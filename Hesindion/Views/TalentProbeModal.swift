@@ -245,6 +245,8 @@ struct TalentProbeModal: View {
             return "Kritischer Patzer!"
         case .kritischerErfolg:
             return "Kritischer Erfolg!"
+        case .qs(let qs) where qs == 0:
+            return "\(talent.value) - \(excesses.map { String($0) }.joined(separator: " - ")) = \(remaining) → Nicht bestanden"
         case .qs(let qs):
             return "\(talent.value) - \(excesses.map { String($0) }.joined(separator: " - ")) = \(remaining) → QS\(qs)"
         }
