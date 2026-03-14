@@ -49,11 +49,6 @@ struct AttributesColumn: View {
             attrCell("KK", attrs.kk)
         }
         .frame(width: 80)
-        .overlay(alignment: .trailing) {
-            Rectangle()
-                .frame(width: 3)
-                .foregroundStyle(Color.dsaBorder)
-        }
     }
 
     private func attrCell(_ label: String, _ value: Int) -> some View {
