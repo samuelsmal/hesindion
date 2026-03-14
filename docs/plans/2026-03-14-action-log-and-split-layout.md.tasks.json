@@ -1,0 +1,21 @@
+{
+  "planPath": "docs/plans/2026-03-14-action-log-and-split-layout.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Create LogEntry model and payload types", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add LogEntry relationship to Hero", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Schema migration to V3", "status": "pending", "blockedBy": [2]},
+    {"id": 4, "subject": "Task 4: Add logging to TalentProbeModal", "status": "pending", "blockedBy": [3]},
+    {"id": 5, "subject": "Task 5: Add logging to RegenerierenSheet", "status": "pending", "blockedBy": [3]},
+    {"id": 6, "subject": "Task 6: Add logging to MountDamageSheet", "status": "pending", "blockedBy": [3]},
+    {"id": 7, "subject": "Task 7: Add Heilung command and sheet", "status": "pending", "blockedBy": [3]},
+    {"id": 8, "subject": "Task 8: Add mount healing command", "status": "pending", "blockedBy": [3]},
+    {"id": 9, "subject": "Task 9: Add logging to CombatView", "status": "pending", "blockedBy": [3]},
+    {"id": 10, "subject": "Task 10: Create LogPanelView", "status": "pending", "blockedBy": [9]},
+    {"id": 11, "subject": "Task 11: Create SplitContentLayout", "status": "pending", "blockedBy": [10]},
+    {"id": 12, "subject": "Task 12: Update HeroDetailView for SplitContentLayout", "status": "pending", "blockedBy": [11]},
+    {"id": 13, "subject": "Task 13: Add localization strings", "status": "pending", "blockedBy": [7, 8]},
+    {"id": 14, "subject": "Task 14: Update CHANGELOG", "status": "pending", "blockedBy": [12, 13]},
+    {"id": 15, "subject": "Task 15: Final build and test", "status": "pending", "blockedBy": [14]}
+  ],
+  "lastUpdated": "2026-03-14T12:00:00Z"
+}
