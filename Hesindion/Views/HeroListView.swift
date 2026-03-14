@@ -101,7 +101,7 @@ struct HeroListView: View {
                         .tag(SidebarSelection.hero(hero.persistentModelID))
                         .listRowBackground(
                                 selection == .hero(hero.persistentModelID)
-                                    ? Color.groupPersonalData.opacity(0.35)
+                                    ? HeroColorScheme.scheme(for: hero).accentColor.opacity(0.35)
                                     : Color(UIColor.systemBackground)
                             )
                     }
