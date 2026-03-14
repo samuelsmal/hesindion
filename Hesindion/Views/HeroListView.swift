@@ -22,19 +22,18 @@ struct HeroListView: View {
 
     var body: some View {
         NavigationSplitView {
-            VStack(spacing: 0) {
-                Text("Hesindion")
-                    .font(.system(.largeTitle, design: .default, weight: .black))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color(UIColor.systemBackground))
-                sidebarContent
-            }
-            .safeAreaInset(edge: .bottom) {
-                importButton
-            }
-            .navigationTitle("")
-            .navigationBarHidden(true)
+            sidebarContent
+                .safeAreaInset(edge: .bottom) {
+                    importButton
+                }
+                .navigationTitle("Hesindion")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("Hesindion")
+                            .font(.system(.title2, design: .default, weight: .black))
+                    }
+                }
         } detail: {
             detailContent
         }
