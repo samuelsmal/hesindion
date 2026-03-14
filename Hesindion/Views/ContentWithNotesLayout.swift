@@ -89,11 +89,6 @@ struct SplitContentLayout<Content: View>: View {
             panelButton(.logs, icon: "list.bullet.rectangle", activeIcon: "list.bullet.rectangle.fill")
             panelButton(.rules, icon: "book.closed", activeIcon: "book.closed.fill")
         }
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .frame(width: DSALayout.secondaryBorder)
-                .foregroundStyle(Color.dsaBorder)
-        }
     }
 
     // MARK: - Portrait Tab Bar (horizontal, bottom)
@@ -137,13 +132,9 @@ struct SplitContentLayout<Content: View>: View {
         } label: {
             Image(systemName: isActive ? activeIcon : icon)
                 .font(.system(.body, weight: .bold))
-                .foregroundStyle(isActive ? .white : panelColor(for: panel))
+                .foregroundStyle(.white)
                 .frame(width: 48, height: 48)
-                .background(isActive ? panelColor(for: panel) : .clear)
-                .overlay(
-                    Rectangle()
-                        .stroke(panelColor(for: panel), lineWidth: isActive ? 0 : DSALayout.secondaryBorder)
-                )
+                .background(panelColor(for: panel))
         }
         .buttonStyle(.plain)
     }
