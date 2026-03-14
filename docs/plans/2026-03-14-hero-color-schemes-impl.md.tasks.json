@@ -1,0 +1,14 @@
+{
+  "planPath": "docs/plans/2026-03-14-hero-color-schemes-impl.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Fix Sidebar Styling", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Remove Attributes Column Border", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Fill Panel Toggle Buttons", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Create HeroColorScheme Type", "status": "pending"},
+    {"id": 5, "subject": "Task 5: Wire Color Schemes into HeroDetailView", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 6: Create HeroSettingsView", "status": "pending", "blockedBy": [4, 5]},
+    {"id": 7, "subject": "Task 7: Update Sidebar with Scheme Accent Color", "status": "pending", "blockedBy": [4]},
+    {"id": 8, "subject": "Task 8: Final Build, Verify, and Update Docs", "status": "pending", "blockedBy": [1, 2, 3, 4, 5, 6, 7]}
+  ],
+  "lastUpdated": "2026-03-14T02:15:00Z"
+}
