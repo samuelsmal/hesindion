@@ -6,9 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
+- Hero settings view accessible via command palette ("Einstellungen für <Hero>")
+- Color scheme picker with visual swatch previews and automatic profession-based detection
+
 ### Changed
 
+- Sidebar title centered via toolbar principal item
+- Panel toggle buttons now have filled backgrounds with white icons (no borders)
 - Redesigned landscape sidebar panel buttons — bold 48×48 squares flush to screen edge with distinct amber/teal/purple colors, dark mode adaptive
+
+### Fixed
+
+- "Held importieren" button text readability (black text on gold background)
+- Selected hero row visibility in sidebar (increased highlight opacity)
+- Removed unnecessary trailing border from attributes column
 
 ### Added
 
