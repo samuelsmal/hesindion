@@ -1,0 +1,11 @@
+{
+  "planPath": "docs/plans/2026-03-13-mount-damage-reiten-check.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Add initialModifier to TalentProbeModal", "status": "completed", "lastUpdated": "2026-03-13T12:00:00Z"},
+    {"id": 2, "subject": "Task 2: Add localization strings", "status": "completed", "lastUpdated": "2026-03-13T12:01:00Z"},
+    {"id": 3, "subject": "Task 3: Build CombatMountDamageView", "status": "completed", "blockedBy": [1, 2], "lastUpdated": "2026-03-13T12:02:00Z"},
+    {"id": 4, "subject": "Task 4: Add command palette command for normal mode", "status": "completed", "blockedBy": [1, 2], "lastUpdated": "2026-03-13T12:03:00Z"},
+    {"id": 5, "subject": "Task 5: Build, smoke test, update docs", "status": "completed", "blockedBy": [3, 4], "lastUpdated": "2026-03-13T12:04:00Z"}
+  ],
+  "lastUpdated": "2026-03-13T12:04:00Z"
+}
