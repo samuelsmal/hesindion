@@ -22,12 +22,19 @@ struct HeroListView: View {
 
     var body: some View {
         NavigationSplitView {
-            sidebarContent
-                .safeAreaInset(edge: .bottom) {
-                    importButton
-                }
-                .navigationTitle("Hesindion")
-                .toolbarTitleDisplayMode(.inlineLarge)
+            VStack(spacing: 0) {
+                Text("Hesindion")
+                    .font(.system(.largeTitle, design: .default, weight: .black))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                sidebarContent
+            }
+            .safeAreaInset(edge: .bottom) {
+                importButton
+            }
+            .navigationTitle("")
+            .navigationBarHidden(true)
         } detail: {
             detailContent
         }
@@ -70,7 +77,7 @@ struct HeroListView: View {
                     .tag(SidebarSelection.rulebook)
                     .listRowBackground(
                         selection == .rulebook
-                            ? Color.groupRulebook.opacity(0.15)
+                            ? Color.groupRulebook.opacity(0.35)
                             : Color(UIColor.systemBackground)
                     )
             } header: {
@@ -94,7 +101,7 @@ struct HeroListView: View {
                         .tag(SidebarSelection.hero(hero.persistentModelID))
                         .listRowBackground(
                                 selection == .hero(hero.persistentModelID)
-                                    ? Color.groupPersonalData.opacity(0.15)
+                                    ? Color.groupPersonalData.opacity(0.35)
                                     : Color(UIColor.systemBackground)
                             )
                     }
@@ -192,7 +199,7 @@ struct HeroListView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.black)
                 .overlay(
                     Rectangle()
                         .stroke(Color.dsaBorder, lineWidth: 3)
