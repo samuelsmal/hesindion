@@ -34,6 +34,7 @@ final class Hero {
     // MARK: - Notes
 
     var notes: String = ""
+    var colorSchemeId: String?
 
     // MARK: - Loadout persistence
 
