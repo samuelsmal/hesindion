@@ -253,6 +253,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var nameHeading: some View {
         Text(hero.name)
             .font(.system(.largeTitle, design: .default, weight: .black))
+            .foregroundStyle(colorScheme.textColor)
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(colorScheme.groupColor(at: 0))

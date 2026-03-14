@@ -41,8 +41,7 @@ struct SplitContentLayout<Content: View>: View {
                     .frame(maxWidth: .infinity)
                     .transition(.move(edge: .trailing))
             }
-        }
-        .overlay(alignment: .trailing) {
+
             panelToggleButtons
         }
     }
