@@ -71,6 +71,7 @@ struct HeroListView: View {
             Section {
                 Label(L("rulebook"), systemImage: "book.closed")
                     .font(.system(.title3, design: .default, weight: .bold))
+                    .lineLimit(1)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 4)
                     .tag(SidebarSelection.rulebook)
