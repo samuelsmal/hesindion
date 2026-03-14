@@ -17,14 +17,14 @@ struct HeroDetailView: View {
     @State private var lookupRuleId: String?
     @State private var showCombatMode = false
     @State private var showRegenerierenSheet = false
-    @State private var showNotes = false
+    @State private var activePanel: SidePanel?
     @State private var showMountDamageSheet = false
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
 
     var body: some View {
         ZStack {
-            ContentWithNotesLayout(hero: hero, showNotes: $showNotes) {
+            SplitContentLayout(hero: hero, activePanel: $activePanel) {
                 if let attrs = hero.attributes, sizeClass == .regular {
                     HStack(spacing: 0) {
                         AttributesColumn(attrs: attrs)
@@ -184,17 +184,6 @@ struct HeroDetailView: View {
                 activeTalentProbe = talent
             }
             activeCommand = nil
-        }
-        .toolbar {
-            if sizeClass == .regular {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        withAnimation { showNotes.toggle() }
-                    } label: {
-                        Image(systemName: showNotes ? "note.text.badge.plus" : "note.text")
-                    }
-                }
-            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

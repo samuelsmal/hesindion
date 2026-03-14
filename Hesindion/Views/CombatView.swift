@@ -48,7 +48,7 @@ struct CombatView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.modelContext) private var modelContext
-    @State private var showNotes = false
+    @State private var activePanel: SidePanel?
     @State private var step: CombatStep = .armorSelection
     @State private var combatId = UUID()
     @State private var rolledInitiative: Int? = nil
@@ -80,7 +80,7 @@ struct CombatView: View {
     }
 
     var body: some View {
-        ContentWithNotesLayout(hero: hero, showNotes: $showNotes) {
+        SplitContentLayout(hero: hero, activePanel: $activePanel) {
         VStack(spacing: 0) {
             switch step {
             case .armorSelection:
@@ -252,23 +252,7 @@ struct CombatView: View {
             vorstossActiveThisRound = false
             activeManeuver = .normal
         }
-        .overlay(alignment: .topTrailing) {
-            if sizeClass == .regular {
-                Button {
-                    withAnimation(DSAAnimation.standard) {
-                        showNotes.toggle()
-                    }
-                } label: {
-                    Image(systemName: "note.text")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(showNotes ? combatAccent : .white)
-                }
-                .buttonStyle(.plain)
-                .padding(.trailing, 48)
-                .padding(.top, 15)
-            }
-        }
-        } // ContentWithNotesLayout
+        } // SplitContentLayout
     }
 }
 
