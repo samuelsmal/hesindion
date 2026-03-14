@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Action log (Protokoll) with event sourcing — all talent checks, combat damage, healing, and resting are recorded as reversible log entries
+- Log panel (Protokoll) viewable in split-screen with combat grouping, swipe-to-delete with automatic state reversal
+- Split-screen layout — Notes, Protokoll, and Regelwerk panels available in 50/50 split (landscape) or full-screen overlay (portrait)
+- Heilung command — heal hero with source tracking and logging
+- Reittier: Heilung command — heal mount with logging
+- SchemaV3 migration with LogEntry model
 - Adaptive content width modifier for iPad: proportional margins (~6% per side) with 700pt max-width cap, standard 16pt padding on iPhone
 - Notes panel ("Notizen") sidebar toggleable via toolbar button on iPad in both hero detail and combat views
 - Hero.notes property persisted via SwiftData with SchemaV2 lightweight migration
@@ -24,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Replaced notes-only right sidebar (ContentWithNotesLayout) with flexible SplitContentLayout supporting Notes, Protokoll, and Regelwerk panels
+- Panel toggle buttons now built into layout instead of toolbar
 - Combat view: replaced per-element horizontal padding with adaptive content width modifier for consistent iPad margins
 - Mount combat: Reiten check now uses the full talent probe modal with dice rolls instead of a simple Yes/No dialog
 - Moved mount attacks from combat root view to attack selection screen
