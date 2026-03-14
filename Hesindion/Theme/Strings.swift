@@ -142,6 +142,11 @@ enum DSAStrings {
         "importHero":           "Import Hero",
         "importHint":           "Import a JSON or YAML file to add your first hero.",
         "selectHint":           "Select a hero or the rulebook from the list.",
+        // HeroSettings
+        "heroSettings":         "Hero Settings",
+        "colorScheme":          "Color Scheme",
+        "colorSchemeAutomatic": "Automatic (from profession)",
+        "close":                "Close",
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unknown Talent",
@@ -422,6 +427,11 @@ enum DSAStrings {
         "importHero":           "Held importieren",
         "importHint":           "Importiere eine JSON- oder YAML-Datei, um deinen ersten Helden hinzuzufügen.",
         "selectHint":           "Wähle einen Helden oder das Regelbuch aus der Liste.",
+        // HeroSettings
+        "heroSettings":         "Heldeneinstellungen",
+        "colorScheme":          "Farbschema",
+        "colorSchemeAutomatic": "Automatisch (aus Profession)",
+        "close":                "Schließen",
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unbekanntes Talent",

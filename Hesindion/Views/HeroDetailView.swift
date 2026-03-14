@@ -21,6 +21,7 @@ struct HeroDetailView: View {
     @State private var showMountDamageSheet = false
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
+    @State private var showHeroSettings = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -155,6 +156,9 @@ struct HeroDetailView: View {
                 .presentationCornerRadius(0)
             }
         }
+        .fullScreenCover(isPresented: $showHeroSettings) {
+            HeroSettingsView(hero: hero) { showHeroSettings = false }
+        }
         .onChange(of: activeCommand?.id) { _, _ in
             guard let cmd = activeCommand else { return }
             if cmd.name == "Kampf" {
@@ -179,6 +183,11 @@ struct HeroDetailView: View {
             }
             if cmd.name == "Reittier: Heilung" {
                 showMountHealingSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name.hasPrefix("Einstellungen für") {
+                showHeroSettings = true
                 activeCommand = nil
                 return
             }

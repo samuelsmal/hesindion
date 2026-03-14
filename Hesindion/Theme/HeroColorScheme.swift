@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct HeroColorScheme {
+struct HeroColorScheme: Identifiable {
     let id: String
     let name: String
     /// Exactly 4 colors: gradient dark → light for sections (Personal Data, Talents, Combat, Equipment).

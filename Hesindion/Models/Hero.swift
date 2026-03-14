@@ -477,6 +477,14 @@ extension Hero {
             execute: { _ in }
         ))
 
+        commands.append(AppCommand(
+            id: UUID(),
+            name: "Einstellungen für \(name)",
+            subparameter: nil,
+            input: nil,
+            execute: { _ in }
+        ))
+
         return commands
     }
 }
