@@ -81,7 +81,7 @@ struct SplitContentLayout<Content: View>: View {
         }
     }
 
-    // MARK: - Landscape Toggle Buttons (vertical, right edge)
+    // MARK: - Landscape Toggle Buttons (vertical, right edge, flush)
 
     private var panelToggleButtons: some View {
         VStack(spacing: 0) {
@@ -89,9 +89,11 @@ struct SplitContentLayout<Content: View>: View {
             panelButton(.logs, icon: "list.bullet.rectangle", activeIcon: "list.bullet.rectangle.fill")
             panelButton(.rules, icon: "book.closed", activeIcon: "book.closed.fill")
         }
-        .background(Color(UIColor.systemBackground).opacity(0.9))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.tertiaryBorder))
-        .padding(.trailing, 8)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .frame(width: DSALayout.secondaryBorder)
+                .foregroundStyle(Color.dsaBorder)
+        }
     }
 
     // MARK: - Portrait Tab Bar (horizontal, bottom)
@@ -114,8 +116,17 @@ struct SplitContentLayout<Content: View>: View {
         }
     }
 
+    private func panelColor(for panel: SidePanel) -> Color {
+        switch panel {
+        case .notes: .panelNotes
+        case .logs:  .panelLogs
+        case .rules: .panelRules
+        }
+    }
+
     private func panelButton(_ panel: SidePanel, icon: String, activeIcon: String) -> some View {
-        Button {
+        let isActive = activePanel == panel
+        return Button {
             withAnimation(DSAAnimation.standard) {
                 if activePanel == panel {
                     activePanel = nil
@@ -124,10 +135,15 @@ struct SplitContentLayout<Content: View>: View {
                 }
             }
         } label: {
-            Image(systemName: activePanel == panel ? activeIcon : icon)
+            Image(systemName: isActive ? activeIcon : icon)
                 .font(.system(.body, weight: .bold))
-                .foregroundStyle(activePanel == panel ? Color.groupPersonalData : .primary)
-                .frame(width: 44, height: 44)
+                .foregroundStyle(isActive ? .white : panelColor(for: panel))
+                .frame(width: 48, height: 48)
+                .background(isActive ? panelColor(for: panel) : .clear)
+                .overlay(
+                    Rectangle()
+                        .stroke(panelColor(for: panel), lineWidth: isActive ? 0 : DSALayout.secondaryBorder)
+                )
         }
         .buttonStyle(.plain)
     }

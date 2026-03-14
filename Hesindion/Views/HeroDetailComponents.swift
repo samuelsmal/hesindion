@@ -29,7 +29,6 @@ struct AttributesBar: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color.attributeBackground(for: label))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 }
 
@@ -67,7 +66,6 @@ struct AttributesColumn: View {
         .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.attributeBackground(for: label))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
     }
 }
 

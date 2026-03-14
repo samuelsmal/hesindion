@@ -1093,7 +1093,6 @@ struct TalentSwipeContent: View {
                         .foregroundStyle(Color.attributeForeground(for: key))
                         .frame(width: 32, height: 24)
                         .background(Color.attributeBackground(for: key).opacity(0.7))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
                 }
             }
             Text("\(value)")

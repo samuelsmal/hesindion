@@ -9,6 +9,20 @@ extension Color {
     static let groupEquipment    = Color(red: 0x16 / 255, green: 0xa3 / 255, blue: 0x4a / 255)
     static let groupRulebook     = Color(red: 0x7c / 255, green: 0x3a / 255, blue: 0xed / 255)
 
+    // Panel toggle button colours — warm trio, adaptive for dark mode
+    static let panelNotes = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 0.85, green: 0.65, blue: 0.30, alpha: 1)   // warm amber
+        : UIColor(red: 0.76, green: 0.55, blue: 0.08, alpha: 1)
+    })
+    static let panelLogs = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 0.30, green: 0.60, blue: 0.70, alpha: 1)   // muted teal
+        : UIColor(red: 0.15, green: 0.45, blue: 0.55, alpha: 1)
+    })
+    static let panelRules = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 0.60, green: 0.40, blue: 0.78, alpha: 1)   // soft purple
+        : UIColor(red: 0.45, green: 0.25, blue: 0.65, alpha: 1)
+    })
+
     /// Adaptive border for neo-brutalist strokes — black in light mode, white in dark mode.
     static let dsaBorder = Color(UIColor.label)
 

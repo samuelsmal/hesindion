@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Redesigned landscape sidebar panel buttons — bold 48×48 squares flush to screen edge with distinct amber/teal/purple colors, dark mode adaptive
+
 ### Added
 
 - Action log (Protokoll) with event sourcing — all talent checks, combat damage, healing, and resting are recorded as reversible log entries
