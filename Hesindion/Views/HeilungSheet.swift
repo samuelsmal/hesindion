@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct HeilungSheet: View {
     let hero: Hero
