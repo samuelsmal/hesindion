@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- LP (Lebenspunkte) calculation now includes species base value (e.g., +5 for humans, +8 for dwarves) — previously only used KO × 2
 - "Held importieren" button text readability (black text on gold background)
 - Selected hero row visibility in sidebar (increased highlight opacity)
 - Removed unnecessary trailing border from attributes column
