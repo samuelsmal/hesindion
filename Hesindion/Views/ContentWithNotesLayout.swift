@@ -50,19 +50,20 @@ struct SplitContentLayout<Content: View>: View {
     // MARK: - Portrait (full-screen overlay)
 
     private var portraitLayout: some View {
-        ZStack {
-            content
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 0) {
+            ZStack {
+                content
+                    .frame(maxWidth: .infinity)
 
-            if let panel = activePanel {
-                panelView(for: panel)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(UIColor.systemBackground))
-                    .transition(.move(edge: .trailing))
+                if let panel = activePanel {
+                    panelView(for: panel)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color(UIColor.systemBackground))
+                        .transition(.move(edge: .bottom))
+                }
             }
-        }
-        .overlay(alignment: .trailing) {
-            panelToggleButtons
+
+            portraitTabBar
         }
     }
 
@@ -80,7 +81,7 @@ struct SplitContentLayout<Content: View>: View {
         }
     }
 
-    // MARK: - Toggle Buttons
+    // MARK: - Landscape Toggle Buttons (vertical, right edge)
 
     private var panelToggleButtons: some View {
         VStack(spacing: 0) {
@@ -91,6 +92,26 @@ struct SplitContentLayout<Content: View>: View {
         .background(Color(UIColor.systemBackground).opacity(0.9))
         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.tertiaryBorder))
         .padding(.trailing, 8)
+    }
+
+    // MARK: - Portrait Tab Bar (horizontal, bottom)
+
+    private var portraitTabBar: some View {
+        HStack(spacing: 0) {
+            panelButton(.notes, icon: "note.text", activeIcon: "note.text.badge.plus")
+                .frame(maxWidth: .infinity)
+            panelButton(.logs, icon: "list.bullet.rectangle", activeIcon: "list.bullet.rectangle.fill")
+                .frame(maxWidth: .infinity)
+            panelButton(.rules, icon: "book.closed", activeIcon: "book.closed.fill")
+                .frame(maxWidth: .infinity)
+        }
+        .padding(.vertical, 4)
+        .background(Color(UIColor.systemBackground))
+        .overlay(alignment: .top) {
+            Rectangle()
+                .frame(height: DSALayout.tertiaryBorder)
+                .foregroundStyle(Color.dsaBorder)
+        }
     }
 
     private func panelButton(_ panel: SidePanel, icon: String, activeIcon: String) -> some View {
