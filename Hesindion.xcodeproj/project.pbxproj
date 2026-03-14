@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30B2F64000000E630FD /* MarkdownUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BA48A2052F4A000000E630FD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +108,7 @@
 			);
 			name = Hesindion;
 			packageProductDependencies = (
+				BA48A30B2F64000000E630FD /* MarkdownUI */,
 			);
 			productName = Hesindion;
 			productReference = BA48A18A2F485F1D00E630FD /* Hesindion.app */;
@@ -158,6 +164,9 @@
 			);
 			mainGroup = BA48A1812F485F1D00E630FD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BA48A18B2F485F1D00E630FD /* Products */;
 			projectDirPath = "";
@@ -467,6 +476,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA48A30B2F64000000E630FD /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BA48A1822F485F1D00E630FD /* Project object */;
 }

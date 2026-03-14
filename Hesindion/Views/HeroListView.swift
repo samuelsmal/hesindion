@@ -19,12 +19,19 @@ struct HeroListView: View {
     @State private var isShowingFilePicker = false
     @State private var importError: String?
     @State private var isShowingError = false
+    @State private var isShowingChangelog = false
+
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "v\(version) (\(build))"
+    }
 
     var body: some View {
         NavigationSplitView {
             sidebarContent
                 .safeAreaInset(edge: .bottom) {
-                    importButton
+                    sidebarFooter
                 }
                 .navigationTitle("Hesindion")
                 .navigationBarTitleDisplayMode(.inline)
@@ -85,6 +92,10 @@ struct HeroListView: View {
             }
 
             Section {
+                importButton
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color(UIColor.systemBackground))
+
                 if heroes.isEmpty {
                     Text(L("importHint"))
                         .foregroundStyle(.secondary)
@@ -206,6 +217,39 @@ struct HeroListView: View {
                 )
         }
         .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+    }
+
+    // MARK: - Sidebar Footer
+
+    private var sidebarFooter: some View {
+        VStack(spacing: 4) {
+            Text(appVersion)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.tertiary)
+
+            Button {
+                isShowingChangelog = true
+            } label: {
+                Text("Changelog")
+                    .font(.system(.caption2))
+                    .foregroundStyle(.quaternary)
+            }
+            .sheet(isPresented: $isShowingChangelog) {
+                NavigationStack {
+                    ChangelogView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(L("ok")) {
+                                    isShowingChangelog = false
+                                }
+                            }
+                        }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color(UIColor.systemBackground))
     }
