@@ -137,6 +137,7 @@ struct OptolithImportService {
         let purchasedKP = intFromAny(attrJSON["kp"]) ?? 0
         let derivedValues = computeDerivedValues(
             attributes: attributes,
+            raceId: raceId,
             purchasedLP: purchasedLP,
             purchasedAE: purchasedAE,
             purchasedKP: purchasedKP,
@@ -790,8 +791,16 @@ struct OptolithImportService {
 
     // MARK: - Derived Values
 
+    private static let speciesBaseLP: [String: Int] = [
+        "R_1": 5,  // Menschen
+        "R_2": 2,  // Elfen
+        "R_3": 5,  // Halbelfen
+        "R_4": 8,  // Zwerge
+    ]
+
     private func computeDerivedValues(
         attributes: Attributes,
+        raceId: String,
         purchasedLP: Int,
         purchasedAE: Int,
         purchasedKP: Int,
@@ -804,8 +813,9 @@ struct OptolithImportService {
         let ko = attributes.ko
         let kk = attributes.kk
 
-        // LE: base = KO * 2 (Mensch)
-        let leBase = ko * 2
+        // LE: base = species base LP + KO * 2
+        let speciesLP = Self.speciesBaseLP[raceId] ?? 5
+        let leBase = speciesLP + ko * 2
         let hoheLebenskraftBonus = advantages
             .filter { $0.ruleId == "ADV_25" }
             .reduce(0) { $0 + ($1.tier ?? 1) }
