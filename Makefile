@@ -3,7 +3,7 @@ SCHEME = Hesindion
 SDK = iphonesimulator
 CONFIG = Debug
 DEVICE_NAME = iPhone 17 Pro
-IPAD_NAME = iPad Pro 11-inch (M4)
+IPAD_NAME = iPad Pro 11-inch (M5)
 DERIVED_DATA = .build
 BUNDLE_ID = org.savoba.Hesindion
 
@@ -63,9 +63,13 @@ install-ipad: build-ipad boot-ipad
 	xcrun simctl install '$(IPAD_ID)' '$(APP_PATH)'
 
 launch-ipad:
-	xcrun simctl launch '$(IPAD_ID)' $(BUNDLE_ID)
+	xcrun simctl launch '$(IPAD_ID)' $(BUNDLE_ID) $(LAUNCH_ARGS)
 
 run-ipad: install-ipad launch-ipad
+
+# Debug shortcut: make debug-combat → builds, launches iPad with first hero in combat view
+debug-combat: LAUNCH_ARGS = debug load_default path combat
+debug-combat: run-ipad
 
 share-heros: boot
 	@if [ -z "$(APP_DATA)" ]; then \

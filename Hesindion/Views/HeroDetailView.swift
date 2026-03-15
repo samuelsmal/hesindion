@@ -22,6 +22,7 @@ struct HeroDetailView: View {
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
     @State private var showHeroSettings = false
+    @State private var showAvatarFullscreen = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -118,6 +119,11 @@ struct HeroDetailView: View {
         }
         .fullScreenCover(isPresented: $showCombatMode) {
             CombatView(hero: hero) { showCombatMode = false }
+        }
+        .onAppear {
+            if DebugLaunch.path == "combat" {
+                showCombatMode = true
+            }
         }
         .sheet(isPresented: $showRegenerierenSheet) {
             RegenerierenSheet(hero: hero)
@@ -251,15 +257,40 @@ struct HeroDetailView: View {
     // MARK: - Extracted Layout Components
 
     @ViewBuilder private var nameHeading: some View {
-        Text(hero.name)
-            .font(.system(.largeTitle, design: .default, weight: .black))
-            .foregroundStyle(colorScheme.textColor)
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colorScheme.groupColor(at: 0))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+        VStack(spacing: 12) {
+            Text(hero.name)
+                .font(.system(.largeTitle, design: .default, weight: .black))
+                .foregroundStyle(colorScheme.textColor)
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(colorScheme.groupColor(at: 0))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            if let data = hero.avatar, let uiImage = UIImage(data: data) {
+                Button {
+                    showAvatarFullscreen = true
+                } label: {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.dsaBorder, lineWidth: 3)
+                        )
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .fullScreenCover(isPresented: $showAvatarFullscreen) {
+            if let data = hero.avatar, let uiImage = UIImage(data: data) {
+                AvatarFullscreenView(image: uiImage)
+            }
+        }
     }
 
     @ViewBuilder private var groupsContent: some View {

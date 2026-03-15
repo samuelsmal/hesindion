@@ -68,6 +68,11 @@ struct HeroListView: View {
         } message: {
             Text(importError ?? L("unknownError"))
         }
+        .onAppear {
+            if DebugLaunch.loadDefault, selection == nil, let first = heroes.first {
+                selection = .hero(first.persistentModelID)
+            }
+        }
     }
 
     // MARK: - Sidebar

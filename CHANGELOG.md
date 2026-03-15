@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Mount pre-check (Galopp + Reiten) redesigned as single-screen vertical flowchart with collapsing steps and connector arrow
 - Talent probe modal: enlarged modifier buttons (44pt tap targets) for easier use
 - Talent probe modal: constrained max width to 400pt on wide screens
 - Sidebar title centered via toolbar principal item

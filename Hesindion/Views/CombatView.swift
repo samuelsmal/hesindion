@@ -711,26 +711,27 @@ private struct CombatArmorSelectionView: View {
             HStack(spacing: 16) {
                 HStack(spacing: 4) {
                     Text(L("rs"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.totalRS)")
-                        .font(.system(.body, weight: .black))
+                        .font(.system(.title3, weight: .black))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
                 HStack(spacing: 4) {
                     Text(L("encumbrance"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.system(.body, weight: .bold))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.effectiveBE)")
-                        .font(.system(.body, weight: .black))
+                        .font(.system(.title3, weight: .black))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .adaptiveContentWidth()
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
             .background(Color.dsaDark)
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
@@ -746,6 +747,7 @@ private struct CombatArmorSelectionView: View {
             }
             .buttonStyle(.plain)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private func armorRow(_ armor: Armor) -> some View {
@@ -770,7 +772,6 @@ private struct CombatArmorSelectionView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .frame(maxWidth: .infinity)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
         }
@@ -2014,7 +2015,6 @@ private struct CombatArmorManagementSheet: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .frame(maxWidth: .infinity)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
         }
@@ -3129,12 +3129,10 @@ private struct CombatMountPreCheckView: View {
 
             Spacer()
 
-            VStack {
-                if !galoppConfirmed {
-                    galoppCheck
-                } else {
-                    reitenCheck
-                }
+            VStack(spacing: 0) {
+                galoppNode
+                connectorArrow
+                reitenNode
             }
             .adaptiveContentWidth()
 
@@ -3152,106 +3150,26 @@ private struct CombatMountPreCheckView: View {
         }
     }
 
-    private var galoppCheck: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "figure.equestrian.sports")
-                .font(.system(size: 48))
-                .foregroundStyle(combatAccent)
+    // MARK: - Step 1: Galopp
 
-            Text(L("galoppConfirm"))
-                .font(.system(.title3, weight: .bold))
-                .multilineTextAlignment(.center)
-
-            HStack(spacing: 12) {
-                Button {
-                    step = .attackChoice
-                } label: {
-                    Text(L("no"))
+    private var galoppNode: some View {
+        VStack(spacing: 12) {
+            if galoppConfirmed {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text(L("galoppConfirm"))
                         .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
-                .buttonStyle(.plain)
-
-                Button {
-                    withAnimation(DSAAnimation.standard) {
-                        galoppConfirmed = true
-                    }
-                } label: {
-                    Text(L("yes"))
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 32)
-    }
-
-    private var reitenCheck: some View {
-        VStack(spacing: 16) {
-            if let talent = reitenTalent {
-                if let succeeded = probeSucceeded {
-                    Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
-
-                    Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
-                        .font(.system(.title3, weight: .bold))
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        if succeeded {
-                            step = onSuccess
-                        } else {
-                            step = .attackChoice
-                        }
-                    } label: {
-                        Text(succeeded ? L("continue") : L("back"))
-                            .font(.system(.body, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(succeeded ? combatAccent : Color.dsaDark)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Image(systemName: "dice.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(combatAccent)
-
-                    Text(L("reitenCheck"))
-                        .font(.system(.title3, weight: .bold))
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        showingProbeModal = true
-                    } label: {
-                        Text(L("rollReitenCheck"))
-                            .font(.system(.body, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(combatAccent)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                    }
-                    .buttonStyle(.plain)
-                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
             } else {
-                Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 48))
+                Image(systemName: "figure.equestrian.sports")
+                    .font(.system(size: 36))
                     .foregroundStyle(combatAccent)
 
-                Text(L("reitenCheckPrompt"))
-                    .font(.system(.title3, weight: .bold))
+                Text(L("galoppConfirm"))
+                    .font(.system(.body, weight: .bold))
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 12) {
@@ -3262,20 +3180,22 @@ private struct CombatMountPreCheckView: View {
                             .font(.system(.body, weight: .bold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
+                            .padding(.vertical, 12)
                             .background(Color(UIColor.systemBackground))
                             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                     }
                     .buttonStyle(.plain)
 
                     Button {
-                        step = onSuccess
+                        withAnimation(DSAAnimation.standard) {
+                            galoppConfirmed = true
+                        }
                     } label: {
                         Text(L("yes"))
                             .font(.system(.body, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
+                            .padding(.vertical, 12)
                             .background(combatAccent)
                             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                     }
@@ -3283,7 +3203,128 @@ private struct CombatMountPreCheckView: View {
                 }
             }
         }
-        .padding(.horizontal, 32)
+        .padding(galoppConfirmed ? 0 : 16)
+        .frame(maxWidth: .infinity)
+        .background(Color(UIColor.systemBackground))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+    }
+
+    // MARK: - Connector
+
+    private var connectorArrow: some View {
+        Image(systemName: "chevron.down.circle.fill")
+            .font(.system(size: 28))
+            .foregroundStyle(galoppConfirmed ? combatAccent : Color.dsaBorder)
+            .padding(.vertical, 8)
+    }
+
+    // MARK: - Step 2: Reiten
+
+    private var reitenNode: some View {
+        VStack(spacing: 12) {
+            if let talent = reitenTalent {
+                reitenWithTalent(talent)
+            } else {
+                reitenManual
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(Color(UIColor.systemBackground))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .opacity(galoppConfirmed ? 1 : 0.4)
+        .allowsHitTesting(galoppConfirmed)
+    }
+
+    @ViewBuilder
+    private func reitenWithTalent(_ talent: Talent) -> some View {
+        if let succeeded = probeSucceeded {
+            Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+
+            Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
+                .font(.system(.body, weight: .bold))
+                .multilineTextAlignment(.center)
+
+            Button {
+                if succeeded {
+                    step = onSuccess
+                } else {
+                    step = .attackChoice
+                }
+            } label: {
+                Text(succeeded ? L("continue") : L("back"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(succeeded ? combatAccent : Color.dsaDark)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        } else {
+            Image(systemName: "dice.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(combatAccent)
+
+            Text(L("reitenCheck"))
+                .font(.system(.body, weight: .bold))
+                .multilineTextAlignment(.center)
+
+            Button {
+                showingProbeModal = true
+            } label: {
+                Text(L("rollReitenCheck"))
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(combatAccent)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var reitenManual: some View {
+        Group {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(combatAccent)
+
+            Text(L("reitenCheckPrompt"))
+                .font(.system(.body, weight: .bold))
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 12) {
+                Button {
+                    step = .attackChoice
+                } label: {
+                    Text(L("no"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    step = onSuccess
+                } label: {
+                    Text(L("yes"))
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 
