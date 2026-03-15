@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Talent probe modal: enlarged modifier buttons (44pt tap targets) for easier use
+- Talent probe modal: constrained max width to 400pt on wide screens
 - Sidebar title centered via toolbar principal item
 - Panel toggle buttons now have filled backgrounds with white icons (no borders)
 - Redesigned landscape sidebar panel buttons — bold 48×48 squares flush to screen edge with distinct amber/teal/purple colors, dark mode adaptive

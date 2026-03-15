@@ -47,6 +47,7 @@ struct TalentProbeModal: View {
             }
             .background(Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .frame(maxWidth: 400)
             .padding(24)
             .gesture(
                 DragGesture().onEnded { value in
@@ -186,23 +187,25 @@ struct TalentProbeModal: View {
         return HStack(spacing: 0) {
             Button { modifiers[index] -= 1 } label: {
                 Text("−")
-                    .font(.system(.caption2, weight: .bold))
+                    .font(.system(.body, weight: .bold))
                     .foregroundStyle(locked ? .secondary : .primary)
-                    .frame(width: 28, height: 28)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(locked)
 
             Text(mod >= 0 ? "+\(mod)" : "\(mod)")
-                .font(.system(.caption, weight: .bold))
+                .font(.system(.body, weight: .bold))
                 .foregroundStyle(locked ? Color.secondary : Color.primary)
-                .frame(minWidth: 20)
+                .frame(minWidth: 28)
 
             Button { modifiers[index] += 1 } label: {
                 Text("+")
-                    .font(.system(.caption2, weight: .bold))
+                    .font(.system(.body, weight: .bold))
                     .foregroundStyle(locked ? .secondary : .primary)
-                    .frame(width: 28, height: 28)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(locked)
