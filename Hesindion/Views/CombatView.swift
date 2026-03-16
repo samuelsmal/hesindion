@@ -21,6 +21,7 @@ enum CombatStep {
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
     case takeDamage
+    case flucht
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     case fernkampfSetup
@@ -42,6 +43,7 @@ extension CombatStep {
         case .execution: "execution"
         case .dualAttackSecond: "dualAttackSecond"
         case .mountPreCheck: "mountPreCheck"
+        case .flucht: "flucht"
         case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
@@ -114,6 +116,7 @@ struct CombatView: View {
         case .fumbleChoice: "fumbleChoice"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
+        case .flucht: "flucht"
         }
     }
 
@@ -296,6 +299,8 @@ struct CombatView: View {
                 Color.clear // Task 12
             case .fernkampfExecution:
                 Color.clear // Task 13
+            case .flucht:
+                Color.clear // Placeholder
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
