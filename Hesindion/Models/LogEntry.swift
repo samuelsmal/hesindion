@@ -11,10 +11,16 @@ protocol Reversible {
 
 enum CombatActionType: String, Codable {
     case attack
+    case rangedAttack
     case parry
     case dodge
     case damageDealt
     case damageTaken
+    case fumble
+    case schipUsed
+    case passierschlag
+    case flucht
+    case opponentDefense
 }
 
 // MARK: - Payload Types
@@ -37,6 +43,10 @@ struct CombatActionPayload: Codable, Reversible {
     var rollValue: Int?
     var damageDealt: Int?
     var damageTaken: Int?
+    var effectiveValue: Int?
+    var outcome: String?
+    var schipAction: String?
+    var fumbleTableResult: String?
     var lpChange: Int
 
     func reverse(on hero: Hero) {

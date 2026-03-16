@@ -223,6 +223,27 @@ struct LogPanelView: View {
         case .damageTaken:
             let dmg = p.damageTaken ?? 0
             return "\(dmg) Schaden erhalten"
+        case .rangedAttack:
+            if let roll = p.rollValue {
+                return "\(weapon) — Fernkampf \(roll)"
+            }
+            return "\(weapon) — Fernkampf"
+        case .fumble:
+            return p.fumbleTableResult ?? "Patzer"
+        case .schipUsed:
+            return p.schipAction ?? "Schip eingesetzt"
+        case .passierschlag:
+            if let roll = p.rollValue {
+                return "Passierschlag — \(roll)"
+            }
+            return "Passierschlag"
+        case .flucht:
+            return "Flucht"
+        case .opponentDefense:
+            if let roll = p.rollValue {
+                return "Gegner verteidigt — \(roll)"
+            }
+            return "Gegner verteidigt"
         }
     }
 

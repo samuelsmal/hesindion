@@ -88,6 +88,33 @@ enum PlaenklerBonus: String, CaseIterable {
     case aw
 }
 
+// MARK: - Weapon Reach
+
+enum WeaponReach: String, CaseIterable {
+    case kurz = "Kurz"
+    case mittel = "Mittel"
+    case lang = "Lang"
+
+    /// AT penalty when attacking an opponent with the given reach.
+    func atPenaltyAgainst(_ opponent: WeaponReach) -> Int {
+        switch (self, opponent) {
+        case (.kurz, .mittel): return -2
+        case (.kurz, .lang):   return -4
+        case (.mittel, .lang): return -2
+        default:               return 0
+        }
+    }
+
+    /// AT/PA penalty for beengte Umgebung.
+    var beengteUmgebungPenalty: Int {
+        switch self {
+        case .kurz:  return 0
+        case .mittel: return -4
+        case .lang:  return -8
+        }
+    }
+}
+
 // MARK: - Modifier Line
 
 struct ModifierLine: Identifiable {
