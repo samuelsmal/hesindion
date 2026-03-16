@@ -21,6 +21,8 @@ enum CombatStep {
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
     case takeDamage
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?)
+    case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
 }
 
 extension CombatStep {
@@ -40,6 +42,8 @@ extension CombatStep {
         case .mountPreCheck: "mountPreCheck"
         case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
+        case .opponentDefense: "opponentDefense"
+        case .fumbleChoice: "fumbleChoice"
         }
     }
 }
@@ -99,6 +103,8 @@ struct CombatView: View {
         case .mountPreCheck: "mountPreCheck"
         case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
+        case .opponentDefense: "opponentDefense"
+        case .fumbleChoice: "fumbleChoice"
         }
     }
 
@@ -192,6 +198,7 @@ struct CombatView: View {
                 .transition(.move(edge: .trailing))
             case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack):
                 CombatExecutionView(
+                    hero: hero,
                     action: action,
                     weaponName: name,
                     attributeValue: attrValue,
@@ -199,12 +206,16 @@ struct CombatView: View {
                     note: note,
                     modifierLines: modifierLines,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
+                    combatId: combatId,
+                    roundNumber: roundNumber,
+                    beengteUmgebungActive: beengteUmgebungActive,
                     step: $step,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
             case .dualAttackSecond(let name, let attrValue, let dmgFormula):
                 CombatExecutionView(
+                    hero: hero,
                     action: .angriff,
                     weaponName: name,
                     attributeValue: attrValue,
@@ -212,6 +223,9 @@ struct CombatView: View {
                     note: L("dualAttackPenalty"),
                     modifierLines: nil,
                     secondAttackStep: nil,
+                    combatId: combatId,
+                    roundNumber: roundNumber,
+                    beengteUmgebungActive: beengteUmgebungActive,
                     step: $step,
                     onDismiss: onDismiss
                 )
@@ -239,6 +253,10 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
+            case .opponentDefense:
+                Color.clear // Task 5 will implement
+            case .fumbleChoice:
+                Color.clear // Task 6 will implement
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
@@ -266,6 +284,10 @@ struct CombatView: View {
                 case .mountDamage:
                     step = .root
                 case .takeDamage:
+                    step = .root
+                case .opponentDefense:
+                    step = .root
+                case .fumbleChoice:
                     step = .root
                 default:
                     step = .root

@@ -4,6 +4,7 @@ import SwiftData
 // MARK: - CombatExecutionView
 
 struct CombatExecutionView: View {
+    let hero: Hero
     let action: CombatAction
     let weaponName: String
     let attributeValue: Int
@@ -11,8 +12,13 @@ struct CombatExecutionView: View {
     let note: String?
     let modifierLines: [ModifierLine]?
     let secondAttackStep: CombatStep?
+    let combatId: UUID
+    let roundNumber: Int
+    let beengteUmgebungActive: Bool
     @Binding var step: CombatStep
     var onDismiss: () -> Void
+
+    @Environment(\.modelContext) private var modelContext
 
     @State private var modifier: Int = 0
     @State private var displayRoll: Int = 1
@@ -20,6 +26,7 @@ struct CombatExecutionView: View {
     @State private var confirmRoll: Int? = nil
     @State private var animationTask: Task<Void, Never>? = nil
     @State private var confirmAnimTask: Task<Void, Never>? = nil
+    @State private var schipUsed: Bool = false
 
     // Damage rolling state
     @State private var damageDisplayRolls: [Int] = []
@@ -90,27 +97,12 @@ struct CombatExecutionView: View {
                 // Manual modifier stepper (ZUSÄTZLICH)
                 modifierBox
 
-                // Maneuver reminder note
-                if let note, !note.isEmpty {
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(.caption2, weight: .bold))
-                        Text(note)
-                            .font(.system(.caption2, weight: .bold))
-                    }
-                    .foregroundStyle(combatAccent)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(combatAccent.opacity(0.1))
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
-                }
-
                 // Row 3: Dice box
                 diceBox
                     .contentShape(Rectangle())
                     .onTapGesture { rollDice() }
 
-                // Row 3: Confirm (only for 1/20 rolls)
+                // Confirm box (only for 1/20 rolls)
                 if let fr = finalRoll, needsConfirm(fr) {
                     confirmBox
                 }
@@ -118,66 +110,42 @@ struct CombatExecutionView: View {
                 if let outcome = computedOutcome {
                     outcomeBar(outcome)
 
-                    if isHit(outcome), let formula = damageFormula, let parsed = parseDamage(formula) {
-                        damageSection(parsed: parsed)
+                    // Maneuver note — shown AFTER outcome bar, only once roll is locked in
+                    if let note, !note.isEmpty {
+                        infoBox(note)
+                    }
+
+                    // Schip reroll button — only for normal misserfolg (not fumble)
+                    if outcome == .misserfolg && !schipUsed && (hero.derivedValues?.schicksalspunkte.current ?? 0) > 0 {
+                        Button {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipUsed = true
+                            finalRoll = nil
+                            confirmRoll = nil
+                            damageFinalRolls = nil
+                            startAnimation()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                Text(L("schip.reroll"))
+                            }
+                            .font(.system(.body, weight: .black))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(red: 0.6, green: 0.5, blue: 0.0))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Attack-specific post-outcome flow
+                    if action == .angriff {
+                        attackOutcomeActions(outcome)
+                    } else {
+                        defenseOutcomeActions(outcome)
                     }
                 }
-
-            if showNeueAktion {
-                if let secondStep = secondAttackStep, computedOutcome != .kritischerPatzer {
-                    // Second dual-wield attack
-                    Button { step = secondStep } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "bolt.fill")
-                            Text(L("dualAttack") + " 2")
-                        }
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                    }
-                    .buttonStyle(.plain)
-                } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
-                    // Fumble -- second attack lost
-                    Text(L("fumbleSecondLost"))
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.dsaDark)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
-                    Button { step = .root } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text(L("newAction"))
-                        }
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Button { step = .root } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text(L("newAction"))
-                        }
-                        .font(.system(.body, weight: .black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
@@ -190,6 +158,170 @@ struct CombatExecutionView: View {
             confirmAnimTask?.cancel()
             damageAnimTask?.cancel()
         }
+    }
+
+    // MARK: - Attack outcome actions
+
+    @ViewBuilder
+    private func attackOutcomeActions(_ outcome: CombatOutcome) -> some View {
+        switch outcome {
+        case .erfolg, .kritischerErfolg:
+            // Critical hit info boxes
+            if outcome == .kritischerErfolg {
+                infoBox(L("opponentDefense.halved"))
+                infoBox(L("opponentDefense.doubleDamage"))
+            } else if finalRoll == 1 && confirmRoll != nil {
+                // Rolled 1 but confirm failed → still normal hit, but note that defense is halved
+                // (1 was rolled — even on failed confirmation the opponent defense is still halved)
+                infoBox(L("opponentDefense.halved"))
+            }
+
+            // "Weiter zur Verteidigung" button
+            Button {
+                step = .opponentDefense(
+                    weaponName: weaponName,
+                    damageFormula: damageFormula,
+                    isCriticalHit: finalRoll == 1,
+                    isDoubleDamage: outcome == .kritischerErfolg,
+                    modifierLines: modifierLines
+                )
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "shield.fill")
+                    Text(L("proceedToDefense"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+
+        case .misserfolg:
+            // showNeueAktion controls this — rendered in the unified block below
+            neueAktionBlock()
+
+        case .kritischerPatzer:
+            // Fumble confirmed → transition to fumble choice
+            Button {
+                step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: false)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text(L("fumble.title"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.groupCombat)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Defense outcome actions (PA/AW — flow unchanged)
+
+    @ViewBuilder
+    private func defenseOutcomeActions(_ outcome: CombatOutcome) -> some View {
+        if outcome == .kritischerPatzer {
+            // Confirmed fumble on defense → fumble choice
+            Button {
+                step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: false)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text(L("fumble.title"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.groupCombat)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        } else if showNeueAktion {
+            neueAktionBlock()
+        }
+    }
+
+    // MARK: - Neue Aktion / dual-wield block
+
+    @ViewBuilder
+    private func neueAktionBlock() -> some View {
+        if let secondStep = secondAttackStep, computedOutcome != .kritischerPatzer {
+            // Second dual-wield attack
+            Button { step = secondStep } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "bolt.fill")
+                    Text(L("dualAttack") + " 2")
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
+            // Fumble — second attack lost
+            Text(L("fumbleSecondLost"))
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.dsaDark)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+            Button { step = .root } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.counterclockwise")
+                    Text(L("newAction"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button { step = .root } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.counterclockwise")
+                    Text(L("newAction"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Info box helper
+
+    private func infoBox(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(.caption2, weight: .bold))
+            Text(text)
+                .font(.system(.caption2, weight: .bold))
+        }
+        .foregroundStyle(combatAccent)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(combatAccent.opacity(0.1))
+        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
     }
 
     // MARK: - Box helpers
@@ -459,10 +591,14 @@ struct CombatExecutionView: View {
         }
     }
 
+    /// For defense actions: show "Neue Aktion" once outcome is determined (and damage if hit+rolled).
+    /// For attack actions: controlled entirely by attackOutcomeActions — this is only used by defense.
     private var showNeueAktion: Bool {
-        guard computedOutcome != nil else { return false }
-        guard let outcome = computedOutcome, isHit(outcome), damageFormula != nil else { return computedOutcome != nil }
-        return damageFinalRolls != nil
+        guard let outcome = computedOutcome else { return false }
+        guard action != .angriff else { return false }
+        // Fumble handled separately
+        guard outcome != .kritischerPatzer else { return false }
+        return true
     }
 
     private func rollDice() {
