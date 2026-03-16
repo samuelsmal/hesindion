@@ -10,8 +10,9 @@ struct HeroImportTests {
         let schema = Schema([
             Hero.self, PersonalData.self, Experience.self, Attributes.self,
             DerivedValues.self, Talent.self, CombatTechnique.self,
-            MeleeWeapon.self, Armor.self, Shield.self, EquipmentItem.self,
-            Money.self, Pet.self, Language.self, HeroSpell.self,
+            MeleeWeapon.self, RangedWeapon.self, Armor.self, Shield.self,
+            EquipmentItem.self, Money.self, Pet.self, Language.self,
+            HeroSpell.self, LogEntry.self, Adventure.self, WeatherDay.self,
         ])
         return try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     }

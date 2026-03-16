@@ -31,6 +31,8 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
     @Relationship(deleteRule: .cascade, inverse: \LogEntry.hero) var logEntries: [LogEntry] = []
 
+    var activeAdventure: Adventure?
+
     // MARK: - Notes
 
     var notes: String = ""
