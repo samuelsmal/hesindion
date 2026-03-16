@@ -408,6 +408,25 @@ struct CombatRootView: View {
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
+
+                // End combat -- clears session
+                Button {
+                    hero.clearCombatSession()
+                    onDismiss()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "flag.fill")
+                        Text(L("endCombat"))
+                    }
+                    .font(.system(.body, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.dsaDark)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 16)
             }
 
             } // inner VStack

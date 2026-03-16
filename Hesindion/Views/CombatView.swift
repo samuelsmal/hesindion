@@ -23,6 +23,27 @@ enum CombatStep {
     case takeDamage
 }
 
+extension CombatStep {
+    /// Stable key for onChange observation (associated values stripped).
+    var persistenceKey: String {
+        switch self {
+        case .armorSelection: "armorSelection"
+        case .combatSetup: "combatSetup"
+        case .initiativeRoll: "initiativeRoll"
+        case .loadoutEquipment: "loadoutEquipment"
+        case .root: "root"
+        case .attackChoice: "attackChoice"
+        case .weaponSelection: "weaponSelection"
+        case .announcement: "announcement"
+        case .execution: "execution"
+        case .dualAttackSecond: "dualAttackSecond"
+        case .mountPreCheck: "mountPreCheck"
+        case .mountDamage: "mountDamage"
+        case .takeDamage: "takeDamage"
+        }
+    }
+}
+
 let combatAccent = Color.groupCombat
 
 func combatSectionLabel(_ title: String) -> some View {
@@ -60,6 +81,7 @@ struct CombatView: View {
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
     @State private var vorstossActiveThisRound: Bool = false
+    @State private var beengteUmgebungActive: Bool = false
     @State private var activeManeuver: CombatManeuver = .normal
 
     private var stepID: String {
@@ -252,7 +274,37 @@ struct CombatView: View {
             twoHandedGripActive = false
             vorstossActiveThisRound = false
             activeManeuver = .normal
+            persistCombatState()
+        }
+        .onChange(of: step.persistenceKey) { _, newKey in
+            if newKey == "root" {
+                persistCombatState()
+            }
+        }
+        .onAppear {
+            if let existingId = hero.activeCombatId {
+                combatId = existingId
+                roundNumber = hero.activeCombatRound
+                rolledInitiative = hero.activeCombatInitiative
+                plaenklerActive = hero.activeCombatPlaenkler
+                if let bonus = hero.activeCombatPlaenklerBonus {
+                    plaenklerBonus = bonus == "at" ? .at : .aw
+                }
+                mountedActive = hero.activeCombatMounted
+                beengteUmgebungActive = hero.activeCombatBeengt
+                step = .root
+            }
         }
         } // SplitContentLayout
+    }
+
+    private func persistCombatState() {
+        hero.activeCombatId = combatId
+        hero.activeCombatRound = roundNumber
+        hero.activeCombatInitiative = rolledInitiative
+        hero.activeCombatPlaenkler = plaenklerActive
+        hero.activeCombatPlaenklerBonus = plaenklerBonus == .at ? "at" : "aw"
+        hero.activeCombatMounted = mountedActive
+        hero.activeCombatBeengt = beengteUmgebungActive
     }
 }
