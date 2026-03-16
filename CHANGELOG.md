@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Fernkampf (ranged) execution view: W20 FK roll with animated dice, modifier breakdown, critical/fumble confirmation, Schip reroll, and distance-adjusted damage formula
+- Fernkampf criticals and fumbles mirror melee: roll 1 confirms critical hit (halved defense + double damage), roll 20 confirms fumble using the dedicated FK fumble table
+- Opponent defense view now shows "Keine Parade mit Waffe möglich" and defense penalty hint for ranged attacks
+- `CombatAction.fernkampf` added so FK fumbles route to the correct `FumbleTableType.fernkampf` table
+
 - Passierschlag (free strike) view: AT-4 attack with no maneuvers, no critical successes or fumbles, with animated dice rolling and damage calculation
 - Passierschlag button on critical parry success in defense outcome
 - Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)

@@ -471,3 +471,565 @@ struct CombatFernkampfSetupView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+// MARK: - CombatFernkampfExecutionView
+
+struct CombatFernkampfExecutionView: View {
+    let hero: Hero
+    let weaponName: String
+    let attributeValue: Int   // effective FK after all modifiers
+    let damageFormula: String
+    let distanzTP: Int         // +1 nah, 0 mittel, -1 weit
+    let modifierLines: [ModifierLine]
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+    let combatId: UUID
+    let roundNumber: Int
+
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var modifier: Int = 0
+    @State private var displayRoll: Int = 1
+    @State private var finalRoll: Int? = nil
+    @State private var confirmRoll: Int? = nil
+    @State private var animationTask: Task<Void, Never>? = nil
+    @State private var confirmAnimTask: Task<Void, Never>? = nil
+    @State private var schipUsed: Bool = false
+    @State private var hasLoggedRoll: Bool = false
+
+    // MARK: - Computed
+
+    private var effectiveValue: Int { attributeValue + modifier }
+
+    /// Base FK before situational modifiers (they are already baked into attributeValue).
+    private var baseFK: Int {
+        attributeValue - modifierLines.reduce(0) { $0 + $1.value }
+    }
+
+    /// Damage formula adjusted for distance-based TP modifier.
+    private var adjustedDamageFormula: String {
+        guard distanzTP != 0 else { return damageFormula }
+        let pattern = /^(\d+W\d+)([+-]\d+)?$/
+        guard let match = damageFormula.firstMatch(of: pattern) else { return damageFormula }
+        let base = String(match.1)
+        let existing = match.2.flatMap { Int($0) } ?? 0
+        let total = existing + distanzTP
+        if total == 0 { return base }
+        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+
+            VStack(spacing: 8) {
+                modifierBreakdown
+                modifierBox
+                diceBox
+                    .contentShape(Rectangle())
+                    .onTapGesture { rollDice() }
+
+                if let fr = finalRoll, needsConfirm(fr) {
+                    confirmBox
+                }
+
+                if let outcome = computedOutcome {
+                    outcomeBar(outcome)
+
+                    // Schip reroll — available on normal misserfolg (not fumble)
+                    if outcome == .misserfolg && !schipUsed && (hero.derivedValues?.schicksalspunkte.current ?? 0) > 0 {
+                        Button {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipUsed = true
+                            hasLoggedRoll = false
+                            logSchipUsed()
+                            finalRoll = nil
+                            confirmRoll = nil
+                            startAnimation()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                Text(L("schip.reroll"))
+                            }
+                            .font(.system(.body, weight: .black))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(red: 0.6, green: 0.5, blue: 0.0))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    outcomeActions(outcome)
+                }
+            }
+            .adaptiveContentWidth()
+            .padding(.vertical, 16)
+
+            Spacer()
+        }
+        .onAppear { startAnimation() }
+        .onDisappear {
+            animationTask?.cancel()
+            confirmAnimTask?.cancel()
+        }
+        .onChange(of: finalRoll) { logRollIfNeeded() }
+        .onChange(of: confirmRoll) { logRollIfNeeded() }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack {
+            Button { step = .fernkampfSetup } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            VStack(spacing: 1) {
+                Text(L("rangedAttack"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Text(weaponName)
+                    .font(.system(.caption, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+
+            Spacer()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(.body, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .background(combatAccent)
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+    }
+
+    // MARK: - Modifier breakdown
+
+    @ViewBuilder
+    private var modifierBreakdown: some View {
+        VStack(spacing: 0) {
+            combatSectionLabel(L("calculation.label"))
+
+            // Base FK row
+            HStack {
+                Text("FK \(baseFK)")
+                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                Spacer()
+                Text(L("source.basis"))
+                    .font(.system(.caption2, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+
+            // Situational modifier lines
+            ForEach(modifierLines) { line in
+                HStack {
+                    Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(line.value > 0
+                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                            : Color.groupCombat)
+                    Spacer()
+                    Text(line.source)
+                        .font(.system(.caption2, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+            }
+
+            // Manual modifier row (only when non-zero)
+            if modifier != 0 {
+                HStack {
+                    Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(modifier > 0
+                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                            : Color.groupCombat)
+                    Spacer()
+                    Text(L("source.additional"))
+                        .font(.system(.caption2, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+            }
+
+            // Effective total
+            HStack {
+                Text("FK \(effectiveValue)")
+                    .font(.system(.body, design: .monospaced, weight: .black))
+                Spacer()
+                Text("Effektiv")
+                    .font(.system(.caption2, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.dsaDark)
+            .foregroundStyle(.white)
+        }
+    }
+
+    // MARK: - Manual modifier stepper
+
+    private var modifierBox: some View {
+        let locked = finalRoll != nil
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Button {
+                    modifier -= 1
+                } label: {
+                    Image(systemName: "arrow.down")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(locked ? Color.gray : combatAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(minWidth: 64)
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                Button {
+                    modifier += 1
+                } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(locked ? Color.gray : combatAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(locked)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+
+            Text(L("modifier"))
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    // MARK: - Dice box
+
+    private var diceBox: some View {
+        let isAnimating = finalRoll == nil
+        let display = finalRoll ?? displayRoll
+        return VStack(spacing: 0) {
+            VStack(spacing: 2) {
+                Text("\(display)")
+                    .font(.system(.largeTitle, weight: .black))
+                    .fontDesign(.monospaced)
+                if isAnimating {
+                    Text(L("tapToRoll"))
+                        .font(.system(.caption2, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            Text("W20")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    // MARK: - Confirm box
+
+    private var confirmBox: some View {
+        let isAnimating = confirmRoll == nil
+        let display: String = {
+            if let cr = confirmRoll { return "\(cr)" }
+            return "\(displayRoll)"
+        }()
+        return VStack(spacing: 0) {
+            Text(display)
+                .font(.system(.title3, weight: .black))
+                .fontDesign(.monospaced)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            Text(L("confirmation"))
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    // MARK: - Outcome
+
+    private enum CombatOutcome {
+        case kritischerErfolg, kritischerPatzer, erfolg, misserfolg
+    }
+
+    private var computedOutcome: CombatOutcome? {
+        guard let fr = finalRoll else { return nil }
+        if needsConfirm(fr) {
+            guard let cr = confirmRoll else { return nil }
+            if fr == 1 {
+                return cr <= effectiveValue ? .kritischerErfolg : .erfolg
+            } else {
+                return cr > effectiveValue ? .kritischerPatzer : .misserfolg
+            }
+        }
+        return fr <= effectiveValue ? .erfolg : .misserfolg
+    }
+
+    private func needsConfirm(_ roll: Int) -> Bool { roll == 1 || roll == 20 }
+
+    private func outcomeBar(_ outcome: CombatOutcome) -> some View {
+        let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
+        return Text(outcomeText(outcome))
+            .font(.system(isCritical ? .title3 : .body, weight: .bold))
+            .foregroundStyle(outcomeTextColor(outcome))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, isCritical ? 14 : 10)
+            .background(outcomeBackground(outcome))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+    }
+
+    private func outcomeText(_ outcome: CombatOutcome) -> String {
+        switch outcome {
+        case .kritischerErfolg: return L("criticalSuccess")
+        case .kritischerPatzer: return L("criticalFumble")
+        case .erfolg:           return L("success")
+        case .misserfolg:       return L("failure")
+        }
+    }
+
+    private func outcomeBackground(_ outcome: CombatOutcome) -> Color {
+        switch outcome {
+        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerPatzer: return .groupCombat
+        case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+        case .misserfolg:       return .dsaDark
+        }
+    }
+
+    private func outcomeTextColor(_ outcome: CombatOutcome) -> Color {
+        switch outcome {
+        case .kritischerErfolg: return .primary
+        default:                return .white
+        }
+    }
+
+    // MARK: - Outcome actions
+
+    @ViewBuilder
+    private func outcomeActions(_ outcome: CombatOutcome) -> some View {
+        switch outcome {
+        case .erfolg, .kritischerErfolg:
+            if outcome == .kritischerErfolg {
+                infoBox(L("opponentDefense.halved"))
+                infoBox(L("opponentDefense.doubleDamage"))
+            } else if finalRoll == 1 && confirmRoll != nil {
+                infoBox(L("opponentDefense.halved"))
+            }
+
+            Button {
+                step = .opponentDefense(
+                    weaponName: weaponName,
+                    damageFormula: adjustedDamageFormula,
+                    isCriticalHit: finalRoll == 1,
+                    isDoubleDamage: outcome == .kritischerErfolg,
+                    modifierLines: nil,
+                    isRangedAttack: true,
+                    rangedDefensePenalty: -4
+                )
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "shield.fill")
+                    Text(L("proceedToDefense"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+
+        case .misserfolg:
+            Button { step = .root } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.counterclockwise")
+                    Text(L("newAction"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+
+        case .kritischerPatzer:
+            Button {
+                step = .fumbleChoice(action: .fernkampf, weaponName: weaponName, isShieldParry: false)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text(L("fumble.title"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.groupCombat)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Info box helper
+
+    private func infoBox(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(.caption2, weight: .bold))
+            Text(text)
+                .font(.system(.caption2, weight: .bold))
+        }
+        .foregroundStyle(combatAccent)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(combatAccent.opacity(0.1))
+        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+    }
+
+    // MARK: - Animation & rolling
+
+    private func startAnimation() {
+        animationTask = Task { @MainActor in
+            while !Task.isCancelled {
+                displayRoll = Int.random(in: 1...20)
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { break }
+            }
+        }
+    }
+
+    private func startConfirmAnimation() {
+        confirmAnimTask = Task { @MainActor in
+            do { try await Task.sleep(nanoseconds: 500_000_000) } catch { return }
+            var count = 0
+            while !Task.isCancelled && count < 10 {
+                displayRoll = Int.random(in: 1...20)
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { return }
+                count += 1
+            }
+            guard !Task.isCancelled else { return }
+            confirmRoll = Int.random(in: 1...20)
+        }
+    }
+
+    private func rollDice() {
+        guard finalRoll == nil else { return }
+        animationTask?.cancel()
+        let rolled = Int.random(in: 1...20)
+        finalRoll = rolled
+        if needsConfirm(rolled) { startConfirmAnimation() }
+    }
+
+    // MARK: - Logging
+
+    private func logRollIfNeeded() {
+        guard !hasLoggedRoll, let outcome = computedOutcome else { return }
+        hasLoggedRoll = true
+
+        let outcomeStr: String = {
+            switch outcome {
+            case .kritischerErfolg: return "critical"
+            case .kritischerPatzer: return "fumble"
+            case .erfolg: return "success"
+            case .misserfolg: return "failure"
+            }
+        }()
+
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .rangedAttack,
+                weaponName: weaponName,
+                rollValue: finalRoll,
+                damageDealt: nil,
+                damageTaken: nil,
+                effectiveValue: effectiveValue,
+                outcome: outcomeStr,
+                schipAction: nil,
+                fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
+    }
+
+    private func logSchipUsed() {
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .schipUsed,
+                weaponName: weaponName,
+                rollValue: nil,
+                damageDealt: nil,
+                damageTaken: nil,
+                effectiveValue: nil,
+                outcome: nil,
+                schipAction: "reroll",
+                fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
+    }
+}

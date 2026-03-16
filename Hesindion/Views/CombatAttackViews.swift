@@ -645,9 +645,10 @@ struct CombatWeaponSelectionView: View {
 
     private var headerLabel: String {
         switch action {
-        case .angriff: return L("attack")
-        case .parieren: return L("selectParryWeapon")
+        case .angriff:    return L("attack")
+        case .parieren:   return L("selectParryWeapon")
         case .ausweichen: return L("dodge")
+        case .fernkampf:  return L("rangedAttack")
         }
     }
 

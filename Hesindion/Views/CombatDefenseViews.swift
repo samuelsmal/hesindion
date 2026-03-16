@@ -10,6 +10,8 @@ struct CombatOpponentDefenseView: View {
     let isCriticalHit: Bool
     let isDoubleDamage: Bool
     let modifierLines: [ModifierLine]?
+    var isRangedAttack: Bool = false
+    var rangedDefensePenalty: Int = 0
     @Binding var step: CombatStep
     var onDismiss: () -> Void
     let combatId: UUID
@@ -71,6 +73,14 @@ struct CombatOpponentDefenseView: View {
                 }
                 if isDoubleDamage {
                     infoBox(L("opponentDefense.doubleDamage"), icon: "flame.fill")
+                }
+
+                // Ranged attack info boxes
+                if isRangedAttack {
+                    infoBox(L("opponentDefense.noWeaponParry"), icon: "xmark.shield.fill")
+                    if rangedDefensePenalty != 0 {
+                        infoBox(L("opponentDefense.schusswaffe"), icon: "arrow.down.circle.fill")
+                    }
                 }
 
                 // Maneuver reminder notes from the attack phase
@@ -420,6 +430,7 @@ struct CombatFumbleChoiceView: View {
     private var tableType: FumbleTableType {
         switch action {
         case .angriff:    return .nahkampfAttacke
+        case .fernkampf:  return .fernkampf
         case .parieren:   return isShieldParry ? .verteidigungSchild : .verteidigungWaffe
         case .ausweichen: return .verteidigungSchild
         }

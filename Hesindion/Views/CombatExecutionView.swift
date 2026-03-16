@@ -36,17 +36,19 @@ struct CombatExecutionView: View {
 
     private var attrLabel: String {
         switch action {
-        case .angriff:   "AT"
-        case .parieren:  "PA"
+        case .angriff:    "AT"
+        case .parieren:   "PA"
         case .ausweichen: "AW"
+        case .fernkampf:  "FK"
         }
     }
 
     private var actionLabel: String {
         switch action {
-        case .angriff:   "Angriff"
-        case .parieren:  "Parieren"
+        case .angriff:    "Angriff"
+        case .parieren:   "Parieren"
         case .ausweichen: "Ausweichen"
+        case .fernkampf:  "Fernkampf"
         }
     }
 
@@ -663,9 +665,10 @@ struct CombatExecutionView: View {
 
         let actionType: CombatActionType = {
             switch action {
-            case .angriff: return .attack
-            case .parieren: return .parry
+            case .angriff:    return .attack
+            case .parieren:   return .parry
             case .ausweichen: return .dodge
+            case .fernkampf:  return .rangedAttack
             }
         }()
 

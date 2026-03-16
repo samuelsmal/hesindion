@@ -4,7 +4,7 @@ import SwiftData
 // MARK: - Local types
 
 enum CombatAction {
-    case angriff, parieren, ausweichen
+    case angriff, parieren, ausweichen, fernkampf
 }
 
 enum CombatStep {
@@ -22,7 +22,7 @@ enum CombatStep {
     case mountDamage
     case takeDamage
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?)
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     case passierschlag
     case fernkampfSetup
@@ -272,7 +272,7 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let isDouble, let mods):
+            case .opponentDefense(let name, let dmg, let isCrit, let isDouble, let mods, let isRanged, let rangedPenalty):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
@@ -280,6 +280,8 @@ struct CombatView: View {
                     isCriticalHit: isCrit,
                     isDoubleDamage: isDouble,
                     modifierLines: mods,
+                    isRangedAttack: isRanged,
+                    rangedDefensePenalty: rangedPenalty,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,
@@ -326,8 +328,20 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .fernkampfExecution:
-                Color.clear // Task 13
+            case .fernkampfExecution(let name, let attrValue, let dmg, let distTP, let mods):
+                CombatFernkampfExecutionView(
+                    hero: hero,
+                    weaponName: name,
+                    attributeValue: attrValue,
+                    damageFormula: dmg,
+                    distanzTP: distTP,
+                    modifierLines: mods,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
