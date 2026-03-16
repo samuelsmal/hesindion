@@ -58,4 +58,16 @@ extension Color {
         default:                .white
         }
     }
+
+    /// Returns a lightened version of the color suitable for text on dark backgrounds.
+    /// Ensures minimum brightness so dark section colors remain visible in dark mode.
+    func adaptedForDarkBackground() -> Color {
+        let uiColor = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        let minBrightness: CGFloat = 0.55
+        let adjustedBrightness = max(b, minBrightness)
+        let adjustedSaturation = min(s, 0.8) // slightly desaturate for readability
+        return Color(hue: Double(h), saturation: Double(adjustedSaturation), brightness: Double(adjustedBrightness))
+    }
 }

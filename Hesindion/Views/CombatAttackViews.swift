@@ -334,6 +334,7 @@ struct CombatAnnouncementView: View {
     let mountedActive: Bool
     let isMountCharge: Bool
     let beengteUmgebungActive: Bool
+    let schipIgnoreZustandThisRound: Bool
     let secondAttack: (name: String, at: Int, damage: String?)?
     @Binding var step: CombatStep
     @Binding var activeManeuver: CombatManeuver
@@ -567,7 +568,7 @@ struct CombatAnnouncementView: View {
         let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
         if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
 
-        if hero.schmerzPenalty != 0 {
+        if !schipIgnoreZustandThisRound && hero.schmerzPenalty != 0 {
             let level = hero.effectiveSchmerzLevel
             lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
         }

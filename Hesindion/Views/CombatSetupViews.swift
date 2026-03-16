@@ -477,6 +477,7 @@ struct CombatLoadoutEquipmentView: View {
 
     /// Tracks selected item names (max 2).
     @State private var selected: Set<String> = []
+    @State private var selectedRanged: String? = nil
 
     private var raufen: CombatTechnique? {
         hero.combatTechniques.first(where: { $0.name == "Raufen" })
@@ -566,6 +567,46 @@ struct CombatLoadoutEquipmentView: View {
                     ForEach(allItems.filter(\.isRaufen), id: \.name) { item in
                         equipmentRow(item)
                     }
+
+                    if !hero.rangedWeapons.isEmpty {
+                        combatSectionLabel(L("fernkampf.rangedWeapons.label"))
+                        ForEach(hero.rangedWeapons, id: \.name) { weapon in
+                            let isSelected = selectedRanged == weapon.name
+                            Button {
+                                selectedRanged = isSelected ? nil : weapon.name
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                        .font(.system(.title3, weight: .semibold))
+                                        .foregroundStyle(isSelected ? combatAccent : .secondary)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(weapon.name)
+                                            .font(.system(.body, weight: isSelected ? .bold : .regular))
+                                            .foregroundStyle(.primary)
+                                        HStack(spacing: 8) {
+                                            Text("FK \(weapon.at)")
+                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .foregroundStyle(.secondary)
+                                            Text(weapon.damage)
+                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .foregroundStyle(.secondary)
+                                            Text(weapon.range)
+                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                                .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.bottom, 4)
+                        }
+                    }
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
@@ -640,6 +681,7 @@ struct CombatLoadoutEquipmentView: View {
         if let name = hero.selectedOffHandName { selected.insert(name) }
         // Legacy: also check selectedShieldName
         if let name = hero.selectedShieldName, !selected.contains(name) { selected.insert(name) }
+        selectedRanged = hero.selectedRangedWeaponName
     }
 
     private func applySelection() {
@@ -654,5 +696,6 @@ struct CombatLoadoutEquipmentView: View {
         hero.selectedOffHandName = offHand?.name
         // Keep selectedShieldName in sync for backwards compat
         hero.selectedShieldName = offHand?.isShield == true ? offHand?.name : nil
+        hero.selectedRangedWeaponName = selectedRanged
     }
 }

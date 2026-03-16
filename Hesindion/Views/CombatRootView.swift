@@ -12,6 +12,9 @@ struct CombatRootView: View {
     @Binding var twoHandedGripActive: Bool
     @Binding var vorstossActiveThisRound: Bool
     @Binding var beengteUmgebungActive: Bool
+    @Binding var defenseCountThisRound: Int
+    @Binding var schipDefenseBoostActive: Bool
+    @Binding var schipIgnoreZustandThisRound: Bool
     let mountedActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
@@ -23,12 +26,21 @@ struct CombatRootView: View {
     private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
         var lines: [ModifierLine] = []
 
+        if defenseCountThisRound > 0 {
+            lines.append(ModifierLine(value: -(defenseCountThisRound * 3), source: L("source.multipleDefense")))
+        }
+
         let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
         if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
 
-        if hero.schmerzPenalty != 0 {
+        if !schipIgnoreZustandThisRound && hero.schmerzPenalty != 0 {
             let level = hero.effectiveSchmerzLevel
             lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
+        }
+
+        // Schicksalspunkt: Verteidigung stärken (+4)
+        if schipDefenseBoostActive {
+            lines.append(ModifierLine(value: 4, source: L("source.schipDefense")))
         }
 
         // Golgariten PA bonus (parry only, not dodge)
@@ -324,8 +336,28 @@ struct CombatRootView: View {
                 }
                 .buttonStyle(.plain)
 
+                // Fernkampf
+                if hero.selectedRangedWeaponName != nil {
+                    Button {
+                        step = .fernkampfSetup
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "scope")
+                            Text(L("rangedAttack"))
+                        }
+                        .font(.system(.title3, weight: .black))
+                        .foregroundStyle(combatAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 // Parieren -- secondary (outline)
                 Button {
+                    defenseCountThisRound += 1
                     let isDualWield = hero.isDualWielding
                     if isDualWield || hero.selectedShield != nil {
                         step = .weaponSelection(.parieren)
@@ -360,6 +392,7 @@ struct CombatRootView: View {
 
                 // Ausweichen -- tertiary (outline)
                 Button {
+                    defenseCountThisRound += 1
                     let mods = buildDefenseModifiers(isAusweichen: true)
                     let baseAW = hero.derivedValues?.ausweichen.value ?? 0
                     let effectiveAW = baseAW + mods.reduce(0) { $0 + $1.value }
@@ -441,6 +474,96 @@ struct CombatRootView: View {
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
                 }
                 .buttonStyle(.plain)
+
+                // SCHICKSALSPUNKTE section
+                let schipsAvailable = hero.derivedValues?.schicksalspunkte.current ?? 0
+
+                if schipsAvailable > 0 || schipDefenseBoostActive || schipIgnoreZustandThisRound {
+                    combatSectionLabel(L("schip.label"))
+
+                    // Show current Schip count
+                    HStack {
+                        Text("\(hero.derivedValues?.schicksalspunkte.current ?? 0)")
+                            .font(.system(.title3, weight: .black))
+                            .fontDesign(.monospaced)
+                        Text("/ \(hero.derivedValues?.schicksalspunkte.max ?? 0)")
+                            .font(.system(.caption, weight: .bold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+
+                    // Verteidigung stärken
+                    if !schipDefenseBoostActive {
+                        if schipsAvailable > 0 {
+                            Button {
+                                hero.derivedValues?.schicksalspunkte.current -= 1
+                                schipDefenseBoostActive = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "shield.checkered")
+                                    Text(L("schip.defenseBoost"))
+                                }
+                                .font(.system(.body, weight: .black))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
+                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } else {
+                        HStack(spacing: 6) {
+                            Image(systemName: "shield.checkered")
+                            Text(L("schip.defenseBoost"))
+                            Image(systemName: "checkmark")
+                        }
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
+                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    // Zustand ignorieren
+                    if !schipIgnoreZustandThisRound && hero.effectiveSchmerzLevel > 0 {
+                        if schipsAvailable > 0 {
+                            Button {
+                                hero.derivedValues?.schicksalspunkte.current -= 1
+                                schipIgnoreZustandThisRound = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "bandage")
+                                    Text(L("schip.ignoreZustand"))
+                                }
+                                .font(.system(.body, weight: .black))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
+                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } else if schipIgnoreZustandThisRound {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bandage")
+                            Text(L("schip.ignoreZustand"))
+                            Image(systemName: "checkmark")
+                        }
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
+                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
 
                 // End combat -- clears session
                 Button {

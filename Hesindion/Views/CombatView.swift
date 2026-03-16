@@ -23,6 +23,8 @@ enum CombatStep {
     case takeDamage
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
+    case fernkampfSetup
+    case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
 }
 
 extension CombatStep {
@@ -44,6 +46,8 @@ extension CombatStep {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .fernkampfSetup: "fernkampfSetup"
+        case .fernkampfExecution: "fernkampfExecution"
         }
     }
 }
@@ -87,6 +91,9 @@ struct CombatView: View {
     @State private var vorstossActiveThisRound: Bool = false
     @State private var beengteUmgebungActive: Bool = false
     @State private var activeManeuver: CombatManeuver = .normal
+    @State private var defenseCountThisRound: Int = 0
+    @State private var schipDefenseBoostActive: Bool = false
+    @State private var schipIgnoreZustandThisRound: Bool = false
 
     private var stepID: String {
         switch step {
@@ -105,6 +112,8 @@ struct CombatView: View {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .fernkampfSetup: "fernkampfSetup"
+        case .fernkampfExecution: "fernkampfExecution"
         }
     }
 
@@ -148,6 +157,9 @@ struct CombatView: View {
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     beengteUmgebungActive: $beengteUmgebungActive,
+                    defenseCountThisRound: $defenseCountThisRound,
+                    schipDefenseBoostActive: $schipDefenseBoostActive,
+                    schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
@@ -185,6 +197,7 @@ struct CombatView: View {
                     mountedActive: mountedActive,
                     isMountCharge: isMountCharge,
                     beengteUmgebungActive: beengteUmgebungActive,
+                    schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
                     secondAttack: secondAttack,
                     step: $step,
                     activeManeuver: $activeManeuver,
@@ -279,6 +292,10 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .fernkampfSetup:
+                Color.clear // Task 12
+            case .fernkampfExecution:
+                Color.clear // Task 13
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
@@ -311,6 +328,10 @@ struct CombatView: View {
                     step = .root
                 case .fumbleChoice:
                     step = .root
+                case .fernkampfSetup:
+                    step = .root
+                case .fernkampfExecution:
+                    step = .fernkampfSetup
                 default:
                     step = .root
                 }
@@ -321,6 +342,9 @@ struct CombatView: View {
             twoHandedGripActive = false
             vorstossActiveThisRound = false
             activeManeuver = .normal
+            defenseCountThisRound = 0
+            schipDefenseBoostActive = false
+            schipIgnoreZustandThisRound = false
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in

@@ -41,6 +41,7 @@ final class Hero {
     var selectedWeaponName: String?
     var selectedShieldName: String?
     var selectedOffHandName: String?
+    var selectedRangedWeaponName: String?
 
     // MARK: - Combat session state
 
@@ -170,6 +171,11 @@ final class Hero {
     }
 
     // MARK: - Loadout computed helpers
+
+    var selectedRangedWeapon: RangedWeapon? {
+        guard let name = selectedRangedWeaponName else { return nil }
+        return rangedWeapons.first { $0.name == name }
+    }
 
     var selectedWeapon: MeleeWeapon? {
         guard let name = selectedWeaponName else { return nil }

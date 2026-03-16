@@ -1,5 +1,37 @@
 import SwiftUI
 
+// MARK: - AvatarFullscreenView
+
+struct AvatarFullscreenView: View {
+    let image: UIImage
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            // Blurred background using the same hero image
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .scaleEffect(1.2)
+                .blur(radius: 30)
+                .ignoresSafeArea()
+                .overlay(Color.black.opacity(0.3))
+
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.dsaBorder, lineWidth: 3)
+                )
+                .padding(32)
+        }
+        .onTapGesture { dismiss() }
+        .statusBarHidden()
+    }
+}
+
 // MARK: - AttributesBar
 
 struct AttributesBar: View {
@@ -132,6 +164,7 @@ struct CollapsibleGroup<Content: View>: View {
     let color: Color
     let textColor: Color
     @State private var isExpanded = true
+    @Environment(\.colorScheme) private var colorScheme
     let content: Content
 
     init(_ title: String, color: Color, textColor: Color = .primary, @ViewBuilder content: () -> Content) {
@@ -139,6 +172,11 @@ struct CollapsibleGroup<Content: View>: View {
         self.color = color
         self.textColor = textColor
         self.content = content()
+    }
+
+    /// Ensures the header color is visible against the current background.
+    private var headerColor: Color {
+        colorScheme == .dark ? color.adaptedForDarkBackground() : color
     }
 
     var body: some View {
@@ -149,17 +187,17 @@ struct CollapsibleGroup<Content: View>: View {
                 HStack(spacing: 8) {
                     Rectangle()
                         .frame(height: 2)
-                        .foregroundStyle(color)
+                        .foregroundStyle(headerColor)
                     Text(title)
-                        .font(.system(.caption, weight: .black))
-                        .foregroundStyle(color)
+                        .font(.system(.subheadline, weight: .black))
+                        .foregroundStyle(headerColor)
                         .fixedSize()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption2, weight: .bold))
-                        .foregroundStyle(color)
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(headerColor)
                     Rectangle()
                         .frame(height: 2)
-                        .foregroundStyle(color)
+                        .foregroundStyle(headerColor)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)

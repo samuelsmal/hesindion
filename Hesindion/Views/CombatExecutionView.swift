@@ -227,10 +227,26 @@ struct CombatExecutionView: View {
 
     @ViewBuilder
     private func defenseOutcomeActions(_ outcome: CombatOutcome) -> some View {
+        // Critical parry success → Passierschlag info
+        if action == .parieren && outcome == .kritischerErfolg {
+            HStack(spacing: 6) {
+                Image(systemName: "bolt.fill")
+                Text(L("passierschlag") + " " + L("passierschlag.info"))
+            }
+            .font(.system(.caption2, weight: .bold))
+            .foregroundStyle(combatAccent)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(combatAccent.opacity(0.1))
+            .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+        }
+
         if outcome == .kritischerPatzer {
             // Confirmed fumble on defense → fumble choice
+            let isShieldParry = action == .parieren && (hero.selectedShield != nil)
             Button {
-                step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: false)
+                step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: isShieldParry)
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
