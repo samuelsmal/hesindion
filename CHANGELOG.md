@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Passierschlag (free strike) view: AT-4 attack with no maneuvers, no critical successes or fumbles, with animated dice rolling and damage calculation
+- Passierschlag button on critical parry success in defense outcome
 - Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
 - Hero settings view accessible via command palette ("Einstellungen für <Hero>")
 - Color scheme picker with visual swatch previews and automatic profession-based detection
