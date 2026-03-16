@@ -909,3 +909,328 @@ struct CombatFluchtView: View {
         modelContext.insert(entry)
     }
 }
+
+// MARK: - CombatPassierschlagView
+
+struct CombatPassierschlagView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+    let combatId: UUID
+    let roundNumber: Int
+
+    @Environment(\.modelContext) private var modelContext
+    @State private var displayRoll: Int = 1
+    @State private var finalRoll: Int? = nil
+    @State private var animationTask: Task<Void, Never>? = nil
+    @State private var damageDisplayRolls: [Int] = []
+    @State private var damageFinalRolls: [Int]? = nil
+    @State private var damageAnimTask: Task<Void, Never>? = nil
+
+    // AT -4, using selected weapon
+    private var weapon: MeleeWeapon? { hero.selectedWeapon }
+    private var weaponName: String { weapon?.name ?? "Raufen" }
+    private var baseAT: Int {
+        let raw = weapon?.at ?? (hero.combatTechniques.first { $0.name == "Raufen" }?.at ?? 0)
+        return raw - 4  // Passierschlag penalty
+    }
+    private var damageFormula: String { weapon?.damage ?? "1W6" }
+
+    private var isHit: Bool {
+        guard let roll = finalRoll else { return false }
+        return roll <= baseAT  // No criticals: 1 is just a success, 20 is just a miss
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // MARK: Header
+            HStack {
+                Button { step = .root } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                VStack(spacing: 1) {
+                    Text(L("passierschlag"))
+                        .font(.system(.headline, weight: .black))
+                        .foregroundStyle(.white)
+                    Text(weaponName)
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            // MARK: Body
+            VStack(spacing: 8) {
+                // Info bar
+                infoBox(L("passierschlag.info"))
+
+                // Effective AT value
+                HStack {
+                    Text("AT \(baseAT)")
+                        .font(.system(.body, design: .monospaced, weight: .black))
+                    Spacer()
+                    Text(L("source.passierschlag"))
+                        .font(.system(.caption2, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.dsaDark)
+                .foregroundStyle(.white)
+
+                // Dice box
+                diceBox
+                    .contentShape(Rectangle())
+                    .onTapGesture { rollDice() }
+
+                // Outcome
+                if let _ = finalRoll {
+                    outcomeBar
+
+                    if isHit {
+                        // Damage section
+                        if let parsed = parseDamage(damageFormula) {
+                            damageSection(parsed: parsed)
+                        }
+
+                        if damageFinalRolls != nil {
+                            neueAktionButton
+                                .padding(.top, 8)
+                        }
+                    } else {
+                        neueAktionButton
+                    }
+                }
+            }
+            .adaptiveContentWidth()
+            .padding(.vertical, 16)
+
+            Spacer()
+        }
+        .onAppear { startAnimation() }
+        .onDisappear {
+            animationTask?.cancel()
+            damageAnimTask?.cancel()
+        }
+    }
+
+    // MARK: - Dice box
+
+    private var diceBox: some View {
+        let isAnimating = finalRoll == nil
+        let display = finalRoll ?? displayRoll
+        return VStack(spacing: 0) {
+            VStack(spacing: 2) {
+                Text("\(display)")
+                    .font(.system(.largeTitle, weight: .black))
+                    .fontDesign(.monospaced)
+                if isAnimating {
+                    Text(L("tapToRoll"))
+                        .font(.system(.caption2, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            Text("W20")
+                .font(.system(.caption2, weight: .bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+    }
+
+    // MARK: - Outcome bar
+
+    private var outcomeBar: some View {
+        let hit = isHit
+        return Text(hit ? L("success") : L("failure"))
+            .font(.system(.body, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(hit
+                ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                : Color.dsaDark)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+    }
+
+    // MARK: - Info box
+
+    private func infoBox(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(.caption2, weight: .bold))
+            Text(text)
+                .font(.system(.caption2, weight: .bold))
+        }
+        .foregroundStyle(combatAccent)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(combatAccent.opacity(0.1))
+        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+    }
+
+    // MARK: - Neue Aktion
+
+    private var neueAktionButton: some View {
+        Button { step = .root } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.counterclockwise")
+                Text(L("newAction"))
+            }
+            .font(.system(.body, weight: .black))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Damage
+
+    private struct ParsedDamage {
+        let count: Int
+        let sides: Int
+        let bonus: Int
+    }
+
+    private func parseDamage(_ formula: String) -> ParsedDamage? {
+        let pattern = /(\d+)W(\d+)([+-]\d+)?/
+        guard let match = formula.firstMatch(of: pattern) else { return nil }
+        return ParsedDamage(
+            count: Int(match.1) ?? 1,
+            sides: Int(match.2) ?? 6,
+            bonus: match.3.flatMap { Int($0) } ?? 0
+        )
+    }
+
+    private func damageSection(parsed: ParsedDamage) -> some View {
+        VStack(spacing: 0) {
+            combatSectionLabel(L("damage.label"))
+
+            let isAnimating = damageFinalRolls == nil
+            let rolls = damageFinalRolls ?? damageDisplayRolls
+
+            HStack(spacing: 6) {
+                ForEach(0..<parsed.count, id: \.self) { i in
+                    Text(i < rolls.count ? "\(rolls[i])" : "-")
+                        .font(.system(.title3, weight: .black))
+                        .fontDesign(.monospaced)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(isAnimating
+                            ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity)
+                            : Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                }
+            }
+
+            if let finalRolls = damageFinalRolls {
+                let diceSum = finalRolls.reduce(0, +)
+                let total = max(0, diceSum + parsed.bonus)
+                let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
+
+                Text("\(diceSum)\(bonusStr) = \(total) TP")
+                    .font(.system(.title3, weight: .black))
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .padding(.top, 6)
+            }
+
+            if isAnimating {
+                Text(L("tapToRoll"))
+                    .font(.system(.caption2, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { rollDamage(parsed: parsed) }
+        .onAppear { startDamageAnimation(parsed: parsed) }
+    }
+
+    // MARK: - Animation & rolling
+
+    private func startAnimation() {
+        animationTask = Task { @MainActor in
+            while !Task.isCancelled {
+                displayRoll = Int.random(in: 1...20)
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { break }
+            }
+        }
+    }
+
+    private func rollDice() {
+        guard finalRoll == nil else { return }
+        animationTask?.cancel()
+        finalRoll = Int.random(in: 1...20)
+        logPassierschlag()
+    }
+
+    private func startDamageAnimation(parsed: ParsedDamage) {
+        damageAnimTask?.cancel()
+        damageAnimTask = Task { @MainActor in
+            while !Task.isCancelled {
+                damageDisplayRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+                do {
+                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
+                } catch { break }
+            }
+        }
+    }
+
+    private func rollDamage(parsed: ParsedDamage) {
+        guard damageFinalRolls == nil else { return }
+        damageAnimTask?.cancel()
+        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+    }
+
+    // MARK: - Logging
+
+    private func logPassierschlag() {
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId, round: roundNumber,
+                action: .passierschlag, weaponName: weaponName,
+                rollValue: finalRoll,
+                damageDealt: nil, damageTaken: nil,
+                effectiveValue: baseAT,
+                outcome: isHit ? "hit" : "miss",
+                schipAction: nil, fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
+    }
+}

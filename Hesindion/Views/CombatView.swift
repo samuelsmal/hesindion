@@ -24,6 +24,7 @@ enum CombatStep {
     case flucht
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
+    case passierschlag
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
 }
@@ -48,6 +49,7 @@ extension CombatStep {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
         }
@@ -114,6 +116,7 @@ struct CombatView: View {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
         case .flucht: "flucht"
@@ -295,6 +298,15 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .passierschlag:
+                CombatPassierschlagView(
+                    hero: hero,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
             case .flucht:
                 CombatFluchtView(
                     hero: hero,
@@ -305,7 +317,15 @@ struct CombatView: View {
                 )
                 .transition(.move(edge: .trailing))
             case .fernkampfSetup:
-                Color.clear // Task 12
+                CombatFernkampfSetupView(
+                    hero: hero,
+                    step: $step,
+                    mountedActive: mountedActive,
+                    beengteUmgebungActive: beengteUmgebungActive,
+                    schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .fernkampfExecution:
                 Color.clear // Task 13
             }
@@ -339,6 +359,8 @@ struct CombatView: View {
                 case .opponentDefense:
                     step = .root
                 case .fumbleChoice:
+                    step = .root
+                case .passierschlag:
                     step = .root
                 case .fernkampfSetup:
                     step = .root
