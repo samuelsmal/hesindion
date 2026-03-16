@@ -8,6 +8,7 @@ extension Color {
     static let groupCombat       = Color(red: 0xdc / 255, green: 0x26 / 255, blue: 0x26 / 255)
     static let groupEquipment    = Color(red: 0x16 / 255, green: 0xa3 / 255, blue: 0x4a / 255)
     static let groupRulebook     = Color(red: 0x7c / 255, green: 0x3a / 255, blue: 0xed / 255)
+    static let groupAdventure    = Color(red: 0xf0 / 255, green: 0x8c / 255, blue: 0x00 / 255) // warm amber/orange
 
     // Panel toggle button colours — warm trio, adaptive for dark mode
     static let panelNotes = Color(UIColor { $0.userInterfaceStyle == .dark
