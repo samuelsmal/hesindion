@@ -267,8 +267,18 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .fumbleChoice:
-                Color.clear // Task 6 will implement
+            case .fumbleChoice(let action, let name, let isShield):
+                CombatFumbleChoiceView(
+                    hero: hero,
+                    action: action,
+                    weaponName: name,
+                    isShieldParry: isShield,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
