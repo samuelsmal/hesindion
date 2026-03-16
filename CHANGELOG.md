@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Abenteuer (Adventure) system with weather generation
+- Aventurian calendar with 12 months + Namenlose Tage
+- Weather generator porting DSA 4.1 WdE p.156ff tables
+- 13 climate regions from Ewiges Eis to Südmeer
+- Day-by-day and bulk weather generation
+- Date jumping with time-jump markers in timeline
+- Plain-text weather export via share sheet
+- Hero ↔ Adventure linking via hero settings
+- New sidebar section for adventures
+
 - Fernkampf (ranged) execution view: W20 FK roll with animated dice, modifier breakdown, critical/fumble confirmation, Schip reroll, and distance-adjusted damage formula
 - Fernkampf criticals and fumbles mirror melee: roll 1 confirms critical hit (halved defense + double damage), roll 20 confirms fumble using the dedicated FK fumble table
 - Opponent defense view now shows "Keine Parade mit Waffe möglich" and defense penalty hint for ranged attacks
