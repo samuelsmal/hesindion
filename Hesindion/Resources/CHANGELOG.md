@@ -11,9 +11,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
 - Hero settings view accessible via command palette ("Einstellungen für <Hero>")
 - Color scheme picker with visual swatch previews and automatic profession-based detection
+- Opponent defense step after successful attack (Pariert / Ausgewichen / Treffer geht durch)
+- Schicksalspunkte integration in combat (Neuer Wurf, Schadenswurf wiederholen, Verteidigung stärken, Zustand ignorieren)
+- Weapon reach modifiers for melee combat (Kurz / Mittel / Lang vs opponent reach)
+- Beengte Umgebung toggle in combat setup and root view with AT/PA penalties by weapon reach
+- Patzertabellen as alternative to 1W6+2 SP on confirmed fumbles (Nahkampf, Verteidigung Waffe, Verteidigung Schild, Fernkampf)
+- Passierschlag action (AT-4, no maneuvers, no criticals/fumbles) triggered by critical parry
+- Flucht action with opponent count and Körperbeherrschung probe reminder
+- Fernkampf attack flow with full modifier support (Distanz, Größe, Bewegung, Sicht, Kampfgetümmel, Zielen, vom Pferd)
+- Ranged weapon selection in combat loadout
+- Combat session persistence — exit and re-enter without restarting combat
+- "Kampf beenden" button to explicitly end combat session
+- Comprehensive combat logging for all action types in the Protokoll
+- Multiple defense tracking with cumulative -3 penalty per round
+- Critical hit info display (opponent defense halved, TP doubled)
 
 ### Changed
 
+- CombatView.swift split into focused files for maintainability
+- Attack info box (maneuver notes) moved to after AT roll result
+- Combat execution view reworked for opponent defense transition flow
 - Sidebar title centered via toolbar principal item
 - Panel toggle buttons now have filled backgrounds with white icons (no borders)
 - Redesigned landscape sidebar panel buttons — bold 48×48 squares flush to screen edge with distinct amber/teal/purple colors, dark mode adaptive
