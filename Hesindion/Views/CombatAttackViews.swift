@@ -344,6 +344,7 @@ struct CombatAnnouncementView: View {
     var onDismiss: () -> Void
 
     @State private var vorteilhaftePosition: Bool = false
+    @State private var selectedOpponentReach: WeaponReach = .mittel
     @State private var selectedManeuver: CombatManeuver = .normal
 
     private var golgaritenForced: Bool {
@@ -437,6 +438,25 @@ struct CombatAnnouncementView: View {
                             .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
                         }
                         .buttonStyle(.plain)
+                    }
+
+                    // Opponent weapon reach
+                    combatSectionLabel(L("opponentReach.label"))
+
+                    HStack(spacing: 8) {
+                        ForEach(WeaponReach.allCases, id: \.self) { reach in
+                            let isSelected = selectedOpponentReach == reach
+                            Button { selectedOpponentReach = reach } label: {
+                                Text(reach.rawValue)
+                                    .font(.system(.caption, weight: .bold))
+                                    .foregroundStyle(isSelected ? .white : .primary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
 
                     // Maneuver selection (hidden for mount charge — auto-selected)
@@ -561,6 +581,13 @@ struct CombatAnnouncementView: View {
 
         if plaenklerActive && plaenklerBonus == .at {
             lines.append(ModifierLine(value: 1, source: L("source.plaenkler")))
+        }
+
+        // Weapon reach
+        let heroReach = WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
+        let reachPenalty = heroReach.atPenaltyAgainst(selectedOpponentReach)
+        if reachPenalty != 0 {
+            lines.append(ModifierLine(value: reachPenalty, source: L("source.reach")))
         }
 
         if selectedManeuver.atModifier != 0 {
