@@ -253,8 +253,20 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense:
-                Color.clear // Task 5 will implement
+            case .opponentDefense(let name, let dmg, let isCrit, let isDouble, let mods):
+                CombatOpponentDefenseView(
+                    hero: hero,
+                    weaponName: name,
+                    damageFormula: dmg,
+                    isCriticalHit: isCrit,
+                    isDoubleDamage: isDouble,
+                    modifierLines: mods,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
             case .fumbleChoice:
                 Color.clear // Task 6 will implement
             }
