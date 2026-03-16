@@ -1,7 +1,9 @@
+import SwiftData
 import SwiftUI
 
 struct HeroSettingsView: View {
-    let hero: Hero
+    @Query(sort: \Adventure.createdAt, order: .reverse) private var adventures: [Adventure]
+    @Bindable var hero: Hero
     let dismiss: () -> Void
 
     var body: some View {
@@ -27,6 +29,21 @@ struct HeroSettingsView: View {
                             isSelected: hero.colorSchemeId == scheme.id
                         )
                     }
+                }
+                .padding(.bottom, 16)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(L("adventures"))
+                        .font(.system(.title3, weight: .black))
+                        .padding(.horizontal, 16)
+
+                    Picker(L("adventures"), selection: $hero.activeAdventure) {
+                        Text("—").tag(Adventure?.none)
+                        ForEach(adventures, id: \.persistentModelID) { adventure in
+                            Text(adventure.name).tag(Adventure?.some(adventure))
+                        }
+                    }
+                    .padding(.horizontal, 16)
                 }
                 .padding(.bottom, 32)
             }
