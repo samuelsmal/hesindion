@@ -295,12 +295,19 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .flucht:
+                CombatFluchtView(
+                    hero: hero,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
             case .fernkampfSetup:
                 Color.clear // Task 12
             case .fernkampfExecution:
                 Color.clear // Task 13
-            case .flucht:
-                Color.clear // Placeholder
             }
         }
         .animation(DSAAnimation.standard, value: stepID)

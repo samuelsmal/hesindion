@@ -459,6 +459,21 @@ struct CombatRootView: View {
                     }
                 }
 
+                // Flucht
+                Button { step = .flucht } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.run")
+                        Text(L("flucht"))
+                    }
+                    .font(.system(.body, weight: .black))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+
                 // Change loadout -- visually distinct (teal)
                 Button { step = .loadoutEquipment } label: {
                     HStack(spacing: 6) {

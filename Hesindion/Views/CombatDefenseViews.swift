@@ -697,3 +697,215 @@ struct CombatFumbleChoiceView: View {
         modelContext.insert(logEntry)
     }
 }
+
+// MARK: - CombatFluchtView
+
+struct CombatFluchtView: View {
+    let hero: Hero
+    @Binding var step: CombatStep
+    var onDismiss: () -> Void
+    let combatId: UUID
+    let roundNumber: Int
+
+    @Environment(\.modelContext) private var modelContext
+    @State private var opponentCount: Int = 1
+    @State private var outcome: FluchtOutcome? = nil
+
+    private enum FluchtOutcome { case success, failure }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button { step = .root } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                Text(L("flucht"))
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(.body, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(combatAccent)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            VStack(spacing: 16) {
+                // Info
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundStyle(combatAccent)
+                    Text(L("flucht.info"))
+                        .font(.system(.caption, weight: .medium))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(combatAccent.opacity(0.1))
+                .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+
+                if outcome == nil {
+                    // Opponent count stepper
+                    combatSectionLabel(L("flucht.opponents"))
+
+                    HStack(spacing: 0) {
+                        Button {
+                            if opponentCount > 1 { opponentCount -= 1 }
+                        } label: {
+                            Image(systemName: "minus")
+                                .font(.system(.body, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(combatAccent)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(opponentCount <= 1)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                        Text("\(opponentCount)")
+                            .font(.system(.largeTitle, weight: .black))
+                            .fontDesign(.monospaced)
+                            .frame(minWidth: 80)
+                            .padding(.vertical, 14)
+                            .background(Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                        Button {
+                            opponentCount += 1
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(.body, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(combatAccent)
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Erschwernis: \u{2013}\(opponentCount)")
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(.secondary)
+
+                    // Outcome buttons
+                    Button {
+                        outcome = .success
+                        logFlucht(succeeded: true)
+                    } label: {
+                        Text(L("flucht.succeeded"))
+                            .font(.system(.title3, weight: .black))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255))
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        outcome = .failure
+                        logFlucht(succeeded: false)
+                    } label: {
+                        Text(L("flucht.failed"))
+                            .font(.system(.title3, weight: .black))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.groupCombat)
+                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Result display
+                if let outcome {
+                    let gs = hero.derivedValues?.geschwindigkeit.max ?? 8
+                    switch outcome {
+                    case .success:
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255))
+                            Text(L("flucht.success"))
+                                .font(.system(.body, weight: .bold))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255).opacity(0.1))
+                        .overlay(Rectangle().stroke(Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255), lineWidth: 2))
+
+                        Text("GS \(gs) Schritt")
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .foregroundStyle(.secondary)
+
+                    case .failure:
+                        HStack(spacing: 6) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(Color.groupCombat)
+                            Text(L("flucht.failure"))
+                                .font(.system(.body, weight: .bold))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.groupCombat.opacity(0.1))
+                        .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+
+                        Text("GS/2 = \(gs / 2) Schritt")
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    // Neue Aktion
+                    Button { step = .root } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(L("newAction"))
+                        }
+                        .font(.system(.body, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(combatAccent)
+                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .adaptiveContentWidth()
+            .padding(.vertical, 16)
+
+            Spacer()
+        }
+    }
+
+    private func logFlucht(succeeded: Bool) {
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId, round: roundNumber,
+                action: .flucht, weaponName: nil,
+                rollValue: nil,
+                damageDealt: nil, damageTaken: nil,
+                effectiveValue: nil,
+                outcome: succeeded ? "success" : "failure",
+                schipAction: nil, fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
+    }
+}
