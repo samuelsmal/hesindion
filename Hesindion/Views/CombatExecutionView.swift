@@ -27,6 +27,7 @@ struct CombatExecutionView: View {
     @State private var animationTask: Task<Void, Never>? = nil
     @State private var confirmAnimTask: Task<Void, Never>? = nil
     @State private var schipUsed: Bool = false
+    @State private var hasLoggedRoll: Bool = false
 
     // Damage rolling state
     @State private var damageDisplayRolls: [Int] = []
@@ -120,6 +121,8 @@ struct CombatExecutionView: View {
                         Button {
                             hero.derivedValues?.schicksalspunkte.current -= 1
                             schipUsed = true
+                            hasLoggedRoll = false
+                            logSchipUsed(action: "reroll")
                             finalRoll = nil
                             confirmRoll = nil
                             damageFinalRolls = nil
@@ -157,6 +160,12 @@ struct CombatExecutionView: View {
             animationTask?.cancel()
             confirmAnimTask?.cancel()
             damageAnimTask?.cancel()
+        }
+        .onChange(of: finalRoll) {
+            logRollIfNeeded()
+        }
+        .onChange(of: confirmRoll) {
+            logRollIfNeeded()
         }
     }
 
@@ -227,7 +236,7 @@ struct CombatExecutionView: View {
 
     @ViewBuilder
     private func defenseOutcomeActions(_ outcome: CombatOutcome) -> some View {
-        // Critical parry success → Passierschlag info
+        // Critical parry success → Passierschlag info + button
         if action == .parieren && outcome == .kritischerErfolg {
             HStack(spacing: 6) {
                 Image(systemName: "bolt.fill")
@@ -240,6 +249,20 @@ struct CombatExecutionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(combatAccent.opacity(0.1))
             .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+
+            Button { step = .passierschlag } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "bolt.fill")
+                    Text(L("passierschlag"))
+                }
+                .font(.system(.body, weight: .black))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(combatAccent)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            }
+            .buttonStyle(.plain)
         }
 
         if outcome == .kritischerPatzer {
@@ -623,6 +646,70 @@ struct CombatExecutionView: View {
         let rolled = Int.random(in: 1...20)
         finalRoll = rolled
         if needsConfirm(rolled) { startConfirmAnimation() }
+    }
+
+    private func logRollIfNeeded() {
+        guard !hasLoggedRoll, let outcome = computedOutcome else { return }
+        hasLoggedRoll = true
+
+        let outcomeStr: String = {
+            switch outcome {
+            case .kritischerErfolg: return "critical"
+            case .kritischerPatzer: return "fumble"
+            case .erfolg: return "success"
+            case .misserfolg: return "failure"
+            }
+        }()
+
+        let actionType: CombatActionType = {
+            switch action {
+            case .angriff: return .attack
+            case .parieren: return .parry
+            case .ausweichen: return .dodge
+            }
+        }()
+
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: actionType,
+                weaponName: weaponName,
+                rollValue: finalRoll,
+                damageDealt: nil,
+                damageTaken: nil,
+                effectiveValue: effectiveValue,
+                outcome: outcomeStr,
+                schipAction: nil,
+                fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
+    }
+
+    private func logSchipUsed(action schipAction: String) {
+        let entry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .schipUsed,
+                weaponName: weaponName,
+                rollValue: nil,
+                damageDealt: nil,
+                damageTaken: nil,
+                effectiveValue: nil,
+                outcome: nil,
+                schipAction: schipAction,
+                fumbleTableResult: nil,
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(entry)
     }
 
     private func startConfirmAnimation() {

@@ -11,8 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
 - Hero settings view accessible via command palette ("Einstellungen für <Hero>")
 - Color scheme picker with visual swatch previews and automatic profession-based detection
+- Combat execution rolls (AT/PA/AW) now logged automatically with outcome and effective value
+- Schip reroll usage logged as dedicated combat action entry
 
 ### Changed
+
+- Combat log descriptions enriched: critical/fumble markers on attacks, TP instead of "Schaden ausgeteilt", structured schip/fumble/flucht/opponent-defense text
 
 - Mount pre-check (Galopp + Reiten) redesigned as single-screen vertical flowchart with collapsing steps and connector arrow
 - Talent probe modal: enlarged modifier buttons (44pt tap targets) for easier use
