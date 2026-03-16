@@ -333,6 +333,7 @@ struct CombatAnnouncementView: View {
     let isOffHand: Bool
     let mountedActive: Bool
     let isMountCharge: Bool
+    let beengteUmgebungActive: Bool
     let secondAttack: (name: String, at: Int, damage: String?)?
     @Binding var step: CombatStep
     @Binding var activeManeuver: CombatManeuver
@@ -601,6 +602,14 @@ struct CombatAnnouncementView: View {
 
         if isOffHand && hero.offHandPenalty != 0 {
             lines.append(ModifierLine(value: hero.offHandPenalty, source: L("source.offHand")))
+        }
+
+        if beengteUmgebungActive {
+            let heroReachBU = WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
+            let buPenalty = heroReachBU.beengteUmgebungPenalty
+            if buPenalty != 0 {
+                lines.append(ModifierLine(value: buPenalty, source: L("beengteUmgebung")))
+            }
         }
 
         return lines

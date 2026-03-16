@@ -11,6 +11,7 @@ struct CombatRootView: View {
     @Binding var dualAttackPenaltyActive: Bool
     @Binding var twoHandedGripActive: Bool
     @Binding var vorstossActiveThisRound: Bool
+    @Binding var beengteUmgebungActive: Bool
     let mountedActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
@@ -49,6 +50,20 @@ struct CombatRootView: View {
         if dualAttackPenaltyActive {
             let penalty = hero.dualAttackPenalty
             if penalty != 0 { lines.append(ModifierLine(value: penalty, source: L("source.dualAttack"))) }
+        }
+
+        // Beengte Umgebung (PA only, not AW)
+        if !isAusweichen && beengteUmgebungActive {
+            let heroReach: WeaponReach
+            if let w = hero.selectedWeapon {
+                heroReach = WeaponReach(rawValue: w.reach) ?? .mittel
+            } else {
+                heroReach = .kurz // Raufen = kurz
+            }
+            let buPenalty = heroReach.beengteUmgebungPenalty
+            if buPenalty != 0 {
+                lines.append(ModifierLine(value: buPenalty, source: L("beengteUmgebung")))
+            }
         }
 
         return lines
@@ -205,6 +220,24 @@ struct CombatRootView: View {
                     .padding(.top, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+
+                // Beengte Umgebung toggle
+                Button { beengteUmgebungActive.toggle() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: beengteUmgebungActive ? "square.split.bottomrightquarter.fill" : "square.split.bottomrightquarter")
+                            .font(.system(.caption, weight: .bold))
+                        Text(L("beengteUmgebung"))
+                            .font(.system(.caption, design: .monospaced, weight: .black))
+                    }
+                    .foregroundStyle(beengteUmgebungActive ? .white : .secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(beengteUmgebungActive ? combatAccent : Color(UIColor.secondarySystemBackground))
+                    .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Loadout + Armor in one row
                 HStack(spacing: 8) {

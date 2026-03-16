@@ -134,6 +134,7 @@ struct CombatSetupView: View {
     @Binding var plaenklerActive: Bool
     @Binding var plaenklerBonus: PlaenklerBonus
     @Binding var mountedActive: Bool
+    @Binding var beengteUmgebungActive: Bool
     var onDismiss: () -> Void
 
     var body: some View {
@@ -229,6 +230,26 @@ struct CombatSetupView: View {
                         }
                         .buttonStyle(.plain)
                     }
+
+                    // Beengte Umgebung toggle
+                    combatSectionLabel(L("beengteUmgebung.label"))
+
+                    Button { beengteUmgebungActive.toggle() } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: beengteUmgebungActive ? "checkmark.square.fill" : "square")
+                                .font(.system(.title3, weight: .semibold))
+                                .foregroundStyle(beengteUmgebungActive ? combatAccent : .secondary)
+                            Text(L("beengteUmgebung"))
+                                .font(.system(.body, weight: beengteUmgebungActive ? .bold : .regular))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 12)
+                        .background(beengteUmgebungActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: beengteUmgebungActive ? 3 : 2))
+                    }
+                    .buttonStyle(.plain)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)

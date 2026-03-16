@@ -116,6 +116,7 @@ struct CombatView: View {
                     plaenklerActive: $plaenklerActive,
                     plaenklerBonus: $plaenklerBonus,
                     mountedActive: $mountedActive,
+                    beengteUmgebungActive: $beengteUmgebungActive,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -140,6 +141,7 @@ struct CombatView: View {
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
+                    beengteUmgebungActive: $beengteUmgebungActive,
                     mountedActive: mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
@@ -176,6 +178,7 @@ struct CombatView: View {
                     isOffHand: isOffHand,
                     mountedActive: mountedActive,
                     isMountCharge: isMountCharge,
+                    beengteUmgebungActive: beengteUmgebungActive,
                     secondAttack: secondAttack,
                     step: $step,
                     activeManeuver: $activeManeuver,
