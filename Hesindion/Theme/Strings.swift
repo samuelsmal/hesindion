@@ -102,8 +102,9 @@ enum DSAStrings {
         "tapToRoll":            "Tap to roll",
         "modifier":             "Mod",
         "new":                  "New",
-        "initiative.label":     "INITIATIVE",
+        "round.label":          "ROUND",
         "lifePoints.label":     "LIFE POINTS",
+        "status.label":         "STATUS",
         "action.label":         "ACTION",
         "unarmed.label":        "UNARMED",
         "selectWeapon":         "Select Weapon",
@@ -297,6 +298,112 @@ enum DSAStrings {
         "ok":                   "OK",
         "yes":                  "Yes",
         "no":                   "No",
+
+        // MARK: - Combat Overhaul
+
+        // Beengte Umgebung
+        "beengteUmgebung":              "Confined Space",
+        "beengteUmgebung.label":        "ENVIRONMENT",
+
+        // Weapon Reach
+        "opponentReach.label":          "OPPONENT REACH",
+        "source.reach":                 "Reach",
+
+        // Opponent Defense
+        "opponentDefense":              "Opponent Defense",
+        "opponentDefense.parried":      "Parried",
+        "opponentDefense.dodged":       "Dodged",
+        "opponentDefense.hitThrough":   "Hit goes through",
+        "opponentDefense.halved":       "Opponent defense halved",
+        "opponentDefense.doubleDamage": "DP doubled",
+        "opponentDefense.noWeaponParry":"No weapon parry possible",
+        "opponentDefense.schusswaffe":  "Ranged weapon: Defense –4",
+        "opponentDefense.wurfwaffe":    "Thrown weapon: Defense –2",
+        "opponentDefense.shieldParry":  "Parried (Shield)",
+        "proceedToDefense":             "Proceed to Defense",
+
+        // Schicksalspunkte
+        "schip.reroll":                 "Fate Point: Reroll",
+        "schip.damageReroll":           "Fate Point: Reroll D6",
+        "schip.defenseBoost":           "Boost Defense (+4)",
+        "schip.ignoreZustand":          "Ignore Condition",
+        "source.schipDefense":          "Fate Point",
+        "schip.label":                  "FATE POINTS",
+
+        // Fumble
+        "fumble.title":                 "Fumble!",
+        "fumble.takeDamage":            "Take 1D6+2 SP",
+        "fumble.rollTable":             "Roll fumble table",
+        "fumble.tableResult":           "Result",
+        "fumble.spIgnoresRS":           "SP not reduced by armor",
+
+        // Multiple Defenses
+        "source.multipleDefense":       "Multiple Defense",
+
+        // Passierschlag
+        "passierschlag":                "Free Strike",
+        "passierschlag.info":           "AT –4, no maneuvers, no critical successes/fumbles",
+        "source.passierschlag":         "Free Strike",
+
+        // Flucht
+        "flucht":                       "Flee",
+        "flucht.info":                  "Body Control check (combat maneuver)",
+        "flucht.opponents":             "Opponents in attack range",
+        "flucht.success":               "Succeeded — GS movement",
+        "flucht.failure":               "Failed — GS/2 movement, free strike suffered",
+        "flucht.succeeded":             "Succeeded",
+        "flucht.failed":                "Failed",
+
+        // Fernkampf
+        "rangedAttack":                 "Ranged Attack",
+        "fernkampf":                    "Ranged Combat",
+        "fernkampf.setup":              "Prepare Ranged Attack",
+        "fernkampf.distanz":            "DISTANCE",
+        "fernkampf.distanz.nah":        "Close",
+        "fernkampf.distanz.mittel":     "Medium",
+        "fernkampf.distanz.weit":       "Far",
+        "fernkampf.groesse":            "SIZE",
+        "fernkampf.groesse.winzig":     "Tiny",
+        "fernkampf.groesse.klein":      "Small",
+        "fernkampf.groesse.mittel":     "Medium",
+        "fernkampf.groesse.gross":      "Large",
+        "fernkampf.groesse.riesig":     "Huge",
+        "fernkampf.bewegungZiel":       "TARGET MOVEMENT",
+        "fernkampf.ziel.still":         "Still",
+        "fernkampf.ziel.leicht":        "Slight",
+        "fernkampf.ziel.schnell":       "Fast",
+        "fernkampf.ziel.haken":         "Zigzag",
+        "fernkampf.bewegungSchuetze":   "SHOOTER MOVEMENT",
+        "fernkampf.schuetze.steht":     "Standing",
+        "fernkampf.schuetze.geht":      "Walking",
+        "fernkampf.schuetze.rennt":     "Running",
+        "fernkampf.sicht":              "VISIBILITY",
+        "fernkampf.sicht.klar":         "Clear",
+        "fernkampf.sicht.stufe1":       "Level 1",
+        "fernkampf.sicht.stufe2":       "Level 2",
+        "fernkampf.sicht.stufe3":       "Level 3",
+        "fernkampf.kampfgetuemmel":     "Melee",
+        "fernkampf.zielen":             "AIM",
+        "fernkampf.zielen.0":           "No Aiming",
+        "fernkampf.zielen.1":           "1 Action (+2)",
+        "fernkampf.zielen.2":           "2 Actions (+4)",
+        "fernkampf.vomPferd":           "FROM HORSEBACK",
+        "fernkampf.pferd.steht":        "Standing",
+        "fernkampf.pferd.schritt":      "Walk",
+        "fernkampf.pferd.galopp":       "Gallop",
+        "fernkampf.rangedWeapons.label":"RANGED WEAPONS",
+        "source.distanz":               "Distance",
+        "source.groesse":               "Size",
+        "source.bewegungZiel":          "Target Movement",
+        "source.bewegungSchuetze":      "Shooter Movement",
+        "source.sicht":                 "Visibility",
+        "source.kampfgetuemmel":        "Melee",
+        "source.zielen":                "Aiming",
+        "source.vomPferd":              "From Horseback",
+
+        // Combat session
+        "endCombat":                    "End Combat",
+        "endCombat.confirm":            "Really end combat?",
     ]
 
     private static let translations: [String: String] = [
@@ -387,8 +494,9 @@ enum DSAStrings {
         "tapToRoll":            "Antippen zum Würfeln",
         "modifier":             "Mod",
         "new":                  "Neu",
-        "initiative.label":     "INITIATIVE",
+        "round.label":          "RUNDE",
         "lifePoints.label":     "LEBENSPUNKTE",
+        "status.label":         "STATUS",
         "action.label":         "AKTION",
         "unarmed.label":        "WAFFENLOS",
         "selectWeapon":         "Waffe wählen",
@@ -583,6 +691,112 @@ enum DSAStrings {
         "yes":                  "Ja",
         "no":                   "Nein",
         "pets":                 "Tiere",
+
+        // MARK: - Combat Overhaul
+
+        // Beengte Umgebung
+        "beengteUmgebung":              "Beengte Umgebung",
+        "beengteUmgebung.label":        "UMGEBUNG",
+
+        // Weapon Reach
+        "opponentReach.label":          "GEGNER-REICHWEITE",
+        "source.reach":                 "Reichweite",
+
+        // Opponent Defense
+        "opponentDefense":              "Verteidigung des Gegners",
+        "opponentDefense.parried":      "Pariert",
+        "opponentDefense.dodged":       "Ausgewichen",
+        "opponentDefense.hitThrough":   "Treffer geht durch",
+        "opponentDefense.halved":       "Gegner Verteidigung halbiert",
+        "opponentDefense.doubleDamage": "TP verdoppelt",
+        "opponentDefense.noWeaponParry":"Keine Parade mit Waffe möglich",
+        "opponentDefense.schusswaffe":  "Schusswaffe: Verteidigung –4",
+        "opponentDefense.wurfwaffe":    "Wurfwaffe: Verteidigung –2",
+        "opponentDefense.shieldParry":  "Pariert (Schild)",
+        "proceedToDefense":             "Weiter zur Verteidigung",
+
+        // Schicksalspunkte
+        "schip.reroll":                 "Schip: Neuer Wurf",
+        "schip.damageReroll":           "Schip: W6 wiederholen",
+        "schip.defenseBoost":           "Verteidigung stärken (+4)",
+        "schip.ignoreZustand":          "Zustand ignorieren",
+        "source.schipDefense":          "Schicksalspunkt",
+        "schip.label":                  "SCHICKSALSPUNKTE",
+
+        // Fumble
+        "fumble.title":                 "Patzer!",
+        "fumble.takeDamage":            "1W6+2 SP nehmen",
+        "fumble.rollTable":             "Patzertabelle würfeln",
+        "fumble.tableResult":           "Ergebnis",
+        "fumble.spIgnoresRS":           "SP werden nicht durch RS reduziert",
+
+        // Multiple Defenses
+        "source.multipleDefense":       "Mehrfache Verteidigung",
+
+        // Passierschlag
+        "passierschlag":                "Passierschlag",
+        "passierschlag.info":           "AT –4, keine Manöver, keine Kritischen Erfolge/Patzer",
+        "source.passierschlag":         "Passierschlag",
+
+        // Flucht
+        "flucht":                       "Flucht",
+        "flucht.info":                  "Probe auf Körperbeherrschung (Kampfmanöver)",
+        "flucht.opponents":             "Gegner in Angriffsdistanz",
+        "flucht.success":               "Gelungen — GS Schritt Bewegung",
+        "flucht.failure":               "Misslungen — GS/2 Bewegung, Passierschlag erlitten",
+        "flucht.succeeded":             "Gelungen",
+        "flucht.failed":                "Misslungen",
+
+        // Fernkampf
+        "rangedAttack":                 "Fernkampf",
+        "fernkampf":                    "Fernkampf",
+        "fernkampf.setup":              "Fernkampf vorbereiten",
+        "fernkampf.distanz":            "DISTANZ",
+        "fernkampf.distanz.nah":        "Nah",
+        "fernkampf.distanz.mittel":     "Mittel",
+        "fernkampf.distanz.weit":       "Weit",
+        "fernkampf.groesse":            "GRÖSSE",
+        "fernkampf.groesse.winzig":     "Winzig",
+        "fernkampf.groesse.klein":      "Klein",
+        "fernkampf.groesse.mittel":     "Mittel",
+        "fernkampf.groesse.gross":      "Groß",
+        "fernkampf.groesse.riesig":     "Riesig",
+        "fernkampf.bewegungZiel":       "BEWEGUNG ZIEL",
+        "fernkampf.ziel.still":         "Still",
+        "fernkampf.ziel.leicht":        "Leicht",
+        "fernkampf.ziel.schnell":       "Schnell",
+        "fernkampf.ziel.haken":         "Haken",
+        "fernkampf.bewegungSchuetze":   "BEWEGUNG SCHÜTZE",
+        "fernkampf.schuetze.steht":     "Steht",
+        "fernkampf.schuetze.geht":      "Geht",
+        "fernkampf.schuetze.rennt":     "Rennt",
+        "fernkampf.sicht":              "SICHT",
+        "fernkampf.sicht.klar":         "Klar",
+        "fernkampf.sicht.stufe1":       "Stufe 1",
+        "fernkampf.sicht.stufe2":       "Stufe 2",
+        "fernkampf.sicht.stufe3":       "Stufe 3",
+        "fernkampf.kampfgetuemmel":     "Kampfgetümmel",
+        "fernkampf.zielen":             "ZIELEN",
+        "fernkampf.zielen.0":           "Kein Zielen",
+        "fernkampf.zielen.1":           "1 Aktion (+2)",
+        "fernkampf.zielen.2":           "2 Aktionen (+4)",
+        "fernkampf.vomPferd":           "VOM PFERD",
+        "fernkampf.pferd.steht":        "Steht",
+        "fernkampf.pferd.schritt":      "Schritt",
+        "fernkampf.pferd.galopp":       "Galopp",
+        "fernkampf.rangedWeapons.label":"FERNKAMPFWAFFEN",
+        "source.distanz":               "Distanz",
+        "source.groesse":               "Größe",
+        "source.bewegungZiel":          "Bewegung Ziel",
+        "source.bewegungSchuetze":      "Bewegung Schütze",
+        "source.sicht":                 "Sicht",
+        "source.kampfgetuemmel":        "Kampfgetümmel",
+        "source.zielen":                "Zielen",
+        "source.vomPferd":              "Vom Pferd",
+
+        // Combat session
+        "endCombat":                    "Kampf beenden",
+        "endCombat.confirm":            "Kampf wirklich beenden?",
     ]
 }
 
