@@ -6,6 +6,7 @@ private let yamlType = UTType(importedAs: "public.yaml")
 
 enum SidebarSelection: Hashable {
     case rulebook
+    case adventure(PersistentIdentifier)
     case hero(PersistentIdentifier)
     case rule(String)
 }
@@ -13,6 +14,7 @@ enum SidebarSelection: Hashable {
 struct HeroListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Hero.name) private var heroes: [Hero]
+    @Query(sort: \Adventure.createdAt, order: .reverse) private var adventures: [Adventure]
 
     @State private var selection: SidebarSelection? = nil
     @State private var previousSelection: SidebarSelection? = nil
@@ -20,6 +22,7 @@ struct HeroListView: View {
     @State private var importError: String?
     @State private var isShowingError = false
     @State private var isShowingChangelog = false
+    @State private var isShowingAdventureCreation = false
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
@@ -68,6 +71,11 @@ struct HeroListView: View {
         } message: {
             Text(importError ?? L("unknownError"))
         }
+        .sheet(isPresented: $isShowingAdventureCreation) {
+            NavigationStack {
+                AdventureCreationSheet()
+            }
+        }
         .onAppear {
             if DebugLaunch.loadDefault, selection == nil, let first = heroes.first {
                 selection = .hero(first.persistentModelID)
@@ -94,6 +102,51 @@ struct HeroListView: View {
                     )
             } header: {
                 sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
+            }
+
+            Section {
+                Button {
+                    isShowingAdventureCreation = true
+                } label: {
+                    Label(L("newAdventure"), systemImage: "plus")
+                        .font(.system(.body, design: .default, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.groupAdventure)
+                        .foregroundStyle(.black)
+                        .overlay(
+                            Rectangle()
+                                .stroke(Color.dsaBorder, lineWidth: 3)
+                        )
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color(UIColor.systemBackground))
+
+                ForEach(adventures, id: \.persistentModelID) { adventure in
+                    HStack(spacing: 12) {
+                        Image(systemName: "cloud.sun")
+                            .font(.system(size: 16))
+                            .frame(width: 36, height: 36)
+                            .background(Color.groupAdventure.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.dsaBorder, lineWidth: 2)
+                            )
+                        Text(adventure.name)
+                            .font(.system(.title3, design: .default, weight: .bold))
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
+                    .listRowBackground(
+                        selection == .adventure(adventure.persistentModelID)
+                            ? Color.groupAdventure.opacity(0.35)
+                            : Color(UIColor.systemBackground)
+                    )
+                }
+            } header: {
+                sidebarSectionHeader(L("adventures"), color: .groupAdventure)
             }
 
             Section {
@@ -181,6 +234,10 @@ struct HeroListView: View {
         switch selection {
         case .rulebook:
             RulebookView(sidebarSelection: $selection)
+        case .adventure(let id):
+            if let adventure = adventures.first(where: { $0.persistentModelID == id }) {
+                AdventureDetailView(adventure: adventure)
+            }
         case .hero(let id):
             if let hero = heroes.first(where: { $0.persistentModelID == id }) {
                 HeroDetailView(hero: hero, sidebarSelection: $selection)
