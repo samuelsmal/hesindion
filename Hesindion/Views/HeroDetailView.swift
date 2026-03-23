@@ -23,6 +23,8 @@ struct HeroDetailView: View {
     @State private var showMountHealingSheet = false
     @State private var showHeroSettings = false
     @State private var showAvatarFullscreen = false
+    @State private var activeSpellProbe: HeroSpell? = nil
+    @State private var activeSpellIsLiturgy: Bool = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -105,6 +107,15 @@ struct HeroDetailView: View {
 
             if let talent = activeTalentProbe {
                 TalentProbeModal(talent: talent, hero: hero) { activeTalentProbe = nil }
+            }
+
+            if let spell = activeSpellProbe {
+                SpellProbeModal(
+                    spell: spell,
+                    hero: hero,
+                    isLiturgy: activeSpellIsLiturgy,
+                    onDismiss: { activeSpellProbe = nil }
+                )
             }
 
         }
@@ -329,6 +340,19 @@ struct HeroDetailView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
+            }
+
+            if !hero.spells.isEmpty || !hero.liturgies.isEmpty || !hero.cantrips.isEmpty || !hero.blessings.isEmpty {
+                CollapsibleGroup(L("groupMagic"), color: .groupMagic) {
+                    VStack(spacing: 8) {
+                        spellsSection
+                        liturgiesSection
+                        cantripsSection
+                        blessingsSection
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
             }
 
             CollapsibleGroup(L("groupEquipment"), color: colorScheme.groupColor(at: 3), textColor: colorScheme.textColor) {
@@ -662,6 +686,74 @@ struct HeroDetailView: View {
         }
         actions.append(SwipeAction(icon: "dice.fill", color: .groupCombat) {
             activeTalentProbe = talent
+        })
+        return actions
+    }
+
+    // MARK: - Spells & Liturgies
+
+    @ViewBuilder private var spellsSection: some View {
+        if !hero.spells.isEmpty {
+            CollapsibleSection(L("spells.section")) {
+                ForEach(hero.spells, id: \.persistentModelID) { spell in
+                    SwipeActionRow(
+                        label: spell.name,
+                        value: "\(spell.value)",
+                        actions: spellActions(for: spell, isLiturgy: false)
+                    )
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var liturgiesSection: some View {
+        if !hero.liturgies.isEmpty {
+            CollapsibleSection(L("liturgies.section")) {
+                ForEach(hero.liturgies, id: \.persistentModelID) { spell in
+                    SwipeActionRow(
+                        label: spell.name,
+                        value: "\(spell.value)",
+                        actions: spellActions(for: spell, isLiturgy: true)
+                    )
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var cantripsSection: some View {
+        if !hero.cantrips.isEmpty {
+            CollapsibleSection(L("cantrips.section")) {
+                ForEach(hero.cantrips, id: \.self) { trait in
+                    SwipeActionRow(label: trait.name, value: "", actions: lookupActions(for: trait))
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var blessingsSection: some View {
+        if !hero.blessings.isEmpty {
+            CollapsibleSection(L("blessings.section")) {
+                ForEach(hero.blessings, id: \.self) { trait in
+                    SwipeActionRow(label: trait.name, value: "", actions: lookupActions(for: trait))
+                    Divider()
+                }
+            }
+        }
+    }
+
+    private func spellActions(for spell: HeroSpell, isLiturgy: Bool) -> [SwipeAction] {
+        var actions: [SwipeAction] = []
+        if let rule = RulesDatabase.shared.lookup(id: spell.ruleId) {
+            actions.append(SwipeAction(icon: "book.closed", color: .groupRulebook) {
+                lookupRuleId = rule.id
+            })
+        }
+        actions.append(SwipeAction(icon: "dice.fill", color: .groupMagic) {
+            activeSpellProbe = spell
+            activeSpellIsLiturgy = isLiturgy
         })
         return actions
     }

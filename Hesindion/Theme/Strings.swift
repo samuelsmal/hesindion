@@ -441,6 +441,12 @@ enum DSAStrings {
         "weather.rain.all":             "Continuous Rain",
         "weather.dayTemp":              "Day",
         "weather.nightTemp":            "Night",
+        // Magic sections
+        "groupMagic":                   "Magic & Karma",
+        "spells.section":               "Spells",
+        "liturgies.section":            "Liturgies",
+        "cantrips.section":             "Cantrips",
+        "blessings.section":            "Blessings",
     ]
 
     private static let translations: [String: String] = [
@@ -871,6 +877,12 @@ enum DSAStrings {
         "weather.rain.all":             "Dauerregen",
         "weather.dayTemp":              "Tag",
         "weather.nightTemp":            "Nacht",
+        // Magic sections
+        "groupMagic":                   "Magie & Karma",
+        "spells.section":               "Zaubersprüche",
+        "liturgies.section":            "Liturgien",
+        "cantrips.section":             "Zaubertricks",
+        "blessings.section":            "Segnungen",
 
         // Magic modifier sources
         "source.maintainedSpells":      "Aufrechterh. Zauber",
