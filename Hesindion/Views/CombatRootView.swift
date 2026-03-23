@@ -19,6 +19,7 @@ struct CombatRootView: View {
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
     var onDismiss: () -> Void
+    var castingSpell: (spell: HeroSpell, startRound: Int, totalRounds: Int, modifierLines: [ModifierLine])? = nil
 
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
@@ -254,6 +255,38 @@ struct CombatRootView: View {
                 }
             }
 
+            // Casting-in-progress banner
+            if let casting = castingSpell {
+                let currentRound = roundNumber - casting.startRound + 1
+                HStack {
+                    Image(systemName: "wand.and.stars")
+                        .foregroundStyle(.white)
+                    Text(String(format: L("spellCasting.banner"), casting.spell.name, currentRound, casting.totalRounds))
+                        .font(.system(.caption, weight: .bold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    if currentRound >= casting.totalRounds {
+                        Button(L("continue")) {
+                            step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
+                        }
+                        .font(.system(.caption, weight: .black))
+                        .foregroundStyle(Color.groupMagic)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.white)
+                    }
+                    Button(L("spellCasting.abort")) {
+                        step = .root
+                    }
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.8))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.groupMagic)
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+
             // AKTION section
             combatSectionLabel(L("action.label"))
 
@@ -310,6 +343,25 @@ struct CombatRootView: View {
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
                         .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Zaubern (only if hero has AE)
+                if let ae = hero.derivedValues?.astralenergie, ae.max > 0 {
+                    Button {
+                        step = .spellSelection
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "wand.and.stars")
+                            Text(L("castSpell"))
+                        }
+                        .font(.system(.title3, weight: .black))
+                        .foregroundStyle(Color.groupMagic)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(Rectangle().stroke(Color.groupMagic, lineWidth: 3))
                     }
                     .buttonStyle(.plain)
                 }

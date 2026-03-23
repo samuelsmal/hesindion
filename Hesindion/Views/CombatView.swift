@@ -27,6 +27,10 @@ enum CombatStep {
     case passierschlag
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
+    case spellSelection
+    case spellSetup(spell: HeroSpell)
+    case spellCasting(spell: HeroSpell, startRound: Int, totalRounds: Int, modifierLines: [ModifierLine])
+    case spellExecution(spell: HeroSpell, modifierLines: [ModifierLine])
 }
 
 extension CombatStep {
@@ -52,6 +56,10 @@ extension CombatStep {
         case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
+        case .spellSelection: "spellSelection"
+        case .spellSetup: "spellSetup"
+        case .spellCasting: "spellCasting"
+        case .spellExecution: "spellExecution"
         }
     }
 }
@@ -120,6 +128,10 @@ struct CombatView: View {
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
         case .flucht: "flucht"
+        case .spellSelection: "spellSelection"
+        case .spellSetup: "spellSetup"
+        case .spellCasting: "spellCasting"
+        case .spellExecution: "spellExecution"
         }
     }
 
@@ -342,6 +354,34 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .spellSelection:
+                CombatSpellSelectionView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
+            case .spellSetup(let spell):
+                CombatSpellSetupView(hero: hero, spell: spell, step: $step, roundNumber: roundNumber, mountedActive: mountedActive, schipIgnoreZustandThisRound: schipIgnoreZustandThisRound, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
+            case .spellCasting(let spell, let startRound, let totalRounds, let modifierLines):
+                CombatRootView(
+                    hero: hero,
+                    step: $step,
+                    rolledInitiative: $rolledInitiative,
+                    roundNumber: $roundNumber,
+                    dualAttackPenaltyActive: $dualAttackPenaltyActive,
+                    twoHandedGripActive: $twoHandedGripActive,
+                    vorstossActiveThisRound: $vorstossActiveThisRound,
+                    beengteUmgebungActive: $beengteUmgebungActive,
+                    defenseCountThisRound: $defenseCountThisRound,
+                    schipDefenseBoostActive: $schipDefenseBoostActive,
+                    schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
+                    mountedActive: mountedActive,
+                    plaenklerActive: plaenklerActive,
+                    plaenklerBonus: plaenklerBonus,
+                    onDismiss: onDismiss,
+                    castingSpell: (spell: spell, startRound: startRound, totalRounds: totalRounds, modifierLines: modifierLines)
+                )
+            case .spellExecution(let spell, let modifierLines):
+                CombatSpellExecutionView(hero: hero, spell: spell, modifierLines: modifierLines, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             }
         }
         .animation(DSAAnimation.standard, value: stepID)
@@ -380,6 +420,12 @@ struct CombatView: View {
                     step = .root
                 case .fernkampfExecution:
                     step = .fernkampfSetup
+                case .spellSelection:
+                    step = .root
+                case .spellSetup:
+                    step = .spellSelection
+                case .spellExecution:
+                    step = .root
                 default:
                     step = .root
                 }
