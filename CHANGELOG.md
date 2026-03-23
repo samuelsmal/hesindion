@@ -8,6 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Generic ModifierEngine for unified modifier calculation across melee, ranged, defense, magic, liturgy, and talent checks
+- Magic casting flow — standalone SpellProbeModal with expandable modifications section
+- Combat spell casting — "Zaubern" action with spell selection, setup, multi-round casting with round tracker, and 3d20 execution
+- Magic & Karma section in hero detail showing spells, liturgies, cantrips, and blessings with swipe-to-roll
+- SkillCheckModal — unified 3d20 skill check UI shared by talents and spells
+- Magic-specific modifiers: maintained spells, foreign tradition, gestures/formula, Bann des Eisens, distraction, spell modifications
+- Effects scraper for populating rule effects from ulisses-regelwiki.de
+- DB-sourced rule effect modifiers via RuleEffectModifiers loader
+
+### Changed
+
+- Melee attack, defense, and ranged modifiers now use ModifierEngine instead of hardcoded logic
+- TalentProbeModal refactored to delegate to generic SkillCheckModal
+- CheckDomain split: meleeParry and meleeDodge replace single meleeDefense for cleaner modifier targeting
+- RulesDatabase.lookupEffects() made internal for engine access
+- build_db.py now accepts both dict and flat list YAML formats for effects import
+
+### Added (prior)
+
 - Abenteuer (Adventure) system with weather generation
 - Aventurian calendar with 12 months + Namenlose Tage
 - Weather generator porting DSA 4.1 WdE p.156ff tables
