@@ -563,54 +563,22 @@ struct CombatAnnouncementView: View {
     }
 
     private func buildModifierLines() -> [ModifierLine] {
-        var lines: [ModifierLine] = []
+        var context = ModifierContext(hero: hero, domain: .meleeAttack)
+        context.mounted = mountedActive
+        context.schipIgnoreZustand = schipIgnoreZustandThisRound
+        context.dualAttackActive = dualAttackPenaltyActive
+        context.beengteUmgebung = beengteUmgebungActive
+        context.opponentReach = selectedOpponentReach
+        context.maneuver = selectedManeuver
+        context.isOffHand = isOffHand
+        context.plaenklerActive = plaenklerActive
+        context.plaenklerBonus = plaenklerBonus
 
-        let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
-        if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
+        var lines = ModifierEngine.shared.evaluate(context: context)
 
-        if !schipIgnoreZustandThisRound && hero.schmerzPenalty != 0 {
-            let level = hero.effectiveSchmerzLevel
-            lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
-        }
-
-        if golgaritenForced || vorteilhaftePosition {
-            lines.append(ModifierLine(value: 2, source: L("source.vorteilhaft")))
-        }
-
-        if golgaritenForced {
-            lines.append(ModifierLine(value: 2, source: L("source.golgariten")))
-        }
-
-        if plaenklerActive && plaenklerBonus == .at {
-            lines.append(ModifierLine(value: 1, source: L("source.plaenkler")))
-        }
-
-        // Weapon reach
-        let heroReach = WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
-        let reachPenalty = heroReach.atPenaltyAgainst(selectedOpponentReach)
-        if reachPenalty != 0 {
-            lines.append(ModifierLine(value: reachPenalty, source: L("source.reach")))
-        }
-
-        if selectedManeuver.atModifier != 0 {
-            lines.append(ModifierLine(value: selectedManeuver.atModifier, source: selectedManeuver.sourceLabel))
-        }
-
-        if dualAttackPenaltyActive {
-            let penalty = hero.dualAttackPenalty
-            if penalty != 0 { lines.append(ModifierLine(value: penalty, source: L("source.dualAttack"))) }
-        }
-
-        if isOffHand && hero.offHandPenalty != 0 {
-            lines.append(ModifierLine(value: hero.offHandPenalty, source: L("source.offHand")))
-        }
-
-        if beengteUmgebungActive {
-            let heroReachBU = WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
-            let buPenalty = heroReachBU.beengteUmgebungPenalty
-            if buPenalty != 0 {
-                lines.append(ModifierLine(value: buPenalty, source: L("beengteUmgebung")))
-            }
+        // Manual vorteilhafte Position toggle (not golgariten-forced)
+        if !golgaritenForced && vorteilhaftePosition {
+            lines.insert(ModifierLine(value: 2, source: L("source.vorteilhaft")), at: 0)
         }
 
         return lines

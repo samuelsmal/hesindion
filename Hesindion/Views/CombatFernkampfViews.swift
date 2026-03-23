@@ -23,64 +23,19 @@ struct CombatFernkampfSetupView: View {
     // MARK: - Modifier computation (non-ViewBuilder helpers)
 
     private func buildModifierLines() -> [ModifierLine] {
-        var lines: [ModifierLine] = []
+        var context = ModifierContext(hero: hero, domain: .rangedAttack)
+        context.mounted = mountedActive
+        context.schipIgnoreZustand = schipIgnoreZustandThisRound
+        context.distanz = distanz
+        context.groesse = groesse
+        context.bewegungZiel = bewegungZiel
+        context.bewegungSchuetze = bewegungSchuetze
+        context.sicht = sicht
+        context.kampfgetuemmel = kampfgetuemmel
+        context.zielen = zielen
+        context.vomPferd = vomPferd
 
-        let distanzMods = [2, 0, -2]
-        if distanzMods[distanz] != 0 {
-            lines.append(ModifierLine(value: distanzMods[distanz], source: L("source.distanz")))
-        }
-
-        let groesseMods = [-8, -4, 0, 4, 8]
-        if groesseMods[groesse] != 0 {
-            lines.append(ModifierLine(value: groesseMods[groesse], source: L("source.groesse")))
-        }
-
-        let bewegungZielMods = [2, 0, -2, -4]
-        if bewegungZielMods[bewegungZiel] != 0 {
-            lines.append(ModifierLine(value: bewegungZielMods[bewegungZiel], source: L("source.bewegungZiel")))
-        }
-
-        let bewegungSchuetzeMods = [0, -2, -4]
-        if bewegungSchuetzeMods[bewegungSchuetze] != 0 {
-            lines.append(ModifierLine(value: bewegungSchuetzeMods[bewegungSchuetze], source: L("source.bewegungSchuetze")))
-        }
-
-        let sichtMods = [0, -2, -4, -6]
-        if sichtMods[sicht] != 0 {
-            lines.append(ModifierLine(value: sichtMods[sicht], source: L("source.sicht")))
-        }
-
-        if kampfgetuemmel {
-            lines.append(ModifierLine(value: -2, source: L("source.kampfgetuemmel")))
-        }
-
-        let zielenMods = [0, 2, 4]
-        if zielenMods[zielen] != 0 {
-            lines.append(ModifierLine(value: zielenMods[zielen], source: L("source.zielen")))
-        }
-
-        if mountedActive {
-            let pferdMods = [0, -4, -8]
-            if pferdMods[vomPferd] != 0 {
-                lines.append(ModifierLine(value: pferdMods[vomPferd], source: L("source.vomPferd")))
-            }
-        }
-
-        // Belastung (mounted heroes get -1 BE)
-        let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
-        if be > 0 {
-            lines.append(ModifierLine(value: -be, source: L("source.belastung")))
-        }
-
-        // Schmerz
-        if !schipIgnoreZustandThisRound && hero.schmerzPenalty != 0 {
-            let level = hero.effectiveSchmerzLevel
-            lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
-        }
-
-        // Note: Beengte Umgebung does NOT apply to ranged combat
-
-        return lines
+        return ModifierEngine.shared.evaluate(context: context)
     }
 
     private var distanzTP: Int {

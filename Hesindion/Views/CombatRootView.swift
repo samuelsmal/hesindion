@@ -24,61 +24,20 @@ struct CombatRootView: View {
     @State private var showArmorSheet = false
 
     private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
-        var lines: [ModifierLine] = []
+        var context = ModifierContext(
+            hero: hero,
+            domain: isAusweichen ? .meleeDodge : .meleeParry
+        )
+        context.mounted = mountedActive
+        context.schipIgnoreZustand = schipIgnoreZustandThisRound
+        context.dualAttackActive = dualAttackPenaltyActive
+        context.beengteUmgebung = beengteUmgebungActive
+        context.defenseCount = defenseCountThisRound
+        context.schipDefenseBoost = schipDefenseBoostActive
+        context.plaenklerActive = plaenklerActive
+        context.plaenklerBonus = plaenklerBonus
 
-        if defenseCountThisRound > 0 {
-            lines.append(ModifierLine(value: -(defenseCountThisRound * 3), source: L("source.multipleDefense")))
-        }
-
-        let be = mountedActive ? max(0, hero.effectiveBE - 1) : hero.effectiveBE
-        if be > 0 { lines.append(ModifierLine(value: -be, source: L("source.belastung"))) }
-
-        if !schipIgnoreZustandThisRound && hero.schmerzPenalty != 0 {
-            let level = hero.effectiveSchmerzLevel
-            lines.append(ModifierLine(value: hero.schmerzPenalty, source: "\(L("source.schmerz")) \(level > 0 ? String(repeating: "I", count: min(level, 4)) : "")"))
-        }
-
-        // Schicksalspunkt: Verteidigung stärken (+4)
-        if schipDefenseBoostActive {
-            lines.append(ModifierLine(value: 4, source: L("source.schipDefense")))
-        }
-
-        // Golgariten PA bonus (parry only, not dodge)
-        if !isAusweichen && hero.golgaritenActive(mounted: mountedActive) {
-            lines.append(ModifierLine(value: 1, source: L("source.golgariten")))
-        }
-
-        // Plänkler AW bonus (dodge only)
-        if isAusweichen && plaenklerActive && plaenklerBonus == .aw {
-            lines.append(ModifierLine(value: 1, source: L("source.plaenkler")))
-        }
-
-        // Mounted dodge penalty
-        if isAusweichen && mountedActive {
-            lines.append(ModifierLine(value: -2, source: L("source.mounted")))
-        }
-
-        // Dual-attack penalty
-        if dualAttackPenaltyActive {
-            let penalty = hero.dualAttackPenalty
-            if penalty != 0 { lines.append(ModifierLine(value: penalty, source: L("source.dualAttack"))) }
-        }
-
-        // Beengte Umgebung (PA only, not AW)
-        if !isAusweichen && beengteUmgebungActive {
-            let heroReach: WeaponReach
-            if let w = hero.selectedWeapon {
-                heroReach = WeaponReach(rawValue: w.reach) ?? .mittel
-            } else {
-                heroReach = .kurz // Raufen = kurz
-            }
-            let buPenalty = heroReach.beengteUmgebungPenalty
-            if buPenalty != 0 {
-                lines.append(ModifierLine(value: buPenalty, source: L("beengteUmgebung")))
-            }
-        }
-
-        return lines
+        return ModifierEngine.shared.evaluate(context: context)
     }
 
     var body: some View {
