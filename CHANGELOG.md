@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-23
+
 ### Added
 
 - Generic ModifierEngine for unified modifier calculation across melee, ranged, defense, magic, liturgy, and talent checks
