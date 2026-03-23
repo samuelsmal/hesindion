@@ -95,3 +95,17 @@ struct ModifierEngine {
         evaluate(context: context).reduce(0) { $0 + $1.value }
     }
 }
+
+// MARK: - Shared Instance
+
+extension ModifierEngine {
+    static let shared: ModifierEngine = {
+        var defs: [ModifierDefinition] = []
+        defs.append(contentsOf: SharedModifiers.all)
+        defs.append(contentsOf: MeleeModifiers.all)
+        defs.append(contentsOf: DefenseModifiers.all)
+        defs.append(contentsOf: RangedModifiers.all)
+        defs.append(contentsOf: MagicModifiers.all)
+        return ModifierEngine(modifiers: defs)
+    }()
+}
