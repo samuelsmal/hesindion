@@ -298,6 +298,9 @@ enum DSAStrings {
         "ok":                   "OK",
         "yes":                  "Yes",
         "no":                   "No",
+        "diceRoll":             "Roll Dice",
+        "diceCount":            "Count",
+        "diceSides":            "Sides",
 
         // MARK: - Combat Overhaul
 
@@ -734,6 +737,9 @@ enum DSAStrings {
         "yes":                  "Ja",
         "no":                   "Nein",
         "pets":                 "Tiere",
+        "diceRoll":             "Würfeln",
+        "diceCount":            "Anzahl",
+        "diceSides":            "Seiten",
 
         // MARK: - Combat Overhaul
 
