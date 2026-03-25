@@ -147,6 +147,7 @@ struct LogPanelView: View {
         case "healing":        "heart.fill"
         case "rest":           "moon.fill"
         case "mountLPChange":  "hare.fill"
+        case "diceRoll":       "dice.fill"
         default:               "questionmark.circle"
         }
     }
@@ -158,6 +159,7 @@ struct LogPanelView: View {
         case "healing":        .groupPersonalData
         case "rest":           .groupPersonalData
         case "mountLPChange":  .groupEquipment
+        case "diceRoll":       .secondary
         default:               .secondary
         }
     }
@@ -193,6 +195,15 @@ struct LogPanelView: View {
             } else {
                 return "\(p.petName) — Heilung +\(p.lpChange) LP"
             }
+
+        case "diceRoll":
+            guard let p = entry.decodePayload(DiceRollPayload.self) else { return "—" }
+            let dice = "\(p.count)W\(p.sides)"
+            if p.count == 1 {
+                return "\(dice) = \(p.total)"
+            }
+            let parts = p.results.map(String.init).joined(separator: " + ")
+            return "\(dice): \(parts) = \(p.total)"
 
         default:
             return "—"
