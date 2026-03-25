@@ -509,6 +509,14 @@ extension Hero {
 
         commands.append(AppCommand(
             id: UUID(),
+            name: "Würfeln",
+            subparameter: nil,
+            input: nil,
+            execute: { _ in }
+        ))
+
+        commands.append(AppCommand(
+            id: UUID(),
             name: "Kampf",
             subparameter: nil,
             input: nil,

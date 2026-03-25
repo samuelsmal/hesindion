@@ -21,6 +21,7 @@ struct HeroDetailView: View {
     @State private var showMountDamageSheet = false
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
+    @State private var showDiceRollSheet = false
     @State private var showHeroSettings = false
     @State private var showAvatarFullscreen = false
     @State private var activeSpellProbe: HeroSpell? = nil
@@ -153,6 +154,11 @@ struct HeroDetailView: View {
                 .presentationCornerRadius(0)
                 .presentationDetents([.medium])
         }
+        .sheet(isPresented: $showDiceRollSheet) {
+            DiceRollSheet(hero: hero)
+                .presentationCornerRadius(0)
+                .presentationDetents([.medium])
+        }
         .sheet(isPresented: $showMountHealingSheet) {
             if let mount = hero.pets.first {
                 MountHealingSheet(hero: hero, mount: mount)
@@ -200,6 +206,11 @@ struct HeroDetailView: View {
             }
             if cmd.name == "Reittier: Heilung" {
                 showMountHealingSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Würfeln" {
+                showDiceRollSheet = true
                 activeCommand = nil
                 return
             }
