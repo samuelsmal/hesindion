@@ -89,6 +89,13 @@ struct MountLPChangePayload: Codable, Reversible {
     }
 }
 
+struct DiceRollPayload: Codable {
+    var count: Int
+    var sides: Int
+    var results: [Int]
+    var total: Int
+}
+
 // MARK: - LogEntry Model
 
 @Model
@@ -135,6 +142,8 @@ final class LogEntry {
             return decodePayload(RestPayload.self)
         case "mountLPChange":
             return decodePayload(MountLPChangePayload.self)
+        case "diceRoll":
+            return nil
         default:
             return nil
         }
