@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- UI snapshot testing infrastructure using swift-snapshot-testing
+- Snapshot tests for 7 views (HeroList, HeroDetail, Combat, CombatRoot, Adventure, DiceRoll, WeatherDay) across 12 iPad/color/dynamic-type variants
+- `make test-ui` and `make test-ui-record` Makefile targets
+- TestData factory for creating fake SwiftData models in tests
+
 ## [0.3.0] - 2026-03-28
 
 ### Added
