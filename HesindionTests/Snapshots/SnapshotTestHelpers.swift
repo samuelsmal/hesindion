@@ -78,6 +78,8 @@ extension XCTestCase {
     func assertAllVariants<V: View>(
         of view: V,
         named name: String,
+        precision: Float = 1,
+        perceptualPrecision: Float = 1,
         record: SnapshotTestingConfiguration.Record? = nil,
         fileID: StaticString = #fileID,
         file filePath: StaticString = #filePath,
@@ -92,7 +94,11 @@ extension XCTestCase {
 
             assertSnapshot(
                 of: styledView,
-                as: .image(layout: .device(config: variant.config)),
+                as: .image(
+                    precision: precision,
+                    perceptualPrecision: perceptualPrecision,
+                    layout: .device(config: variant.config)
+                ),
                 named: "\(name)_\(variant.name)",
                 record: record,
                 fileID: fileID,
