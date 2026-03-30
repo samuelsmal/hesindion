@@ -19,8 +19,9 @@ enum TestData {
 
     static var boronmirURL: URL {
         URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()    // Snapshots/
-            .deletingLastPathComponent()    // HesindionTests/
+            .deletingLastPathComponent()    // TestData.swift → Snapshots/
+            .deletingLastPathComponent()    // Snapshots/ → HesindionTests/
+            .deletingLastPathComponent()    // HesindionTests/ → project root
             .appendingPathComponent("docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json")
     }
 

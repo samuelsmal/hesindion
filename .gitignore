@@ -17,4 +17,4 @@ DerivedData/
 *.xcresult
 
 # Snapshot test failure artifacts
-HesindionTests/__Snapshots__/failures/
+**/failures/
