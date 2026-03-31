@@ -235,6 +235,7 @@ struct FieldRow: View {
             .padding(.leading, 24)
             .padding(.trailing, 12)
             .padding(.vertical, 8)
+            .background(Color(UIColor.systemBackground))
             Divider()
         }
     }

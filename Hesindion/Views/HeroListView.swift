@@ -89,9 +89,13 @@ struct HeroListView: View {
     private var sidebarContent: some View {
         List(selection: $selection) {
             Section {
-                Label(L("rulebook"), systemImage: "book.closed")
+                HStack(spacing: 8) {
+                    Image(systemName: "book.closed")
+                    Text(L("rulebook"))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
                     .font(.system(.title3, design: .default, weight: .bold))
-                    .lineLimit(1)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 4)
                     .tag(SidebarSelection.rulebook)
@@ -193,6 +197,8 @@ struct HeroListView: View {
                 .font(.system(.subheadline, weight: .black))
                 .textCase(.uppercase)
                 .foregroundStyle(color)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 8)
             Rectangle()
                 .fill(color)
@@ -278,9 +284,6 @@ struct HeroListView: View {
                         .stroke(Color.dsaBorder, lineWidth: 3)
                 )
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
     }
 
     // MARK: - Sidebar Footer

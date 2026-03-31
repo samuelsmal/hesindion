@@ -7,28 +7,34 @@ import SwiftData
 /// Standard iPad configurations for snapshot testing.
 enum iPadConfig {
     /// iPad Pro 11-inch (M5) — primary test device
-    static let pro11 = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
-        size: CGSize(width: 1024, height: 1366),
-        traits: UITraitCollection { traits in
-            traits.userInterfaceIdiom = .pad
-            traits.displayScale = 2
-            traits.horizontalSizeClass = .regular
-            traits.verticalSizeClass = .regular
-        }
-    )
+    static func pro11(style: UIUserInterfaceStyle = .light) -> ViewImageConfig {
+        ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
+            size: CGSize(width: 1024, height: 1366),
+            traits: UITraitCollection { traits in
+                traits.userInterfaceIdiom = .pad
+                traits.displayScale = 2
+                traits.horizontalSizeClass = .regular
+                traits.verticalSizeClass = .regular
+                traits.userInterfaceStyle = style
+            }
+        )
+    }
 
     /// iPad Pro 13-inch
-    static let pro13 = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
-        size: CGSize(width: 1032, height: 1376),
-        traits: UITraitCollection { traits in
-            traits.userInterfaceIdiom = .pad
-            traits.displayScale = 2
-            traits.horizontalSizeClass = .regular
-            traits.verticalSizeClass = .regular
-        }
-    )
+    static func pro13(style: UIUserInterfaceStyle = .light) -> ViewImageConfig {
+        ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
+            size: CGSize(width: 1032, height: 1376),
+            traits: UITraitCollection { traits in
+                traits.userInterfaceIdiom = .pad
+                traits.displayScale = 2
+                traits.horizontalSizeClass = .regular
+                traits.verticalSizeClass = .regular
+                traits.userInterfaceStyle = style
+            }
+        )
+    }
 }
 
 /// All variant axes for snapshot testing.
@@ -41,13 +47,9 @@ struct SnapshotVariant: CustomStringConvertible {
     var description: String { name }
 
     static let all: [SnapshotVariant] = {
-        let configs: [(String, ViewImageConfig)] = [
-            ("iPad11", iPadConfig.pro11),
-            ("iPad13", iPadConfig.pro13),
-        ]
-        let schemes: [(String, ColorScheme)] = [
-            ("light", .light),
-            ("dark", .dark),
+        let schemes: [(String, ColorScheme, UIUserInterfaceStyle)] = [
+            ("light", .light, .light),
+            ("dark", .dark, .dark),
         ]
         let typeSizes: [(String, DynamicTypeSize)] = [
             ("default", .large),
@@ -56,16 +58,20 @@ struct SnapshotVariant: CustomStringConvertible {
         ]
 
         var variants: [SnapshotVariant] = []
-        for (configName, config) in configs {
-            for (schemeName, scheme) in schemes {
-                for (sizeName, size) in typeSizes {
-                    variants.append(SnapshotVariant(
-                        name: "\(configName)_\(schemeName)_\(sizeName)",
-                        config: config,
-                        colorScheme: scheme,
-                        dynamicTypeSize: size
-                    ))
-                }
+        for (schemeName, scheme, style) in schemes {
+            for (sizeName, size) in typeSizes {
+                variants.append(SnapshotVariant(
+                    name: "iPad11_\(schemeName)_\(sizeName)",
+                    config: iPadConfig.pro11(style: style),
+                    colorScheme: scheme,
+                    dynamicTypeSize: size
+                ))
+                variants.append(SnapshotVariant(
+                    name: "iPad13_\(schemeName)_\(sizeName)",
+                    config: iPadConfig.pro13(style: style),
+                    colorScheme: scheme,
+                    dynamicTypeSize: size
+                ))
             }
         }
         return variants

@@ -394,8 +394,10 @@ struct HeroDetailView: View {
 
     // MARK: - Section 2: PersonalData
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     private var personalDataColumns: [GridItem] {
-        if sizeClass == .regular {
+        if sizeClass == .regular && !dynamicTypeSize.isAccessibilitySize {
             return [GridItem(.flexible()), GridItem(.flexible())]
         } else {
             return [GridItem(.flexible())]
@@ -421,7 +423,7 @@ struct HeroDetailView: View {
                     FieldRow(label: "profession", value: pd.profession)
                     FieldRow(label: "title", value: pd.title)
                 }
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 if !pd.characteristics.isEmpty {
                     FieldRow(label: "characteristics", value: pd.characteristics)
                 }
@@ -1145,6 +1147,7 @@ private struct SwipeActionRow<Content: View>: View {
                                 .font(.system(.title3, weight: .bold))
                                 .foregroundStyle(.white)
                                 .frame(width: 56)
+                                .frame(maxHeight: .infinity)
                         }
                         .buttonStyle(.plain)
                         .background(action.color)

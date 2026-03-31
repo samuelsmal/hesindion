@@ -83,7 +83,8 @@ struct CombatRootView: View {
                         .foregroundStyle(.white)
                 }
                 .padding(.vertical, 8)
-                .frame(width: 64)
+                .padding(.horizontal, 8)
+                .frame(minWidth: 64)
                 .background(Color.dsaDark)
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
@@ -116,7 +117,8 @@ struct CombatRootView: View {
                             .font(.system(.caption, weight: .black))
                     }
                     .foregroundStyle(.white)
-                    .frame(width: 64)
+                    .padding(.horizontal, 8)
+                    .frame(minWidth: 64)
                     .frame(maxHeight: .infinity)
                     .background(Color.dsaDark)
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
