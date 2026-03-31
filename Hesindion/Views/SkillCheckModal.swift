@@ -296,18 +296,18 @@ struct SkillCheckModal: View {
     }
 
     private func computeResult(rolls: [Int]) -> CheckResult {
-        let ones = rolls.filter { $0 == 1 }.count
-        let twenties = rolls.filter { $0 == 20 }.count
-        if ones >= 2 { return .kritischerPatzer }
-        if twenties >= 2 { return .kritischerErfolg }
         let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
-        var remaining = config.skillValue
-        for i in 0..<3 {
-            let excess = rolls[i] - (config.checkAttributes[i].value + modifiers[i] + engineMod)
-            if excess > 0 { remaining -= excess }
+        let attrValues = (0..<3).map { config.checkAttributes[$0].value + modifiers[$0] + engineMod }
+        let outcome = SkillCheckEngine.evaluate(
+            rolls: rolls,
+            attributeValues: attrValues,
+            skillPoints: config.skillValue
+        )
+        switch outcome {
+        case .criticalFailure: return .kritischerPatzer
+        case .criticalSuccess: return .kritischerErfolg
+        case .regular(let qs, _): return .qs(qs)
         }
-        if remaining <= 0 { return .qs(0) }
-        return .qs(min(6, Int(ceil(Double(remaining) / 3.0))))
     }
 
     // MARK: - Colors

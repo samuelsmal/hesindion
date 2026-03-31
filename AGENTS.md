@@ -60,6 +60,11 @@ The UI follows a **Neo-Brutalist** design theme.
 - Main actor isolation is enabled by default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`)
 - `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY` is enabled
 
+## Git Workflow
+
+- **Never commit directly to `main`** — all changes must be on a feature branch and merged via pull request
+- Create a descriptive branch name before starting work (e.g., `fix/dark-mode-contrast`, `feat/dice-roller`)
+
 ## Code Creation Guidance
 
 - Create minimal and small pieces of code, favour composing
