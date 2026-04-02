@@ -798,6 +798,20 @@ struct OptolithImportService {
         "R_4": 8,  // Zwerge
     ]
 
+    private static let speciesBaseSK: [String: Int] = [
+        "R_1": -5,  // Menschen
+        "R_2": -4,  // Elfen
+        "R_3": -5,  // Halbelfen
+        "R_4": -4,  // Zwerge
+    ]
+
+    private static let speciesBaseZK: [String: Int] = [
+        "R_1": -5,  // Menschen
+        "R_2": -6,  // Elfen
+        "R_3": -5,  // Halbelfen
+        "R_4": -4,  // Zwerge
+    ]
+
     private func computeDerivedValues(
         attributes: Attributes,
         raceId: String,
@@ -841,13 +855,23 @@ struct OptolithImportService {
             karmaenergie = MutableResourceValue(current: keMax, bonus: 0, max: keMax)
         }
 
-        // SK = ceil((MU + KL + IN) / 6)
-        let skBase = Int(ceil(Double(mu + kl + inVal) / 6.0))
-        let seelenkraft = ResourceValue(base: skBase, bonus: 0, max: skBase)
+        // SK = species base + ceil((MU + KL + IN) / 6)
+        let speciesSK = Self.speciesBaseSK[raceId] ?? -5
+        let skBase = speciesSK + Int(ceil(Double(mu + kl + inVal) / 6.0))
+        let hoheSeelenkraftBonus = advantages
+            .filter { $0.ruleId == "ADV_26" }
+            .reduce(0) { $0 + ($1.tier ?? 1) }
+        let skMax = skBase + hoheSeelenkraftBonus
+        let seelenkraft = ResourceValue(base: skBase, bonus: hoheSeelenkraftBonus, max: skMax)
 
-        // ZK = ceil((KO + KO + KK) / 6)
-        let zkBase = Int(ceil(Double(ko + ko + kk) / 6.0))
-        let zaehigkeit = ResourceValue(base: zkBase, bonus: 0, max: zkBase)
+        // ZK = species base + ceil((KO + KO + KK) / 6)
+        let speciesZK = Self.speciesBaseZK[raceId] ?? -5
+        let zkBase = speciesZK + Int(ceil(Double(ko + ko + kk) / 6.0))
+        let hoheZaehigkeitBonus = advantages
+            .filter { $0.ruleId == "ADV_27" }
+            .reduce(0) { $0 + ($1.tier ?? 1) }
+        let zkMax = zkBase + hoheZaehigkeitBonus
+        let zaehigkeit = ResourceValue(base: zkBase, bonus: hoheZaehigkeitBonus, max: zkMax)
 
         // INI = (MU + GE) / 2
         let iniValue = (mu + ge) / 2

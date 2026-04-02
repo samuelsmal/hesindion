@@ -111,6 +111,8 @@ struct HeroImportTests {
         let dv = try #require(hero.derivedValues)
         #expect(dv.lebensenergie.max > 0)
         #expect(dv.lebensenergie.current == dv.lebensenergie.max)
+        #expect(dv.seelenkraft.max == 2)
+        #expect(dv.zaehigkeit.max == 2)
         #expect(dv.schicksalspunkte.max == 3)
         #expect(dv.schicksalspunkte.current == 3)
 
