@@ -70,7 +70,10 @@ struct LogPanelView: View {
                     entryRow(entry, indented: indented)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
-                                entryToDelete = entry
+                                let captured = entry
+                                Task { @MainActor in
+                                    entryToDelete = captured
+                                }
                             } label: {
                                 Label("Löschen", systemImage: "trash")
                             }
