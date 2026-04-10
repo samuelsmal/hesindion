@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Command palette keyboard shortcut (Cmd+K) now works on iPad with external keyboard
 - "Held importieren" button text readability (black text on gold background)
 - Selected hero row visibility in sidebar (increased highlight opacity)
 - Removed unnecessary trailing border from attributes column

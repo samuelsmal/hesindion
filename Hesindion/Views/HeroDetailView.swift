@@ -120,14 +120,14 @@ struct HeroDetailView: View {
             }
 
         }
-        .onKeyPress(characters: .init(charactersIn: "k"), phases: .down) { keyPress in
-            guard keyPress.modifiers.contains(.control) else { return .ignored }
-            if !showCommandSearch {
+        .background {
+            Button("") {
                 showCommandSearch = true
                 commandQuery = ""
                 searchFocused = true
             }
-            return .handled
+            .keyboardShortcut("k", modifiers: .command)
+            .hidden()
         }
         .fullScreenCover(isPresented: $showCombatMode) {
             CombatView(hero: hero) { showCombatMode = false }
