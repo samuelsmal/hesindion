@@ -70,7 +70,10 @@ struct LogPanelView: View {
                     entryRow(entry, indented: indented)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
-                                entryToDelete = entry
+                                let captured = entry
+                                Task { @MainActor in
+                                    entryToDelete = captured
+                                }
                             } label: {
                                 Label("Löschen", systemImage: "trash")
                             }
@@ -147,6 +150,7 @@ struct LogPanelView: View {
         case "healing":        "heart.fill"
         case "rest":           "moon.fill"
         case "mountLPChange":  "hare.fill"
+        case "diceRoll":       "dice.fill"
         default:               "questionmark.circle"
         }
     }
@@ -158,6 +162,7 @@ struct LogPanelView: View {
         case "healing":        .groupPersonalData
         case "rest":           .groupPersonalData
         case "mountLPChange":  .groupEquipment
+        case "diceRoll":       .secondary
         default:               .secondary
         }
     }
@@ -194,6 +199,15 @@ struct LogPanelView: View {
                 return "\(p.petName) — Heilung +\(p.lpChange) LP"
             }
 
+        case "diceRoll":
+            guard let p = entry.decodePayload(DiceRollPayload.self) else { return "—" }
+            let dice = "\(p.count)W\(p.sides)"
+            if p.count == 1 {
+                return "\(dice) = \(p.total)"
+            }
+            let parts = p.results.map(String.init).joined(separator: " + ")
+            return "\(dice): \(parts) = \(p.total)"
+
         default:
             return "—"
         }
@@ -204,12 +218,19 @@ struct LogPanelView: View {
         switch p.action {
         case .attack:
             if let roll = p.rollValue {
-                return "\(weapon) — Attacke \(roll)"
+                let outcomeStr = p.outcome == "critical" ? " \u{2605}" : p.outcome == "fumble" ? " \u{2717}\u{2717}" : ""
+                return "\(weapon) — Attacke \(roll)\(outcomeStr)"
             }
             return "\(weapon) — Attacke"
+        case .rangedAttack:
+            if let roll = p.rollValue {
+                return "\(weapon) — Fernkampf \(roll)"
+            }
+            return "\(weapon) — Fernkampf"
         case .parry:
             if let roll = p.rollValue {
-                return "\(weapon) — Parade \(roll)"
+                let outcomeStr = p.outcome == "critical" ? " \u{2605}" : ""
+                return "\(weapon) — Parade \(roll)\(outcomeStr)"
             }
             return "\(weapon) — Parade"
         case .dodge:
@@ -219,10 +240,41 @@ struct LogPanelView: View {
             return "Ausweichen"
         case .damageDealt:
             let dmg = p.damageDealt ?? 0
-            return "\(weapon) — \(dmg) Schaden ausgeteilt"
+            return "\(weapon) — \(dmg) TP"
         case .damageTaken:
             let dmg = p.damageTaken ?? 0
             return "\(dmg) Schaden erhalten"
+        case .fumble:
+            if let tableResult = p.fumbleTableResult {
+                return "Patzer: \(tableResult)"
+            }
+            let sp = p.damageTaken ?? 0
+            return "Patzer — \(sp) SP"
+        case .schipUsed:
+            let action = p.schipAction ?? ""
+            switch action {
+            case "reroll": return "Schip: Neuer Wurf"
+            case "damageReroll": return "Schip: W6 wiederholt"
+            case "defenseBoost": return "Schip: Verteidigung +4"
+            case "ignoreZustand": return "Schip: Zustand ignoriert"
+            default: return "Schip eingesetzt"
+            }
+        case .passierschlag:
+            if let roll = p.rollValue {
+                let hit = p.outcome == "hit" ? "\u{2713}" : "\u{2717}"
+                return "Passierschlag — \(roll) \(hit)"
+            }
+            return "Passierschlag"
+        case .flucht:
+            let success = p.outcome == "success" ? "gelungen" : "misslungen"
+            return "Flucht — \(success)"
+        case .opponentDefense:
+            switch p.outcome {
+            case "parried": return "\(weapon) — Gegner pariert"
+            case "dodged": return "\(weapon) — Gegner ausgewichen"
+            case "hit": return "\(weapon) — Treffer!"
+            default: return "\(weapon) — Verteidigung"
+            }
         }
     }
 

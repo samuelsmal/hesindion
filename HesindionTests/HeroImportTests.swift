@@ -10,8 +10,9 @@ struct HeroImportTests {
         let schema = Schema([
             Hero.self, PersonalData.self, Experience.self, Attributes.self,
             DerivedValues.self, Talent.self, CombatTechnique.self,
-            MeleeWeapon.self, Armor.self, Shield.self, EquipmentItem.self,
-            Money.self, Pet.self, Language.self, HeroSpell.self,
+            MeleeWeapon.self, RangedWeapon.self, Armor.self, Shield.self,
+            EquipmentItem.self, Money.self, Pet.self, Language.self,
+            HeroSpell.self, LogEntry.self, Adventure.self, WeatherDay.self,
         ])
         return try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     }
@@ -110,6 +111,8 @@ struct HeroImportTests {
         let dv = try #require(hero.derivedValues)
         #expect(dv.lebensenergie.max > 0)
         #expect(dv.lebensenergie.current == dv.lebensenergie.max)
+        #expect(dv.seelenkraft.max == 2)
+        #expect(dv.zaehigkeit.max == 2)
         #expect(dv.schicksalspunkte.max == 3)
         #expect(dv.schicksalspunkte.current == 3)
 

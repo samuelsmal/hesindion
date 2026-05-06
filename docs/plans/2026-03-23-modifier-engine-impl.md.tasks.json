@@ -1,0 +1,28 @@
+{
+  "planPath": "docs/plans/2026-03-23-modifier-engine-impl.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create Engine directory and core types", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Shared modifiers (pain, encumbrance)", "status": "pending", "blockedBy": [0]},
+    {"id": 2, "subject": "Task 2: Melee attack modifiers", "status": "pending", "blockedBy": [0]},
+    {"id": 3, "subject": "Task 3: Defense modifiers", "status": "pending", "blockedBy": [0]},
+    {"id": 4, "subject": "Task 4: Ranged attack modifiers", "status": "pending", "blockedBy": [0]},
+    {"id": 5, "subject": "Task 5: Magic modifiers", "status": "pending", "blockedBy": [0]},
+    {"id": 6, "subject": "Task 6: Wire up ModifierEngine.shared", "status": "pending", "blockedBy": [1, 2, 3, 4, 5]},
+    {"id": 7, "subject": "Task 7: Migrate melee attack to ModifierEngine", "status": "pending", "blockedBy": [6]},
+    {"id": 8, "subject": "Task 8: Migrate defense to ModifierEngine", "status": "pending", "blockedBy": [6]},
+    {"id": 9, "subject": "Task 9: Migrate ranged attack to ModifierEngine", "status": "pending", "blockedBy": [6]},
+    {"id": 10, "subject": "Task 10: Extract SkillCheckModal from TalentProbeModal", "status": "pending", "blockedBy": [6]},
+    {"id": 11, "subject": "Task 11: Add magic localization strings", "status": "pending", "blockedBy": [6]},
+    {"id": 12, "subject": "Task 12: SpellProbeModal (standalone magic check)", "status": "pending", "blockedBy": [10, 11, 6]},
+    {"id": 13, "subject": "Task 13: Wire SpellProbeModal into hero spell list", "status": "pending", "blockedBy": [12]},
+    {"id": 14, "subject": "Task 14: Combat spell steps — CombatStep + routing", "status": "pending", "blockedBy": [6]},
+    {"id": 15, "subject": "Task 15: CombatSpellSelectionView and CombatSpellSetupView", "status": "pending", "blockedBy": [14]},
+    {"id": 16, "subject": "Task 16: Multi-round casting banner and execution view", "status": "pending", "blockedBy": [15]},
+    {"id": 17, "subject": "Task 17: Add Zaubern button to combat root", "status": "pending", "blockedBy": [16]},
+    {"id": 18, "subject": "Task 18: Effects scraper script", "status": "pending"},
+    {"id": 19, "subject": "Task 19: Integrate scraped effects into build_db.py", "status": "pending", "blockedBy": [18]},
+    {"id": 20, "subject": "Task 20: RuleEffectModifiers loader", "status": "pending", "blockedBy": [19]},
+    {"id": 21, "subject": "Task 21: Update CHANGELOG.md and architecture docs", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-23T00:00:00Z"
+}

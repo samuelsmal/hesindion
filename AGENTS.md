@@ -36,10 +36,20 @@ make clean        # Clean build artifacts
 ### Combat System
 
 - `CombatView` is a full-screen orchestrator with a `CombatStep` enum driving navigation:
-  `armorSelection → initiativeRoll → root → weaponSelection/execution/takeDamage`
+  `armorSelection → combatSetup → initiativeRoll → loadoutEquipment → root → (attack/defense/fernkampf/flucht/passierschlag)`
+- **Attack flow**: attackChoice → weaponSelection → announcement (maneuvers, reach, modifiers) → execution (AT roll) → opponentDefense (Pariert/Ausgewichen/Treffer) → damage
+- **Defense flow**: PA/AW roll → outcome → fumbleChoice on Patzer, Passierschlag on critical PA
+- **Fernkampf flow**: fernkampfSetup (8 modifier categories) → fernkampfExecution (FK roll) → opponentDefense
 - **Armor & Belastung**: `Armor.isEquipped` persists across combat sessions. `Hero` computes `totalRS`, `effectiveBE`, and `belastungPenalty` from equipped armor and Belastungsgewöhnung (SA_41). Penalties apply to AT, PA, AW, INI, GS.
 - **Damage flow** ("Schaden nehmen"): user enters TP → app shows `max(0, TP - RS)` → confirm applies LP reduction
 - **Initiative**: rolled at combat start with Belastung-adjusted base; re-rollable mid-combat via sheet
+- **Combat session persistence**: state saved to Hero model; exit/re-enter resumes at root; "Kampf beenden" clears state
+- **Schicksalspunkte**: Neuer Wurf (reroll failed AT/PA/AW/FK), W6 wiederholen (damage), Verteidigung stärken (+4), Zustand ignorieren
+- **Patzertabellen**: 4 tables (Nahkampf AT, Verteidigung Waffe, Verteidigung Schild, Fernkampf) as alternative to 1W6+2 SP
+- **Weapon reach**: opponent reach selector applies AT penalties (Kurz vs Mittel: -2, Kurz vs Lang: -4, Mittel vs Lang: -2)
+- **Beengte Umgebung**: toggleable; Kurz 0, Mittel -4 AT/PA, Lang -8 AT/PA
+- **Multiple defenses**: -3 cumulative per round, tracked and reset per round
+- **Combat views split**: CombatView.swift (orchestrator), CombatSetupViews, CombatRootView, CombatAttackViews, CombatExecutionView, CombatDamageViews, CombatDefenseViews, CombatFernkampfViews
 
 ## Design
 
@@ -49,6 +59,11 @@ The UI follows a **Neo-Brutalist** design theme.
 
 - Main actor isolation is enabled by default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`)
 - `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY` is enabled
+
+## Git Workflow
+
+- **Never commit directly to `main`** — all changes must be on a feature branch and merged via pull request
+- Create a descriptive branch name before starting work (e.g., `fix/dark-mode-contrast`, `feat/dice-roller`)
 
 ## Code Creation Guidance
 

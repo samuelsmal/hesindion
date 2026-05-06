@@ -8,6 +8,9 @@ enum SidePanel: String, CaseIterable {
     case rules
 }
 
+/// Golden ratio ≈ 1.618; content fraction = 1.618 / (1.618 + 1)
+private let goldenContentFraction: CGFloat = 1.618 / (1.618 + 1)
+
 // MARK: - SplitContentLayout
 
 struct SplitContentLayout<Content: View>: View {
@@ -29,20 +32,32 @@ struct SplitContentLayout<Content: View>: View {
         }
     }
 
-    // MARK: - Landscape (50/50 split)
+    // MARK: - Landscape (golden ratio split: content 1.618 : panel 1)
 
     private var landscapeLayout: some View {
-        HStack(spacing: 0) {
-            content
-                .frame(maxWidth: .infinity)
+        GeometryReader { geo in
+            let availableWidth = activePanel != nil ? geo.size.width - 48 : geo.size.width
+            HStack(spacing: 0) {
+                content
+                    .frame(width: activePanel != nil
+                           ? availableWidth * goldenContentFraction
+                           : availableWidth)
 
-            if let panel = activePanel {
-                panelView(for: panel)
-                    .frame(maxWidth: .infinity)
-                    .transition(.move(edge: .trailing))
+                if activePanel != nil {
+                    if let panel = activePanel {
+                        panelView(for: panel)
+                            .frame(width: availableWidth * (1 - goldenContentFraction))
+                            .transition(.move(edge: .trailing))
+                    }
+
+                    panelToggleButtons
+                }
             }
-
-            panelToggleButtons
+            .overlay(alignment: .trailing) {
+                if activePanel == nil {
+                    panelToggleButtons
+                }
+            }
         }
     }
 

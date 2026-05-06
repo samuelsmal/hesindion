@@ -278,7 +278,7 @@ final class RulesDatabase: @unchecked Sendable {
         )
     }
 
-    private func lookupEffects(ruleId: String) -> [RuleEffect] {
+    func lookupEffects(ruleId: String) -> [RuleEffect] {
         let sql = "SELECT level, type, attribute, value, scope, description FROM effects WHERE rule_id = ? ORDER BY level"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }

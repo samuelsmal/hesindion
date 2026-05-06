@@ -3,7 +3,7 @@ SCHEME = Hesindion
 SDK = iphonesimulator
 CONFIG = Debug
 DEVICE_NAME = iPhone 17 Pro
-IPAD_NAME = iPad Pro 11-inch (M4)
+IPAD_NAME = iPad Pro 11-inch (M5)
 DERIVED_DATA = .build
 BUNDLE_ID = org.savoba.Hesindion
 
@@ -21,31 +21,9 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-ipad boot-ipad install-ipad launch-ipad run-ipad clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record
 
 build:
-	xcodebuild \
-		-project $(PROJECT) \
-		-scheme $(SCHEME) \
-		-sdk $(SDK) \
-		-configuration $(CONFIG) \
-		-derivedDataPath $(DERIVED_DATA) \
-		-destination 'platform=iOS Simulator,name=$(DEVICE_NAME)' \
-		build
-
-boot:
-	xcrun simctl boot '$(DEVICE_ID)' 2>/dev/null || true
-	open -a Simulator
-
-install: build boot
-	xcrun simctl install '$(DEVICE_ID)' '$(APP_PATH)'
-
-launch:
-	xcrun simctl launch '$(DEVICE_ID)' $(BUNDLE_ID)
-
-run: install launch
-
-build-ipad:
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -55,37 +33,61 @@ build-ipad:
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
 		build
 
-boot-ipad:
+boot:
 	xcrun simctl boot '$(IPAD_ID)' 2>/dev/null || true
 	open -a Simulator
 
-install-ipad: build-ipad boot-ipad
+install: build boot
 	xcrun simctl install '$(IPAD_ID)' '$(APP_PATH)'
 
-launch-ipad:
-	xcrun simctl launch '$(IPAD_ID)' $(BUNDLE_ID)
+launch:
+	xcrun simctl launch '$(IPAD_ID)' $(BUNDLE_ID) $(LAUNCH_ARGS)
 
-run-ipad: install-ipad launch-ipad
+run: install launch
+
+build-iphone:
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(DEVICE_NAME)' \
+		build
+
+boot-iphone:
+	xcrun simctl boot '$(DEVICE_ID)' 2>/dev/null || true
+	open -a Simulator
+
+install-iphone: build-iphone boot-iphone
+	xcrun simctl install '$(DEVICE_ID)' '$(APP_PATH)'
+
+launch-iphone:
+	xcrun simctl launch '$(DEVICE_ID)' $(BUNDLE_ID)
+
+run-iphone: install-iphone launch-iphone
+
+# Debug shortcut: make debug-combat → builds, launches iPad with first hero in combat view
+debug-combat: LAUNCH_ARGS = debug load_default path combat
+debug-combat: run
 
 share-heros: boot
-	@if [ -z "$(APP_DATA)" ]; then \
-		echo "Error: App not installed. Run 'make install' first."; \
-		exit 1; \
-	fi
-	@mkdir -p "$(APP_DATA)/Documents"
-	cp "$(SAMPLE_HEROS)/"*.json "$(APP_DATA)/Documents/"
-	@echo "Copied sample heros to $(APP_DATA)/Documents/"
-
-share-heros-ipad:
-	xcrun simctl boot '$(IPAD_ID)' 2>/dev/null || true
-	open -a Simulator
 	@if [ -z "$(IPAD_APP_DATA)" ]; then \
-		echo "Error: App not installed on iPad. Install it first."; \
+		echo "Error: App not installed. Run 'make install' first."; \
 		exit 1; \
 	fi
 	@mkdir -p "$(IPAD_APP_DATA)/Documents"
 	cp "$(SAMPLE_HEROS)/"*.json "$(IPAD_APP_DATA)/Documents/"
-	@echo "Copied sample heros to iPad: $(IPAD_APP_DATA)/Documents/"
+	@echo "Copied sample heros to $(IPAD_APP_DATA)/Documents/"
+
+share-heros-iphone: boot-iphone
+	@if [ -z "$(APP_DATA)" ]; then \
+		echo "Error: App not installed on iPhone. Install it first."; \
+		exit 1; \
+	fi
+	@mkdir -p "$(APP_DATA)/Documents"
+	cp "$(SAMPLE_HEROS)/"*.json "$(APP_DATA)/Documents/"
+	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
 deploy:
 	xcodebuild \
@@ -114,3 +116,35 @@ deploy-kombucha:
 clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -sdk $(SDK) clean
 	rm -rf $(DERIVED_DATA)
+
+# ── Testing ──────────────────────────────────────────────────────────────────
+
+test: boot
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		test
+
+test-ui: boot
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		test -only-testing:HesindionTests
+
+test-ui-record: boot
+	SNAPSHOT_TESTING_RECORD=1 xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		test -only-testing:HesindionTests

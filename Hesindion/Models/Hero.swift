@@ -31,6 +31,8 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
     @Relationship(deleteRule: .cascade, inverse: \LogEntry.hero) var logEntries: [LogEntry] = []
 
+    var activeAdventure: Adventure?
+
     // MARK: - Notes
 
     var notes: String = ""
@@ -41,6 +43,17 @@ final class Hero {
     var selectedWeaponName: String?
     var selectedShieldName: String?
     var selectedOffHandName: String?
+    var selectedRangedWeaponName: String?
+
+    // MARK: - Combat session state
+
+    var activeCombatId: UUID?
+    var activeCombatRound: Int = 0
+    var activeCombatInitiative: Int?
+    var activeCombatPlaenkler: Bool = false
+    var activeCombatPlaenklerBonus: String?   // "at" or "aw"
+    var activeCombatMounted: Bool = false
+    var activeCombatBeengt: Bool = false
 
     init(
         name: String,
@@ -73,6 +86,15 @@ final class Hero {
         self.languages = []
         self.spells = []
         self.liturgies = []
+
+        // Combat session defaults
+        self.activeCombatId = nil
+        self.activeCombatRound = 0
+        self.activeCombatInitiative = nil
+        self.activeCombatPlaenkler = false
+        self.activeCombatPlaenklerBonus = nil
+        self.activeCombatMounted = false
+        self.activeCombatBeengt = false
     }
 
     var totalEquipmentWeight: Double {
@@ -151,6 +173,11 @@ final class Hero {
     }
 
     // MARK: - Loadout computed helpers
+
+    var selectedRangedWeapon: RangedWeapon? {
+        guard let name = selectedRangedWeaponName else { return nil }
+        return rangedWeapons.first { $0.name == name }
+    }
 
     var selectedWeapon: MeleeWeapon? {
         guard let name = selectedWeaponName else { return nil }
@@ -299,6 +326,17 @@ final class Hero {
     /// Whether combat setup screen is needed.
     var needsCombatSetup: Bool {
         hasPlaenklerFormation || hasMount
+    }
+
+    /// Clears persisted combat session so re-entering starts fresh.
+    func clearCombatSession() {
+        activeCombatId = nil
+        activeCombatRound = 0
+        activeCombatInitiative = nil
+        activeCombatPlaenkler = false
+        activeCombatPlaenklerBonus = nil
+        activeCombatMounted = false
+        activeCombatBeengt = false
     }
 }
 
@@ -468,6 +506,14 @@ extension Hero {
                 execute: { _ in }
             ))
         }
+
+        commands.append(AppCommand(
+            id: UUID(),
+            name: "Würfeln",
+            subparameter: nil,
+            input: nil,
+            execute: { _ in }
+        ))
 
         commands.append(AppCommand(
             id: UUID(),

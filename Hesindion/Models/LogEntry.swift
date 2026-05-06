@@ -11,10 +11,16 @@ protocol Reversible {
 
 enum CombatActionType: String, Codable {
     case attack
+    case rangedAttack
     case parry
     case dodge
     case damageDealt
     case damageTaken
+    case fumble
+    case schipUsed
+    case passierschlag
+    case flucht
+    case opponentDefense
 }
 
 // MARK: - Payload Types
@@ -37,6 +43,10 @@ struct CombatActionPayload: Codable, Reversible {
     var rollValue: Int?
     var damageDealt: Int?
     var damageTaken: Int?
+    var effectiveValue: Int?
+    var outcome: String?
+    var schipAction: String?
+    var fumbleTableResult: String?
     var lpChange: Int
 
     func reverse(on hero: Hero) {
@@ -77,6 +87,13 @@ struct MountLPChangePayload: Codable, Reversible {
         let reversed = pet.currentLifeEnergy - lpChange
         pet.currentLifeEnergy = min(max(reversed, 0), pet.lifeEnergy)
     }
+}
+
+struct DiceRollPayload: Codable {
+    var count: Int
+    var sides: Int
+    var results: [Int]
+    var total: Int
 }
 
 // MARK: - LogEntry Model
@@ -125,6 +142,8 @@ final class LogEntry {
             return decodePayload(RestPayload.self)
         case "mountLPChange":
             return decodePayload(MountLPChangePayload.self)
+        case "diceRoll":
+            return nil
         default:
             return nil
         }

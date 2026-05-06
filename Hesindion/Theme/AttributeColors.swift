@@ -8,6 +8,8 @@ extension Color {
     static let groupCombat       = Color(red: 0xdc / 255, green: 0x26 / 255, blue: 0x26 / 255)
     static let groupEquipment    = Color(red: 0x16 / 255, green: 0xa3 / 255, blue: 0x4a / 255)
     static let groupRulebook     = Color(red: 0x7c / 255, green: 0x3a / 255, blue: 0xed / 255)
+    static let groupAdventure    = Color(red: 0xf0 / 255, green: 0x8c / 255, blue: 0x00 / 255) // warm amber/orange
+    static let groupMagic        = Color(red: 0x8b / 255, green: 0x5c / 255, blue: 0xf6 / 255) // violet/magic
 
     // Panel toggle button colours — warm trio, adaptive for dark mode
     static let panelNotes = Color(UIColor { $0.userInterfaceStyle == .dark
@@ -57,5 +59,17 @@ extension Color {
         case "FF", "KO", "KK": .black
         default:                .white
         }
+    }
+
+    /// Returns a lightened version of the color suitable for text on dark backgrounds.
+    /// Ensures minimum brightness so dark section colors remain visible in dark mode.
+    func adaptedForDarkBackground() -> Color {
+        let uiColor = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        let minBrightness: CGFloat = 0.55
+        let adjustedBrightness = max(b, minBrightness)
+        let adjustedSaturation = min(s, 0.8) // slightly desaturate for readability
+        return Color(hue: Double(h), saturation: Double(adjustedSaturation), brightness: Double(adjustedBrightness))
     }
 }

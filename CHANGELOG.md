@@ -8,18 +8,77 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
-- Hero settings view accessible via command palette ("Einstellungen für <Hero>")
-- Color scheme picker with visual swatch previews and automatic profession-based detection
+- UI snapshot testing infrastructure using swift-snapshot-testing
+- Snapshot tests for 7 views (HeroList, HeroDetail, Combat, CombatRoot, Adventure, DiceRoll, WeatherDay) across 12 iPad/color/dynamic-type variants
+- `make test-ui` and `make test-ui-record` Makefile targets
+- TestData factory for creating fake SwiftData models in tests
+
+## [0.3.0] - 2026-03-28
+
+### Added
+
+- General-purpose dice roller ("Würfeln") command with configurable count and sides, tumble animation, and action log integration
+
+## [0.2.0] - 2026-03-23
+
+### Added
+
+- Generic ModifierEngine for unified modifier calculation across melee, ranged, defense, magic, liturgy, and talent checks
+- Magic casting flow — standalone SpellProbeModal with expandable modifications section
+- Combat spell casting — "Zaubern" action with spell selection, setup, multi-round casting with round tracker, and 3d20 execution
+- Magic & Karma section in hero detail showing spells, liturgies, cantrips, and blessings with swipe-to-roll
+- SkillCheckModal — unified 3d20 skill check UI shared by talents and spells
+- Magic-specific modifiers: maintained spells, foreign tradition, gestures/formula, Bann des Eisens, distraction, spell modifications
+- Effects scraper for populating rule effects from ulisses-regelwiki.de
+- DB-sourced rule effect modifiers via RuleEffectModifiers loader
 
 ### Changed
 
+- Melee attack, defense, and ranged modifiers now use ModifierEngine instead of hardcoded logic
+- TalentProbeModal refactored to delegate to generic SkillCheckModal
+- CheckDomain split: meleeParry and meleeDodge replace single meleeDefense for cleaner modifier targeting
+- RulesDatabase.lookupEffects() made internal for engine access
+- build_db.py now accepts both dict and flat list YAML formats for effects import
+
+### Added (prior)
+
+- Abenteuer (Adventure) system with weather generation
+- Aventurian calendar with 12 months + Namenlose Tage
+- Weather generator porting DSA 4.1 WdE p.156ff tables
+- 13 climate regions from Ewiges Eis to Südmeer
+- Day-by-day and bulk weather generation
+- Date jumping with time-jump markers in timeline
+- Plain-text weather export via share sheet
+- Hero ↔ Adventure linking via hero settings
+- New sidebar section for adventures
+
+- Fernkampf (ranged) execution view: W20 FK roll with animated dice, modifier breakdown, critical/fumble confirmation, Schip reroll, and distance-adjusted damage formula
+- Fernkampf criticals and fumbles mirror melee: roll 1 confirms critical hit (halved defense + double damage), roll 20 confirms fumble using the dedicated FK fumble table
+- Opponent defense view now shows "Keine Parade mit Waffe möglich" and defense penalty hint for ranged attacks
+- `CombatAction.fernkampf` added so FK fumbles route to the correct `FumbleTableType.fernkampf` table
+
+- Passierschlag (free strike) view: AT-4 attack with no maneuvers, no critical successes or fumbles, with animated dice rolling and damage calculation
+- Passierschlag button on critical parry success in defense outcome
+- Per-profession color schemes for hero detail views (19 palettes: priests by deity, warriors, mages, mundane)
+- Hero settings view accessible via command palette ("Einstellungen für <Hero>")
+- Color scheme picker with visual swatch previews and automatic profession-based detection
+- Combat execution rolls (AT/PA/AW) now logged automatically with outcome and effective value
+- Schip reroll usage logged as dedicated combat action entry
+
+### Changed
+
+- Combat log descriptions enriched: critical/fumble markers on attacks, TP instead of "Schaden ausgeteilt", structured schip/fumble/flucht/opponent-defense text
+
+- Mount pre-check (Galopp + Reiten) redesigned as single-screen vertical flowchart with collapsing steps and connector arrow
+- Talent probe modal: enlarged modifier buttons (44pt tap targets) for easier use
+- Talent probe modal: constrained max width to 400pt on wide screens
 - Sidebar title centered via toolbar principal item
 - Panel toggle buttons now have filled backgrounds with white icons (no borders)
 - Redesigned landscape sidebar panel buttons — bold 48×48 squares flush to screen edge with distinct amber/teal/purple colors, dark mode adaptive
 
 ### Fixed
 
+- LP (Lebenspunkte) calculation now includes species base value (e.g., +5 for humans, +8 for dwarves) — previously only used KO × 2
 - "Held importieren" button text readability (black text on gold background)
 - Selected hero row visibility in sidebar (increased highlight opacity)
 - Removed unnecessary trailing border from attributes column

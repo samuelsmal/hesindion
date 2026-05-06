@@ -798,30 +798,39 @@ def import_effects(conn: sqlite3.Connection, effects_path: Path):
         return
 
     count = 0
-    for section_key, entries in doc.items():
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            rule_id = entry.get("id")
-            if not rule_id:
-                continue
-            # Verify rule exists in DB
-            exists = conn.execute("SELECT 1 FROM rules WHERE id = ?", (rule_id,)).fetchone()
-            if not exists:
-                print(f"  WARNING: rule_id '{rule_id}' not found in DB, skipping")
-                continue
 
-            for item in entry.get("effects", []):
-                if "level" in item and "effects" in item:
-                    # Level-grouped
-                    level = item["level"]
-                    for eff in item["effects"]:
-                        _insert_effect(conn, rule_id, level, eff)
-                        count += 1
-                elif "type" in item:
-                    # Flat effect
-                    _insert_effect(conn, rule_id, None, item)
+    # Support two formats:
+    # 1. Dict with section keys → list of entries with "id" field (original hand-authored)
+    # 2. Flat list of entries with "rule_id" field (scraper output)
+    entries_list = []
+    if isinstance(doc, dict):
+        for section_key, entries in doc.items():
+            if isinstance(entries, list):
+                entries_list.extend(entries)
+    elif isinstance(doc, list):
+        entries_list = doc
+
+    for entry in entries_list:
+        rule_id = entry.get("id") or entry.get("rule_id")
+        if not rule_id:
+            continue
+        # Verify rule exists in DB
+        exists = conn.execute("SELECT 1 FROM rules WHERE id = ?", (rule_id,)).fetchone()
+        if not exists:
+            print(f"  WARNING: rule_id '{rule_id}' not found in DB, skipping")
+            continue
+
+        for item in entry.get("effects", []):
+            if "level" in item and "effects" in item:
+                # Level-grouped
+                level = item["level"]
+                for eff in item["effects"]:
+                    _insert_effect(conn, rule_id, level, eff)
                     count += 1
+            elif "type" in item:
+                # Flat effect (may have level at top level)
+                _insert_effect(conn, rule_id, item.get("level"), item)
+                count += 1
 
     conn.commit()
     print(f"  Imported {count} effects")

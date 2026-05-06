@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30B2F64000000E630FD /* MarkdownUI */; };
+		BABE7EFD2F6576EC006A2898 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30D2F64000000E630FD /* SnapshotTesting */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BABE7EFD2F6576EC006A2898 /* SnapshotTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			);
 			name = HesindionTests;
 			packageProductDependencies = (
+				BA48A30D2F64000000E630FD /* SnapshotTesting */,
 			);
 			productName = HesindionTests;
 			productReference = BA48A2002F4A000000E630FD /* HesindionTests.xctest */;
@@ -166,6 +169,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BA48A18B2F485F1D00E630FD /* Products */;
@@ -486,6 +490,14 @@
 				minimumVersion = 2.4.1;
 			};
 		};
+		BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.17.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -493,6 +505,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
+		};
+		BA48A30D2F64000000E630FD /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -19,3 +19,10 @@ final class RangedWeapon {
         self.weight = weight
     }
 }
+
+extension RangedWeapon {
+    /// Schusswaffen: Armbrüste (CT_11), Bögen (CT_12). Others are Wurfwaffen.
+    var isSchusswaffe: Bool {
+        ["CT_11", "CT_12"].contains(combatTechniqueId)
+    }
+}

@@ -21,7 +21,11 @@ struct HeroDetailView: View {
     @State private var showMountDamageSheet = false
     @State private var showHeilungSheet = false
     @State private var showMountHealingSheet = false
+    @State private var showDiceRollSheet = false
     @State private var showHeroSettings = false
+    @State private var showAvatarFullscreen = false
+    @State private var activeSpellProbe: HeroSpell? = nil
+    @State private var activeSpellIsLiturgy: Bool = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -106,18 +110,32 @@ struct HeroDetailView: View {
                 TalentProbeModal(talent: talent, hero: hero) { activeTalentProbe = nil }
             }
 
+            if let spell = activeSpellProbe {
+                SpellProbeModal(
+                    spell: spell,
+                    hero: hero,
+                    isLiturgy: activeSpellIsLiturgy,
+                    onDismiss: { activeSpellProbe = nil }
+                )
+            }
+
         }
-        .onKeyPress(characters: .init(charactersIn: "k"), phases: .down) { keyPress in
-            guard keyPress.modifiers.contains(.control) else { return .ignored }
-            if !showCommandSearch {
+        .background {
+            Button("") {
                 showCommandSearch = true
                 commandQuery = ""
                 searchFocused = true
             }
-            return .handled
+            .keyboardShortcut("k", modifiers: .command)
+            .hidden()
         }
         .fullScreenCover(isPresented: $showCombatMode) {
             CombatView(hero: hero) { showCombatMode = false }
+        }
+        .onAppear {
+            if DebugLaunch.path == "combat" {
+                showCombatMode = true
+            }
         }
         .sheet(isPresented: $showRegenerierenSheet) {
             RegenerierenSheet(hero: hero)
@@ -133,6 +151,11 @@ struct HeroDetailView: View {
         }
         .sheet(isPresented: $showHeilungSheet) {
             HeilungSheet(hero: hero)
+                .presentationCornerRadius(0)
+                .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showDiceRollSheet) {
+            DiceRollSheet(hero: hero)
                 .presentationCornerRadius(0)
                 .presentationDetents([.medium])
         }
@@ -183,6 +206,11 @@ struct HeroDetailView: View {
             }
             if cmd.name == "Reittier: Heilung" {
                 showMountHealingSheet = true
+                activeCommand = nil
+                return
+            }
+            if cmd.name == "Würfeln" {
+                showDiceRollSheet = true
                 activeCommand = nil
                 return
             }
@@ -251,15 +279,40 @@ struct HeroDetailView: View {
     // MARK: - Extracted Layout Components
 
     @ViewBuilder private var nameHeading: some View {
-        Text(hero.name)
-            .font(.system(.largeTitle, design: .default, weight: .black))
-            .foregroundStyle(colorScheme.textColor)
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colorScheme.groupColor(at: 0))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+        VStack(spacing: 12) {
+            Text(hero.name)
+                .font(.system(.largeTitle, design: .default, weight: .black))
+                .foregroundStyle(colorScheme.textColor)
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(colorScheme.groupColor(at: 0))
+                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+
+            if let data = hero.avatar, let uiImage = UIImage(data: data) {
+                Button {
+                    showAvatarFullscreen = true
+                } label: {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.dsaBorder, lineWidth: 3)
+                        )
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .fullScreenCover(isPresented: $showAvatarFullscreen) {
+            if let data = hero.avatar, let uiImage = UIImage(data: data) {
+                AvatarFullscreenView(image: uiImage)
+            }
+        }
     }
 
     @ViewBuilder private var groupsContent: some View {
@@ -300,6 +353,19 @@ struct HeroDetailView: View {
                 .padding(.vertical, 8)
             }
 
+            if !hero.spells.isEmpty || !hero.liturgies.isEmpty || !hero.cantrips.isEmpty || !hero.blessings.isEmpty {
+                CollapsibleGroup(L("groupMagic"), color: .groupMagic) {
+                    VStack(spacing: 8) {
+                        spellsSection
+                        liturgiesSection
+                        cantripsSection
+                        blessingsSection
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
+            }
+
             CollapsibleGroup(L("groupEquipment"), color: colorScheme.groupColor(at: 3), textColor: colorScheme.textColor) {
                 VStack(spacing: 8) {
                     equipmentSection
@@ -328,8 +394,10 @@ struct HeroDetailView: View {
 
     // MARK: - Section 2: PersonalData
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     private var personalDataColumns: [GridItem] {
-        if sizeClass == .regular {
+        if sizeClass == .regular && !dynamicTypeSize.isAccessibilitySize {
             return [GridItem(.flexible()), GridItem(.flexible())]
         } else {
             return [GridItem(.flexible())]
@@ -355,7 +423,7 @@ struct HeroDetailView: View {
                     FieldRow(label: "profession", value: pd.profession)
                     FieldRow(label: "title", value: pd.title)
                 }
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 if !pd.characteristics.isEmpty {
                     FieldRow(label: "characteristics", value: pd.characteristics)
                 }
@@ -631,6 +699,74 @@ struct HeroDetailView: View {
         }
         actions.append(SwipeAction(icon: "dice.fill", color: .groupCombat) {
             activeTalentProbe = talent
+        })
+        return actions
+    }
+
+    // MARK: - Spells & Liturgies
+
+    @ViewBuilder private var spellsSection: some View {
+        if !hero.spells.isEmpty {
+            CollapsibleSection(L("spells.section")) {
+                ForEach(hero.spells, id: \.persistentModelID) { spell in
+                    SwipeActionRow(
+                        label: spell.name,
+                        value: "\(spell.value)",
+                        actions: spellActions(for: spell, isLiturgy: false)
+                    )
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var liturgiesSection: some View {
+        if !hero.liturgies.isEmpty {
+            CollapsibleSection(L("liturgies.section")) {
+                ForEach(hero.liturgies, id: \.persistentModelID) { spell in
+                    SwipeActionRow(
+                        label: spell.name,
+                        value: "\(spell.value)",
+                        actions: spellActions(for: spell, isLiturgy: true)
+                    )
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var cantripsSection: some View {
+        if !hero.cantrips.isEmpty {
+            CollapsibleSection(L("cantrips.section")) {
+                ForEach(hero.cantrips, id: \.self) { trait in
+                    SwipeActionRow(label: trait.name, value: "", actions: lookupActions(for: trait))
+                    Divider()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var blessingsSection: some View {
+        if !hero.blessings.isEmpty {
+            CollapsibleSection(L("blessings.section")) {
+                ForEach(hero.blessings, id: \.self) { trait in
+                    SwipeActionRow(label: trait.name, value: "", actions: lookupActions(for: trait))
+                    Divider()
+                }
+            }
+        }
+    }
+
+    private func spellActions(for spell: HeroSpell, isLiturgy: Bool) -> [SwipeAction] {
+        var actions: [SwipeAction] = []
+        if let rule = RulesDatabase.shared.lookup(id: spell.ruleId) {
+            actions.append(SwipeAction(icon: "book.closed", color: .groupRulebook) {
+                lookupRuleId = rule.id
+            })
+        }
+        actions.append(SwipeAction(icon: "dice.fill", color: .groupMagic) {
+            activeSpellProbe = spell
+            activeSpellIsLiturgy = isLiturgy
         })
         return actions
     }
@@ -1011,6 +1147,7 @@ private struct SwipeActionRow<Content: View>: View {
                                 .font(.system(.title3, weight: .bold))
                                 .foregroundStyle(.white)
                                 .frame(width: 56)
+                                .frame(maxHeight: .infinity)
                         }
                         .buttonStyle(.plain)
                         .background(action.color)
