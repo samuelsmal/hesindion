@@ -1,0 +1,13 @@
+{
+  "planPath": "docs/plans/2026-06-06-schip-on-failure-plan.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 0: Add schip.remaining localization string", "status": "pending"},
+    {"id": 2, "subject": "Task 1: Add reroll state, eligibility helpers, preview seam", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 2: Make dice boxes reroll-selectable on failure", "status": "pending", "blockedBy": [2]},
+    {"id": 4, "subject": "Task 3: Add Schip reroll button + remaining caption", "status": "pending", "blockedBy": [3]},
+    {"id": 5, "subject": "Task 4: Implement selective reroll + logging", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 5: Snapshot tests for new states", "status": "pending", "blockedBy": [5]},
+    {"id": 7, "subject": "Task 6: Full verification + changelog confirm", "status": "pending", "blockedBy": [6]}
+  ],
+  "lastUpdated": "2026-06-06"
+}
