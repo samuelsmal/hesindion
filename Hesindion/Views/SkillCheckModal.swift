@@ -339,7 +339,7 @@ struct SkillCheckModal: View {
     private func startAnimation() {
         animationTask = Task { @MainActor in
             while !Task.isCancelled {
-                displayRolls = (0..<3).map { _ in Int.random(in: 1...20) }
+                displayRolls = DiceRoller.roll(count: 3, sides: 20)
                 do {
                     try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch {
@@ -352,7 +352,7 @@ struct SkillCheckModal: View {
     private func roll() {
         guard finalRolls == nil else { return }
         animationTask?.cancel()
-        let rolls = (0..<3).map { _ in Int.random(in: 1...20) }
+        let rolls = DiceRoller.roll(count: 3, sides: 20)
         finalRolls = rolls
 
         let result = computeResult(rolls: rolls)

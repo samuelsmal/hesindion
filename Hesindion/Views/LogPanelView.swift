@@ -64,6 +64,8 @@ struct LogPanelView: View {
         List {
             ForEach(rows) { row in
                 switch row.content {
+                case .sessionHeader(let date, let rate, let talentCount):
+                    sessionHeaderRow(date: date, rate: rate, talentCount: talentCount)
                 case .combatHeader(let combatId, let totalRounds, let totalLP):
                     combatHeaderRow(combatId: combatId, totalRounds: totalRounds, totalLP: totalLP)
                 case .entry(let entry, let indented):
@@ -84,6 +86,34 @@ struct LogPanelView: View {
             .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
+    }
+
+    // MARK: - Session Header Row
+
+    private func sessionHeaderRow(date: Date, rate: Double?, talentCount: Int) -> some View {
+        HStack(spacing: 6) {
+            Text("SITZUNG")
+                .font(.system(.caption2, weight: .black))
+            Text(date, format: .dateTime.day().month(.abbreviated))
+                .font(.system(.caption, weight: .bold))
+            Spacer()
+            if let rate {
+                Circle()
+                    .fill(Color.successRateColor(rate))
+                    .frame(width: 8, height: 8)
+                Text("\(Int((rate * 100).rounded()))% (\(talentCount))")
+                    .font(.system(.caption, weight: .bold, design: .monospaced))
+            }
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, DSALayout.contentPadding)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .frame(height: 1)
+                .foregroundStyle(Color.dsaBorder.opacity(0.3))
+        }
     }
 
     // MARK: - Combat Header Row
@@ -286,12 +316,33 @@ struct LogPanelView: View {
     }
 
     private enum RowContent {
+        case sessionHeader(date: Date, rate: Double?, talentCount: Int)
         case combatHeader(combatId: UUID, totalRounds: Int, totalLP: Int)
         case entry(LogEntry, indented: Bool)
     }
 
     private func buildFlatRows() -> [FlatRow] {
-        let sorted = sortedEntries
+        // Group all entries into play sessions (≥ 8h gaps), newest session first.
+        let sessions = SessionGrouper.group(sortedEntries, by: \.timestamp)
+        var rows: [FlatRow] = []
+        for session in sessions {
+            guard let first = session.first else { continue }
+            let talentChecks = session.filter { $0.kind == "talentCheck" }
+            let successes = talentChecks.filter {
+                $0.decodePayload(TalentCheckPayload.self)?.succeeded == true
+            }.count
+            let rate: Double? = talentChecks.isEmpty ? nil : Double(successes) / Double(talentChecks.count)
+            rows.append(FlatRow(
+                id: "session-\(first.id.uuidString)",
+                content: .sessionHeader(date: first.timestamp, rate: rate, talentCount: talentChecks.count)
+            ))
+            rows.append(contentsOf: buildEntryRows(for: session))
+        }
+        return rows
+    }
+
+    /// Builds the combat-grouped entry rows for a single session's entries.
+    private func buildEntryRows(for sorted: [LogEntry]) -> [FlatRow] {
         var rows: [FlatRow] = []
         var combatBuckets: [UUID: [LogEntry]] = [:]
         var combatInsertionOrder: [UUID] = []

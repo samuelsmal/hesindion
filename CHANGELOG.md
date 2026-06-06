@@ -12,6 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Snapshot tests for 7 views (HeroList, HeroDetail, Combat, CombatRoot, Adventure, DiceRoll, WeatherDay) across 12 iPad/color/dynamic-type variants
 - `make test-ui` and `make test-ui-record` Makefile targets
 - TestData factory for creating fake SwiftData models in tests
+- `DiceRoller` engine — pure, testable dice rolling with an injectable `RandomNumberGenerator`
+- Statistical tests for dice fairness (`DiceRollerTests`): chi-square uniformity for W3/W6/W20, mean, serial-independence, and end-to-end 3d20 → SkillCheckEngine critical-rate checks
+- Success-probability tests verifying sampled pass rates for realistic ability profiles match exact enumeration of all 8000 outcomes
+- Per-ability **theoretical success rate** on each talent row — traffic-light dot + % computed by exact enumeration (`SkillCheckEngine.successProbability`)
+- Per-ability **recorded success rate** revealed on tap: overall %, number of Proben, sessions, and best session
+- **Session grouping** of the action log into play sessions separated by ≥ 8h gaps (`SessionGrouper`), with per-session success-rate headers in the Log panel
+- `TalentStatistics` engine for aggregating recorded checks, plus tests (`SessionGrouperTests`, `TalentStatisticsTests`, `SuccessProbabilityTests`)
+
+### Changed
+
+- `DiceRollSheet` and `SkillCheckModal` now route all rolls through `DiceRoller` instead of calling `Int.random(in:)` inline
 
 ## [0.3.0] - 2026-03-28
 
