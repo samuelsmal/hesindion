@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Schip (fate point) reroll option on failed skill and spell checks — on a regular failure, the locked 3W20 dice become reroll-selectable (all selected by default) and a "Schip: Neuer Wurf" button spends one Schip to reroll the chosen dice
 - UI snapshot testing infrastructure using swift-snapshot-testing
 - Snapshot tests for 7 views (HeroList, HeroDetail, Combat, CombatRoot, Adventure, DiceRoll, WeatherDay) across 12 iPad/color/dynamic-type variants
 - `make test-ui` and `make test-ui-record` Makefile targets
