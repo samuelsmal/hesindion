@@ -39,12 +39,15 @@ struct SkillCheckModal: View {
     @State private var displayRolls = [Int](repeating: 1, count: 3)
     @State private var finalRolls: [Int]? = nil
     @State private var animationTask: Task<Void, Never>? = nil
+    @State private var schipUsed = false
+    @State private var rerollSelection: Set<Int> = [0, 1, 2]  // all dice selected by default
 
     init(
         config: SkillCheckConfig,
         hero: Hero,
         onDismiss: @escaping () -> Void,
         onResult: ((SkillCheckResult) -> Void)? = nil,
+        previewFinalRolls: [Int]? = nil,
         initialModifier: Int = 0,
         hints: [SkillCheckHint] = []
     ) {
@@ -55,6 +58,7 @@ struct SkillCheckModal: View {
         self.initialModifier = initialModifier
         self.hints = hints
         _modifiers = State(initialValue: [initialModifier, initialModifier, initialModifier])
+        _finalRolls = State(initialValue: previewFinalRolls)
     }
 
     var body: some View {
@@ -293,6 +297,17 @@ struct SkillCheckModal: View {
         case kritischerPatzer
         case kritischerErfolg
         case qs(Int)
+    }
+
+    private var schipsRemaining: Int {
+        hero.derivedValues?.schicksalspunkte.current ?? 0
+    }
+
+    /// Schip reroll is offered only on a regular failure (QS 0) — not on a
+    /// critical botch and not on any success. Mirrors the combat decision.
+    private func isRerollEligible(_ result: CheckResult) -> Bool {
+        guard case .qs(0) = result else { return false }
+        return !schipUsed && schipsRemaining > 0
     }
 
     private func computeResult(rolls: [Int]) -> CheckResult {
