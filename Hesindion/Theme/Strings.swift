@@ -332,6 +332,7 @@ enum DSAStrings {
         "schip.ignoreZustand":          "Ignore Condition",
         "source.schipDefense":          "Fate Point",
         "schip.label":                  "FATE POINTS",
+        "schip.remaining":              "Fate Points left",
 
         // Fumble
         "fumble.title":                 "Fumble!",
@@ -771,6 +772,7 @@ enum DSAStrings {
         "schip.ignoreZustand":          "Zustand ignorieren",
         "source.schipDefense":          "Schicksalspunkt",
         "schip.label":                  "SCHICKSALSPUNKTE",
+        "schip.remaining":              "Schips übrig",
 
         // Fumble
         "fumble.title":                 "Patzer!",
