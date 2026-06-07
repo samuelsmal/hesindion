@@ -418,7 +418,26 @@ struct SkillCheckModal: View {
         animationTask?.cancel()
         let rolls = (0..<3).map { _ in Int.random(in: 1...20) }
         finalRolls = rolls
+        emitResult(rolls: rolls, schipReroll: false)
+    }
 
+    private func reroll() {
+        guard let current = finalRolls, !schipUsed, !rerollSelection.isEmpty else { return }
+        guard schipsRemaining > 0 else { return }
+
+        // Spend one Schip and lock out further rerolls this check.
+        hero.derivedValues?.schicksalspunkte.current -= 1
+        schipUsed = true
+
+        // Reroll only the selected dice; keep the others.
+        var newRolls = current
+        for i in rerollSelection { newRolls[i] = Int.random(in: 1...20) }
+        finalRolls = newRolls
+
+        emitResult(rolls: newRolls, schipReroll: true)
+    }
+
+    private func emitResult(rolls: [Int], schipReroll: Bool) {
         let result = computeResult(rolls: rolls)
         let qs: Int
         let succeeded: Bool
@@ -437,25 +456,27 @@ struct SkillCheckModal: View {
         }
         let remaining = config.skillValue - excesses.reduce(0, +)
 
-        let skillCheckResult = SkillCheckResult(
+        onResult?(SkillCheckResult(
             rolls: rolls,
             qualityLevel: qs,
             succeeded: succeeded,
             isCriticalSuccess: isCritSuccess,
             isCriticalFailure: isCritFailure,
             remainingSkillPoints: remaining
-        )
-        onResult?(skillCheckResult)
+        ))
 
         let entry = LogEntry.create(
             kind: config.logKind,
-            payload: TalentCheckPayload(talentName: config.name, qualityLevel: qs, succeeded: succeeded),
+            payload: TalentCheckPayload(
+                talentName: config.name,
+                qualityLevel: qs,
+                succeeded: succeeded,
+                schipReroll: schipReroll ? true : nil
+            ),
             hero: hero
         )
         modelContext.insert(entry)
     }
-
-    private func reroll() { /* implemented in next task */ }
 }
 
 // MARK: - SkillCheckHint

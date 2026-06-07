@@ -29,6 +29,7 @@ struct TalentCheckPayload: Codable, Reversible {
     var talentName: String
     var qualityLevel: Int
     var succeeded: Bool
+    var schipReroll: Bool? = nil
 
     func reverse(on hero: Hero) {
         // no-op: talent checks don't mutate hero state
