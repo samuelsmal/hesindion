@@ -163,14 +163,30 @@ struct SkillCheckModal: View {
                 .overlay(Rectangle().stroke(hint.color, lineWidth: 2))
             }
 
-            // Dice row (tap to roll)
+            // Dice row — tap to roll; once failed with Schips available, tap to
+            // toggle which dice the Schip reroll will replace.
+            let rerollEligible = hasResult && isRerollEligible(computeResult(rolls: fr))
             HStack(spacing: 0) {
                 ForEach(0..<3, id: \.self) { i in
-                    diceBox(value: rolls[i], isAnimating: !hasResult)
+                    diceBox(
+                        value: rolls[i],
+                        isAnimating: !hasResult,
+                        selected: rerollEligible && rerollSelection.contains(i)
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !hasResult {
+                            roll()
+                        } else if rerollEligible {
+                            if rerollSelection.contains(i) {
+                                rerollSelection.remove(i)
+                            } else {
+                                rerollSelection.insert(i)
+                            }
+                        }
+                    }
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture { roll() }
 
             // Result boxes
             HStack(spacing: 0) {
@@ -240,7 +256,7 @@ struct SkillCheckModal: View {
         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
     }
 
-    private func diceBox(value: Int, isAnimating: Bool) -> some View {
+    private func diceBox(value: Int, isAnimating: Bool, selected: Bool) -> some View {
         Text("\(value)")
             .font(.system(.title3, weight: .black))
             .fontDesign(.monospaced)
@@ -248,6 +264,12 @@ struct SkillCheckModal: View {
             .padding(.vertical, 8)
             .background(isAnimating ? config.accentColor.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .overlay(
+                Rectangle().stroke(
+                    selected ? Color(red: 0.6, green: 0.5, blue: 0.0) : Color.clear,
+                    lineWidth: 3
+                )
+            )
     }
 
     private func resultBox(value: Int) -> some View {
