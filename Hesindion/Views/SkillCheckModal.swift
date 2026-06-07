@@ -201,6 +201,33 @@ struct SkillCheckModal: View {
             let result = computeResult(rolls: fr)
             summaryBar(rolls: fr, result: result)
                 .opacity(hasResult ? 1 : 0)
+
+            // Schip reroll affordance — only on a regular failure with Schips left.
+            if hasResult, isRerollEligible(computeResult(rolls: fr)) {
+                Button {
+                    reroll()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                        Text(L("schip.reroll"))
+                    }
+                    .font(.system(.body, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color(red: 0.6, green: 0.5, blue: 0.0))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+                .disabled(rerollSelection.isEmpty)
+                .opacity(rerollSelection.isEmpty ? 0.5 : 1)
+
+                Text("\(schipsRemaining) \(L("schip.remaining"))")
+                    .font(.system(.caption2, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
+            }
         }
         .padding(16)
     }
@@ -427,6 +454,8 @@ struct SkillCheckModal: View {
         )
         modelContext.insert(entry)
     }
+
+    private func reroll() { /* implemented in next task */ }
 }
 
 // MARK: - SkillCheckHint
