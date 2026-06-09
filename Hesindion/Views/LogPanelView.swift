@@ -102,7 +102,7 @@ struct LogPanelView: View {
                     .fill(Color.successRateColor(rate))
                     .frame(width: 8, height: 8)
                 Text("\(Int((rate * 100).rounded()))% (\(talentCount))")
-                    .font(.system(.caption, weight: .bold, design: .monospaced))
+                    .font(.system(.caption, design: .monospaced).weight(.bold))
             }
         }
         .foregroundStyle(.secondary)
