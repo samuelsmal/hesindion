@@ -63,6 +63,30 @@ enum SkillCheckEngine {
         return .regular(qs: qualityLevel(for: remaining), remainingFP: remaining)
     }
 
+    /// Exact probability that a check succeeds, by enumerating all 8000 equally
+    /// likely 3d20 outcomes through `evaluate`. Pure and deterministic — this is the
+    /// theoretical success rate shown per ability.
+    ///
+    /// - Parameters:
+    ///   - attributeValues: The 3 attribute values for this check.
+    ///   - skillPoints: The talent's Fertigkeitspunkte (FP).
+    ///   - modifier: Global modifier applied to all 3 thresholds (positive = easier).
+    static func successProbability(attributeValues: [Int], skillPoints: Int, modifier: Int = 0) -> Double {
+        precondition(attributeValues.count == 3)
+        var successes = 0
+        for a in 1...20 {
+            for b in 1...20 {
+                for c in 1...20 {
+                    if evaluate(rolls: [a, b, c], attributeValues: attributeValues,
+                                skillPoints: skillPoints, modifier: modifier).succeeded {
+                        successes += 1
+                    }
+                }
+            }
+        }
+        return Double(successes) / 8000.0
+    }
+
     /// Convert remaining FP to quality level (Qualitätsstufe).
     ///
     /// | FP    | QS |

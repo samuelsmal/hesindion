@@ -61,6 +61,16 @@ extension Color {
         }
     }
 
+    /// Traffic-light colour for a success probability (0...1): red < 34%,
+    /// amber 34–66%, green ≥ 67%. Reuses the neo-brutalist group palette.
+    static func successRateColor(_ probability: Double) -> Color {
+        switch probability {
+        case ..<0.34: return .groupCombat      // red
+        case ..<0.67: return .groupAdventure   // amber/orange
+        default:      return .groupEquipment   // green
+        }
+    }
+
     /// Returns a lightened version of the color suitable for text on dark backgrounds.
     /// Ensures minimum brightness so dark section colors remain visible in dark mode.
     func adaptedForDarkBackground() -> Color {

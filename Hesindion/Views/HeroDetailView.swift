@@ -26,6 +26,7 @@ struct HeroDetailView: View {
     @State private var showAvatarFullscreen = false
     @State private var activeSpellProbe: HeroSpell? = nil
     @State private var activeSpellIsLiturgy: Bool = false
+    @State private var showRecordedStats = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -670,8 +671,19 @@ struct HeroDetailView: View {
         "Wissenstalente", "Handwerkstalente"
     ]
 
+    /// Recorded talent checks distilled from the action log, for per-ability rates.
+    private var talentChecks: [TalentStatistics.Check] {
+        hero.logEntries.compactMap { entry in
+            guard entry.kind == "talentCheck",
+                  let payload = entry.decodePayload(TalentCheckPayload.self) else { return nil }
+            return TalentStatistics.Check(name: payload.talentName, succeeded: payload.succeeded, date: entry.timestamp)
+        }
+    }
+
     @ViewBuilder private var talentsSections: some View {
         let grouped = Dictionary(grouping: hero.talents, by: \.category)
+        let checks = talentChecks
+        recordedStatsToggle
         ForEach(talentCategoryOrder, id: \.self) { category in
             if let items = grouped[category], !items.isEmpty {
                 CollapsibleSection(category) {
@@ -680,7 +692,10 @@ struct HeroDetailView: View {
                             TalentSwipeContent(
                                 name: talent.name,
                                 value: talent.value,
-                                probeKeys: TalentProbeAttributes.checks[talent.name]
+                                probeKeys: TalentProbeAttributes.checks[talent.name],
+                                successRate: talentSuccessRate(for: talent),
+                                record: TalentStatistics.record(for: talent.name, checks: checks),
+                                isExpanded: showRecordedStats
                             )
                         }
                         Divider()
@@ -688,6 +703,42 @@ struct HeroDetailView: View {
                 }
             }
         }
+    }
+
+    /// Single section-level switch that reveals/hides the recorded-stats line
+    /// under every talent row at once. Theory badge stays inline regardless.
+    private var recordedStatsToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) { showRecordedStats.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: showRecordedStats ? "chart.bar.fill" : "chart.bar")
+                Text("Aufgezeichnete Werte")
+                    .font(.system(.subheadline, weight: .bold))
+                Spacer(minLength: 8)
+                Text(showRecordedStats ? "AN" : "AUS")
+                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(showRecordedStats ? Color.groupTalents : Color(UIColor.secondarySystemBackground))
+                    .foregroundStyle(showRecordedStats ? Color.black : Color.secondary)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Aufgezeichnete Werte anzeigen")
+        .accessibilityValue(showRecordedStats ? "an" : "aus")
+    }
+
+    /// Theoretical (base, no situational modifier) success probability for a talent.
+    private func talentSuccessRate(for talent: Talent) -> Double {
+        guard let attrs = hero.attributes,
+              let data = TalentProbeAttributes.lookup(talent: talent.name, attributes: attrs) else { return 0 }
+        return TalentSuccessRateCache.probability(attributeValues: data.values, skillPoints: talent.value)
     }
 
     private func talentActions(for talent: Talent) -> [SwipeAction] {
@@ -1227,33 +1278,100 @@ struct DefaultSwipeContent: View {
     }
 }
 
-/// Talent row content showing name, probe abbreviations, and value.
+/// Memoized cache for theoretical talent success probabilities. Results are
+/// deterministic, so caching by (attributes, FP) avoids re-enumerating 8000
+/// outcomes on every SwiftUI render.
+@MainActor
+private enum TalentSuccessRateCache {
+    private static var cache: [String: Double] = [:]
+
+    static func probability(attributeValues: [Int], skillPoints: Int) -> Double {
+        let key = attributeValues.map(String.init).joined(separator: ",") + "|\(skillPoints)"
+        if let cached = cache[key] { return cached }
+        let value = SkillCheckEngine.successProbability(attributeValues: attributeValues, skillPoints: skillPoints)
+        cache[key] = value
+        return value
+    }
+}
+
+/// Talent row content: name, probe abbreviations, theoretical success rate
+/// (traffic-light dot + %), and value. The recorded-stats detail is shown when
+/// `isExpanded`, driven by the Talents section's global "Aufgezeichnete Werte" toggle.
 struct TalentSwipeContent: View {
     let name: String
     let value: Int
     let probeKeys: [String]?
+    let successRate: Double
+    let record: TalentStatistics.Record?
+    let isExpanded: Bool
 
     var body: some View {
-        HStack(spacing: 0) {
-            Text(L(name)).font(.body)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            if let keys = probeKeys {
-                ForEach(keys, id: \.self) { key in
-                    Text(key)
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color.attributeForeground(for: key))
-                        .frame(width: 32, height: 24)
-                        .background(Color.attributeBackground(for: key).opacity(0.7))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                Text(L(name)).font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let keys = probeKeys {
+                    ForEach(keys, id: \.self) { key in
+                        Text(key)
+                            .font(.system(.caption, weight: .bold))
+                            .foregroundStyle(Color.attributeForeground(for: key))
+                            .frame(width: 32, height: 24)
+                            .background(Color.attributeBackground(for: key).opacity(0.7))
+                    }
                 }
+                successBadge
+                    .frame(width: 60, alignment: .trailing)
+                    .padding(.leading, 8)
+                Text("\(value)")
+                    .font(.system(.body, design: .monospaced))
+                    .frame(width: 36, alignment: .trailing)
             }
-            Text("\(value)")
-                .font(.system(.body, design: .monospaced))
-                .frame(width: 36, alignment: .trailing)
+            if isExpanded {
+                recordedDetail
+                    .padding(.top, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(.leading, 24)
         .padding(.trailing, 12)
         .padding(.vertical, 6)
     }
+
+    private var successBadge: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(Color.successRateColor(successRate))
+                .frame(width: 9, height: 9)
+            Text("\(percent(successRate))%")
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder private var recordedDetail: some View {
+        if let record {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.successRateColor(record.rate))
+                        .frame(width: 7, height: 7)
+                    Text("Aufgezeichnet: \(percent(record.rate))% · \(record.total) \(record.total == 1 ? "Probe" : "Proben") · \(record.sessionCount) \(record.sessionCount == 1 ? "Sitzung" : "Sitzungen")")
+                }
+                if let best = record.bestSession {
+                    Text("Beste Sitzung: \(percent(best.rate))% (\(best.successes)/\(best.total))")
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .font(.system(.caption2))
+            .foregroundStyle(.secondary)
+        } else {
+            Text("Noch keine Proben aufgezeichnet")
+                .font(.system(.caption2))
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    private func percent(_ p: Double) -> Int { Int((p * 100).rounded()) }
 }
 
 // MARK: - Preview

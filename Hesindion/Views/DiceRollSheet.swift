@@ -190,7 +190,7 @@ struct DiceRollSheet: View {
     // MARK: - Animation & Rolling
 
     private func syncDisplayValues() {
-        displayValues = (0..<diceCount).map { _ in Int.random(in: 1...sides) }
+        displayValues = DiceRoller.roll(count: diceCount, sides: sides)
     }
 
     private func startAnimation() {
@@ -206,6 +206,6 @@ struct DiceRollSheet: View {
     private func rollDice() {
         guard rollResults == nil else { return }
         animTask?.cancel()
-        rollResults = (0..<diceCount).map { _ in Int.random(in: 1...sides) }
+        rollResults = DiceRoller.roll(count: diceCount, sides: sides)
     }
 }
