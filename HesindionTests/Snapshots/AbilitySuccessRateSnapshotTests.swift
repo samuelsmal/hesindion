@@ -58,6 +58,19 @@ final class AbilitySuccessRateSnapshotTests: XCTestCase {
         }
 
         let view = VStack(spacing: 0) {
+            // Mirrors the "Aufgezeichnete Werte" section toggle in its ON state.
+            HStack(spacing: 8) {
+                Image(systemName: "chart.bar.fill")
+                Text("Aufgezeichnete Werte").font(.system(.subheadline, weight: .bold))
+                Spacer(minLength: 8)
+                Text("AN")
+                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.groupTalents)
+                    .foregroundStyle(Color.black)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 8)
             Text("KÖRPERTALENTE")
                 .font(.system(.subheadline, weight: .black))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,7 +83,7 @@ final class AbilitySuccessRateSnapshotTests: XCTestCase {
                     probeKeys: TalentProbeAttributes.checks[talent.name],
                     successRate: rate(talent),
                     record: TalentStatistics.record(for: talent.name, checks: checks),
-                    isExpanded: talent.name == "Verbergen"   // show the recorded detail
+                    isExpanded: true   // toggle ON → recorded detail under every row
                 )
                 Divider()
             }

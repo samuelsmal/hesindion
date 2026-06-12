@@ -26,7 +26,7 @@ struct HeroDetailView: View {
     @State private var showAvatarFullscreen = false
     @State private var activeSpellProbe: HeroSpell? = nil
     @State private var activeSpellIsLiturgy: Bool = false
-    @State private var expandedTalents: Set<PersistentIdentifier> = []
+    @State private var showRecordedStats = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -683,6 +683,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var talentsSections: some View {
         let grouped = Dictionary(grouping: hero.talents, by: \.category)
         let checks = talentChecks
+        recordedStatsToggle
         ForEach(talentCategoryOrder, id: \.self) { category in
             if let items = grouped[category], !items.isEmpty {
                 CollapsibleSection(category) {
@@ -694,8 +695,7 @@ struct HeroDetailView: View {
                                 probeKeys: TalentProbeAttributes.checks[talent.name],
                                 successRate: talentSuccessRate(for: talent),
                                 record: TalentStatistics.record(for: talent.name, checks: checks),
-                                isExpanded: expandedTalents.contains(talent.persistentModelID),
-                                onTap: { toggleTalentExpansion(talent.persistentModelID) }
+                                isExpanded: showRecordedStats
                             )
                         }
                         Divider()
@@ -705,19 +705,40 @@ struct HeroDetailView: View {
         }
     }
 
+    /// Single section-level switch that reveals/hides the recorded-stats line
+    /// under every talent row at once. Theory badge stays inline regardless.
+    private var recordedStatsToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) { showRecordedStats.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: showRecordedStats ? "chart.bar.fill" : "chart.bar")
+                Text("Aufgezeichnete Werte")
+                    .font(.system(.subheadline, weight: .bold))
+                Spacer(minLength: 8)
+                Text(showRecordedStats ? "AN" : "AUS")
+                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(showRecordedStats ? Color.groupTalents : Color(UIColor.secondarySystemBackground))
+                    .foregroundStyle(showRecordedStats ? Color.black : Color.secondary)
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Aufgezeichnete Werte anzeigen")
+        .accessibilityValue(showRecordedStats ? "an" : "aus")
+    }
+
     /// Theoretical (base, no situational modifier) success probability for a talent.
     private func talentSuccessRate(for talent: Talent) -> Double {
         guard let attrs = hero.attributes,
               let data = TalentProbeAttributes.lookup(talent: talent.name, attributes: attrs) else { return 0 }
         return TalentSuccessRateCache.probability(attributeValues: data.values, skillPoints: talent.value)
-    }
-
-    private func toggleTalentExpansion(_ id: PersistentIdentifier) {
-        if expandedTalents.contains(id) {
-            expandedTalents.remove(id)
-        } else {
-            expandedTalents.insert(id)
-        }
     }
 
     private func talentActions(for talent: Talent) -> [SwipeAction] {
@@ -1274,7 +1295,8 @@ private enum TalentSuccessRateCache {
 }
 
 /// Talent row content: name, probe abbreviations, theoretical success rate
-/// (traffic-light dot + %), and value. Tapping toggles the recorded-stats detail.
+/// (traffic-light dot + %), and value. The recorded-stats detail is shown when
+/// `isExpanded`, driven by the Talents section's global "Aufgezeichnete Werte" toggle.
 struct TalentSwipeContent: View {
     let name: String
     let value: Int
@@ -1282,7 +1304,6 @@ struct TalentSwipeContent: View {
     let successRate: Double
     let record: TalentStatistics.Record?
     let isExpanded: Bool
-    var onTap: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -1314,8 +1335,6 @@ struct TalentSwipeContent: View {
         .padding(.leading, 24)
         .padding(.trailing, 12)
         .padding(.vertical, 6)
-        .contentShape(Rectangle())
-        .onTapGesture { onTap() }
     }
 
     private var successBadge: some View {

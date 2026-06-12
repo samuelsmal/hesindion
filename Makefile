@@ -119,6 +119,11 @@ clean:
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
+# Force xcodebuild onto the single named simulator. Without these, test
+# parallelization clones the device (one booting sim per worker → several
+# simulators on the boot screen at once). NO clones, NO extra boots.
+NO_CLONE = -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1
+
 test: boot
 	xcodebuild \
 		-project $(PROJECT) \
@@ -127,6 +132,7 @@ test: boot
 		-configuration $(CONFIG) \
 		-derivedDataPath $(DERIVED_DATA) \
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		$(NO_CLONE) \
 		test
 
 test-ui: boot
@@ -137,14 +143,16 @@ test-ui: boot
 		-configuration $(CONFIG) \
 		-derivedDataPath $(DERIVED_DATA) \
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		$(NO_CLONE) \
 		test -only-testing:HesindionTests
 
 test-ui-record: boot
-	SNAPSHOT_TESTING_RECORD=1 xcodebuild \
+	SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
 		-sdk $(SDK) \
 		-configuration $(CONFIG) \
 		-derivedDataPath $(DERIVED_DATA) \
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		$(NO_CLONE) \
 		test -only-testing:HesindionTests

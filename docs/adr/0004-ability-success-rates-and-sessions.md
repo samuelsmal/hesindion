@@ -39,8 +39,11 @@ schema change was needed. We only needed a rule for what constitutes a "session"
 
 ## Consequences
 
-- Talent rows show a traffic-light dot + % (theoretical); tapping reveals recorded
-  stats (overall %, Proben count, session count, best session).
+- Talent rows show a traffic-light dot + % (theoretical) inline at all times. The
+  recorded stats (overall %, Proben count, session count, best session) are hidden by
+  default and revealed under every row at once by the Talents section's
+  "Aufgezeichnete Werte" toggle — keeping the default view uncluttered rather than
+  inlining aggregations on every row.
 - The Log panel gains per-session header rows (date · success rate · count).
 - The 8h threshold is a heuristic; if it misclassifies long sessions or back-to-back
   nights it can be tuned in one place (`SessionGrouper.defaultGap`).
