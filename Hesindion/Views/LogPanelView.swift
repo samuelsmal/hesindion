@@ -173,10 +173,11 @@ struct LogPanelView: View {
         switch entry.kind {
         case "talentCheck":
             guard let p = entry.decodePayload(TalentCheckPayload.self) else { return "—" }
+            let schip = p.schipReroll == true ? " ✦ Schip" : ""
             if p.succeeded {
-                return "\(p.talentName) — QS \(p.qualityLevel) ✓"
+                return "\(p.talentName) — QS \(p.qualityLevel) ✓\(schip)"
             } else {
-                return "\(p.talentName) — misslungen ✗"
+                return "\(p.talentName) — misslungen ✗\(schip)"
             }
 
         case "combatAction":
