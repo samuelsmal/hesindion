@@ -36,4 +36,19 @@ final class StateDetailSheetSnapshotTests: XCTestCase {
 
         assertAllVariants(of: view, named: "state_detail_schmerz_derived")
     }
+
+    /// A binary Status (Liegend): on/off `levelControl` indicator, single effect row,
+    /// cause + removal callout and the destructive "Entfernen" button.
+    @MainActor
+    func testLiegendStatus() throws {
+        let container = try TestData.makeContainer()
+        let hero = try TestData.importBoronmir(into: container)
+        hero.setStateLevel("liegend", level: 1)
+
+        let def = StateCatalog.definition(for: "liegend")!
+        let view = StateDetailSheet(hero: hero, def: def)
+            .modelContainer(container)
+
+        assertAllVariants(of: view, named: "state_detail_liegend")
+    }
 }

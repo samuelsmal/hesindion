@@ -14,6 +14,10 @@ struct StatesSectionView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showPicker = false
     @State private var detailState: StateSelection?
+    /// Bumped on every long-press quick action to drive haptic feedback.
+    @State private var quickActionTick = 0
+    /// Whether the most recent quick action removed the state (resulting level 0).
+    @State private var quickActionRemoved = false
 
     /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
     private struct StateSelection: Identifiable {
@@ -24,11 +28,17 @@ struct StatesSectionView: View {
     /// Long-press quick action: Zustand ⇒ decrement one level; Status ⇒ remove.
     /// Derived/implied chips pass no long-press handler.
     private func quickAction(for def: StateDefinition) {
+        let newLevel: Int
         if def.kind == .zustand {
-            hero.setStateLevel(def.id, level: hero.level(of: def.id) - 1)
+            newLevel = hero.level(of: def.id) - 1
         } else {
-            hero.setStateLevel(def.id, level: 0)
+            newLevel = 0
         }
+        hero.setStateLevel(def.id, level: newLevel)
+        // Trigger haptic feedback: a warning when the action removed the state,
+        // a lighter impact for a decrement.
+        quickActionRemoved = newLevel <= 0
+        quickActionTick += 1
     }
 
     /// Implied states (e.g. bewusstlos ⇒ liegend) that aren't already explicitly active,
@@ -68,6 +78,9 @@ struct StatesSectionView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .sensoryFeedback(trigger: quickActionTick) { _, _ in
+            quickActionRemoved ? .warning : .impact
+        }
         .sheet(isPresented: $showPicker) {
             StatePickerSheet(hero: hero)
                 .presentationCornerRadius(0)

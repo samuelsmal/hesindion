@@ -105,11 +105,12 @@ struct StateDetailSheet: View {
                 Text(L("states.level").uppercased())
                     .font(.system(.caption, weight: .black))
                     .foregroundStyle(.secondary)
-                // I–IV stepper: tap a number to set; tap the active one to clear.
+                // I–IV stepper: tap a number to set that level. Removal is
+                // exclusively via the destructive "Entfernen" button below.
                 HStack(spacing: 8) {
                     ForEach(1...4, id: \.self) { lvl in
                         Button {
-                            hero.setStateLevel(def.id, level: level == lvl ? 0 : lvl)
+                            hero.setStateLevel(def.id, level: lvl)
                         } label: {
                             Text(StateCatalog.roman(lvl))
                                 .font(.system(.body, design: .monospaced, weight: .black))
