@@ -69,11 +69,13 @@ struct HeroImportTests {
         // Scripts (from SA_27)
         #expect(!hero.scripts.isEmpty)
 
-        // Talents (31 entries in Optolith export)
-        #expect(hero.talents.count == 31)
+        // Talents: import backfills all 59 standard talents (TAL_1…TAL_59),
+        // defaulting any not present in the export to level 0.
+        #expect(hero.talents.count == 59)
 
-        // Combat techniques (5 entries: CT_12, CT_3, CT_5, CT_10, CT_9)
-        #expect(hero.combatTechniques.count == 5)
+        // Combat techniques: import lists all 21 standard techniques,
+        // defaulting any not rated in the export to base value 6.
+        #expect(hero.combatTechniques.count == 21)
 
         // Equipment split
         #expect(hero.meleeWeapons.count == 2)  // Rabenschnabel + Langschwert

@@ -61,7 +61,12 @@ final class RulesDatabase: @unchecked Sendable {
             fatalError("rules.db not found in bundle")
         }
         var handle: OpaquePointer?
-        guard sqlite3_open_v2(path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nil) == SQLITE_OK else {
+        // FULLMUTEX (serialized) — the shared singleton connection is reached from
+        // multiple threads (SwiftUI/SwiftData rendering touches RulesDatabase.shared
+        // on background queues while imports query it). NOMUTEX corrupted the
+        // read-only connection under that concurrency, intermittently yielding empty
+        // query results. Read-only DB, so serialization overhead is negligible.
+        guard sqlite3_open_v2(path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
             fatalError("Cannot open rules.db")
         }
         db = handle

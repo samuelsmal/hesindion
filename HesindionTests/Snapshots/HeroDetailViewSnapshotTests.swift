@@ -17,7 +17,12 @@ final class HeroDetailViewSnapshotTests: XCTestCase {
         )
         .modelContainer(container)
 
-        // Avatar image loading may cause minor pixel differences between runs
-        assertAllVariants(of: view, named: "boronmir", precision: 0.99)
+        // This is the only snapshot that renders a real decoded-bitmap avatar.
+        // Bitmap resampling/anti-aliasing produces tiny color deltas spread across
+        // many pixels between runs — `precision` alone (which demands exact matches
+        // on the kept fraction of pixels) flags these as failures, especially under
+        // full-suite memory pressure. `perceptualPrecision` tolerates small per-pixel
+        // color differences, which is the correct knob for bitmap rendering.
+        assertAllVariants(of: view, named: "boronmir", precision: 0.99, perceptualPrecision: 0.98)
     }
 }
