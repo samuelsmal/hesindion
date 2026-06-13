@@ -108,26 +108,30 @@ struct AdventureDetailView: View {
         VStack(spacing: 8) {
             weatherButton(L("weather.add"), icon: "plus", filled: true) { isShowingAddStretch = true }
             HStack(spacing: 8) {
-                weatherButton(L("weather.rules"), icon: "info.circle", filled: false) { isShowingRules = true }
+                weatherButton(L("weather.rules"), icon: "info.circle", filled: false, fillHeight: true) { isShowingRules = true }
                 ShareLink(item: exportText()) {
-                    weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false)
+                    weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false, fillHeight: true)
                 }
+                .buttonStyle(.plain)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
         .padding(.vertical, 8)
     }
 
-    private func weatherButton(_ title: String, icon: String, filled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) { weatherButtonLabel(title, icon: icon, filled: filled) }
+    private func weatherButton(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) { weatherButtonLabel(title, icon: icon, filled: filled, fillHeight: fillHeight) }
+            .buttonStyle(.plain)
     }
 
-    private func weatherButtonLabel(_ title: String, icon: String, filled: Bool) -> some View {
+    private func weatherButtonLabel(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false) -> some View {
         Label(title, systemImage: icon)
             .font(.system(.subheadline, weight: .bold))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity)
+            .frame(maxHeight: fillHeight ? .infinity : nil)
             .padding(.vertical, 12)
             .background(filled ? Color.groupAdventure : Color.clear)
             .foregroundStyle(filled ? .black : Color.groupAdventure)
