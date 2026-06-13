@@ -39,6 +39,9 @@ struct StateDefinition: Identifiable, Equatable {
     let implies: [String]
     /// Level (per Stufe) at which the state counts as Handlungsunfähig (4 for most Zustände; nil otherwise).
     let handlungsunfaehigAtLevel: Int?
+    /// L() key for a short per-round combat reminder (e.g. Blutend "1 SP am Ende jeder KR").
+    /// Non-nil only for states with a timed per-Kampfrunde effect; drives the combat reminder line.
+    var perRoundReminderKey: String? = nil
 
     /// True iff the penalty is unambiguously `-level` in every domain (mechanic `.penalty(_, .perLevel)`),
     /// so a single number on the chip is guaranteed to match the engine. Per-domain `.fixed`, `.entrueckung`
@@ -160,11 +163,13 @@ enum StateCatalog {
         StateDefinition(id: "blutend", kind: .status, nameKey: "state.blutend.name",
             iconSystemName: "drop.fill", mechanic: .reminderOnly,
             levelEffectKeys: ["state.blutend.effect"], causeKey: "state.blutend.cause",
-            removalKey: "state.blutend.removal", implies: [], handlungsunfaehigAtLevel: nil),
+            removalKey: "state.blutend.removal", implies: [], handlungsunfaehigAtLevel: nil,
+            perRoundReminderKey: "state.blutend.perRound"),
         StateDefinition(id: "brennend", kind: .status, nameKey: "state.brennend.name",
             iconSystemName: "flame.fill", mechanic: .reminderOnly,
             levelEffectKeys: ["state.brennend.effect"], causeKey: "state.brennend.cause",
-            removalKey: "state.brennend.removal", implies: [], handlungsunfaehigAtLevel: nil),
+            removalKey: "state.brennend.removal", implies: [], handlungsunfaehigAtLevel: nil,
+            perRoundReminderKey: "state.brennend.perRound"),
         StateDefinition(id: "blind", kind: .status, nameKey: "state.blind.name",
             iconSystemName: "eye.slash", mechanic: .reminderOnly,
             levelEffectKeys: ["state.blind.effect"], causeKey: "state.blind.cause",

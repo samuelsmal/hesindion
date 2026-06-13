@@ -110,6 +110,30 @@ final class StateModifiersTests: XCTestCase {
         XCTAssertEqual(encumbranceLines.first?.value, -hero.effectiveBE)
     }
 
+    func testEingeengtStatusDrivesBeengtePenaltyWithoutDoubleCount() {
+        // Combat re-wires Beengte Umgebung onto the `eingeengt` status: building a melee
+        // ModifierContext with `beengteUmgebung = hero.hasState("eingeengt")` must produce
+        // the weapon-length penalty line, while StateModifiers (mechanic .eingeengt) emits
+        // NO separate line — so the penalty is counted exactly once.
+        let hero = makeHero()
+        hero.setStateLevel("eingeengt", level: 1)
+        XCTAssertTrue(hero.hasState("eingeengt"))
+
+        var ctx = ModifierContext(hero: hero, domain: .meleeAttack)
+        ctx.beengteUmgebung = hero.hasState("eingeengt")   // exactly how the combat views wire it
+        let lines = ModifierEngine.shared.evaluate(context: ctx)
+
+        // The Beengte-Umgebung weapon-length line fires (default reach "Mittel" ⇒ −4).
+        let beengteLines = lines.filter { $0.source == L("beengteUmgebung") }
+        XCTAssertEqual(beengteLines.count, 1, "Beengte Umgebung penalty must fire exactly once")
+        XCTAssertEqual(beengteLines.first?.value, -4)
+
+        // No line is tagged as a Zustand and none carries an "eingeengt"-derived penalty:
+        // the .eingeengt mechanic intentionally emits nothing in StateModifiers.
+        XCTAssertEqual(lines.filter { $0.isZustand }.count, 0, "eingeengt must not be double-counted as a Zustand line")
+        XCTAssertEqual(lines.count, 1, "only the single Beengte-Umgebung line should be present")
+    }
+
     func testCapCorrectionLineIsTaggedNonZustand() {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 4)

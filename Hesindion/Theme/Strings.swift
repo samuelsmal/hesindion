@@ -1039,11 +1039,13 @@ enum DSAStrings {
         "state.blutend.effect":  "Am Ende jeder KR 1 SP durch starke Nachblutungen.",
         "state.blutend.cause":   "Tiefe Wunden oder kritische Treffer.",
         "state.blutend.removal": "Heilkunde (Wunden) +2 oder nach Ablauf der Dauer.",
+        "state.blutend.perRound": "1 SP am Ende jeder KR",
 
         "state.brennend.name":    "Brennend",
         "state.brennend.effect":  "Feuerschaden in jeder KR. Löschen: Körperbeherrschung-Probe je KR (klein ±0, groß −1, ganzer Körper −2).",
         "state.brennend.cause":   "Feuer oder Säure.",
         "state.brennend.removal": "Flammen löschen (Probe, Wasser, Sand …).",
+        "state.brennend.perRound": "Feuerschaden je KR",
 
         "state.blind.name":    "Blind",
         "state.blind.effect":  "Gegner erst per Sinnesschärfe (Suchen) lokalisieren; Nahkampf-AT halbiert; Fernkampf trifft nur bei nat. 1; Verteidigung gegen Nahkampf nur bei nat. 1, gegen Fernkampf unmöglich.",
