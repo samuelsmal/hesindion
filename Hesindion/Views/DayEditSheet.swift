@@ -15,15 +15,15 @@ struct DayEditSheet: View {
             }
 
             Section(L("weather.editValues")) {
-                Picker(L("weather.clouds.none"), selection: cloudsBinding) {
+                Picker(L("weather.field.clouds"), selection: cloudsBinding) {
                     ForEach(CloudCover.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
-                Picker(L("weather.wind.none"), selection: windBinding) {
+                Picker(L("weather.field.wind"), selection: windBinding) {
                     ForEach(WindStrength.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
                 Stepper("\(L("weather.dayTemp")): \(weatherDay.dayTemperature)\u{00B0}", value: dayTempBinding, in: -60...60)
                 Stepper("\(L("weather.nightTemp")): \(weatherDay.nightTemperature)\u{00B0}", value: nightTempBinding, in: -60...60)
-                Picker(L("weather.rain.none"), selection: rainBinding) {
+                Picker(L("weather.field.rain"), selection: rainBinding) {
                     ForEach(RainLevel.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
             }
@@ -34,7 +34,10 @@ struct DayEditSheet: View {
             ToolbarItem(placement: .confirmationAction) { Button(L("save")) { dismiss() } }
         }
         .onAppear { region = weatherDay.region }
-        .onChange(of: region) { _, _ in reroll(changingRegion: true) }
+        .onChange(of: region) { _, newRegion in
+            guard newRegion != weatherDay.region else { return }
+            reroll(changingRegion: true)
+        }
     }
 
     // Bindings that flag the field as a manual override on write.
