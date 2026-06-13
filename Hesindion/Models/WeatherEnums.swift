@@ -1,68 +1,79 @@
 import Foundation
 
-// MARK: - Weather Region
+// MARK: - Macro Region (grouping for the picker, north → south)
+
+enum MacroRegion: String, Codable, CaseIterable, Identifiable {
+    case hoherNorden, hochgebirge, nordaventurien, zentralaventurien,
+         tulamidenlande, suedaventurien, tieferSueden
+    var id: String { rawValue }
+    var displayName: String { L("macro.\(rawValue)") }
+}
+
+// MARK: - Weather Region (named, player-facing)
 
 enum WeatherRegion: String, Codable, CaseIterable, Identifiable {
-    case ewigesEis
-    case ehernesSchwert
-    case hoherNorden
-    case tundra
-    case thorwal
-    case weiden
-    case mittelreich
-    case almada
-    case raschtulswall
-    case horasreichSued
-    case khom
-    case echsensuempfe
-    case suedmeer
+    case ewigesEis, nivesenland, gjalskerland
+    case ehernesSchwert, raschtulswall
+    case thorwal, bornland, svelltland, orkland
+    case mittelreich, streitendeKoenigreiche, elfenlande
+    case aranien, khom, mhanadiTal
+    case almada, horasreich, ersteSonne, zyklopeninseln
+    case meridiana, echsensuempfe, maraskan, suedmeer
 
     var id: String { rawValue }
 
-    var displayName: String {
+    var displayName: String { L("region.\(rawValue)") }
+
+    var macroRegion: MacroRegion {
         switch self {
-        case .ewigesEis: "Ewiges Eis"
-        case .ehernesSchwert: "Höhen des Ehernen Schwerts"
-        case .hoherNorden: "Hoher Norden"
-        case .tundra: "Tundra und Taiga"
-        case .thorwal: "Bornland, Thorwal"
-        case .weiden: "Streitende Königreiche bis Weiden"
-        case .mittelreich: "Zentrales Mittelreich"
-        case .almada: "Nördliches Horasreich, Almada, Aranien"
-        case .raschtulswall: "Höhen des Raschtulswalls"
-        case .horasreichSued: "Südliches Horasreich, Reich der Ersten Sonne"
-        case .khom: "Khom"
-        case .echsensuempfe: "Echsensümpfe, Meridiana"
-        case .suedmeer: "Altoum, Gewürzinseln, Südmeer"
+        case .ewigesEis, .nivesenland, .gjalskerland: .hoherNorden
+        case .ehernesSchwert, .raschtulswall: .hochgebirge
+        case .thorwal, .bornland, .svelltland, .orkland: .nordaventurien
+        case .mittelreich, .streitendeKoenigreiche, .elfenlande: .zentralaventurien
+        case .aranien, .khom, .mhanadiTal: .tulamidenlande
+        case .almada, .horasreich, .ersteSonne, .zyklopeninseln: .suedaventurien
+        case .meridiana, .echsensuempfe, .maraskan, .suedmeer: .tieferSueden
         }
     }
 
-    /// Base temperature tuple: (summer, spring/autumn, winter)
-    private var baseTemps: (summer: Int, springAutumn: Int, winter: Int) {
+    var archetype: ClimateArchetype {
         switch self {
-        case .ewigesEis:       (-20, -30, -40)
-        case .ehernesSchwert:  (-10, -20, -30)
-        case .hoherNorden:     (  0, -10, -20)
-        case .tundra:          (  5,   0,  -5)
-        case .thorwal:         ( 10,   3,  -5)
-        case .weiden:          ( 10,   5,   0)
-        case .mittelreich:     ( 15,  10,   5)
-        case .almada:          ( 20,  15,  10)
-        case .raschtulswall:   (  5,   0, -10)
-        case .horasreichSued:  ( 25,  20,  15)
-        case .khom:            ( 40,  35,  30)
-        case .echsensuempfe:   ( 30,  25,  20)
-        case .suedmeer:        ( 35,  30,  25)
+        case .ewigesEis: .polar
+        case .nivesenland, .gjalskerland, .orkland: .subarctic
+        case .ehernesSchwert: .highMountainIce
+        case .raschtulswall: .highMountain
+        case .thorwal: .coldCoast
+        case .bornland, .svelltland: .coldContinental
+        case .mittelreich, .streitendeKoenigreiche, .elfenlande: .temperate
+        case .aranien: .semiArid
+        case .khom: .desert
+        case .mhanadiTal, .ersteSonne: .subtropicalHot
+        case .almada, .horasreich, .zyklopeninseln: .mediterranean
+        case .meridiana, .echsensuempfe, .maraskan: .tropicalHumid
+        case .suedmeer: .tropicalSea
         }
     }
 
-    func baseTemperature(for season: AventurianSeason) -> Int {
-        switch season {
-        case .sommer: baseTemps.summer
-        case .herbst, .fruehling: baseTemps.springAutumn
-        case .winter: baseTemps.winter
-        }
+    /// All regions of a macro-region, in declaration order (for grouped pickers).
+    static func inMacro(_ macro: MacroRegion) -> [WeatherRegion] {
+        allCases.filter { $0.macroRegion == macro }
     }
+
+    /// Resolve a persisted raw value, mapping retired legacy zone names.
+    static func resolve(persisted raw: String) -> WeatherRegion {
+        if let direct = WeatherRegion(rawValue: raw) { return direct }
+        return legacyMap[raw] ?? .mittelreich
+    }
+
+    /// Old (pre-redesign) raw values that no longer exist as cases.
+    private static let legacyMap: [String: WeatherRegion] = [
+        "hoherNorden": .nivesenland,
+        "tundra": .nivesenland,
+        "weiden": .streitendeKoenigreiche,
+        "horasreichSued": .ersteSonne,
+        // ewigesEis, ehernesSchwert, thorwal, mittelreich, almada,
+        // raschtulswall, khom, echsensuempfe, suedmeer keep their raw values.
+    ]
 }
 
 // MARK: - Cloud Cover

@@ -72,4 +72,25 @@ struct WeatherEnumsTests {
             #expect(!rain.displayName.isEmpty)
         }
     }
+
+    // MARK: - Two-layer region model
+
+    @Test func everyRegionMapsToArchetypeAndMacro() {
+        for r in WeatherRegion.allCases {
+            _ = r.archetype          // must compile + not crash
+            _ = r.macroRegion
+            #expect(!r.displayName.isEmpty)
+        }
+    }
+
+    @Test func legacyRawValuesResolve() {
+        #expect(WeatherRegion.resolve(persisted: "weiden") == .streitendeKoenigreiche)
+        #expect(WeatherRegion.resolve(persisted: "horasreichSued") == .ersteSonne)
+        #expect(WeatherRegion.resolve(persisted: "tundra") == .nivesenland)
+        #expect(WeatherRegion.resolve(persisted: "hoherNorden") == .nivesenland)
+        #expect(WeatherRegion.resolve(persisted: "mittelreich") == .mittelreich)   // unchanged
+        #expect(WeatherRegion.resolve(persisted: "khom") == .khom)                  // unchanged
+        #expect(WeatherRegion.resolve(persisted: "") == .mittelreich)              // fallback
+        #expect(WeatherRegion.resolve(persisted: "garbage") == .mittelreich)
+    }
 }
