@@ -78,6 +78,19 @@ final class HeroStateTests: XCTestCase {
         XCTAssertTrue(hero.isBewegungsunfaehig)
     }
 
+    func testBelastungLevelClampedToFour() throws {
+        let ctx = try makeContext()
+        let hero = Hero(name: "Test"); ctx.insert(hero)
+        // Equip heavy armor so effectiveBE (raw) exceeds 4.
+        hero.armors.append(Armor(name: "Plattenpanzer", protectionValue: 8, encumbrance: 4, weight: 20, isEquipped: true))
+        hero.armors.append(Armor(name: "Schwerer Helm", protectionValue: 2, encumbrance: 2, weight: 5, isEquipped: true))
+        XCTAssertEqual(hero.effectiveBE, 6, "precondition: raw effectiveBE should exceed 4")
+        // Derived Belastung level must be clamped to the IV-level cap.
+        XCTAssertEqual(hero.level(of: "belastung"), 4)
+        // …and the clamped value (4, not 6) must flow into the Zustand total.
+        XCTAssertEqual(hero.totalZustandLevels, 4)
+    }
+
     func testImpliedStatusesFromBewusstlos() throws {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)

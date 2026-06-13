@@ -267,7 +267,7 @@ final class Hero {
     /// Current stored level of a catalog state (0 if absent). Schmerz/Belastung are derived.
     func level(of stateID: String) -> Int {
         if stateID == "schmerz" { return effectiveSchmerzLevel }
-        if stateID == "belastung" { return effectiveBE }
+        if stateID == "belastung" { return min(effectiveBE, 4) }
         return states.first { $0.stateID == stateID }?.level ?? 0
     }
 
@@ -301,7 +301,7 @@ final class Hero {
             result.append((s, effectiveSchmerzLevel))
         }
         if let b = StateCatalog.definition(for: "belastung"), effectiveBE > 0 {
-            result.append((b, effectiveBE))
+            result.append((b, min(effectiveBE, 4)))
         }
         for entry in states {
             if let def = StateCatalog.definition(for: entry.stateID) {
