@@ -51,6 +51,15 @@ make clean        # Clean build artifacts
 - **Multiple defenses**: -3 cumulative per round, tracked and reset per round
 - **Combat views split**: CombatView.swift (orchestrator), CombatSetupViews, CombatRootView, CombatAttackViews, CombatExecutionView, CombatDamageViews, CombatDefenseViews, CombatFernkampfViews
 
+### Player States (Zustände & Status)
+
+- **Catalog + storage**: `StateCatalog` (`Hesindion/Models/StateCatalog.swift`) is a static in-code list of 8 leveled Zustände (I–IV) and 17 binary Status with localized name/effects/cause/removal, SF Symbol, modifier mechanic, and implication chains. Per-hero state is one generic `@Model HeroStateEntry(stateID, level)` on `Hero` (cascade relationship) — see ADR-0003.
+- **ModifierEngine integration**: active Zustände feed penalties into the `ModifierEngine`, which applies the DSA −5 Zustand-penalty cap via `isZustand` tagging
+- **Derived states**: Schmerz and Belastung are computed (not stored) and excluded from manual editing via `StateCatalog.derivedIDs`; Belastung counts toward the −5 cap
+- **UI surfaces**: a "Zustände & Status" section on hero detail (chips + add picker + detail sheet with prominent removal rules), a shared `StatesStrip`, and a combat-root states strip with a Handlungsunfähig/Bewegungsunfähig warning banner and per-round reminders
+- **Eingeengt**: the `eingeengt` status is the single source of truth for the Beengte-Umgebung combat penalty (the toggle reads/writes it)
+- **Entrückung**: a "gottgefällig" toggle in spell/liturgy casting
+
 ## Design
 
 The UI follows a **Neo-Brutalist** design theme.

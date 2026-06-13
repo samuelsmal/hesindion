@@ -54,6 +54,7 @@ final class Hero {
     var activeCombatPlaenkler: Bool = false
     var activeCombatPlaenklerBonus: String?   // "at" or "aw"
     var activeCombatMounted: Bool = false
+    // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
 
     init(
@@ -95,7 +96,6 @@ final class Hero {
         self.activeCombatPlaenkler = false
         self.activeCombatPlaenklerBonus = nil
         self.activeCombatMounted = false
-        self.activeCombatBeengt = false
     }
 
     var totalEquipmentWeight: Double {
@@ -412,7 +412,6 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
-        activeCombatBeengt = false
     }
 }
 
