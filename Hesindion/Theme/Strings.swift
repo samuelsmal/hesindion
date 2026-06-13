@@ -942,6 +942,9 @@ enum DSAStrings {
         "states.handlungsunfaehig.banner":      "Handlungsunfähig",
         "states.bewegungsunfaehig.banner":      "Bewegungsunfähig",
         "states.gottgefaellig":                 "Gottgefällige Probe",
+        "states.zustaende.section":             "Zustände",
+        "states.status.section":                "Status",
+        "states.search.prompt":                 "Zustand oder Status suchen",
         "source.zustandCap":                    "Zustände max. −5",
 
         // Zustände (I–IV)

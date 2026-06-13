@@ -323,6 +323,7 @@ struct HeroDetailView: View {
                     personalDataSection
                     experienceSection
                     derivedValuesSection
+                    statesSection
                     advantagesSection
                     disadvantagesSection
                     generalSpecialAbilitiesSection
@@ -573,6 +574,16 @@ struct HeroDetailView: View {
                 .padding(.vertical, 6)
             }
             Divider()
+        }
+    }
+
+    // MARK: - Section 3b: Player States (Zustände & Status)
+
+    @ViewBuilder private var statesSection: some View {
+        CollapsibleSection(L("states.section")) {
+            StatesSectionView(hero: hero)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
         }
     }
 
