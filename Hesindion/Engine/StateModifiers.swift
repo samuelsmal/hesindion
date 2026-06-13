@@ -10,25 +10,21 @@ enum StateModifiers {
 
     /// One definition per catalog state whose mechanic is `.penalty`.
     static let penaltyDefinitions: [ModifierDefinition] = StateCatalog.all.compactMap { def in
-        guard case .penalty(let domains) = def.mechanic else { return nil }
+        guard case .penalty(let domains, let value) = def.mechanic else { return nil }
         return ModifierDefinition(id: "state.\(def.id)", domains: domains) { ctx in
             guard !ctx.schipIgnoreZustand else { return nil }
             let level = ctx.hero.level(of: def.id)
             guard level > 0 else { return nil }
             let isZustand = def.kind == .zustand
-            let value = Self.penaltyValue(for: def, level: level, domain: ctx.domain)
-            guard value != 0 else { return nil }
+            let penalty: Int
+            switch value {
+            case .perLevel:        penalty = -level
+            case .fixed(let map):  penalty = map[ctx.domain] ?? 0
+            }
+            guard penalty != 0 else { return nil }
             // Zustände show roman numerals; statuses are binary.
-            let roman = isZustand ? " " + String(repeating: "I", count: min(level, 4)) : ""
-            return ModifierLine(value: value, source: L(def.nameKey) + roman, isZustand: isZustand)
-        }
-    }
-
-    static func penaltyValue(for def: StateDefinition, level: Int, domain: CheckDomain) -> Int {
-        switch def.id {
-        case "liegend": return domain == .meleeAttack ? -4 : -2   // parry/dodge -2
-        case "fixiert": return -4                                  // dodge only (domain already filtered)
-        default: return -level                                     // zustände: -Stufe
+            let roman = isZustand ? StateCatalog.romanSuffix(level) : ""
+            return ModifierLine(value: penalty, source: L(def.nameKey) + roman, isZustand: isZustand)
         }
     }
 
@@ -41,7 +37,7 @@ enum StateModifiers {
         guard level > 0 else { return nil }
         let value = ctx.gottgefaellig ? max(0, level - 1) : -level
         guard value != 0 else { return nil }
-        let roman = " " + String(repeating: "I", count: min(level, 4))
+        let roman = StateCatalog.romanSuffix(level)
         return ModifierLine(value: value, source: L("state.entrueckung.name") + roman, isZustand: true)
     }
 }

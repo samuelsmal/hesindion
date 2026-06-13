@@ -5,10 +5,18 @@ enum StateKind: Equatable {
     case status    // binary
 }
 
+/// The magnitude of a `.penalty` mechanic — single source of truth for penalty values.
+enum StatePenaltyValue: Equatable {
+    /// value = -level (leveled Zustände, Schmerz).
+    case perLevel
+    /// per-domain fixed value (binary Status like Liegend/Fixiert).
+    case fixed([CheckDomain: Int])
+}
+
 /// How a state's penalty wires into the ModifierEngine.
 enum StateMechanic: Equatable {
     /// `-level` (or fixed) applied to the given domains, labelled, respects schipIgnoreZustand.
-    case penalty(domains: Set<CheckDomain>)
+    case penalty(domains: Set<CheckDomain>, value: StatePenaltyValue)
     /// Drives existing Beengte-Umgebung weapon-length penalties instead of a flat line.
     case eingeengt
     /// Geweihten bonus/penalty toggle (gottgefällig).
@@ -40,6 +48,12 @@ enum StateCatalog {
         all.first { $0.id == id }
     }
 
+    /// Roman-numeral level suffix for labels: " I".." IIII" (clamped at IV), empty for level<=0.
+    static func romanSuffix(_ level: Int) -> String {
+        guard level > 0 else { return "" }
+        return " " + String(repeating: "I", count: min(level, 4))
+    }
+
     /// States that are auto-derived (computed on Hero), not manually added or stored.
     static let derivedIDs: Set<String> = ["schmerz", "belastung"]
 
@@ -50,7 +64,7 @@ enum StateCatalog {
         StateDefinition(
             id: "betaeubung", kind: .zustand, nameKey: "state.betaeubung.name",
             iconSystemName: "bolt.horizontal.circle",
-            mechanic: .penalty(domains: Set(CheckDomain.allCases)),
+            mechanic: .penalty(domains: Set(CheckDomain.allCases), value: .perLevel),
             levelEffectKeys: ["state.betaeubung.I", "state.betaeubung.II",
                               "state.betaeubung.III", "state.betaeubung.IV"],
             causeKey: "state.betaeubung.cause", removalKey: "state.betaeubung.removal",
@@ -58,7 +72,7 @@ enum StateCatalog {
         StateDefinition(
             id: "furcht", kind: .zustand, nameKey: "state.furcht.name",
             iconSystemName: "exclamationmark.shield",
-            mechanic: .penalty(domains: Set(CheckDomain.allCases)),
+            mechanic: .penalty(domains: Set(CheckDomain.allCases), value: .perLevel),
             levelEffectKeys: ["state.furcht.I", "state.furcht.II",
                               "state.furcht.III", "state.furcht.IV"],
             causeKey: "state.furcht.cause", removalKey: "state.furcht.removal",
@@ -66,7 +80,7 @@ enum StateCatalog {
         StateDefinition(
             id: "paralyse", kind: .zustand, nameKey: "state.paralyse.name",
             iconSystemName: "figure.stand",
-            mechanic: .penalty(domains: Set(CheckDomain.allCases)),
+            mechanic: .penalty(domains: Set(CheckDomain.allCases), value: .perLevel),
             levelEffectKeys: ["state.paralyse.I", "state.paralyse.II",
                               "state.paralyse.III", "state.paralyse.IV"],
             causeKey: "state.paralyse.cause", removalKey: "state.paralyse.removal",
@@ -74,7 +88,7 @@ enum StateCatalog {
         StateDefinition(
             id: "verwirrung", kind: .zustand, nameKey: "state.verwirrung.name",
             iconSystemName: "questionmark.circle",
-            mechanic: .penalty(domains: Set(CheckDomain.allCases)),
+            mechanic: .penalty(domains: Set(CheckDomain.allCases), value: .perLevel),
             levelEffectKeys: ["state.verwirrung.I", "state.verwirrung.II",
                               "state.verwirrung.III", "state.verwirrung.IV"],
             causeKey: "state.verwirrung.cause", removalKey: "state.verwirrung.removal",
@@ -99,7 +113,7 @@ enum StateCatalog {
         StateDefinition(
             id: "schmerz", kind: .zustand, nameKey: "source.schmerz",
             iconSystemName: "exclamationmark.triangle.fill",
-            mechanic: .penalty(domains: Set(CheckDomain.allCases)),
+            mechanic: .penalty(domains: Set(CheckDomain.allCases), value: .perLevel),
             levelEffectKeys: ["state.schmerz.I", "state.schmerz.II",
                               "state.schmerz.III", "state.schmerz.IV"],
             causeKey: "state.schmerz.cause", removalKey: "state.schmerz.removal",
@@ -116,11 +130,14 @@ enum StateCatalog {
 
     static let statuses: [StateDefinition] = [
         StateDefinition(id: "liegend", kind: .status, nameKey: "state.liegend.name",
-            iconSystemName: "figure.fall", mechanic: .penalty(domains: [.meleeAttack, .meleeParry, .meleeDodge]),
+            iconSystemName: "figure.fall",
+            mechanic: .penalty(domains: [.meleeAttack, .meleeParry, .meleeDodge],
+                               value: .fixed([.meleeAttack: -4, .meleeParry: -2, .meleeDodge: -2])),
             levelEffectKeys: ["state.liegend.effect"], causeKey: "state.liegend.cause",
             removalKey: "state.liegend.removal", implies: [], handlungsunfaehigAtLevel: nil),
         StateDefinition(id: "fixiert", kind: .status, nameKey: "state.fixiert.name",
-            iconSystemName: "pin", mechanic: .penalty(domains: [.meleeDodge]),
+            iconSystemName: "pin",
+            mechanic: .penalty(domains: [.meleeDodge], value: .fixed([.meleeDodge: -4])),
             levelEffectKeys: ["state.fixiert.effect"], causeKey: "state.fixiert.cause",
             removalKey: "state.fixiert.removal", implies: [], handlungsunfaehigAtLevel: nil),
         StateDefinition(id: "eingeengt", kind: .status, nameKey: "beengteUmgebung",

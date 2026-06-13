@@ -89,4 +89,34 @@ final class StateModifiersTests: XCTestCase {
         XCTAssertEqual(schmerzLines.first?.value, -2)
         XCTAssertEqual(schmerzLines.first?.source, L("source.schmerz") + " II")
     }
+
+    func testSchipIgnoreZustandDoesNotSuppressEncumbrance() {
+        // Belastung is gear-derived: a "Zustand ignorieren" Schip must NOT will it away.
+        let schema = Schema([
+            Hero.self, HeroStateEntry.self, DerivedValues.self, Armor.self,
+        ])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: config)
+        let ctx = ModelContext(container)
+        let hero = Hero(name: "T"); ctx.insert(hero)
+        hero.armors.append(Armor(name: "Plattenpanzer", protectionValue: 8, encumbrance: 4, weight: 20, isEquipped: true))
+        XCTAssertEqual(hero.effectiveBE, 4, "precondition: effectiveBE > 0")
+
+        var mctx = ModifierContext(hero: hero, domain: .meleeAttack)
+        mctx.schipIgnoreZustand = true
+        let lines = ModifierEngine.shared.evaluate(context: mctx)
+        let encumbranceLines = lines.filter { $0.source == L("source.belastung") }
+        XCTAssertEqual(encumbranceLines.count, 1, "Belastung must survive schipIgnoreZustand")
+        XCTAssertEqual(encumbranceLines.first?.value, -hero.effectiveBE)
+    }
+
+    func testCapCorrectionLineIsTaggedNonZustand() {
+        let hero = makeHero()
+        hero.setStateLevel("furcht", level: 4)
+        hero.setStateLevel("verwirrung", level: 4)   // raw -8, cap binds at -5
+        let lines = ModifierEngine.shared.evaluate(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let capLines = lines.filter { $0.source == L("source.zustandCap") }
+        XCTAssertEqual(capLines.count, 1, "cap correction line must be present when the cap binds")
+        XCTAssertEqual(capLines.first?.isZustand, false, "cap correction must not itself count as a Zustand")
+    }
 }
