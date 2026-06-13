@@ -81,12 +81,23 @@ enum WeatherRegion: String, Codable, CaseIterable, Identifiable {
 enum CloudCover: String, Codable, CaseIterable {
     case none, few, lots, all
 
+    /// Day-temperature modifier (softened so highs stay realistic).
     var temperatureModifier: Int {
         switch self {
-        case .none: 10
-        case .few: 5
-        case .lots: 0
-        case .all: -5
+        case .none: 6
+        case .few: 3
+        case .lots: -1
+        case .all: -4
+        }
+    }
+
+    /// Multiplier applied to the clear-sky diurnal range (clouds trap night heat).
+    var cloudFactor: Double {
+        switch self {
+        case .none: 1.0
+        case .few: 0.8
+        case .lots: 0.6
+        case .all: 0.45
         }
     }
 
@@ -105,14 +116,25 @@ enum CloudCover: String, Codable, CaseIterable {
 enum WindStrength: String, Codable, CaseIterable {
     case none, light, soft, fresh, cool, strong, storm
 
+    /// Day-temperature modifier (softened).
     var temperatureModifier: Int {
         switch self {
-        case .none: 4
-        case .light: 2
+        case .none: 2
+        case .light: 1
         case .soft, .fresh: 0
         case .cool: -2
-        case .strong: -4
-        case .storm: -6
+        case .strong: -3
+        case .storm: -4
+        }
+    }
+
+    /// Degrees subtracted from the diurnal range (wind mixes air, warms nights).
+    var nightWindReduction: Int {
+        switch self {
+        case .none, .light: 0
+        case .soft, .fresh: 2
+        case .cool, .strong: 4
+        case .storm: 5
         }
     }
 
