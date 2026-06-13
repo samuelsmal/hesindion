@@ -10,8 +10,6 @@ struct AdventureCreationSheet: View {
     @State private var month: AventurianMonth = .praios
     @State private var day: Int = 1
     @State private var year: Int = 1040
-    @State private var desert = false
-    @State private var windy = false
 
     var body: some View {
         Form {
@@ -21,13 +19,7 @@ struct AdventureCreationSheet: View {
             }
 
             Section {
-                Picker(L("adventureRegion"), selection: $region) {
-                    ForEach(WeatherRegion.allCases) { region in
-                        Text(region.displayName).tag(region)
-                    }
-                }
-                Toggle(L("adventureDesert"), isOn: $desert)
-                Toggle(L("adventureWindy"), isOn: $windy)
+                RegionPicker(selection: $region)
             }
 
             Section(L("adventureStartDate")) {
