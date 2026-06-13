@@ -946,6 +946,13 @@ enum DSAStrings {
         "states.status.section":                "Status",
         "states.search.prompt":                 "Zustand oder Status suchen",
         "source.zustandCap":                    "Zustände max. −5",
+        // Detail sheet
+        "states.level":                         "Stufe",
+        "states.active":                        "Aktiv",
+        "states.effect.header":                 "Auswirkung",
+        "states.cause.header":                  "Ursache",
+        "states.removal.header":                "Beenden / Heilung",
+        "states.derived.note":                  "Dieser Zustand ergibt sich automatisch und kann nicht manuell entfernt werden.",
 
         // Zustände (I–IV)
         "state.betaeubung.name":    "Betäubung",

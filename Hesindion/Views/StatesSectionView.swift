@@ -13,6 +13,23 @@ struct StatesSectionView: View {
     @Bindable var hero: Hero
     @Environment(\.modelContext) private var modelContext
     @State private var showPicker = false
+    @State private var detailState: StateSelection?
+
+    /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
+    private struct StateSelection: Identifiable {
+        let def: StateDefinition
+        var id: String { def.id }
+    }
+
+    /// Long-press quick action: Zustand ⇒ decrement one level; Status ⇒ remove.
+    /// Derived/implied chips pass no long-press handler.
+    private func quickAction(for def: StateDefinition) {
+        if def.kind == .zustand {
+            hero.setStateLevel(def.id, level: hero.level(of: def.id) - 1)
+        } else {
+            hero.setStateLevel(def.id, level: 0)
+        }
+    }
 
     /// Implied states (e.g. bewusstlos ⇒ liegend) that aren't already explicitly active,
     /// rendered as non-removable derived-style chips.
@@ -33,13 +50,18 @@ struct StatesSectionView: View {
                         def: entry.def,
                         level: entry.level,
                         isDerived: derived,
-                        onTap: {},
-                        onLongPress: {}
+                        onTap: { detailState = StateSelection(def: entry.def) },
+                        onLongPress: { quickAction(for: entry.def) }
                     )
                 }
 
                 ForEach(impliedOnlyDefs) { def in
-                    StateChip(def: def, level: 1, isDerived: true)
+                    StateChip(
+                        def: def,
+                        level: 1,
+                        isDerived: true,
+                        onTap: { detailState = StateSelection(def: def) }
+                    )
                 }
 
                 addChip
@@ -48,6 +70,11 @@ struct StatesSectionView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .sheet(isPresented: $showPicker) {
             StatePickerSheet(hero: hero)
+                .presentationCornerRadius(0)
+                .presentationDetents([.large])
+        }
+        .sheet(item: $detailState) { selection in
+            StateDetailSheet(hero: hero, def: selection.def)
                 .presentationCornerRadius(0)
                 .presentationDetents([.large])
         }

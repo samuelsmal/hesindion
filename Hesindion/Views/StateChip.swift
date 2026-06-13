@@ -60,11 +60,14 @@ struct StateChip: View {
         .background(isDerived ? Color(UIColor.secondarySystemBackground) : accent)
         .overlay(borderOverlay)
         .contentShape(Rectangle())
+        // Long-press takes high priority so it wins the gesture arena cleanly; the tap
+        // still fires reliably for a quick press. Derived chips attach no long-press.
+        .highPriorityGesture(
+            isDerived
+                ? nil
+                : LongPressGesture(minimumDuration: 0.4).onEnded { _ in onLongPress() }
+        )
         .onTapGesture { onTap() }
-        .onLongPressGesture {
-            guard !isDerived else { return }
-            onLongPress()
-        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label)
     }
