@@ -35,6 +35,7 @@ struct ModifierContext {
     var schipIgnoreZustand: Bool = false
     var dualAttackActive: Bool = false
     var beengteUmgebung: Bool = false
+    var gottgefaellig: Bool = false
 
     // Melee specific
     var opponentReach: WeaponReach? = nil
@@ -86,9 +87,21 @@ struct ModifierEngine {
     }
 
     func evaluate(context: ModifierContext) -> [ModifierLine] {
-        modifiers
+        let lines = modifiers
             .filter { $0.domains.contains(context.domain) }
             .compactMap { $0.evaluate(context) }
+        return Self.applyingZustandCap(lines)
+    }
+
+    /// GR: the combined Zustand penalty is capped at −5. Encumbrance and Schmerz count
+    /// as Zustände for the cap (they are tagged `isZustand`). Non-Zustand bonuses/penalties
+    /// (maneuvers, schip defense +4, …) are never clamped — only the aggregate Zustand
+    /// penalty floors at −5 via an explicit correction line.
+    static func applyingZustandCap(_ lines: [ModifierLine]) -> [ModifierLine] {
+        let zustandPenalty = lines.filter { $0.isZustand }.reduce(0) { $0 + min(0, $1.value) }
+        guard zustandPenalty < -5 else { return lines }
+        let correction = -5 - zustandPenalty   // positive
+        return lines + [ModifierLine(value: correction, source: L("source.zustandCap"), isZustand: false)]
     }
 
     func totalModifier(context: ModifierContext) -> Int {
@@ -102,6 +115,7 @@ extension ModifierEngine {
     static let shared: ModifierEngine = {
         var defs: [ModifierDefinition] = []
         defs.append(contentsOf: SharedModifiers.all)
+        defs.append(contentsOf: StateModifiers.all)
         defs.append(contentsOf: MeleeModifiers.all)
         defs.append(contentsOf: DefenseModifiers.all)
         defs.append(contentsOf: RangedModifiers.all)

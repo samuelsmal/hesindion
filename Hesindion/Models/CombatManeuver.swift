@@ -121,4 +121,5 @@ struct ModifierLine: Identifiable {
     let id = UUID()
     let value: Int
     let source: String
+    var isZustand: Bool = false
 }
