@@ -562,6 +562,25 @@ extension Hero {
             ))
         }
 
+        for def in StateCatalog.manuallyAddable {
+            commands.append(AppCommand(
+                id: UUID(),
+                name: def.kind == .zustand ? "Zustand" : "Status",
+                subparameter: L(def.nameKey),
+                input: .integerAmount(
+                    label: L("states.level"),
+                    min: 0,
+                    max: def.kind == .zustand ? 4 : 1,
+                    initial: level(of: def.id)
+                ),
+                execute: { result in
+                    if case .integerAmount(let v) = result {
+                        self.setStateLevel(def.id, level: v)
+                    }
+                }
+            ))
+        }
+
         for talent in talents {
             commands.append(AppCommand(
                 id: UUID(),
