@@ -5,8 +5,9 @@ struct AdventureDetailView: View {
     @Bindable var adventure: Adventure
     @Environment(\.modelContext) private var modelContext
 
-    @State private var isShowingDateJump = false
-    @State private var isShowingBulkGenerate = false
+    @State private var isShowingAddStretch = false
+    @State private var isShowingRules = false
+    @State private var editingDay: WeatherDay?
 
     private var sortedWeatherDays: [WeatherDay] {
         adventure.weatherDays.sorted { a, b in
@@ -36,14 +37,19 @@ struct AdventureDetailView: View {
                     .font(.system(.title3, design: .default, weight: .black))
             }
         }
-        .sheet(isPresented: $isShowingDateJump) {
+        .sheet(isPresented: $isShowingAddStretch) {
             NavigationStack {
-                DateJumpSheet(adventure: adventure)
+                AddStretchSheet(adventure: adventure)
             }
         }
-        .sheet(isPresented: $isShowingBulkGenerate) {
+        .sheet(isPresented: $isShowingRules) {
             NavigationStack {
-                BulkGenerateSheet(adventure: adventure)
+                WeatherRulesSheet()
+            }
+        }
+        .sheet(item: $editingDay) { day in
+            NavigationStack {
+                DayEditSheet(weatherDay: day)
             }
         }
     }
@@ -95,34 +101,33 @@ struct AdventureDetailView: View {
     // MARK: - Controls
 
     private var controlsBar: some View {
-        HStack(spacing: 8) {
-            controlButton(L("nextDay"), icon: "sun.max") { generateOneDay() }
-            controlButton(L("generateDays"), icon: "calendar.badge.plus") { isShowingBulkGenerate = true }
-            controlButton(L("setDate"), icon: "clock.arrow.2.circlepath") { isShowingDateJump = true }
-            ShareLink(item: exportText()) {
-                Label(L("export"), systemImage: "square.and.arrow.up")
-                    .font(.system(.caption, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.groupAdventure)
-                    .foregroundStyle(.black)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+        VStack(spacing: 8) {
+            weatherButton(L("weather.add"), icon: "plus", filled: true) { isShowingAddStretch = true }
+            HStack(spacing: 8) {
+                weatherButton(L("weather.rules"), icon: "info.circle", filled: false) { isShowingRules = true }
+                ShareLink(item: exportText()) {
+                    weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false)
+                }
             }
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
         .padding(.vertical, 8)
     }
 
-    private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: icon)
-                .font(.system(.caption, weight: .bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Color.groupAdventure)
-                .foregroundStyle(.black)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
-        }
+    private func weatherButton(_ title: String, icon: String, filled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) { weatherButtonLabel(title, icon: icon, filled: filled) }
+    }
+
+    private func weatherButtonLabel(_ title: String, icon: String, filled: Bool) -> some View {
+        Label(title, systemImage: icon)
+            .font(.system(.subheadline, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(filled ? Color.groupAdventure : Color.clear)
+            .foregroundStyle(filled ? .black : Color.groupAdventure)
+            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
     }
 
     // MARK: - Timeline
@@ -143,7 +148,8 @@ struct AdventureDetailView: View {
                     if weatherDay.isTimeJump {
                         timeJumpDivider()
                     }
-                    WeatherDayRow(weatherDay: weatherDay)
+                    Button { editingDay = weatherDay } label: { WeatherDayRow(weatherDay: weatherDay) }
+                        .buttonStyle(.plain)
                 }
             }
         }
@@ -167,11 +173,7 @@ struct AdventureDetailView: View {
     private var adventureSettings: some View {
         CollapsibleGroup(L("settings"), color: .groupAdventure) {
             VStack(spacing: 12) {
-                Picker(L("adventureRegion"), selection: $adventure.region) {
-                    ForEach(WeatherRegion.allCases) { region in
-                        Text(region.displayName).tag(region)
-                    }
-                }
+                RegionPicker(selection: $adventure.region, label: L("adventureDefaultRegion"))
             }
             .padding(DSALayout.contentPadding)
         }
@@ -180,22 +182,6 @@ struct AdventureDetailView: View {
     }
 
     // MARK: - Actions
-
-    private func generateOneDay() {
-        let lastDay = sortedWeatherDays.first
-        let region = lastDay?.region ?? adventure.region
-        let gen = WeatherGenerator(region: region)
-        let previousResult: WeatherResult? = lastDay.map {
-            WeatherResult(date: $0.date, clouds: $0.clouds, wind: $0.wind,
-                          dayTemperature: $0.dayTemperature, nightTemperature: $0.nightTemperature, rain: $0.rain)
-        }
-        let result = gen.generate(date: adventure.currentDate, previousResult: previousResult)
-        let weatherDay = WeatherDay(from: result, region: region)
-        if let lastDay, result.date != lastDay.date.next() { weatherDay.isTimeJump = true }
-        weatherDay.adventure = adventure
-        modelContext.insert(weatherDay)
-        adventure.currentDate = adventure.currentDate.next()
-    }
 
     private func exportText() -> String {
         var lines = ["\(adventure.name) — Wetter (\(adventure.region.displayName))\n"]

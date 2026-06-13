@@ -4,47 +4,47 @@
     {
       "id": 1,
       "subject": "Task 1: ClimateArchetype model",
-      "status": "pending",
+      "status": "completed",
       "description": "Pure enum of 13 climate archetypes carrying base day temp + clear-sky diurnal range per season, humidity, windiness(rollBonus), displayName via L(). See plan Task 1.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/ClimateArchetype.swift\", \"HesindionTests/ClimateArchetypeTests.swift\"], \"verifyCommand\": \"make test\", \"acceptanceCriteria\": [\"13 archetypes with per-season base temp + range, humidity, windiness\", \"ranges monotonic summer>=SA>=winter\", \"displayName via L()\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 2,
       "subject": "Task 2: WeatherRegion two-layer + MacroRegion + legacy mapping + Strings",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "Replace 13 zones with ~23 named regions grouped by MacroRegion, each -> archetype; resolve(persisted:) maps legacy raw values; EN+DE Strings. See plan Task 2.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/WeatherEnums.swift\", \"Hesindion/Theme/Strings.swift\", \"HesindionTests/WeatherEnumsTests.swift\"], \"verifyCommand\": \"make test\", \"acceptanceCriteria\": [\"~23 regions each map to archetype+macro+displayName\", \"resolve() handles all legacy raw values\", \"EN+DE keys for region/macro/climate\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: AventurianDate ordinal + adding(days:)",
-      "status": "pending",
+      "status": "completed",
       "description": "Add ordinal() total ordering (365-day year) and adding(days:) to AventurianDate. See plan Task 3.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/AventurianCalendar.swift\", \"HesindionTests/AventurianDateTests.swift\"], \"verifyCommand\": \"make test\", \"acceptanceCriteria\": [\"ordinal strictly increasing\", \"adding == repeated next\", \"year is 365 days\"], \"modelTier\": \"mechanical\"}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: WeatherGenerator diurnal-range rewrite + softened day modifiers",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1, 2],
       "description": "Archetype-keyed generator; night = day - (clearSkyRange x cloudFactor - windReduction + jitter, floor 2); softened day cloud/wind mods; cloudFromRoll(_:humidity:). See plan Task 4.\n\n```json:metadata\n{\"files\": [\"Hesindion/Services/WeatherGenerator.swift\", \"Hesindion/Models/WeatherEnums.swift\", \"Hesindion/Models/ClimateArchetype.swift\", \"HesindionTests/WeatherGeneratorTests.swift\"], \"verifyCommand\": \"make test\", \"acceptanceCriteria\": [\"archetype-keyed generator, no desert/windy params\", \"night<day, range in [2, clearSky+2]\", \"temperate summer nights not freezing\", \"desert day <=50\", \"dry vs humid cloud bias\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 5,
       "subject": "Task 5: Model changes — per-day region & manual overrides; drop desert/windy",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2, 4],
       "description": "WeatherDay gains regionRaw (fallback to adventure.region), WeatherField overrides, diurnalRange, init(from:region:); Adventure drops desert/windy; fix call sites for green build. See plan Task 5.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/WeatherDay.swift\", \"Hesindion/Models/Adventure.swift\", \"Hesindion/Views/AdventureDetailView.swift\", \"Hesindion/Views/BulkGenerateSheet.swift\", \"HesindionTests/WeatherDayModelTests.swift\"], \"verifyCommand\": \"make test && make build\", \"acceptanceCriteria\": [\"per-day region with adventure fallback + legacy resolve\", \"WeatherField overrides round-trip\", \"Adventure drops desert/windy\", \"app builds\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 6,
       "subject": "Task 6: RegionPicker component + update AdventureCreationSheet",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2, 5],
       "description": "Reusable grouped RegionPicker (Section per MacroRegion); creation sheet uses it, drops desert/windy. See plan Task 6.\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/RegionPicker.swift\", \"Hesindion/Views/AdventureCreationSheet.swift\"], \"verifyCommand\": \"make build\", \"acceptanceCriteria\": [\"grouped RegionPicker by macro-region\", \"creation sheet uses it, no desert/windy\", \"builds\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 7,
       "subject": "Task 7: WeatherDayRow redesign — region, diurnal range, badges",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5],
       "description": "Row shows region, day/night temps, range + reason (humidity/clouds/wind), edited badge. EN+DE Strings. See plan Task 7.\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/WeatherDayRow.swift\", \"Hesindion/Theme/Strings.swift\"], \"verifyCommand\": \"make build\", \"acceptanceCriteria\": [\"row shows region + range + reason\", \"edited badge when overrides present\", \"builds\"], \"modelTier\": \"standard\"}\n```"
     },
@@ -58,14 +58,14 @@
     {
       "id": 9,
       "subject": "Task 9: AddStretchSheet (replaces Next-day / Generate-days / Set-date)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [3, 4, 5, 6, 8],
       "description": "Single add-stretch sheet (start date + region + #days) with StretchPlanner gap detection; delete BulkGenerateSheet/DateJumpSheet + generateOneDay. See plan Task 9.\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/AddStretchSheet.swift\", \"Hesindion/Views/AdventureDetailView.swift\", \"HesindionTests/StretchGenerationTests.swift\"], \"verifyCommand\": \"make test && make build\", \"acceptanceCriteria\": [\"add-stretch sheet with date+region+count + sane defaults\", \"continuity from contiguous day, gap marks isTimeJump\", \"old sheets deleted\", \"builds + tests pass\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 10,
       "subject": "Task 10: DayEditSheet (tap a day to change region / re-roll / override)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [4, 5, 6, 8],
       "description": "Tap-to-edit day: change region (re-roll from archetype), re-roll non-overridden fields, override values (flagged + preserved). EN+DE Strings. See plan Task 10.\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/DayEditSheet.swift\", \"Hesindion/Theme/Strings.swift\"], \"verifyCommand\": \"make build\", \"acceptanceCriteria\": [\"change region re-rolls keeping overrides\", \"re-roll only non-overridden fields\", \"edits set overrides flags\", \"builds\"], \"modelTier\": \"standard\"}\n```"
     },
