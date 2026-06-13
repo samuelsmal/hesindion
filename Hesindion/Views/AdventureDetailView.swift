@@ -136,9 +136,9 @@ struct AdventureDetailView: View {
         LazyVStack(spacing: 0) {
             if sortedWeatherDays.isEmpty {
                 ContentUnavailableView(
-                    L("nextDay"),
+                    L("weather.add"),
                     systemImage: "cloud.sun",
-                    description: Text("Generiere den ersten Wettertag")
+                    description: Text(L("weather.empty"))
                 )
                 .padding(.vertical, 40)
             }
