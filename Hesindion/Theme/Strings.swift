@@ -498,6 +498,9 @@ enum DSAStrings {
         "weather.reason.clear":         "clear",
         "weather.reason.cloudy":        "clouds",
         "weather.reason.windy":         "wind",
+        "weather.reroll":               "Re-roll",
+        "weather.editValues":           "Override Values",
+        "save":                         "Save",
         // Magic sections
         "groupMagic":                   "Magic & Karma",
         "spells.section":               "Spells",
@@ -991,6 +994,9 @@ enum DSAStrings {
         "weather.reason.clear":         "klar",
         "weather.reason.cloudy":        "Wolken",
         "weather.reason.windy":         "Wind",
+        "weather.reroll":               "Neu würfeln",
+        "weather.editValues":           "Werte überschreiben",
+        "save":                         "Speichern",
         // Magic sections
         "groupMagic":                   "Magie & Karma",
         "spells.section":               "Zaubersprüche",
