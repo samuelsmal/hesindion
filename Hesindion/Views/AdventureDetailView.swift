@@ -17,6 +17,10 @@ struct AdventureDetailView: View {
         }
     }
 
+    private var currentRegion: WeatherRegion {
+        sortedWeatherDays.first?.region ?? adventure.region
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
@@ -58,7 +62,7 @@ struct AdventureDetailView: View {
 
     private var adventureHeader: some View {
         VStack(spacing: 4) {
-            Text(adventure.region.displayName)
+            Text(currentRegion.displayName)
                 .font(.system(.subheadline, weight: .bold))
                 .foregroundStyle(.secondary)
             Text(adventure.currentDate.formatted())
@@ -184,7 +188,7 @@ struct AdventureDetailView: View {
     // MARK: - Actions
 
     private func exportText() -> String {
-        var lines = ["\(adventure.name) — Wetter (\(adventure.region.displayName))\n"]
+        var lines = ["\(adventure.name) — Wetter (\(currentRegion.displayName))\n"]
         let chronological = sortedWeatherDays.reversed()
         for day in chronological {
             let date = day.date.formatted()
@@ -192,7 +196,7 @@ struct AdventureDetailView: View {
             let wind = day.wind.displayName
             let temps = "\(day.dayTemperature)\u{00B0}/\(day.nightTemperature)\u{00B0}"
             let rain = day.rain.displayName
-            lines.append("\(date): \(clouds), \(wind), \(temps), \(rain)")
+            lines.append("\(date) [\(day.region.displayName)]: \(clouds), \(wind), \(temps), \(rain)")
         }
         return lines.joined(separator: "\n")
     }

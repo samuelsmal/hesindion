@@ -51,7 +51,7 @@
     {
       "id": 8,
       "subject": "Task 8: Control area + settings cleanup + WeatherRulesSheet (fixes buttons)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5],
       "description": "1 full-width primary + 2 equal ghost buttons (uniform, ShareLink restyled); WeatherRulesSheet; settings = default RegionPicker only; tappable rows. EN+DE Strings. See plan Task 8.\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/AdventureDetailView.swift\", \"Hesindion/Views/WeatherRulesSheet.swift\", \"Hesindion/Theme/Strings.swift\"], \"verifyCommand\": \"make build\", \"acceptanceCriteria\": [\"1 primary + 2 equal ghost buttons, uniform, ShareLink restyled\", \"WeatherRulesSheet present\", \"settings = default region only\", \"rows tappable\"], \"modelTier\": \"standard\"}\n```"
     },
@@ -72,7 +72,7 @@
     {
       "id": 11,
       "subject": "Task 11: Update test data + snapshots; re-record baselines; final verify",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [7, 8, 9, 10],
       "description": "TestData per-day regions + realistic temps; delete then re-record 24 snapshot PNGs (single sim); final make test && make test-ui green. See plan Task 11.\n\n```json:metadata\n{\"files\": [\"HesindionTests/Snapshots/TestData.swift\", \"HesindionTests/Snapshots/__Snapshots__/AdventureDetailViewSnapshotTests\", \"HesindionTests/Snapshots/__Snapshots__/WeatherDayRowSnapshotTests\"], \"verifyCommand\": \"make test && make test-ui\", \"acceptanceCriteria\": [\"sample data uses per-day regions + realistic temps\", \"all unit tests pass\", \"snapshot baselines re-recorded and verified green\"], \"modelTier\": \"standard\"}\n```"
     }
