@@ -75,6 +75,20 @@ enum StateCatalog {
         level > 0 ? " " + roman(level) : ""
     }
 
+    /// Trailing level/penalty text for an active state, shared by `StateChip` (appended to the
+    /// name) and the hero-detail swipe rows (shown as a trailing value):
+    /// - per-level Zustände ⇒ roman + " −level" (e.g. "II −2"), the unambiguous `−level` penalty;
+    /// - other Zustände ⇒ roman level only (e.g. "II");
+    /// - Statuses ⇒ empty.
+    static func levelValueText(for def: StateDefinition, level: Int) -> String {
+        guard def.kind == .zustand else { return "" }
+        let roman = roman(level)
+        if def.showsPerLevelPenalty {
+            return roman.isEmpty ? "−\(level)" : "\(roman) −\(level)"
+        }
+        return roman
+    }
+
     /// States that are auto-derived (computed on Hero), not manually added or stored.
     static let derivedIDs: Set<String> = ["schmerz", "belastung"]
 

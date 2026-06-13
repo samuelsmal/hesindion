@@ -14,7 +14,8 @@ import SwiftUI
 ///
 /// Derived (Schmerz/Belastung) and implied states render visually distinct: a dashed,
 /// secondary-colored border and a muted background. They are not removable, so callers
-/// pass `isDerived: true` to disable the long-press affordance.
+/// pass `isDerived: true`. Tap opens the state detail sheet (the only chip interaction;
+/// removal happens there). Used by the combat STATUS strip.
 struct StateChip: View {
     let def: StateDefinition
     let level: Int
@@ -23,27 +24,11 @@ struct StateChip: View {
     /// Background accent for "live" (manually-tracked) chips.
     var accent: Color = .groupCombat
     var onTap: () -> Void = {}
-    var onLongPress: () -> Void = {}
-
-    private var isZustand: Bool { def.kind == .zustand }
-
-    /// Numeric penalty shown on the chip — ONLY for per-level Zustände, where `−level` is
-    /// unambiguous across every domain and matches the engine (e.g. "−2"); nil otherwise.
-    /// Per-domain `.fixed`, `.entrueckung`, `.eingeengt` and `.reminderOnly` show no number.
-    private var penaltyText: String? {
-        guard isZustand, def.showsPerLevelPenalty else { return nil }
-        return "−\(level)"
-    }
 
     private var label: String {
-        var text = L(def.nameKey)
-        if isZustand {
-            text += StateCatalog.romanSuffix(level)
-        }
-        if let penalty = penaltyText {
-            text += " \(penalty)"
-        }
-        return text
+        let value = StateCatalog.levelValueText(for: def, level: level)
+        let name = L(def.nameKey)
+        return value.isEmpty ? name : "\(name) \(value)"
     }
 
     var body: some View {
@@ -60,13 +45,6 @@ struct StateChip: View {
         .background(isDerived ? Color(UIColor.secondarySystemBackground) : accent)
         .overlay(borderOverlay)
         .contentShape(Rectangle())
-        // Long-press takes high priority so it wins the gesture arena cleanly; the tap
-        // still fires reliably for a quick press. Derived chips attach no long-press.
-        .highPriorityGesture(
-            isDerived
-                ? nil
-                : LongPressGesture(minimumDuration: 0.4).onEnded { _ in onLongPress() }
-        )
         .onTapGesture { onTap() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label)

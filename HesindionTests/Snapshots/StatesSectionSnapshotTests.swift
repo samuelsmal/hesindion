@@ -14,11 +14,16 @@ final class StatesSectionSnapshotTests: XCTestCase {
         hero.setStateLevel("furcht", level: 2)
         hero.setStateLevel("liegend", level: 1)
 
-        let view = StatesSectionView(hero: hero)
-            .frame(width: 380)
-            .padding()
-            .background(Color(UIColor.systemBackground))
-            .modelContainer(container)
+        // Wrap in a ScrollView so the swipe rows size to their content height (as they do
+        // inside HeroDetailView). With a bare `.device` layout the rows' action backgrounds
+        // would greedily expand to fill the screen.
+        let view = ScrollView {
+            StatesSectionView(hero: hero)
+                .frame(width: 380)
+                .padding()
+        }
+        .background(Color(UIColor.systemBackground))
+        .modelContainer(container)
 
         assertAllVariants(of: view, named: "states_section")
     }
