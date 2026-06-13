@@ -176,26 +176,48 @@ struct CombatRootView: View {
                 // STATUS section
                 combatSectionLabel(L("status.label"))
 
-                // Schmerz indicator
-                if hero.effectiveSchmerzLevel > 0 {
-                    let level = hero.effectiveSchmerzLevel
-                    let label = level >= 4 ? L("schmerz.IV") : L("schmerz.\(String(repeating: "I", count: level))")
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(.caption, weight: .bold))
-                        Text("\(label) (\(hero.schmerzPenalty))")
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                // Incapacitation warning banner — impossible to miss, top of STATUS.
+                if hero.isHandlungsunfaehig {
+                    combatWarningBanner(
+                        icon: "hand.raised.slash.fill",
+                        text: L("states.handlungsunfaehig.banner")
+                    )
+                }
+                if hero.isBewegungsunfaehig {
+                    combatWarningBanner(
+                        icon: "figure.stand",
+                        text: L("states.bewegungsunfaehig.banner")
+                    )
+                }
+
+                // Active player states strip (Schmerz, Belastung, Furcht, Liegend, …),
+                // addable mid-combat via the picker, tappable to the detail sheet.
+                StatesStrip(hero: hero, accent: combatAccent)
+                    .padding(.top, 4)
+
+                // Per-round reminders for timed effects (Blutend, Brennend, …).
+                let perRoundReminders = hero.activeStates.compactMap { entry -> (StateDefinition, String)? in
+                    guard let key = entry.def.perRoundReminderKey else { return nil }
+                    return (entry.def, L(key))
+                }
+                if !perRoundReminders.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(perRoundReminders, id: \.0.id) { def, reminder in
+                            HStack(spacing: 6) {
+                                Image(systemName: def.iconSystemName)
+                                    .font(.system(.caption2, weight: .bold))
+                                Text("\(L(def.nameKey)): \(reminder)")
+                                    .font(.system(.caption2, design: .monospaced, weight: .bold))
+                            }
+                            .foregroundStyle(combatAccent)
+                        }
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.groupCombat)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                     .padding(.top, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                // Beengte Umgebung toggle
+                // Beengte Umgebung toggle — a quick shortcut bound to the `eingeengt`
+                // status (so it also appears as a chip above and persists like other states).
                 Button { beengteUmgebungActive.toggle() } label: {
                     HStack(spacing: 6) {
                         Image(systemName: beengteUmgebungActive ? "square.split.bottomrightquarter.fill" : "square.split.bottomrightquarter")
@@ -558,7 +580,7 @@ struct CombatRootView: View {
                     }
 
                     // Zustand ignorieren
-                    if !schipIgnoreZustandThisRound && hero.effectiveSchmerzLevel > 0 {
+                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
                         if schipsAvailable > 0 {
                             Button {
                                 hero.derivedValues?.schicksalspunkte.current -= 1
@@ -617,6 +639,28 @@ struct CombatRootView: View {
             .adaptiveContentWidth()
             } // ScrollView
         }
+    }
+
+    /// Full-width, high-contrast incapacitation banner — `Color.groupCombat` fill, white
+    /// bold uppercase text, thick `Color.dsaBorder` rectangle. Impossible to miss.
+    private func combatWarningBanner(icon: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(.title3, weight: .black))
+            Text(text)
+                .font(.system(.headline, weight: .black))
+                .textCase(.uppercase)
+            Spacer()
+            Image(systemName: icon)
+                .font(.system(.title3, weight: .black))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(Color.groupCombat)
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .padding(.top, 6)
     }
 
     @ViewBuilder

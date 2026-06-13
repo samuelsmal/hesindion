@@ -6,7 +6,7 @@ import SwiftData
 enum TestData {
 
     static let schema = Schema([
-        Hero.self, PersonalData.self, Experience.self, Attributes.self,
+        Hero.self, HeroStateEntry.self, PersonalData.self, Experience.self, Attributes.self,
         DerivedValues.self, Talent.self, CombatTechnique.self,
         MeleeWeapon.self, RangedWeapon.self, Armor.self, Shield.self,
         EquipmentItem.self, Money.self, Pet.self, Language.self,

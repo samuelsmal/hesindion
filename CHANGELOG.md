@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Zustände & Status tracking per hero — a static catalog of 8 DSA 5 Zustände (leveled I–IV) and 17 binary Status with localized effects, cause, and removal rules; managed via a "Zustände & Status" section on hero detail (swipe-to-remove rows, add picker, detail sheet with prominent removal rules) and a shared `StatesStrip` of chips in combat
+- Automatic modifier integration for states: active Zustände feed penalties into the ModifierEngine with the DSA −5 Zustand-penalty cap; combat root shows a states strip, a Handlungsunfähig/Bewegungsunfähig warning banner, and per-round reminders
+- Entrückung "gottgefällig" toggle in spell and liturgy casting
+- Command palette (Cmd+K) entries for states — "Zustand: …" / "Status: …" set a level (0 removes), covering add/level/remove from the keyboard
+- Drag-to-reveal (swipe) removal of states in hero detail, matching the app's `SwipeActionRow` edit style; the reusable `SwipeActionRow` was extracted to its own file
 - Schip (fate point) reroll option on failed skill and spell checks — on a regular failure, the locked 3W20 dice become reroll-selectable (all selected by default) and a "Schip: Neuer Wurf" button spends one Schip to reroll the chosen dice
 - UI snapshot testing infrastructure using swift-snapshot-testing
 - Snapshot tests for 7 views (HeroList, HeroDetail, Combat, CombatRoot, Adventure, DiceRoll, WeatherDay) across 12 iPad/color/dynamic-type variants
@@ -29,6 +34,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - `make test`/`test-ui`/`test-ui-record` no longer clone the simulator per test worker (`-parallel-testing-enabled NO`, `-maximum-concurrent-test-simulator-destinations 1`); `test-ui-record` uses the correct `SNAPSHOT_TESTING_RECORD=all` value
+
+### Changed
+
+- Schmerz now flows through the new states system rather than a standalone computation, with Belastung counting toward the −5 Zustand cap
+- The Beengte-Umgebung combat toggle now persists as the `eingeengt` status (its single source of truth) and survives combat exit
 
 ## [0.3.0] - 2026-03-28
 

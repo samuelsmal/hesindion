@@ -933,6 +933,180 @@ enum DSAStrings {
         "mod.distraction.freefall":     "Freier Fall (−3)",
         "maxModifications":             "Max. Modifikationen: %d",
         "concentrationCheck":           "Selbstbeherrschung-Probe nötig",
+
+        // MARK: - Player States (Zustände & Status)
+        // Meta / UI
+        "states.section":                       "Zustände & Status",
+        "states.add":                           "Zustand hinzufügen",
+        "states.remove":                        "Entfernen",
+        "states.handlungsunfaehig.banner":      "Handlungsunfähig",
+        "states.bewegungsunfaehig.banner":      "Bewegungsunfähig",
+        "states.gottgefaellig":                 "Gottgefällige Probe",
+        "states.zustaende.section":             "Zustände",
+        "states.status.section":                "Status",
+        "states.search.prompt":                 "Zustand oder Status suchen",
+        "source.zustandCap":                    "Zustände max. −5",
+        // Detail sheet
+        "states.level":                         "Stufe",
+        "states.active":                        "Aktiv",
+        "states.effect.header":                 "Auswirkung",
+        "states.cause.header":                  "Ursache",
+        "states.removal.header":                "Beenden / Heilung",
+        "states.derived.note":                  "Dieser Zustand ergibt sich automatisch und kann nicht manuell entfernt werden.",
+        "states.implied.note":                  "Dieser Zustand folgt aus einem anderen aktiven Zustand und kann nicht direkt entfernt werden.",
+
+        // Zustände (I–IV)
+        "state.betaeubung.name":    "Betäubung",
+        "state.betaeubung.I":       "leicht angeschlagen, alle Proben −1",
+        "state.betaeubung.II":      "angeschlagen, alle Proben −2",
+        "state.betaeubung.III":     "schwer angeschlagen, alle Proben −3",
+        "state.betaeubung.IV":      "Handlungsunfähig",
+        "state.betaeubung.cause":   "Übermäßiger Alkohol, Erschöpfung oder Schläge.",
+        "state.betaeubung.removal": "Jede Stufe verschwindet nach einer Ruhephase von 3 Stunden.",
+
+        "state.furcht.name":    "Furcht",
+        "state.furcht.I":       "beunruhigt, alle Proben −1",
+        "state.furcht.II":      "verängstigt, alle Proben −2",
+        "state.furcht.III":     "in Panik, alle Proben −3",
+        "state.furcht.IV":      "katatonisch, handlungsunfähig",
+        "state.furcht.cause":   "Grauenerregende Kreaturen, Zauber oder der Nachteil Angst vor …",
+        "state.furcht.removal": "Solange der Auslöser in der Nähe ist, bleibt die Furcht. Danach 1 Stufe je 5 Minuten.",
+
+        "state.paralyse.name":    "Paralyse",
+        "state.paralyse.I":       "leichte Steife, −1 auf Proben mit Bewegung/Sprache, GS 75 %",
+        "state.paralyse.II":      "versteift, −2 auf Proben mit Bewegung/Sprache, GS 50 %",
+        "state.paralyse.III":     "stark eingeschränkt, −3 auf Proben mit Bewegung/Sprache, GS 25 %",
+        "state.paralyse.IV":      "vollständig bewegungsunfähig",
+        "state.paralyse.cause":   "Angriffe von Ghulen oder der Zauber Paralysis.",
+        "state.paralyse.removal": "Baut sich jede halbe Stunde um 1 Stufe ab.",
+
+        "state.verwirrung.name":    "Verwirrung",
+        "state.verwirrung.I":       "leicht verwirrt, alle Proben −1",
+        "state.verwirrung.II":      "verwirrt, alle Proben −2",
+        "state.verwirrung.III":     "sehr verwirrt, alle Proben −3; Zaubern, Liturgien und Wissenstalente unmöglich",
+        "state.verwirrung.IV":      "Handlungsunfähig",
+        "state.verwirrung.cause":   "Bestimmte Kreaturen, Gifte, Zauber oder dämonische Fähigkeiten.",
+        "state.verwirrung.removal": "Baut sich jede Stunde um 1 Stufe ab (sofern der Auslöser nichts anderes vorgibt).",
+
+        "state.berauscht.name":    "Berauscht",
+        "state.berauscht.I":       "Proben auf Zechen um 1 erschwert",
+        "state.berauscht.II":      "Proben auf Zechen um 2 erschwert",
+        "state.berauscht.III":     "Proben auf Zechen um 3 erschwert",
+        "state.berauscht.IV":      "+1 Stufe Betäubung; 4 Stufen Berauscht werden entfernt",
+        "state.berauscht.cause":   "Misslungene Gift-Probe auf Alkohol.",
+        "state.berauscht.removal": "Baut sich alle 2 Stunden um 1 Stufe ab, sofern kein weiterer Alkohol getrunken wird.",
+
+        "state.entrueckung.name":    "Entrückung",
+        "state.entrueckung.I":       "leicht entrückt, alle Proben auf Talente und Zauber −1, sofern nicht dem Gott gefällig",
+        "state.entrueckung.II":      "entrückt, gottgefällige Proben +1, alle anderen −2",
+        "state.entrueckung.III":     "göttlich berührt, gottgefällige Proben +2, alle anderen −3",
+        "state.entrueckung.IV":      "Werkzeug des Gottes, gottgefällige Proben +3, alle anderen −4",
+        "state.entrueckung.cause":   "Geweihte, die in kurzer Zeit viele Karmapunkte ausgeben.",
+        "state.entrueckung.removal": "Baut sich jede Stunde um 1 Stufe ab.",
+
+        // schmerz: name reuses existing "source.schmerz"
+        "state.schmerz.I":       "alle Proben −1",
+        "state.schmerz.II":      "alle Proben −2",
+        "state.schmerz.III":     "alle Proben −3",
+        "state.schmerz.IV":      "Handlungsunfähig",
+        "state.schmerz.cause":   "Niedrige Lebensenergie (LE-Schwellen) oder schmerzhafte Effekte.",
+        "state.schmerz.removal": "Sinkt automatisch, wenn die Lebensenergie wieder steigt.",
+
+        // belastung: name reuses existing "source.belastung"
+        "state.belastung.I":       "Abzüge auf AT, PA, AW, INI und GS",
+        "state.belastung.II":      "Abzüge auf AT, PA, AW, INI und GS",
+        "state.belastung.III":     "Abzüge auf AT, PA, AW, INI und GS",
+        "state.belastung.IV":      "Abzüge auf AT, PA, AW, INI und GS",
+        "state.belastung.cause":   "Getragene Rüstung und Last.",
+        "state.belastung.removal": "Leichtere Rüstung tragen oder Belastungsgewöhnung steigern.",
+
+        // Status (single .effect)
+        "state.liegend.name":    "Liegend",
+        "state.liegend.effect":  "GS 1; eigene Angriffe −4, Verteidigung −2. Aufstehen kostet 1 Aktion (Passierschlag möglich).",
+        "state.liegend.cause":   "Zu Boden geworfen oder gestürzt.",
+        "state.liegend.removal": "Aufstehen (1 Aktion).",
+
+        "state.fixiert.name":    "Fixiert",
+        "state.fixiert.effect":  "GS 0; Ausweichen −4. Kampf am Platz weiter möglich.",
+        "state.fixiert.cause":   "Leim, Ranken oder Fallen.",
+        "state.fixiert.removal": "Befreien (abhängig vom Auslöser).",
+
+        // eingeengt: name reuses existing "beengteUmgebung"
+        "state.eingeengt.effect":  "AT/PA-Abzüge nach Waffenlänge (kurz 0, mittel −4, lang −8); Talente bis −2.",
+        "state.eingeengt.cause":   "Niedrige Räume, enge Gänge oder Gedränge.",
+        "state.eingeengt.removal": "Die beengte Umgebung verlassen.",
+
+        "state.blutend.name":    "Blutend",
+        "state.blutend.effect":  "Am Ende jeder KR 1 SP durch starke Nachblutungen.",
+        "state.blutend.cause":   "Tiefe Wunden oder kritische Treffer.",
+        "state.blutend.removal": "Heilkunde (Wunden) +2 oder nach Ablauf der Dauer.",
+        "state.blutend.perRound": "1 SP am Ende jeder KR",
+
+        "state.brennend.name":    "Brennend",
+        "state.brennend.effect":  "Feuerschaden in jeder KR. Löschen: Körperbeherrschung-Probe je KR (klein ±0, groß −1, ganzer Körper −2).",
+        "state.brennend.cause":   "Feuer oder Säure.",
+        "state.brennend.removal": "Flammen löschen (Probe, Wasser, Sand …).",
+        "state.brennend.perRound": "Feuerschaden je KR",
+
+        "state.blind.name":    "Blind",
+        "state.blind.effect":  "Gegner erst per Sinnesschärfe (Suchen) lokalisieren; Nahkampf-AT halbiert; Fernkampf trifft nur bei nat. 1; Verteidigung gegen Nahkampf nur bei nat. 1, gegen Fernkampf unmöglich.",
+        "state.blind.cause":   "Nachteil Blind, völlige Dunkelheit oder verbundene Augen.",
+        "state.blind.removal": "Sicht wiederherstellen.",
+
+        "state.taub.name":    "Taub",
+        "state.taub.effect":  "Kann nichts hören; keine rein gehörbasierten Sinnesschärfe-Proben; Sinnesschärfe (Hinterhalte entdecken) −3.",
+        "state.taub.cause":   "Lärm, Verletzung oder Nachteil.",
+        "state.taub.removal": "Gehör wiederherstellen.",
+
+        "state.stumm.name":    "Stumm",
+        "state.stumm.effect":  "Kann nicht sprechen; Kommunikation stark eingeschränkt; Probleme bei Zaubern mit verbaler Komponente.",
+        "state.stumm.cause":   "Verletzung oder Zauber.",
+        "state.stumm.removal": "Abhängig vom Auslöser.",
+
+        "state.ueberrascht.name":    "Überrascht",
+        "state.ueberrascht.effect":  "Gegen den Überraschungsangriff ist keine Verteidigung möglich. Danach beginnt der reguläre Kampf.",
+        "state.ueberrascht.cause":   "Hinterhalt oder unbemerkte Gegner.",
+        "state.ueberrascht.removal": "Nach der Überraschungsaktion.",
+
+        "state.unsichtbar.name":    "Unsichtbar",
+        "state.unsichtbar.effect":  "Nur angreifbar, wenn die Position bekannt ist (Sinnesschärfe Suchen vs. Verbergen); AT halbiert; Fernkampf nur bei nat. 1. Verteidigung gegen unsichtbaren Angreifer nur bei nat. 1.",
+        "state.unsichtbar.cause":   "Zauber oder magische Effekte.",
+        "state.unsichtbar.removal": "Abhängig vom Auslöser.",
+
+        "state.vergiftet.name":    "Vergiftet",
+        "state.vergiftet.effect":  "Solange das Gift wirkt, ist keine normale Regeneration möglich.",
+        "state.vergiftet.cause":   "Gift.",
+        "state.vergiftet.removal": "Gift neutralisieren oder Wirkdauer abwarten.",
+
+        "state.krank.name":    "Krank",
+        "state.krank.effect":  "Keine normale Regeneration. Ohne tägliche Ruhephase Verlust von 1W3 LE.",
+        "state.krank.cause":   "Krankheit.",
+        "state.krank.removal": "Krankheit abklingen lassen oder geheilt werden.",
+
+        "state.uebler_geruch.name":    "Übler Geruch",
+        "state.uebler_geruch.effect":  "Alle sozialen Talentproben −1 für eine Woche (außer Einschüchtern, Menschenkenntnis, Willenskraft).",
+        "state.uebler_geruch.cause":   "Extrem unangenehmer Geruch.",
+        "state.uebler_geruch.removal": "Nicht abwaschbar; nur ~1 Stunde maskierbar. Endet nach einer Woche.",
+
+        "state.bewegungsunfaehig.name":    "Bewegungsunfähig",
+        "state.bewegungsunfaehig.effect":  "Kann sich nicht bewegen; Wahrnehmung normal. Nur Aktionen ohne Körperbewegung möglich.",
+        "state.bewegungsunfaehig.cause":   "Paralyse, Treibsand oder Fesseln.",
+        "state.bewegungsunfaehig.removal": "Abhängig vom Auslöser.",
+
+        "state.handlungsunfaehig.name":    "Handlungsunfähig",
+        "state.handlungsunfaehig.effect":  "Keine Aktionen oder Verteidigung; GS 0. Gilt meist auch als Liegend.",
+        "state.handlungsunfaehig.cause":   "Schwere Zustände (z. B. Stufe IV).",
+        "state.handlungsunfaehig.removal": "Wenn die Ursache endet.",
+
+        "state.bewusstlos.name":    "Bewusstlos",
+        "state.bewusstlos.effect":  "Bewusstlos; zählt zusätzlich als Handlungsunfähig (und Liegend).",
+        "state.bewusstlos.cause":   "Schlaf oder Schlag auf den Kopf.",
+        "state.bewusstlos.removal": "Aufwachen.",
+
+        "state.versteinert.name":    "Versteinert",
+        "state.versteinert.effect":  "Zu Stein erstarrt; keine Wahrnehmung, keine Alterung; Gift/Krankheit pausieren. Schaden an der Statue überträgt sich.",
+        "state.versteinert.cause":   "Versteinerungseffekt.",
+        "state.versteinert.removal": "Dauerhaft; nur durch Magie oder göttliches Eingreifen.",
     ]
 }
 

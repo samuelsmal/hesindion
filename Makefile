@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only
 
 build:
 	xcodebuild \
@@ -161,3 +161,17 @@ test-ui-record: boot
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
 		$(NO_CLONE) \
 		test -only-testing:HesindionTests
+
+# Re-record only a specific test (class or method) — narrows the blast radius of
+# a re-record so unrelated baselines aren't rewritten.
+#   make test-ui-record-only ONLY=HesindionTests/SomeSnapshotTests
+test-ui-record-only: boot
+	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		$(NO_CLONE) \
+		test -only-testing:$(ONLY)

@@ -101,7 +101,17 @@ struct CombatView: View {
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
     @State private var vorstossActiveThisRound: Bool = false
-    @State private var beengteUmgebungActive: Bool = false
+    /// Beengte Umgebung is now backed by the `eingeengt` player status (single source of
+    /// truth), so it shows as a chip in the states strip and persists via SwiftData like
+    /// every other state. Reads `hero.hasState("eingeengt")`; the binding writes through
+    /// `hero.setStateLevel`. The old `activeCombatBeengt` session field is no longer used.
+    private var beengteUmgebungActive: Bool { hero.hasState("eingeengt") }
+    private var beengteUmgebungBinding: Binding<Bool> {
+        Binding(
+            get: { hero.hasState("eingeengt") },
+            set: { hero.setStateLevel("eingeengt", level: $0 ? 1 : 0) }
+        )
+    }
     @State private var activeManeuver: CombatManeuver = .normal
     @State private var defenseCountThisRound: Int = 0
     @State private var schipDefenseBoostActive: Bool = false
@@ -149,7 +159,7 @@ struct CombatView: View {
                     plaenklerActive: $plaenklerActive,
                     plaenklerBonus: $plaenklerBonus,
                     mountedActive: $mountedActive,
-                    beengteUmgebungActive: $beengteUmgebungActive,
+                    beengteUmgebungActive: beengteUmgebungBinding,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -174,7 +184,7 @@ struct CombatView: View {
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
-                    beengteUmgebungActive: $beengteUmgebungActive,
+                    beengteUmgebungActive: beengteUmgebungBinding,
                     defenseCountThisRound: $defenseCountThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
@@ -369,7 +379,7 @@ struct CombatView: View {
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
-                    beengteUmgebungActive: $beengteUmgebungActive,
+                    beengteUmgebungActive: beengteUmgebungBinding,
                     defenseCountThisRound: $defenseCountThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
@@ -456,7 +466,7 @@ struct CombatView: View {
                     plaenklerBonus = bonus == "at" ? .at : .aw
                 }
                 mountedActive = hero.activeCombatMounted
-                beengteUmgebungActive = hero.activeCombatBeengt
+                // Beengte Umgebung restores automatically via the `eingeengt` status (SwiftData).
                 step = .root
             }
         }
@@ -470,6 +480,6 @@ struct CombatView: View {
         hero.activeCombatPlaenkler = plaenklerActive
         hero.activeCombatPlaenklerBonus = plaenklerBonus == .at ? "at" : "aw"
         hero.activeCombatMounted = mountedActive
-        hero.activeCombatBeengt = beengteUmgebungActive
+        // Beengte Umgebung is the `eingeengt` status now and persists itself; no field to write.
     }
 }
