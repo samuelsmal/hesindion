@@ -580,7 +580,7 @@ struct CombatRootView: View {
                     }
 
                     // Zustand ignorieren
-                    if !schipIgnoreZustandThisRound && hero.effectiveSchmerzLevel > 0 {
+                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
                         if schipsAvailable > 0 {
                             Button {
                                 hero.derivedValues?.schicksalspunkte.current -= 1

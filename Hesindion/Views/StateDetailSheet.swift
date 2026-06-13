@@ -24,6 +24,16 @@ struct StateDetailSheet: View {
 
     private var isZustand: Bool { def.kind == .zustand }
     private var isDerived: Bool { StateCatalog.derivedIDs.contains(def.id) }
+
+    /// True when the state is implied by another active state (e.g. Liegend ⇐ Bewusstlos)
+    /// but isn't itself stored — there's nothing to remove, so the sheet is read-only.
+    private var isImpliedOnly: Bool {
+        hero.impliedStateIDs.contains(def.id) && !hero.states.contains { $0.stateID == def.id }
+    }
+
+    /// Read-only treatment (no stepper, no Remove button) for derived OR implied-only states.
+    private var isReadOnly: Bool { isDerived || isImpliedOnly }
+
     private var accent: Color { .groupCombat }
 
     /// Live level read from the hero (derived states report their computed level).
@@ -37,7 +47,7 @@ struct StateDetailSheet: View {
                 effectTable
                 causeBlock
                 removalCallout
-                if isDerived {
+                if isReadOnly {
                     derivedNote
                 } else {
                     removeButton
@@ -84,8 +94,8 @@ struct StateDetailSheet: View {
     // MARK: - Level control (stepper / on-off indicator)
 
     @ViewBuilder private var levelControl: some View {
-        if isDerived {
-            // Read-only: show the auto-computed level as a static badge.
+        if isReadOnly {
+            // Read-only: show the (auto-computed / implied) level as a static badge.
             HStack(spacing: 10) {
                 Text(L("states.level").uppercased())
                     .font(.system(.caption, weight: .black))
@@ -224,7 +234,7 @@ struct StateDetailSheet: View {
             Image(systemName: "gearshape.fill")
                 .font(.system(.subheadline, weight: .bold))
                 .foregroundStyle(.secondary)
-            Text(L("states.derived.note"))
+            Text(L(isImpliedOnly && !isDerived ? "states.implied.note" : "states.derived.note"))
                 .font(.system(.footnote, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

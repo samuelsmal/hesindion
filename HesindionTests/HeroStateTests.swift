@@ -91,6 +91,41 @@ final class HeroStateTests: XCTestCase {
         XCTAssertEqual(hero.totalZustandLevels, 4)
     }
 
+    func testHasIgnorableZustand() throws {
+        let ctx = try makeContext()
+
+        // Bare hero: no suppressible Zustand.
+        let bare = Hero(name: "Bare"); ctx.insert(bare)
+        XCTAssertFalse(bare.hasIgnorableZustand, "bare hero has no ignorable Zustand")
+
+        // Only Belastung (gear-derived): NOT suppressible by the Schip.
+        let encumbered = Hero(name: "Encumbered"); ctx.insert(encumbered)
+        encumbered.armors.append(Armor(name: "Plattenpanzer", protectionValue: 8, encumbrance: 4, weight: 20, isEquipped: true))
+        XCTAssertTrue(encumbered.effectiveBE > 0, "precondition: Belastung active")
+        XCTAssertEqual(encumbered.level(of: "belastung"), 4)
+        XCTAssertFalse(encumbered.hasIgnorableZustand, "Belastung alone must not enable the Zustand-ignorieren Schip")
+
+        // Furcht (no LP loss): suppressible.
+        let frightened = Hero(name: "Frightened"); ctx.insert(frightened)
+        frightened.setStateLevel("furcht", level: 1)
+        XCTAssertTrue(frightened.hasIgnorableZustand, "Furcht is suppressible by the Schip")
+
+        // Schmerz (driven by low LP, no manual Zustand): suppressible.
+        let hurt = Hero(name: "Hurt"); ctx.insert(hurt)
+        hurt.derivedValues = DerivedValues(
+            lebensenergie: LifeEnergyValue(base: 20, bonus: 0, purchased: 0, max: 20, current: 10),
+            astralenergie: nil, karmaenergie: nil,
+            seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
+            zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
+            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
+            geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
+            schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
+        XCTAssertTrue(hurt.effectiveSchmerzLevel > 0, "precondition: Schmerz active")
+        XCTAssertTrue(hurt.hasIgnorableZustand, "Schmerz is suppressible by the Schip")
+    }
+
     func testImpliedStatusesFromBewusstlos() throws {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)

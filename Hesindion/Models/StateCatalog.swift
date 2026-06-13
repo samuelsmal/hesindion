@@ -59,13 +59,18 @@ enum StateCatalog {
         all.first { $0.id == id }
     }
 
-    /// Bare roman numeral for a level: "I".."IIII" (clamped at IV), empty for level<=0.
+    /// Bare DSA roman numeral for a level: "I", "II", "III", "IV" (clamped at IV), empty for level<=0.
     static func roman(_ level: Int) -> String {
-        guard level > 0 else { return "" }
-        return String(repeating: "I", count: min(level, 4))
+        switch min(max(level, 0), 4) {
+        case 1: return "I"
+        case 2: return "II"
+        case 3: return "III"
+        case 4: return "IV"
+        default: return ""
+        }
     }
 
-    /// Roman-numeral level suffix for labels: " I".." IIII" (clamped at IV), empty for level<=0.
+    /// Roman-numeral level suffix for labels: " I".." IV" (clamped at IV), empty for level<=0.
     static func romanSuffix(_ level: Int) -> String {
         level > 0 ? " " + roman(level) : ""
     }

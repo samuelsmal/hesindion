@@ -953,6 +953,7 @@ enum DSAStrings {
         "states.cause.header":                  "Ursache",
         "states.removal.header":                "Beenden / Heilung",
         "states.derived.note":                  "Dieser Zustand ergibt sich automatisch und kann nicht manuell entfernt werden.",
+        "states.implied.note":                  "Dieser Zustand folgt aus einem anderen aktiven Zustand und kann nicht direkt entfernt werden.",
 
         // Zustände (I–IV)
         "state.betaeubung.name":    "Betäubung",

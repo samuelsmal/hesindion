@@ -311,6 +311,13 @@ final class Hero {
         return result
     }
 
+    /// True if any active Zustand penalty is suppressible by the "Zustand ignorieren" Schip.
+    /// Covers Furcht, Betäubung, Paralyse, Verwirrung, Entrückung, Schmerz, etc. Belastung is
+    /// intentionally excluded — `SharedModifiers.encumbrance` does not honour schipIgnoreZustand.
+    var hasIgnorableZustand: Bool {
+        activeStates.contains { $0.def.kind == .zustand && $0.def.id != "belastung" }
+    }
+
     /// Sum of all Zustand levels (GR: ≥8 ⇒ Handlungsunfähig). Statuses don't count.
     var totalZustandLevels: Int {
         activeStates.filter { $0.def.kind == .zustand }.reduce(0) { $0 + $1.level }
