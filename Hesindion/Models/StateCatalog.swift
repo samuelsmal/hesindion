@@ -39,6 +39,14 @@ struct StateDefinition: Identifiable, Equatable {
     let implies: [String]
     /// Level (per Stufe) at which the state counts as Handlungsunfähig (4 for most Zustände; nil otherwise).
     let handlungsunfaehigAtLevel: Int?
+
+    /// True iff the penalty is unambiguously `-level` in every domain (mechanic `.penalty(_, .perLevel)`),
+    /// so a single number on the chip is guaranteed to match the engine. Per-domain `.fixed`, `.entrueckung`
+    /// (gottgefällig changes the sign), `.eingeengt` and `.reminderOnly` are NOT representable as one chip number.
+    var showsPerLevelPenalty: Bool {
+        if case .penalty(_, .perLevel) = mechanic { return true }
+        return false
+    }
 }
 
 enum StateCatalog {
@@ -48,10 +56,15 @@ enum StateCatalog {
         all.first { $0.id == id }
     }
 
+    /// Bare roman numeral for a level: "I".."IIII" (clamped at IV), empty for level<=0.
+    static func roman(_ level: Int) -> String {
+        guard level > 0 else { return "" }
+        return String(repeating: "I", count: min(level, 4))
+    }
+
     /// Roman-numeral level suffix for labels: " I".." IIII" (clamped at IV), empty for level<=0.
     static func romanSuffix(_ level: Int) -> String {
-        guard level > 0 else { return "" }
-        return " " + String(repeating: "I", count: min(level, 4))
+        level > 0 ? " " + roman(level) : ""
     }
 
     /// States that are auto-derived (computed on Hero), not manually added or stored.

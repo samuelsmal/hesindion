@@ -4,8 +4,13 @@ import SwiftUI
 ///
 /// Styling mirrors the combat STATUS badges in `CombatRootView`: a flat, high-contrast
 /// background, a 2px `Color.dsaBorder` rectangle overlay, monospaced bold text and an
-/// SF Symbol icon. Penalty-mechanic Zustände (and Entrückung) show their roman level and
-/// the numeric penalty (e.g. "Furcht II −2").
+/// SF Symbol icon. Zustände show their roman level (e.g. "Furcht II"); a numeric penalty
+/// is appended ONLY for per-level Zustände, where it is unambiguously `−level` in every
+/// domain and guaranteed to match the engine (e.g. "Furcht II −2").
+///
+/// Per-domain `.fixed` statuses (Liegend −4/−2) and Entrückung (whose sign flips for
+/// gottgefällige Proben) cannot be reduced to one chip number — their penalties are shown
+/// contextually on the actual roll, not on the chip.
 ///
 /// Derived (Schmerz/Belastung) and implied states render visually distinct: a dashed,
 /// secondary-colored border and a muted background. They are not removable, so callers
@@ -22,23 +27,12 @@ struct StateChip: View {
 
     private var isZustand: Bool { def.kind == .zustand }
 
-    /// Numeric penalty shown on the chip for penalty/entrückung Zustände (e.g. "−2"); nil otherwise.
+    /// Numeric penalty shown on the chip — ONLY for per-level Zustände, where `−level` is
+    /// unambiguous across every domain and matches the engine (e.g. "−2"); nil otherwise.
+    /// Per-domain `.fixed`, `.entrueckung`, `.eingeengt` and `.reminderOnly` show no number.
     private var penaltyText: String? {
-        guard isZustand else { return nil }
-        switch def.mechanic {
-        case .penalty(_, let value):
-            switch value {
-            case .perLevel:
-                return "−\(level)"
-            case .fixed:
-                return nil
-            }
-        case .entrueckung:
-            // Default (non-gottgefällig) reading: −level.
-            return "−\(level)"
-        default:
-            return nil
-        }
+        guard isZustand, def.showsPerLevelPenalty else { return nil }
+        return "−\(level)"
     }
 
     private var label: String {

@@ -89,7 +89,6 @@ struct FlowLayout: Layout {
             acc + row.height + (acc > 0 ? lineSpacing : 0)
         }
         let width = rows.map { $0.width }.max() ?? 0
-        rows.removeAll()
         return CGSize(width: min(width, maxWidth), height: height)
     }
 

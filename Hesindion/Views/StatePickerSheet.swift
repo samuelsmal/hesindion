@@ -65,7 +65,7 @@ struct StatePickerSheet: View {
                     .font(.system(.body, weight: .semibold))
                 Spacer()
                 if level > 0 {
-                    Text(StateCatalog.romanSuffix(level).trimmingCharacters(in: .whitespaces))
+                    Text(StateCatalog.roman(level))
                         .font(.system(.body, design: .monospaced, weight: .black))
                         .foregroundStyle(Color.groupCombat)
                 }
@@ -76,7 +76,7 @@ struct StatePickerSheet: View {
                     Button {
                         hero.setStateLevel(def.id, level: level == lvl ? 0 : lvl)
                     } label: {
-                        Text(StateCatalog.romanSuffix(lvl).trimmingCharacters(in: .whitespaces))
+                        Text(StateCatalog.roman(lvl))
                             .font(.system(.caption, design: .monospaced, weight: .black))
                             .foregroundStyle(level == lvl ? .white : .primary)
                             .frame(maxWidth: .infinity)
