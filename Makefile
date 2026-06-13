@@ -146,8 +146,13 @@ test-ui: boot
 		$(NO_CLONE) \
 		test -only-testing:HesindionTests
 
+# Re-record snapshot baselines. swift-snapshot-testing reads
+# SNAPSHOT_TESTING_RECORD from the test *runner* process, so the value must be
+# injected with the TEST_RUNNER_ prefix (xcodebuild strips it before launch);
+# a plain host env var never reaches the simulator process. Valid values are
+# all/failed/missing/never — "all" force-records every snapshot.
 test-ui-record: boot
-	SNAPSHOT_TESTING_RECORD=all xcodebuild \
+	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
 		-sdk $(SDK) \
