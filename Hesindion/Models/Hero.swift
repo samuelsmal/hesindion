@@ -30,6 +30,7 @@ final class Hero {
     @Relationship(deleteRule: .cascade) var spells: [HeroSpell]
     @Relationship(deleteRule: .cascade) var liturgies: [HeroSpell]
     @Relationship(deleteRule: .cascade, inverse: \LogEntry.hero) var logEntries: [LogEntry] = []
+    @Relationship(deleteRule: .cascade) var states: [HeroStateEntry] = []
 
     var activeAdventure: Adventure?
 
@@ -260,6 +261,81 @@ final class Hero {
 
     /// Penalty from Schmerz, applied to all checks.
     var schmerzPenalty: Int { -effectiveSchmerzLevel }
+
+    // MARK: - Player States
+
+    /// Current stored level of a catalog state (0 if absent). Schmerz/Belastung are derived.
+    func level(of stateID: String) -> Int {
+        if stateID == "schmerz" { return effectiveSchmerzLevel }
+        if stateID == "belastung" { return effectiveBE }
+        return states.first { $0.stateID == stateID }?.level ?? 0
+    }
+
+    func hasState(_ stateID: String) -> Bool { level(of: stateID) > 0 }
+
+    /// Set/clear a manually-tracked state. Clamps Zustände to 1–4, statuses to 1; level 0 removes.
+    func setStateLevel(_ stateID: String, level rawLevel: Int) {
+        guard !StateCatalog.derivedIDs.contains(stateID) else { return }
+        let def = StateCatalog.definition(for: stateID)
+        let clamped: Int = {
+            if rawLevel <= 0 { return 0 }
+            return def?.kind == .status ? 1 : min(rawLevel, 4)
+        }()
+        let existing = states.first { $0.stateID == stateID }
+        if clamped == 0 {
+            if let e = existing {
+                states.removeAll { $0 === e }
+                modelContext?.delete(e)
+            }
+        } else if let e = existing {
+            e.level = clamped
+        } else {
+            states.append(HeroStateEntry(stateID: stateID, level: clamped))
+        }
+    }
+
+    /// All active states (stored + derived Schmerz/Belastung when > 0), as (definition, level).
+    var activeStates: [(def: StateDefinition, level: Int)] {
+        var result: [(StateDefinition, Int)] = []
+        if let s = StateCatalog.definition(for: "schmerz"), effectiveSchmerzLevel > 0 {
+            result.append((s, effectiveSchmerzLevel))
+        }
+        if let b = StateCatalog.definition(for: "belastung"), effectiveBE > 0 {
+            result.append((b, effectiveBE))
+        }
+        for entry in states {
+            if let def = StateCatalog.definition(for: entry.stateID) {
+                result.append((def, entry.level))
+            }
+        }
+        return result
+    }
+
+    /// Sum of all Zustand levels (GR: ≥8 ⇒ Handlungsunfähig). Statuses don't count.
+    var totalZustandLevels: Int {
+        activeStates.filter { $0.def.kind == .zustand }.reduce(0) { $0 + $1.level }
+    }
+
+    /// Derived statuses implied by active states (e.g. bewusstlos ⇒ handlungsunfaehig, liegend).
+    var impliedStateIDs: Set<String> {
+        var out = Set<String>()
+        for (def, _) in activeStates { out.formUnion(def.implies) }
+        return out
+    }
+
+    var isHandlungsunfaehig: Bool {
+        if hasState("handlungsunfaehig") || impliedStateIDs.contains("handlungsunfaehig") { return true }
+        if totalZustandLevels >= 8 { return true }
+        // Any Zustand at its handlungsunfaehig level (most level IV).
+        return activeStates.contains { entry in
+            entry.def.handlungsunfaehigAtLevel.map { entry.level >= $0 } ?? false
+        }
+    }
+
+    var isBewegungsunfaehig: Bool {
+        if hasState("bewegungsunfaehig") || impliedStateIDs.contains("bewegungsunfaehig") { return true }
+        return level(of: "paralyse") >= 4
+    }
 
     // MARK: - Combat Ability Detection
 

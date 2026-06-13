@@ -31,8 +31,6 @@ struct StateDefinition: Identifiable, Equatable {
     let implies: [String]
     /// Level (per Stufe) at which the state counts as Handlungsunfähig (4 for most Zustände; nil otherwise).
     let handlungsunfaehigAtLevel: Int?
-
-    static func == (a: StateDefinition, b: StateDefinition) -> Bool { a.id == b.id }
 }
 
 enum StateCatalog {
@@ -42,10 +40,11 @@ enum StateCatalog {
         all.first { $0.id == id }
     }
 
+    /// States that are auto-derived (computed on Hero), not manually added or stored.
+    static let derivedIDs: Set<String> = ["schmerz", "belastung"]
+
     /// States a user can add by hand (excludes auto-derived Schmerz/Belastung).
-    static var manuallyAddable: [StateDefinition] {
-        all.filter { $0.id != "schmerz" && $0.id != "belastung" }
-    }
+    static let manuallyAddable: [StateDefinition] = all.filter { !derivedIDs.contains($0.id) }
 
     static let zustaende: [StateDefinition] = [
         StateDefinition(
