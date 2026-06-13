@@ -134,6 +134,42 @@ final class StateModifiersTests: XCTestCase {
         XCTAssertEqual(lines.count, 1, "only the single Beengte-Umgebung line should be present")
     }
 
+    func testEntrueckungGottgefaelligFlipsSign() {
+        let hero = makeHero()
+        hero.setStateLevel("entrueckung", level: 3)
+
+        // Default (gottgefaellig == false): Entrückung III applies as a -3 penalty.
+        let penaltyLines = ModifierEngine.shared.evaluate(
+            context: ModifierContext(hero: hero, domain: .spellCasting))
+        let entLine = penaltyLines.first { $0.source.hasPrefix(L("state.entrueckung.name")) }
+        XCTAssertNotNil(entLine, "Entrückung line must be present when not gottgefällig")
+        XCTAssertEqual(entLine?.value, -3, "Entrückung III ⇒ -3 by default")
+        XCTAssertEqual(
+            ModifierEngine.shared.totalModifier(
+                context: ModifierContext(hero: hero, domain: .spellCasting)),
+            -3)
+
+        // Gottgefällige Probe: flips to a bonus of max(0, level-1) = +2.
+        var bonusCtx = ModifierContext(hero: hero, domain: .spellCasting)
+        bonusCtx.gottgefaellig = true
+        let bonusLines = ModifierEngine.shared.evaluate(context: bonusCtx)
+        let bonusLine = bonusLines.first { $0.source.hasPrefix(L("state.entrueckung.name")) }
+        XCTAssertNotNil(bonusLine, "Entrückung line must be present when gottgefällig (level 3)")
+        XCTAssertEqual(bonusLine?.value, 2, "gottgefällig ⇒ max(0, 3-1) = +2")
+        XCTAssertEqual(ModifierEngine.shared.totalModifier(context: bonusCtx), 2)
+    }
+
+    func testEntrueckungGottgefaelligLevelOneEmitsNoLine() {
+        let hero = makeHero()
+        hero.setStateLevel("entrueckung", level: 1)
+        var ctx = ModifierContext(hero: hero, domain: .spellCasting)
+        ctx.gottgefaellig = true   // max(0, 1-1) == 0 ⇒ no line
+        let lines = ModifierEngine.shared.evaluate(context: ctx)
+        XCTAssertFalse(
+            lines.contains { $0.source.hasPrefix(L("state.entrueckung.name")) },
+            "gottgefällig Entrückung I yields 0 ⇒ no modifier line")
+    }
+
     func testCapCorrectionLineIsTaggedNonZustand() {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 4)

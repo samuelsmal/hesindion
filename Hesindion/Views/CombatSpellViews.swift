@@ -101,6 +101,7 @@ struct CombatSpellSetupView: View {
     @State private var foreignTradition = false
     @State private var ironStein = 0
     @State private var distractionLevel = 0
+    @State private var gottgefaellig = false
 
     private var spellDetail: SpellDetail? {
         RulesDatabase.shared.lookup(id: spell.ruleId)?.spellDetail
@@ -138,6 +139,7 @@ struct CombatSpellSetupView: View {
         ctx.distractionLevel = distractionLevel
         ctx.mounted = mountedActive
         ctx.schipIgnoreZustand = schipIgnoreZustandThisRound
+        ctx.gottgefaellig = gottgefaellig
         return ctx
     }
 
@@ -233,6 +235,11 @@ struct CombatSpellSetupView: View {
                         stepperRow(L("mod.maintainedSpells"), value: $maintainedCount, range: 0...10)
                         stepperRow(L("mod.ironCarried"), value: $ironStein, range: 0...20)
                         distractionPicker
+
+                        // Entrückung: gottgefällige Probe flips the penalty to a bonus.
+                        if hero.hasState("entrueckung") {
+                            toggleRow(L("states.gottgefaellig"), isOn: $gottgefaellig)
+                        }
 
                         // Max modifications info
                         HStack(spacing: 8) {

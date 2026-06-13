@@ -17,6 +17,7 @@ struct SpellProbeModal: View {
     @State private var foreignTradition = false
     @State private var ironStein = 0
     @State private var distractionLevel = 0
+    @State private var gottgefaellig = false
 
     // MARK: - Attribute ID → short key mapping
 
@@ -59,6 +60,7 @@ struct SpellProbeModal: View {
         ctx.omitFormula = omitFormula
         ctx.ironSteinCarried = ironStein
         ctx.distractionLevel = distractionLevel
+        ctx.gottgefaellig = gottgefaellig
         return ctx
     }
 
@@ -175,6 +177,11 @@ struct SpellProbeModal: View {
 
                     // Distraction picker
                     distractionPicker
+
+                    // Entrückung: gottgefällige Probe flips the penalty to a bonus.
+                    if hero.hasState("entrueckung") {
+                        toggleRow(L("states.gottgefaellig"), isOn: $gottgefaellig)
+                    }
 
                     // Max modifications info
                     HStack(spacing: 8) {
