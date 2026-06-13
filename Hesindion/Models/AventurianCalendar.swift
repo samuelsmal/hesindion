@@ -87,3 +87,23 @@ struct AventurianDate: Equatable, Codable, Hashable {
         return "\(day). \(month.displayName) \(year) BF"
     }
 }
+
+extension AventurianDate {
+    /// Absolute day index. Year length is fixed at 365 (12×30 + 5 Namenlose Tage).
+    func ordinal() -> Int {
+        var dayOfYear = day
+        var m = AventurianMonth.praios
+        while m != month {
+            dayOfYear += m.dayCount
+            m = m.next
+        }
+        return year * 365 + dayOfYear
+    }
+
+    /// This date plus `days` (clamped at 0), via the canonical `next()` rollover.
+    func adding(days: Int) -> AventurianDate {
+        var d = self
+        for _ in 0..<max(0, days) { d = d.next() }
+        return d
+    }
+}
