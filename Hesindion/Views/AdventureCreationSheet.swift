@@ -51,9 +51,7 @@ struct AdventureCreationSheet: View {
                     let adventure = Adventure(
                         name: name,
                         region: region,
-                        startDate: AventurianDate(day: day, month: month, year: year),
-                        desert: desert,
-                        windy: windy
+                        startDate: AventurianDate(day: day, month: month, year: year)
                     )
                     modelContext.insert(adventure)
                     dismiss()

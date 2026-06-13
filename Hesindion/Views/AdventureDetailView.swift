@@ -172,8 +172,6 @@ struct AdventureDetailView: View {
                         Text(region.displayName).tag(region)
                     }
                 }
-                Toggle(L("adventureDesert"), isOn: $adventure.desert)
-                Toggle(L("adventureWindy"), isOn: $adventure.windy)
             }
             .padding(DSALayout.contentPadding)
         }
@@ -184,21 +182,16 @@ struct AdventureDetailView: View {
     // MARK: - Actions
 
     private func generateOneDay() {
-        let gen = WeatherGenerator(region: adventure.region, desert: adventure.desert, windy: adventure.windy)
         let lastDay = sortedWeatherDays.first
+        let region = lastDay?.region ?? adventure.region
+        let gen = WeatherGenerator(region: region)
         let previousResult: WeatherResult? = lastDay.map {
             WeatherResult(date: $0.date, clouds: $0.clouds, wind: $0.wind,
                           dayTemperature: $0.dayTemperature, nightTemperature: $0.nightTemperature, rain: $0.rain)
         }
         let result = gen.generate(date: adventure.currentDate, previousResult: previousResult)
-        let weatherDay = WeatherDay(from: result)
-        // Mark as time jump if there's a gap from the last generated day
-        if let lastDay = sortedWeatherDays.first {
-            let expectedNext = lastDay.date.next()
-            if result.date != expectedNext {
-                weatherDay.isTimeJump = true
-            }
-        }
+        let weatherDay = WeatherDay(from: result, region: region)
+        if let lastDay, result.date != lastDay.date.next() { weatherDay.isTimeJump = true }
         weatherDay.adventure = adventure
         modelContext.insert(weatherDay)
         adventure.currentDate = adventure.currentDate.next()

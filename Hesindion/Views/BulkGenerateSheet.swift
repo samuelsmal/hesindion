@@ -28,14 +28,14 @@ struct BulkGenerateSheet: View {
     }
 
     private func generateDays() {
-        let gen = WeatherGenerator(region: adventure.region, desert: adventure.desert, windy: adventure.windy)
+        let gen = WeatherGenerator(region: adventure.region)
 
         // Check if first day should be marked as time jump
         let lastDay = adventure.weatherDays.sorted(by: { $0.generatedAt < $1.generatedAt }).last
 
         let results = gen.generateBatch(startDate: adventure.currentDate, count: dayCount)
         for (index, result) in results.enumerated() {
-            let weatherDay = WeatherDay(from: result)
+            let weatherDay = WeatherDay(from: result, region: adventure.region)
             if index == 0, let lastDay = lastDay {
                 let expectedNext = lastDay.date.next()
                 if result.date != expectedNext {
