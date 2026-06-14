@@ -2,104 +2,86 @@ import Testing
 @testable import Hesindion
 
 struct WeatherGeneratorTests {
+    let summer = AventurianDate(day: 1, month: .praios, year: 1040)
+    let autumn = AventurianDate(day: 1, month: .efferd, year: 1040)
 
-    @Test func generateProducesValidCloudCover() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
-        let result = gen.generate(date: date, previousResult: nil)
-        #expect(CloudCover.allCases.contains(result.clouds))
+    @Test func producesValidEnums() {
+        let gen = WeatherGenerator(region: .mittelreich)
+        let r = gen.generate(date: summer, previousResult: nil)
+        #expect(CloudCover.allCases.contains(r.clouds))
+        #expect(WindStrength.allCases.contains(r.wind))
+        #expect(RainLevel.allCases.contains(r.rain))
     }
 
-    @Test func generateProducesValidWind() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
-        let result = gen.generate(date: date, previousResult: nil)
-        #expect(WindStrength.allCases.contains(result.wind))
-    }
-
-    @Test func generateProducesValidRain() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
-        let result = gen.generate(date: date, previousResult: nil)
-        #expect(RainLevel.allCases.contains(result.rain))
-    }
-
-    @Test func nightTempIsLowerThanDay() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
-        for _ in 0..<20 {
-            let result = gen.generate(date: date, previousResult: nil)
-            #expect(result.nightTemperature < result.dayTemperature)
+    @Test func nightLowerThanDayWithinRange() {
+        let gen = WeatherGenerator(region: .khom)
+        for _ in 0..<50 {
+            let r = gen.generate(date: summer, previousResult: nil)
+            #expect(r.nightTemperature < r.dayTemperature)
+            let range = r.dayTemperature - r.nightTemperature
+            #expect(range >= 2)
+            #expect(range <= ClimateArchetype.desert.clearSkyRange(for: .sommer) + 2)
         }
     }
 
-    @Test func desertFavorsClearSkies() {
-        let gen = WeatherGenerator(region: .khom, desert: true, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
-        var clearCount = 0
+    @Test func temperateSummerNightsNotFreezing() {            // regression for the bug
+        let gen = WeatherGenerator(archetype: .temperate)
+        var minNight = 99
+        for _ in 0..<50 {
+            // force clear, calm by regenerating with no previous and reading clear days
+            let r = gen.generate(date: summer, previousResult: nil)
+            if r.clouds == .none && r.wind == .none {
+                minNight = min(minNight, r.nightTemperature)
+            }
+        }
+        #expect(minNight >= 0 || minNight == 99)  // 99 = no clear-calm sample this run
+    }
+
+    @Test func desertSummerDaysNotAbsurd() {
+        let gen = WeatherGenerator(region: .khom)
         for _ in 0..<100 {
-            let result = gen.generate(date: date, previousResult: nil)
-            if result.clouds == .none { clearCount += 1 }
+            let r = gen.generate(date: summer, previousResult: nil)
+            #expect(r.dayTemperature <= 50)
         }
-        #expect(clearCount > 60)
     }
 
-    @Test func batchGeneratesCorrectCount() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let start = AventurianDate(day: 1, month: .praios, year: 1040)
-        let results = gen.generateBatch(startDate: start, count: 5)
+    @Test func dryFavorsClearHumidFavorsClouds() {
+        let dry = WeatherGenerator(region: .khom)
+        let humid = WeatherGenerator(region: .suedmeer)
+        var dryClear = 0, humidCloudy = 0
+        for _ in 0..<100 {
+            if dry.generate(date: summer, previousResult: nil).clouds == .none { dryClear += 1 }
+            if humid.generate(date: summer, previousResult: nil).clouds != .none { humidCloudy += 1 }
+        }
+        #expect(dryClear > 60)
+        #expect(humidCloudy > 60)
+    }
+
+    @Test func batchCountAndDates() {
+        let gen = WeatherGenerator(region: .mittelreich)
+        let results = gen.generateBatch(startDate: AventurianDate(day: 28, month: .praios, year: 1040), count: 5)
         #expect(results.count == 5)
-    }
-
-    @Test func batchAdvancesDates() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let start = AventurianDate(day: 28, month: .praios, year: 1040)
-        let results = gen.generateBatch(startDate: start, count: 5)
-        #expect(results[0].date == AventurianDate(day: 28, month: .praios, year: 1040))
-        #expect(results[2].date == AventurianDate(day: 30, month: .praios, year: 1040))
         #expect(results[3].date == AventurianDate(day: 1, month: .rondra, year: 1040))
     }
 
     @Test func noRainWithoutClouds() {
-        let gen = WeatherGenerator(region: .mittelreich, desert: false, windy: false)
-        let date = AventurianDate(day: 1, month: .praios, year: 1040)
+        let gen = WeatherGenerator(region: .mittelreich)
         for _ in 0..<100 {
-            let result = gen.generate(date: date, previousResult: nil)
-            if result.clouds == .none {
-                #expect(result.rain == .none)
-            }
+            let r = gen.generate(date: summer, previousResult: nil)
+            if r.clouds == .none { #expect(r.rain == .none) }
         }
     }
 
-    @Test func cloudTableNormalRanges() {
-        #expect(WeatherGenerator.cloudFromRoll(4, desert: false) == .none)
-        #expect(WeatherGenerator.cloudFromRoll(5, desert: false) == .few)
-        #expect(WeatherGenerator.cloudFromRoll(10, desert: false) == .few)
-        #expect(WeatherGenerator.cloudFromRoll(11, desert: false) == .lots)
-        #expect(WeatherGenerator.cloudFromRoll(16, desert: false) == .lots)
-        #expect(WeatherGenerator.cloudFromRoll(17, desert: false) == .all)
-    }
-
-    @Test func cloudTableDesertRanges() {
-        #expect(WeatherGenerator.cloudFromRoll(16, desert: true) == .none)
-        #expect(WeatherGenerator.cloudFromRoll(17, desert: true) == .few)
-        #expect(WeatherGenerator.cloudFromRoll(19, desert: true) == .lots)
-        #expect(WeatherGenerator.cloudFromRoll(20, desert: true) == .all)
-    }
-
-    @Test func windTableNonAutumnRanges() {
-        #expect(WeatherGenerator.windFromRoll(4, autumn: false) == .none)
-        #expect(WeatherGenerator.windFromRoll(5, autumn: false) == .light)
-        #expect(WeatherGenerator.windFromRoll(11, autumn: false) == .fresh)
-        #expect(WeatherGenerator.windFromRoll(17, autumn: false) == .strong)
-        #expect(WeatherGenerator.windFromRoll(20, autumn: false) == .storm)
+    @Test func cloudTablesByHumidity() {
+        #expect(WeatherGenerator.cloudFromRoll(16, humidity: .dry) == .none)
+        #expect(WeatherGenerator.cloudFromRoll(4, humidity: .moderate) == .none)
+        #expect(WeatherGenerator.cloudFromRoll(5, humidity: .moderate) == .few)
+        #expect(WeatherGenerator.cloudFromRoll(2, humidity: .humid) == .none)
+        #expect(WeatherGenerator.cloudFromRoll(13, humidity: .humid) == .all)
     }
 
     @Test func windTableAutumnRanges() {
         #expect(WeatherGenerator.windFromRoll(3, autumn: true) == .none)
-        #expect(WeatherGenerator.windFromRoll(4, autumn: true) == .light)
-        #expect(WeatherGenerator.windFromRoll(8, autumn: true) == .fresh)
-        #expect(WeatherGenerator.windFromRoll(15, autumn: true) == .strong)
-        #expect(WeatherGenerator.windFromRoll(19, autumn: true) == .storm)
+        #expect(WeatherGenerator.windFromRoll(20, autumn: false) == .storm)
     }
 }

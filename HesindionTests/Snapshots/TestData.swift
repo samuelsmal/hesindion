@@ -36,20 +36,18 @@ enum TestData {
         let startDate = AventurianDate(day: 1, month: .praios, year: 1040)
         let adventure = Adventure(name: "Die Schwarze Katze", region: .mittelreich, startDate: startDate)
 
-        for dayOffset in 0..<3 {
-            let date = AventurianDate(day: 1 + dayOffset, month: .praios, year: 1040)
-            let result = WeatherResult(
-                date: date,
-                clouds: .none,
-                wind: .none,
-                dayTemperature: 18 + dayOffset * 2,
-                nightTemperature: 10 + dayOffset,
-                rain: .none
-            )
-            let weatherDay = WeatherDay(from: result)
+        let samples: [(Int, WeatherRegion, CloudCover, WindStrength, Int, Int, RainLevel)] = [
+            (1, .mittelreich, .none, .none, 22, 13, .none),
+            (2, .mittelreich, .lots, .fresh, 16, 10, .little),
+            (3, .khom,        .none, .strong, 41, 21, .none),   // travel into the desert
+        ]
+        for (offset, region, clouds, wind, dayT, nightT, rain) in samples {
+            let date = AventurianDate(day: offset, month: .praios, year: 1040)
+            let result = WeatherResult(date: date, clouds: clouds, wind: wind,
+                                       dayTemperature: dayT, nightTemperature: nightT, rain: rain)
+            let weatherDay = WeatherDay(from: result, region: region, isTimeJump: region == .khom)
             adventure.weatherDays.append(weatherDay)
         }
-
         context.insert(adventure)
         return adventure
     }
