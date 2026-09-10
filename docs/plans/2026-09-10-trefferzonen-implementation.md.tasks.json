@@ -10,7 +10,7 @@
     {
       "id": 1,
       "subject": "Task 1: Persist the Optolith raceId",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Stop discarding raceId at import so species-dependent values become recomputable later.\n\n**Files:**\n- Modify: `Hesindion/Models/PersonalData.swift:12`\n- Modify: `Hesindion/Services/OptolithImportService.swift:328-353`\n- Test: `HesindionTests/OptolithImportTests.swift`\n\n**Acceptance Criteria:**\n- [ ] PersonalData.speciesId is String?, defaults to nil, needs no migration stage\n- [ ] A hero imported from a fixture with \"r\": \"R_1\" has speciesId == \"R_1\" and species == \"Menschen\"\n- [ ] An existing hero constructed without the field reads nil rather than crashing\n\n**Verify:** `make test` → import tests pass\n\n**Steps:**\n- Write the failing import test\n- Run `make test` — expect FAIL\n- Add `var speciesId: String?` to PersonalData and a defaulted init parameter\n- Populate it in parsePersonalData from the raceId it already receives\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/PersonalData.swift\", \"Hesindion/Services/OptolithImportService.swift\", \"HesindionTests/OptolithImportTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"PersonalData.speciesId is String?, defaults to nil, needs no migration stage\", \"A hero imported from a fixture with \\\"r\\\": \\\"R_1\\\" has speciesId == \\\"R_1\\\" and species == \\\"Menschen\\\"\", \"An existing hero constructed without the field reads nil rather than crashing\"], \"modelTier\": \"mechanical\"}\n```"
     },
     {
@@ -25,7 +25,7 @@
     {
       "id": 3,
       "subject": "Task 3: HitZone and HitZoneTable",
-      "status": "pending",
+      "status": "in_progress",
       "description": "**Goal:** The eight 1W20 zone tables as pure values, with exhaustive coverage tests.\n\n**Files:**\n- Create: `Hesindion/Models/HitZone.swift`\n- Create: `Hesindion/Models/HitZoneTable.swift`\n- Test: `HesindionTests/HitZoneTableTests.swift`\n\n**Acceptance Criteria:**\n- [ ] For every BodyPlan, rolls 1...20 cover Set(1...20) exactly — no gaps, no overlaps\n- [ ] Odd rolls yield .links, even .rechts for paired zones; nil for Kopf/Torso/Schwanz\n- [ ] lookup(0, ...) and lookup(21, ...) clamp instead of trapping\n- [ ] .sechsbeinigMitSchwanz(.klein) falls back to the .gross table\n\n**Verify:** `make test` → HitZoneTableTests all pass\n\n**Steps:**\n- Write HitZoneTableTests including the totality property test\n- Run `make test` — expect FAIL\n- Write HitZone.swift (HitZone, BodySide, HitZoneHit)\n- Write HitZoneTable.swift with all eight range tables and lookup\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/HitZone.swift\", \"Hesindion/Models/HitZoneTable.swift\", \"HesindionTests/HitZoneTableTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"For every BodyPlan, rolls 1...20 cover Set(1...20) exactly \\u2014 no gaps, no overlaps\", \"Odd rolls yield .links, even .rechts for paired zones; nil for Kopf/Torso/Schwanz\", \"lookup(0, ...) and lookup(21, ...) clamp instead of trapping\", \".sechsbeinigMitSchwanz(.klein) falls back to the .gross table\"], \"modelTier\": \"standard\"}\n```"
     },
     {
@@ -126,5 +126,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-10T12:36:30"
+  "lastUpdated": "2026-09-10T12:42:10"
 }
