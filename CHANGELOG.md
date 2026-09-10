@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Trefferzonen (DSA 5 Fokus-Regeln) — optional hit-zone rules, off by default and switchable per combat. Attacking: a zone picker feeds the Zonenaufschlag (Kopf −10, Torso −4, Gliedmaßen −8, halved by Gezielter Angriff/Schuss, eased by 2 against a surprised target) into the attack roll, and a read-only card states the zone's wound effect for the GM. Taking damage: the zone is tapped or rolled on 1W20, damage is compared against the Wundschwelle, and a failed Selbstbeherrschung check applies Betäubung (Kopf), Liegend (Beine) or an extra 1W3+1 SP (Torso). All ten published zone tables are implemented — humanoid, vierbeinig, sechsbeinig mit Schwanz, Fangarme, and creatures without distinct zones
+- Per-rule Fokus-Regeln toggles in combat setup, so a group can adopt individual optional rules rather than all or nothing
+- The Optolith `raceId` is now persisted as `PersonalData.speciesId`, making species-dependent derived values recomputable in future
+
+### Fixed
+
+- **Wundschwelle, Ausweichen and Initiative rounded down instead of up.** DSA 5 rounds derived values up — the Regelwiki's own example is KO 11 → Wundschwelle 6, which the app computed as 5. Every hero with an odd KO had a Wundschwelle one point too low; odd GE cost a point of Ausweichen and odd MU+GE a point of Initiative. Ausweichen and Initiative affect defence and turn order, so this is a visible change at the table. Existing heroes are corrected automatically at next launch
+- The Wundschwelle modifiers Eisern (`ADV_54`, +1) and Gläsern (`DISADV_56`, −1) were never applied — the bonus was hardcoded to 0, unlike the neighbouring Seelenkraft and Zähigkeit traits
+
+### Added
+
 - Zustände & Status tracking per hero — a static catalog of 8 DSA 5 Zustände (leveled I–IV) and 17 binary Status with localized effects, cause, and removal rules; managed via a "Zustände & Status" section on hero detail (swipe-to-remove rows, add picker, detail sheet with prominent removal rules) and a shared `StatesStrip` of chips in combat
 - Automatic modifier integration for states: active Zustände feed penalties into the ModifierEngine with the DSA −5 Zustand-penalty cap; combat root shows a states strip, a Handlungsunfähig/Bewegungsunfähig warning banner, and per-round reminders
 - Entrückung "gottgefällig" toggle in spell and liturgy casting

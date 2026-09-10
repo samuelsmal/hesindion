@@ -51,6 +51,14 @@ make clean        # Clean build artifacts
 - **Multiple defenses**: -3 cumulative per round, tracked and reset per round
 - **Combat views split**: CombatView.swift (orchestrator), CombatSetupViews, CombatRootView, CombatAttackViews, CombatExecutionView, CombatDamageViews, CombatDefenseViews, CombatFernkampfViews
 
+### Trefferzonen (Fokus-Regeln, optional)
+
+- **Activation is per rule**: `FokusRule` (`Hesindion/Models/FokusRule.swift`) lists the optional Fokus-Regeln; `Hero.activeCombatFokusRules: [String]` stores which are on for the current combat, via `isFokusRuleActive(_:)` / `setFokusRule(_:active:)`. All off by default. Combat setup renders one toggle per `FokusRule.allCases`, so a new rule costs one enum case plus two localized strings — see ADR-0005.
+- **Rules model** — pure value types, no SwiftUI or SwiftData: `HitZone` / `HitZoneTable` (all ten published 1W20 tables; odd rolls hit left, even right) and `WoundEffectCatalog` / `WoundEffectResolver`. `FumbleTable.swift` is the pattern.
+- **Offence**: `HitZoneModifiers` emits the Zonenaufschlag as a `ModifierLine` (`SA_160` halves in melee, `SA_161` at range; `targetIsSurprised` is a GM flag on `ModifierContext`, deliberately *not* hero state, because it describes the opponent). After a landed hit a read-only `WoundEffectReminderCard` states the effect for the GM — nothing is applied, because opponents are not modelled.
+- **Defence**: `CombatTakeDamageView` compares damage against `wundschwelle.max`; at each multiple the Selbstbeherrschung check is one step harder. A failed check applies Betäubung/Liegend via `setStateLevel`, or folds 1W3+1 into the **single** LP write on confirm. The probe reuses `TalentProbeModal`.
+- The offence/defence asymmetry is deliberate and explained in **ADR-0005**.
+
 ### Player States (Zustände & Status)
 
 - **Catalog + storage**: `StateCatalog` (`Hesindion/Models/StateCatalog.swift`) is a static in-code list of 8 leveled Zustände (I–IV) and 17 binary Status with localized name/effects/cause/removal, SF Symbol, modifier mechanic, and implication chains. Per-hero state is one generic `@Model HeroStateEntry(stateID, level)` on `Hero` (cascade relationship) — see ADR-0003.
@@ -76,6 +84,7 @@ The UI follows a **Neo-Brutalist** design theme.
 
 ## Code Creation Guidance
 
+- **DSA rounding**: where a calculation yields a fraction and the rules do not clearly say otherwise, round **up** (`Int(ceil(...))`). Two exceptions: *"je volle N Punkte"* wordings are floor by construction, and for penalties "up" is ambiguous (numerically gentler vs. harsher in magnitude) — read the rule. Derived-value formulas live in `Hesindion/Engine/DerivedValueFormulas.swift` so the import and repair paths cannot drift. See **ADR-0006**.
 - Create minimal and small pieces of code, favour composing
 - Try to find the sweet spot between small and large files, do some housekeeping from time to time
 

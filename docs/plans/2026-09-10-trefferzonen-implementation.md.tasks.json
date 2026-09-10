@@ -50,7 +50,7 @@
     {
       "id": 6,
       "subject": "Task 6: HitZoneModifiers",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Zonenaufschlag as a ModifierDefinition, halved by the Sonderfertigkeit and eased by 2 against a surprised target.\n\n**Files:**\n- Create: `Hesindion/Engine/HitZoneModifiers.swift`\n- Modify: `Hesindion/Engine/ModifierEngine.swift:29-54` (context fields), `:115-122` (register)\n- Test: `HesindionTests/HitZoneModifiersTests.swift`\n\n**Acceptance Criteria:**\n- [ ] Base penalties: Kopf -10, Torso -4, Arme -8, Beine -8\n- [ ] SA_160 halves in melee, SA_161 in ranged; the wrong SF does not\n- [ ] Überrascht moves the penalty 2 toward zero\n- [ ] Combined: Kopf + SF + Überrascht = -3\n- [ ] Never returns a positive value\n- [ ] Every base value is even (guards the halving from a future odd table edit)\n- [ ] No zone selected → no ModifierLine\n\n**Verify:** `make test` → HitZoneModifiersTests all pass\n\n**Steps:**\n- Write HitZoneModifiersTests with a local in-memory makeHero helper\n- Run `make test` — expect FAIL\n- Add targetHitZone and targetIsSurprised to ModifierContext\n- Write HitZoneModifiers.swift\n- Register HitZoneModifiers.all in ModifierEngine.shared\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/HitZoneModifiers.swift\", \"Hesindion/Engine/ModifierEngine.swift\", \"HesindionTests/HitZoneModifiersTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"Base penalties: Kopf -10, Torso -4, Arme -8, Beine -8\", \"SA_160 halves in melee, SA_161 in ranged; the wrong SF does not\", \"\\u00dcberrascht moves the penalty 2 toward zero\", \"Combined: Kopf + SF + \\u00dcberrascht = -3\", \"Never returns a positive value\", \"Every base value is even (guards the halving from a future odd table edit)\", \"No zone selected \\u2192 no ModifierLine\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         3,
@@ -60,13 +60,13 @@
     {
       "id": 7,
       "subject": "Task 7: Per-rule Fokus-Regeln toggles",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A per-rule activation mechanism — each Fokus-Regel independently switchable per combat, all off by default.\n\n**Files:**\n- Create: `Hesindion/Models/FokusRule.swift`\n- Modify: `Hesindion/Models/Hero.swift:50` (field + helpers), `:415` (clear)\n- Modify: `Hesindion/Views/CombatSetupViews.swift`\n- Test: `HesindionTests/FokusRuleTests.swift`\n\n**Acceptance Criteria:**\n- [ ] activeCombatFokusRules defaults to []; isFokusRuleActive(.trefferzonen) is false\n- [ ] setFokusRule(.trefferzonen, active: true) then false round-trips cleanly\n- [ ] Enabling twice does not duplicate the id\n- [ ] clearCombatSession() resets it to []\n- [ ] combatSetup shows one toggle per FokusRule.allCases, driven by a single ForEach\n\n**Verify:** `make test` → FokusRuleTests pass; `make run` → a Fokus-Regeln section with a Trefferzonen toggle\n\n**Steps:**\n- Write FokusRuleTests\n- Run `make test` — expect FAIL\n- Write FokusRule.swift\n- Add activeCombatFokusRules + isFokusRuleActive/setFokusRule to Hero; clear in clearCombatSession\n- Add the Fokus-Regeln ForEach section to CombatSetupViews\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/FokusRule.swift\", \"Hesindion/Models/Hero.swift\", \"Hesindion/Views/CombatSetupViews.swift\", \"HesindionTests/FokusRuleTests.swift\"], \"verifyCommand\": \"make test\", \"acceptanceCriteria\": [\"activeCombatFokusRules defaults to []\", \"setFokusRule round-trips and does not duplicate\", \"clearCombatSession() resets it to []\", \"combatSetup shows one toggle per FokusRule.allCases\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 8,
       "subject": "Task 8: Shared zone picker view",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** One reusable chip row for choosing a zone, used by all three screens.\n\n**Files:**\n- Create: `Hesindion/Views/CombatZonePicker.swift`\n\n**Acceptance Criteria:**\n- [ ] Renders a chip per zone plus a \"Keine Zone\" default\n- [ ] Each chip shows its live penalty when showsPenalty is true\n- [ ] Optional Überrascht toggle, and an SF hint shown only when the hero owns it\n- [ ] Selecting a chip writes through the binding; selecting the active chip clears to nil\n\n**Verify:** `make run` → builds and launches; picker renders where mounted\n\n**Steps:**\n- Write CombatZonePicker.swift (full code in the plan)\n- Run `make run` — builds, no visual change yet\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/CombatZonePicker.swift\"], \"verifyCommand\": \"`make run`\", \"acceptanceCriteria\": [\"Renders a chip per zone plus a \\\"Keine Zone\\\" default\", \"Each chip shows its live penalty when showsPenalty is true\", \"Optional \\u00dcberrascht toggle, and an SF hint shown only when the hero owns it\", \"Selecting a chip writes through the binding; selecting the active chip clears to nil\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         5,
@@ -76,7 +76,7 @@
     {
       "id": 9,
       "subject": "Task 9: Wire the picker into melee and ranged",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Announced zone flows into the AT/FK modifier breakdown on both attack paths.\n\n**Files:**\n- Modify: `Hesindion/Views/CombatAttackViews.swift` (announcement; context at :566)\n- Modify: `Hesindion/Views/CombatFernkampfViews.swift` (fernkampfSetup; context at :26)\n\n**Acceptance Criteria:**\n- [ ] Picker appears in both screens only when hero.isFokusRuleActive(.trefferzonen)\n- [ ] Selecting a zone adds a ModifierLine labelled \"Trefferzone: Kopf\" to the breakdown\n- [ ] Default is no zone, and the breakdown is then identical to before\n- [ ] The melee screen reads SA_160, the ranged screen SA_161\n\n**Verify:** `make run` → select Kopf in a melee announcement; a -10 line appears and effective AT drops by 10\n\n**Steps:**\n- Add targetZone/targetIsSurprised @State to the announcement view\n- Render CombatZonePicker behind the isFokusRuleActive(.trefferzonen) guard\n- Set context.targetHitZone and .targetIsSurprised after CombatAttackViews.swift:566\n- Repeat in CombatFernkampfViews.swift after :26 with SA_161\n- Verify by hand with `make run`\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/CombatAttackViews.swift\", \"Hesindion/Views/CombatFernkampfViews.swift\"], \"verifyCommand\": \"`make run`\", \"acceptanceCriteria\": [\"Picker appears in both screens only when hero.isFokusRuleActive(.trefferzonen)\", \"Selecting a zone adds a ModifierLine labelled \\\"Trefferzone: Kopf\\\" to the breakdown\", \"Default is no zone, and the breakdown is then identical to before\", \"The melee screen reads SA_160, the ranged screen SA_161\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         7,
@@ -86,7 +86,7 @@
     {
       "id": 10,
       "subject": "Task 10: Reminder card after a landed hit",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Hand the GM the wound effect for the announced zone, since the opponent is not modelled.\n\n**Files:**\n- Modify: `Hesindion/Views/CombatDamageViews.swift` (post-hit damage screen)\n\n**Acceptance Criteria:**\n- [ ] Card appears only when Trefferzonen is on and a zone was announced\n- [ ] Shows the zone name, its effect text, and the resisting Selbstbeherrschung application\n- [ ] Read-only — no buttons, no state writes\n\n**Verify:** `make run` → land a targeted melee hit; the card renders and hero state is unchanged\n\n**Steps:**\n- Add WoundEffectReminderCard to CombatDamageViews.swift\n- Thread the announced zone through the CombatStep payload and render the card\n- Verify by hand with `make run`\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/CombatDamageViews.swift\"], \"verifyCommand\": \"`make run`\", \"acceptanceCriteria\": [\"Card appears only when Trefferzonen is on and a zone was announced\", \"Shows the zone name, its effect text, and the resisting Selbstbeherrschung application\", \"Read-only \\u2014 no buttons, no state writes\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         4,
@@ -97,7 +97,7 @@
     {
       "id": 11,
       "subject": "Task 11: Defence — zone row, Wundschwelle and wound effects",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** The real automation: roll or tap a zone, compare damage to the Wundschwelle, resist, apply.\n\n**Files:**\n- Modify: `Hesindion/Views/CombatDamageViews.swift:6-170` (CombatTakeDamageView)\n- Modify: `Hesindion/Models/WoundEffect.swift` (add WoundEffectResolver)\n- Test: `HesindionTests/WoundEffectApplicationTests.swift`\n\n**Acceptance Criteria:**\n- [ ] multiple = effectiveDamage / wundschwelle.max; 0 hides the panel entirely\n- [ ] The rules' worked example holds: ws = 6 → -1 at 6 damage, -2 at 12, -3 at 18\n- [ ] ws == 0 never triggers an effect\n- [ ] Failed probe: Kopf raises Betäubung (clamped at 4), Beine sets Liegend, Torso folds 1W3+1 into the single LP write\n- [ ] Successful probe applies nothing\n- [ ] Missing Selbstbeherrschung talent counts as a failure and shows trefferzone.noTalent\n- [ ] LP is written exactly once on confirm\n- [ ] One LogEntry per resolved wound effect\n\n**Verify:** `make test` → WoundEffectApplicationTests all pass\n\n**Steps:**\n- Write WoundEffectApplicationTests (SplitMix64 for the seeded 1W3+1)\n- Run `make test` — expect FAIL\n- Add WoundEffectResolver to WoundEffect.swift\n- Extend CombatTakeDamageView with zoneRow and woundEffectPanel\n- Apply on confirm in one LP write; insert one LogEntry\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/WoundEffect.swift\", \"Hesindion/Views/CombatDamageViews.swift\", \"HesindionTests/WoundEffectApplicationTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"multiple = effectiveDamage / wundschwelle.max; 0 hides the panel entirely\", \"The rules' worked example holds: ws = 6 \\u2192 -1 at 6 damage, -2 at 12, -3 at 18\", \"ws == 0 never triggers an effect\", \"Failed probe: Kopf raises Bet\\u00e4ubung (clamped at 4), Beine sets Liegend, Torso folds 1W3+1 into the single LP write\", \"Successful probe applies nothing\", \"Missing Selbstbeherrschung talent counts as a failure and shows trefferzone.noTalent\", \"LP is written exactly once on confirm\", \"One LogEntry per resolved wound effect\"], \"modelTier\": \"deep\"}\n```",
       "blockedBy": [
         2,
@@ -109,7 +109,7 @@
     {
       "id": 12,
       "subject": "Task 12: Snapshot test",
-      "status": "pending",
+      "status": "in_progress",
       "description": "**Goal:** Lock the Wundeffekt panel's layout.\n\n**Files:**\n- Create: `HesindionTests/Snapshots/WoundEffectSnapshotTests.swift`\n\n**Acceptance Criteria:**\n- [ ] One variant covering CombatTakeDamageView with the panel open\n- [ ] Reference recorded and committed\n\n**Verify:** `make test-ui` → passes against the committed reference\n\n**Steps:**\n- Add WoundEffectSnapshotTests following CombatViewSnapshotTests\n- Run `make test-ui-record` — note it writes only MISSING references; delete the file first when re-recording\n- Run `make test-ui` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"HesindionTests/Snapshots/WoundEffectSnapshotTests.swift\"], \"verifyCommand\": \"`make test-ui`\", \"acceptanceCriteria\": [\"One variant covering CombatTakeDamageView with the panel open\", \"Reference recorded and committed\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         11
@@ -118,7 +118,7 @@
     {
       "id": 13,
       "subject": "Task 13: Documentation",
-      "status": "pending",
+      "status": "in_progress",
       "description": "**Goal:** Record the decisions where they will be found later.\n\n**Files:**\n- Create: `docs/adr/0005-trefferzonen-offence-defence-asymmetry.md`\n- Create: `docs/adr/0006-derived-value-rounding-and-repair.md`\n- Modify: `CHANGELOG.md`, `AGENTS.md`\n\n**Acceptance Criteria:**\n- [ ] ADR-0005 records why wound effects apply on defence only\n- [ ] ADR-0006 records the round-up convention and repair-not-migration\n- [ ] CHANGELOG [Unreleased] → Added covers Trefferzonen; → Fixed covers all three rounding corrections\n- [ ] AGENTS.md gains a Trefferzonen bullet and the round-up rule under Code Creation Guidance\n\n**Verify:** `git diff --stat` shows all four files; both ADRs follow docs/adr/0000-template.md\n\n**Steps:**\n- Write ADR-0005\n- Write ADR-0006\n- Update CHANGELOG.md\n- Update AGENTS.md\n- Commit\n\n```json:metadata\n{\"files\": [\"docs/adr/0005-trefferzonen-offence-defence-asymmetry.md\", \"docs/adr/0006-derived-value-rounding-and-repair.md\", \"CHANGELOG.md\", \"AGENTS.md\"], \"verifyCommand\": \"`git diff --stat` shows all four files; both ADRs follow docs/adr/0000-template.md\", \"acceptanceCriteria\": [\"ADR-0005 records why wound effects apply on defence only\", \"ADR-0006 records the round-up convention and repair-not-migration\", \"CHANGELOG [Unreleased] \\u2192 Added covers Trefferzonen; \\u2192 Fixed covers all three rounding corrections\", \"AGENTS.md gains a Trefferzonen bullet and the round-up rule under Code Creation Guidance\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         11,
@@ -126,5 +126,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-10T12:56:50"
+  "lastUpdated": "2026-09-10T13:59:39"
 }
