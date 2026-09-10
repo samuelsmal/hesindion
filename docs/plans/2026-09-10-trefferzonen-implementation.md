@@ -31,7 +31,7 @@
 | `Hesindion/Engine/DerivedValueFormulas.swift` | **new** — the only definition of WS/AW/INI. Shared by import and repair |
 | `Hesindion/Services/DerivedValueRepair.swift` | **new** — idempotent launch-time repair of stored derived values |
 | `Hesindion/Models/HitZone.swift` | **new** — `HitZone`, `BodySide`, `HitZoneHit` |
-| `Hesindion/Models/HitZoneTable.swift` | **new** — `BodyPlan`, `CreatureSize`, the eight 1W20 tables, `lookup` |
+| `Hesindion/Models/HitZoneTable.swift` | **new** — `BodyPlan`, `CreatureSize`, the ten 1W20 tables, `lookup` |
 | `Hesindion/Models/WoundEffect.swift` | **new** — per-zone effect kind + resistance keys |
 | `Hesindion/Engine/HitZoneModifiers.swift` | **new** — Zonenaufschlag as a `ModifierDefinition` |
 | `Hesindion/Views/CombatZonePicker.swift` | **new** — the zone-chip row, shared by melee, ranged and damage screens |
@@ -501,7 +501,12 @@ species base existing heroes cannot supply."
 
 ## Task 3: HitZone and HitZoneTable
 
-**Goal:** The eight 1W20 zone tables as pure values, with exhaustive coverage tests.
+**Goal:** The ten 1W20 zone tables as pure values, with exhaustive coverage tests.
+
+> **Amended after review.** Task 3 originally shipped eight tables; the source publishes ten. The
+> Fangarme and `keineZonen` tables, plus two review findings (a silent `?? .torso` fallback and a
+> `Range` struct shadowing `Swift.Range`), landed as a follow-up commit. The acceptance criteria
+> below apply to all ten.
 
 **Files:**
 - Create: `Hesindion/Models/HitZone.swift`

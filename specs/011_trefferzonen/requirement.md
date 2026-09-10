@@ -28,6 +28,7 @@ is the pattern to follow: a `static func lookup(...)` over private static table 
 enum HitZone: String, CaseIterable, Identifiable {
     case kopf, torso, arme, beine
     case vordereBeine, mittlereGliedmassen, hintereBeine, schwanz
+    case fangarme, koerper
 
     var id: String { rawValue }
 
@@ -61,6 +62,8 @@ enum BodyPlan: Equatable {
     case humanoid(CreatureSize)              // klein, mittel, gross
     case vierbeinig(CreatureSize)            // klein, mittel, gross
     case sechsbeinigMitSchwanz(CreatureSize) // gross, riesig
+    case fangarme(CreatureSize)              // mittel bis riesig
+    case keineZonen                          // one table, no size variants
 }
 
 enum HitZoneTable {
@@ -99,6 +102,25 @@ enum HitZoneTable {
 |--------|------|-------|---------|----------|---------|---------|
 | groß   | 1–4 | 5–12 | 13–14 | 15–16 | 17–18 | 19–20 |
 | riesig | 1–2 | 3–10 | 11–14 | 15–16 | 17–18 | 19–20 |
+
+**Fangarme** (mittel bis riesig, z. B. Krakenmolch)
+
+| Kopf | Torso | Fangarme |
+|------|-------|----------|
+| 3–6  | 1–2   | 7–20     |
+
+**Keine unterschiedlichen Zonen** (z. B. Riesenamöbe) — 1–20 Körper.
+
+The source publishes **ten** tables and all ten are implemented. Two are irregular, and are called
+out here so a later "tidy-up" cannot silently normalise them:
+
+- **Fangarme puts Torso (1–2) before Kopf (3–6)** — the only table where that order holds. It is not
+  a transcription slip, and a test pins it.
+- The rules add *"Der Rest der Zahlen verteilt sich gleichmäßig auf die Fangarme, Überschüsse werden
+  auf den Torso aufgeschlagen"*. How 7–20 divides across a creature's tentacles depends on how many
+  it has — per-creature GM adjudication — so the whole band resolves to one `.fangarme` zone.
+- `keineZonen` has no size variants, so its `BodyPlan` case carries no `CreatureSize`.
+- `fangarme` and `koerper` are unpaired: no left/right side.
 
 The hero always uses `.humanoid(.mittel)`. The other plans exist for the *defence-side* zone picker
 when the hero is something other than a mid-sized humanoid, and as the reference table the GM reads

@@ -25,13 +25,13 @@
     {
       "id": 3,
       "subject": "Task 3: HitZone and HitZoneTable",
-      "status": "in_progress",
+      "status": "completed",
       "description": "**Goal:** The eight 1W20 zone tables as pure values, with exhaustive coverage tests.\n\n**Files:**\n- Create: `Hesindion/Models/HitZone.swift`\n- Create: `Hesindion/Models/HitZoneTable.swift`\n- Test: `HesindionTests/HitZoneTableTests.swift`\n\n**Acceptance Criteria:**\n- [ ] For every BodyPlan, rolls 1...20 cover Set(1...20) exactly — no gaps, no overlaps\n- [ ] Odd rolls yield .links, even .rechts for paired zones; nil for Kopf/Torso/Schwanz\n- [ ] lookup(0, ...) and lookup(21, ...) clamp instead of trapping\n- [ ] .sechsbeinigMitSchwanz(.klein) falls back to the .gross table\n\n**Verify:** `make test` → HitZoneTableTests all pass\n\n**Steps:**\n- Write HitZoneTableTests including the totality property test\n- Run `make test` — expect FAIL\n- Write HitZone.swift (HitZone, BodySide, HitZoneHit)\n- Write HitZoneTable.swift with all eight range tables and lookup\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/HitZone.swift\", \"Hesindion/Models/HitZoneTable.swift\", \"HesindionTests/HitZoneTableTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"For every BodyPlan, rolls 1...20 cover Set(1...20) exactly \\u2014 no gaps, no overlaps\", \"Odd rolls yield .links, even .rechts for paired zones; nil for Kopf/Torso/Schwanz\", \"lookup(0, ...) and lookup(21, ...) clamp instead of trapping\", \".sechsbeinigMitSchwanz(.klein) falls back to the .gross table\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: WoundEffect catalog",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Per-zone wound effect: what it does, and which Selbstbeherrschung application resists it.\n\n**Files:**\n- Create: `Hesindion/Models/WoundEffect.swift`\n- Test: `HesindionTests/WoundEffectCatalogTests.swift`\n\n**Acceptance Criteria:**\n- [ ] Kopf raises betaeubung; Beine sets liegend; Torso is 1W3+1; Arme is a reminder\n- [ ] vordereBeine/hintereBeine behave as Beine; mittlereGliedmassen as Arme; schwanz is a reminder\n- [ ] Every HitZone case returns an effect — no crash, no nil\n- [ ] The state ids used exist in StateCatalog\n\n**Verify:** `make test` → WoundEffectCatalogTests all pass\n\n**Steps:**\n- Write WoundEffectCatalogTests including the StateCatalog cross-check\n- Run `make test` — expect FAIL\n- Write WoundEffect.swift (kind, struct, catalog)\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/WoundEffect.swift\", \"HesindionTests/WoundEffectCatalogTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"Kopf raises betaeubung; Beine sets liegend; Torso is 1W3+1; Arme is a reminder\", \"vordereBeine/hintereBeine behave as Beine; mittlereGliedmassen as Arme; schwanz is a reminder\", \"Every HitZone case returns an effect \\u2014 no crash, no nil\", \"The state ids used exist in StateCatalog\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         3
@@ -40,7 +40,7 @@
     {
       "id": 5,
       "subject": "Task 5: Localization keys",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** All new user-facing strings in Strings.swift, German and English, before any view needs them.\n\n**Files:**\n- Modify: `Hesindion/Theme/Strings.swift` (both englishFallback and translations)\n- Test: `HesindionTests/StringsCoverageTests.swift`\n\n**Acceptance Criteria:**\n- [ ] Every HitZone.nameKey, BodySide.nameKey, effectKey and resistanceKey resolves in German\n- [ ] All 14 screen keys resolve\n- [ ] No key resolves to itself (the L() fallback for a missing key)\n\n**Verify:** `make test` → StringsCoverageTests passes\n\n**Steps:**\n- Write StringsCoverageTests asserting L(key) != key\n- Run `make test` — expect FAIL\n- Add the German entries to translations\n- Add the English fallbacks\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Theme/Strings.swift\", \"HesindionTests/StringsCoverageTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"Every HitZone.nameKey, BodySide.nameKey, effectKey and resistanceKey resolves in German\", \"All 14 screen keys resolve\", \"No key resolves to itself (the L() fallback for a missing key)\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         3,
@@ -126,5 +126,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-10T12:42:10"
+  "lastUpdated": "2026-09-10T12:56:50"
 }
