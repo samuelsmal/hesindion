@@ -37,6 +37,11 @@ struct ModifierContext {
     var beengteUmgebung: Bool = false
     var gottgefaellig: Bool = false
 
+    // Trefferzonen (Fokus-Regeln)
+    var targetHitZone: HitZone? = nil
+    /// GM-driven. The opponent is not modelled, so this cannot come from hero states.
+    var targetIsSurprised: Bool = false
+
     // Melee specific
     var opponentReach: WeaponReach? = nil
     var maneuver: CombatManeuver = .normal
@@ -120,6 +125,7 @@ extension ModifierEngine {
         defs.append(contentsOf: DefenseModifiers.all)
         defs.append(contentsOf: RangedModifiers.all)
         defs.append(contentsOf: MagicModifiers.all)
+        defs.append(contentsOf: HitZoneModifiers.all)
         return ModifierEngine(modifiers: defs)
     }()
 }
