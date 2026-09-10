@@ -20,6 +20,18 @@ let wsValue  = ko / 2                                                 // truncat
 
 DSA 5 rounds derived values up. Truncation is one point low for every odd input.
 
+## Project convention: round up
+
+**Decided 2026-09-10.** Where a DSA 5 calculation produces a fraction and the rules do not clearly
+say otherwise, **round up**. This is how the rules read, and how the table has been playing it.
+
+Two things the convention does *not* cover, which still need reading the rule text:
+
+- **"Je volle N Punkte" wordings**, which are floor by construction — the Leiteigenschaftsbonus and
+  Bann des Eisens below are both of this shape.
+- **Penalties**, where "up" is ambiguous: rounding a −1.5 penalty "up" numerically gives −1 (gentler)
+  but "up in magnitude" gives −2 (harsher). Read the rule; do not apply the convention blind.
+
 ## Findings
 
 ### 1. Wundschwelle — confirmed bug
@@ -34,26 +46,28 @@ Separately, the Wundschwelle modifiers `ADV_54` (Eisern, +1) and `DISADV_56` (Gl
 never applied — `bonus` is hardcoded to `0`, unlike `seelenkraft` (`ADV_26`) and `zaehigkeit`
 (`ADV_27`) which do look their traits up. Neither rule id appears anywhere in the Swift sources.
 
-### 2. Ausweichen — very likely the same bug, needs a book check
+### 2. Ausweichen — bug, fix under the convention
 
-`OptolithImportService.swift:881`, `let awValue = ge / 2`.
+`OptolithImportService.swift:881`, `let awValue = ge / 2` → `Int(ceil(Double(ge) / 2.0))`.
 
-Community consensus is explicit that AW rounds up (*"Ungerade Zahlen sind immer besser als Gerade,
-da aufgerundet wird"*), and it matches the `ceil` treatment SK and ZK already get in this same
-function. But no primary quote was found stating the rounding for AW directly.
+Nothing in the rules carves AW out, so the round-up convention applies. It also matches the `ceil`
+treatment SK and ZK already get in this same function, and the community reading is explicit
+(*"Ungerade Zahlen sind immer besser als Gerade, da aufgerundet wird"*).
 
-**Verify against the Basisregelwerk / Kodex der Helden before changing.** A hero with odd GE gains
-+1 AW, which changes defence rolls — this is not a silent fix.
+Heroes with odd GE gain +1 AW. That changes defence rolls, so it is a visible change at the table,
+not a silent correction — worth mentioning in the CHANGELOG rather than burying.
 
-### 3. Initiative — very likely the same bug, needs a book check
+### 3. Initiative — bug, fix under the convention
 
-`OptolithImportService.swift:877`, `let iniValue = (mu + ge) / 2`.
+`OptolithImportService.swift:877`, `let iniValue = (mu + ge) / 2` →
+`Int(ceil(Double(mu + ge) / 2.0))`.
 
 Wiki Aventurica gives the formula as *"(MU + GE)/2 + eventuelle Vor-/Nachteile"* (citing Kodex der
-Helden p. 22) but states no rounding. Same reasoning and same caveat as Ausweichen.
+Helden p. 22) and states no rounding, so the convention applies.
 
-Note also that the *"eventuelle Vor-/Nachteile"* term is unimplemented, the same omission as
-Eisern/Gläsern on Wundschwelle. Scoping which advantages modify INI was not part of this pass.
+The *"eventuelle Vor-/Nachteile"* term is separately unimplemented — the same omission as
+Eisern/Gläsern on Wundschwelle. Scoping which traits modify INI is **not** part of this work; it is
+a follow-up, and the rounding fix does not depend on it.
 
 ### 4. Checked and correct — leave alone
 
@@ -65,22 +79,27 @@ Eisern/Gläsern on Wundschwelle. Scoping which advantages modify INI was not par
 | `CombatSpellViews.swift:126`, `SpellProbeModal.swift:74` | `spell.value / 4` | Max spell modifications is FW/4 *abgerundet* |
 | `CombatAttackViews.swift:195, 243` | `(kk - 20) / 2` | Mächtiger Schlag, guarded by `penalty > 0`, so the negative-truncation asymmetry is never reached |
 
-### 5. Not verified in this pass
+### 5. Follow-ups — apply the convention after a rule read
 
-Low impact, but no rules check was done:
+| Site | Expression | Note |
+|------|-----------|------|
+| `Hero.swift:401` | `2 + (mountGS / 2)` | Sturmangriff bonus damage. A bonus, so the convention points at `ceil` — confirm the rule text does not say *"je volle 2"* |
+| `CombatDefenseViews.swift:877` | `Text("GS/2 = \(gs / 2) Schritt")` | Movement display. Convention points at `ceil`. Display-only, so it is cosmetic until the number is used for something |
+| `MagicModifiers.swift:51` | `ironSteinCarried / 2` | **Correct as-is.** Bann des Eisens is *−1 per 2 Stein* — a "je volle N" wording, so floor is right, and it is guarded by `penalty > 0` besides |
 
-- `Hero.swift:401` — Sturmangriff bonus `2 + (mountGS / 2)`
-- `CombatDefenseViews.swift:877` — the `GS/2 = … Schritt` display
-- `MagicModifiers.swift:51` — `ironSteinCarried / 2`
+None of these block spec 011.
 
 ## Recommendation
 
-1. Fix Wundschwelle (rounding **and** Eisern/Gläsern) as part of spec 011 — it blocks that spec.
-2. Check AW and INI against the printed rules before touching them. If confirmed, they fold into
-   the same `DerivedValueRepair` pass at no extra cost; both depend only on persisted attributes.
-3. Extract the derived-value formulas out of `OptolithImportService` so the import path and the
+1. Fix all three — Wundschwelle (rounding **and** Eisern/Gläsern), Ausweichen, Initiative — as one
+   change, since all three are attribute-only and share the same `DerivedValueRepair` pass. The
+   Wundschwelle half blocks spec 011; the other two ride along at no extra cost.
+2. Extract the derived-value formulas out of `OptolithImportService` so the import path and the
    repair path share one definition. That is what lets a future rounding fix land in one place.
-4. Item 5 can wait for a rules pass; nothing depends on it.
+3. Persist the Optolith `raceId` (see spec 011) so species-dependent values become recomputable
+   later. Not needed for this fix — LP, SK and ZK are already correct.
+4. Item 5 needs a rules read, not a decision. Nothing depends on it.
+5. Follow-up, out of scope here: the *"eventuelle Vor-/Nachteile"* term on Initiative.
 
 ## Note on the migration plan
 

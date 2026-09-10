@@ -400,9 +400,16 @@ multiplier, the probe result, and what was applied. One entry, after confirm —
 # Data Model Fixes Required
 
 Before implementing this spec, fix the following bugs in `Hesindion/Services/OptolithImportService.swift`.
-Every wound effect in this spec triggers on a comparison against the Wundschwelle, so a Wundschwelle
-that is off by one makes the whole defence side wrong — silently, and in the hero's favour or against
-them depending on the hero.
+
+Only the first is a blocker: every wound effect in this spec triggers on a comparison against the
+Wundschwelle, so a Wundschwelle that is off by one makes the whole defence side wrong — silently, and
+in the hero's favour or against them depending on the hero. Ausweichen and Initiative are the same
+bug in the same function and share the repair pass, so they are fixed here rather than left behind;
+they are not otherwise related to Trefferzonen.
+
+The project convention is **round up** wherever DSA 5 produces a fraction and the rules do not
+clearly say otherwise. All three fixes follow from it. The full sweep that found them is in
+`docs/plans/2026-09-10-derived-value-rounding-audit.md`.
 
 ## Wundschwelle rounding — `ko / 2` truncates
 
@@ -421,6 +428,21 @@ derived values already use:
 ```swift
 let wsBase = Int(ceil(Double(ko) / 2.0))
 ```
+
+## Ausweichen and Initiative truncate the same way
+
+Same function, same class of bug, and the same convention applies — neither has a rule carving it out:
+
+```swift
+let awValue  = ge / 2              // → Int(ceil(Double(ge) / 2.0))
+let iniValue = (mu + ge) / 2       // → Int(ceil(Double(mu + ge) / 2.0))
+```
+
+Heroes with odd GE gain +1 AW, and odd `MU + GE` gains +1 INI. Both change rolls at the table, so
+both belong in the CHANGELOG as `Fixed`, not buried as an internal correction.
+
+Initiative's *"eventuelle Vor-/Nachteile"* term is separately unimplemented. That is a follow-up and
+is **not** in scope here; the rounding fix does not depend on it.
 
 ## Eisern / Gläsern are not applied
 
@@ -466,18 +488,39 @@ change — the stored properties are unchanged. A launch-time pass is the right 
 ### What can and cannot be recomputed
 
 `computeDerivedValues` needs `raceId` (Optolith `R_1`, `R_2`, …) to look up the species bases for
-LP, SK and ZK. `Hero` never persists it — `PersonalData.species` holds a display name, not the id.
-A full recompute is therefore impossible from stored data.
+LP, SK and ZK. It is parsed at import (`OptolithImportService.swift:74`) and used, but only the
+*display name* survives — `parsePersonalData` resolves it to `PersonalData.species` ("Menschen") and
+the id is dropped. Species-dependent values therefore cannot be recomputed for existing heroes.
 
 That constraint lands well: the values that depend **only** on persisted attributes and traits are
-exactly the ones that are wrong.
+exactly the three that are wrong.
 
-| Value | Inputs | Recomputable? |
-|-------|--------|---------------|
+| Value | Inputs | Recomputable today? |
+|-------|--------|---------------------|
 | Wundschwelle | KO, `ADV_54`, `DISADV_56` | yes |
 | Ausweichen | GE | yes |
 | Initiative | MU, GE | yes |
-| LP / SK / ZK | species base + attributes | **no** — needs `raceId` |
+| LP / SK / ZK | species base + attributes | no — needs `raceId`, **and none of them is wrong** |
+
+LP has no division at all (`speciesLP + ko * 2`), and SK and ZK already use `Int(ceil(...))`. So the
+repair pass needs nothing it cannot reach.
+
+### Persist `raceId` going forward
+
+Independently of the repair, stop throwing the id away:
+
+- Add `var speciesId: String?` to `PersonalData` (`Hesindion/Models/PersonalData.swift:12`, beside
+  the existing `species` display name) and populate it in `parsePersonalData`
+  (`OptolithImportService.swift:342`), which already receives `raceId` as a parameter.
+- Optional with a `nil` default, so it is an additive property change and needs no migration stage.
+  Existing heroes report `nil` until re-imported; new and re-imported heroes carry it.
+- `DerivedValueRepair` must therefore treat `speciesId == nil` as the normal case, not an error.
+
+This unblocks a future species-aware recompute and makes one latent problem visible: the species
+tables cover only `R_1`–`R_4` (Mensch, Elf, Halbelf, Zwerg) and fall back to the **human** values via
+`?? 5` / `?? -5` (`OptolithImportService.swift:831`, `:859`, `:868`). A dwarf or elf import works;
+anything else is silently treated as human. With the id persisted, that becomes detectable instead of
+invisible. Fixing the tables is out of scope here.
 
 ### `DerivedValueRepair`
 
@@ -486,8 +529,8 @@ A new `Hesindion/Services/DerivedValueRepair.swift`, run once per launch from `C
 
 ```swift
 enum DerivedValueRepair {
-    /// Recomputes the attribute-only derived values in place.
-    /// Idempotent: recomputing an already-correct hero writes nothing.
+    /// Recomputes the attribute-only derived values — Wundschwelle, Ausweichen, Initiative —
+    /// in place. Idempotent: recomputing an already-correct hero writes nothing.
     static func repair(_ hero: Hero) -> Bool   // true if anything changed
 }
 ```
@@ -499,8 +542,9 @@ enum DerivedValueRepair {
 - Extract the three formulas into one place shared with `OptolithImportService` so the import path
   and the repair path cannot drift apart. This is the sweet-spot refactor `AGENTS.md` asks for —
   the formulas currently exist only inline inside a 900-line import service.
-- **Do not** touch LP: `lebensenergie.current` is live session state, and its `max` depends on the
-  species base that cannot be reconstructed.
+- **Do not** touch LP, SK or ZK. All three are already correct, all three need the species base that
+  cannot be reconstructed for existing heroes, and `lebensenergie.current` is live session state
+  besides. The repair writes exactly three fields.
 - Log a single summary line naming how many heroes were repaired; no per-hero `LogEntry` — this is
   maintenance, not play.
 
@@ -512,8 +556,12 @@ The broader rounding audit that turned these up is in
 Add to the import test suite: `ko = 11 → 6` (the rules example), `ko = 12 → 6`, Eisern `→ 7`,
 Gläsern `→ 5`, and Eisern + Gläsern together `→ 6`.
 
-For `DerivedValueRepair`: a hero stored with the old truncating values is corrected; a correct hero
-is left untouched and reports no change; a second run is a no-op; LP is never modified.
+Ausweichen and Initiative get the same treatment: odd `ge` rounds up, odd `mu + ge` rounds up, and
+the even cases are unchanged — a regression guard proving the fix did not shift already-correct heroes.
+
+For `DerivedValueRepair`: a hero stored with the old truncating values has all three corrected; a
+correct hero is left untouched and reports no change; a second run is a no-op; LP, SK and ZK are
+never modified; a hero with `speciesId == nil` repairs normally.
 
 
 # Localization
