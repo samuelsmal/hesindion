@@ -10,15 +10,52 @@ final class HitZoneTableTests: XCTestCase {
         .fangarme(.mittel), .keineZonen,
     ]
 
-    /// The property that matters: every table is total over 1...20.
-    func testEveryPlanCoversEveryRollExactlyOnce() {
-        for plan in Self.allPlans {
-            var covered = Set<Int>()
-            for roll in 1...20 {
-                _ = HitZoneTable.lookup(roll, plan: plan)   // must not trap
-                covered.insert(roll)
+    /// The published DSA 5 Trefferzonen tables, mirrored here (not read from
+    /// `HitZoneTable`, which keeps its ranges private) so the test has an
+    /// independent reference to compare `lookup`'s actual output against. This is
+    /// the same class of assertion as `testHumanoidMittelBoundaries` /
+    /// `testFangarmeBoundaries` below, just exhaustive across every plan and roll.
+    private static let expectedRanges: [(BodyPlan, [(ClosedRange<Int>, HitZone)])] = [
+        (.humanoid(.klein), [(1...6, .kopf), (7...10, .torso), (11...18, .arme), (19...20, .beine)]),
+        (.humanoid(.mittel), [(1...2, .kopf), (3...12, .torso), (13...16, .arme), (17...20, .beine)]),
+        (.humanoid(.gross), [(1...2, .kopf), (3...6, .torso), (7...16, .arme), (17...20, .beine)]),
+        (.vierbeinig(.klein), [(1...4, .kopf), (5...12, .torso), (13...16, .vordereBeine), (17...20, .hintereBeine)]),
+        (.vierbeinig(.mittel), [(1...4, .kopf), (5...10, .torso), (11...16, .vordereBeine), (17...20, .hintereBeine)]),
+        (.vierbeinig(.gross), [(1...5, .kopf), (6...11, .torso), (12...16, .vordereBeine), (17...20, .hintereBeine)]),
+        (.sechsbeinigMitSchwanz(.gross), [
+            (1...4, .kopf), (5...12, .torso), (13...14, .vordereBeine),
+            (15...16, .mittlereGliedmassen), (17...18, .hintereBeine), (19...20, .schwanz),
+        ]),
+        (.sechsbeinigMitSchwanz(.riesig), [
+            (1...2, .kopf), (3...10, .torso), (11...14, .vordereBeine),
+            (15...16, .mittlereGliedmassen), (17...18, .hintereBeine), (19...20, .schwanz),
+        ]),
+        (.fangarme(.mittel), [(1...2, .torso), (3...6, .kopf), (7...20, .fangarme)]),
+        (.keineZonen, [(1...20, .koerper)]),
+    ]
+
+    /// The property that matters: each table *partitions* 1...20 — every roll maps
+    /// to exactly the zone the published rules assign it, so a gap (some roll
+    /// falling through to nothing) and an overlap (one zone's range silently
+    /// encroaching on a neighbour's) are both caught. A prior version of this test
+    /// built `covered` from the loop variable instead of `lookup`'s result, so the
+    /// assertion was `Set(1...20) == Set(1...20)` — unconditionally true.
+    func testEveryPlanPartitionsEveryRollExactly() {
+        for (plan, ranges) in Self.expectedRanges {
+            var expectedZone: [Int: HitZone] = [:]
+            for (range, zone) in ranges {
+                for roll in range {
+                    XCTAssertNil(expectedZone[roll], "plan \(plan) reference table overlaps at roll \(roll)")
+                    expectedZone[roll] = zone
+                }
             }
-            XCTAssertEqual(covered, Set(1...20), "plan \(plan) has a gap")
+            XCTAssertEqual(Set(expectedZone.keys), Set(1...20), "plan \(plan) reference table has a gap")
+
+            for roll in 1...20 {
+                XCTAssertEqual(
+                    HitZoneTable.lookup(roll, plan: plan).zone, expectedZone[roll],
+                    "plan \(plan) roll \(roll) did not resolve to the published zone")
+            }
         }
     }
 

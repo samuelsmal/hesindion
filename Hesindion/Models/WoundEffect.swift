@@ -118,4 +118,38 @@ enum WoundEffectResolver {
         var ignored: Int? = nil
         apply(zone, to: hero, extraDamage: &ignored)
     }
+
+    // MARK: - Confirm-time decision (Task 11 acceptance criterion)
+
+    /// Whether a hit even threatens a wound effect: the rule must be on, a zone must
+    /// be known, and the damage must reach at least one multiple of the Wundschwelle.
+    static func effectThreatens(zonesActive: Bool, hasZone: Bool, damage: Int, wundschwelle: Int) -> Bool {
+        zonesActive && hasZone && multiple(damage: damage, wundschwelle: wundschwelle) >= 1
+    }
+
+    /// Whether a threatened effect actually applies: a hero without the talent
+    /// cannot resist at all, so that counts as a failure; otherwise it is the
+    /// Selbstbeherrschung probe result.
+    static func effectApplies(threatens: Bool, hasTalent: Bool, probeSucceeded: Bool?) -> Bool {
+        guard threatens else { return false }
+        guard hasTalent else { return true }
+        return probeSucceeded == false
+    }
+
+    /// The whole confirm-time write, in one place: resolve the effect against the
+    /// hero if (and only if) it applies to a known zone, and fold any Torso extra
+    /// damage into the single LP figure the caller must subtract exactly once.
+    ///
+    /// Extra damage can never appear without the hit's `effectiveDamage`: it is
+    /// additive in `totalDamage`, and it is only rolled at all when `effectApplies`
+    /// is true for a real `zoneHit` — never in isolation.
+    static func confirmDamage(
+        zoneHit: HitZoneHit?, effectApplies: Bool, effectiveDamage: Int, hero: Hero
+    ) -> (extraDamage: Int?, totalDamage: Int) {
+        var extra: Int? = nil
+        if let hit = zoneHit, effectApplies {
+            apply(hit.zone, to: hero, extraDamage: &extra)
+        }
+        return (extra, totalDamage(effective: effectiveDamage, extra: extra))
+    }
 }

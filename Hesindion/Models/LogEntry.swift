@@ -106,6 +106,11 @@ struct WoundEffectPayload: Codable {
     var probeSucceeded: Bool?
     var applied: Bool
     var extraDamage: Int?
+    /// The equipped weapon's name if the Arme drop-weapon action was taken as part
+    /// of this same confirm, else `nil`. Staged, not immediate — see
+    /// `CombatWoundEffectPanel` — so it always lands in the same transaction as the
+    /// LP write above.
+    var weaponDropped: String?
 }
 
 struct DiceRollPayload: Codable {

@@ -37,6 +37,7 @@ final class WoundEffectSnapshotTests: XCTestCase {
                     effectApplies: false,
                     extraDamage: nil,
                     confirmed: false,
+                    dropWeapon: .constant(false),
                     onRollProbe: {}
                 )
             }

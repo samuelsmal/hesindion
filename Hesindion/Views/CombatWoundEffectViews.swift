@@ -77,6 +77,11 @@ struct CombatWoundEffectPanel: View {
     let effectApplies: Bool
     let extraDamage: Int?
     let confirmed: Bool
+    /// Staged intent for the Arme drop-weapon action: the weapon is only actually
+    /// cleared on confirm, alongside the LP write and the log entry (see
+    /// `CombatTakeDamageView.applyDamage()`), so an abandoned flow cannot disarm
+    /// the hero.
+    @Binding var dropWeapon: Bool
     var onRollProbe: () -> Void
 
     private var effect: WoundEffect { WoundEffectCatalog.effect(for: hit.zone) }
@@ -133,17 +138,23 @@ struct CombatWoundEffectPanel: View {
 
             if effectApplies, case .reminder = effect.kind, hero.selectedWeaponName != nil {
                 Button {
-                    hero.selectedWeaponName = nil
+                    dropWeapon.toggle()
                 } label: {
-                    Text(L("trefferzone.dropWeapon"))
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    HStack(spacing: 6) {
+                        if dropWeapon {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        Text(L("trefferzone.dropWeapon"))
+                    }
+                    .font(.system(.caption, weight: .bold))
+                    .foregroundStyle(dropWeapon ? .white : .primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(dropWeapon ? Color.groupCombat : Color(UIColor.systemBackground))
+                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
+                .disabled(confirmed)
             }
 
             if let extra = extraDamage {

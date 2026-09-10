@@ -239,7 +239,8 @@ struct LogPanelView: View {
             let head = "\(zone)\(side) — \(p.damage)/\(p.wundschwelle) ×\(p.multiple)"
             guard p.applied else { return "\(head) ✓" }
             let extra = p.extraDamage.map { " +\($0) SP" } ?? ""
-            return "\(head) ✗\(extra)"
+            let dropped = p.weaponDropped.map { " · \($0) \(L("trefferzone.dropWeapon"))" } ?? ""
+            return "\(head) ✗\(extra)\(dropped)"
 
         case "diceRoll":
             guard let p = entry.decodePayload(DiceRollPayload.self) else { return "—" }

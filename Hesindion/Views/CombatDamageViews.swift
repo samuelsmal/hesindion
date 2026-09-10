@@ -22,6 +22,9 @@ struct CombatTakeDamageView: View {
     @State private var showingProbeModal = false
     /// Rolled once, on confirm, and folded into the single LP write.
     @State private var extraDamage: Int? = nil
+    /// Staged intent, not an immediate action: only cleared on confirm, alongside
+    /// the LP write and the log entry, so an abandoned flow cannot disarm the hero.
+    @State private var dropWeapon: Bool = false
 
     private var rs: Int { hero.totalRS }
     private var effectiveDamage: Int { max(0, tpInput - rs) }
@@ -42,15 +45,17 @@ struct CombatTakeDamageView: View {
 
     /// The wound effect is threatened once the damage reaches the Wundschwelle.
     private var woundEffectThreatens: Bool {
-        zonesActive && zoneHit != nil && multiple >= 1
+        WoundEffectResolver.effectThreatens(
+            zonesActive: zonesActive, hasZone: zoneHit != nil,
+            damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
     /// It actually applies on a failed probe — and a hero without the talent
     /// cannot resist at all, so that counts as a failure.
     private var woundEffectApplies: Bool {
-        guard woundEffectThreatens else { return false }
-        guard selbstbeherrschung != nil else { return true }
-        return probeSucceeded == false
+        WoundEffectResolver.effectApplies(
+            threatens: woundEffectThreatens, hasTalent: selbstbeherrschung != nil,
+            probeSucceeded: probeSucceeded)
     }
 
     var body: some View {
@@ -164,6 +169,7 @@ struct CombatTakeDamageView: View {
                             effectApplies: woundEffectApplies,
                             extraDamage: extraDamage,
                             confirmed: confirmed,
+                            dropWeapon: $dropWeapon,
                             onRollProbe: { showingProbeModal = true }
                         )
                     }
@@ -206,8 +212,8 @@ struct CombatTakeDamageView: View {
         }
         // A different zone resists with a different Anwendungsgebiet, and a different
         // damage total changes the modifier — either way the old probe is void.
-        .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil } }
-        .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil } }
+        .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
+        .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
         .overlay {
             if showingProbeModal, let talent = selbstbeherrschung {
                 TalentProbeModal(
@@ -225,15 +231,22 @@ struct CombatTakeDamageView: View {
     // MARK: - Confirm
 
     /// The single point where LP changes: the hit and any Torso extra damage are
-    /// summed first and written once.
+    /// summed first and written once. The Arme drop-weapon action is staged (see
+    /// `CombatWoundEffectPanel`) rather than immediate, so it too only lands here —
+    /// in the same transaction as the LP write and the log entry — and never on a
+    /// flow the user abandons before confirming.
     private func applyDamage() {
-        var extra: Int? = nil
-        if let hit = zoneHit, woundEffectApplies {
-            WoundEffectResolver.apply(hit.zone, to: hero, extraDamage: &extra)
-        }
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: zoneHit, effectApplies: woundEffectApplies,
+            effectiveDamage: effectiveDamage, hero: hero)
         extraDamage = extra
 
-        let total = WoundEffectResolver.totalDamage(effective: effectiveDamage, extra: extra)
+        var droppedWeapon: String? = nil
+        if dropWeapon, woundEffectApplies, let weaponName = hero.selectedWeaponName {
+            droppedWeapon = weaponName
+            hero.selectedWeaponName = nil
+        }
+
         if let dv = hero.derivedValues {
             dv.lebensenergie.current = max(0, dv.lebensenergie.current - total)
         }
@@ -265,7 +278,8 @@ struct CombatTakeDamageView: View {
                     multiple: multiple,
                     probeSucceeded: probeSucceeded,
                     applied: woundEffectApplies,
-                    extraDamage: extra
+                    extraDamage: extra,
+                    weaponDropped: droppedWeapon
                 ),
                 hero: hero
             ))

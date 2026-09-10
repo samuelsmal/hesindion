@@ -140,4 +140,87 @@ final class WoundEffectApplicationTests: XCTestCase {
         XCTAssertEqual(WoundEffectResolver.totalDamage(effective: 10, extra: 3), 13)
         XCTAssertEqual(WoundEffectResolver.totalDamage(effective: 0, extra: 2), 2)
     }
+
+    // MARK: - I6: the confirm-time decision (Task 11's "LP written exactly once")
+    //
+    // `effectThreatens` / `effectApplies` / `confirmDamage` are the pieces the view
+    // used to compute privately (`CombatTakeDamageView.applyDamage()`), untestable
+    // there. Extracting them means a regression — writing LP twice, or applying
+    // Torso's extra damage without the hit damage — now has somewhere to fail.
+
+    func testTrefferzonenOffNeverThreatens() {
+        XCTAssertFalse(WoundEffectResolver.effectThreatens(
+            zonesActive: false, hasZone: true, damage: 20, wundschwelle: 6))
+    }
+
+    func testRuleOnButNoZoneNeverThreatens() {
+        XCTAssertFalse(WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: false, damage: 20, wundschwelle: 6))
+    }
+
+    func testZoneBelowWundschwelleNeverThreatens() {
+        XCTAssertFalse(WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: true, damage: 5, wundschwelle: 6))
+    }
+
+    func testZoneAtWundschwelleThreatens() {
+        XCTAssertTrue(WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: true, damage: 6, wundschwelle: 6))
+    }
+
+    func testNoTalentAlwaysApplies() {
+        XCTAssertTrue(WoundEffectResolver.effectApplies(threatens: true, hasTalent: false, probeSucceeded: nil))
+    }
+
+    func testFailedProbeApplies() {
+        XCTAssertTrue(WoundEffectResolver.effectApplies(threatens: true, hasTalent: true, probeSucceeded: false))
+    }
+
+    func testSucceededProbeDoesNotApply() {
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: true, hasTalent: true, probeSucceeded: true))
+    }
+
+    func testUnthreatenedNeverAppliesRegardlessOfTalentOrProbe() {
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, hasTalent: false, probeSucceeded: nil))
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, hasTalent: true, probeSucceeded: false))
+    }
+
+    func testConfirmDamageWithNoZoneNeverAddsExtra() {
+        let hero = makeHero(ws: 6)
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: nil, effectApplies: true, effectiveDamage: 10, hero: hero)
+        XCTAssertNil(extra)
+        XCTAssertEqual(total, 10)
+    }
+
+    func testConfirmDamageWhenEffectDoesNotApplyNeverAddsExtra() {
+        let hero = makeHero(ws: 6)
+        let torsoHit = HitZoneHit(zone: .torso, side: nil)
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: torsoHit, effectApplies: false, effectiveDamage: 10, hero: hero)
+        XCTAssertNil(extra, "extra damage must never be rolled when the effect does not apply")
+        XCTAssertEqual(total, 10)
+        XCTAssertEqual(hero.derivedValues?.lebensenergie.current, 30, "confirmDamage must not itself write LP")
+    }
+
+    func testConfirmDamageFoldsTorsoExtraIntoTotal() {
+        let hero = makeHero(ws: 6)
+        let torsoHit = HitZoneHit(zone: .torso, side: nil)
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: torsoHit, effectApplies: true, effectiveDamage: 10, hero: hero)
+        XCTAssertNotNil(extra)
+        XCTAssertTrue((2...4).contains(extra ?? 0), "1W3+1 must land in 2...4, got \(String(describing: extra))")
+        XCTAssertEqual(total, 10 + (extra ?? 0), "extra damage can never apply without the hit damage")
+        XCTAssertTrue(hero.states.isEmpty, "Torso applies no Zustand")
+    }
+
+    func testConfirmDamageWithKopfRaisesStateAndAddsNoExtra() {
+        let hero = makeHero(ws: 6)
+        let kopfHit = HitZoneHit(zone: .kopf, side: nil)
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: kopfHit, effectApplies: true, effectiveDamage: 7, hero: hero)
+        XCTAssertNil(extra, "Kopf must not produce extra damage")
+        XCTAssertEqual(total, 7)
+        XCTAssertEqual(hero.level(of: "betaeubung"), 1)
+    }
 }

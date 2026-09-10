@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Wundschwelle, Ausweichen and Initiative rounded down instead of up.** DSA 5 rounds derived values up — the Regelwiki's own example is KO 11 → Wundschwelle 6, which the app computed as 5. Every hero with an odd KO had a Wundschwelle one point too low; odd GE cost a point of Ausweichen and odd MU+GE a point of Initiative. Ausweichen and Initiative affect defence and turn order, so this is a visible change at the table. Existing heroes are corrected automatically at next launch
 - The Wundschwelle modifiers Eisern (`ADV_54`, +1) and Gläsern (`DISADV_56`, −1) were never applied — the bonus was hardcoded to 0, unlike the neighbouring Seelenkraft and Zähigkeit traits
+- Trefferzonen: the Arme Wundeffekt's "Waffe ablegen" button cleared the hero's equipped weapon immediately instead of participating in the confirm transaction, so navigating away from an unconfirmed take-damage flow left the hero disarmed with no LP change and no log entry. The action is now staged and only applied on confirm, alongside the single LP write and the log entry
 - `make test`/`test-ui`/`test-ui-record` no longer clone the simulator per test worker (`-parallel-testing-enabled NO`, `-maximum-concurrent-test-simulator-destinations 1`); `test-ui-record` uses the correct `SNAPSHOT_TESTING_RECORD=all` value
 
 ### Changed
