@@ -628,8 +628,14 @@ snapshot suite.
 - **ADR-0005** (`docs/adr/0005-trefferzonen-offence-defence-asymmetry.md`) recording why wound
   effects are applied on the defence side only: no opponent is modelled, so the offence side can
   only ever hand the GM a reminder.
-- **CHANGELOG.md** under `[Unreleased] → Added`.
-- **AGENTS.md** — a Trefferzonen bullet under *Combat System*.
+- **CHANGELOG.md**: the Trefferzonen feature under `[Unreleased] → Added`, and the three rounding
+  corrections under `Fixed` — Ausweichen and Initiative change rolls, so they belong where players
+  will see them, not buried in an internal note.
+- **AGENTS.md** — a Trefferzonen bullet under *Combat System*, and the round-up convention under
+  *Code Creation Guidance* so it outlives this spec.
+- **ADR-0006** (`docs/adr/0006-derived-value-rounding-and-repair.md`) recording the round-up
+  convention, the `DerivedValueRepair` launch pass, and why it is a repair rather than a schema
+  migration. This one is not about Trefferzonen and stands on its own.
 
 
 # Out of Scope
