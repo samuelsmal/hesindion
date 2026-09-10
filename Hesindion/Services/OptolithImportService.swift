@@ -352,6 +352,7 @@ struct OptolithImportService {
             age: intFromAny(json["age"]) ?? 0,
             gender: gender,
             species: species,
+            speciesId: raceId.isEmpty ? nil : raceId,
             height: intFromAny(json["size"]) ?? 0,
             weight: intFromAny(json["weight"]) ?? 0,
             hairColor: Self.hairColorMap[hairColorId] ?? "\(hairColorId)",

@@ -140,4 +140,28 @@ struct HeroImportTests {
         let heroes = try context.fetch(FetchDescriptor<Hero>())
         #expect(heroes.count == 1)
     }
+
+    @Test func importPersistsRaceId() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+
+        let heroes = try context.fetch(FetchDescriptor<Hero>())
+        let hero = try #require(heroes.first)
+        let personalData = try #require(hero.personalData)
+
+        // Boronmir's export has "r": "R_1"
+        #expect(personalData.speciesId == "R_1")
+        #expect(personalData.species == "Menschen")
+    }
+
+    @Test func speciesIdDefaultsToNil() {
+        let personalData = PersonalData(
+            name: "T", family: "", birthplace: "", birthdate: "", age: 0, gender: "",
+            species: "Menschen", height: 0, weight: 0, hairColor: "", eyeColor: "",
+            culture: "", socialStatus: "", profession: "", title: "", characteristics: ""
+        )
+        #expect(personalData.speciesId == nil)
+    }
 }
