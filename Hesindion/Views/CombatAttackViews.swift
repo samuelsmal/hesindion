@@ -339,6 +339,7 @@ struct CombatAnnouncementView: View {
     @Binding var step: CombatStep
     @Binding var activeManeuver: CombatManeuver
     @Binding var vorstossActiveThisRound: Bool
+    @Binding var announcedZone: HitZone?
     let dualAttackPenaltyActive: Bool
     let twoHandedGripActive: Bool
     let plaenklerActive: Bool
@@ -558,6 +559,7 @@ struct CombatAnnouncementView: View {
         if selectedManeuver.preventsDefense {
             vorstossActiveThisRound = true
         }
+        announcedZone = hero.isFokusRuleActive(.trefferzonen) ? targetZone : nil
 
         let modifiers = buildModifierLines()
         let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }

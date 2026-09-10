@@ -167,6 +167,33 @@ struct CombatTakeDamageView: View {
     }
 }
 
+// MARK: - WoundEffectReminderCard
+
+/// Read-only GM prompt shown after a landed targeted attack.
+///
+/// Nothing is applied: the opponent has no LP, no KO and no states, so the app can
+/// only state the rule and let the GM adjudicate.
+struct WoundEffectReminderCard: View {
+    let zone: HitZone
+
+    var body: some View {
+        let effect = WoundEffectCatalog.effect(for: zone)
+        VStack(alignment: .leading, spacing: 6) {
+            combatSectionLabel(String(format: L("trefferzone.reminderTitle"), L(zone.nameKey)))
+            Text(L(effect.effectKey))
+                .font(.system(.caption, weight: .semibold))
+            Text(L(effect.resistanceKey))
+                .font(.system(.caption2))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.groupCombat.opacity(0.1))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+    }
+}
+
 // MARK: - CombatMountDamageView
 
 struct CombatMountDamageView: View {

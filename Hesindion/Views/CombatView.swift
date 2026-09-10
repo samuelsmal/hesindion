@@ -116,6 +116,10 @@ struct CombatView: View {
     @State private var defenseCountThisRound: Int = 0
     @State private var schipDefenseBoostActive: Bool = false
     @State private var schipIgnoreZustandThisRound: Bool = false
+    /// Trefferzone announced for the attack currently in flight. The app has no opponent
+    /// model to apply the wound effect to, so this only carries the zone from the
+    /// announcement/setup step to the post-hit damage screen for the read-only reminder card.
+    @State private var announcedZone: HitZone? = nil
 
     private var stepID: String {
         switch step {
@@ -230,6 +234,7 @@ struct CombatView: View {
                     step: $step,
                     activeManeuver: $activeManeuver,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
+                    announcedZone: $announcedZone,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
                     plaenklerActive: plaenklerActive,
@@ -304,6 +309,7 @@ struct CombatView: View {
                     modifierLines: mods,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
+                    announcedZone: announcedZone,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,
@@ -347,6 +353,7 @@ struct CombatView: View {
                     mountedActive: mountedActive,
                     beengteUmgebungActive: beengteUmgebungActive,
                     schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
+                    announcedZone: $announcedZone,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -449,6 +456,7 @@ struct CombatView: View {
             defenseCountThisRound = 0
             schipDefenseBoostActive = false
             schipIgnoreZustandThisRound = false
+            announcedZone = nil
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in
