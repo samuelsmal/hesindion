@@ -154,13 +154,61 @@ enum WoundEffectCatalog {
 
 Trefferzonen are optional rules and must not change existing combat unless switched on.
 
-- Add `var activeCombatTrefferzonen: Bool = false` to the *Combat session state* block on `Hero`
+Groups play with different subsets of the Fokus-Regeln, so activation is **per rule**, not one
+switch for "Fokus-Regeln on". The mechanism is built once here and every later Fokus rule costs one
+enum case plus two localized strings.
+
+- Add `Hesindion/Models/FokusRule.swift`:
+
+```swift
+/// Optional DSA 5 Fokus-Regeln. Each is independently switchable per combat, because
+/// a group may want hit zones without, say, zone armour.
+///
+/// Adding a rule: one case here, two `L()` keys, and whatever the rule itself needs.
+enum FokusRule: String, CaseIterable, Identifiable {
+    case trefferzonen
+
+    var id: String { rawValue }
+    var nameKey: String { "fokus.\(rawValue).name" }
+    var subtitleKey: String { "fokus.\(rawValue).subtitle" }
+}
+```
+
+- Add `var activeCombatFokusRules: [String] = []` to the *Combat session state* block on `Hero`
   (`Hesindion/Models/Hero.swift:50`), following the `activeCombat*` naming of
-  `activeCombatPlaenkler` / `activeCombatMounted`, and reset it in `clearCombatSession()`
-  (`Hero.swift:415`). Default `false` preserves today's behaviour for existing heroes.
-- Surface it as a toggle in `combatSetup` (`CombatSetupViews`), grouped with the other optional-rule
-  switches, labelled `L("trefferzonen.enable")` with a short subtitle naming it a Fokus-Regel.
-- Every UI element in this spec is hidden when the flag is `false`.
+  `activeCombatPlaenkler` / `activeCombatMounted`, and reset it to `[]` in `clearCombatSession()`
+  (`Hero.swift:415`). Empty by default, so combat behaves exactly as it does today.
+
+- Add two helpers on `Hero`:
+
+```swift
+    func isFokusRuleActive(_ rule: FokusRule) -> Bool {
+        activeCombatFokusRules.contains(rule.rawValue)
+    }
+
+    func setFokusRule(_ rule: FokusRule, active: Bool) {
+        if active {
+            guard !isFokusRuleActive(rule) else { return }
+            activeCombatFokusRules.append(rule.rawValue)
+        } else {
+            activeCombatFokusRules.removeAll { $0 == rule.rawValue }
+        }
+    }
+```
+
+  Storing ids rather than a `Bool` per rule means a rule that is later removed leaves a harmless
+  unknown string instead of a dead column, and `FokusRule.allCases` drives the UI with no
+  per-rule view code.
+- Surface the rules in `combatSetup` (`CombatSetupViews`) as a "Fokus-Regeln" section with one
+  toggle per `FokusRule.allCases`, each labelled `L(rule.nameKey)` with `L(rule.subtitleKey)`
+  beneath. One `ForEach`, no per-rule view code.
+- Every UI element in this spec is hidden when `hero.isFokusRuleActive(.trefferzonen)` is false.
+
+**Known future rule.** Trefferzonenrüstung (per-zone RS,
+<https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html>) is a separate work package. It will add a
+`trefferzonenRuestung` case here and needs a dependency notion (zone armour is meaningless without
+zones), which this spec deliberately does **not** build — there is one rule today, and a
+`requires:` graph with a single node is speculation. Note only that the extension point exists.
 
 
 # Offence: Zonenaufschlag
@@ -572,8 +620,8 @@ All user-facing strings go through `L()` with entries in both the English and Ge
 - `hitZone.*` — zone names (`hitZone.kopf`, `hitZone.arme`, …) and `bodySide.links` / `bodySide.rechts`
 - `bodyPlan.*` — plan and size names
 - `woundEffect.<zone>.effect` / `woundEffect.<zone>.resistance`
-- `trefferzone.*` — screen labels, the `trefferzonen.enable` toggle, `trefferzone.noTalent`,
-  `trefferzone.dropWeapon`
+- `fokus.*` — the Fokus-Regeln section header and each rule's name/subtitle
+- `trefferzone.*` — screen labels, `trefferzone.noTalent`, `trefferzone.dropWeapon`
 - `modifier.trefferzone` — the `ModifierLine` label
 
 German is the display language for rules terms and must match the Regelwiki wording.
@@ -676,5 +724,5 @@ Everything this spec builds on already exists on `main`:
 | Static rules-table pattern | `Models/FumbleTable.swift` |
 | SA lookup by `ruleId` | `Hero.swift:143` |
 
-The only schema change is the additive `activeCombatTrefferzonen` flag. It carries a default value,
+The only schema change is the additive `activeCombatFokusRules` array. It carries a default value,
 so it needs no new `SchemaV5` — the same treatment the other `activeCombat*` booleans received.

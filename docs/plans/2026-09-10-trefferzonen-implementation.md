@@ -37,7 +37,8 @@
 | `Hesindion/Views/CombatZonePicker.swift` | **new** — the zone-chip row, shared by melee, ranged and damage screens |
 | `Hesindion/Services/OptolithImportService.swift` | modify — use the shared formulas; persist `speciesId` |
 | `Hesindion/Models/PersonalData.swift` | modify — add `speciesId` |
-| `Hesindion/Models/Hero.swift` | modify — add `activeCombatTrefferzonen`, clear it in `clearCombatSession` |
+| `Hesindion/Models/FokusRule.swift` | **new** — the catalog of optional Fokus-Regeln |
+| `Hesindion/Models/Hero.swift` | modify — add `activeCombatFokusRules` + helpers, clear it in `clearCombatSession` |
 | `Hesindion/ContentView.swift` | modify — run the repair pass once at launch |
 | `Hesindion/Views/CombatSetupViews.swift` | modify — the activation toggle |
 | `Hesindion/Views/CombatAttackViews.swift` | modify — zone picker in `announcement` |
@@ -959,7 +960,7 @@ final class StringsCoverageTests: XCTestCase {
 
     func testScreenKeysAreLocalized() {
         for key in [
-            "trefferzonen.enable", "trefferzonen.enableSubtitle",
+            "fokus.section", "fokus.trefferzonen.name", "fokus.trefferzonen.subtitle",
             "trefferzone.section", "trefferzone.none", "trefferzone.roll",
             "trefferzone.targetSurprised", "trefferzone.sfHalves",
             "trefferzone.woundEffect", "trefferzone.threshold",
@@ -1000,8 +1001,9 @@ Append to the `translations` dictionary in `Hesindion/Theme/Strings.swift`:
         "woundEffect.resistance.handlungsfaehigkeit": "Selbstbeherrschung (Handlungsfähigkeit bewahren)",
         "woundEffect.resistance.stoerungen":          "Selbstbeherrschung (Störungen ignorieren)",
 
-        "trefferzonen.enable":          "Trefferzonen",
-        "trefferzonen.enableSubtitle":  "Fokus-Regel: Treffer werden einer Zone zugeordnet.",
+        "fokus.section":                "Fokus-Regeln",
+        "fokus.trefferzonen.name":      "Trefferzonen",
+        "fokus.trefferzonen.subtitle":  "Treffer werden einer Trefferzone zugeordnet.",
         "trefferzone.section":          "Trefferzone",
         "trefferzone.none":             "Keine Zone",
         "trefferzone.roll":             "1W20",
@@ -1227,91 +1229,182 @@ opponent, which the app does not model."
 
 ---
 
-## Task 7: Activation toggle
+## Task 7: Per-rule Fokus-Regeln toggles
 
-**Goal:** Trefferzonen off by default, switchable per combat, persisted across combat re-entry.
+**Goal:** A per-rule activation mechanism — each Fokus-Regel independently switchable per combat, all off by default.
 
 **Files:**
-- Modify: `Hesindion/Models/Hero.swift:50` (field), `:415` (clear)
+- Create: `Hesindion/Models/FokusRule.swift`
+- Modify: `Hesindion/Models/Hero.swift:50` (field + helpers), `:415` (clear)
 - Modify: `Hesindion/Views/CombatSetupViews.swift`
-- Test: `HesindionTests/CombatSessionStateTests.swift` (extend; create if absent)
+- Test: `HesindionTests/FokusRuleTests.swift`
 
 **Acceptance Criteria:**
-- [ ] `activeCombatTrefferzonen` defaults to `false`
-- [ ] `clearCombatSession()` resets it to `false`
-- [ ] A toggle appears in `combatSetup` labelled `L("trefferzonen.enable")`
+- [ ] `activeCombatFokusRules` defaults to `[]`; `isFokusRuleActive(.trefferzonen)` is false
+- [ ] `setFokusRule(.trefferzonen, active: true)` then `false` round-trips cleanly
+- [ ] Enabling twice does not duplicate the id
+- [ ] `clearCombatSession()` resets it to `[]`
+- [ ] `combatSetup` shows one toggle per `FokusRule.allCases`, driven by a single `ForEach`
 
-**Verify:** `make test` → session-state tests pass; `make run` → toggle visible in combat setup
+**Verify:** `make test` → `FokusRuleTests` pass; `make run` → a "Fokus-Regeln" section with a Trefferzonen toggle
 
 **Steps:**
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
-func testTrefferzonenDefaultsOffAndClears() {
-    // Same in-memory container helper the other model tests use.
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Hero.self, HeroStateEntry.self, configurations: config)
-    let ctx = ModelContext(container)
-    let hero = Hero(name: "T"); ctx.insert(hero)
+// HesindionTests/FokusRuleTests.swift
+import XCTest
+import SwiftData
+@testable import Hesindion
 
-    XCTAssertFalse(hero.activeCombatTrefferzonen)
-    hero.activeCombatTrefferzonen = true
-    hero.clearCombatSession()
-    XCTAssertFalse(hero.activeCombatTrefferzonen)
+final class FokusRuleTests: XCTestCase {
+
+    private func makeHero() -> Hero {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: Hero.self, HeroStateEntry.self, configurations: config)
+        let ctx = ModelContext(container)
+        let hero = Hero(name: "T"); ctx.insert(hero)
+        return hero
+    }
+
+    func testDefaultsToNoRulesActive() {
+        let hero = makeHero()
+        XCTAssertEqual(hero.activeCombatFokusRules, [])
+        XCTAssertFalse(hero.isFokusRuleActive(.trefferzonen))
+    }
+
+    func testToggleRoundTrips() {
+        let hero = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
+        XCTAssertTrue(hero.isFokusRuleActive(.trefferzonen))
+        hero.setFokusRule(.trefferzonen, active: false)
+        XCTAssertFalse(hero.isFokusRuleActive(.trefferzonen))
+    }
+
+    func testEnablingTwiceDoesNotDuplicate() {
+        let hero = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
+        hero.setFokusRule(.trefferzonen, active: true)
+        XCTAssertEqual(hero.activeCombatFokusRules, ["trefferzonen"])
+    }
+
+    func testClearCombatSessionResetsRules() {
+        let hero = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
+        hero.clearCombatSession()
+        XCTAssertEqual(hero.activeCombatFokusRules, [])
+    }
+
+    /// Every case must carry resolvable strings, so adding a rule cannot silently
+    /// ship an untranslated toggle.
+    func testEveryRuleIsLocalized() {
+        for rule in FokusRule.allCases {
+            XCTAssertNotEqual(L(rule.nameKey), rule.nameKey)
+            XCTAssertNotEqual(L(rule.subtitleKey), rule.subtitleKey)
+        }
+    }
 }
 ```
 
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `make test`
-Expected: FAIL — "value of type 'Hero' has no member 'activeCombatTrefferzonen'"
+Expected: FAIL — "cannot find type 'FokusRule' in scope"
 
-- [ ] **Step 3: Add the field**
-
-In `Hesindion/Models/Hero.swift`, in the *Combat session state* block after `activeCombatMounted`:
+- [ ] **Step 3: Write FokusRule.swift**
 
 ```swift
-    /// Trefferzonen (Fokus-Regeln) active for this combat. Off by default — with it
-    /// false, combat behaves exactly as it did before the rules were added.
-    var activeCombatTrefferzonen: Bool = false
+// Hesindion/Models/FokusRule.swift
+import Foundation
+
+/// Optional DSA 5 Fokus-Regeln. Each is independently switchable per combat, because
+/// a group may want hit zones without, say, zone armour.
+///
+/// Adding a rule: one case here, two `L()` keys, and whatever the rule itself needs.
+enum FokusRule: String, CaseIterable, Identifiable {
+    case trefferzonen
+
+    var id: String { rawValue }
+    var nameKey: String { "fokus.\(rawValue).name" }
+    var subtitleKey: String { "fokus.\(rawValue).subtitle" }
+}
 ```
 
-And in `clearCombatSession()`:
+- [ ] **Step 4: Add storage and helpers to Hero**
+
+In the *Combat session state* block after `activeCombatMounted`:
 
 ```swift
-        activeCombatTrefferzonen = false
+    /// Ids of the Fokus-Regeln active for this combat (see `FokusRule`). Empty by
+    /// default — with no rule active, combat behaves exactly as it did before.
+    /// Stored as raw ids rather than one Bool per rule so that adding or retiring a
+    /// rule does not change the schema.
+    var activeCombatFokusRules: [String] = []
 ```
 
-- [ ] **Step 4: Add the toggle**
-
-In `Hesindion/Views/CombatSetupViews.swift`, in the setup form beside the other optional-rule switches, following the file's existing toggle styling:
+And as methods on `Hero`:
 
 ```swift
-                Toggle(isOn: Binding(
-                    get: { hero.activeCombatTrefferzonen },
-                    set: { hero.activeCombatTrefferzonen = $0 }
-                )) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("trefferzonen.enable"))
-                            .font(.system(.body, weight: .black))
-                        Text(L("trefferzonen.enableSubtitle"))
-                            .font(.system(.caption))
-                            .foregroundStyle(.secondary)
+    func isFokusRuleActive(_ rule: FokusRule) -> Bool {
+        activeCombatFokusRules.contains(rule.rawValue)
+    }
+
+    func setFokusRule(_ rule: FokusRule, active: Bool) {
+        if active {
+            guard !isFokusRuleActive(rule) else { return }
+            activeCombatFokusRules.append(rule.rawValue)
+        } else {
+            activeCombatFokusRules.removeAll { $0 == rule.rawValue }
+        }
+    }
+```
+
+In `clearCombatSession()`:
+
+```swift
+        activeCombatFokusRules = []
+```
+
+- [ ] **Step 5: Add the section to CombatSetupViews**
+
+Beside the other optional-rule switches, following the file's existing toggle styling:
+
+```swift
+                combatSectionLabel(L("fokus.section"))
+
+                ForEach(FokusRule.allCases) { rule in
+                    Toggle(isOn: Binding(
+                        get: { hero.isFokusRuleActive(rule) },
+                        set: { hero.setFokusRule(rule, active: $0) }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L(rule.nameKey))
+                                .font(.system(.body, weight: .black))
+                            Text(L(rule.subtitleKey))
+                                .font(.system(.caption))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [ ] **Step 6: Run tests**
 
 Run: `make test`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add Hesindion/Models/Hero.swift Hesindion/Views/CombatSetupViews.swift HesindionTests/CombatSessionStateTests.swift
-git commit -m "feat(combat): per-combat Trefferzonen toggle, off by default"
+git add Hesindion/Models/FokusRule.swift Hesindion/Models/Hero.swift Hesindion/Views/CombatSetupViews.swift HesindionTests/FokusRuleTests.swift
+git commit -m "feat(combat): per-rule Fokus-Regeln toggles
+
+Groups play with different subsets of the optional rules, so each is
+switchable on its own rather than behind one Fokus-Regeln switch.
+Stored as raw ids on the combat session, driven in the UI by a single
+ForEach over FokusRule.allCases, so a future rule costs one enum case
+and two strings."
 ```
 
 ---
@@ -1430,7 +1523,7 @@ git commit -m "feat(combat): shared Trefferzone picker view"
 - Modify: `Hesindion/Views/CombatFernkampfViews.swift` (fernkampfSetup step)
 
 **Acceptance Criteria:**
-- [ ] Picker appears in both screens only when `hero.activeCombatTrefferzonen`
+- [ ] Picker appears in both screens only when `hero.isFokusRuleActive(.trefferzonen)`
 - [ ] Selecting a zone adds a `ModifierLine` labelled "Trefferzone: Kopf" to the breakdown
 - [ ] Default is no zone, and the breakdown is then byte-identical to before
 - [ ] The melee screen reads `SA_160`, the ranged screen `SA_161`
@@ -1453,7 +1546,7 @@ In `CombatAttackViews.swift`, in the announcement view struct:
 Inside the modifier section, before the existing modifier rows:
 
 ```swift
-                if hero.activeCombatTrefferzonen {
+                if hero.isFokusRuleActive(.trefferzonen) {
                     CombatZonePicker(
                         selection: $targetZone,
                         targetIsSurprised: $targetIsSurprised,
@@ -1546,7 +1639,7 @@ struct WoundEffectReminderCard: View {
 In the damage view reached after a hit, pass the announced zone down through the `CombatStep` payload and render:
 
 ```swift
-                if hero.activeCombatTrefferzonen, let zone = announcedZone {
+                if hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
                     WoundEffectReminderCard(zone: zone)
                 }
 ```
@@ -1734,7 +1827,7 @@ computes `rs` and `effectiveDamage` at lines 17-18):
 
     @ViewBuilder
     private var zoneRow: some View {
-        if hero.activeCombatTrefferzonen {
+        if hero.isFokusRuleActive(.trefferzonen) {
             CombatZonePicker(
                 selection: Binding(get: { zoneHit?.zone }, set: { newZone in
                     lastRoll = nil
@@ -1779,7 +1872,7 @@ Then the Wundeffekt panel, shown only when `multiple >= 1`:
 ```swift
     @ViewBuilder
     private var woundEffectPanel: some View {
-        if hero.activeCombatTrefferzonen, let hit = zoneHit, multiple >= 1 {
+        if hero.isFokusRuleActive(.trefferzonen), let hit = zoneHit, multiple >= 1 {
             let effect = WoundEffectCatalog.effect(for: hit.zone)
             VStack(alignment: .leading, spacing: 6) {
                 combatSectionLabel(L("trefferzone.woundEffect"))
@@ -1919,7 +2012,7 @@ final class WoundEffectSnapshotTests: XCTestCase {
     func testWoundEffectPanel() throws {
         let container = try TestData.makeContainer()
         let hero = try TestData.importBoronmir(into: container)
-        hero.activeCombatTrefferzonen = true
+        hero.setFokusRule(.trefferzonen, active: true)
         hero.derivedValues?.wundschwelle = ComputedValue(value: 6, bonus: 0, max: 6)
 
         let view = CombatTakeDamageView(
