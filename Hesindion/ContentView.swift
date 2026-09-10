@@ -9,8 +9,16 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var didRepair = false
+
     var body: some View {
         HeroListView()
+            .task {
+                guard !didRepair else { return }
+                didRepair = true
+                DerivedValueRepair.repairAll(in: modelContext)
+            }
     }
 }
 
