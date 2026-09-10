@@ -221,9 +221,16 @@ enum FokusRule: String, CaseIterable, Identifiable {
   Storing ids rather than a `Bool` per rule means a rule that is later removed leaves a harmless
   unknown string instead of a dead column, and `FokusRule.allCases` drives the UI with no
   per-rule view code.
-- Surface the rules in `combatSetup` (`CombatSetupViews`) as a "Fokus-Regeln" section with one
-  toggle per `FokusRule.allCases`, each labelled `L(rule.nameKey)` with `L(rule.subtitleKey)`
-  beneath. One `ForEach`, no per-rule view code.
+- Surface the rules as a `CombatFokusRulesSection` — one toggle per `FokusRule.allCases`, each
+  labelled `L(rule.nameKey)` with `L(rule.subtitleKey)` beneath. One `ForEach`, no per-rule view
+  code.
+- **Host it on the armour-selection step, not `combatSetup`.** `.combatSetup` is reached only via
+  `hero.needsCombatSetup` (`hasPlaenklerFormation || hasMount`), so a hero with neither would never
+  see the toggles and the entire feature would be unreachable for them. `.armorSelection` is
+  `CombatView`'s unconditional initial step — the only override is resuming an in-progress combat,
+  whose rules were chosen when it started — and it comes before any dice are rolled, which is where
+  a rules choice belongs. This was found in review after the toggles had shipped on the wrong
+  screen; the acceptance criteria all passed while the screen was never mounted.
 - Every UI element in this spec is hidden when `hero.isFokusRuleActive(.trefferzonen)` is false.
 
 **Known future rule.** Trefferzonenrüstung (per-zone RS,
