@@ -4,6 +4,7 @@ import Foundation
 enum HitZone: String, CaseIterable, Identifiable {
     case kopf, torso, arme, beine
     case vordereBeine, mittlereGliedmassen, hintereBeine, schwanz
+    case fangarme, koerper
 
     var id: String { rawValue }
 
@@ -13,7 +14,7 @@ enum HitZone: String, CaseIterable, Identifiable {
     /// Zones that exist as a left/right pair, and therefore carry a `BodySide`.
     var isPaired: Bool {
         switch self {
-        case .kopf, .torso, .schwanz: false
+        case .kopf, .torso, .schwanz, .fangarme, .koerper: false
         default: true
         }
     }

@@ -524,6 +524,8 @@ enum DSAStrings {
         "hitZone.mittlereGliedmassen":  "Mid Limbs",
         "hitZone.hintereBeine":         "Hind Legs",
         "hitZone.schwanz":              "Tail",
+        "hitZone.fangarme":             "Tentacles",
+        "hitZone.koerper":              "Body",
         "bodySide.links":               "left",
         "bodySide.rechts":              "right",
 
@@ -532,6 +534,7 @@ enum DSAStrings {
         "woundEffect.arme.effect":      "One-handed items are dropped.",
         "woundEffect.beine.effect":     "The target falls prone.",
         "woundEffect.schwanz.effect":   "No rules effect.",
+        "woundEffect.koerper.effect":   "No rules effect.",
         "woundEffect.resistance.handlungsfaehigkeit": "Self-Control (Retain Composure)",
         "woundEffect.resistance.stoerungen":          "Self-Control (Ignore Disruptions)",
 
@@ -1279,6 +1282,8 @@ enum DSAStrings {
         "hitZone.mittlereGliedmassen":  "Mittlere Gliedmaßen",
         "hitZone.hintereBeine":         "Hintere Beine",
         "hitZone.schwanz":              "Schwanz",
+        "hitZone.fangarme":             "Fangarme",
+        "hitZone.koerper":              "Körper",
         "bodySide.links":               "links",
         "bodySide.rechts":              "rechts",
 
@@ -1287,6 +1292,7 @@ enum DSAStrings {
         "woundEffect.arme.effect":      "Einhändig geführte Gegenstände fallen zu Boden.",
         "woundEffect.beine.effect":     "Der Getroffene stürzt zu Boden.",
         "woundEffect.schwanz.effect":   "Kein Regeleffekt.",
+        "woundEffect.koerper.effect":   "Kein Regeleffekt.",
         "woundEffect.resistance.handlungsfaehigkeit": "Selbstbeherrschung (Handlungsfähigkeit bewahren)",
         "woundEffect.resistance.stoerungen":          "Selbstbeherrschung (Störungen ignorieren)",
 

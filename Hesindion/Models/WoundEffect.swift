@@ -26,7 +26,8 @@ struct WoundEffect: Equatable {
 ///
 /// The rules table names Kopf, Torso, Arme and Beine only. The extra limb zones on
 /// non-humanoid plans reuse the closest analogue — front/rear legs behave as Beine,
-/// mid-limbs as Arme (a manipulator, not a leg) — and Schwanz has no published effect.
+/// mid-limbs and Fangarme as Arme (a manipulator, not a leg) — and Schwanz and Körper
+/// have no published effect.
 enum WoundEffectCatalog {
 
     static func effect(for zone: HitZone) -> WoundEffect {
@@ -50,6 +51,14 @@ enum WoundEffectCatalog {
         case .schwanz:
             WoundEffect(zone: zone, kind: .reminder,
                         effectKey: "woundEffect.schwanz.effect",
+                        resistanceKey: "woundEffect.resistance.stoerungen")
+        case .fangarme:
+            WoundEffect(zone: zone, kind: .reminder,
+                        effectKey: "woundEffect.arme.effect",
+                        resistanceKey: "woundEffect.resistance.stoerungen")
+        case .koerper:
+            WoundEffect(zone: zone, kind: .reminder,
+                        effectKey: "woundEffect.koerper.effect",
                         resistanceKey: "woundEffect.resistance.stoerungen")
         }
     }

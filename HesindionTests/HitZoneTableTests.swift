@@ -7,6 +7,7 @@ final class HitZoneTableTests: XCTestCase {
         .humanoid(.klein), .humanoid(.mittel), .humanoid(.gross),
         .vierbeinig(.klein), .vierbeinig(.mittel), .vierbeinig(.gross),
         .sechsbeinigMitSchwanz(.gross), .sechsbeinigMitSchwanz(.riesig),
+        .fangarme(.mittel), .keineZonen,
     ]
 
     /// The property that matters: every table is total over 1...20.
@@ -57,5 +58,28 @@ final class HitZoneTableTests: XCTestCase {
             HitZoneTable.lookup(1, plan: .sechsbeinigMitSchwanz(.klein)).zone,
             HitZoneTable.lookup(1, plan: .sechsbeinigMitSchwanz(.gross)).zone
         )
+    }
+
+    /// Fangarme is the one table where Torso precedes Kopf — pin the boundaries so a
+    /// future "tidy-up" cannot silently normalise the order.
+    func testFangarmeBoundaries() {
+        let plan = BodyPlan.fangarme(.mittel)
+        XCTAssertEqual(HitZoneTable.lookup(1, plan: plan).zone, .torso)
+        XCTAssertEqual(HitZoneTable.lookup(2, plan: plan).zone, .torso)
+        XCTAssertEqual(HitZoneTable.lookup(3, plan: plan).zone, .kopf)
+        XCTAssertEqual(HitZoneTable.lookup(6, plan: plan).zone, .kopf)
+        XCTAssertEqual(HitZoneTable.lookup(7, plan: plan).zone, .fangarme)
+        XCTAssertEqual(HitZoneTable.lookup(20, plan: plan).zone, .fangarme)
+    }
+
+    func testKeineZonenAlwaysMapsToKoerper() {
+        for roll in 1...20 {
+            XCTAssertEqual(HitZoneTable.lookup(roll, plan: .keineZonen).zone, .koerper)
+        }
+    }
+
+    func testFangarmeAndKoerperHaveNoSide() {
+        XCTAssertNil(HitZoneTable.lookup(10, plan: .fangarme(.mittel)).side)
+        XCTAssertNil(HitZoneTable.lookup(5, plan: .keineZonen).side)
     }
 }
