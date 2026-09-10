@@ -1,0 +1,34 @@
+import XCTest
+@testable import Hesindion
+
+final class StringsCoverageTests: XCTestCase {
+
+    private func assertLocalized(_ key: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertNotEqual(L(key), key, "missing translation for \(key)", file: file, line: line)
+    }
+
+    func testHitZoneNamesAreLocalized() {
+        for zone in HitZone.allCases { assertLocalized(zone.nameKey) }
+        assertLocalized(BodySide.links.nameKey)
+        assertLocalized(BodySide.rechts.nameKey)
+    }
+
+    func testWoundEffectTextsAreLocalized() {
+        for zone in HitZone.allCases {
+            let effect = WoundEffectCatalog.effect(for: zone)
+            assertLocalized(effect.effectKey)
+            assertLocalized(effect.resistanceKey)
+        }
+    }
+
+    func testScreenKeysAreLocalized() {
+        for key in [
+            "fokus.section", "fokus.trefferzonen.name", "fokus.trefferzonen.subtitle",
+            "trefferzone.section", "trefferzone.none", "trefferzone.roll",
+            "trefferzone.targetSurprised", "trefferzone.sfHalves",
+            "trefferzone.woundEffect", "trefferzone.threshold",
+            "trefferzone.probe", "trefferzone.noTalent", "trefferzone.dropWeapon",
+            "trefferzone.reminderTitle", "modifier.trefferzone",
+        ] { assertLocalized(key) }
+    }
+}
