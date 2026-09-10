@@ -196,41 +196,41 @@ enum FokusRule: String, CaseIterable, Identifiable {
 }
 ```
 
-- Add `var activeCombatFokusRules: [String] = []` to the *Combat session state* block on `Hero`
-  (`Hesindion/Models/Hero.swift:50`), following the `activeCombat*` naming of
-  `activeCombatPlaenkler` / `activeCombatMounted`, and reset it to `[]` in `clearCombatSession()`
-  (`Hero.swift:415`). Empty by default, so combat behaves exactly as it does today.
+- Add `var fokusRules: [String] = []` to `Hero` as a **persistent per-hero setting**, beside `notes`
+  and `colorSchemeId` — NOT in the combat-session block, and NOT reset by `clearCombatSession()`.
+  These are the table's house rules — which optional rules this group plays with — so they must
+  survive a fight ending.
 
 - Add two helpers on `Hero`:
 
 ```swift
     func isFokusRuleActive(_ rule: FokusRule) -> Bool {
-        activeCombatFokusRules.contains(rule.rawValue)
+        fokusRules.contains(rule.rawValue)
     }
 
     func setFokusRule(_ rule: FokusRule, active: Bool) {
         if active {
             guard !isFokusRuleActive(rule) else { return }
-            activeCombatFokusRules.append(rule.rawValue)
+            fokusRules.append(rule.rawValue)
         } else {
-            activeCombatFokusRules.removeAll { $0 == rule.rawValue }
+            fokusRules.removeAll { $0 == rule.rawValue }
         }
     }
 ```
 
   Storing ids rather than a `Bool` per rule means a rule that is later removed leaves a harmless
-  unknown string instead of a dead column, and `FokusRule.allCases` drives the UI with no
-  per-rule view code.
-- Surface the rules as a `CombatFokusRulesSection` — one toggle per `FokusRule.allCases`, each
-  labelled `L(rule.nameKey)` with `L(rule.subtitleKey)` beneath. One `ForEach`, no per-rule view
-  code.
-- **Host it on the armour-selection step, not `combatSetup`.** `.combatSetup` is reached only via
-  `hero.needsCombatSetup` (`hasPlaenklerFormation || hasMount`), so a hero with neither would never
-  see the toggles and the entire feature would be unreachable for them. `.armorSelection` is
-  `CombatView`'s unconditional initial step — the only override is resuming an in-progress combat,
-  whose rules were chosen when it started — and it comes before any dice are rolled, which is where
-  a rules choice belongs. This was found in review after the toggles had shipped on the wrong
-  screen; the acceptance criteria all passed while the screen was never mounted.
+  unknown string instead of a dead column, and `FokusRule.allCases` drives the UI with no per-rule
+  view code.
+
+- Surface the rules in **`HeroSettingsView`** — the general per-hero settings screen, alongside the
+  colour scheme and active adventure — as a "Fokus-Regeln" section with one toggle per
+  `FokusRule.allCases`. One `ForEach`, no per-rule view code.
+- **Not in the combat flow.** Two earlier placements were wrong and both were my error rather than an
+  implementation slip. `combatSetup` is reached only when `hero.needsCombatSetup`
+  (`hasPlaenklerFormation || hasMount`), so an ordinary hero never saw the toggles and the feature was
+  unreachable — every acceptance criterion passed while the screen was never mounted. Moving them to
+  the armour-selection step fixed reachability but kept the wrong lifetime: session-scoped state,
+  wiped by `clearCombatSession()`, when the setting is a property of the hero.
 - Every UI element in this spec is hidden when `hero.isFokusRuleActive(.trefferzonen)` is false.
 
 **Known future rule.** Trefferzonenrüstung (per-zone RS,
@@ -443,8 +443,11 @@ Selbstbeherrschung is already in `TalentProbeAttributes.swift:13` as `["MU", "MU
 probe through the existing skill-check flow rather than reimplementing 3W20:
 
 - Look up `hero.talents.first { $0.name == "Selbstbeherrschung" }`.
-- If the hero lacks the talent, skip the probe, show `L("trefferzone.noTalent")` and treat it as a
-  failure — the effect applies.
+- Selbstbeherrschung is a DSA 5 **basic ability** — every hero has it. There is no "lacks the
+  talent" rules case. If the row is somehow absent that is a data anomaly, so fall back to a FW 0
+  probe (a Talentprobe can always be attempted) rather than auto-applying the effect.
+- An unrolled probe means the GM has not adjudicated, so nothing is applied. That holds uniformly,
+  which is what stops declining to roll from being better than rolling.
 - Present the probe with the Anwendungsgebiet from `WoundEffect.resistanceKey` and the
   `probeModifier` pre-filled. Schicksalspunkt rerolls come for free from the existing flow.
 
