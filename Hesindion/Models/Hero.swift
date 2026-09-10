@@ -54,6 +54,11 @@ final class Hero {
     var activeCombatPlaenkler: Bool = false
     var activeCombatPlaenklerBonus: String?   // "at" or "aw"
     var activeCombatMounted: Bool = false
+    /// Ids of the Fokus-Regeln active for this combat (see `FokusRule`). Empty by
+    /// default — with no rule active, combat behaves exactly as it did before.
+    /// Stored as raw ids rather than one Bool per rule so that adding or retiring a
+    /// rule does not change the schema.
+    var activeCombatFokusRules: [String] = []
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
 
@@ -419,6 +424,20 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
+        activeCombatFokusRules = []
+    }
+
+    func isFokusRuleActive(_ rule: FokusRule) -> Bool {
+        activeCombatFokusRules.contains(rule.rawValue)
+    }
+
+    func setFokusRule(_ rule: FokusRule, active: Bool) {
+        if active {
+            guard !isFokusRuleActive(rule) else { return }
+            activeCombatFokusRules.append(rule.rawValue)
+        } else {
+            activeCombatFokusRules.removeAll { $0 == rule.rawValue }
+        }
     }
 }
 

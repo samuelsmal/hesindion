@@ -250,6 +250,34 @@ struct CombatSetupView: View {
                         .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: beengteUmgebungActive ? 3 : 2))
                     }
                     .buttonStyle(.plain)
+
+                    // Fokus-Regeln toggles
+                    combatSectionLabel(L("fokus.section"))
+
+                    ForEach(FokusRule.allCases) { rule in
+                        let isActive = hero.isFokusRuleActive(rule)
+                        Button { hero.setFokusRule(rule, active: !isActive) } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: isActive ? "checkmark.square.fill" : "square")
+                                    .font(.system(.title3, weight: .semibold))
+                                    .foregroundStyle(isActive ? combatAccent : .secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(L(rule.nameKey))
+                                        .font(.system(.body, weight: isActive ? .bold : .regular))
+                                        .foregroundStyle(.primary)
+                                    Text(L(rule.subtitleKey))
+                                        .font(.system(.caption, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .background(isActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(isActive ? combatAccent : Color.dsaBorder, lineWidth: isActive ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
