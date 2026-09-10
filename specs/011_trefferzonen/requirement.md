@@ -346,6 +346,10 @@ let probeModifier = -multiple
   `-multiple` (*"Multiple der Wundschwelle erhöhen die Erschwernis um den Multiplikator"*).
 - Guard `ws > 0`: `wundschwelle` is an imported value and `HeroDetailView.swift:548` already treats
   `max == 0` as "not present". A hero without it never triggers a wound effect.
+- `.max` is the field to read, because it is the one that carries the Eisern / Gläsern modifier —
+  but only after the import bugs in *Data Model Fixes Required* are fixed. That section is a
+  **prerequisite**, not a follow-up: today `wundschwelle` truncates instead of rounding up and
+  ignores both traits.
 
 **One effect, harder probe.** Exceeding the threshold *n*-fold does not trigger *n* separate
 effects — it triggers one effect whose resistance probe is `−n`. The rules give a worked example:
@@ -391,6 +395,73 @@ probe through the existing skill-check flow rather than reimplementing 3W20:
 Write one `LogEntry` per resolved wound effect, with the same `combatId` / `roundNumber` the view
 already receives: the zone and side, the roll if one was made, damage vs. Wundschwelle and the
 multiplier, the probe result, and what was applied. One entry, after confirm — not one per step.
+
+
+# Data Model Fixes Required
+
+Before implementing this spec, fix the following bugs in `Hesindion/Services/OptolithImportService.swift`.
+Every wound effect in this spec triggers on a comparison against the Wundschwelle, so a Wundschwelle
+that is off by one makes the whole defence side wrong — silently, and in the hero's favour or against
+them depending on the hero.
+
+## Wundschwelle rounding — `ko / 2` truncates
+
+`computeDerivedValues` currently has (`OptolithImportService.swift:888`):
+
+```swift
+// WS = KO / 2
+let wsValue = ko / 2                       // integer division — truncates
+```
+
+DSA 5 rounds the Wundschwelle **up**. The rules' own worked example is unambiguous: *"Bei einer KO
+von 11 und damit einer Wundschwelle von 6"* — `11 / 2` in Swift is `5`, so every hero with an odd KO
+currently gets a Wundschwelle one point too low. Fix to match the `ceil` treatment the neighbouring
+derived values already use:
+
+```swift
+let wsBase = Int(ceil(Double(ko) / 2.0))
+```
+
+## Eisern / Gläsern are not applied
+
+`wundschwelle` is built with a hardcoded `bonus: 0`:
+
+```swift
+let wundschwelle = ComputedValue(value: wsValue, bonus: 0, max: wsValue)
+```
+
+Two traits modify it, and neither is referenced anywhere in the codebase:
+
+| Rule | Name | Effect |
+|------|------|--------|
+| `ADV_54` | Eisern | *"Die Wundschwelle des Helden steigt durch den Vorteil um 1."* |
+| `DISADV_56` | Gläsern | *"Die Wundschwelle des Helden sinkt durch den Nachteil um 1."* |
+
+Both are `max: 1` and untiered in `rules.db`, so they apply as a flat ±1 and do not stack. Follow the
+pattern `seelenkraft` (`ADV_26`) and `zaehigkeit` (`ADV_27`) already use at
+`OptolithImportService.swift:861` and `:870`, but without the tier summation:
+
+```swift
+let wsBase  = Int(ceil(Double(ko) / 2.0))
+let wsBonus = (advantages.contains    { $0.ruleId == "ADV_54"    } ? 1 : 0)
+            + (disadvantages.contains { $0.ruleId == "DISADV_56" } ? -1 : 0)
+let wundschwelle = ComputedValue(value: wsBase, bonus: wsBonus, max: wsBase + wsBonus)
+```
+
+This keeps `max` as the effective value, so `wundschwelle.max` stays the correct field to read —
+both for this spec and for the existing display at `HeroDetailView.swift:548`.
+
+## Existing heroes need a re-import
+
+`computeDerivedValues` is private and runs only on import (`OptolithImportService.swift:138`, `:186`,
+`:249`); there is no recompute path. Already-imported heroes therefore keep their stored — wrong —
+Wundschwelle until the hero is re-imported. Either re-import the sample heroes in
+`docs/sample_heros/`, or add a recompute call, but do not assume the fix propagates on its own.
+
+## Tests
+
+Add to the import test suite: `ko = 11 → 6` (the rules example), `ko = 12 → 6`, Eisern `→ 7`,
+Gläsern `→ 5`, and Eisern + Gläsern together `→ 6`.
 
 
 # Localization
@@ -492,7 +563,7 @@ Everything this spec builds on already exists on `main`:
 | Needed | Where |
 |--------|-------|
 | `betaeubung`, `liegend` states + `setStateLevel` | `StateCatalog.swift`, `Hero.swift:277` |
-| `wundschwelle` derived value | `DerivedValues.swift:44` |
+| `wundschwelle` derived value | `DerivedValues.swift:44` — **needs fixing first**, see *Data Model Fixes Required* |
 | Selbstbeherrschung probe attributes | `TalentProbeAttributes.swift:13` |
 | Seedable dice | `Engine/DiceRoller.swift` |
 | `ModifierLine` / `CheckDomain` | `Engine/ModifierEngine.swift` |
