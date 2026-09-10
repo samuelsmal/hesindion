@@ -451,17 +451,69 @@ let wundschwelle = ComputedValue(value: wsBase, bonus: wsBonus, max: wsBase + ws
 This keeps `max` as the effective value, so `wundschwelle.max` stays the correct field to read —
 both for this spec and for the existing display at `HeroDetailView.swift:548`.
 
-## Existing heroes need a re-import
+## Recompute on launch
 
 `computeDerivedValues` is private and runs only on import (`OptolithImportService.swift:138`, `:186`,
-`:249`); there is no recompute path. Already-imported heroes therefore keep their stored — wrong —
-Wundschwelle until the hero is re-imported. Either re-import the sample heroes in
-`docs/sample_heros/`, or add a recompute call, but do not assume the fix propagates on its own.
+`:249`), so stored — wrong — values do not heal themselves. Fix them at launch.
+
+### Why not a schema migration
+
+`HesindionApp.swift:15` builds its container as `ModelContainer(for: Hero.self, HeroStateEntry.self)`
+and never passes `migrationPlan:`. `HesindionMigrationPlan` exists (`Migration/MigrationPlan.swift`)
+but is not wired in, so a `SchemaV5` stage would not run. This is also a data *repair*, not a shape
+change — the stored properties are unchanged. A launch-time pass is the right tool.
+
+### What can and cannot be recomputed
+
+`computeDerivedValues` needs `raceId` (Optolith `R_1`, `R_2`, …) to look up the species bases for
+LP, SK and ZK. `Hero` never persists it — `PersonalData.species` holds a display name, not the id.
+A full recompute is therefore impossible from stored data.
+
+That constraint lands well: the values that depend **only** on persisted attributes and traits are
+exactly the ones that are wrong.
+
+| Value | Inputs | Recomputable? |
+|-------|--------|---------------|
+| Wundschwelle | KO, `ADV_54`, `DISADV_56` | yes |
+| Ausweichen | GE | yes |
+| Initiative | MU, GE | yes |
+| LP / SK / ZK | species base + attributes | **no** — needs `raceId` |
+
+### `DerivedValueRepair`
+
+A new `Hesindion/Services/DerivedValueRepair.swift`, run once per launch from `ContentView`'s
+`.task`:
+
+```swift
+enum DerivedValueRepair {
+    /// Recomputes the attribute-only derived values in place.
+    /// Idempotent: recomputing an already-correct hero writes nothing.
+    static func repair(_ hero: Hero) -> Bool   // true if anything changed
+}
+```
+
+- Fetch all `Hero`s, call `repair(_:)`, and save **only if** at least one returned `true`, so a
+  clean launch performs no writes.
+- Idempotency is the property to test: running it twice must produce the same values and report no
+  change on the second pass.
+- Extract the three formulas into one place shared with `OptolithImportService` so the import path
+  and the repair path cannot drift apart. This is the sweet-spot refactor `AGENTS.md` asks for —
+  the formulas currently exist only inline inside a 900-line import service.
+- **Do not** touch LP: `lebensenergie.current` is live session state, and its `max` depends on the
+  species base that cannot be reconstructed.
+- Log a single summary line naming how many heroes were repaired; no per-hero `LogEntry` — this is
+  maintenance, not play.
+
+The broader rounding audit that turned these up is in
+`docs/plans/2026-09-10-derived-value-rounding-audit.md`.
 
 ## Tests
 
 Add to the import test suite: `ko = 11 → 6` (the rules example), `ko = 12 → 6`, Eisern `→ 7`,
 Gläsern `→ 5`, and Eisern + Gläsern together `→ 6`.
+
+For `DerivedValueRepair`: a hero stored with the old truncating values is corrected; a correct hero
+is left untouched and reports no change; a second run is a no-op; LP is never modified.
 
 
 # Localization
