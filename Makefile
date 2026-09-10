@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -175,3 +175,33 @@ test-ui-record-only: boot
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
 		$(NO_CLONE) \
 		test -only-testing:$(ONLY)
+
+# ── Screenshots ──────────────────────────────────────────────────────────────
+
+# Runs the XCUITest target and exports its screenshot attachments to
+# docs/screenshots/. Same single-simulator flags as the other test targets.
+#
+# xcresulttool names exported files by attachment payload, so the manifest is
+# used to rename them back to the XCTAttachment names the tests set
+# (01-fokus-settings … 04-wound-effect-panel).
+SCREENSHOT_DIR = docs/screenshots
+SCREENSHOT_RESULT = $(DERIVED_DATA)/screenshots.xcresult
+SCREENSHOT_EXPORT = $(DERIVED_DATA)/screenshot-export
+
+screenshots: boot
+	rm -rf '$(SCREENSHOT_RESULT)' '$(SCREENSHOT_EXPORT)'
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		-resultBundlePath '$(SCREENSHOT_RESULT)' \
+		$(NO_CLONE) \
+		test -only-testing:HesindionUITests
+	xcrun xcresulttool export attachments \
+		--path '$(SCREENSHOT_RESULT)' \
+		--output-path '$(SCREENSHOT_EXPORT)'
+	@mkdir -p $(SCREENSHOT_DIR)
+	@python3 scripts/export_screenshots.py '$(SCREENSHOT_EXPORT)' '$(SCREENSHOT_DIR)'

@@ -34,6 +34,20 @@
                ReferencedContainer = "container:Hesindion.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BA48A4002F70000000E630FD"
+               BuildableName = "HesindionUITests.xctest"
+               BlueprintName = "HesindionUITests"
+               ReferencedContainer = "container:Hesindion.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -50,6 +64,17 @@
                BlueprintIdentifier = "BA48A2042F4A000000E630FD"
                BuildableName = "HesindionTests.xctest"
                BlueprintName = "HesindionTests"
+               ReferencedContainer = "container:Hesindion.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BA48A4002F70000000E630FD"
+               BuildableName = "HesindionUITests.xctest"
+               BlueprintName = "HesindionUITests"
                ReferencedContainer = "container:Hesindion.xcodeproj">
             </BuildableReference>
          </TestableReference>

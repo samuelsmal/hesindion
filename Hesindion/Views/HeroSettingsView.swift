@@ -54,6 +54,7 @@ struct HeroSettingsView: View {
                     Text(L("fokus.section"))
                         .font(.system(.title3, weight: .black))
                         .padding(.horizontal, 16)
+                        .accessibilityIdentifier("heroSettings.fokusRules")
 
                     ForEach(FokusRule.allCases) { rule in
                         fokusRuleRow(rule)

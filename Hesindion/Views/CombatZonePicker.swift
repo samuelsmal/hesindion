@@ -25,7 +25,7 @@ struct CombatZonePicker: View {
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
                 ForEach(zones) { zone in
-                    chip(isSelected: selection == zone) {
+                    chip(isSelected: selection == zone, identifier: "combat.zone.\(zone.rawValue)") {
                         selection = (selection == zone) ? nil : zone
                     } label: {
                         VStack(spacing: 2) {
@@ -39,7 +39,7 @@ struct CombatZonePicker: View {
                     }
                 }
 
-                chip(isSelected: selection == nil) {
+                chip(isSelected: selection == nil, identifier: "combat.zone.none") {
                     selection = nil
                 } label: {
                     Text(L("trefferzone.none"))
@@ -76,7 +76,12 @@ struct CombatZonePicker: View {
 
     /// One chip, styled like the other single-select segmented pickers in combat
     /// (e.g. opponent weapon reach): accent fill + heavier border when selected.
-    private func chip(isSelected: Bool, action: @escaping () -> Void, @ViewBuilder label: () -> some View) -> some View {
+    private func chip(
+        isSelected: Bool,
+        identifier: String,
+        action: @escaping () -> Void,
+        @ViewBuilder label: () -> some View
+    ) -> some View {
         Button(action: action) {
             label()
                 .foregroundStyle(isSelected ? .white : .primary)
@@ -86,5 +91,6 @@ struct CombatZonePicker: View {
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
     }
 }

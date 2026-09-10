@@ -128,6 +128,7 @@ struct CombatTakeDamageView: View {
                     .buttonStyle(.plain)
                     .disabled(confirmed)
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .accessibilityIdentifier("combat.takeDamage.increaseTP")
                 }
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -316,6 +317,8 @@ struct WoundEffectReminderCard: View {
         .padding(.vertical, 10)
         .background(Color.groupCombat.opacity(0.1))
         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.woundEffectReminder")
     }
 }
 

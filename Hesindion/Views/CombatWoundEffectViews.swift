@@ -160,5 +160,7 @@ struct CombatWoundEffectPanel: View {
         .padding(12)
         .background(Color.groupCombat.opacity(0.1))
         .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.woundEffectPanel")
     }
 }
