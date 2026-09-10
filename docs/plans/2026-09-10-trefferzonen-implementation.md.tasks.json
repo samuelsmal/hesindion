@@ -16,7 +16,7 @@
     {
       "id": 2,
       "subject": "Task 2: DerivedValueRepair + launch hook",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Correct stored WS/AW/INI on already-imported heroes, once per launch, idempotently.\n\n**Files:**\n- Create: `Hesindion/Services/DerivedValueRepair.swift`\n- Modify: `Hesindion/ContentView.swift:11-15`\n- Test: `HesindionTests/DerivedValueRepairTests.swift`\n\n**Acceptance Criteria:**\n- [ ] A hero stored with truncated values has all three corrected and repair returns true\n- [ ] An already-correct hero is untouched and repair returns false\n- [ ] A second run is a no-op (idempotent)\n- [ ] lebensenergie, seelenkraft and zaehigkeit are never written\n- [ ] A hero with speciesId == nil repairs normally\n\n**Verify:** `make test` → DerivedValueRepairTests all pass\n\n**Steps:**\n- Write DerivedValueRepairTests (stale hero: KO 11, GE 13, MU 12 with WS 5, AW 6, INI 12)\n- Run `make test` — expect FAIL\n- Write DerivedValueRepair with repair(_:) and repairAll(in:)\n- Hook repairAll into ContentView's .task behind a didRepair guard\n- Run `make test` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Services/DerivedValueRepair.swift\", \"Hesindion/ContentView.swift\", \"HesindionTests/DerivedValueRepairTests.swift\"], \"verifyCommand\": \"`make test`\", \"acceptanceCriteria\": [\"A hero stored with truncated values has all three corrected and repair returns true\", \"An already-correct hero is untouched and repair returns false\", \"A second run is a no-op (idempotent)\", \"lebensenergie, seelenkraft and zaehigkeit are never written\", \"A hero with speciesId == nil repairs normally\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         0
@@ -109,7 +109,7 @@
     {
       "id": 12,
       "subject": "Task 12: Snapshot test",
-      "status": "in_progress",
+      "status": "completed",
       "description": "**Goal:** Lock the Wundeffekt panel's layout.\n\n**Files:**\n- Create: `HesindionTests/Snapshots/WoundEffectSnapshotTests.swift`\n\n**Acceptance Criteria:**\n- [ ] One variant covering CombatTakeDamageView with the panel open\n- [ ] Reference recorded and committed\n\n**Verify:** `make test-ui` → passes against the committed reference\n\n**Steps:**\n- Add WoundEffectSnapshotTests following CombatViewSnapshotTests\n- Run `make test-ui-record` — note it writes only MISSING references; delete the file first when re-recording\n- Run `make test-ui` — expect PASS\n- Commit\n\n```json:metadata\n{\"files\": [\"HesindionTests/Snapshots/WoundEffectSnapshotTests.swift\"], \"verifyCommand\": \"`make test-ui`\", \"acceptanceCriteria\": [\"One variant covering CombatTakeDamageView with the panel open\", \"Reference recorded and committed\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         11
@@ -118,7 +118,7 @@
     {
       "id": 13,
       "subject": "Task 13: Documentation",
-      "status": "in_progress",
+      "status": "completed",
       "description": "**Goal:** Record the decisions where they will be found later.\n\n**Files:**\n- Create: `docs/adr/0005-trefferzonen-offence-defence-asymmetry.md`\n- Create: `docs/adr/0006-derived-value-rounding-and-repair.md`\n- Modify: `CHANGELOG.md`, `AGENTS.md`\n\n**Acceptance Criteria:**\n- [ ] ADR-0005 records why wound effects apply on defence only\n- [ ] ADR-0006 records the round-up convention and repair-not-migration\n- [ ] CHANGELOG [Unreleased] → Added covers Trefferzonen; → Fixed covers all three rounding corrections\n- [ ] AGENTS.md gains a Trefferzonen bullet and the round-up rule under Code Creation Guidance\n\n**Verify:** `git diff --stat` shows all four files; both ADRs follow docs/adr/0000-template.md\n\n**Steps:**\n- Write ADR-0005\n- Write ADR-0006\n- Update CHANGELOG.md\n- Update AGENTS.md\n- Commit\n\n```json:metadata\n{\"files\": [\"docs/adr/0005-trefferzonen-offence-defence-asymmetry.md\", \"docs/adr/0006-derived-value-rounding-and-repair.md\", \"CHANGELOG.md\", \"AGENTS.md\"], \"verifyCommand\": \"`git diff --stat` shows all four files; both ADRs follow docs/adr/0000-template.md\", \"acceptanceCriteria\": [\"ADR-0005 records why wound effects apply on defence only\", \"ADR-0006 records the round-up convention and repair-not-migration\", \"CHANGELOG [Unreleased] \\u2192 Added covers Trefferzonen; \\u2192 Fixed covers all three rounding corrections\", \"AGENTS.md gains a Trefferzonen bullet and the round-up rule under Code Creation Guidance\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         11,
@@ -126,5 +126,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-10T13:59:39"
+  "lastUpdated": "2026-09-10T14:23:20"
 }
