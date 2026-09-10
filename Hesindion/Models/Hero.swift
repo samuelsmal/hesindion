@@ -39,6 +39,18 @@ final class Hero {
     var notes: String = ""
     var colorSchemeId: String?
 
+    // MARK: - Fokus-Regeln
+
+    /// Ids of the optional DSA 5 Fokus-Regeln this hero plays with (see `FokusRule`).
+    /// Empty by default — with no rule active, the app behaves exactly as it did
+    /// before. These are the group's house rules, so they are a per-hero *setting*
+    /// (edited on the hero settings screen) and deliberately outlive a combat:
+    /// `clearCombatSession()` must not touch them.
+    ///
+    /// Stored as raw ids rather than one Bool per rule so that adding or retiring a
+    /// rule does not change the schema.
+    var fokusRules: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -54,11 +66,6 @@ final class Hero {
     var activeCombatPlaenkler: Bool = false
     var activeCombatPlaenklerBonus: String?   // "at" or "aw"
     var activeCombatMounted: Bool = false
-    /// Ids of the Fokus-Regeln active for this combat (see `FokusRule`). Empty by
-    /// default — with no rule active, combat behaves exactly as it did before.
-    /// Stored as raw ids rather than one Bool per rule so that adding or retiring a
-    /// rule does not change the schema.
-    var activeCombatFokusRules: [String] = []
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
 
@@ -424,19 +431,18 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
-        activeCombatFokusRules = []
     }
 
     func isFokusRuleActive(_ rule: FokusRule) -> Bool {
-        activeCombatFokusRules.contains(rule.rawValue)
+        fokusRules.contains(rule.rawValue)
     }
 
     func setFokusRule(_ rule: FokusRule, active: Bool) {
         if active {
             guard !isFokusRuleActive(rule) else { return }
-            activeCombatFokusRules.append(rule.rawValue)
+            fokusRules.append(rule.rawValue)
         } else {
-            activeCombatFokusRules.removeAll { $0 == rule.rawValue }
+            fokusRules.removeAll { $0 == rule.rawValue }
         }
     }
 }

@@ -72,7 +72,8 @@ struct CombatWoundEffectPanel: View {
     let hit: HitZoneHit
     let effectiveDamage: Int
     let wundschwelle: Int
-    /// `nil` until the probe is rolled; a hero without the talent never gets one.
+    /// `nil` until the probe is rolled — the GM has not adjudicated, so no effect
+    /// is applied. Every hero can roll: Selbstbeherrschung is a basic ability.
     @Binding var probeSucceeded: Bool?
     let effectApplies: Bool
     let extraDamage: Int?
@@ -94,10 +95,6 @@ struct CombatWoundEffectPanel: View {
         WoundEffectResolver.probeModifier(damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
-    private var talent: Talent? {
-        hero.talents.first { $0.name == "Selbstbeherrschung" }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             combatSectionLabel(L("trefferzone.woundEffect"))
@@ -109,11 +106,7 @@ struct CombatWoundEffectPanel: View {
                 .font(.system(.caption, weight: .semibold))
                 .foregroundStyle(effectApplies ? Color.groupCombat : .primary)
 
-            if talent == nil {
-                Text(L("trefferzone.noTalent"))
-                    .font(.system(.caption))
-                    .foregroundStyle(.secondary)
-            } else if let succeeded = probeSucceeded {
+            if let succeeded = probeSucceeded {
                 HStack(spacing: 6) {
                     Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .foregroundStyle(succeeded ? Color.green : Color.groupCombat)

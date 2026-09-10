@@ -168,21 +168,79 @@ final class WoundEffectApplicationTests: XCTestCase {
             zonesActive: true, hasZone: true, damage: 6, wundschwelle: 6))
     }
 
-    func testNoTalentAlwaysApplies() {
-        XCTAssertTrue(WoundEffectResolver.effectApplies(threatens: true, hasTalent: false, probeSucceeded: nil))
+    /// An unrolled probe means the GM has not adjudicated the wound effect. Nothing
+    /// may be applied on that basis — the app never decides a rules outcome for the
+    /// table. This replaces the old "no Selbstbeherrschung → effect applies" branch:
+    /// Selbstbeherrschung is a DSA 5 basic ability every hero has, so that premise
+    /// was false, and auto-applying also made *declining* to roll strictly better
+    /// than rolling.
+    func testUnrolledProbeNeverApplies() {
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: true, probeSucceeded: nil))
     }
 
     func testFailedProbeApplies() {
-        XCTAssertTrue(WoundEffectResolver.effectApplies(threatens: true, hasTalent: true, probeSucceeded: false))
+        XCTAssertTrue(WoundEffectResolver.effectApplies(threatens: true, probeSucceeded: false))
     }
 
     func testSucceededProbeDoesNotApply() {
-        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: true, hasTalent: true, probeSucceeded: true))
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: true, probeSucceeded: true))
     }
 
-    func testUnthreatenedNeverAppliesRegardlessOfTalentOrProbe() {
-        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, hasTalent: false, probeSucceeded: nil))
-        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, hasTalent: true, probeSucceeded: false))
+    func testUnthreatenedNeverApplies() {
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, probeSucceeded: nil))
+        XCTAssertFalse(WoundEffectResolver.effectApplies(threatens: false, probeSucceeded: false))
+    }
+
+    // MARK: - Selbstbeherrschung is a basic ability
+
+    /// A hero whose Selbstbeherrschung row is missing is a data anomaly, not a rules
+    /// case. The probe stays available at Fertigkeitswert 0 — in DSA you may always
+    /// attempt a Talentprobe — and the check attributes (MU/MU/KO) exist on every hero.
+    func testMissingTalentFallsBackToAZeroValueProbe() {
+        let hero = makeHero(ws: 6)
+        XCTAssertTrue(hero.talents.isEmpty, "precondition: no talent rows at all")
+
+        let talent = hero.selbstbeherrschung
+        XCTAssertEqual(talent.name, "Selbstbeherrschung")
+        XCTAssertEqual(talent.value, 0, "FW 0 probe, not a refusal and not an auto-fail")
+        XCTAssertEqual(TalentProbeAttributes.checks["Selbstbeherrschung"], ["MU", "MU", "KO"])
+        XCTAssertFalse(
+            hero.talents.contains { $0 === talent },
+            "the stand-in must not be grafted onto the hero")
+    }
+
+    /// The real row wins whenever it exists, at whatever FW the hero has.
+    func testExistingTalentIsUsedVerbatim() {
+        let hero = makeHero(ws: 6)
+        let real = Talent(ruleId: "TAL_8", name: "Selbstbeherrschung", value: 7, category: "Körpertalente")
+        hero.talents.append(real)
+
+        XCTAssertTrue(hero.selbstbeherrschung === real)
+        XCTAssertEqual(hero.selbstbeherrschung.value, 7)
+    }
+
+    /// The heart of the fix: with the talent missing, *not* rolling must leave the
+    /// hero untouched — no Betäubung, no Liegend, no extra damage, no LP change.
+    func testMissingTalentAndUnrolledProbeAppliesNothing() {
+        let hero = makeHero(ws: 6)
+        XCTAssertTrue(hero.talents.isEmpty, "precondition: no Selbstbeherrschung row")
+
+        let threatens = WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: true, damage: 12, wundschwelle: 6)
+        XCTAssertTrue(threatens)
+
+        let applies = WoundEffectResolver.effectApplies(threatens: threatens, probeSucceeded: nil)
+        XCTAssertFalse(applies, "a missing talent row must never auto-apply a wound effect")
+
+        for zone in [HitZone.kopf, .torso, .beine, .arme] {
+            let (extra, total) = WoundEffectResolver.confirmDamage(
+                zoneHit: HitZoneHit(zone: zone, side: nil),
+                effectApplies: applies, effectiveDamage: 12, hero: hero)
+            XCTAssertNil(extra, "\(zone): no extra damage without an adjudicated probe")
+            XCTAssertEqual(total, 12, "\(zone): only the hit damage is written")
+        }
+        XCTAssertTrue(hero.states.isEmpty, "no Zustand may be applied")
+        XCTAssertEqual(hero.derivedValues?.lebensenergie.current, 30)
     }
 
     func testConfirmDamageWithNoZoneNeverAddsExtra() {

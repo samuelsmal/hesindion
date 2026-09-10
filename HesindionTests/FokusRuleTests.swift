@@ -14,7 +14,7 @@ final class FokusRuleTests: XCTestCase {
 
     func testDefaultsToNoRulesActive() {
         let hero = makeHero()
-        XCTAssertEqual(hero.activeCombatFokusRules, [])
+        XCTAssertEqual(hero.fokusRules, [])
         XCTAssertFalse(hero.isFokusRuleActive(.trefferzonen))
     }
 
@@ -30,20 +30,48 @@ final class FokusRuleTests: XCTestCase {
         let hero = makeHero()
         hero.setFokusRule(.trefferzonen, active: true)
         hero.setFokusRule(.trefferzonen, active: true)
-        XCTAssertEqual(hero.activeCombatFokusRules, ["trefferzonen"])
+        XCTAssertEqual(hero.fokusRules, ["trefferzonen"])
     }
 
-    func testClearCombatSessionResetsRules() {
+    /// The Fokus-Regeln are the table's house rules, not a per-fight choice: ending a
+    /// combat must leave them exactly as the player set them on the hero settings
+    /// screen. (This assertion is deliberately the inverse of the original one, which
+    /// wiped them — that was the bug.)
+    func testClearCombatSessionKeepsFokusRules() {
         let hero = makeHero()
         hero.setFokusRule(.trefferzonen, active: true)
+        hero.activeCombatRound = 3
+
         hero.clearCombatSession()
-        XCTAssertEqual(hero.activeCombatFokusRules, [])
+
+        XCTAssertEqual(hero.fokusRules, ["trefferzonen"], "house rules outlive a combat")
+        XCTAssertTrue(hero.isFokusRuleActive(.trefferzonen))
+        XCTAssertEqual(hero.activeCombatRound, 0, "combat session state is still cleared")
+    }
+
+    /// A second combat starts with the rules the group plays with, without the player
+    /// re-enabling them on the way in.
+    func testRulesSurviveARepeatedCombatCycle() {
+        let hero = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
+        for _ in 0..<3 { hero.clearCombatSession() }
+        XCTAssertTrue(hero.isFokusRuleActive(.trefferzonen))
+    }
+
+    /// Two heroes at the same table may play with different rules — activation is
+    /// per hero, so it must not leak between them.
+    func testActivationIsPerHero() {
+        let hero = makeHero()
+        let other = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
+        XCTAssertTrue(hero.isFokusRuleActive(.trefferzonen))
+        XCTAssertFalse(other.isFokusRuleActive(.trefferzonen))
     }
 
     /// C1 premise: the ordinary hero — no Plänkler-Formation, no mount — never reaches
-    /// the combat *setup* screen, which is why the Fokus-Regeln toggles cannot live
-    /// there. They now sit on the armour-selection step, the unconditional first step of
-    /// every combat; that placement is a view fact and is not unit-testable.
+    /// the combat *setup* screen, and the armour-selection step is no place for a
+    /// setting either. The toggles now live on the hero settings screen, off the combat
+    /// flow entirely; that placement is a view fact and is not unit-testable.
     func testOrdinaryHeroNeverSeesTheCombatSetupScreen() {
         let hero = makeHero()
         XCTAssertFalse(hero.hasPlaenklerFormation)

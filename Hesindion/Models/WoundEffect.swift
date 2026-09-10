@@ -127,12 +127,15 @@ enum WoundEffectResolver {
         zonesActive && hasZone && multiple(damage: damage, wundschwelle: wundschwelle) >= 1
     }
 
-    /// Whether a threatened effect actually applies: a hero without the talent
-    /// cannot resist at all, so that counts as a failure; otherwise it is the
-    /// Selbstbeherrschung probe result.
-    static func effectApplies(threatens: Bool, hasTalent: Bool, probeSucceeded: Bool?) -> Bool {
+    /// Whether a threatened effect actually applies: only a *failed* Selbstbeherrschung
+    /// probe applies it.
+    ///
+    /// Selbstbeherrschung is a DSA 5 basic ability every hero has, so there is no
+    /// "hero cannot resist" case — an absent talent row is a data anomaly, and the
+    /// probe falls back to Fertigkeitswert 0 rather than auto-applying the effect.
+    /// An unrolled probe (`nil`) means the GM has not adjudicated yet: nothing applies.
+    static func effectApplies(threatens: Bool, probeSucceeded: Bool?) -> Bool {
         guard threatens else { return false }
-        guard hasTalent else { return true }
         return probeSucceeded == false
     }
 

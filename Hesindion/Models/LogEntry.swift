@@ -102,7 +102,8 @@ struct WoundEffectPayload: Codable {
     var damage: Int
     var wundschwelle: Int
     var multiple: Int
-    /// `nil` when no probe was rolled (no Selbstbeherrschung, or skipped).
+    /// `nil` when the Selbstbeherrschung probe was not rolled — the GM never
+    /// adjudicated, so `applied` is false. Every hero can roll it (basic ability).
     var probeSucceeded: Bool?
     var applied: Bool
     var extraDamage: Int?

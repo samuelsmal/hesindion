@@ -51,11 +51,6 @@ struct CombatArmorSelectionView: View {
                             }
                         }
                     }
-
-                    // Fokus-Regeln live here rather than on the (conditional) combat
-                    // setup screen: armour selection is the one step every combat
-                    // starts on, so every hero can switch the rules on.
-                    CombatFokusRulesSection(hero: hero)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
@@ -130,47 +125,6 @@ struct CombatArmorSelectionView: View {
             .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - CombatFokusRulesSection
-
-/// One toggle per optional Fokus-Regel. Hosted by the armour-selection step, which is
-/// the unconditional entry point into combat — the combat *setup* step only appears for
-/// heroes with a Plänkler-Formation or a mount, so the rules would be unreachable for
-/// everyone else there.
-struct CombatFokusRulesSection: View {
-    let hero: Hero
-
-    var body: some View {
-        VStack(spacing: 0) {
-            combatSectionLabel(L("fokus.section"))
-
-            ForEach(FokusRule.allCases) { rule in
-                let isActive = hero.isFokusRuleActive(rule)
-                Button { hero.setFokusRule(rule, active: !isActive) } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: isActive ? "checkmark.square.fill" : "square")
-                            .font(.system(.title3, weight: .semibold))
-                            .foregroundStyle(isActive ? combatAccent : .secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L(rule.nameKey))
-                                .font(.system(.body, weight: isActive ? .bold : .regular))
-                                .foregroundStyle(.primary)
-                            Text(L(rule.subtitleKey))
-                                .font(.system(.caption, weight: .semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 12)
-                    .background(isActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(isActive ? combatAccent : Color.dsaBorder, lineWidth: isActive ? 3 : 2))
-                }
-                .buttonStyle(.plain)
-            }
-        }
     }
 }
 

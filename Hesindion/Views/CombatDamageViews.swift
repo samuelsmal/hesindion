@@ -17,9 +17,13 @@ struct CombatTakeDamageView: View {
     // Trefferzonen (Fokus-Regel)
     @State private var zoneHit: HitZoneHit? = nil
     @State private var lastRoll: Int? = nil
-    /// `nil` until the Selbstbeherrschung probe is rolled.
+    /// `nil` until the Selbstbeherrschung probe is rolled — which means the GM has
+    /// not adjudicated the wound effect, so nothing is applied.
     @State private var probeSucceeded: Bool? = nil
     @State private var showingProbeModal = false
+    /// Resolved once when the probe is opened rather than per body pass, because the
+    /// FW-0 fallback (see `Hero.selbstbeherrschung`) builds a fresh stand-in `Talent`.
+    @State private var probeTalent: Talent? = nil
     /// Rolled once, on confirm, and folded into the single LP write.
     @State private var extraDamage: Int? = nil
     /// Staged intent, not an immediate action: only cleared on confirm, alongside
@@ -39,10 +43,6 @@ struct CombatTakeDamageView: View {
         WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
-    private var selbstbeherrschung: Talent? {
-        hero.talents.first { $0.name == "Selbstbeherrschung" }
-    }
-
     /// The wound effect is threatened once the damage reaches the Wundschwelle.
     private var woundEffectThreatens: Bool {
         WoundEffectResolver.effectThreatens(
@@ -50,12 +50,12 @@ struct CombatTakeDamageView: View {
             damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
-    /// It actually applies on a failed probe — and a hero without the talent
-    /// cannot resist at all, so that counts as a failure.
+    /// It applies only on a *failed* Selbstbeherrschung probe. Every hero has that
+    /// basic ability, so an unrolled probe simply means the GM has not adjudicated —
+    /// never a silent auto-apply.
     private var woundEffectApplies: Bool {
         WoundEffectResolver.effectApplies(
-            threatens: woundEffectThreatens, hasTalent: selbstbeherrschung != nil,
-            probeSucceeded: probeSucceeded)
+            threatens: woundEffectThreatens, probeSucceeded: probeSucceeded)
     }
 
     var body: some View {
@@ -170,7 +170,10 @@ struct CombatTakeDamageView: View {
                             extraDamage: extraDamage,
                             confirmed: confirmed,
                             dropWeapon: $dropWeapon,
-                            onRollProbe: { showingProbeModal = true }
+                            onRollProbe: {
+                                probeTalent = hero.selbstbeherrschung
+                                showingProbeModal = true
+                            }
                         )
                     }
                 }
@@ -215,7 +218,7 @@ struct CombatTakeDamageView: View {
         .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
         .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
         .overlay {
-            if showingProbeModal, let talent = selbstbeherrschung {
+            if showingProbeModal, let talent = probeTalent {
                 TalentProbeModal(
                     talent: talent,
                     hero: hero,
