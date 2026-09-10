@@ -63,3 +63,59 @@ enum WoundEffectCatalog {
         }
     }
 }
+
+// MARK: - WoundEffectResolver
+
+/// Pure decision logic for wound effects, kept out of the view so it is testable.
+///
+/// Nothing here writes LP: the Torso effect reports its extra damage back to the
+/// caller so that taking damage stays a *single* LP write.
+enum WoundEffectResolver {
+
+    /// How many times the damage covers the Wundschwelle. `0` means no wound effect.
+    static func multiple(damage: Int, wundschwelle: Int) -> Int {
+        guard wundschwelle > 0 else { return 0 }
+        return max(0, damage) / wundschwelle
+    }
+
+    /// The Selbstbeherrschung probe is harder by 1 per multiple of the Wundschwelle.
+    /// Rules example: Wundschwelle 6 → −1 at 6 SP, −2 at 12, −3 at 18.
+    static func probeModifier(damage: Int, wundschwelle: Int) -> Int {
+        -multiple(damage: damage, wundschwelle: wundschwelle)
+    }
+
+    /// Extra dice damage (Torso: 1W3+1), injectable for deterministic tests.
+    static func rollExtraDamage<G: RandomNumberGenerator>(
+        count: Int, sides: Int, flat: Int, using generator: inout G
+    ) -> Int {
+        DiceRoller.roll(count: count, sides: sides, using: &generator).reduce(0, +) + flat
+    }
+
+    /// The one LP figure written on confirm: the hit plus any Torso extra damage.
+    static func totalDamage(effective: Int, extra: Int?) -> Int {
+        max(0, effective) + max(0, extra ?? 0)
+    }
+
+    /// Apply a zone's effect to the hero. `extraDamage` is folded into the caller's
+    /// single LP write rather than applied here.
+    static func apply(_ zone: HitZone, to hero: Hero, extraDamage: inout Int?) {
+        switch WoundEffectCatalog.effect(for: zone).kind {
+        case .raiseState(let id):
+            hero.setStateLevel(id, level: hero.level(of: id) + 1)
+        case .setStatus(let id):
+            hero.setStateLevel(id, level: 1)
+        case .extraDamage(let count, let sides, let flat):
+            var rng = SystemRandomNumberGenerator()
+            extraDamage = rollExtraDamage(count: count, sides: sides, flat: flat, using: &rng)
+        case .reminder:
+            break
+        }
+    }
+
+    /// Convenience for the success path and for tests.
+    static func resolve(zone: HitZone, probeSucceeded: Bool, hero: Hero) {
+        guard !probeSucceeded else { return }
+        var ignored: Int? = nil
+        apply(zone, to: hero, extraDamage: &ignored)
+    }
+}

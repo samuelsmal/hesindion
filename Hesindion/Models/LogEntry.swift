@@ -90,6 +90,24 @@ struct MountLPChangePayload: Codable, Reversible {
     }
 }
 
+/// A Wundeffekt resolved while taking damage (Fokus-Regel Trefferzonen).
+///
+/// Deliberately not `Reversible`: the LP change rides on the `combatAction` entry
+/// written by the same confirm, so reversing both would double-count it.
+struct WoundEffectPayload: Codable {
+    var zone: String
+    var side: String?
+    /// The 1W20 that picked the zone, or `nil` if the zone was tapped.
+    var roll: Int?
+    var damage: Int
+    var wundschwelle: Int
+    var multiple: Int
+    /// `nil` when no probe was rolled (no Selbstbeherrschung, or skipped).
+    var probeSucceeded: Bool?
+    var applied: Bool
+    var extraDamage: Int?
+}
+
 struct DiceRollPayload: Codable {
     var count: Int
     var sides: Int

@@ -180,6 +180,7 @@ struct LogPanelView: View {
         case "healing":        "heart.fill"
         case "rest":           "moon.fill"
         case "mountLPChange":  "hare.fill"
+        case "woundEffect":    "bandage.fill"
         case "diceRoll":       "dice.fill"
         default:               "questionmark.circle"
         }
@@ -192,6 +193,7 @@ struct LogPanelView: View {
         case "healing":        .groupPersonalData
         case "rest":           .groupPersonalData
         case "mountLPChange":  .groupEquipment
+        case "woundEffect":    .groupCombat
         case "diceRoll":       .secondary
         default:               .secondary
         }
@@ -229,6 +231,15 @@ struct LogPanelView: View {
             } else {
                 return "\(p.petName) — Heilung +\(p.lpChange) LP"
             }
+
+        case "woundEffect":
+            guard let p = entry.decodePayload(WoundEffectPayload.self) else { return "—" }
+            let zone = L("hitZone.\(p.zone)")
+            let side = p.side.map { " (\(L("bodySide.\($0)")))" } ?? ""
+            let head = "\(zone)\(side) — \(p.damage)/\(p.wundschwelle) ×\(p.multiple)"
+            guard p.applied else { return "\(head) ✓" }
+            let extra = p.extraDamage.map { " +\($0) SP" } ?? ""
+            return "\(head) ✗\(extra)"
 
         case "diceRoll":
             guard let p = entry.decodePayload(DiceRollPayload.self) else { return "—" }

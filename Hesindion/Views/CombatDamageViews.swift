@@ -14,8 +14,44 @@ struct CombatTakeDamageView: View {
     @State private var tpInput: Int = 0
     @State private var confirmed: Bool = false
 
+    // Trefferzonen (Fokus-Regel)
+    @State private var zoneHit: HitZoneHit? = nil
+    @State private var lastRoll: Int? = nil
+    /// `nil` until the Selbstbeherrschung probe is rolled.
+    @State private var probeSucceeded: Bool? = nil
+    @State private var showingProbeModal = false
+    /// Rolled once, on confirm, and folded into the single LP write.
+    @State private var extraDamage: Int? = nil
+
     private var rs: Int { hero.totalRS }
     private var effectiveDamage: Int { max(0, tpInput - rs) }
+
+    // MARK: - Trefferzonen
+
+    private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
+
+    private var wundschwelle: Int { hero.derivedValues?.wundschwelle.max ?? 0 }
+
+    private var multiple: Int {
+        WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
+    }
+
+    private var selbstbeherrschung: Talent? {
+        hero.talents.first { $0.name == "Selbstbeherrschung" }
+    }
+
+    /// The wound effect is threatened once the damage reaches the Wundschwelle.
+    private var woundEffectThreatens: Bool {
+        zonesActive && zoneHit != nil && multiple >= 1
+    }
+
+    /// It actually applies on a failed probe — and a hero without the talent
+    /// cannot resist at all, so that counts as a failure.
+    private var woundEffectApplies: Bool {
+        guard woundEffectThreatens else { return false }
+        guard selbstbeherrschung != nil else { return true }
+        return probeSucceeded == false
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -111,28 +147,32 @@ struct CombatTakeDamageView: View {
                 .background(Color.dsaDark)
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
+                if zonesActive {
+                    CombatHitZoneRow(
+                        zoneHit: $zoneHit,
+                        lastRoll: $lastRoll,
+                        isDisabled: confirmed
+                    )
+
+                    if let hit = zoneHit, multiple >= 1 {
+                        CombatWoundEffectPanel(
+                            hero: hero,
+                            hit: hit,
+                            effectiveDamage: effectiveDamage,
+                            wundschwelle: wundschwelle,
+                            probeSucceeded: $probeSucceeded,
+                            effectApplies: woundEffectApplies,
+                            extraDamage: extraDamage,
+                            confirmed: confirmed,
+                            onRollProbe: { showingProbeModal = true }
+                        )
+                    }
+                }
+
                 if !confirmed {
                     // Confirm button
                     Button {
-                        if let dv = hero.derivedValues {
-                            dv.lebensenergie.current = max(0, dv.lebensenergie.current - effectiveDamage)
-                        }
-                        let entry = LogEntry.create(
-                            kind: "combatAction",
-                            payload: CombatActionPayload(
-                                combatId: combatId,
-                                round: roundNumber,
-                                action: .damageTaken,
-                                weaponName: nil,
-                                rollValue: nil,
-                                damageDealt: nil,
-                                damageTaken: effectiveDamage,
-                                lpChange: -effectiveDamage
-                            ),
-                            hero: hero
-                        )
-                        modelContext.insert(entry)
-                        confirmed = true
+                        applyDamage()
                     } label: {
                         Text(L("confirm"))
                             .font(.system(.title3, weight: .black))
@@ -164,6 +204,74 @@ struct CombatTakeDamageView: View {
 
             Spacer()
         }
+        // A different zone resists with a different Anwendungsgebiet, and a different
+        // damage total changes the modifier — either way the old probe is void.
+        .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil } }
+        .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil } }
+        .overlay {
+            if showingProbeModal, let talent = selbstbeherrschung {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in probeSucceeded = succeeded },
+                    initialModifier: WoundEffectResolver.probeModifier(
+                        damage: effectiveDamage, wundschwelle: wundschwelle)
+                )
+            }
+        }
+    }
+
+    // MARK: - Confirm
+
+    /// The single point where LP changes: the hit and any Torso extra damage are
+    /// summed first and written once.
+    private func applyDamage() {
+        var extra: Int? = nil
+        if let hit = zoneHit, woundEffectApplies {
+            WoundEffectResolver.apply(hit.zone, to: hero, extraDamage: &extra)
+        }
+        extraDamage = extra
+
+        let total = WoundEffectResolver.totalDamage(effective: effectiveDamage, extra: extra)
+        if let dv = hero.derivedValues {
+            dv.lebensenergie.current = max(0, dv.lebensenergie.current - total)
+        }
+
+        modelContext.insert(LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .damageTaken,
+                weaponName: nil,
+                rollValue: nil,
+                damageDealt: nil,
+                damageTaken: total,
+                lpChange: -total
+            ),
+            hero: hero
+        ))
+
+        if let hit = zoneHit, woundEffectThreatens {
+            modelContext.insert(LogEntry.create(
+                kind: "woundEffect",
+                payload: WoundEffectPayload(
+                    zone: hit.zone.rawValue,
+                    side: hit.side?.rawValue,
+                    roll: lastRoll,
+                    damage: effectiveDamage,
+                    wundschwelle: wundschwelle,
+                    multiple: multiple,
+                    probeSucceeded: probeSucceeded,
+                    applied: woundEffectApplies,
+                    extraDamage: extra
+                ),
+                hero: hero
+            ))
+        }
+
+        confirmed = true
     }
 }
 
