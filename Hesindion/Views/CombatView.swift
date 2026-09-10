@@ -62,6 +62,22 @@ extension CombatStep {
         case .spellExecution: "spellExecution"
         }
     }
+
+    /// Whether an already announced Trefferzone survives into this step.
+    ///
+    /// Default-deny on purpose: the zone is carried only by the steps that *resolve*
+    /// the attack it was announced for. Every other step — a new `attackChoice`, the
+    /// off-hand `dualAttackSecond`, a `mountPreCheck`, a Passierschlag, a return to
+    /// `root` — starts an action that announced nothing, and must not inherit the
+    /// previous swing's zone (which would let the player pay the Zonenaufschlag once
+    /// and collect the wound effect twice). A future attack path therefore has to opt
+    /// *in* to carrying a zone rather than remember to clear it.
+    var preservesAnnouncedZone: Bool {
+        switch self {
+        case .execution, .fernkampfExecution, .opponentDefense: true
+        default: false
+        }
+    }
 }
 
 let combatAccent = Color.groupCombat
@@ -460,6 +476,9 @@ struct CombatView: View {
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in
+            if !step.preservesAnnouncedZone {
+                announcedZone = nil
+            }
             if newKey == "root" {
                 persistCombatState()
             }

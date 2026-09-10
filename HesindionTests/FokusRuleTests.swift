@@ -40,6 +40,17 @@ final class FokusRuleTests: XCTestCase {
         XCTAssertEqual(hero.activeCombatFokusRules, [])
     }
 
+    /// C1 premise: the ordinary hero — no Plänkler-Formation, no mount — never reaches
+    /// the combat *setup* screen, which is why the Fokus-Regeln toggles cannot live
+    /// there. They now sit on the armour-selection step, the unconditional first step of
+    /// every combat; that placement is a view fact and is not unit-testable.
+    func testOrdinaryHeroNeverSeesTheCombatSetupScreen() {
+        let hero = makeHero()
+        XCTAssertFalse(hero.hasPlaenklerFormation)
+        XCTAssertFalse(hero.hasMount)
+        XCTAssertFalse(hero.needsCombatSetup)
+    }
+
     /// Every case must carry resolvable strings, so adding a rule cannot silently
     /// ship an untranslated toggle.
     func testEveryRuleIsLocalized() {

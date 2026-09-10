@@ -327,7 +327,8 @@ struct CombatFernkampfSetupView: View {
             targetIsSurprised: $targetIsSurprised,
             showsPenalty: true,
             showsSurprisedToggle: true,
-            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_161" }
+            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_161" },
+            sfHalvesKey: "trefferzone.sfHalves.ranged"
         )
     }
 

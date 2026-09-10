@@ -14,6 +14,10 @@ struct CombatZonePicker: View {
     var showsSurprisedToggle: Bool = false
     /// Hero owns SA_160 / SA_161 for the current domain.
     var hasSonderfertigkeit: Bool = false
+    /// Which Sonderfertigkeit halves the Zonenaufschlag here — SA_160 *Gezielter Angriff*
+    /// in melee, SA_161 *Gezielter Schuss* at range. The picker is shared by both screens,
+    /// so the caller names its own SF; nil (the defence screen) shows no hint at all.
+    var sfHalvesKey: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -62,8 +66,8 @@ struct CombatZonePicker: View {
                 .buttonStyle(.plain)
             }
 
-            if showsPenalty && hasSonderfertigkeit {
-                Text(L("trefferzone.sfHalves"))
+            if showsPenalty, hasSonderfertigkeit, let sfHalvesKey {
+                Text(L(sfHalvesKey))
                     .font(.system(.caption2))
                     .foregroundStyle(.secondary)
             }

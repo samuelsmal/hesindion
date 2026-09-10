@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Trefferzonen (DSA 5 Fokus-Regeln) — optional hit-zone rules, off by default and switchable per combat. Attacking: a zone picker feeds the Zonenaufschlag (Kopf −10, Torso −4, Gliedmaßen −8, halved by Gezielter Angriff/Schuss, eased by 2 against a surprised target) into the attack roll, and a read-only card states the zone's wound effect for the GM. Taking damage: the zone is tapped or rolled on 1W20, damage is compared against the Wundschwelle, and a failed Selbstbeherrschung check applies Betäubung (Kopf), Liegend (Beine) or an extra 1W3+1 SP (Torso). All ten published zone tables are implemented — humanoid, vierbeinig, sechsbeinig mit Schwanz, Fangarme, and creatures without distinct zones
-- Per-rule Fokus-Regeln toggles in combat setup, so a group can adopt individual optional rules rather than all or nothing
+- Per-rule Fokus-Regeln toggles on the armour-selection screen — the first step of every combat, so every hero can switch the optional rules on rather than only those with a Plänkler-Formation or a mount, and a group can adopt individual rules rather than all or nothing
 - The Optolith `raceId` is now persisted as `PersonalData.speciesId`, making species-dependent derived values recomputable in future
 
 - Zustände & Status tracking per hero — a static catalog of 8 DSA 5 Zustände (leveled I–IV) and 17 binary Status with localized effects, cause, and removal rules; managed via a "Zustände & Status" section on hero detail (swipe-to-remove rows, add picker, detail sheet with prominent removal rules) and a shared `StatesStrip` of chips in combat

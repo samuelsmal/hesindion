@@ -25,10 +25,18 @@ final class StringsCoverageTests: XCTestCase {
         for key in [
             "fokus.section", "fokus.trefferzonen.name", "fokus.trefferzonen.subtitle",
             "trefferzone.section", "trefferzone.none", "trefferzone.roll",
-            "trefferzone.targetSurprised", "trefferzone.sfHalves",
+            "trefferzone.targetSurprised",
+            "trefferzone.sfHalves.melee", "trefferzone.sfHalves.ranged",
             "trefferzone.woundEffect", "trefferzone.threshold",
             "trefferzone.probe", "trefferzone.noTalent", "trefferzone.dropWeapon",
             "trefferzone.reminderTitle", "modifier.trefferzone",
         ] { assertLocalized(key) }
+    }
+
+    /// M7: the melee and ranged zone pickers share one component but not one hint —
+    /// SA_160 *Gezielter Angriff* halves in melee, SA_161 *Gezielter Schuss* at range.
+    /// A single shared string was necessarily wrong on one of the two screens.
+    func testSfHalvesHintsDifferPerDomain() {
+        XCTAssertNotEqual(L("trefferzone.sfHalves.melee"), L("trefferzone.sfHalves.ranged"))
     }
 }
