@@ -124,7 +124,7 @@ struct CombatOpponentDefenseView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: combatAccent)
+                        .dsaBox(.raised, stroke: combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -142,7 +142,7 @@ struct CombatOpponentDefenseView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: combatAccent)
+                        .dsaBox(.raised, stroke: combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -160,7 +160,7 @@ struct CombatOpponentDefenseView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -270,7 +270,7 @@ struct CombatOpponentDefenseView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.dsaSchipGold)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .padding(.top, 8)
@@ -307,7 +307,7 @@ struct CombatOpponentDefenseView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -540,7 +540,7 @@ struct CombatFumbleChoiceView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
 
@@ -554,7 +554,7 @@ struct CombatFumbleChoiceView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.dsaDark)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -646,7 +646,7 @@ struct CombatFumbleChoiceView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -831,7 +831,7 @@ struct CombatFluchtView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.dsaPositive)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -845,7 +845,7 @@ struct CombatFluchtView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupCombat)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -900,7 +900,7 @@ struct CombatFluchtView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -1126,7 +1126,7 @@ struct CombatPassierschlagView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }

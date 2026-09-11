@@ -141,7 +141,7 @@ struct CombatExecutionView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.dsaSchipGold)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -208,7 +208,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
 
@@ -230,7 +230,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -264,7 +264,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -284,7 +284,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         } else if showNeueAktion {
@@ -308,7 +308,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
@@ -331,7 +331,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         } else {
@@ -345,7 +345,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }

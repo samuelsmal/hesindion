@@ -32,13 +32,13 @@ struct DSABoxModifier: ViewModifier {
 
     private var strokeColor: Color { stroke ?? .dsaBorder }
 
-    /// The reference uses `var(--border)` for the shadow too, and `dsaBorder` is
-    /// already brightness-adaptive — black on light, white on the app's near-black
-    /// dark surface, where a black shadow would be invisible.
-    private var shadowColor: Color {
-        guard role == .raised, !isPressed else { return .clear }
-        return .dsaBorder
-    }
+    /// The shadow is drawn in `dsaBorder`: the reference uses `var(--border)` for
+    /// both, and `dsaBorder` is already brightness-adaptive — black on light,
+    /// white on the app's near-black dark surface, where a black shadow would be
+    /// invisible.
+    ///
+    /// A pressed element has moved *into* its shadow, so it no longer casts one.
+    private var showsShadow: Bool { role == .raised && !isPressed }
 
     /// Pressed elements move by the shadow's own offset, so they land flush in the
     /// space the shadow occupied.
@@ -52,13 +52,26 @@ struct DSABoxModifier: ViewModifier {
             // most call sites already set one, so imposing a fill here would
             // silently override them.
             .background(fill)
+            // The shadow is an offset *rectangle drawn behind the box*, not
+            // SwiftUI's `.shadow()`. `.shadow()` is a layer effect: it applies to
+            // everything the view draws, including its text, so every label would
+            // cast its own hard shadow and render doubled. CSS `box-shadow` — what
+            // the reference specifies — affects only the box, and this is its
+            // SwiftUI equivalent.
+            // An opaque backing under the shadow. Call sites often tint a surface
+            // with `accent.opacity(0.1)`, and a translucent fill would composite
+            // against the black shadow rectangle behind it rather than against the
+            // page — turning a pale tint nearly black. A surface that casts a
+            // shadow is by definition opaque, so it gets a real background.
+            .background(showsShadow ? Color(UIColor.systemBackground) : Color.clear)
+            .background(alignment: .topLeading) {
+                if showsShadow {
+                    Rectangle()
+                        .fill(Color.dsaBorder)
+                        .offset(x: DSALayout.shadowOffset, y: DSALayout.shadowOffset)
+                }
+            }
             .overlay(Rectangle().stroke(strokeColor, lineWidth: DSALayout.border))
-            .shadow(
-                color: shadowColor,
-                radius: 0,
-                x: shadowColor == .clear ? 0 : DSALayout.shadowOffset,
-                y: shadowColor == .clear ? 0 : DSALayout.shadowOffset
-            )
             .offset(x: pressOffset, y: pressOffset)
             .animation(DSAAnimation.press, value: isPressed)
     }

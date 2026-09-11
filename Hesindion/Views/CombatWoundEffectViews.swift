@@ -39,7 +39,7 @@ struct CombatHitZoneRow: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(isDisabled ? Color.dsaDisabled : combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
             .disabled(isDisabled)
@@ -123,7 +123,7 @@ struct CombatWoundEffectPanel: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                         .background(confirmed ? Color.dsaDisabled : combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(confirmed)
@@ -144,7 +144,7 @@ struct CombatWoundEffectPanel: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(dropWeapon ? Color.groupCombat : Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(confirmed)

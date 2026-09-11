@@ -171,7 +171,7 @@ struct RegenerierenSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupPersonalData)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -332,7 +332,7 @@ struct CommandModal: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .dsaBox(.flush)
+                                        .dsaBox(.raised)
                                 }
                                 .buttonStyle(.dsaMotion)
 
@@ -346,7 +346,7 @@ struct CommandModal: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .dsaBox(.flush)
+                                        .dsaBox(.raised)
                                 }
                                 .buttonStyle(.dsaMotion)
                             }
@@ -370,7 +370,7 @@ struct CommandModal: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupPersonalData)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }
@@ -458,7 +458,7 @@ struct MountDamageSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat.opacity(0.3))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -477,7 +477,7 @@ struct MountDamageSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat.opacity(0.3))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }
@@ -512,7 +512,7 @@ struct MountDamageSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.groupCombat)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -558,7 +558,7 @@ struct MountDamageSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.groupCombat)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -586,7 +586,7 @@ struct MountDamageSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.groupCombat)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -615,7 +615,7 @@ struct MountDamageSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -626,7 +626,7 @@ struct MountDamageSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }

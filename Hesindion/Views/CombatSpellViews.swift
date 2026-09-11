@@ -71,7 +71,7 @@ struct CombatSpellSelectionView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 14)
                             .background(Color(UIColor.systemBackground))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -297,7 +297,7 @@ struct CombatSpellSetupView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupMagic)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                     .padding(.top, 16)

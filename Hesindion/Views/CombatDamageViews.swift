@@ -192,7 +192,7 @@ struct CombatTakeDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(combatAccent)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 } else {
@@ -207,7 +207,7 @@ struct CombatTakeDamageView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -420,7 +420,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent.opacity(0.3))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -441,7 +441,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent.opacity(0.3))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -497,7 +497,7 @@ struct CombatMountDamageView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -540,7 +540,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(succeeded ? combatAccent : Color.dsaDark)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 } else {
@@ -568,7 +568,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -598,7 +598,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color(UIColor.systemBackground))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -611,7 +611,7 @@ struct CombatMountDamageView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -719,7 +719,7 @@ struct CombatMountPreCheckView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(Color(UIColor.systemBackground))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -734,7 +734,7 @@ struct CombatMountPreCheckView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(combatAccent)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -797,7 +797,7 @@ struct CombatMountPreCheckView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(succeeded ? combatAccent : Color.dsaDark)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         } else {
@@ -818,7 +818,7 @@ struct CombatMountPreCheckView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -844,7 +844,7 @@ struct CombatMountPreCheckView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -857,7 +857,7 @@ struct CombatMountPreCheckView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }

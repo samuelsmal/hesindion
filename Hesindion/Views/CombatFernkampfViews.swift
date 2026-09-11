@@ -269,7 +269,7 @@ struct CombatFernkampfSetupView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
                 .background(kampfgetuemmel ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                .dsaBox(.flush, stroke: kampfgetuemmel ? combatAccent : Color.dsaBorder)
+                .dsaBox(.raised, stroke: kampfgetuemmel ? combatAccent : Color.dsaBorder)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -395,7 +395,7 @@ struct CombatFernkampfSetupView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(hero.selectedRangedWeapon != nil ? combatAccent : Color.dsaDisabled)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
         .disabled(hero.selectedRangedWeapon == nil)
@@ -416,7 +416,7 @@ struct CombatFernkampfSetupView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -535,7 +535,7 @@ struct CombatFernkampfExecutionView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.dsaSchipGold)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -861,7 +861,7 @@ struct CombatFernkampfExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
 
@@ -876,7 +876,7 @@ struct CombatFernkampfExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
 
@@ -893,7 +893,7 @@ struct CombatFernkampfExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }

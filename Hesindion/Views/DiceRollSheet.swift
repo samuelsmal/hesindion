@@ -182,7 +182,7 @@ struct DiceRollSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupPersonalData)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }

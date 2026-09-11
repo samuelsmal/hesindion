@@ -216,7 +216,7 @@ struct SkillCheckModal: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.dsaSchipGold)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(rerollSelection.isEmpty)

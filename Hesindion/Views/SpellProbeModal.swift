@@ -152,7 +152,7 @@ struct SpellProbeModal: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(Color.groupMagic.opacity(0.8))
-                .dsaBox(.flush)
+                .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
 

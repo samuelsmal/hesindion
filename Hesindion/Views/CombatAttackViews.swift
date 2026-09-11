@@ -316,7 +316,7 @@ struct CombatAttackChoiceView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -440,7 +440,7 @@ struct CombatAnnouncementView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: vorteilhaftePosition ? combatAccent : Color.dsaBorder)
+                            .dsaBox(.raised, stroke: vorteilhaftePosition ? combatAccent : Color.dsaBorder)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -458,7 +458,7 @@ struct CombatAnnouncementView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
                                     .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                    .dsaBox(.flush)
+                                    .dsaBox(.raised)
                             }
                             .buttonStyle(.dsaMotion)
                         }
@@ -498,7 +498,7 @@ struct CombatAnnouncementView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+                            .dsaBox(.raised, stroke: isSelected ? combatAccent : Color.dsaBorder)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -544,7 +544,7 @@ struct CombatAnnouncementView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -790,7 +790,7 @@ struct CombatWeaponSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
         .padding(.bottom, 4)

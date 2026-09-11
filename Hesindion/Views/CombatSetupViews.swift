@@ -92,7 +92,7 @@ struct CombatArmorSelectionView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -122,7 +122,7 @@ struct CombatArmorSelectionView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
+            .dsaBox(.raised, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -186,7 +186,7 @@ struct CombatSetupView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
                             .background(plaenklerActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: plaenklerActive ? combatAccent : Color.dsaBorder)
+                            .dsaBox(.raised, stroke: plaenklerActive ? combatAccent : Color.dsaBorder)
                         }
                         .buttonStyle(.dsaMotion)
 
@@ -201,7 +201,7 @@ struct CombatSetupView: View {
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
                                             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                            .dsaBox(.flush)
+                                            .dsaBox(.raised)
                                     }
                                     .buttonStyle(.dsaMotion)
                                 }
@@ -228,7 +228,7 @@ struct CombatSetupView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
                             .background(mountedActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: mountedActive ? combatAccent : Color.dsaBorder)
+                            .dsaBox(.raised, stroke: mountedActive ? combatAccent : Color.dsaBorder)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -249,7 +249,7 @@ struct CombatSetupView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 12)
                         .background(beengteUmgebungActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
+                        .dsaBox(.raised, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -265,7 +265,7 @@ struct CombatSetupView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -401,7 +401,7 @@ struct CombatInitiativeRollView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .dsaBox(.flush)
+                                    .dsaBox(.raised)
                             }
                             .buttonStyle(.dsaMotion)
                         }
@@ -440,7 +440,7 @@ struct CombatInitiativeRollView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -603,7 +603,7 @@ struct CombatLoadoutEquipmentView: View {
                                 .padding(.vertical, 12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                                .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+                                .dsaBox(.raised, stroke: isSelected ? combatAccent : Color.dsaBorder)
                             }
                             .buttonStyle(.dsaMotion)
                             .padding(.bottom, 4)
@@ -625,7 +625,7 @@ struct CombatLoadoutEquipmentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(selected.isEmpty ? Color.dsaDisabled : combatAccent)
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
             .disabled(selected.isEmpty)
@@ -670,7 +670,7 @@ struct CombatLoadoutEquipmentView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+            .dsaBox(.raised, stroke: isSelected ? combatAccent : Color.dsaBorder)
         }
         .buttonStyle(.dsaMotion)
         .disabled(!enabled)

@@ -85,7 +85,7 @@ struct StatesStrip: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color(UIColor.secondarySystemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }

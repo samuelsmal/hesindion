@@ -38,7 +38,7 @@ struct MountHealingSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.groupEquipment.opacity(0.3))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -57,7 +57,7 @@ struct MountHealingSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.groupEquipment.opacity(0.3))
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -86,7 +86,7 @@ struct MountHealingSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupEquipment)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }

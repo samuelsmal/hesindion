@@ -44,7 +44,7 @@ struct HeilungSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.groupPersonalData.opacity(0.3))
-                                .dsaBox(.flush)
+                                .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
 
@@ -63,7 +63,7 @@ struct HeilungSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.groupPersonalData.opacity(0.3))
-                                .dsaBox(.flush)
+                                .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -105,7 +105,7 @@ struct HeilungSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupPersonalData)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
             }

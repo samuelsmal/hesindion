@@ -128,7 +128,7 @@ struct StateDetailSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                                 .background(level == lvl ? accent : Color(UIColor.secondarySystemBackground))
-                                .dsaBox(.flush)
+                                .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -266,7 +266,7 @@ struct StateDetailSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(Color.groupCombat)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
