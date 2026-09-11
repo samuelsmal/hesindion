@@ -7,11 +7,28 @@ enum DSALayout {
     static let contentPadding: CGFloat = 12
     /// Vertical padding for headers (combat, modal, section).
     static let headerVerticalPadding: CGFloat = 14
-    /// Primary border width — highest emphasis elements.
-    static let primaryBorder: CGFloat = 3
-    /// Secondary border width — standard elements.
+    /// The one border width. Emphasis is carried by the shadow, not by a heavier
+    /// stroke, so there is a single weight — ADR-0008.
+    static let border: CGFloat = 2
+
+    /// The signature hard offset shadow: offset `(4, 4)`, radius 0, colour =
+    /// `dsaBorder`. Pressed elements move by exactly this amount so they land
+    /// flush in the space the shadow occupied (ADR-0008).
+    static let shadowOffset: CGFloat = 4
+
+    /// Divider between rows *inside* a `.dsaBox` — the replacement for the retired
+    /// 1pt border tier (ADR-0007). A divider, not a border: it never surrounds.
+    static let divider: CGFloat = 1
+    static let dividerOpacity: Double = 0.15
+
+    // MARK: - Retired (ADR-0007, ADR-0008)
+    // Kept only until every call site is migrated, then deleted.
+
+    @available(*, deprecated, message: "Emphasis is the shadow now — use .dsaBox(.raised). ADR-0008.")
+    static let primaryBorder: CGFloat = 2
+    @available(*, deprecated, message: "Use .dsaBox() — geometry lives there. ADR-0008.")
     static let secondaryBorder: CGFloat = 2
-    /// Tertiary border width — compact/detail elements.
+    @available(*, deprecated, message: "Retired — use .dsaRowDivider() inside one .dsaBox. ADR-0007.")
     static let tertiaryBorder: CGFloat = 1
     /// Maximum content width on iPad.
     static let iPadMaxContentWidth: CGFloat = 700

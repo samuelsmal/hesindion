@@ -109,7 +109,7 @@ struct SpellProbeModal: View {
     var body: some View {
         if let checkAttrs = checkAttributes {
             ZStack {
-                Color.black.opacity(0.5)
+                Color.dsaOverlay
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
 
@@ -122,7 +122,7 @@ struct SpellProbeModal: View {
             }
         } else {
             ZStack {
-                Color.black.opacity(0.5)
+                Color.dsaOverlay
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
                 Text(L("unknownTalent"))

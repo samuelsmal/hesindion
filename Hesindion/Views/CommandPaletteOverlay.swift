@@ -289,7 +289,7 @@ struct CommandModal: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.5)
+            Color.dsaOverlay
                 .ignoresSafeArea()
                 .onTapGesture { activeCommand = nil }
 

@@ -26,7 +26,18 @@ extension Color {
     })
 
     /// Adaptive border for neo-brutalist strokes — black in light mode, white in dark mode.
+    /// Also the shadow colour: the reference uses `var(--border)` for both (ADR-0008).
     static let dsaBorder = Color(UIColor.label)
+
+    /// Modal scrim. The reference's `--overlay` is black at 0.8; with no elevation
+    /// and a flat surface, the scrim is the main cue that a modal is above the
+    /// content, so it carries more weight here than it would elsewhere.
+    static let dsaOverlay = Color.black.opacity(0.8)
+
+    /// Disabled fill. Neo-brutalism expresses "disabled" by flattening the *fill*
+    /// and keeping the hard border, rather than softening everything to grey —
+    /// `Colors.grey` was doing the latter at six sites (audit S4/S9).
+    static let dsaDisabled = Color(UIColor.tertiarySystemFill)
 
     /// Dark accent background used for stat badges and INI boxes.
     static let dsaDark = Color(white: 0.18)
@@ -50,7 +61,7 @@ extension Color {
         case "GE": .attrGE
         case "KO": .attrKO
         case "KK": .attrKK
-        default:   .yellow
+        default:   .groupPersonalData
         }
     }
 

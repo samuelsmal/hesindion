@@ -51,7 +51,7 @@ struct TalentProbeModal: View {
             )
         } else {
             ZStack {
-                Color.black.opacity(0.5)
+                Color.dsaOverlay
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
                 Text(L("unknownTalent"))

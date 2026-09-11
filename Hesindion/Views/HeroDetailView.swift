@@ -87,7 +87,7 @@ struct HeroDetailView: View {
             }
 
             if showCommandSearch {
-                Color.black.opacity(0.3)
+                Color.dsaOverlay
                     .ignoresSafeArea()
                     .onTapGesture { dismissSearch() }
 

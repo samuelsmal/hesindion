@@ -8,23 +8,15 @@ struct AvatarFullscreenView: View {
 
     var body: some View {
         ZStack {
-            // Blurred background using the same hero image
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .scaleEffect(1.2)
-                .blur(radius: 30)
+            // A flat scrim, not a blurred copy of the image: blur is the one thing
+            // the design language rules out (ADR-0002, audit S10).
+            Color.dsaOverlay
                 .ignoresSafeArea()
-                .overlay(Color.black.opacity(0.3))
 
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.dsaBorder, lineWidth: 3)
-                )
+                .dsaBox(.raised)
                 .padding(32)
         }
         .onTapGesture { dismiss() }

@@ -297,7 +297,7 @@ struct CombatRootView: View {
                         .foregroundStyle(Color.groupMagic)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.white)
+                        .background(Color(UIColor.secondarySystemBackground))
                     }
                     Button(L("spellCasting.abort")) {
                         step = .root
