@@ -23,29 +23,15 @@ struct CombatZonePicker: View {
         VStack(alignment: .leading, spacing: 8) {
             combatSectionLabel(L("trefferzone.section"))
 
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
-                ForEach(zones) { zone in
-                    chip(isSelected: selection == zone, identifier: "combat.zone.\(zone.rawValue)") {
-                        selection = (selection == zone) ? nil : zone
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text(L(zone.nameKey))
-                                .font(.system(.caption, weight: .black))
-                            if showsPenalty {
-                                Text("\(HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: hasSonderfertigkeit, targetIsSurprised: targetIsSurprised))")
-                                    .font(.system(.caption2, design: .monospaced, weight: .bold))
-                            }
-                        }
-                    }
-                }
-
-                chip(isSelected: selection == nil, identifier: "combat.zone.none") {
-                    selection = nil
-                } label: {
-                    Text(L("trefferzone.none"))
-                        .font(.system(.caption, weight: .black))
-                }
+            // Centred when the chips fit on one line (the iPad case, and any phone
+            // with the four humanoid zones); falls back to a wrapping grid when they
+            // do not — a non-humanoid plan can offer up to ten zones, and five chips
+            // at their minimum width already exceed an iPhone in portrait.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { chips }
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
             }
+            .frame(maxWidth: .infinity)
             .fixedSize(horizontal: false, vertical: true)
 
             if showsSurprisedToggle {
@@ -77,6 +63,32 @@ struct CombatZonePicker: View {
 
     /// One chip, styled like the other single-select segmented pickers in combat
     /// (e.g. opponent weapon reach): accent fill + heavier border when selected.
+    /// The zone chips plus the "Keine Zone" reset, shared by both layout branches.
+    @ViewBuilder
+    private var chips: some View {
+        ForEach(zones) { zone in
+            chip(isSelected: selection == zone, identifier: "combat.zone.\(zone.rawValue)") {
+                selection = (selection == zone) ? nil : zone
+            } label: {
+                VStack(spacing: 2) {
+                    Text(L(zone.nameKey))
+                        .font(.system(.caption, weight: .black))
+                    if showsPenalty {
+                        Text("\(HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: hasSonderfertigkeit, targetIsSurprised: targetIsSurprised))")
+                            .font(.system(.caption2, design: .monospaced, weight: .bold))
+                    }
+                }
+            }
+        }
+
+        chip(isSelected: selection == nil, identifier: "combat.zone.none") {
+            selection = nil
+        } label: {
+            Text(L("trefferzone.none"))
+                .font(.system(.caption, weight: .black))
+        }
+    }
+
     private func chip(
         isSelected: Bool,
         identifier: String,
@@ -86,7 +98,8 @@ struct CombatZonePicker: View {
         Button(action: action) {
             label()
                 .foregroundStyle(isSelected ? .white : .primary)
-                .frame(maxWidth: .infinity)
+                .frame(minWidth: 78)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 // Fill the grid row so a one-line chip ("Keine Zone") matches the
                 // two-line zone chips, which carry a penalty beneath the name.
