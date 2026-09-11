@@ -46,6 +46,7 @@ struct CombatZonePicker: View {
                         .font(.system(.caption, weight: .black))
                 }
             }
+            .fixedSize(horizontal: false, vertical: true)
 
             if showsSurprisedToggle {
                 Button { targetIsSurprised.toggle() } label: {
@@ -87,6 +88,9 @@ struct CombatZonePicker: View {
                 .foregroundStyle(isSelected ? .white : .primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
+                // Fill the grid row so a one-line chip ("Keine Zone") matches the
+                // two-line zone chips, which carry a penalty beneath the name.
+                .frame(maxHeight: .infinity)
                 .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
         }

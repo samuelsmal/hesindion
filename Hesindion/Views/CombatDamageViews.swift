@@ -111,7 +111,9 @@ struct CombatTakeDamageView: View {
                     Text("\(tpInput)")
                         .font(.system(.largeTitle, weight: .black))
                         .fontDesign(.monospaced)
-                        .frame(minWidth: 80)
+                        // Equal thirds: the two steppers already fill, so the value
+                        // must too, or it collapses to its intrinsic width.
+                        .frame(minWidth: 80, maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
