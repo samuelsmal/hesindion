@@ -14,8 +14,49 @@ struct CombatTakeDamageView: View {
     @State private var tpInput: Int = 0
     @State private var confirmed: Bool = false
 
+    // Trefferzonen (Fokus-Regel)
+    @State private var zoneHit: HitZoneHit? = nil
+    @State private var lastRoll: Int? = nil
+    /// `nil` until the Selbstbeherrschung probe is rolled — which means the GM has
+    /// not adjudicated the wound effect, so nothing is applied.
+    @State private var probeSucceeded: Bool? = nil
+    @State private var showingProbeModal = false
+    /// Resolved once when the probe is opened rather than per body pass, because the
+    /// FW-0 fallback (see `Hero.selbstbeherrschung`) builds a fresh stand-in `Talent`.
+    @State private var probeTalent: Talent? = nil
+    /// Rolled once, on confirm, and folded into the single LP write.
+    @State private var extraDamage: Int? = nil
+    /// Staged intent, not an immediate action: only cleared on confirm, alongside
+    /// the LP write and the log entry, so an abandoned flow cannot disarm the hero.
+    @State private var dropWeapon: Bool = false
+
     private var rs: Int { hero.totalRS }
-    private var effectiveDamage: Int { max(0, tpInput - rs) }
+    private var effectiveDamage: Int { WoundEffectResolver.effectiveDamage(tp: tpInput, rs: rs) }
+
+    // MARK: - Trefferzonen
+
+    private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
+
+    private var wundschwelle: Int { hero.derivedValues?.wundschwelle.max ?? 0 }
+
+    private var multiple: Int {
+        WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
+    }
+
+    /// The wound effect is threatened once the damage reaches the Wundschwelle.
+    private var woundEffectThreatens: Bool {
+        WoundEffectResolver.effectThreatens(
+            zonesActive: zonesActive, hasZone: zoneHit != nil,
+            damage: effectiveDamage, wundschwelle: wundschwelle)
+    }
+
+    /// It applies only on a *failed* Selbstbeherrschung probe. Every hero has that
+    /// basic ability, so an unrolled probe simply means the GM has not adjudicated —
+    /// never a silent auto-apply.
+    private var woundEffectApplies: Bool {
+        WoundEffectResolver.effectApplies(
+            threatens: woundEffectThreatens, probeSucceeded: probeSucceeded)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -70,7 +111,9 @@ struct CombatTakeDamageView: View {
                     Text("\(tpInput)")
                         .font(.system(.largeTitle, weight: .black))
                         .fontDesign(.monospaced)
-                        .frame(minWidth: 80)
+                        // Equal thirds: the two steppers already fill, so the value
+                        // must too, or it collapses to its intrinsic width.
+                        .frame(minWidth: 80, maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
                         .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
@@ -87,6 +130,7 @@ struct CombatTakeDamageView: View {
                     .buttonStyle(.plain)
                     .disabled(confirmed)
                     .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .accessibilityIdentifier("combat.takeDamage.increaseTP")
                 }
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -111,28 +155,36 @@ struct CombatTakeDamageView: View {
                 .background(Color.dsaDark)
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
 
+                if zonesActive {
+                    CombatHitZoneRow(
+                        zoneHit: $zoneHit,
+                        lastRoll: $lastRoll,
+                        isDisabled: confirmed
+                    )
+
+                    if let hit = zoneHit, multiple >= 1 {
+                        CombatWoundEffectPanel(
+                            hero: hero,
+                            hit: hit,
+                            effectiveDamage: effectiveDamage,
+                            wundschwelle: wundschwelle,
+                            probeSucceeded: $probeSucceeded,
+                            effectApplies: woundEffectApplies,
+                            extraDamage: extraDamage,
+                            confirmed: confirmed,
+                            dropWeapon: $dropWeapon,
+                            onRollProbe: {
+                                probeTalent = hero.selbstbeherrschung
+                                showingProbeModal = true
+                            }
+                        )
+                    }
+                }
+
                 if !confirmed {
                     // Confirm button
                     Button {
-                        if let dv = hero.derivedValues {
-                            dv.lebensenergie.current = max(0, dv.lebensenergie.current - effectiveDamage)
-                        }
-                        let entry = LogEntry.create(
-                            kind: "combatAction",
-                            payload: CombatActionPayload(
-                                combatId: combatId,
-                                round: roundNumber,
-                                action: .damageTaken,
-                                weaponName: nil,
-                                rollValue: nil,
-                                damageDealt: nil,
-                                damageTaken: effectiveDamage,
-                                lpChange: -effectiveDamage
-                            ),
-                            hero: hero
-                        )
-                        modelContext.insert(entry)
-                        confirmed = true
+                        applyDamage()
                     } label: {
                         Text(L("confirm"))
                             .font(.system(.title3, weight: .black))
@@ -164,6 +216,111 @@ struct CombatTakeDamageView: View {
 
             Spacer()
         }
+        // A different zone resists with a different Anwendungsgebiet, and a different
+        // damage total changes the modifier — either way the old probe is void.
+        .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
+        .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
+        .overlay {
+            if showingProbeModal, let talent = probeTalent {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in probeSucceeded = succeeded },
+                    initialModifier: WoundEffectResolver.probeModifier(
+                        damage: effectiveDamage, wundschwelle: wundschwelle)
+                )
+            }
+        }
+    }
+
+    // MARK: - Confirm
+
+    /// The single point where LP changes: the hit and any Torso extra damage are
+    /// summed first and written once. The Arme drop-weapon action is staged (see
+    /// `CombatWoundEffectPanel`) rather than immediate, so it too only lands here —
+    /// in the same transaction as the LP write and the log entry — and never on a
+    /// flow the user abandons before confirming.
+    private func applyDamage() {
+        let (extra, total) = WoundEffectResolver.confirmDamage(
+            zoneHit: zoneHit, effectApplies: woundEffectApplies,
+            effectiveDamage: effectiveDamage, hero: hero)
+        extraDamage = extra
+
+        var droppedWeapon: String? = nil
+        if dropWeapon, woundEffectApplies, let weaponName = hero.selectedWeaponName {
+            droppedWeapon = weaponName
+            hero.selectedWeaponName = nil
+        }
+
+        if let dv = hero.derivedValues {
+            dv.lebensenergie.current = max(0, dv.lebensenergie.current - total)
+        }
+
+        modelContext.insert(LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .damageTaken,
+                weaponName: nil,
+                rollValue: nil,
+                damageDealt: nil,
+                damageTaken: total,
+                lpChange: -total
+            ),
+            hero: hero
+        ))
+
+        if let hit = zoneHit, woundEffectThreatens {
+            modelContext.insert(LogEntry.create(
+                kind: "woundEffect",
+                payload: WoundEffectPayload(
+                    zone: hit.zone.rawValue,
+                    side: hit.side?.rawValue,
+                    roll: lastRoll,
+                    damage: effectiveDamage,
+                    wundschwelle: wundschwelle,
+                    multiple: multiple,
+                    probeSucceeded: probeSucceeded,
+                    applied: woundEffectApplies,
+                    extraDamage: extra,
+                    weaponDropped: droppedWeapon
+                ),
+                hero: hero
+            ))
+        }
+
+        confirmed = true
+    }
+}
+
+// MARK: - WoundEffectReminderCard
+
+/// Read-only GM prompt shown after a landed targeted attack.
+///
+/// Nothing is applied: the opponent has no LP, no KO and no states, so the app can
+/// only state the rule and let the GM adjudicate.
+struct WoundEffectReminderCard: View {
+    let zone: HitZone
+
+    var body: some View {
+        let effect = WoundEffectCatalog.effect(for: zone)
+        VStack(alignment: .leading, spacing: 6) {
+            combatSectionLabel(String(format: L("trefferzone.reminderTitle"), L(zone.nameKey)))
+            Text(L(effect.effectKey))
+                .font(.system(.caption, weight: .semibold))
+            Text(L(effect.resistanceKey))
+                .font(.system(.caption2))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.groupCombat.opacity(0.1))
+        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.woundEffectReminder")
     }
 }
 

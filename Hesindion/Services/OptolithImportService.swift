@@ -141,7 +141,8 @@ struct OptolithImportService {
             purchasedLP: purchasedLP,
             purchasedAE: purchasedAE,
             purchasedKP: purchasedKP,
-            advantages: activatables.advantages
+            advantages: activatables.advantages,
+            disadvantages: activatables.disadvantages
         )
 
         // Upsert: check for existing hero by name
@@ -351,6 +352,7 @@ struct OptolithImportService {
             age: intFromAny(json["age"]) ?? 0,
             gender: gender,
             species: species,
+            speciesId: raceId.isEmpty ? nil : raceId,
             height: intFromAny(json["size"]) ?? 0,
             weight: intFromAny(json["weight"]) ?? 0,
             hairColor: Self.hairColorMap[hairColorId] ?? "\(hairColorId)",
@@ -818,7 +820,8 @@ struct OptolithImportService {
         purchasedLP: Int,
         purchasedAE: Int,
         purchasedKP: Int,
-        advantages: [HeroTrait]
+        advantages: [HeroTrait],
+        disadvantages: [HeroTrait]
     ) -> DerivedValues {
         let mu = attributes.mu
         let kl = attributes.kl
@@ -873,20 +876,20 @@ struct OptolithImportService {
         let zkMax = zkBase + hoheZaehigkeitBonus
         let zaehigkeit = ResourceValue(base: zkBase, bonus: hoheZaehigkeitBonus, max: zkMax)
 
-        // INI = (MU + GE) / 2
-        let iniValue = (mu + ge) / 2
+        // INI = ceil((MU + GE) / 2)
+        let iniValue = DerivedValueFormulas.initiative(mu: mu, ge: ge)
         let initiative = ComputedValue(value: iniValue, bonus: 0, max: iniValue)
 
-        // AW = GE / 2
-        let awValue = ge / 2
+        // AW = ceil(GE / 2)
+        let awValue = DerivedValueFormulas.ausweichen(ge: ge)
         let ausweichen = ComputedValue(value: awValue, bonus: 0, max: awValue)
 
         // GS = 8 (Mensch base)
         let geschwindigkeit = ResourceValue(base: 8, bonus: 0, max: 8)
 
-        // WS = KO / 2
-        let wsValue = ko / 2
-        let wundschwelle = ComputedValue(value: wsValue, bonus: 0, max: wsValue)
+        // WS = ceil(KO / 2), ± Eisern / Gläsern
+        let ws = DerivedValueFormulas.wundschwelle(ko: ko, advantages: advantages, disadvantages: disadvantages)
+        let wundschwelle = ComputedValue(value: ws.base, bonus: ws.bonus, max: ws.base + ws.bonus)
 
         // Schicksalspunkte: base 3 for Mensch
         let schipBase = 3

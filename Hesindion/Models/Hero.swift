@@ -39,6 +39,18 @@ final class Hero {
     var notes: String = ""
     var colorSchemeId: String?
 
+    // MARK: - Fokus-Regeln
+
+    /// Ids of the optional DSA 5 Fokus-Regeln this hero plays with (see `FokusRule`).
+    /// Empty by default — with no rule active, the app behaves exactly as it did
+    /// before. These are the group's house rules, so they are a per-hero *setting*
+    /// (edited on the hero settings screen) and deliberately outlive a combat:
+    /// `clearCombatSession()` must not touch them.
+    ///
+    /// Stored as raw ids rather than one Bool per rule so that adding or retiring a
+    /// rule does not change the schema.
+    var fokusRules: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -419,6 +431,19 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
+    }
+
+    func isFokusRuleActive(_ rule: FokusRule) -> Bool {
+        fokusRules.contains(rule.rawValue)
+    }
+
+    func setFokusRule(_ rule: FokusRule, active: Bool) {
+        if active {
+            guard !isFokusRuleActive(rule) else { return }
+            fokusRules.append(rule.rawValue)
+        } else {
+            fokusRules.removeAll { $0 == rule.rawValue }
+        }
     }
 }
 

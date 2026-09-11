@@ -212,6 +212,7 @@ struct CommandSearchOverlay: View {
                 TextField(L("searchCommands"), text: $query)
                     .focused(isFocused)
                     .autocorrectionDisabled()
+                    .accessibilityIdentifier("commandPalette.search")
                 if !query.isEmpty {
                     Button {
                         query = ""

@@ -29,29 +29,31 @@ struct CombatArmorSelectionView: View {
             .background(combatAccent)
             .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
 
-            if hero.armors.isEmpty {
-                VStack(spacing: 8) {
-                    Spacer()
-                    Image(systemName: "shield.slash")
-                        .font(.system(.largeTitle))
-                        .foregroundStyle(.secondary)
-                    Text(L("noArmor"))
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-            } else {
-                ScrollView {
-                    VStack(spacing: 4) {
-                        ForEach(hero.armors, id: \.persistentModelID) { armor in
-                            armorRow(armor)
+            ScrollView {
+                VStack(spacing: 0) {
+                    combatSectionLabel(L("armorSelection.label"))
+
+                    if hero.armors.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "shield.slash")
+                                .font(.system(.largeTitle))
+                                .foregroundStyle(.secondary)
+                            Text(L("noArmor"))
+                                .font(.system(.body, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                    } else {
+                        VStack(spacing: 4) {
+                            ForEach(hero.armors, id: \.persistentModelID) { armor in
+                                armorRow(armor)
+                            }
                         }
                     }
-                    .adaptiveContentWidth()
-                    .padding(.top, 8)
-                    .padding(.bottom, 16)
                 }
+                .adaptiveContentWidth()
+                .padding(.bottom, 16)
             }
 
             // Summary bar

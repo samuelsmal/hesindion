@@ -45,6 +45,21 @@ struct HeroSettingsView: View {
                     }
                     .padding(.horizontal, 16)
                 }
+                .padding(.bottom, 16)
+
+                // The optional Fokus-Regeln are the table's house rules, so they are a
+                // per-hero setting that outlives any single combat — not a per-fight
+                // choice made on the way into a fight.
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(L("fokus.section"))
+                        .font(.system(.title3, weight: .black))
+                        .padding(.horizontal, 16)
+                        .accessibilityIdentifier("heroSettings.fokusRules")
+
+                    ForEach(FokusRule.allCases) { rule in
+                        fokusRuleRow(rule)
+                    }
+                }
                 .padding(.bottom, 32)
             }
         }
@@ -72,6 +87,33 @@ struct HeroSettingsView: View {
                 .frame(height: DSALayout.secondaryBorder)
                 .foregroundStyle(Color.dsaBorder)
         }
+    }
+
+    private func fokusRuleRow(_ rule: FokusRule) -> some View {
+        let isActive = hero.isFokusRuleActive(rule)
+        return Button {
+            hero.setFokusRule(rule, active: !isActive)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: isActive ? "checkmark.square.fill" : "square")
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L(rule.nameKey))
+                        .font(.system(.body, weight: isActive ? .bold : .regular))
+                        .foregroundStyle(.primary)
+                    Text(L(rule.subtitleKey))
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
     }
 
     private func schemeRow(scheme: HeroColorScheme?, label: String, isSelected: Bool) -> some View {

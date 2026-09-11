@@ -10,6 +10,10 @@ final class PersonalData {
     var age: Int
     var gender: String
     var species: String
+    /// Optolith race id (`R_1` = Menschen, `R_2` = Elfen, …). Optional because heroes
+    /// imported before this field existed never captured it; `nil` is the normal case
+    /// for them, not an error.
+    var speciesId: String?
     var height: Int
     var weight: Int
     var hairColor: String
@@ -28,6 +32,7 @@ final class PersonalData {
         age: Int,
         gender: String,
         species: String,
+        speciesId: String? = nil,
         height: Int,
         weight: Int,
         hairColor: String,
@@ -45,6 +50,7 @@ final class PersonalData {
         self.age = age
         self.gender = gender
         self.species = species
+        self.speciesId = speciesId
         self.height = height
         self.weight = weight
         self.hairColor = hairColor

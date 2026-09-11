@@ -90,6 +90,30 @@ struct MountLPChangePayload: Codable, Reversible {
     }
 }
 
+/// A Wundeffekt resolved while taking damage (Fokus-Regel Trefferzonen).
+///
+/// Deliberately not `Reversible`: the LP change rides on the `combatAction` entry
+/// written by the same confirm, so reversing both would double-count it.
+struct WoundEffectPayload: Codable {
+    var zone: String
+    var side: String?
+    /// The 1W20 that picked the zone, or `nil` if the zone was tapped.
+    var roll: Int?
+    var damage: Int
+    var wundschwelle: Int
+    var multiple: Int
+    /// `nil` when the Selbstbeherrschung probe was not rolled — the GM never
+    /// adjudicated, so `applied` is false. Every hero can roll it (basic ability).
+    var probeSucceeded: Bool?
+    var applied: Bool
+    var extraDamage: Int?
+    /// The equipped weapon's name if the Arme drop-weapon action was taken as part
+    /// of this same confirm, else `nil`. Staged, not immediate — see
+    /// `CombatWoundEffectPanel` — so it always lands in the same transaction as the
+    /// LP write above.
+    var weaponDropped: String?
+}
+
 struct DiceRollPayload: Codable {
     var count: Int
     var sides: Int

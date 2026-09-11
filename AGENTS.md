@@ -25,6 +25,27 @@ make clean        # Clean build artifacts
 - **Device families:** iPhone and iPad
 - **No external dependencies** — uses only Apple frameworks
 
+### Testing
+
+**Always run one xcodebuild-backed target at a time, and never widen the destination set.** The `NO_CLONE` flags in the Makefile pin every test run to the single named simulator; test parallelisation otherwise clones the device and boots several simulators at once.
+
+```bash
+make test          # everything in the scheme: HesindionTests + HesindionUITests
+make test-ui       # HesindionTests only (unit + swift-snapshot-testing)
+make screenshots   # HesindionUITests only, exporting attachments to docs/screenshots/
+```
+
+Two test targets:
+
+- **`HesindionTests`** — unit tests plus `swift-snapshot-testing` view snapshots. Runs in-process against in-memory `ModelContainer`s built by `TestData`.
+- **`HesindionUITests`** — XCUITest. Drives the real app on the simulator and attaches screenshots (`XCTAttachment`, `.keepAlways`). `make screenshots` exports them with `xcrun xcresulttool export attachments` and `scripts/export_screenshots.py` renames the exports to the attachment names.
+
+The app launches into an empty store, so UI tests use a **debug-only seed**: `UITestSeed` (`Hesindion/UITestSeed.swift`) reacts to the `-uitest-seed-hero` launch argument by wiping a *separate* store file, importing the bundled `Hesindion/Resources/UITestHero.json` (the `docs/sample_heros` Boronmir export with the base64 avatars stripped — 3.1 MB → 8 KB, since the resource ships in Release builds too), switching the Trefferzonen Fokus-Regel on and leaving a combat session open (so `CombatView` resumes at the combat root). It is guarded twice — `#if DEBUG` and the launch argument — and never touches the store a real user's app writes to. UI tests also reuse the existing `DebugLaunch` hooks (`debug load_default path combat`) for navigation.
+
+Elements the UI tests drive carry `.accessibilityIdentifier`s (`heroSettings.fokusRules`, `commandPalette.search`, `combat.zone.<zone>`, `combat.woundEffectPanel`, `combat.woundEffectReminder`, `combat.takeDamage.increaseTP`, `combat.execution.*`). Prefer adding an identifier to an existing element over reshaping a view for a test.
+
+Two known pre-existing flakes — not regressions: `SkillCheckModalSnapshotTests.testFailureWithNoSchips` (intermittent SIGTRAP, passes in isolation) and `DiceRollerTests.testD20IsUniform` (unseeded chi-square, fails ~1 run in 200 by construction).
+
 ## Architecture
 
 - **SwiftUI** for all UI with **SwiftData** for persistence
@@ -51,6 +72,14 @@ make clean        # Clean build artifacts
 - **Multiple defenses**: -3 cumulative per round, tracked and reset per round
 - **Combat views split**: CombatView.swift (orchestrator), CombatSetupViews, CombatRootView, CombatAttackViews, CombatExecutionView, CombatDamageViews, CombatDefenseViews, CombatFernkampfViews
 
+### Trefferzonen (Fokus-Regeln, optional)
+
+- **Activation is per rule and per hero**: `FokusRule` (`Hesindion/Models/FokusRule.swift`) lists the optional Fokus-Regeln; `Hero.fokusRules: [String]` stores which the hero plays with, via `isFokusRuleActive(_:)` / `setFokusRule(_:active:)`. All off by default. These are the table's house rules, not a per-fight choice, so they live with `notes` / `colorSchemeId` — **not** in the combat-session block — and `clearCombatSession()` deliberately does not reset them. The UI is a "Fokus-Regeln" section on **`HeroSettingsView`** with one `ForEach(FokusRule.allCases)` row, so a new rule costs one enum case plus two localized strings.
+- **Rules model** — pure value types, no SwiftUI or SwiftData: `HitZone` / `HitZoneTable` (all ten published 1W20 tables; odd rolls hit left, even right) and `WoundEffectCatalog` / `WoundEffectResolver`. `FumbleTable.swift` is the pattern.
+- **Offence**: `HitZoneModifiers` emits the Zonenaufschlag as a `ModifierLine` (`SA_160` halves in melee, `SA_161` at range; `targetIsSurprised` is a GM flag on `ModifierContext`, deliberately *not* hero state, because it describes the opponent). After a landed hit a read-only `WoundEffectReminderCard` states the effect for the GM — nothing is applied, because opponents are not modelled.
+- **Defence**: `CombatTakeDamageView` compares damage against `wundschwelle.max`; at each multiple the Selbstbeherrschung check is one step harder. Only a *failed* check applies Betäubung/Liegend via `setStateLevel`, or folds 1W3+1 into the **single** LP write on confirm; an unrolled probe means the GM has not adjudicated, so nothing is applied. The probe reuses `TalentProbeModal`. Selbstbeherrschung is a DSA 5 basic ability every hero has — a missing talent row is a data anomaly, and `Hero.selbstbeherrschung` falls back to a transient FW-0 stand-in so the probe can still be rolled.
+- The offence/defence asymmetry is deliberate and explained in **ADR-0005**.
+
 ### Player States (Zustände & Status)
 
 - **Catalog + storage**: `StateCatalog` (`Hesindion/Models/StateCatalog.swift`) is a static in-code list of 8 leveled Zustände (I–IV) and 17 binary Status with localized name/effects/cause/removal, SF Symbol, modifier mechanic, and implication chains. Per-hero state is one generic `@Model HeroStateEntry(stateID, level)` on `Hero` (cascade relationship) — see ADR-0003.
@@ -76,6 +105,7 @@ The UI follows a **Neo-Brutalist** design theme.
 
 ## Code Creation Guidance
 
+- **DSA rounding**: where a calculation yields a fraction and the rules do not clearly say otherwise, round **up** (`Int(ceil(...))`). Two exceptions: *"je volle N Punkte"* wordings are floor by construction, and for penalties "up" is ambiguous (numerically gentler vs. harsher in magnitude) — read the rule. Derived-value formulas live in `Hesindion/Engine/DerivedValueFormulas.swift` so the import and repair paths cannot drift. See **ADR-0006**.
 - Create minimal and small pieces of code, favour composing
 - Try to find the sweet spot between small and large files, do some housekeeping from time to time
 

@@ -12,6 +12,9 @@ struct CombatOpponentDefenseView: View {
     let modifierLines: [ModifierLine]?
     var isRangedAttack: Bool = false
     var rangedDefensePenalty: Int = 0
+    /// Trefferzone announced for this attack, if any. Read-only here — the app has no
+    /// opponent model to apply the wound effect to (see `WoundEffectReminderCard`).
+    var announcedZone: HitZone? = nil
     @Binding var step: CombatStep
     var onDismiss: () -> Void
     let combatId: UUID
@@ -168,6 +171,13 @@ struct CombatOpponentDefenseView: View {
                 } else if showDamage && damageFormula == nil {
                     // No damage formula — skip straight to new action
                     neueAktionButton
+                }
+
+                // Wound-effect reminder — read-only GM prompt, nothing is applied (no
+                // opponent model to apply it to).
+                if showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
+                    WoundEffectReminderCard(zone: zone)
+                        .padding(.top, 8)
                 }
             }
             .adaptiveContentWidth()

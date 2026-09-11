@@ -104,6 +104,8 @@ struct CombatExecutionView: View {
                 diceBox
                     .contentShape(Rectangle())
                     .onTapGesture { rollDice() }
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("combat.execution.diceBox")
 
                 // Confirm box (only for 1/20 rolls)
                 if let fr = finalRoll, needsConfirm(fr) {
@@ -423,6 +425,7 @@ struct CombatExecutionView: View {
                 .buttonStyle(.plain)
                 .disabled(locked)
                 .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .accessibilityIdentifier("combat.execution.increaseModifier")
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)

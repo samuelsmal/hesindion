@@ -62,6 +62,22 @@ extension CombatStep {
         case .spellExecution: "spellExecution"
         }
     }
+
+    /// Whether an already announced Trefferzone survives into this step.
+    ///
+    /// Default-deny on purpose: the zone is carried only by the steps that *resolve*
+    /// the attack it was announced for. Every other step — a new `attackChoice`, the
+    /// off-hand `dualAttackSecond`, a `mountPreCheck`, a Passierschlag, a return to
+    /// `root` — starts an action that announced nothing, and must not inherit the
+    /// previous swing's zone (which would let the player pay the Zonenaufschlag once
+    /// and collect the wound effect twice). A future attack path therefore has to opt
+    /// *in* to carrying a zone rather than remember to clear it.
+    var preservesAnnouncedZone: Bool {
+        switch self {
+        case .execution, .fernkampfExecution, .opponentDefense: true
+        default: false
+        }
+    }
 }
 
 let combatAccent = Color.groupCombat
@@ -116,6 +132,10 @@ struct CombatView: View {
     @State private var defenseCountThisRound: Int = 0
     @State private var schipDefenseBoostActive: Bool = false
     @State private var schipIgnoreZustandThisRound: Bool = false
+    /// Trefferzone announced for the attack currently in flight. The app has no opponent
+    /// model to apply the wound effect to, so this only carries the zone from the
+    /// announcement/setup step to the post-hit damage screen for the read-only reminder card.
+    @State private var announcedZone: HitZone? = nil
 
     private var stepID: String {
         switch step {
@@ -230,6 +250,7 @@ struct CombatView: View {
                     step: $step,
                     activeManeuver: $activeManeuver,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
+                    announcedZone: $announcedZone,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
                     plaenklerActive: plaenklerActive,
@@ -304,6 +325,7 @@ struct CombatView: View {
                     modifierLines: mods,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
+                    announcedZone: announcedZone,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,
@@ -347,6 +369,7 @@ struct CombatView: View {
                     mountedActive: mountedActive,
                     beengteUmgebungActive: beengteUmgebungActive,
                     schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
+                    announcedZone: $announcedZone,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -449,9 +472,13 @@ struct CombatView: View {
             defenseCountThisRound = 0
             schipDefenseBoostActive = false
             schipIgnoreZustandThisRound = false
+            announcedZone = nil
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in
+            if !step.preservesAnnouncedZone {
+                announcedZone = nil
+            }
             if newKey == "root" {
                 persistCombatState()
             }

@@ -339,6 +339,7 @@ struct CombatAnnouncementView: View {
     @Binding var step: CombatStep
     @Binding var activeManeuver: CombatManeuver
     @Binding var vorstossActiveThisRound: Bool
+    @Binding var announcedZone: HitZone?
     let dualAttackPenaltyActive: Bool
     let twoHandedGripActive: Bool
     let plaenklerActive: Bool
@@ -348,6 +349,8 @@ struct CombatAnnouncementView: View {
     @State private var vorteilhaftePosition: Bool = false
     @State private var selectedOpponentReach: WeaponReach = .mittel
     @State private var selectedManeuver: CombatManeuver = .normal
+    @State private var targetZone: HitZone? = nil
+    @State private var targetIsSurprised = false
 
     private var golgaritenForced: Bool {
         hero.golgaritenActive(mounted: mountedActive)
@@ -501,6 +504,18 @@ struct CombatAnnouncementView: View {
                     }
                     } // end if !isMountCharge
 
+                    // Trefferzone (Fokus-Regel)
+                    if hero.isFokusRuleActive(.trefferzonen) {
+                        CombatZonePicker(
+                            selection: $targetZone,
+                            targetIsSurprised: $targetIsSurprised,
+                            showsPenalty: true,
+                            showsSurprisedToggle: true,
+                            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_160" },
+                            sfHalvesKey: "trefferzone.sfHalves.melee"
+                        )
+                    }
+
                     // Mount charge info
                     if isMountCharge {
                         HStack {
@@ -545,6 +560,7 @@ struct CombatAnnouncementView: View {
         if selectedManeuver.preventsDefense {
             vorstossActiveThisRound = true
         }
+        announcedZone = hero.isFokusRuleActive(.trefferzonen) ? targetZone : nil
 
         let modifiers = buildModifierLines()
         let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }
@@ -564,6 +580,8 @@ struct CombatAnnouncementView: View {
 
     private func buildModifierLines() -> [ModifierLine] {
         var context = ModifierContext(hero: hero, domain: .meleeAttack)
+        context.targetHitZone = targetZone
+        context.targetIsSurprised = targetIsSurprised
         context.mounted = mountedActive
         context.schipIgnoreZustand = schipIgnoreZustandThisRound
         context.dualAttackActive = dualAttackPenaltyActive

@@ -19,11 +19,19 @@
 			remoteGlobalIDString = BA48A1892F485F1D00E630FD;
 			remoteInfo = Hesindion;
 		};
+		BA48A4072F70000000E630FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BA48A1822F485F1D00E630FD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA48A1892F485F1D00E630FD;
+			remoteInfo = Hesindion;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		BA48A18A2F485F1D00E630FD /* Hesindion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hesindion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA48A2002F4A000000E630FD /* HesindionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HesindionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA48A4012F70000000E630FD /* HesindionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HesindionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -50,6 +58,11 @@
 			path = HesindionTests;
 			sourceTree = "<group>";
 		};
+		BA48A4022F70000000E630FD /* HesindionUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HesindionUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +82,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA48A4042F70000000E630FD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -77,6 +97,7 @@
 			children = (
 				BA48A18C2F485F1D00E630FD /* Hesindion */,
 				BA48A2012F4A000000E630FD /* HesindionTests */,
+				BA48A4022F70000000E630FD /* HesindionUITests */,
 				BA48A18B2F485F1D00E630FD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,6 +107,7 @@
 			children = (
 				BA48A18A2F485F1D00E630FD /* Hesindion.app */,
 				BA48A2002F4A000000E630FD /* HesindionTests.xctest */,
+				BA48A4012F70000000E630FD /* HesindionUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,6 +161,29 @@
 			productReference = BA48A2002F4A000000E630FD /* HesindionTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		BA48A4002F70000000E630FD /* HesindionUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA48A40A2F70000000E630FD /* Build configuration list for PBXNativeTarget "HesindionUITests" */;
+			buildPhases = (
+				BA48A4032F70000000E630FD /* Sources */,
+				BA48A4042F70000000E630FD /* Frameworks */,
+				BA48A4052F70000000E630FD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BA48A4062F70000000E630FD /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BA48A4022F70000000E630FD /* HesindionUITests */,
+			);
+			name = HesindionUITests;
+			packageProductDependencies = (
+			);
+			productName = HesindionUITests;
+			productReference = BA48A4012F70000000E630FD /* HesindionUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -153,6 +198,10 @@
 						CreatedOnToolsVersion = 26.0.1;
 					};
 					BA48A2042F4A000000E630FD = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = BA48A1892F485F1D00E630FD;
+					};
+					BA48A4002F70000000E630FD = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = BA48A1892F485F1D00E630FD;
 					};
@@ -178,12 +227,20 @@
 			targets = (
 				BA48A1892F485F1D00E630FD /* Hesindion */,
 				BA48A2042F4A000000E630FD /* HesindionTests */,
+				BA48A4002F70000000E630FD /* HesindionUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		BA48A1882F485F1D00E630FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA48A4052F70000000E630FD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -207,6 +264,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA48A4032F70000000E630FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -214,6 +278,11 @@
 			isa = PBXTargetDependency;
 			target = BA48A1892F485F1D00E630FD /* Hesindion */;
 			targetProxy = BA48A2052F4A000000E630FD /* PBXContainerItemProxy */;
+		};
+		BA48A4062F70000000E630FD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA48A1892F485F1D00E630FD /* Hesindion */;
+			targetProxy = BA48A4072F70000000E630FD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -449,6 +518,44 @@
 			};
 			name = Release;
 		};
+		BA48A4082F70000000E630FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TBCJC928A5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Hesindion;
+			};
+			name = Debug;
+		};
+		BA48A4092F70000000E630FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TBCJC928A5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Hesindion;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -475,6 +582,15 @@
 			buildConfigurations = (
 				BA48A2072F4A000000E630FD /* Debug */,
 				BA48A2082F4A000000E630FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA48A40A2F70000000E630FD /* Build configuration list for PBXNativeTarget "HesindionUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA48A4082F70000000E630FD /* Debug */,
+				BA48A4092F70000000E630FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

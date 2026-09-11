@@ -9,6 +9,7 @@ struct CombatFernkampfSetupView: View {
     let mountedActive: Bool
     let beengteUmgebungActive: Bool
     let schipIgnoreZustandThisRound: Bool
+    @Binding var announcedZone: HitZone?
     var onDismiss: () -> Void
 
     @State private var distanz: Int = 1         // 0=nah, 1=mittel, 2=weit
@@ -19,11 +20,15 @@ struct CombatFernkampfSetupView: View {
     @State private var kampfgetuemmel: Bool = false
     @State private var zielen: Int = 0          // 0/1/2 actions
     @State private var vomPferd: Int = 0        // 0=steht, 1=schritt, 2=galopp
+    @State private var targetZone: HitZone? = nil
+    @State private var targetIsSurprised = false
 
     // MARK: - Modifier computation (non-ViewBuilder helpers)
 
     private func buildModifierLines() -> [ModifierLine] {
         var context = ModifierContext(hero: hero, domain: .rangedAttack)
+        context.targetHitZone = targetZone
+        context.targetIsSurprised = targetIsSurprised
         context.mounted = mountedActive
         context.schipIgnoreZustand = schipIgnoreZustandThisRound
         context.distanz = distanz
@@ -71,6 +76,9 @@ struct CombatFernkampfSetupView: View {
                     zielenSection
                     if mountedActive {
                         vomPferdSection
+                    }
+                    if hero.isFokusRuleActive(.trefferzonen) {
+                        trefferzoneSection
                     }
                     modifierSummary
                 }
@@ -311,6 +319,19 @@ struct CombatFernkampfSetupView: View {
         }
     }
 
+    // MARK: - Trefferzone Section
+
+    private var trefferzoneSection: some View {
+        CombatZonePicker(
+            selection: $targetZone,
+            targetIsSurprised: $targetIsSurprised,
+            showsPenalty: true,
+            showsSurprisedToggle: true,
+            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_161" },
+            sfHalvesKey: "trefferzone.sfHalves.ranged"
+        )
+    }
+
     // MARK: - Modifier Summary
 
     private var modifierSummary: some View {
@@ -357,6 +378,7 @@ struct CombatFernkampfSetupView: View {
     private var continueButton: some View {
         Button {
             guard let weapon = hero.selectedRangedWeapon else { return }
+            announcedZone = hero.isFokusRuleActive(.trefferzonen) ? targetZone : nil
             let mods = buildModifierLines()
             let fk = weapon.at + mods.reduce(0) { $0 + $1.value }
             step = .fernkampfExecution(
