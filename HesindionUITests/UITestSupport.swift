@@ -17,11 +17,16 @@ enum UITest {
     ///
     /// `path` reuses the app's existing `DebugLaunch` navigation hook — `"combat"`
     /// opens the combat full-screen cover straight away.
+    /// `appearance` ("dark"/"light") drives the app's own `DebugLaunch` hook. It
+    /// exists because the simulator-level equivalent is not dependable here:
+    /// `XCUIDevice.shared.appearance` races the app's start when set before
+    /// launch, and never arrives when set after.
     @MainActor
-    static func launch(path: String? = nil) -> XCUIApplication {
+    static func launch(path: String? = nil, appearance: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
         if let path { app.launchArguments += ["path", path] }
+        if let appearance { app.launchArguments += ["appearance", appearance] }
         app.launch()
         return app
     }
