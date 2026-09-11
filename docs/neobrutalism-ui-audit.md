@@ -118,7 +118,9 @@ spec's intent ("2px is the default; use it nearly everywhere"). Two notes:
 
 - The tier system is load-bearing given D1 — it carries the emphasis the shadow would have.
 - The 1px tier (23 uses) is the one that fights the aesthetic: a hairline is precisely the
-  "subtle" the spec prohibits. Worth asking whether those 23 sites want a thinner border or none.
+  "subtle" the spec prohibits.
+
+**Settled (ADR-0007):** the 1px tier is retired as a border; 3px and 2px remain. See §6.
 
 ### D4 — System font (SF), not DM Sans
 
@@ -274,8 +276,10 @@ Three observations:
    are 225 repetitions of three strings, the same copy-paste shape as S1.
 
 **Recommendation.** Define named font tokens in `Theme/` (heading / body / caption / mono,
-preserving the Dynamic Type base — see §5), collapse `.semibold` into its neighbours, and decide
-deliberately whether the heading weight is 700 or 900 rather than having both.
+preserving the Dynamic Type base — see §5) and make them the only way to set a weight.
+
+**Settled (ADR-0007):** heading 700, body 500 — the spec's two weights exactly; `.black` and
+`.semibold` retired. See §6.
 
 ### S6 — "No subtle greys" is violated at roughly 260 sites
 
@@ -412,19 +416,32 @@ These should not regress:
 | 2 | Swap `.green`/`.red`/`.yellow` for palette tokens | S9 | S |
 | 3 | Add `Color.dsaOverlay` (≈0.8); apply to all 8 scrims | S7 | S |
 | 4 | Decide + record square corners; fix the Capsule and the 10 literal radii | S4, D5 | S |
-| 5 | Add `Theme/DSABox.swift` (`.dsaBox(.primary/.secondary/.tertiary)`); migrate the 202 copies | **S1, S2** | **L** |
+| 5 | Add `Theme/DSABox.swift` (`.dsaBox(.primary/.secondary)`); migrate the 202 copies | **S1, S2** | **L** |
 | 6 | Implement the spec-010 colour flip as a `ButtonStyle`; replace the 192 `.plain` | S3 | M |
-| 7 | Add named font tokens; collapse `.semibold`; settle 700-vs-900 for headings | S5 | M |
+| 7 | Add named font tokens at 700/500; retire `.black` and `.semibold` | S5 | M |
 | 8 | Tokenise the recurring opacities; make tinted *fills* solid | S6 | M |
 | 9 | Amend ADR-0002 to state the no-shadow choice and its departure from the reference | D1 | XS |
-| 10 | CI guard banning bare `lineWidth:` / `opacity(` outside `Theme/` | S2, S6 | S |
+| 10 | CI guard banning bare `lineWidth:` / `weight:` / `opacity(` outside `Theme/` | S2, S5, S6 | S |
 
 Items 1–4 and 9 are independent and can land immediately; item 1 is a one-line bug fix. Item 5 is
 the one large piece of work and it is what makes 6, 7 and 10 cheap — the 202 identical copies make
 most of it a safe mechanical replacement.
 
-Two decisions are yours before item 5 starts: whether headings are **700 or 900** (S5), and whether
-the **1px border tier survives at all** (D3).
+### The two blocking decisions are settled — see ADR-0007
+
+Both questions that gated item 5 have been answered, and the answers are recorded in
+`docs/adr/0007-type-scale-and-border-tiers.md`:
+
+- **Type scale (S5): heading 700, body 500.** The reference's two weights exactly. Hierarchy comes
+  from lowering body rather than raising headings — the app's de-facto body weight was already 700,
+  which is why headings had climbed to 900. `.black` (900) and `.semibold` (600) are retired.
+- **Border tiers (D3): two, not three.** `tertiaryBorder` (1px) is retired as a border. Stacked
+  rows that used it take one 2px box around the *group* plus a light inner divider, which also
+  removes the doubling defect (adjacent 1px strokes rendering as a 2px line between rows while the
+  outer edge stays 1px) and the six 30%-alpha hairlines.
+
+Both are encoded in the item-5 style layer so call sites cannot opt out. Note this changes item 5's
+shape: `.dsaBox` needs two tiers, not three, plus a separate row-divider treatment.
 
 ### A note on the Flutter port
 
