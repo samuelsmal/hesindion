@@ -34,19 +34,19 @@ struct CombatHitZoneRow: View {
                     Image(systemName: "dice.fill")
                     Text(L("trefferzone.roll"))
                 }
-                .font(.system(.caption, weight: .black))
+                .font(.dsaHeading(.caption))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(isDisabled ? Color.gray : combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .background(isDisabled ? Color.dsaDisabled : combatAccent)
+                .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
             .disabled(isDisabled)
 
             if let hit = zoneHit {
                 Text(summary(hit))
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -100,32 +100,32 @@ struct CombatWoundEffectPanel: View {
             combatSectionLabel(L("trefferzone.woundEffect"))
 
             Text(String(format: L("trefferzone.threshold"), effectiveDamage, wundschwelle, multiple))
-                .font(.system(.caption, design: .monospaced, weight: .bold))
+                .font(.dsaMono(.caption, emphasis: true))
 
             Text(L(effect.effectKey))
-                .font(.system(.caption, weight: .semibold))
+                .font(.dsaBody(.caption))
                 .foregroundStyle(effectApplies ? Color.groupCombat : .primary)
 
             if let succeeded = probeSucceeded {
                 HStack(spacing: 6) {
                     Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+                        .foregroundStyle(succeeded ? Color.groupEquipment : Color.groupCombat)
                     Text(succeeded ? L("success") : L("failure"))
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                 }
             } else {
                 Button(action: onRollProbe) {
                     Text(String(format: L("trefferzone.probe"), L(effect.resistanceKey), probeModifier))
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 10)
-                        .background(confirmed ? Color.gray : combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .background(confirmed ? Color.dsaDisabled : combatAccent)
+                        .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .disabled(confirmed)
             }
 
@@ -139,27 +139,27 @@ struct CombatWoundEffectPanel: View {
                         }
                         Text(L("trefferzone.dropWeapon"))
                     }
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(dropWeapon ? .white : .primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(dropWeapon ? Color.groupCombat : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .disabled(confirmed)
             }
 
             if let extra = extraDamage {
                 Text("+\(extra) \(L("lpLost"))")
-                    .font(.system(.caption, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(Color.groupCombat)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color.groupCombat.opacity(0.1))
-        .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+        .dsaBox(.flush, stroke: Color.groupCombat)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.woundEffectPanel")
     }

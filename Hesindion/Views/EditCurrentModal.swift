@@ -28,44 +28,44 @@ struct EditCurrentModal: View {
 
             VStack(spacing: 20) {
                 Text("/ \(maxLabel)")
-                    .font(.system(.subheadline))
+                    .font(.dsaBody(.subheadline))
                     .foregroundStyle(.secondary)
 
                 Text("\(current)")
-                    .font(.system(.largeTitle, weight: .black))
+                    .font(.dsaHeading(.largeTitle))
 
                 HStack(spacing: 16) {
                     Button {
                         edit.setCurrent(max(0, current - 1))
                     } label: {
                         Text("−")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupPersonalData)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     Button {
                         let cap = edit.max == Int.max - 1 ? Int.max - 2 : edit.max
                         edit.setCurrent(min(cap, current + 1))
                     } label: {
                         Text("+")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupPersonalData)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
             .padding(24)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in

@@ -21,21 +21,21 @@ struct RuleDetailView: View {
                                 Image(systemName: "chevron.left")
                                 Text(backLabel(prev))
                             }
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(Color.groupRulebook)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                         .padding(.horizontal, 16)
                         .padding(.top, 12)
                     }
 
                     Text(rule.name)
-                        .font(.system(.largeTitle, weight: .black))
+                        .font(.dsaHeading(.largeTitle))
                         .padding(20)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.groupRulebook)
                         .foregroundStyle(.white)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.flush)
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
 
@@ -61,7 +61,7 @@ struct RuleDetailView: View {
 
                         if !rule.effects.isEmpty {
                             Text(L("effects"))
-                                .font(.system(.subheadline, weight: .black))
+                                .font(.dsaHeading(.subheadline))
                                 .padding(.top, 4)
 
                             ForEach(Array(rule.effects.enumerated()), id: \.offset) { _, effect in
@@ -91,24 +91,24 @@ struct RuleDetailView: View {
 
     private func metaBadge(_ text: String) -> some View {
         Text(text)
-            .font(.system(.caption, weight: .bold))
+            .font(.dsaBody(.caption))
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color.groupRulebook.opacity(0.2))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+            .dsaBox(.flush)
     }
 
     private func effectRow(_ effect: RuleEffect) -> some View {
         HStack(alignment: .top, spacing: 8) {
             if let level = effect.level {
                 Text("\(L("tierPrefix")) \(level)")
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                     .frame(width: 56, alignment: .leading)
             }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(effect.type)
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                     if let attr = effect.attribute {
                         Text(attr)
                             .font(.caption)
@@ -116,7 +116,7 @@ struct RuleDetailView: View {
                     }
                     if let val = effect.value {
                         Text(val >= 0 ? "+\(Int(val))" : "\(Int(val))")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                             .fontDesign(.monospaced)
                     }
                 }
@@ -131,7 +131,7 @@ struct RuleDetailView: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.groupRulebook.opacity(0.08))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+        .dsaBox(.flush)
     }
 
     private func spellMetaBlock(_ spell: SpellDetail, isLiturgy: Bool) -> some View {
@@ -163,13 +163,13 @@ struct RuleDetailView: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.groupRulebook.opacity(0.08))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.tertiaryBorder))
+        .dsaBox(.flush)
     }
 
     private func spellMetaRow(_ label: String, _ value: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text(label)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
                 .frame(width: 100, alignment: .leading)
             Text(value)
                 .font(.caption)

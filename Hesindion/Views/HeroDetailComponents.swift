@@ -45,9 +45,9 @@ struct AttributesBar: View {
     private func attrBox(_ label: String, _ value: Int) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Text("\(value)")
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity)
@@ -78,9 +78,9 @@ struct AttributesColumn: View {
     private func attrCell(_ label: String, _ value: Int) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Text("\(value)")
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -129,11 +129,11 @@ struct CollapsibleSection<Content: View>: View {
             } label: {
                 HStack {
                     Text(title)
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(groupTextColor)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(groupTextColor)
                 }
                 .padding(.horizontal, 12)
@@ -141,11 +141,11 @@ struct CollapsibleSection<Content: View>: View {
                 .frame(maxWidth: .infinity)
                 .background(groupColor)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             if isExpanded { content }
         }
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.flush)
     }
 }
 
@@ -181,11 +181,11 @@ struct CollapsibleGroup<Content: View>: View {
                         .frame(height: 2)
                         .foregroundStyle(headerColor)
                     Text(title)
-                        .font(.system(.subheadline, weight: .black))
+                        .font(.dsaHeading(.subheadline))
                         .foregroundStyle(headerColor)
                         .fixedSize()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(headerColor)
                     Rectangle()
                         .frame(height: 2)
@@ -194,7 +194,7 @@ struct CollapsibleGroup<Content: View>: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             if isExpanded {
                 content
@@ -220,7 +220,7 @@ struct FieldRow: View {
                 Spacer(minLength: 8)
                 if !value.isEmpty {
                     Text(value)
-                        .font(.system(.body, design: .monospaced))
+                        .font(.dsaMono(.body, emphasis: true))
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -242,7 +242,7 @@ struct SubfieldBlock: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(label).font(.system(.body, weight: .semibold))
+                Text(label).font(.dsaBody(.body))
                 Spacer()
             }
             .padding(.horizontal, 12)
@@ -253,7 +253,7 @@ struct SubfieldBlock: View {
                     HStack {
                         Text(L(key)).font(.body).foregroundStyle(.secondary)
                         Spacer()
-                        Text(val).font(.system(.body, design: .monospaced))
+                        Text(val).font(.dsaMono(.body, emphasis: true))
                     }
                     .padding(.leading, 24)
                     .padding(.trailing, 12)
@@ -279,12 +279,12 @@ struct LPBarView: View {
         HStack(spacing: 0) {
             Button(action: onDecrement) {
                 Text("▼")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 48)
                     .background(accent)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -295,7 +295,7 @@ struct LPBarView: View {
                         .fill(barColor)
                         .frame(width: geo.size.width * fraction)
                     Text("\(L(label))   \(current) / \(max)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .foregroundStyle(textColor)
                         .frame(maxWidth: .infinity)
                 }
@@ -304,12 +304,12 @@ struct LPBarView: View {
 
             Button(action: onIncrement) {
                 Text("▲")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 48)
                     .background(accent)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -319,7 +319,7 @@ struct LPBarView: View {
         if max > 0 && current < max / 4 { return Color(red: 0xCC/255.0, green: 0x22/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max / 2 { return Color(red: 0xE0/255.0, green: 0x70/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max * 3 / 4 { return Color(red: 0xD4/255.0, green: 0xC0/255.0, blue: 0x00/255.0) }
-        return Color(red: 0x2E/255.0, green: 0x7D/255.0, blue: 0x32/255.0)
+        return Color.dsaPositive
     }
 
     private var textColor: Color {

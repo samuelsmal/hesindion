@@ -65,22 +65,22 @@ struct StateDetailSheet: View {
     private var header: some View {
         HStack(spacing: 10) {
             Image(systemName: def.iconSystemName)
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
             Text(L(def.nameKey))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
             if isZustand, level > 0 {
                 Text(StateCatalog.roman(level))
-                    .font(.system(.headline, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.headline, emphasis: true))
             }
             Spacer()
             Button {
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
             .accessibilityLabel(L("close"))
         }
         .foregroundStyle(.white)
@@ -88,7 +88,7 @@ struct StateDetailSheet: View {
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .frame(maxWidth: .infinity)
         .background(accent)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.primaryBorder))
+        .dsaBox(.flush)
     }
 
     // MARK: - Level control (stepper / on-off indicator)
@@ -98,22 +98,22 @@ struct StateDetailSheet: View {
             // Read-only: show the (auto-computed / implied) level as a static badge.
             HStack(spacing: 10) {
                 Text(L("states.level").uppercased())
-                    .font(.system(.caption, weight: .black))
+                    .font(.dsaHeading(.caption))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(isZustand ? StateCatalog.roman(level) : L("states.active"))
-                    .font(.system(.title3, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.title3, emphasis: true))
                     .foregroundStyle(accent)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(accent.opacity(0.1))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
         } else if isZustand {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L("states.level").uppercased())
-                    .font(.system(.caption, weight: .black))
+                    .font(.dsaHeading(.caption))
                     .foregroundStyle(.secondary)
                 // I–IV stepper: tap a number to set that level. Removal is
                 // exclusively via the destructive "Entfernen" button below.
@@ -123,14 +123,14 @@ struct StateDetailSheet: View {
                             hero.setStateLevel(def.id, level: lvl)
                         } label: {
                             Text(StateCatalog.roman(lvl))
-                                .font(.system(.body, design: .monospaced, weight: .black))
+                                .font(.dsaMono(.body, emphasis: true))
                                 .foregroundStyle(level == lvl ? .white : .primary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                                 .background(level == lvl ? accent : Color(UIColor.secondarySystemBackground))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+                                .dsaBox(.flush)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
                 }
             }
@@ -138,17 +138,17 @@ struct StateDetailSheet: View {
             // Status: binary on/off indicator.
             HStack(spacing: 10) {
                 Image(systemName: level > 0 ? "checkmark.square.fill" : "square")
-                    .font(.system(.title3, weight: .bold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(level > 0 ? accent : .secondary)
                 Text(L("states.active"))
-                    .font(.system(.body, weight: .black))
+                    .font(.dsaHeading(.body))
                 Spacer()
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(accent.opacity(0.1))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
         }
     }
 
@@ -169,7 +169,7 @@ struct StateDetailSheet: View {
                     )
                 }
             }
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
         }
     }
 
@@ -177,12 +177,12 @@ struct StateDetailSheet: View {
         HStack(alignment: .top, spacing: 10) {
             if let roman {
                 Text(roman)
-                    .font(.system(.subheadline, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.subheadline, emphasis: true))
                     .foregroundStyle(highlighted ? .white : .secondary)
                     .frame(width: 44, alignment: .leading)
             }
             Text(text)
-                .font(.system(.subheadline, weight: highlighted ? .black : .regular))
+                .font(highlighted ? .dsaHeading(.subheadline) : .dsaBody(.subheadline))
                 .foregroundStyle(highlighted ? .white : .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -198,7 +198,7 @@ struct StateDetailSheet: View {
         VStack(alignment: .leading, spacing: 6) {
             blockHeader(L("states.cause.header"))
             Text(L(def.causeKey))
-                .font(.system(.subheadline))
+                .font(.dsaBody(.subheadline))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -210,21 +210,21 @@ struct StateDetailSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "cross.case.fill")
-                    .font(.system(.subheadline, weight: .black))
+                    .font(.dsaHeading(.subheadline))
                 Text(L("states.removal.header").uppercased())
-                    .font(.system(.caption, weight: .black))
+                    .font(.dsaHeading(.caption))
             }
             .foregroundStyle(accent)
 
             Text(L(def.removalKey))
-                .font(.system(.subheadline, weight: .semibold))
+                .font(.dsaBody(.subheadline))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(accent.opacity(0.12))
-        .overlay(Rectangle().stroke(accent, lineWidth: DSALayout.primaryBorder))
+        .dsaBox(.flush, stroke: accent)
     }
 
     // MARK: - Derived note (read-only states)
@@ -232,10 +232,10 @@ struct StateDetailSheet: View {
     private var derivedNote: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "gearshape.fill")
-                .font(.system(.subheadline, weight: .bold))
+                .font(.dsaBody(.subheadline))
                 .foregroundStyle(.secondary)
             Text(L(isImpliedOnly && !isDerived ? "states.implied.note" : "states.derived.note"))
-                .font(.system(.footnote, weight: .semibold))
+                .font(.dsaBody(.footnote))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -245,7 +245,7 @@ struct StateDetailSheet: View {
         .overlay(
             Rectangle().stroke(
                 Color.secondary,
-                style: StrokeStyle(lineWidth: DSALayout.secondaryBorder, dash: [4, 3])
+                style: StrokeStyle(lineWidth: DSALayout.border, dash: [4, 3])
             )
         )
     }
@@ -261,21 +261,21 @@ struct StateDetailSheet: View {
                 Image(systemName: "trash.fill")
                 Text(L("states.remove"))
             }
-            .font(.system(.body, weight: .black))
+            .font(.dsaHeading(.body))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(Color.groupCombat)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.primaryBorder))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Helpers
 
     private func blockHeader(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.system(.caption, weight: .black))
+            .font(.dsaHeading(.caption))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 4)

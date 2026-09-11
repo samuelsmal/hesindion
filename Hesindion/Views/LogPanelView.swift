@@ -15,7 +15,7 @@ struct LogPanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Protokoll")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .padding(.horizontal, DSALayout.contentPadding)
                 .padding(.vertical, DSALayout.headerVerticalPadding)
 
@@ -31,7 +31,7 @@ struct LogPanelView: View {
         }
         .overlay(alignment: .leading) {
             Rectangle()
-                .frame(width: DSALayout.primaryBorder)
+                .frame(width: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
         .confirmationDialog(
@@ -93,16 +93,16 @@ struct LogPanelView: View {
     private func sessionHeaderRow(date: Date, rate: Double?, talentCount: Int) -> some View {
         HStack(spacing: 6) {
             Text("SITZUNG")
-                .font(.system(.caption2, weight: .black))
+                .font(.dsaHeading(.caption2))
             Text(date, format: .dateTime.day().month(.abbreviated))
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Spacer()
             if let rate {
                 Circle()
                     .fill(Color.successRateColor(rate))
                     .frame(width: 8, height: 8)
                 Text("\(Int((rate * 100).rounded()))% (\(talentCount))")
-                    .font(.system(.caption, design: .monospaced).weight(.bold))
+                    .font(.dsaMono(.caption, emphasis: true).weight(.bold))
             }
         }
         .foregroundStyle(.secondary)
@@ -138,12 +138,12 @@ struct LogPanelView: View {
                 Image(systemName: "bolt.fill")
                     .foregroundStyle(Color.groupCombat)
                 Text("Kampf — \(totalRounds) Runden, \(lpString) LP")
-                    .font(.system(.subheadline, weight: .bold))
+                    .font(.dsaBody(.subheadline))
                 Spacer()
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .padding(.horizontal, DSALayout.contentPadding)
         .padding(.vertical, 8)
     }
@@ -157,13 +157,13 @@ struct LogPanelView: View {
                 .frame(width: 20)
 
             Text(entryDescription(entry))
-                .font(.system(.subheadline))
+                .font(.dsaBody(.subheadline))
                 .lineLimit(1)
 
             Spacer()
 
             Text(entry.timestamp, style: .time)
-                .font(.system(.caption))
+                .font(.dsaBody(.caption))
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, DSALayout.contentPadding)

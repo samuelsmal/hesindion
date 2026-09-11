@@ -88,7 +88,7 @@ func combatSectionLabel(_ title: String) -> some View {
             .frame(height: 2)
             .foregroundStyle(combatAccent)
         Text(title)
-            .font(.system(.caption, weight: .black))
+            .font(.dsaHeading(.caption))
             .foregroundStyle(combatAccent)
             .fixedSize()
         Rectangle()

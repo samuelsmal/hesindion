@@ -12,7 +12,7 @@ struct HeroSettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L("colorScheme"))
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
 
@@ -34,7 +34,7 @@ struct HeroSettingsView: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L("adventures"))
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .padding(.horizontal, 16)
 
                     Picker(L("adventures"), selection: $hero.activeAdventure) {
@@ -52,7 +52,7 @@ struct HeroSettingsView: View {
                 // choice made on the way into a fight.
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L("fokus.section"))
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .padding(.horizontal, 16)
                         .accessibilityIdentifier("heroSettings.fokusRules")
 
@@ -70,21 +70,21 @@ struct HeroSettingsView: View {
         HStack {
             Button(action: dismiss) {
                 Text(L("close"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
             }
             Spacer()
             Text(L("heroSettings"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
             Spacer()
             Text(L("close"))
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .hidden()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
     }
@@ -96,15 +96,15 @@ struct HeroSettingsView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isActive ? "checkmark.square.fill" : "square")
-                    .font(.system(.title3, weight: .semibold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.primary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L(rule.nameKey))
-                        .font(.system(.body, weight: isActive ? .bold : .regular))
+                        .font(isActive ? .dsaHeading(.body) : .dsaBody(.body))
                         .foregroundStyle(.primary)
                     Text(L(rule.subtitleKey))
-                        .font(.system(.caption, weight: .semibold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.secondary)
                 }
 
@@ -113,7 +113,7 @@ struct HeroSettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     private func schemeRow(scheme: HeroColorScheme?, label: String, isSelected: Bool) -> some View {
@@ -129,23 +129,23 @@ struct HeroSettingsView: View {
                             .frame(width: 20, height: 32)
                     }
                 }
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
 
                 Text(label)
-                    .font(.system(.body, weight: isSelected ? .bold : .regular))
+                    .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
                     .foregroundStyle(.primary)
 
                 Spacer()
 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }

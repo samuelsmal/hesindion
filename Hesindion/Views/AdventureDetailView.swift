@@ -38,7 +38,7 @@ struct AdventureDetailView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(adventure.name)
-                    .font(.system(.title3, design: .default, weight: .black))
+                    .font(.dsaHeading(.title3))
             }
         }
         .sheet(isPresented: $isShowingAddStretch) {
@@ -63,10 +63,10 @@ struct AdventureDetailView: View {
     private var adventureHeader: some View {
         VStack(spacing: 4) {
             Text(currentRegion.displayName)
-                .font(.system(.subheadline, weight: .bold))
+                .font(.dsaBody(.subheadline))
                 .foregroundStyle(.secondary)
             Text(adventure.currentDate.formatted())
-                .font(.system(.title2, design: .monospaced, weight: .black))
+                .font(.dsaMono(.title2, emphasis: true))
 
             if !adventure.heroes.isEmpty {
                 HStack(spacing: -8) {
@@ -80,7 +80,7 @@ struct AdventureDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .background(Color.groupAdventure.opacity(0.15))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.primaryBorder))
+        .dsaBox(.flush)
     }
 
     @ViewBuilder
@@ -112,7 +112,7 @@ struct AdventureDetailView: View {
                 ShareLink(item: exportText()) {
                     weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false, fillHeight: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .fixedSize(horizontal: false, vertical: true)
         }
@@ -122,12 +122,12 @@ struct AdventureDetailView: View {
 
     private func weatherButton(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) { weatherButtonLabel(title, icon: icon, filled: filled, fillHeight: fillHeight) }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
     }
 
     private func weatherButtonLabel(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false) -> some View {
         Label(title, systemImage: icon)
-            .font(.system(.subheadline, weight: .bold))
+            .font(.dsaBody(.subheadline))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity)
@@ -135,7 +135,7 @@ struct AdventureDetailView: View {
             .padding(.vertical, 12)
             .background(filled ? Color.groupAdventure : Color.clear)
             .foregroundStyle(filled ? .black : Color.groupAdventure)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
     }
 
     // MARK: - Timeline
@@ -157,7 +157,7 @@ struct AdventureDetailView: View {
                         timeJumpDivider()
                     }
                     Button { editingDay = weatherDay } label: { WeatherDayRow(weatherDay: weatherDay) }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                 }
             }
         }
@@ -168,7 +168,7 @@ struct AdventureDetailView: View {
         HStack(spacing: 8) {
             Rectangle().fill(Color.groupAdventure).frame(height: 1)
             Text(L("timeJump"))
-                .font(.system(.caption2, weight: .black))
+                .font(.dsaHeading(.caption2))
                 .foregroundStyle(Color.groupAdventure)
                 .textCase(.uppercase)
             Rectangle().fill(Color.groupAdventure).frame(height: 1)

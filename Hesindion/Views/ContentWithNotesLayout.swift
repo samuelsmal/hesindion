@@ -120,7 +120,7 @@ struct SplitContentLayout<Content: View>: View {
         .background(Color(UIColor.systemBackground))
         .overlay(alignment: .top) {
             Rectangle()
-                .frame(height: DSALayout.tertiaryBorder)
+                .frame(height: DSALayout.divider)
                 .foregroundStyle(Color.dsaBorder)
         }
     }
@@ -145,12 +145,12 @@ struct SplitContentLayout<Content: View>: View {
             }
         } label: {
             Image(systemName: isActive ? activeIcon : icon)
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .foregroundStyle(.white)
                 .frame(width: 48, height: 48)
                 .background(panelColor(for: panel))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -160,7 +160,7 @@ struct RulebookPanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Regelwerk")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .padding(.horizontal, DSALayout.contentPadding)
                 .padding(.vertical, DSALayout.headerVerticalPadding)
 
@@ -168,7 +168,7 @@ struct RulebookPanelView: View {
         }
         .overlay(alignment: .leading) {
             Rectangle()
-                .frame(width: DSALayout.primaryBorder)
+                .frame(width: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
     }

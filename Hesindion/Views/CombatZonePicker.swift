@@ -38,24 +38,24 @@ struct CombatZonePicker: View {
                 Button { targetIsSurprised.toggle() } label: {
                     HStack(spacing: 12) {
                         Image(systemName: targetIsSurprised ? "checkmark.square.fill" : "square")
-                            .font(.system(.title3, weight: .semibold))
+                            .font(.dsaHeading(.title3))
                             .foregroundStyle(targetIsSurprised ? combatAccent : .secondary)
                         Text(L("trefferzone.targetSurprised"))
-                            .font(.system(.body, weight: targetIsSurprised ? .bold : .regular))
+                            .font(targetIsSurprised ? .dsaHeading(.body) : .dsaBody(.body))
                             .foregroundStyle(.primary)
                         Spacer()
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 12)
                     .background(targetIsSurprised ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(targetIsSurprised ? combatAccent : Color.dsaBorder, lineWidth: targetIsSurprised ? 3 : 2))
+                    .dsaBox(.flush, stroke: targetIsSurprised ? combatAccent : Color.dsaBorder)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
 
             if showsPenalty, hasSonderfertigkeit, let sfHalvesKey {
                 Text(L(sfHalvesKey))
-                    .font(.system(.caption2))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
             }
         }
@@ -72,10 +72,10 @@ struct CombatZonePicker: View {
             } label: {
                 VStack(spacing: 2) {
                     Text(L(zone.nameKey))
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                     if showsPenalty {
                         Text("\(HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: hasSonderfertigkeit, targetIsSurprised: targetIsSurprised))")
-                            .font(.system(.caption2, design: .monospaced, weight: .bold))
+                            .font(.dsaMono(.caption2, emphasis: true))
                     }
                 }
             }
@@ -85,7 +85,7 @@ struct CombatZonePicker: View {
             selection = nil
         } label: {
             Text(L("trefferzone.none"))
-                .font(.system(.caption, weight: .black))
+                .font(.dsaHeading(.caption))
         }
     }
 
@@ -105,9 +105,9 @@ struct CombatZonePicker: View {
                 // two-line zone chips, which carry a penalty beneath the name.
                 .frame(maxHeight: .infinity)
                 .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .accessibilityIdentifier(identifier)
     }
 }

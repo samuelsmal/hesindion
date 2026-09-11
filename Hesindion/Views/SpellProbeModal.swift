@@ -142,19 +142,19 @@ struct SpellProbeModal: View {
             } label: {
                 HStack {
                     Text(L("modifications.section"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Spacer()
                     Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(.white)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(Color.groupMagic.opacity(0.8))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             if expanded {
                 VStack(spacing: 0) {
@@ -186,20 +186,20 @@ struct SpellProbeModal: View {
                     // Max modifications info
                     HStack(spacing: 8) {
                         Image(systemName: "info.circle.fill")
-                            .font(.system(.caption2, weight: .bold))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(Color.groupMagic)
                         Text(String(format: L("maxModifications"), maxModifications))
-                            .font(.system(.caption2, weight: .bold))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(Color.groupMagic)
                         Spacer()
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(Color.groupMagic.opacity(0.1))
-                    .overlay(Rectangle().stroke(Color.groupMagic, lineWidth: 1))
+                    .dsaBox(.flush, stroke: Color.groupMagic)
                 }
                 .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             }
         }
     }
@@ -243,7 +243,7 @@ struct SpellProbeModal: View {
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
             Text(label)
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
@@ -251,49 +251,49 @@ struct SpellProbeModal: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 
     private func stepperRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
         HStack {
             Text(label)
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             HStack(spacing: 0) {
                 Button {
                     if value.wrappedValue > range.lowerBound { value.wrappedValue -= 1 }
                 } label: {
                     Text("\u{2212}")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Text("\(value.wrappedValue)")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .frame(minWidth: 24)
 
                 Button {
                     if value.wrappedValue < range.upperBound { value.wrappedValue += 1 }
                 } label: {
                     Text("+")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 
     private var distractionPicker: some View {
         HStack {
             Text(L("mod.distraction"))
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             Picker("", selection: $distractionLevel) {
                 Text(L("mod.distraction.none")).tag(0)
@@ -306,6 +306,6 @@ struct SpellProbeModal: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 }

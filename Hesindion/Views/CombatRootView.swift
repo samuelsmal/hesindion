@@ -46,25 +46,25 @@ struct CombatRootView: View {
             // Header
             HStack {
                 Text(L("combat"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Text(hero.name)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
             VStack(spacing: 0) {
@@ -76,54 +76,54 @@ struct CombatRootView: View {
                 // INI box
                 VStack(spacing: 2) {
                     Text("INI")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(.white)
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
                 .frame(minWidth: 64)
                 .background(Color.dsaDark)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
 
                 // Round counter
                 Text("\(L("roundPrefix")) \(roundNumber)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
 
                 // Next round button
                 Button { roundNumber += 1 } label: {
                     Image(systemName: "arrow.right")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                         .frame(width: 52)
                         .frame(maxHeight: .infinity)
                         .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 // Neuer Kampf compact button
                 Button { showInitiativeSheet = true } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "dice.fill")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                         Text(L("new"))
-                            .font(.system(.caption, weight: .black))
+                            .font(.dsaHeading(.caption))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .frame(minWidth: 64)
                     .frame(maxHeight: .infinity)
                     .background(Color.dsaDark)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .fixedSize(horizontal: false, vertical: true)
             .sheet(isPresented: $showInitiativeSheet) {
@@ -146,7 +146,7 @@ struct CombatRootView: View {
                 combatSectionLabel(L("lifePoints.label"))
 
                 Text(L("hero"))
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 4)
@@ -155,7 +155,7 @@ struct CombatRootView: View {
 
                 if mountedActive, let mount = hero.pets.first {
                     Text(mount.name)
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
@@ -205,9 +205,9 @@ struct CombatRootView: View {
                         ForEach(perRoundReminders, id: \.0.id) { def, reminder in
                             HStack(spacing: 6) {
                                 Image(systemName: def.iconSystemName)
-                                    .font(.system(.caption2, weight: .bold))
+                                    .font(.dsaBody(.caption2))
                                 Text("\(L(def.nameKey)): \(reminder)")
-                                    .font(.system(.caption2, design: .monospaced, weight: .bold))
+                                    .font(.dsaMono(.caption2, emphasis: true))
                             }
                             .foregroundStyle(combatAccent)
                         }
@@ -221,17 +221,17 @@ struct CombatRootView: View {
                 Button { beengteUmgebungActive.toggle() } label: {
                     HStack(spacing: 6) {
                         Image(systemName: beengteUmgebungActive ? "square.split.bottomrightquarter.fill" : "square.split.bottomrightquarter")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                         Text(L("beengteUmgebung"))
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .font(.dsaMono(.caption, emphasis: true))
                     }
                     .foregroundStyle(beengteUmgebungActive ? .white : .secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(beengteUmgebungActive ? combatAccent : Color(UIColor.secondarySystemBackground))
-                    .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -239,18 +239,18 @@ struct CombatRootView: View {
                 HStack(spacing: 8) {
                     if let weaponName = hero.selectedWeaponName {
                         Image(systemName: "hammer.fill")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                         Text(weaponName)
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .font(.dsaMono(.caption, emphasis: true))
                         if let offHandName = hero.selectedOffHandName {
                             Text("+")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                                 .foregroundStyle(.secondary)
                             let isShield = hero.selectedShield != nil
                             Image(systemName: isShield ? "shield.fill" : "hammer.fill")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                             Text(offHandName)
-                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .font(.dsaMono(.caption, emphasis: true))
                         }
                     }
 
@@ -259,17 +259,17 @@ struct CombatRootView: View {
                     Button { showArmorSheet = true } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "shield.fill")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                             Text("\(L("rs")) \(hero.totalRS)")
-                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .font(.dsaMono(.caption, emphasis: true))
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color.dsaDark)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
                 .foregroundStyle(.primary)
                 .padding(.top, 4)
@@ -286,14 +286,14 @@ struct CombatRootView: View {
                     Image(systemName: "wand.and.stars")
                         .foregroundStyle(.white)
                     Text(String(format: L("spellCasting.banner"), casting.spell.name, currentRound, casting.totalRounds))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Spacer()
                     if currentRound >= casting.totalRounds {
                         Button(L("continue")) {
                             step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
                         }
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                         .foregroundStyle(Color.groupMagic)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -302,13 +302,13 @@ struct CombatRootView: View {
                     Button(L("spellCasting.abort")) {
                         step = .root
                     }
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.white.opacity(0.8))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(Color.groupMagic)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             }
 
             // AKTION section
@@ -343,14 +343,14 @@ struct CombatRootView: View {
                         Image(systemName: "bolt.fill")
                         Text(L("attack"))
                     }
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 // Fernkampf
                 if hero.selectedRangedWeaponName != nil {
@@ -361,14 +361,14 @@ struct CombatRootView: View {
                             Image(systemName: "scope")
                             Text(L("rangedAttack"))
                         }
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(combatAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                        .dsaBox(.flush, stroke: combatAccent)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
 
                 // Zaubern (only if hero has AE)
@@ -380,14 +380,14 @@ struct CombatRootView: View {
                             Image(systemName: "wand.and.stars")
                             Text(L("castSpell"))
                         }
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(Color.groupMagic)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.groupMagic, lineWidth: 3))
+                        .dsaBox(.flush, stroke: Color.groupMagic)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
 
                 // Parieren -- secondary (outline)
@@ -415,14 +415,14 @@ struct CombatRootView: View {
                         Image(systemName: "shield.fill")
                         Text(L("parry"))
                     }
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
+                    .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
 
                 // Ausweichen -- tertiary (outline)
@@ -437,23 +437,23 @@ struct CombatRootView: View {
                         Image(systemName: "figure.walk")
                         Text(L("dodge"))
                     }
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
+                    .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
 
                 // Vorstoß warning
                 if vorstossActiveThisRound {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(.caption2, weight: .bold))
+                            .font(.dsaBody(.caption2))
                         Text(L("noDefenseWarning"))
-                            .font(.system(.caption2, weight: .bold))
+                            .font(.dsaBody(.caption2))
                     }
                     .foregroundStyle(combatAccent)
                     .padding(.horizontal, 16)
@@ -468,13 +468,13 @@ struct CombatRootView: View {
                             Image(systemName: "heart.slash.fill")
                             Text(L("takeDamage"))
                         }
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(Color.dsaDark)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     if mountedActive {
                         Button {
@@ -484,13 +484,13 @@ struct CombatRootView: View {
                                 Image(systemName: "heart.slash.fill")
                                 Text(L("mountTakesDamage"))
                             }
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.dsaDark)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
                 }
 
@@ -500,30 +500,30 @@ struct CombatRootView: View {
                         Image(systemName: "figure.run")
                         Text(L("flucht"))
                     }
-                    .font(.system(.body, weight: .black))
+                    .font(.dsaHeading(.body))
                     .foregroundStyle(combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                    .dsaBox(.flush, stroke: combatAccent)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 // Change loadout -- visually distinct (teal)
                 Button { step = .loadoutEquipment } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                         Text(L("changeLoadout"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)) // teal
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 // SCHICKSALSPUNKTE section
                 let schipsAvailable = hero.derivedValues?.schicksalspunkte.current ?? 0
@@ -534,10 +534,10 @@ struct CombatRootView: View {
                     // Show current Schip count
                     HStack {
                         Text("\(hero.derivedValues?.schicksalspunkte.current ?? 0)")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .fontDesign(.monospaced)
                         Text("/ \(hero.derivedValues?.schicksalspunkte.max ?? 0)")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
@@ -555,14 +555,14 @@ struct CombatRootView: View {
                                     Image(systemName: "shield.checkered")
                                     Text(L("schip.defenseBoost"))
                                 }
-                                .font(.system(.body, weight: .black))
+                                .font(.dsaHeading(.body))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                .background(Color.dsaSchipGold)
+                                .dsaBox(.flush)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     } else {
                         HStack(spacing: 6) {
@@ -570,12 +570,12 @@ struct CombatRootView: View {
                             Text(L("schip.defenseBoost"))
                             Image(systemName: "checkmark")
                         }
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(Color.dsaSchipGold)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
-                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
+                        .background(Color.dsaSchipGold.opacity(0.1))
+                        .overlay(Rectangle().stroke(Color.dsaSchipGold, lineWidth: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
@@ -590,14 +590,14 @@ struct CombatRootView: View {
                                     Image(systemName: "bandage")
                                     Text(L("schip.ignoreZustand"))
                                 }
-                                .font(.system(.body, weight: .black))
+                                .font(.dsaHeading(.body))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                .background(Color.dsaSchipGold)
+                                .dsaBox(.flush)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     } else if schipIgnoreZustandThisRound {
                         HStack(spacing: 6) {
@@ -605,12 +605,12 @@ struct CombatRootView: View {
                             Text(L("schip.ignoreZustand"))
                             Image(systemName: "checkmark")
                         }
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(Color.dsaSchipGold)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
-                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
+                        .background(Color.dsaSchipGold.opacity(0.1))
+                        .overlay(Rectangle().stroke(Color.dsaSchipGold, lineWidth: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -624,14 +624,14 @@ struct CombatRootView: View {
                         Image(systemName: "flag.fill")
                         Text(L("endCombat"))
                     }
-                    .font(.system(.body, weight: .black))
+                    .font(.dsaHeading(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.dsaDark)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .padding(.top, 16)
             }
 
@@ -646,20 +646,20 @@ struct CombatRootView: View {
     private func combatWarningBanner(icon: String, text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
             Text(text)
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .textCase(.uppercase)
             Spacer()
             Image(systemName: icon)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
         .background(Color.groupCombat)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.flush)
         .padding(.top, 6)
     }
 
@@ -692,30 +692,30 @@ struct CombatArmorManagementSheet: View {
             // Header
             HStack {
                 Text(L("armorSelection"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button { dismiss() } label: {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             if hero.armors.isEmpty {
                 VStack(spacing: 8) {
                     Spacer()
                     Image(systemName: "shield.slash")
-                        .font(.system(.largeTitle))
+                        .font(.dsaHeading(.largeTitle))
                         .foregroundStyle(.secondary)
                     Text(L("noArmor"))
-                        .font(.system(.body, weight: .semibold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -737,19 +737,19 @@ struct CombatArmorManagementSheet: View {
             HStack(spacing: 16) {
                 HStack(spacing: 4) {
                     Text(L("rs"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.totalRS)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
                 HStack(spacing: 4) {
                     Text(L("encumbrance"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.effectiveBE)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
@@ -758,7 +758,7 @@ struct CombatArmorManagementSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color.dsaDark)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
         }
     }
 
@@ -768,15 +768,15 @@ struct CombatArmorManagementSheet: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
-                    .font(.system(.title3, weight: .semibold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(armor.name)
-                        .font(.system(.body, weight: armor.isEquipped ? .bold : .regular))
+                        .font(armor.isEquipped ? .dsaHeading(.body) : .dsaBody(.body))
                         .foregroundStyle(.primary)
                     Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
-                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .font(.dsaMono(.caption, emphasis: false))
                         .foregroundStyle(.secondary)
                 }
 
@@ -785,9 +785,9 @@ struct CombatArmorManagementSheet: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
+            .dsaBox(.flush, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -813,12 +813,12 @@ struct CombatInitiativeSheet: View {
         VStack(spacing: 0) {
             // Header
             Text(L("newInitiative"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 0) {
                 // Base selector
@@ -839,32 +839,32 @@ struct CombatInitiativeSheet: View {
                         VStack(spacing: 0) {
                             VStack(spacing: 2) {
                                 Text("\(d6Result ?? d6Display)")
-                                    .font(.system(.largeTitle, weight: .black))
+                                    .font(.dsaHeading(.largeTitle))
                                     .fontDesign(.monospaced)
                                 if d6Result == nil {
                                     Text(L("rolling"))
-                                        .font(.system(.caption2, weight: .semibold))
+                                        .font(.dsaBody(.caption2))
                                         .foregroundStyle(.secondary)
                                 }
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                             Text("W6")
-                                .font(.system(.caption2, weight: .bold))
+                                .font(.dsaBody(.caption2))
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 2)
                         }
 
                         // Calculation box
                         Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .fontDesign(.monospaced)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                             .opacity(d6Result == nil ? 0.4 : 1)
 
                         if let t = total {
@@ -873,14 +873,14 @@ struct CombatInitiativeSheet: View {
                                 onConfirm(t)
                             } label: {
                                 Text("\(L("confirmIni")) \(t)")
-                                    .font(.system(.body, weight: .black))
+                                    .font(.dsaHeading(.body))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                    .dsaBox(.flush)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -903,17 +903,17 @@ struct CombatInitiativeSheet: View {
         } label: {
             VStack(spacing: 2) {
                 Text(label)
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text("\(value)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
             }
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     private func startD6Animation() {

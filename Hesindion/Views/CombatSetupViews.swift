@@ -13,21 +13,21 @@ struct CombatArmorSelectionView: View {
             // Header
             HStack {
                 Text(L("armorSelection"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -36,10 +36,10 @@ struct CombatArmorSelectionView: View {
                     if hero.armors.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "shield.slash")
-                                .font(.system(.largeTitle))
+                                .font(.dsaHeading(.largeTitle))
                                 .foregroundStyle(.secondary)
                             Text(L("noArmor"))
-                                .font(.system(.body, weight: .semibold))
+                                .font(.dsaBody(.body))
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -60,19 +60,19 @@ struct CombatArmorSelectionView: View {
             HStack(spacing: 16) {
                 HStack(spacing: 4) {
                     Text(L("rs"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.totalRS)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
                 HStack(spacing: 4) {
                     Text(L("encumbrance"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.effectiveBE)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
@@ -82,19 +82,19 @@ struct CombatArmorSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color.dsaDark)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
 
             // Continue button
             Button { step = hero.needsCombatSetup ? .combatSetup : .initiativeRoll } label: {
                 Text(L("continue"))
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
         .frame(maxWidth: .infinity)
     }
@@ -105,15 +105,15 @@ struct CombatArmorSelectionView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
-                    .font(.system(.title3, weight: .semibold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(armor.name)
-                        .font(.system(.body, weight: armor.isEquipped ? .bold : .regular))
+                        .font(armor.isEquipped ? .dsaHeading(.body) : .dsaBody(.body))
                         .foregroundStyle(.primary)
                     Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
-                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .font(.dsaMono(.caption, emphasis: false))
                         .foregroundStyle(.secondary)
                 }
 
@@ -122,9 +122,9 @@ struct CombatArmorSelectionView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
+            .dsaBox(.flush, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -145,27 +145,27 @@ struct CombatSetupView: View {
             HStack {
                 Button { step = .armorSelection } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(L("combatSetup"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -176,19 +176,19 @@ struct CombatSetupView: View {
                         Button { plaenklerActive.toggle() } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: plaenklerActive ? "checkmark.square.fill" : "square")
-                                    .font(.system(.title3, weight: .semibold))
+                                    .font(.dsaHeading(.title3))
                                     .foregroundStyle(plaenklerActive ? combatAccent : .secondary)
                                 Text(L("plaenkler"))
-                                    .font(.system(.body, weight: plaenklerActive ? .bold : .regular))
+                                    .font(plaenklerActive ? .dsaHeading(.body) : .dsaBody(.body))
                                     .foregroundStyle(.primary)
                                 Spacer()
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
                             .background(plaenklerActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(plaenklerActive ? combatAccent : Color.dsaBorder, lineWidth: plaenklerActive ? 3 : 2))
+                            .dsaBox(.flush, stroke: plaenklerActive ? combatAccent : Color.dsaBorder)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
 
                         if plaenklerActive {
                             HStack(spacing: 8) {
@@ -196,14 +196,14 @@ struct CombatSetupView: View {
                                     let isSelected = plaenklerBonus == bonus
                                     Button { plaenklerBonus = bonus } label: {
                                         Text(bonus == .at ? L("plaenklerAT") : L("plaenklerAW"))
-                                            .font(.system(.caption, weight: .bold))
+                                            .font(.dsaBody(.caption))
                                             .foregroundStyle(isSelected ? .white : .primary)
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
                                             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                                            .dsaBox(.flush)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(.dsaMotion)
                                 }
                             }
                             .padding(.top, 4)
@@ -218,19 +218,19 @@ struct CombatSetupView: View {
                         Button { mountedActive.toggle() } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: mountedActive ? "checkmark.square.fill" : "square")
-                                    .font(.system(.title3, weight: .semibold))
+                                    .font(.dsaHeading(.title3))
                                     .foregroundStyle(mountedActive ? combatAccent : .secondary)
                                 Text("\(L("mounted")) (\(mountName))")
-                                    .font(.system(.body, weight: mountedActive ? .bold : .regular))
+                                    .font(mountedActive ? .dsaHeading(.body) : .dsaBody(.body))
                                     .foregroundStyle(.primary)
                                 Spacer()
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
                             .background(mountedActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(mountedActive ? combatAccent : Color.dsaBorder, lineWidth: mountedActive ? 3 : 2))
+                            .dsaBox(.flush, stroke: mountedActive ? combatAccent : Color.dsaBorder)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
 
                     // Beengte Umgebung toggle
@@ -239,19 +239,19 @@ struct CombatSetupView: View {
                     Button { beengteUmgebungActive.toggle() } label: {
                         HStack(spacing: 12) {
                             Image(systemName: beengteUmgebungActive ? "checkmark.square.fill" : "square")
-                                .font(.system(.title3, weight: .semibold))
+                                .font(.dsaHeading(.title3))
                                 .foregroundStyle(beengteUmgebungActive ? combatAccent : .secondary)
                             Text(L("beengteUmgebung"))
-                                .font(.system(.body, weight: beengteUmgebungActive ? .bold : .regular))
+                                .font(beengteUmgebungActive ? .dsaHeading(.body) : .dsaBody(.body))
                                 .foregroundStyle(.primary)
                             Spacer()
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 12)
                         .background(beengteUmgebungActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: beengteUmgebungActive ? 3 : 2))
+                        .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
@@ -260,14 +260,14 @@ struct CombatSetupView: View {
             // Continue
             Button { step = .initiativeRoll } label: {
                 Text(L("continue"))
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 }
@@ -311,31 +311,31 @@ struct CombatInitiativeRollView: View {
             HStack {
                 Button { step = hero.needsCombatSetup ? .combatSetup : .armorSelection } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 Text(L("newInitiative"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             VStack(spacing: 0) {
                 // Base selector
@@ -355,34 +355,34 @@ struct CombatInitiativeRollView: View {
                         VStack(spacing: 0) {
                             VStack(spacing: 2) {
                                 Text("\(d6Result ?? d6Display)")
-                                    .font(.system(.largeTitle, weight: .black))
+                                    .font(.dsaHeading(.largeTitle))
                                     .fontDesign(.monospaced)
                                 if d6Result == nil {
                                     Text(L("tapToRoll"))
-                                        .font(.system(.caption2, weight: .semibold))
+                                        .font(.dsaBody(.caption2))
                                         .foregroundStyle(.secondary)
                                 }
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                             .contentShape(Rectangle())
                             .onTapGesture { tapDice() }
                             Text("W6")
-                                .font(.system(.caption2, weight: .bold))
+                                .font(.dsaBody(.caption2))
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 2)
                         }
 
                         // Calculation box
                         Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .fontDesign(.monospaced)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                             .opacity(d6Result == nil ? 0.4 : 1)
 
                         if let t = total {
@@ -396,14 +396,14 @@ struct CombatInitiativeRollView: View {
                                 }
                             } label: {
                                 Text("\(L("confirm"))  \u{2192}  INI \(t)")
-                                    .font(.system(.body, weight: .black))
+                                    .font(.dsaHeading(.body))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                    .dsaBox(.flush)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     }
                     .padding(.top, 12)
@@ -432,17 +432,17 @@ struct CombatInitiativeRollView: View {
         } label: {
             VStack(spacing: 2) {
                 Text(label)
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text("\(value)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
             }
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     private func tapDice() {
@@ -523,31 +523,31 @@ struct CombatLoadoutEquipmentView: View {
             HStack {
                 Button { step = .initiativeRoll } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 Text(L("selectEquipment"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -579,21 +579,21 @@ struct CombatLoadoutEquipmentView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                        .font(.system(.title3, weight: .semibold))
+                                        .font(.dsaHeading(.title3))
                                         .foregroundStyle(isSelected ? combatAccent : .secondary)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(weapon.name)
-                                            .font(.system(.body, weight: isSelected ? .bold : .regular))
+                                            .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
                                             .foregroundStyle(.primary)
                                         HStack(spacing: 8) {
                                             Text("FK \(weapon.at)")
-                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .font(.dsaMono(.caption, emphasis: true))
                                                 .foregroundStyle(.secondary)
                                             Text(weapon.damage)
-                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .font(.dsaMono(.caption, emphasis: true))
                                                 .foregroundStyle(.secondary)
                                             Text(weapon.range)
-                                                .font(.system(.caption, design: .monospaced, weight: .bold))
+                                                .font(.dsaMono(.caption, emphasis: true))
                                                 .foregroundStyle(.secondary)
                                         }
                                     }
@@ -603,9 +603,9 @@ struct CombatLoadoutEquipmentView: View {
                                 .padding(.vertical, 12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                                .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                                .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                             .padding(.bottom, 4)
                         }
                     }
@@ -620,14 +620,14 @@ struct CombatLoadoutEquipmentView: View {
                 step = .root
             } label: {
                 Text(L("continue"))
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(selected.isEmpty ? Color.gray : combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .background(selected.isEmpty ? Color.dsaDisabled : combatAccent)
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
             .disabled(selected.isEmpty)
         }
         .onAppear { loadCurrentSelection() }
@@ -648,19 +648,19 @@ struct CombatLoadoutEquipmentView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(.title3, weight: .semibold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(isSelected ? combatAccent : .secondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
-                        .font(.system(.body, weight: isSelected ? .bold : .regular))
+                        .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
                         .foregroundStyle(enabled ? .primary : .tertiary)
                     Text(item.detail)
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(enabled ? .secondary : .tertiary)
                     if let note = item.note {
                         Text(note)
-                            .font(.system(.caption2))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(combatAccent)
                     }
                 }
@@ -670,9 +670,9 @@ struct CombatLoadoutEquipmentView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .disabled(!enabled)
         .padding(.bottom, 4)
     }

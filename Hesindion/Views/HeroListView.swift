@@ -41,7 +41,7 @@ struct HeroListView: View {
                 .toolbar {
                     ToolbarItem(placement: .principal) {
                         Text("Hesindion")
-                            .font(.system(.title2, design: .default, weight: .black))
+                            .font(.dsaHeading(.title2))
                     }
                 }
         } detail: {
@@ -95,7 +95,7 @@ struct HeroListView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
-                    .font(.system(.title3, design: .default, weight: .bold))
+                    .font(.dsaHeading(.title3))
                     .padding(.vertical, 8)
                     .padding(.horizontal, 4)
                     .tag(SidebarSelection.rulebook)
@@ -113,17 +113,16 @@ struct HeroListView: View {
                     isShowingAdventureCreation = true
                 } label: {
                     Label(L("newAdventure"), systemImage: "plus")
-                        .font(.system(.body, design: .default, weight: .bold))
+                        .font(.dsaHeading(.body))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.groupAdventure)
                         .foregroundStyle(.black)
-                        .overlay(
-                            Rectangle()
-                                .stroke(Color.dsaBorder, lineWidth: 3)
-                        )
+                        .dsaBox(.raised, fill: .groupAdventure)
                 }
-                .listRowInsets(EdgeInsets())
+                .buttonStyle(.dsaMotion)
+                // Room for the shadow: it draws outside the bounds and reserves
+                // no layout space, so a flush row would clip it (ADR-0008).
+                .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                 .listRowBackground(Color(UIColor.systemBackground))
 
                 ForEach(adventures, id: \.persistentModelID) { adventure in
@@ -138,7 +137,7 @@ struct HeroListView: View {
                                     .stroke(Color.dsaBorder, lineWidth: 2)
                             )
                         Text(adventure.name)
-                            .font(.system(.title3, design: .default, weight: .bold))
+                            .font(.dsaHeading(.title3))
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 4)
@@ -155,7 +154,8 @@ struct HeroListView: View {
 
             Section {
                 importButton
-                    .listRowInsets(EdgeInsets())
+                    // Room for the shadow — see the newAdventure button above.
+                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                     .listRowBackground(Color(UIColor.systemBackground))
 
                 if heroes.isEmpty {
@@ -167,7 +167,7 @@ struct HeroListView: View {
                         HStack(spacing: 12) {
                             heroAvatar(hero)
                             Text(hero.name)
-                                .font(.system(.title3, design: .default, weight: .bold))
+                                .font(.dsaHeading(.title3))
                         }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 4)
@@ -192,9 +192,9 @@ struct HeroListView: View {
         HStack(spacing: 0) {
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
             Text(title)
-                .font(.system(.subheadline, weight: .black))
+                .font(.dsaHeading(.subheadline))
                 .textCase(.uppercase)
                 .foregroundStyle(color)
                 .lineLimit(1)
@@ -202,7 +202,7 @@ struct HeroListView: View {
                 .padding(.horizontal, 8)
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
         }
         .padding(.vertical, 4)
     }
@@ -274,16 +274,13 @@ struct HeroListView: View {
             isShowingFilePicker = true
         } label: {
             Label(L("importHero"), systemImage: "square.and.arrow.down")
-                .font(.system(.body, design: .default, weight: .bold))
+                .font(.dsaHeading(.body))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.groupPersonalData)
                 .foregroundStyle(.black)
-                .overlay(
-                    Rectangle()
-                        .stroke(Color.dsaBorder, lineWidth: 3)
-                )
+                .dsaBox(.raised, fill: .groupPersonalData)
         }
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Sidebar Footer
@@ -291,14 +288,14 @@ struct HeroListView: View {
     private var sidebarFooter: some View {
         VStack(spacing: 4) {
             Text(appVersion)
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.tertiary)
 
             Button {
                 isShowingChangelog = true
             } label: {
                 Text("Changelog")
-                    .font(.system(.caption2))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.quaternary)
             }
             .sheet(isPresented: $isShowingChangelog) {

@@ -42,6 +42,16 @@ extension Color {
     /// Dark accent background used for stat badges and INI boxes.
     static let dsaDark = Color(white: 0.18)
 
+    /// Schips / fate points. Was three spellings of the same idea across the
+    /// combat and check screens (`0.6/0.5/0.0`, `#998000`, `#997F00`) — one gold
+    /// now (audit S5).
+    static let dsaSchipGold = Color(red: 0.6, green: 0.5, blue: 0.0)
+
+    /// A positive modifier or a landed result. Distinct from `groupEquipment`,
+    /// which is the *equipment group* hue; this is the darker "good outcome"
+    /// green that was copy-pasted as `0x2E7D32` into four combat files.
+    static let dsaPositive = Color(red: 0x2E / 255, green: 0x7D / 255, blue: 0x32 / 255)
+
     static let attrMU = Color(red: 0xc5 / 255, green: 0x47 / 255, blue: 0x47 / 255)
     static let attrKL = Color(red: 0xa8 / 255, green: 0x5b / 255, blue: 0xd4 / 255)
     static let attrIN = Color(red: 0x33 / 255, green: 0x9b / 255, blue: 0x5b / 255)

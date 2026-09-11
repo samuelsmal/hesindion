@@ -21,15 +21,6 @@ enum DSALayout {
     static let divider: CGFloat = 1
     static let dividerOpacity: Double = 0.15
 
-    // MARK: - Retired (ADR-0007, ADR-0008)
-    // Kept only until every call site is migrated, then deleted.
-
-    @available(*, deprecated, message: "Emphasis is the shadow now — use .dsaBox(.raised). ADR-0008.")
-    static let primaryBorder: CGFloat = 2
-    @available(*, deprecated, message: "Use .dsaBox() — geometry lives there. ADR-0008.")
-    static let secondaryBorder: CGFloat = 2
-    @available(*, deprecated, message: "Retired — use .dsaRowDivider() inside one .dsaBox. ADR-0007.")
-    static let tertiaryBorder: CGFloat = 1
     /// Maximum content width on iPad.
     static let iPadMaxContentWidth: CGFloat = 700
     /// Proportional content fraction on iPad (1.0 - 2×0.06).

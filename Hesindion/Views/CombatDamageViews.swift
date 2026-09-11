@@ -64,31 +64,31 @@ struct CombatTakeDamageView: View {
             HStack {
                 Button { step = .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 Text(L("takeDamage"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             VStack(spacing: 16) {
                 // TP input stepper
@@ -99,37 +99,37 @@ struct CombatTakeDamageView: View {
                         if tpInput > 0 { tpInput -= 1 }
                     } label: {
                         Image(systemName: "minus")
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(confirmed ? Color.gray : combatAccent)
+                            .background(confirmed ? Color.dsaDisabled : combatAccent)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                     .disabled(confirmed || tpInput <= 0)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
 
                     Text("\(tpInput)")
-                        .font(.system(.largeTitle, weight: .black))
+                        .font(.dsaHeading(.largeTitle))
                         .fontDesign(.monospaced)
                         // Equal thirds: the two steppers already fill, so the value
                         // must too, or it collapses to its intrinsic width.
                         .frame(minWidth: 80, maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
 
                     Button {
                         tpInput += 1
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(confirmed ? Color.gray : combatAccent)
+                            .background(confirmed ? Color.dsaDisabled : combatAccent)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                     .disabled(confirmed)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
                     .accessibilityIdentifier("combat.takeDamage.increaseTP")
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -137,23 +137,23 @@ struct CombatTakeDamageView: View {
                 // Calculation display
                 VStack(spacing: 4) {
                     Text("\(tpInput) \(L("tp")) \u{2212} \(rs) \(L("rs")) = \(effectiveDamage)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                     if effectiveDamage == 0 {
                         Text(L("absorbed"))
-                            .font(.system(.caption, weight: .semibold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(.white.opacity(0.7))
                     } else {
                         Text("\(effectiveDamage) \(L("lpLost"))")
-                            .font(.system(.caption, weight: .semibold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(.white.opacity(0.7))
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.dsaDark)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
 
                 if zonesActive {
                     CombatHitZoneRow(
@@ -187,14 +187,14 @@ struct CombatTakeDamageView: View {
                         applyDamage()
                     } label: {
                         Text(L("confirm"))
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(combatAccent)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 } else {
                     // Neue Aktion button
                     Button { step = .root } label: {
@@ -202,14 +202,14 @@ struct CombatTakeDamageView: View {
                             Image(systemName: "arrow.counterclockwise")
                             Text(L("newAction"))
                         }
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
             .adaptiveContentWidth()
@@ -309,16 +309,16 @@ struct WoundEffectReminderCard: View {
         VStack(alignment: .leading, spacing: 6) {
             combatSectionLabel(String(format: L("trefferzone.reminderTitle"), L(zone.nameKey)))
             Text(L(effect.effectKey))
-                .font(.system(.caption, weight: .semibold))
+                .font(.dsaBody(.caption))
             Text(L(effect.resistanceKey))
-                .font(.system(.caption2))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color.groupCombat.opacity(0.1))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .dsaBox(.flush)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.woundEffectReminder")
     }
@@ -352,27 +352,27 @@ struct CombatMountDamageView: View {
             HStack {
                 Button { step = .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(L("mountTakesDamage"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             Spacer()
 
@@ -406,7 +406,7 @@ struct CombatMountDamageView: View {
                 .foregroundStyle(combatAccent)
 
             Text(mount.name)
-                .font(.system(.title3, weight: .bold))
+                .font(.dsaHeading(.title3))
 
             // SP stepper
             VStack(spacing: 4) {
@@ -415,50 +415,50 @@ struct CombatMountDamageView: View {
                         if spAmount > 1 { spAmount -= 1 }
                     } label: {
                         Text("−")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent.opacity(0.3))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     Text("\(spAmount)")
-                        .font(.system(.largeTitle, weight: .black))
+                        .font(.dsaHeading(.largeTitle))
                         .fontDesign(.monospaced)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
 
                     Button {
                         spAmount += 1
                     } label: {
                         Text("+")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent.opacity(0.3))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
 
                 Text(L("mountDamage.sp"))
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.secondary)
             }
 
             // Penalty display
             if penalty > 0 {
                 Text(String(format: L("mountDamage.penalty"), penalty))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(combatAccent)
             } else {
                 Text(L("mountDamage.noPenalty"))
-                    .font(.system(.caption, weight: .medium))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.secondary)
             }
 
@@ -492,14 +492,14 @@ struct CombatMountDamageView: View {
                 }
             } label: {
                 Text(L("mountDamage.apply"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
         .padding(.horizontal, 32)
     }
@@ -513,36 +513,36 @@ struct CombatMountDamageView: View {
                     // Result
                     Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .font(.system(size: 48))
-                        .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+                        .foregroundStyle(succeeded ? Color.groupEquipment : Color.groupCombat)
 
                     Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
-                        .font(.system(.title3, weight: .bold))
+                        .font(.dsaHeading(.title3))
                         .multilineTextAlignment(.center)
 
                     if !succeeded {
                         Text(L("mountDamage.sturz"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(Color.groupCombat)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity)
                             .background(Color.groupCombat.opacity(0.1))
-                            .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+                            .dsaBox(.flush, stroke: Color.groupCombat)
                     }
 
                     Button {
                         step = .root
                     } label: {
                         Text(L("continue"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(succeeded ? combatAccent : Color.dsaDark)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 } else {
                     // Prompt to roll
                     Image(systemName: "dice.fill")
@@ -550,12 +550,12 @@ struct CombatMountDamageView: View {
                         .foregroundStyle(combatAccent)
 
                     Text(L("reitenCheck"))
-                        .font(.system(.title3, weight: .bold))
+                        .font(.dsaHeading(.title3))
                         .multilineTextAlignment(.center)
 
                     if penalty > 0 {
                         Text(String(format: L("mountDamage.penalty"), penalty))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(combatAccent)
                     }
 
@@ -563,14 +563,14 @@ struct CombatMountDamageView: View {
                         showingProbeModal = true
                     } label: {
                         Text(L("rollReitenCheck"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             } else {
                 // No Reiten talent — manual confirmation
@@ -579,12 +579,12 @@ struct CombatMountDamageView: View {
                     .foregroundStyle(combatAccent)
 
                 Text(L("reitenCheckPrompt"))
-                    .font(.system(.title3, weight: .bold))
+                    .font(.dsaHeading(.title3))
                     .multilineTextAlignment(.center)
 
                 if penalty > 0 {
                     Text(String(format: L("mountDamage.penalty"), penalty))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(combatAccent)
                 }
 
@@ -593,27 +593,27 @@ struct CombatMountDamageView: View {
                         probeSucceeded = false
                     } label: {
                         Text(L("no"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     Button {
                         probeSucceeded = true
                     } label: {
                         Text(L("yes"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(combatAccent)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
         }
@@ -642,27 +642,27 @@ struct CombatMountPreCheckView: View {
             HStack {
                 Button { step = .attackChoice } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(L("reitenCheck"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             Spacer()
 
@@ -694,9 +694,9 @@ struct CombatMountPreCheckView: View {
             if galoppConfirmed {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Color.groupEquipment)
                     Text(L("galoppConfirm"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 16)
@@ -706,7 +706,7 @@ struct CombatMountPreCheckView: View {
                     .foregroundStyle(combatAccent)
 
                 Text(L("galoppConfirm"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 12) {
@@ -714,14 +714,14 @@ struct CombatMountPreCheckView: View {
                         step = .attackChoice
                     } label: {
                         Text(L("no"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     Button {
                         withAnimation(DSAAnimation.standard) {
@@ -729,21 +729,21 @@ struct CombatMountPreCheckView: View {
                         }
                     } label: {
                         Text(L("yes"))
-                            .font(.system(.body, weight: .bold))
+                            .font(.dsaBody(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(combatAccent)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
         }
         .padding(galoppConfirmed ? 0 : 16)
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .dsaBox(.flush)
     }
 
     // MARK: - Connector
@@ -768,7 +768,7 @@ struct CombatMountPreCheckView: View {
         .padding(16)
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .dsaBox(.flush)
         .opacity(galoppConfirmed ? 1 : 0.4)
         .allowsHitTesting(galoppConfirmed)
     }
@@ -778,10 +778,10 @@ struct CombatMountPreCheckView: View {
         if let succeeded = probeSucceeded {
             Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .font(.system(size: 36))
-                .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+                .foregroundStyle(succeeded ? Color.groupEquipment : Color.groupCombat)
 
             Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .multilineTextAlignment(.center)
 
             Button {
@@ -792,35 +792,35 @@ struct CombatMountPreCheckView: View {
                 }
             } label: {
                 Text(succeeded ? L("continue") : L("back"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(succeeded ? combatAccent : Color.dsaDark)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         } else {
             Image(systemName: "dice.fill")
                 .font(.system(size: 36))
                 .foregroundStyle(combatAccent)
 
             Text(L("reitenCheck"))
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .multilineTextAlignment(.center)
 
             Button {
                 showingProbeModal = true
             } label: {
                 Text(L("rollReitenCheck"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -831,7 +831,7 @@ struct CombatMountPreCheckView: View {
                 .foregroundStyle(combatAccent)
 
             Text(L("reitenCheckPrompt"))
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 12) {
@@ -839,27 +839,27 @@ struct CombatMountPreCheckView: View {
                     step = .attackChoice
                 } label: {
                     Text(L("no"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Button {
                     step = onSuccess
                 } label: {
                     Text(L("yes"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
         }
     }

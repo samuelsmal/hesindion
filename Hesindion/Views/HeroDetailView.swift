@@ -282,12 +282,12 @@ struct HeroDetailView: View {
     @ViewBuilder private var nameHeading: some View {
         VStack(spacing: 12) {
             Text(hero.name)
-                .font(.system(.largeTitle, design: .default, weight: .black))
+                .font(.dsaHeading(.largeTitle))
                 .foregroundStyle(colorScheme.textColor)
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(colorScheme.groupColor(at: 0))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             if let data = hero.avatar, let uiImage = UIImage(data: data) {
                 Button {
@@ -303,7 +303,7 @@ struct HeroDetailView: View {
                                 .stroke(Color.dsaBorder, lineWidth: 3)
                         )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -567,7 +567,7 @@ struct HeroDetailView: View {
                 HStack {
                     Text(key).font(.body).foregroundStyle(.secondary)
                     Spacer()
-                    Text(val).font(.system(.body, design: .monospaced))
+                    Text(val).font(.dsaMono(.body, emphasis: true))
                 }
                 .padding(.leading, 24)
                 .padding(.trailing, 12)
@@ -723,22 +723,22 @@ struct HeroDetailView: View {
             HStack(spacing: 8) {
                 Image(systemName: showRecordedStats ? "chart.bar.fill" : "chart.bar")
                 Text("Aufgezeichnete Werte")
-                    .font(.system(.subheadline, weight: .bold))
+                    .font(.dsaBody(.subheadline))
                 Spacer(minLength: 8)
                 Text(showRecordedStats ? "AN" : "AUS")
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(showRecordedStats ? Color.groupTalents : Color(UIColor.secondarySystemBackground))
                     .foregroundStyle(showRecordedStats ? Color.black : Color.secondary)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .accessibilityLabel("Aufgezeichnete Werte anzeigen")
         .accessibilityValue(showRecordedStats ? "an" : "aus")
     }
@@ -845,17 +845,17 @@ struct HeroDetailView: View {
                         )
 
                         HStack(spacing: 12) {
-                            Text("AT").font(.system(.caption, weight: .bold))
+                            Text("AT").font(.dsaBody(.caption))
                             if hero.belastungPenalty != 0 {
-                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
                             } else {
-                                Text("\(ct.at)").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.at)").font(.dsaMono(.caption, emphasis: true))
                             }
-                            Text("PA").font(.system(.caption, weight: .bold))
+                            Text("PA").font(.dsaBody(.caption))
                             if ct.pa > 0 && hero.belastungPenalty != 0 {
-                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
                             } else {
-                                Text("\(ct.pa)").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.pa)").font(.dsaMono(.caption, emphasis: true))
                             }
                             Spacer()
                         }
@@ -916,7 +916,7 @@ struct HeroDetailView: View {
                 Text(name).font(.body)
                 Spacer()
                 Text(String(format: "%.2f st", weight))
-                    .font(.system(.body, design: .monospaced))
+                    .font(.dsaMono(.body, emphasis: true))
             }
             .padding(.leading, 24)
             .padding(.trailing, 12)
@@ -935,7 +935,7 @@ struct HeroDetailView: View {
             HStack {
                 let label = String(format: "%.2f / %d st", total, totalCap)
                 if hero.isOverloaded {
-                    Text("⚠ " + label).foregroundStyle(.red)
+                    Text("⚠ " + label).foregroundStyle(Color.groupCombat)
                 } else {
                     Text(label)
                 }
@@ -944,10 +944,10 @@ struct HeroDetailView: View {
             if petsCap > 0 {
                 Text("\(heroCap) + \(petsCap) = \(totalCap) st")
                     .foregroundStyle(.secondary)
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.dsaMono(.caption, emphasis: true))
             }
         }
-        .font(.system(.body, design: .monospaced))
+        .font(.dsaMono(.body, emphasis: true))
         .padding(.leading, 24)
         .padding(.trailing, 12)
         .padding(.vertical, 8)
@@ -1045,7 +1045,7 @@ struct HeroDetailView: View {
                             ])
                             if a.isEquipped {
                                 Text(L("equipped"))
-                                    .font(.system(.caption2, weight: .bold))
+                                    .font(.dsaBody(.caption2))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -1096,9 +1096,9 @@ struct HeroDetailView: View {
                 ForEach(hero.pets, id: \.persistentModelID) { pet in
                     VStack(spacing: 0) {
                         HStack {
-                            Text(pet.name).font(.system(.body, weight: .semibold))
+                            Text(pet.name).font(.dsaBody(.body))
                             Spacer()
-                            Text(pet.type).font(.system(.caption, design: .monospaced))
+                            Text(pet.type).font(.dsaMono(.caption, emphasis: true))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 12)
@@ -1191,7 +1191,7 @@ struct TalentSwipeContent: View {
                 if let keys = probeKeys {
                     ForEach(keys, id: \.self) { key in
                         Text(key)
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(Color.attributeForeground(for: key))
                             .frame(width: 32, height: 24)
                             .background(Color.attributeBackground(for: key).opacity(0.7))
@@ -1201,7 +1201,7 @@ struct TalentSwipeContent: View {
                     .frame(width: 60, alignment: .trailing)
                     .padding(.leading, 8)
                 Text("\(value)")
-                    .font(.system(.body, design: .monospaced))
+                    .font(.dsaMono(.body, emphasis: true))
                     .frame(width: 36, alignment: .trailing)
             }
             if isExpanded {
@@ -1221,7 +1221,7 @@ struct TalentSwipeContent: View {
                 .fill(Color.successRateColor(successRate))
                 .frame(width: 9, height: 9)
             Text("\(percent(successRate))%")
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.secondary)
         }
     }
@@ -1240,11 +1240,11 @@ struct TalentSwipeContent: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            .font(.system(.caption2))
+            .font(.dsaBody(.caption2))
             .foregroundStyle(.secondary)
         } else {
             Text("Noch keine Proben aufgezeichnet")
-                .font(.system(.caption2))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.tertiary)
         }
     }

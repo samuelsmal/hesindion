@@ -26,7 +26,7 @@ struct RulebookView: View {
                                 } label: {
                                     ruleRow(rule)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.dsaMotion)
                                 Divider()
                             }
                         }
@@ -45,12 +45,12 @@ struct RulebookView: View {
 
     private var headerBanner: some View {
         Text(L("rulebook"))
-            .font(.system(.largeTitle, design: .default, weight: .black))
+            .font(.dsaHeading(.largeTitle))
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.groupRulebook)
             .foregroundStyle(.white)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
             .padding(.horizontal, 16)
             .padding(.top, 16)
     }

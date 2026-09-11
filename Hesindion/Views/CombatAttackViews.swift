@@ -29,27 +29,27 @@ struct CombatAttackChoiceView: View {
             HStack {
                 Button { step = .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(L("attack"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -225,7 +225,7 @@ struct CombatAttackChoiceView: View {
             // Mount special skills note
             if !mount.specialSkills.isEmpty {
                 Text("\u{24D8} \(mount.specialSkills)")
-                    .font(.system(.caption2, weight: .medium))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(combatAccent)
                     .padding(.top, 2)
             }
@@ -296,15 +296,15 @@ struct CombatAttackChoiceView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(.title3, weight: .bold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(combatAccent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(.caption, weight: .semibold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -316,9 +316,9 @@ struct CombatAttackChoiceView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -372,32 +372,32 @@ struct CombatAnnouncementView: View {
             HStack {
                 Button { step = .weaponSelection(action) } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 VStack(spacing: 1) {
                     Text(L("announcement"))
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(.white)
                     Text(weaponName)
-                        .font(.system(.caption, weight: .semibold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.85))
                 }
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -405,44 +405,44 @@ struct CombatAnnouncementView: View {
                     if golgaritenForced {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.square.fill")
-                                .font(.system(.body, weight: .semibold))
+                                .font(.dsaBody(.body))
                                 .foregroundStyle(combatAccent)
                             Text("\(L("advantageousPosition")) (\(L("mounted")))")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                                 .foregroundStyle(.primary)
                             Spacer()
                             Text("+2")
-                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .font(.dsaMono(.caption, emphasis: true))
                                 .foregroundStyle(combatAccent)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .background(combatAccent.opacity(0.1))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                        .dsaBox(.flush, stroke: combatAccent)
                     } else {
                         Button {
                             vorteilhaftePosition.toggle()
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
-                                    .font(.system(.body, weight: .semibold))
+                                    .font(.dsaBody(.body))
                                     .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
                                 Text(L("advantageousPosition"))
-                                    .font(.system(.caption, weight: .bold))
+                                    .font(.dsaBody(.caption))
                                     .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
                                 Spacer()
                                 if vorteilhaftePosition {
                                     Text("+2")
-                                        .font(.system(.caption, design: .monospaced, weight: .black))
+                                        .font(.dsaMono(.caption, emphasis: true))
                                         .foregroundStyle(combatAccent)
                                 }
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
+                            .dsaBox(.flush, stroke: vorteilhaftePosition ? combatAccent : Color.dsaBorder)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
 
                     // Opponent weapon reach
@@ -453,14 +453,14 @@ struct CombatAnnouncementView: View {
                             let isSelected = selectedOpponentReach == reach
                             Button { selectedOpponentReach = reach } label: {
                                 Text(reach.rawValue)
-                                    .font(.system(.caption, weight: .bold))
+                                    .font(.dsaBody(.caption))
                                     .foregroundStyle(isSelected ? .white : .primary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
                                     .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                                    .dsaBox(.flush)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     }
 
@@ -473,23 +473,23 @@ struct CombatAnnouncementView: View {
                         Button { selectedManeuver = maneuver } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                                    .font(.system(.body, weight: .semibold))
+                                    .font(.dsaBody(.body))
                                     .foregroundStyle(isSelected ? combatAccent : .secondary)
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack {
                                         Text(maneuver.displayName)
-                                            .font(.system(.body, weight: isSelected ? .bold : .regular))
+                                            .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
                                             .foregroundStyle(.primary)
                                         Spacer()
                                         if maneuver.atModifier != 0 {
                                             Text("AT \(maneuver.atModifier > 0 ? "+" : "")\(maneuver.atModifier)")
-                                                .font(.system(.caption, design: .monospaced, weight: .black))
-                                                .foregroundStyle(maneuver.atModifier > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
+                                                .font(.dsaMono(.caption, emphasis: true))
+                                                .foregroundStyle(maneuver.atModifier > 0 ? Color.dsaPositive : Color.groupCombat)
                                         }
                                     }
                                     if let info = maneuver.infoText() {
                                         Text(info)
-                                            .font(.system(.caption2, weight: .medium))
+                                            .font(.dsaBody(.caption2))
                                             .foregroundStyle(maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
                                     }
                                 }
@@ -498,9 +498,9 @@ struct CombatAnnouncementView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
                     } // end if !isMountCharge
 
@@ -522,13 +522,13 @@ struct CombatAnnouncementView: View {
                             Image(systemName: "info.circle.fill")
                                 .foregroundStyle(combatAccent)
                             Text(L("sturmangriffPferd.info"))
-                                .font(.system(.caption, weight: .medium))
+                                .font(.dsaBody(.caption))
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(combatAccent.opacity(0.1))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                        .dsaBox(.flush, stroke: combatAccent)
                     }
                 }
                 .adaptiveContentWidth()
@@ -539,14 +539,14 @@ struct CombatAnnouncementView: View {
             // Continue
             Button { proceed() } label: {
                 Text(L("continue"))
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
         .onAppear {
             if isMountCharge {
@@ -644,27 +644,27 @@ struct CombatWeaponSelectionView: View {
             HStack {
                 Button { step = dualAttackPenaltyActive && action == .angriff ? .attackChoice : .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(headerLabel)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -763,25 +763,25 @@ struct CombatWeaponSelectionView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(name)
-                        .font(.system(.body, weight: .semibold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                     if let note, !note.isEmpty {
                         Text(note)
-                            .font(.system(.caption2, weight: .medium))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(combatAccent)
                     }
                 }
                 Spacer()
                 HStack(spacing: 4) {
                     Text("\(statLabel) \(statValue)")
-                        .font(.system(.caption, design: .monospaced, weight: .black))
+                        .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.dsaDark)
                     if hero.belastungPenalty != 0 {
                         Text("(\(hero.belastungPenalty))")
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -790,9 +790,9 @@ struct CombatWeaponSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .padding(.bottom, 4)
     }
 }
