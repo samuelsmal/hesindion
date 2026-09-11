@@ -78,6 +78,13 @@ enum WoundEffectResolver {
         return max(0, damage) / wundschwelle
     }
 
+    /// Damage that actually reaches the hero: the weapon's TP less the armour's RS,
+    /// floored at zero. This is the figure every Wundschwelle comparison uses, so a
+    /// well-armoured hero can take a heavy hit and still threaten no wound effect.
+    static func effectiveDamage(tp: Int, rs: Int) -> Int {
+        max(0, tp - max(0, rs))
+    }
+
     /// The Selbstbeherrschung probe is harder by 1 per multiple of the Wundschwelle.
     /// Rules example: Wundschwelle 6 → −1 at 6 SP, −2 at 12, −3 at 18.
     static func probeModifier(damage: Int, wundschwelle: Int) -> Int {

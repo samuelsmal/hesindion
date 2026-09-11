@@ -281,4 +281,97 @@ final class WoundEffectApplicationTests: XCTestCase {
         XCTAssertEqual(total, 7)
         XCTAssertEqual(hero.level(of: "betaeubung"), 1)
     }
+
+    // MARK: - Rüstungsschutz (RS)
+    //
+    // RS is what decides whether the Wundschwelle is crossed at all, and until now
+    // every test fed a pre-computed `effectiveDamage`, so the subtraction itself was
+    // never exercised in this path.
+
+    func testRSReducesDamageBelowWundschwelleSoNothingThreatens() {
+        // 8 TP against RS 4 is 4 damage — under a Wundschwelle of 6.
+        let damage = WoundEffectResolver.effectiveDamage(tp: 8, rs: 4)
+        XCTAssertEqual(damage, 4)
+        XCTAssertEqual(WoundEffectResolver.multiple(damage: damage, wundschwelle: 6), 0)
+        XCTAssertFalse(WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: true, damage: damage, wundschwelle: 6))
+    }
+
+    func testRSStillLeavesEnoughDamageToThreaten() {
+        // 12 TP against RS 4 is 8 damage — one multiple of a Wundschwelle of 6.
+        let damage = WoundEffectResolver.effectiveDamage(tp: 12, rs: 4)
+        XCTAssertEqual(damage, 8)
+        XCTAssertEqual(WoundEffectResolver.multiple(damage: damage, wundschwelle: 6), 1)
+        XCTAssertEqual(WoundEffectResolver.probeModifier(damage: damage, wundschwelle: 6), -1)
+    }
+
+    func testRSShiftsTheMultiplierDownAFullStep() {
+        // Same 18 TP: unarmoured it is ×3, behind RS 6 it is only ×2.
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: WoundEffectResolver.effectiveDamage(tp: 18, rs: 0), wundschwelle: 6), 3)
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: WoundEffectResolver.effectiveDamage(tp: 18, rs: 6), wundschwelle: 6), 2)
+    }
+
+    func testRSAtOrAboveTPAbsorbsTheHitEntirely() {
+        XCTAssertEqual(WoundEffectResolver.effectiveDamage(tp: 5, rs: 5), 0)
+        XCTAssertEqual(WoundEffectResolver.effectiveDamage(tp: 3, rs: 9), 0, "never negative")
+        XCTAssertFalse(WoundEffectResolver.effectThreatens(
+            zonesActive: true, hasZone: true,
+            damage: WoundEffectResolver.effectiveDamage(tp: 3, rs: 9), wundschwelle: 6))
+    }
+
+    func testRSComesFromEquippedArmourOnly() {
+        let hero = makeHero(ws: 6)
+        hero.armors.append(Armor(name: "Kettenhemd", protectionValue: 4,
+                                 encumbrance: 2, weight: 10, isEquipped: true))
+        hero.armors.append(Armor(name: "Helm im Rucksack", protectionValue: 2,
+                                 encumbrance: 1, weight: 3, isEquipped: false))
+        XCTAssertEqual(hero.totalRS, 4, "unequipped armour must not protect")
+        XCTAssertEqual(WoundEffectResolver.effectiveDamage(tp: 10, rs: hero.totalRS), 6)
+    }
+
+    // MARK: - RS together with the Wundschwelle-modifying traits
+    //
+    // Eisern (ADV_54, +1) and Gläsern (DISADV_56, −1) are the only traits that touch
+    // this comparison — they move the threshold while RS moves the damage, so the two
+    // can cancel or compound. Belastungsgewöhnung (SA_41) is deliberately absent here:
+    // it reduces Belastung, not RS or damage.
+
+    private func wundschwelle(ko: Int, adv: [String] = [], disadv: [String] = []) -> Int {
+        let t = { (id: String) in HeroTrait(ruleId: id, name: id, tier: nil, sid: nil) }
+        let ws = DerivedValueFormulas.wundschwelle(
+            ko: ko, advantages: adv.map(t), disadvantages: disadv.map(t))
+        return ws.base + ws.bonus
+    }
+
+    func testEisernRaisesTheThresholdSoArmouredHeroEscapesTheEffect() {
+        // KO 11 → Wundschwelle 6; Eisern makes it 7.
+        let damage = WoundEffectResolver.effectiveDamage(tp: 12, rs: 6)   // 6 damage
+        XCTAssertEqual(damage, 6)
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: damage, wundschwelle: wundschwelle(ko: 11)), 1, "×1 without Eisern")
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: damage, wundschwelle: wundschwelle(ko: 11, adv: ["ADV_54"])), 0,
+            "Eisern lifts the threshold above the damage")
+    }
+
+    func testGlaesernLowersTheThresholdSoArmourNoLongerSaves() {
+        // KO 12 → Wundschwelle 6; Gläsern makes it 5.
+        let damage = WoundEffectResolver.effectiveDamage(tp: 11, rs: 6)   // 5 damage
+        XCTAssertEqual(damage, 5)
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: damage, wundschwelle: wundschwelle(ko: 12)), 0, "armour saves without Gläsern")
+        XCTAssertEqual(WoundEffectResolver.multiple(
+            damage: damage, wundschwelle: wundschwelle(ko: 12, disadv: ["DISADV_56"])), 1,
+            "Gläsern drops the threshold onto the damage")
+    }
+
+    func testEisernAndGlaesernTogetherLeaveTheThresholdUnchangedBehindArmour() {
+        let damage = WoundEffectResolver.effectiveDamage(tp: 12, rs: 6)
+        XCTAssertEqual(
+            WoundEffectResolver.multiple(damage: damage, wundschwelle: wundschwelle(ko: 11)),
+            WoundEffectResolver.multiple(damage: damage, wundschwelle: wundschwelle(
+                ko: 11, adv: ["ADV_54"], disadv: ["DISADV_56"])))
+    }
 }

@@ -31,7 +31,7 @@ struct CombatTakeDamageView: View {
     @State private var dropWeapon: Bool = false
 
     private var rs: Int { hero.totalRS }
-    private var effectiveDamage: Int { max(0, tpInput - rs) }
+    private var effectiveDamage: Int { WoundEffectResolver.effectiveDamage(tp: tpInput, rs: rs) }
 
     // MARK: - Trefferzonen
 
