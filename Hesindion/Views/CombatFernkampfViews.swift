@@ -468,9 +468,11 @@ struct CombatFernkampfExecutionView: View {
         attributeValue - modifierLines.reduce(0) { $0 + $1.value }
     }
 
-    /// Damage formula adjusted for distance-based TP modifier.
-    private var adjustedDamageFormula: String {
-        DamageFormula.adding(distanzTP, to: damageFormula)
+    /// The distance TP as a named part rather than a number folded into the
+    /// formula, so the damage screen can print where it came from.
+    private var damageLines: [ModifierLine] {
+        guard distanzTP != 0 else { return [] }
+        return [ModifierLine(value: distanzTP, source: L("fernkampf.distanz"))]
     }
 
     // MARK: - Body
@@ -576,76 +578,20 @@ struct CombatFernkampfExecutionView: View {
     // MARK: - Modifier breakdown
 
     @ViewBuilder
+    /// The same calculation box the melee rolls use — this screen had its own
+    /// copy, one bordered row per line, from before there was a shared one. The
+    /// hardcoded "Effektiv" went with it.
     private var modifierBreakdown: some View {
-        VStack(spacing: 0) {
-            combatSectionLabel(L("calculation.label"))
-
-            // Base FK row
-            HStack {
-                Text("FK \(baseFK)")
-                    .font(.dsaMono(.caption, emphasis: true))
-                Spacer()
-                Text(L("source.basis"))
-                    .font(.dsaBody(.caption2))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
-
-            // Situational modifier lines
-            ForEach(modifierLines) { line in
-                HStack {
-                    Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
-                        .font(.dsaMono(.caption, emphasis: true))
-                        .foregroundStyle(line.value > 0
-                            ? Color.dsaPositive
-                            : Color.groupCombat)
-                    Spacer()
-                    Text(line.source)
-                        .font(.dsaBody(.caption2))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .dsaBox(.flush)
-            }
-
-            // Manual modifier row (only when non-zero)
-            if modifier != 0 {
-                HStack {
-                    Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
-                        .font(.dsaMono(.caption, emphasis: true))
-                        .foregroundStyle(modifier > 0
-                            ? Color.dsaPositive
-                            : Color.groupCombat)
-                    Spacer()
-                    Text(L("source.additional"))
-                        .font(.dsaBody(.caption2))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .dsaBox(.flush)
-            }
-
-            // Effective total
-            HStack {
-                Text("FK \(effectiveValue)")
-                    .font(.dsaMono(.body, emphasis: true))
-                Spacer()
-                Text("Effektiv")
-                    .font(.dsaBody(.caption2))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.dsaDark)
-            .foregroundStyle(.white)
-        }
+        CombatBreakdownBox(
+            baseValue: "FK \(baseFK)",
+            baseSource: L("source.basis"),
+            lines: modifier == 0
+                ? modifierLines
+                : modifierLines + [ModifierLine(value: modifier, source: L("source.additional"))],
+            totalValue: "FK \(effectiveValue)",
+            totalSource: L("source.effective"),
+            sectionLabel: L("calculation.label")
+        )
     }
 
     // MARK: - Manual modifier stepper
@@ -809,20 +755,22 @@ struct CombatFernkampfExecutionView: View {
                         table: .angriff,
                         action: .fernkampf,
                         weaponName: weaponName,
-                        damageFormula: adjustedDamageFormula,
+                        damageFormula: damageFormula,
                         modifierLines: nil,
                         isRangedAttack: true,
-                        rangedDefensePenalty: -4
+                        rangedDefensePenalty: -4,
+                        damageLines: damageLines
                     )
                 } else {
                     step = .opponentDefense(
                         weaponName: weaponName,
-                        damageFormula: adjustedDamageFormula,
+                        damageFormula: damageFormula,
                         isCriticalHit: finalRoll == 1,
                         criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
                         modifierLines: nil,
                         isRangedAttack: true,
-                        rangedDefensePenalty: -4
+                        rangedDefensePenalty: -4,
+                        damageLines: damageLines
                     )
                 }
             } label: {

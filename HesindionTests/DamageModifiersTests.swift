@@ -75,17 +75,45 @@ final class DamageModifiersTests: XCTestCase {
 
     /// "+1 TP bei Nahkampfangriffen, wenn er sich auf dem Rücken eines Reittiers
     /// befindet." The hero needs the style and the loadout it is written for.
-    func testGolgaritenAddsOneTPFromHorseback() throws {
-        let hero = try TestData.importBoronmir(into: TestData.makeContainer())
-        hero.selectedWeaponName = "Rabenschnabel"
-        hero.selectedShieldName = "Großschild"
-        XCTAssertTrue(hero.hasGolgaritenStil, "the sample hero is the one with the style")
+    ///
+    /// Built by hand rather than imported: the import reads `rules.db`, which
+    /// intermittently comes back empty (see AGENTS.md), and this test is about
+    /// the arithmetic, not the import.
+    func testGolgaritenAddsOneTPFromHorseback() {
+        let golgarit = golgaritenHero()
 
-        let mounted = DamageModifiers.lines(hero: hero, maneuver: .normal, twoHandedGrip: false, mounted: true)
+        let mounted = DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true)
         XCTAssertEqual(DamageModifiers.total(mounted), 1)
 
-        let afoot = DamageModifiers.lines(hero: hero, maneuver: .normal, twoHandedGrip: false, mounted: false)
+        let afoot = DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: false)
         XCTAssertTrue(afoot.isEmpty, "on foot the style pays nothing")
+    }
+
+    /// The style is written for one loadout — Rabenschnabel and Großschild — so
+    /// the same hero with a different weapon in hand gets nothing.
+    func testGolgaritenNeedsItsOwnLoadout() {
+        let golgarit = golgaritenHero()
+        golgarit.selectedWeaponName = "Langschwert"
+        XCTAssertTrue(
+            DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true).isEmpty)
+    }
+
+    /// A mounted hero carrying the style's weapons, and nothing else switched on.
+    private func golgaritenHero() -> Hero {
+        let golgarit = Hero(name: "Golgarit")
+        context.insert(golgarit)
+        golgarit.combatSpecialAbilities = [HeroTrait(ruleId: "SA_661", name: "Golgariten-Stil")]
+        golgarit.meleeWeapons = [
+            MeleeWeapon(name: "Rabenschnabel", combatTechniqueId: "CT_5", damage: "1W6+4",
+                        at: 12, pa: 8, reach: "Mittel", weight: 2),
+        ]
+        golgarit.shields = [
+            Shield(name: "Großschild", damage: "1W6+1", at: 6, pa: 11,
+                   reach: "Kurz", structurePoints: 30, weight: 6),
+        ]
+        golgarit.selectedWeaponName = "Rabenschnabel"
+        golgarit.selectedShieldName = "Großschild"
+        return golgarit
     }
 
     func testGolgaritenNeedsTheStyleNotJustAMount() {
@@ -95,15 +123,25 @@ final class DamageModifiersTests: XCTestCase {
     // MARK: - Sturmangriff
 
     /// +2 plus half the mount's GS. Only for the charge itself.
-    func testSturmangriffAddsTwoPlusHalfTheMountsSpeed() throws {
-        let hero = try TestData.importBoronmir(into: TestData.makeContainer())
-        let expected = hero.sturmangriffDamageBonus
-        XCTAssertEqual(expected, 2 + hero.mountGS / 2)
+    func testSturmangriffAddsTwoPlusHalfTheMountsSpeed() {
+        let rider = Hero(name: "Rider")
+        context.insert(rider)
+        rider.pets = [
+            Pet(
+                petId: "PET_1", name: "Kupperus", size: 1.9, type: "Pferd",
+                attributes: PetAttributes(mu: 12, kl: 10, inValue: 12, ch: 12, ff: 8, ge: 15, ko: 24, kk: 25),
+                lifeEnergy: 75, spirit: 0, toughness: 0,
+                initiative: "14+1W6", speed: 12,
+                attack: "Niederreiten", damage: "2W6+6", reach: "Mittel",
+                actions: 1, talents: "", skills: "", notes: ""
+            )
+        ]
+        XCTAssertEqual(rider.sturmangriffDamageBonus, 2 + 12 / 2)
 
-        let charge = DamageModifiers.lines(hero: hero, maneuver: .sturmangriff, twoHandedGrip: false, mounted: true)
-        XCTAssertEqual(charge.first { $0.source == L("source.sturmangriff") }?.value, expected)
+        let charge = DamageModifiers.lines(hero: rider, maneuver: .sturmangriff, twoHandedGrip: false, mounted: true)
+        XCTAssertEqual(charge.first { $0.source == L("source.sturmangriff") }?.value, 8)
 
-        let walk = DamageModifiers.lines(hero: hero, maneuver: .normal, twoHandedGrip: false, mounted: true)
+        let walk = DamageModifiers.lines(hero: rider, maneuver: .normal, twoHandedGrip: false, mounted: true)
         XCTAssertNil(walk.first { $0.source == L("source.sturmangriff") })
     }
 }

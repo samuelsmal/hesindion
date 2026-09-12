@@ -18,6 +18,9 @@ struct CombatCriticalSuccessView: View {
     let weaponName: String
     let damageFormula: String?
     let modifierLines: [ModifierLine]?
+    /// TP bonuses on the way to the damage roll; this screen only adds the
+    /// table's own multiplier on top.
+    var damageLines: [ModifierLine] = []
     let isRangedAttack: Bool
     let rangedDefensePenalty: Int
     @Binding var step: CombatStep
@@ -447,7 +450,8 @@ struct CombatCriticalSuccessView: View {
                     criticalDamage: resolvedDamage,
                     modifierLines: modifierLines,
                     isRangedAttack: isRangedAttack,
-                    rangedDefensePenalty: rangedDefensePenalty
+                    rangedDefensePenalty: rangedDefensePenalty,
+                    damageLines: damageLines
                 )
             }
         } else {

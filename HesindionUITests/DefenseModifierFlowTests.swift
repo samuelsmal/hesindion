@@ -36,8 +36,14 @@ final class DefenseModifierFlowTests: XCTestCase {
         let parryButton = app.buttons["combat.parry"]
         XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         XCTAssertTrue(
-            parryButton.label.contains("2. Verteidigung"),
-            "The Parieren button did not announce the second defence: \(parryButton.label)"
+            parryButton.label.contains("2. Parade"),
+            "The Parieren button did not announce the second parry: \(parryButton.label)"
+        )
+        // Parries and dodges are counted apart, so the dodge is still on its
+        // first and says nothing.
+        XCTAssertFalse(
+            app.buttons["combat.dodge"].label.contains("Ausweichen \u{00B7}"),
+            "A parry made the first dodge of the round more difficult"
         )
         captureScreenshot(app, named: "24-defense-second-costs")
 
@@ -66,14 +72,14 @@ final class DefenseModifierFlowTests: XCTestCase {
 
         let parryButton = app.buttons["combat.parry"]
         XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
-        XCTAssertTrue(parryButton.label.contains("2. Verteidigung"), "Penalty not pending")
+        XCTAssertTrue(parryButton.label.contains("2. Parade"), "Penalty not pending")
 
         let nextRound = app.buttons["combat.nextRound"]
         XCTAssertTrue(nextRound.exists, "No next-round control on the combat root")
         nextRound.tap()
 
         XCTAssertFalse(
-            app.buttons["combat.parry"].label.contains("Verteidigung"),
+            app.buttons["combat.parry"].label.contains("Parade \u{00B7}"),
             "The new round still carries the last round's defences"
         )
 

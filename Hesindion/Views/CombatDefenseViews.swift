@@ -13,6 +13,10 @@ struct CombatOpponentDefenseView: View {
     /// `.unchanged` for an ordinary hit.
     let criticalDamage: CriticalDamage
     let modifierLines: [ModifierLine]?
+    /// TP bonuses the announcement worked out — Wuchtschlag, the two-handed
+    /// grip, Sturmangriff, Golgariten-Stil. Carried here rather than folded into
+    /// `damageFormula` so each can be named in the calculation.
+    var damageLines: [ModifierLine] = []
     var isRangedAttack: Bool = false
     var rangedDefensePenalty: Int = 0
     /// Trefferzone announced for this attack, if any. Read-only here — the app has no
@@ -197,8 +201,10 @@ struct CombatOpponentDefenseView: View {
 
                 // The figure the player actually reports, once everything that
                 // feeds it has been settled. It stopped at the weapon's damage
-                // before, so a Wundeffekt never reached it.
-                if showDamage, let total = appliedTotal {
+                // before, so a Wundeffekt never reached it. Shown only when the
+                // Wundeffekt actually adds something: without one it would
+                // restate the calculation's own total in an identical dark bar.
+                if showDamage, (woundEffectDamage ?? 0) > 0, let total = appliedTotal {
                     appliedTotalBox(total)
                         .padding(.top, 8)
                 }
@@ -252,32 +258,20 @@ struct CombatOpponentDefenseView: View {
                 }
             }
 
-            // Formula + total (after finalised)
-            if let finalRolls = damageFinalRolls {
-                let diceSum = finalRolls.reduce(0, +)
-                let rawTotal = max(0, diceSum + parsed.bonus + extraDamageModifier)
-                let total = criticalDamage.apply(to: rawTotal)
-                let bonusStr = Self.term(parsed.bonus) + Self.term(extraDamageModifier)
-
-                if let critLabel = criticalDamage.label {
-                    Text("\(diceSum)\(bonusStr) = \(rawTotal) \(critLabel) = \(total) TP")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                        .padding(.top, 6)
-                } else {
-                    Text("\(diceSum)\(bonusStr) = \(total) TP")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                        .padding(.top, 6)
-                }
+            // Every part of the damage, in one box: the dice, the weapon's own
+            // bonus, each ability or manoeuvre that added to it, whatever was
+            // entered by hand, and the critical's multiplier last. It used to be
+            // one pre-computed string, which is why a Wuchtschlag's +4 could not
+            // be told from a weapon's +4.
+            if damageFinalRolls != nil {
+                CombatBreakdownBox(
+                    rows: damageRows(parsed: parsed),
+                    totalValue: "\(weaponDamageTotal(parsed: parsed)) \(L("tp"))",
+                    totalSource: L("damage.reportToGM")
+                )
+                .padding(.top, 6)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("combat.dealDamage.breakdown")
             }
 
             if isAnimating {
@@ -357,14 +351,51 @@ struct CombatOpponentDefenseView: View {
 
     // MARK: - Reported total
 
+    /// One row per part of the damage, in the order they apply.
+    private func damageRows(parsed: DamageFormula) -> [BreakdownRow] {
+        var rows: [BreakdownRow] = []
+        let diceSum = (damageFinalRolls ?? []).reduce(0, +)
+        rows.append(BreakdownRow(
+            value: "\(diceSum)",
+            source: "\(parsed.count)W\(parsed.sides)"
+        ))
+        if parsed.bonus != 0 {
+            rows.append(.signed(parsed.bonus, L("source.weapon")))
+        }
+        for line in damageLines {
+            rows.append(.line(line))
+        }
+        if extraDamageModifier != 0 {
+            rows.append(.signed(extraDamageModifier, L("source.additional")))
+        }
+        // A critical multiplies everything above it, so it is last and it is not
+        // a signed term.
+        if let label = criticalDamage.label {
+            rows.append(BreakdownRow(
+                value: label,
+                source: L("critical.damageEffect"),
+                tint: Color.groupCombat
+            ))
+        }
+        return rows
+    }
+
+    /// The weapon's damage with every part applied — the Wundeffekt is added
+    /// after, in the reported total, because it is not the weapon's doing.
+    private func weaponDamageTotal(parsed: DamageFormula) -> Int {
+        let diceSum = (damageFinalRolls ?? []).reduce(0, +)
+        let bonuses = damageLines.reduce(0) { $0 + $1.value }
+        return criticalDamage.apply(to: max(0, diceSum + parsed.bonus + bonuses + extraDamageModifier))
+    }
+
     /// The weapon's damage plus any settled Wundeffekt. `nil` until the dice are
     /// finalised, since there is nothing to total before then.
     private var appliedTotal: Int? {
         guard let formula = damageFormula,
               let parsed = DamageFormula.parse(formula),
               let rolls = damageFinalRolls else { return nil }
-        let raw = max(0, rolls.reduce(0, +) + parsed.bonus + extraDamageModifier)
-        return criticalDamage.apply(to: raw) + (woundEffectDamage ?? 0)
+        _ = rolls
+        return weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0)
     }
 
     /// "18 TP + 3 WE = 21 TP" — the same shape as the take-damage screen's

@@ -16,9 +16,14 @@ struct CombatSituation: Equatable {
     var dualAttackActive: Bool = false
     var beengteUmgebung: Bool = false
     var twoHandedGrip: Bool = false
-    /// Defences already **rolled** this round. The penalty is for the ones
-    /// before this one, so the count must not include the defence being set up.
-    var defensesThisRound: Int = 0
+    /// Parries already made this round, and dodges already made this round —
+    /// **counted apart**. Mehrfache Verteidigung is per defence type: having
+    /// parried twice does not make the round's first dodge any harder.
+    ///
+    /// Each counts the defences *before* the one being set up, so the first of
+    /// either kind is unmodified.
+    var parriesThisRound: Int = 0
+    var dodgesThisRound: Int = 0
     var schipDefenseBoost: Bool = false
     var plaenklerActive: Bool = false
     var plaenklerBonus: PlaenklerBonus = .at
@@ -35,7 +40,7 @@ struct CombatSituation: Equatable {
         context.schipIgnoreZustand = schipIgnoreZustand
         context.dualAttackActive = dualAttackActive
         context.beengteUmgebung = beengteUmgebung
-        context.defenseCount = defensesThisRound
+        context.defenseCount = defensesSoFar(isAusweichen: isAusweichen)
         context.schipDefenseBoost = schipDefenseBoost
         context.plaenklerActive = plaenklerActive
         context.plaenklerBonus = plaenklerBonus
@@ -47,9 +52,14 @@ struct CombatSituation: Equatable {
         return ModifierEngine.shared.evaluate(context: context)
     }
 
-    /// What the *next* defence this round will cost, as a signed number, for the
-    /// buttons that offer it. `0` while the first defence is still to come.
-    var pendingMultipleDefensePenalty: Int {
-        -(defensesThisRound * 3)
+    /// Defences of this kind already made this round.
+    func defensesSoFar(isAusweichen: Bool) -> Int {
+        isAusweichen ? dodgesThisRound : parriesThisRound
+    }
+
+    /// What the *next* defence of this kind will cost, as a signed number, for
+    /// the buttons that offer it. `0` while the first is still to come.
+    func pendingMultipleDefensePenalty(isAusweichen: Bool) -> Int {
+        -(defensesSoFar(isAusweichen: isAusweichen) * 3)
     }
 }

@@ -11,6 +11,9 @@ struct CombatExecutionView: View {
     let damageFormula: String?
     let note: String?
     let modifierLines: [ModifierLine]?
+    /// TP bonuses on top of `damageFormula`, forwarded to whichever screen rolls
+    /// the damage.
+    var damageLines: [ModifierLine] = []
     let secondAttackStep: CombatStep?
     let combatId: UUID
     let roundNumber: Int
@@ -36,10 +39,6 @@ struct CombatExecutionView: View {
     /// counting the same defence twice.
     @State private var hasCountedDefense: Bool = false
 
-    // Damage rolling state
-    @State private var damageDisplayRolls: [Int] = []
-    @State private var damageFinalRolls: [Int]? = nil
-    @State private var damageAnimTask: Task<Void, Never>? = nil
 
     private var attrLabel: String {
         switch action {
@@ -160,7 +159,6 @@ struct CombatExecutionView: View {
                             logSchipUsed(action: "reroll")
                             finalRoll = nil
                             confirmRoll = nil
-                            damageFinalRolls = nil
                             startAnimation()
                         } label: {
                             HStack(spacing: 6) {
@@ -200,7 +198,6 @@ struct CombatExecutionView: View {
         .onDisappear {
             animationTask?.cancel()
             confirmAnimTask?.cancel()
-            damageAnimTask?.cancel()
         }
         .onChange(of: finalRoll) {
             logRollIfNeeded()
@@ -242,7 +239,8 @@ struct CombatExecutionView: View {
                         action: action,
                         weaponName: weaponName,
                         damageFormula: damageFormula,
-                        modifierLines: modifierLines
+                        modifierLines: modifierLines,
+                        damageLines: damageLines
                     )
                 } else {
                     step = .opponentDefense(
@@ -250,7 +248,8 @@ struct CombatExecutionView: View {
                         damageFormula: damageFormula,
                         isCriticalHit: finalRoll == 1,
                         criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
-                        modifierLines: modifierLines
+                        modifierLines: modifierLines,
+                        damageLines: damageLines
                     )
                 }
             } label: {
@@ -509,9 +508,14 @@ struct CombatExecutionView: View {
         return attributeValue - linesSum
     }
 
+    /// Always the box, never a bare number, whenever the caller went through the
+    /// modifier engine — an empty calculation is itself the answer to "what is
+    /// modifying this roll?", and a roll that shows only its result cannot be
+    /// checked at all. The plain value box is left for the rolls that have no
+    /// engine behind them (a mount's attack).
     @ViewBuilder
     private var modifierBreakdown: some View {
-        if let lines = modifierLines, !lines.isEmpty {
+        if let lines = modifierLines {
             CombatBreakdownBox(
                 baseValue: "\(attrLabel) \(baseValue)",
                 baseSource: L("source.basis"),
@@ -748,77 +752,5 @@ struct CombatExecutionView: View {
             guard !Task.isCancelled else { return }
             confirmRoll = DiceRoller.roll(sides: 20)
         }
-    }
-
-    // MARK: - Damage
-
-    private func isHit(_ outcome: CombatOutcome) -> Bool {
-        outcome == .erfolg || outcome == .kritischerErfolg
-    }
-
-    private func damageSection(parsed: DamageFormula) -> some View {
-        VStack(spacing: 0) {
-            combatSectionLabel(L("damage.label"))
-
-            let isAnimating = damageFinalRolls == nil
-            let rolls = damageFinalRolls ?? damageDisplayRolls
-
-            // Individual dice
-            HStack(spacing: 6) {
-                ForEach(0..<parsed.count, id: \.self) { i in
-                    Text(i < rolls.count ? "\(rolls[i])" : "-")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                }
-            }
-
-            // Formula + total
-            if let finalRolls = damageFinalRolls {
-                let diceSum = finalRolls.reduce(0, +)
-                let total = max(0, diceSum + parsed.bonus)
-                let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
-
-                Text("\(diceSum)\(bonusStr) = \(total) TP")
-                    .font(.dsaHeading(.title3))
-                    .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-                    .padding(.top, 6)
-            }
-
-            if isAnimating {
-                Text(L("tapToRoll"))
-                    .font(.dsaBody(.caption2))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { rollDamage(parsed: parsed) }
-        .onAppear { startDamageAnimation(parsed: parsed) }
-    }
-
-    private func startDamageAnimation(parsed: DamageFormula) {
-        damageAnimTask?.cancel()
-        damageAnimTask = Task { @MainActor in
-            while !Task.isCancelled {
-                damageDisplayRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
-                do {
-                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
-                } catch { break }
-            }
-        }
-    }
-
-    private func rollDamage(parsed: DamageFormula) {
-        guard damageFinalRolls == nil else { return }
-        damageAnimTask?.cancel()
-        damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }
     }
 }

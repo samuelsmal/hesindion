@@ -12,7 +12,8 @@ struct CombatRootView: View {
     @Binding var twoHandedGripActive: Bool
     @Binding var vorstossActiveThisRound: Bool
     @Binding var beengteUmgebungActive: Bool
-    @Binding var defenseCountThisRound: Int
+    @Binding var parriesThisRound: Int
+    @Binding var dodgesThisRound: Int
     @Binding var schipDefenseBoostActive: Bool
     @Binding var schipIgnoreZustandThisRound: Bool
     let mountedActive: Bool
@@ -33,7 +34,8 @@ struct CombatRootView: View {
             dualAttackActive: dualAttackPenaltyActive,
             beengteUmgebung: beengteUmgebungActive,
             twoHandedGrip: twoHandedGripActive,
-            defensesThisRound: defenseCountThisRound,
+            parriesThisRound: parriesThisRound,
+            dodgesThisRound: dodgesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
             plaenklerActive: plaenklerActive,
             plaenklerBonus: plaenklerBonus
@@ -44,15 +46,16 @@ struct CombatRootView: View {
         situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen)
     }
 
-    /// "2. Verteidigung · −3" under the Parieren and Ausweichen buttons, so the
-    /// cost of defending again is on the button that charges it rather than
-    /// discovered on the next screen.
-    private var defenseCostSubtitle: String? {
-        guard defenseCountThisRound > 0 else { return nil }
+    /// "2. Parade · −3" under the button that charges it, so the cost of
+    /// defending again is known before the next screen. Each button counts its
+    /// own kind: parries and dodges are tracked apart.
+    private func defenseCostSubtitle(isAusweichen: Bool) -> String? {
+        let made = situation.defensesSoFar(isAusweichen: isAusweichen)
+        guard made > 0 else { return nil }
         return String(
-            format: L("defense.nth"),
-            defenseCountThisRound + 1,
-            situation.pendingMultipleDefensePenalty
+            format: L(isAusweichen ? "defense.nthDodge" : "defense.nthParry"),
+            made + 1,
+            situation.pendingMultipleDefensePenalty(isAusweichen: isAusweichen)
         )
     }
 
@@ -470,7 +473,7 @@ struct CombatRootView: View {
                             Text(L("parry"))
                         }
                         .font(.dsaHeading(.title3))
-                        if let cost = defenseCostSubtitle {
+                        if let cost = defenseCostSubtitle(isAusweichen: false) {
                             Text(cost)
                                 .font(.dsaBody(.caption2))
                                 .opacity(0.85)
@@ -499,7 +502,7 @@ struct CombatRootView: View {
                             Text(L("dodge"))
                         }
                         .font(.dsaHeading(.title3))
-                        if let cost = defenseCostSubtitle {
+                        if let cost = defenseCostSubtitle(isAusweichen: true) {
                             Text(cost)
                                 .font(.dsaBody(.caption2))
                                 .opacity(0.85)

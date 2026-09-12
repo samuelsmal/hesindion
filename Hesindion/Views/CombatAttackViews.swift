@@ -544,17 +544,19 @@ struct CombatAnnouncementView: View {
 
         let modifiers = buildModifierLines()
         let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }
-        let effectiveDamage = adjustedDamage()
         let note = selectedManeuver.infoText()
 
+        // The weapon's own damage and the bonuses travel apart: the damage
+        // screen prints every part, and nothing can fold the same bonus in twice.
         step = .execution(
             action,
             name: weaponName,
             attributeValue: effectiveAT,
-            damageFormula: effectiveDamage,
+            damageFormula: damageFormula,
             note: note,
             modifierLines: modifiers,
-            secondAttack: secondAttack
+            secondAttack: secondAttack,
+            damageLines: damageBonusLines
         )
     }
 

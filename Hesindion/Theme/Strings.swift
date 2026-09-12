@@ -354,7 +354,8 @@ enum DSAStrings {
 
         // Multiple Defenses
         "source.multipleDefense":       "Multiple Defense",
-        "defense.nth":                  "%d. defense \u{00B7} %d",
+        "defense.nthParry":             "%d. parry \u{00B7} %d",
+        "defense.nthDodge":             "%d. dodge \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Free Strike",
@@ -943,7 +944,8 @@ enum DSAStrings {
 
         // Multiple Defenses
         "source.multipleDefense":       "Mehrfache Verteidigung",
-        "defense.nth":                  "%d. Verteidigung \u{00B7} %d",
+        "defense.nthParry":             "%d. Parade \u{00B7} %d",
+        "defense.nthDodge":             "%d. Ausweichen \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Passierschlag",
