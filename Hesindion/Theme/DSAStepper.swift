@@ -26,6 +26,10 @@ struct DSAStepper<Value: View>: View {
     var iconColor: Color = .white
     var decrementDisabled: Bool = false
     var incrementDisabled: Bool = false
+    /// The whole control is settled — no longer something to act on, so it gives
+    /// up its shadow along with its colour (ADR-0010). Distinct from the two
+    /// `*Disabled` flags, which only bound the value.
+    var isSettled: Bool = false
     var decrementIdentifier: String?
     var incrementIdentifier: String?
     let onDecrement: () -> Void
@@ -57,7 +61,7 @@ struct DSAStepper<Value: View>: View {
             )
         }
         .fixedSize(horizontal: false, vertical: true)
-        .dsaBox(.raised)
+        .dsaBox(isSettled ? .flush : .raised)
     }
 
     private var rule: some View {
@@ -83,7 +87,9 @@ struct DSAStepper<Value: View>: View {
         .buttonStyle(
             DSASegmentPressStyle(
                 tint: disabled ? Color.dsaDisabled : tint,
-                foreground: iconColor
+                // A disabled segment sits on the page, so a white icon would
+                // vanish into it. Full contrast, never a soft grey (ADR-0010).
+                foreground: disabled ? Color.dsaDisabledLabel : iconColor
             )
         )
         .disabled(disabled)

@@ -10,68 +10,67 @@ struct CombatHitZoneRow: View {
     /// The hero is a humanoid of normal size — the only plan a player character uses.
     var plan: BodyPlan = .humanoid(.mittel)
     var isDisabled: Bool = false
+    /// The reveal modal is presented by the screen, not here: an `.overlay` is
+    /// sized by the view it decorates, so a scrim hung on this row would cover
+    /// this row and nothing else.
+    var onRollZone: () -> Void = {}
 
     /// Naming the zone and rolling for it are the two equally valid ways to
     /// answer the same question, so they share one group and one visual weight.
     private var isDetermined: Bool { zoneHit != nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            CombatZonePicker(
-                selection: Binding(
-                    get: { zoneHit?.zone },
-                    set: { newZone in
-                        lastRoll = nil
-                        zoneHit = newZone.map { HitZoneHit(zone: $0, side: nil) }
-                    }),
-                targetIsSurprised: .constant(false),
-                zones: [.kopf, .torso, .arme, .beine],
-                allowsNoZone: false,
-                accessory: AnyView(
-                    Button {
-                        let roll = DiceRoller.roll(sides: 20)
-                        lastRoll = roll
-                        zoneHit = HitZoneTable.lookup(roll, plan: plan)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "dice.fill")
-                            Text(L("trefferzone.roll"))
-                        }
-                        .font(.dsaHeading(.caption))
-                        // Red is the call to act. Once the zone is settled the
-                        // question is answered, so the button stops shouting and
-                        // becomes the re-roll it actually is.
-                        .foregroundStyle(isDetermined ? Color.primary : Color.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            isDisabled
-                                ? Color.dsaDisabled
-                                : (isDetermined ? Color(UIColor.secondarySystemBackground) : combatAccent)
-                        )
-                        .dsaBox(.flush)
-                    }
-                    .buttonStyle(.dsaMotion)
-                    .disabled(isDisabled)
-                    .accessibilityIdentifier("combat.zone.roll")
-                )
-            )
-            .disabled(isDisabled)
-
-            // Only after a roll. A tapped zone is already shown by its highlighted
-            // chip, so echoing the name underneath said nothing; the roll adds the
-            // d20 value and the side, which the chips cannot show.
-            if let hit = zoneHit, let roll = lastRoll {
-                Text(rollSummary(hit, roll: roll))
-                    .font(.dsaMono(.caption, emphasis: true))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityIdentifier("combat.takeDamage.zoneRoll")
-            }
-        }
+        CombatZonePicker(
+            selection: Binding(
+                get: { zoneHit?.zone },
+                set: { newZone in
+                    lastRoll = nil
+                    zoneHit = newZone.map { HitZoneHit(zone: $0, side: nil) }
+                }),
+            targetIsSurprised: .constant(false),
+            zones: [.kopf, .torso, .arme, .beine],
+            allowsNoZone: false,
+            isSettled: isDisabled,
+            accessory: AnyView(rollButton)
+        )
+        .disabled(isDisabled)
     }
 
-    /// "14: Beine (rechts)" — the rolled value and the side it landed on.
-    private func rollSummary(_ hit: HitZoneHit, roll: Int) -> String {
+    /// The roll is shown in the reveal modal, where the player is already
+    /// looking, rather than resolved silently and reported as a line of text
+    /// under the chips. That line said "7: Torso" — the zone half of which the
+    /// highlighted chip was already saying, louder.
+    private var rollButton: some View {
+        Button(action: onRollZone) {
+            HStack(spacing: 6) {
+                Image(systemName: "dice.fill")
+                Text(L("trefferzone.roll"))
+            }
+            .font(.dsaHeading(.caption))
+            // Red is the call to act. Once the zone is settled the question is
+            // answered, so the button stops shouting and becomes the re-roll it
+            // actually is.
+            .foregroundStyle(
+                isDisabled || isDetermined ? Color.dsaDisabledLabel : Color.white
+            )
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+                isDisabled
+                    ? Color.dsaDisabled
+                    : (isDetermined ? Color(UIColor.secondarySystemBackground) : combatAccent)
+            )
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .disabled(isDisabled)
+        .accessibilityIdentifier("combat.zone.roll")
+    }
+
+    /// "14: Beine (rechts)" — the rolled value and the side it landed on. Shown
+    /// inside the reveal modal, where the die is the point.
+    static func rollSummary(_ roll: Int, plan: BodyPlan = .humanoid(.mittel)) -> String {
+        let hit = HitZoneTable.lookup(roll, plan: plan)
         let name = L(hit.zone.nameKey)
         let sided = hit.side.map { "\(name) (\(L($0.nameKey)))" } ?? name
         return "\(roll): \(sided)"
@@ -104,7 +103,11 @@ struct WoundEffectDamageControl: View {
                     Text(L("trefferzone.rollExtraDamage"))
                 }
                 .font(.dsaHeading(.caption))
-                .foregroundStyle(.white)
+                // A settled control keeps its label at full strength (ADR-0010).
+                // On `tertiarySystemFill` a white label was grey on grey, and
+                // the whole Wundeffekt panel became unreadable the moment the
+                // entry was confirmed — exactly when you most want to read it.
+                .foregroundStyle(isDisabled ? Color.dsaDisabledLabel : Color.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(isDisabled ? Color.dsaDisabled : Color.groupCombat)
@@ -118,6 +121,7 @@ struct WoundEffectDamageControl: View {
                 tint: isDisabled ? Color.dsaDisabled : Color.groupCombat,
                 decrementDisabled: isDisabled || rolled <= 0,
                 incrementDisabled: isDisabled,
+                isSettled: isDisabled,
                 incrementIdentifier: "combat.takeDamage.increaseExtraDamage",
                 onDecrement: { if rolled > 0 { value = rolled - 1 } },
                 onIncrement: { value = rolled + 1 }
@@ -129,7 +133,7 @@ struct WoundEffectDamageControl: View {
                     .accessibilityIdentifier("combat.takeDamage.extraDamage")
             }
         }
-        .dsaOptionGroup()
+        .dsaOptionGroup(isSettled: isDisabled)
     }
 }
 
@@ -190,36 +194,25 @@ struct CombatWoundEffectPanel: View {
                 Button(action: onRollProbe) {
                     Text(String(format: L("trefferzone.probe"), L(effect.resistanceKey), probeModifier))
                         .font(.dsaHeading(.caption))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(confirmed ? Color.dsaDisabledLabel : Color.white)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                         .background(confirmed ? Color.dsaDisabled : combatAccent)
-                        .dsaBox(.raised)
+                        .dsaBox(confirmed ? .flush : .raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(confirmed)
             }
 
             if effectApplies, case .reminder = effect.kind, hero.selectedWeaponName != nil {
-                Button {
-                    dropWeapon.toggle()
-                } label: {
-                    HStack(spacing: 6) {
-                        if dropWeapon {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        Text(L("trefferzone.dropWeapon"))
-                    }
-                    .font(.dsaBody(.caption))
-                    .foregroundStyle(dropWeapon ? .white : .primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(dropWeapon ? Color.groupCombat : Color(UIColor.systemBackground))
-                    .dsaBox(.raised)
-                }
-                .buttonStyle(.dsaMotion)
+                DSAToggleRow(
+                    title: L("trefferzone.dropWeapon"),
+                    isOn: $dropWeapon,
+                    accent: Color.groupCombat,
+                    identifier: "combat.takeDamage.dropWeapon"
+                )
                 .disabled(confirmed)
             }
 

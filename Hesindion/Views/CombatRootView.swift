@@ -71,7 +71,11 @@ struct CombatRootView: View {
             // RUNDE section
             combatSectionLabel(L("round.label"))
 
-            // INI + round counter + Neu button
+            // INI + round counter + Neu button — one control, like `DSAStepper`:
+            // the row owns the border and the shadow, its four segments are
+            // divided by rules. Previously each segment drew its own box and
+            // only the round counter was `.raised`, so the row read as a shadow
+            // stuck to the middle of a strip of joined boxes.
             HStack(spacing: 0) {
                 // INI box
                 VStack(spacing: 2) {
@@ -85,8 +89,10 @@ struct CombatRootView: View {
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
                 .frame(minWidth: 64)
+                .frame(maxHeight: .infinity)
                 .background(Color.dsaDark)
-                .dsaBox(.flush)
+
+                roundRowRule
 
                 // Round counter
                 Text("\(L("roundPrefix")) \(roundNumber)")
@@ -94,19 +100,20 @@ struct CombatRootView: View {
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
-                    .dsaBox(.raised)
+
+                roundRowRule
 
                 // Next round button
                 Button { roundNumber += 1 } label: {
                     Image(systemName: "arrow.right")
                         .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
                         .frame(width: 52)
                         .frame(maxHeight: .infinity)
-                        .background(combatAccent)
-                        .dsaBox(.flush)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.dsaMotion)
+                .buttonStyle(DSASegmentPressStyle(tint: combatAccent, foreground: .white))
+
+                roundRowRule
 
                 // Neuer Kampf compact button
                 Button { showInitiativeSheet = true } label: {
@@ -116,16 +123,15 @@ struct CombatRootView: View {
                         Text(L("new"))
                             .font(.dsaHeading(.caption))
                     }
-                    .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .frame(minWidth: 64)
                     .frame(maxHeight: .infinity)
-                    .background(Color.dsaDark)
-                    .dsaBox(.flush)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.dsaMotion)
+                .buttonStyle(DSASegmentPressStyle(tint: Color.dsaDark, foreground: .white))
             }
             .fixedSize(horizontal: false, vertical: true)
+            .dsaBox(.raised)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
@@ -235,6 +241,16 @@ struct CombatRootView: View {
                 .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+                // A spent Schip is a state of this round, not an action, so it
+                // is reported here rather than left as a dead button among live
+                // ones.
+                if schipDefenseBoostActive {
+                    schipSpentChip(icon: "shield.checkered", title: L("schip.defenseBoost"))
+                }
+                if schipIgnoreZustandThisRound {
+                    schipSpentChip(icon: "bandage", title: L("schip.ignoreZustand"))
+                }
+
                 // Loadout + Armor in one row
                 HStack(spacing: 8) {
                     if let weaponName = hero.selectedWeaponName {
@@ -255,6 +271,26 @@ struct CombatRootView: View {
                     }
 
                     Spacer()
+
+                    // Schicksalspunkte, beside RS. Both are at-a-glance
+                    // resources and this row is already where the eye goes for
+                    // them; the SCHICKSALSPUNKTE section that used to carry this
+                    // count existed only to hold two buttons that are now
+                    // actions among the actions.
+                    if let schips = hero.derivedValues?.schicksalspunkte, schips.max > 0 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.dsaBody(.caption))
+                            Text("\(schips.current)/\(schips.max)")
+                                .font(.dsaMono(.caption, emphasis: true))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.dsaSchipGold)
+                        .dsaBox(.flush)
+                        .accessibilityIdentifier("combat.schip.count")
+                    }
 
                     Button { showArmorSheet = true } label: {
                         HStack(spacing: 6) {
@@ -348,7 +384,7 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .dsaBox(.raised)
+                    .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -366,7 +402,7 @@ struct CombatRootView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.raised, stroke: combatAccent)
+                        .dsaBox(.flush, stroke: combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -385,7 +421,7 @@ struct CombatRootView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.raised, stroke: Color.groupMagic)
+                        .dsaBox(.flush, stroke: Color.groupMagic)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -420,7 +456,7 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.raised, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
+                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
@@ -442,7 +478,7 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.raised, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
+                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
@@ -472,7 +508,7 @@ struct CombatRootView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(Color.dsaDark)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -488,7 +524,7 @@ struct CombatRootView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.dsaDark)
-                            .dsaBox(.raised)
+                            .dsaBox(.flush)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -505,7 +541,7 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color(UIColor.systemBackground))
-                    .dsaBox(.raised, stroke: combatAccent)
+                    .dsaBox(.flush, stroke: combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -521,124 +557,116 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)) // teal
-                    .dsaBox(.raised)
+                    .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
 
-                // SCHICKSALSPUNKTE section
-                let schipsAvailable = hero.derivedValues?.schicksalspunkte.current ?? 0
-
-                if schipsAvailable > 0 || schipDefenseBoostActive || schipIgnoreZustandThisRound {
-                    combatSectionLabel(L("schip.label"))
-
-                    // Show current Schip count
-                    HStack {
-                        Text("\(hero.derivedValues?.schicksalspunkte.current ?? 0)")
-                            .font(.dsaHeading(.title3))
-                            .fontDesign(.monospaced)
-                        Text("/ \(hero.derivedValues?.schicksalspunkte.max ?? 0)")
-                            .font(.dsaBody(.caption))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-
-                    // Verteidigung stärken
-                    if !schipDefenseBoostActive {
-                        if schipsAvailable > 0 {
-                            Button {
-                                hero.derivedValues?.schicksalspunkte.current -= 1
-                                schipDefenseBoostActive = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "shield.checkered")
-                                    Text(L("schip.defenseBoost"))
-                                }
-                                .font(.dsaHeading(.body))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.dsaSchipGold)
-                                .dsaBox(.raised)
-                            }
-                            .buttonStyle(.dsaMotion)
-                        }
-                    } else {
-                        HStack(spacing: 6) {
-                            Image(systemName: "shield.checkered")
-                            Text(L("schip.defenseBoost"))
-                            Image(systemName: "checkmark")
-                        }
-                        .font(.dsaBody(.caption))
-                        .foregroundStyle(Color.dsaSchipGold)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.dsaSchipGold.opacity(0.1))
-                        .dsaBox(.flush, stroke: Color.dsaSchipGold)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    // Zustand ignorieren
-                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
-                        if schipsAvailable > 0 {
-                            Button {
-                                hero.derivedValues?.schicksalspunkte.current -= 1
-                                schipIgnoreZustandThisRound = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "bandage")
-                                    Text(L("schip.ignoreZustand"))
-                                }
-                                .font(.dsaHeading(.body))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.dsaSchipGold)
-                                .dsaBox(.raised)
-                            }
-                            .buttonStyle(.dsaMotion)
-                        }
-                    } else if schipIgnoreZustandThisRound {
-                        HStack(spacing: 6) {
-                            Image(systemName: "bandage")
-                            Text(L("schip.ignoreZustand"))
-                            Image(systemName: "checkmark")
-                        }
-                        .font(.dsaBody(.caption))
-                        .foregroundStyle(Color.dsaSchipGold)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.dsaSchipGold.opacity(0.1))
-                        .dsaBox(.flush, stroke: Color.dsaSchipGold)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                // Schicksalspunkte buy actions, so the actions sit here with the
+                // rest. A section of their own said "this costs a Schip" by
+                // position alone, and split two near-identical gold buttons
+                // across two groups with an unrelated one in between. The gold
+                // fill and the printed cost say it instead.
+                if schipsAvailable > 0 && !schipDefenseBoostActive {
+                    schipActionButton(icon: "shield.checkered", title: L("schip.defenseBoost")) {
+                        hero.derivedValues?.schicksalspunkte.current -= 1
+                        schipDefenseBoostActive = true
                     }
                 }
 
-                // End combat -- clears session
-                Button {
-                    hero.clearCombatSession()
-                    onDismiss()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "flag.fill")
-                        Text(L("endCombat"))
+                if schipsAvailable > 0 && !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
+                    schipActionButton(icon: "bandage", title: L("schip.ignoreZustand")) {
+                        hero.derivedValues?.schicksalspunkte.current -= 1
+                        schipIgnoreZustandThisRound = true
                     }
-                    .font(.dsaHeading(.body))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.dsaDark)
-                    .dsaBox(.raised)
                 }
-                .buttonStyle(.dsaMotion)
-                .padding(.top, 16)
             }
+            // One raised group with flat options inside — the same container the
+            // Manöver and Trefferzone lists use on the announcement screen. This
+            // is ADR-0009's "containers" half, which that decision recorded as
+            // undelivered: nine full-width actions each casting their own shadow
+            // was the stack of shadows it set out to remove.
+            .dsaOptionGroup()
+
+            // End combat — not an action in the round, it leaves the screen, so
+            // it stays outside the group and keeps its own shadow. Clears the
+            // session.
+            Button {
+                hero.clearCombatSession()
+                onDismiss()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "flag.fill")
+                    Text(L("endCombat"))
+                }
+                .font(.dsaHeading(.body))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.dsaDark)
+                .dsaBox(.raised)
+            }
+            .buttonStyle(.dsaMotion)
+            .padding(.top, 16)
 
             } // inner VStack
             .adaptiveContentWidth()
             } // ScrollView
         }
+    }
+
+    private var schipsAvailable: Int {
+        hero.derivedValues?.schicksalspunkte.current ?? 0
+    }
+
+    /// A Schip-funded action, sitting in the AKTION group with the rest. The
+    /// gold fill and the printed cost are what mark the Schip; nothing about its
+    /// position does.
+    private func schipActionButton(
+        icon: String,
+        title: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(title)
+                Spacer(minLength: 8)
+                Text(L("schip.cost"))
+                    .font(.dsaMono(.caption, emphasis: true))
+            }
+            .font(.dsaHeading(.body))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .background(Color.dsaSchipGold)
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+    }
+
+    /// The counterpart statement once the Schip is spent.
+    private func schipSpentChip(icon: String, title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+            Text(title)
+            Image(systemName: "checkmark")
+        }
+        .font(.dsaBody(.caption))
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.dsaSchipGold)
+        .dsaBox(.flush, stroke: Color.dsaSchipGold)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 4)
+    }
+
+    /// A divider between two segments of the round row, at border weight.
+    private var roundRowRule: some View {
+        Rectangle()
+            .fill(Color.dsaBorder)
+            .frame(width: DSALayout.border)
     }
 
     /// Full-width, high-contrast incapacitation banner — `Color.groupCombat` fill, white

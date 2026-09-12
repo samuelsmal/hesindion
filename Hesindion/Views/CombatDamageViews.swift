@@ -31,6 +31,7 @@ struct CombatTakeDamageView: View {
     /// adding the total back would overshoot on a hero who was dropped to zero.
     @State private var applied: AppliedDamage? = nil
     @State private var showingOverwriteAlert = false
+    @State private var showingZoneRoll = false
 
     /// The undo record for a confirmed entry.
     private struct AppliedDamage {
@@ -44,6 +45,29 @@ struct CombatTakeDamageView: View {
 
     private var rs: Int { hero.totalRS }
     private var effectiveDamage: Int { WoundEffectResolver.effectiveDamage(tp: tpInput, rs: rs) }
+
+    /// The Wundeffekt's own damage, but only where it is actually going to be
+    /// written: a probe that has not been rolled, or one that was passed, adds
+    /// nothing.
+    private var appliedExtraDamage: Int {
+        guard woundEffectApplies else { return 0 }
+        return extraDamage ?? 0
+    }
+
+    /// What LP will actually lose. The display used to stop at `TP - RS`, so on
+    /// a failed probe the panel showed 12 while the confirm wrote 16 — the one
+    /// number the screen exists to produce was the one it did not show.
+    private var totalDamage: Int { effectiveDamage + appliedExtraDamage }
+
+    /// "12 TP - 0 RS + 4 WE = 16". The Wundeffekt term appears only when it
+    /// contributes, so an ordinary hit still reads as two terms.
+    private var damageFormula: String {
+        var formula = "\(tpInput) \(L("tp")) \u{2212} \(rs) \(L("rs"))"
+        if appliedExtraDamage > 0 {
+            formula += " + \(appliedExtraDamage) \(L("we"))"
+        }
+        return formula + " = \(totalDamage)"
+    }
 
     // MARK: - Trefferzonen
 
@@ -111,6 +135,7 @@ struct CombatTakeDamageView: View {
                     tint: combatAccent,
                     decrementDisabled: confirmed || tpInput <= 0,
                     incrementDisabled: confirmed,
+                    isSettled: confirmed,
                     incrementIdentifier: "combat.takeDamage.increaseTP",
                     onDecrement: { if tpInput > 0 { tpInput -= 1 } },
                     onIncrement: { tpInput += 1 }
@@ -123,16 +148,17 @@ struct CombatTakeDamageView: View {
 
                 // Calculation display
                 VStack(spacing: 4) {
-                    Text("\(tpInput) \(L("tp")) \u{2212} \(rs) \(L("rs")) = \(effectiveDamage)")
+                    Text(damageFormula)
                         .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
-                    if effectiveDamage == 0 {
+                        .accessibilityIdentifier("combat.takeDamage.formula")
+                    if totalDamage == 0 {
                         Text(L("absorbed"))
                             .font(.dsaBody(.caption))
                             .foregroundStyle(.white.opacity(0.7))
                     } else {
-                        Text("\(effectiveDamage) \(L("lpLost"))")
+                        Text("\(totalDamage) \(L("lpLost"))")
                             .font(.dsaBody(.caption))
                             .foregroundStyle(.white.opacity(0.7))
                     }
@@ -146,7 +172,8 @@ struct CombatTakeDamageView: View {
                     CombatHitZoneRow(
                         zoneHit: $zoneHit,
                         lastRoll: $lastRoll,
-                        isDisabled: confirmed
+                        isDisabled: confirmed,
+                        onRollZone: { showingZoneRoll = true }
                     )
 
                     if let hit = zoneHit, multiple >= 1 {
@@ -222,11 +249,57 @@ struct CombatTakeDamageView: View {
         // damage total changes the modifier — either way the old probe is void.
         .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
         .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
-        .alert(L("takeDamage.overwrite.title"), isPresented: $showingOverwriteAlert) {
-            Button(L("cancel"), role: .cancel) {}
-            Button(L("takeDamage.overwrite.action"), role: .destructive) { undoDamage() }
-        } message: {
-            Text(L("takeDamage.overwrite.message"))
+        .overlay {
+            if showingZoneRoll {
+                DSADiceRevealModal(
+                    title: L("trefferzone.section"),
+                    sides: 20,
+                    accent: combatAccent,
+                    caption: { $0.first.map { CombatHitZoneRow.rollSummary($0) } },
+                    onConfirm: { rolls in
+                        if let roll = rolls.first {
+                            lastRoll = roll
+                            zoneHit = HitZoneTable.lookup(roll, plan: .humanoid(.mittel))
+                        }
+                        showingZoneRoll = false
+                    },
+                    onCancel: { showingZoneRoll = false }
+                )
+            }
+        }
+        // Not `.alert`: a system alert arrives with rounded corners, a blurred
+        // material and tinted text, on top of a screen built without any of the
+        // three.
+        .overlay {
+            if showingOverwriteAlert {
+                DSAModal(
+                    title: L("takeDamage.overwrite.title"),
+                    accent: combatAccent,
+                    onScrimTap: { showingOverwriteAlert = false }
+                ) {
+                    Text(L("takeDamage.overwrite.message"))
+                        .font(.dsaBody(.body))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    DSAModalButton(
+                        title: L("takeDamage.overwrite.action"),
+                        accent: combatAccent,
+                        identifier: "combat.takeDamage.overwriteConfirm"
+                    ) {
+                        showingOverwriteAlert = false
+                        undoDamage()
+                    }
+
+                    DSAModalButton(
+                        title: L("cancel"),
+                        accent: combatAccent,
+                        filled: false,
+                        identifier: "combat.takeDamage.overwriteCancel"
+                    ) {
+                        showingOverwriteAlert = false
+                    }
+                }
+            }
         }
         .overlay {
             if showingProbeModal, let talent = probeTalent {

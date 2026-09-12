@@ -34,10 +34,20 @@ extension Color {
     /// content, so it carries more weight here than it would elsewhere.
     static let dsaOverlay = Color.black.opacity(0.8)
 
-    /// Disabled fill. Neo-brutalism expresses "disabled" by flattening the *fill*
-    /// and keeping the hard border, rather than softening everything to grey —
-    /// `Colors.grey` was doing the latter at six sites (audit S4/S9).
-    static let dsaDisabled = Color(UIColor.tertiarySystemFill)
+    /// Fill for a control that is disabled or already settled (ADR-0010).
+    ///
+    /// The page itself. A disabled surface gives up its **depth and its colour**
+    /// — never its contrast: it keeps the full-strength 2pt border and, via
+    /// `dsaDisabledLabel`, a full-strength label. This was
+    /// `UIColor.tertiarySystemFill`, a translucent grey that swallowed the white
+    /// labels sitting on it: the settled Wundeffekt controls were unreadable, and
+    /// a soft grey is the one thing the design language rules out outright.
+    static let dsaDisabled = Color(UIColor.systemBackground)
+
+    /// Label colour on a `dsaDisabled` surface. Deliberately not `.secondary`:
+    /// a settled entry is something you want to *read back*, so removing the
+    /// affordance must not remove the information.
+    static let dsaDisabledLabel = Color.primary
 
     /// Dark accent background used for stat badges and INI boxes.
     static let dsaDark = Color(white: 0.18)

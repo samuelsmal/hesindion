@@ -11,6 +11,9 @@ import XCTest
 /// times for a single outcome.
 final class TakeDamageFlowTests: XCTestCase {
 
+    /// The Wundeffekt term in the damage formula ("+ 4 WE").
+    static let woundEffectTerm = "WE"
+
     /// A probe the hero passes without it being a critical success.
     ///
     /// Deliberately **not** 1: three 1s is a Meisterhaft and routes through
@@ -112,23 +115,35 @@ final class TakeDamageFlowTests: XCTestCase {
         )
     }
 
-    /// The rolled zone reports the die and the side; a tapped zone says nothing
-    /// beyond its own highlighted chip.
+    /// The rolled zone reports the die in the reveal modal; a tapped zone says
+    /// nothing beyond its own highlighted chip.
     @MainActor
     func testZoneRollReportsTheDieButATapDoesNot() {
         continueAfterFailure = false
         let app = launchTakeDamage(dice: 7)
-        let summary = element(app, "combat.takeDamage.zoneRoll")
+        let summary = element(app, "dice.reveal.caption")
 
         chooseZone(app, "torso")
-        XCTAssertFalse(summary.exists, "A tapped zone should not print a roll summary")
+        XCTAssertFalse(summary.exists, "A tapped zone should not open the reveal")
 
-        let rollZone = app.button(containing: "1W20")
+        let rollZone = app.buttons["combat.zone.roll"]
         XCTAssertTrue(rollZone.waitForExistence(timeout: UITest.timeout), "Zone roll button missing")
         rollZone.tap()
+
         XCTAssertTrue(summary.waitForExistence(timeout: UITest.timeout), "Rolled zone was not reported")
         XCTAssertTrue(summary.label.contains("7"), "Summary should carry the rolled value, got \(summary.label)")
         captureScreenshot(app, named: "12-take-damage-zone-rolled")
+
+        // The reveal holds the number until it is dismissed, for the same reason
+        // the probe does: a modal that closes itself takes the result away
+        // before it has been read.
+        let confirmRoll = app.buttons["dice.reveal.confirm"]
+        XCTAssertTrue(confirmRoll.waitForExistence(timeout: UITest.timeout), "Reveal confirm missing")
+        confirmRoll.tap()
+        XCTAssertTrue(
+            app.buttons["combat.zone.torso"].waitForExistence(timeout: UITest.timeout),
+            "Reveal did not close"
+        )
     }
 
     // MARK: - Both probe branches
@@ -180,6 +195,15 @@ final class TakeDamageFlowTests: XCTestCase {
         XCTAssertTrue(rolledValue.waitForExistence(timeout: UITest.timeout), "Damage figure missing")
         XCTAssertNotEqual(rolledValue.label, "+0", "Wundeffekt damage was not rolled")
 
+        // The formula carries the Wundeffekt term as soon as it contributes:
+        // it used to stop at `TP - RS`, showing 12 where the confirm wrote 16.
+        let formula = element(app, "combat.takeDamage.formula")
+        XCTAssertTrue(formula.waitForExistence(timeout: UITest.timeout), "Damage formula missing")
+        XCTAssertTrue(
+            formula.label.contains(Self.woundEffectTerm),
+            "Formula should carry the Wundeffekt term, got \(formula.label)"
+        )
+
         captureScreenshot(app, named: "15-take-damage-extra-damage")
 
         let confirm = app.button(containing: "Bestätigen")
@@ -214,7 +238,7 @@ final class TakeDamageFlowTests: XCTestCase {
 
         app.otherElements["combat.takeDamage.overwriteCatcher"].tap()
 
-        let overwrite = app.buttons["Überschreiben"]
+        let overwrite = app.buttons["combat.takeDamage.overwriteConfirm"]
         XCTAssertTrue(overwrite.waitForExistence(timeout: UITest.timeout), "Overwrite prompt not shown")
         captureScreenshot(app, named: "17-take-damage-overwrite")
         overwrite.tap()

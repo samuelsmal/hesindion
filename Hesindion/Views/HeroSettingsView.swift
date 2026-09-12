@@ -90,30 +90,16 @@ struct HeroSettingsView: View {
     }
 
     private func fokusRuleRow(_ rule: FokusRule) -> some View {
-        let isActive = hero.isFokusRuleActive(rule)
-        return Button {
-            hero.setFokusRule(rule, active: !isActive)
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: isActive ? "checkmark.square.fill" : "square")
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(.primary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L(rule.nameKey))
-                        .font(isActive ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(.primary)
-                    Text(L(rule.subtitleKey))
-                        .font(.dsaBody(.caption))
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-        }
-        .buttonStyle(.dsaMotion)
+        DSAToggleRow(
+            title: L(rule.nameKey),
+            isOn: Binding(
+                get: { hero.isFokusRuleActive(rule) },
+                set: { hero.setFokusRule(rule, active: $0) }
+            ),
+            accent: .groupCombat,
+            subtitle: L(rule.subtitleKey)
+        )
+        .padding(.horizontal, 16)
     }
 
     private func schemeRow(scheme: HeroColorScheme?, label: String, isSelected: Bool) -> some View {

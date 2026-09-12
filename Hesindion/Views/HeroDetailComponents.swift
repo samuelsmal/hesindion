@@ -276,15 +276,20 @@ struct LPBarView: View {
     let onIncrement: () -> Void
 
     var body: some View {
+        // One control, built like `DSAStepper`: the bar owns the border and the
+        // shadow, the three segments are divided by rules of the same weight.
+        // It used to draw no border at all, so on the combat root it was the one
+        // full-width control on the screen sitting flat between two that cast.
         HStack(spacing: 0) {
             Button(action: onDecrement) {
                 Text("▼")
                     .font(.dsaBody(.body))
-                    .foregroundStyle(.white)
                     .frame(width: 44, height: 48)
-                    .background(accent)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.dsaMotion)
+            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
+
+            rule
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -302,15 +307,24 @@ struct LPBarView: View {
             }
             .frame(height: 48)
 
+            rule
+
             Button(action: onIncrement) {
                 Text("▲")
                     .font(.dsaBody(.body))
-                    .foregroundStyle(.white)
                     .frame(width: 44, height: 48)
-                    .background(accent)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.dsaMotion)
+            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
         }
+        .fixedSize(horizontal: false, vertical: true)
+        .dsaBox(.raised)
+    }
+
+    private var rule: some View {
+        Rectangle()
+            .fill(Color.dsaBorder)
+            .frame(width: DSALayout.border)
     }
 
     private var barColor: Color {

@@ -192,6 +192,7 @@ enum DSAStrings {
         "takeDamage.label":     "TAKE DAMAGE",
         "tp":                   "TP",
         "rs":                   "RS",
+        "we":                   "WE",  // Wundeffekt term in the damage formula
         "equip":                "Equip",
         "unequip":              "Unequip",
         "armorSelection":       "Armor Selection",
@@ -337,6 +338,7 @@ enum DSAStrings {
         "source.schipDefense":          "Fate Point",
         "schip.label":                  "FATE POINTS",
         "schip.remaining":              "Fate Points left",
+        "schip.cost":                   "1 FtP",
 
         // Fumble
         "fumble.title":                 "Fumble!",
@@ -737,6 +739,7 @@ enum DSAStrings {
         "takeDamage.label":     "SCHADEN NEHMEN",
         "tp":                   "TP",
         "rs":                   "RS",
+        "we":                   "WE",  // Wundeffekt term in the damage formula
         "equip":                "Anlegen",
         "unequip":              "Ablegen",
         "armorSelection":       "Rüstungsauswahl",
@@ -883,6 +886,7 @@ enum DSAStrings {
         "source.schipDefense":          "Schicksalspunkt",
         "schip.label":                  "SCHICKSALSPUNKTE",
         "schip.remaining":              "Schips übrig",
+        "schip.cost":                   "1 Schip",
 
         // Fumble
         "fumble.title":                 "Patzer!",

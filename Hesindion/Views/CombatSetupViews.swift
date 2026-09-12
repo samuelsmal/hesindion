@@ -173,22 +173,11 @@ struct CombatSetupView: View {
                     if hero.hasPlaenklerFormation {
                         combatSectionLabel(L("formation.label"))
 
-                        Button { plaenklerActive.toggle() } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: plaenklerActive ? "checkmark.square.fill" : "square")
-                                    .font(.dsaHeading(.title3))
-                                    .foregroundStyle(plaenklerActive ? combatAccent : .secondary)
-                                Text(L("plaenkler"))
-                                    .font(plaenklerActive ? .dsaHeading(.body) : .dsaBody(.body))
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 12)
-                            .background(plaenklerActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: plaenklerActive ? combatAccent : Color.dsaBorder)
-                        }
-                        .buttonStyle(.dsaMotion)
+                        DSAToggleRow(
+                            title: L("plaenkler"),
+                            isOn: $plaenklerActive,
+                            accent: combatAccent
+                        )
 
                         if plaenklerActive {
                             HStack(spacing: 8) {
@@ -215,43 +204,21 @@ struct CombatSetupView: View {
                         combatSectionLabel(L("mount.label"))
 
                         let mountName = hero.pets.first?.name ?? L("mount")
-                        Button { mountedActive.toggle() } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: mountedActive ? "checkmark.square.fill" : "square")
-                                    .font(.dsaHeading(.title3))
-                                    .foregroundStyle(mountedActive ? combatAccent : .secondary)
-                                Text("\(L("mounted")) (\(mountName))")
-                                    .font(mountedActive ? .dsaHeading(.body) : .dsaBody(.body))
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 12)
-                            .background(mountedActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: mountedActive ? combatAccent : Color.dsaBorder)
-                        }
-                        .buttonStyle(.dsaMotion)
+                        DSAToggleRow(
+                            title: "\(L("mounted")) (\(mountName))",
+                            isOn: $mountedActive,
+                            accent: combatAccent
+                        )
                     }
 
                     // Beengte Umgebung toggle
                     combatSectionLabel(L("beengteUmgebung.label"))
 
-                    Button { beengteUmgebungActive.toggle() } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: beengteUmgebungActive ? "checkmark.square.fill" : "square")
-                                .font(.dsaHeading(.title3))
-                                .foregroundStyle(beengteUmgebungActive ? combatAccent : .secondary)
-                            Text(L("beengteUmgebung"))
-                                .font(beengteUmgebungActive ? .dsaHeading(.body) : .dsaBody(.body))
-                                .foregroundStyle(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 12)
-                        .background(beengteUmgebungActive ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
-                    }
-                    .buttonStyle(.dsaMotion)
+                    DSAToggleRow(
+                        title: L("beengteUmgebung"),
+                        isOn: $beengteUmgebungActive,
+                        accent: combatAccent
+                    )
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)

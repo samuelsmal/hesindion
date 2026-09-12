@@ -251,27 +251,12 @@ struct CombatFernkampfSetupView: View {
         VStack(spacing: 0) {
             combatSectionLabel(L("fernkampf.kampfgetuemmel"))
 
-            Button {
-                kampfgetuemmel.toggle()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: kampfgetuemmel ? "checkmark.square.fill" : "square")
-                        .font(.dsaHeading(.title3))
-                        .foregroundStyle(kampfgetuemmel ? combatAccent : .secondary)
-                    Text(L("fernkampf.kampfgetuemmel"))
-                        .font(kampfgetuemmel ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Text("\u{2013}2")
-                        .font(.dsaMono(.caption, emphasis: true))
-                        .foregroundStyle(kampfgetuemmel ? combatAccent : .secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-                .background(kampfgetuemmel ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                .dsaBox(.flush, stroke: kampfgetuemmel ? combatAccent : Color.dsaBorder)
-            }
-            .buttonStyle(.dsaMotion)
+            DSAToggleRow(
+                title: L("fernkampf.kampfgetuemmel"),
+                isOn: $kampfgetuemmel,
+                accent: combatAccent,
+                detail: "\u{2013}2"
+            )
         }
     }
 

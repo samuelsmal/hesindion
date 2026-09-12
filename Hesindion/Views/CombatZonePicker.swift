@@ -25,6 +25,9 @@ struct CombatZonePicker: View {
     /// Placed inside the chip group, not below it. On the take-damage screen the
     /// 1W20 roll is not a lesser action than naming a zone — it is the other way
     /// of answering the same question, so it carries the same weight.
+    /// The choice is made and locked, so the group gives up its shadow with the
+    /// rest of the screen (ADR-0010).
+    var isSettled: Bool = false
     var accessory: AnyView? = nil
 
     var body: some View {
@@ -47,25 +50,18 @@ struct CombatZonePicker: View {
                     accessory
                 }
             }
-            .dsaOptionGroup()
+            .dsaOptionGroup(isSettled: isSettled)
 
             if showsSurprisedToggle {
-                Button { targetIsSurprised.toggle() } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: targetIsSurprised ? "checkmark.square.fill" : "square")
-                            .font(.dsaHeading(.title3))
-                            .foregroundStyle(targetIsSurprised ? combatAccent : .secondary)
-                        Text(L("trefferzone.targetSurprised"))
-                            .font(targetIsSurprised ? .dsaHeading(.body) : .dsaBody(.body))
-                            .foregroundStyle(.primary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 12)
-                    .background(targetIsSurprised ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: targetIsSurprised ? combatAccent : Color.dsaBorder)
-                }
-                .buttonStyle(.dsaMotion)
+                // Filled when on, like the zone chip directly above it. It was
+                // the tickbox one row under a red-filled "Torso" — the same
+                // screen saying "selected" two different ways.
+                DSAToggleRow(
+                    title: L("trefferzone.targetSurprised"),
+                    isOn: $targetIsSurprised,
+                    accent: combatAccent,
+                    identifier: "combat.zone.surprised"
+                )
             }
 
             if showsPenalty, hasSonderfertigkeit, let sfHalvesKey {

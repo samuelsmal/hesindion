@@ -156,10 +156,12 @@ extension View {
     /// been refactored. The group carries the depth its members gave up: the
     /// shadow marks the *group* as a thing on the page, while the options inside
     /// stay flat against it.
-    func dsaOptionGroup() -> some View {
+    /// `isSettled` drops the group's shadow: a settled group is no longer a
+    /// thing you act on, and depth is what the shadow means (ADR-0010).
+    func dsaOptionGroup(isSettled: Bool = false) -> some View {
         padding(10)
             .frame(maxWidth: .infinity)
-            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
+            .dsaBox(isSettled ? .flush : .raised, fill: Color(UIColor.systemBackground))
     }
 }
 

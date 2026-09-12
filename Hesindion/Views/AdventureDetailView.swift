@@ -107,7 +107,9 @@ struct AdventureDetailView: View {
     private var controlsBar: some View {
         VStack(spacing: 8) {
             weatherButton(L("weather.add"), icon: "plus", filled: true) { isShowingAddStretch = true }
-            HStack(spacing: 8) {
+            // 8pt of visible gap plus the 5pt the left button's shadow spends
+            // outside its own bounds.
+            HStack(spacing: 8 + DSALayout.shadowOffset) {
                 weatherButton(L("weather.rules"), icon: "info.circle", filled: false, fillHeight: true) { isShowingRules = true }
                 ShareLink(item: exportText()) {
                     weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false, fillHeight: true)
@@ -133,9 +135,13 @@ struct AdventureDetailView: View {
             .frame(maxWidth: .infinity)
             .frame(maxHeight: fillHeight ? .infinity : nil)
             .padding(.vertical, 12)
-            .background(filled ? Color.groupAdventure : Color.clear)
+            .background(filled ? Color.groupAdventure : Color(UIColor.systemBackground))
             .foregroundStyle(filled ? .black : Color.groupAdventure)
-            .dsaBox(.flush)
+            // Full-width action buttons, so they cast (ADR-0009). They were the
+            // last screen the promotion sweep missed: it matched call sites that
+            // applied `.dsaBox` directly, and these three route through a shared
+            // label builder.
+            .dsaBox(.raised)
     }
 
     // MARK: - Timeline

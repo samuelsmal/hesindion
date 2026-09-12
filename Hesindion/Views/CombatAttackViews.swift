@@ -401,48 +401,21 @@ struct CombatAnnouncementView: View {
 
             ScrollView {
                 VStack(spacing: 8) {
-                    // Vorteilhafte Position
+                    // Vorteilhafte Position. Forced on for a mounted Golgarit,
+                    // so that case renders the same row without the button.
                     if golgaritenForced {
-                        HStack(spacing: 8) {
-                            Image(systemName: "checkmark.square.fill")
-                                .font(.dsaBody(.body))
-                                .foregroundStyle(combatAccent)
-                            Text("\(L("advantageousPosition")) (\(L("mounted")))")
-                                .font(.dsaBody(.caption))
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text("+2")
-                                .font(.dsaMono(.caption, emphasis: true))
-                                .foregroundStyle(combatAccent)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(combatAccent.opacity(0.1))
-                        .dsaBox(.flush, stroke: combatAccent)
+                        DSAToggleRowLabel(
+                            title: "\(L("advantageousPosition")) (\(L("mounted")))",
+                            isOn: true,
+                            accent: combatAccent
+                        )
                     } else {
-                        Button {
-                            vorteilhaftePosition.toggle()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
-                                    .font(.dsaBody(.body))
-                                    .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
-                                Text(L("advantageousPosition"))
-                                    .font(.dsaBody(.caption))
-                                    .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
-                                Spacer()
-                                if vorteilhaftePosition {
-                                    Text("+2")
-                                        .font(.dsaMono(.caption, emphasis: true))
-                                        .foregroundStyle(combatAccent)
-                                }
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: vorteilhaftePosition ? combatAccent : Color.dsaBorder)
-                        }
-                        .buttonStyle(.dsaMotion)
+                        DSAToggleRow(
+                            title: L("advantageousPosition"),
+                            isOn: $vorteilhaftePosition,
+                            accent: combatAccent,
+                            identifier: "combat.attack.advantageousPosition"
+                        )
                     }
 
                     // Opponent weapon reach
