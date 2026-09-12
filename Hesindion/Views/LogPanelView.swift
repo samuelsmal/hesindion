@@ -293,6 +293,9 @@ struct LogPanelView: View {
             }
             let sp = p.damageTaken ?? 0
             return "Patzer — \(sp) SP"
+        case .criticalSuccess:
+            let result = p.criticalTableResult ?? p.outcome ?? ""
+            return result.isEmpty ? "Kritischer Erfolg" : "Kritischer Erfolg: \(result)"
         case .schipUsed:
             let action = p.schipAction ?? ""
             switch action {

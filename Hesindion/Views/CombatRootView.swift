@@ -946,7 +946,7 @@ struct CombatInitiativeSheet: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            d6Result = Int.random(in: 1...6)
+            d6Result = DiceRoller.roll(sides: 6)
         }
     }
 }

@@ -35,13 +35,19 @@ enum UITest {
     static func launch(
         path: String? = nil,
         appearance: String? = nil,
-        diceScript: String? = nil
+        diceScript: String? = nil,
+        fokusRules: [String] = []
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
         if let path { app.launchArguments += ["path", path] }
         if let appearance { app.launchArguments += ["appearance", appearance] }
         if let diceScript { app.launchArguments += ["dice_script", diceScript] }
+        // Raw `FokusRule` values — the enum lives in the app target and cannot be
+        // referenced from here.
+        if !fokusRules.isEmpty {
+            app.launchArguments += ["-uitest-fokus", fokusRules.joined(separator: ",")]
+        }
         app.launch()
         return app
     }

@@ -22,8 +22,12 @@ enum CombatStep {
     case mountDamage
     case takeDamage
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0)
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
+    /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
+    /// screen has to ask which defence this was — the app knows the hero parried,
+    /// not whether the incoming attack was melee or ranged.
+    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0)
     case passierschlag
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
@@ -53,6 +57,7 @@ extension CombatStep {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .criticalSuccess: "criticalSuccess"
         case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
@@ -74,7 +79,7 @@ extension CombatStep {
     /// *in* to carrying a zone rather than remember to clear it.
     var preservesAnnouncedZone: Bool {
         switch self {
-        case .execution, .fernkampfExecution, .opponentDefense: true
+        case .execution, .fernkampfExecution, .criticalSuccess, .opponentDefense: true
         default: false
         }
     }
@@ -154,6 +159,7 @@ struct CombatView: View {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .criticalSuccess: "criticalSuccess"
         case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
@@ -315,13 +321,13 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let isDouble, let mods, let isRanged, let rangedPenalty):
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
                     damageFormula: dmg,
                     isCriticalHit: isCrit,
-                    isDoubleDamage: isDouble,
+                    criticalDamage: criticalDamage,
                     modifierLines: mods,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
@@ -338,6 +344,22 @@ struct CombatView: View {
                     action: action,
                     weaponName: name,
                     isShieldParry: isShield,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
+            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty):
+                CombatCriticalSuccessView(
+                    hero: hero,
+                    requestedTable: table,
+                    action: action,
+                    weaponName: name,
+                    damageFormula: dmg,
+                    modifierLines: mods,
+                    isRangedAttack: isRanged,
+                    rangedDefensePenalty: rangedPenalty,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,
@@ -446,6 +468,8 @@ struct CombatView: View {
                 case .opponentDefense:
                     step = .root
                 case .fumbleChoice:
+                    step = .root
+                case .criticalSuccess:
                     step = .root
                 case .passierschlag:
                     step = .root

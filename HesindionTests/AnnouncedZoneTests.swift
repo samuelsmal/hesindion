@@ -30,7 +30,7 @@ final class AnnouncedZoneTests: XCTestCase {
             .takeDamage,
             .flucht,
             .opponentDefense(weaponName: "Säbel", damageFormula: "1W6+4", isCriticalHit: false,
-                             isDoubleDamage: false, modifierLines: nil),
+                             criticalDamage: .unchanged, modifierLines: nil),
             .fumbleChoice(action: .angriff, weaponName: "Säbel", isShieldParry: false),
             .passierschlag,
             .fernkampfSetup,
@@ -76,7 +76,7 @@ final class AnnouncedZoneTests: XCTestCase {
         XCTAssertTrue(CombatStep.execution(.angriff, name: "Säbel", attributeValue: 12,
                                            damageFormula: "1W6+4", note: nil).preservesAnnouncedZone)
         XCTAssertTrue(CombatStep.opponentDefense(weaponName: "Säbel", damageFormula: "1W6+4",
-                                                 isCriticalHit: false, isDoubleDamage: false,
+                                                 isCriticalHit: false, criticalDamage: .unchanged,
                                                  modifierLines: nil).preservesAnnouncedZone)
         XCTAssertTrue(CombatStep.fernkampfExecution(weaponName: "Bogen", attributeValue: 11,
                                                     damageFormula: "1W6+4", distanzTP: 0,

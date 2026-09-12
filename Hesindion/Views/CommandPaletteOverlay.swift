@@ -173,7 +173,7 @@ struct RegenerierenSheet: View {
     private func rollDie() {
         guard d6Result == nil else { return }
         animTask?.cancel()
-        d6Result = Int.random(in: 1...6)
+        d6Result = DiceRoller.roll(sides: 6)
     }
 }
 

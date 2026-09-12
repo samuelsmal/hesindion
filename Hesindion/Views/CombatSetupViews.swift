@@ -405,7 +405,7 @@ struct CombatInitiativeRollView: View {
     private func tapDice() {
         if d6Result == nil && animTask != nil {
             animTask?.cancel()
-            d6Result = Int.random(in: 1...6)
+            d6Result = DiceRoller.roll(sides: 6)
         }
     }
 
@@ -421,7 +421,7 @@ struct CombatInitiativeRollView: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            d6Result = Int.random(in: 1...6)
+            d6Result = DiceRoller.roll(sides: 6)
         }
     }
 }

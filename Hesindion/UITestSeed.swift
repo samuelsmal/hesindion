@@ -21,6 +21,23 @@ enum UITestSeed {
         ProcessInfo.processInfo.arguments.contains(launchArgument)
     }
 
+    /// `-uitest-fokus kritischeErfolgeAngriff,kritischeErfolgeDetail` switches
+    /// further Fokus-Regeln on beyond Trefferzonen.
+    ///
+    /// The alternative was to drive the hero settings screen in every test that
+    /// needs a rule — twenty taps of scrolling before the flow under test starts,
+    /// repeated per test. Unknown names are ignored rather than trapping: a typo
+    /// in a test argument should fail that test's own assertions, not the launch.
+    static let fokusArgument = "-uitest-fokus"
+
+    private static var requestedFokusRules: [FokusRule] {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: fokusArgument), index + 1 < args.count else { return [] }
+        return args[index + 1]
+            .split(separator: ",")
+            .compactMap { FokusRule(rawValue: String($0)) }
+    }
+
     /// The weapon the seeded hero goes into combat with. Named here because the
     /// UI tests navigate the attack flow that depends on it (a single one-handed
     /// melee weapon, no shield, no off-hand).
@@ -88,6 +105,9 @@ enum UITestSeed {
 
         // The Trefferzonen surfaces only exist when the Fokus-Regel is on.
         hero.setFokusRule(.trefferzonen, active: true)
+        for rule in requestedFokusRules {
+            hero.setFokusRule(rule, active: true)
+        }
 
         // Drop the hero straight into a running fight: re-entering combat resumes at
         // the combat root (see `CombatView.onAppear`), which skips the armour /

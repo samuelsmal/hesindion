@@ -17,6 +17,7 @@ enum CombatActionType: String, Codable {
     case damageDealt
     case damageTaken
     case fumble
+    case criticalSuccess
     case schipUsed
     case passierschlag
     case flucht
@@ -49,6 +50,10 @@ struct CombatActionPayload: Codable, Reversible {
     var schipAction: String?
     var fumbleTableResult: String?
     var lpChange: Int
+    /// The Kritische-Erfolge table result (ADR-0011). Added after the fact, so
+    /// optional and decoded with `decodeIfPresent` — payloads written before it
+    /// existed still decode.
+    var criticalTableResult: String? = nil
 
     func reverse(on hero: Hero) {
         guard let dv = hero.derivedValues else { return }

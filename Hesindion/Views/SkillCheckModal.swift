@@ -407,7 +407,7 @@ struct SkillCheckModal: View {
     private func resultBackground(_ result: CheckResult) -> Color {
         switch result {
         case .kritischerPatzer: return .groupCombat
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .qs(let n) where n == 0: return .dsaDark
         case .qs(let n) where n == 1: return Color(red: 0x1a / 255.0, green: 0x5c / 255.0, blue: 0x2e / 255.0)
         case .qs(let n) where n == 2: return Color(red: 0x1e / 255.0, green: 0x7a / 255.0, blue: 0x3c / 255.0)
@@ -431,7 +431,12 @@ struct SkillCheckModal: View {
     private func startAnimation() {
         animationTask = Task { @MainActor in
             while !Task.isCancelled {
-                displayRolls = DiceRoller.roll(count: 3, sides: 20)
+                // `Int.random`, not `DiceRoller`: these are tumble frames.
+                // Drawing them from the queue emptied a `dice_script` before
+                // `roll()` ever reached it, so no talent, spell, liturgy or
+                // Reiten check could be driven to its Kritischer Erfolg or
+                // Patzer from a test.
+                displayRolls = (0..<3).map { _ in Int.random(in: 1...20) }
                 do {
                     try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch {
@@ -459,7 +464,7 @@ struct SkillCheckModal: View {
 
         // Reroll only the selected dice; keep the others.
         var newRolls = current
-        for i in rerollSelection { newRolls[i] = Int.random(in: 1...20) }
+        for i in rerollSelection { newRolls[i] = DiceRoller.roll(sides: 20) }
         finalRolls = newRolls
 
         emitResult(rolls: newRolls, schipReroll: true)

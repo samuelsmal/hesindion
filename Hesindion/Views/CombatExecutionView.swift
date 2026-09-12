@@ -54,6 +54,30 @@ struct CombatExecutionView: View {
 
     private var effectiveValue: Int { attributeValue + modifier }
 
+    /// Whether the hero's table plays with the optional Kritische-Erfolge table
+    /// for *this* action (ADR-0011). An attack reads the Angriff table; a defence
+    /// reads one of the two defensive ones, and which of those it is depends on
+    /// the incoming attack, which is why the screen after this one may have to ask.
+    private var usesCriticalTable: Bool {
+        switch action {
+        case .angriff, .fernkampf:
+            hero.isFokusRuleActive(.kritischeErfolgeAngriff)
+        case .parieren, .ausweichen:
+            hero.isFokusRuleActive(.kritischeErfolgeNahkampf)
+                || hero.isFokusRuleActive(.kritischeErfolgeFernkampf)
+        }
+    }
+
+    /// `nil` asks. Pre-selected when only one of the two defensive tables is on,
+    /// which is the common case — a table either plays with ranged criticals or
+    /// does not.
+    private var defenseCriticalTable: CriticalSuccessTableType? {
+        let melee = hero.isFokusRuleActive(.kritischeErfolgeNahkampf)
+        let ranged = hero.isFokusRuleActive(.kritischeErfolgeFernkampf)
+        if melee && ranged { return nil }
+        return melee ? .verteidigungNahkampf : .verteidigungFernkampf
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -182,26 +206,46 @@ struct CombatExecutionView: View {
             // Critical hit info boxes
             if outcome == .kritischerErfolg {
                 infoBox(L("opponentDefense.halved"))
-                infoBox(L("opponentDefense.doubleDamage"))
+                // The halving is unconditional; the doubling is not. With the
+                // optional table in play it is the table that says what happens
+                // to the damage — announcing "doppelter Schaden" here and then
+                // rolling a +2 would state the outcome before it was decided.
+                if !usesCriticalTable {
+                    infoBox(L("opponentDefense.doubleDamage"))
+                }
             } else if finalRoll == 1 && confirmRoll != nil {
                 // Rolled 1 but confirm failed → still normal hit, but note that defense is halved
                 // (1 was rolled — even on failed confirmation the opponent defense is still halved)
                 infoBox(L("opponentDefense.halved"))
             }
 
-            // "Weiter zur Verteidigung" button
+            // "Weiter zur Verteidigung" button — or, on a confirmed critical with
+            // the optional table switched on, the table first: it is what decides
+            // what happens to the damage (ADR-0011).
             Button {
-                step = .opponentDefense(
-                    weaponName: weaponName,
-                    damageFormula: damageFormula,
-                    isCriticalHit: finalRoll == 1,
-                    isDoubleDamage: outcome == .kritischerErfolg,
-                    modifierLines: modifierLines
-                )
+                if outcome == .kritischerErfolg, usesCriticalTable {
+                    step = .criticalSuccess(
+                        table: .angriff,
+                        action: action,
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        modifierLines: modifierLines
+                    )
+                } else {
+                    step = .opponentDefense(
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        isCriticalHit: finalRoll == 1,
+                        criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
+                        modifierLines: modifierLines
+                    )
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "shield.fill")
-                    Text(L("proceedToDefense"))
+                    Text(usesCriticalTable && outcome == .kritischerErfolg
+                         ? L("critical.title")
+                         : L("proceedToDefense"))
                 }
                 .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
@@ -240,8 +284,35 @@ struct CombatExecutionView: View {
 
     @ViewBuilder
     private func defenseOutcomeActions(_ outcome: CombatOutcome) -> some View {
-        // Critical parry success → Passierschlag info + button
-        if action == .parieren && outcome == .kritischerErfolg {
+        // A critical defence with the optional table on goes to the table, which
+        // *replaces* the Passierschlag — on results 2–6 it hands out a standing
+        // advantage instead, so the button must not be offered alongside it. An
+        // Ausweichen reaches the table too; only the Passierschlag was ever
+        // parry-only (ADR-0011).
+        if outcome == .kritischerErfolg, usesCriticalTable {
+            Button {
+                step = .criticalSuccess(
+                    table: defenseCriticalTable,
+                    action: action,
+                    weaponName: weaponName,
+                    damageFormula: damageFormula,
+                    modifierLines: modifierLines
+                )
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "die.face.6.fill")
+                    Text(L("critical.title"))
+                }
+                .font(.dsaHeading(.body))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .dsaBox(.raised)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("combat.execution.criticalTable")
+        } else if action == .parieren && outcome == .kritischerErfolg {
             HStack(spacing: 6) {
                 Image(systemName: "bolt.fill")
                 Text(L("passierschlag") + " " + L("passierschlag.info"))
@@ -567,7 +638,7 @@ struct CombatExecutionView: View {
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
         let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
         return Text(outcomeText(outcome))
-            .font(.system(isCritical ? .title3 : .body, weight: .bold))
+            .font(.dsaHeading(isCritical ? .title3 : .body))
             .foregroundStyle(outcomeTextColor(outcome))
             .frame(maxWidth: .infinity)
             .padding(.vertical, isCritical ? 14 : 10)
@@ -586,9 +657,9 @@ struct CombatExecutionView: View {
 
     private func outcomeBackground(_ outcome: CombatOutcome) -> Color {
         switch outcome {
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .kritischerPatzer: return .groupCombat
-        case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+        case .erfolg:           return Color.dsaPositive
         case .misserfolg:       return .dsaDark
         }
     }
@@ -620,13 +691,20 @@ struct CombatExecutionView: View {
         guard action != .angriff else { return false }
         // Fumble handled separately
         guard outcome != .kritischerPatzer else { return false }
+        // So is a critical that owes the player a table roll: its screen carries
+        // its own "Neue Aktion", and leaving early would skip the result.
+        guard !(outcome == .kritischerErfolg && usesCriticalTable) else { return false }
         return true
     }
 
     private func rollDice() {
         guard finalRoll == nil else { return }
         animationTask?.cancel()
-        let rolled = Int.random(in: 1...20)
+        // The settled roll goes through `DiceRoller` so `ScriptedDice` can put a
+        // UI test on a chosen branch — a confirmed critical, say. The tumbling
+        // `displayRoll` above deliberately does not: it is animation, and feeding
+        // it would drain the script before the real roll was taken.
+        let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
         if needsConfirm(rolled) { startConfirmAnimation() }
     }
@@ -708,7 +786,7 @@ struct CombatExecutionView: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            confirmRoll = Int.random(in: 1...20)
+            confirmRoll = DiceRoller.roll(sides: 20)
         }
     }
 
@@ -797,6 +875,6 @@ struct CombatExecutionView: View {
     private func rollDamage(parsed: ParsedDamage) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
-        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+        damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }
     }
 }

@@ -62,6 +62,10 @@ extension Color {
     /// green that was copy-pasted as `0x2E7D32` into four combat files.
     static let dsaPositive = Color(red: 0x2E / 255, green: 0x7D / 255, blue: 0x32 / 255)
 
+    /// A *critical* success — brighter than `dsaPositive`, which marks an ordinary
+    /// good outcome. Was `0x00c853` written out longhand in three combat files.
+    static let dsaCritical = Color(red: 0x00 / 255, green: 0xc8 / 255, blue: 0x53 / 255)
+
     static let attrMU = Color(red: 0xc5 / 255, green: 0x47 / 255, blue: 0x47 / 255)
     static let attrKL = Color(red: 0xa8 / 255, green: 0x5b / 255, blue: 0xd4 / 255)
     static let attrIN = Color(red: 0x33 / 255, green: 0x9b / 255, blue: 0x5b / 255)

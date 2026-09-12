@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.0-rc.2] - 2026-09-12
+
+### Added
+
+- The basic rule stays available with the table switched on: a confirmed critical asks whether to take it — doubled damage, the Passierschlag, or the undiminished defence — or to roll the table. The optional rule's own wording is permissive ("kann auch diese Tabelle benutzt werden"), and on a low roll the table is worse than what it replaces, so the trade is the player's to make at the moment it happens. This is the shape the Patzer screen has always had
+- Kritische Erfolge (DSA 5 Fokus-Regeln, optional, off by default) — the three 2W6 tables from *Aventurisches Kompendium 2* that replace the basic critical outcomes: double damage on a confirmed critical AT/FK, the Passierschlag on a critical melee defence, and the undiminished next defence on a critical ranged defence. Each nests the Fokusregel's further 1W20, so 33 sub-tables in all, quoted in German as published. Switched per hero and per table on the hero settings screen, so a group can adopt one without the others
+- The damage arithmetic a critical table names is carried into the total the app computes — `+2 TP`, `×1½` (rounded up), `×2`, `×3`, or nothing at all on the two results that change no damage. Conditions on the opponent and the "bis zum Ende der nächsten KR" bonuses are stated for the GM, because opponents are not modelled and the combat session has nowhere to hold a modifier that expires (ADR-0011)
+- `CriticalSuccessFlowTests` — the critical table end to end on a scripted die, for both the attack table and the melee defence table withholding the Passierschlag on a low roll. A confirmed critical is a ~1-in-20 event, so it cannot be rolled for in a test
+- Three new screenshots: the basic-rule-or-table choice, the basic rule taken, and the table with its category, its refinement and the resulting `×2`
+- `-uitest-fokus` launch argument, switching further Fokus-Regeln on for a UI test instead of driving twenty taps of the settings screen first
+
+### Changed
+
+- `Color.dsaCritical` replaces `0x00c853` written out longhand in three combat files, and `Color.dsaPositive` replaces six more copies of `0x2E7D32` — the same consolidation `dsaSchipGold` already had. The last two text-sizing `.font(.system(…))` calls became `.dsaHeading`, so the type scale now governs every piece of text in the app
+- Every settled dice roll now goes through `DiceRoller`, and every tumbling animation frame deliberately does not. Both halves were wrong somewhere: settled rolls on `Int.random` (the AT and FK rolls and their confirmations, all damage dice, both Schip rerolls, the initiative W6, the Passierschlag's AT, the fumble table's 2W6) could not be reached by `ScriptedDice` at all, which is why the wound-effect screenshot test retries its attack up to five times
+
+### Fixed
+
+- **No skill check could be driven to its Kritischer Erfolg or Patzer from a test.** `SkillCheckModal` drew its three *tumbling* dice from `DiceRoller` in an animation loop, emptying a `dice_script` long before the settled roll reached it — and every talent, spell, liturgy and Reiten check goes through that modal. Its Schip reroll had the inverse fault and used `Int.random`, so the branch after spending a Schip was unreachable too
+- The published `Schwerer betäubender Treffer` sub-table skips 15–18 entirely; the app treats that band as "nochmal würfeln", which is what its neighbour does and the only reading that leaves every 1W20 resolvable. Found by asserting that all 33 sub-tables tile 1…20
+
 ## [0.4.0-rc.1] - 2026-09-12
 
 ### Added

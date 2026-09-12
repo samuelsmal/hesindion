@@ -607,7 +607,7 @@ struct CombatFernkampfExecutionView: View {
                     Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(line.value > 0
-                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                            ? Color.dsaPositive
                             : Color.groupCombat)
                     Spacer()
                     Text(line.source)
@@ -626,7 +626,7 @@ struct CombatFernkampfExecutionView: View {
                     Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(modifier > 0
-                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                            ? Color.dsaPositive
                             : Color.groupCombat)
                     Spacer()
                     Text(L("source.additional"))
@@ -758,7 +758,7 @@ struct CombatFernkampfExecutionView: View {
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
         let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
         return Text(outcomeText(outcome))
-            .font(.system(isCritical ? .title3 : .body, weight: .bold))
+            .font(.dsaHeading(isCritical ? .title3 : .body))
             .foregroundStyle(outcomeTextColor(outcome))
             .frame(maxWidth: .infinity)
             .padding(.vertical, isCritical ? 14 : 10)
@@ -777,9 +777,9 @@ struct CombatFernkampfExecutionView: View {
 
     private func outcomeBackground(_ outcome: CombatOutcome) -> Color {
         switch outcome {
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .kritischerPatzer: return .groupCombat
-        case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+        case .erfolg:           return Color.dsaPositive
         case .misserfolg:       return .dsaDark
         }
     }
@@ -799,25 +799,45 @@ struct CombatFernkampfExecutionView: View {
         case .erfolg, .kritischerErfolg:
             if outcome == .kritischerErfolg {
                 infoBox(L("opponentDefense.halved"))
-                infoBox(L("opponentDefense.doubleDamage"))
+                // See `CombatExecutionView`: with the optional table on, what
+                // happens to the damage is the table's to say, not this screen's.
+                if !hero.isFokusRuleActive(.kritischeErfolgeAngriff) {
+                    infoBox(L("opponentDefense.doubleDamage"))
+                }
             } else if finalRoll == 1 && confirmRoll != nil {
                 infoBox(L("opponentDefense.halved"))
             }
 
             Button {
-                step = .opponentDefense(
-                    weaponName: weaponName,
-                    damageFormula: adjustedDamageFormula,
-                    isCriticalHit: finalRoll == 1,
-                    isDoubleDamage: outcome == .kritischerErfolg,
-                    modifierLines: nil,
-                    isRangedAttack: true,
-                    rangedDefensePenalty: -4
-                )
+                // The Angriff table covers "AT oder FK" in its own wording, so a
+                // critical shot reads the same table a critical swing does.
+                if outcome == .kritischerErfolg, hero.isFokusRuleActive(.kritischeErfolgeAngriff) {
+                    step = .criticalSuccess(
+                        table: .angriff,
+                        action: .fernkampf,
+                        weaponName: weaponName,
+                        damageFormula: adjustedDamageFormula,
+                        modifierLines: nil,
+                        isRangedAttack: true,
+                        rangedDefensePenalty: -4
+                    )
+                } else {
+                    step = .opponentDefense(
+                        weaponName: weaponName,
+                        damageFormula: adjustedDamageFormula,
+                        isCriticalHit: finalRoll == 1,
+                        criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
+                        modifierLines: nil,
+                        isRangedAttack: true,
+                        rangedDefensePenalty: -4
+                    )
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "shield.fill")
-                    Text(L("proceedToDefense"))
+                    Text(outcome == .kritischerErfolg && hero.isFokusRuleActive(.kritischeErfolgeAngriff)
+                         ? L("critical.title")
+                         : L("proceedToDefense"))
                 }
                 .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
@@ -903,14 +923,14 @@ struct CombatFernkampfExecutionView: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            confirmRoll = Int.random(in: 1...20)
+            confirmRoll = DiceRoller.roll(sides: 20)
         }
     }
 
     private func rollDice() {
         guard finalRoll == nil else { return }
         animationTask?.cancel()
-        let rolled = Int.random(in: 1...20)
+        let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
         if needsConfirm(rolled) { startConfirmAnimation() }
     }

@@ -8,7 +8,10 @@ struct CombatOpponentDefenseView: View {
     let weaponName: String
     let damageFormula: String?
     let isCriticalHit: Bool
-    let isDoubleDamage: Bool
+    /// What the critical did to the damage. `.double` under the basic rule,
+    /// whatever the optional table rolled when it is in play (ADR-0011), and
+    /// `.unchanged` for an ordinary hit.
+    let criticalDamage: CriticalDamage
     let modifierLines: [ModifierLine]?
     var isRangedAttack: Bool = false
     var rangedDefensePenalty: Int = 0
@@ -76,8 +79,12 @@ struct CombatOpponentDefenseView: View {
                 if isCriticalHit {
                     infoBox(L("opponentDefense.halved"), icon: "exclamationmark.triangle.fill")
                 }
-                if isDoubleDamage {
+                if criticalDamage == .double {
                     infoBox(L("opponentDefense.doubleDamage"), icon: "flame.fill")
+                } else if let label = criticalDamage.label {
+                    // The optional table's own verdict — anything from "+2" to
+                    // "×3" — instead of the basic rule's flat doubling.
+                    infoBox("\(L("critical.damageEffect")): \(label)", icon: "flame.fill")
                 }
 
                 // Ranged attack info boxes
@@ -96,7 +103,7 @@ struct CombatOpponentDefenseView: View {
                             Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
                                 .font(.dsaMono(.caption, emphasis: true))
                                 .foregroundStyle(line.value > 0
-                                    ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                                    ? Color.dsaPositive
                                     : combatAccent)
                             Spacer()
                             Text(line.source)
@@ -233,11 +240,11 @@ struct CombatOpponentDefenseView: View {
             if let finalRolls = damageFinalRolls {
                 let diceSum = finalRolls.reduce(0, +)
                 let rawTotal = max(0, diceSum + parsed.bonus)
-                let total = isDoubleDamage ? rawTotal * 2 : rawTotal
+                let total = criticalDamage.apply(to: rawTotal)
                 let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
 
-                if isDoubleDamage {
-                    Text("\(diceSum)\(bonusStr) = \(rawTotal) × 2 = \(total) TP")
+                if let critLabel = criticalDamage.label {
+                    Text("\(diceSum)\(bonusStr) = \(rawTotal) \(critLabel) = \(total) TP")
                         .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                         .frame(maxWidth: .infinity)
@@ -272,7 +279,7 @@ struct CombatOpponentDefenseView: View {
                     damageSchipUsed = true
                     if var rolls = damageFinalRolls,
                        let minIdx = rolls.indices.min(by: { rolls[$0] < rolls[$1] }) {
-                        rolls[minIdx] = Int.random(in: 1...parsed.sides)
+                        rolls[minIdx] = DiceRoller.roll(sides: parsed.sides)
                         damageFinalRolls = rolls
                     }
                 } label: {
@@ -293,7 +300,7 @@ struct CombatOpponentDefenseView: View {
                 .onAppear {
                     let diceSum = finalRolls.reduce(0, +)
                     let rawTotal = max(0, diceSum + parsed.bonus)
-                    let total = isDoubleDamage ? rawTotal * 2 : rawTotal
+                    let total = criticalDamage.apply(to: rawTotal)
                     logDamageDealt(total)
                 }
             }
@@ -313,7 +320,7 @@ struct CombatOpponentDefenseView: View {
               let parsed = parseDamage(formula),
               let rolls = damageFinalRolls else { return nil }
         let raw = max(0, rolls.reduce(0, +) + parsed.bonus)
-        return (isDoubleDamage ? raw * 2 : raw) + (woundEffectDamage ?? 0)
+        return criticalDamage.apply(to: raw) + (woundEffectDamage ?? 0)
     }
 
     /// "18 TP + 3 WE = 21 TP" — the same shape as the take-damage screen's
@@ -411,7 +418,7 @@ struct CombatOpponentDefenseView: View {
     private func rollDamage(parsed: ParsedDamage) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
-        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+        damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }
     }
 
     // MARK: - Logging
@@ -700,15 +707,17 @@ struct CombatFumbleChoiceView: View {
 
     // MARK: - Roll Helpers
 
+    // Through `DiceRoller`, not `Int.random`, so `ScriptedDice` can drive the
+    // fumble branches from a UI test the way it drives every other roll.
     private func rollSimpleDamage() {
-        let roll = Int.random(in: 1...6)
+        let roll = DiceRoller.roll(sides: 6)
         simpleDamageRoll = roll
         applySimpleDamage(roll + 2)
     }
 
     private func rollTable() {
-        let d1 = Int.random(in: 1...6)
-        let d2 = Int.random(in: 1...6)
+        let d1 = DiceRoller.roll(sides: 6)
+        let d2 = DiceRoller.roll(sides: 6)
         let total = d1 + d2
         tableRoll = (d1, d2)
         let entry = FumbleTable.lookup(total, table: tableType, isUnarmed: isUnarmed || isDodge)
@@ -1114,7 +1123,7 @@ struct CombatPassierschlagView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(hit
-                ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+                ? Color.dsaPositive
                 : Color.dsaDark)
             .dsaBox(.flush)
     }
@@ -1236,7 +1245,7 @@ struct CombatPassierschlagView: View {
     private func rollDice() {
         guard finalRoll == nil else { return }
         animationTask?.cancel()
-        finalRoll = Int.random(in: 1...20)
+        finalRoll = DiceRoller.roll(sides: 20)
         logPassierschlag()
     }
 
@@ -1255,7 +1264,7 @@ struct CombatPassierschlagView: View {
     private func rollDamage(parsed: ParsedDamage) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
-        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
+        damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }
     }
 
     // MARK: - Logging

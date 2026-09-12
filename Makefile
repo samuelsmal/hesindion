@@ -183,7 +183,7 @@ test-ui-record-only: boot
 #
 # xcresulttool names exported files by attachment payload, so the manifest is
 # used to rename them back to the XCTAttachment names the tests set
-# (01-fokus-settings … 04-wound-effect-panel).
+# (01-hero-list … 20-critical-hit-table).
 SCREENSHOT_DIR = docs/screenshots
 SCREENSHOT_RESULT = $(DERIVED_DATA)/screenshots.xcresult
 SCREENSHOT_EXPORT = $(DERIVED_DATA)/screenshot-export
