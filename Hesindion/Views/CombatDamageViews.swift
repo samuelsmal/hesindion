@@ -429,7 +429,8 @@ struct CombatTakeDamageView: View {
 /// nothing on this device to subtract it from.
 struct WoundEffectReminderCard: View {
     let zone: HitZone
-    @State private var extraDamage: Int? = nil
+    /// Owned by the screen, so the damage total can include it.
+    @Binding var extraDamage: Int?
 
     var body: some View {
         let effect = WoundEffectCatalog.effect(for: zone)

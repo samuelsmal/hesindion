@@ -46,7 +46,35 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         captureScreenshot(app, named: "09-attack-zone-picker")
     }
 
-    // MARK: - 03 GM wound-effect reminder after a landed targeted attack
+    // MARK: - 02b The attack execution screen
+
+    /// The AT roll screen, before rolling: the `Mod` stepper and the calculation
+    /// breakdown that ends in the effective value. Both were reported as
+    /// out-of-style — the caption sat under the stepper's shadow, and the total
+    /// was the one unbordered surface in the app.
+    @MainActor
+    func test02bExecution() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat")
+        goToMeleeAnnouncement(app)
+
+        let torso = app.buttons["combat.zone.torso"]
+        XCTAssertTrue(torso.waitForExistence(timeout: UITest.timeout), "Zone picker not shown")
+        XCTAssertTrue(app.scrollUntilHittable(torso), "Could not reach the zone picker")
+        torso.tap()
+
+        app.button(containing: "Weiter").tap()
+
+        // A modifier the player might actually dial in, so the breakdown shows
+        // its "Zusätzlich" line rather than only the rule-derived ones.
+        let plus = app.buttons["combat.execution.increaseModifier"]
+        XCTAssertTrue(plus.waitForExistence(timeout: UITest.timeout), "Attack execution screen not shown")
+        for _ in 0..<3 { plus.tap() }
+
+        captureScreenshot(app, named: "10-attack-execution")
+    }
+
+    // MARK: - 03 wound-effect reminder after a landed targeted attack
 
     @MainActor
     func test03ReminderCard() {
@@ -87,8 +115,27 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         }
 
         XCTAssertTrue(reminder.exists, "Wound-effect reminder card not shown")
-        app.scrollUntilHittable(reminder, maxSwipes: 4)
-        captureScreenshot(app, named: "10-attack-wound-effect-reminder")
+
+        // Settle both figures, so the capture shows the screen in the state that
+        // matters: the weapon's damage rolled, the Wundeffekt's entered, the
+        // reported total below them and "Neue Aktion" last.
+        let damageBox = app.staticTexts["Antippen zum Würfeln"].firstMatch
+        if damageBox.waitForExistence(timeout: UITest.probeTimeout) {
+            damageBox.tap()
+        }
+        let rollExtra = app.buttons["combat.takeDamage.rollExtraDamage"]
+        if rollExtra.waitForExistence(timeout: UITest.probeTimeout) {
+            XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the Wundeffekt roll")
+            rollExtra.tap()
+        }
+
+        let total = app.descendants(matching: .any)["combat.dealDamage.total"]
+        XCTAssertTrue(
+            total.waitForExistence(timeout: UITest.timeout),
+            "The reported damage total is missing"
+        )
+        app.scrollUntilHittable(total, maxSwipes: 4)
+        captureScreenshot(app, named: "11-attack-wound-effect-reminder")
     }
 
     // MARK: - 04 Wundeffekt panel on the take-damage screen
@@ -114,7 +161,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         let panel = app.otherElements["combat.woundEffectPanel"]
         XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "Wundeffekt panel not shown")
 
-        captureScreenshot(app, named: "13-take-damage-effect-threatened")
+        captureScreenshot(app, named: "14-take-damage-effect-threatened")
     }
 
     // MARK: - Navigation helpers

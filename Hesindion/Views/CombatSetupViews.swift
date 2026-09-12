@@ -103,26 +103,16 @@ struct CombatArmorSelectionView: View {
         Button {
             armor.isEquipped.toggle()
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(armor.name)
-                        .font(armor.isEquipped ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(.primary)
-                    Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
-                        .font(.dsaMono(.caption, emphasis: false))
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
+            // Equipped is the fill, like every other option (ADR-0010). This row
+            // was the last `checkmark.circle` left, so on the setup screen the
+            // Plattenrüstung showed a ring while "Beritten" two sections down
+            // showed a fill.
+            DSAToggleRowLabel(
+                title: armor.name,
+                isOn: armor.isEquipped,
+                accent: combatAccent,
+                subtitle: "\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)"
+            )
         }
         .buttonStyle(.dsaMotion)
     }

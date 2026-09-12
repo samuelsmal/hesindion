@@ -24,11 +24,7 @@ struct HeroListView: View {
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
 
-    private var appVersion: String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "v\(version) (\(build))"
-    }
+    private var appVersion: String { AppVersion.display }
 
     var body: some View {
         NavigationSplitView {
@@ -87,7 +83,7 @@ struct HeroListView: View {
 
     @ViewBuilder
     private var sidebarContent: some View {
-        List(selection: $selection) {
+        List {
             Section {
                 HStack(spacing: 8) {
                     Image(systemName: "book.closed")
@@ -100,8 +96,7 @@ struct HeroListView: View {
                     .sidebarRow(
                         accent: .groupRulebook,
                         isSelected: selection == .rulebook
-                    )
-                    .tag(SidebarSelection.rulebook)
+                    ) { selection = .rulebook }
             } header: {
                 sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
             }
@@ -138,8 +133,7 @@ struct HeroListView: View {
                     .sidebarRow(
                         accent: .groupAdventure,
                         isSelected: selection == .adventure(adventure.persistentModelID)
-                    )
-                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
+                    ) { selection = .adventure(adventure.persistentModelID) }
                 }
             } header: {
                 sidebarSectionHeader(L("adventures"), color: .groupAdventure)
@@ -168,8 +162,7 @@ struct HeroListView: View {
                         .sidebarRow(
                             accent: HeroColorScheme.scheme(for: hero).accentColor,
                             isSelected: selection == .hero(hero.persistentModelID)
-                        )
-                        .tag(SidebarSelection.hero(hero.persistentModelID))
+                        ) { selection = .hero(hero.persistentModelID) }
                     }
                 }
             } header: {

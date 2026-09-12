@@ -24,6 +24,8 @@ struct CombatOpponentDefenseView: View {
 
     // Damage rolling state (shown after "Treffer geht durch")
     @State private var showDamage: Bool = false
+    /// Settled in the wound-effect card, folded into the reported total.
+    @State private var woundEffectDamage: Int? = nil
     @State private var damageDisplayRolls: [Int] = []
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
@@ -168,15 +170,28 @@ struct CombatOpponentDefenseView: View {
                 // Damage section
                 if showDamage, let formula = damageFormula, let parsed = parseDamage(formula) {
                     damageSection(parsed: parsed)
-                } else if showDamage && damageFormula == nil {
-                    // No damage formula — skip straight to new action
-                    neueAktionButton
                 }
 
-                // Wound-effect reminder — read-only GM prompt, nothing is applied (no
-                // opponent model to apply it to).
+                // Wound-effect reminder. Nothing is applied — the opponent has no
+                // LP to subtract from (ADR-0005) — but the extra damage can be
+                // settled here, and it belongs in the total below.
                 if showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
-                    WoundEffectReminderCard(zone: zone)
+                    WoundEffectReminderCard(zone: zone, extraDamage: $woundEffectDamage)
+                        .padding(.top, 8)
+                }
+
+                // The figure the player actually reports, once everything that
+                // feeds it has been settled. It stopped at the weapon's damage
+                // before, so a Wundeffekt never reached it.
+                if showDamage, let total = appliedTotal {
+                    appliedTotalBox(total)
+                        .padding(.top, 8)
+                }
+
+                // Last, because it leaves the screen. It used to sit inside the
+                // damage section, above the wound effect.
+                if showDamage, damageFormula == nil || damageFinalRolls != nil {
+                    neueAktionButton
                         .padding(.top, 8)
                 }
             }
@@ -283,15 +298,47 @@ struct CombatOpponentDefenseView: View {
                 }
             }
 
-            // Neue Aktion button — shown once dice are rolled
-            if damageFinalRolls != nil {
-                neueAktionButton
-                    .padding(.top, 8)
-            }
         }
         .contentShape(Rectangle())
         .onTapGesture { rollDamage(parsed: parsed) }
         .onAppear { startDamageAnimation(parsed: parsed) }
+    }
+
+    // MARK: - Reported total
+
+    /// The weapon's damage plus any settled Wundeffekt. `nil` until the dice are
+    /// finalised, since there is nothing to total before then.
+    private var appliedTotal: Int? {
+        guard let formula = damageFormula,
+              let parsed = parseDamage(formula),
+              let rolls = damageFinalRolls else { return nil }
+        let raw = max(0, rolls.reduce(0, +) + parsed.bonus)
+        return (isDoubleDamage ? raw * 2 : raw) + (woundEffectDamage ?? 0)
+    }
+
+    /// "18 TP + 3 WE = 21 TP" — the same shape as the take-damage screen's
+    /// formula, so both ends of a hit read the same way. The Wundeffekt term
+    /// appears only when it contributes.
+    @ViewBuilder
+    private func appliedTotalBox(_ total: Int) -> some View {
+        let extra = woundEffectDamage ?? 0
+        let base = total - extra
+        VStack(spacing: 4) {
+            Text(extra > 0
+                 ? "\(base) \(L("tp")) + \(extra) \(L("we")) = \(total) \(L("tp"))"
+                 : "\(total) \(L("tp"))")
+                .font(.dsaHeading(.title3))
+                .fontDesign(.monospaced)
+                .foregroundStyle(.white)
+                .accessibilityIdentifier("combat.dealDamage.total")
+            Text(L("damage.reportToGM"))
+                .font(.dsaBody(.caption))
+                .foregroundStyle(.white.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(Color.dsaDark)
+        .dsaBox(.flush)
     }
 
     // MARK: - Neue Aktion

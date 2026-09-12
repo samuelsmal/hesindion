@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The attack side reports the total it dealt (`9 TP + 4 WE = 13 TP`), and the wound effect is settled before the button that leaves the screen rather than after it
+- A screenshot of the skill-check modal and of the attack execution screen, so both can be reviewed as a diff like the rest
 - Neobrutalism style layer — `DSABox` (the app's one surface: flat fill, 2pt border, square corners, hard offset shadow), `DSAStepper` (the `[−][value][+]` control), `DSAToggleRow`, `DSAModal`, `DSADiceRevealModal` and `DSAType`. The border idiom previously existed as 202 byte-identical copies of `.overlay(Rectangle().stroke(…))`, and the app had exactly one custom `ViewModifier` (ADR-0007 … ADR-0010)
 - The hard offset shadow is back — the reference's signature element, absent from the app entirely. 5pt offset, zero blur, drawn in the border colour so it stays visible on the near-black dark surface. Carried by containers and primary actions only, so it marks importance rather than tappability (ADR-0008, ADR-0009)
 - Press feedback on every button — a pressed surface moves into its own shadow and the shadow disappears, so it lands flush; segments inside a shared control flip background and label colour instead. 192 of 211 buttons were `.buttonStyle(.plain)` with nothing put back, and so were visually inert
@@ -46,6 +48,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- A modal owns its own depth: `SkillCheckModal`'s panel casts, and nothing inside it does. The panel was flat on the scrim while three controls within it cast shadows onto their own neighbours — the modifier row printed one across the hint box beneath it
+- The calculation breakdown on the attack execution screen is one box with dividers, ending in the effective value. Every row used to stroke its own rectangle, so each boundary was a doubled border, and the total was the only unbordered surface in the app
+- The `Mod` caption sits clear of its stepper's shadow, which had been drawn over it
+- The sidebar marks the active hero once. `List(selection:)` drew a second marker in the system accent on top of the hero's own, so the row was highlighted twice in two colours
+- Equipping armour is shown by the fill like every other option; the Plattenrüstung row was the last `checkmark.circle` left, beside a "Beritten" toggle that already used the fill
+- Every gap on the adventure screen accounts for the offset its shadows spend outside their own bounds, so the actions no longer sit under each other's shadow
+- A critical result is announced by its colour, not by "!!! Kritischer Erfolg!"
 - Type scale is two weights — 700 for headings, 500 for body, the reference's own pair. `.black` (900) at 201 sites and `.semibold` at 52 retired, along with 551 inline `.system(…)` fonts (ADR-0007)
 - One border weight (2pt) everywhere. The 1pt and 3pt tiers are retired: emphasis is now shadow-or-not rather than a heavier line (ADR-0007, ADR-0008)
 - Corners are square, recorded as `DSALayout.cornerRadius = 0`. Ten rounded outliers — avatar badges, the hero image, two adventure `Circle()`s and a `Capsule()` in the weather row — are squared to match (ADR-0009)

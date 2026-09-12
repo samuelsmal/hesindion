@@ -93,7 +93,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
             app.buttons["combat.takeDamage.increaseTP"].waitForExistence(timeout: UITest.timeout),
             "Take-damage screen did not open"
         )
-        captureScreenshot(app, named: "11-take-damage-entry")
+        captureScreenshot(app, named: "12-take-damage-entry")
     }
 
     @MainActor

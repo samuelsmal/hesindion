@@ -410,7 +410,9 @@ struct CombatExecutionView: View {
             Text(L("modifier"))
                 .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
-                .padding(.top, 2)
+                // Clear the stepper's shadow, which draws outside its bounds and
+                // reserves no layout space — 2pt put "Mod" underneath it.
+                .padding(.top, DSALayout.shadowOffset + 4)
         }
     }
 
@@ -423,73 +425,71 @@ struct CombatExecutionView: View {
         return attributeValue - linesSum
     }
 
+    /// One line of the calculation: the contribution on the left, where it comes
+    /// from on the right, a divider beneath.
+    private func breakdownRow(value: String, source: String, tint: Color) -> some View {
+        HStack {
+            Text(value)
+                .font(.dsaMono(.caption, emphasis: true))
+                .foregroundStyle(tint)
+            Spacer()
+            Text(source)
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .dsaRowDivider()
+    }
+
     @ViewBuilder
     private var modifierBreakdown: some View {
         if let lines = modifierLines, !lines.isEmpty {
             VStack(spacing: 0) {
                 combatSectionLabel(L("calculation.label"))
 
-                // Base value row
-                HStack {
-                    Text("\(attrLabel) \(baseValue)")
-                        .font(.dsaMono(.caption, emphasis: true))
-                    Spacer()
-                    Text(L("source.basis"))
-                        .font(.dsaBody(.caption2))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .dsaBox(.flush)
+                // One box, dividers within. Each row used to stroke its own
+                // rectangle, so every boundary was a doubled 2pt border — and
+                // the total was a bare dark bar with no border at all, the only
+                // unbordered surface on the screen.
+                VStack(spacing: 0) {
+                    breakdownRow(
+                        value: "\(attrLabel) \(baseValue)",
+                        source: L("source.basis"),
+                        tint: .primary
+                    )
 
-                // Modifier lines
-                ForEach(lines) { line in
-                    HStack {
-                        Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
-                            .font(.dsaMono(.caption, emphasis: true))
-                            .foregroundStyle(line.value > 0 ? Color.dsaPositive : Color.groupCombat)
-                        Spacer()
-                        Text(line.source)
-                            .font(.dsaBody(.caption2))
-                            .foregroundStyle(.secondary)
+                    ForEach(lines) { line in
+                        breakdownRow(
+                            value: line.value > 0 ? "+\(line.value)" : "\(line.value)",
+                            source: line.source,
+                            tint: line.value > 0 ? Color.dsaPositive : Color.groupCombat
+                        )
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-                }
 
-                // Manual modifier row (only when non-zero)
-                if modifier != 0 {
-                    HStack {
-                        Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
-                            .font(.dsaMono(.caption, emphasis: true))
-                            .foregroundStyle(modifier > 0 ? Color.dsaPositive : Color.groupCombat)
-                        Spacer()
-                        Text(L("source.additional"))
-                            .font(.dsaBody(.caption2))
-                            .foregroundStyle(.secondary)
+                    if modifier != 0 {
+                        breakdownRow(
+                            value: modifier > 0 ? "+\(modifier)" : "\(modifier)",
+                            source: L("source.additional"),
+                            tint: modifier > 0 ? Color.dsaPositive : Color.groupCombat
+                        )
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-                }
 
-                // Effective total row
-                HStack {
-                    Text("\(attrLabel) \(effectiveValue)")
-                        .font(.dsaMono(.body, emphasis: true))
-                    Spacer()
-                    Text("Effektiv")
-                        .font(.dsaBody(.caption2))
-                        .foregroundStyle(.secondary)
+                    // The sum, inside the same box rather than welded under it.
+                    HStack {
+                        Text("\(attrLabel) \(effectiveValue)")
+                            .font(.dsaMono(.body, emphasis: true))
+                        Spacer()
+                        Text(L("source.effective"))
+                            .font(.dsaBody(.caption2))
+                            .opacity(0.75)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.dsaDark)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.dsaDark)
-                .foregroundStyle(.white)
+                .dsaBox(.raised, fill: Color(UIColor.systemBackground))
             }
         } else {
             // Fallback: simple display (for defense/dodge without full breakdown)

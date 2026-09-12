@@ -177,17 +177,32 @@ extension View {
     ///
     /// Rows are option surfaces, so they are `.flush` and take the accent as a
     /// stroke when selected, exactly like the manoeuvre and zone rows.
-    func sidebarRow(accent: Color, isSelected: Bool) -> some View {
-        self
-            .padding(.vertical, 10)
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? accent.opacity(0.35) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: isSelected ? accent : Color.dsaBorder)
-            .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 16))
-            .listRowBackground(Color(UIColor.systemBackground))
-            // The system hairline is the "subtle grey" the design language rules
-            // out, and it would double up against the row's own border.
-            .listRowSeparator(.hidden)
+    /// The row is a `Button` rather than a `List(selection:)` tag on purpose.
+    /// `List` highlights its selected row in the system accent — a blue ring
+    /// once the sidebar has focus, which on a device marked the active hero a
+    /// second time, in a second colour, on top of this one. There is no way to
+    /// ask for the selection *behaviour* without the chrome, so the row does
+    /// its own selecting and the List tracks nothing.
+    func sidebarRow(
+        accent: Color,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            self
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(isSelected ? accent.opacity(0.35) : Color(UIColor.systemBackground))
+                .dsaBox(.flush, stroke: isSelected ? accent : Color.dsaBorder)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 16))
+        .listRowBackground(Color(UIColor.systemBackground))
+        // The system hairline is the "subtle grey" the design language rules
+        // out, and it would double up against the row's own border.
+        .listRowSeparator(.hidden)
     }
 }

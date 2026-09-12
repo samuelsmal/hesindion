@@ -82,6 +82,11 @@ final class TakeDamageFlowTests: XCTestCase {
         XCTAssertTrue(dieButton.waitForExistence(timeout: UITest.timeout), "Probe dice not shown")
         dieButton.tap()
 
+        // The check itself, fully rendered: dice, breakdown, result and the
+        // controls that sit on the panel. It is the one modal built before
+        // `DSAModal` existed, so it is worth a capture of its own.
+        captureScreenshot(app, named: "15-take-damage-probe-modal")
+
         // The check is closed deliberately, not automatically — the result is
         // worth reading and a Schip reroll is still available until it is
         // dismissed. Leaving it open would make every later assertion
@@ -132,7 +137,7 @@ final class TakeDamageFlowTests: XCTestCase {
 
         XCTAssertTrue(summary.waitForExistence(timeout: UITest.timeout), "Rolled zone was not reported")
         XCTAssertTrue(summary.label.contains("7"), "Summary should carry the rolled value, got \(summary.label)")
-        captureScreenshot(app, named: "12-take-damage-zone-rolled")
+        captureScreenshot(app, named: "13-take-damage-zone-rolled")
 
         // The reveal holds the number until it is dismissed, for the same reason
         // the probe does: a modal that closes itself takes the result away
@@ -183,7 +188,7 @@ final class TakeDamageFlowTests: XCTestCase {
             rollExtra.waitForExistence(timeout: UITest.timeout),
             "A failed probe must offer the Wundeffekt damage roll"
         )
-        captureScreenshot(app, named: "14-take-damage-probe-failed")
+        captureScreenshot(app, named: "16-take-damage-probe-failed")
 
         // The panel sits below the fold once the wound effect expands.
         XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the damage roll button")
@@ -204,7 +209,7 @@ final class TakeDamageFlowTests: XCTestCase {
             "Formula should carry the Wundeffekt term, got \(formula.label)"
         )
 
-        captureScreenshot(app, named: "15-take-damage-extra-damage")
+        captureScreenshot(app, named: "17-take-damage-extra-damage")
 
         let confirm = app.button(containing: "Bestätigen")
         XCTAssertTrue(confirm.waitForExistence(timeout: UITest.timeout), "Confirm missing")
@@ -215,7 +220,7 @@ final class TakeDamageFlowTests: XCTestCase {
             app.button(containing: "Neue Aktion").waitForExistence(timeout: UITest.timeout),
             "Damage was not applied"
         )
-        captureScreenshot(app, named: "16-take-damage-applied")
+        captureScreenshot(app, named: "18-take-damage-applied")
     }
 
     // MARK: - Correcting a wrong press
@@ -240,7 +245,7 @@ final class TakeDamageFlowTests: XCTestCase {
 
         let overwrite = app.buttons["combat.takeDamage.overwriteConfirm"]
         XCTAssertTrue(overwrite.waitForExistence(timeout: UITest.timeout), "Overwrite prompt not shown")
-        captureScreenshot(app, named: "17-take-damage-overwrite")
+        captureScreenshot(app, named: "19-take-damage-overwrite")
         overwrite.tap()
 
         XCTAssertTrue(

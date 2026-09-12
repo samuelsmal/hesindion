@@ -105,7 +105,11 @@ struct AdventureDetailView: View {
     // MARK: - Controls
 
     private var controlsBar: some View {
-        VStack(spacing: 8) {
+        // The buttons cast now, and a shadow draws outside its own bounds without
+        // reserving layout space, so an 8pt stack put each shadow on top of the
+        // next button. Every gap on this screen is the visible gap plus the
+        // offset the shadow spends.
+        VStack(spacing: 8 + DSALayout.shadowOffset) {
             weatherButton(L("weather.add"), icon: "plus", filled: true) { isShowingAddStretch = true }
             // 8pt of visible gap plus the 5pt the left button's shadow spends
             // outside its own bounds.
@@ -119,7 +123,8 @@ struct AdventureDetailView: View {
             .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
-        .padding(.vertical, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 12 + DSALayout.shadowOffset)
     }
 
     private func weatherButton(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false, action: @escaping () -> Void) -> some View {
@@ -195,7 +200,8 @@ struct AdventureDetailView: View {
             .padding(DSALayout.contentPadding)
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
-        .padding(.vertical, 8)
+        .padding(.top, 12 + DSALayout.shadowOffset)
+        .padding(.bottom, 16)
     }
 
     // MARK: - Actions

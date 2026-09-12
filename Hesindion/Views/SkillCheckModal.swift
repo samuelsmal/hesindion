@@ -72,7 +72,13 @@ struct SkillCheckModal: View {
                 probeContent()
             }
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            // A modal on a scrim is the floating-container case the shadow is
+            // reserved for (ADR-0009). This panel was `.flush` while three
+            // controls *inside* it were `.raised`, so the only shadows on
+            // screen were cast by contents onto their own neighbours — the
+            // modifier row printed one across the hint box beneath it — while
+            // the panel itself sat flat on the scrim.
+            .dsaBox(.raised)
             .frame(maxWidth: 400)
             .padding(24)
             .gesture(
@@ -217,7 +223,7 @@ struct SkillCheckModal: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.dsaSchipGold)
-                    .dsaBox(.raised)
+                    .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(rerollSelection.isEmpty)
@@ -243,7 +249,7 @@ struct SkillCheckModal: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(config.accentColor)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
                 .padding(.top, 4)
@@ -277,31 +283,37 @@ struct SkillCheckModal: View {
             Button { modifiers[index] -= 1 } label: {
                 Text("\u{2212}")
                     .font(.dsaBody(.body))
-                    .foregroundStyle(locked ? .secondary : .primary)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.dsaMotion)
+            .buttonStyle(segmentStyle(locked: locked))
             .disabled(locked)
 
             Text(mod >= 0 ? "+\(mod)" : "\(mod)")
                 .font(.dsaBody(.body))
-                .foregroundStyle(locked ? Color.secondary : Color.primary)
+                .foregroundStyle(locked ? Color.dsaDisabledLabel : Color.primary)
                 .frame(minWidth: 28)
 
             Button { modifiers[index] += 1 } label: {
                 Text("+")
                     .font(.dsaBody(.body))
-                    .foregroundStyle(locked ? .secondary : .primary)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.dsaMotion)
+            .buttonStyle(segmentStyle(locked: locked))
             .disabled(locked)
         }
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .dsaBox(.raised)
+        .dsaBox(.flush)
+    }
+
+    /// Spec 010's colour flip, for segments with no shadow to press into.
+    private func segmentStyle(locked: Bool) -> DSASegmentPressStyle {
+        DSASegmentPressStyle(
+            tint: Color(UIColor.systemBackground),
+            foreground: locked ? Color.dsaDisabledLabel : Color.primary
+        )
     }
 
     private func diceBox(value: Int, isAnimating: Bool, selected: Bool) -> some View {

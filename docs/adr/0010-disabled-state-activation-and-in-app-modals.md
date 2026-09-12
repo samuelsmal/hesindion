@@ -13,7 +13,7 @@ design-language answer quietly kept the system default.
 **Disabled.** `Color.dsaDisabled` was `UIColor.tertiarySystemFill` — a
 translucent grey — and every call site paired it with `.foregroundStyle(.white)`,
 because that is what the *enabled* fill needs. So the moment a control settled,
-its label went white-on-pale-grey. On `16-take-damage-applied` the entire
+its label went white-on-pale-grey. On `18-take-damage-applied` the entire
 Wundeffekt panel became unreadable at exactly the point the player wants to read
 it back. A soft grey is also the one thing the design language names and rules
 out.
@@ -82,4 +82,10 @@ same container the Manöver and Trefferzone lists use.
   `StateDetailSheet`. They are multi-select and level-select lists rather than
   boolean toggles, and filling a long list of states is a bigger visual call than
   this decision covers. Left deliberately.
+- **`SkillCheckModal` follows the same rule as `DSAModal`, retroactively.** It
+  predates this decision and had it backwards: the panel was `.flush` while
+  three controls inside it were `.raised`, so the only shadows on screen were
+  cast by contents onto their own neighbours. The panel casts; nothing within it
+  does. Its modifier segments take spec 010's colour flip, having no shadow left
+  to press into.
 - Snapshot baselines and screenshots are invalidated and re-recorded.
