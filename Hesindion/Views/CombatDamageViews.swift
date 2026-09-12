@@ -157,15 +157,12 @@ struct CombatTakeDamageView: View {
                             wundschwelle: wundschwelle,
                             probeSucceeded: $probeSucceeded,
                             effectApplies: woundEffectApplies,
-                            extraDamage: extraDamage,
+                            extraDamage: $extraDamage,
                             confirmed: confirmed,
                             dropWeapon: $dropWeapon,
                             onRollProbe: {
                                 probeTalent = hero.selbstbeherrschung
                                 showingProbeModal = true
-                            },
-                            onRollExtraDamage: {
-                                extraDamage = WoundEffectResolver.rollExtraDamage(for: hit.zone)
                             }
                         )
                     }
@@ -350,12 +347,16 @@ struct CombatTakeDamageView: View {
 
 // MARK: - WoundEffectReminderCard
 
-/// Read-only rules prompt shown after a landed targeted attack.
+/// Rules prompt shown after a landed targeted attack.
 ///
-/// Nothing is applied: the opponent has no LP, no KO and no states, so the app can
-/// only state the rule and leave the call to the player.
+/// Nothing is *applied*: the opponent has no LP, no KO and no states, so the app
+/// states the rule and leaves the call to the player. Where the effect is extra
+/// damage the number can still be settled here — rolled, or entered after being
+/// told — because the player needs the figure to report, even though there is
+/// nothing on this device to subtract it from.
 struct WoundEffectReminderCard: View {
     let zone: HitZone
+    @State private var extraDamage: Int? = nil
 
     var body: some View {
         let effect = WoundEffectCatalog.effect(for: zone)
@@ -366,6 +367,11 @@ struct WoundEffectReminderCard: View {
             Text(L(effect.resistanceKey))
                 .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
+
+            if case .extraDamage = effect.kind {
+                WoundEffectDamageControl(zone: zone, value: $extraDamage)
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)

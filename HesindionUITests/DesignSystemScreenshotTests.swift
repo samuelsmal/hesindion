@@ -55,7 +55,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
         let app = UITest.launch(appearance: "light")
         awaitHeroDetail(app)
         collapseSidebar(app)
-        captureScreenshot(app, named: "hero-detail-light")
+        captureScreenshot(app, named: "02-hero-detail-light")
     }
 
     @MainActor
@@ -64,7 +64,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
         let app = UITest.launch(appearance: "dark")
         awaitHeroDetail(app)
         collapseSidebar(app)
-        captureScreenshot(app, named: "hero-detail-dark")
+        captureScreenshot(app, named: "03-hero-detail-dark")
     }
 
     // MARK: - Combat root
@@ -74,7 +74,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
         continueAfterFailure = false
         let app = UITest.launch(path: "combat", appearance: "light")
         awaitCombatRoot(app)
-        captureScreenshot(app, named: "combat-root")
+        captureScreenshot(app, named: "07-combat-root-light")
     }
 
     // MARK: - Take damage
@@ -93,7 +93,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
             app.buttons["combat.takeDamage.increaseTP"].waitForExistence(timeout: UITest.timeout),
             "Take-damage screen did not open"
         )
-        captureScreenshot(app, named: "take-damage")
+        captureScreenshot(app, named: "11-take-damage-entry")
     }
 
     @MainActor
@@ -101,7 +101,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
         continueAfterFailure = false
         let app = UITest.launch(path: "combat", appearance: "dark")
         awaitCombatRoot(app)
-        captureScreenshot(app, named: "combat-root-dark")
+        captureScreenshot(app, named: "08-combat-root-dark")
     }
 
     // MARK: - Sidebar, adventure weather, dice roller
@@ -113,7 +113,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
         continueAfterFailure = false
         let app = UITest.launch(appearance: "light")
         awaitHeroDetail(app)
-        captureScreenshot(app, named: "hero-list")
+        captureScreenshot(app, named: "01-hero-list")
     }
 
     /// The weather table, reached through the seeded adventure. Its rows come
@@ -137,7 +137,7 @@ final class DesignSystemScreenshotTests: XCTestCase {
             app.staticTexts[UITest.adventureName].waitForExistence(timeout: UITest.timeout),
             "Adventure detail did not open"
         )
-        captureScreenshot(app, named: "adventure-weather")
+        captureScreenshot(app, named: "05-adventure-weather")
     }
 
     /// The dice roller, whose stepper was the one with unequal thirds before
@@ -158,6 +158,6 @@ final class DesignSystemScreenshotTests: XCTestCase {
             app.staticTexts["W6"].waitForExistence(timeout: UITest.timeout),
             "Dice roll sheet did not open"
         )
-        captureScreenshot(app, named: "dice-roller")
+        captureScreenshot(app, named: "06-dice-roller")
     }
 }

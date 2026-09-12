@@ -27,7 +27,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         XCTAssertTrue(section.waitForExistence(timeout: UITest.timeout), "Hero settings did not open")
         XCTAssertTrue(app.scrollUntilHittable(section), "Could not scroll the Fokus-Regeln section into view")
 
-        captureScreenshot(app, named: "01-fokus-settings")
+        captureScreenshot(app, named: "04-hero-settings-fokus")
     }
 
     // MARK: - 02 Trefferzone picker on the melee announcement
@@ -43,7 +43,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(torso), "Could not scroll the zone picker into view")
         torso.tap()
 
-        captureScreenshot(app, named: "02-zone-picker")
+        captureScreenshot(app, named: "09-attack-zone-picker")
     }
 
     // MARK: - 03 GM wound-effect reminder after a landed targeted attack
@@ -88,7 +88,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
 
         XCTAssertTrue(reminder.exists, "Wound-effect reminder card not shown")
         app.scrollUntilHittable(reminder, maxSwipes: 4)
-        captureScreenshot(app, named: "03-reminder-card")
+        captureScreenshot(app, named: "10-attack-wound-effect-reminder")
     }
 
     // MARK: - 04 Wundeffekt panel on the take-damage screen
@@ -114,7 +114,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         let panel = app.otherElements["combat.woundEffectPanel"]
         XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "Wundeffekt panel not shown")
 
-        captureScreenshot(app, named: "04-wound-effect-panel")
+        captureScreenshot(app, named: "13-take-damage-effect-threatened")
     }
 
     // MARK: - Navigation helpers

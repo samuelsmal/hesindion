@@ -78,6 +78,61 @@ struct CombatHitZoneRow: View {
     }
 }
 
+// MARK: - WoundEffectDamageControl
+
+/// Settles a Wundeffekt's own damage: roll it, or enter the number you were
+/// given. Both are first-class — at the table the value may just as easily be
+/// spoken to you as rolled here, and the app has no way to tell which.
+///
+/// Used by both sides of a fight. When the hero takes the hit the figure is
+/// folded into the LP write; when the hero *deals* one it is informational,
+/// because the opponent is not modelled (ADR-0005).
+struct WoundEffectDamageControl: View {
+    let zone: HitZone
+    @Binding var value: Int?
+    var isDisabled: Bool = false
+
+    private var rolled: Int { value ?? 0 }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Button {
+                value = WoundEffectResolver.rollExtraDamage(for: zone)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "dice.fill")
+                    Text(L("trefferzone.rollExtraDamage"))
+                }
+                .font(.dsaHeading(.caption))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(isDisabled ? Color.dsaDisabled : Color.groupCombat)
+                .dsaBox(.flush)
+            }
+            .buttonStyle(.dsaMotion)
+            .disabled(isDisabled)
+            .accessibilityIdentifier("combat.takeDamage.rollExtraDamage")
+
+            DSAStepper(
+                tint: isDisabled ? Color.dsaDisabled : Color.groupCombat,
+                decrementDisabled: isDisabled || rolled <= 0,
+                incrementDisabled: isDisabled,
+                incrementIdentifier: "combat.takeDamage.increaseExtraDamage",
+                onDecrement: { if rolled > 0 { value = rolled - 1 } },
+                onIncrement: { value = rolled + 1 }
+            ) {
+                Text("+\(rolled)")
+                    .font(.dsaHeading(.title3))
+                    .fontDesign(.monospaced)
+                    .padding(.vertical, 8)
+                    .accessibilityIdentifier("combat.takeDamage.extraDamage")
+            }
+        }
+        .dsaOptionGroup()
+    }
+}
+
 // MARK: - CombatWoundEffectPanel
 
 /// Wundschwelle panel for the hero taking damage: the multiple, the Wundeffekt, and
@@ -94,7 +149,7 @@ struct CombatWoundEffectPanel: View {
     /// can roll it: Selbstbeherrschung is a basic ability.
     @Binding var probeSucceeded: Bool?
     let effectApplies: Bool
-    let extraDamage: Int?
+    @Binding var extraDamage: Int?
     let confirmed: Bool
     /// Staged intent for the Arme drop-weapon action: the weapon is only actually
     /// cleared on confirm, alongside the LP write and the log entry (see
@@ -102,7 +157,6 @@ struct CombatWoundEffectPanel: View {
     /// the hero.
     @Binding var dropWeapon: Bool
     var onRollProbe: () -> Void
-    var onRollExtraDamage: () -> Void = {}
 
     private var effect: WoundEffect { WoundEffectCatalog.effect(for: hit.zone) }
 
@@ -169,32 +223,15 @@ struct CombatWoundEffectPanel: View {
                 .disabled(confirmed)
             }
 
-            // The Wundeffekt's own damage roll. It used to happen silently inside
+            // The Wundeffekt's own damage. It used to be rolled silently inside
             // `confirmDamage`, so the number was never shown — unlike every other
             // roll on this screen.
-            if effectApplies, case .extraDamage = effect.kind, extraDamage == nil {
-                Button(action: onRollExtraDamage) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "dice.fill")
-                        Text(L("trefferzone.rollExtraDamage"))
-                    }
-                    .font(.dsaHeading(.caption))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(confirmed ? Color.dsaDisabled : Color.groupCombat)
-                    .dsaBox(.raised)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(confirmed)
-                .accessibilityIdentifier("combat.takeDamage.rollExtraDamage")
-            }
-
-            if let extra = extraDamage {
-                Text("+\(extra) \(L("lpLost"))")
-                    .font(.dsaMono(.caption, emphasis: true))
-                    .foregroundStyle(Color.groupCombat)
-                    .accessibilityIdentifier("combat.takeDamage.extraDamage")
+            if effectApplies, case .extraDamage = effect.kind {
+                WoundEffectDamageControl(
+                    zone: hit.zone,
+                    value: $extraDamage,
+                    isDisabled: confirmed
+                )
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

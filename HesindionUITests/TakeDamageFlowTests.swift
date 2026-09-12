@@ -128,6 +128,7 @@ final class TakeDamageFlowTests: XCTestCase {
         rollZone.tap()
         XCTAssertTrue(summary.waitForExistence(timeout: UITest.timeout), "Rolled zone was not reported")
         XCTAssertTrue(summary.label.contains("7"), "Summary should carry the rolled value, got \(summary.label)")
+        captureScreenshot(app, named: "12-take-damage-zone-rolled")
     }
 
     // MARK: - Both probe branches
@@ -167,18 +168,19 @@ final class TakeDamageFlowTests: XCTestCase {
             rollExtra.waitForExistence(timeout: UITest.timeout),
             "A failed probe must offer the Wundeffekt damage roll"
         )
+        captureScreenshot(app, named: "14-take-damage-probe-failed")
+
         // The panel sits below the fold once the wound effect expands.
         XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the damage roll button")
         rollExtra.tap()
 
-        // The button is only offered while `extraDamage == nil`, so its going away
-        // is proof the roll happened and was stored. Asserted this way rather than
-        // on the "+N LP" label, which SwiftUI does not expose to XCUITest from
-        // inside the panel's `.accessibilityElement(children: .contain)`.
-        XCTAssertTrue(
-            rollExtra.waitForNonExistence(timeout: UITest.timeout),
-            "Wundeffekt damage was not rolled"
-        )
+        // The roll button stays put — it is a re-roll now that the value can also
+        // be entered by hand — so the proof is the figure itself moving off zero.
+        let rolledValue = element(app, "combat.takeDamage.extraDamage")
+        XCTAssertTrue(rolledValue.waitForExistence(timeout: UITest.timeout), "Damage figure missing")
+        XCTAssertNotEqual(rolledValue.label, "+0", "Wundeffekt damage was not rolled")
+
+        captureScreenshot(app, named: "15-take-damage-extra-damage")
 
         let confirm = app.button(containing: "Bestätigen")
         XCTAssertTrue(confirm.waitForExistence(timeout: UITest.timeout), "Confirm missing")
@@ -189,6 +191,7 @@ final class TakeDamageFlowTests: XCTestCase {
             app.button(containing: "Neue Aktion").waitForExistence(timeout: UITest.timeout),
             "Damage was not applied"
         )
+        captureScreenshot(app, named: "16-take-damage-applied")
     }
 
     // MARK: - Correcting a wrong press
@@ -213,6 +216,7 @@ final class TakeDamageFlowTests: XCTestCase {
 
         let overwrite = app.buttons["Überschreiben"]
         XCTAssertTrue(overwrite.waitForExistence(timeout: UITest.timeout), "Overwrite prompt not shown")
+        captureScreenshot(app, named: "17-take-damage-overwrite")
         overwrite.tap()
 
         XCTAssertTrue(
