@@ -1,20 +1,43 @@
 import SwiftUI
 import SwiftData
 
+/// What a delete is about, once asked for and before it is confirmed. A combat
+/// carries the entries it wrote, gathered when the button is pressed, so the
+/// confirmation can say how many go and the delete cannot drift from what was shown.
+///
+/// It lives outside the panel because the confirmation does: a modal drawn inside
+/// the log panel is bounded by it, and in landscape that is a third of the screen
+/// — the panel wraps the title over three lines and stacks the buttons in a
+/// column. `SplitContentLayout` owns the state and draws the modal over the whole
+/// layout, which is where every other modal in the app sits (see `HeroDetailView`).
+enum LogDeletion {
+    case entry(LogEntry)
+    case combat(id: UUID, entries: [LogEntry])
+
+    var entries: [LogEntry] {
+        switch self {
+        case .entry(let entry): [entry]
+        case .combat(_, let entries): entries
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .entry:
+            "Eintrag löschen?"
+        case .combat(_, let entries):
+            "Kampf löschen? (\(entries.count) \(entries.count == 1 ? "Eintrag" : "Einträge"))"
+        }
+    }
+}
+
 struct LogPanelView: View {
     @Bindable var hero: Hero
-    @Environment(\.modelContext) private var modelContext
+    /// Set by the trash buttons; the confirmation and the delete itself belong to
+    /// the layout above, so the modal is not boxed into the panel's width.
+    @Binding var pendingDeletion: LogDeletion?
 
-    @State private var pendingDeletion: PendingDeletion?
     @State private var collapsedCombats: Set<UUID> = []
-
-    /// What the confirmation dialog is about. A combat carries the entries it
-    /// wrote, gathered when the button is pressed, so the dialog can say how many
-    /// go and the delete cannot drift from what was shown.
-    private enum PendingDeletion {
-        case entry(LogEntry)
-        case combat(id: UUID, entries: [LogEntry])
-    }
 
     private var sortedEntries: [LogEntry] {
         hero.logEntries.sorted { $0.timestamp > $1.timestamp }
@@ -42,38 +65,6 @@ struct LogPanelView: View {
                 .frame(width: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
-        .confirmationDialog(
-            deletionTitle,
-            isPresented: Binding(
-                get: { pendingDeletion != nil },
-                set: { if !$0 { pendingDeletion = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Löschen", role: .destructive) {
-                switch pendingDeletion {
-                case .entry(let entry):
-                    deleteEntry(entry)
-                case .combat(_, let entries):
-                    entries.forEach(deleteEntry)
-                case nil:
-                    break
-                }
-                pendingDeletion = nil
-            }
-            Button("Abbrechen", role: .cancel) {
-                pendingDeletion = nil
-            }
-        } message: {
-            Text("Die Auswirkung wird rückgängig gemacht.")
-        }
-    }
-
-    private var deletionTitle: String {
-        if case .combat(_, let entries) = pendingDeletion {
-            return "Kampf löschen? (\(entries.count) \(entries.count == 1 ? "Eintrag" : "Einträge"))"
-        }
-        return "Eintrag löschen?"
     }
 
     // MARK: - Log List
@@ -98,14 +89,6 @@ struct LogPanelView: View {
                                 }
                             } label: {
                                 Label("Löschen", systemImage: "trash")
-                            }
-                        }
-                        // The swipe alone was the only way in, and in a narrow
-                        // side panel it is easy to miss and easy to lose to the
-                        // panel's own drag. Long-press reaches the same dialog.
-                        .contextMenu {
-                            Button("Löschen", systemImage: "trash", role: .destructive) {
-                                pendingDeletion = .entry(entry)
                             }
                         }
                 }
@@ -202,6 +185,9 @@ struct LogPanelView: View {
 
     // MARK: - Entry Row
 
+    /// The trailing trash is the same affordance the combat header has. The swipe
+    /// stays, but it was the only way in, and in a narrow side panel it is easy to
+    /// miss and easy to lose to the panel's own drag (issue #13).
     private func entryRow(_ entry: LogEntry, indented: Bool = false) -> some View {
         HStack(spacing: 8) {
             Image(systemName: iconName(for: entry.kind))
@@ -217,6 +203,20 @@ struct LogPanelView: View {
             Text(entry.timestamp, style: .time)
                 .font(.dsaBody(.caption))
                 .foregroundStyle(.secondary)
+
+            Button {
+                pendingDeletion = .entry(entry)
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 8)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel("Eintrag löschen")
+            .accessibilityIdentifier("log.deleteEntry")
         }
         .padding(.horizontal, DSALayout.contentPadding)
         .padding(.leading, indented ? 16 : 0)
@@ -474,10 +474,4 @@ struct LogPanelView: View {
         }
     }
 
-    // MARK: - Deletion
-
-    private func deleteEntry(_ entry: LogEntry) {
-        entry.reversible()?.reverse(on: hero)
-        modelContext.delete(entry)
-    }
 }

@@ -103,6 +103,9 @@ Three known intermittent failures — none of them regressions:
 
 The UI follows a **Neo-Brutalist** design theme.
 
+- **No system dialogs.** A confirmation is `DSAModal` + `DSAModalButton`, never `.alert` or `.confirmationDialog`: a system dialog brings rounded corners, blurred material and tinted text onto a screen built without any of the three. The same goes for `.contextMenu`
+- **A modal is a sibling of the layout, not a child of a panel.** It is drawn in the root `ZStack` next to `SplitContentLayout` (see `HeroDetailView`, and `SplitContentLayout` itself for the log's delete), because a modal placed inside a side panel is bounded by it — in landscape that is a third of the screen
+
 ## Swift Configuration
 
 - Main actor isolation is enabled by default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`)

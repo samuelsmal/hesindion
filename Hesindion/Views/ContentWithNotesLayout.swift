@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - SidePanel
@@ -19,16 +20,63 @@ struct SplitContentLayout<Content: View>: View {
     @ViewBuilder let content: Content
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.modelContext) private var modelContext
+
+    /// The log panel asks for a delete; the confirmation is drawn here, over the
+    /// whole layout, because a modal inside the panel is bounded by the panel.
+    @State private var logDeletion: LogDeletion?
 
     private var isLandscape: Bool {
         sizeClass == .regular
     }
 
     var body: some View {
-        if isLandscape {
-            landscapeLayout
-        } else {
-            portraitLayout
+        ZStack {
+            if isLandscape {
+                landscapeLayout
+            } else {
+                portraitLayout
+            }
+
+            if let deletion = logDeletion {
+                deletionModal(deletion)
+            }
+        }
+    }
+
+    // MARK: - Deleting from the log
+
+    /// The app's own modal, not `.confirmationDialog`: a system dialog brings
+    /// rounded corners, blurred material and tinted text onto a screen built
+    /// without any of the three (see `DSAModal`).
+    private func deletionModal(_ deletion: LogDeletion) -> some View {
+        DSAModal(title: deletion.title, accent: Color.groupCombat) {
+            Text("Die Auswirkung wird rückgängig gemacht.")
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(
+                title: "Löschen",
+                accent: Color.groupCombat,
+                identifier: "log.deleteConfirm"
+            ) {
+                // Each entry undoes its own effect on the way out — the LP a hit
+                // took, the LP a heal gave — exactly as deleting one always did.
+                for entry in deletion.entries {
+                    entry.reversible()?.reverse(on: hero)
+                    modelContext.delete(entry)
+                }
+                logDeletion = nil
+            }
+
+            DSAModalButton(
+                title: "Abbrechen",
+                accent: Color.groupCombat,
+                filled: false,
+                identifier: "log.deleteCancel"
+            ) {
+                logDeletion = nil
+            }
         }
     }
 
@@ -89,7 +137,7 @@ struct SplitContentLayout<Content: View>: View {
         case .notes:
             NotesPanelView(hero: hero)
         case .logs:
-            LogPanelView(hero: hero)
+            LogPanelView(hero: hero, pendingDeletion: $logDeletion)
         case .rules:
             RulebookPanelView()
         }

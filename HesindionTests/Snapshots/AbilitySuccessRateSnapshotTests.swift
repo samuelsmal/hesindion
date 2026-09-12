@@ -102,7 +102,9 @@ final class AbilitySuccessRateSnapshotTests: XCTestCase {
         let context = ModelContext(container)
         seedLog(for: hero, in: context)
 
-        let view = LogPanelView(hero: hero)
+        // The delete confirmation is drawn by `SplitContentLayout`, not the panel,
+        // so nothing here can be pending.
+        let view = LogPanelView(hero: hero, pendingDeletion: .constant(nil))
             .modelContainer(container)
             .frame(width: 440, height: 720)
             .environment(\.colorScheme, .light)
