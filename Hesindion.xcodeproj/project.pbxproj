@@ -122,6 +122,7 @@
 				BA48A1862F485F1D00E630FD /* Sources */,
 				BA48A1872F485F1D00E630FD /* Frameworks */,
 				BA48A1882F485F1D00E630FD /* Resources */,
+				BA48A5002F80000000E630FD /* Bundle CHANGELOG.md */,
 			);
 			buildRules = (
 			);
@@ -248,6 +249,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BA48A5002F80000000E630FD /* Bundle CHANGELOG.md */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 0;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/CHANGELOG.md",
+			);
+			name = "Bundle CHANGELOG.md";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/CHANGELOG.md",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The in-app Changelog screen reads CHANGELOG.md out of the bundle. Copy\n# the canonical one at the repo root rather than keeping a second copy under\n# Hesindion/Resources/, which is a synchronized group and so bundled\n# automatically — that copy silently fell eleven commits behind.\nset -euo pipefail\n/bin/cp -f \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BA48A1862F485F1D00E630FD /* Sources */ = {

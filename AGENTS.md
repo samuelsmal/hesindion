@@ -126,6 +126,12 @@ Maintain `CHANGELOG.md` in the project root following [Keep a Changelog v1.0.0](
 
 When a release is cut, move `[Unreleased]` items into a versioned section with the date.
 
+The root `CHANGELOG.md` is the only copy. The in-app Changelog screen reads it out
+of the app bundle, where the target's *Bundle CHANGELOG.md* script phase puts it at
+build time. Do not add a copy under `Hesindion/Resources/` — that directory is a
+file-system synchronized group, so a file dropped there is bundled silently, and the
+copy that used to live there fell eleven commits behind before anyone noticed.
+
 ### Architecture Decision Records (ADRs)
 
 Record significant architecture decisions in `docs/adr/` using the format defined in `docs/adr/0000-template.md`. Create a new ADR when:
