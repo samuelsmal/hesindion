@@ -82,7 +82,7 @@ struct StatePickerSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(level == lvl ? Color.groupCombat : Color(UIColor.secondarySystemBackground))
-                            .dsaBox(.raised)
+                            .dsaBox(.flush)
                     }
                     .buttonStyle(.dsaMotion)
                 }

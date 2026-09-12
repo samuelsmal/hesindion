@@ -123,7 +123,7 @@ struct CombatWoundEffectPanel: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                         .background(confirmed ? Color.dsaDisabled : combatAccent)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(confirmed)

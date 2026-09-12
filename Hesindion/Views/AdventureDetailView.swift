@@ -90,15 +90,15 @@ struct AdventureDetailView: View {
             Image(uiImage: uiImage)
                 .resizable().scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.dsaBorder, lineWidth: 1))
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 12))
                 .frame(width: size, height: size)
                 .background(Color.groupAdventure.opacity(0.3))
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.dsaBorder, lineWidth: 1))
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         }
     }
 

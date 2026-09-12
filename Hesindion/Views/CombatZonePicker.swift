@@ -48,7 +48,7 @@ struct CombatZonePicker: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 12)
                     .background(targetIsSurprised ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .dsaBox(.raised, stroke: targetIsSurprised ? combatAccent : Color.dsaBorder)
+                    .dsaBox(.flush, stroke: targetIsSurprised ? combatAccent : Color.dsaBorder)
                 }
                 .buttonStyle(.dsaMotion)
             }
@@ -105,7 +105,7 @@ struct CombatZonePicker: View {
                 // two-line zone chips, which carry a penalty beneath the name.
                 .frame(maxHeight: .infinity)
                 .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                .dsaBox(.raised)
+                .dsaBox(.flush)
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier(identifier)

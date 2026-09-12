@@ -297,11 +297,8 @@ struct HeroDetailView: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: 120, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.dsaBorder, lineWidth: 3)
-                        )
+                        .clipShape(Rectangle())
+                        .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
                 .frame(maxWidth: .infinity)

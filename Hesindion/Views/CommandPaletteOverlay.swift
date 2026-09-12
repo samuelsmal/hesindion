@@ -265,7 +265,7 @@ struct CommandSearchOverlay: View {
             }
             .frame(maxHeight: maxHeight)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.raised)
+            .dsaBox(.flush)
         }
         .padding(.horizontal, 16)
         .gesture(
@@ -376,7 +376,7 @@ struct CommandModal: View {
             }
             .padding(32)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.raised)
+            .dsaBox(.flush)
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in

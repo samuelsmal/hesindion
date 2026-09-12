@@ -104,7 +104,7 @@ struct CombatRootView: View {
                         .frame(width: 52)
                         .frame(maxHeight: .infinity)
                         .background(combatAccent)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
 
@@ -121,7 +121,7 @@ struct CombatRootView: View {
                     .frame(minWidth: 64)
                     .frame(maxHeight: .infinity)
                     .background(Color.dsaDark)
-                    .dsaBox(.raised)
+                    .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
             }
@@ -229,7 +229,7 @@ struct CombatRootView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(beengteUmgebungActive ? combatAccent : Color(UIColor.secondarySystemBackground))
-                    .dsaBox(.raised, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
+                    .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
                 }
                 .buttonStyle(.dsaMotion)
                 .padding(.top, 4)
@@ -267,7 +267,7 @@ struct CombatRootView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color.dsaDark)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -472,7 +472,7 @@ struct CombatRootView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(Color.dsaDark)
-                        .dsaBox(.raised)
+                        .dsaBox(.flush)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -488,7 +488,7 @@ struct CombatRootView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.dsaDark)
-                            .dsaBox(.raised)
+                            .dsaBox(.flush)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -575,7 +575,7 @@ struct CombatRootView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color.dsaSchipGold.opacity(0.1))
-                        .overlay(Rectangle().stroke(Color.dsaSchipGold, lineWidth: 2))
+                        .dsaBox(.flush, stroke: Color.dsaSchipGold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
@@ -610,7 +610,7 @@ struct CombatRootView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color.dsaSchipGold.opacity(0.1))
-                        .overlay(Rectangle().stroke(Color.dsaSchipGold, lineWidth: 2))
+                        .dsaBox(.flush, stroke: Color.dsaSchipGold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -785,7 +785,7 @@ struct CombatArmorManagementSheet: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.raised, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
+            .dsaBox(.flush, stroke: armor.isEquipped ? combatAccent : Color.dsaBorder)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -911,7 +911,7 @@ struct CombatInitiativeSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .dsaBox(.raised)
+            .dsaBox(.flush)
         }
         .buttonStyle(.dsaMotion)
     }

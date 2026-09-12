@@ -72,7 +72,7 @@ struct SkillCheckModal: View {
                 probeContent()
             }
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.raised)
+            .dsaBox(.flush)
             .frame(maxWidth: 400)
             .padding(24)
             .gesture(
@@ -291,12 +291,7 @@ struct SkillCheckModal: View {
             .padding(.vertical, 8)
             .background(isAnimating ? config.accentColor.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
             .dsaBox(.flush)
-            .overlay(
-                Rectangle().stroke(
-                    selected ? Color.dsaSchipGold : Color.clear,
-                    lineWidth: 3
-                )
-            )
+            .dsaBox(.flush, stroke: selected ? Color.dsaSchipGold : Color.clear)
     }
 
     private func resultBox(value: Int) -> some View {

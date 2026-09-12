@@ -35,7 +35,7 @@ struct WeatherDayRow: View {
                         .font(.dsaBody(.caption2))
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(Color.groupAdventure.opacity(0.25))
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                 }
             }
         }

@@ -865,7 +865,7 @@ struct CombatFluchtView: View {
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.dsaPositive.opacity(0.1))
-                        .overlay(Rectangle().stroke(Color.dsaPositive, lineWidth: 2))
+                        .dsaBox(.flush, stroke: Color.dsaPositive)
 
                         Text("GS \(gs) Schritt")
                             .font(.dsaMono(.caption, emphasis: true))

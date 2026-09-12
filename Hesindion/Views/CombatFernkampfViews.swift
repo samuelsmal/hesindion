@@ -269,7 +269,7 @@ struct CombatFernkampfSetupView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
                 .background(kampfgetuemmel ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                .dsaBox(.raised, stroke: kampfgetuemmel ? combatAccent : Color.dsaBorder)
+                .dsaBox(.flush, stroke: kampfgetuemmel ? combatAccent : Color.dsaBorder)
             }
             .buttonStyle(.dsaMotion)
         }
@@ -416,7 +416,7 @@ struct CombatFernkampfSetupView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .dsaBox(.raised)
+            .dsaBox(.flush)
         }
         .buttonStyle(.dsaMotion)
     }

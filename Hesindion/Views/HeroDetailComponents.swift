@@ -16,7 +16,7 @@ struct AvatarFullscreenView: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .dsaBox(.raised)
+                .dsaBox(.flush)
                 .padding(32)
         }
         .onTapGesture { dismiss() }

@@ -131,11 +131,8 @@ struct HeroListView: View {
                             .font(.system(size: 16))
                             .frame(width: 36, height: 36)
                             .background(Color.groupAdventure.opacity(0.2))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.dsaBorder, lineWidth: 2)
-                            )
+                            .clipShape(Rectangle())
+                            .dsaBox(.flush)
                         Text(adventure.name)
                             .font(.dsaHeading(.title3))
                     }
@@ -215,21 +212,15 @@ struct HeroListView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 16))
                 .frame(width: size, height: size)
                 .background(Color.groupPersonalData.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         }
     }
 
