@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.0-rc.1] - 2026-09-12
+
 ### Added
 
 - Neobrutalism style layer — `DSABox` (the app's one surface: flat fill, 2pt border, square corners, hard offset shadow), `DSAStepper` (the `[−][value][+]` control), `DSAToggleRow`, `DSAModal`, `DSADiceRevealModal` and `DSAType`. The border idiom previously existed as 202 byte-identical copies of `.overlay(Rectangle().stroke(…))`, and the app had exactly one custom `ViewModifier` (ADR-0007 … ADR-0010)
@@ -58,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `DiceRollSheet` and `SkillCheckModal` now route all rolls through `DiceRoller` instead of calling `Int.random(in:)` inline
 - Recorded talent stats moved from per-row tap-to-expand to a single section-level toggle, keeping rows uncluttered while still showing the theoretical % inline
+- Schmerz now flows through the new states system rather than a standalone computation, with Belastung counting toward the −5 Zustand cap
+- The Beengte-Umgebung combat toggle now persists as the `eingeengt` status (its single source of truth) and survives combat exit
 
 ### Fixed
 
@@ -71,11 +75,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Trefferzonen: a hero without a Selbstbeherrschung talent row had the Wundeffekt applied automatically, with no probe offered. Selbstbeherrschung is a DSA 5 basic ability every hero has, so that case was never a rules outcome — the probe is now always offered (falling back to Fertigkeitswert 0 if the row is missing), and a wound effect is applied only on a rolled, failed probe. Not rolling now means "the GM has not adjudicated" and applies nothing, removing the asymmetry where declining to roll was better than rolling
 - Trefferzonen: the Arme Wundeffekt's "Waffe ablegen" button cleared the hero's equipped weapon immediately instead of participating in the confirm transaction, so navigating away from an unconfirmed take-damage flow left the hero disarmed with no LP change and no log entry. The action is now staged and only applied on confirm, alongside the single LP write and the log entry
 - `make test`/`test-ui`/`test-ui-record` no longer clone the simulator per test worker (`-parallel-testing-enabled NO`, `-maximum-concurrent-test-simulator-destinations 1`); `test-ui-record` uses the correct `SNAPSHOT_TESTING_RECORD=all` value
-
-### Changed
-
-- Schmerz now flows through the new states system rather than a standalone computation, with Belastung counting toward the −5 Zustand cap
-- The Beengte-Umgebung combat toggle now persists as the `eingeengt` status (its single source of truth) and survives combat exit
 
 ## [0.3.0] - 2026-03-28
 
