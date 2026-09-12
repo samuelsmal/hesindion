@@ -33,6 +33,12 @@ struct CombatOpponentDefenseView: View {
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
     @State private var damageSchipUsed: Bool = false
+    /// TP the app cannot know about. The imported weapons carry no Leiteigenschaft
+    /// threshold (there is no equipment table in `rules.db` — issue #14), so the
+    /// TP/KK bonus, and any ability or GM ruling the app does not model, has to be
+    /// enterable or the reported total is simply wrong.
+    @State private var extraDamageModifier: Int = 0
+    @State private var hasLoggedDamage: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -175,8 +181,10 @@ struct CombatOpponentDefenseView: View {
                 }
 
                 // Damage section
-                if showDamage, let formula = damageFormula, let parsed = parseDamage(formula) {
+                if showDamage, let formula = damageFormula, let parsed = DamageFormula.parse(formula) {
                     damageSection(parsed: parsed)
+                    tpModifierBox
+                        .padding(.top, 8)
                 }
 
                 // Wound-effect reminder. Nothing is applied — the opponent has no
@@ -209,12 +217,20 @@ struct CombatOpponentDefenseView: View {
         }
         .onDisappear {
             damageAnimTask?.cancel()
+            // The log used to be written inside the Schip reroll button's
+            // `onAppear`, so a hero with no Schicksalspunkte dealt damage that
+            // was never logged at all. Here it is the settled total — Wundeffekt
+            // and manual TP included — written exactly once.
+            if let total = appliedTotal, !hasLoggedDamage {
+                hasLoggedDamage = true
+                logDamageDealt(total)
+            }
         }
     }
 
     // MARK: - Damage Section
 
-    private func damageSection(parsed: ParsedDamage) -> some View {
+    private func damageSection(parsed: DamageFormula) -> some View {
         VStack(spacing: 0) {
             combatSectionLabel(L("damage.label"))
 
@@ -239,9 +255,9 @@ struct CombatOpponentDefenseView: View {
             // Formula + total (after finalised)
             if let finalRolls = damageFinalRolls {
                 let diceSum = finalRolls.reduce(0, +)
-                let rawTotal = max(0, diceSum + parsed.bonus)
+                let rawTotal = max(0, diceSum + parsed.bonus + extraDamageModifier)
                 let total = criticalDamage.apply(to: rawTotal)
-                let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
+                let bonusStr = Self.term(parsed.bonus) + Self.term(extraDamageModifier)
 
                 if let critLabel = criticalDamage.label {
                     Text("\(diceSum)\(bonusStr) = \(rawTotal) \(critLabel) = \(total) TP")
@@ -272,7 +288,7 @@ struct CombatOpponentDefenseView: View {
             }
 
             // Schip reroll — only shown after dice are finalised, before schip is spent
-            if let finalRolls = damageFinalRolls, !damageSchipUsed,
+            if damageFinalRolls != nil, !damageSchipUsed,
                (hero.derivedValues?.schicksalspunkte.current ?? 0) > 0 {
                 Button {
                     hero.derivedValues?.schicksalspunkte.current -= 1
@@ -296,13 +312,6 @@ struct CombatOpponentDefenseView: View {
                 }
                 .buttonStyle(.dsaMotion)
                 .padding(.top, 8)
-                // Log damage when first finalised
-                .onAppear {
-                    let diceSum = finalRolls.reduce(0, +)
-                    let rawTotal = max(0, diceSum + parsed.bonus)
-                    let total = criticalDamage.apply(to: rawTotal)
-                    logDamageDealt(total)
-                }
             }
 
         }
@@ -311,15 +320,50 @@ struct CombatOpponentDefenseView: View {
         .onAppear { startDamageAnimation(parsed: parsed) }
     }
 
+    /// "+4" / "-1" / "" — one signed term of the printed damage formula.
+    private static func term(_ value: Int) -> String {
+        value > 0 ? "+\(value)" : value < 0 ? "\(value)" : ""
+    }
+
+    /// TP the app has no data for: the weapon's Leiteigenschaft bonus above all,
+    /// which no Optolith export carries. It sits outside the dice box because
+    /// that box is one big tap target for the roll.
+    private var tpModifierBox: some View {
+        VStack(spacing: 0) {
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: combatAccent,
+                incrementIdentifier: "combat.dealDamage.increaseModifier",
+                onDecrement: { extraDamageModifier -= 1 },
+                onIncrement: { extraDamageModifier += 1 }
+            ) {
+                Text(extraDamageModifier >= 0 ? "+\(extraDamageModifier)" : "\(extraDamageModifier)")
+                    .font(.dsaHeading(.title3))
+                    .fontDesign(.monospaced)
+                    .padding(.vertical, 10)
+            }
+            .frame(maxWidth: .infinity)
+            Text(L("damage.extraModifier"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                // Clear the stepper's shadow, which draws outside its bounds and
+                // reserves no layout space.
+                .padding(.top, DSALayout.shadowOffset + 4)
+        }
+        .accessibilityIdentifier("combat.dealDamage.modifier")
+    }
+
     // MARK: - Reported total
 
     /// The weapon's damage plus any settled Wundeffekt. `nil` until the dice are
     /// finalised, since there is nothing to total before then.
     private var appliedTotal: Int? {
         guard let formula = damageFormula,
-              let parsed = parseDamage(formula),
+              let parsed = DamageFormula.parse(formula),
               let rolls = damageFinalRolls else { return nil }
-        let raw = max(0, rolls.reduce(0, +) + parsed.bonus)
+        let raw = max(0, rolls.reduce(0, +) + parsed.bonus + extraDamageModifier)
         return criticalDamage.apply(to: raw) + (woundEffectDamage ?? 0)
     }
 
@@ -385,25 +429,9 @@ struct CombatOpponentDefenseView: View {
 
     // MARK: - Damage formula parsing
 
-    private struct ParsedDamage {
-        let count: Int
-        let sides: Int
-        let bonus: Int
-    }
-
-    private func parseDamage(_ formula: String) -> ParsedDamage? {
-        let pattern = /(\d+)W(\d+)([+-]\d+)?/
-        guard let match = formula.firstMatch(of: pattern) else { return nil }
-        return ParsedDamage(
-            count: Int(match.1) ?? 1,
-            sides: Int(match.2) ?? 6,
-            bonus: match.3.flatMap { Int($0) } ?? 0
-        )
-    }
-
     // MARK: - Dice animation & rolling
 
-    private func startDamageAnimation(parsed: ParsedDamage) {
+    private func startDamageAnimation(parsed: DamageFormula) {
         damageAnimTask?.cancel()
         damageAnimTask = Task { @MainActor in
             while !Task.isCancelled {
@@ -415,7 +443,7 @@ struct CombatOpponentDefenseView: View {
         }
     }
 
-    private func rollDamage(parsed: ParsedDamage) {
+    private func rollDamage(parsed: DamageFormula) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
         damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }
@@ -1061,7 +1089,7 @@ struct CombatPassierschlagView: View {
 
                     if isHit {
                         // Damage section
-                        if let parsed = parseDamage(damageFormula) {
+                        if let parsed = DamageFormula.parse(damageFormula) {
                             damageSection(parsed: parsed)
                         }
 
@@ -1165,23 +1193,7 @@ struct CombatPassierschlagView: View {
 
     // MARK: - Damage
 
-    private struct ParsedDamage {
-        let count: Int
-        let sides: Int
-        let bonus: Int
-    }
-
-    private func parseDamage(_ formula: String) -> ParsedDamage? {
-        let pattern = /(\d+)W(\d+)([+-]\d+)?/
-        guard let match = formula.firstMatch(of: pattern) else { return nil }
-        return ParsedDamage(
-            count: Int(match.1) ?? 1,
-            sides: Int(match.2) ?? 6,
-            bonus: match.3.flatMap { Int($0) } ?? 0
-        )
-    }
-
-    private func damageSection(parsed: ParsedDamage) -> some View {
+    private func damageSection(parsed: DamageFormula) -> some View {
         VStack(spacing: 0) {
             combatSectionLabel(L("damage.label"))
 
@@ -1249,7 +1261,7 @@ struct CombatPassierschlagView: View {
         logPassierschlag()
     }
 
-    private func startDamageAnimation(parsed: ParsedDamage) {
+    private func startDamageAnimation(parsed: DamageFormula) {
         damageAnimTask?.cancel()
         damageAnimTask = Task { @MainActor in
             while !Task.isCancelled {
@@ -1261,7 +1273,7 @@ struct CombatPassierschlagView: View {
         }
     }
 
-    private func rollDamage(parsed: ParsedDamage) {
+    private func rollDamage(parsed: DamageFormula) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
         damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }

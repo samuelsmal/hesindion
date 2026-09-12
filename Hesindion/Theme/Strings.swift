@@ -226,7 +226,7 @@ enum DSAStrings {
         "maneuver.sturmangriff":"Mounted Charge",
         "plaenkler":            "Skirmisher Formation",
         "plaenklerAT":          "+1 AT",
-        "plaenklerAW":          "+1 Dodge",
+        "plaenklerAW":          "+1 Defense (parry & dodge)",
         "noDefenseWarning":     "No defense this round!",
         "opponentPA":           "Opponent PA",
         "damageBonus":          "Damage",
@@ -236,6 +236,7 @@ enum DSAStrings {
         "calculation.label":    "CALCULATION",
         "additional.label":     "ADDITIONAL",
         "source.basis":         "Base",
+        "source.weapon":        "Weapon",
         "source.belastung":     "Encumbrance",
         "source.schmerz":       "Pain",
         "source.vorteilhaft":   "Adv. Position",
@@ -247,6 +248,7 @@ enum DSAStrings {
         "source.sturmangriff":  "Mounted Charge",
         "source.dualAttack":    "Dual-attack",
         "source.offHand":       "Off-hand",
+        "source.twoHandedGrip": "Two-handed grip",
         "source.additional":    "Additional",
         "source.effective":     "Effective",
         "damage.reportToGM":    "Damage dealt",
@@ -289,6 +291,7 @@ enum DSAStrings {
         "meleeWeapons.label":   "MELEE WEAPONS",
         "basis.label":          "BASICS",
         "damage.label":         "DAMAGE",
+        "damage.extraModifier": "Extra TP (e.g. weapon's lead attribute bonus)",
         "mainWeapon":           "MAIN WEAPON",
         "shieldOption":         "SHIELD",
         "hero":                 "Hero",
@@ -351,6 +354,7 @@ enum DSAStrings {
 
         // Multiple Defenses
         "source.multipleDefense":       "Multiple Defense",
+        "defense.nth":                  "%d. defense \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Free Strike",
@@ -810,7 +814,7 @@ enum DSAStrings {
         "maneuver.sturmangriff":"Sturmangriff",
         "plaenkler":            "Plänkler-Formation",
         "plaenklerAT":          "+1 AT",
-        "plaenklerAW":          "+1 AW",
+        "plaenklerAW":          "+1 VW (PA & AW)",
         "noDefenseWarning":     "Keine Verteidigung diese Runde!",
         "opponentPA":           "Gegner PA",
         "damageBonus":          "Schaden",
@@ -820,6 +824,7 @@ enum DSAStrings {
         "calculation.label":    "BERECHNUNG",
         "additional.label":     "ZUSÄTZLICH",
         "source.basis":         "Basis",
+        "source.weapon":        "Waffe",
         "source.belastung":     "Belastung",
         "source.schmerz":       "Schmerz",
         "source.vorteilhaft":   "Vorteilh. Pos.",
@@ -831,6 +836,7 @@ enum DSAStrings {
         "source.sturmangriff":  "Sturmangriff",
         "source.dualAttack":    "Beidhändig",
         "source.offHand":       "Nebenhand",
+        "source.twoHandedGrip": "Zweihändige Führung",
         "source.additional":    "Zusätzlich",
         "source.effective":     "Effektiv",
         "damage.reportToGM":    "Zugefügter Schaden",
@@ -873,6 +879,7 @@ enum DSAStrings {
         "meleeWeapons.label":   "NAHKAMPFWAFFEN",
         "basis.label":          "BASIS",
         "damage.label":         "SCHADEN",
+        "damage.extraModifier": "Zusätzliche TP (z. B. Leiteigenschaft der Waffe)",
         "mainWeapon":           "HAUPTWAFFE",
         "shieldOption":         "SCHILD",
         "hero":                 "Held",
@@ -936,6 +943,7 @@ enum DSAStrings {
 
         // Multiple Defenses
         "source.multipleDefense":       "Mehrfache Verteidigung",
+        "defense.nth":                  "%d. Verteidigung \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Passierschlag",

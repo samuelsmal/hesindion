@@ -16,6 +16,10 @@ struct CombatExecutionView: View {
     let roundNumber: Int
     let beengteUmgebungActive: Bool
     @Binding var step: CombatStep
+    /// Called once when a *defence* is set up on this screen, so the round can
+    /// count it. The count drives Mehrfache Verteidigung for the **next**
+    /// defence — this one was already modified with the count as it stood.
+    var onDefenseAttempted: () -> Void = {}
     var onDismiss: () -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -28,6 +32,9 @@ struct CombatExecutionView: View {
     @State private var confirmAnimTask: Task<Void, Never>? = nil
     @State private var schipUsed: Bool = false
     @State private var hasLoggedRoll: Bool = false
+    /// Guards the round's defence count against a Schip reroll or a redraw
+    /// counting the same defence twice.
+    @State private var hasCountedDefense: Bool = false
 
     // Damage rolling state
     @State private var damageDisplayRolls: [Int] = []
@@ -183,7 +190,13 @@ struct CombatExecutionView: View {
 
             Spacer()
         }
-        .onAppear { startAnimation() }
+        .onAppear {
+            startAnimation()
+            if action == .parieren || action == .ausweichen, !hasCountedDefense {
+                hasCountedDefense = true
+                onDefenseAttempted()
+            }
+        }
         .onDisappear {
             animationTask?.cancel()
             confirmAnimTask?.cancel()
@@ -496,72 +509,19 @@ struct CombatExecutionView: View {
         return attributeValue - linesSum
     }
 
-    /// One line of the calculation: the contribution on the left, where it comes
-    /// from on the right, a divider beneath.
-    private func breakdownRow(value: String, source: String, tint: Color) -> some View {
-        HStack {
-            Text(value)
-                .font(.dsaMono(.caption, emphasis: true))
-                .foregroundStyle(tint)
-            Spacer()
-            Text(source)
-                .font(.dsaBody(.caption2))
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .dsaRowDivider()
-    }
-
     @ViewBuilder
     private var modifierBreakdown: some View {
         if let lines = modifierLines, !lines.isEmpty {
-            VStack(spacing: 0) {
-                combatSectionLabel(L("calculation.label"))
-
-                // One box, dividers within. Each row used to stroke its own
-                // rectangle, so every boundary was a doubled 2pt border — and
-                // the total was a bare dark bar with no border at all, the only
-                // unbordered surface on the screen.
-                VStack(spacing: 0) {
-                    breakdownRow(
-                        value: "\(attrLabel) \(baseValue)",
-                        source: L("source.basis"),
-                        tint: .primary
-                    )
-
-                    ForEach(lines) { line in
-                        breakdownRow(
-                            value: line.value > 0 ? "+\(line.value)" : "\(line.value)",
-                            source: line.source,
-                            tint: line.value > 0 ? Color.dsaPositive : Color.groupCombat
-                        )
-                    }
-
-                    if modifier != 0 {
-                        breakdownRow(
-                            value: modifier > 0 ? "+\(modifier)" : "\(modifier)",
-                            source: L("source.additional"),
-                            tint: modifier > 0 ? Color.dsaPositive : Color.groupCombat
-                        )
-                    }
-
-                    // The sum, inside the same box rather than welded under it.
-                    HStack {
-                        Text("\(attrLabel) \(effectiveValue)")
-                            .font(.dsaMono(.body, emphasis: true))
-                        Spacer()
-                        Text(L("source.effective"))
-                            .font(.dsaBody(.caption2))
-                            .opacity(0.75)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(Color.dsaDark)
-                }
-                .dsaBox(.raised, fill: Color(UIColor.systemBackground))
-            }
+            CombatBreakdownBox(
+                baseValue: "\(attrLabel) \(baseValue)",
+                baseSource: L("source.basis"),
+                lines: modifier == 0
+                    ? lines
+                    : lines + [ModifierLine(value: modifier, source: L("source.additional"))],
+                totalValue: "\(attrLabel) \(effectiveValue)",
+                totalSource: L("source.effective"),
+                sectionLabel: L("calculation.label")
+            )
         } else {
             // Fallback: simple display (for defense/dodge without full breakdown)
             valueBox("\(attributeValue)", label: attrLabel)
@@ -792,27 +752,11 @@ struct CombatExecutionView: View {
 
     // MARK: - Damage
 
-    private struct ParsedDamage {
-        let count: Int
-        let sides: Int
-        let bonus: Int
-    }
-
-    private func parseDamage(_ formula: String) -> ParsedDamage? {
-        // Matches formats like "1W6", "2W6+4", "1W6-1"
-        let pattern = /(\d+)W(\d+)([+-]\d+)?/
-        guard let match = formula.firstMatch(of: pattern) else { return nil }
-        let count = Int(match.1) ?? 1
-        let sides = Int(match.2) ?? 6
-        let bonus = match.3.flatMap { Int($0) } ?? 0
-        return ParsedDamage(count: count, sides: sides, bonus: bonus)
-    }
-
     private func isHit(_ outcome: CombatOutcome) -> Bool {
         outcome == .erfolg || outcome == .kritischerErfolg
     }
 
-    private func damageSection(parsed: ParsedDamage) -> some View {
+    private func damageSection(parsed: DamageFormula) -> some View {
         VStack(spacing: 0) {
             combatSectionLabel(L("damage.label"))
 
@@ -860,7 +804,7 @@ struct CombatExecutionView: View {
         .onAppear { startDamageAnimation(parsed: parsed) }
     }
 
-    private func startDamageAnimation(parsed: ParsedDamage) {
+    private func startDamageAnimation(parsed: DamageFormula) {
         damageAnimTask?.cancel()
         damageAnimTask = Task { @MainActor in
             while !Task.isCancelled {
@@ -872,7 +816,7 @@ struct CombatExecutionView: View {
         }
     }
 
-    private func rollDamage(parsed: ParsedDamage) {
+    private func rollDamage(parsed: DamageFormula) {
         guard damageFinalRolls == nil else { return }
         damageAnimTask?.cancel()
         damageFinalRolls = (0..<parsed.count).map { _ in DiceRoller.roll(sides: parsed.sides) }

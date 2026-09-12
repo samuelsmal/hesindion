@@ -238,7 +238,11 @@ struct CombatInitiativeRollView: View {
     let mountedActive: Bool
     var onDismiss: () -> Void
 
-    @State private var selectedBase: Int? = nil
+    /// Which base the roll uses. Identity, not the number: hero and mount can
+    /// share an INI value, and comparing by value then lit both buttons.
+    private enum INIBase: Equatable { case hero, mount }
+
+    @State private var selectedBase: INIBase? = nil
     @State private var d6Display: Int = 1
     @State private var d6Result: Int? = nil
     @State private var animTask: Task<Void, Never>? = nil
@@ -257,9 +261,23 @@ struct CombatInitiativeRollView: View {
         hero.pets.first?.name
     }
 
+    /// The mount's base is only on offer while the hero is actually mounted —
+    /// an unmounted hero rolling the horse's INI was the one thing this screen
+    /// could get wrong without saying so.
+    private var mountBaseAvailable: Bool {
+        mountedActive && mountBaseINI != nil
+    }
+
+    private func value(of base: INIBase) -> Int {
+        switch base {
+        case .hero:  heroBaseINI
+        case .mount: mountBaseINI ?? heroBaseINI
+        }
+    }
+
     private var total: Int? {
         guard let base = selectedBase, let d6 = d6Result else { return nil }
-        return base + d6
+        return value(of: base) + d6
     }
 
     var body: some View {
@@ -299,14 +317,15 @@ struct CombatInitiativeRollView: View {
                 combatSectionLabel(L("basis.label"))
 
                 HStack(spacing: 8) {
-                    baseButton(label: L("hero"), value: heroBaseINI)
-                    if let mINI = mountBaseINI {
-                        baseButton(label: mountName ?? L("mount"), value: mINI)
+                    baseButton(.hero, label: L("hero"), value: heroBaseINI)
+                    if mountBaseAvailable, let mINI = mountBaseINI {
+                        baseButton(.mount, label: mountName ?? L("mount"), value: mINI)
                     }
                 }
 
                 // Dice + result
-                if let base = selectedBase {
+                if let selected = selectedBase {
+                    let base = value(of: selected)
                     VStack(spacing: 8) {
                         // D6 box
                         VStack(spacing: 0) {
@@ -372,18 +391,18 @@ struct CombatInitiativeRollView: View {
             .padding(.bottom, 16)
         }
         .onAppear {
-            if mountedActive, let mINI = mountBaseINI {
-                selectedBase = mINI
+            if mountBaseAvailable {
+                selectedBase = .mount
                 startD6Animation()
             }
         }
         .onDisappear { animTask?.cancel() }
     }
 
-    private func baseButton(label: String, value: Int) -> some View {
-        let isSelected = selectedBase == value
+    private func baseButton(_ base: INIBase, label: String, value: Int) -> some View {
+        let isSelected = selectedBase == base
         return Button {
-            selectedBase = value
+            selectedBase = base
             d6Result = nil
             startD6Animation()
         } label: {

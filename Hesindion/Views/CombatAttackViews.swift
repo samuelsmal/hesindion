@@ -135,23 +135,14 @@ struct CombatAttackChoiceView: View {
 
     private func proceedSingleAttack() {
         if let w = hero.selectedWeapon {
-            let damage = twoHandedGripActive ? adjustDamage(w.damage, bonus: 1) : w.damage
-            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
+            // The weapon's own damage, unadjusted: the announcement screen owns
+            // every bonus, the grip's +1 included. Adding it here too gave a
+            // two-handed attack +2 TP for a button that promises +1.
+            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
         } else if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
             step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
         }
-    }
-
-    /// Adjusts a damage formula like "1W6+2" by adding a bonus.
-    private func adjustDamage(_ formula: String, bonus: Int) -> String {
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = formula.firstMatch(of: pattern) else { return formula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + bonus
-        if total == 0 { return base }
-        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
     }
 
     // MARK: - Hero single attack (mounted, no dual-wield / two-hand)
@@ -516,6 +507,9 @@ struct CombatAnnouncementView: View {
                         .background(combatAccent.opacity(0.1))
                         .dsaBox(.flush, stroke: combatAccent)
                     }
+
+                    // What the manoeuvre just did to the damage, if anything.
+                    damageBreakdown
                 }
                 .adaptiveContentWidth()
                 .padding(.top, 8)
@@ -588,20 +582,36 @@ struct CombatAnnouncementView: View {
         return lines
     }
 
+    /// Where the extra TP come from. The box the player reads and the formula the
+    /// dice get are the same call, so they cannot disagree.
+    private var damageBonusLines: [ModifierLine] {
+        DamageModifiers.lines(
+            hero: hero,
+            maneuver: selectedManeuver,
+            twoHandedGrip: twoHandedGripActive,
+            mounted: mountedActive
+        )
+    }
+
+    /// The TP calculation, for the same reason the AT one exists: a manoeuvre
+    /// bonus that is only ever folded into a formula string cannot be checked
+    /// against the rulebook. Hidden when the weapon's damage is all there is.
+    @ViewBuilder
+    private var damageBreakdown: some View {
+        if let formula = damageFormula, !damageBonusLines.isEmpty {
+            CombatBreakdownBox(
+                baseValue: formula,
+                baseSource: L("source.weapon"),
+                lines: damageBonusLines,
+                totalValue: adjustedDamage() ?? formula,
+                totalSource: L("source.effective"),
+                sectionLabel: L("damage.label")
+            )
+        }
+    }
+
     private func adjustedDamage() -> String? {
-        guard var formula = damageFormula else { return nil }
-        var bonus = selectedManeuver.damageBonus
-        if twoHandedGripActive { bonus += 1 }
-        if selectedManeuver == .sturmangriff { bonus += hero.sturmangriffDamageBonus }
-        if bonus == 0 { return formula }
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = formula.firstMatch(of: pattern) else { return formula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + bonus
-        if total == 0 { return base }
-        formula = total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
-        return formula
+        DamageModifiers.applied(to: damageFormula, lines: damageBonusLines)
     }
 }
 
@@ -613,6 +623,9 @@ struct CombatWeaponSelectionView: View {
     @Binding var step: CombatStep
     let dualAttackPenaltyActive: Bool
     let twoHandedGripActive: Bool
+    /// Everything the round is in. A defence picked here is rolled straight from
+    /// this screen, so this screen is where its modifiers have to come from.
+    let situation: CombatSituation
     var onDismiss: () -> Void
 
     private var headerLabel: String {
@@ -655,17 +668,19 @@ struct CombatWeaponSelectionView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     let statLabel = action == .angriff ? "AT" : "PA"
-                    let dualPenalty = dualAttackPenaltyActive ? hero.dualAttackPenalty : 0
+
+                    // The rows carry the weapon's own value. The dual-attack,
+                    // off-hand and grip penalties used to be added here *and*
+                    // again by the modifier engine on the next screen, so a
+                    // dual-wield attack was penalised twice.
 
                     // Main weapon option
                     if let w = hero.selectedWeapon {
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
-                        let val = baseVal + dualPenalty + (action == .parieren && twoHandedGripActive ? -1 : 0)
                         weaponRow(
                             name: w.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus),
                             damageFormula: action == .angriff ? w.damage : nil,
                             note: nil,
                             isOffHand: false
@@ -673,12 +688,10 @@ struct CombatWeaponSelectionView: View {
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
-                        let val = baseVal + dualPenalty
                         weaponRow(
                             name: "Raufen",
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus),
                             damageFormula: action == .angriff ? "1W6" : nil,
                             note: nil,
                             isOffHand: false
@@ -688,12 +701,10 @@ struct CombatWeaponSelectionView: View {
                     // Off-hand weapon (dual-wield)
                     if let offW = hero.selectedOffHandWeapon {
                         combatSectionLabel("\(L("offHandWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? offW.at : offW.pa
-                        let val = baseVal + dualPenalty + hero.offHandPenalty
                         weaponRow(
                             name: offW.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? offW.at : offW.pa,
                             damageFormula: action == .angriff ? offW.damage : nil,
                             note: hero.offHandPenalty != 0 ? "\(L("offHandPenalty")): \(hero.offHandPenalty)" : nil,
                             isOffHand: true
@@ -703,11 +714,10 @@ struct CombatWeaponSelectionView: View {
                     // Shield option
                     if let s = hero.selectedShield {
                         combatSectionLabel("\(L("shieldOption")) (\(statLabel))")
-                        let val = action == .angriff ? s.at : s.pa
                         weaponRow(
                             name: s.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? s.at : s.pa,
                             damageFormula: action == .angriff ? s.damage : nil,
                             note: action == .parieren && !s.note.isEmpty ? s.note : nil,
                             isOffHand: false
@@ -720,10 +730,25 @@ struct CombatWeaponSelectionView: View {
         }
     }
 
-    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
-        Button {
+    /// Modifier lines for a defence rolled from this row, or `nil` on the attack
+    /// path where the announcement screen builds them instead.
+    private func defenseLines(isOffHand: Bool) -> [ModifierLine]? {
+        guard action != .angriff else { return nil }
+        return situation.defenseModifiers(
+            hero: hero,
+            isAusweichen: action == .ausweichen,
+            isOffHand: isOffHand
+        )
+    }
+
+    private func weaponRow(name: String, statLabel: String, baseValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
+        let lines = defenseLines(isOffHand: isOffHand)
+        let shownValue = baseValue + (lines?.reduce(0) { $0 + $1.value } ?? 0)
+        return Button {
             if dualAttackPenaltyActive && action == .angriff {
-                // Determine the other weapon for the second attack
+                // Determine the other weapon for the second attack. It never
+                // passes an announcement screen, so its penalties stay explicit
+                // here — the engine is not asked twice for them.
                 let otherWeapon: MeleeWeapon? = isOffHand ? hero.selectedWeapon : hero.selectedOffHandWeapon
                 let otherName = otherWeapon?.name ?? "?"
                 let otherBaseAT = otherWeapon?.at ?? 0
@@ -734,16 +759,23 @@ struct CombatWeaponSelectionView: View {
                 step = .announcement(
                     .angriff,
                     name: name,
-                    baseAT: statValue,
+                    baseAT: baseValue,
                     damageFormula: damageFormula,
                     isOffHand: isOffHand,
                     secondAttack: (name: otherName, at: otherAT, damage: otherDmg),
                     isMountCharge: false
                 )
             } else if action == .angriff {
-                step = .announcement(.angriff, name: name, baseAT: statValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil, isMountCharge: false)
+                step = .announcement(.angriff, name: name, baseAT: baseValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil, isMountCharge: false)
             } else {
-                step = .execution(action, name: name, attributeValue: statValue, damageFormula: nil, note: action == .parieren ? note : nil)
+                step = .execution(
+                    action,
+                    name: name,
+                    attributeValue: shownValue,
+                    damageFormula: nil,
+                    note: action == .parieren ? note : nil,
+                    modifierLines: lines
+                )
             }
         } label: {
             HStack {
@@ -759,7 +791,7 @@ struct CombatWeaponSelectionView: View {
                 }
                 Spacer()
                 HStack(spacing: 4) {
-                    Text("\(statLabel) \(statValue)")
+                    Text("\(statLabel) \(shownValue)")
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
@@ -779,6 +811,7 @@ struct CombatWeaponSelectionView: View {
             .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.weaponRow.\(name)")
         .padding(.bottom, 4)
     }
 }

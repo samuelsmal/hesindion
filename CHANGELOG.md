@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The first defence of a round was already at −3.** The Mehrfache-Verteidigung count was incremented as the Parieren or Ausweichen button was tapped and then read back for the very defence that had incremented it. It is now counted when a defence roll is set up, so the first defence of the round is unmodified, the second is at −3 and the third at −6 (issue #20)
+- **A hero with a shield or a second weapon defended with no modifiers at all.** That loadout picks the parrying weapon first, and the weapon list rolled a bare PA: no Mehrfache Verteidigung, no Schmerz, no Belastung, no Schicksalspunkt boost, nothing. Both ways into a defence now build their lines from one `CombatSituation`, and the roll screen shows the calculation (issue #20)
+- **A dual-wield attack was penalised twice.** The weapon list added the dual-attack and off-hand penalties to the row's own number and the modifier engine added them again on the announcement screen. The rows now carry the weapon's own value and the engine owns every situational modifier (issue #19)
+- **The two-handed grip was worth +2 TP for a button that promises +1** — the attack-choice screen folded the bonus into the formula and the announcement screen folded it in again (issue #19)
+- Golgariten-Stil's **+1 TP for melee attacks from horseback** (SA_661) was never applied; only the AT half of the style was wired up (issue #19)
+- Plänkler-Formation grants "+1 AT **oder** +1 VW" (SA_884), and VW is parry *and* dodge — the app gave the defensive half on the dodge alone (issue #19)
+- Damage dealt was only written to the log inside the Schicksalspunkt reroll button, so a hero with no Schips dealt damage that was never logged. It is now logged once, as the settled total, on the way out of the screen
+- The initiative screen offered the mount's INI to an unmounted hero, and picked the base by value, so a hero and mount with equal INI lit both buttons (issue #15)
+
+### Added
+
+- The TP calculation is on screen: the announcement shows the weapon's damage, each bonus with its source (Wuchtschlag, the grip, Sturmangriff, Golgariten-Stil) and the resulting formula, in the same box the AT calculation uses. A manoeuvre bonus that is only ever folded into a formula string cannot be checked against the rulebook (issue #19)
+- A **TP modifier** on the damage roll, for what the app cannot know: no Optolith export carries a weapon's Leiteigenschaft threshold, so the TP/KK bonus had nowhere to go (the equipment data itself is issue #14)
+- The Parieren and Ausweichen buttons print what defending again will cost ("2. Verteidigung · −3") before it is paid
+- `CombatSituation` and `DamageModifiers` — the round's flags and the TP bonuses as pure values, so both are unit-testable, plus `DamageFormula`, which replaces four copies of the damage-parsing regex and three of the bonus-adding one
+- `DefenseModifierFlowTests` drives two parries in one round on a seeded shield loadout, and three screenshots of it; `-uitest-shield` puts the shield in the loadout that sends a parry through the weapon list
+
 ## [0.4.0-rc.2] - 2026-09-12
 
 ### Added

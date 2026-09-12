@@ -43,6 +43,19 @@ enum UITestSeed {
     /// melee weapon, no shield, no off-hand).
     static let weaponName = "Langschwert"
 
+    /// `-uitest-shield` equips the hero's shield as well.
+    ///
+    /// It exists for the defence tests: with a shield in the loadout, Parieren
+    /// goes through the weapon list rather than straight to the roll, and that is
+    /// the path whose modifiers were being dropped.
+    static let shieldArgument = "-uitest-shield"
+
+    static let shieldName = "Großschild"
+
+    private static var wantsShield: Bool {
+        ProcessInfo.processInfo.arguments.contains(shieldArgument)
+    }
+
     /// The seeded adventure. Named here because the screenshot tests navigate to
     /// it by name to reach the weather table.
     static let adventureName = "Die Sieben Gezeichneten"
@@ -114,7 +127,7 @@ enum UITestSeed {
         // setup / initiative / loadout screens the screenshots are not about.
         hero.selectedWeaponName = weaponName
         hero.selectedOffHandName = nil
-        hero.selectedShieldName = nil
+        hero.selectedShieldName = wantsShield ? shieldName : nil
         hero.activeCombatId = UUID()
         hero.activeCombatRound = 1
         hero.activeCombatInitiative = 12

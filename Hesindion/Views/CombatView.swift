@@ -142,6 +142,21 @@ struct CombatView: View {
     /// announcement/setup step to the post-hit damage screen for the read-only reminder card.
     @State private var announcedZone: HitZone? = nil
 
+    /// The round's flags as one value, for the screens that roll a defence.
+    private var situation: CombatSituation {
+        CombatSituation(
+            mounted: mountedActive,
+            schipIgnoreZustand: schipIgnoreZustandThisRound,
+            dualAttackActive: dualAttackPenaltyActive,
+            beengteUmgebung: beengteUmgebungActive,
+            twoHandedGrip: twoHandedGripActive,
+            defensesThisRound: defenseCountThisRound,
+            schipDefenseBoost: schipDefenseBoostActive,
+            plaenklerActive: plaenklerActive,
+            plaenklerBonus: plaenklerBonus
+        )
+    }
+
     private var stepID: String {
         switch step {
         case .armorSelection: "armorSelection"
@@ -237,6 +252,7 @@ struct CombatView: View {
                     step: $step,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
+                    situation: situation,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -278,6 +294,7 @@ struct CombatView: View {
                     roundNumber: roundNumber,
                     beengteUmgebungActive: beengteUmgebungActive,
                     step: $step,
+                    onDefenseAttempted: { defenseCountThisRound += 1 },
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))

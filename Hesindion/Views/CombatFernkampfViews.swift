@@ -470,14 +470,7 @@ struct CombatFernkampfExecutionView: View {
 
     /// Damage formula adjusted for distance-based TP modifier.
     private var adjustedDamageFormula: String {
-        guard distanzTP != 0 else { return damageFormula }
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = damageFormula.firstMatch(of: pattern) else { return damageFormula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + distanzTP
-        if total == 0 { return base }
-        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+        DamageFormula.adding(distanzTP, to: damageFormula)
     }
 
     // MARK: - Body

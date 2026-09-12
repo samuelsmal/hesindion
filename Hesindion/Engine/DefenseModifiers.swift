@@ -3,11 +3,17 @@ import Foundation
 enum DefenseModifiers {
     static let all: [ModifierDefinition] = [
         multipleDefense, schipDefenseBoost, golgaritenPA,
-        plaenklerAW, mountedDodgePenalty, dualAttackDefense,
-        beengteUmgebungPA,
+        plaenklerVW, mountedDodgePenalty, dualAttackDefense,
+        beengteUmgebungPA, offHandParry, twoHandedGripPA,
     ]
 
-    /// Multiple defense penalty (-3 per additional defense this round).
+    /// Multiple defense penalty (-3 per defense already made this round).
+    ///
+    /// `defenseCount` counts the defences *before* this one, so the first
+    /// defence of a round is unmodified and the second is at -3. It used to be
+    /// incremented as the button was tapped and then read back for the very
+    /// defence that incremented it, which put every first parry of a round at
+    /// -3.
     static let multipleDefense = ModifierDefinition(
         id: "multipleDefense",
         domains: [.meleeParry, .meleeDodge]
@@ -34,10 +40,14 @@ enum DefenseModifiers {
         return ModifierLine(value: 1, source: L("source.golgariten"))
     }
 
-    /// Plänkler AW bonus (dodge only, +1).
-    static let plaenklerAW = ModifierDefinition(
-        id: "plaenklerAW",
-        domains: [.meleeDodge]
+    /// Plänkler-Formation (SA_884): the formation agrees on "+1 AT **oder** +1 VW".
+    ///
+    /// VW is the Verteidigungswert — parry and dodge both. The bonus used to be
+    /// scoped to `.meleeDodge` alone, so a hero who took the defensive half of an
+    /// ability they had paid for got nothing for it while parrying.
+    static let plaenklerVW = ModifierDefinition(
+        id: "plaenklerVW",
+        domains: [.meleeParry, .meleeDodge]
     ) { ctx in
         guard ctx.plaenklerActive, ctx.plaenklerBonus == .aw else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
@@ -61,6 +71,28 @@ enum DefenseModifiers {
         let penalty = ctx.hero.dualAttackPenalty
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("source.dualAttack"))
+    }
+
+    /// Off-hand weapon parry penalty (-4 unless the hero has Beidhändig), the
+    /// defensive half of `MeleeModifiers.offHandPenalty`. The weapon list used
+    /// to add this to the row's own number, which is why it never reached the
+    /// calculation the player can read.
+    static let offHandParry = ModifierDefinition(
+        id: "offHandParry",
+        domains: [.meleeParry]
+    ) { ctx in
+        guard ctx.isOffHand, ctx.hero.offHandPenalty != 0 else { return nil }
+        return ModifierLine(value: ctx.hero.offHandPenalty, source: L("source.offHand"))
+    }
+
+    /// Parrying with a weapon held in both hands: -1 PA, the other half of the
+    /// "+1 TP, -1 PA" the grip button promises.
+    static let twoHandedGripPA = ModifierDefinition(
+        id: "twoHandedGripPA",
+        domains: [.meleeParry]
+    ) { ctx in
+        guard ctx.twoHandedGrip else { return nil }
+        return ModifierLine(value: -1, source: L("source.twoHandedGrip"))
     }
 
     /// Beengte Umgebung PA penalty (parry only, based on weapon reach).

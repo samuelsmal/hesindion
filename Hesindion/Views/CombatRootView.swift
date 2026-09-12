@@ -24,21 +24,36 @@ struct CombatRootView: View {
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
 
-    private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
-        var context = ModifierContext(
-            hero: hero,
-            domain: isAusweichen ? .meleeDodge : .meleeParry
+    /// The flags this round is in, as one value — the same one the weapon list
+    /// gets, so both ways into a defence are modified alike.
+    private var situation: CombatSituation {
+        CombatSituation(
+            mounted: mountedActive,
+            schipIgnoreZustand: schipIgnoreZustandThisRound,
+            dualAttackActive: dualAttackPenaltyActive,
+            beengteUmgebung: beengteUmgebungActive,
+            twoHandedGrip: twoHandedGripActive,
+            defensesThisRound: defenseCountThisRound,
+            schipDefenseBoost: schipDefenseBoostActive,
+            plaenklerActive: plaenklerActive,
+            plaenklerBonus: plaenklerBonus
         )
-        context.mounted = mountedActive
-        context.schipIgnoreZustand = schipIgnoreZustandThisRound
-        context.dualAttackActive = dualAttackPenaltyActive
-        context.beengteUmgebung = beengteUmgebungActive
-        context.defenseCount = defenseCountThisRound
-        context.schipDefenseBoost = schipDefenseBoostActive
-        context.plaenklerActive = plaenklerActive
-        context.plaenklerBonus = plaenklerBonus
+    }
 
-        return ModifierEngine.shared.evaluate(context: context)
+    private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
+        situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen)
+    }
+
+    /// "2. Verteidigung · −3" under the Parieren and Ausweichen buttons, so the
+    /// cost of defending again is on the button that charges it rather than
+    /// discovered on the next screen.
+    private var defenseCostSubtitle: String? {
+        guard defenseCountThisRound > 0 else { return nil }
+        return String(
+            format: L("defense.nth"),
+            defenseCountThisRound + 1,
+            situation.pendingMultipleDefensePenalty
+        )
     }
 
     var body: some View {
@@ -112,6 +127,7 @@ struct CombatRootView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(DSASegmentPressStyle(tint: combatAccent, foreground: .white))
+                .accessibilityIdentifier("combat.nextRound")
 
                 roundRowRule
 
@@ -428,13 +444,14 @@ struct CombatRootView: View {
 
                 // Parieren -- secondary (outline)
                 Button {
-                    defenseCountThisRound += 1
                     let isDualWield = hero.isDualWielding
                     if isDualWield || hero.selectedShield != nil {
                         step = .weaponSelection(.parieren)
                     } else if let w = hero.selectedWeapon {
                         let mods = buildDefenseModifiers(isAusweichen: false)
-                        let basePA = w.pa + hero.passiveShieldPABonus + (twoHandedGripActive ? -1 : 0)
+                        // The grip's -1 is a modifier line now, so the base must
+                        // not carry it too.
+                        let basePA = w.pa + hero.passiveShieldPABonus
                         let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
                         step = .execution(.parieren, name: w.name, attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
                     } else if hero.selectedWeaponName == "Raufen" {
@@ -447,11 +464,18 @@ struct CombatRootView: View {
                         step = .weaponSelection(.parieren)
                     }
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "shield.fill")
-                        Text(L("parry"))
+                    VStack(spacing: 2) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "shield.fill")
+                            Text(L("parry"))
+                        }
+                        .font(.dsaHeading(.title3))
+                        if let cost = defenseCostSubtitle {
+                            Text(cost)
+                                .font(.dsaBody(.caption2))
+                                .opacity(0.85)
+                        }
                     }
-                    .font(.dsaHeading(.title3))
                     .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -460,20 +484,27 @@ struct CombatRootView: View {
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
+                .accessibilityIdentifier("combat.parry")
 
                 // Ausweichen -- tertiary (outline)
                 Button {
-                    defenseCountThisRound += 1
                     let mods = buildDefenseModifiers(isAusweichen: true)
                     let baseAW = hero.derivedValues?.ausweichen.value ?? 0
                     let effectiveAW = baseAW + mods.reduce(0) { $0 + $1.value }
                     step = .execution(.ausweichen, name: "Ausweichen", attributeValue: effectiveAW, damageFormula: nil, note: nil, modifierLines: mods)
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "figure.walk")
-                        Text(L("dodge"))
+                    VStack(spacing: 2) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "figure.walk")
+                            Text(L("dodge"))
+                        }
+                        .font(.dsaHeading(.title3))
+                        if let cost = defenseCostSubtitle {
+                            Text(cost)
+                                .font(.dsaBody(.caption2))
+                                .opacity(0.85)
+                        }
                     }
-                    .font(.dsaHeading(.title3))
                     .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -482,6 +513,7 @@ struct CombatRootView: View {
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(vorstossActiveThisRound)
+                .accessibilityIdentifier("combat.dodge")
 
                 // Vorstoß warning
                 if vorstossActiveThisRound {

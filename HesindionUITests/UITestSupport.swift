@@ -36,7 +36,8 @@ enum UITest {
         path: String? = nil,
         appearance: String? = nil,
         diceScript: String? = nil,
-        fokusRules: [String] = []
+        fokusRules: [String] = [],
+        shield: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
@@ -47,6 +48,11 @@ enum UITest {
         // referenced from here.
         if !fokusRules.isEmpty {
             app.launchArguments += ["-uitest-fokus", fokusRules.joined(separator: ",")]
+        }
+        // Puts a shield in the loadout, which is what sends a parry through the
+        // weapon list instead of straight to the roll.
+        if shield {
+            app.launchArguments.append("-uitest-shield")
         }
         app.launch()
         return app
