@@ -287,7 +287,7 @@ struct HeroDetailView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(colorScheme.groupColor(at: 0))
-                .dsaBox(.flush)
+                .dsaBox(.raised)
 
             if let data = hero.avatar, let uiImage = UIImage(data: data) {
                 Button {
@@ -298,7 +298,7 @@ struct HeroDetailView: View {
                         .scaledToFill()
                         .frame(width: 120, height: 120)
                         .clipShape(Rectangle())
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .frame(maxWidth: .infinity)

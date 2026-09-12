@@ -26,6 +26,10 @@ enum UITestSeed {
     /// melee weapon, no shield, no off-hand).
     static let weaponName = "Langschwert"
 
+    /// The seeded adventure. Named here because the screenshot tests navigate to
+    /// it by name to reach the weather table.
+    static let adventureName = "Die Sieben Gezeichneten"
+
     /// A store of its own, wiped on every launch — the real store is never touched
     /// and a repeated run always starts from the same state.
     private static var storeURL: URL {
@@ -38,7 +42,7 @@ enum UITestSeed {
         do {
             try resetStore()
             let container = try ModelContainer(
-                for: Hero.self, HeroStateEntry.self,
+                for: Hero.self, HeroStateEntry.self, Adventure.self, WeatherDay.self,
                 configurations: ModelConfiguration(url: storeURL)
             )
             try populate(container)
@@ -95,7 +99,53 @@ enum UITestSeed {
         hero.activeCombatRound = 1
         hero.activeCombatInitiative = 12
 
+        seedAdventure(into: context, hero: hero)
+
         try context.save()
+    }
+
+    /// A fixed adventure with a fixed week of weather.
+    ///
+    /// The values are written out rather than produced by `WeatherGenerator`,
+    /// which rolls dice: a generated table would differ on every run and the
+    /// weather screenshot could never be compared against its predecessor.
+    private static func seedAdventure(into context: ModelContext, hero: Hero) {
+        let adventure = Adventure(
+            name: adventureName,
+            region: .mittelreich,
+            startDate: AventurianDate(day: 12, month: .rondra, year: 1040)
+        )
+        context.insert(adventure)
+
+        // A week that exercises the row's whole vocabulary: clear through storm,
+        // a warm day and a near-freezing night, and one hand-edited day so the
+        // "bearbeitet" marker is on screen.
+        let week: [(Int, CloudCover, WindStrength, Int, Int, RainLevel, WeatherField)] = [
+            (12, .none,  .light,  24,  11, .none,   []),
+            (13, .few,   .soft,   22,  10, .none,   []),
+            (14, .lots,  .fresh,  18,   7, .little, []),
+            (15, .all,   .strong, 14,   5, .lots,   [.rain]),
+            (16, .lots,  .cool,   16,   6, .little, []),
+            (17, .few,   .light,  21,   9, .none,   []),
+            (18, .none,  .none,   26,  13, .none,   []),
+        ]
+
+        for (day, clouds, wind, dayTemp, nightTemp, rain, overrides) in week {
+            let result = WeatherResult(
+                date: AventurianDate(day: day, month: .rondra, year: 1040),
+                clouds: clouds,
+                wind: wind,
+                dayTemperature: dayTemp,
+                nightTemperature: nightTemp,
+                rain: rain
+            )
+            let weatherDay = WeatherDay(from: result, region: .mittelreich)
+            weatherDay.adventure = adventure
+            weatherDay.overridesRaw = overrides.rawValue
+            context.insert(weatherDay)
+        }
+
+        hero.activeAdventure = adventure
     }
 }
 #endif

@@ -21,7 +21,8 @@ struct CombatHitZoneRow: View {
                         zoneHit = newZone.map { HitZoneHit(zone: $0, side: nil) }
                     }),
                 targetIsSurprised: .constant(false),
-                zones: [.kopf, .torso, .arme, .beine]
+                zones: [.kopf, .torso, .arme, .beine],
+                allowsNoZone: false
             )
             .disabled(isDisabled)
 
@@ -44,19 +45,23 @@ struct CombatHitZoneRow: View {
             .buttonStyle(.dsaMotion)
             .disabled(isDisabled)
 
-            if let hit = zoneHit {
-                Text(summary(hit))
+            // Only after a roll. A tapped zone is already shown by its highlighted
+            // chip, so echoing the name underneath said nothing; the roll adds the
+            // d20 value and the side, which the chips cannot show.
+            if let hit = zoneHit, let roll = lastRoll {
+                Text(rollSummary(hit, roll: roll))
                     .font(.dsaMono(.caption, emphasis: true))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("combat.takeDamage.zoneRoll")
             }
         }
     }
 
-    /// "14: Beine (rechts)" after a roll, plain "Beine" after a tap.
-    private func summary(_ hit: HitZoneHit) -> String {
+    /// "14: Beine (rechts)" — the rolled value and the side it landed on.
+    private func rollSummary(_ hit: HitZoneHit, roll: Int) -> String {
         let name = L(hit.zone.nameKey)
         let sided = hit.side.map { "\(name) (\(L($0.nameKey)))" } ?? name
-        return lastRoll.map { "\($0): \(sided)" } ?? sided
+        return "\(roll): \(sided)"
     }
 }
 
@@ -72,8 +77,8 @@ struct CombatWoundEffectPanel: View {
     let hit: HitZoneHit
     let effectiveDamage: Int
     let wundschwelle: Int
-    /// `nil` until the probe is rolled — the GM has not adjudicated, so no effect
-    /// is applied. Every hero can roll: Selbstbeherrschung is a basic ability.
+    /// `nil` until the probe is rolled, so no effect is applied yet. Every hero
+    /// can roll it: Selbstbeherrschung is a basic ability.
     @Binding var probeSucceeded: Bool?
     let effectApplies: Bool
     let extraDamage: Int?
@@ -84,6 +89,7 @@ struct CombatWoundEffectPanel: View {
     /// the hero.
     @Binding var dropWeapon: Bool
     var onRollProbe: () -> Void
+    var onRollExtraDamage: () -> Void = {}
 
     private var effect: WoundEffect { WoundEffectCatalog.effect(for: hit.zone) }
 
@@ -123,7 +129,7 @@ struct CombatWoundEffectPanel: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                         .background(confirmed ? Color.dsaDisabled : combatAccent)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(confirmed)
@@ -150,10 +156,32 @@ struct CombatWoundEffectPanel: View {
                 .disabled(confirmed)
             }
 
+            // The Wundeffekt's own damage roll. It used to happen silently inside
+            // `confirmDamage`, so the number was never shown — unlike every other
+            // roll on this screen.
+            if effectApplies, case .extraDamage = effect.kind, extraDamage == nil {
+                Button(action: onRollExtraDamage) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "dice.fill")
+                        Text(L("trefferzone.rollExtraDamage"))
+                    }
+                    .font(.dsaHeading(.caption))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(confirmed ? Color.dsaDisabled : Color.groupCombat)
+                    .dsaBox(.raised)
+                }
+                .buttonStyle(.dsaMotion)
+                .disabled(confirmed)
+                .accessibilityIdentifier("combat.takeDamage.rollExtraDamage")
+            }
+
             if let extra = extraDamage {
                 Text("+\(extra) \(L("lpLost"))")
                     .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(Color.groupCombat)
+                    .accessibilityIdentifier("combat.takeDamage.extraDamage")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

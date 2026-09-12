@@ -27,7 +27,7 @@ struct CombatArmorSelectionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -82,7 +82,7 @@ struct CombatArmorSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color.dsaDark)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             // Continue button
             Button { step = hero.needsCombatSetup ? .combatSetup : .initiativeRoll } label: {
@@ -165,7 +165,7 @@ struct CombatSetupView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -335,7 +335,7 @@ struct CombatInitiativeRollView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             VStack(spacing: 0) {
                 // Base selector
@@ -547,7 +547,7 @@ struct CombatLoadoutEquipmentView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {

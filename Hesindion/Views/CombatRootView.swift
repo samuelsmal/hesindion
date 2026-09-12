@@ -64,7 +64,7 @@ struct CombatRootView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
             VStack(spacing: 0) {
@@ -94,7 +94,7 @@ struct CombatRootView: View {
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
 
                 // Next round button
                 Button { roundNumber += 1 } label: {
@@ -472,7 +472,7 @@ struct CombatRootView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(Color.dsaDark)
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
                     }
                     .buttonStyle(.dsaMotion)
 
@@ -488,7 +488,7 @@ struct CombatRootView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.dsaDark)
-                            .dsaBox(.flush)
+                            .dsaBox(.raised)
                         }
                         .buttonStyle(.dsaMotion)
                     }
@@ -706,7 +706,7 @@ struct CombatArmorManagementSheet: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             if hero.armors.isEmpty {
                 VStack(spacing: 8) {

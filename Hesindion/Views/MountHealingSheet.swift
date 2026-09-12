@@ -48,7 +48,7 @@ struct MountHealingSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
 
                     Button { amount += 1 } label: {
                         Text("+")

@@ -91,7 +91,7 @@ struct CombatExecutionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             VStack(spacing: 8) {
                 // Row 1: modifier breakdown or simple value
@@ -252,7 +252,7 @@ struct CombatExecutionView: View {
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(combatAccent.opacity(0.1))
-            .dsaBox(.flush, stroke: combatAccent)
+            .dsaBox(.raised, stroke: combatAccent)
 
             Button { step = .passierschlag } label: {
                 HStack(spacing: 6) {
@@ -319,7 +319,7 @@ struct CombatExecutionView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.dsaDark)
-                .dsaBox(.flush)
+                .dsaBox(.raised)
 
             Button { step = .root } label: {
                 HStack(spacing: 6) {
@@ -391,43 +391,21 @@ struct CombatExecutionView: View {
     private var modifierBox: some View {
         let locked = finalRoll != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button {
-                    modifier -= 1
-                } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : combatAccent)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : combatAccent,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                incrementIdentifier: "combat.execution.increaseModifier",
+                onDecrement: { modifier -= 1 },
+                onIncrement: { modifier += 1 }
+            ) {
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
                     .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 64)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-
-                Button {
-                    modifier += 1
-                } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : combatAccent)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
-                .accessibilityIdentifier("combat.execution.increaseModifier")
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
             Text(L("modifier"))
                 .font(.dsaBody(.caption2))

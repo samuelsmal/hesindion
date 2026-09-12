@@ -77,36 +77,19 @@ struct DiceRollSheet: View {
         onIncrement: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button(action: onDecrement) {
-                    Image(systemName: "arrow.down")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(isRolled ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(isRolled ? Color.dsaDisabled : Color.groupPersonalData)
-                }
-                .buttonStyle(.dsaMotion)
-                .dsaBox(.flush)
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: isRolled ? Color.dsaDisabled : Color.groupPersonalData,
+                iconColor: isRolled ? .white : .black,
+                onDecrement: onDecrement,
+                onIncrement: onIncrement
+            ) {
                 Text(displayValue ?? "\(value ?? 0)")
                     .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 48)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-
-                Button(action: onIncrement) {
-                    Image(systemName: "arrow.up")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(isRolled ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(isRolled ? Color.dsaDisabled : Color.groupPersonalData)
-                }
-                .buttonStyle(.dsaMotion)
-                .dsaBox(.flush)
             }
-            .fixedSize(horizontal: false, vertical: true)
 
             Text(label)
                 .font(.dsaBody(.caption2))

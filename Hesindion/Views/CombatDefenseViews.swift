@@ -66,7 +66,7 @@ struct CombatOpponentDefenseView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             // MARK: Body
             VStack(spacing: 8) {
@@ -518,7 +518,7 @@ struct CombatFumbleChoiceView: View {
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(combatAccent)
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     // MARK: - Choice Buttons
@@ -760,7 +760,7 @@ struct CombatFluchtView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             VStack(spacing: 16) {
                 // Info
@@ -780,41 +780,17 @@ struct CombatFluchtView: View {
                     // Opponent count stepper
                     combatSectionLabel(L("flucht.opponents"))
 
-                    HStack(spacing: 0) {
-                        Button {
-                            if opponentCount > 1 { opponentCount -= 1 }
-                        } label: {
-                            Image(systemName: "minus")
-                                .font(.dsaBody(.body))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(combatAccent)
-                        }
-                        .buttonStyle(.dsaMotion)
-                        .disabled(opponentCount <= 1)
-                        .dsaBox(.flush)
-
+                    DSAStepper(
+                        tint: combatAccent,
+                        decrementDisabled: opponentCount <= 1,
+                        onDecrement: { if opponentCount > 1 { opponentCount -= 1 } },
+                        onIncrement: { opponentCount += 1 }
+                    ) {
                         Text("\(opponentCount)")
                             .font(.dsaHeading(.largeTitle))
                             .fontDesign(.monospaced)
-                            .frame(minWidth: 80)
                             .padding(.vertical, 14)
-                            .background(Color(UIColor.systemBackground))
-                            .dsaBox(.flush)
-
-                        Button {
-                            opponentCount += 1
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.dsaBody(.body))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(combatAccent)
-                        }
-                        .buttonStyle(.dsaMotion)
-                        .dsaBox(.flush)
                     }
-                    .fixedSize(horizontal: false, vertical: true)
 
                     Text("Erschwernis: \u{2013}\(opponentCount)")
                         .font(.dsaMono(.caption, emphasis: true))
@@ -997,7 +973,7 @@ struct CombatPassierschlagView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             // MARK: Body
             VStack(spacing: 8) {

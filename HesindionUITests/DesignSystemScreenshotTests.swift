@@ -77,11 +77,87 @@ final class DesignSystemScreenshotTests: XCTestCase {
         captureScreenshot(app, named: "combat-root")
     }
 
+    // MARK: - Take damage
+
+    /// The TP stepper is a segmented control, so it is the screen that shows
+    /// whether the shadow scope reads correctly on joined segments.
+    @MainActor
+    func testTakeDamage() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", appearance: "light")
+        awaitCombatRoot(app)
+        let takeDamage = app.button(containing: "Schaden nehmen")
+        XCTAssertTrue(takeDamage.waitForExistence(timeout: UITest.timeout), "Take-damage action missing")
+        takeDamage.tap()
+        XCTAssertTrue(
+            app.buttons["combat.takeDamage.increaseTP"].waitForExistence(timeout: UITest.timeout),
+            "Take-damage screen did not open"
+        )
+        captureScreenshot(app, named: "take-damage")
+    }
+
     @MainActor
     func testCombatRootDark() {
         continueAfterFailure = false
         let app = UITest.launch(path: "combat", appearance: "dark")
         awaitCombatRoot(app)
         captureScreenshot(app, named: "combat-root-dark")
+    }
+
+    // MARK: - Sidebar, adventure weather, dice roller
+
+    /// The sidebar itself — the last surface that was still rendering as stock
+    /// `List` rows, so it is worth a capture of its own.
+    @MainActor
+    func testHeroList() {
+        continueAfterFailure = false
+        let app = UITest.launch(appearance: "light")
+        awaitHeroDetail(app)
+        captureScreenshot(app, named: "hero-list")
+    }
+
+    /// The weather table, reached through the seeded adventure. Its rows come
+    /// from `UITestSeed`'s fixed week rather than from `WeatherGenerator`, which
+    /// rolls dice — a generated table would differ on every run and could never
+    /// be compared against its predecessor.
+    @MainActor
+    func testAdventureWeather() {
+        continueAfterFailure = false
+        let app = UITest.launch(appearance: "light")
+        awaitHeroDetail(app)
+
+        let asButton = app.button(containing: UITest.adventureName)
+        let row = asButton.waitForExistence(timeout: UITest.probeTimeout)
+            ? asButton
+            : app.staticTexts[UITest.adventureName].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "Seeded adventure not in the sidebar")
+        row.tap()
+
+        XCTAssertTrue(
+            app.staticTexts[UITest.adventureName].waitForExistence(timeout: UITest.timeout),
+            "Adventure detail did not open"
+        )
+        captureScreenshot(app, named: "adventure-weather")
+    }
+
+    /// The dice roller, whose stepper was the one with unequal thirds before
+    /// `DSAStepper`.
+    @MainActor
+    func testDiceRoller() {
+        continueAfterFailure = false
+        let app = UITest.launch(appearance: "light")
+        let field = app.openCommandPalette()
+        XCTAssertTrue(field.waitForExistence(timeout: UITest.timeout), "Command palette did not open")
+        field.typeText("Würfeln")
+
+        let command = app.button(containing: "Würfeln")
+        XCTAssertTrue(command.waitForExistence(timeout: UITest.timeout), "Dice command not offered")
+        command.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["W6"].waitForExistence(timeout: UITest.timeout),
+            "Dice roll sheet did not open"
+        )
+        captureScreenshot(app, named: "dice-roller")
     }
 }

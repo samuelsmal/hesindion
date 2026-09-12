@@ -17,8 +17,8 @@ struct CombatTakeDamageView: View {
     // Trefferzonen (Fokus-Regel)
     @State private var zoneHit: HitZoneHit? = nil
     @State private var lastRoll: Int? = nil
-    /// `nil` until the Selbstbeherrschung probe is rolled — which means the GM has
-    /// not adjudicated the wound effect, so nothing is applied.
+    /// `nil` until the Selbstbeherrschung probe is rolled — the wound effect has
+    /// not been resolved yet, so nothing is applied.
     @State private var probeSucceeded: Bool? = nil
     @State private var showingProbeModal = false
     /// Resolved once when the probe is opened rather than per body pass, because the
@@ -26,6 +26,18 @@ struct CombatTakeDamageView: View {
     @State private var probeTalent: Talent? = nil
     /// Rolled once, on confirm, and folded into the single LP write.
     @State private var extraDamage: Int? = nil
+    /// Everything `applyDamage` changed, kept so a wrong press can be taken back.
+    /// The previous LP is stored rather than recomputed: the write clamps at 0, so
+    /// adding the total back would overshoot on a hero who was dropped to zero.
+    @State private var applied: AppliedDamage? = nil
+    @State private var showingOverwriteAlert = false
+
+    /// The undo record for a confirmed entry.
+    private struct AppliedDamage {
+        let previousLP: Int?
+        let droppedWeapon: String?
+        let logEntries: [LogEntry]
+    }
     /// Staged intent, not an immediate action: only cleared on confirm, alongside
     /// the LP write and the log entry, so an abandoned flow cannot disarm the hero.
     @State private var dropWeapon: Bool = false
@@ -51,7 +63,7 @@ struct CombatTakeDamageView: View {
     }
 
     /// It applies only on a *failed* Selbstbeherrschung probe. Every hero has that
-    /// basic ability, so an unrolled probe simply means the GM has not adjudicated —
+    /// basic ability, so an unrolled probe simply means it has not been rolled —
     /// never a silent auto-apply.
     private var woundEffectApplies: Bool {
         WoundEffectResolver.effectApplies(
@@ -88,51 +100,26 @@ struct CombatTakeDamageView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             VStack(spacing: 16) {
+                VStack(spacing: 16) {
                 // TP input stepper
                 combatSectionLabel(L("tp"))
 
-                HStack(spacing: 0) {
-                    Button {
-                        if tpInput > 0 { tpInput -= 1 }
-                    } label: {
-                        Image(systemName: "minus")
-                            .font(.dsaBody(.body))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(confirmed ? Color.dsaDisabled : combatAccent)
-                    }
-                    .buttonStyle(.dsaMotion)
-                    .disabled(confirmed || tpInput <= 0)
-                    .dsaBox(.flush)
-
+                DSAStepper(
+                    tint: combatAccent,
+                    decrementDisabled: confirmed || tpInput <= 0,
+                    incrementDisabled: confirmed,
+                    incrementIdentifier: "combat.takeDamage.increaseTP",
+                    onDecrement: { if tpInput > 0 { tpInput -= 1 } },
+                    onIncrement: { tpInput += 1 }
+                ) {
                     Text("\(tpInput)")
                         .font(.dsaHeading(.largeTitle))
                         .fontDesign(.monospaced)
-                        // Equal thirds: the two steppers already fill, so the value
-                        // must too, or it collapses to its intrinsic width.
-                        .frame(minWidth: 80, maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-
-                    Button {
-                        tpInput += 1
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.dsaBody(.body))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(confirmed ? Color.dsaDisabled : combatAccent)
-                    }
-                    .buttonStyle(.dsaMotion)
-                    .disabled(confirmed)
-                    .dsaBox(.flush)
-                    .accessibilityIdentifier("combat.takeDamage.increaseTP")
                 }
-                .fixedSize(horizontal: false, vertical: true)
 
                 // Calculation display
                 VStack(spacing: 4) {
@@ -176,8 +163,26 @@ struct CombatTakeDamageView: View {
                             onRollProbe: {
                                 probeTalent = hero.selbstbeherrschung
                                 showingProbeModal = true
+                            },
+                            onRollExtraDamage: {
+                                extraDamage = WoundEffectResolver.rollExtraDamage(for: hit.zone)
                             }
                         )
+                    }
+                }
+
+                }
+                // Confirmed inputs render disabled but stay reachable: a wrong
+                // press should be correctable here rather than forcing "Neue
+                // Aktion", which returns to the combat root and leaves the
+                // mistaken damage on the sheet. The catcher covers the inputs
+                // only, so the action button below stays live.
+                .overlay {
+                    if confirmed {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { showingOverwriteAlert = true }
+                            .accessibilityIdentifier("combat.takeDamage.overwriteCatcher")
                     }
                 }
 
@@ -220,6 +225,12 @@ struct CombatTakeDamageView: View {
         // damage total changes the modifier — either way the old probe is void.
         .onChange(of: zoneHit) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
         .onChange(of: effectiveDamage) { if !confirmed { probeSucceeded = nil; dropWeapon = false } }
+        .alert(L("takeDamage.overwrite.title"), isPresented: $showingOverwriteAlert) {
+            Button(L("cancel"), role: .cancel) {}
+            Button(L("takeDamage.overwrite.action"), role: .destructive) { undoDamage() }
+        } message: {
+            Text(L("takeDamage.overwrite.message"))
+        }
         .overlay {
             if showingProbeModal, let talent = probeTalent {
                 TalentProbeModal(
@@ -242,9 +253,14 @@ struct CombatTakeDamageView: View {
     /// in the same transaction as the LP write and the log entry — and never on a
     /// flow the user abandons before confirming.
     private func applyDamage() {
+        // The Wundeffekt's damage is rolled beforehand (see the panel's roll
+        // button), so `confirmDamage` is told the result rather than rolling
+        // one of its own — otherwise the figure on screen and the figure written
+        // to LP could differ.
         let (extra, total) = WoundEffectResolver.confirmDamage(
             zoneHit: zoneHit, effectApplies: woundEffectApplies,
-            effectiveDamage: effectiveDamage, hero: hero)
+            effectiveDamage: effectiveDamage, hero: hero,
+            preRolledExtraDamage: extraDamage)
         extraDamage = extra
 
         var droppedWeapon: String? = nil
@@ -253,11 +269,15 @@ struct CombatTakeDamageView: View {
             hero.selectedWeaponName = nil
         }
 
+        let previousLP = hero.derivedValues?.lebensenergie.current
         if let dv = hero.derivedValues {
             dv.lebensenergie.current = max(0, dv.lebensenergie.current - total)
         }
 
-        modelContext.insert(LogEntry.create(
+        // Held so `undoDamage` can remove exactly the entries this confirm wrote.
+        var written: [LogEntry] = []
+
+        let actionEntry = LogEntry.create(
             kind: "combatAction",
             payload: CombatActionPayload(
                 combatId: combatId,
@@ -270,10 +290,12 @@ struct CombatTakeDamageView: View {
                 lpChange: -total
             ),
             hero: hero
-        ))
+        )
+        modelContext.insert(actionEntry)
+        written.append(actionEntry)
 
         if let hit = zoneHit, woundEffectThreatens {
-            modelContext.insert(LogEntry.create(
+            let effectEntry = LogEntry.create(
                 kind: "woundEffect",
                 payload: WoundEffectPayload(
                     zone: hit.zone.rawValue,
@@ -288,19 +310,50 @@ struct CombatTakeDamageView: View {
                     weaponDropped: droppedWeapon
                 ),
                 hero: hero
-            ))
+            )
+            modelContext.insert(effectEntry)
+            written.append(effectEntry)
         }
 
+        applied = AppliedDamage(
+            previousLP: previousLP,
+            droppedWeapon: droppedWeapon,
+            logEntries: written
+        )
         confirmed = true
+    }
+
+    /// Takes back a confirmed entry so a wrong press can be corrected in place.
+    ///
+    /// Without this the only way out was "Neue Aktion", which returns to the
+    /// combat root and leaves the mistaken damage on the sheet. Everything the
+    /// confirm wrote is reversed: the LP value, the dropped weapon, and both log
+    /// entries.
+    private func undoDamage() {
+        guard let record = applied else { return }
+
+        if let dv = hero.derivedValues, let previous = record.previousLP {
+            dv.lebensenergie.current = previous
+        }
+        if let weaponName = record.droppedWeapon {
+            hero.selectedWeaponName = weaponName
+        }
+        for entry in record.logEntries {
+            modelContext.delete(entry)
+        }
+
+        applied = nil
+        extraDamage = nil
+        confirmed = false
     }
 }
 
 // MARK: - WoundEffectReminderCard
 
-/// Read-only GM prompt shown after a landed targeted attack.
+/// Read-only rules prompt shown after a landed targeted attack.
 ///
 /// Nothing is applied: the opponent has no LP, no KO and no states, so the app can
-/// only state the rule and let the GM adjudicate.
+/// only state the rule and leave the call to the player.
 struct WoundEffectReminderCard: View {
     let zone: HitZone
 
@@ -372,7 +425,7 @@ struct CombatMountDamageView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             Spacer()
 
@@ -430,7 +483,7 @@ struct CombatMountDamageView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
+                        .dsaBox(.raised)
 
                     Button {
                         spAmount += 1
@@ -528,7 +581,7 @@ struct CombatMountDamageView: View {
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity)
                             .background(Color.groupCombat.opacity(0.1))
-                            .dsaBox(.flush, stroke: Color.groupCombat)
+                            .dsaBox(.raised, stroke: Color.groupCombat)
                     }
 
                     Button {
@@ -662,7 +715,7 @@ struct CombatMountPreCheckView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             Spacer()
 
@@ -743,7 +796,7 @@ struct CombatMountPreCheckView: View {
         .padding(galoppConfirmed ? 0 : 16)
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     // MARK: - Connector

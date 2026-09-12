@@ -48,7 +48,7 @@ struct CombatSpellSelectionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 4) {
@@ -184,7 +184,7 @@ struct CombatSpellSetupView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -470,7 +470,7 @@ struct CombatSpellExecutionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             if let checkAttrs = checkAttributes {
                 SkillCheckModal(

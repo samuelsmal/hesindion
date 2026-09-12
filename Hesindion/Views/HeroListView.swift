@@ -94,16 +94,14 @@ struct HeroListView: View {
                     Text(L("rulebook"))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
+                    Spacer(minLength: 0)
                 }
                     .font(.dsaHeading(.title3))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.rulebook)
-                    .listRowBackground(
-                        selection == .rulebook
-                            ? Color.groupRulebook.opacity(0.35)
-                            : Color(UIColor.systemBackground)
+                    .sidebarRow(
+                        accent: .groupRulebook,
+                        isSelected: selection == .rulebook
                     )
+                    .tag(SidebarSelection.rulebook)
             } header: {
                 sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
             }
@@ -135,15 +133,13 @@ struct HeroListView: View {
                             .dsaBox(.flush)
                         Text(adventure.name)
                             .font(.dsaHeading(.title3))
+                        Spacer(minLength: 0)
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
-                    .listRowBackground(
-                        selection == .adventure(adventure.persistentModelID)
-                            ? Color.groupAdventure.opacity(0.35)
-                            : Color(UIColor.systemBackground)
+                    .sidebarRow(
+                        accent: .groupAdventure,
+                        isSelected: selection == .adventure(adventure.persistentModelID)
                     )
+                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
                 }
             } header: {
                 sidebarSectionHeader(L("adventures"), color: .groupAdventure)
@@ -165,15 +161,15 @@ struct HeroListView: View {
                             heroAvatar(hero)
                             Text(hero.name)
                                 .font(.dsaHeading(.title3))
+                            Spacer(minLength: 0)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
+                        // Each hero keeps its own profession accent, so the
+                        // sidebar carries the same identity the detail pane does.
+                        .sidebarRow(
+                            accent: HeroColorScheme.scheme(for: hero).accentColor,
+                            isSelected: selection == .hero(hero.persistentModelID)
+                        )
                         .tag(SidebarSelection.hero(hero.persistentModelID))
-                        .listRowBackground(
-                                selection == .hero(hero.persistentModelID)
-                                    ? HeroColorScheme.scheme(for: hero).accentColor.opacity(0.35)
-                                    : Color(UIColor.systemBackground)
-                            )
                     }
                 }
             } header: {

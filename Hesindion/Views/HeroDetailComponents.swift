@@ -145,7 +145,7 @@ struct CollapsibleSection<Content: View>: View {
 
             if isExpanded { content }
         }
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 }
 

@@ -9,6 +9,11 @@ enum UITest {
     /// Enables the debug-only seeded store (see `UITestSeed` in the app target).
     static let seedArgument = "-uitest-seed-hero"
 
+    /// The seeded adventure's name. Mirrors `UITestSeed.adventureName`, which
+    /// lives in the app target and so cannot be referenced from here — keep the
+    /// two in step.
+    static let adventureName = "Die Sieben Gezeichneten"
+
     static let timeout: TimeInterval = 30
     /// Short timeout for "did this branch happen?" probes inside a retry loop.
     static let probeTimeout: TimeInterval = 5
@@ -21,12 +26,22 @@ enum UITest {
     /// exists because the simulator-level equivalent is not dependable here:
     /// `XCUIDevice.shared.appearance` races the app's start when set before
     /// launch, and never arrives when set after.
+    /// `diceScript` is a comma-separated list of die results fed to `DiceRoller`
+    /// (see `ScriptedDice`). It exists because a UI test drives the real app,
+    /// which uses the no-generator roll overloads, so ADR-0003's injectable RNG —
+    /// enough for unit tests — cannot reach it. Without a script, a branching
+    /// flow can only be rolled for repeatedly and hoped at.
     @MainActor
-    static func launch(path: String? = nil, appearance: String? = nil) -> XCUIApplication {
+    static func launch(
+        path: String? = nil,
+        appearance: String? = nil,
+        diceScript: String? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
         if let path { app.launchArguments += ["path", path] }
         if let appearance { app.launchArguments += ["appearance", appearance] }
+        if let diceScript { app.launchArguments += ["dice_script", diceScript] }
         app.launch()
         return app
     }

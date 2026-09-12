@@ -128,7 +128,7 @@ struct CombatFernkampfSetupView: View {
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(combatAccent)
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     // MARK: - Distanz Section
@@ -592,7 +592,7 @@ struct CombatFernkampfExecutionView: View {
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(combatAccent)
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     // MARK: - Modifier breakdown
@@ -675,42 +675,20 @@ struct CombatFernkampfExecutionView: View {
     private var modifierBox: some View {
         let locked = finalRoll != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button {
-                    modifier -= 1
-                } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : combatAccent)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : combatAccent,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                onDecrement: { modifier -= 1 },
+                onIncrement: { modifier += 1 }
+            ) {
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
                     .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 64)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-
-                Button {
-                    modifier += 1
-                } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : combatAccent)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
 
             Text(L("modifier"))

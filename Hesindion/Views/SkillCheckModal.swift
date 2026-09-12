@@ -174,6 +174,7 @@ struct SkillCheckModal: View {
                         selected: rerollEligible && rerollSelection.contains(i)
                     )
                     .contentShape(Rectangle())
+                    .accessibilityIdentifier("skillCheck.die.\(i)")
                     .onTapGesture {
                         if !hasResult {
                             roll()
@@ -228,6 +229,26 @@ struct SkillCheckModal: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 4)
             }
+
+            // Closing the check is an explicit act, not automatic: the result is
+            // worth reading, and a Schip reroll is still on the table until it is
+            // dismissed. Before this the only ways out were a scrim tap or a drag,
+            // which are easy to miss and left the check sitting over the screen
+            // that sent you here.
+            if hasResult {
+                Button(action: onDismiss) {
+                    Text(L("confirm"))
+                        .font(.dsaHeading(.body))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(config.accentColor)
+                        .dsaBox(.raised)
+                }
+                .buttonStyle(.dsaMotion)
+                .padding(.top, 4)
+                .accessibilityIdentifier("skillCheck.confirm")
+            }
         }
         .padding(16)
     }
@@ -280,7 +301,7 @@ struct SkillCheckModal: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     private func diceBox(value: Int, isAnimating: Bool, selected: Bool) -> some View {

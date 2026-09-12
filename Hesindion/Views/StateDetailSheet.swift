@@ -88,7 +88,7 @@ struct StateDetailSheet: View {
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .frame(maxWidth: .infinity)
         .background(accent)
-        .dsaBox(.flush)
+        .dsaBox(.raised)
     }
 
     // MARK: - Level control (stepper / on-off indicator)

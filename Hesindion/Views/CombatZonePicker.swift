@@ -12,6 +12,10 @@ struct CombatZonePicker: View {
     var showsPenalty: Bool = false
     /// Show the Überrascht toggle (offence only).
     var showsSurprisedToggle: Bool = false
+    /// Offer the "keine Zone" chip. True on offence, where not aiming is a real
+    /// choice; false when the hero takes a hit, where the zone is either chosen
+    /// outright or rolled.
+    var allowsNoZone: Bool = true
     /// Hero owns SA_160 / SA_161 for the current domain.
     var hasSonderfertigkeit: Bool = false
     /// Which Sonderfertigkeit halves the Zonenaufschlag here — SA_160 *Gezielter Angriff*
@@ -33,6 +37,7 @@ struct CombatZonePicker: View {
             }
             .frame(maxWidth: .infinity)
             .fixedSize(horizontal: false, vertical: true)
+            .dsaOptionGroup()
 
             if showsSurprisedToggle {
                 Button { targetIsSurprised.toggle() } label: {
@@ -81,11 +86,16 @@ struct CombatZonePicker: View {
             }
         }
 
-        chip(isSelected: selection == nil, identifier: "combat.zone.none") {
-            selection = nil
-        } label: {
-            Text(L("trefferzone.none"))
-                .font(.dsaHeading(.caption))
+        // Only where declining to aim is a real choice — the attack announcement.
+        // When the hero *takes* a hit under the Fokus-Regel the zone is either
+        // chosen outright or rolled, so "keine Zone" is not an available answer.
+        if allowsNoZone {
+            chip(isSelected: selection == nil, identifier: "combat.zone.none") {
+                selection = nil
+            } label: {
+                Text(L("trefferzone.none"))
+                    .font(.dsaHeading(.caption))
+            }
         }
     }
 

@@ -49,7 +49,7 @@ struct CombatAttackChoiceView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -316,7 +316,7 @@ struct CombatAttackChoiceView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
     }
@@ -397,7 +397,7 @@ struct CombatAnnouncementView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -463,11 +463,13 @@ struct CombatAnnouncementView: View {
                             .buttonStyle(.dsaMotion)
                         }
                     }
+                    .dsaOptionGroup()
 
                     // Maneuver selection (hidden for mount charge — auto-selected)
                     if !isMountCharge {
                     combatSectionLabel(L("announcement.label"))
 
+                    VStack(spacing: 8) {
                     ForEach(availableManeuvers, id: \.self) { maneuver in
                         let isSelected = selectedManeuver == maneuver
                         Button { selectedManeuver = maneuver } label: {
@@ -502,6 +504,8 @@ struct CombatAnnouncementView: View {
                         }
                         .buttonStyle(.dsaMotion)
                     }
+                    }
+                    .dsaOptionGroup()
                     } // end if !isMountCharge
 
                     // Trefferzone (Fokus-Regel)
@@ -664,7 +668,7 @@ struct CombatWeaponSelectionView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .dsaBox(.flush)
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {

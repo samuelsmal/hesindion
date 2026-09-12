@@ -143,3 +143,49 @@ extension ButtonStyle where Self == DSAPressMotionStyle {
     /// their own surface.
     static var dsaMotion: DSAPressMotionStyle { DSAPressMotionStyle() }
 }
+
+// MARK: - Option groups
+
+extension View {
+    /// Wraps a group of options — segmented chips, a list of manoeuvres, a zone
+    /// picker — in one raised panel.
+    ///
+    /// This is the other half of ADR-0009's scope decision. Making option rows
+    /// `.flush` calmed the lists, but on a screen built entirely of options it
+    /// left nothing casting at all, so the screen read as though it had never
+    /// been refactored. The group carries the depth its members gave up: the
+    /// shadow marks the *group* as a thing on the page, while the options inside
+    /// stay flat against it.
+    func dsaOptionGroup() -> some View {
+        padding(10)
+            .frame(maxWidth: .infinity)
+            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
+    }
+}
+
+// MARK: - Sidebar rows
+
+extension View {
+    /// A selectable row in the sidebar list.
+    ///
+    /// The sidebar was the last surface still rendering as stock `List` rows —
+    /// selection shown by a tinted `listRowBackground`, rows separated by system
+    /// hairlines — while the two call-to-action buttons beside it were fully
+    /// styled. That mismatch is what made the sidebar read as a different app.
+    ///
+    /// Rows are option surfaces, so they are `.flush` and take the accent as a
+    /// stroke when selected, exactly like the manoeuvre and zone rows.
+    func sidebarRow(accent: Color, isSelected: Bool) -> some View {
+        self
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(isSelected ? accent.opacity(0.35) : Color(UIColor.systemBackground))
+            .dsaBox(.flush, stroke: isSelected ? accent : Color.dsaBorder)
+            .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 16))
+            .listRowBackground(Color(UIColor.systemBackground))
+            // The system hairline is the "subtle grey" the design language rules
+            // out, and it would double up against the row's own border.
+            .listRowSeparator(.hidden)
+    }
+}

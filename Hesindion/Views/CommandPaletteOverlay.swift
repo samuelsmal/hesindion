@@ -80,18 +80,16 @@ struct RegenerierenSheet: View {
     private var modifierBox: some View {
         let locked = d6Result != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button { userModifier -= 1 } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(locked ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : Color.groupPersonalData)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : Color.groupPersonalData,
+                iconColor: locked ? .white : .black,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                onDecrement: { userModifier -= 1 },
+                onIncrement: { userModifier += 1 }
+            ) {
                 VStack(spacing: 2) {
                     Text(totalMod >= 0 ? "+\(totalMod)" : "\(totalMod)")
                         .font(.dsaHeading(.title3))
@@ -102,23 +100,8 @@ struct RegenerierenSheet: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(minWidth: 64)
                 .padding(.vertical, 10)
-                .background(Color(UIColor.systemBackground))
-                .dsaBox(.flush)
-
-                Button { userModifier += 1 } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(locked ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.dsaDisabled : Color.groupPersonalData)
-                }
-                .buttonStyle(.dsaMotion)
-                .disabled(locked)
-                .dsaBox(.flush)
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
             Text(L("modifier"))
                 .font(.dsaBody(.caption2))
@@ -376,7 +359,7 @@ struct CommandModal: View {
             }
             .padding(32)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in
@@ -468,7 +451,7 @@ struct MountDamageSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
+                    .dsaBox(.raised)
 
                 Button { spAmount += 1 } label: {
                     Text("+")
@@ -548,7 +531,7 @@ struct MountDamageSheet: View {
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
                     .background(Color.groupCombat.opacity(0.1))
-                    .dsaBox(.flush, stroke: Color.groupCombat)
+                    .dsaBox(.raised, stroke: Color.groupCombat)
             }
 
             Button { dismiss() } label: {

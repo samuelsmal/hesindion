@@ -65,7 +65,7 @@ struct EditCurrentModal: View {
             }
             .padding(24)
             .background(Color(UIColor.systemBackground))
-            .dsaBox(.flush)
+            .dsaBox(.raised)
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in
