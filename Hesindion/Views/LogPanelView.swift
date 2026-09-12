@@ -5,8 +5,16 @@ struct LogPanelView: View {
     @Bindable var hero: Hero
     @Environment(\.modelContext) private var modelContext
 
-    @State private var entryToDelete: LogEntry?
+    @State private var pendingDeletion: PendingDeletion?
     @State private var collapsedCombats: Set<UUID> = []
+
+    /// What the confirmation dialog is about. A combat carries the entries it
+    /// wrote, gathered when the button is pressed, so the dialog can say how many
+    /// go and the delete cannot drift from what was shown.
+    private enum PendingDeletion {
+        case entry(LogEntry)
+        case combat(id: UUID, entries: [LogEntry])
+    }
 
     private var sortedEntries: [LogEntry] {
         hero.logEntries.sorted { $0.timestamp > $1.timestamp }
@@ -35,25 +43,37 @@ struct LogPanelView: View {
                 .foregroundStyle(Color.dsaBorder)
         }
         .confirmationDialog(
-            "Eintrag löschen?",
+            deletionTitle,
             isPresented: Binding(
-                get: { entryToDelete != nil },
-                set: { if !$0 { entryToDelete = nil } }
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
             ),
             titleVisibility: .visible
         ) {
             Button("Löschen", role: .destructive) {
-                if let entry = entryToDelete {
+                switch pendingDeletion {
+                case .entry(let entry):
                     deleteEntry(entry)
+                case .combat(_, let entries):
+                    entries.forEach(deleteEntry)
+                case nil:
+                    break
                 }
-                entryToDelete = nil
+                pendingDeletion = nil
             }
             Button("Abbrechen", role: .cancel) {
-                entryToDelete = nil
+                pendingDeletion = nil
             }
         } message: {
             Text("Die Auswirkung wird rückgängig gemacht.")
         }
+    }
+
+    private var deletionTitle: String {
+        if case .combat(_, let entries) = pendingDeletion {
+            return "Kampf löschen? (\(entries.count) \(entries.count == 1 ? "Eintrag" : "Einträge"))"
+        }
+        return "Eintrag löschen?"
     }
 
     // MARK: - Log List
@@ -74,10 +94,18 @@ struct LogPanelView: View {
                             Button(role: .destructive) {
                                 let captured = entry
                                 Task { @MainActor in
-                                    entryToDelete = captured
+                                    pendingDeletion = .entry(captured)
                                 }
                             } label: {
                                 Label("Löschen", systemImage: "trash")
+                            }
+                        }
+                        // The swipe alone was the only way in, and in a narrow
+                        // side panel it is easy to miss and easy to lose to the
+                        // panel's own drag. Long-press reaches the same dialog.
+                        .contextMenu {
+                            Button("Löschen", systemImage: "trash", role: .destructive) {
+                                pendingDeletion = .entry(entry)
                             }
                         }
                 }
@@ -118,34 +146,58 @@ struct LogPanelView: View {
 
     // MARK: - Combat Header Row
 
+    /// The header carries the delete for the whole combat: its rows can be
+    /// collapsed, and a collapsed combat has nothing left to swipe, so deleting a
+    /// finished fight had no entry point at all (issue #13). The trash is a plain
+    /// visible button rather than a swipe for the same reason.
     private func combatHeaderRow(combatId: UUID, totalRounds: Int, totalLP: Int) -> some View {
         let isCollapsed = collapsedCombats.contains(combatId)
         let lpString = totalLP >= 0 ? "+\(totalLP)" : "\(totalLP)"
 
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                if isCollapsed {
-                    collapsedCombats.remove(combatId)
-                } else {
-                    collapsedCombats.insert(combatId)
+        return HStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    if isCollapsed {
+                        collapsedCombats.remove(combatId)
+                    } else {
+                        collapsedCombats.insert(combatId)
+                    }
                 }
+            } label: {
+                HStack {
+                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "bolt.fill")
+                        .foregroundStyle(Color.groupCombat)
+                    Text("Kampf — \(totalRounds) Runden, \(lpString) LP")
+                        .font(.dsaBody(.subheadline))
+                    Spacer()
+                }
+                .contentShape(Rectangle())
             }
-        } label: {
-            HStack {
-                Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+            .buttonStyle(.dsaMotion)
+
+            Button {
+                pendingDeletion = .combat(id: combatId, entries: entries(ofCombat: combatId))
+            } label: {
+                Image(systemName: "trash")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                Image(systemName: "bolt.fill")
                     .foregroundStyle(Color.groupCombat)
-                Text("Kampf — \(totalRounds) Runden, \(lpString) LP")
-                    .font(.dsaBody(.subheadline))
-                Spacer()
+                    .padding(.leading, 10)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel("Kampf löschen")
+            .accessibilityIdentifier("log.deleteCombat")
         }
-        .buttonStyle(.dsaMotion)
         .padding(.horizontal, DSALayout.contentPadding)
         .padding(.vertical, 8)
+    }
+
+    private func entries(ofCombat combatId: UUID) -> [LogEntry] {
+        LogEntry.entries(ofCombat: combatId, in: sortedEntries)
     }
 
     // MARK: - Entry Row

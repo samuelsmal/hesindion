@@ -100,6 +100,10 @@ struct MountLPChangePayload: Codable, Reversible {
 /// Deliberately not `Reversible`: the LP change rides on the `combatAction` entry
 /// written by the same confirm, so reversing both would double-count it.
 struct WoundEffectPayload: Codable {
+    /// The combat this Wundeffekt was recorded in, so deleting that combat takes it
+    /// too. Optional because entries written before it existed have no value, and a
+    /// non-optional field would fail to decode them.
+    var combatId: UUID?
     var zone: String
     var side: String?
     /// The 1W20 that picked the zone, or `nil` if the zone was tapped.
@@ -156,6 +160,28 @@ final class LogEntry {
 
     func decodePayload<P: Codable>(_ type: P.Type) -> P? {
         try? JSONDecoder().decode(type, from: payload)
+    }
+
+    // MARK: - Combat Selection
+
+    /// Every entry a single combat wrote: its own actions, and the Wundeffekte
+    /// recorded alongside them.
+    ///
+    /// A Wundeffekt only carries a `combatId` if it was written after
+    /// `WoundEffectPayload` gained the field, so an older one is left where it is
+    /// rather than matched by timestamp — a guess that could take an unrelated
+    /// entry with it.
+    static func entries(ofCombat combatId: UUID, in entries: [LogEntry]) -> [LogEntry] {
+        entries.filter { entry in
+            switch entry.kind {
+            case "combatAction":
+                return entry.decodePayload(CombatActionPayload.self)?.combatId == combatId
+            case "woundEffect":
+                return entry.decodePayload(WoundEffectPayload.self)?.combatId == combatId
+            default:
+                return false
+            }
+        }
     }
 
     // MARK: - Reversible Resolution

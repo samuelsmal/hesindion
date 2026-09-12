@@ -77,6 +77,8 @@ struct CombatRootView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.dsaMotion)
+                .accessibilityLabel("Kampf schließen")
+                .accessibilityIdentifier("combat.close")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -170,11 +172,16 @@ struct CombatRootView: View {
                 // LEBENSPUNKTE section
                 combatSectionLabel(L("lifePoints.label"))
 
-                Text(L("hero"))
-                    .font(.dsaMono(.caption, emphasis: true))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
+                // Only worth printing when the mount's bar follows it: the label
+                // exists to tell the two bars apart, and on foot there is one bar
+                // under a heading that already says LEBENSPUNKTE.
+                if mountedActive, hero.pets.first != nil {
+                    Text(L("hero"))
+                        .font(.dsaMono(.caption, emphasis: true))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
+                }
 
                 lpBar
 

@@ -137,6 +137,71 @@ struct WoundEffectDamageControl: View {
     }
 }
 
+// MARK: - CombatWundschwelleRow
+
+/// Where the hit stands against the hero's Wundschwelle — shown whether or not the
+/// Trefferzonen focus rule is on.
+///
+/// The comparison used to live inside `CombatWoundEffectPanel`, which only appears
+/// with that focus rule *and* a rolled zone, so with the rule off the take-damage
+/// screen never mentioned the Wundschwelle at all: the player had to remember the
+/// number and do the comparison in their head (issue #23). The threshold is a
+/// property of the hero, not of the focus rule, so it is stated either way.
+///
+/// What *follows* from reaching it stays where it belongs — the zone Wundeffekt is
+/// still the focus rule's business, and this row says so rather than implying an
+/// effect it cannot name.
+struct CombatWundschwelleRow: View {
+    let effectiveDamage: Int
+    let wundschwelle: Int
+    /// Whether the Trefferzonen focus rule is on, and whether a zone has been
+    /// rolled — only to explain what is still missing before a Wundeffekt.
+    let zonesActive: Bool
+    let hasZone: Bool
+
+    private var multiple: Int {
+        WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
+    }
+
+    private var reached: Bool { multiple >= 1 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            combatSectionLabel(L("wundschwelle.label"))
+
+            if reached {
+                Text(L("wundschwelle.reached"))
+                    .font(.dsaHeading(.caption))
+                    .foregroundStyle(Color.groupCombat)
+
+                Text(String(format: L("trefferzone.threshold"),
+                            effectiveDamage, wundschwelle, multiple))
+                    .font(.dsaMono(.caption, emphasis: true))
+
+                if !zonesActive {
+                    Text(L("wundschwelle.zonesOff"))
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(.secondary)
+                } else if !hasZone {
+                    Text(L("wundschwelle.rollZone"))
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text(String(format: L("wundschwelle.below"), effectiveDamage, wundschwelle))
+                    .font(.dsaMono(.caption, emphasis: true))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(reached ? Color.groupCombat.opacity(0.1) : Color.clear)
+        .dsaBox(.flush, stroke: reached ? Color.groupCombat : Color.dsaBorder)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.takeDamage.wundschwelle")
+    }
+}
+
 // MARK: - CombatWoundEffectPanel
 
 /// Wundschwelle panel for the hero taking damage: the multiple, the Wundeffekt, and

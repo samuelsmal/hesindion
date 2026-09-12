@@ -151,6 +151,18 @@ struct SplitContentLayout<Content: View>: View {
                 .background(panelColor(for: panel))
         }
         .buttonStyle(.dsaMotion)
+        // Icon-only, so there is nothing for a test — or a screen reader — to go
+        // on without these.
+        .accessibilityLabel(panelName(for: panel))
+        .accessibilityIdentifier("panel.\(panel.rawValue)")
+    }
+
+    private func panelName(for panel: SidePanel) -> String {
+        switch panel {
+        case .notes: "Notizen"
+        case .logs:  "Protokoll"
+        case .rules: "Regelwerk"
+        }
     }
 }
 

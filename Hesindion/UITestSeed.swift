@@ -30,9 +30,25 @@ enum UITestSeed {
     /// in a test argument should fail that test's own assertions, not the launch.
     static let fokusArgument = "-uitest-fokus"
 
+    /// `-uitest-fokus-off trefferzonen` switches a rule back off, applied after the
+    /// on-switches above.
+    ///
+    /// The seed turns Trefferzonen on for everybody, because most of the combat
+    /// surfaces only exist with it. A screen that has to behave *without* the rule —
+    /// the Wundschwelle on taking damage (issue #23) — needs the other direction.
+    static let fokusOffArgument = "-uitest-fokus-off"
+
     private static var requestedFokusRules: [FokusRule] {
+        rules(for: fokusArgument)
+    }
+
+    private static var disabledFokusRules: [FokusRule] {
+        rules(for: fokusOffArgument)
+    }
+
+    private static func rules(for argument: String) -> [FokusRule] {
         let args = ProcessInfo.processInfo.arguments
-        guard let index = args.firstIndex(of: fokusArgument), index + 1 < args.count else { return [] }
+        guard let index = args.firstIndex(of: argument), index + 1 < args.count else { return [] }
         return args[index + 1]
             .split(separator: ",")
             .compactMap { FokusRule(rawValue: String($0)) }
@@ -120,6 +136,9 @@ enum UITestSeed {
         hero.setFokusRule(.trefferzonen, active: true)
         for rule in requestedFokusRules {
             hero.setFokusRule(rule, active: true)
+        }
+        for rule in disabledFokusRules {
+            hero.setFokusRule(rule, active: false)
         }
 
         // Drop the hero straight into a running fight: re-entering combat resumes at

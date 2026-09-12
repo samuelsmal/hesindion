@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **A finished combat could not be deleted from the log.** The combat header only collapsed its rows, and a collapsed combat leaves nothing to swipe, so the single-entry swipe — the only way in — was out of reach as well. The header now carries a visible trash for the whole fight, with the number of entries named in the confirmation, and every entry answers a long-press as well as a swipe. Deleting reverses each entry's LP change, as a single delete already did (issue #13)
+- The "Held" label above the LP bar was printed even on foot, where it labels the only bar on screen. It appears with the mount's bar, which is what it exists to tell apart (issue #24)
 - **The first defence of a round was already at −3.** The Mehrfache-Verteidigung count was incremented as the Parieren or Ausweichen button was tapped and then read back for the very defence that had incremented it. It is now counted when a defence roll is set up, so the first defence of the round is unmodified, the second is at −3 and the third at −6 (issue #20)
 - **Parries and dodges are counted apart.** Mehrfache Verteidigung applies per defence type, so having parried twice no longer makes the round's first dodge harder, and the two buttons price their own next defence ("2. Parade · −3", "1. Ausweichen") (issue #20)
 - **A hero with a shield or a second weapon defended with no modifiers at all.** That loadout picks the parrying weapon first, and the weapon list rolled a bare PA: no Mehrfache Verteidigung, no Schmerz, no Belastung, no Schicksalspunkt boost, nothing. Both ways into a defence now build their lines from one `CombatSituation`, and the roll screen shows the calculation (issue #20)
@@ -24,12 +26,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **The Wundschwelle is on the take-damage screen whether or not the Trefferzonen Fokus-Regel is on** — the comparison lived inside the Wundeffekt panel, which needs that rule *and* a rolled zone, so a group not using the rule had to remember the threshold and do the arithmetic in their head. The row states where the hit stands either way, and says what is still missing before a Wundeffekt rather than implying one it cannot name. The zone effect itself remains the focus rule's business (issue #23)
 - **The damage roll shows every part**: the dice, the weapon's own bonus, each ability or manoeuvre that added to it, anything entered by hand, and a critical's multiplier last — `5 (1W6) +4 Waffe +2 Wuchtschlag = 11 TP`. The bonuses now travel to the roll as named parts instead of being folded into a formula string, which is what made them uncheckable and, twice, double-counted. The announcement screen shows the same calculation before the dice (issue #19)
 - The AT/PA/AW calculation is **always** on the roll screen, even when nothing modifies it: "nothing is modifying this roll" is itself the answer, and a roll that shows only its result cannot be checked at all
 - A **TP modifier** on the damage roll, for what the app cannot know: no Optolith export carries a weapon's Leiteigenschaft threshold, so the TP/KK bonus had nowhere to go (the equipment data itself is issue #14)
 - The Parieren and Ausweichen buttons print what defending again will cost ("2. Verteidigung · −3") before it is paid
 - `CombatSituation` and `DamageModifiers` — the round's flags and the TP bonuses as pure values, so both are unit-testable, plus `DamageFormula`, which replaces four copies of the damage-parsing regex and three of the bonus-adding one. `CombatBreakdownBox` is the calculation box, now shared by the melee roll, the ranged roll (which had its own copy, one bordered row per line) and the damage
 - `DefenseModifierFlowTests` drives two parries in one round on a seeded shield loadout, `DamageBreakdownFlowTests` a Wuchtschlag through to its TP, and five screenshots of the two; `-uitest-shield` puts the shield in the loadout that sends a parry through the weapon list
+- `WundschwelleFlowTests` and `CombatLogDeletionFlowTests` — the Wundschwelle without the focus rule, and a fight deleted from the log; `-uitest-fokus-off` switches a Fokus-Regel back off for a test, which the seed otherwise turns on for everybody
+- `WoundEffectPayload` carries the `combatId` of the fight it was recorded in, so deleting that fight takes it too. Optional, because entries written before the field existed have no value for it
 
 ## [0.4.0-rc.2] - 2026-09-12
 

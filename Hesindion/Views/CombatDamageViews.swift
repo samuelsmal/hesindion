@@ -79,6 +79,12 @@ struct CombatTakeDamageView: View {
         WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
+    /// Whether the full Wundeffekt panel is on screen — it prints the Wundschwelle
+    /// comparison itself, so `CombatWundschwelleRow` stands down when it does.
+    private var woundEffectPanelShown: Bool {
+        zonesActive && zoneHit != nil && multiple >= 1
+    }
+
     /// The wound effect is threatened once the damage reaches the Wundschwelle.
     private var woundEffectThreatens: Bool {
         WoundEffectResolver.effectThreatens(
@@ -167,6 +173,18 @@ struct CombatTakeDamageView: View {
                 .padding(.vertical, 14)
                 .background(Color.dsaDark)
                 .dsaBox(.flush)
+
+                // The Wundschwelle comparison, whether or not the focus rule is on.
+                // Skipped only when the wound-effect panel below is already
+                // printing the same line, so it is never stated twice.
+                if wundschwelle > 0, !woundEffectPanelShown {
+                    CombatWundschwelleRow(
+                        effectiveDamage: effectiveDamage,
+                        wundschwelle: wundschwelle,
+                        zonesActive: zonesActive,
+                        hasZone: zoneHit != nil
+                    )
+                }
 
                 if zonesActive {
                     CombatHitZoneRow(
@@ -368,6 +386,7 @@ struct CombatTakeDamageView: View {
             let effectEntry = LogEntry.create(
                 kind: "woundEffect",
                 payload: WoundEffectPayload(
+                    combatId: combatId,
                     zone: hit.zone.rawValue,
                     side: hit.side?.rawValue,
                     roll: lastRoll,

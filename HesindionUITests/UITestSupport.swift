@@ -37,6 +37,7 @@ enum UITest {
         appearance: String? = nil,
         diceScript: String? = nil,
         fokusRules: [String] = [],
+        fokusRulesOff: [String] = [],
         shield: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
@@ -48,6 +49,11 @@ enum UITest {
         // referenced from here.
         if !fokusRules.isEmpty {
             app.launchArguments += ["-uitest-fokus", fokusRules.joined(separator: ",")]
+        }
+        // The seed turns Trefferzonen on for every hero, so a test that needs the
+        // rule *off* has to say so.
+        if !fokusRulesOff.isEmpty {
+            app.launchArguments += ["-uitest-fokus-off", fokusRulesOff.joined(separator: ",")]
         }
         // Puts a shield in the loadout, which is what sends a parry through the
         // weapon list instead of straight to the roll.
