@@ -473,34 +473,43 @@ struct CombatAnnouncementView: View {
                     ForEach(availableManeuvers, id: \.self) { maneuver in
                         let isSelected = selectedManeuver == maneuver
                         Button { selectedManeuver = maneuver } label: {
+                            // Selection is the accent fill, the same signal the zone
+                            // and reach chips use. The radio circle that used to sit
+                            // here was a second, different way of saying the same
+                            // thing on the same screen.
                             HStack(spacing: 12) {
-                                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                                    .font(.dsaBody(.body))
-                                    .foregroundStyle(isSelected ? combatAccent : .secondary)
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack {
                                         Text(maneuver.displayName)
                                             .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
-                                            .foregroundStyle(.primary)
+                                            .foregroundStyle(isSelected ? .white : .primary)
                                         Spacer()
                                         if maneuver.atModifier != 0 {
                                             Text("AT \(maneuver.atModifier > 0 ? "+" : "")\(maneuver.atModifier)")
                                                 .font(.dsaMono(.caption, emphasis: true))
-                                                .foregroundStyle(maneuver.atModifier > 0 ? Color.dsaPositive : Color.groupCombat)
+                                                .foregroundStyle(
+                                                    isSelected
+                                                        ? .white
+                                                        : (maneuver.atModifier > 0 ? Color.dsaPositive : Color.groupCombat)
+                                                )
                                         }
                                     }
                                     if let info = maneuver.infoText() {
                                         Text(info)
                                             .font(.dsaBody(.caption2))
-                                            .foregroundStyle(maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
+                                            .foregroundStyle(
+                                                isSelected
+                                                    ? Color.white.opacity(0.85)
+                                                    : (maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
+                                            )
                                     }
                                 }
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+                            .background(isSelected ? combatAccent : Color(UIColor.systemBackground))
+                            .dsaBox(.flush)
                         }
                         .buttonStyle(.dsaMotion)
                     }

@@ -151,8 +151,10 @@ struct AdventureDetailView: View {
                 .padding(.vertical, 40)
             }
 
-            ForEach(sortedWeatherDays, id: \.id) { weatherDay in
-                VStack(spacing: 0) {
+            // One box around the run of days, dividers within — rather than a
+            // bordered card per day, which read as a stack of heavy black bands.
+            VStack(spacing: 0) {
+                ForEach(sortedWeatherDays, id: \.id) { weatherDay in
                     if weatherDay.isTimeJump {
                         timeJumpDivider()
                     }
@@ -160,6 +162,7 @@ struct AdventureDetailView: View {
                         .buttonStyle(.dsaMotion)
                 }
             }
+            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
     }

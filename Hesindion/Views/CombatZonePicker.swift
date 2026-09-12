@@ -22,6 +22,10 @@ struct CombatZonePicker: View {
     /// in melee, SA_161 *Gezielter Schuss* at range. The picker is shared by both screens,
     /// so the caller names its own SF; nil (the defence screen) shows no hint at all.
     var sfHalvesKey: String? = nil
+    /// Placed inside the chip group, not below it. On the take-damage screen the
+    /// 1W20 roll is not a lesser action than naming a zone — it is the other way
+    /// of answering the same question, so it carries the same weight.
+    var accessory: AnyView? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -31,12 +35,18 @@ struct CombatZonePicker: View {
             // with the four humanoid zones); falls back to a wrapping grid when they
             // do not — a non-humanoid plan can offer up to ten zones, and five chips
             // at their minimum width already exceed an iPhone in portrait.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { chips }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
+            VStack(spacing: 8) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { chips }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
+                }
+                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
+
+                if let accessory {
+                    accessory
+                }
             }
-            .frame(maxWidth: .infinity)
-            .fixedSize(horizontal: false, vertical: true)
             .dsaOptionGroup()
 
             if showsSurprisedToggle {

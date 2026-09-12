@@ -41,8 +41,11 @@ struct WeatherDayRow: View {
         }
         .padding(DSALayout.contentPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .dsaBox(.flush)
-        .padding(.bottom, -DSALayout.border)
+        // Rows are separated, not boxed. Each used to draw its own 2pt rectangle
+        // and then pull the next one up by exactly that much to collapse the
+        // seam — which still left a heavy black band between every day. One
+        // divider is what a list of days needs (ADR-0007).
+        .dsaRowDivider()
     }
 
     private var rangeText: String {

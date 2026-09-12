@@ -94,7 +94,9 @@ struct DiceRollSheet: View {
             Text(label)
                 .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
-                .padding(.top, 2)
+                // Clear the stepper's shadow, which draws outside its bounds and
+                // reserves no layout space — a 2pt gap put the caption under it.
+                .padding(.top, DSALayout.shadowOffset + 4)
         }
     }
 

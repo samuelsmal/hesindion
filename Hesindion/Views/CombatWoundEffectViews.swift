@@ -11,6 +11,10 @@ struct CombatHitZoneRow: View {
     var plan: BodyPlan = .humanoid(.mittel)
     var isDisabled: Bool = false
 
+    /// Naming the zone and rolling for it are the two equally valid ways to
+    /// answer the same question, so they share one group and one visual weight.
+    private var isDetermined: Bool { zoneHit != nil }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             CombatZonePicker(
@@ -22,27 +26,36 @@ struct CombatHitZoneRow: View {
                     }),
                 targetIsSurprised: .constant(false),
                 zones: [.kopf, .torso, .arme, .beine],
-                allowsNoZone: false
+                allowsNoZone: false,
+                accessory: AnyView(
+                    Button {
+                        let roll = DiceRoller.roll(sides: 20)
+                        lastRoll = roll
+                        zoneHit = HitZoneTable.lookup(roll, plan: plan)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "dice.fill")
+                            Text(L("trefferzone.roll"))
+                        }
+                        .font(.dsaHeading(.caption))
+                        // Red is the call to act. Once the zone is settled the
+                        // question is answered, so the button stops shouting and
+                        // becomes the re-roll it actually is.
+                        .foregroundStyle(isDetermined ? Color.primary : Color.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            isDisabled
+                                ? Color.dsaDisabled
+                                : (isDetermined ? Color(UIColor.secondarySystemBackground) : combatAccent)
+                        )
+                        .dsaBox(.flush)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .disabled(isDisabled)
+                    .accessibilityIdentifier("combat.zone.roll")
+                )
             )
-            .disabled(isDisabled)
-
-            Button {
-                let roll = DiceRoller.roll(sides: 20)
-                lastRoll = roll
-                zoneHit = HitZoneTable.lookup(roll, plan: plan)
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "dice.fill")
-                    Text(L("trefferzone.roll"))
-                }
-                .font(.dsaHeading(.caption))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(isDisabled ? Color.dsaDisabled : combatAccent)
-                .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
             .disabled(isDisabled)
 
             // Only after a roll. A tapped zone is already shown by its highlighted
