@@ -1,6 +1,11 @@
 import Foundation
 
-enum CreatureSize { case klein, mittel, gross, riesig }
+enum CreatureSize: String, CaseIterable, Identifiable {
+    case klein, mittel, gross, riesig
+
+    var id: String { rawValue }
+    var nameKey: String { "creatureSize.\(rawValue)" }
+}
 
 /// Body plans with a published Trefferzonen table.
 enum BodyPlan: Equatable {

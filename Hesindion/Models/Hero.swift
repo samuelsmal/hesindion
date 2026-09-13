@@ -51,6 +51,10 @@ final class Hero {
     /// rule does not change the schema.
     var fokusRules: [String] = []
 
+    /// The hero's Trefferzonen size category, once the player has set it. `nil`
+    /// means "not answered": `sizeCategory` then falls back to the species list.
+    var hitZoneSize: String?
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?

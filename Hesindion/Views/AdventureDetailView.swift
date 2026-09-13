@@ -25,7 +25,6 @@ struct AdventureDetailView: View {
         ScrollView {
             VStack(spacing: 0) {
                 nameHeading
-                    .padding(.bottom, 12)
                 adventureHeader
                 controlsBar
                 weatherTimeline
@@ -35,7 +34,7 @@ struct AdventureDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Color(UIColor.systemBackground))
-        .navigationTitle(adventure.name)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingAddStretch) {
             NavigationStack {
@@ -69,6 +68,8 @@ struct AdventureDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.groupAdventure)
             .dsaBox(.raised)
+            .padding(.horizontal, DSALayout.horizontalPadding)
+            .padding(.bottom, 12)
     }
 
     private var adventureHeader: some View {
@@ -92,6 +93,10 @@ struct AdventureDetailView: View {
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .background(Color.groupAdventure.opacity(0.15))
         .dsaBox(.flush)
+        // Inset like everything below it. The heading and this bar were the only
+        // content flush with the pane edges, which is what made them read as too
+        // wide next to the hero pane's boxed name.
+        .padding(.horizontal, DSALayout.horizontalPadding)
     }
 
     @ViewBuilder

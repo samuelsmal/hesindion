@@ -56,7 +56,12 @@ final class DamageBreakdownFlowTests: XCTestCase {
             "The damage was reported without a calculation"
         )
         XCTAssertTrue(app.staticTexts["1W6"].exists, "The dice are not named in the calculation")
-        XCTAssertTrue(app.staticTexts["Wuchtschlag"].exists, "The manoeuvre's bonus is not named")
+        // "Wuchtschlag I" — the tier is part of the name now that every tier the
+        // hero has is offered separately.
+        XCTAssertTrue(
+            app.staticTexts["Wuchtschlag I"].exists,
+            "The manoeuvre's bonus is not named"
+        )
         XCTAssertTrue(app.staticTexts["+2"].exists, "The manoeuvre's bonus is named but not priced")
         // 5 rolled + 4 weapon + 2 Wuchtschlag.
         XCTAssertTrue(app.staticTexts["11 TP"].exists, "The parts do not add up to the reported total")

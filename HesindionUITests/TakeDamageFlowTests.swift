@@ -11,8 +11,8 @@ import XCTest
 /// times for a single outcome.
 final class TakeDamageFlowTests: XCTestCase {
 
-    /// The Wundeffekt term in the damage formula ("+ 4 WE").
-    static let woundEffectTerm = "WE"
+    /// The Wundeffekt's own row in the damage calculation.
+    static let woundEffectRow = "Wundeffekt"
 
     /// A probe the hero passes without it being a critical success.
     ///
@@ -199,19 +199,20 @@ final class TakeDamageFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the damage roll button")
         rollExtra.tap()
 
-        // The roll button stays put — it is a re-roll now that the value can also
-        // be entered by hand — so the proof is the figure itself moving off zero.
+        // Choosing "roll" settles the number at once, and only that route's result
+        // stays on screen.
         let rolledValue = element(app, "combat.takeDamage.extraDamage")
         XCTAssertTrue(rolledValue.waitForExistence(timeout: UITest.timeout), "Damage figure missing")
         XCTAssertNotEqual(rolledValue.label, "+0", "Wundeffekt damage was not rolled")
 
-        // The formula carries the Wundeffekt term as soon as it contributes:
-        // it used to stop at `TP - RS`, showing 12 where the confirm wrote 16.
-        let formula = element(app, "combat.takeDamage.formula")
-        XCTAssertTrue(formula.waitForExistence(timeout: UITest.timeout), "Damage formula missing")
+        // The calculation carries the Wundeffekt as its own row as soon as it
+        // contributes: it used to stop at `TP - RS`, showing 12 where the confirm
+        // wrote 16.
+        let calculation = element(app, "combat.takeDamage.formula")
+        XCTAssertTrue(calculation.waitForExistence(timeout: UITest.timeout), "Damage calculation missing")
         XCTAssertTrue(
-            formula.label.contains(Self.woundEffectTerm),
-            "Formula should carry the Wundeffekt term, got \(formula.label)"
+            app.staticTexts[Self.woundEffectRow].exists,
+            "The calculation should carry a Wundeffekt row"
         )
 
         captureScreenshot(app, named: "17-take-damage-extra-damage")

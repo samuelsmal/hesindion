@@ -339,6 +339,13 @@ struct CombatAnnouncementView: View {
 
     @State private var vorteilhaftePosition: Bool = false
     @State private var selectedOpponentReach: WeaponReach = .mittel
+
+    /// The reach of the weapon being announced. `MeleeModifiers.weaponReach` reads
+    /// the same value from the hero, so the chips cannot promise a penalty the
+    /// roll does not apply.
+    private var heroWeaponReach: WeaponReach {
+        WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
+    }
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
     @State private var targetIsSurprised = false
@@ -350,7 +357,14 @@ struct CombatAnnouncementView: View {
     private var availableManeuvers: [CombatManeuver] {
         var maneuvers: [CombatManeuver] = [.normal]
         if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
-        if hero.wuchtschlagTier > 0 { maneuvers.append(.wuchtschlag(tier: hero.wuchtschlagTier)) }
+        // One entry per tier the hero has, not only the highest: Wuchtschlag II
+        // may be swung as a I, and the trade (-2 AT per +2 TP) is the whole
+        // decision. Offering the top tier alone made that choice for the player.
+        if hero.wuchtschlagTier > 0 {
+            for tier in 1...hero.wuchtschlagTier {
+                maneuvers.append(.wuchtschlag(tier: tier))
+            }
+        }
         if hero.hasVorstoss { maneuvers.append(.vorstoss) }
         if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
         if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
@@ -417,19 +431,31 @@ struct CombatAnnouncementView: View {
                     // Opponent weapon reach
                     combatSectionLabel(L("opponentReach.label"))
 
+                    // Each option carries what it costs the hero's own weapon —
+                    // reaching a longer weapon is -2 per step (`WeaponReach
+                    // .atPenaltyAgainst`) — the same way the zone chips print
+                    // their Zonenaufschlag. Three bare words said nothing about
+                    // why one of them mattered.
                     HStack(spacing: 8) {
                         ForEach(WeaponReach.allCases, id: \.self) { reach in
                             let isSelected = selectedOpponentReach == reach
+                            let penalty = heroWeaponReach.atPenaltyAgainst(reach)
                             Button { selectedOpponentReach = reach } label: {
-                                Text(reach.rawValue)
-                                    .font(.dsaBody(.caption))
-                                    .foregroundStyle(isSelected ? .white : .primary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                    .dsaBox(.flush)
+                                VStack(spacing: 2) {
+                                    Text(reach.rawValue)
+                                        .font(.dsaBody(.caption))
+                                    Text(penalty == 0 ? "AT ±0" : "AT \(penalty)")
+                                        .font(.dsaMono(.caption2, emphasis: true))
+                                        .opacity(isSelected ? 0.85 : 0.6)
+                                }
+                                .foregroundStyle(isSelected ? .white : .primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                                .dsaBox(.flush)
                             }
                             .buttonStyle(.dsaMotion)
+                            .accessibilityIdentifier("combat.reach.\(reach.rawValue)")
                         }
                     }
                     .dsaOptionGroup()

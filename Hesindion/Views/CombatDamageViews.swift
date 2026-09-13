@@ -59,14 +59,19 @@ struct CombatTakeDamageView: View {
     /// number the screen exists to produce was the one it did not show.
     private var totalDamage: Int { effectiveDamage + appliedExtraDamage }
 
-    /// "12 TP - 0 RS + 4 WE = 16". The Wundeffekt term appears only when it
-    /// contributes, so an ordinary hit still reads as two terms.
-    private var damageFormula: String {
-        var formula = "\(tpInput) \(L("tp")) \u{2212} \(rs) \(L("rs"))"
+    /// The hit as parts: what was dealt, what the armour stopped, what a Wundeffekt
+    /// added. Zero-valued parts are left out, as in every other calculation —
+    /// except the armour, which is worth stating even at 0 on the one screen whose
+    /// whole subject is how much of the hit got through.
+    private var damageRows: [BreakdownRow] {
+        var rows: [BreakdownRow] = [
+            BreakdownRow(value: "\(tpInput)", source: L("tp"))
+        ]
+        rows.append(.signed(-rs, L("rs")))
         if appliedExtraDamage > 0 {
-            formula += " + \(appliedExtraDamage) \(L("we"))"
+            rows.append(.signed(appliedExtraDamage, L("trefferzone.woundEffect")))
         }
-        return formula + " = \(totalDamage)"
+        return rows
     }
 
     // MARK: - Trefferzonen
@@ -152,28 +157,6 @@ struct CombatTakeDamageView: View {
                         .padding(.vertical, 14)
                 }
 
-                // Calculation display
-                VStack(spacing: 4) {
-                    Text(damageFormula)
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .foregroundStyle(.white)
-                        .accessibilityIdentifier("combat.takeDamage.formula")
-                    if totalDamage == 0 {
-                        Text(L("absorbed"))
-                            .font(.dsaBody(.caption))
-                            .foregroundStyle(.white.opacity(0.7))
-                    } else {
-                        Text("\(totalDamage) \(L("lpLost"))")
-                            .font(.dsaBody(.caption))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.dsaDark)
-                .dsaBox(.flush)
-
                 if zonesActive {
                     CombatHitZoneRow(
                         zoneHit: $zoneHit,
@@ -215,6 +198,21 @@ struct CombatTakeDamageView: View {
                         }
                     )
                 }
+
+                // One calculation, last, with every part in it — the same box and
+                // the same grammar as the damage the hero deals. It used to be a
+                // formula string in a dark bar directly under the stepper, which
+                // read as a different kind of thing from the row-based
+                // calculations everywhere else, and stood above the two inputs
+                // (zone, Wundeffekt) that feed it.
+                CombatBreakdownBox(
+                    rows: damageRows,
+                    totalValue: "\(totalDamage) LP",
+                    totalSource: totalDamage == 0 ? L("absorbed") : L("lpLost"),
+                    sectionLabel: L("calculation.label")
+                )
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("combat.takeDamage.formula")
 
                 }
                 // Confirmed inputs render disabled but stay reachable: a wrong
@@ -281,7 +279,7 @@ struct CombatTakeDamageView: View {
                     result: { rolls in
                         AnyView(
                             HitZoneTableView(
-                                plan: .humanoid(.mittel),
+                                plan: hero.bodyPlan,
                                 roll: rolls.first,
                                 accent: combatAccent
                             )
@@ -290,7 +288,7 @@ struct CombatTakeDamageView: View {
                     onConfirm: { rolls in
                         if let roll = rolls.first {
                             lastRoll = roll
-                            zoneHit = HitZoneTable.lookup(roll, plan: .humanoid(.mittel))
+                            zoneHit = HitZoneTable.lookup(roll, plan: hero.bodyPlan)
                         }
                         showingZoneRoll = false
                     },

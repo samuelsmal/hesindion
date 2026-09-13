@@ -38,7 +38,8 @@ enum UITest {
         diceScript: String? = nil,
         fokusRules: [String] = [],
         fokusRulesOff: [String] = [],
-        shield: Bool = false
+        shield: Bool = false,
+        wuchtschlagTier: Int? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
@@ -59,6 +60,10 @@ enum UITest {
         // weapon list instead of straight to the roll.
         if shield {
             app.launchArguments.append("-uitest-shield")
+        }
+        // The sample hero has Wuchtschlag I; a test that wants the II trade says so.
+        if let wuchtschlagTier {
+            app.launchArguments += ["-uitest-wuchtschlag", "\(wuchtschlagTier)"]
         }
         app.launch()
         return app

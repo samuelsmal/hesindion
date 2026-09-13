@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The take-damage screen's `12 TP − 0 RS + 4 WE = 16` was a formula string in a dark bar, a third grammar next to the row-based calculations everywhere else, and it stood *above* the two inputs that feed it. It is the same box as the rest now, last on the screen, with the total at the end
+- The adventure heading and its date bar were the only content flush with the pane edges, which is what made them read as too wide, and the navigation title repeated the heading a centimetre above it
 - **The damage screen showed two calculations and the dice twice**: the weapon's total in one dark bar, then a second bar below the wound effect restating it with the Wundeffekt added, with the rolled dice printed above both. There is one calculation now, last, with every part in it — dice, weapon, abilities, anything by hand, a critical's multiplier, the Wundeffekt — and the dice stand down once they have been rolled (their individual results ride along in the row's label)
 - **"Zugefügter Schaden" was the wrong name for the total.** The damage dealt is TP − RS and the opponent's RS is not modelled, so the app can only state the TP: the total says **Gesamte Trefferpunkte**
 - The combat root's actions are grouped by what the rules call them — AKTION, REAKTION, SCHICKSALSPUNKTE, EINTRAGEN — instead of one list in which "Schaden nehmen", which is not a rules action at all, sat between the two defences. Colour now means one thing each: red is rolled, gold costs a Schip, dark only records. The teal on "Ausrüstung wechseln" was a colour used nowhere else in the app
@@ -36,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **The Trefferzonentabelle follows the hero's species, not one table for everybody.** Zwerge are klein, Menschen and Elfen mittel, and the ranges differ — the same 1W20 picks a different zone. The species list is the Fokusregel's own; where it has no answer the hero settings ask, right under the Trefferzonen toggle, and the choice overrides the list either way
+- **The zone reveal names the limb.** A paired zone is a pair, and the roll decides which: odd left, even right. The table prints "Arme (links / rechts)" and the row that was hit names the side it landed on
+- **Every Wuchtschlag tier the hero has is offered, not only the highest.** Wuchtschlag II may be swung as a I, and the trade — −2 AT per +2 TP — is the whole decision; offering the top tier alone made it for the player
+- **The opponent-reach chips print what they cost.** "Kurz / Mittel / Lang" said nothing about the −2 per step it costs to reach past a longer weapon; each option now carries its own AT figure, from the same rule the roll applies
 - **The opponent's Selbstbeherrschung is asked for before a Wundeffekt applies.** The attack side stated the effect and offered its damage straight away, as though the Wundeffekt were automatic; the receiving side has always made the player roll the check first. The card now asks how the opponent's check went — the die is theirs, thrown at the table, so the app takes the outcome rather than rolling for the other side — and only a failed check offers the extra damage (issue #11 follow-up)
 - **A number you can roll or be told is now one fork, not two controls.** The Wundeffekt damage offered a roll button *and* a stepper at the same time, which left "what wins if I roll and then type?" unanswered. You choose the route, a roll happens immediately, and only the chosen route's result stays on screen
 - **The Trefferzone reveal shows the table it rolled on**, with the row the die landed in lit, instead of the line "7: Torso". The zone tables are short enough to print, and printing them makes the roll checkable
@@ -47,6 +53,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The Parieren and Ausweichen buttons print what defending again will cost ("2. Verteidigung · −3") before it is paid
 - `CombatSituation` and `DamageModifiers` — the round's flags and the TP bonuses as pure values, so both are unit-testable, plus `DamageFormula`, which replaces four copies of the damage-parsing regex and three of the bonus-adding one. `CombatBreakdownBox` is the calculation box, now shared by the melee roll, the ranged roll (which had its own copy, one bordered row per line) and the damage
 - `DefenseModifierFlowTests` drives two parries in one round on a seeded shield loadout, `DamageBreakdownFlowTests` a Wuchtschlag through to its TP, and five screenshots of the two; `-uitest-shield` puts the shield in the loadout that sends a parry through the weapon list
+- `ComplicatedAttackFlowTests` drives one attack carrying five modifiers at once — a longer opponent weapon, an advantageous position, a surprised target's head, Wuchtschlag II — confirmed as a critical and doubled, and asserts the 26 TP that comes out the far end. Each part was already covered on its own; this is the one that checks they still add up together (screenshots `34`–`36`). `-uitest-wuchtschlag` raises the seeded hero's tier
+- `WeaponReachTests` covers the reach matrix, all nine combinations, which had no cover at all, and `HeroBodyPlanTests` the species → table lookup and its override
 - `WundschwelleFlowTests` and `CombatLogDeletionFlowTests` — the Wundschwelle without the focus rule, and a fight deleted from the log; `-uitest-fokus-off` switches a Fokus-Regel back off for a test, which the seed otherwise turns on for everybody
 - `WoundEffectPayload` carries the `combatId` of the fight it was recorded in, so deleting that fight takes it too. Optional, because entries written before the field existed have no value for it
 

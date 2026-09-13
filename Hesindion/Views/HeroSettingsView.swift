@@ -58,6 +58,14 @@ struct HeroSettingsView: View {
 
                     ForEach(FokusRule.allCases) { rule in
                         fokusRuleRow(rule)
+
+                        // Switching Trefferzonen on is the moment the size
+                        // matters, so that is where the app asks for it — rather
+                        // than guessing from the hero's height, which is not what
+                        // the rule keys on.
+                        if rule == .trefferzonen, hero.isFokusRuleActive(.trefferzonen) {
+                            hitZoneSizeRow
+                        }
                     }
                 }
                 .padding(.bottom, 32)
@@ -87,6 +95,47 @@ struct HeroSettingsView: View {
                 .frame(height: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
+    }
+
+    /// The hero's own Trefferzonen table. Defaulted from the species where the
+    /// rules name one, asked for otherwise — and always overridable, because the
+    /// list cannot cover every species a table might use.
+    private var hitZoneSizeRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("hitZoneSize.title"))
+                .font(.dsaHeading(.caption))
+            Text(L("hitZoneSize.subtitle"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+
+            if hero.needsHitZoneSize {
+                Text(L("hitZoneSize.unknown"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(Color.groupCombat)
+            }
+
+            HStack(spacing: 8) {
+                ForEach([CreatureSize.klein, .mittel, .gross]) { size in
+                    let isSelected = hero.sizeCategory == size
+                    Button { hero.hitZoneSize = size.rawValue } label: {
+                        Text(L(size.nameKey))
+                            .font(.dsaBody(.caption))
+                            .foregroundStyle(isSelected ? .white : .primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(isSelected ? Color.groupCombat : Color(UIColor.secondarySystemBackground))
+                            .dsaBox(.flush)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .accessibilityIdentifier("heroSettings.hitZoneSize.\(size.rawValue)")
+                }
+            }
+            .dsaOptionGroup()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("heroSettings.hitZoneSize")
     }
 
     private func fokusRuleRow(_ rule: FokusRule) -> some View {

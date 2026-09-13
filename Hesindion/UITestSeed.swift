@@ -38,6 +38,18 @@ enum UITestSeed {
     /// the Wundschwelle on taking damage (issue #23) — needs the other direction.
     static let fokusOffArgument = "-uitest-fokus-off"
 
+    /// `-uitest-wuchtschlag 2` raises the seeded hero's Wuchtschlag to that tier.
+    ///
+    /// The sample hero has tier 1, and a screenshot of a heavily modified attack
+    /// needs a second tier to show the trade at its full size.
+    static let wuchtschlagArgument = "-uitest-wuchtschlag"
+
+    private static var requestedWuchtschlagTier: Int? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: wuchtschlagArgument), index + 1 < args.count else { return nil }
+        return Int(args[index + 1])
+    }
+
     private static var requestedFokusRules: [FokusRule] {
         rules(for: fokusArgument)
     }
@@ -139,6 +151,13 @@ enum UITestSeed {
         }
         for rule in disabledFokusRules {
             hero.setFokusRule(rule, active: false)
+        }
+
+        // `HeroTrait` is a value type inside the hero's array, so the entry is
+        // replaced rather than mutated in place.
+        if let tier = requestedWuchtschlagTier,
+           let index = hero.combatSpecialAbilities.firstIndex(where: { $0.ruleId == "SA_67" }) {
+            hero.combatSpecialAbilities[index].tier = tier
         }
 
         // Drop the hero straight into a running fight: re-entering combat resumes at

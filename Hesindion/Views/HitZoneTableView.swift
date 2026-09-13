@@ -14,6 +14,19 @@ struct HitZoneTableView: View {
     let roll: Int?
     var accent: Color = .groupCombat
 
+    /// A paired zone is a *pair*: the table says "Arme", the roll says which arm
+    /// (odd left, even right). The row that was hit names the side, the rest say
+    /// what they cover.
+    private func zoneName(_ row: HitZoneTable.Row, isHit: Bool) -> String {
+        let name = L(row.zone.nameKey)
+        guard row.zone.isPaired else { return name }
+        if isHit, let roll {
+            let side: BodySide = roll.isMultiple(of: 2) ? .rechts : .links
+            return "\(name) (\(L(side.nameKey)))"
+        }
+        return "\(name) (\(L(BodySide.links.nameKey)) / \(L(BodySide.rechts.nameKey)))"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ForEach(HitZoneTable.rows(for: plan)) { row in
@@ -22,7 +35,7 @@ struct HitZoneTableView: View {
                     Text(row.rangeText)
                         .font(.dsaMono(.caption, emphasis: true))
                         .frame(minWidth: 44, alignment: .leading)
-                    Text(L(row.zone.nameKey))
+                    Text(zoneName(row, isHit: isHit))
                         .font(.dsaBody(.caption))
                     Spacer()
                     if isHit, let roll {

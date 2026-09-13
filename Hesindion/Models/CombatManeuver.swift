@@ -45,7 +45,7 @@ extension CombatManeuver {
         switch self {
         case .normal: return L("maneuver.normal")
         case .finte: return L("maneuver.finte")
-        case .wuchtschlag: return L("maneuver.wuchtschlag")
+        case .wuchtschlag(let tier): return "\(L("maneuver.wuchtschlag")) \(Self.roman(tier))"
         case .vorstoss: return L("maneuver.vorstoss")
         case .schildspalter: return L("maneuver.schildspalter")
         case .sturmangriff: return L("maneuver.sturmangriff")
@@ -53,11 +53,17 @@ extension CombatManeuver {
     }
 
     /// Localized source label for modifier breakdown.
+    /// I, II, III — how the rulebook writes an ability's tier, and how the two
+    /// Wuchtschlag rows are told apart once both are offered.
+    static func roman(_ tier: Int) -> String {
+        ["", "I", "II", "III", "IV"][min(max(tier, 0), 4)]
+    }
+
     var sourceLabel: String {
         switch self {
         case .normal: return ""
         case .finte: return L("source.finte")
-        case .wuchtschlag: return L("source.wuchtschlag")
+        case .wuchtschlag(let tier): return "\(L("source.wuchtschlag")) \(Self.roman(tier))"
         case .vorstoss: return L("source.vorstoss")
         case .schildspalter: return ""
         case .sturmangriff: return L("source.sturmangriff")
