@@ -9,11 +9,15 @@ struct BreakdownRow: Identifiable {
     var tint: Color = .primary
 
     /// A signed contribution, tinted by its sign the way the AT breakdown does.
+    ///
+    /// Zero is neither: an RS of 0 is worth stating on the take-damage screen —
+    /// the armour did nothing — but it is not a penalty, and printing it in the
+    /// penalty colour said it was.
     static func signed(_ value: Int, _ source: String) -> BreakdownRow {
         BreakdownRow(
             value: value > 0 ? "+\(value)" : "\(value)",
             source: source,
-            tint: value > 0 ? Color.dsaPositive : Color.groupCombat
+            tint: value == 0 ? .secondary : (value > 0 ? Color.dsaPositive : Color.groupCombat)
         )
     }
 
