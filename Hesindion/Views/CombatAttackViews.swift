@@ -398,13 +398,18 @@ struct CombatAnnouncementView: View {
                         DSAToggleRowLabel(
                             title: "\(L("advantageousPosition")) (\(L("mounted")))",
                             isOn: true,
-                            accent: combatAccent
+                            accent: combatAccent,
+                            detail: "AT +2"
                         )
                     } else {
+                        // "(+2)" used to be part of the title, which left "+2 to
+                        // what?" unanswered. The detail slot is where every
+                        // manoeuvre row already prints "AT -1".
                         DSAToggleRow(
                             title: L("advantageousPosition"),
                             isOn: $vorteilhaftePosition,
                             accent: combatAccent,
+                            detail: "AT +2",
                             identifier: "combat.attack.advantageousPosition"
                         )
                     }

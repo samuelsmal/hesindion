@@ -26,6 +26,23 @@ enum HitZoneTable {
         let zone: HitZone
     }
 
+    /// One row of a published table, for screens that show the table rather than
+    /// only its answer.
+    struct Row: Identifiable {
+        let lower: Int
+        let upper: Int
+        let zone: HitZone
+
+        var id: Int { lower }
+        var rangeText: String { lower == upper ? "\(lower)" : "\(lower)–\(upper)" }
+        func covers(_ roll: Int) -> Bool { roll >= lower && roll <= upper }
+    }
+
+    /// The published table for `plan`, in printed order.
+    static func rows(for plan: BodyPlan) -> [Row] {
+        ranges(for: plan).map { Row(lower: $0.lower, upper: $0.upper, zone: $0.zone) }
+    }
+
     /// Resolve a 1W20 roll against a body plan. Rolls outside 1...20 are clamped.
     static func lookup(_ roll: Int, plan: BodyPlan) -> HitZoneHit {
         let clamped = min(max(roll, 1), 20)

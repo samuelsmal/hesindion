@@ -1,6 +1,12 @@
 import SwiftUI
 
 enum DSALayout {
+    /// Line height for the icon+value chips in the combat header, so two chips
+    /// with different SF Symbols come out the same height.
+    static let chipIconHeight: CGFloat = 18
+    /// Gap between a control and the caption naming it.
+    static let captionGap: CGFloat = 4
+
     /// Horizontal padding for sections and content areas.
     static let horizontalPadding: CGFloat = 16
     /// Inner content padding (rows, cells).

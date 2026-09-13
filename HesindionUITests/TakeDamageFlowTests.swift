@@ -120,23 +120,28 @@ final class TakeDamageFlowTests: XCTestCase {
         )
     }
 
-    /// The rolled zone reports the die in the reveal modal; a tapped zone says
-    /// nothing beyond its own highlighted chip.
+    /// The rolled zone is shown against the table it was rolled on; a tapped zone
+    /// says nothing beyond its own highlighted chip.
     @MainActor
-    func testZoneRollReportsTheDieButATapDoesNot() {
+    func testZoneRollShowsTheTableButATapDoesNot() {
         continueAfterFailure = false
         let app = launchTakeDamage(dice: 7)
-        let summary = element(app, "dice.reveal.caption")
+        let table = element(app, "trefferzone.table")
 
         chooseZone(app, "torso")
-        XCTAssertFalse(summary.exists, "A tapped zone should not open the reveal")
+        XCTAssertFalse(table.exists, "A tapped zone should not open the reveal")
 
         let rollZone = app.buttons["combat.zone.roll"]
         XCTAssertTrue(rollZone.waitForExistence(timeout: UITest.timeout), "Zone roll button missing")
         rollZone.tap()
 
-        XCTAssertTrue(summary.waitForExistence(timeout: UITest.timeout), "Rolled zone was not reported")
-        XCTAssertTrue(summary.label.contains("7"), "Summary should carry the rolled value, got \(summary.label)")
+        // The published table, with the row the die landed on lit — the reveal
+        // used to state "7: Torso" and leave the rule off screen.
+        XCTAssertTrue(table.waitForExistence(timeout: UITest.timeout), "The zone table was not shown")
+        XCTAssertTrue(
+            app.staticTexts["3–12"].exists,
+            "The table should print its ranges, so a 7 can be seen landing in 3-12"
+        )
         captureScreenshot(app, named: "13-take-damage-zone-rolled")
 
         // The reveal holds the number until it is dismissed, for the same reason

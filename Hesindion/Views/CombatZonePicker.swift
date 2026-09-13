@@ -60,10 +60,14 @@ struct CombatZonePicker: View {
                 // Filled when on, like the zone chip directly above it. It was
                 // the tickbox one row under a red-filled "Torso" — the same
                 // screen saying "selected" two different ways.
+                // What being surprised *does* — the Zonenaufschlag eases by 2
+                // (`HitZoneModifiers.penalty`) — rather than a bare statement of
+                // fact the player has to look up.
                 DSAToggleRow(
                     title: L("trefferzone.targetSurprised"),
                     isOn: $targetIsSurprised,
                     accent: combatAccent,
+                    subtitle: L("trefferzone.surprisedEffect"),
                     identifier: "combat.zone.surprised"
                 )
             }

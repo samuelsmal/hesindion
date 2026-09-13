@@ -304,32 +304,20 @@ struct CombatRootView: View {
                     // count existed only to hold two buttons that are now
                     // actions among the actions.
                     if let schips = hero.derivedValues?.schicksalspunkte, schips.max > 0 {
-                        HStack(spacing: 6) {
-                            Image(systemName: "sparkles")
-                                .font(.dsaBody(.caption))
-                            Text("\(schips.current)/\(schips.max)")
-                                .font(.dsaMono(.caption, emphasis: true))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.dsaSchipGold)
-                        .dsaBox(.flush)
+                        resourceChip(
+                            icon: "sparkles",
+                            text: "\(schips.current)/\(schips.max)",
+                            fill: Color.dsaSchipGold
+                        )
                         .accessibilityIdentifier("combat.schip.count")
                     }
 
                     Button { showArmorSheet = true } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "shield.fill")
-                                .font(.dsaBody(.caption))
-                            Text("\(L("rs")) \(hero.totalRS)")
-                                .font(.dsaMono(.caption, emphasis: true))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.dsaDark)
-                        .dsaBox(.flush)
+                        resourceChip(
+                            icon: "shield.fill",
+                            text: "\(L("rs")) \(hero.totalRS)",
+                            fill: Color.dsaDark
+                        )
                     }
                     .buttonStyle(.dsaMotion)
                 }
@@ -452,6 +440,32 @@ struct CombatRootView: View {
                     .buttonStyle(.dsaMotion)
                 }
 
+                // Flucht is an action like any other, and was stranded between
+                // the bookkeeping buttons.
+                Button { step = .flucht } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.run")
+                        Text(L("flucht"))
+                    }
+                    .font(.dsaHeading(.title3))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: combatAccent)
+                }
+                .buttonStyle(.dsaMotion)
+
+            }
+            .dsaOptionGroup()
+
+            // Reactions: what the hero does on someone else's turn. They used to
+            // sit in one undifferentiated list with the actions, the bookkeeping
+            // and the Schip buys, so "Schaden nehmen" — which is not a rules
+            // action at all — sat between the two defences.
+            combatSectionLabel(L("reaction.label"))
+
+            VStack(spacing: 8) {
                 // Parieren -- secondary (outline)
                 Button {
                     let isDualWield = hero.isDualWielding
@@ -537,10 +551,46 @@ struct CombatRootView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 4)
                 }
+            }
+            // One raised group with flat options inside — the same container the
+            // Manöver and Trefferzone lists use on the announcement screen. This
+            // is ADR-0009's "containers" half, which that decision recorded as
+            // undelivered: nine full-width actions each casting their own shadow
+            // was the stack of shadows it set out to remove.
+            .dsaOptionGroup()
 
-                // Damage buttons — side by side when mounted, full width otherwise
+            // What a Schicksalspunkt buys. Grouped because the cost is the thing
+            // they have in common — the gold fill says it too, but a player
+            // deciding whether to spend one wants them in one place.
+            if schipsAvailable > 0,
+               !schipDefenseBoostActive || (!schipIgnoreZustandThisRound && hero.hasIgnorableZustand) {
+                combatSectionLabel(L("fateAction.label"))
+
+                VStack(spacing: 8) {
+                    if !schipDefenseBoostActive {
+                        schipActionButton(icon: "shield.checkered", title: L("schip.defenseBoost")) {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipDefenseBoostActive = true
+                        }
+                    }
+
+                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
+                        schipActionButton(icon: "bandage", title: L("schip.ignoreZustand")) {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipIgnoreZustandThisRound = true
+                        }
+                    }
+                }
+                .dsaOptionGroup()
+            }
+
+            // Neither an action nor a reaction: writing down what happened, and
+            // swapping kit. Dark, because nothing here is rolled — the teal on
+            // "Ausrüstung wechseln" was a colour used nowhere else in the app.
+            combatSectionLabel(L("recordAction.label"))
+
+            VStack(spacing: 8) {
                 HStack(spacing: 8) {
-                    // Schaden nehmen -- dark
                     Button { step = .takeDamage } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "heart.slash.fill")
@@ -555,9 +605,7 @@ struct CombatRootView: View {
                     .buttonStyle(.dsaMotion)
 
                     if mountedActive {
-                        Button {
-                            step = .mountDamage
-                        } label: {
+                        Button { step = .mountDamage } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "heart.slash.fill")
                                 Text(L("mountTakesDamage"))
@@ -572,61 +620,20 @@ struct CombatRootView: View {
                     }
                 }
 
-                // Flucht
-                Button { step = .flucht } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "figure.run")
-                        Text(L("flucht"))
-                    }
-                    .font(.dsaHeading(.body))
-                    .foregroundStyle(combatAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: combatAccent)
-                }
-                .buttonStyle(.dsaMotion)
-
-                // Change loadout -- visually distinct (teal)
                 Button { step = .loadoutEquipment } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.dsaBody(.body))
                         Text(L("changeLoadout"))
-                            .font(.dsaBody(.body))
                     }
+                    .font(.dsaHeading(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)) // teal
+                    .background(Color.dsaDark)
                     .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
-
-                // Schicksalspunkte buy actions, so the actions sit here with the
-                // rest. A section of their own said "this costs a Schip" by
-                // position alone, and split two near-identical gold buttons
-                // across two groups with an unrelated one in between. The gold
-                // fill and the printed cost say it instead.
-                if schipsAvailable > 0 && !schipDefenseBoostActive {
-                    schipActionButton(icon: "shield.checkered", title: L("schip.defenseBoost")) {
-                        hero.derivedValues?.schicksalspunkte.current -= 1
-                        schipDefenseBoostActive = true
-                    }
-                }
-
-                if schipsAvailable > 0 && !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
-                    schipActionButton(icon: "bandage", title: L("schip.ignoreZustand")) {
-                        hero.derivedValues?.schicksalspunkte.current -= 1
-                        schipIgnoreZustandThisRound = true
-                    }
-                }
             }
-            // One raised group with flat options inside — the same container the
-            // Manöver and Trefferzone lists use on the announcement screen. This
-            // is ADR-0009's "containers" half, which that decision recorded as
-            // undelivered: nine full-width actions each casting their own shadow
-            // was the stack of shadows it set out to remove.
             .dsaOptionGroup()
 
             // End combat — not an action in the round, it leaves the screen, so
@@ -656,6 +663,28 @@ struct CombatRootView: View {
         }
     }
 
+    /// The two at-a-glance resources beside each other: Schicksalspunkte and RS.
+    ///
+    /// One builder, because they were two copies of the same layout and came out
+    /// a hair apart — SF Symbols have different bounding boxes, so `sparkles` and
+    /// `shield.fill` gave the two chips different heights. The icon frame fixes
+    /// the line height so the glyph cannot set it.
+    private func resourceChip(icon: String, text: String, fill: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.dsaBody(.caption))
+                .frame(height: DSALayout.chipIconHeight)
+            Text(text)
+                .font(.dsaMono(.caption, emphasis: true))
+                .frame(height: DSALayout.chipIconHeight)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(fill)
+        .dsaBox(.flush)
+    }
+
     private var schipsAvailable: Int {
         hero.derivedValues?.schicksalspunkte.current ?? 0
     }
@@ -669,18 +698,23 @@ struct CombatRootView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
+            // The label is centred like every other action in the group; the cost
+            // rides in a trailing overlay so it cannot pull the label off centre.
             HStack(spacing: 6) {
                 Image(systemName: icon)
                 Text(title)
-                Spacer(minLength: 8)
-                Text(L("schip.cost"))
-                    .font(.dsaMono(.caption, emphasis: true))
             }
             .font(.dsaHeading(.body))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
+            .overlay(alignment: .trailing) {
+                Text(L("schip.cost"))
+                    .font(.dsaMono(.caption, emphasis: true))
+                    .foregroundStyle(.white)
+                    .padding(.trailing, 14)
+            }
             .background(Color.dsaSchipGold)
             .dsaBox(.flush)
         }

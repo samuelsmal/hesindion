@@ -67,14 +67,6 @@ struct CombatHitZoneRow: View {
         .accessibilityIdentifier("combat.zone.roll")
     }
 
-    /// "14: Beine (rechts)" — the rolled value and the side it landed on. Shown
-    /// inside the reveal modal, where the die is the point.
-    static func rollSummary(_ roll: Int, plan: BodyPlan = .humanoid(.mittel)) -> String {
-        let hit = HitZoneTable.lookup(roll, plan: plan)
-        let name = L(hit.zone.nameKey)
-        let sided = hit.side.map { "\(name) (\(L($0.nameKey)))" } ?? name
-        return "\(roll): \(sided)"
-    }
 }
 
 // MARK: - WoundEffectDamageControl
@@ -91,36 +83,130 @@ struct WoundEffectDamageControl: View {
     @Binding var value: Int?
     var isDisabled: Bool = false
 
+    /// Which route the player took to the number. `nil` until they say.
+    ///
+    /// The two used to sit side by side — a roll button above a stepper — which
+    /// left "what wins if I roll and then type?" unanswered, and the screen
+    /// showing two controls for one number. Deciding first means only one of them
+    /// is ever on screen, and the answer is whatever the chosen route produced.
+    private enum Route { case rolled, byHand }
+    @State private var route: Route? = nil
+
     private var rolled: Int { value ?? 0 }
+
+    private var formula: String { WoundEffectResolver.extraDamageFormula(for: zone) }
 
     var body: some View {
         VStack(spacing: 8) {
-            Button {
-                value = WoundEffectResolver.rollExtraDamage(for: zone)
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "dice.fill")
-                    Text(L("trefferzone.rollExtraDamage"))
-                }
-                .font(.dsaHeading(.caption))
-                // A settled control keeps its label at full strength (ADR-0010).
-                // On `tertiarySystemFill` a white label was grey on grey, and
-                // the whole Wundeffekt panel became unreadable the moment the
-                // entry was confirmed — exactly when you most want to read it.
-                .foregroundStyle(isDisabled ? Color.dsaDisabledLabel : Color.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(isDisabled ? Color.dsaDisabled : Color.groupCombat)
-                .dsaBox(.flush)
+            switch route {
+            case .none:
+                routeChoice
+            case .rolled:
+                resultRow(canReroll: true)
+            case .byHand:
+                stepper
             }
-            .buttonStyle(.dsaMotion)
-            .disabled(isDisabled)
-            .accessibilityIdentifier("combat.takeDamage.rollExtraDamage")
+        }
+        .dsaOptionGroup(isSettled: isDisabled)
+        .onAppear {
+            // A value restored from an earlier visit is already settled; the
+            // stepper is the honest home for it, since we cannot know it was rolled.
+            if route == nil, value != nil { route = .byHand }
+        }
+    }
 
-            // At the table the number is as often spoken to you as rolled by you
-            // (ADR-0005), so neither route is the fallback of the other.
-            DSAOrDivider(label: "\(L("or")) — \(L("byHand"))")
+    // MARK: - The fork
 
+    private var routeChoice: some View {
+        VStack(spacing: 8) {
+            Text(String(format: L("trefferzone.extraDamageAsk"), formula))
+                .font(.dsaBody(.caption))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 8) {
+                routeButton(
+                    icon: "dice.fill",
+                    title: L("roll"),
+                    identifier: "combat.takeDamage.rollExtraDamage"
+                ) {
+                    value = WoundEffectResolver.rollExtraDamage(for: zone)
+                    route = .rolled
+                }
+
+                routeButton(
+                    icon: "square.and.pencil",
+                    title: L("enterValue"),
+                    identifier: "combat.takeDamage.enterExtraDamage"
+                ) {
+                    value = value ?? 0
+                    route = .byHand
+                }
+            }
+        }
+    }
+
+    private func routeButton(
+        icon: String,
+        title: String,
+        identifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.dsaHeading(.caption))
+            .foregroundStyle(isDisabled ? Color.dsaDisabledLabel : Color.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isDisabled ? Color.dsaDisabled : Color.groupCombat)
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .disabled(isDisabled)
+        .accessibilityIdentifier(identifier)
+    }
+
+    // MARK: - What the chosen route produced
+
+    private func resultRow(canReroll: Bool) -> some View {
+        HStack(spacing: 8) {
+            Text("+\(rolled)")
+                .font(.dsaHeading(.title3))
+                .fontDesign(.monospaced)
+                .accessibilityIdentifier("combat.takeDamage.extraDamage")
+            Text(formula)
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            if canReroll, !isDisabled {
+                Button {
+                    value = WoundEffectResolver.rollExtraDamage(for: zone)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text(L("rollAgain"))
+                    }
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(Color.groupCombat)
+                }
+                .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.takeDamage.rerollExtraDamage")
+            }
+
+            if !isDisabled {
+                changeRouteButton
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private var stepper: some View {
+        VStack(spacing: 6) {
             DSAStepper(
                 tint: isDisabled ? Color.dsaDisabled : Color.groupCombat,
                 decrementDisabled: isDisabled || rolled <= 0,
@@ -136,8 +222,32 @@ struct WoundEffectDamageControl: View {
                     .padding(.vertical, 8)
                     .accessibilityIdentifier("combat.takeDamage.extraDamage")
             }
+
+            if !isDisabled {
+                HStack {
+                    Text(formula)
+                        .font(.dsaBody(.caption2))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    changeRouteButton
+                }
+            }
         }
-        .dsaOptionGroup(isSettled: isDisabled)
+    }
+
+    /// Changing route clears the number: a value rolled here and then edited by
+    /// hand would be neither, and the screen could not say which it was.
+    private var changeRouteButton: some View {
+        Button {
+            value = nil
+            route = nil
+        } label: {
+            Text(L("change"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(Color.groupCombat)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.takeDamage.changeExtraDamageRoute")
     }
 }
 

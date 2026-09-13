@@ -24,6 +24,8 @@ struct AdventureDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                nameHeading
+                    .padding(.bottom, 12)
                 adventureHeader
                 controlsBar
                 weatherTimeline
@@ -35,12 +37,6 @@ struct AdventureDetailView: View {
         .background(Color(UIColor.systemBackground))
         .navigationTitle(adventure.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(adventure.name)
-                    .font(.dsaHeading(.title3))
-            }
-        }
         .sheet(isPresented: $isShowingAddStretch) {
             NavigationStack {
                 AddStretchSheet(adventure: adventure)
@@ -59,6 +55,21 @@ struct AdventureDetailView: View {
     }
 
     // MARK: - Header
+
+    /// The adventure's name, in the boxed heading the hero pane uses.
+    ///
+    /// It used to be the bare navigation title — system chrome, on a screen where
+    /// everything else is a bordered box. A heading that is not in the design
+    /// language reads as belonging to the OS rather than to the app.
+    private var nameHeading: some View {
+        Text(adventure.name)
+            .font(.dsaHeading(.largeTitle))
+            .foregroundStyle(.white)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.groupAdventure)
+            .dsaBox(.raised)
+    }
 
     private var adventureHeader: some View {
         VStack(spacing: 4) {

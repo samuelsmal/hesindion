@@ -21,6 +21,10 @@ struct DSADiceRevealModal: View {
     /// Renders the settled roll as the sentence the player actually wants —
     /// "7: Torso (rechts)" — beneath the dice. `nil` shows nothing.
     var caption: ([Int]) -> String? = { _ in nil }
+    /// A settled roll shown as a view rather than a line of text: the table it
+    /// was rolled against, with the row it hit lit. Takes precedence over
+    /// `caption`, which cannot show where in a table the number landed.
+    var result: (([Int]) -> AnyView)? = nil
     let onConfirm: ([Int]) -> Void
     let onCancel: () -> Void
 
@@ -34,6 +38,7 @@ struct DSADiceRevealModal: View {
         count: Int = 1,
         accent: Color = .groupCombat,
         caption: @escaping ([Int]) -> String? = { _ in nil },
+        result: (([Int]) -> AnyView)? = nil,
         onConfirm: @escaping ([Int]) -> Void,
         onCancel: @escaping () -> Void
     ) {
@@ -42,6 +47,7 @@ struct DSADiceRevealModal: View {
         self.count = count
         self.accent = accent
         self.caption = caption
+        self.result = result
         self.onConfirm = onConfirm
         self.onCancel = onCancel
         _tumbling = State(initialValue: Array(repeating: 1, count: count))
@@ -65,11 +71,17 @@ struct DSADiceRevealModal: View {
             .frame(maxWidth: .infinity)
             .accessibilityIdentifier("dice.reveal.value")
 
-            if let results, let caption = caption(results) {
-                Text(caption)
-                    .font(.dsaMono(.caption, emphasis: true))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityIdentifier("dice.reveal.caption")
+            if let results {
+                if let result {
+                    // No identifier of our own: the content carries its own, and
+                    // an identifier on this wrapper takes that identity over.
+                    result(results)
+                } else if let caption = caption(results) {
+                    Text(caption)
+                        .font(.dsaMono(.caption, emphasis: true))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("dice.reveal.caption")
+                }
             }
 
             if isSettled {

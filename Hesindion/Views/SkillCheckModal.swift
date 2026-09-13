@@ -149,7 +149,7 @@ struct SkillCheckModal: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background((line.value < 0 ? Color.groupCombat : config.accentColor).opacity(0.1))
-                .dsaBox(.flush, stroke: line.value < 0 ? Color.groupCombat : config.accentColor)
+                .dsaRowDivider()
             }
 
             // Hints
@@ -166,7 +166,11 @@ struct SkillCheckModal: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(hint.color.opacity(0.1))
-                .dsaBox(.flush, stroke: hint.color)
+                // A row in a spacing-0 stack must not stroke its own rectangle
+                // (ADR-0007): the neighbour drawn after it covers the shared
+                // edge, which is why this one came out with three borders. The
+                // tint carries the meaning; the divider carries the boundary.
+                .dsaRowDivider()
             }
 
             // Dice row — tap to roll; once failed with Schips available, tap to

@@ -110,6 +110,14 @@ enum WoundEffectResolver {
         return DiceRoller.roll(count: count, sides: sides).reduce(0, +) + flat
     }
 
+    /// "1W3+1" — what the zone's extra damage rolls, for a screen that has to say
+    /// what it is about to roll or what a number entered by hand stands for.
+    static func extraDamageFormula(for zone: HitZone) -> String {
+        guard case .extraDamage(let count, let sides, let flat) = WoundEffectCatalog.effect(for: zone).kind
+        else { return "" }
+        return flat == 0 ? "\(count)W\(sides)" : "\(count)W\(sides)+\(flat)"
+    }
+
     /// The one LP figure written on confirm: the hit plus any Torso extra damage.
     static func totalDamage(effective: Int, extra: Int?) -> Int {
         max(0, effective) + max(0, extra ?? 0)

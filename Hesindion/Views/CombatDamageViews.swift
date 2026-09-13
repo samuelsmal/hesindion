@@ -276,7 +276,17 @@ struct CombatTakeDamageView: View {
                     title: L("trefferzone.section"),
                     sides: 20,
                     accent: combatAccent,
-                    caption: { $0.first.map { CombatHitZoneRow.rollSummary($0) } },
+                    // The table itself, with the row the die hit lit — rather than
+                    // "7: Torso", which stated the answer and hid the rule.
+                    result: { rolls in
+                        AnyView(
+                            HitZoneTableView(
+                                plan: .humanoid(.mittel),
+                                roll: rolls.first,
+                                accent: combatAccent
+                            )
+                        )
+                    },
                     onConfirm: { rolls in
                         if let roll = rolls.first {
                             lastRoll = roll
@@ -442,31 +452,46 @@ struct CombatTakeDamageView: View {
 
 // MARK: - WoundEffectReminderCard
 
-/// Rules prompt shown after a landed targeted attack.
+/// What a landed targeted attack does to the opponent, and the one thing the
+/// player has to be told before it does: whether the opponent's Selbstbeherrschung
+/// check succeeded.
 ///
 /// Nothing is *applied*: the opponent has no LP, no KO and no states, so the app
-/// states the rule and leaves the call to the player. Where the effect is extra
-/// damage the number can still be settled here — rolled, or entered after being
-/// told — because the player needs the figure to report, even though there is
-/// nothing on this device to subtract it from.
+/// states the rule and leaves the call to the player. What it can do is ask the
+/// question in the right order. The card used to state the effect and offer its
+/// damage immediately, as though the Wundeffekt were automatic — it is not, and
+/// the same screen on the receiving side has always made the player roll the
+/// check first. The opponent's roll happens at the table, so the app asks for the
+/// outcome rather than rolling anything.
 struct WoundEffectReminderCard: View {
     let zone: HitZone
     /// Owned by the screen, so the damage total can include it.
     @Binding var extraDamage: Int?
 
+    /// `nil` until the player says how the opponent's check went.
+    @State private var probePassed: Bool? = nil
+
     var body: some View {
         let effect = WoundEffectCatalog.effect(for: zone)
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             combatSectionLabel(String(format: L("trefferzone.reminderTitle"), L(zone.nameKey)))
-            Text(L(effect.effectKey))
-                .font(.dsaBody(.caption))
-            Text(L(effect.resistanceKey))
+
+            Text(L("trefferzone.onFailure"))
                 .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
+            Text(L(effect.effectKey))
+                .font(.dsaBody(.caption))
 
-            if case .extraDamage = effect.kind {
-                WoundEffectDamageControl(zone: zone, value: $extraDamage)
-                    .padding(.top, 4)
+            switch probePassed {
+            case .none:
+                probeAsk(effect: effect)
+            case .some(true):
+                outcomeRow(passed: true)
+            case .some(false):
+                outcomeRow(passed: false)
+                if case .extraDamage = effect.kind {
+                    WoundEffectDamageControl(zone: zone, value: $extraDamage)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -476,6 +501,82 @@ struct WoundEffectReminderCard: View {
         .dsaBox(.flush)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.woundEffectReminder")
+    }
+
+    /// The question, and the two answers. Not a roll: the die is the opponent's,
+    /// thrown at the table, and this app never speaks for the other side.
+    private func probeAsk(effect: WoundEffect) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(format: L("trefferzone.opponentProbe"), L(effect.resistanceKey)))
+                .font(.dsaBody(.caption))
+
+            HStack(spacing: 8) {
+                answerButton(
+                    title: L("trefferzone.probePassed"),
+                    icon: "checkmark.circle.fill",
+                    fill: Color.dsaPositive,
+                    identifier: "combat.opponentProbe.passed"
+                ) {
+                    extraDamage = nil
+                    probePassed = true
+                }
+
+                answerButton(
+                    title: L("trefferzone.probeFailed"),
+                    icon: "xmark.circle.fill",
+                    fill: Color.groupCombat,
+                    identifier: "combat.opponentProbe.failed"
+                ) {
+                    probePassed = false
+                }
+            }
+        }
+    }
+
+    private func answerButton(
+        title: String,
+        icon: String,
+        fill: Color,
+        identifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.dsaHeading(.caption))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(fill)
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier(identifier)
+    }
+
+    /// The answer, and the way back if it was the wrong button.
+    private func outcomeRow(passed: Bool) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: passed ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundStyle(passed ? Color.dsaPositive : Color.groupCombat)
+            Text(passed ? L("trefferzone.noWoundEffect") : L("failure"))
+                .font(.dsaHeading(.caption))
+            Spacer()
+            Button {
+                extraDamage = nil
+                probePassed = nil
+            } label: {
+                Text(L("trefferzone.changeProbe"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(Color.groupCombat)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("combat.opponentProbe.change")
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.opponentProbe.outcome")
     }
 }
 

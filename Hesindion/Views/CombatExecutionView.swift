@@ -490,13 +490,18 @@ struct CombatExecutionView: View {
                     .padding(.vertical, 10)
             }
             .frame(maxWidth: .infinity)
-            Text(L("modifier"))
-                .font(.dsaBody(.caption2))
-                .foregroundStyle(.secondary)
-                // Clear the stepper's shadow, which draws outside its bounds and
-                // reserves no layout space — 2pt put "Mod" underneath it.
-                .padding(.top, DSALayout.shadowOffset + 4)
+            fieldCaption(L("modifier"), clearsShadow: true)
         }
+    }
+
+    /// A caption under a control. The gap is measured from what the eye sees, so
+    /// a control that casts a shadow clears it first — otherwise "Mod" sat 2pt
+    /// closer to its box than "W20" did to the dice.
+    private func fieldCaption(_ text: String, clearsShadow: Bool) -> some View {
+        Text(text)
+            .font(.dsaBody(.caption2))
+            .foregroundStyle(.secondary)
+            .padding(.top, (clearsShadow ? DSALayout.shadowOffset : 0) + DSALayout.captionGap)
     }
 
     // MARK: - Modifier breakdown
@@ -516,8 +521,11 @@ struct CombatExecutionView: View {
     @ViewBuilder
     private var modifierBreakdown: some View {
         if let lines = modifierLines {
+            // Only the total names the attribute. The modifier rows are bare
+            // numbers, so an "AT" on the base row alone made the column ragged
+            // and said nothing the total does not.
             CombatBreakdownBox(
-                baseValue: "\(attrLabel) \(baseValue)",
+                baseValue: "\(baseValue)",
                 baseSource: L("source.basis"),
                 lines: modifier == 0
                     ? lines
@@ -550,10 +558,7 @@ struct CombatExecutionView: View {
             .padding(.vertical, 14)
             .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
             .dsaBox(.flush)
-            Text("W20")
-                .font(.dsaBody(.caption2))
-                .foregroundStyle(.secondary)
-                .padding(.top, 2)
+            fieldCaption("W20", clearsShadow: false)
         }
     }
 

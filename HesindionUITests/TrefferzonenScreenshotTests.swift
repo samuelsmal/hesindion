@@ -116,26 +116,61 @@ final class TrefferzonenScreenshotTests: XCTestCase {
 
         XCTAssertTrue(reminder.exists, "Wound-effect reminder card not shown")
 
-        // Settle both figures, so the capture shows the screen in the state that
-        // matters: the weapon's damage rolled, the Wundeffekt's entered, the
-        // reported total below them and "Neue Aktion" last.
+        // Roll the weapon's damage first — the calculation only exists once the
+        // dice have settled.
         let damageBox = app.staticTexts["Antippen zum Würfeln"].firstMatch
         if damageBox.waitForExistence(timeout: UITest.probeTimeout) {
             damageBox.tap()
         }
-        let rollExtra = app.buttons["combat.takeDamage.rollExtraDamage"]
-        if rollExtra.waitForExistence(timeout: UITest.probeTimeout) {
-            XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the Wundeffekt roll")
-            rollExtra.tap()
-        }
 
-        let total = app.descendants(matching: .any)["combat.dealDamage.total"]
-        XCTAssertTrue(
-            total.waitForExistence(timeout: UITest.timeout),
-            "The reported damage total is missing"
+        // The Wundeffekt is not automatic: the opponent rolls Selbstbeherrschung
+        // at the table and the player enters how it went. Nothing is offered
+        // until they do.
+        let passed = app.buttons["combat.opponentProbe.passed"]
+        XCTAssertTrue(passed.waitForExistence(timeout: UITest.timeout), "Opponent probe not asked")
+        XCTAssertFalse(
+            app.buttons["combat.takeDamage.rollExtraDamage"].exists,
+            "The Wundeffekt damage must not be offered before the check is answered"
         )
-        app.scrollUntilHittable(total, maxSwipes: 4)
+        app.scrollUntilHittable(passed, maxSwipes: 4)
         captureScreenshot(app, named: "11-attack-wound-effect-reminder")
+
+        // Passed: the effect is averted and nothing is added.
+        passed.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["combat.opponentProbe.outcome"]
+                .waitForExistence(timeout: UITest.timeout),
+            "The outcome of the opponent's check is not stated"
+        )
+        XCTAssertFalse(
+            app.buttons["combat.takeDamage.rollExtraDamage"].exists,
+            "A passed check must not offer Wundeffekt damage"
+        )
+        captureScreenshot(app, named: "32-attack-opponent-probe-passed")
+
+        // Failed: the effect applies and its damage can be settled — rolled here,
+        // or entered after being told.
+        app.buttons["combat.opponentProbe.change"].tap()
+        let failed = app.buttons["combat.opponentProbe.failed"]
+        XCTAssertTrue(failed.waitForExistence(timeout: UITest.timeout), "Cannot re-answer the check")
+        failed.tap()
+
+        let rollExtra = app.buttons["combat.takeDamage.rollExtraDamage"]
+        XCTAssertTrue(
+            rollExtra.waitForExistence(timeout: UITest.timeout),
+            "A failed check must offer the Wundeffekt damage"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the Wundeffekt roll")
+        rollExtra.tap()
+
+        // One calculation, with the Wundeffekt inside it.
+        let breakdown = app.descendants(matching: .any)["combat.dealDamage.breakdown"]
+        XCTAssertTrue(
+            breakdown.waitForExistence(timeout: UITest.timeout),
+            "The damage calculation is missing"
+        )
+        app.scrollUntilHittable(breakdown, maxSwipes: 4)
+        captureScreenshot(app, named: "33-attack-opponent-probe-failed")
     }
 
     // MARK: - 04 Wundeffekt panel on the take-damage screen

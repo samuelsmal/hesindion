@@ -583,7 +583,7 @@ struct CombatFernkampfExecutionView: View {
     /// hardcoded "Effektiv" went with it.
     private var modifierBreakdown: some View {
         CombatBreakdownBox(
-            baseValue: "FK \(baseFK)",
+            baseValue: "\(baseFK)",
             baseSource: L("source.basis"),
             lines: modifier == 0
                 ? modifierLines

@@ -184,29 +184,38 @@ struct CombatOpponentDefenseView: View {
                     .buttonStyle(.dsaMotion)
                 }
 
-                // Damage section
+                // The damage, in the order it is settled: roll the dice, add
+                // anything by hand, settle the Wundeffekt — and then one
+                // calculation with every part in it. There used to be two: the
+                // weapon's own total in a dark bar, and a second dark bar below
+                // the wound effect restating it with the Wundeffekt added.
                 if showDamage, let formula = damageFormula, let parsed = DamageFormula.parse(formula) {
                     damageSection(parsed: parsed)
                     tpModifierBox
                         .padding(.top, 8)
                 }
 
-                // Wound-effect reminder. Nothing is applied — the opponent has no
-                // LP to subtract from (ADR-0005) — but the extra damage can be
-                // settled here, and it belongs in the total below.
+                // Nothing is applied — the opponent has no LP to subtract from
+                // (ADR-0005) — but the extra damage is settled here and belongs
+                // in the calculation below.
                 if showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
                     WoundEffectReminderCard(zone: zone, extraDamage: $woundEffectDamage)
                         .padding(.top, 8)
                 }
 
-                // The figure the player actually reports, once everything that
-                // feeds it has been settled. It stopped at the weapon's damage
-                // before, so a Wundeffekt never reached it. Shown only when the
-                // Wundeffekt actually adds something: without one it would
-                // restate the calculation's own total in an identical dark bar.
-                if showDamage, (woundEffectDamage ?? 0) > 0, let total = appliedTotal {
-                    appliedTotalBox(total)
-                        .padding(.top, 8)
+                if showDamage,
+                   let formula = damageFormula,
+                   let parsed = DamageFormula.parse(formula),
+                   damageFinalRolls != nil {
+                    CombatBreakdownBox(
+                        rows: damageRows(parsed: parsed),
+                        totalValue: "\(appliedTotal ?? 0) \(L("tp"))",
+                        totalSource: L("damage.totalTP"),
+                        sectionLabel: L("calculation.label")
+                    )
+                    .padding(.top, 8)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("combat.dealDamage.breakdown")
                 }
 
                 // Last, because it leaves the screen. It used to sit inside the
@@ -243,38 +252,22 @@ struct CombatOpponentDefenseView: View {
             let isAnimating = damageFinalRolls == nil
             let rolls = damageFinalRolls ?? damageDisplayRolls
 
-            // Individual dice
-            HStack(spacing: 6) {
-                ForEach(0..<parsed.count, id: \.self) { i in
-                    Text(i < rolls.count ? "\(rolls[i])" : "-")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(isAnimating
-                            ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity)
-                            : Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                }
-            }
-
-            // Every part of the damage, in one box: the dice, the weapon's own
-            // bonus, each ability or manoeuvre that added to it, whatever was
-            // entered by hand, and the critical's multiplier last. It used to be
-            // one pre-computed string, which is why a Wuchtschlag's +4 could not
-            // be told from a weapon's +4.
-            if damageFinalRolls != nil {
-                CombatBreakdownBox(
-                    rows: damageRows(parsed: parsed),
-                    totalValue: "\(weaponDamageTotal(parsed: parsed)) \(L("tp"))",
-                    totalSource: L("damage.reportToGM")
-                )
-                .padding(.top, 6)
-                .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("combat.dealDamage.breakdown")
-            }
-
+            // The dice are the thing to tap while they are still tumbling. Once
+            // they settle they are the calculation's first row, so showing them
+            // here as well printed the same result twice.
             if isAnimating {
+                HStack(spacing: 6) {
+                    ForEach(0..<parsed.count, id: \.self) { i in
+                        Text(i < rolls.count ? "\(rolls[i])" : "-")
+                            .font(.dsaHeading(.title3))
+                            .fontDesign(.monospaced)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity))
+                            .dsaBox(.flush)
+                    }
+                }
+
                 Text(L("tapToRoll"))
                     .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
@@ -354,11 +347,14 @@ struct CombatOpponentDefenseView: View {
     /// One row per part of the damage, in the order they apply.
     private func damageRows(parsed: DamageFormula) -> [BreakdownRow] {
         var rows: [BreakdownRow] = []
-        let diceSum = (damageFinalRolls ?? []).reduce(0, +)
-        rows.append(BreakdownRow(
-            value: "\(diceSum)",
-            source: "\(parsed.count)W\(parsed.sides)"
-        ))
+        let dice = damageFinalRolls ?? []
+        let diceSum = dice.reduce(0, +)
+        // With more than one die the individual results ride along in the source,
+        // so folding the dice into the calculation loses nothing: "7  2W6 (4 + 3)".
+        let diceSource = dice.count > 1
+            ? "\(parsed.count)W\(parsed.sides) (\(dice.map(String.init).joined(separator: " + ")))"
+            : "\(parsed.count)W\(parsed.sides)"
+        rows.append(BreakdownRow(value: "\(diceSum)", source: diceSource))
         if parsed.bonus != 0 {
             rows.append(.signed(parsed.bonus, L("source.weapon")))
         }
@@ -368,14 +364,19 @@ struct CombatOpponentDefenseView: View {
         if extraDamageModifier != 0 {
             rows.append(.signed(extraDamageModifier, L("source.additional")))
         }
-        // A critical multiplies everything above it, so it is last and it is not
-        // a signed term.
+        // A critical multiplies everything above it, so it comes after the parts
+        // it multiplies and it is not a signed term.
         if let label = criticalDamage.label {
             rows.append(BreakdownRow(
                 value: label,
                 source: L("critical.damageEffect"),
                 tint: Color.groupCombat
             ))
+        }
+        // The Wundeffekt is the weapon's damage plus something the zone did, so
+        // it lands after the multiplier rather than inside it.
+        if let extra = woundEffectDamage, extra > 0 {
+            rows.append(.signed(extra, L("trefferzone.woundEffect")))
         }
         return rows
     }
@@ -396,31 +397,6 @@ struct CombatOpponentDefenseView: View {
               let rolls = damageFinalRolls else { return nil }
         _ = rolls
         return weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0)
-    }
-
-    /// "18 TP + 3 WE = 21 TP" — the same shape as the take-damage screen's
-    /// formula, so both ends of a hit read the same way. The Wundeffekt term
-    /// appears only when it contributes.
-    @ViewBuilder
-    private func appliedTotalBox(_ total: Int) -> some View {
-        let extra = woundEffectDamage ?? 0
-        let base = total - extra
-        VStack(spacing: 4) {
-            Text(extra > 0
-                 ? "\(base) \(L("tp")) + \(extra) \(L("we")) = \(total) \(L("tp"))"
-                 : "\(total) \(L("tp"))")
-                .font(.dsaHeading(.title3))
-                .fontDesign(.monospaced)
-                .foregroundStyle(.white)
-                .accessibilityIdentifier("combat.dealDamage.total")
-            Text(L("damage.reportToGM"))
-                .font(.dsaBody(.caption))
-                .foregroundStyle(.white.opacity(0.7))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(Color.dsaDark)
-        .dsaBox(.flush)
     }
 
     // MARK: - Neue Aktion
