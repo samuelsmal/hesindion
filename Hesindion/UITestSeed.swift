@@ -87,6 +87,14 @@ enum UITestSeed {
         return args[index + 1].split(separator: ",").map(String.init)
     }
 
+    /// `-uitest-mounted` resumes the fight with the hero in the saddle — the
+    /// state the combat setup screen would otherwise have to be walked to reach.
+    static let mountedArgument = "-uitest-mounted"
+
+    private static var wantsMounted: Bool {
+        ProcessInfo.processInfo.arguments.contains(mountedArgument)
+    }
+
     /// `-uitest-fresh-combat` leaves the hero *out* of a running fight, so
     /// entering combat starts at the armour screen and walks the preparation
     /// flow rather than resuming at the root.
@@ -201,6 +209,7 @@ enum UITestSeed {
             hero.activeCombatId = UUID()
             hero.activeCombatRound = 1
             hero.activeCombatInitiative = 12
+            hero.activeCombatMounted = wantsMounted
         }
 
         seedAdventure(into: context, hero: hero)

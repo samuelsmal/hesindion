@@ -42,7 +42,8 @@ enum UITest {
         wuchtschlagTier: Int? = nil,
         weapon: String? = nil,
         consecrate: [String] = [],
-        freshCombat: Bool = false
+        freshCombat: Bool = false,
+        mounted: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
@@ -80,6 +81,11 @@ enum UITest {
         // which is what makes every other test start at the combat root.
         if freshCombat {
             app.launchArguments.append("-uitest-fresh-combat")
+        }
+        // Resumes the fight in the saddle. Styles like Golgariten-Stil only pay
+        // out from horseback, so there is no reaching them from a seated hero.
+        if mounted {
+            app.launchArguments.append("-uitest-mounted")
         }
         app.launch()
         return app
