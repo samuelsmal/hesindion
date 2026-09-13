@@ -39,7 +39,10 @@ enum UITest {
         fokusRules: [String] = [],
         fokusRulesOff: [String] = [],
         shield: Bool = false,
-        wuchtschlagTier: Int? = nil
+        wuchtschlagTier: Int? = nil,
+        weapon: String? = nil,
+        consecrate: [String] = [],
+        freshCombat: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
@@ -64,6 +67,19 @@ enum UITest {
         // The sample hero has Wuchtschlag I; a test that wants the II trade says so.
         if let wuchtschlagTier {
             app.launchArguments += ["-uitest-wuchtschlag", "\(wuchtschlagTier)"]
+        }
+        // Which weapon is in hand, and which of them the player has marked as
+        // consecrated — the Karmale-Objekte flow turns on both.
+        if let weapon {
+            app.launchArguments += ["-uitest-weapon", weapon]
+        }
+        if !consecrate.isEmpty {
+            app.launchArguments += ["-uitest-consecrate", consecrate.joined(separator: ",")]
+        }
+        // Without this the seed drops the hero into a fight already in progress,
+        // which is what makes every other test start at the combat root.
+        if freshCombat {
+            app.launchArguments.append("-uitest-fresh-combat")
         }
         app.launch()
         return app

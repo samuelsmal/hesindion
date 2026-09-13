@@ -44,6 +44,9 @@ struct ModifierContext {
 
     // Melee specific
     var opponentReach: WeaponReach? = nil
+    /// The reach of the thing actually in the hand. `nil` falls back to the
+    /// hero's main weapon, which is only right when that is what is being swung.
+    var attackerReach: WeaponReach? = nil
     var maneuver: CombatManeuver = .normal
     var isOffHand: Bool = false
     var twoHandedGrip: Bool = false

@@ -93,6 +93,44 @@ enum CriticalDamage: Equatable {
         case .triple:       "×3"
         }
     }
+
+    /// The damage clause as a sentence, for the effect list.
+    ///
+    /// Generated from the value rather than quoted from the row, because the
+    /// 1W20 refinement can change the multiplier its own category announced —
+    /// `schwererSchmerzhafterTreffer` is a ×2 category with ×1½ bands in it — and
+    /// printing the category's prose beside the refinement's result would then
+    /// have the screen contradict itself.
+    var sentence: String? {
+        switch self {
+        case .unchanged:    nil
+        case .bonus(let n): String(format: L("critical.damage.bonus"), n)
+        case .oneAndAHalf:  L("critical.damage.oneAndAHalf")
+        case .double:       L("critical.damage.double")
+        case .triple:       L("critical.damage.triple")
+        }
+    }
+}
+
+// MARK: - Reading a result without its damage clause
+
+/// Every table row that changes the damage says so in prose first — "Die
+/// Trefferpunkte samt Modifikatoren werden verdoppelt und der Gegner erhält …"
+/// — and the multiplier is already a row of the calculation and a line of its
+/// own. Quoted whole, the category's sentence and the refinement's said the
+/// same thing twice on one screen, three times counting the damage bar.
+///
+/// The clause always runs to the first " und " or to the end of the sentence.
+/// `CriticalSuccessTableTests` checks that against all 33 tables, so a row added
+/// in another shape fails there rather than losing half its text here.
+enum CriticalEffectText {
+    static func withoutDamageClause(_ text: String, damage: CriticalDamage) -> String? {
+        guard damage != .unchanged else { return text }
+        guard let separator = text.range(of: " und ") else { return nil }
+        let rest = text[separator.upperBound...]
+        guard let first = rest.first else { return nil }
+        return first.uppercased() + rest.dropFirst()
+    }
 }
 
 // MARK: - Entries
@@ -106,6 +144,12 @@ struct CriticalSuccessRefinement: Equatable {
     var grantsPassierschlag: Bool = false
 
     var isReroll: Bool { effect == nil }
+
+    /// What this band adds beyond the damage. `nil` when it changes nothing else.
+    var additionalEffect: String? {
+        guard let effect else { return nil }
+        return CriticalEffectText.withoutDamageClause(effect, damage: damage)
+    }
 }
 
 /// One 2W6 result: the category, and the Fokusregel breakdown beneath it.
@@ -124,6 +168,12 @@ struct CriticalSuccessCategory: Equatable {
     /// Covers 1...20 with no gap for every category — `CriticalSuccessTableTests`
     /// asserts it.
     var refinements: [CriticalSuccessRefinement] = []
+
+    /// What this category says beyond the damage. `nil` when the damage is all
+    /// it says — "Schwerer Treffer" is exactly that.
+    var additionalEffect: String? {
+        CriticalEffectText.withoutDamageClause(effect, damage: damage)
+    }
 }
 
 // MARK: - Lookup

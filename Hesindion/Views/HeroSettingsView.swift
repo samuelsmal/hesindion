@@ -66,6 +66,13 @@ struct HeroSettingsView: View {
                         if rule == .trefferzonen, hero.isFokusRuleActive(.trefferzonen) {
                             hitZoneSizeRow
                         }
+
+                        // Same reason as the size above: the rule is only worth
+                        // anything once the app knows which weapon is consecrated,
+                        // and nothing in the export says.
+                        if rule == .karmaleObjekte, hero.isFokusRuleActive(.karmaleObjekte) {
+                            consecratedWeaponsRow
+                        }
                     }
                 }
                 .padding(.bottom, 32)
@@ -136,6 +143,40 @@ struct HeroSettingsView: View {
         .padding(.horizontal, 16)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("heroSettings.hitZoneSize")
+    }
+
+    /// Which weapons are geweiht. A list of the hero's own melee weapons, one
+    /// toggle each — not a text field and not a guess from the name.
+    private var consecratedWeaponsRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("consecrated.title"))
+                .font(.dsaHeading(.caption))
+            Text(L("consecrated.subtitle"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+
+            if hero.meleeWeapons.isEmpty {
+                Text(L("consecrated.noWeapons"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(Color.groupCombat)
+            }
+
+            ForEach(hero.meleeWeapons, id: \.name) { weapon in
+                DSAToggleRow(
+                    title: weapon.name,
+                    isOn: Binding(
+                        get: { hero.isConsecrated(weapon.name) },
+                        set: { hero.setConsecrated(weapon.name, $0) }
+                    ),
+                    accent: .groupCombat,
+                    identifier: "heroSettings.consecrated.\(weapon.name)"
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("heroSettings.consecratedWeapons")
     }
 
     private func fokusRuleRow(_ rule: FokusRule) -> some View {

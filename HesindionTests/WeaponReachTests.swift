@@ -56,4 +56,87 @@ final class WeaponReachTests: XCTestCase {
             }
         }
     }
+
+    // MARK: - Whose reach is it?
+
+    /// The matrix above is only right if the reach fed into it is the reach of
+    /// the thing in the hand. It used to be `hero.selectedWeapon` for every
+    /// attack, so an off-hand swing, a Schildattacke and a bare fist all borrowed
+    /// the main weapon's reach.
+
+    private func armedHero() -> Hero {
+        let hero = Hero(name: "Testheld")
+        hero.meleeWeapons = [
+            MeleeWeapon(name: "Langschwert", combatTechniqueId: "CT_12",
+                        damage: "1W6+4", at: 14, pa: 7, reach: "Lang", weight: 2.0),
+            MeleeWeapon(name: "Dolch", combatTechniqueId: "CT_1",
+                        damage: "1W6+1", at: 12, pa: 5, reach: "Kurz", weight: 0.4),
+        ]
+        hero.shields = [
+            Shield(name: "Großschild", damage: "1W6", at: 8, pa: 5,
+                   note: "", reach: "Kurz", structurePoints: 20, weight: 6.0)
+        ]
+        hero.selectedWeaponName = "Langschwert"
+        return hero
+    }
+
+    func testEachPieceOfTheLoadoutCarriesItsOwnReach() {
+        let hero = armedHero()
+        XCTAssertEqual(hero.reach(ofLoadoutNamed: "Langschwert"), .lang)
+        XCTAssertEqual(hero.reach(ofLoadoutNamed: "Dolch"), .kurz)
+        XCTAssertEqual(hero.reach(ofLoadoutNamed: "Großschild"), .kurz)
+    }
+
+    /// Waffenlose Kampftechniken are kurz. This is the case the old code got
+    /// worst: `selectedWeapon` is nil for Raufen, the fallback was "Mittel", and
+    /// a bare-handed hero closed on a spear for free.
+    func testRaufenIsShort() {
+        XCTAssertEqual(armedHero().reach(ofLoadoutNamed: "Raufen"), .kurz)
+        XCTAssertEqual(WeaponReach.kurz.atPenaltyAgainst(.lang), -4)
+    }
+
+    /// A name that matches nothing keeps the value the app used before rather
+    /// than inventing a penalty for it.
+    func testAnUnknownNameFallsBackToMedium() {
+        XCTAssertEqual(armedHero().reach(ofLoadoutNamed: "Sonnenspeer"), .mittel)
+    }
+
+    // MARK: - Through the engine
+
+    private func atPenalty(_ hero: Hero, attacker: WeaponReach?, opponent: WeaponReach) -> Int {
+        var context = ModifierContext(hero: hero, domain: .meleeAttack)
+        context.opponentReach = opponent
+        context.attackerReach = attacker
+        return ModifierEngine.shared.evaluate(context: context)
+            .filter { $0.source == L("source.reach") }
+            .reduce(0) { $0 + $1.value }
+    }
+
+    func testTheEngineUsesTheAnnouncedWeaponNotTheMainOne() {
+        let hero = armedHero()   // main weapon is Lang
+        XCTAssertEqual(atPenalty(hero, attacker: .lang, opponent: .lang), 0)
+        XCTAssertEqual(atPenalty(hero, attacker: .kurz, opponent: .lang), -4,
+                       "The dagger in the off hand reaches like a dagger")
+    }
+
+    func testTheEngineFallsBackToTheMainWeapon() {
+        XCTAssertEqual(atPenalty(armedHero(), attacker: nil, opponent: .lang), 0)
+    }
+
+    /// Beengte Umgebung is the other rule keyed to reach, and it read the same
+    /// wrong value: a long weapon is -8 in a corridor, a fist is not.
+    func testBeengteUmgebungFollowsTheSameReach() {
+        let hero = armedHero()
+        func penalty(_ reach: WeaponReach) -> Int {
+            var context = ModifierContext(hero: hero, domain: .meleeAttack)
+            context.beengteUmgebung = true
+            context.attackerReach = reach
+            return ModifierEngine.shared.evaluate(context: context)
+                .filter { $0.source == L("beengteUmgebung") }
+                .reduce(0) { $0 + $1.value }
+        }
+        XCTAssertEqual(penalty(.lang), -8)
+        XCTAssertEqual(penalty(.mittel), -4)
+        XCTAssertEqual(penalty(.kurz), 0)
+    }
 }

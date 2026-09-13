@@ -14,6 +14,11 @@ struct CombatExecutionView: View {
     /// TP bonuses on top of `damageFormula`, forwarded to whichever screen rolls
     /// the damage.
     var damageLines: [ModifierLine] = []
+    /// A multiplier the announcement already settled — a consecrated weapon
+    /// against a demon of its opposing deity. Travels beside the critical's own
+    /// multiplier rather than folded into it: they are two different rules and
+    /// the damage screen names each.
+    var damageMultiplier: CriticalDamage = .unchanged
     let secondAttackStep: CombatStep?
     let combatId: UUID
     let roundNumber: Int
@@ -240,7 +245,8 @@ struct CombatExecutionView: View {
                         weaponName: weaponName,
                         damageFormula: damageFormula,
                         modifierLines: modifierLines,
-                        damageLines: damageLines
+                        damageLines: damageLines,
+                        damageMultiplier: damageMultiplier
                     )
                 } else {
                     step = .opponentDefense(
@@ -249,7 +255,8 @@ struct CombatExecutionView: View {
                         isCriticalHit: finalRoll == 1,
                         criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
                         modifierLines: modifierLines,
-                        damageLines: damageLines
+                        damageLines: damageLines,
+                        damageMultiplier: damageMultiplier
                     )
                 }
             } label: {
@@ -404,33 +411,17 @@ struct CombatExecutionView: View {
                 .background(Color.dsaDark)
                 .dsaBox(.raised)
 
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.dsaHeading(.body))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.execution.newAction"
+            ) { step = .root }
         } else {
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.dsaHeading(.body))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.execution.newAction.miss"
+            ) { step = .root }
         }
     }
 

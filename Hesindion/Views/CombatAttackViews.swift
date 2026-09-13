@@ -19,8 +19,7 @@ struct CombatAttackChoiceView: View {
     private var canUseTwoHanded: Bool {
         guard !isDualWield, !hasShield else { return false }
         guard let w = hero.selectedWeapon else { return false }
-        let excluded = ["CT_1", "CT_3"] // Dolche, Fechtwaffen
-        return !excluded.contains(w.combatTechniqueId)
+        return CombatTechniqueID(rawValue: w.combatTechniqueId)?.allowsTwoHandedGrip ?? true
     }
 
     var body: some View {
@@ -340,15 +339,29 @@ struct CombatAnnouncementView: View {
     @State private var vorteilhaftePosition: Bool = false
     @State private var selectedOpponentReach: WeaponReach = .mittel
 
-    /// The reach of the weapon being announced. `MeleeModifiers.weaponReach` reads
-    /// the same value from the hero, so the chips cannot promise a penalty the
-    /// roll does not apply.
+    /// The reach of the weapon being announced — the one named in the header, not
+    /// whatever the hero has in the main hand. It is handed to the modifier
+    /// engine as `attackerReach`, so the chips cannot promise a penalty the roll
+    /// does not apply.
     private var heroWeaponReach: WeaponReach {
-        WeaponReach(rawValue: hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
+        hero.reach(ofLoadoutNamed: weaponName)
     }
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
     @State private var targetIsSurprised = false
+    /// What is on the other end of the swing, as far as *Karmale Objekte* cares.
+    /// The GM's answer; the app has no opponent to read it from.
+    @State private var daemonTarget: KarmalWeapon.Target = .ordinary
+
+    /// Whether this weapon has anything to say about demons at all.
+    private var weaponIsConsecrated: Bool {
+        hero.isFokusRuleActive(.karmaleObjekte) && hero.isConsecrated(weaponName)
+    }
+
+    /// The multiplier the Fokusregel adds, if any.
+    private var karmalDamage: CriticalDamage {
+        KarmalWeapon.damage(consecrated: weaponIsConsecrated, target: daemonTarget)
+    }
 
     private var golgaritenForced: Bool {
         hero.golgaritenActive(mounted: mountedActive)
@@ -539,25 +552,59 @@ struct CombatAnnouncementView: View {
                         .dsaBox(.flush, stroke: combatAccent)
                     }
 
+                    // Karmale Objekte. Shown only for a weapon the player has
+                    // marked as consecrated, because for every other weapon the
+                    // rule has nothing to say and the question would be noise.
+                    if weaponIsConsecrated {
+                        combatSectionLabel(L("daemon.label"))
+
+                        DSAToggleRow(
+                            title: L("daemon.target"),
+                            isOn: Binding(
+                                get: { daemonTarget != .ordinary },
+                                set: { daemonTarget = $0 ? .daemon : .ordinary }
+                            ),
+                            accent: combatAccent,
+                            subtitle: L("daemon.target.subtitle"),
+                            identifier: "combat.attack.daemon"
+                        )
+
+                        if daemonTarget != .ordinary {
+                            DSAToggleRow(
+                                title: L("daemon.opposingDeity"),
+                                isOn: Binding(
+                                    get: { daemonTarget == .daemonOfOpposingDeity },
+                                    set: { daemonTarget = $0 ? .daemonOfOpposingDeity : .daemon }
+                                ),
+                                accent: combatAccent,
+                                detail: L("daemon.opposingDeity.detail"),
+                                identifier: "combat.attack.opposingDeity"
+                            )
+                        }
+                    }
+
+                    // The announcement, added up: what the attack is rolled
+                    // against, what it does to the opponent's defence, and what
+                    // it will hit for. Every part of it was on this screen
+                    // already, one modifier per row, but the numbers they add up
+                    // to only appeared on the next screen — so the decision this
+                    // screen exists for was made without its result in view.
+                    attackBreakdown
+                    opponentDefenseBreakdown
+
                     // What the manoeuvre just did to the damage, if anything.
                     damageBreakdown
+
+                    CombatActionButton(
+                        title: L("continue"),
+                        identifier: "combat.announcement.continue"
+                    ) { proceed() }
+                    .padding(.top, 8)
                 }
                 .adaptiveContentWidth()
                 .padding(.top, 8)
                 .padding(.bottom, 16)
             }
-
-            // Continue
-            Button { proceed() } label: {
-                Text(L("continue"))
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(combatAccent)
-                    .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
         }
         .onAppear {
             if isMountCharge {
@@ -587,7 +634,8 @@ struct CombatAnnouncementView: View {
             note: note,
             modifierLines: modifiers,
             secondAttack: secondAttack,
-            damageLines: damageBonusLines
+            damageLines: damageBonusLines,
+            damageMultiplier: karmalDamage
         )
     }
 
@@ -600,6 +648,7 @@ struct CombatAnnouncementView: View {
         context.dualAttackActive = dualAttackPenaltyActive
         context.beengteUmgebung = beengteUmgebungActive
         context.opponentReach = selectedOpponentReach
+        context.attackerReach = heroWeaponReach
         context.maneuver = selectedManeuver
         context.isOffHand = isOffHand
         context.plaenklerActive = plaenklerActive
@@ -626,21 +675,91 @@ struct CombatAnnouncementView: View {
         )
     }
 
+    /// The AT as it will be rolled. Same box, same rows and the same "Basis /
+    /// Effektiv" wording as the execution screen, because it is the same
+    /// calculation — this is where it is decided and there it is thrown.
+    private var attackBreakdown: some View {
+        let lines = buildModifierLines()
+        return CombatBreakdownBox(
+            baseValue: "\(baseAT)",
+            baseSource: L("source.basis"),
+            lines: lines,
+            totalValue: "AT \(baseAT + lines.reduce(0) { $0 + $1.value })",
+            totalSource: L("source.effective"),
+            sectionLabel: L("attack.label")
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.announcement.atBreakdown")
+    }
+
+    /// What the announcement costs the *other* side. Only Finte does anything
+    /// here, and it used to say so as grey subtitle text under the manoeuvre
+    /// row — the one modifier on the screen that was not a number in a column.
+    ///
+    /// Nothing is applied: the opponent is not modelled (ADR-0005), so this is
+    /// the figure the GM subtracts.
+    @ViewBuilder
+    private var opponentDefenseBreakdown: some View {
+        let lines = opponentDefenseLines
+        if !lines.isEmpty {
+            CombatBreakdownBox(
+                rows: lines.map(BreakdownRow.line),
+                totalValue: "PA \(signed(lines.reduce(0) { $0 + $1.value }))",
+                totalSource: L("source.opponentDefense"),
+                sectionLabel: L("opponentDefense.label")
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.announcement.opponentDefense")
+        }
+    }
+
+    private func signed(_ value: Int) -> String {
+        value > 0 ? "+\(value)" : (value < 0 ? "\(value)" : "±0")
+    }
+
+    private var opponentDefenseLines: [ModifierLine] {
+        var lines: [ModifierLine] = []
+        if case .finte(let tier) = selectedManeuver {
+            lines.append(ModifierLine(value: -tier * 2, source: L("maneuver.finte")))
+        }
+        return lines
+    }
+
     /// The TP calculation, for the same reason the AT one exists: a manoeuvre
     /// bonus that is only ever folded into a formula string cannot be checked
     /// against the rulebook. Hidden when the weapon's damage is all there is.
     @ViewBuilder
     private var damageBreakdown: some View {
-        if let formula = damageFormula, !damageBonusLines.isEmpty {
+        if let formula = damageFormula, !damageBonusLines.isEmpty || karmalDamage != .unchanged {
             CombatBreakdownBox(
-                baseValue: formula,
-                baseSource: L("source.weapon"),
-                lines: damageBonusLines,
-                totalValue: adjustedDamage() ?? formula,
+                rows: damageRows(formula),
+                totalValue: effectiveDamageLabel(formula),
                 totalSource: L("source.effective"),
                 sectionLabel: L("damage.label")
             )
         }
+    }
+
+    /// Rows rather than the base/lines shorthand, because a multiplier is not a
+    /// signed term and the shorthand can only add.
+    private func damageRows(_ formula: String) -> [BreakdownRow] {
+        var rows: [BreakdownRow] = [BreakdownRow(value: formula, source: L("source.weapon"))]
+        rows.append(contentsOf: damageBonusLines.map(BreakdownRow.line))
+        if let label = karmalDamage.label {
+            rows.append(BreakdownRow(
+                value: label, source: L("source.karmal"), tint: Color.groupCombat
+            ))
+        }
+        return rows
+    }
+
+    /// "1W6+8", or "(1W6+8) ×2" where the Fokusregel doubles it — the dice are
+    /// not rolled yet, so the multiplier stays in the label rather than being
+    /// worked into the formula.
+    private func effectiveDamageLabel(_ formula: String) -> String {
+        let added = adjustedDamage() ?? formula
+        guard let label = karmalDamage.label else { return added }
+        return "(\(added)) \(label)"
     }
 
     private func adjustedDamage() -> String? {

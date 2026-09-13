@@ -20,18 +20,18 @@ enum CombatStep {
     /// bonuses on top of it, carried apart all the way to the roll so the damage
     /// screen can print every part. Folding them into the string here is what
     /// made the manoeuvre bonus unaccountable — and, twice, double-counted.
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [])
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
     case takeDamage
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [])
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
     /// screen has to ask which defence this was — the app knows the hero parried,
     /// not whether the incoming attack was melee or ranged.
-    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [])
+    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
     case passierschlag
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
@@ -105,6 +105,58 @@ func combatSectionLabel(_ title: String) -> some View {
             .foregroundStyle(combatAccent)
     }
     .padding(.vertical, 8)
+}
+
+/// The bar every combat screen wears: back on the left, the screen's name in
+/// the middle, and the way out of the whole flow on the right.
+///
+/// Written out once per screen before this, which is how three of them ended up
+/// with no back button at all.
+func combatScreenHeader(
+    title: String,
+    subtitle: String? = nil,
+    onBack: (() -> Void)? = nil,
+    onDismiss: @escaping () -> Void
+) -> some View {
+    HStack {
+        if let onBack {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.dsaBody(.body))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("combat.back")
+        }
+
+        Spacer()
+
+        VStack(spacing: 1) {
+            Text(title)
+                .font(.dsaHeading(.headline))
+                .foregroundStyle(.white)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+        }
+
+        Spacer()
+
+        Button(action: onDismiss) {
+            Image(systemName: "xmark")
+                .font(.dsaBody(.body))
+                .foregroundStyle(.white)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.close")
+    }
+    .padding(.horizontal, DSALayout.horizontalPadding)
+    .padding(.vertical, DSALayout.headerVerticalPadding)
+    .frame(maxWidth: .infinity)
+    .background(combatAccent)
+    .dsaBox(.raised)
 }
 
 // MARK: - CombatView (full-screen orchestrator)
@@ -290,7 +342,7 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier):
                 CombatExecutionView(
                     hero: hero,
                     action: action,
@@ -300,6 +352,7 @@ struct CombatView: View {
                     note: note,
                     modifierLines: modifierLines,
                     damageLines: damageLines,
+                    damageMultiplier: damageMultiplier,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
                     combatId: combatId,
                     roundNumber: roundNumber,
@@ -351,7 +404,7 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines):
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
@@ -360,6 +413,7 @@ struct CombatView: View {
                     criticalDamage: criticalDamage,
                     modifierLines: mods,
                     damageLines: damageLines,
+                    damageMultiplier: damageMultiplier,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     announcedZone: announcedZone,
@@ -381,7 +435,7 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines):
+            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier):
                 CombatCriticalSuccessView(
                     hero: hero,
                     requestedTable: table,
@@ -390,6 +444,7 @@ struct CombatView: View {
                     damageFormula: dmg,
                     modifierLines: mods,
                     damageLines: damageLines,
+                    damageMultiplier: damageMultiplier,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     step: $step,
@@ -483,9 +538,9 @@ struct CombatView: View {
                 case .combatSetup:
                     step = .armorSelection
                 case .initiativeRoll:
-                    step = hero.needsCombatSetup ? .combatSetup : .armorSelection
+                    step = .combatSetup
                 case .loadoutEquipment:
-                    step = .initiativeRoll
+                    step = .root
                 case .root:
                     onDismiss()
                 case .attackChoice:

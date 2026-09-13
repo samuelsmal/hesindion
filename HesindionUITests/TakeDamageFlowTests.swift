@@ -229,6 +229,62 @@ final class TakeDamageFlowTests: XCTestCase {
         captureScreenshot(app, named: "18-take-damage-applied")
     }
 
+    // MARK: - What the confirm did
+
+    /// The screen used to end at "16 LP verloren". The two questions that follow
+    /// at the table — how much is left, and what applies now — went unanswered,
+    /// and one of the answers is not written by any step of the flow: Schmerz is
+    /// derived from the LP total and moves on its own.
+    @MainActor
+    func testTheOutcomeNamesTheRemainingLifePointsAndAnyNewState() {
+        continueAfterFailure = false
+        let app = launchTakeDamage(dice: Self.passingDie)
+        enterTP(app, times: 20)
+
+        let outcome = element(app, "combat.takeDamage.outcome")
+        XCTAssertFalse(outcome.exists, "Nothing is reported before the entry is confirmed")
+
+        let confirm = app.button(containing: "Bestätigen")
+        XCTAssertTrue(confirm.waitForExistence(timeout: UITest.timeout), "Confirm missing")
+        XCTAssertTrue(app.scrollUntilHittable(confirm), "Could not reach confirm")
+        confirm.tap()
+
+        XCTAssertTrue(
+            outcome.waitForExistence(timeout: UITest.timeout),
+            "The confirm reported nothing back"
+        )
+        XCTAssertTrue(
+            app.staticTexts["LEBENSPUNKTE"].exists,
+            "The outcome should name what the life points are now"
+        )
+        // 20 TP against RS 5 is 15 through, which takes this hero past the first
+        // Schmerz threshold — a change nothing on the screen sets.
+        XCTAssertTrue(
+            app.staticTexts["Schmerz"].exists,
+            "A state the damage brought on should be named"
+        )
+    }
+
+    /// Taking the entry back takes the report with it.
+    @MainActor
+    func testUndoClearsTheOutcome() {
+        continueAfterFailure = false
+        let app = launchTakeDamage(dice: Self.passingDie)
+        enterTP(app, times: 6)
+        app.button(containing: "Bestätigen").tap()
+
+        let outcome = element(app, "combat.takeDamage.outcome")
+        XCTAssertTrue(outcome.waitForExistence(timeout: UITest.timeout), "No outcome")
+
+        app.otherElements["combat.takeDamage.overwriteCatcher"].tap()
+        app.buttons["combat.takeDamage.overwriteConfirm"].tap()
+
+        XCTAssertTrue(
+            outcome.waitForNonExistence(timeout: UITest.timeout),
+            "The report should go with the entry it reports on"
+        )
+    }
+
     // MARK: - Correcting a wrong press
 
     /// After confirming, the inputs read as disabled but stay reachable: tapping

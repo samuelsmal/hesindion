@@ -20,6 +20,10 @@ enum FokusRule: String, CaseIterable, Identifiable {
     /// The Fokusregel nested inside all three: a further 1W20 refines the 2W6
     /// category. On its own it does nothing, which its subtitle says.
     case kritischeErfolgeDetail
+    /// Karmale Objekte — what a consecrated weapon does to a demon. Off by
+    /// default; switching it on asks which weapons are consecrated, because no
+    /// Optolith export says so and the app must not guess it from a name.
+    case karmaleObjekte
 
     var id: String { rawValue }
     var nameKey: String { "fokus.\(rawValue).name" }

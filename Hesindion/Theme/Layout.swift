@@ -6,6 +6,9 @@ enum DSALayout {
     static let chipIconHeight: CGFloat = 18
     /// Gap between a control and the caption naming it.
     static let captionGap: CGFloat = 4
+    /// Side of a drawn weapon glyph, so the app's own icons sit at the same
+    /// weight as the SF Symbols they share a row with.
+    static let weaponIconSize: CGFloat = 20
 
     /// Horizontal padding for sections and content areas.
     static let horizontalPadding: CGFloat = 16

@@ -84,17 +84,12 @@ struct CombatArmorSelectionView: View {
             .background(Color.dsaDark)
             .dsaBox(.raised)
 
-            // Continue button
-            Button { step = hero.needsCombatSetup ? .combatSetup : .initiativeRoll } label: {
-                Text(L("continue"))
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(combatAccent)
-                    .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
+            CombatActionButton(
+                title: L("continue"),
+                identifier: "combat.armorSelection.continue"
+            ) { step = .combatSetup }
+            .adaptiveContentWidth()
+            .padding(.top, 12)
         }
         .frame(maxWidth: .infinity)
     }
@@ -120,6 +115,14 @@ struct CombatArmorSelectionView: View {
 
 // MARK: - CombatSetupView
 
+/// The preparation screen: everything that is true about the hero *before* the
+/// first initiative is rolled, in one place and every part of it changeable.
+///
+/// It used to carry three toggles — Plänkler-Formation, mounted, Beengte
+/// Umgebung — and was skipped entirely for a hero with neither the formation nor
+/// a horse. The weapon and the shield were chosen two steps further on, *after*
+/// the initiative roll, and the armour a step before, so at no point did the app
+/// show what the hero was about to fight with.
 struct CombatSetupView: View {
     let hero: Hero
     @Binding var step: CombatStep
@@ -129,36 +132,58 @@ struct CombatSetupView: View {
     @Binding var beengteUmgebungActive: Bool
     var onDismiss: () -> Void
 
+    @State private var selected: Set<String> = []
+    @State private var selectedRanged: String? = nil
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button { step = .armorSelection } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.dsaMotion)
-                Spacer()
-                Text(L("combatSetup"))
-                    .font(.dsaHeading(.headline))
-                    .foregroundStyle(.white)
-                Spacer()
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.dsaMotion)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity)
-            .background(combatAccent)
-            .dsaBox(.raised)
+            combatScreenHeader(
+                title: L("combatSetup"),
+                onBack: { step = .armorSelection },
+                onDismiss: onDismiss
+            )
 
             ScrollView {
                 VStack(spacing: 0) {
+                    // What is already settled, restated rather than left behind
+                    // on the previous screen: the armour is a number the rest of
+                    // the fight leans on.
+                    combatSectionLabel(L("armor.label"))
+                    Button { step = .armorSelection } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "shield.lefthalf.filled")
+                                .font(.dsaHeading(.title3))
+                                .foregroundStyle(combatAccent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(hero.wornArmorNames.isEmpty
+                                     ? L("armor.none")
+                                     : hero.wornArmorNames.joined(separator: ", "))
+                                    .font(.dsaBody(.body))
+                                Text("\(L("rs")) \(hero.totalRS)")
+                                    .font(.dsaMono(.caption, emphasis: true))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(UIColor.systemBackground))
+                        .dsaBox(.flush)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .accessibilityIdentifier("combat.setup.armor")
+                    .padding(.bottom, 4)
+
+                    CombatLoadoutPicker(
+                        hero: hero,
+                        mountedActive: mountedActive,
+                        selected: $selected,
+                        selectedRanged: $selectedRanged
+                    )
+
                     // Plänkler-Formation
                     if hero.hasPlaenklerFormation {
                         combatSectionLabel(L("formation.label"))
@@ -166,7 +191,8 @@ struct CombatSetupView: View {
                         DSAToggleRow(
                             title: L("plaenkler"),
                             isOn: $plaenklerActive,
-                            accent: combatAccent
+                            accent: combatAccent,
+                            identifier: "combat.setup.plaenkler"
                         )
 
                         if plaenklerActive {
@@ -183,8 +209,10 @@ struct CombatSetupView: View {
                                             .dsaBox(.flush)
                                     }
                                     .buttonStyle(.dsaMotion)
+                                    .accessibilityIdentifier("combat.setup.plaenkler.\(bonus.rawValue)")
                                 }
                             }
+                            .dsaOptionGroup()
                             .padding(.top, 4)
                         }
                     }
@@ -197,7 +225,8 @@ struct CombatSetupView: View {
                         DSAToggleRow(
                             title: "\(L("mounted")) (\(mountName))",
                             isOn: $mountedActive,
-                            accent: combatAccent
+                            accent: combatAccent,
+                            identifier: "combat.setup.mounted"
                         )
                     }
 
@@ -207,24 +236,38 @@ struct CombatSetupView: View {
                     DSAToggleRow(
                         title: L("beengteUmgebung"),
                         isOn: $beengteUmgebungActive,
-                        accent: combatAccent
+                        accent: combatAccent,
+                        identifier: "combat.setup.beengteUmgebung"
                     )
+
+                    CombatActionButton(
+                        title: L("continue"),
+                        identifier: "combat.setup.continue",
+                        isEnabled: !selected.isEmpty
+                    ) {
+                        CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
+                        step = .initiativeRoll
+                    }
+                    .padding(.top, 16)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
-
-            // Continue
-            Button { step = .initiativeRoll } label: {
-                Text(L("continue"))
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(combatAccent)
-                    .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
+        }
+        .onAppear {
+            let current = CombatLoadoutPicker.load(from: hero)
+            selected = current.selected
+            selectedRanged = current.ranged
+        }
+        // A two-handed weapon cannot be swung from the saddle, so mounting up has
+        // to be able to take one out of the hero's hands rather than leave the
+        // screen showing a selection the rules forbid.
+        .onChange(of: mountedActive) {
+            guard mountedActive else { return }
+            let forbidden = hero.meleeWeapons
+                .filter { CombatTechniqueID(rawValue: $0.combatTechniqueId)?.isTwoHandedOnly ?? false }
+                .map(\.name)
+            selected.subtract(forbidden)
         }
     }
 }
@@ -284,7 +327,7 @@ struct CombatInitiativeRollView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = hero.needsCombatSetup ? .combatSetup : .armorSelection } label: {
+                Button { step = .combatSetup } label: {
                     Image(systemName: "chevron.left")
                         .font(.dsaBody(.body))
                         .foregroundStyle(.white)
@@ -365,11 +408,7 @@ struct CombatInitiativeRollView: View {
                             Button {
                                 animTask?.cancel()
                                 rolledInitiative = t
-                                if hero.selectedWeaponName != nil {
-                                    step = .root
-                                } else {
-                                    step = .loadoutEquipment
-                                }
+                                step = .root
                             } label: {
                                 Text("\(L("confirm"))  \u{2192}  INI \(t)")
                                     .font(.dsaHeading(.body))
@@ -447,233 +486,53 @@ struct CombatInitiativeRollView: View {
 
 // MARK: - CombatLoadoutEquipmentView
 
+/// Changing the loadout mid-fight, reached from the combat root. Before the
+/// fight the same picker sits on the preparation screen, where the question
+/// belongs.
 struct CombatLoadoutEquipmentView: View {
     let hero: Hero
     @Binding var step: CombatStep
     let mountedActive: Bool
     var onDismiss: () -> Void
 
-    /// Tracks selected item names (max 2).
     @State private var selected: Set<String> = []
     @State private var selectedRanged: String? = nil
 
-    private var raufen: CombatTechnique? {
-        hero.combatTechniques.first(where: { $0.name == "Raufen" })
-    }
-
-    /// All selectable items: weapons, shields, and Raufen.
-    private var allItems: [(name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)] {
-        var items: [(String, String, String?, Bool, Bool, Bool)] = []
-        for w in hero.meleeWeapons {
-            let twoHandedTechniques = ["CT_7", "CT_14"] // Zweihandschwerter, Stangenwaffen
-            let isTwoHanded = twoHandedTechniques.contains(w.combatTechniqueId)
-            let mountedNote: String? = (mountedActive && isTwoHanded) ? "(\(L("mounted")))" : nil
-            items.append((w.name, "AT \(w.at) / PA \(w.pa)", mountedNote, false, false, isTwoHanded))
-        }
-        for s in hero.shields {
-            items.append((s.name, "AT \(s.at) / PA \(s.pa)", s.note.isEmpty ? nil : s.note, true, false, false))
-        }
-        items.append(("Raufen", "AT \(raufen?.at ?? 0) / PA \(raufen?.pa ?? 0)", nil, false, true, false))
-        return items
-    }
-
-    private func canSelect(_ item: (name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)) -> Bool {
-        if selected.contains(item.name) { return true } // can always deselect
-        if mountedActive && item.isTwoHandedOnly { return false } // two-handed weapons not usable when mounted
-        if item.isRaufen { return selected.isEmpty } // Raufen = both hands free
-        if item.isTwoHandedOnly { return selected.isEmpty } // two-handed weapon needs both hands
-        if selected.count >= 2 { return false }
-        if selected.count == 1 {
-            let currentItem = allItems.first { selected.contains($0.name) }
-            if currentItem?.isRaufen == true { return false }
-            if currentItem?.isTwoHandedOnly == true { return false }
-            // Can't pick two shields
-            if item.isShield && currentItem?.isShield == true { return false }
-        }
-        return true
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button { step = .initiativeRoll } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.dsaMotion)
-
-                Spacer()
-
-                Text(L("selectEquipment"))
-                    .font(.dsaHeading(.headline))
-                    .foregroundStyle(.white)
-
-                Spacer()
-
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.dsaMotion)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity)
-            .background(combatAccent)
-            .dsaBox(.raised)
+            combatScreenHeader(
+                title: L("selectEquipment"),
+                onBack: { step = .root },
+                onDismiss: onDismiss
+            )
 
             ScrollView {
                 VStack(spacing: 0) {
-                    if !hero.meleeWeapons.isEmpty {
-                        combatSectionLabel(L("meleeWeapons.label"))
-                        ForEach(allItems.filter({ !$0.isShield && !$0.isRaufen }), id: \.name) { item in
-                            equipmentRow(item)
-                        }
-                    }
+                    CombatLoadoutPicker(
+                        hero: hero,
+                        mountedActive: mountedActive,
+                        selected: $selected,
+                        selectedRanged: $selectedRanged
+                    )
 
-                    if !hero.shields.isEmpty {
-                        combatSectionLabel(L("shields.label"))
-                        ForEach(allItems.filter(\.isShield), id: \.name) { item in
-                            equipmentRow(item)
-                        }
+                    CombatActionButton(
+                        title: L("continue"),
+                        identifier: "combat.loadout.continue",
+                        isEnabled: !selected.isEmpty
+                    ) {
+                        CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
+                        step = .root
                     }
-
-                    combatSectionLabel(L("unarmed.label"))
-                    ForEach(allItems.filter(\.isRaufen), id: \.name) { item in
-                        equipmentRow(item)
-                    }
-
-                    if !hero.rangedWeapons.isEmpty {
-                        combatSectionLabel(L("fernkampf.rangedWeapons.label"))
-                        ForEach(hero.rangedWeapons, id: \.name) { weapon in
-                            let isSelected = selectedRanged == weapon.name
-                            Button {
-                                selectedRanged = isSelected ? nil : weapon.name
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                        .font(.dsaHeading(.title3))
-                                        .foregroundStyle(isSelected ? combatAccent : .secondary)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(weapon.name)
-                                            .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
-                                            .foregroundStyle(.primary)
-                                        HStack(spacing: 8) {
-                                            Text("FK \(weapon.at)")
-                                                .font(.dsaMono(.caption, emphasis: true))
-                                                .foregroundStyle(.secondary)
-                                            Text(weapon.damage)
-                                                .font(.dsaMono(.caption, emphasis: true))
-                                                .foregroundStyle(.secondary)
-                                            Text(weapon.range)
-                                                .font(.dsaMono(.caption, emphasis: true))
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                                .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
-                            }
-                            .buttonStyle(.dsaMotion)
-                            .padding(.bottom, 4)
-                        }
-                    }
+                    .padding(.top, 16)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
-
-            // Continue button
-            Button {
-                applySelection()
-                step = .root
-            } label: {
-                Text(L("continue"))
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(selected.isEmpty ? Color.dsaDisabled : combatAccent)
-                    .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
-            .disabled(selected.isEmpty)
         }
-        .onAppear { loadCurrentSelection() }
-    }
-
-    private func equipmentRow(_ item: (name: String, detail: String, note: String?, isShield: Bool, isRaufen: Bool, isTwoHandedOnly: Bool)) -> some View {
-        let isSelected = selected.contains(item.name)
-        let enabled = canSelect(item)
-        return Button {
-            if isSelected {
-                selected.remove(item.name)
-            } else {
-                if item.isRaufen || item.isTwoHandedOnly {
-                    selected.removeAll()
-                }
-                selected.insert(item.name)
-            }
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(isSelected ? combatAccent : .secondary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(enabled ? .primary : .tertiary)
-                    Text(item.detail)
-                        .font(.dsaMono(.caption, emphasis: true))
-                        .foregroundStyle(enabled ? .secondary : .tertiary)
-                    if let note = item.note {
-                        Text(note)
-                            .font(.dsaBody(.caption2))
-                            .foregroundStyle(combatAccent)
-                    }
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+        .onAppear {
+            let current = CombatLoadoutPicker.load(from: hero)
+            selected = current.selected
+            selectedRanged = current.ranged
         }
-        .buttonStyle(.dsaMotion)
-        .disabled(!enabled)
-        .padding(.bottom, 4)
-    }
-
-    private func loadCurrentSelection() {
-        selected.removeAll()
-        if let name = hero.selectedWeaponName { selected.insert(name) }
-        if let name = hero.selectedOffHandName { selected.insert(name) }
-        // Legacy: also check selectedShieldName
-        if let name = hero.selectedShieldName, !selected.contains(name) { selected.insert(name) }
-        selectedRanged = hero.selectedRangedWeaponName
-    }
-
-    private func applySelection() {
-        let items = allItems
-        let selectedItems = items.filter { selected.contains($0.name) }
-
-        // Determine main weapon and off-hand
-        let mainWeapon = selectedItems.first { !$0.isShield && !$0.isRaufen } ?? selectedItems.first { $0.isRaufen }
-        let offHand = selectedItems.first { $0.name != mainWeapon?.name }
-
-        hero.selectedWeaponName = mainWeapon?.name
-        hero.selectedOffHandName = offHand?.name
-        // Keep selectedShieldName in sync for backwards compat
-        hero.selectedShieldName = offHand?.isShield == true ? offHand?.name : nil
-        hero.selectedRangedWeaponName = selectedRanged
     }
 }

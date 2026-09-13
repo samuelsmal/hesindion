@@ -55,6 +55,16 @@ final class Hero {
     /// means "not answered": `sizeCategory` then falls back to the species list.
     var hitZoneSize: String?
 
+    /// Names of the melee weapons the player has marked as consecrated (geweiht
+    /// or heilig).
+    ///
+    /// Set by hand on the hero settings screen, never derived: no Optolith export
+    /// carries a Weihe, and a weapon's name says nothing about it — a
+    /// Rabenschnabel is Boron's symbol and also an ordinary war pick sold by the
+    /// hundred. Names rather than ids, like the loadout, so a re-import that
+    /// rebuilds the weapon rows does not lose the answer.
+    var consecratedWeapons: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -149,6 +159,11 @@ final class Hero {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.protectionValue }
     }
 
+    /// What the hero is wearing, for the preparation screen to restate.
+    var wornArmorNames: [String] {
+        armors.filter(\.isEquipped).map(\.name)
+    }
+
     /// Sum of BE from all equipped armor pieces.
     var totalEquippedBE: Int {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.encumbrance }
@@ -207,6 +222,58 @@ final class Hero {
         }
         guard let name = selectedShieldName else { return nil }
         return shields.first { $0.name == name }
+    }
+
+    /// The reach of one named piece of the loadout.
+    ///
+    /// Reach is a property of the thing in the hand, and the hand is not always
+    /// holding `selectedWeapon`: an off-hand attack swings the off-hand weapon, a
+    /// Schildattacke swings a shield, and Raufen swings a fist. Reading the main
+    /// weapon's reach for all of them gave a bare-handed hero the reach of the
+    /// sword they are not holding — and with the default `Mittel`, no penalty at
+    /// all against a spear.
+    ///
+    /// Unarmed is `kurz` (GRW, waffenlose Kampftechniken); shields carry their own
+    /// reach in the import. A name that matches nothing keeps the old `mittel`
+    /// rather than guessing a penalty onto it.
+    func reach(ofLoadoutNamed name: String) -> WeaponReach {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: weapon.reach) ?? .mittel
+        }
+        if let shield = shields.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: shield.reach) ?? .kurz
+        }
+        if name == "Raufen" { return .kurz }
+        return .mittel
+    }
+
+    // MARK: - Karmale Objekte
+
+    func isConsecrated(_ weaponName: String?) -> Bool {
+        guard let weaponName else { return false }
+        return consecratedWeapons.contains(weaponName)
+    }
+
+    func setConsecrated(_ weaponName: String, _ consecrated: Bool) {
+        if consecrated {
+            guard !consecratedWeapons.contains(weaponName) else { return }
+            consecratedWeapons.append(weaponName)
+        } else {
+            consecratedWeapons.removeAll { $0 == weaponName }
+        }
+    }
+
+    /// The glyph for one named piece of the loadout — the weapon's own combat
+    /// technique where it has one, a shield where it is one, a fist otherwise.
+    func loadoutIcon(for name: String) -> WeaponIcon {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(weapon.combatTechniqueId)
+        }
+        if let ranged = rangedWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(ranged.combatTechniqueId)
+        }
+        if shields.contains(where: { $0.name == name }) { return .system("shield.fill") }
+        return WeaponIcon.forTechnique(.raufen)
     }
 
     /// Passive shield PA bonus applied to main weapon parade.
@@ -423,6 +490,11 @@ final class Hero {
     }
 
     /// Whether combat setup screen is needed.
+    /// Whether the preparation screen has anything *situational* to ask about.
+    ///
+    /// No longer a routing gate — the screen is where the loadout is chosen, so
+    /// every hero sees it — but the formation and mount sections still appear
+    /// only for a hero who has either.
     var needsCombatSetup: Bool {
         hasPlaenklerFormation || hasMount
     }

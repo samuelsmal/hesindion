@@ -8,6 +8,10 @@ struct TalentProbeModal: View {
     var onDismiss: () -> Void
     var onRolled: ((Bool) -> Void)? = nil
     var initialModifier: Int = 0
+    /// The colour the modal wears. A Talentprobe raised from the hero sheet is a
+    /// personal-data thing; the same probe raised mid-fight is a combat thing,
+    /// and arriving in the sheet's gold read as a different app's dialog.
+    var accent: Color = .groupPersonalData
 
     private var probeData: (keys: [String], values: [Int])? {
         guard let attrs = hero.attributes else { return nil }
@@ -21,11 +25,14 @@ struct TalentProbeModal: View {
 
     private var hints: [SkillCheckHint] {
         var result: [SkillCheckHint] = []
-        if hero.hasAufmerksamkeit && talent.ruleId == "TAL_8" {
+        // Aufmerksamkeit (SA_40) eases the *Sinnesschärfe* check that avoids being
+        // surprised — TAL_10. TAL_8 is Selbstbeherrschung, so the hint was
+        // offered on every wound-effect probe in combat, where it does not apply.
+        if hero.hasAufmerksamkeit && talent.ruleId == Talent.sinnesschaerfeRuleId {
             result.append(SkillCheckHint(
                 icon: "info.circle.fill",
                 text: L("aufmerksamkeitHint"),
-                color: .groupPersonalData
+                color: accent
             ))
         }
         return result
@@ -39,7 +46,7 @@ struct TalentProbeModal: View {
                     name: talent.name,
                     skillValue: talent.value,
                     checkAttributes: zip(data.keys, data.values).map { (key: $0, value: $1) },
-                    accentColor: .groupPersonalData,
+                    accentColor: accent,
                     modifierLines: modifierLines,
                     logKind: "talentCheck"
                 ),

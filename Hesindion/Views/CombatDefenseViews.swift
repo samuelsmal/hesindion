@@ -17,6 +17,11 @@ struct CombatOpponentDefenseView: View {
     /// grip, Sturmangriff, Golgariten-Stil. Carried here rather than folded into
     /// `damageFormula` so each can be named in the calculation.
     var damageLines: [ModifierLine] = []
+    /// A multiplier settled before the roll: a consecrated weapon against a
+    /// demon of its opposing deity doubles the TP (Fokusregel *Karmale
+    /// Objekte*). Separate from `criticalDamage` because they are separate
+    /// rules and can both be in play at once.
+    var damageMultiplier: CriticalDamage = .unchanged
     var isRangedAttack: Bool = false
     var rangedDefensePenalty: Int = 0
     /// Trefferzone announced for this attack, if any. Read-only here — the app has no
@@ -33,6 +38,9 @@ struct CombatOpponentDefenseView: View {
     @State private var showDamage: Bool = false
     /// Settled in the wound-effect card, folded into the reported total.
     @State private var woundEffectDamage: Int? = nil
+    /// How the opponent's Selbstbeherrschung check went, per the player. `nil`
+    /// while the card is still asking.
+    @State private var woundEffectProbePassed: Bool? = nil
     @State private var damageDisplayRolls: [Int] = []
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
@@ -88,6 +96,9 @@ struct CombatOpponentDefenseView: View {
                 // Critical hit info boxes
                 if isCriticalHit {
                     infoBox(L("opponentDefense.halved"), icon: "exclamationmark.triangle.fill")
+                }
+                if let label = damageMultiplier.label {
+                    infoBox("\(L("source.karmal")): \(label)", icon: "flame.fill")
                 }
                 if criticalDamage == .double {
                     infoBox(L("opponentDefense.doubleDamage"), icon: "flame.fill")
@@ -199,8 +210,12 @@ struct CombatOpponentDefenseView: View {
                 // (ADR-0005) — but the extra damage is settled here and belongs
                 // in the calculation below.
                 if showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
-                    WoundEffectReminderCard(zone: zone, extraDamage: $woundEffectDamage)
-                        .padding(.top, 8)
+                    WoundEffectReminderCard(
+                        zone: zone,
+                        extraDamage: $woundEffectDamage,
+                        probePassed: $woundEffectProbePassed
+                    )
+                    .padding(.top, 8)
                 }
 
                 if showDamage,
@@ -220,7 +235,13 @@ struct CombatOpponentDefenseView: View {
 
                 // Last, because it leaves the screen. It used to sit inside the
                 // damage section, above the wound effect.
-                if showDamage, damageFormula == nil || damageFinalRolls != nil {
+                //
+                // Held back while the Wundeffekt is still asking. The screen used
+                // to offer "Bestanden / Misslungen" and "Neue Aktion" at the same
+                // time, which reads as though the question were optional — and
+                // leaving without answering it drops a Wundeffekt that has
+                // already been announced, silently, out of the reported total.
+                if showDamage, damageFormula == nil || damageFinalRolls != nil, !woundEffectPending {
                     neueAktionButton
                         .padding(.top, 8)
                 }
@@ -364,8 +385,16 @@ struct CombatOpponentDefenseView: View {
         if extraDamageModifier != 0 {
             rows.append(.signed(extraDamageModifier, L("source.additional")))
         }
-        // A critical multiplies everything above it, so it comes after the parts
-        // it multiplies and it is not a signed term.
+        // Multipliers come after the parts they multiply and are not signed
+        // terms. The weapon's own doubling is first: it is a property of the
+        // blow, and the critical multiplies whatever the blow was worth.
+        if let label = damageMultiplier.label {
+            rows.append(BreakdownRow(
+                value: label,
+                source: L("source.karmal"),
+                tint: Color.groupCombat
+            ))
+        }
         if let label = criticalDamage.label {
             rows.append(BreakdownRow(
                 value: label,
@@ -386,7 +415,8 @@ struct CombatOpponentDefenseView: View {
     private func weaponDamageTotal(parsed: DamageFormula) -> Int {
         let diceSum = (damageFinalRolls ?? []).reduce(0, +)
         let bonuses = damageLines.reduce(0) { $0 + $1.value }
-        return criticalDamage.apply(to: max(0, diceSum + parsed.bonus + bonuses + extraDamageModifier))
+        let raw = max(0, diceSum + parsed.bonus + bonuses + extraDamageModifier)
+        return criticalDamage.apply(to: damageMultiplier.apply(to: raw))
     }
 
     /// The weapon's damage plus any settled Wundeffekt. `nil` until the dice are
@@ -399,22 +429,26 @@ struct CombatOpponentDefenseView: View {
         return weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0)
     }
 
+    /// Whether the wound effect still has an open question on screen: the
+    /// opponent's check unanswered, or a failed check whose extra damage has not
+    /// been settled.
+    private var woundEffectPending: Bool {
+        guard showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone else {
+            return false
+        }
+        guard let passed = woundEffectProbePassed else { return true }
+        guard !passed, case .extraDamage = WoundEffectCatalog.effect(for: zone).kind else { return false }
+        return woundEffectDamage == nil
+    }
+
     // MARK: - Neue Aktion
 
     private var neueAktionButton: some View {
-        Button { step = .root } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.counterclockwise")
-                Text(L("newAction"))
-            }
-            .font(.dsaHeading(.body))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(combatAccent)
-            .dsaBox(.raised)
-        }
-        .buttonStyle(.dsaMotion)
+        CombatActionButton(
+            title: L("newAction"),
+            icon: "arrow.counterclockwise",
+            identifier: "combat.dealDamage.newAction"
+        ) { step = .root }
     }
 
     // MARK: - Info box helper

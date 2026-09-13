@@ -33,11 +33,16 @@ struct CombatTakeDamageView: View {
     @State private var showingOverwriteAlert = false
     @State private var showingZoneRoll = false
 
-    /// The undo record for a confirmed entry.
+    /// The undo record for a confirmed entry, and what the screen reports back.
     private struct AppliedDamage {
         let previousLP: Int?
         let droppedWeapon: String?
         let logEntries: [LogEntry]
+        /// Every state's level as it stood before the write, so the outcome can
+        /// name the ones that changed. Schmerz is derived from LP, so it moves on
+        /// its own without anything setting it — which is precisely the change a
+        /// player would otherwise have to notice for themselves.
+        let statesBefore: [String: Int]
     }
     /// Staged intent, not an immediate action: only cleared on confirm, alongside
     /// the LP write and the log entry, so an abandoned flow cannot disarm the hero.
@@ -229,35 +234,29 @@ struct CombatTakeDamageView: View {
                     }
                 }
 
+                // What the confirm actually did. The screen used to end at
+                // "16 LP verloren" and leave the two questions that matter at the
+                // table unanswered: how much is left, and what applies now that
+                // did not before — the Betäubung a Wundeffekt raised, or the
+                // Schmerz step the new LP total crossed on its own.
+                //
+                // Outside the catcher above: this is a report, and tapping a
+                // report should not offer to overwrite the entry.
+                if confirmed, let record = applied {
+                    CombatDamageOutcomeBox(hero: hero, statesBefore: record.statesBefore)
+                }
+
                 if !confirmed {
-                    // Confirm button
-                    Button {
-                        applyDamage()
-                    } label: {
-                        Text(L("confirm"))
-                            .font(.dsaHeading(.title3))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(combatAccent)
-                            .dsaBox(.raised)
-                    }
-                    .buttonStyle(.dsaMotion)
+                    CombatActionButton(
+                        title: L("confirm"),
+                        identifier: "combat.takeDamage.confirm"
+                    ) { applyDamage() }
                 } else {
-                    // Neue Aktion button
-                    Button { step = .root } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text(L("newAction"))
-                        }
-                        .font(.dsaHeading(.body))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(combatAccent)
-                        .dsaBox(.raised)
-                    }
-                    .buttonStyle(.dsaMotion)
+                    CombatActionButton(
+                        title: L("newAction"),
+                        icon: "arrow.counterclockwise",
+                        identifier: "combat.takeDamage.newAction"
+                    ) { step = .root }
                 }
             }
             .adaptiveContentWidth()
@@ -338,7 +337,8 @@ struct CombatTakeDamageView: View {
                     onDismiss: { showingProbeModal = false },
                     onRolled: { succeeded in probeSucceeded = succeeded },
                     initialModifier: WoundEffectResolver.probeModifier(
-                        damage: effectiveDamage, wundschwelle: wundschwelle)
+                        damage: effectiveDamage, wundschwelle: wundschwelle),
+                    accent: combatAccent
                 )
             }
         }
@@ -369,6 +369,9 @@ struct CombatTakeDamageView: View {
         }
 
         let previousLP = hero.derivedValues?.lebensenergie.current
+        let statesBefore = Dictionary(
+            uniqueKeysWithValues: hero.activeStates.map { ($0.def.id, $0.level) }
+        )
         if let dv = hero.derivedValues {
             dv.lebensenergie.current = max(0, dv.lebensenergie.current - total)
         }
@@ -418,7 +421,8 @@ struct CombatTakeDamageView: View {
         applied = AppliedDamage(
             previousLP: previousLP,
             droppedWeapon: droppedWeapon,
-            logEntries: written
+            logEntries: written,
+            statesBefore: statesBefore
         )
         confirmed = true
     }
@@ -465,9 +469,10 @@ struct WoundEffectReminderCard: View {
     let zone: HitZone
     /// Owned by the screen, so the damage total can include it.
     @Binding var extraDamage: Int?
-
-    /// `nil` until the player says how the opponent's check went.
-    @State private var probePassed: Bool? = nil
+    /// `nil` until the player says how the opponent's check went. Owned by the
+    /// screen too: an unanswered question is a reason not to offer the way out
+    /// yet, and the screen is what draws that button.
+    @Binding var probePassed: Bool?
 
     var body: some View {
         let effect = WoundEffectCatalog.effect(for: zone)
@@ -645,7 +650,8 @@ struct CombatMountDamageView: View {
                     hero: hero,
                     onDismiss: { showingProbeModal = false },
                     onRolled: { succeeded in probeSucceeded = succeeded },
-                    initialModifier: -penalty
+                    initialModifier: -penalty,
+                    accent: combatAccent
                 )
             }
         }
@@ -935,7 +941,8 @@ struct CombatMountPreCheckView: View {
                     talent: talent,
                     hero: hero,
                     onDismiss: { showingProbeModal = false },
-                    onRolled: { succeeded in probeSucceeded = succeeded }
+                    onRolled: { succeeded in probeSucceeded = succeeded },
+                    accent: combatAccent
                 )
             }
         }

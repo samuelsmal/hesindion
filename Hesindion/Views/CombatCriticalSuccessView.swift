@@ -21,6 +21,10 @@ struct CombatCriticalSuccessView: View {
     /// TP bonuses on the way to the damage roll; this screen only adds the
     /// table's own multiplier on top.
     var damageLines: [ModifierLine] = []
+    /// A multiplier the announcement already settled (a consecrated weapon
+    /// against a demon of its opposing deity). Carried through, not merged: the
+    /// damage screen names each rule separately.
+    var damageMultiplier: CriticalDamage = .unchanged
     let isRangedAttack: Bool
     let rangedDefensePenalty: Int
     @Binding var step: CombatStep
@@ -105,10 +109,15 @@ struct CombatCriticalSuccessView: View {
 
                             if let dice = categoryDice, let category {
                                 diceRow(dice)
-                                resultBox(title: category.title, text: category.effect)
 
-                                if usesDetail {
-                                    detailSection
+                                // One result, however many dice it took to reach
+                                // it. The category and the 1W20 refinement used
+                                // to be two green boxes of the same weight, drawn
+                                // as though they were separate outcomes.
+                                tableResultBox(category)
+
+                                if usesDetail, settledRefinement == nil {
+                                    rollDetailButton
                                 }
                             } else {
                                 rollCategoryButton
@@ -353,30 +362,25 @@ struct CombatCriticalSuccessView: View {
         .padding(.horizontal, 16)
     }
 
-    @ViewBuilder
-    private var detailSection: some View {
-        if let settled = settledRefinement, let die = detailDie, let effect = settled.effect {
-            resultBox(title: "\(L("critical.detail")) — \(die)", text: effect)
-        } else {
-            Button { showingDetailRoll = true } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "die.face.5.fill")
-                    // A band the table answers with "nochmal würfeln" is not a
-                    // result, so the button comes back rather than the screen
-                    // settling on nothing.
-                    Text(refinement?.isReroll == true ? L("critical.rerollPrompt") : L("critical.rollDetail"))
-                }
-                .font(.dsaHeading(.body))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.dsaDark)
-                .dsaBox(.raised)
+    private var rollDetailButton: some View {
+        Button { showingDetailRoll = true } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "die.face.5.fill")
+                // A band the table answers with "nochmal würfeln" is not a
+                // result, so the button comes back rather than the screen
+                // settling on nothing.
+                Text(refinement?.isReroll == true ? L("critical.rerollPrompt") : L("critical.rollDetail"))
             }
-            .buttonStyle(.dsaMotion)
-            .accessibilityIdentifier("combat.critical.rollDetail")
-            .padding(.horizontal, 16)
+            .font(.dsaHeading(.body))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.dsaDark)
+            .dsaBox(.raised)
         }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.critical.rollDetail")
+        .padding(.horizontal, 16)
     }
 
     /// The 2W6 that picks the table row, in the same box every other calculation
@@ -397,6 +401,61 @@ struct CombatCriticalSuccessView: View {
         .padding(.horizontal, 16)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.critical.dice")
+    }
+
+    /// Everything the table said, in one box: what the result is called, and the
+    /// effects it has, one numbered line each.
+    ///
+    /// The damage line is generated from the *resolved* multiplier rather than
+    /// quoted from either row, so a 1W20 band that halves its category's ×2 does
+    /// not leave the screen claiming both. Every other line is the published
+    /// sentence with its damage clause taken off, because the damage already has
+    /// a line — and had three: the category's prose, the refinement's prose
+    /// restating it, and the dark ×2 bar underneath.
+    private func tableResultBox(_ category: CriticalSuccessCategory) -> some View {
+        var effects: [String] = []
+        if let sentence = resolvedDamage.sentence { effects.append(sentence) }
+        if let text = category.additionalEffect { effects.append(text) }
+        if let text = settledRefinement?.additionalEffect, !effects.contains(text) {
+            effects.append(text)
+        }
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(category.title)
+                    .font(.dsaHeading(.body))
+                Spacer(minLength: 8)
+                if let die = detailDie, settledRefinement != nil {
+                    Text("1W20 \(die)")
+                        .font(.dsaMono(.caption2, emphasis: true))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            ForEach(Array(effects.enumerated()), id: \.offset) { index, text in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    // Numbered only when there is more than one thing to say —
+                    // a lone "1." is a list of one.
+                    if effects.count > 1 {
+                        Text("\(index + 1)")
+                            .font(.dsaMono(.caption2, emphasis: true))
+                            .foregroundStyle(Color.dsaCritical)
+                    }
+                    Text(text)
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.dsaCritical.opacity(0.12))
+        .dsaBox(.flush, stroke: Color.dsaCritical)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.critical.result")
     }
 
     private func resultBox(title: String, text: String) -> some View {
@@ -449,7 +508,8 @@ struct CombatCriticalSuccessView: View {
                     modifierLines: modifierLines,
                     isRangedAttack: isRangedAttack,
                     rangedDefensePenalty: rangedDefensePenalty,
-                    damageLines: damageLines
+                    damageLines: damageLines,
+                    damageMultiplier: damageMultiplier
                 )
             }
         } else {

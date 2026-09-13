@@ -66,6 +66,36 @@ enum UITestSeed {
             .compactMap { FokusRule(rawValue: String($0)) }
     }
 
+    /// `-uitest-weapon Rabenschnabel` swaps which of the hero's weapons is in
+    /// hand. The Karmale-Objekte flow is about a *particular* weapon, so it has
+    /// to be able to pick one.
+    static let weaponArgument = "-uitest-weapon"
+
+    private static var requestedWeaponName: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: weaponArgument), index + 1 < args.count else { return nil }
+        return args[index + 1]
+    }
+
+    /// `-uitest-consecrate Rabenschnabel` marks a weapon geweiht — the setting
+    /// the player would make on the hero settings screen.
+    static let consecrateArgument = "-uitest-consecrate"
+
+    private static var consecratedWeaponNames: [String] {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: consecrateArgument), index + 1 < args.count else { return [] }
+        return args[index + 1].split(separator: ",").map(String.init)
+    }
+
+    /// `-uitest-fresh-combat` leaves the hero *out* of a running fight, so
+    /// entering combat starts at the armour screen and walks the preparation
+    /// flow rather than resuming at the root.
+    static let freshCombatArgument = "-uitest-fresh-combat"
+
+    private static var wantsFreshCombat: Bool {
+        ProcessInfo.processInfo.arguments.contains(freshCombatArgument)
+    }
+
     /// The weapon the seeded hero goes into combat with. Named here because the
     /// UI tests navigate the attack flow that depends on it (a single one-handed
     /// melee weapon, no shield, no off-hand).
@@ -163,12 +193,15 @@ enum UITestSeed {
         // Drop the hero straight into a running fight: re-entering combat resumes at
         // the combat root (see `CombatView.onAppear`), which skips the armour /
         // setup / initiative / loadout screens the screenshots are not about.
-        hero.selectedWeaponName = weaponName
+        hero.selectedWeaponName = requestedWeaponName ?? weaponName
         hero.selectedOffHandName = nil
         hero.selectedShieldName = wantsShield ? shieldName : nil
-        hero.activeCombatId = UUID()
-        hero.activeCombatRound = 1
-        hero.activeCombatInitiative = 12
+        hero.consecratedWeapons = consecratedWeaponNames
+        if !wantsFreshCombat {
+            hero.activeCombatId = UUID()
+            hero.activeCombatRound = 1
+            hero.activeCombatInitiative = 12
+        }
 
         seedAdventure(into: context, hero: hero)
 

@@ -265,4 +265,101 @@ final class CriticalSuccessTableTests: XCTestCase {
             )
         }
     }
+
+    // MARK: - Reading a row without its damage clause
+
+    /// The screen states the multiplier once, as its own line, and prints every
+    /// other effect with the damage clause taken off. That only works while the
+    /// published rows keep the shape they have: a row that changes the damage
+    /// opens with the clause, and the clause ends at the first " und " or at the
+    /// full stop. This is what checks that across all 33 sub-tables — a row typed
+    /// in another shape fails here, not silently on screen.
+
+    /// Every opener the tables actually use. A new one must be added
+    /// deliberately, because it is a new sentence shape to split.
+    private static let damageClauseOpeners = [
+        "Die Trefferpunkte samt Modifikatoren werden ",
+        "Die Trefferpunkte werden um ",
+        "Der Treffer richtet +",
+    ]
+
+    private func allRows() -> [(label: String, text: String, damage: CriticalDamage)] {
+        var rows: [(String, String, CriticalDamage)] = []
+        for table in CriticalSuccessTableType.allCases {
+            for category in CriticalSuccessTable.categories(for: table) {
+                rows.append(("\(table.rawValue) 2W6 \(category.roll)", category.effect, category.damage))
+                for refinement in category.refinements {
+                    guard let effect = refinement.effect else { continue }
+                    rows.append((
+                        "\(table.rawValue) 2W6 \(category.roll) 1W20 \(refinement.range)",
+                        effect, refinement.damage
+                    ))
+                }
+            }
+        }
+        return rows
+    }
+
+    func testEveryDamageRowOpensWithItsDamageClause() {
+        for row in allRows() where row.damage != .unchanged {
+            XCTAssertTrue(
+                Self.damageClauseOpeners.contains(where: { row.text.hasPrefix($0) }),
+                "\(row.label) changes the damage but does not open with a damage clause: \(row.text)"
+            )
+        }
+    }
+
+    /// What is left after the clause is either nothing (the row only changes the
+    /// damage) or a sentence in its own right — never a fragment starting
+    /// mid-clause.
+    func testStrippingLeavesASentenceOrNothing() {
+        for row in allRows() where row.damage != .unchanged {
+            guard let rest = CriticalEffectText.withoutDamageClause(row.text, damage: row.damage) else {
+                XCTAssertTrue(row.text.hasSuffix("."), "\(row.label): no ' und ' and no full stop")
+                continue
+            }
+            XCTAssertFalse(rest.isEmpty, "\(row.label): empty remainder")
+            XCTAssertEqual(
+                String(rest.prefix(1)), String(rest.prefix(1)).uppercased(),
+                "\(row.label): remainder does not start a sentence — \(rest)"
+            )
+            XCTAssertFalse(
+                Self.damageClauseOpeners.contains(where: { rest.hasPrefix($0) }),
+                "\(row.label): the damage clause survived the strip — \(rest)"
+            )
+        }
+    }
+
+    /// A row that changes nothing about the damage is printed whole.
+    func testRowsWithoutDamageAreLeftAlone() {
+        for row in allRows() where row.damage == .unchanged {
+            XCTAssertEqual(
+                CriticalEffectText.withoutDamageClause(row.text, damage: .unchanged), row.text,
+                row.label
+            )
+        }
+    }
+
+    /// The case the merge exists for: "Schwerer Treffer" says only that the
+    /// damage doubles, so it contributes no line of its own, and its 1W20 bands
+    /// contribute the part that is not the doubling.
+    func testTheDoublingIsNotSaidTwice() {
+        let category = CriticalSuccessTable.category(7, table: .angriff)
+        XCTAssertEqual(category.title, "Schwerer Treffer")
+        XCTAssertNil(category.additionalEffect, "The category is the doubling and nothing else")
+
+        let refinement = CriticalSuccessTable.refinement(7, in: category)
+        XCTAssertEqual(refinement?.additionalEffect, "Der Gegner erhält 1 Stufe Schmerz für 2 KR.")
+    }
+
+    /// The damage line is generated from the resolved multiplier, so a band that
+    /// disagrees with its category cannot leave both claims on screen.
+    func testARefinementMayOverrideItsCategorysMultiplier() {
+        let category = CriticalSuccessTable.category(5, table: .angriff)
+        XCTAssertEqual(category.damage, .oneAndAHalf)   // Mittelschwerer schmerzhafter Treffer
+        XCTAssertTrue(
+            category.refinements.contains { $0.damage == .unchanged },
+            "\(category.title) has bands that leave the damage alone"
+        )
+    }
 }

@@ -81,12 +81,13 @@ struct CombatFernkampfSetupView: View {
                         trefferzoneSection
                     }
                     modifierSummary
+
+                    continueButton
+                        .padding(.top, 8)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
-
-            continueButton
         }
         .frame(maxWidth: .infinity)
     }
@@ -361,7 +362,11 @@ struct CombatFernkampfSetupView: View {
     // MARK: - Continue Button
 
     private var continueButton: some View {
-        Button {
+        CombatActionButton(
+            title: L("continue"),
+            identifier: "combat.fernkampf.continue",
+            isEnabled: hero.selectedRangedWeapon != nil
+        ) {
             guard let weapon = hero.selectedRangedWeapon else { return }
             announcedZone = hero.isFokusRuleActive(.trefferzonen) ? targetZone : nil
             let mods = buildModifierLines()
@@ -373,17 +378,7 @@ struct CombatFernkampfSetupView: View {
                 distanzTP: distanzTP,
                 modifierLines: mods
             )
-        } label: {
-            Text(L("continue"))
-                .font(.dsaHeading(.title3))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(hero.selectedRangedWeapon != nil ? combatAccent : Color.dsaDisabled)
-                .dsaBox(.raised)
         }
-        .buttonStyle(.dsaMotion)
-        .disabled(hero.selectedRangedWeapon == nil)
     }
 
     // MARK: - Reusable sub-view helpers (non-@ViewBuilder returning some View)
@@ -790,19 +785,11 @@ struct CombatFernkampfExecutionView: View {
             .buttonStyle(.dsaMotion)
 
         case .misserfolg:
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.dsaHeading(.body))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .dsaBox(.raised)
-            }
-            .buttonStyle(.dsaMotion)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.fernkampf.newAction"
+            ) { step = .root }
 
         case .kritischerPatzer:
             Button {

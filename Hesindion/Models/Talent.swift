@@ -40,4 +40,8 @@ extension Hero {
 extension Talent {
     static let selbstbeherrschungName = "Selbstbeherrschung"
     static let selbstbeherrschungRuleId = "TAL_8"
+    /// Sinnesschärfe — the check Aufmerksamkeit (SA_40) eases. Named here because
+    /// it sits one digit away from Selbstbeherrschung's id, and the hint was
+    /// wired to the wrong one.
+    static let sinnesschaerfeRuleId = "TAL_10"
 }

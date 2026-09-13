@@ -132,6 +132,14 @@ final class TrefferzonenScreenshotTests: XCTestCase {
             app.buttons["combat.takeDamage.rollExtraDamage"].exists,
             "The Wundeffekt damage must not be offered before the check is answered"
         )
+        // Nor the way out. Offering "Bestanden / Misslungen" and "Neue Aktion"
+        // side by side reads as though the question were optional, and leaving
+        // without answering drops an announced Wundeffekt out of the total
+        // without saying so.
+        XCTAssertFalse(
+            app.buttons["combat.dealDamage.newAction"].exists,
+            "The screen must not offer to leave while it is still asking"
+        )
         app.scrollUntilHittable(passed, maxSwipes: 4)
         captureScreenshot(app, named: "11-attack-wound-effect-reminder")
 
@@ -146,6 +154,10 @@ final class TrefferzonenScreenshotTests: XCTestCase {
             app.buttons["combat.takeDamage.rollExtraDamage"].exists,
             "A passed check must not offer Wundeffekt damage"
         )
+        XCTAssertTrue(
+            app.buttons["combat.dealDamage.newAction"].waitForExistence(timeout: UITest.timeout),
+            "Answered, the screen lets go"
+        )
         captureScreenshot(app, named: "32-attack-opponent-probe-passed")
 
         // Failed: the effect applies and its damage can be settled — rolled here,
@@ -159,6 +171,12 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         XCTAssertTrue(
             rollExtra.waitForExistence(timeout: UITest.timeout),
             "A failed check must offer the Wundeffekt damage"
+        )
+        // A failed check with the damage still unsettled is the same open
+        // question one step further on.
+        XCTAssertFalse(
+            app.buttons["combat.dealDamage.newAction"].exists,
+            "The Wundeffekt's own damage is part of the answer"
         )
         XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the Wundeffekt roll")
         rollExtra.tap()

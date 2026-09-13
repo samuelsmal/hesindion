@@ -280,7 +280,7 @@ struct CombatRootView: View {
                 // Loadout + Armor in one row
                 HStack(spacing: 8) {
                     if let weaponName = hero.selectedWeaponName {
-                        Image(systemName: "hammer.fill")
+                        WeaponIconView(hero.loadoutIcon(for: weaponName))
                             .font(.dsaBody(.caption))
                         Text(weaponName)
                             .font(.dsaMono(.caption, emphasis: true))
@@ -288,8 +288,7 @@ struct CombatRootView: View {
                             Text("+")
                                 .font(.dsaBody(.caption))
                                 .foregroundStyle(.secondary)
-                            let isShield = hero.selectedShield != nil
-                            Image(systemName: isShield ? "shield.fill" : "hammer.fill")
+                            WeaponIconView(hero.loadoutIcon(for: offHandName))
                                 .font(.dsaBody(.caption))
                             Text(offHandName)
                                 .font(.dsaMono(.caption, emphasis: true))
@@ -372,8 +371,7 @@ struct CombatRootView: View {
                     let canTwoHand: Bool = {
                         guard !isDualWield, !hasShield else { return false }
                         guard let w = hero.selectedWeapon else { return false }
-                        let excluded = ["CT_1", "CT_3"]
-                        return !excluded.contains(w.combatTechniqueId)
+                        return CombatTechniqueID(rawValue: w.combatTechniqueId)?.allowsTwoHandedGrip ?? true
                     }()
 
                     if isDualWield || canTwoHand || mountedActive {
