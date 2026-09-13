@@ -117,6 +117,10 @@ struct WoundEffectDamageControl: View {
             .disabled(isDisabled)
             .accessibilityIdentifier("combat.takeDamage.rollExtraDamage")
 
+            // At the table the number is as often spoken to you as rolled by you
+            // (ADR-0005), so neither route is the fallback of the other.
+            DSAOrDivider(label: "\(L("or")) — \(L("byHand"))")
+
             DSAStepper(
                 tint: isDisabled ? Color.dsaDisabled : Color.groupCombat,
                 decrementDisabled: isDisabled || rolled <= 0,

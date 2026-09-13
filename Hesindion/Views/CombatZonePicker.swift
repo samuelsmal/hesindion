@@ -46,7 +46,11 @@ struct CombatZonePicker: View {
                 .frame(maxWidth: .infinity)
                 .fixedSize(horizontal: false, vertical: true)
 
+                // Naming a zone and rolling for one are two routes to the same
+                // answer, so the group says so rather than stacking two controls
+                // that read as unrelated actions.
                 if let accessory {
+                    DSAOrDivider()
                     accessory
                 }
             }

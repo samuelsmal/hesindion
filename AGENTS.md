@@ -104,6 +104,8 @@ Three known intermittent failures — none of them regressions:
 The UI follows a **Neo-Brutalist** design theme.
 
 - **No system dialogs.** A confirmation is `DSAModal` + `DSAModalButton`, never `.alert` or `.confirmationDialog`: a system dialog brings rounded corners, blurred material and tinted text onto a screen built without any of the three. The same goes for `.contextMenu`
+- **An either/or is drawn as one group with a `DSAOrDivider` between the branches**, both at the same visual weight. Two controls stacked in a box read as two independent actions, and giving one the red fill turns a free choice into a recommendation the rules do not make
+- **One calculation grammar: `CombatBreakdownBox`.** Parts on top (value left, where it comes from right), the result in the dark bar inside the same border. A bare number in a dark bar is that grammar's *total*, so anything shown that way must say what it is the total of — a dice sum presented like a result reads as the damage
 - **A modal is a sibling of the layout, not a child of a panel.** It is drawn in the root `ZStack` next to `SplitContentLayout` (see `HeroDetailView`, and `SplitContentLayout` itself for the log's delete), because a modal placed inside a side panel is bounded by it — in landscape that is a third of the screen
 
 ## Swift Configuration

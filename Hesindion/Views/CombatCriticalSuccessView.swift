@@ -262,6 +262,10 @@ struct CombatCriticalSuccessView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            // Both routes carry the same fill. They used to be dark and red —
+            // this app's secondary/primary idiom — which recommended the table,
+            // and the rules recommend neither ("kann auch diese Tabelle benutzt
+            // werden").
             resolutionButton(
                 title: L(table.basicRuleKey),
                 subtitle: L("critical.basicRule"),
@@ -272,10 +276,12 @@ struct CombatCriticalSuccessView: View {
                 logIfResolved()
             }
 
+            DSAOrDivider()
+
             resolutionButton(
                 title: L("critical.rollTable"),
                 subtitle: L("critical.fokusRule"),
-                fill: combatAccent,
+                fill: Color.dsaDark,
                 identifier: "combat.critical.takeTable"
             ) {
                 resolution = .table
@@ -373,31 +379,23 @@ struct CombatCriticalSuccessView: View {
         }
     }
 
+    /// The 2W6 that picks the table row, in the same box every other calculation
+    /// in combat uses.
+    ///
+    /// It used to be `4 + 3 = 7` in three bare boxes, the sum in a dark bar — the
+    /// grammar of a result total, on a screen about damage, with nothing saying
+    /// what the 7 was. It reads as the damage, and the reader is left asking
+    /// whether the hit does 7 or 14. The total row now names it: a category roll.
     private func diceRow(_ dice: [Int]) -> some View {
-        HStack(spacing: 6) {
-            ForEach(Array(dice.enumerated()), id: \.offset) { index, value in
-                if index > 0 {
-                    Text("+").font(.dsaBody(.body))
-                }
-                Text("\(value)")
-                    .font(.dsaHeading(.title3))
-                    .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush)
-            }
-            Text("=").font(.dsaBody(.body))
-            Text("\(dice.reduce(0, +))")
-                .font(.dsaHeading(.title3))
-                .fontDesign(.monospaced)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Color.dsaDark)
-                .foregroundStyle(.white)
-                .dsaBox(.flush)
-        }
+        CombatBreakdownBox(
+            rows: dice.enumerated().map { index, value in
+                BreakdownRow(value: "\(value)", source: String(format: L("critical.die"), index + 1))
+            },
+            totalValue: "\(dice.reduce(0, +))",
+            totalSource: L("critical.category")
+        )
         .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.critical.dice")
     }
 
@@ -424,7 +422,7 @@ struct CombatCriticalSuccessView: View {
             Text(label)
                 .font(.dsaMono(.body, emphasis: true))
             Spacer()
-            Text(L("critical.damageEffect"))
+            Text(L("critical.damageEffectWhen"))
                 .font(.dsaBody(.caption2))
                 .opacity(0.75)
         }
