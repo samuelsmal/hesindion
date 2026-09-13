@@ -174,9 +174,21 @@ struct CombatTakeDamageView: View {
                 .background(Color.dsaDark)
                 .dsaBox(.flush)
 
-                // The Wundschwelle comparison, whether or not the focus rule is on.
-                // Skipped only when the wound-effect panel below is already
-                // printing the same line, so it is never stated twice.
+                if zonesActive {
+                    CombatHitZoneRow(
+                        zoneHit: $zoneHit,
+                        lastRoll: $lastRoll,
+                        isDisabled: confirmed,
+                        onRollZone: { showingZoneRoll = true }
+                    )
+                }
+
+                // One slot for what the damage means, always in the same place:
+                // below the zone, because the zone is what is being asked for
+                // first. The plain comparison stands here until the Wundeffekt
+                // panel can say more, and the panel then takes the same slot —
+                // rather than the threshold moving above the zone picker when no
+                // zone is chosen and below it when one is.
                 if wundschwelle > 0, !woundEffectPanelShown {
                     CombatWundschwelleRow(
                         effectiveDamage: effectiveDamage,
@@ -186,31 +198,22 @@ struct CombatTakeDamageView: View {
                     )
                 }
 
-                if zonesActive {
-                    CombatHitZoneRow(
-                        zoneHit: $zoneHit,
-                        lastRoll: $lastRoll,
-                        isDisabled: confirmed,
-                        onRollZone: { showingZoneRoll = true }
+                if zonesActive, let hit = zoneHit, multiple >= 1 {
+                    CombatWoundEffectPanel(
+                        hero: hero,
+                        hit: hit,
+                        effectiveDamage: effectiveDamage,
+                        wundschwelle: wundschwelle,
+                        probeSucceeded: $probeSucceeded,
+                        effectApplies: woundEffectApplies,
+                        extraDamage: $extraDamage,
+                        confirmed: confirmed,
+                        dropWeapon: $dropWeapon,
+                        onRollProbe: {
+                            probeTalent = hero.selbstbeherrschung
+                            showingProbeModal = true
+                        }
                     )
-
-                    if let hit = zoneHit, multiple >= 1 {
-                        CombatWoundEffectPanel(
-                            hero: hero,
-                            hit: hit,
-                            effectiveDamage: effectiveDamage,
-                            wundschwelle: wundschwelle,
-                            probeSucceeded: $probeSucceeded,
-                            effectApplies: woundEffectApplies,
-                            extraDamage: $extraDamage,
-                            confirmed: confirmed,
-                            dropWeapon: $dropWeapon,
-                            onRollProbe: {
-                                probeTalent = hero.selbstbeherrschung
-                                showingProbeModal = true
-                            }
-                        )
-                    }
                 }
 
                 }

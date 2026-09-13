@@ -274,7 +274,7 @@ struct CombatCriticalSuccessView: View {
 
             resolutionButton(
                 title: L("critical.rollTable"),
-                subtitle: L("critical.optionalRule"),
+                subtitle: L("critical.fokusRule"),
                 fill: combatAccent,
                 identifier: "combat.critical.takeTable"
             ) {

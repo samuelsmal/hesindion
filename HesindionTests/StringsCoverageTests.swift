@@ -44,7 +44,7 @@ final class StringsCoverageTests: XCTestCase {
             "critical.damageEffect", "critical.chooseTable",
             "critical.chooseMelee", "critical.chooseRanged",
             "critical.chooseResolution", "critical.basicRule",
-            "critical.optionalRule", "critical.rollTable",
+            "critical.fokusRule", "critical.rollTable",
         ] { assertLocalized(key) }
     }
 
