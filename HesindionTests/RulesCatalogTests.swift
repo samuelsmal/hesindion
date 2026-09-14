@@ -128,6 +128,12 @@ final class RulesCatalogTests: XCTestCase {
         for pointer in byHandStatePointers {
             XCTAssertTrue(stateIDs.contains(pointer.symbol), pointer.symbol)
         }
+        // The exception above is only valid while Belastung's rule lives in the
+        // engine; if that moves, this is the line that says so.
+        let belastung = RulesDatabase.shared.lookupCatalogEntry(ruleId: "COND_1")
+        XCTAssertEqual(belastung?.status, .byHand, "COND_1")
+        XCTAssertEqual(belastung?.pointer?.file, "Hesindion/Engine/SharedModifiers.swift",
+                       "COND_1 is exempt above only because its rule lives in the engine")
     }
 
     /// Importing a hero with an ability nothing handles should fail here, not go
