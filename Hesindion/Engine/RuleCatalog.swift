@@ -97,11 +97,20 @@ struct RuleCatalog {
     /// trapped: `Dictionary(uniqueKeysWithValues:)` would crash inside the
     /// standard library with nothing naming the id.
     init(rules: [CatalogRule], statuses: [CatalogEntry] = []) {
-        assert(Set(rules.map(\.id)).count == rules.count, "duplicate rule ids")
-        assert(Set(statuses.map(\.id)).count == statuses.count, "duplicate status ids")
+        assert(Set(rules.map(\.id)).count == rules.count,
+               "duplicate rule ids: \(Self.duplicates(in: rules.map(\.id)))")
+        assert(Set(statuses.map(\.id)).count == statuses.count,
+               "duplicate status ids: \(Self.duplicates(in: statuses.map(\.id)))")
         self.rules = Dictionary(rules.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         self.statuses = Dictionary(statuses.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        self.implemented = rules.sorted { $0.id < $1.id }
+        // Derived from the deduplicated dictionary, not from the input: in
+        // Release the assert is gone, and a duplicate id would otherwise leave
+        // the list and the lookup disagreeing about what the catalog holds.
+        self.implemented = self.rules.values.sorted { $0.id < $1.id }
+    }
+
+    private static func duplicates(in ids: [String]) -> [String] {
+        Dictionary(grouping: ids, by: { $0 }).filter { $0.value.count > 1 }.keys.sorted()
     }
 
     static let bundled = RuleCatalog(
