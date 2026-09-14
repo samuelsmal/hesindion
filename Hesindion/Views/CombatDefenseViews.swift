@@ -59,15 +59,6 @@ struct CombatOpponentDefenseView: View {
     /// TP/KK bonus, and any ability or GM ruling the app does not model, has to be
     /// enterable or the reported total is simply wrong.
     @State private var extraDamageModifier: Int = 0
-    /// The opponent's armour, if the GM says what it is.
-    ///
-    /// Not persisted and not part of `OpponentProfile`: the RS of the thing in
-    /// front of the hero is the GM's to hand over or to withhold, and a value
-    /// carried from one fight to the next would be a claim the app is not
-    /// entitled to make. It exists so the multipliers can land on the right side
-    /// of the subtraction — a consecrated weapon doubles the TP *before* armour,
-    /// and with no RS on the screen there was nothing for "before" to mean.
-    @State private var opponentRS: Int = 0
     @State private var hasLoggedDamage: Bool = false
 
     var body: some View {
@@ -221,8 +212,6 @@ struct CombatOpponentDefenseView: View {
                     damageSection(parsed: parsed)
                     tpModifierBox
                         .padding(.top, 8)
-                    opponentRSBox
-                        .padding(.top, 8)
                 }
 
                 // Nothing is applied — the opponent has no LP to subtract from
@@ -243,10 +232,8 @@ struct CombatOpponentDefenseView: View {
                    damageFinalRolls != nil {
                     CombatBreakdownBox(
                         rows: damageRows(parsed: parsed),
-                        totalValue: "\(appliedTotal ?? 0) \(opponentRS > 0 ? "LP" : L("tp"))",
-                        // Trefferpunkte until the armour is taken off them; what
-                        // is left after it is life points the opponent loses.
-                        totalSource: opponentRS > 0 ? L("damage.totalAfterArmour") : L("damage.totalTP"),
+                        totalValue: "\(appliedTotal ?? 0) \(L("tp"))",
+                        totalSource: L("damage.totalTP"),
                         sectionLabel: L("calculation.label")
                     )
                     .padding(.top, 8)
@@ -264,7 +251,6 @@ struct CombatOpponentDefenseView: View {
                 // already been announced, silently, out of the reported total.
                 if showDamage, damageFormula == nil || damageFinalRolls != nil, !woundEffectPending {
                     neueAktionButton
-                        .padding(.top, 8)
                 }
             }
             .adaptiveContentWidth()
@@ -385,38 +371,6 @@ struct CombatOpponentDefenseView: View {
         .accessibilityIdentifier("combat.dealDamage.modifier")
     }
 
-    /// The opponent's armour. Left at zero it says so and changes nothing; the
-    /// row appears in the calculation either way once it is not zero, because
-    /// where the subtraction happens is the whole point of having it.
-    private var opponentRSBox: some View {
-        VStack(spacing: 0) {
-            DSAStepper(
-                decrementIcon: "arrow.down",
-                incrementIcon: "arrow.up",
-                tint: combatAccent,
-                decrementDisabled: opponentRS <= 0,
-                incrementIdentifier: "combat.dealDamage.increaseOpponentRS",
-                onDecrement: { if opponentRS > 0 { opponentRS -= 1 } },
-                onIncrement: { opponentRS += 1 }
-            ) {
-                Text("\(opponentRS)")
-                    .font(.dsaHeading(.title3))
-                    .fontDesign(.monospaced)
-                    .padding(.vertical, 10)
-            }
-            .frame(maxWidth: .infinity)
-            Text(L("damage.opponentRS"))
-                .font(.dsaBody(.caption2))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.top, DSALayout.shadowOffset + 4)
-        }
-        // `children: .contain`, or the identifier below merges the stepper's two
-        // buttons into this one element and takes their identifiers with them.
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("combat.dealDamage.opponentRS")
-    }
-
     // MARK: - Reported total
 
     /// One row per part of the damage, in the order they apply.
@@ -461,12 +415,6 @@ struct CombatOpponentDefenseView: View {
         if let extra = woundEffectDamage, extra > 0 {
             rows.append(.signed(extra, L("trefferzone.woundEffect")))
         }
-        // Armour last. Both multipliers above it act on the Trefferpunkte, and
-        // the rules subtract armour from what they produce — "die Würfel werden
-        // geworfen, verdoppelt, dann wird der Rüstungsschutz abgezogen".
-        if opponentRS > 0 {
-            rows.append(.signed(-opponentRS, L("damage.opponentRS.row")))
-        }
         return rows
     }
 
@@ -479,15 +427,18 @@ struct CombatOpponentDefenseView: View {
         return criticalDamage.apply(to: damageMultiplier.apply(to: raw))
     }
 
-    /// The weapon's damage plus any settled Wundeffekt, less the opponent's
-    /// armour. `nil` until the dice are finalised, since there is nothing to
-    /// total before then.
+    /// The weapon's damage plus any settled Wundeffekt. `nil` until the dice are
+    /// finalised, since there is nothing to total before then.
+    ///
+    /// Trefferpunkte, and only ever Trefferpunkte. What the hero produces is TP;
+    /// the armour that stops some of them and the life points that are left are
+    /// the other side's, and the app does not model the other side (ADR-0005).
     private var appliedTotal: Int? {
         guard let formula = damageFormula,
               let parsed = DamageFormula.parse(formula),
               let rolls = damageFinalRolls else { return nil }
         _ = rolls
-        return max(0, weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0) - opponentRS)
+        return weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0)
     }
 
     /// What the announcement left on the other side's defence. Halving is not a

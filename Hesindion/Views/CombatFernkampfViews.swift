@@ -83,7 +83,6 @@ struct CombatFernkampfSetupView: View {
                     modifierSummary
 
                     continueButton
-                        .padding(.top, 8)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)

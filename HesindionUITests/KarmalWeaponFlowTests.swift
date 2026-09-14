@@ -98,13 +98,13 @@ final class KarmalWeaponFlowTests: XCTestCase {
         )
     }
 
-    /// Two doublings and an armour, in the order the rules put them.
+    /// Two doublings on one hit, each naming where it came from.
     ///
     /// A confirmed critical against a demon of the weapon's opposing deity:
     /// 1W6+4 with a scripted 5 is 9, doubled by the Weihe and doubled again by
-    /// the critical is 36, and the opponent's armour comes off *after* both —
-    /// "die Würfel werden geworfen, verdoppelt, dann wird der Rüstungsschutz
-    /// abgezogen". 36 − 4 = 32 LP. Subtracting the armour first would give 26.
+    /// the critical — 36 Trefferpunkte. What the armour stops and what the
+    /// opponent is left with is the GM's arithmetic; the app states the TP and
+    /// stops there (ADR-0005).
     @MainActor
     func testACriticalAgainstTheOpposingDeityDoublesTwiceBeforeArmour() {
         continueAfterFailure = false
@@ -151,19 +151,13 @@ final class KarmalWeaponFlowTests: XCTestCase {
         XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No damage calculation")
         XCTAssertTrue(app.staticTexts["36 TP"].exists, "9 doubled twice is 36")
 
-        // The opponent's armour, entered by hand and kept nowhere.
-        let moreRS = app.buttons["combat.dealDamage.increaseOpponentRS"]
-        XCTAssertTrue(moreRS.waitForExistence(timeout: UITest.timeout), "No opponent RS control")
-        _ = app.scrollUntilHittable(moreRS)
-        for _ in 0..<4 { moreRS.tap() }
-
-        XCTAssertTrue(
-            app.staticTexts["32 LP"].waitForExistence(timeout: UITest.timeout),
-            "Armour comes off after both doublings: 36 - 4 = 32, not 26"
-        )
         // Each multiplier says where it came from, not that it affects damage.
         XCTAssertTrue(app.staticTexts["Geweihte Waffe der Gegengottheit"].exists)
         XCTAssertTrue(app.staticTexts["Kritischer Treffer"].exists)
+
+        // The hero deals Trefferpunkte. Life points are the other side's, and
+        // the app must not claim to know what the hit left them with.
+        XCTAssertFalse(app.staticTexts["Verlorene Lebenspunkte"].exists)
 
         app.scrollUntilHittable(breakdown, maxSwipes: 4)
         captureScreenshot(app, named: "42-damage-karmal-critical")

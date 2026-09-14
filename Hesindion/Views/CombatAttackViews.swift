@@ -524,7 +524,6 @@ struct CombatAnnouncementView: View {
                         title: L("continue"),
                         identifier: "combat.announcement.continue"
                     ) { proceed() }
-                    .padding(.top, 8)
                 }
                 .adaptiveContentWidth()
                 .padding(.top, 8)
@@ -897,7 +896,11 @@ struct CombatAnnouncementView: View {
     /// against the rulebook. Hidden when the weapon's damage is all there is.
     @ViewBuilder
     private var damageBreakdown: some View {
-        if let formula = damageFormula, !damageBonusLines.isEmpty || karmalDamage != .unchanged {
+        // Always, not only when something modifies it. What the attack will hit
+        // for is half of what this screen is announcing, and hiding the box on
+        // an unmodified swing left the screen ending on the AT with the "Weiter"
+        // apparently welded to it.
+        if let formula = damageFormula {
             CombatBreakdownBox(
                 rows: damageRows(formula),
                 totalValue: effectiveDamageLabel(formula),

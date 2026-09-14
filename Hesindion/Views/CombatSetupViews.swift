@@ -178,7 +178,6 @@ struct CombatSetupView: View {
                         CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
                         step = .initiativeRoll
                     }
-                    .padding(.top, 16)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
@@ -453,7 +452,6 @@ struct CombatLoadoutEquipmentView: View {
                         CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
                         step = .root
                     }
-                    .padding(.top, 16)
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)

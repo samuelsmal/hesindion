@@ -22,6 +22,15 @@ struct CombatActionButton: View {
     var isEnabled: Bool = true
     let action: () -> Void
 
+    /// The gap this button keeps from whatever is above it.
+    ///
+    /// A raised box draws its shadow *outside* its bounds and reserves no layout
+    /// space for it (ADR-0008), so a nominal 8pt gap comes out as 3 and the
+    /// action reads as the last row of the calculation it follows. The button
+    /// carries the clearance itself rather than leaving every screen to
+    /// remember it.
+    static let topGap: CGFloat = DSALayout.shadowOffset + 12
+
     @ViewBuilder
     var body: some View {
         if let identifier {
@@ -32,6 +41,10 @@ struct CombatActionButton: View {
     }
 
     private var button: some View {
+        content.padding(.top, Self.topGap)
+    }
+
+    private var content: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if let icon {
