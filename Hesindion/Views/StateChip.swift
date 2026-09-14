@@ -34,9 +34,9 @@ struct StateChip: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: def.iconSystemName)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Text(label)
-                .font(.system(.caption, design: .monospaced, weight: .black))
+                .font(.dsaMono(.caption, emphasis: true))
                 .fixedSize()
         }
         .foregroundStyle(isDerived ? Color.primary : .white)
@@ -55,11 +55,11 @@ struct StateChip: View {
             Rectangle()
                 .stroke(
                     Color.secondary,
-                    style: StrokeStyle(lineWidth: DSALayout.secondaryBorder, dash: [4, 3])
+                    style: StrokeStyle(lineWidth: DSALayout.border, dash: [4, 3])
                 )
         } else {
             Rectangle()
-                .stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder)
+                .stroke(Color.dsaBorder, lineWidth: DSALayout.border)
         }
     }
 }

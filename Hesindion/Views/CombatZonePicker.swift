@@ -12,12 +12,23 @@ struct CombatZonePicker: View {
     var showsPenalty: Bool = false
     /// Show the Überrascht toggle (offence only).
     var showsSurprisedToggle: Bool = false
+    /// Offer the "keine Zone" chip. True on offence, where not aiming is a real
+    /// choice; false when the hero takes a hit, where the zone is either chosen
+    /// outright or rolled.
+    var allowsNoZone: Bool = true
     /// Hero owns SA_160 / SA_161 for the current domain.
     var hasSonderfertigkeit: Bool = false
     /// Which Sonderfertigkeit halves the Zonenaufschlag here — SA_160 *Gezielter Angriff*
     /// in melee, SA_161 *Gezielter Schuss* at range. The picker is shared by both screens,
     /// so the caller names its own SF; nil (the defence screen) shows no hint at all.
     var sfHalvesKey: String? = nil
+    /// Placed inside the chip group, not below it. On the take-damage screen the
+    /// 1W20 roll is not a lesser action than naming a zone — it is the other way
+    /// of answering the same question, so it carries the same weight.
+    /// The choice is made and locked, so the group gives up its shadow with the
+    /// rest of the screen (ADR-0010).
+    var isSettled: Bool = false
+    var accessory: AnyView? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -27,35 +38,43 @@ struct CombatZonePicker: View {
             // with the four humanoid zones); falls back to a wrapping grid when they
             // do not — a non-humanoid plan can offer up to ten zones, and five chips
             // at their minimum width already exceed an iPhone in portrait.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { chips }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
+            VStack(spacing: 8) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { chips }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
+                }
+                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
+
+                // Naming a zone and rolling for one are two routes to the same
+                // answer, so the group says so rather than stacking two controls
+                // that read as unrelated actions.
+                if let accessory {
+                    DSAOrDivider()
+                    accessory
+                }
             }
-            .frame(maxWidth: .infinity)
-            .fixedSize(horizontal: false, vertical: true)
+            .dsaOptionGroup(isSettled: isSettled)
 
             if showsSurprisedToggle {
-                Button { targetIsSurprised.toggle() } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: targetIsSurprised ? "checkmark.square.fill" : "square")
-                            .font(.system(.title3, weight: .semibold))
-                            .foregroundStyle(targetIsSurprised ? combatAccent : .secondary)
-                        Text(L("trefferzone.targetSurprised"))
-                            .font(.system(.body, weight: targetIsSurprised ? .bold : .regular))
-                            .foregroundStyle(.primary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 12)
-                    .background(targetIsSurprised ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(targetIsSurprised ? combatAccent : Color.dsaBorder, lineWidth: targetIsSurprised ? 3 : 2))
-                }
-                .buttonStyle(.plain)
+                // Filled when on, like the zone chip directly above it. It was
+                // the tickbox one row under a red-filled "Torso" — the same
+                // screen saying "selected" two different ways.
+                // What being surprised *does* — the Zonenaufschlag eases by 2
+                // (`HitZoneModifiers.penalty`) — rather than a bare statement of
+                // fact the player has to look up.
+                DSAToggleRow(
+                    title: L("trefferzone.targetSurprised"),
+                    isOn: $targetIsSurprised,
+                    accent: combatAccent,
+                    subtitle: L("trefferzone.surprisedEffect"),
+                    identifier: "combat.zone.surprised"
+                )
             }
 
             if showsPenalty, hasSonderfertigkeit, let sfHalvesKey {
                 Text(L(sfHalvesKey))
-                    .font(.system(.caption2))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
             }
         }
@@ -72,20 +91,25 @@ struct CombatZonePicker: View {
             } label: {
                 VStack(spacing: 2) {
                     Text(L(zone.nameKey))
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                     if showsPenalty {
                         Text("\(HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: hasSonderfertigkeit, targetIsSurprised: targetIsSurprised))")
-                            .font(.system(.caption2, design: .monospaced, weight: .bold))
+                            .font(.dsaMono(.caption2, emphasis: true))
                     }
                 }
             }
         }
 
-        chip(isSelected: selection == nil, identifier: "combat.zone.none") {
-            selection = nil
-        } label: {
-            Text(L("trefferzone.none"))
-                .font(.system(.caption, weight: .black))
+        // Only where declining to aim is a real choice — the attack announcement.
+        // When the hero *takes* a hit under the Fokus-Regel the zone is either
+        // chosen outright or rolled, so "keine Zone" is not an available answer.
+        if allowsNoZone {
+            chip(isSelected: selection == nil, identifier: "combat.zone.none") {
+                selection = nil
+            } label: {
+                Text(L("trefferzone.none"))
+                    .font(.dsaHeading(.caption))
+            }
         }
     }
 
@@ -105,9 +129,9 @@ struct CombatZonePicker: View {
                 // two-line zone chips, which carry a penalty beneath the name.
                 .frame(maxHeight: .infinity)
                 .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .accessibilityIdentifier(identifier)
     }
 }

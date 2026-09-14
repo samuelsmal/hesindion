@@ -51,6 +51,20 @@ final class Hero {
     /// rule does not change the schema.
     var fokusRules: [String] = []
 
+    /// The hero's Trefferzonen size category, once the player has set it. `nil`
+    /// means "not answered": `sizeCategory` then falls back to the species list.
+    var hitZoneSize: String?
+
+    /// Names of the melee weapons the player has marked as consecrated (geweiht
+    /// or heilig).
+    ///
+    /// Set by hand on the hero settings screen, never derived: no Optolith export
+    /// carries a Weihe, and a weapon's name says nothing about it — a
+    /// Rabenschnabel is Boron's symbol and also an ordinary war pick sold by the
+    /// hundred. Names rather than ids, like the loadout, so a re-import that
+    /// rebuilds the weapon rows does not lose the answer.
+    var consecratedWeapons: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -145,6 +159,11 @@ final class Hero {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.protectionValue }
     }
 
+    /// What the hero is wearing, for the preparation screen to restate.
+    var wornArmorNames: [String] {
+        armors.filter(\.isEquipped).map(\.name)
+    }
+
     /// Sum of BE from all equipped armor pieces.
     var totalEquippedBE: Int {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.encumbrance }
@@ -152,7 +171,7 @@ final class Hero {
 
     /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 2.
     var belastungsgewoehnungLevel: Int {
-        combatSpecialAbilities.first(where: { $0.ruleId == "SA_41" })?.tier ?? 0
+        specialAbility(CombatAbility.belastungsgewoehnung.rawValue)?.tier ?? 0
     }
 
     /// Effective BE after Belastungsgewöhnung reduction.
@@ -205,6 +224,58 @@ final class Hero {
         return shields.first { $0.name == name }
     }
 
+    /// The reach of one named piece of the loadout.
+    ///
+    /// Reach is a property of the thing in the hand, and the hand is not always
+    /// holding `selectedWeapon`: an off-hand attack swings the off-hand weapon, a
+    /// Schildattacke swings a shield, and Raufen swings a fist. Reading the main
+    /// weapon's reach for all of them gave a bare-handed hero the reach of the
+    /// sword they are not holding — and with the default `Mittel`, no penalty at
+    /// all against a spear.
+    ///
+    /// Unarmed is `kurz` (GRW, waffenlose Kampftechniken); shields carry their own
+    /// reach in the import. A name that matches nothing keeps the old `mittel`
+    /// rather than guessing a penalty onto it.
+    func reach(ofLoadoutNamed name: String) -> WeaponReach {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: weapon.reach) ?? .mittel
+        }
+        if let shield = shields.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: shield.reach) ?? .kurz
+        }
+        if name == "Raufen" { return .kurz }
+        return .mittel
+    }
+
+    // MARK: - Karmale Objekte
+
+    func isConsecrated(_ weaponName: String?) -> Bool {
+        guard let weaponName else { return false }
+        return consecratedWeapons.contains(weaponName)
+    }
+
+    func setConsecrated(_ weaponName: String, _ consecrated: Bool) {
+        if consecrated {
+            guard !consecratedWeapons.contains(weaponName) else { return }
+            consecratedWeapons.append(weaponName)
+        } else {
+            consecratedWeapons.removeAll { $0 == weaponName }
+        }
+    }
+
+    /// The glyph for one named piece of the loadout — the weapon's own combat
+    /// technique where it has one, a shield where it is one, a fist otherwise.
+    func loadoutIcon(for name: String) -> WeaponIcon {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(weapon.combatTechniqueId)
+        }
+        if let ranged = rangedWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(ranged.combatTechniqueId)
+        }
+        if shields.contains(where: { $0.name == name }) { return .system("shield.fill") }
+        return WeaponIcon.forTechnique(.raufen)   // Raufen, and anything unlisted
+    }
+
     /// Passive shield PA bonus applied to main weapon parade.
     var passiveShieldPABonus: Int {
         selectedShield?.paModifier ?? 0
@@ -221,11 +292,9 @@ final class Hero {
         advantages.contains { $0.ruleId == "ADV_5" }
     }
 
-    /// Level of Beidhändiger Kampf SA. Each level reduces the -2 dual-attack penalty by 1.
-    /// TODO: Confirm correct SA ruleId for "Beidhändiger Kampf" once identified in Optolith data.
+    /// Level of Beidhändiger Kampf (SA_42). Each level reduces the −2 dual-attack penalty by 1.
     var beidhaendigerKampfLevel: Int {
-        let sa = combatSpecialAbilities.first { $0.name.contains("Beidhändiger Kampf") }
-        return sa?.tier ?? 0
+        tier(of: .beidhaendigerKampf)
     }
 
     /// Dual-attack penalty: base -2, reduced by Beidhändiger Kampf level.
@@ -358,42 +427,47 @@ final class Hero {
 
     // MARK: - Combat Ability Detection
 
-    var hasAufmerksamkeit: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_40" }
+    /// A Sonderfertigkeit by rule id, wherever the importer filed it.
+    ///
+    /// The importer sorts an SA into `combatSpecialAbilities` or
+    /// `generalSpecialAbilities` by its Optolith group (`CombatSpecialAbilityGroup`).
+    /// It used to ask the effects table instead, which had rows for nine combat
+    /// abilities, so Plänkler-Formation (SA_884), Gezielter Angriff (SA_160) and
+    /// Gezielter Schuss (SA_161) all sat in the general list while every lookup
+    /// searched the combat one. Heroes imported before that fix still carry the
+    /// old split, so the lookup searches both lists and does not care.
+    func specialAbility(_ ruleId: String) -> HeroTrait? {
+        combatSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? generalSpecialAbilities.first { $0.ruleId == ruleId }
     }
 
-    var hasGolgaritenStil: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_661" }
+    func hasSpecialAbility(_ ruleId: String) -> Bool {
+        specialAbility(ruleId) != nil
     }
 
-    var hasBerittenerKampf: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_43" }
+    /// The tier of a Sonderfertigkeit, or 0 when the hero does not have it. An
+    /// owned ability with no tier in the export counts as I.
+    func specialAbilityTier(_ ruleId: String) -> Int {
+        guard let trait = specialAbility(ruleId) else { return 0 }
+        return trait.tier ?? 1
     }
 
-    /// Finte tier (0 if not owned). SA_48.
-    var finteTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_48" }?.tier ?? 0
-    }
+    func has(_ ability: CombatAbility) -> Bool { hasSpecialAbility(ability.rawValue) }
 
-    /// Wuchtschlag tier (0 if not owned). SA_67.
-    var wuchtschlagTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_67" }?.tier ?? 0
-    }
+    func tier(of ability: CombatAbility) -> Int { specialAbilityTier(ability.rawValue) }
 
-    /// True if hero has Vorstoß (SA_66).
-    var hasVorstoss: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_66" }
-    }
-
-    /// True if hero has Schildspalter (SA_59).
-    var hasSchildspalter: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_59" }
-    }
-
-    /// True if hero has Plänkler-Formation (SA_884).
-    var hasPlaenklerFormation: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_884" }
-    }
+    var hasAufmerksamkeit: Bool { has(.aufmerksamkeit) }
+    var hasGolgaritenStil: Bool { has(.golgaritenStil) }
+    var hasBerittenerKampf: Bool { has(.berittenerKampf) }
+    var finteTier: Int { tier(of: .finte) }
+    var wuchtschlagTier: Int { tier(of: .wuchtschlag) }
+    var hasVorstoss: Bool { has(.vorstoss) }
+    var hasSchildspalter: Bool { has(.schildspalter) }
+    var hasPlaenklerFormation: Bool { has(.plaenklerFormation) }
+    /// Gezielter Angriff and Gezielter Schuss — each halves the Zonenaufschlag
+    /// for its own kind of attack.
+    var hasGezielterAngriff: Bool { has(.gezielterAngriff) }
+    var hasGezielterSchuss: Bool { has(.gezielterSchuss) }
 
     /// Whether Golgariten-Stil conditions are met (mounted + Rabenschnabel + Großschild).
     func golgaritenActive(mounted: Bool) -> Bool {
@@ -419,6 +493,11 @@ final class Hero {
     }
 
     /// Whether combat setup screen is needed.
+    /// Whether the preparation screen has anything *situational* to ask about.
+    ///
+    /// No longer a routing gate — the screen is where the loadout is chosen, so
+    /// every hero sees it — but the formation and mount sections still appear
+    /// only for a hero who has either.
     var needsCombatSetup: Bool {
         hasPlaenklerFormation || hasMount
     }

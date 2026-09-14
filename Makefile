@@ -9,6 +9,10 @@ BUNDLE_ID = org.savoba.Hesindion
 
 SAMPLE_HEROS = docs/sample_heros
 
+# Optolith source data the rules database is built from (not in this repo).
+DSA_DATA ?= ../../dsa_companion_data/Data
+RULES_DB = Hesindion/Resources/rules.db
+
 # Physical devices
 PHYSICAL_DEVICE_NAME = Karl
 PHYSICAL_DEVICE_ID = $(shell xcrun devicectl list devices 2>/dev/null | grep '$(PHYSICAL_DEVICE_NAME)' | awk '{print $$3}')
@@ -21,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db
 
 build:
 	xcodebuild \
@@ -117,6 +121,24 @@ clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -sdk $(SDK) clean
 	rm -rf $(DERIVED_DATA)
 
+# The build script's own tests (validate, snapshot, import). Pure Python, seconds.
+test-rules-db:
+	python3 -m unittest discover -s scripts/build_rules_db -p 'test_*.py' -v
+
+# Rebuild the bundled rules database from the Optolith YAML and the rules
+# catalog. Fails on a catalog problem or when the status counts drift from
+# specs/data/rules-catalog.snapshot.json; any non-empty UPDATE_SNAPSHOT value
+# rewrites the snapshot. The script builds to a temp file and renames on
+# success, so a failed build leaves the old database in place.
+rules-db: test-rules-db
+	python3 scripts/build_rules_db/build_db.py \
+		--source '$(DSA_DATA)' \
+		--catalog specs/data/rules-catalog.yaml \
+		--snapshot specs/data/rules-catalog.snapshot.json \
+		--repo-root . \
+		$(if $(UPDATE_SNAPSHOT),--update-snapshot,) \
+		--output '$(RULES_DB)'
+
 # ── Testing ──────────────────────────────────────────────────────────────────
 
 # Force xcodebuild onto the single named simulator. Without these, test
@@ -183,7 +205,7 @@ test-ui-record-only: boot
 #
 # xcresulttool names exported files by attachment payload, so the manifest is
 # used to rename them back to the XCTAttachment names the tests set
-# (01-fokus-settings … 04-wound-effect-panel).
+# (01-hero-list … 20-critical-hit-table).
 SCREENSHOT_DIR = docs/screenshots
 SCREENSHOT_RESULT = $(DERIVED_DATA)/screenshots.xcresult
 SCREENSHOT_EXPORT = $(DERIVED_DATA)/screenshot-export

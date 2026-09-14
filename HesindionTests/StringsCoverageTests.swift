@@ -33,6 +33,21 @@ final class StringsCoverageTests: XCTestCase {
         ] { assertLocalized(key) }
     }
 
+    /// The critical-table screen's own chrome. The table titles and the
+    /// "replaces …" notes are covered by `CriticalSuccessTableTests`, which can
+    /// derive them from the enum; these are hand-written call sites and so have
+    /// nowhere else to be checked.
+    func testCriticalTableScreenKeysAreLocalized() {
+        for key in [
+            "critical.title", "critical.category", "critical.detail",
+            "critical.rollCategory", "critical.rollDetail", "critical.rerollPrompt",
+            "critical.damageEffect", "critical.chooseTable",
+            "critical.chooseMelee", "critical.chooseRanged",
+            "critical.chooseResolution", "critical.basicRule",
+            "critical.fokusRule", "critical.rollTable",
+        ] { assertLocalized(key) }
+    }
+
     /// M7: the melee and ranged zone pickers share one component but not one hint —
     /// SA_160 *Gezielter Angriff* halves in melee, SA_161 *Gezielter Schuss* at range.
     /// A single shared string was necessarily wrong on one of the two screens.

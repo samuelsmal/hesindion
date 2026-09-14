@@ -24,31 +24,31 @@ struct CombatSpellSelectionView: View {
                     step = .root
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 Text(L("spellSelection"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 4) {
@@ -58,22 +58,22 @@ struct CombatSpellSelectionView: View {
                         } label: {
                             HStack {
                                 Text(spell.name)
-                                    .font(.system(.body, weight: .bold))
+                                    .font(.dsaBody(.body))
                                     .foregroundStyle(.primary)
                                 Spacer()
                                 Text("FW \(spell.value)")
-                                    .font(.system(.body, design: .monospaced, weight: .black))
+                                    .font(.dsaMono(.body, emphasis: true))
                                     .foregroundStyle(Color.groupMagic)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(.caption, weight: .bold))
+                                    .font(.dsaBody(.caption))
                                     .foregroundStyle(.secondary)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 14)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
                 }
                 .adaptiveContentWidth()
@@ -155,19 +155,19 @@ struct CombatSpellSetupView: View {
                     step = .spellSelection
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 VStack(spacing: 2) {
                     Text(L("spellSetup"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.8))
                     Text(spell.name)
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(.white)
                 }
 
@@ -175,16 +175,16 @@ struct CombatSpellSetupView: View {
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -192,30 +192,30 @@ struct CombatSpellSetupView: View {
                     HStack(spacing: 16) {
                         HStack(spacing: 4) {
                             Text("FW")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                                 .foregroundStyle(.secondary)
                             Text("\(spell.value)")
-                                .font(.system(.body, weight: .black))
+                                .font(.dsaHeading(.body))
                                 .fontDesign(.monospaced)
                         }
 
                         if let cost = baseCost {
                             HStack(spacing: 4) {
                                 Text("AsP")
-                                    .font(.system(.caption, weight: .bold))
+                                    .font(.dsaBody(.caption))
                                     .foregroundStyle(.secondary)
                                 Text("\(cost)")
-                                    .font(.system(.body, weight: .black))
+                                    .font(.dsaHeading(.body))
                                     .fontDesign(.monospaced)
                             }
                         }
 
                         HStack(spacing: 4) {
                             Image(systemName: "clock")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                                 .foregroundStyle(.secondary)
                             Text("\(castingActions) \(castingActions == 1 ? "Aktion" : "Aktionen")")
-                                .font(.system(.body, weight: .bold))
+                                .font(.dsaBody(.body))
                         }
 
                         Spacer()
@@ -223,7 +223,7 @@ struct CombatSpellSetupView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.secondarySystemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
 
                     // Modifications section
                     combatSectionLabel(L("modifications.section"))
@@ -244,20 +244,20 @@ struct CombatSpellSetupView: View {
                         // Max modifications info
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle.fill")
-                                .font(.system(.caption2, weight: .bold))
+                                .font(.dsaBody(.caption2))
                                 .foregroundStyle(Color.groupMagic)
                             Text(String(format: L("maxModifications"), maxModifications))
-                                .font(.system(.caption2, weight: .bold))
+                                .font(.dsaBody(.caption2))
                                 .foregroundStyle(Color.groupMagic)
                             Spacer()
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Color.groupMagic.opacity(0.1))
-                        .overlay(Rectangle().stroke(Color.groupMagic, lineWidth: 1))
+                        .dsaBox(.flush, stroke: Color.groupMagic)
                     }
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
 
                     // Modifier summary
                     let mods = modifierLines
@@ -266,17 +266,17 @@ struct CombatSpellSetupView: View {
                             ForEach(mods) { line in
                                 HStack(spacing: 8) {
                                     Image(systemName: line.value < 0 ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                                        .font(.system(.caption2, weight: .bold))
+                                        .font(.dsaBody(.caption2))
                                         .foregroundStyle(line.value < 0 ? Color.groupCombat : Color.groupMagic)
                                     Text("\(line.source): \(line.value >= 0 ? "+" : "")\(line.value)")
-                                        .font(.system(.caption2, weight: .bold))
+                                        .font(.dsaBody(.caption2))
                                         .foregroundStyle(line.value < 0 ? Color.groupCombat : Color.groupMagic)
                                     Spacer()
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
                                 .background((line.value < 0 ? Color.groupCombat : Color.groupMagic).opacity(0.1))
-                                .overlay(Rectangle().stroke(line.value < 0 ? Color.groupCombat : Color.groupMagic, lineWidth: 2))
+                                .dsaBox(.flush, stroke: line.value < 0 ? Color.groupCombat : Color.groupMagic)
                             }
                         }
                         .padding(.top, 8)
@@ -292,14 +292,14 @@ struct CombatSpellSetupView: View {
                         }
                     } label: {
                         Text(castingActions <= 1 ? L("continue") : "\(L("continue")) (\(castingActions) \(castingActions == 1 ? "Aktion" : "Aktionen"))")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.groupMagic)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.raised)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                     .padding(.top, 16)
                 }
                 .adaptiveContentWidth()
@@ -313,7 +313,7 @@ struct CombatSpellSetupView: View {
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
             Text(label)
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
@@ -321,49 +321,49 @@ struct CombatSpellSetupView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 
     private func stepperRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
         HStack {
             Text(label)
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             HStack(spacing: 0) {
                 Button {
                     if value.wrappedValue > range.lowerBound { value.wrappedValue -= 1 }
                 } label: {
                     Text("\u{2212}")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Text("\(value.wrappedValue)")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .frame(minWidth: 24)
 
                 Button {
                     if value.wrappedValue < range.upperBound { value.wrappedValue += 1 }
                 } label: {
                     Text("+")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 
     private var distractionPicker: some View {
         HStack {
             Text(L("mod.distraction"))
-                .font(.system(.caption, weight: .medium))
+                .font(.dsaBody(.caption))
             Spacer()
             Picker("", selection: $distractionLevel) {
                 Text(L("mod.distraction.none")).tag(0)
@@ -376,7 +376,7 @@ struct CombatSpellSetupView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .overlay(Rectangle().stroke(Color.dsaBorder.opacity(0.3), lineWidth: 1))
+        .dsaBox(.flush, stroke: Color.dsaBorder.opacity(0.3))
     }
 }
 
@@ -446,31 +446,31 @@ struct CombatSpellExecutionView: View {
                     step = .root
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Spacer()
 
                 Text(spell.name)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(Color.groupMagic)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             if let checkAttrs = checkAttributes {
                 SkillCheckModal(
@@ -494,10 +494,10 @@ struct CombatSpellExecutionView: View {
                 VStack(spacing: 12) {
                     Spacer()
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(.largeTitle))
+                        .font(.dsaHeading(.largeTitle))
                         .foregroundStyle(.secondary)
                     Text(L("unknownTalent"))
-                        .font(.system(.body, weight: .semibold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }

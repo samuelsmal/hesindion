@@ -34,14 +34,20 @@ enum MeleeModifiers {
         return ModifierLine(value: 1, source: L("source.plaenkler"))
     }
 
+    /// The reach of the thing being swung: the announced weapon where the screen
+    /// says which, the main weapon otherwise.
+    static func attackerReach(_ ctx: ModifierContext) -> WeaponReach {
+        if let reach = ctx.attackerReach { return reach }
+        return WeaponReach(rawValue: ctx.hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
+    }
+
     /// Weapon reach mismatch penalty.
     static let weaponReach = ModifierDefinition(
         id: "weaponReach",
         domains: [.meleeAttack]
     ) { ctx in
         guard let opponentReach = ctx.opponentReach else { return nil }
-        let heroReach = WeaponReach(rawValue: ctx.hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
-        let penalty = heroReach.atPenaltyAgainst(opponentReach)
+        let penalty = attackerReach(ctx).atPenaltyAgainst(opponentReach)
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("source.reach"))
     }
@@ -81,8 +87,7 @@ enum MeleeModifiers {
         domains: [.meleeAttack]
     ) { ctx in
         guard ctx.beengteUmgebung else { return nil }
-        let heroReach = WeaponReach(rawValue: ctx.hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
-        let penalty = heroReach.beengteUmgebungPenalty
+        let penalty = attackerReach(ctx).beengteUmgebungPenalty
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("beengteUmgebung"))
     }

@@ -24,6 +24,7 @@ struct AdventureDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                nameHeading
                 adventureHeader
                 controlsBar
                 weatherTimeline
@@ -33,14 +34,8 @@ struct AdventureDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Color(UIColor.systemBackground))
-        .navigationTitle(adventure.name)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(adventure.name)
-                    .font(.system(.title3, design: .default, weight: .black))
-            }
-        }
         .sheet(isPresented: $isShowingAddStretch) {
             NavigationStack {
                 AddStretchSheet(adventure: adventure)
@@ -60,13 +55,30 @@ struct AdventureDetailView: View {
 
     // MARK: - Header
 
+    /// The adventure's name, in the boxed heading the hero pane uses.
+    ///
+    /// It used to be the bare navigation title — system chrome, on a screen where
+    /// everything else is a bordered box. A heading that is not in the design
+    /// language reads as belonging to the OS rather than to the app.
+    private var nameHeading: some View {
+        Text(adventure.name)
+            .font(.dsaHeading(.largeTitle))
+            .foregroundStyle(.white)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.groupAdventure)
+            .dsaBox(.raised)
+            .padding(.horizontal, DSALayout.horizontalPadding)
+            .padding(.bottom, 12)
+    }
+
     private var adventureHeader: some View {
         VStack(spacing: 4) {
             Text(currentRegion.displayName)
-                .font(.system(.subheadline, weight: .bold))
+                .font(.dsaBody(.subheadline))
                 .foregroundStyle(.secondary)
             Text(adventure.currentDate.formatted())
-                .font(.system(.title2, design: .monospaced, weight: .black))
+                .font(.dsaMono(.title2, emphasis: true))
 
             if !adventure.heroes.isEmpty {
                 HStack(spacing: -8) {
@@ -80,7 +92,11 @@ struct AdventureDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .background(Color.groupAdventure.opacity(0.15))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.primaryBorder))
+        .dsaBox(.flush)
+        // Inset like everything below it. The heading and this bar were the only
+        // content flush with the pane edges, which is what made them read as too
+        // wide next to the hero pane's boxed name.
+        .padding(.horizontal, DSALayout.horizontalPadding)
     }
 
     @ViewBuilder
@@ -90,52 +106,63 @@ struct AdventureDetailView: View {
             Image(uiImage: uiImage)
                 .resizable().scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.dsaBorder, lineWidth: 1))
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 12))
                 .frame(width: size, height: size)
                 .background(Color.groupAdventure.opacity(0.3))
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.dsaBorder, lineWidth: 1))
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         }
     }
 
     // MARK: - Controls
 
     private var controlsBar: some View {
-        VStack(spacing: 8) {
+        // The buttons cast now, and a shadow draws outside its own bounds without
+        // reserving layout space, so an 8pt stack put each shadow on top of the
+        // next button. Every gap on this screen is the visible gap plus the
+        // offset the shadow spends.
+        VStack(spacing: 8 + DSALayout.shadowOffset) {
             weatherButton(L("weather.add"), icon: "plus", filled: true) { isShowingAddStretch = true }
-            HStack(spacing: 8) {
+            // 8pt of visible gap plus the 5pt the left button's shadow spends
+            // outside its own bounds.
+            HStack(spacing: 8 + DSALayout.shadowOffset) {
                 weatherButton(L("weather.rules"), icon: "info.circle", filled: false, fillHeight: true) { isShowingRules = true }
                 ShareLink(item: exportText()) {
                     weatherButtonLabel(L("export"), icon: "square.and.arrow.up", filled: false, fillHeight: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
-        .padding(.vertical, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 12 + DSALayout.shadowOffset)
     }
 
     private func weatherButton(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) { weatherButtonLabel(title, icon: icon, filled: filled, fillHeight: fillHeight) }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
     }
 
     private func weatherButtonLabel(_ title: String, icon: String, filled: Bool, fillHeight: Bool = false) -> some View {
         Label(title, systemImage: icon)
-            .font(.system(.subheadline, weight: .bold))
+            .font(.dsaBody(.subheadline))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity)
             .frame(maxHeight: fillHeight ? .infinity : nil)
             .padding(.vertical, 12)
-            .background(filled ? Color.groupAdventure : Color.clear)
+            .background(filled ? Color.groupAdventure : Color(UIColor.systemBackground))
             .foregroundStyle(filled ? .black : Color.groupAdventure)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            // Full-width action buttons, so they cast (ADR-0009). They were the
+            // last screen the promotion sweep missed: it matched call sites that
+            // applied `.dsaBox` directly, and these three route through a shared
+            // label builder.
+            .dsaBox(.raised)
     }
 
     // MARK: - Timeline
@@ -151,15 +178,18 @@ struct AdventureDetailView: View {
                 .padding(.vertical, 40)
             }
 
-            ForEach(sortedWeatherDays, id: \.id) { weatherDay in
-                VStack(spacing: 0) {
+            // One box around the run of days, dividers within — rather than a
+            // bordered card per day, which read as a stack of heavy black bands.
+            VStack(spacing: 0) {
+                ForEach(sortedWeatherDays, id: \.id) { weatherDay in
                     if weatherDay.isTimeJump {
                         timeJumpDivider()
                     }
                     Button { editingDay = weatherDay } label: { WeatherDayRow(weatherDay: weatherDay) }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                 }
             }
+            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
     }
@@ -168,7 +198,7 @@ struct AdventureDetailView: View {
         HStack(spacing: 8) {
             Rectangle().fill(Color.groupAdventure).frame(height: 1)
             Text(L("timeJump"))
-                .font(.system(.caption2, weight: .black))
+                .font(.dsaHeading(.caption2))
                 .foregroundStyle(Color.groupAdventure)
                 .textCase(.uppercase)
             Rectangle().fill(Color.groupAdventure).frame(height: 1)
@@ -186,7 +216,8 @@ struct AdventureDetailView: View {
             .padding(DSALayout.contentPadding)
         }
         .padding(.horizontal, DSALayout.horizontalPadding)
-        .padding(.vertical, 8)
+        .padding(.top, 12 + DSALayout.shadowOffset)
+        .padding(.bottom, 16)
     }
 
     // MARK: - Actions

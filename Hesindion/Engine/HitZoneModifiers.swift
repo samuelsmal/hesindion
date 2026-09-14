@@ -37,7 +37,7 @@ enum HitZoneModifiers {
     ) { ctx in
         guard let zone = ctx.targetHitZone else { return nil }
         let ruleId = ctx.domain == .rangedAttack ? "SA_161" : "SA_160"
-        let hasSF = ctx.hero.combatSpecialAbilities.contains { $0.ruleId == ruleId }
+        let hasSF = ctx.hero.hasSpecialAbility(ruleId)
         let value = penalty(for: zone, hasSonderfertigkeit: hasSF, targetIsSurprised: ctx.targetIsSurprised)
         guard value != 0 else { return nil }
         return ModifierLine(value: value, source: "\(L("modifier.trefferzone")): \(L(zone.nameKey))")

@@ -81,12 +81,12 @@ struct CombatFernkampfSetupView: View {
                         trefferzoneSection
                     }
                     modifierSummary
+
+                    continueButton
                 }
                 .adaptiveContentWidth()
                 .padding(.bottom, 16)
             }
-
-            continueButton
         }
         .frame(maxWidth: .infinity)
     }
@@ -97,20 +97,20 @@ struct CombatFernkampfSetupView: View {
         HStack {
             Button { step = .root } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             Spacer()
 
             VStack(spacing: 1) {
                 Text(L("fernkampf.setup"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 if let weapon = hero.selectedRangedWeapon {
                     Text(weapon.name)
-                        .font(.system(.caption, weight: .semibold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
@@ -119,16 +119,16 @@ struct CombatFernkampfSetupView: View {
 
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(combatAccent)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.raised)
     }
 
     // MARK: - Distanz Section
@@ -251,27 +251,12 @@ struct CombatFernkampfSetupView: View {
         VStack(spacing: 0) {
             combatSectionLabel(L("fernkampf.kampfgetuemmel"))
 
-            Button {
-                kampfgetuemmel.toggle()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: kampfgetuemmel ? "checkmark.square.fill" : "square")
-                        .font(.system(.title3, weight: .semibold))
-                        .foregroundStyle(kampfgetuemmel ? combatAccent : .secondary)
-                    Text(L("fernkampf.kampfgetuemmel"))
-                        .font(.system(.body, weight: kampfgetuemmel ? .bold : .regular))
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Text("\u{2013}2")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                        .foregroundStyle(kampfgetuemmel ? combatAccent : .secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-                .background(kampfgetuemmel ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(kampfgetuemmel ? combatAccent : Color.dsaBorder, lineWidth: kampfgetuemmel ? 3 : 2))
-            }
-            .buttonStyle(.plain)
+            DSAToggleRow(
+                title: L("fernkampf.kampfgetuemmel"),
+                isOn: $kampfgetuemmel,
+                accent: combatAccent,
+                detail: "\u{2013}2"
+            )
         }
     }
 
@@ -327,7 +312,7 @@ struct CombatFernkampfSetupView: View {
             targetIsSurprised: $targetIsSurprised,
             showsPenalty: true,
             showsSurprisedToggle: true,
-            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_161" },
+            hasSonderfertigkeit: hero.hasGezielterSchuss,
             sfHalvesKey: "trefferzone.sfHalves.ranged"
         )
     }
@@ -356,18 +341,18 @@ struct CombatFernkampfSetupView: View {
                     // Total
                     HStack {
                         Text("FK \(L("fernkampf"))")
-                            .font(.system(.body, weight: .black))
+                            .font(.dsaHeading(.body))
                             .foregroundStyle(.primary)
                         Spacer()
                         Text("\(effectiveFK)")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .fontDesign(.monospaced)
                             .foregroundStyle(effectiveFK < baseFK ? .red : (effectiveFK > baseFK ? combatAccent : .primary))
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
                 }
             }
         }
@@ -376,7 +361,11 @@ struct CombatFernkampfSetupView: View {
     // MARK: - Continue Button
 
     private var continueButton: some View {
-        Button {
+        CombatActionButton(
+            title: L("continue"),
+            identifier: "combat.fernkampf.continue",
+            isEnabled: hero.selectedRangedWeapon != nil
+        ) {
             guard let weapon = hero.selectedRangedWeapon else { return }
             announcedZone = hero.isFokusRuleActive(.trefferzonen) ? targetZone : nil
             let mods = buildModifierLines()
@@ -388,17 +377,7 @@ struct CombatFernkampfSetupView: View {
                 distanzTP: distanzTP,
                 modifierLines: mods
             )
-        } label: {
-            Text(L("continue"))
-                .font(.system(.title3, weight: .black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(hero.selectedRangedWeapon != nil ? combatAccent : Color.gray)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
         }
-        .buttonStyle(.plain)
-        .disabled(hero.selectedRangedWeapon == nil)
     }
 
     // MARK: - Reusable sub-view helpers (non-@ViewBuilder returning some View)
@@ -407,28 +386,28 @@ struct CombatFernkampfSetupView: View {
         Button(action: action) {
             VStack(spacing: 2) {
                 Text(label)
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text(mod)
-                    .font(.system(.caption2, design: .monospaced, weight: .semibold))
+                    .font(.dsaMono(.caption2, emphasis: false))
                     .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
             }
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     private func modSummaryRow(label: String, value: Int, isBase: Bool) -> some View {
         HStack {
             Text(label)
-                .font(.system(.caption, weight: isBase ? .bold : .regular))
+                .font(isBase ? .dsaHeading(.caption) : .dsaBody(.caption))
                 .foregroundStyle(isBase ? .primary : .secondary)
             Spacer()
             Text(isBase ? "\(value)" : (value >= 0 ? "+\(value)" : "\(value)"))
-                .font(.system(.caption, design: .monospaced, weight: .semibold))
+                .font(.dsaMono(.caption, emphasis: false))
                 .foregroundStyle(value < 0 ? .red : (value > 0 ? combatAccent : .secondary))
         }
         .padding(.horizontal, 12)
@@ -438,9 +417,9 @@ struct CombatFernkampfSetupView: View {
     private func tpHint(_ tp: Int) -> some View {
         HStack(spacing: 4) {
             Image(systemName: "info.circle")
-                .font(.system(.caption2, weight: .semibold))
+                .font(.dsaBody(.caption2))
             Text("\(L("tp")) \(tp > 0 ? "+\(tp)" : "\(tp)")")
-                .font(.system(.caption, weight: .semibold))
+                .font(.dsaBody(.caption))
         }
         .foregroundStyle(combatAccent)
         .padding(.horizontal, 12)
@@ -483,16 +462,11 @@ struct CombatFernkampfExecutionView: View {
         attributeValue - modifierLines.reduce(0) { $0 + $1.value }
     }
 
-    /// Damage formula adjusted for distance-based TP modifier.
-    private var adjustedDamageFormula: String {
-        guard distanzTP != 0 else { return damageFormula }
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = damageFormula.firstMatch(of: pattern) else { return damageFormula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + distanzTP
-        if total == 0 { return base }
-        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
+    /// The distance TP as a named part rather than a number folded into the
+    /// formula, so the damage screen can print where it came from.
+    private var damageLines: [ModifierLine] {
+        guard distanzTP != 0 else { return [] }
+        return [ModifierLine(value: distanzTP, source: L("fernkampf.distanz"))]
     }
 
     // MARK: - Body
@@ -530,14 +504,14 @@ struct CombatFernkampfExecutionView: View {
                                 Image(systemName: "sparkles")
                                 Text(L("schip.reroll"))
                             }
-                            .font(.system(.body, weight: .black))
+                            .font(.dsaHeading(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .background(Color.dsaSchipGold)
+                            .dsaBox(.raised)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
 
                     outcomeActions(outcome)
@@ -563,19 +537,19 @@ struct CombatFernkampfExecutionView: View {
         HStack {
             Button { step = .fernkampfSetup } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             Spacer()
 
             VStack(spacing: 1) {
                 Text(L("rangedAttack"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Text(weaponName)
-                    .font(.system(.caption, weight: .semibold))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.white.opacity(0.85))
             }
 
@@ -583,91 +557,35 @@ struct CombatFernkampfExecutionView: View {
 
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(combatAccent)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.raised)
     }
 
     // MARK: - Modifier breakdown
 
     @ViewBuilder
+    /// The same calculation box the melee rolls use — this screen had its own
+    /// copy, one bordered row per line, from before there was a shared one. The
+    /// hardcoded "Effektiv" went with it.
     private var modifierBreakdown: some View {
-        VStack(spacing: 0) {
-            combatSectionLabel(L("calculation.label"))
-
-            // Base FK row
-            HStack {
-                Text("FK \(baseFK)")
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
-                Spacer()
-                Text(L("source.basis"))
-                    .font(.system(.caption2, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-
-            // Situational modifier lines
-            ForEach(modifierLines) { line in
-                HStack {
-                    Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                        .foregroundStyle(line.value > 0
-                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
-                            : Color.groupCombat)
-                    Spacer()
-                    Text(line.source)
-                        .font(.system(.caption2, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-            }
-
-            // Manual modifier row (only when non-zero)
-            if modifier != 0 {
-                HStack {
-                    Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                        .foregroundStyle(modifier > 0
-                            ? Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
-                            : Color.groupCombat)
-                    Spacer()
-                    Text(L("source.additional"))
-                        .font(.system(.caption2, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-            }
-
-            // Effective total
-            HStack {
-                Text("FK \(effectiveValue)")
-                    .font(.system(.body, design: .monospaced, weight: .black))
-                Spacer()
-                Text("Effektiv")
-                    .font(.system(.caption2, weight: .bold))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.dsaDark)
-            .foregroundStyle(.white)
-        }
+        CombatBreakdownBox(
+            baseValue: "\(baseFK)",
+            baseSource: L("source.basis"),
+            lines: modifier == 0
+                ? modifierLines
+                : modifierLines + [ModifierLine(value: modifier, source: L("source.additional"))],
+            totalValue: "FK \(effectiveValue)",
+            totalSource: L("source.effective"),
+            sectionLabel: L("calculation.label")
+        )
     }
 
     // MARK: - Manual modifier stepper
@@ -675,46 +593,24 @@ struct CombatFernkampfExecutionView: View {
     private var modifierBox: some View {
         let locked = finalRoll != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button {
-                    modifier -= 1
-                } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : combatAccent)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : combatAccent,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                onDecrement: { modifier -= 1 },
+                onIncrement: { modifier += 1 }
+            ) {
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 64)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
-                Button {
-                    modifier += 1
-                } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : combatAccent)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
 
             Text(L("modifier"))
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -728,21 +624,21 @@ struct CombatFernkampfExecutionView: View {
         return VStack(spacing: 0) {
             VStack(spacing: 2) {
                 Text("\(display)")
-                    .font(.system(.largeTitle, weight: .black))
+                    .font(.dsaHeading(.largeTitle))
                     .fontDesign(.monospaced)
                 if isAnimating {
                     Text(L("tapToRoll"))
-                        .font(.system(.caption2, weight: .semibold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             Text("W20")
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -758,14 +654,14 @@ struct CombatFernkampfExecutionView: View {
         }()
         return VStack(spacing: 0) {
             Text(display)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
                 .fontDesign(.monospaced)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             Text(L("confirmation"))
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -795,12 +691,12 @@ struct CombatFernkampfExecutionView: View {
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
         let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
         return Text(outcomeText(outcome))
-            .font(.system(isCritical ? .title3 : .body, weight: .bold))
+            .font(.dsaHeading(isCritical ? .title3 : .body))
             .foregroundStyle(outcomeTextColor(outcome))
             .frame(maxWidth: .infinity)
             .padding(.vertical, isCritical ? 14 : 10)
             .background(outcomeBackground(outcome))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
     }
 
     private func outcomeText(_ outcome: CombatOutcome) -> String {
@@ -814,9 +710,9 @@ struct CombatFernkampfExecutionView: View {
 
     private func outcomeBackground(_ outcome: CombatOutcome) -> Color {
         switch outcome {
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .kritischerPatzer: return .groupCombat
-        case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+        case .erfolg:           return Color.dsaPositive
         case .misserfolg:       return .dsaDark
         }
     }
@@ -836,49 +732,63 @@ struct CombatFernkampfExecutionView: View {
         case .erfolg, .kritischerErfolg:
             if outcome == .kritischerErfolg {
                 infoBox(L("opponentDefense.halved"))
-                infoBox(L("opponentDefense.doubleDamage"))
+                // See `CombatExecutionView`: with the optional table on, what
+                // happens to the damage is the table's to say, not this screen's.
+                if !hero.isFokusRuleActive(.kritischeErfolgeAngriff) {
+                    infoBox(L("opponentDefense.doubleDamage"))
+                }
             } else if finalRoll == 1 && confirmRoll != nil {
                 infoBox(L("opponentDefense.halved"))
             }
 
             Button {
-                step = .opponentDefense(
-                    weaponName: weaponName,
-                    damageFormula: adjustedDamageFormula,
-                    isCriticalHit: finalRoll == 1,
-                    isDoubleDamage: outcome == .kritischerErfolg,
-                    modifierLines: nil,
-                    isRangedAttack: true,
-                    rangedDefensePenalty: -4
-                )
+                // The Angriff table covers "AT oder FK" in its own wording, so a
+                // critical shot reads the same table a critical swing does.
+                if outcome == .kritischerErfolg, hero.isFokusRuleActive(.kritischeErfolgeAngriff) {
+                    step = .criticalSuccess(
+                        table: .angriff,
+                        action: .fernkampf,
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        modifierLines: nil,
+                        isRangedAttack: true,
+                        rangedDefensePenalty: -4,
+                        damageLines: damageLines
+                    )
+                } else {
+                    step = .opponentDefense(
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        isCriticalHit: finalRoll == 1,
+                        criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
+                        modifierLines: nil,
+                        isRangedAttack: true,
+                        rangedDefensePenalty: -4,
+                        damageLines: damageLines
+                    )
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "shield.fill")
-                    Text(L("proceedToDefense"))
+                    Text(outcome == .kritischerErfolg && hero.isFokusRuleActive(.kritischeErfolgeAngriff)
+                         ? L("critical.title")
+                         : L("proceedToDefense"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
         case .misserfolg:
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.system(.body, weight: .black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            }
-            .buttonStyle(.plain)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.fernkampf.newAction"
+            ) { step = .root }
 
         case .kritischerPatzer:
             Button {
@@ -888,14 +798,14 @@ struct CombatFernkampfExecutionView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                     Text(L("fumble.title"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -904,15 +814,15 @@ struct CombatFernkampfExecutionView: View {
     private func infoBox(_ text: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "info.circle.fill")
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
             Text(text)
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
         }
         .foregroundStyle(combatAccent)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(combatAccent.opacity(0.1))
-        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+        .dsaBox(.flush, stroke: combatAccent)
     }
 
     // MARK: - Animation & rolling
@@ -940,14 +850,14 @@ struct CombatFernkampfExecutionView: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            confirmRoll = Int.random(in: 1...20)
+            confirmRoll = DiceRoller.roll(sides: 20)
         }
     }
 
     private func rollDice() {
         guard finalRoll == nil else { return }
         animationTask?.cancel()
-        let rolled = Int.random(in: 1...20)
+        let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
         if needsConfirm(rolled) { startConfirmAnimation() }
     }

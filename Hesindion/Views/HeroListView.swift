@@ -24,11 +24,7 @@ struct HeroListView: View {
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
 
-    private var appVersion: String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "v\(version) (\(build))"
-    }
+    private var appVersion: String { AppVersion.display }
 
     var body: some View {
         NavigationSplitView {
@@ -41,7 +37,7 @@ struct HeroListView: View {
                 .toolbar {
                     ToolbarItem(placement: .principal) {
                         Text("Hesindion")
-                            .font(.system(.title2, design: .default, weight: .black))
+                            .font(.dsaHeading(.title2))
                     }
                 }
         } detail: {
@@ -87,23 +83,20 @@ struct HeroListView: View {
 
     @ViewBuilder
     private var sidebarContent: some View {
-        List(selection: $selection) {
+        List {
             Section {
                 HStack(spacing: 8) {
                     Image(systemName: "book.closed")
                     Text(L("rulebook"))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
+                    Spacer(minLength: 0)
                 }
-                    .font(.system(.title3, design: .default, weight: .bold))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.rulebook)
-                    .listRowBackground(
-                        selection == .rulebook
-                            ? Color.groupRulebook.opacity(0.35)
-                            : Color(UIColor.systemBackground)
-                    )
+                    .font(.dsaHeading(.title3))
+                    .sidebarRow(
+                        accent: .groupRulebook,
+                        isSelected: selection == .rulebook
+                    ) { selection = .rulebook }
             } header: {
                 sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
             }
@@ -113,17 +106,16 @@ struct HeroListView: View {
                     isShowingAdventureCreation = true
                 } label: {
                     Label(L("newAdventure"), systemImage: "plus")
-                        .font(.system(.body, design: .default, weight: .bold))
+                        .font(.dsaHeading(.body))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.groupAdventure)
                         .foregroundStyle(.black)
-                        .overlay(
-                            Rectangle()
-                                .stroke(Color.dsaBorder, lineWidth: 3)
-                        )
+                        .dsaBox(.raised, fill: .groupAdventure)
                 }
-                .listRowInsets(EdgeInsets())
+                .buttonStyle(.dsaMotion)
+                // Room for the shadow: it draws outside the bounds and reserves
+                // no layout space, so a flush row would clip it (ADR-0008).
+                .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                 .listRowBackground(Color(UIColor.systemBackground))
 
                 ForEach(adventures, id: \.persistentModelID) { adventure in
@@ -132,22 +124,16 @@ struct HeroListView: View {
                             .font(.system(size: 16))
                             .frame(width: 36, height: 36)
                             .background(Color.groupAdventure.opacity(0.2))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.dsaBorder, lineWidth: 2)
-                            )
+                            .clipShape(Rectangle())
+                            .dsaBox(.flush)
                         Text(adventure.name)
-                            .font(.system(.title3, design: .default, weight: .bold))
+                            .font(.dsaHeading(.title3))
+                        Spacer(minLength: 0)
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
-                    .listRowBackground(
-                        selection == .adventure(adventure.persistentModelID)
-                            ? Color.groupAdventure.opacity(0.35)
-                            : Color(UIColor.systemBackground)
-                    )
+                    .sidebarRow(
+                        accent: .groupAdventure,
+                        isSelected: selection == .adventure(adventure.persistentModelID)
+                    ) { selection = .adventure(adventure.persistentModelID) }
                 }
             } header: {
                 sidebarSectionHeader(L("adventures"), color: .groupAdventure)
@@ -155,7 +141,8 @@ struct HeroListView: View {
 
             Section {
                 importButton
-                    .listRowInsets(EdgeInsets())
+                    // Room for the shadow — see the newAdventure button above.
+                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                     .listRowBackground(Color(UIColor.systemBackground))
 
                 if heroes.isEmpty {
@@ -167,16 +154,15 @@ struct HeroListView: View {
                         HStack(spacing: 12) {
                             heroAvatar(hero)
                             Text(hero.name)
-                                .font(.system(.title3, design: .default, weight: .bold))
+                                .font(.dsaHeading(.title3))
+                            Spacer(minLength: 0)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
-                        .tag(SidebarSelection.hero(hero.persistentModelID))
-                        .listRowBackground(
-                                selection == .hero(hero.persistentModelID)
-                                    ? HeroColorScheme.scheme(for: hero).accentColor.opacity(0.35)
-                                    : Color(UIColor.systemBackground)
-                            )
+                        // Each hero keeps its own profession accent, so the
+                        // sidebar carries the same identity the detail pane does.
+                        .sidebarRow(
+                            accent: HeroColorScheme.scheme(for: hero).accentColor,
+                            isSelected: selection == .hero(hero.persistentModelID)
+                        ) { selection = .hero(hero.persistentModelID) }
                     }
                 }
             } header: {
@@ -192,9 +178,9 @@ struct HeroListView: View {
         HStack(spacing: 0) {
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
             Text(title)
-                .font(.system(.subheadline, weight: .black))
+                .font(.dsaHeading(.subheadline))
                 .textCase(.uppercase)
                 .foregroundStyle(color)
                 .lineLimit(1)
@@ -202,7 +188,7 @@ struct HeroListView: View {
                 .padding(.horizontal, 8)
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
         }
         .padding(.vertical, 4)
     }
@@ -215,21 +201,15 @@ struct HeroListView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 16))
                 .frame(width: size, height: size)
                 .background(Color.groupPersonalData.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         }
     }
 
@@ -274,16 +254,13 @@ struct HeroListView: View {
             isShowingFilePicker = true
         } label: {
             Label(L("importHero"), systemImage: "square.and.arrow.down")
-                .font(.system(.body, design: .default, weight: .bold))
+                .font(.dsaHeading(.body))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.groupPersonalData)
                 .foregroundStyle(.black)
-                .overlay(
-                    Rectangle()
-                        .stroke(Color.dsaBorder, lineWidth: 3)
-                )
+                .dsaBox(.raised, fill: .groupPersonalData)
         }
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Sidebar Footer
@@ -291,14 +268,14 @@ struct HeroListView: View {
     private var sidebarFooter: some View {
         VStack(spacing: 4) {
             Text(appVersion)
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.tertiary)
 
             Button {
                 isShowingChangelog = true
             } label: {
                 Text("Changelog")
-                    .font(.system(.caption2))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.quaternary)
             }
             .sheet(isPresented: $isShowingChangelog) {
