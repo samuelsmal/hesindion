@@ -66,6 +66,8 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
             continue
         if status == "byHand":
             problems.extend(_check_pointer(rid, e.get("pointer"), repo_root))
+            if not e.get("note"):
+                problems.append(f"{rid}: byHand without note")
         if status == "todo" and not e.get("why"):
             problems.append(f"{rid}: todo without why")
         if status == "noRollEffect" and not e.get("note"):

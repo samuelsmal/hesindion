@@ -38,11 +38,14 @@ def main():
     lines = [
         "# The rules catalog — docs/plans/2026-09-14-rules-catalog-design.md §4.",
         "# One entry per rule id in rules.db. The build fails on a missing or unknown id,",
-        "# an unknown status, a byHand pointer that does not resolve, a todo without why,",
-        "# a noRollEffect without note, a name or group that does not match rules.db, a",
-        "# duplicate id, or counts that differ from rules-catalog.snapshot.json.",
+        "# an unknown status, a byHand pointer that does not resolve, a byHand without",
+        "# note, a todo without why, a noRollEffect without note, a name or group that",
+        "# does not match rules.db, a duplicate id, or counts that differ from",
+        "# rules-catalog.snapshot.json.",
         "#",
         "# status: implemented | byHand | noRollEffect | todo",
+        "#",
+        "# Entries with a status other than todo live in the block at the top of the file.",
         "",
     ]
     for rid, name, group in rows:

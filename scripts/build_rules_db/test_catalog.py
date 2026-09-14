@@ -49,12 +49,17 @@ class ValidateTests(unittest.TestCase):
         no_pointer = entry(id="SA_2", name="Zweite", status="byHand", note="x")
         self.assertEqual(catalog.validate([ok, no_pointer], RULES, self.root),
                          ["SA_2: byHand needs pointer {file, symbol}"])
-        no_file = entry(id="SA_2", name="Zweite", status="byHand", pointer={"file": "Nope.swift", "symbol": "x"})
+        no_file = entry(id="SA_2", name="Zweite", status="byHand", note="x", pointer={"file": "Nope.swift", "symbol": "x"})
         self.assertEqual(catalog.validate([ok, no_file], RULES, self.root),
                          ["SA_2: pointer file Nope.swift does not exist"])
-        no_symbol = entry(id="SA_2", name="Zweite", status="byHand", pointer={"file": "Hero.swift", "symbol": "golgariten"})
+        no_symbol = entry(id="SA_2", name="Zweite", status="byHand", note="x", pointer={"file": "Hero.swift", "symbol": "golgariten"})
         self.assertEqual(catalog.validate([ok, no_symbol], RULES, self.root),
                          ["SA_2: symbol 'golgariten' not found in Hero.swift"])
+
+    def test_by_hand_needs_a_note(self):
+        entries = [entry(status="byHand", pointer={"file": "Hero.swift", "symbol": "golgaritenActive"}),
+                   entry(id="SA_2", name="Zweite")]
+        self.assertIn("SA_1: byHand without note", catalog.validate(entries, RULES, self.root))
 
     def test_todo_needs_a_why(self):
         entries = [entry(why=None), entry(id="SA_2", name="Zweite")]

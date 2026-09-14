@@ -80,11 +80,14 @@ struct RuleDetailView: View {
                                 .padding(.top, 4)
                             Text(L(entry.status.labelKey))
                                 .font(.dsaBody(.body))
+                            // The note is a developer record in English; the release build shows only the status label.
+                            #if DEBUG
                             if let note = entry.note, !note.isEmpty {
                                 Text(note)
                                     .font(.dsaBody(.caption))
                                     .foregroundStyle(.secondary)
                             }
+                            #endif
                         }
                     }
                     .padding(16)

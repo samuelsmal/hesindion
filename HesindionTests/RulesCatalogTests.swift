@@ -58,6 +58,13 @@ final class RulesCatalogTests: XCTestCase {
             let pattern = "(?<![A-Za-z0-9_])" + NSRegularExpression.escapedPattern(for: pointer.symbol) + "(?![A-Za-z0-9_])"
             XCTAssertNotNil(text.range(of: pattern, options: .regularExpression),
                             "\(entry.id): \(pointer.symbol) is not in \(pointer.file)")
+            // A text match alone is satisfied by a string literal sitting in a comment
+            // or an `implies` list — for a StateCatalog pointer, the symbol must also
+            // actually be one of its ids.
+            if pointer.file.hasSuffix("StateCatalog.swift") {
+                XCTAssertTrue(StateCatalog.all.contains { $0.id == pointer.symbol },
+                              "\(entry.id): \(pointer.symbol) is not a StateCatalog id")
+            }
         }
     }
 
@@ -98,15 +105,28 @@ final class RulesCatalogTests: XCTestCase {
         }
     }
 
-    func testEveryCatalogStateHasAStatusOtherThanTodo() throws {
+    /// No hard-coded rule-id list: a `StateCatalog` id and a `byHand` pointer at
+    /// `StateCatalog.swift` must name each other, in both directions, so adding a
+    /// state without a matching pointer — or a pointer whose symbol is stale —
+    /// fails here instead of going unnoticed.
+    ///
+    /// `belastung` (COND_1) is the one exception: its roll penalty lives in
+    /// `SharedModifiers.encumbrance`, not `StateCatalog.swift`, and that is where
+    /// its pointer points; the StateCatalog entry itself stays display-only.
+    func testEveryCatalogStateIsByHand() throws {
         try requireDatabase()
-        let ids = ["COND_1", "COND_2", "COND_3", "COND_4", "COND_5", "COND_6", "COND_7", "COND_9",
-                   "STATE_1", "STATE_2", "STATE_3", "STATE_5", "STATE_6", "STATE_7", "STATE_8", "STATE_9",
-                   "STATE_10", "STATE_11", "STATE_12", "STATE_13", "STATE_14", "STATE_15", "STATE_19",
-                   "STATE_20", "STATE_21"]
-        XCTAssertEqual(ids.count, StateCatalog.all.count, "one rules.db id per StateCatalog entry")
-        for id in ids {
-            XCTAssertEqual(RulesDatabase.shared.lookupCatalogEntry(ruleId: id)?.status, .byHand, id)
+        let statePointerFile = "Hesindion/Models/StateCatalog.swift"
+        let displayOnlyExceptions: Set<String> = ["belastung"]
+        let byHandStatePointers = RulesDatabase.shared.catalogEntries(status: .byHand)
+            .compactMap(\.pointer)
+            .filter { $0.file == statePointerFile }
+        for definition in StateCatalog.all where !displayOnlyExceptions.contains(definition.id) {
+            let matches = byHandStatePointers.filter { $0.symbol == definition.id }
+            XCTAssertEqual(matches.count, 1, definition.id)
+        }
+        let stateIDs = Set(StateCatalog.all.map(\.id))
+        for pointer in byHandStatePointers {
+            XCTAssertTrue(stateIDs.contains(pointer.symbol), pointer.symbol)
         }
     }
 
@@ -124,6 +144,7 @@ final class RulesCatalogTests: XCTestCase {
         XCTAssertFalse(carried.isEmpty)
         for ruleId in carried {
             let status = RulesDatabase.shared.lookupCatalogEntry(ruleId: ruleId)?.status
+            XCTAssertNotNil(status, "\(ruleId) is on the hero sheet and has no catalog entry")
             XCTAssertNotEqual(status, .todo,
                               "\(ruleId) (\(RulesDatabase.shared.lookup(id: ruleId)?.name ?? "?")) is on the hero sheet and the catalog says todo")
         }
