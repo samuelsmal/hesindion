@@ -6,12 +6,330 @@
 #
 # status: implemented | byHand | noRollEffect | todo
 
+# ---------------------------------------------------------------------------
+# Handled by the app today (status byHand). The pointer names the symbol that
+# reaches the rule; the build and RulesCatalogTests check it exists.
+# ---------------------------------------------------------------------------
+- id: SA_40
+  name: "Aufmerksamkeit"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasAufmerksamkeit }
+  note: "TalentProbeModal offers +2 on Sinnesschärfe (TAL_10) when the hero has it; a talent modifier, not a combat value."
+
+- id: SA_41
+  name: "Belastungsgewöhnung"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: effectiveBE }
+  note: "Reduces BE by tier before every value derived from it (AT, PA, AW, INI, GS)."
+
+- id: SA_42
+  name: "Beidhändiger Kampf"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: beidhaendigerKampfLevel }
+  note: "Each tier takes 1 off the −2 dual-attack penalty (MeleeModifiers.dualAttackPenalty)."
+
+- id: SA_43
+  name: "Berittener Kampf"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasBerittenerKampf }
+  note: "CombatAttackViews offers Sturmangriff zu Pferd when the hero has it."
+
+- id: SA_48
+  name: "Finte"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: finteTier }
+  note: "Offered as a manoeuvre (CombatManeuver): AT −1 per tier, opponent PA −2 per tier as an opponent line."
+
+- id: SA_59
+  name: "Schildspalter"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/CombatManeuver.swift, symbol: schildspalter }
+  note: "Offered as a manoeuvre on the announcement screen."
+
+- id: SA_66
+  name: "Vorstoß"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/CombatManeuver.swift, symbol: vorstoss }
+  note: "Offered as a manoeuvre on the announcement screen: AT +2, no defence this round."
+
+- id: SA_67
+  name: "Wuchtschlag"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: wuchtschlagTier }
+  note: "Offered as a manoeuvre, every tier up to the hero's selectable: AT −2 and TP +2 per tier (CombatManeuver, DamageModifiers)."
+
+- id: SA_160
+  name: "Gezielter Angriff"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasGezielterAngriff }
+  note: "HitZoneModifiers halves the Zonenaufschlag in melee (Trefferzonen Fokusregel)."
+
+- id: SA_161
+  name: "Gezielter Schuss"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasGezielterSchuss }
+  note: "HitZoneModifiers halves the Zonenaufschlag at range (Trefferzonen Fokusregel)."
+
+- id: SA_661
+  name: "Golgariten-Stil"
+  group: "Kampfstile (bewaffnet)"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: golgaritenActive }
+  note: "Mounted with Rabenschnabel AND Großschild: +2 AT (Vorteilhafte Position) +2 AT, +1 PA, +1 TP. The Regelwiki says +1 PA and no TP, and Rabenschnabel OR Großschild — to be corrected in step 2 (design §4)."
+
+- id: SA_884
+  name: "Plänkler-Formation"
+  group: "Kampf"
+  status: byHand
+  pointer: { file: Hesindion/Engine/MeleeModifiers.swift, symbol: plaenklerAT }
+  note: "CombatSetupView asks AT or VW per fight; +1 on the chosen one (MeleeModifiers.plaenklerAT, DefenseModifiers.plaenklerVW)."
+
+- id: ADV_5
+  name: "Beidhändig"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasBeidhaendig }
+  note: "Removes the −4 off-hand penalty."
+
+- id: ADV_25
+  name: "Hohe Lebenskraft"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Services/OptolithImportService.swift, symbol: hoheLebenskraftBonus }
+  note: "+1 LeP per tier on import."
+
+- id: ADV_26
+  name: "Hohe Seelenkraft"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Services/OptolithImportService.swift, symbol: hoheSeelenkraftBonus }
+  note: "+1 SK per tier on import."
+
+- id: ADV_27
+  name: "Hohe Zähigkeit"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Services/OptolithImportService.swift, symbol: hoheZaehigkeitBonus }
+  note: "+1 ZK per tier on import."
+
+- id: ADV_44
+  name: "Verbesserte Regeneration (Lebensenergie)"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: verbessertRegenerationLEBonus }
+  note: "+1 LeP regeneration, +2 at tier II."
+
+- id: ADV_49
+  name: "Zäher Hund"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasZaeherHund }
+  note: "Effective Schmerz is one level lower, except level IV."
+
+- id: ADV_54
+  name: "Eisern"
+  group: "Vorteil"
+  status: byHand
+  pointer: { file: Hesindion/Engine/DerivedValueFormulas.swift, symbol: wundschwelle }
+  note: "Wundschwelle +1."
+
+- id: DISADV_56
+  name: "Gläsern"
+  group: "Nachteil"
+  status: byHand
+  pointer: { file: Hesindion/Engine/DerivedValueFormulas.swift, symbol: wundschwelle }
+  note: "Wundschwelle −1."
+
+- id: COND_1
+  name: "Belastung"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: belastung }
+  note: "Derived from equipped armour; the penalty comes from Hero.belastungPenalty, the catalog entry is reminder-only."
+
+- id: COND_2
+  name: "Betäubung"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: betaeubung }
+  note: "−level on every check (StateModifiers), counts toward the −5 Zustand cap."
+
+- id: COND_3
+  name: "Entrückung"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: entrueckung }
+  note: "StateModifiers.entrueckungDef: gottgefällig +(level−1), everything else −level."
+
+- id: COND_4
+  name: "Furcht"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: furcht }
+  note: "−level on every check (StateModifiers), counts toward the cap."
+
+- id: COND_5
+  name: "Paralyse"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: paralyse }
+  note: "−level on every check (StateModifiers), counts toward the cap."
+
+- id: COND_6
+  name: "Schmerz"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: schmerz }
+  note: "Derived from LP; −level on every check, counts toward the cap; ADV_49 lowers it."
+
+- id: COND_7
+  name: "Verwirrung"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: verwirrung }
+  note: "−level on every check (StateModifiers), counts toward the cap."
+
+- id: COND_9
+  name: "Berauscht"
+  group: "Zustand (leveled)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: berauscht }
+  note: "Reminder only: the app cannot yet tell a Zechen check apart."
+
+- id: STATE_1
+  name: "Bewegungsunfähig"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: bewegungsunfaehig }
+  note: "Reminder and combat-root warning banner; no modifier."
+
+- id: STATE_2
+  name: "Bewusstlos"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: bewusstlos }
+  note: "Reminder only; implies Handlungsunfähig."
+
+- id: STATE_3
+  name: "Blind"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: blind }
+  note: "Reminder only."
+
+- id: STATE_5
+  name: "Brennend"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: brennend }
+  note: "Reminder only."
+
+- id: STATE_6
+  name: "Eingeengt"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: eingeengt }
+  note: "Single source of truth for Beengte Umgebung: AT/PA penalty by weapon reach (MeleeModifiers.beengteUmgebungAT)."
+
+- id: STATE_7
+  name: "Fixiert"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: fixiert }
+  note: "AW −4 (StateModifiers)."
+
+- id: STATE_8
+  name: "Handlungsunfähig"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: handlungsunfaehig }
+  note: "Reminder and combat-root warning banner; no modifier."
+
+- id: STATE_9
+  name: "Krank"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: krank }
+  note: "Reminder only."
+
+- id: STATE_10
+  name: "Liegend"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: liegend }
+  note: "Hero: AT −4, PA/AW −2 (StateModifiers). Opponent: −2 on their defence as an opponent line (OpponentProfile.isProne)."
+
+- id: STATE_11
+  name: "Stumm"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: stumm }
+  note: "Reminder only."
+
+- id: STATE_12
+  name: "Taub"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: taub }
+  note: "Reminder only."
+
+- id: STATE_13
+  name: "Überrascht"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: ueberrascht }
+  note: "Reminder only for the hero; the opponent's surprise is a GM flag (ModifierContext.targetIsSurprised)."
+
+- id: STATE_14
+  name: "Unsichtbar"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: unsichtbar }
+  note: "Reminder only."
+
+- id: STATE_15
+  name: "Vergiftet"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: vergiftet }
+  note: "Reminder only."
+
+- id: STATE_19
+  name: "Übler Geruch"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: uebler_geruch }
+  note: "Reminder only."
+
+- id: STATE_20
+  name: "Versteinert"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: versteinert }
+  note: "Reminder only."
+
+- id: STATE_21
+  name: "Blutend"
+  group: "Status (binary)"
+  status: byHand
+  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: blutend }
+  note: "Reminder only."
+
 - { id: ADV_0, name: "Eigener Vorteil", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_1, name: "Adel", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_2, name: "Altersresistenz", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_3, name: "Angenehmer Geruch", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_4, name: "Begabung", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_5, name: "Beidhändig", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_6, name: "Dunkelsicht", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_7, name: "Eisenaffine Aura", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_8, name: "Entfernungssinn", group: "Vorteil", status: todo, why: not yet read }
@@ -28,9 +346,6 @@
 - { id: ADV_22, name: "Hitzeresistenz", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_23, name: "Hohe Astralkraft", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_24, name: "Hohe Karmalkraft", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_25, name: "Hohe Lebenskraft", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_26, name: "Hohe Seelenkraft", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_27, name: "Hohe Zähigkeit", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_28, name: "Immunität gegen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_29, name: "Immunität gegen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_30, name: "Kälteresistenz", group: "Vorteil", status: todo, why: not yet read }
@@ -47,17 +362,14 @@
 - { id: ADV_41, name: "Unscheinbar", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_42, name: "Verbesserte Regeneration (Astralenergie)", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_43, name: "Verbesserte Regeneration (Karmaenergie)", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_44, name: "Verbesserte Regeneration (Lebensenergie)", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_45, name: "Verhüllte Aura", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_46, name: "Vertrauenerweckend", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_47, name: "Waffenbegabung", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_48, name: "Wohlklang", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_49, name: "Zäher Hund", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_50, name: "Zauberer", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_51, name: "Zeitgefühl", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_52, name: "Zweistimmiger Gesang", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_53, name: "Zwergennase", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_54, name: "Eisern", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_55, name: "Hart im nehmen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_56, name: "Affinität zu Dämonen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_57, name: "Affinität zu Elementaren", group: "Vorteil", status: todo, why: not yet read }
@@ -162,15 +474,7 @@
 - { id: CT_19, name: "Diskusse", group: "Fernkampf", status: todo, why: not yet read }
 - { id: CT_20, name: "Fächer", group: "Nahkampf", status: todo, why: not yet read }
 - { id: CT_21, name: "Spießwaffen", group: "Nahkampf", status: todo, why: not yet read }
-- { id: COND_1, name: "Belastung", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_2, name: "Betäubung", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_3, name: "Entrückung", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_4, name: "Furcht", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_5, name: "Paralyse", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_6, name: "Schmerz", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_7, name: "Verwirrung", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_8, name: "Animosität", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: COND_9, name: "Berauscht", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_10, name: "Trance", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_11, name: "Sikaryan-Verlust", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_12, name: "Begehren", group: "Zustand (leveled)", status: todo, why: not yet read }
@@ -229,7 +533,6 @@
 - { id: DISADV_53, name: "Wilde Magie", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_54, name: "Zauberanfällig", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_55, name: "Zerbrechlich", group: "Nachteil", status: todo, why: not yet read }
-- { id: DISADV_56, name: "Gläsern", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_57, name: "Verweichlicht", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_58, name: "Instabiler Zauberer", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Nachteil", status: todo, why: not yet read }
@@ -671,13 +974,9 @@
 - { id: LANG_38, name: "Krakonisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_39, name: "Wachsamkeit", group: "Schicksal", status: todo, why: not yet read }
 - { id: LANG_39, name: "Mahrisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_40, name: "Aufmerksamkeit", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_40, name: "Molochisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_41, name: "Belastungsgewöhnung", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_41, name: "Neckergesang", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_42, name: "Beidhändiger Kampf", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_42, name: "Riesensprache", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_43, name: "Berittener Kampf", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_43, name: "Rissoal", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_44, name: "Berittener Schütze", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_44, name: "Tiefzwergisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
@@ -687,7 +986,6 @@
 - { id: LANG_46, name: "Z'Lit", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_47, name: "Feindgespür", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_47, name: "Zhulchammaqra", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_48, name: "Finte", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_48, name: "Zyklopisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_49, name: "Haltegriff", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_49, name: "Dschuku", group: "Sonderfertigkeit", status: todo, why: not yet read }
@@ -709,7 +1007,6 @@
 - { id: LANG_57, name: "Uthurisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_58, name: "Rundumschlag", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_58, name: "Xoxota", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_59, name: "Schildspalter", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_59, name: "Archäisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_60, name: "Schnellladen", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_60, name: "Draydalanisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
@@ -723,9 +1020,7 @@
 - { id: LANG_64, name: "Grolmurisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_65, name: "Verteidigungshaltung", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_65, name: "Hiero-Amaunal", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_66, name: "Vorstoß", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_66, name: "Hiero-Imperial", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_67, name: "Wuchtschlag", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_67, name: "Kerrishitisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_68, name: "Wurf", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_68, name: "Leonal", group: "Sonderfertigkeit", status: todo, why: not yet read }
@@ -827,8 +1122,6 @@
 - { id: SA_157, name: "Blindkampf", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_158, name: "Eisenhagel", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_159, name: "Festnageln", group: "Kampf", status: todo, why: not yet read }
-- { id: SA_160, name: "Gezielter Angriff", group: "Kampf", status: todo, why: not yet read }
-- { id: SA_161, name: "Gezielter Schuss", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_162, name: "Herunterstoßen", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_163, name: "Kampf im Wasser", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_164, name: "Kampfstil-Kombination", group: "Kampf", status: todo, why: not yet read }
@@ -1328,7 +1621,6 @@
 - { id: SA_658, name: "Verbesserte Fokussierung", group: "Karmal (Erweitert)", status: todo, why: not yet read }
 - { id: SA_659, name: "Wohlklang der Seele", group: "Karmal (Erweitert)", status: todo, why: not yet read }
 - { id: SA_660, name: "Amazonen-Stil", group: "Kampfstile (bewaffnet)", status: todo, why: not yet read }
-- { id: SA_661, name: "Golgariten-Stil", group: "Kampfstile (bewaffnet)", status: todo, why: not yet read }
 - { id: SA_662, name: "Mantikor-Stil", group: "Kampfstile (bewaffnet)", status: todo, why: not yet read }
 - { id: SA_663, name: "Liturgieerweiterung", group: "Karmal", status: todo, why: not yet read }
 - { id: SA_664, name: "Feenrettung", group: "Schicksal", status: todo, why: not yet read }
@@ -1551,7 +1843,6 @@
 - { id: SA_881, name: "Machtvolle Meisterparade", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_882, name: "Meisterliche Geschossabwehr", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_883, name: "Meisterlicher Klingentänzer", group: "Kampf", status: todo, why: not yet read }
-- { id: SA_884, name: "Plänkler-Formation", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_885, name: "Querschuss", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_886, name: "Reißangriff", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_887, name: "Schildschlag", group: "Kampf", status: todo, why: not yet read }
@@ -2656,27 +2947,10 @@
 - { id: SPELL_481, name: "Warenchronik", group: "Zaubersprüche", status: todo, why: not yet read }
 - { id: SPELL_482, name: "Weisheit der Schrift", group: "Zaubersprüche", status: todo, why: not yet read }
 - { id: SPELL_483, name: "Zitterfinger", group: "Zaubersprüche", status: todo, why: not yet read }
-- { id: STATE_1, name: "Bewegungsunfähig", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_2, name: "Bewusstlos", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_3, name: "Blind", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_4, name: "Blutrausch", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_5, name: "Brennend", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_6, name: "Eingeengt", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_7, name: "Fixiert", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_8, name: "Handlungsunfähig", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_9, name: "Krank", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_10, name: "Liegend", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_11, name: "Stumm", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_12, name: "Taub", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_13, name: "Überrascht", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_14, name: "Unsichtbar", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_15, name: "Vergiftet", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_16, name: "Hörigkeit", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_17, name: "Pechmagnet", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_18, name: "Raserei", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_19, name: "Übler Geruch", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_20, name: "Versteinert", group: "Status (binary)", status: todo, why: not yet read }
-- { id: STATE_21, name: "Blutend", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_22, name: "Kind der Finsternis", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_23, name: "Minderer Vampir", group: "Status (binary)", status: todo, why: not yet read }
 - { id: STATE_24, name: "Lykanthrop", group: "Status (binary)", status: todo, why: not yet read }

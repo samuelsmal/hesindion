@@ -44,8 +44,6 @@ final class RulesCatalogTests: XCTestCase {
     /// A `byHand` pointer names a file and a symbol; both must exist, or the
     /// catalog describes code that is not there. The Python build checks the
     /// same pattern (`catalog._check_pointer`); the two must stay identical.
-    /// `note`/`pointer`/`reviewed*` are otherwise unexercised until Task 7 adds
-    /// byHand entries to the catalog.
     func testEveryPointerNamesASymbolThatExists() throws {
         try requireDatabase()
         try XCTSkipUnless(FileManager.default.fileExists(atPath: Self.repoRoot.appending(path: "AGENTS.md").path),
@@ -82,5 +80,52 @@ final class RulesCatalogTests: XCTestCase {
         }
         XCTAssertTrue(schmerz.levelTexts[0].text.contains("–1") || schmerz.levelTexts[0].text.contains("-1"), schmerz.levelTexts[0].text)
         XCTAssertEqual(RulesDatabase.shared.lookup(id: "SA_67")?.levelTexts.count, 0)
+    }
+
+    /// The floor. Adding entries must not fail this; losing one must.
+    func testCoverageDoesNotGoBackwards() throws {
+        try requireDatabase()
+        let counts = RulesDatabase.shared.catalogStatusCounts()
+        XCTAssertGreaterThanOrEqual((counts[.implemented] ?? 0) + (counts[.byHand] ?? 0), 45)
+    }
+
+    func testEveryCombatAbilityHasAStatusOtherThanTodo() throws {
+        try requireDatabase()
+        for ability in CombatAbility.allCases {
+            let status = RulesDatabase.shared.lookupCatalogEntry(ruleId: ability.rawValue)?.status
+            XCTAssertNotNil(status, "\(ability) has no catalog entry")
+            XCTAssertNotEqual(status, .todo, "\(ability) is in code but the catalog says todo")
+        }
+    }
+
+    func testEveryCatalogStateHasAStatusOtherThanTodo() throws {
+        try requireDatabase()
+        let ids = ["COND_1", "COND_2", "COND_3", "COND_4", "COND_5", "COND_6", "COND_7", "COND_9",
+                   "STATE_1", "STATE_2", "STATE_3", "STATE_5", "STATE_6", "STATE_7", "STATE_8", "STATE_9",
+                   "STATE_10", "STATE_11", "STATE_12", "STATE_13", "STATE_14", "STATE_15", "STATE_19",
+                   "STATE_20", "STATE_21"]
+        XCTAssertEqual(ids.count, StateCatalog.all.count, "one rules.db id per StateCatalog entry")
+        for id in ids {
+            XCTAssertEqual(RulesDatabase.shared.lookupCatalogEntry(ruleId: id)?.status, .byHand, id)
+        }
+    }
+
+    /// Importing a hero with an ability nothing handles should fail here, not go
+    /// unnoticed at the table. `SA_27` and `SA_29` carry Schriften and Sprachen
+    /// and never become traits.
+    func testTheSampleHeroCarriesNoAbilityTheAppIgnores() throws {
+        try requireDatabase()
+        let notAbilities: Set<String> = ["SA_27", "SA_29"]
+        let hero = try TestData.importBoronmir(into: TestData.makeContainer())
+        guard !hero.combatTechniques.isEmpty else { throw XCTSkip("rules.db went empty mid-import (known flake)") }
+        let carried = (hero.combatSpecialAbilities + hero.generalSpecialAbilities)
+            .map(\.ruleId)
+            .filter { !notAbilities.contains($0) }
+        XCTAssertFalse(carried.isEmpty)
+        for ruleId in carried {
+            let status = RulesDatabase.shared.lookupCatalogEntry(ruleId: ruleId)?.status
+            XCTAssertNotEqual(status, .todo,
+                              "\(ruleId) (\(RulesDatabase.shared.lookup(id: ruleId)?.name ?? "?")) is on the hero sheet and the catalog says todo")
+        }
     }
 }

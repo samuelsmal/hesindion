@@ -125,30 +125,4 @@ final class CombatAbilityCoverageTests: XCTestCase {
         }
         XCTAssertEqual(bare.wuchtschlagTier, 0)
     }
-
-    /// The other direction: every combat Sonderfertigkeit the sample hero
-    /// carries is one the app knows about. Importing a hero with an ability that
-    /// nothing implements should fail here, not go unnoticed at the table.
-    ///
-    /// `SA_27` and `SA_29` are the carriers for Schriften and Sprachen — the
-    /// importer unpacks them into their own lists and they never become traits.
-    func testTheSampleHeroCarriesNoAbilityTheAppIgnores() throws {
-        try requireDatabase()
-        let notAbilities: Set<String> = ["SA_27", "SA_29"]
-        let known = Set(CombatAbility.allCases.map(\.rawValue))
-
-        let hero = try TestData.importBoronmir(into: TestData.makeContainer())
-        let carried = (hero.combatSpecialAbilities + hero.generalSpecialAbilities)
-            .map(\.ruleId)
-            .filter { !notAbilities.contains($0) }
-
-        XCTAssertFalse(carried.isEmpty, "The sample hero should carry some Sonderfertigkeiten")
-        for ruleId in carried {
-            XCTAssertTrue(
-                known.contains(ruleId),
-                "\(ruleId) (\(RulesDatabase.shared.lookup(id: ruleId)?.name ?? "?")) is on the hero sheet "
-                    + "and nothing in the app does anything with it"
-            )
-        }
-    }
 }
