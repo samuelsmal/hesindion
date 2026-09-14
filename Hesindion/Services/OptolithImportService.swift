@@ -461,7 +461,7 @@ struct OptolithImportService {
     /// Whether an ability belongs in `combatSpecialAbilities`: Optolith's group
     /// says so. The effects table used to decide this and covered ten abilities.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        SpecialAbilityGroup.isCombat(groupId: rules.lookup(id: id)?.groupId)
+        CombatSpecialAbilityGroup.contains(groupId: rules.lookup(id: id)?.groupId)
     }
 
     // MARK: - Talents

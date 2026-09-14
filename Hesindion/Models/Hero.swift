@@ -433,8 +433,8 @@ final class Hero {
     /// A Sonderfertigkeit by rule id, wherever the importer filed it.
     ///
     /// The importer sorts an SA into `combatSpecialAbilities` or
-    /// `generalSpecialAbilities` by its Optolith group (`SpecialAbilityGroup`).
-    /// It used to ask the effects table instead, which had rows for ten combat
+    /// `generalSpecialAbilities` by its Optolith group (`CombatSpecialAbilityGroup`).
+    /// It used to ask the effects table instead, which had rows for nine combat
     /// abilities, so Plänkler-Formation (SA_884), Gezielter Angriff (SA_160) and
     /// Gezielter Schuss (SA_161) all sat in the general list while every lookup
     /// searched the combat one. Heroes imported before that fix still carry the

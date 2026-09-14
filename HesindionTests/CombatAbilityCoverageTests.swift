@@ -11,11 +11,12 @@ import XCTest
 ///    not match `rules.db` — the app withheld the two-handed grip from
 ///    *Armbrüste*, forbade a mounted hero the *lance*, and counted no bow as a
 ///    Schusswaffe.
-/// 2. **The importer filed it out of reach.** An SA goes to
-///    `combatSpecialAbilities` or `generalSpecialAbilities` depending on whether
-///    `rules.db` has a combat-scoped effect for it, and for three of them it has
-///    none — so Plänkler-Formation, Gezielter Angriff and Gezielter Schuss all
-///    landed in the general list while every lookup searched the combat one.
+/// 2. **The importer filed it out of reach.** Until `CombatSpecialAbilityGroup`,
+///    an SA went to `combatSpecialAbilities` only when `rules.db` had a
+///    combat-scoped effects row for it, which nine of 226 had — so
+///    Plänkler-Formation, Gezielter Angriff and Gezielter Schuss sat in the
+///    general list while every lookup searched the combat one. Heroes imported
+///    back then still carry that split.
 /// 3. **Nothing implements it.** Every ability the app handles is hand-wired;
 ///    `RuleEffectModifiers` would read the `effects` table but is not wired into
 ///    `ModifierEngine.shared` and nothing calls it, so having a row there buys an
