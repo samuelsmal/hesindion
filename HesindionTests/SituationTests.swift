@@ -35,6 +35,20 @@ final class SituationTests: XCTestCase {
         XCTAssertFalse(s.opponents.entries[0].isProne)
     }
 
+    func testAnOutOfRangeIndexStillNamesAnOpponent() {
+        var roster = OpponentRoster([OpponentProfile(label: "Ork"), OpponentProfile(label: "Goblin")])
+        roster.currentIndex = 7
+        XCTAssertEqual(roster.current.label, "Goblin")
+        roster.entries = [OpponentProfile(label: "Wolf")]
+        XCTAssertEqual(roster.current.label, "Wolf")
+    }
+
+    func testEveryCheckDomainIsARuleDomain() {
+        for check in CheckDomain.allCases {
+            XCTAssertNotNil(RuleDomain(rawValue: check.rawValue), "\(check)")
+        }
+    }
+
     func testDefencesThisRoundFollowTheDomain() {
         var s = Situation(hero: hero, domain: .meleeParry)
         s.round.parriesThisRound = 2
@@ -84,6 +98,12 @@ final class SituationTests: XCTestCase {
                                  OpponentProfile.opposingDeityKey: true])
         XCTAssertTrue(o.states.isEmpty)
         XCTAssertFalse(o.advantageousPosition)
+    }
+
+    func testTheOpponentStateIdsAreStateCatalogIds() {
+        for id in [OpponentProfile.proneStateId, OpponentProfile.surprisedStateId] {
+            XCTAssertTrue(StateCatalog.all.contains { $0.id == id }, id)
+        }
     }
 
     func testAModifierLineCarriesNoRuleIdUnlessGivenOne() {

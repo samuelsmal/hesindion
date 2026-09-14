@@ -125,6 +125,17 @@ final class WeaponReachTests: XCTestCase {
         XCTAssertEqual(atPenalty(armedHero(), loadout: nil, opponent: .lang), 0)
     }
 
+    /// The roster's default opponent reaches Mittel: an opponent nobody has
+    /// described costs a dagger −2, not nothing.
+    func testAnUndescribedOpponentReachesMittel() {
+        let hero = armedHero()
+        var situation = Situation(hero: hero, domain: .meleeAttack)
+        situation.loadoutName = "Dolch"
+        XCTAssertEqual(ModifierEngine.shared.evaluate(context: situation)
+            .filter { $0.source == L("source.reach") }
+            .reduce(0) { $0 + $1.value }, -2)
+    }
+
     /// Beengte Umgebung is the other rule keyed to reach, and it read the same
     /// wrong value: a long weapon is -8 in a corridor, a fist is not.
     func testBeengteUmgebungFollowsTheSameReach() {

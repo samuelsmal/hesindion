@@ -76,13 +76,13 @@ struct OpponentProfile: Equatable {
 
     /// Status Liegend: −2 on *their* defence. The penalty is theirs.
     var isProne: Bool {
-        get { states.contains("liegend") }
-        set { if newValue { states.insert("liegend") } else { states.remove("liegend") } }
+        get { states.contains(Self.proneStateId) }
+        set { if newValue { states.insert(Self.proneStateId) } else { states.remove(Self.proneStateId) } }
     }
     /// Eases the Zonenaufschlag by 2 (Trefferzonen Fokusregel).
     var isSurprised: Bool {
-        get { states.contains("ueberrascht") }
-        set { if newValue { states.insert("ueberrascht") } else { states.remove("ueberrascht") } }
+        get { states.contains(Self.surprisedStateId) }
+        set { if newValue { states.insert(Self.surprisedStateId) } else { states.remove(Self.surprisedStateId) } }
     }
     /// The hero is better placed than this opponent: Vorteilhafte Position.
     var advantageousPosition: Bool {
@@ -98,6 +98,11 @@ struct OpponentProfile: Equatable {
 
     static let advantageousPositionKey = FactKey(id: "advantageousPosition", span: .attack)
     static let opposingDeityKey = FactKey(id: "opposingDeity", span: .opponent)
+
+    /// `StateCatalog` ids. The status is the opponent's, but the id is the
+    /// catalog's, so a rule can name the same status whoever is in it.
+    static let proneStateId = "liegend"
+    static let surprisedStateId = "ueberrascht"
 
     /// The table their hit zones are rolled on.
     var bodyPlan: BodyPlan { bodyPlanKind.plan(size: size) }

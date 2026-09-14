@@ -8,7 +8,6 @@ enum RuleDomain: String, CaseIterable, Codable {
     case spellCasting, liturgyCasting, talentCheck
     case damage
 
-    init(_ check: CheckDomain) { self = RuleDomain(rawValue: check.rawValue)! }
     var checkDomain: CheckDomain? { CheckDomain(rawValue: rawValue) }
 }
 
@@ -44,9 +43,17 @@ struct OpponentRoster: Equatable {
         self.currentIndex = min(max(currentIndex, 0), entries.count - 1)
     }
 
+    /// The entry the hero is facing. The index is clamped here as well as in
+    /// `init`, because both stored properties are assigned directly by the
+    /// views and the tests; an empty roster is the one thing that stays fatal.
+    private var safeIndex: Int {
+        precondition(!entries.isEmpty, "a roster has at least one opponent")
+        return min(max(currentIndex, 0), entries.count - 1)
+    }
+
     var current: OpponentProfile {
-        get { entries[currentIndex] }
-        set { entries[currentIndex] = newValue }
+        get { entries[safeIndex] }
+        set { entries[safeIndex] = newValue }
     }
 }
 
