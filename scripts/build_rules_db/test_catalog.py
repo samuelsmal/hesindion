@@ -100,6 +100,16 @@ class ValidateTests(unittest.TestCase):
         entries = [entry(group="Falsch"), entry(id="SA_2", name="Zweite")]
         self.assertEqual(catalog.validate(entries, RULES, self.root), [])
 
+    def test_an_unknown_key_is_a_problem(self):
+        entries = [entry(spurious="x"), entry(id="SA_2", name="Zweite")]
+        self.assertIn("SA_1: unknown key 'spurious'", catalog.validate(entries, RULES, self.root))
+
+    def test_implemented_needs_clauses(self):
+        ok = entry(status="implemented", clauses=[{}])
+        no_clauses = entry(id="SA_2", name="Zweite", status="implemented")
+        self.assertEqual(catalog.validate([ok, no_clauses], RULES, self.root),
+                         ["SA_2: implemented without clauses"])
+
 
 class LoadCatalogTests(unittest.TestCase):
     def test_a_mapping_is_not_a_valid_catalog(self):
@@ -234,6 +244,18 @@ class ImportCatalogTests(unittest.TestCase):
                                 update_snapshot=True)
         snap = json.loads(self.snapshot_path.read_text())
         self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2})
+
+    def test_the_source_hash_is_stored(self):
+        self._write_catalog(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+        )
+        conn = self._conn()
+        catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
+                                update_snapshot=True)
+        stored = conn.execute(
+            "SELECT value FROM catalog_meta WHERE key = 'source_sha256'").fetchone()[0]
+        self.assertEqual(stored, catalog.source_hash(self.catalog_path))
 
 
 if __name__ == "__main__":

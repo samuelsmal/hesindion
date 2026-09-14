@@ -363,6 +363,17 @@ final class RulesDatabase: @unchecked Sendable {
         return ids
     }
 
+    /// The SHA-256 of the catalog YAML the bundled database was built from, so a
+    /// test can tell a database that lags behind `specs/data/rules-catalog.yaml`.
+    func catalogSourceHash() -> String? {
+        let sql = "SELECT value FROM catalog_meta WHERE key = 'source_sha256'"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return col_text(stmt, 0)
+    }
+
     /// The number of rules in `rules`, for tests that hold a count to the database
     /// rather than to a number typed in the test. -1 means the query itself could
     /// not be prepared (a malformed database), which no rule count would ever be.

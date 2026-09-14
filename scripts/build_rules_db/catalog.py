@@ -8,6 +8,7 @@ functions over dicts, testable without a database. import_catalog and
 write_catalog_table read and write a live sqlite3.Connection.
 """
 
+import hashlib
 import json
 import re
 import sqlite3
@@ -18,6 +19,11 @@ import yaml
 
 STATUSES = ("implemented", "byHand", "noRollEffect", "todo")
 REQUIRED = ("id", "name", "group", "status")
+# The design's §4 entry fields.
+KNOWN_KEYS = {
+    "id", "name", "group", "status", "note", "why", "pointer", "reviewed",
+    "sources", "text", "cost", "prerequisites", "unlocks", "applies_with", "clauses",
+}
 
 
 class CatalogError(Exception):
@@ -50,6 +56,9 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
         if missing:
             problems.append(f"{rid}: missing {', '.join(missing)}")
             continue
+        for k in sorted(e):
+            if k not in KNOWN_KEYS:
+                problems.append(f"{rid}: unknown key {k!r}")
         if rid in seen:
             problems.append(f"{rid}: listed twice")
         seen.add(rid)
@@ -72,6 +81,8 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
             problems.append(f"{rid}: todo without why")
         if status == "noRollEffect" and not e.get("note"):
             problems.append(f"{rid}: noRollEffect without note")
+        if status == "implemented" and not e.get("clauses"):
+            problems.append(f"{rid}: implemented without clauses")
     for rid in rules:
         if rid not in seen:
             problems.append(f"{rid}: no catalog entry")
@@ -125,7 +136,11 @@ def write_snapshot(counts: dict[str, int], path: Path) -> None:
     path.write_text(json.dumps(counts, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def write_catalog_table(conn, entries: list[dict]) -> None:
+def source_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_catalog_table(conn, entries: list[dict], source_hash: str | None = None) -> None:
     conn.execute("DROP TABLE IF EXISTS catalog")
     conn.execute("""
         CREATE TABLE catalog (
@@ -138,6 +153,15 @@ def write_catalog_table(conn, entries: list[dict]) -> None:
             reviewed_on    TEXT
         )
     """)
+    conn.execute("DROP TABLE IF EXISTS catalog_meta")
+    conn.execute("""
+        CREATE TABLE catalog_meta (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+    """)
+    if source_hash is not None:
+        conn.execute("INSERT INTO catalog_meta VALUES (?, ?)", ("source_sha256", source_hash))
     for e in entries:
         pointer = e.get("pointer") or {}
         reviewed = e.get("reviewed") or {}
@@ -183,5 +207,5 @@ def import_catalog(conn: sqlite3.Connection, catalog_path: Path, snapshot_path: 
             for d in drift:
                 print(f"  catalog: {d}", file=sys.stderr)
             raise SystemExit("catalog counts do not match the snapshot")
-    write_catalog_table(conn, entries)
+    write_catalog_table(conn, entries, source_hash(catalog_path))
     print("  catalog: " + ", ".join(f"{s} {counts[s]}" for s in STATUSES))

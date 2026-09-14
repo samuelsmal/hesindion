@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 @testable import Hesindion
 
@@ -154,5 +155,18 @@ final class RulesCatalogTests: XCTestCase {
             XCTAssertNotEqual(status, .todo,
                               "\(ruleId) (\(RulesDatabase.shared.lookup(id: ruleId)?.name ?? "?")) is on the hero sheet and the catalog says todo")
         }
+    }
+
+    /// The bundled database must be built from the committed catalog. Editing
+    /// the YAML and forgetting `make rules-db` would otherwise pass every other
+    /// test while the app reports yesterday's coverage.
+    func testTheDatabaseWasBuiltFromTheCommittedCatalog() throws {
+        try requireDatabase()
+        let yaml = Self.repoRoot.appending(path: "specs/data/rules-catalog.yaml")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: yaml.path), "source tree not reachable (device run)")
+        let data = try Data(contentsOf: yaml)
+        let expected = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        XCTAssertEqual(RulesDatabase.shared.catalogSourceHash(), expected,
+                       "rules.db was not built from the current specs/data/rules-catalog.yaml; run make rules-db")
     }
 }
