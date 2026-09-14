@@ -433,16 +433,12 @@ final class Hero {
     /// A Sonderfertigkeit by rule id, wherever the importer filed it.
     ///
     /// The importer sorts an SA into `combatSpecialAbilities` or
-    /// `generalSpecialAbilities` by whether `rules.db` has an effects row scoped
-    /// to combat — and for several abilities it has none at all. Plänkler-
-    /// Formation (SA_884), Gezielter Angriff (SA_160) and Gezielter Schuss
-    /// (SA_161) all land in the general list, so every lookup that searched only
-    /// the combat list found nothing: the formation section never appeared for a
-    /// hero who has the formation, and the Zonenaufschlag was never halved for a
-    /// hero who paid for exactly that.
-    ///
-    /// Which list a trait sits in is a property of the *data*, not of the rule,
-    /// so the lookup does not care.
+    /// `generalSpecialAbilities` by its Optolith group (`SpecialAbilityGroup`).
+    /// It used to ask the effects table instead, which had rows for ten combat
+    /// abilities, so Plänkler-Formation (SA_884), Gezielter Angriff (SA_160) and
+    /// Gezielter Schuss (SA_161) all sat in the general list while every lookup
+    /// searched the combat one. Heroes imported before that fix still carry the
+    /// old split, so the lookup searches both lists and does not care.
     func specialAbility(_ ruleId: String) -> HeroTrait? {
         combatSpecialAbilities.first { $0.ruleId == ruleId }
             ?? generalSpecialAbilities.first { $0.ruleId == ruleId }

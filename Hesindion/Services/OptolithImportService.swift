@@ -458,12 +458,10 @@ struct OptolithImportService {
         )
     }
 
-    /// Check if a special ability is combat-related using the rules database.
-    /// Falls back to `false` (general SA) if the rule is not found.
+    /// Whether an ability belongs in `combatSpecialAbilities`: Optolith's group
+    /// says so. The effects table used to decide this and covered ten abilities.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        guard let rule = rules.lookup(id: id) else { return false }
-        // The rules.db effects with scope "combat" indicate combat special abilities
-        return rule.effects.contains { $0.scope == "combat" }
+        SpecialAbilityGroup.isCombat(groupId: rules.lookup(id: id)?.groupId)
     }
 
     // MARK: - Talents

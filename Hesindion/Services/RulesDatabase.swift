@@ -11,6 +11,8 @@ struct RuleSearchResult: Identifiable {
 struct RuleDetail: Identifiable {
     let id: String
     let category: String
+    /// Optolith's group (`groups.id`), nil for categories that have none.
+    let groupId: Int?
     let name: String
     let description: String
     let cost: String?
@@ -169,7 +171,7 @@ final class RulesDatabase: @unchecked Sendable {
 
     func lookup(id: String, locale: String = "de-DE") -> RuleDetail? {
         let sql = """
-            SELECT r.id, r.category, i.name, i.description, r.cost, r.levels, r.max
+            SELECT r.id, r.category, i.name, i.description, r.cost, r.levels, r.max, r.group_id
             FROM rules r
             JOIN rules_i18n i ON i.rule_id = r.id AND i.locale = ?
             WHERE r.id = ?
@@ -190,6 +192,7 @@ final class RulesDatabase: @unchecked Sendable {
         let cost = col_text_opt(stmt, 4)
         let levels = col_int_opt(stmt, 5)
         let max = col_int_opt(stmt, 6)
+        let groupId = col_int_opt(stmt, 7)
 
         let effects = lookupEffects(ruleId: ruleId)
         let spellDetail = (category == "spell" || category == "liturgy")
@@ -197,7 +200,7 @@ final class RulesDatabase: @unchecked Sendable {
             : nil
 
         return RuleDetail(
-            id: ruleId, category: category, name: name, description: desc,
+            id: ruleId, category: category, groupId: groupId, name: name, description: desc,
             cost: cost, levels: levels, max: max, effects: effects,
             spellDetail: spellDetail
         )
@@ -249,6 +252,17 @@ final class RulesDatabase: @unchecked Sendable {
             ids.append(col_text(stmt, 0))
         }
         return ids
+    }
+
+    /// The name of an Optolith group, for the tests that hold the group enums to the table.
+    func lookupGroupName(_ id: Int) -> String? {
+        let sql = "SELECT name FROM groups WHERE id = ?"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_int(stmt, 1, Int32(id))
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return col_text(stmt, 0)
     }
 
     private func lookupSpellDetail(ruleId: String) -> SpellDetail? {
