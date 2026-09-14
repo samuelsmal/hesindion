@@ -68,6 +68,7 @@ struct CatalogPointer: Equatable {
 
 struct CatalogEntry: Identifiable, Equatable {
     let id: String
+    let name: String
     let status: CatalogStatus
     let note: String?
     let pointer: CatalogPointer?
@@ -297,7 +298,7 @@ final class RulesDatabase: @unchecked Sendable {
     // MARK: - Catalog
 
     private static let catalogColumns =
-        "rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on"
+        "rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on, name"
 
     private func catalogEntry(from stmt: OpaquePointer?) -> CatalogEntry? {
         guard let status = CatalogStatus(rawValue: col_text(stmt, 1)) else { return nil }
@@ -306,6 +307,7 @@ final class RulesDatabase: @unchecked Sendable {
         let pointer: CatalogPointer? = if let file, let symbol { CatalogPointer(file: file, symbol: symbol) } else { nil }
         return CatalogEntry(
             id: col_text(stmt, 0),
+            name: col_text(stmt, 7),
             status: status,
             note: col_text_opt(stmt, 2),
             pointer: pointer,
@@ -335,6 +337,69 @@ final class RulesDatabase: @unchecked Sendable {
             if let entry = catalogEntry(from: stmt) { results.append(entry) }
         }
         return results
+    }
+
+    /// The entries whose id starts with `prefix` — `GRW_` for the core rules
+    /// that have no `rules` row.
+    func catalogEntries(idPrefix prefix: String) -> [CatalogEntry] {
+        let sql = "SELECT \(Self.catalogColumns) FROM catalog WHERE rule_id LIKE ? ORDER BY rule_id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, prefix + "%", -1, SQLITE_TRANSIENT)
+        var results: [CatalogEntry] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let entry = catalogEntry(from: stmt) { results.append(entry) }
+        }
+        return results
+    }
+
+    func allCatalogEntries() -> [CatalogEntry] {
+        let sql = "SELECT \(Self.catalogColumns) FROM catalog ORDER BY rule_id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        var results: [CatalogEntry] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let entry = catalogEntry(from: stmt) { results.append(entry) }
+        }
+        return results
+    }
+
+    /// The SHA-256 of the vocabulary JSON the bundled database was validated
+    /// against, so a test can tell a database that lags behind `RuleVocabulary`.
+    func catalogVocabularyHash() -> String? {
+        let sql = "SELECT value FROM catalog_meta WHERE key = 'vocabulary_sha256'"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return col_text(stmt, 0)
+    }
+
+    /// Every `implemented` entry with its clauses decoded. The build validated
+    /// the JSON, so a decode failure here means the Swift vocabulary and the
+    /// exported one have drifted; the entry is skipped and the count test
+    /// (`RuleCatalogDecodingTests.testEveryImplementedEntryDecodes`) catches it.
+    func implementedRules() -> [CatalogRule] {
+        let sql = "SELECT rule_id, name, reviewed_by, applies_with, clauses FROM catalog WHERE status = 'implemented' ORDER BY rule_id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        let decoder = JSONDecoder()
+        var rules: [CatalogRule] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let id = col_text(stmt, 0)
+            do {
+                let applies = try col_text_opt(stmt, 3).map { try decoder.decode(RulePredicate.self, from: Data($0.utf8)) }
+                let clauses = try decoder.decode([RuleClause].self, from: Data(col_text(stmt, 4).utf8))
+                rules.append(CatalogRule(id: id, name: col_text(stmt, 1), reviewed: col_text_opt(stmt, 2) != nil,
+                                         appliesWith: applies, clauses: clauses))
+            } catch {
+                assertionFailure("\(id): clauses do not decode: \(error)")
+            }
+        }
+        return rules
     }
 
     func catalogStatusCounts() -> [CatalogStatus: Int] {

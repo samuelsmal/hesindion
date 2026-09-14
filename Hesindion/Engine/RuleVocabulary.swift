@@ -49,7 +49,9 @@ enum RuleVocabulary {
     // MARK: - Signatures
 
     /// Argument types: `string`, `strings` (one or a list), `int`, `number`,
-    /// `bool`, `enum:<name>`, `list:<enum name>`.
+    /// `bool`, `enum:<name>`, `list:<enum name>`. `list:effect` (used by
+    /// `choice`) refers to the `effects` table itself, the one `list:` token
+    /// with no entry under `enums`.
     struct Signature {
         var args: [String: String] = [:]
         var required: [String] = []

@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 @testable import Hesindion
 
@@ -41,6 +42,16 @@ final class RuleVocabularyTests: XCTestCase {
         XCTAssertEqual(enums["zone"], HitZone.allCases.map(\.rawValue))
         XCTAssertEqual(enums["kind"], RuleVocabulary.ClauseKind.allCases.map(\.rawValue))
         XCTAssertEqual(root["version"] as? Int, RuleVocabulary.version)
+    }
+
+    /// `make rules-db` validated the catalog against the exported vocabulary and
+    /// wrote its hash; if the enums moved since, the bundled clauses were checked
+    /// against a contract the app no longer has.
+    func testTheDatabaseWasBuiltAgainstThisVocabulary() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
+        let expected = SHA256.hash(data: Data(RuleVocabulary.exportJSON().utf8)).map { String(format: "%02x", $0) }.joined()
+        XCTAssertEqual(RulesDatabase.shared.catalogVocabularyHash(), expected,
+                       "rules.db was built against another rule-vocabulary.json; run make test-ui (to re-export) and make rules-db")
     }
 
     func testTheExportIsDeterministicAndEndsWithANewline() {

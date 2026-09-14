@@ -37,9 +37,10 @@ final class RulesCatalogTests: XCTestCase {
         try requireDatabase()
         let expected = RulesDatabase.shared.ruleCount()
         XCTAssertGreaterThan(expected, 0)
+        let core = RulesDatabase.shared.catalogEntries(idPrefix: "GRW_").count
         let counts = RulesDatabase.shared.catalogStatusCounts()
         let total = counts.values.reduce(0, +)
-        XCTAssertEqual(total, expected, "every rule, counted once")
+        XCTAssertEqual(total, expected + core, "every rule and every core rule, counted once")
     }
 
     /// A `byHand` pointer names a file and a symbol; both must exist, or the
