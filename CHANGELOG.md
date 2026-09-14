@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
-- The `effects` table, `specs/data/rules.yaml`, the Regelwiki scraper and `RuleEffectModifiers`. Eighty-two hand-written rows for 26 rules, read by code nothing called; the catalog replaces all of it
+- The `effects` table, `specs/data/rules.yaml`, the Regelwiki scraper and `RuleEffectModifiers`. Seventy-nine hand-written rows for 26 rules, read by code nothing called; the catalog replaces all of it
 - The damage half of the attack-execution screen — dice state, animation and roll — which nothing had called since the damage moved to the opponent-defence screen
 
 ### Fixed
