@@ -60,6 +60,40 @@ class ValidateTests(unittest.TestCase):
         entries = [entry(why=None), entry(id="SA_2", name="Zweite")]
         self.assertIn("SA_1: todo without why", catalog.validate(entries, RULES, self.root))
 
+    def test_no_roll_effect_needs_a_note(self):
+        entries = [entry(status="noRollEffect", why=None), entry(id="SA_2", name="Zweite")]
+        self.assertIn("SA_1: noRollEffect without note", catalog.validate(entries, RULES, self.root))
+
+    def test_a_non_mapping_entry_is_a_problem_not_a_crash(self):
+        problems = catalog.validate([None, "SA_1"], RULES, self.root)
+        self.assertIn("entry 0: not a mapping", problems)
+        self.assertIn("entry 1: not a mapping", problems)
+
+    def test_a_pointer_file_outside_the_repo_is_a_problem(self):
+        absolute = entry(status="byHand", note="x", pointer={"file": "/etc/passwd", "symbol": "x"})
+        self.assertIn("SA_1: pointer file /etc/passwd must be a relative path inside the repository",
+                      catalog.validate([absolute], RULES, self.root))
+        escaping = entry(status="byHand", note="x", pointer={"file": "../Hero.swift", "symbol": "x"})
+        self.assertIn("SA_1: pointer file ../Hero.swift must be a relative path inside the repository",
+                      catalog.validate([escaping], RULES, self.root))
+
+    def test_a_pointer_symbol_must_be_a_non_empty_string(self):
+        empty = entry(status="byHand", note="x", pointer={"file": "Hero.swift", "symbol": ""})
+        self.assertIn("SA_1: pointer symbol must be a non-empty string",
+                      catalog.validate([empty], RULES, self.root))
+        not_a_string = entry(status="byHand", note="x", pointer={"file": "Hero.swift", "symbol": 1})
+        self.assertIn("SA_1: pointer symbol must be a non-empty string",
+                      catalog.validate([not_a_string], RULES, self.root))
+
+
+class LoadCatalogTests(unittest.TestCase):
+    def test_a_mapping_is_not_a_valid_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "catalog.yaml"
+            path.write_text("id: SA_1\n")
+            with self.assertRaises(catalog.CatalogError):
+                catalog.load_catalog(path)
+
 
 class SnapshotTests(unittest.TestCase):
     def setUp(self):
@@ -84,13 +118,18 @@ class SnapshotTests(unittest.TestCase):
         self.assertTrue(any("grew" in p for p in problems))
         self.assertTrue(any("--update-snapshot" in p for p in problems))
 
+    def test_a_missing_snapshot_says_so(self):
+        problems = catalog.check_snapshot({"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 0}, self.path)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("--update-snapshot", problems[0])
+
 
 class TableTests(unittest.TestCase):
     def test_the_table_holds_one_row_per_entry(self):
         conn = sqlite3.connect(":memory:")
         entries = [entry(), entry(id="SA_2", name="Zweite", status="byHand", note="by hand",
                                   pointer={"file": "Hero.swift", "symbol": "x"},
-                                  reviewed={"by": "sam", "on": "2026-09-14"})]
+                                  reviewed={"by": "sam", "date": "2026-09-14"})]
         catalog.write_catalog_table(conn, entries)
         rows = conn.execute("SELECT rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on "
                             "FROM catalog ORDER BY rule_id").fetchall()
@@ -98,6 +137,20 @@ class TableTests(unittest.TestCase):
             ("SA_1", "todo", "not yet read", None, None, None, None),
             ("SA_2", "byHand", "by hand", "Hero.swift", "x", "sam", "2026-09-14"),
         ])
+
+    def test_yaml_on_key_still_yields_a_date_string(self):
+        yaml_text = (
+            "- { id: SA_1, name: Erste, group: Kampf, status: byHand, note: x, "
+            "pointer: { file: a, symbol: b }, reviewed: { by: sam, date: 2026-09-14 } }\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "catalog.yaml"
+            path.write_text(yaml_text)
+            entries = catalog.load_catalog(path)
+        conn = sqlite3.connect(":memory:")
+        catalog.write_catalog_table(conn, entries)
+        reviewed_on = conn.execute("SELECT reviewed_on FROM catalog WHERE rule_id = 'SA_1'").fetchone()[0]
+        self.assertEqual(reviewed_on, "2026-09-14")
 
 
 if __name__ == "__main__":

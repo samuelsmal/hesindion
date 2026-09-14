@@ -33,7 +33,10 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path) -> lis
     """
     problems: list[str] = []
     seen: set[str] = set()
-    for e in entries:
+    for i, e in enumerate(entries):
+        if not isinstance(e, dict):
+            problems.append(f"entry {i}: not a mapping")
+            continue
         rid = e.get("id", "?")
         missing = [k for k in REQUIRED if k not in e]
         if missing:
@@ -55,6 +58,8 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path) -> lis
             problems.extend(_check_pointer(rid, e.get("pointer"), repo_root))
         if status == "todo" and not e.get("why"):
             problems.append(f"{rid}: todo without why")
+        if status == "noRollEffect" and not e.get("note"):
+            problems.append(f"{rid}: noRollEffect without note")
     for rid in rules:
         if rid not in seen:
             problems.append(f"{rid}: no catalog entry")
@@ -64,13 +69,20 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path) -> lis
 def _check_pointer(rid: str, pointer, repo_root: Path) -> list[str]:
     if not isinstance(pointer, dict) or "file" not in pointer or "symbol" not in pointer:
         return [f"{rid}: byHand needs pointer {{file, symbol}}"]
-    path = repo_root / pointer["file"]
+    file = pointer["file"]
+    if Path(file).is_absolute() or ".." in Path(file).parts:
+        return [f"{rid}: pointer file {file} must be a relative path inside the repository"]
+    symbol = pointer["symbol"]
+    if not isinstance(symbol, str) or not symbol:
+        return [f"{rid}: pointer symbol must be a non-empty string"]
+    path = repo_root / file
     if not path.is_file():
-        return [f"{rid}: pointer file {pointer['file']} does not exist"]
+        return [f"{rid}: pointer file {file} does not exist"]
     text = path.read_text(encoding="utf-8")
-    pattern = r"(?<![A-Za-z0-9_])" + re.escape(pointer["symbol"]) + r"(?![A-Za-z0-9_])"
+    # Kept identical to the Swift test RulesCatalogTests.testEveryPointerNamesASymbolThatExists.
+    pattern = r"(?<![A-Za-z0-9_])" + re.escape(symbol) + r"(?![A-Za-z0-9_])"
     if not re.search(pattern, text):
-        return [f"{rid}: symbol {pointer['symbol']!r} not found in {pointer['file']}"]
+        return [f"{rid}: symbol {symbol!r} not found in {file}"]
     return []
 
 
@@ -126,7 +138,7 @@ def write_catalog_table(conn, entries: list[dict]) -> None:
                 pointer.get("file"),
                 pointer.get("symbol"),
                 reviewed.get("by"),
-                str(reviewed["on"]) if reviewed.get("on") is not None else None,
+                str(reviewed["date"]) if reviewed.get("date") is not None else None,
             ),
         )
     conn.commit()
