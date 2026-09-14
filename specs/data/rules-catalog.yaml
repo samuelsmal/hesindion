@@ -1,145 +1,146 @@
 # The rules catalog — docs/plans/2026-09-14-rules-catalog-design.md §4.
 # One entry per rule id in rules.db. The build fails on a missing or unknown id,
 # an unknown status, a byHand pointer that does not resolve, a todo without why,
-# or a noRollEffect without note.
+# a noRollEffect without note, a name or group that does not match rules.db, a
+# duplicate id, or counts that differ from rules-catalog.snapshot.json.
 #
 # status: implemented | byHand | noRollEffect | todo
 
-- { id: ADV_0, name: "Eigener Vorteil", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_1, name: "Adel", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_2, name: "Altersresistenz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_3, name: "Angenehmer Geruch", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_4, name: "Begabung", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_5, name: "Beidhändig", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_6, name: "Dunkelsicht", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_7, name: "Eisenaffine Aura", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_8, name: "Entfernungssinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_9, name: "Flink", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_10, name: "Fuchssinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_11, name: "Geborener Redner", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_12, name: "Geweihter", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_13, name: "Giftresistenz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_14, name: "Glück", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_15, name: "Gutaussehend", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_16, name: "Herausragende Fertigkeit", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_17, name: "Herausragende Kampftechnik", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_18, name: "Herausragender Sinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_22, name: "Hitzeresistenz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_23, name: "Hohe Astralkraft", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_24, name: "Hohe Karmalkraft", group: "Kampf", status: todo, why: not yet read }
-- { id: ADV_25, name: "Hohe Lebenskraft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_26, name: "Hohe Seelenkraft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_27, name: "Hohe Zähigkeit", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_28, name: "Immunität gegen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_29, name: "Immunität gegen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_30, name: "Kälteresistenz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_31, name: "Krankheitsresistenz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_32, name: "Magische Einstimmung", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_33, name: "Mystiker", group: "Kampf", status: todo, why: not yet read }
-- { id: ADV_34, name: "Nichtschläfer", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_35, name: "Pragmatiker", group: "Kampf", status: todo, why: not yet read }
-- { id: ADV_36, name: "Reich", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_37, name: "Richtungssinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_38, name: "Schlangenmensch", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_39, name: "Schwer zu verzaubern", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_40, name: "Soziale Anpassungsfähigkeit", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_41, name: "Unscheinbar", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_42, name: "Verbesserte Regeneration (Astralenergie)", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_43, name: "Verbesserte Regeneration (Karmaenergie)", group: "Kampf", status: todo, why: not yet read }
-- { id: ADV_44, name: "Verbesserte Regeneration (Lebensenergie)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_45, name: "Verhüllte Aura", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_46, name: "Vertrauenerweckend", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_47, name: "Waffenbegabung", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_48, name: "Wohlklang", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_49, name: "Zäher Hund", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_50, name: "Zauberer", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_51, name: "Zeitgefühl", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_52, name: "Zweistimmiger Gesang", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_53, name: "Zwergennase", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_54, name: "Eisern", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_55, name: "Hart im nehmen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_56, name: "Affinität zu Dämonen", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_57, name: "Affinität zu Elementaren", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_58, name: "Große Zauberauswahl", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_59, name: "Kein Bann des Eisen", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_60, name: "Machtvolle Zaubermelodien", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_61, name: "Machtvolle Zaubertänze", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_62, name: "Schutzgeist", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_63, name: "Weitreichende Zaubermelodien", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_64, name: "Weitreichende Zaubertänze", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_65, name: "Basiliskentöter", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_66, name: "Drachentöter", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_67, name: "Feenfreund", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_68, name: "Hass auf", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_69, name: "Saumagen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_70, name: "Tierfreund", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_71, name: "Wasserlebewesen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_72, name: "Allerweltsname", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_73, name: "Gutes Namensgedächtnis", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_74, name: "Heldenhafter Name", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_75, name: "Schnell wieder auf den Beinen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_76, name: "Akoluth", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_77, name: "Prediger", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_78, name: "Visionär", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_79, name: "Zahlreiche Predigten", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_80, name: "Zahlreiche Visionen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_81, name: "Feenblut (Blütenfee)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_82, name: "Feenblut (Dryade)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_83, name: "Feenblut (Großer Eberbiestinger)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_84, name: "Feenblut (Nixer)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_85, name: "Animalische Kraft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_86, name: "Blumenduft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_87, name: "Dickes Fell", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_88, name: "Einblicke ins Verborgene", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_89, name: "Glatte Haut", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_90, name: "Harmonie des Waldes", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_91, name: "Kraft der Bäume", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_92, name: "Leichter Gang", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_93, name: "Seesprache", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_94, name: "Tierische Kampfgefährten", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_95, name: "Verführerische Gestalt", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_96, name: "Wasser des Lebens", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_97, name: "Unbeschwertes Zaubern", group: "Schicksal", status: todo, why: not yet read }
-- { id: ADV_98, name: "Begabte/r Aufreißer/in", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_99, name: "Einkommen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_100, name: "Natürlicher Rüstungsschutz", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_101, name: "Ausdauernde/r Liebhaber/in", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_102, name: "Begabte/r Aufreißer/in", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_103, name: "Erotische Ausstrahlung", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_104, name: "Erotische Stimme", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_105, name: "Freudenfluss", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_106, name: "Fruchtbar", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_107, name: "Große Blase", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_108, name: "Guter Geschmack", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_109, name: "Hypnotische(s) Brüste / Gesäß / Gemächt", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_110, name: "Jungfrau", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_111, name: "Levthangeküsst", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_112, name: "Potent", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_113, name: "Rahjageküsst", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_114, name: "Resistenz gegen Geschlechtskrankheiten", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_115, name: "Stattlicher Penis", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_116, name: "Traumhafter Po", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_117, name: "Treu I-II", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_118, name: "Vorliebe (Sexpraktik)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_119, name: "Wohlgeformte Brüste", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_120, name: "Wunderschöne Vagina", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_121, name: "Wolfsblut", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_122, name: "Wolfsgebiss", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_123, name: "Wolfskind", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_124, name: "Dschinnenblut (Rosendschinn)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_125, name: "Feenblut (Levschy)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_126, name: "Feenblut (Vila)", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_127, name: "Betörender Duft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_128, name: "Muttererde", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_129, name: "Rosenliebe", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_130, name: "Ekstatisches Verlangen", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_132, name: "Gabe der Sonne", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_134, name: "Lustvolle Ausschweifung", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_135, name: "Rausch der Leidenschaft", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_136, name: "Reigen der Liebe", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_138, name: "Wilde Erregung", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_139, name: "Koboldfreund", group: "Allgemein", status: todo, why: not yet read }
-- { id: ADV_140, name: "Blutzauberer", group: "Kampf", status: todo, why: not yet read }
+- { id: ADV_0, name: "Eigener Vorteil", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_1, name: "Adel", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_2, name: "Altersresistenz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_3, name: "Angenehmer Geruch", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_4, name: "Begabung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_5, name: "Beidhändig", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_6, name: "Dunkelsicht", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_7, name: "Eisenaffine Aura", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_8, name: "Entfernungssinn", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_9, name: "Flink", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_10, name: "Fuchssinn", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_11, name: "Geborener Redner", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_12, name: "Geweihter", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_13, name: "Giftresistenz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_14, name: "Glück", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_15, name: "Gutaussehend", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_16, name: "Herausragende Fertigkeit", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_17, name: "Herausragende Kampftechnik", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_18, name: "Herausragender Sinn", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_22, name: "Hitzeresistenz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_23, name: "Hohe Astralkraft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_24, name: "Hohe Karmalkraft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_25, name: "Hohe Lebenskraft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_26, name: "Hohe Seelenkraft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_27, name: "Hohe Zähigkeit", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_28, name: "Immunität gegen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_29, name: "Immunität gegen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_30, name: "Kälteresistenz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_31, name: "Krankheitsresistenz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_32, name: "Magische Einstimmung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_33, name: "Mystiker", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_34, name: "Nichtschläfer", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_35, name: "Pragmatiker", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_36, name: "Reich", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_37, name: "Richtungssinn", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_38, name: "Schlangenmensch", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_39, name: "Schwer zu verzaubern", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_40, name: "Soziale Anpassungsfähigkeit", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_41, name: "Unscheinbar", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_42, name: "Verbesserte Regeneration (Astralenergie)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_43, name: "Verbesserte Regeneration (Karmaenergie)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_44, name: "Verbesserte Regeneration (Lebensenergie)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_45, name: "Verhüllte Aura", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_46, name: "Vertrauenerweckend", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_47, name: "Waffenbegabung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_48, name: "Wohlklang", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_49, name: "Zäher Hund", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_50, name: "Zauberer", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_51, name: "Zeitgefühl", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_52, name: "Zweistimmiger Gesang", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_53, name: "Zwergennase", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_54, name: "Eisern", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_55, name: "Hart im nehmen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_56, name: "Affinität zu Dämonen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_57, name: "Affinität zu Elementaren", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_58, name: "Große Zauberauswahl", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_59, name: "Kein Bann des Eisen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_60, name: "Machtvolle Zaubermelodien", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_61, name: "Machtvolle Zaubertänze", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_62, name: "Schutzgeist", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_63, name: "Weitreichende Zaubermelodien", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_64, name: "Weitreichende Zaubertänze", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_65, name: "Basiliskentöter", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_66, name: "Drachentöter", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_67, name: "Feenfreund", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_68, name: "Hass auf", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_69, name: "Saumagen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_70, name: "Tierfreund", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_71, name: "Wasserlebewesen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_72, name: "Allerweltsname", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_73, name: "Gutes Namensgedächtnis", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_74, name: "Heldenhafter Name", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_75, name: "Schnell wieder auf den Beinen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_76, name: "Akoluth", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_77, name: "Prediger", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_78, name: "Visionär", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_79, name: "Zahlreiche Predigten", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_80, name: "Zahlreiche Visionen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_81, name: "Feenblut (Blütenfee)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_82, name: "Feenblut (Dryade)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_83, name: "Feenblut (Großer Eberbiestinger)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_84, name: "Feenblut (Nixer)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_85, name: "Animalische Kraft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_86, name: "Blumenduft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_87, name: "Dickes Fell", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_88, name: "Einblicke ins Verborgene", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_89, name: "Glatte Haut", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_90, name: "Harmonie des Waldes", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_91, name: "Kraft der Bäume", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_92, name: "Leichter Gang", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_93, name: "Seesprache", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_94, name: "Tierische Kampfgefährten", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_95, name: "Verführerische Gestalt", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_96, name: "Wasser des Lebens", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_97, name: "Unbeschwertes Zaubern", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_98, name: "Begabte/r Aufreißer/in", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_99, name: "Einkommen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_100, name: "Natürlicher Rüstungsschutz", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_101, name: "Ausdauernde/r Liebhaber/in", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_102, name: "Begabte/r Aufreißer/in", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_103, name: "Erotische Ausstrahlung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_104, name: "Erotische Stimme", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_105, name: "Freudenfluss", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_106, name: "Fruchtbar", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_107, name: "Große Blase", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_108, name: "Guter Geschmack", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_109, name: "Hypnotische(s) Brüste / Gesäß / Gemächt", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_110, name: "Jungfrau", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_111, name: "Levthangeküsst", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_112, name: "Potent", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_113, name: "Rahjageküsst", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_114, name: "Resistenz gegen Geschlechtskrankheiten", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_115, name: "Stattlicher Penis", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_116, name: "Traumhafter Po", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_117, name: "Treu I-II", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_118, name: "Vorliebe (Sexpraktik)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_119, name: "Wohlgeformte Brüste", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_120, name: "Wunderschöne Vagina", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_121, name: "Wolfsblut", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_122, name: "Wolfsgebiss", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_123, name: "Wolfskind", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_124, name: "Dschinnenblut (Rosendschinn)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_125, name: "Feenblut (Levschy)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_126, name: "Feenblut (Vila)", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_127, name: "Betörender Duft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_128, name: "Muttererde", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_129, name: "Rosenliebe", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_130, name: "Ekstatisches Verlangen", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_132, name: "Gabe der Sonne", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_134, name: "Lustvolle Ausschweifung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_135, name: "Rausch der Leidenschaft", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_136, name: "Reigen der Liebe", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_138, name: "Wilde Erregung", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_139, name: "Koboldfreund", group: "Vorteil", status: todo, why: not yet read }
+- { id: ADV_140, name: "Blutzauberer", group: "Vorteil", status: todo, why: not yet read }
 - { id: CT_1, name: "Armbrüste", group: "Fernkampf", status: todo, why: not yet read }
 - { id: CT_2, name: "Bögen", group: "Fernkampf", status: todo, why: not yet read }
 - { id: CT_3, name: "Dolche", group: "Nahkampf", status: todo, why: not yet read }
@@ -175,89 +176,89 @@
 - { id: COND_12, name: "Begehren", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_13, name: "Überanstrengung", group: "Zustand (leveled)", status: todo, why: not yet read }
 - { id: COND_14, name: "Dämonische Auszehrung", group: "Zustand (leveled)", status: todo, why: not yet read }
-- { id: DISADV_0, name: "Eigener Nachteil", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_1, name: "Angst vor", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_2, name: "Arm", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_3, name: "Artefaktgebunden", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_4, name: "Behäbig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_5, name: "Blind", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_6, name: "Blutrausch", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_7, name: "Eingeschränkter Sinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_11, name: "Farbenblind", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_12, name: "Fettleibig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_13, name: "Giftanfällig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_14, name: "Hässlich", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_15, name: "Hitzeempfindlich", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_16, name: "Kälteempfindlich", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_17, name: "Keine Flugsalbe", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_18, name: "Kein Vertrauter", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_19, name: "Körpergebundene Kraft", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_20, name: "Körperliche Auffälligkeit", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_21, name: "Krankheitsanfällig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_22, name: "Lästige Mindergeister", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_23, name: "Lichtempfindlich", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_24, name: "Magische Einschränkung", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_25, name: "Nachtblind", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_26, name: "Niedrige Astralkraft", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_27, name: "Niedrige Karmalkraft", group: "Kampf", status: todo, why: not yet read }
-- { id: DISADV_28, name: "Niedrige Lebenskraft", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_29, name: "Niedrige Seelenkraft", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_30, name: "Niedrige Zähigkeit", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_31, name: "Pech", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_32, name: "Pechmagnet", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_33, name: "Persönlichkeitsschwächen", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_34, name: "Prinzipientreue", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_35, name: "Schlafwandler", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_36, name: "Schlechte Angewohnheit", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_37, name: "Schlechte Eigenschaft", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_38, name: "Schlechte Regeneration (Astralenergie)", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_39, name: "Schlechte Regeneration (Karmalenergie)", group: "Kampf", status: todo, why: not yet read }
-- { id: DISADV_40, name: "Schlechte Regeneration (Lebensenergie)", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_41, name: "Schwacher Astralkörper", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_42, name: "Schwacher Karmalkörper", group: "Kampf", status: todo, why: not yet read }
-- { id: DISADV_43, name: "Sensibler Geruchssinn", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_44, name: "Sprachfehler", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_45, name: "Stigma", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_46, name: "Stumm", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_47, name: "Taub", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_48, name: "Unfähig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_49, name: "Unfrei", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_50, name: "Verpflichtungen", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_51, name: "Verstümmelt", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_52, name: "Wahrer Name", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_53, name: "Wilde Magie", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_54, name: "Zauberanfällig", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_55, name: "Zerbrechlich", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_56, name: "Gläsern", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_57, name: "Verweichlicht", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_58, name: "Instabiler Zauberer", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_60, name: "Schwache Zaubermelodien", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_61, name: "Schwache Zaubertänze", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_62, name: "Verminderte Zaubermelodien", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_63, name: "Verminderte Zaubertänze", group: "Schicksal", status: todo, why: not yet read }
-- { id: DISADV_64, name: "Jagdwildgeruch", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_65, name: "Raubtiergeruch", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_66, name: "Böser Namensvetter", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_67, name: "Lächerlicher Name", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_68, name: "Schlechtes Namensgedächtnis", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_69, name: "Schurkenname", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_70, name: "Unpassender Name", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_71, name: "Unverträglichkeit gegenüber Alkohol", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_72, name: "Wenige Predigten", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_73, name: "Wenige Visionen", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_74, name: "Lernfaul", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_75, name: "Abneigung (Sexpraktik)", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_76, name: "Fixierung", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_77, name: "Frigide", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_78, name: "Homophobie/Heterophobie", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_79, name: "Schlechter Geschmack", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_80, name: "Unerotische Stimme", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_81, name: "Untreu", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_82, name: "Verfrühter Höhepunkt", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_84, name: "Impotent", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_85, name: "Unfruchtbar", group: "Allgemein", status: todo, why: not yet read }
-- { id: DISADV_86, name: "Lästige Blütenfeen", group: "Schicksal", status: todo, why: not yet read }
+- { id: DISADV_0, name: "Eigener Nachteil", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_1, name: "Angst vor", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_2, name: "Arm", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_3, name: "Artefaktgebunden", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_4, name: "Behäbig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_5, name: "Blind", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_6, name: "Blutrausch", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_7, name: "Eingeschränkter Sinn", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_11, name: "Farbenblind", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_12, name: "Fettleibig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_13, name: "Giftanfällig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_14, name: "Hässlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_15, name: "Hitzeempfindlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_16, name: "Kälteempfindlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_17, name: "Keine Flugsalbe", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_18, name: "Kein Vertrauter", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_19, name: "Körpergebundene Kraft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_20, name: "Körperliche Auffälligkeit", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_21, name: "Krankheitsanfällig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_22, name: "Lästige Mindergeister", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_23, name: "Lichtempfindlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_24, name: "Magische Einschränkung", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_25, name: "Nachtblind", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_26, name: "Niedrige Astralkraft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_27, name: "Niedrige Karmalkraft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_28, name: "Niedrige Lebenskraft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_29, name: "Niedrige Seelenkraft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_30, name: "Niedrige Zähigkeit", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_31, name: "Pech", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_32, name: "Pechmagnet", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_33, name: "Persönlichkeitsschwächen", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_34, name: "Prinzipientreue", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_35, name: "Schlafwandler", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_36, name: "Schlechte Angewohnheit", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_37, name: "Schlechte Eigenschaft", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_38, name: "Schlechte Regeneration (Astralenergie)", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_39, name: "Schlechte Regeneration (Karmalenergie)", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_40, name: "Schlechte Regeneration (Lebensenergie)", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_41, name: "Schwacher Astralkörper", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_42, name: "Schwacher Karmalkörper", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_43, name: "Sensibler Geruchssinn", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_44, name: "Sprachfehler", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_45, name: "Stigma", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_46, name: "Stumm", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_47, name: "Taub", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_48, name: "Unfähig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_49, name: "Unfrei", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_50, name: "Verpflichtungen", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_51, name: "Verstümmelt", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_52, name: "Wahrer Name", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_53, name: "Wilde Magie", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_54, name: "Zauberanfällig", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_55, name: "Zerbrechlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_56, name: "Gläsern", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_57, name: "Verweichlicht", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_58, name: "Instabiler Zauberer", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_60, name: "Schwache Zaubermelodien", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_61, name: "Schwache Zaubertänze", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_62, name: "Verminderte Zaubermelodien", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_63, name: "Verminderte Zaubertänze", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_64, name: "Jagdwildgeruch", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_65, name: "Raubtiergeruch", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_66, name: "Böser Namensvetter", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_67, name: "Lächerlicher Name", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_68, name: "Schlechtes Namensgedächtnis", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_69, name: "Schurkenname", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_70, name: "Unpassender Name", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_71, name: "Unverträglichkeit gegenüber Alkohol", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_72, name: "Wenige Predigten", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_73, name: "Wenige Visionen", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_74, name: "Lernfaul", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_75, name: "Abneigung (Sexpraktik)", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_76, name: "Fixierung", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_77, name: "Frigide", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_78, name: "Homophobie/Heterophobie", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_79, name: "Schlechter Geschmack", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_80, name: "Unerotische Stimme", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_81, name: "Untreu", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_82, name: "Verfrühter Höhepunkt", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_84, name: "Impotent", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_85, name: "Unfruchtbar", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_86, name: "Lästige Blütenfeen", group: "Nachteil", status: todo, why: not yet read }
 - { id: LITURGY_1, name: "Bann der Dunkelheit", group: "Liturgie", status: todo, why: not yet read }
 - { id: BLESSING_1, name: "Eidsegen", group: "Segnungen", status: todo, why: not yet read }
 - { id: LITURGY_2, name: "Bann der Furcht", group: "Liturgie", status: todo, why: not yet read }

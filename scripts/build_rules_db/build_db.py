@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -785,30 +786,6 @@ def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {lang_count} languages, {script_count} scripts")
 
 
-def import_catalog(conn: sqlite3.Connection, args) -> None:
-    entries = catalog.load_catalog(args.catalog)
-    rules = dict(conn.execute(
-        "SELECT rule_id, name FROM rules_i18n WHERE locale = 'de-DE'"
-    ).fetchall())
-    problems = catalog.validate(entries, rules, args.repo_root)
-    if problems:
-        for p in problems:
-            print(f"  catalog: {p}")
-        raise SystemExit(f"{len(problems)} catalog problem(s); see above")
-    counts = catalog.status_counts(entries)
-    if args.update_snapshot:
-        catalog.write_snapshot(counts, args.snapshot)
-        print(f"  Wrote snapshot {args.snapshot}")
-    else:
-        drift = catalog.check_snapshot(counts, args.snapshot)
-        if drift:
-            for d in drift:
-                print(f"  catalog: {d}")
-            raise SystemExit("catalog counts do not match the snapshot")
-    catalog.write_catalog_table(conn, entries)
-    print("  catalog: " + ", ".join(f"{s} {counts[s]}" for s in catalog.STATUSES))
-
-
 def build_fts_index(conn: sqlite3.Connection):
     conn.execute("""
         INSERT INTO rules_fts (rule_id, name, description)
@@ -834,7 +811,11 @@ def main():
     assert args.source.is_dir(), f"Source directory not found: {args.source}"
     assert args.catalog.is_file(), f"Catalog not found: {args.catalog}"
 
-    conn = sqlite3.connect(str(args.output))
+    tmp = args.output.with_suffix(".db.tmp")
+    if tmp.exists():
+        tmp.unlink()
+
+    conn = sqlite3.connect(str(tmp))
     conn.execute("PRAGMA journal_mode=DELETE")
     conn.execute("PRAGMA foreign_keys=ON")
 
@@ -888,7 +869,7 @@ def main():
     import_blessings(conn, args.source)
 
     print("Importing the rules catalog...")
-    import_catalog(conn, args)
+    catalog.import_catalog(conn, args.catalog, args.snapshot, args.repo_root, args.update_snapshot)
 
     print("Building FTS index...")
     build_fts_index(conn)
@@ -896,6 +877,7 @@ def main():
     print_stats(conn)
 
     conn.close()
+    os.replace(tmp, args.output)
     print(f"Built {args.output} successfully.")
 
 

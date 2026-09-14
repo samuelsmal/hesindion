@@ -2,7 +2,8 @@
 """Write the catalog skeleton: every rule id in an existing rules.db as a `todo` entry.
 
 Run once. Afterwards the build lists any id that is missing from the catalog, and a
-missing id is added by hand as one line in the same shape.
+missing id is added by hand as one line in the same shape. To re-scaffold after ids
+change, write to a temp path and merge by hand, because overwriting loses every status.
 """
 
 import argparse
@@ -31,14 +32,15 @@ def main():
         FROM rules r
         JOIN rules_i18n i ON i.rule_id = r.id AND i.locale = 'de-DE'
         JOIN categories c ON c.id = r.category
-        LEFT JOIN groups g ON g.id = r.group_id
+        LEFT JOIN groups g ON g.id = r.group_id AND g.category = r.category
         ORDER BY r.category, CAST(substr(r.id, instr(r.id, '_') + 1) AS INTEGER)
     """).fetchall()
     lines = [
         "# The rules catalog — docs/plans/2026-09-14-rules-catalog-design.md §4.",
         "# One entry per rule id in rules.db. The build fails on a missing or unknown id,",
         "# an unknown status, a byHand pointer that does not resolve, a todo without why,",
-        "# or a noRollEffect without note.",
+        "# a noRollEffect without note, a name or group that does not match rules.db, a",
+        "# duplicate id, or counts that differ from rules-catalog.snapshot.json.",
         "#",
         "# status: implemented | byHand | noRollEffect | todo",
         "",

@@ -6,6 +6,8 @@ statuses and pointers only, no clauses yet.
 
 import json
 import re
+import sqlite3
+import sys
 from pathlib import Path
 
 import yaml
@@ -26,10 +28,12 @@ def load_catalog(path: Path) -> list[dict]:
     return doc
 
 
-def validate(entries: list[dict], rules: dict[str, str], repo_root: Path) -> list[str]:
+def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
+             groups: dict[str, str] | None = None) -> list[str]:
     """Every problem with the catalog, as one line each. Empty means valid.
 
-    `rules` maps every rule id in rules.db to its German name.
+    `rules` maps every rule id in rules.db to its German name. `groups`, when given,
+    maps every rule id to its expected group label; omit it to skip that check.
     """
     problems: list[str] = []
     seen: set[str] = set()
@@ -50,6 +54,8 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path) -> lis
             continue
         if e["name"] != rules[rid]:
             problems.append(f"{rid}: name is {e['name']!r}, rules.db says {rules[rid]!r}")
+        if groups is not None and rid in groups and e["group"] != groups[rid]:
+            problems.append(f"{rid}: group is {e['group']!r}, rules.db says {groups[rid]!r}")
         status = e["status"]
         if status not in STATUSES:
             problems.append(f"{rid}: status {status!r} is not one of {', '.join(STATUSES)}")
@@ -142,3 +148,34 @@ def write_catalog_table(conn, entries: list[dict]) -> None:
             ),
         )
     conn.commit()
+
+
+def import_catalog(conn: sqlite3.Connection, catalog_path: Path, snapshot_path: Path,
+                    repo_root: Path, update_snapshot: bool) -> None:
+    entries = load_catalog(catalog_path)
+    rules = dict(conn.execute(
+        "SELECT rule_id, name FROM rules_i18n WHERE locale = 'de-DE'"
+    ).fetchall())
+    groups = dict(conn.execute("""
+        SELECT r.id, COALESCE(g.name, c.name)
+        FROM rules r
+        JOIN categories c ON c.id = r.category
+        LEFT JOIN groups g ON g.id = r.group_id AND g.category = r.category
+    """).fetchall())
+    problems = validate(entries, rules, repo_root, groups)
+    if problems:
+        for p in problems:
+            print(f"  catalog: {p}", file=sys.stderr)
+        raise SystemExit(f"{len(problems)} catalog problem(s); see above")
+    counts = status_counts(entries)
+    if update_snapshot:
+        write_snapshot(counts, snapshot_path)
+        print(f"  Wrote snapshot {snapshot_path}")
+    else:
+        drift = check_snapshot(counts, snapshot_path)
+        if drift:
+            for d in drift:
+                print(f"  catalog: {d}", file=sys.stderr)
+            raise SystemExit("catalog counts do not match the snapshot")
+    write_catalog_table(conn, entries)
+    print("  catalog: " + ", ".join(f"{s} {counts[s]}" for s in STATUSES))

@@ -85,6 +85,16 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("SA_1: pointer symbol must be a non-empty string",
                       catalog.validate([not_a_string], RULES, self.root))
 
+    def test_a_group_mismatch_is_a_problem_when_groups_is_given(self):
+        groups = {"SA_1": "Kampf", "SA_2": "Kampf"}
+        entries = [entry(group="Nicht Kampf"), entry(id="SA_2", name="Zweite")]
+        problems = catalog.validate(entries, RULES, self.root, groups)
+        self.assertIn("SA_1: group is 'Nicht Kampf', rules.db says 'Kampf'", problems)
+
+    def test_group_check_is_skipped_when_groups_is_none(self):
+        entries = [entry(group="Falsch"), entry(id="SA_2", name="Zweite")]
+        self.assertEqual(catalog.validate(entries, RULES, self.root), [])
+
 
 class LoadCatalogTests(unittest.TestCase):
     def test_a_mapping_is_not_a_valid_catalog(self):
@@ -151,6 +161,74 @@ class TableTests(unittest.TestCase):
         catalog.write_catalog_table(conn, entries)
         reviewed_on = conn.execute("SELECT reviewed_on FROM catalog WHERE rule_id = 'SA_1'").fetchone()[0]
         self.assertEqual(reviewed_on, "2026-09-14")
+
+
+class ImportCatalogTests(unittest.TestCase):
+    """Uses an in-memory sqlite db with a minimal rules/rules_i18n/categories/groups schema."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.catalog_path = self.root / "catalog.yaml"
+        self.snapshot_path = self.root / "snapshot.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _conn(self):
+        conn = sqlite3.connect(":memory:")
+        conn.executescript("""
+            CREATE TABLE categories (id TEXT PRIMARY KEY, name TEXT NOT NULL);
+            CREATE TABLE groups (id INTEGER PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL);
+            CREATE TABLE rules (id TEXT PRIMARY KEY, category TEXT NOT NULL, group_id INTEGER);
+            CREATE TABLE rules_i18n (rule_id TEXT NOT NULL, locale TEXT NOT NULL, name TEXT NOT NULL);
+        """)
+        conn.execute("INSERT INTO categories VALUES ('special_ability', 'Sonderfertigkeit')")
+        conn.execute("INSERT INTO groups VALUES (1, 'special_ability', 'Kampf')")
+        conn.execute("INSERT INTO rules VALUES ('SA_1', 'special_ability', 1)")
+        conn.execute("INSERT INTO rules VALUES ('SA_2', 'special_ability', NULL)")
+        conn.execute("INSERT INTO rules_i18n VALUES ('SA_1', 'de-DE', 'Erste')")
+        conn.execute("INSERT INTO rules_i18n VALUES ('SA_2', 'de-DE', 'Zweite')")
+        conn.commit()
+        return conn
+
+    def _write_catalog(self, text):
+        self.catalog_path.write_text(text)
+
+    def test_a_valid_catalog_writes_the_table(self):
+        self._write_catalog(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+        )
+        conn = self._conn()
+        catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
+                                update_snapshot=True)
+        rows = conn.execute("SELECT rule_id FROM catalog ORDER BY rule_id").fetchall()
+        self.assertEqual(rows, [("SA_1",), ("SA_2",)])
+
+    def test_a_catalog_with_a_problem_raises(self):
+        self._write_catalog("- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n")
+        conn = self._conn()
+        with self.assertRaises(SystemExit):
+            catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
+                                    update_snapshot=True)
+
+    def test_snapshot_drift_raises_and_update_snapshot_writes(self):
+        self._write_catalog(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+        )
+        self.snapshot_path.write_text(
+            json.dumps({"implemented": 1, "byHand": 0, "noRollEffect": 0, "todo": 1}))
+
+        with self.assertRaises(SystemExit):
+            catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
+                                    update_snapshot=False)
+
+        catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
+                                update_snapshot=True)
+        snap = json.loads(self.snapshot_path.read_text())
+        self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2})
 
 
 if __name__ == "__main__":
