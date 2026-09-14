@@ -33,6 +33,13 @@ final class RulesCatalogTests: XCTestCase {
         XCTAssertEqual(RulesDatabase.shared.lookup(id: "SA_661")?.catalog?.status, entry.status)
     }
 
+    /// `name` is read by column position; a reordered `catalogColumns` would
+    /// hand back a status or a pointer here rather than fail.
+    func testAnEntryCarriesItsName() throws {
+        try requireDatabase()
+        XCTAssertEqual(RulesDatabase.shared.lookupCatalogEntry(ruleId: "SA_661")?.name, "Golgariten-Stil")
+    }
+
     func testTheCountsAddUpToTheRules() throws {
         try requireDatabase()
         let expected = RulesDatabase.shared.ruleCount()

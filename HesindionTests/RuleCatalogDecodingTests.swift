@@ -79,18 +79,35 @@ final class RuleCatalogDecodingTests: XCTestCase {
         XCTAssertEqual(decoded[1].effects, [.choice([.add(target: .at, value: 1, per: nil), .add(target: .vw, value: 1, per: nil)])])
     }
 
+    /// The error must name the token it did not know: "does not decode" sends
+    /// the reader through the whole clause, "unknown zone nase" does not.
     func testAnUnknownNameIsADecodingError() {
-        for bad in [
-            #"{"is": "situation.raining"}"#,
-            #"{"is": "loadout.reach", "value": "Weit"}"#,
-            #"{"is": "situation.targetZone", "value": ["nase"]}"#,
-            #"{"is": "gm.fact", "id": "x", "span": "century"}"#,
-            #"{"is": "opponent.type", "value": "dragon"}"#,
+        for (bad, token) in [
+            (#"{"is": "situation.raining"}"#, "situation.raining"),
+            (#"{"is": "loadout.reach", "value": "Weit"}"#, "Weit"),
+            (#"{"is": "situation.targetZone", "value": ["nase"]}"#, "nase"),
+            (#"{"is": "gm.fact", "id": "x", "span": "century"}"#, "century"),
+            (#"{"is": "opponent.type", "value": "dragon"}"#, "dragon"),
         ] {
-            XCTAssertThrowsError(try predicate(bad), bad) { XCTAssertTrue($0 is DecodingError, "\($0)") }
+            XCTAssertThrowsError(try predicate(bad), bad) {
+                XCTAssertTrue($0 is DecodingError, "\($0)")
+                XCTAssertTrue("\($0)".contains(token), "\($0) does not name \(token)")
+            }
         }
-        XCTAssertThrowsError(try clauses(#"[{"kind": "passive", "domains": ["meleeAttack"], "effects": [{"effect": "sing"}]}]"#))
-        XCTAssertThrowsError(try clauses(#"[{"kind": "passive", "domains": ["meleeAttack"], "effects": [{"effect": "add", "target": "luck", "value": 1}]}]"#))
+        XCTAssertThrowsError(try clauses(#"[{"kind": "passive", "domains": ["meleeAttack"], "effects": [{"effect": "sing"}]}]"#)) {
+            XCTAssertTrue("\($0)".contains("sing"), "\($0)")
+        }
+        XCTAssertThrowsError(try clauses(#"[{"kind": "passive", "domains": ["meleeAttack"], "effects": [{"effect": "add", "target": "luck", "value": 1}]}]"#)) {
+            XCTAssertTrue("\($0)".contains("luck"), "\($0)")
+        }
+    }
+
+    /// A node that names a predicate *and* a combinator would lose its `is`,
+    /// because the combinators are read first.
+    func testAPredicateIsANameOrACombinatorNotBoth() {
+        XCTAssertThrowsError(try predicate(#"{"is": "situation.mounted", "all": [{"is": "opponent.onFoot"}]}"#)) {
+            XCTAssertTrue($0 is DecodingError, "\($0)")
+        }
     }
 
     func testOwnershipIsByPrefix() {
@@ -107,8 +124,17 @@ final class RuleCatalogDecodingTests: XCTestCase {
     func testEveryImplementedEntryDecodes() throws {
         guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
         let expected = RulesDatabase.shared.catalogStatusCounts()[.implemented] ?? 0
+        try XCTSkipIf(expected == 0, "no implemented entries in the bundled catalog yet")
         XCTAssertEqual(RulesDatabase.shared.implementedRules().count, expected)
         XCTAssertEqual(RuleCatalog.bundled.implemented.count, expected)
-        XCTAssertEqual(RuleCatalog.bundled.statuses.count, RulesDatabase.shared.allCatalogEntries().count)
+    }
+
+    /// The bundled catalog carries every entry's status, whatever it is — this
+    /// is the list the app shows for the rules it did *not* apply.
+    func testEveryEntryIsInTheBundledStatuses() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
+        let all = RulesDatabase.shared.allCatalogEntries()
+        XCTAssertGreaterThan(all.count, 0)
+        XCTAssertEqual(RuleCatalog.bundled.statuses.count, all.count)
     }
 }

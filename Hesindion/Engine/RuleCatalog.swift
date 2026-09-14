@@ -89,14 +89,20 @@ struct CatalogRule: Equatable {
 struct RuleCatalog {
     let rules: [String: CatalogRule]
     let statuses: [String: CatalogEntry]
+    /// Sorted by id, so evaluation order is fixed. Held, not recomputed: the
+    /// evaluator walks it on every roll.
+    let implemented: [CatalogRule]
 
+    /// A duplicate id is a build or fixture mistake and is asserted, not
+    /// trapped: `Dictionary(uniqueKeysWithValues:)` would crash inside the
+    /// standard library with nothing naming the id.
     init(rules: [CatalogRule], statuses: [CatalogEntry] = []) {
-        self.rules = Dictionary(uniqueKeysWithValues: rules.map { ($0.id, $0) })
-        self.statuses = Dictionary(uniqueKeysWithValues: statuses.map { ($0.id, $0) })
+        assert(Set(rules.map(\.id)).count == rules.count, "duplicate rule ids")
+        assert(Set(statuses.map(\.id)).count == statuses.count, "duplicate status ids")
+        self.rules = Dictionary(rules.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        self.statuses = Dictionary(statuses.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        self.implemented = rules.sorted { $0.id < $1.id }
     }
-
-    /// Sorted by id, so evaluation order is fixed.
-    var implemented: [CatalogRule] { rules.values.sorted { $0.id < $1.id } }
 
     static let bundled = RuleCatalog(
         rules: RulesDatabase.shared.implementedRules(),
@@ -107,8 +113,10 @@ struct RuleCatalog {
 // MARK: - Decoding
 
 /// Dynamic keys: the JSON names the predicate or effect in `is` / `effect`
-/// and puts its arguments beside it.
-struct RuleKey: CodingKey {
+/// and puts its arguments beside it. Keys the vocabulary does not name are
+/// ignored here; `catalog.py` already rejected them at build time, and the
+/// vocabulary hash in `catalog_meta` ties this decoder to that validation.
+fileprivate struct RuleCodingKey: CodingKey {
     var stringValue: String
     var intValue: Int? { nil }
     init(_ s: String) { stringValue = s }
@@ -116,31 +124,39 @@ struct RuleKey: CodingKey {
     init?(intValue: Int) { nil }
 }
 
-private extension KeyedDecodingContainer where K == RuleKey {
-    func string(_ key: String) throws -> String { try decode(String.self, forKey: RuleKey(key)) }
-    func stringIfPresent(_ key: String) throws -> String? { try decodeIfPresent(String.self, forKey: RuleKey(key)) }
-    func intIfPresent(_ key: String) throws -> Int? { try decodeIfPresent(Int.self, forKey: RuleKey(key)) }
-    func doubleIfPresent(_ key: String) throws -> Double? { try decodeIfPresent(Double.self, forKey: RuleKey(key)) }
+private extension KeyedDecodingContainer where K == RuleCodingKey {
+    func string(_ key: String) throws -> String { try decode(String.self, forKey: RuleCodingKey(key)) }
+    func stringIfPresent(_ key: String) throws -> String? { try decodeIfPresent(String.self, forKey: RuleCodingKey(key)) }
+    func intIfPresent(_ key: String) throws -> Int? { try decodeIfPresent(Int.self, forKey: RuleCodingKey(key)) }
+    func doubleIfPresent(_ key: String) throws -> Double? { try decodeIfPresent(Double.self, forKey: RuleCodingKey(key)) }
     /// One string or a list of them.
     func strings(_ key: String) throws -> [String]? {
-        if let one = try? decodeIfPresent(String.self, forKey: RuleKey(key)) { return [one] }
-        return try decodeIfPresent([String].self, forKey: RuleKey(key))
+        if let one = try? decodeIfPresent(String.self, forKey: RuleCodingKey(key)) { return [one] }
+        return try decodeIfPresent([String].self, forKey: RuleCodingKey(key))
     }
     func named<T: RawRepresentable>(_ type: T.Type, _ key: String, _ what: String) throws -> T where T.RawValue == String {
         let raw = try string(key)
         guard let value = T(rawValue: raw) else {
-            throw DecodingError.dataCorruptedError(forKey: RuleKey(key), in: self, debugDescription: "unknown \(what) \(raw)")
+            throw DecodingError.dataCorruptedError(forKey: RuleCodingKey(key), in: self, debugDescription: "unknown \(what) \(raw)")
         }
         return value
     }
 }
 
 extension RulePredicate: Decodable {
+    /// A node is either a combinator (`all` / `any` / `not`) or a named
+    /// predicate (`is`), never both: the combinators are read first, so a node
+    /// carrying both would silently drop its `is`. It is refused instead.
     init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: RuleKey.self)
-        if c.contains(RuleKey("all")) { self = .all(try c.decode([RulePredicate].self, forKey: RuleKey("all"))); return }
-        if c.contains(RuleKey("any")) { self = .any(try c.decode([RulePredicate].self, forKey: RuleKey("any"))); return }
-        if c.contains(RuleKey("not")) { self = .not(try c.decode(RulePredicate.self, forKey: RuleKey("not"))); return }
+        let c = try decoder.container(keyedBy: RuleCodingKey.self)
+        let combinators = RuleVocabulary.Combinator.allCases.map(\.rawValue)
+        if c.contains(RuleCodingKey("is")), combinators.contains(where: { c.contains(RuleCodingKey($0)) }) {
+            throw DecodingError.dataCorruptedError(forKey: RuleCodingKey("is"), in: c,
+                                                   debugDescription: "a predicate is either a name or a combinator, not both")
+        }
+        if c.contains(RuleCodingKey("all")) { self = .all(try c.decode([RulePredicate].self, forKey: RuleCodingKey("all"))); return }
+        if c.contains(RuleCodingKey("any")) { self = .any(try c.decode([RulePredicate].self, forKey: RuleCodingKey("any"))); return }
+        if c.contains(RuleCodingKey("not")) { self = .not(try c.decode(RulePredicate.self, forKey: RuleCodingKey("not"))); return }
         switch try c.named(RuleVocabulary.Predicate.self, "is", "predicate") {
         case .heroHasRule:
             self = .heroHasRule(id: try c.string("id"), minTier: try c.intIfPresent("minTier") ?? 1)
@@ -150,7 +166,7 @@ extension RulePredicate: Decodable {
             self = .heroFokusRule(try c.string("value"))
         case .loadoutWeapon:
             self = .loadoutWeapon(technique: try c.strings("technique"), item: try c.stringIfPresent("item"),
-                                  consecrated: try c.decodeIfPresent(Bool.self, forKey: RuleKey("consecrated")))
+                                  consecrated: try c.decodeIfPresent(Bool.self, forKey: RuleCodingKey("consecrated")))
         case .loadoutShield:
             self = .loadoutShield(item: try c.stringIfPresent("item"))
         case .loadoutReach:
@@ -160,12 +176,12 @@ extension RulePredicate: Decodable {
         case .situationBeengt:
             self = .situationBeengt
         case .situationDefencesThisRound:
-            self = .situationDefencesThisRound(min: try c.decode(Int.self, forKey: RuleKey("min")))
+            self = .situationDefencesThisRound(min: try c.decode(Int.self, forKey: RuleCodingKey("min")))
         case .situationTargetZone:
-            let raws = try c.decode([String].self, forKey: RuleKey("value"))
+            let raws = try c.decode([String].self, forKey: RuleCodingKey("value"))
             self = .situationTargetZone(try raws.map { raw in
                 guard let zone = HitZone(rawValue: raw) else {
-                    throw DecodingError.dataCorruptedError(forKey: RuleKey("value"), in: c, debugDescription: "unknown zone \(raw)")
+                    throw DecodingError.dataCorruptedError(forKey: RuleCodingKey("value"), in: c, debugDescription: "unknown zone \(raw)")
                 }
                 return zone
             })
@@ -186,7 +202,7 @@ extension RulePredicate: Decodable {
 }
 
 extension RuleTarget {
-    static func decode(from c: KeyedDecodingContainer<RuleKey>) throws -> RuleTarget {
+    fileprivate static func decode(from c: KeyedDecodingContainer<RuleCodingKey>) throws -> RuleTarget {
         switch try c.named(RuleVocabulary.Target.self, "target", "target") {
         case .at: .at
         case .pa: .pa
@@ -201,21 +217,21 @@ extension RuleTarget {
 
 extension RuleEffect: Decodable {
     init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: RuleKey.self)
+        let c = try decoder.container(keyedBy: RuleCodingKey.self)
         switch try c.named(RuleVocabulary.Effect.self, "effect", "effect") {
         case .add:
-            self = .add(target: try RuleTarget.decode(from: c), value: try c.decode(Int.self, forKey: RuleKey("value")),
-                        per: try c.decodeIfPresent(RuleVocabulary.Per.self, forKey: RuleKey("per")))
+            self = .add(target: try RuleTarget.decode(from: c), value: try c.decode(Int.self, forKey: RuleCodingKey("value")),
+                        per: try c.decodeIfPresent(RuleVocabulary.Per.self, forKey: RuleCodingKey("per")))
         case .multiply:
-            self = .multiply(target: try RuleTarget.decode(from: c), factor: try c.decode(Double.self, forKey: RuleKey("factor")))
+            self = .multiply(target: try RuleTarget.decode(from: c), factor: try c.decode(Double.self, forKey: RuleCodingKey("factor")))
         case .opponentAdd:
-            self = .opponentAdd(target: try RuleTarget.decode(from: c), value: try c.decode(Int.self, forKey: RuleKey("value")))
+            self = .opponentAdd(target: try RuleTarget.decode(from: c), value: try c.decode(Int.self, forKey: RuleCodingKey("value")))
         case .modifyRule:
             self = .modifyRule(id: try c.string("id"), target: try RuleTarget.decode(from: c),
                                add: try c.intIfPresent("add"), set: try c.intIfPresent("set"),
                                multiply: try c.doubleIfPresent("multiply"))
         case .choice:
-            self = .choice(try c.decode([RuleEffect].self, forKey: RuleKey("options")))
+            self = .choice(try c.decode([RuleEffect].self, forKey: RuleCodingKey("options")))
         }
     }
 }

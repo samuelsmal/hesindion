@@ -326,44 +326,41 @@ final class RulesDatabase: @unchecked Sendable {
         return catalogEntry(from: stmt)
     }
 
-    func catalogEntries(status: CatalogStatus) -> [CatalogEntry] {
-        let sql = "SELECT \(Self.catalogColumns) FROM catalog WHERE status = ? ORDER BY rule_id"
+    /// The one loop behind every list of catalog entries: prepare, bind the
+    /// optional text at index 1, read. A statement that will not prepare says
+    /// so — an empty list is otherwise indistinguishable from an empty table,
+    /// which is the same silence that hides the `allCombatTechniqueIds()` flake.
+    private func catalogEntries(sql: String, bind: String? = nil) -> [CatalogEntry] {
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            print("RulesDatabase: \(sql) failed: \(String(cString: sqlite3_errmsg(db)))")
+            return []
+        }
         defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, status.rawValue, -1, SQLITE_TRANSIENT)
+        if let bind { sqlite3_bind_text(stmt, 1, bind, -1, SQLITE_TRANSIENT) }
         var results: [CatalogEntry] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let entry = catalogEntry(from: stmt) { results.append(entry) }
         }
         return results
+    }
+
+    func catalogEntries(status: CatalogStatus) -> [CatalogEntry] {
+        catalogEntries(sql: "SELECT \(Self.catalogColumns) FROM catalog WHERE status = ? ORDER BY rule_id",
+                       bind: status.rawValue)
     }
 
     /// The entries whose id starts with `prefix` — `GRW_` for the core rules
-    /// that have no `rules` row.
+    /// that have no `rules` row. Compared by `substr`, not `LIKE`: in a `LIKE`
+    /// pattern the `_` in `GRW_` is a single-character wildcard.
     func catalogEntries(idPrefix prefix: String) -> [CatalogEntry] {
-        let sql = "SELECT \(Self.catalogColumns) FROM catalog WHERE rule_id LIKE ? ORDER BY rule_id"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, prefix + "%", -1, SQLITE_TRANSIENT)
-        var results: [CatalogEntry] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let entry = catalogEntry(from: stmt) { results.append(entry) }
-        }
-        return results
+        catalogEntries(sql: "SELECT \(Self.catalogColumns) FROM catalog WHERE substr(rule_id, 1, length(?1)) = ?1 ORDER BY rule_id",
+                       bind: prefix)
     }
 
+    /// Every entry, for the not-applied list.
     func allCatalogEntries() -> [CatalogEntry] {
-        let sql = "SELECT \(Self.catalogColumns) FROM catalog ORDER BY rule_id"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        var results: [CatalogEntry] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let entry = catalogEntry(from: stmt) { results.append(entry) }
-        }
-        return results
+        catalogEntries(sql: "SELECT \(Self.catalogColumns) FROM catalog ORDER BY rule_id")
     }
 
     /// The SHA-256 of the vocabulary JSON the bundled database was validated
@@ -381,10 +378,15 @@ final class RulesDatabase: @unchecked Sendable {
     /// the JSON, so a decode failure here means the Swift vocabulary and the
     /// exported one have drifted; the entry is skipped and the count test
     /// (`RuleCatalogDecodingTests.testEveryImplementedEntryDecodes`) catches it.
+    /// A skipped rule is printed as well as asserted, so a Release build that
+    /// quietly drops one still leaves a trace of which one and why.
     func implementedRules() -> [CatalogRule] {
         let sql = "SELECT rule_id, name, reviewed_by, applies_with, clauses FROM catalog WHERE status = 'implemented' ORDER BY rule_id"
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            print("RulesDatabase: \(sql) failed: \(String(cString: sqlite3_errmsg(db)))")
+            return []
+        }
         defer { sqlite3_finalize(stmt) }
         let decoder = JSONDecoder()
         var rules: [CatalogRule] = []
@@ -396,6 +398,7 @@ final class RulesDatabase: @unchecked Sendable {
                 rules.append(CatalogRule(id: id, name: col_text(stmt, 1), reviewed: col_text_opt(stmt, 2) != nil,
                                          appliesWith: applies, clauses: clauses))
             } catch {
+                print("RulesDatabase: \(id): clauses do not decode: \(error)")
                 assertionFailure("\(id): clauses do not decode: \(error)")
             }
         }
