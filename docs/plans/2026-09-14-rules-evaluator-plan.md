@@ -151,12 +151,12 @@ final class SituationTests: XCTestCase {
         XCTAssertEqual(o.states, ["ueberrascht"])
     }
 
-    func testAdvantageousPositionAndOpposingDeityAreAttackSpanFacts() {
+    func testAdvantageousPositionIsAnAttackFactAndOpposingDeityAFightFact() {
         var o = OpponentProfile()
         o.advantageousPosition = true
         o.isOfOpposingDeity = true
         XCTAssertEqual(o.facts[FactKey(id: "advantageousPosition", span: .attack)], true)
-        XCTAssertEqual(o.facts[FactKey(id: "opposingDeity", span: .attack)], true)
+        XCTAssertEqual(o.facts[FactKey(id: "opposingDeity", span: .opponent)], true, "the same demon stays the same demon")
         o.advantageousPosition = false
         XCTAssertNil(o.facts[FactKey(id: "advantageousPosition", span: .attack)], "false is not stated, it is withdrawn")
     }
@@ -167,13 +167,16 @@ final class SituationTests: XCTestCase {
         o.isDaemon = true
         o.isOnFoot = true
         o.facts[FactKey(id: "knownLocation", span: .opponent)] = true
+        o.isOfOpposingDeity = true
         o.isProne = true
         o.advantageousPosition = true
         o.resetPerAttack()
         XCTAssertEqual(o.reach, .lang)
         XCTAssertTrue(o.isDaemon)
         XCTAssertEqual(o.isOnFoot, true)
-        XCTAssertEqual(o.facts, [FactKey(id: "knownLocation", span: .opponent): true])
+        XCTAssertTrue(o.isOfOpposingDeity)
+        XCTAssertEqual(o.facts, [FactKey(id: "knownLocation", span: .opponent): true,
+                                 OpponentProfile.opposingDeityKey: true])
         XCTAssertTrue(o.states.isEmpty)
         XCTAssertFalse(o.advantageousPosition)
     }
@@ -367,14 +370,15 @@ struct OpponentProfile: Equatable {
         get { facts[Self.advantageousPositionKey] == true }
         set { facts[Self.advantageousPositionKey] = newValue ? true : nil }
     }
-    /// A demon of the deity this weapon is sworn against — doubled TP.
+    /// A demon of the deity this weapon is sworn against — doubled TP. Lasts
+    /// the fight, like `isDaemon`: the same demon stays the same demon.
     var isOfOpposingDeity: Bool {
         get { facts[Self.opposingDeityKey] == true }
         set { facts[Self.opposingDeityKey] = newValue ? true : nil }
     }
 
     static let advantageousPositionKey = FactKey(id: "advantageousPosition", span: .attack)
-    static let opposingDeityKey = FactKey(id: "opposingDeity", span: .attack)
+    static let opposingDeityKey = FactKey(id: "opposingDeity", span: .opponent)
 
     /// The table their hit zones are rolled on.
     var bodyPlan: BodyPlan { bodyPlanKind.plan(size: size) }
@@ -4045,7 +4049,7 @@ git commit -m "feat(rules): Liegend is one catalog entry for both sides of the f
 
 ### Task 14: Karmale Objekte, the multiplier and the GM's question
 
-**Goal:** The Fokusregel is a `GRW_karmaleObjekte` entry: a consecrated weapon against a demon of its opposing deity doubles TP; whether the demon is of the opposing deity is a `gm.fact` question with attack span.
+**Goal:** The Fokusregel is a `GRW_karmaleObjekte` entry: a consecrated weapon against a demon of its opposing deity doubles TP; whether the demon is of the opposing deity is a `gm.fact` question with opponent span (it lasts the fight, as it did before).
 
 **Files:**
 - Modify: `specs/data/rules-catalog.yaml`, `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`
@@ -4054,7 +4058,7 @@ git commit -m "feat(rules): Liegend is one catalog entry for both sides of the f
 - Test: `HesindionTests/RuleFixtureTests.swift`, `HesindionTests/KarmalWeaponTests.swift:14-49`
 
 **Acceptance Criteria:**
-- [ ] Rule on, weapon consecrated, demon, opposing deity stated: `DamageModifiers.multiplier` is `.double`; opposing deity unstated: `.unchanged` and a question `opposingDeity` (span `attack`); not a demon: `conditionFalse` and no question; rule off or weapon not consecrated: `.unchanged`.
+- [ ] Rule on, weapon consecrated, demon, opposing deity stated: `DamageModifiers.multiplier` is `.double`; opposing deity unstated: `.unchanged` and a question `opposingDeity` (span `opponent`); not a demon: `conditionFalse` and no question; rule off or weapon not consecrated: `.unchanged`.
 - [ ] `KarmalWeapon.statesSomething` and the consecrated-weapon setting tests are untouched.
 - [ ] Snapshot: implemented 14, byHand 40, todo 2629 (total 2683).
 
@@ -4130,7 +4134,7 @@ Add to the core-rules block:
   text: |
     Angriffe mit geweihten Waffen bewirken bei Dämonen regulären Schaden. Angriffe mit
     geweihten Waffen der Gegengottheit erzeugen doppelte Trefferpunkte.
-  note: "Fokusregel karmaleObjekte. Which weapon is geweiht is a hero-span answer under the rule's toggle (Hero.consecratedWeapons; no Optolith export says so). Whether the demon is of the opposing deity is the GM's call per attack (gm.fact opposingDeity). Regular damage to any other demon is stated on screen, not computed (KarmalWeapon.statesSomething)."
+  note: "Fokusregel karmaleObjekte. Which weapon is geweiht is a hero-span answer under the rule's toggle (Hero.consecratedWeapons; no Optolith export says so). Whether the demon is of the opposing deity is the GM's call, once per fight (gm.fact opposingDeity, span opponent). Regular damage to any other demon is stated on screen, not computed (KarmalWeapon.statesSomething)."
   clauses:
     - kind: passive
       domains: [damage]
@@ -4138,7 +4142,7 @@ Add to the core-rules block:
         - { hero.fokusRule: karmaleObjekte }
         - { loadout.weapon: { consecrated: true } }
         - { opponent.type: demon }
-        - { gm.fact: { id: opposingDeity, span: attack } }
+        - { gm.fact: { id: opposingDeity, span: opponent } }
       effects: [{ multiply: { target: tp, factor: 2 } }]
 ```
 
