@@ -60,15 +60,18 @@ struct RuleDetailView: View {
                         }
 
                         if !rule.levelTexts.isEmpty {
-                            ForEach(Array(rule.levelTexts.enumerated()), id: \.offset) { index, text in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Text("\(L("rule.levelPrefix")) \(StateCatalog.romanSuffix(index + 1).trimmingCharacters(in: .whitespaces))")
-                                        .font(.dsaBody(.caption))
-                                        .frame(width: 72, alignment: .leading)
-                                    Text(markdownDescription(text))
-                                        .font(.body)
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(rule.levelTexts, id: \.level) { entry in
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("\(L("rule.levelPrefix")) \(StateCatalog.roman(entry.level))")
+                                            .font(.dsaBody(.caption))
+                                            .frame(width: 100, alignment: .leading)
+                                        Text(markdownDescription(entry.text))
+                                            .font(.body)
+                                    }
                                 }
                             }
+                            .padding(.top, 4)
                         }
 
                         if let entry = rule.catalog {

@@ -34,16 +34,22 @@ final class RulesCatalogTests: XCTestCase {
 
     func testTheCountsAddUpToTheRules() throws {
         try requireDatabase()
+        let expected = RulesDatabase.shared.ruleCount()
+        XCTAssertGreaterThan(expected, 0)
         let counts = RulesDatabase.shared.catalogStatusCounts()
         let total = counts.values.reduce(0, +)
-        XCTAssertEqual(total, 2675, "every rule, counted once")
+        XCTAssertEqual(total, expected, "every rule, counted once")
     }
 
     /// A `byHand` pointer names a file and a symbol; both must exist, or the
     /// catalog describes code that is not there. The Python build checks the
     /// same pattern (`catalog._check_pointer`); the two must stay identical.
+    /// `note`/`pointer`/`reviewed*` are otherwise unexercised until Task 7 adds
+    /// byHand entries to the catalog.
     func testEveryPointerNamesASymbolThatExists() throws {
         try requireDatabase()
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: Self.repoRoot.appending(path: "AGENTS.md").path),
+                          "source tree not reachable (device run)")
         for entry in RulesDatabase.shared.catalogEntries(status: .byHand) {
             guard let pointer = entry.pointer else {
                 XCTFail("\(entry.id) is byHand without a pointer")
@@ -70,8 +76,11 @@ final class RulesCatalogTests: XCTestCase {
     func testAZustandCarriesItsLevelTexts() throws {
         try requireDatabase()
         let schmerz = try XCTUnwrap(RulesDatabase.shared.lookup(id: "COND_6"))
-        XCTAssertEqual(schmerz.levelTexts.count, 4)
-        XCTAssertTrue(schmerz.levelTexts[0].contains("–1") || schmerz.levelTexts[0].contains("-1"), schmerz.levelTexts[0])
-        XCTAssertEqual(RulesDatabase.shared.lookup(id: "SA_67")?.levelTexts, [])
+        XCTAssertEqual(schmerz.levelTexts.map(\.level), [1, 2, 3, 4])
+        for entry in schmerz.levelTexts {
+            XCTAssertEqual(entry.text, entry.text.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        XCTAssertTrue(schmerz.levelTexts[0].text.contains("–1") || schmerz.levelTexts[0].text.contains("-1"), schmerz.levelTexts[0].text)
+        XCTAssertEqual(RulesDatabase.shared.lookup(id: "SA_67")?.levelTexts.count, 0)
     }
 }

@@ -15,8 +15,9 @@ struct RuleDetail: Identifiable {
     let groupId: Int?
     let name: String
     let description: String
-    /// The per-level texts (`level1`…`level4`), empty for most rules; Zustände have four.
-    let levelTexts: [String]
+    /// The per-level texts with their level number, empty for most rules; Zustände have four.
+    /// Trimmed, because the source rows end in a newline.
+    let levelTexts: [(level: Int, text: String)]
     let cost: String?
     let levels: Int?
     let max: Int?
@@ -215,7 +216,11 @@ final class RulesDatabase: @unchecked Sendable {
         let levels = col_int_opt(stmt, 5)
         let max = col_int_opt(stmt, 6)
         let groupId = col_int_opt(stmt, 7)
-        let levelTexts = (8...11).compactMap { col_text_opt(stmt, Int32($0)) }.filter { !$0.isEmpty }
+        let levelTexts: [(level: Int, text: String)] = (1...4).compactMap { level in
+            guard let raw = col_text_opt(stmt, Int32(7 + level)) else { return nil }
+            let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            return text.isEmpty ? nil : (level, text)
+        }
 
         let spellDetail = (category == "spell" || category == "liturgy")
             ? lookupSpellDetail(ruleId: ruleId)
@@ -356,6 +361,18 @@ final class RulesDatabase: @unchecked Sendable {
         var ids: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW { ids.append(col_text(stmt, 0)) }
         return ids
+    }
+
+    /// The number of rules in `rules`, for tests that hold a count to the database
+    /// rather than to a number typed in the test. -1 means the query itself could
+    /// not be prepared (a malformed database), which no rule count would ever be.
+    func ruleCount() -> Int {
+        let sql = "SELECT COUNT(*) FROM rules"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return -1 }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return -1 }
+        return Int(sqlite3_column_int(stmt, 0))
     }
 
     private func lookupSpellDetail(ruleId: String) -> SpellDetail? {
