@@ -463,7 +463,7 @@ class TableTests(unittest.TestCase):
         conn = sqlite3.connect(":memory:")
         entries = [entry(), entry(id="SA_2", name="Zweite", status="byHand", note="by hand",
                                   pointer={"file": "Hero.swift", "symbol": "x"},
-                                  reviewed={"by": "sam", "on": "2026-09-14"})]
+                                  reviewed={"by": "sam", "date": "2026-09-14"})]
         catalog.write_catalog_table(conn, entries)
         rows = conn.execute("SELECT rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on "
                             "FROM catalog ORDER BY rule_id").fetchall()
@@ -615,7 +615,7 @@ def write_catalog_table(conn, entries: list[dict]) -> None:
                 pointer.get("file"),
                 pointer.get("symbol"),
                 reviewed.get("by"),
-                str(reviewed["on"]) if reviewed.get("on") is not None else None,
+                str(reviewed["on"]) if reviewed.get("date") is not None else None,
             ),
         )
     conn.commit()

@@ -93,7 +93,7 @@ One renderer per output kind. A boolean question is a toggle, an enumerated one 
   name: Golgariten-Stil
   group: Kampfstile (bewaffnet)
   status: implemented                       # implemented | byHand | noRollEffect | todo
-  reviewed: { by: sam, on: 2026-09-14 }     # or null
+  reviewed: { by: sam, date: 2026-09-14 }     # or null
   sources:
     - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/…/golgariten-stil.html", fetched: 2026-09-14 }
     - { kind: book, title: "Aventurisches Götterwirken I", page: 229 }
