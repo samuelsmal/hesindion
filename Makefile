@@ -126,7 +126,8 @@ test-rules-db:
 	python3 -m unittest discover -s scripts/build_rules_db -p 'test_*.py' -v
 
 # Rebuild the bundled rules database from the Optolith YAML and the rules
-# catalog. Fails on a catalog problem or when the status counts drift from
+# catalog. Fails on a catalog problem (including a clause outside
+# specs/data/rule-vocabulary.json) or when the status counts drift from
 # specs/data/rules-catalog.snapshot.json; any non-empty UPDATE_SNAPSHOT value
 # rewrites the snapshot. The script builds to a temp file and renames on
 # success, so a failed build leaves the old database in place.

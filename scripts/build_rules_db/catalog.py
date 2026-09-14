@@ -35,13 +35,41 @@ class CatalogError(Exception):
     pass
 
 
+SCALAR_TYPES = {"string", "strings", "int", "number", "bool"}
+# The enums every check below reaches for by name.
+REQUIRED_ENUMS = ("kind", "domain", "target", "span")
+
+
 def load_vocabulary(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         vocab = json.load(f)
     for key in ("predicates", "effects", "enums", "combinators"):
         if key not in vocab:
             raise CatalogError(f"{path}: vocabulary has no {key!r}")
+    for name in REQUIRED_ENUMS:
+        if name not in vocab["enums"]:
+            raise CatalogError(f"{path}: vocabulary has no enum {name!r}")
+    for table in ("predicates", "effects"):
+        for name, sig in vocab[table].items():
+            tokens = list(sig.get("args", {}).values())
+            if "value" in sig:
+                tokens.append(sig["value"])
+            for token in tokens:
+                if not _known_type(token, vocab):
+                    raise CatalogError(f"{path}: {table} {name}: unknown type {token!r}")
     return vocab
+
+
+def _known_type(token, vocab: dict) -> bool:
+    if token in SCALAR_TYPES:
+        return True
+    # The one exception: `choice` declares `value: list:effect`, which names the
+    # effects table itself rather than an enum. _check_effect checks it by hand.
+    if token == "list:effect":
+        return True
+    if isinstance(token, str) and (token.startswith("enum:") or token.startswith("list:")):
+        return token.split(":", 1)[1] in vocab["enums"]
+    return False
 
 
 def load_catalog(path: Path) -> list[dict]:
@@ -205,6 +233,7 @@ def _check_effect(rid: str, eff, vocab: dict, where: str, implemented_ids: set[s
     if sig is None:
         return [f"{rid}: {where}: unknown effect {name!r}"]
     if name == "choice":
+        # The signature's `value: list:effect` is descriptive only; this branch checks it.
         if not isinstance(arg, list) or len(arg) < 2:
             return [f"{rid}: {where}: choice needs at least two options"]
         return [x for k, o in enumerate(arg)
@@ -269,7 +298,9 @@ def _check_type(rid: str, name: str, v, t: str, vocab: dict, where: str) -> list
         allowed = vocab["enums"].get(t[5:], [])
         ok = isinstance(v, list) and bool(v) and all(x in allowed for x in v)
     else:
-        ok = True
+        # load_vocabulary rejects every token this function does not know, so
+        # reaching here means a vocabulary that never passed through it.
+        ok = False
     return [] if ok else [f"{rid}: {where}: {name} is {v!r}, expected {t}"]
 
 
@@ -380,7 +411,9 @@ def write_catalog_table(conn, entries: list[dict], source_sha256: str | None = N
         reviewed = e.get("reviewed") or {}
         applies, clauses = entry_json(e)
         conn.execute(
-            "INSERT INTO catalog VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO catalog (rule_id, name, status, note, pointer_file, pointer_symbol, "
+            "reviewed_by, reviewed_on, applies_with, clauses) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 e["id"],
                 e["name"],

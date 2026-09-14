@@ -7,6 +7,9 @@ from pathlib import Path
 import catalog
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+VOCABULARY_PATH = REPO_ROOT / "specs/data/rule-vocabulary.json"
+
 RULES = {"SA_1": "Erste", "SA_2": "Zweite"}
 
 
@@ -119,6 +122,76 @@ class LoadCatalogTests(unittest.TestCase):
                 catalog.load_catalog(path)
 
 
+class VocabularyLoadTests(unittest.TestCase):
+    """load_vocabulary is the only place a type token is checked, so it must catch them all."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "vocabulary.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write(self, **overrides):
+        vocab = {
+            "version": 1,
+            "combinators": ["all", "any", "not"],
+            "predicates": {"situation.mounted": {"args": {}, "required": []}},
+            "effects": {"add": {"args": {"target": "enum:target", "value": "int"},
+                                "required": ["target", "value"]},
+                        "choice": {"args": {}, "required": [], "value": "list:effect"}},
+            "enums": {"kind": ["passive", "offer"], "domain": ["meleeAttack"],
+                      "target": ["at"], "span": ["hero"], "zone": ["kopf"]},
+        }
+        vocab.update(overrides)
+        self.path.write_text(json.dumps(vocab), encoding="utf-8")
+        return self.path
+
+    def test_a_baseline_vocabulary_loads(self):
+        self.assertEqual(catalog.load_vocabulary(self._write())["version"], 1)
+
+    def test_a_misspelled_scalar_type_is_refused(self):
+        path = self._write(predicates={"hero.thing": {"args": {"x": "Int"}, "required": []}})
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(path)
+        self.assertIn("unknown type 'Int'", str(cm.exception))
+        self.assertIn("predicates hero.thing", str(cm.exception))
+
+    def test_an_enum_that_does_not_exist_is_refused(self):
+        path = self._write(effects={"add": {"args": {"target": "enum:nosuch"}, "required": []}})
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(path)
+        self.assertIn("unknown type 'enum:nosuch'", str(cm.exception))
+
+    def test_a_scalar_value_type_is_checked_too(self):
+        path = self._write(predicates={"hero.thing": {"args": {}, "required": [], "value": "list:nosuch"}})
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(path)
+        self.assertIn("unknown type 'list:nosuch'", str(cm.exception))
+
+    def test_a_missing_required_enum_is_named(self):
+        path = self._write(enums={"kind": ["passive"], "domain": ["meleeAttack"], "target": ["at"]})
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(path)
+        self.assertIn("'span'", str(cm.exception))
+        path = self._write(enums={"domain": ["meleeAttack"], "target": ["at"], "span": ["hero"]})
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(path)
+        self.assertIn("'kind'", str(cm.exception))
+
+    def test_a_missing_table_is_named(self):
+        vocab = {"predicates": {}, "effects": {}, "enums": {}}
+        self.path.write_text(json.dumps(vocab), encoding="utf-8")
+        with self.assertRaises(catalog.CatalogError) as cm:
+            catalog.load_vocabulary(self.path)
+        self.assertIn("'combinators'", str(cm.exception))
+
+    def test_the_committed_vocabulary_loads(self):
+        vocab = catalog.load_vocabulary(VOCABULARY_PATH)
+        self.assertIn("modifyRule", vocab["effects"])
+        self.assertIn("kind", vocab["enums"])
+
+
 class SnapshotTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -217,7 +290,7 @@ class ImportCatalogTests(unittest.TestCase):
         conn = self._conn()
         catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
                                 update_snapshot=True,
-                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
+                                vocabulary_path=VOCABULARY_PATH)
         rows = conn.execute("SELECT rule_id FROM catalog ORDER BY rule_id").fetchall()
         self.assertEqual(rows, [("SA_1",), ("SA_2",)])
 
@@ -227,7 +300,7 @@ class ImportCatalogTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
                                     update_snapshot=True,
-                                    vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
+                                    vocabulary_path=VOCABULARY_PATH)
 
     def test_snapshot_drift_raises_and_update_snapshot_writes(self):
         self._write_catalog(
@@ -240,11 +313,11 @@ class ImportCatalogTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
                                     update_snapshot=False,
-                                    vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
+                                    vocabulary_path=VOCABULARY_PATH)
 
         catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
                                 update_snapshot=True,
-                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
+                                vocabulary_path=VOCABULARY_PATH)
         snap = json.loads(self.snapshot_path.read_text())
         self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2})
 
@@ -256,7 +329,7 @@ class ImportCatalogTests(unittest.TestCase):
         conn = self._conn()
         catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
                                 update_snapshot=True,
-                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
+                                vocabulary_path=VOCABULARY_PATH)
         stored = conn.execute(
             "SELECT value FROM catalog_meta WHERE key = 'source_sha256'").fetchone()[0]
         self.assertEqual(stored, catalog.source_hash(self.catalog_path))
@@ -267,15 +340,12 @@ class ImportCatalogTests(unittest.TestCase):
             "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
         )
         conn = self._conn()
-        vocab = REPO_ROOT / "specs/data/rule-vocabulary.json"
         catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
-                                update_snapshot=True, vocabulary_path=vocab)
+                                update_snapshot=True, vocabulary_path=VOCABULARY_PATH)
         stored = conn.execute(
             "SELECT value FROM catalog_meta WHERE key = 'vocabulary_sha256'").fetchone()[0]
-        self.assertEqual(stored, catalog.source_hash(vocab))
+        self.assertEqual(stored, catalog.source_hash(VOCABULARY_PATH))
 
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # A cut-down vocabulary with the same shape as specs/data/rule-vocabulary.json.
 VOCAB = {
@@ -435,7 +505,7 @@ class ClauseValidationTests(unittest.TestCase):
                       self.validate(GRW, dict(GRW, id="GRW_bad", clauses="yes")))
 
     def test_the_committed_vocabulary_accepts_the_design_example(self):
-        vocab = catalog.load_vocabulary(REPO_ROOT / "specs/data/rule-vocabulary.json")
+        vocab = catalog.load_vocabulary(VOCABULARY_PATH)
         problems = catalog.validate([GOLGARITEN, GRW, entry(id="SA_2", name="Zweite")], RULES, self.root, vocabulary=vocab)
         self.assertEqual(problems, [])
 

@@ -812,6 +812,7 @@ def main():
     args = parse_args()
     assert args.source.is_dir(), f"Source directory not found: {args.source}"
     assert args.catalog.is_file(), f"Catalog not found: {args.catalog}"
+    assert args.vocabulary.is_file(), f"Vocabulary not found: {args.vocabulary}"
 
     tmp = args.output.with_suffix(".db.tmp")
     if tmp.exists():
