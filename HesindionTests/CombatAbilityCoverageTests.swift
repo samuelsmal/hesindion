@@ -51,6 +51,7 @@ final class CombatAbilityCoverageTests: XCTestCase {
         let expected: [CombatAbility: String] = [
             .aufmerksamkeit: "Aufmerksamkeit",
             .belastungsgewoehnung: "Belastungsgewöhnung",
+            .beidhaendigerKampf: "Beidhändiger Kampf",
             .berittenerKampf: "Berittener Kampf",
             .finte: "Finte",
             .schildspalter: "Schildspalter",
@@ -101,6 +102,15 @@ final class CombatAbilityCoverageTests: XCTestCase {
             let hero = hero(with: .wuchtschlag, inCombatList: inCombatList, tier: 2)
             XCTAssertEqual(hero.wuchtschlagTier, 2)
         }
+    }
+
+    /// Used to be found by `name.contains("Beidhändiger Kampf")`, which a renamed
+    /// or untranslated export defeats.
+    func testBeidhaendigerKampfIsReadById() {
+        let hero = hero(with: .beidhaendigerKampf, inCombatList: true, tier: 2)
+        XCTAssertEqual(hero.beidhaendigerKampfLevel, 2)
+        XCTAssertEqual(hero.dualAttackPenalty, 0)
+        XCTAssertEqual(Hero(name: "Ohne").dualAttackPenalty, -2)
     }
 
     /// An ability with no tier in the export is tier I, not tier 0 — 0 reads as

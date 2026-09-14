@@ -292,12 +292,9 @@ final class Hero {
         advantages.contains { $0.ruleId == "ADV_5" }
     }
 
-    /// Level of Beidhändiger Kampf SA. Each level reduces the -2 dual-attack penalty by 1.
-    /// TODO: Confirm correct SA ruleId for "Beidhändiger Kampf" once identified in Optolith data.
+    /// Level of Beidhändiger Kampf (SA_42). Each level reduces the −2 dual-attack penalty by 1.
     var beidhaendigerKampfLevel: Int {
-        let sa = (combatSpecialAbilities + generalSpecialAbilities)
-            .first { $0.name.contains("Beidhändiger Kampf") }
-        return sa?.tier ?? 0
+        tier(of: .beidhaendigerKampf)
     }
 
     /// Dual-attack penalty: base -2, reduced by Beidhändiger Kampf level.

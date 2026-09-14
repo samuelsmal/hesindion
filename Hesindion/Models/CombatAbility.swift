@@ -19,6 +19,7 @@ import Foundation
 enum CombatAbility: String, CaseIterable {
     case aufmerksamkeit       = "SA_40"
     case belastungsgewoehnung = "SA_41"
+    case beidhaendigerKampf   = "SA_42"
     case berittenerKampf      = "SA_43"
     case finte                = "SA_48"
     case schildspalter        = "SA_59"
@@ -45,6 +46,8 @@ enum CombatAbility: String, CaseIterable {
             .byHand("TalentProbeModal — eases one named Talentprobe (Sinnesschärfe), not a combat value")
         case .belastungsgewoehnung:
             .byHand("Hero.effectiveBE — reduces BE before every value that derives from it")
+        case .beidhaendigerKampf:
+            .byHand("Hero.beidhaendigerKampfLevel — each tier takes 1 off the −2 dual-attack penalty")
         case .berittenerKampf:
             .byHand("CombatAttackViews — offers Sturmangriff zu Pferd")
         case .finte, .schildspalter, .vorstoss, .wuchtschlag:
