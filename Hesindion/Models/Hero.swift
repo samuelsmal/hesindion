@@ -171,7 +171,7 @@ final class Hero {
 
     /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 2.
     var belastungsgewoehnungLevel: Int {
-        combatSpecialAbilities.first(where: { $0.ruleId == "SA_41" })?.tier ?? 0
+        specialAbility(CombatAbility.belastungsgewoehnung.rawValue)?.tier ?? 0
     }
 
     /// Effective BE after Belastungsgewöhnung reduction.
@@ -273,7 +273,7 @@ final class Hero {
             return WeaponIcon.forTechniqueId(ranged.combatTechniqueId)
         }
         if shields.contains(where: { $0.name == name }) { return .system("shield.fill") }
-        return WeaponIcon.forTechnique(.raufen)
+        return WeaponIcon.forTechnique(.raufen)   // Raufen, and anything unlisted
     }
 
     /// Passive shield PA bonus applied to main weapon parade.
@@ -295,7 +295,8 @@ final class Hero {
     /// Level of Beidhändiger Kampf SA. Each level reduces the -2 dual-attack penalty by 1.
     /// TODO: Confirm correct SA ruleId for "Beidhändiger Kampf" once identified in Optolith data.
     var beidhaendigerKampfLevel: Int {
-        let sa = combatSpecialAbilities.first { $0.name.contains("Beidhändiger Kampf") }
+        let sa = (combatSpecialAbilities + generalSpecialAbilities)
+            .first { $0.name.contains("Beidhändiger Kampf") }
         return sa?.tier ?? 0
     }
 
@@ -429,42 +430,51 @@ final class Hero {
 
     // MARK: - Combat Ability Detection
 
-    var hasAufmerksamkeit: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_40" }
+    /// A Sonderfertigkeit by rule id, wherever the importer filed it.
+    ///
+    /// The importer sorts an SA into `combatSpecialAbilities` or
+    /// `generalSpecialAbilities` by whether `rules.db` has an effects row scoped
+    /// to combat — and for several abilities it has none at all. Plänkler-
+    /// Formation (SA_884), Gezielter Angriff (SA_160) and Gezielter Schuss
+    /// (SA_161) all land in the general list, so every lookup that searched only
+    /// the combat list found nothing: the formation section never appeared for a
+    /// hero who has the formation, and the Zonenaufschlag was never halved for a
+    /// hero who paid for exactly that.
+    ///
+    /// Which list a trait sits in is a property of the *data*, not of the rule,
+    /// so the lookup does not care.
+    func specialAbility(_ ruleId: String) -> HeroTrait? {
+        combatSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? generalSpecialAbilities.first { $0.ruleId == ruleId }
     }
 
-    var hasGolgaritenStil: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_661" }
+    func hasSpecialAbility(_ ruleId: String) -> Bool {
+        specialAbility(ruleId) != nil
     }
 
-    var hasBerittenerKampf: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_43" }
+    /// The tier of a Sonderfertigkeit, or 0 when the hero does not have it. An
+    /// owned ability with no tier in the export counts as I.
+    func specialAbilityTier(_ ruleId: String) -> Int {
+        guard let trait = specialAbility(ruleId) else { return 0 }
+        return trait.tier ?? 1
     }
 
-    /// Finte tier (0 if not owned). SA_48.
-    var finteTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_48" }?.tier ?? 0
-    }
+    func has(_ ability: CombatAbility) -> Bool { hasSpecialAbility(ability.rawValue) }
 
-    /// Wuchtschlag tier (0 if not owned). SA_67.
-    var wuchtschlagTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_67" }?.tier ?? 0
-    }
+    func tier(of ability: CombatAbility) -> Int { specialAbilityTier(ability.rawValue) }
 
-    /// True if hero has Vorstoß (SA_66).
-    var hasVorstoss: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_66" }
-    }
-
-    /// True if hero has Schildspalter (SA_59).
-    var hasSchildspalter: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_59" }
-    }
-
-    /// True if hero has Plänkler-Formation (SA_884).
-    var hasPlaenklerFormation: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_884" }
-    }
+    var hasAufmerksamkeit: Bool { has(.aufmerksamkeit) }
+    var hasGolgaritenStil: Bool { has(.golgaritenStil) }
+    var hasBerittenerKampf: Bool { has(.berittenerKampf) }
+    var finteTier: Int { tier(of: .finte) }
+    var wuchtschlagTier: Int { tier(of: .wuchtschlag) }
+    var hasVorstoss: Bool { has(.vorstoss) }
+    var hasSchildspalter: Bool { has(.schildspalter) }
+    var hasPlaenklerFormation: Bool { has(.plaenklerFormation) }
+    /// Gezielter Angriff and Gezielter Schuss — each halves the Zonenaufschlag
+    /// for its own kind of attack.
+    var hasGezielterAngriff: Bool { has(.gezielterAngriff) }
+    var hasGezielterSchuss: Bool { has(.gezielterSchuss) }
 
     /// Whether Golgariten-Stil conditions are met (mounted + Rabenschnabel + Großschild).
     func golgaritenActive(mounted: Bool) -> Bool {

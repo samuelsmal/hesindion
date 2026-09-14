@@ -19,6 +19,9 @@ struct CombatExecutionView: View {
     /// multiplier rather than folded into it: they are two different rules and
     /// the damage screen names each.
     var damageMultiplier: CriticalDamage = .unchanged
+    /// What the announcement did to the opponent's defence, carried through to
+    /// the screen where the GM needs it.
+    var opponentDefenseModifiers: [ModifierLine] = []
     let secondAttackStep: CombatStep?
     let combatId: UUID
     let roundNumber: Int
@@ -246,7 +249,8 @@ struct CombatExecutionView: View {
                         damageFormula: damageFormula,
                         modifierLines: modifierLines,
                         damageLines: damageLines,
-                        damageMultiplier: damageMultiplier
+                        damageMultiplier: damageMultiplier,
+                        opponentDefenseModifiers: opponentDefenseModifiers
                     )
                 } else {
                     step = .opponentDefense(
@@ -256,7 +260,8 @@ struct CombatExecutionView: View {
                         criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
                         modifierLines: modifierLines,
                         damageLines: damageLines,
-                        damageMultiplier: damageMultiplier
+                        damageMultiplier: damageMultiplier,
+                        opponentDefenseModifiers: opponentDefenseModifiers
                     )
                 }
             } label: {

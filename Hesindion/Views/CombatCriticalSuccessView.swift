@@ -25,6 +25,7 @@ struct CombatCriticalSuccessView: View {
     /// against a demon of its opposing deity). Carried through, not merged: the
     /// damage screen names each rule separately.
     var damageMultiplier: CriticalDamage = .unchanged
+    var opponentDefenseModifiers: [ModifierLine] = []
     let isRangedAttack: Bool
     let rangedDefensePenalty: Int
     @Binding var step: CombatStep
@@ -509,7 +510,8 @@ struct CombatCriticalSuccessView: View {
                     isRangedAttack: isRangedAttack,
                     rangedDefensePenalty: rangedDefensePenalty,
                     damageLines: damageLines,
-                    damageMultiplier: damageMultiplier
+                    damageMultiplier: damageMultiplier,
+                    opponentDefenseModifiers: opponentDefenseModifiers
                 )
             }
         } else {

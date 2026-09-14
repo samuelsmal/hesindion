@@ -75,7 +75,7 @@ enum WeaponIcon: Equatable {
         case .boegen:                                      .asset("weapon.bow")
         case .armbrueste:                                  .asset("weapon.crossbow")
         case .schilde:                                     .system("shield.fill")
-        case .raufen:                                      .system("hand.raised.fill")
+        case .raufen:                                      .asset("weapon.fist")
         default:                                           .asset("weapon.generic")
         }
     }

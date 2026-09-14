@@ -48,6 +48,15 @@ enum HitZoneTable {
         ranges(for: plan).map { Row(lower: $0.lower, upper: $0.upper, zone: $0.zone) }
     }
 
+    /// The distinct zones this plan has, in printed order — what a picker should
+    /// offer when the target is *not* another person. A four-legged opponent has
+    /// no Arme, and offering them meant aiming at something the table cannot
+    /// return.
+    static func zones(for plan: BodyPlan) -> [HitZone] {
+        var seen: Set<HitZone> = []
+        return ranges(for: plan).compactMap { seen.insert($0.zone).inserted ? $0.zone : nil }
+    }
+
     /// Resolve a 1W20 roll against a body plan. Rolls outside 1...20 are clamped.
     static func lookup(_ roll: Int, plan: BodyPlan) -> HitZoneHit {
         let clamped = min(max(roll, 1), 20)

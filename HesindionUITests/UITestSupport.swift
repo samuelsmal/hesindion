@@ -161,6 +161,21 @@ extension XCTestCase {
 
     /// Attaches a full-screen screenshot that survives a passing test run, so
     /// `xcresulttool export attachments` can pull it out afterwards.
+    /// Unfolds the announcement screen's GEGNER section, which is shut by
+    /// default because most attacks answer nothing in it.
+    @MainActor
+    func openOpponentSection(_ app: XCUIApplication) {
+        let toggle = app.buttons["combat.attack.opponent.toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: UITest.timeout), "No opponent section")
+        // Idempotent: already open if the reach chips are on screen.
+        guard !app.buttons["combat.reach.Mittel"].exists else { return }
+        toggle.tap()
+        XCTAssertTrue(
+            app.buttons["combat.reach.Mittel"].waitForExistence(timeout: UITest.timeout),
+            "The opponent section did not open"
+        )
+    }
+
     func captureScreenshot(_ app: XCUIApplication, named name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name

@@ -8,7 +8,6 @@ enum CombatAction {
 }
 
 enum CombatStep {
-    case armorSelection
     case combatSetup
     case initiativeRoll
     case loadoutEquipment           // merged from loadoutWeapon + loadoutShield
@@ -20,18 +19,18 @@ enum CombatStep {
     /// bonuses on top of it, carried apart all the way to the roll so the damage
     /// screen can print every part. Folding them into the string here is what
     /// made the manoeuvre bonus unaccountable — and, twice, double-counted.
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
     case takeDamage
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
     /// screen has to ask which defence this was — the app knows the hero parried,
     /// not whether the incoming attack was melee or ranged.
-    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged)
+    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
     case passierschlag
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
@@ -45,7 +44,6 @@ extension CombatStep {
     /// Stable key for onChange observation (associated values stripped).
     var persistenceKey: String {
         switch self {
-        case .armorSelection: "armorSelection"
         case .combatSetup: "combatSetup"
         case .initiativeRoll: "initiativeRoll"
         case .loadoutEquipment: "loadoutEquipment"
@@ -168,7 +166,7 @@ struct CombatView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.modelContext) private var modelContext
     @State private var activePanel: SidePanel?
-    @State private var step: CombatStep = .armorSelection
+    @State private var step: CombatStep = .combatSetup
     @State private var combatId = UUID()
     @State private var rolledInitiative: Int? = nil
     @State private var dualAttackPenaltyActive: Bool = false
@@ -177,6 +175,10 @@ struct CombatView: View {
     @State private var plaenklerActive: Bool = false
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
+    /// The other side of the fight. Held here, not on the announcement screen,
+    /// because the same opponent is still the same opponent in round four — the
+    /// reach used to be asked for again on every single attack.
+    @State private var opponent = OpponentProfile()
     @State private var vorstossActiveThisRound: Bool = false
     /// Beengte Umgebung is now backed by the `eingeengt` player status (single source of
     /// truth), so it shows as a chip in the states strip and persists via SwiftData like
@@ -220,7 +222,6 @@ struct CombatView: View {
 
     private var stepID: String {
         switch step {
-        case .armorSelection: "armorSelection"
         case .combatSetup: "combatSetup"
         case .initiativeRoll: "initiativeRoll"
         case .loadoutEquipment: "loadoutEquipment"
@@ -251,9 +252,6 @@ struct CombatView: View {
         SplitContentLayout(hero: hero, activePanel: $activePanel) {
         VStack(spacing: 0) {
             switch step {
-            case .armorSelection:
-                CombatArmorSelectionView(hero: hero, step: $step, onDismiss: onDismiss)
-                    .transition(.move(edge: .leading))
             case .combatSetup:
                 CombatSetupView(
                     hero: hero,
@@ -339,10 +337,11 @@ struct CombatView: View {
                     twoHandedGripActive: twoHandedGripActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: $opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
                 CombatExecutionView(
                     hero: hero,
                     action: action,
@@ -353,6 +352,7 @@ struct CombatView: View {
                     modifierLines: modifierLines,
                     damageLines: damageLines,
                     damageMultiplier: damageMultiplier,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
                     combatId: combatId,
                     roundNumber: roundNumber,
@@ -404,7 +404,7 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier):
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
@@ -413,6 +413,7 @@ struct CombatView: View {
                     criticalDamage: criticalDamage,
                     modifierLines: mods,
                     damageLines: damageLines,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
                     damageMultiplier: damageMultiplier,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
@@ -435,7 +436,7 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier):
+            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
                 CombatCriticalSuccessView(
                     hero: hero,
                     requestedTable: table,
@@ -445,6 +446,7 @@ struct CombatView: View {
                     modifierLines: mods,
                     damageLines: damageLines,
                     damageMultiplier: damageMultiplier,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     step: $step,
@@ -533,10 +535,8 @@ struct CombatView: View {
         .gesture(DragGesture().onEnded { v in
             if v.translation.height > 80 {
                 switch step {
-                case .armorSelection:
-                    onDismiss()
                 case .combatSetup:
-                    step = .armorSelection
+                    onDismiss()
                 case .initiativeRoll:
                     step = .combatSetup
                 case .loadoutEquipment:

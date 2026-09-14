@@ -17,6 +17,10 @@ struct CombatOpponentDefenseView: View {
     /// grip, Sturmangriff, Golgariten-Stil. Carried here rather than folded into
     /// `damageFormula` so each can be named in the calculation.
     var damageLines: [ModifierLine] = []
+    /// What the announcement did to the *opponent's* defence — a Finte, a target
+    /// on the ground. Nothing is applied: they have no PA to subtract from, so
+    /// this is the figure the GM takes off theirs.
+    var opponentDefenseModifiers: [ModifierLine] = []
     /// A multiplier settled before the roll: a consecrated weapon against a
     /// demon of its opposing deity doubles the TP (Fokusregel *Karmale
     /// Objekte*). Separate from `criticalDamage` because they are separate
@@ -116,26 +120,25 @@ struct CombatOpponentDefenseView: View {
                     }
                 }
 
-                // Maneuver reminder notes from the attack phase
-                if let lines = modifierLines, !lines.isEmpty {
-                    combatSectionLabel(L("announcement.label"))
-                    ForEach(lines) { line in
-                        HStack {
-                            Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
-                                .font(.dsaMono(.caption, emphasis: true))
-                                .foregroundStyle(line.value > 0
-                                    ? Color.dsaPositive
-                                    : combatAccent)
-                            Spacer()
-                            Text(line.source)
-                                .font(.dsaBody(.caption2))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                    }
+                // What the announcement does to the *opponent's* defence.
+                //
+                // This slot used to hold the hero's own AT modifiers — the
+                // reach, the manoeuvre, the Zonenaufschlag — carried over from
+                // the announcement as a reminder, drawn as bare bordered rows:
+                // a third calculation grammar, of numbers that had already been
+                // spent on a roll that already happened, under a heading that
+                // did not say what they applied to. They apply to nothing on
+                // this screen. What does is the figure the GM takes off their
+                // side, and that is now the same box as everything else.
+                if !opponentDefenseLines.isEmpty {
+                    CombatBreakdownBox(
+                        rows: opponentDefenseLines.map(BreakdownRow.line),
+                        totalValue: "\(L("parry")) \(signedTotal(opponentDefenseLines))",
+                        totalSource: L("source.opponentDefense"),
+                        sectionLabel: L("opponentDefense.label")
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("combat.dealDamage.opponentDefense")
                 }
 
                 // Outcome buttons (only while damage section is not shown)
@@ -427,6 +430,16 @@ struct CombatOpponentDefenseView: View {
               let rolls = damageFinalRolls else { return nil }
         _ = rolls
         return weaponDamageTotal(parsed: parsed) + (woundEffectDamage ?? 0)
+    }
+
+    /// What the announcement left on the other side's defence. Halving is not a
+    /// modifier line — it is stated in its own banner above — so this is the
+    /// Finte and the Liegend penalty, the two things that subtract.
+    private var opponentDefenseLines: [ModifierLine] { opponentDefenseModifiers }
+
+    private func signedTotal(_ lines: [ModifierLine]) -> String {
+        let total = lines.reduce(0) { $0 + $1.value }
+        return total > 0 ? "+\(total)" : (total < 0 ? "\(total)" : "±0")
     }
 
     /// Whether the wound effect still has an open question on screen: the

@@ -30,10 +30,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
         let oneHanded = app.button(containing: "Einhändig")
         if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
 
-        XCTAssertTrue(
-            app.buttons["combat.reach.Mittel"].waitForExistence(timeout: UITest.timeout),
-            "The announcement screen did not open"
-        )
+        openOpponentSection(app)
         return app
     }
 

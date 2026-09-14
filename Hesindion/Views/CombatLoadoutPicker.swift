@@ -110,27 +110,27 @@ struct CombatLoadoutPicker: View {
                 selected.insert(item.name)
             }
         } label: {
+            // In hand is the fill (ADR-0010), like the armour two sections up and
+            // every manoeuvre and chip in combat. These rows were the last ring
+            // left in the flow, so the preparation screen said "selected" two
+            // different ways on one screen.
             HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(isSelected ? combatAccent : .secondary)
-
                 // The thing itself, not a hammer standing in for all of them.
                 WeaponIconView(item.icon)
                     .font(.dsaBody(.body))
-                    .foregroundStyle(enabled ? Color.primary : Color.secondary)
+                    .foregroundStyle(isSelected ? Color.white : (enabled ? Color.primary : Color.secondary))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(enabled ? .primary : .tertiary)
+                        .foregroundStyle(isSelected ? Color.white : (enabled ? Color.primary : Color(UIColor.tertiaryLabel)))
                     Text(item.detail)
                         .font(.dsaMono(.caption, emphasis: true))
-                        .foregroundStyle(enabled ? .secondary : .tertiary)
+                        .foregroundStyle(isSelected ? Color.white.opacity(0.85) : (enabled ? Color.secondary : Color(UIColor.tertiaryLabel)))
                     if let note = item.note {
                         Text(note)
                             .font(.dsaBody(.caption2))
-                            .foregroundStyle(combatAccent)
+                            .foregroundStyle(isSelected ? Color.white.opacity(0.85) : combatAccent)
                     }
                 }
                 Spacer()
@@ -138,8 +138,8 @@ struct CombatLoadoutPicker: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+            .background(isSelected ? combatAccent : Color(UIColor.systemBackground))
+            .dsaBox(.flush)
         }
         .buttonStyle(.dsaMotion)
         .disabled(!enabled)
@@ -153,30 +153,28 @@ struct CombatLoadoutPicker: View {
             selectedRanged = isSelected ? nil : weapon.name
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.dsaHeading(.title3))
-                    .foregroundStyle(isSelected ? combatAccent : .secondary)
                 WeaponIconView(techniqueId: weapon.combatTechniqueId)
                     .font(.dsaBody(.body))
+                    .foregroundStyle(isSelected ? Color.white : Color.primary)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(weapon.name)
                         .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(isSelected ? .white : .primary)
                     HStack(spacing: 8) {
                         Text("FK \(weapon.at)")
                         Text(weapon.damage)
                         Text(weapon.range)
                     }
                     .font(.dsaMono(.caption, emphasis: true))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.secondary)
                 }
                 Spacer()
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .dsaBox(.flush, stroke: isSelected ? combatAccent : Color.dsaBorder)
+            .background(isSelected ? combatAccent : Color(UIColor.systemBackground))
+            .dsaBox(.flush)
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier("combat.loadout.\(weapon.name)")

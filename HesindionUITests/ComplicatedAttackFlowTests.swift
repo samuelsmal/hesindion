@@ -31,6 +31,9 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         let oneHanded = app.button(containing: "Einhändig")
         if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
 
+        // Everything about the other side lives in one fold now, shut by default.
+        openOpponentSection(app)
+
         // 1. The opponent out-reaches the hero: Mittel against Lang is −2 AT, and
         //    the chip says so before it is chosen.
         let longReach = app.buttons["combat.reach.Lang"]
@@ -44,6 +47,14 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(position.waitForExistence(timeout: UITest.timeout), "Position toggle missing")
         position.tap()
 
+        // 2b. And the target is on the ground. The penalty for that is *theirs*,
+        //     on their defence — the rules give the attacker nothing for it — so
+        //     it must not turn up in the hero's AT.
+        let prone = app.buttons["combat.attack.prone"]
+        XCTAssertTrue(prone.waitForExistence(timeout: UITest.timeout), "Prone toggle missing")
+        XCTAssertTrue(app.scrollUntilHittable(prone), "Could not reach the prone toggle")
+        prone.tap()
+
         // 3. Wuchtschlag II — offered as its own row beside Wuchtschlag I, because
         //    the hero may swing either.
         let wuchtschlagII = app.button(containing: "Wuchtschlag II")
@@ -55,7 +66,8 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(wuchtschlagII), "Could not reach Wuchtschlag II")
         wuchtschlagII.tap()
 
-        // 4. The head, against a surprised opponent: −10 eased by 2.
+        // 4. The head, against a surprised opponent: −10 eased by 2. The zones on
+        //    offer are the opponent's — a humanoid, here, so the familiar four.
         let kopf = app.buttons["combat.zone.kopf"]
         XCTAssertTrue(app.scrollUntilHittable(kopf), "Could not reach the zone picker")
         kopf.tap()
@@ -80,6 +92,10 @@ final class ComplicatedAttackFlowTests: XCTestCase {
                 "The calculation should name \(label)"
             )
         }
+        XCTAssertFalse(
+            app.staticTexts["Ziel liegt"].exists,
+            "A prone target costs the hero's attack nothing"
+        )
         captureScreenshot(app, named: "35-attack-calculation-complicated")
 
         diceBox.tap()
@@ -94,6 +110,22 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         toDefense.tap()
 
         app.button(containing: "Treffer geht durch").tap()
+
+        // The one calculation that *does* belong on this screen: what the GM
+        // takes off the opponent's defence. This slot used to hold the hero's
+        // own AT modifiers, spent on a roll that had already happened.
+        let opponentDefense = app.descendants(matching: .any)["combat.dealDamage.opponentDefense"]
+        XCTAssertTrue(
+            opponentDefense.waitForExistence(timeout: UITest.timeout),
+            "The opponent's defence modifiers are missing"
+        )
+        // The recap of the hero's own AT modifiers is gone: it sat under a
+        // MANÖVER heading, listing numbers already spent on a roll that had
+        // happened, in a row style used nowhere else.
+        XCTAssertFalse(
+            app.staticTexts["MANÖVER"].exists,
+            "The hero's own AT modifiers do not belong on the damage screen"
+        )
 
         let damageBox = app.staticTexts["Antippen zum Würfeln"].firstMatch
         XCTAssertTrue(damageBox.waitForExistence(timeout: UITest.timeout), "Damage dice not offered")

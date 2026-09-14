@@ -26,10 +26,7 @@ final class WeaponStyleFlowTests: XCTestCase {
         XCTAssertTrue(heroWeapon.waitForExistence(timeout: UITest.timeout), "No hero attack offered")
         heroWeapon.tap()
 
-        XCTAssertTrue(
-            app.buttons["combat.reach.Mittel"].waitForExistence(timeout: UITest.timeout),
-            "The announcement screen did not open"
-        )
+        openOpponentSection(app)
         return app
     }
 
@@ -74,10 +71,7 @@ final class WeaponStyleFlowTests: XCTestCase {
         XCTAssertTrue(weaponRow.waitForExistence(timeout: UITest.timeout), "No weapon list")
         weaponRow.tap()
 
-        XCTAssertTrue(
-            app.buttons["combat.reach.Mittel"].waitForExistence(timeout: UITest.timeout),
-            "The announcement screen did not open"
-        )
+        openOpponentSection(app)
         XCTAssertFalse(
             app.staticTexts["Golgariten"].exists,
             "The style is worth nothing on foot and should not be claimed"

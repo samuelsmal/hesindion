@@ -334,10 +334,11 @@ struct CombatAnnouncementView: View {
     let twoHandedGripActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
+    /// The other side of the fight, as far as the app has been told. Owned by
+    /// `CombatView` so it outlives one attack: the same opponent has the same
+    /// reach and the same body plan in round four as in round one.
+    @Binding var opponent: OpponentProfile
     var onDismiss: () -> Void
-
-    @State private var vorteilhaftePosition: Bool = false
-    @State private var selectedOpponentReach: WeaponReach = .mittel
 
     /// The reach of the weapon being announced — the one named in the header, not
     /// whatever the hero has in the main hand. It is handed to the modifier
@@ -348,10 +349,7 @@ struct CombatAnnouncementView: View {
     }
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
-    @State private var targetIsSurprised = false
-    /// What is on the other end of the swing, as far as *Karmale Objekte* cares.
-    /// The GM's answer; the app has no opponent to read it from.
-    @State private var daemonTarget: KarmalWeapon.Target = .ordinary
+    @State private var showingZoneRoll = false
 
     /// Whether this weapon has anything to say about demons at all.
     private var weaponIsConsecrated: Bool {
@@ -360,8 +358,14 @@ struct CombatAnnouncementView: View {
 
     /// The multiplier the Fokusregel adds, if any.
     private var karmalDamage: CriticalDamage {
-        KarmalWeapon.damage(consecrated: weaponIsConsecrated, target: daemonTarget)
+        KarmalWeapon.damage(
+            consecrated: weaponIsConsecrated,
+            target: !opponent.isDaemon ? .ordinary
+                : (opponent.isOfOpposingDeity ? .daemonOfOpposingDeity : .daemon)
+        )
     }
+
+    private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
 
     private var golgaritenForced: Bool {
         hero.golgaritenActive(mounted: mountedActive)
@@ -419,59 +423,7 @@ struct CombatAnnouncementView: View {
 
             ScrollView {
                 VStack(spacing: 8) {
-                    // Vorteilhafte Position. Forced on for a mounted Golgarit,
-                    // so that case renders the same row without the button.
-                    if golgaritenForced {
-                        DSAToggleRowLabel(
-                            title: "\(L("advantageousPosition")) (\(L("mounted")))",
-                            isOn: true,
-                            accent: combatAccent,
-                            detail: "AT +2"
-                        )
-                    } else {
-                        // "(+2)" used to be part of the title, which left "+2 to
-                        // what?" unanswered. The detail slot is where every
-                        // manoeuvre row already prints "AT -1".
-                        DSAToggleRow(
-                            title: L("advantageousPosition"),
-                            isOn: $vorteilhaftePosition,
-                            accent: combatAccent,
-                            detail: "AT +2",
-                            identifier: "combat.attack.advantageousPosition"
-                        )
-                    }
-
-                    // Opponent weapon reach
-                    combatSectionLabel(L("opponentReach.label"))
-
-                    // Each option carries what it costs the hero's own weapon —
-                    // reaching a longer weapon is -2 per step (`WeaponReach
-                    // .atPenaltyAgainst`) — the same way the zone chips print
-                    // their Zonenaufschlag. Three bare words said nothing about
-                    // why one of them mattered.
-                    HStack(spacing: 8) {
-                        ForEach(WeaponReach.allCases, id: \.self) { reach in
-                            let isSelected = selectedOpponentReach == reach
-                            let penalty = heroWeaponReach.atPenaltyAgainst(reach)
-                            Button { selectedOpponentReach = reach } label: {
-                                VStack(spacing: 2) {
-                                    Text(reach.rawValue)
-                                        .font(.dsaBody(.caption))
-                                    Text(penalty == 0 ? "AT ±0" : "AT \(penalty)")
-                                        .font(.dsaMono(.caption2, emphasis: true))
-                                        .opacity(isSelected ? 0.85 : 0.6)
-                                }
-                                .foregroundStyle(isSelected ? .white : .primary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                .dsaBox(.flush)
-                            }
-                            .buttonStyle(.dsaMotion)
-                            .accessibilityIdentifier("combat.reach.\(reach.rawValue)")
-                        }
-                    }
-                    .dsaOptionGroup()
+                    opponentSection
 
                     // Maneuver selection (hidden for mount charge — auto-selected)
                     if !isMountCharge {
@@ -525,15 +477,19 @@ struct CombatAnnouncementView: View {
                     .dsaOptionGroup()
                     } // end if !isMountCharge
 
-                    // Trefferzone (Fokus-Regel)
-                    if hero.isFokusRuleActive(.trefferzonen) {
+                    // Trefferzone (Fokus-Regel). The zones on offer are the
+                    // opponent's, not the hero's: a four-legged opponent has no
+                    // Arme, and a 1W20 against them lands on their own table.
+                    if zonesActive, opponent.bodyPlanKind != .keineZonen {
                         CombatZonePicker(
                             selection: $targetZone,
-                            targetIsSurprised: $targetIsSurprised,
+                            targetIsSurprised: $opponent.isSurprised,
+                            zones: HitZoneTable.zones(for: opponent.bodyPlan),
                             showsPenalty: true,
                             showsSurprisedToggle: true,
-                            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_160" },
-                            sfHalvesKey: "trefferzone.sfHalves.melee"
+                            hasSonderfertigkeit: hero.hasGezielterAngriff,
+                            sfHalvesKey: "trefferzone.sfHalves.melee",
+                            accessory: AnyView(rollZoneButton)
                         )
                     }
 
@@ -550,37 +506,6 @@ struct CombatAnnouncementView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(combatAccent.opacity(0.1))
                         .dsaBox(.flush, stroke: combatAccent)
-                    }
-
-                    // Karmale Objekte. Shown only for a weapon the player has
-                    // marked as consecrated, because for every other weapon the
-                    // rule has nothing to say and the question would be noise.
-                    if weaponIsConsecrated {
-                        combatSectionLabel(L("daemon.label"))
-
-                        DSAToggleRow(
-                            title: L("daemon.target"),
-                            isOn: Binding(
-                                get: { daemonTarget != .ordinary },
-                                set: { daemonTarget = $0 ? .daemon : .ordinary }
-                            ),
-                            accent: combatAccent,
-                            subtitle: L("daemon.target.subtitle"),
-                            identifier: "combat.attack.daemon"
-                        )
-
-                        if daemonTarget != .ordinary {
-                            DSAToggleRow(
-                                title: L("daemon.opposingDeity"),
-                                isOn: Binding(
-                                    get: { daemonTarget == .daemonOfOpposingDeity },
-                                    set: { daemonTarget = $0 ? .daemonOfOpposingDeity : .daemon }
-                                ),
-                                accent: combatAccent,
-                                detail: L("daemon.opposingDeity.detail"),
-                                identifier: "combat.attack.opposingDeity"
-                            )
-                        }
                     }
 
                     // The announcement, added up: what the attack is rolled
@@ -610,6 +535,34 @@ struct CombatAnnouncementView: View {
             if isMountCharge {
                 selectedManeuver = .sturmangriff
             }
+            // The shape of the opponent holds for the fight; their posture does
+            // not. A new announcement is a new swing.
+            opponent.resetPerAttack()
+        }
+        .overlay {
+            if showingZoneRoll {
+                DSADiceRevealModal(
+                    title: L("trefferzone.section"),
+                    sides: 20,
+                    accent: combatAccent,
+                    result: { rolls in
+                        AnyView(
+                            HitZoneTableView(
+                                plan: opponent.bodyPlan,
+                                roll: rolls.first,
+                                accent: combatAccent
+                            )
+                        )
+                    },
+                    onConfirm: { rolls in
+                        if let roll = rolls.first {
+                            targetZone = HitZoneTable.lookup(roll, plan: opponent.bodyPlan).zone
+                        }
+                        showingZoneRoll = false
+                    },
+                    onCancel: { showingZoneRoll = false }
+                )
+            }
         }
     }
 
@@ -635,19 +588,237 @@ struct CombatAnnouncementView: View {
             modifierLines: modifiers,
             secondAttack: secondAttack,
             damageLines: damageBonusLines,
-            damageMultiplier: karmalDamage
+            damageMultiplier: karmalDamage,
+            opponentDefenseModifiers: opponentDefenseLines
         )
+    }
+
+    // MARK: - The other side of the fight
+
+    /// What is set, read off the lid while the section is shut.
+    private var opponentSummary: String {
+        var parts: [String] = [opponent.reach.rawValue]
+        if zonesActive { parts.append(L(opponent.size.nameKey)) }
+        if opponent.advantageousPosition || golgaritenForced { parts.append("AT +2") }
+        if opponent.isProne { parts.append(L("opponent.prone")) }
+        if opponent.isSurprised { parts.append(L("trefferzone.targetSurprised")) }
+        if opponent.isDaemon { parts.append(L("daemon.target.short")) }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Everything the GM can tell the app about the other side, in one fold.
+    ///
+    /// These were four separate things in three places: the reach had its own
+    /// section at the top, Vorteilhafte Position a loose row above it, "Ziel ist
+    /// überrascht" was buried in the Trefferzone picker, and the demon question
+    /// sat between the zone and the calculations. They are all the same kind of
+    /// fact — something true of the opponent that a rule turns on — and most
+    /// attacks answer none of them, which is why the section folds.
+    private var opponentSection: some View {
+        CombatDisclosureSection(
+            title: L("opponent.label"),
+            summary: opponentSummary,
+            identifier: "combat.attack.opponent"
+        ) {
+            // Reach. Each option carries what it costs the hero's own weapon —
+            // reaching past a longer weapon is -2 per step — the same way the
+            // zone chips print their Zonenaufschlag.
+            captioned(L("opponentReach.label")) {
+                HStack(spacing: 8) {
+                    ForEach(WeaponReach.allCases, id: \.self) { reach in
+                        let isSelected = opponent.reach == reach
+                        let penalty = heroWeaponReach.atPenaltyAgainst(reach)
+                        Button { opponent.reach = reach } label: {
+                            VStack(spacing: 2) {
+                                Text(reach.rawValue)
+                                    .font(.dsaBody(.caption))
+                                Text(penalty == 0 ? "AT ±0" : "AT \(penalty)")
+                                    .font(.dsaMono(.caption2, emphasis: true))
+                                    .opacity(isSelected ? 0.85 : 0.6)
+                            }
+                            .foregroundStyle(isSelected ? .white : .primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                            .dsaBox(.flush)
+                        }
+                        .buttonStyle(.dsaMotion)
+                        .accessibilityIdentifier("combat.reach.\(reach.rawValue)")
+                    }
+                }
+                .dsaOptionGroup()
+            }
+
+            // Which Trefferzonentabelle they are built on. Only under the rule
+            // that uses it — and it is the one thing on this screen the app
+            // cannot fall back on a sensible default for, because the hero's own
+            // table is the wrong answer for anything that is not another person.
+            if zonesActive {
+                captioned(L("opponent.bodyPlan")) {
+                    chipRow(BodyPlanKind.allCases, id: \.id, isSelected: { $0 == opponent.bodyPlanKind }) { kind in
+                        opponent.bodyPlanKind = kind
+                        if let first = kind.publishedSizes.first,
+                           !kind.publishedSizes.contains(opponent.size) {
+                            opponent.size = first
+                        }
+                    } label: { L($0.nameKey) } identifier: { "combat.opponent.plan.\($0.rawValue)" }
+                }
+
+                if !opponent.bodyPlanKind.publishedSizes.isEmpty {
+                    captioned(L("opponent.size")) {
+                        chipRow(
+                            opponent.bodyPlanKind.publishedSizes,
+                            id: \.id,
+                            isSelected: { $0 == opponent.size }
+                        ) { opponent.size = $0 }
+                        label: { L($0.nameKey) }
+                        identifier: { "combat.opponent.size.\($0.rawValue)" }
+                    }
+                }
+            }
+
+            // Vorteilhafte Position. Forced on for a mounted Golgarit, so that
+            // case renders the same row without the button.
+            if golgaritenForced {
+                DSAToggleRowLabel(
+                    title: "\(L("advantageousPosition")) (\(L("mounted")))",
+                    isOn: true,
+                    accent: combatAccent,
+                    detail: "AT +2"
+                )
+            } else {
+                DSAToggleRow(
+                    title: L("advantageousPosition"),
+                    isOn: $opponent.advantageousPosition,
+                    accent: combatAccent,
+                    detail: "AT +2",
+                    identifier: "combat.attack.advantageousPosition"
+                )
+            }
+
+            // Status Liegend: the penalty is theirs, on their defence — the
+            // rules give the attacker nothing for it.
+            DSAToggleRow(
+                title: L("opponent.prone"),
+                isOn: $opponent.isProne,
+                accent: combatAccent,
+                detail: "\(L("parry")) −2",
+                subtitle: L("opponent.prone.effect"),
+                identifier: "combat.attack.prone"
+            )
+
+            // Karmale Objekte. Only for a weapon the player has marked as
+            // consecrated, because for every other weapon the rule says nothing.
+            if weaponIsConsecrated {
+                DSAToggleRow(
+                    title: L("daemon.target"),
+                    isOn: $opponent.isDaemon,
+                    accent: combatAccent,
+                    subtitle: L("daemon.target.subtitle"),
+                    identifier: "combat.attack.daemon"
+                )
+
+                if opponent.isDaemon {
+                    DSAToggleRow(
+                        title: L("daemon.opposingDeity"),
+                        isOn: $opponent.isOfOpposingDeity,
+                        accent: combatAccent,
+                        detail: L("daemon.opposingDeity.detail"),
+                        identifier: "combat.attack.opposingDeity"
+                    )
+                }
+            }
+        }
+    }
+
+    /// A control under the name of what it sets. The section holds several
+    /// pickers and a bare row of chips says nothing about which question it
+    /// answers.
+    private func captioned<Content: View>(
+        _ caption: String, @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(caption)
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func chipRow<T, ID: Hashable>(
+        _ options: [T],
+        id: KeyPath<T, ID>,
+        isSelected: @escaping (T) -> Bool,
+        select: @escaping (T) -> Void,
+        label: @escaping (T) -> String,
+        identifier: @escaping (T) -> String
+    ) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { chips(options, id: id, isSelected: isSelected, select: select, label: label, identifier: identifier) }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
+                chips(options, id: id, isSelected: isSelected, select: select, label: label, identifier: identifier)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .dsaOptionGroup()
+    }
+
+    @ViewBuilder
+    private func chips<T, ID: Hashable>(
+        _ options: [T],
+        id: KeyPath<T, ID>,
+        isSelected: @escaping (T) -> Bool,
+        select: @escaping (T) -> Void,
+        label: @escaping (T) -> String,
+        identifier: @escaping (T) -> String
+    ) -> some View {
+        ForEach(options, id: id) { option in
+            let selected = isSelected(option)
+            Button { select(option) } label: {
+                Text(label(option))
+                    .font(.dsaHeading(.caption))
+                    .foregroundStyle(selected ? .white : .primary)
+                    .frame(maxWidth: .infinity, minHeight: 22)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(selected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                    .dsaBox(.flush)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier(identifier(option))
+        }
+    }
+
+    /// The other way of answering "where did it land": 1W20 on the opponent's
+    /// own table. The receiving side has had this since the rule went in; the
+    /// attacking side could only ever declare a zone and pay its Zonenaufschlag.
+    private var rollZoneButton: some View {
+        Button { showingZoneRoll = true } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "dice.fill")
+                Text(L("trefferzone.roll"))
+            }
+            .font(.dsaHeading(.caption))
+            .foregroundStyle(targetZone == nil ? Color.white : Color.dsaDisabledLabel)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(targetZone == nil ? combatAccent : Color(UIColor.secondarySystemBackground))
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.zone.roll")
     }
 
     private func buildModifierLines() -> [ModifierLine] {
         var context = ModifierContext(hero: hero, domain: .meleeAttack)
         context.targetHitZone = targetZone
-        context.targetIsSurprised = targetIsSurprised
+        context.targetIsSurprised = opponent.isSurprised
         context.mounted = mountedActive
         context.schipIgnoreZustand = schipIgnoreZustandThisRound
         context.dualAttackActive = dualAttackPenaltyActive
         context.beengteUmgebung = beengteUmgebungActive
-        context.opponentReach = selectedOpponentReach
+        context.opponentReach = opponent.reach
         context.attackerReach = heroWeaponReach
         context.maneuver = selectedManeuver
         context.isOffHand = isOffHand
@@ -657,7 +828,7 @@ struct CombatAnnouncementView: View {
         var lines = ModifierEngine.shared.evaluate(context: context)
 
         // Manual vorteilhafte Position toggle (not golgariten-forced)
-        if !golgaritenForced && vorteilhaftePosition {
+        if !golgaritenForced && opponent.advantageousPosition {
             lines.insert(ModifierLine(value: 2, source: L("source.vorteilhaft")), at: 0)
         }
 
@@ -718,11 +889,7 @@ struct CombatAnnouncementView: View {
     }
 
     private var opponentDefenseLines: [ModifierLine] {
-        var lines: [ModifierLine] = []
-        if case .finte(let tier) = selectedManeuver {
-            lines.append(ModifierLine(value: -tier * 2, source: L("maneuver.finte")))
-        }
-        return lines
+        opponent.defenseModifiers(maneuver: selectedManeuver)
     }
 
     /// The TP calculation, for the same reason the AT one exists: a manoeuvre

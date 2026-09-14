@@ -1,107 +1,67 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - CombatArmorSelectionView
+// MARK: - CombatArmorPicker
 
-struct CombatArmorSelectionView: View {
+/// Which pieces of armour are on, and what they add up to.
+///
+/// This was a screen of its own ahead of the preparation screen — one that could
+/// not go back, whose summary bar ran edge to edge under a "Weiter" that did the
+/// same, and which asked a question of exactly the same kind as the weapon two
+/// steps later. Splitting "what is the hero wearing" from "what is the hero
+/// holding" across two screens had nothing behind it.
+struct CombatArmorPicker: View {
     let hero: Hero
-    @Binding var step: CombatStep
-    var onDismiss: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text(L("armorSelection"))
-                    .font(.dsaHeading(.headline))
-                    .foregroundStyle(.white)
-                Spacer()
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white)
+            combatSectionLabel(L("armorSelection.label"))
+
+            if hero.armors.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "shield.slash")
+                        .foregroundStyle(.secondary)
+                    Text(L("noArmor"))
+                        .font(.dsaBody(.caption))
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.dsaMotion)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity)
-            .background(combatAccent)
-            .dsaBox(.raised)
-
-            ScrollView {
-                VStack(spacing: 0) {
-                    combatSectionLabel(L("armorSelection.label"))
-
-                    if hero.armors.isEmpty {
-                        VStack(spacing: 8) {
-                            Image(systemName: "shield.slash")
-                                .font(.dsaHeading(.largeTitle))
-                                .foregroundStyle(.secondary)
-                            Text(L("noArmor"))
-                                .font(.dsaBody(.body))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                    } else {
-                        VStack(spacing: 4) {
-                            ForEach(hero.armors, id: \.persistentModelID) { armor in
-                                armorRow(armor)
-                            }
-                        }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DSALayout.contentPadding)
+                .padding(.vertical, DSALayout.contentPadding)
+                .background(Color(UIColor.systemBackground))
+                .dsaBox(.flush)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach(hero.armors, id: \.persistentModelID) { armor in
+                        armorRow(armor)
                     }
                 }
-                .adaptiveContentWidth()
-                .padding(.bottom, 16)
-            }
 
-            // Summary bar
-            HStack(spacing: 16) {
-                HStack(spacing: 4) {
-                    Text(L("rs"))
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white.opacity(0.7))
-                    Text("\(hero.totalRS)")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .foregroundStyle(.white)
+                // What it comes to. The same dark total bar every calculation in
+                // combat ends with, rather than a full-bleed bar pinned to the
+                // bottom of a screen.
+                HStack(spacing: 16) {
+                    Text("\(L("rs")) \(hero.totalRS)")
+                    Text("\(L("encumbrance")) \(hero.effectiveBE)")
+                    Spacer()
                 }
-                HStack(spacing: 4) {
-                    Text(L("encumbrance"))
-                        .font(.dsaBody(.body))
-                        .foregroundStyle(.white.opacity(0.7))
-                    Text("\(hero.effectiveBE)")
-                        .font(.dsaHeading(.title3))
-                        .fontDesign(.monospaced)
-                        .foregroundStyle(.white)
-                }
-                Spacer()
+                .font(.dsaMono(.body, emphasis: true))
+                .foregroundStyle(.white)
+                .padding(.horizontal, DSALayout.contentPadding)
+                .padding(.vertical, 10)
+                .background(Color.dsaDark)
+                .dsaBox(.raised)
+                .padding(.top, 4)
+                .accessibilityIdentifier("combat.setup.armorTotal")
             }
-            .adaptiveContentWidth()
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity)
-            .background(Color.dsaDark)
-            .dsaBox(.raised)
-
-            CombatActionButton(
-                title: L("continue"),
-                identifier: "combat.armorSelection.continue"
-            ) { step = .combatSetup }
-            .adaptiveContentWidth()
-            .padding(.top, 12)
         }
-        .frame(maxWidth: .infinity)
     }
 
     private func armorRow(_ armor: Armor) -> some View {
         Button {
             armor.isEquipped.toggle()
         } label: {
-            // Equipped is the fill, like every other option (ADR-0010). This row
-            // was the last `checkmark.circle` left, so on the setup screen the
-            // Plattenrüstung showed a ring while "Beritten" two sections down
-            // showed a fill.
+            // Equipped is the fill, like every other option (ADR-0010).
             DSAToggleRowLabel(
                 title: armor.name,
                 isOn: armor.isEquipped,
@@ -110,6 +70,7 @@ struct CombatArmorSelectionView: View {
             )
         }
         .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.armor.\(armor.name)")
     }
 }
 
@@ -139,43 +100,12 @@ struct CombatSetupView: View {
         VStack(spacing: 0) {
             combatScreenHeader(
                 title: L("combatSetup"),
-                onBack: { step = .armorSelection },
                 onDismiss: onDismiss
             )
 
             ScrollView {
                 VStack(spacing: 0) {
-                    // What is already settled, restated rather than left behind
-                    // on the previous screen: the armour is a number the rest of
-                    // the fight leans on.
-                    combatSectionLabel(L("armor.label"))
-                    Button { step = .armorSelection } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "shield.lefthalf.filled")
-                                .font(.dsaHeading(.title3))
-                                .foregroundStyle(combatAccent)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(hero.wornArmorNames.isEmpty
-                                     ? L("armor.none")
-                                     : hero.wornArmorNames.joined(separator: ", "))
-                                    .font(.dsaBody(.body))
-                                Text("\(L("rs")) \(hero.totalRS)")
-                                    .font(.dsaMono(.caption, emphasis: true))
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush)
-                    }
-                    .buttonStyle(.dsaMotion)
-                    .accessibilityIdentifier("combat.setup.armor")
-                    .padding(.bottom, 4)
+                    CombatArmorPicker(hero: hero)
 
                     CombatLoadoutPicker(
                         hero: hero,

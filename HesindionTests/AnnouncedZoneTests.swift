@@ -14,7 +14,6 @@ final class AnnouncedZoneTests: XCTestCase {
     @MainActor
     private var representativeSteps: [CombatStep] {
         [
-            .armorSelection,
             .combatSetup,
             .initiativeRoll,
             .loadoutEquipment,
