@@ -46,11 +46,12 @@ The app launches into an empty store, so UI tests use a **debug-only seed**: `UI
 
 Elements the UI tests drive carry `.accessibilityIdentifier`s (`heroSettings.fokusRules`, `commandPalette.search`, `combat.zone.<zone>`, `combat.woundEffectPanel`, `combat.woundEffectReminder`, `combat.takeDamage.increaseTP`, `combat.execution.*`). Prefer adding an identifier to an existing element over reshaping a view for a test.
 
-Three known intermittent failures — none of them regressions:
+Four known intermittent failures — none of them regressions:
 
 - `SkillCheckModalSnapshotTests.testFailureWithNoSchips` — intermittent SIGTRAP, passes in isolation.
 - `DiceRollerTests.testD20IsUniform` — unseeded chi-square, fails ~1 run in 200 by construction.
 - `HeroImportTests.importBoronmirFromOptolith` — fails on `combatTechniques.count == 0` roughly 1 full run in 4, passes in isolation and on rerun. The techniques come from `rules.db`, and `RulesDatabase.allCombatTechniqueIds()` returns `[]` on any `sqlite3_prepare_v2` failure, so a transient one is indistinguishable from an empty table. Worth chasing — the same silent empty would import a hero with no combat techniques.
+- `CombatViewSnapshotTests.testPreparation` — the two melee weapon rows swap places between runs; `hero.meleeWeapons` is a SwiftData to-many with no guaranteed order and the reference encodes one of them. Needs a stable sort in the loadout picker, then a re-record.
 
 ## Architecture
 

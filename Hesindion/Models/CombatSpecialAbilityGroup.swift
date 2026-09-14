@@ -8,6 +8,11 @@ import Foundation
 /// reach. `groups.id` is only meaningful for `special_ability` rules;
 /// advantages reuse the same numbers for other groups (ADV_24 has group 3,
 /// which is Karmal there).
+///
+/// Prügel (group 21, nine abilities) and Befehle (group 12, six) are
+/// combat-shaped but deliberately outside this list: the design counted the
+/// four groups as the combat slice, and every rule gets a catalog entry
+/// regardless. Revisit when the catalog's authoring pass reaches them.
 enum CombatSpecialAbilityGroup: Int, CaseIterable {
     case kampf = 3
     case kampfstileBewaffnet = 9
