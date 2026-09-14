@@ -15,10 +15,13 @@ struct RuleDetail: Identifiable {
     let groupId: Int?
     let name: String
     let description: String
+    /// The per-level texts (`level1`…`level4`), empty for most rules; Zustände have four.
+    let levelTexts: [String]
     let cost: String?
     let levels: Int?
     let max: Int?
     let spellDetail: SpellDetail?
+    let catalog: CatalogEntry?
 }
 
 struct SpellDetail {
@@ -41,6 +44,34 @@ struct CombatTechniqueDetail {
     let primaryAttr1: String?
     let primaryAttr2: String?
     let hasNoParry: Bool
+}
+
+/// What the app does with a rule. The values are the catalog's own strings.
+enum CatalogStatus: String, CaseIterable {
+    /// Clauses in the catalog drive it through the evaluator (design §3; step 2).
+    case implemented
+    /// Named in Swift; `pointer` says where.
+    case byHand
+    /// Read and found to touch no roll the app makes.
+    case noRollEffect
+    /// Not read yet.
+    case todo
+
+    var labelKey: String { "catalog.status.\(rawValue)" }
+}
+
+struct CatalogPointer: Equatable {
+    let file: String
+    let symbol: String
+}
+
+struct CatalogEntry: Identifiable, Equatable {
+    let id: String
+    let status: CatalogStatus
+    let note: String?
+    let pointer: CatalogPointer?
+    let reviewedBy: String?
+    let reviewedOn: String?
 }
 
 final class RulesDatabase: @unchecked Sendable {
@@ -161,7 +192,8 @@ final class RulesDatabase: @unchecked Sendable {
 
     func lookup(id: String, locale: String = "de-DE") -> RuleDetail? {
         let sql = """
-            SELECT r.id, r.category, i.name, i.description, r.cost, r.levels, r.max, r.group_id
+            SELECT r.id, r.category, i.name, i.description, r.cost, r.levels, r.max, r.group_id,
+                   i.level1, i.level2, i.level3, i.level4
             FROM rules r
             JOIN rules_i18n i ON i.rule_id = r.id AND i.locale = ?
             WHERE r.id = ?
@@ -183,6 +215,7 @@ final class RulesDatabase: @unchecked Sendable {
         let levels = col_int_opt(stmt, 5)
         let max = col_int_opt(stmt, 6)
         let groupId = col_int_opt(stmt, 7)
+        let levelTexts = (8...11).compactMap { col_text_opt(stmt, Int32($0)) }.filter { !$0.isEmpty }
 
         let spellDetail = (category == "spell" || category == "liturgy")
             ? lookupSpellDetail(ruleId: ruleId)
@@ -190,8 +223,10 @@ final class RulesDatabase: @unchecked Sendable {
 
         return RuleDetail(
             id: ruleId, category: category, groupId: groupId, name: name, description: desc,
+            levelTexts: levelTexts,
             cost: cost, levels: levels, max: max,
-            spellDetail: spellDetail
+            spellDetail: spellDetail,
+            catalog: lookupCatalogEntry(ruleId: ruleId)
         )
     }
 
@@ -254,6 +289,75 @@ final class RulesDatabase: @unchecked Sendable {
         return col_text(stmt, 0)
     }
 
+    // MARK: - Catalog
+
+    private static let catalogColumns =
+        "rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on"
+
+    private func catalogEntry(from stmt: OpaquePointer?) -> CatalogEntry? {
+        guard let status = CatalogStatus(rawValue: col_text(stmt, 1)) else { return nil }
+        let file = col_text_opt(stmt, 3)
+        let symbol = col_text_opt(stmt, 4)
+        let pointer: CatalogPointer? = if let file, let symbol { CatalogPointer(file: file, symbol: symbol) } else { nil }
+        return CatalogEntry(
+            id: col_text(stmt, 0),
+            status: status,
+            note: col_text_opt(stmt, 2),
+            pointer: pointer,
+            reviewedBy: col_text_opt(stmt, 5),
+            reviewedOn: col_text_opt(stmt, 6)
+        )
+    }
+
+    func lookupCatalogEntry(ruleId: String) -> CatalogEntry? {
+        let sql = "SELECT \(Self.catalogColumns) FROM catalog WHERE rule_id = ?"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return catalogEntry(from: stmt)
+    }
+
+    func catalogEntries(status: CatalogStatus) -> [CatalogEntry] {
+        let sql = "SELECT \(Self.catalogColumns) FROM catalog WHERE status = ? ORDER BY rule_id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, status.rawValue, -1, SQLITE_TRANSIENT)
+        var results: [CatalogEntry] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let entry = catalogEntry(from: stmt) { results.append(entry) }
+        }
+        return results
+    }
+
+    func catalogStatusCounts() -> [CatalogStatus: Int] {
+        let sql = "SELECT status, COUNT(*) FROM catalog GROUP BY status"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [:] }
+        defer { sqlite3_finalize(stmt) }
+        var counts: [CatalogStatus: Int] = [:]
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let status = CatalogStatus(rawValue: col_text(stmt, 0)) {
+                counts[status] = Int(sqlite3_column_int(stmt, 1))
+            }
+        }
+        return counts
+    }
+
+    /// Rules the catalog does not mention. The build refuses to produce such a
+    /// database; this is the check that the bundled one came from the build.
+    func ruleIdsWithoutCatalogEntry() -> [String] {
+        let sql = "SELECT id FROM rules WHERE id NOT IN (SELECT rule_id FROM catalog) ORDER BY id"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return ["<catalog table missing>"] }
+        defer { sqlite3_finalize(stmt) }
+        var ids: [String] = []
+        while sqlite3_step(stmt) == SQLITE_ROW { ids.append(col_text(stmt, 0)) }
+        return ids
+    }
+
     private func lookupSpellDetail(ruleId: String) -> SpellDetail? {
         let sql = """
             SELECT check_attr_1, check_attr_2, check_attr_3,
@@ -300,11 +404,6 @@ final class RulesDatabase: @unchecked Sendable {
     private func col_int_opt(_ stmt: OpaquePointer?, _ idx: Int32) -> Int? {
         guard sqlite3_column_type(stmt, idx) != SQLITE_NULL else { return nil }
         return Int(sqlite3_column_int(stmt, idx))
-    }
-
-    private func col_double_opt(_ stmt: OpaquePointer?, _ idx: Int32) -> Double? {
-        guard sqlite3_column_type(stmt, idx) != SQLITE_NULL else { return nil }
-        return sqlite3_column_double(stmt, idx)
     }
 }
 

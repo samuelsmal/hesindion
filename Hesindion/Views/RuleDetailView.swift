@@ -59,6 +59,30 @@ struct RuleDetailView: View {
                                 .font(.body)
                         }
 
+                        if !rule.levelTexts.isEmpty {
+                            ForEach(Array(rule.levelTexts.enumerated()), id: \.offset) { index, text in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text("\(L("rule.levelPrefix")) \(StateCatalog.romanSuffix(index + 1).trimmingCharacters(in: .whitespaces))")
+                                        .font(.dsaBody(.caption))
+                                        .frame(width: 72, alignment: .leading)
+                                    Text(markdownDescription(text))
+                                        .font(.body)
+                                }
+                            }
+                        }
+
+                        if let entry = rule.catalog {
+                            Text(L("catalog.section"))
+                                .font(.dsaHeading(.subheadline))
+                                .padding(.top, 4)
+                            Text(L(entry.status.labelKey))
+                                .font(.dsaBody(.body))
+                            if let note = entry.note, !note.isEmpty {
+                                Text(note)
+                                    .font(.dsaBody(.caption))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                     .padding(16)
                 }
