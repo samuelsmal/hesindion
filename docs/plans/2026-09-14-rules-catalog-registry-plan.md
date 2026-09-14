@@ -1228,7 +1228,7 @@ git commit -m "feat(rules): the app reads the catalog and the rule screen says w
 - Modify: `HesindionTests/CombatAbilityCoverageTests.swift` (remove `testTheSampleHeroCarriesNoAbilityTheAppIgnores`)
 
 **Acceptance Criteria:**
-- [ ] `make rules-db UPDATE_SNAPSHOT=1` prints `catalog: implemented 0, byHand 46, noRollEffect 0, todo 2629`.
+- [ ] `make rules-db UPDATE_SNAPSHOT=1` prints `catalog: implemented 0, byHand 45, noRollEffect 0, todo 2630`.
 - [ ] Every `CombatAbility` case, ADV_5, ADV_25, ADV_26, ADV_27, ADV_44, ADV_49, ADV_54, DISADV_56, and the 25 Zustände and Status in `StateCatalog` are `byHand`.
 - [ ] No Sonderfertigkeit Boronmir carries is `todo`.
 
@@ -1245,7 +1245,7 @@ Add to `HesindionTests/RulesCatalogTests.swift`:
     func testCoverageDoesNotGoBackwards() throws {
         try requireDatabase()
         let counts = RulesDatabase.shared.catalogStatusCounts()
-        XCTAssertGreaterThanOrEqual((counts[.implemented] ?? 0) + (counts[.byHand] ?? 0), 46)
+        XCTAssertGreaterThanOrEqual((counts[.implemented] ?? 0) + (counts[.byHand] ?? 0), 45)
     }
 
     func testEveryCombatAbilityHasAStatusOtherThanTodo() throws {
@@ -1297,7 +1297,7 @@ Expected: `testCoverageDoesNotGoBackwards`, `testEveryCombatAbilityHasAStatusOth
 
 - [ ] **Step 3: Write the hand entries**
 
-In `specs/data/rules-catalog.yaml`, delete the 46 `todo` lines for the ids below and insert these block entries after the header comment, before the first `todo` line. The note says what the code does *today*, discrepancies with the rules included, because that is what a reader with only an id needs.
+In `specs/data/rules-catalog.yaml`, delete the 45 `todo` lines for the ids below and insert these block entries after the header comment, before the first `todo` line. The note says what the code does *today*, discrepancies with the rules included, because that is what a reader with only an id needs.
 
 ```yaml
 # ---------------------------------------------------------------------------
@@ -1503,7 +1503,7 @@ If a name differs (for example `vorstoß`), use the identifier the file actually
 make rules-db UPDATE_SNAPSHOT=1
 ```
 
-Expected: `catalog: implemented 0, byHand 46, noRollEffect 0, todo 2629` and `Built Hesindion/Resources/rules.db successfully.` Any `catalog:` problem line means an entry is wrong; fix the entry, not the check.
+Expected: `catalog: implemented 0, byHand 45, noRollEffect 0, todo 2630` and `Built Hesindion/Resources/rules.db successfully.` Any `catalog:` problem line means an entry is wrong; fix the entry, not the check.
 
 - [ ] **Step 6: Run and commit**
 
@@ -1512,7 +1512,7 @@ Expected: `** TEST SUCCEEDED **`.
 
 ```bash
 git add specs/data/rules-catalog.yaml specs/data/rules-catalog.snapshot.json Hesindion/Resources/rules.db HesindionTests/RulesCatalogTests.swift HesindionTests/CombatAbilityCoverageTests.swift
-git commit -m "feat(rules): the 46 rules the app handles are on record, and the count cannot shrink unnoticed"
+git commit -m "feat(rules): the 45 rules the app handles are on record, and the count cannot shrink unnoticed"
 ```
 
 ---
@@ -1557,7 +1557,7 @@ Under `## [Unreleased]` in `CHANGELOG.md`, add:
 ```markdown
 ### Added
 
-- **A rules catalog with a status for every rule.** `rules.db` now says, for each of its 2675 rules, whether the app applies it automatically, handles it in code (and where), has read it and found no roll it touches, or has not read it yet. The build refuses a database where a rule is missing from the catalog, a pointer names code that does not exist, or the counts move without the committed snapshot moving with them; the rule detail screen shows the status. Forty-six rules are on record today. Issue #27
+- **A rules catalog with a status for every rule.** `rules.db` now says, for each of its 2675 rules, whether the app applies it automatically, handles it in code (and where), has read it and found no roll it touches, or has not read it yet. The build refuses a database where a rule is missing from the catalog, a pointer names code that does not exist, or the counts move without the committed snapshot moving with them; the rule detail screen shows the status. Forty-five rules are on record today. Issue #27
 ```
 
 and under `### Removed`:
@@ -1577,7 +1577,7 @@ git commit -m "docs(rules): the catalog replaces the effects table in the agent 
 
 ## Self-review
 
-**Spec coverage (design §7 steps 0 and 1):** importer off the effects table → Task 1. Catalog file with every id → Tasks 5 and 7. `byHand` with pointers for the rules the app handles → Task 7 (46: the 12 `CombatAbility` cases including SA_42, 8 Vorteile/Nachteile, 25 states, plus ADV_25/26/27 — the design said nineteen before SA_42 and the states were counted). Build compiles it and deletes the effects table, `rules.yaml`, `RuleEffectModifiers`, scraper → Tasks 4 and 5. `CombatAbility.wiring` replaced by the catalog status → Task 4. Structural checks and snapshot → Tasks 3, 5, 6, 7. Coverage a measured number → Task 7's floor test. `GRW_*` entries, clauses, the vocabulary, the evaluator: step 2, not here.
+**Spec coverage (design §7 steps 0 and 1):** importer off the effects table → Task 1. Catalog file with every id → Tasks 5 and 7. `byHand` with pointers for the rules the app handles → Task 7 (45: the 12 `CombatAbility` cases including SA_42, 8 Vorteile and Nachteile, 25 states). Build compiles it and deletes the effects table, `rules.yaml`, `RuleEffectModifiers`, scraper → Tasks 4 and 5. `CombatAbility.wiring` replaced by the catalog status → Task 4. Structural checks and snapshot → Tasks 3, 5, 6, 7. Coverage a measured number → Task 7's floor test. `GRW_*` entries, clauses, the vocabulary, the evaluator: step 2, not here.
 
 **Placeholders:** none; every step carries its code or its exact command. The two manoeuvre symbols in Task 7 are stated and verified by a grep step and by the build itself.
 
