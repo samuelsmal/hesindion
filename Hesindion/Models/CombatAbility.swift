@@ -8,13 +8,14 @@ import Foundation
 /// checks each one against `rules.db` — a typo fails a test instead of silently
 /// switching a rule off.
 ///
-/// **How an ability reaches the roll.** `RuleEffectModifiers` builds modifier
-/// definitions straight from the `effects` table, so an ability that is a flat
-/// number against a named value needs no code at all. The rest — a choice
-/// between two bonuses, a penalty that is *halved* rather than shifted, a style
-/// that pays out only in one loadout — cannot be written as a row in that table,
-/// so they are wired by hand. `wiring` records which is which, and the coverage
-/// test fails if an ability the sample hero carries is neither.
+/// **How an ability reaches the roll.** By hand, all eleven of them.
+/// `RuleEffectModifiers` can build modifier definitions straight from the
+/// `effects` table, but it is not wired into `ModifierEngine.shared` and nothing
+/// calls it — and the table it would read covers 26 of the 2675 rules in
+/// `rules.db`, ten of the 1557 Sonderfertigkeiten. `wiring` records how each
+/// ability is actually reached, and `CombatAbilityCoverageTests` holds it to
+/// that: a `.fromEffects` claim has to survive a round trip through the live
+/// engine, so the field cannot drift into wishful thinking. See issue #27.
 enum CombatAbility: String, CaseIterable {
     case aufmerksamkeit       = "SA_40"
     case belastungsgewoehnung = "SA_41"
@@ -28,28 +29,32 @@ enum CombatAbility: String, CaseIterable {
     case golgaritenStil       = "SA_661"
     case plaenklerFormation   = "SA_884"
 
-    enum Wiring {
-        /// Driven by the `effects` table — nothing in the app names it.
+    enum Wiring: Equatable {
+        /// Reached through `ModifierEngine.shared` off the `effects` table, with
+        /// no code naming the ability. Nothing is, yet.
         case fromEffects
-        /// Wired by hand, because the rule is not a flat modifier. The reason is
-        /// spelled out so "why is this not in the table?" has an answer.
+        /// Named in the app's own code. The note says what reaches it, so
+        /// "where does this ability actually happen?" has an answer that is not
+        /// a search.
         case byHand(String)
     }
 
     var wiring: Wiring {
         switch self {
         case .aufmerksamkeit:
-            .byHand("Eases one named Talentprobe (Sinnesschärfe), not a combat value")
+            .byHand("TalentProbeModal — eases one named Talentprobe (Sinnesschärfe), not a combat value")
         case .belastungsgewoehnung:
-            .byHand("Reduces BE by 2 per tier before every other value derives from it")
-        case .berittenerKampf, .finte, .schildspalter, .vorstoss, .wuchtschlag:
-            .fromEffects
+            .byHand("Hero.effectiveBE — reduces BE before every value that derives from it")
+        case .berittenerKampf:
+            .byHand("CombatAttackViews — offers Sturmangriff zu Pferd")
+        case .finte, .schildspalter, .vorstoss, .wuchtschlag:
+            .byHand("CombatManeuver — offered as a manoeuvre on the announcement screen")
         case .gezielterAngriff, .gezielterSchuss:
-            .byHand("Halves the Zonenaufschlag; a multiplier, not an addend")
+            .byHand("HitZoneModifiers — halves the Zonenaufschlag; a multiplier, not an addend")
         case .golgaritenStil:
-            .byHand("Pays out only mounted, with a Rabenschnabel and a Großschild")
+            .byHand("Hero.golgaritenActive — pays out only mounted, with a Rabenschnabel and a Großschild")
         case .plaenklerFormation:
-            .byHand("+1 AT *or* +1 VW — a choice the player makes each fight")
+            .byHand("CombatSetupView — +1 AT *or* +1 VW, a choice the player makes each fight")
         }
     }
 }
