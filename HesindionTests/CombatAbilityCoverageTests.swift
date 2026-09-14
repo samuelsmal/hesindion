@@ -111,6 +111,7 @@ final class CombatAbilityCoverageTests: XCTestCase {
         XCTAssertEqual(hero.beidhaendigerKampfLevel, 2)
         XCTAssertEqual(hero.dualAttackPenalty, 0)
         XCTAssertEqual(Hero(name: "Ohne").dualAttackPenalty, -2)
+        XCTAssertEqual(self.hero(with: .beidhaendigerKampf, inCombatList: false, tier: nil).dualAttackPenalty, -1)
     }
 
     /// An ability with no tier in the export is tier I, not tier 0 — 0 reads as
