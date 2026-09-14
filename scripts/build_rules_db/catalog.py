@@ -2,6 +2,10 @@
 
 Design: docs/plans/2026-09-14-rules-catalog-design.md §4. This file is step 1 of §7:
 statuses and pointers only, no clauses yet.
+
+load_catalog, validate, status_counts, check_snapshot and write_snapshot are pure
+functions over dicts, testable without a database. import_catalog and
+write_catalog_table read and write a live sqlite3.Connection.
 """
 
 import json
