@@ -90,7 +90,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
         XCTAssertTrue(opposing.waitForExistence(timeout: UITest.timeout), "No opposing-deity row")
         opposing.tap()
 
-        captureScreenshot(app, named: "39-attack-karmal-announcement")
+        captureScreenshot(app, named: "38-attack-karmal-announcement")
 
         XCTAssertTrue(
             app.staticTexts["×2"].waitForExistence(timeout: UITest.timeout),
@@ -129,7 +129,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
 
         let breakdown = app.descendants(matching: .any)["combat.dealDamage.breakdown"]
         XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No damage calculation")
-        captureScreenshot(app, named: "40-damage-karmal")
+        captureScreenshot(app, named: "39-damage-karmal")
 
         // 5 on the W6 + 4 from the weapon is 9, doubled by the Weihe: 18.
         XCTAssertTrue(app.staticTexts["×2"].exists, "The doubling should be a row of its own")

@@ -52,7 +52,7 @@ final class WeaponStyleFlowTests: XCTestCase {
             "The style should be a named row, not folded into the total"
         )
 
-        captureScreenshot(app, named: "41-attack-mounted-style")
+        captureScreenshot(app, named: "40-attack-mounted-style")
     }
 
     /// Same hero, same weapon, on foot: the style pays nothing, and the screen
