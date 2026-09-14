@@ -87,6 +87,7 @@ final class RuleCatalogDecodingTests: XCTestCase {
             (#"{"is": "loadout.reach", "value": "Weit"}"#, "Weit"),
             (#"{"is": "situation.targetZone", "value": ["nase"]}"#, "nase"),
             (#"{"is": "gm.fact", "id": "x", "span": "century"}"#, "century"),
+            (#"{"is": "gm.fact", "id": "x", "span": "hero"}"#, "no store"),
             (#"{"is": "opponent.type", "value": "dragon"}"#, "dragon"),
         ] {
             XCTAssertThrowsError(try predicate(bad), bad) {

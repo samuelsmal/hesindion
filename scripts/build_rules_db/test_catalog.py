@@ -471,6 +471,17 @@ class ClauseValidationTests(unittest.TestCase):
         self.assertIn("GRW_bad: clause 0: situation.targetZone is ['nase'], expected list:zone", problems)
         self.assertIn("GRW_bad: clause 0: hero.fokusRule needs an argument", problems)
 
+    def test_a_gm_fact_span_without_a_store_is_refused(self):
+        def clause(span):
+            return dict(GRW, id="GRW_span", clauses=[{
+                "kind": "passive", "domains": ["meleeAttack"],
+                "when": [{"gm.fact": {"id": "x", "span": span}}],
+                "effects": [{"add": {"target": "at", "value": 1}}],
+            }])
+        problems = self.validate(GRW, clause("hero"))
+        self.assertIn("GRW_span: clause 0: gm.fact span 'hero' has no store yet; only opponent and attack", problems)
+        self.assertEqual(self.validate(GRW, clause("attack")), [])
+
     def test_modify_rule_must_name_an_implemented_entry_and_do_something(self):
         lonely = dict(GOLGARITEN)   # GRW not in the catalog
         problems = self.validate(lonely)

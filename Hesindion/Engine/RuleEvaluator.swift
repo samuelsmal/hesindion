@@ -40,7 +40,8 @@ struct RuleOffer: Equatable {
 }
 
 /// A fact a rule needs that nobody has stated. Its subject is the current
-/// opponent (spans `opponent` and `attack`) or the hero (span `hero`).
+/// opponent; a `hero`- or `round`-span fact is refused at decode time until it
+/// has a store.
 struct RuleQuestion: Equatable, Hashable {
     let key: FactKey
     let askedBy: String
@@ -79,13 +80,36 @@ struct Evaluation: Equatable {
 /// opponent lines are collected beside the lines. The −5 Zustand cap is not
 /// applied here: `ModifierEngine` applies it once over the union of these
 /// lines and the Swift definitions still in migration.
+///
+/// Three tie-breaks a catalog author cannot see in their own entry:
+///
+/// - Rules are evaluated in ascending id order (`RuleCatalog.implemented` is
+///   sorted), so that is the order lines, offers and questions come out in.
+/// - When several rules `set` the same line, the last one in that order wins.
+///   Two rules setting the same line is a catalog mistake, not a rule; this
+///   only says which of them the app will have obeyed.
+/// - `multiply` rounds toward zero, the house convention for halving a
+///   modifier (`HitZoneModifiers.penalty` halves the same way). On a penalty
+///   that is the player-favourable direction.
 enum RuleEvaluator {
+
+    /// Zustände the "Zustand ignorieren" Schicksalspunkt does not switch off.
+    /// Belastung is gear-derived — the Schip wills away a Zustand, not the
+    /// armour the hero is still wearing. `SharedModifiers.encumbrance` has
+    /// never checked the flag either; this keeps the catalog side honest.
+    static let statesTheSchipCannotIgnore: Set<String> = ["belastung"]
 
     static func evaluate(catalog: RuleCatalog, situation: Situation) -> Evaluation {
         var out = Evaluation()
         var modifications: [Modification] = []
+        // Built once for the whole sheet rather than per rule: the catalog is
+        // thousands of entries long and each of these walks the hero.
+        let owned = situation.hero.ownedRuleTiers
+        let choices = situation.effectiveChoices
+        let announced = situation.effectiveAnnounced
         for rule in catalog.implemented {
-            evaluate(rule, in: situation, into: &out, modifications: &modifications)
+            evaluate(rule, in: situation, owned: owned, choices: choices, announced: announced,
+                     into: &out, modifications: &modifications)
         }
         applyModifications(modifications, to: &out)
         dropZeroLines(&out)
@@ -108,9 +132,18 @@ enum RuleEvaluator {
         let multiply: Double?
     }
 
-    private static func evaluate(_ rule: CatalogRule, in s: Situation, into out: inout Evaluation,
-                                 modifications: inout [Modification]) {
-        let ownedTier = s.hero.ownedRuleTier(rule.id)
+    /// One question per key and asker: two clauses of the same rule that turn
+    /// on the same unstated fact are one thing to ask the GM.
+    private static func ask(_ key: FactKey, by ruleId: String, _ out: inout Evaluation) {
+        let question = RuleQuestion(key: key, askedBy: ruleId)
+        guard !out.questions.contains(question) else { return }
+        out.questions.append(question)
+    }
+
+    private static func evaluate(_ rule: CatalogRule, in s: Situation,
+                                 owned: [String: Int], choices: [String: Int], announced: [String: Int],
+                                 into out: inout Evaluation, modifications: inout [Modification]) {
+        let ownedTier = owned[rule.id]
         if rule.needsOwnership && ownedTier == nil { return }
         let tier = ownedTier ?? 1
 
@@ -119,7 +152,7 @@ enum RuleEvaluator {
             case .no:
                 out.notApplied.append(NotApplied(ruleId: rule.id, name: rule.name, reason: .conditionFalse)); return
             case .unknown(let key):
-                out.questions.append(RuleQuestion(key: key, askedBy: rule.id))
+                ask(key, by: rule.id, &out)
                 out.notApplied.append(NotApplied(ruleId: rule.id, name: rule.name, reason: .questionUnanswered)); return
             case .yes:
                 break
@@ -138,7 +171,7 @@ enum RuleEvaluator {
                 switch test(when, s) {
                 case .no: reasons.append(.conditionFalse); continue
                 case .unknown(let key):
-                    out.questions.append(RuleQuestion(key: key, askedBy: rule.id))
+                    ask(key, by: rule.id, &out)
                     reasons.append(.questionUnanswered); continue
                 case .yes: break
                 }
@@ -148,7 +181,7 @@ enum RuleEvaluator {
                 landed = apply(clause.effects, tier: tier, rule, s, &out, &modifications) || landed
             case .offer:
                 if case .choice(let options)? = clause.effects.first {
-                    if let chosen = s.effectiveChoices[rule.id], options.indices.contains(chosen) {
+                    if let chosen = choices[rule.id], options.indices.contains(chosen) {
                         landed = apply([options[chosen]], tier: tier, rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .choice(options), reviewed: rule.reviewed))
@@ -159,8 +192,8 @@ enum RuleEvaluator {
                         case .fixed(let n)?: n
                         case .owned?, nil:   tier
                     }
-                    if let announced = s.effectiveAnnounced[rule.id] {
-                        landed = apply(clause.effects, tier: min(announced, maxTier), rule, s, &out, &modifications) || landed
+                    if let tierAnnounced = announced[rule.id] {
+                        landed = apply(clause.effects, tier: min(tierAnnounced, maxTier), rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .tiers(maxTier), reviewed: rule.reviewed))
                         reasons.append(.offerNotTaken)
@@ -218,8 +251,8 @@ enum RuleEvaluator {
     private static func applyModifications(_ modifications: [Modification], to out: inout Evaluation) {
         var missed: [Modification] = []
         for mod in modifications {
-            let hits = out.lines.indices.filter { out.lines[$0].ruleId == mod.targetRule && out.lines[$0].target == mod.target }
-            guard !hits.isEmpty else { missed.append(mod); continue }
+            let hits = out.lines.contains { $0.ruleId == mod.targetRule && $0.target == mod.target }
+            guard hits else { missed.append(mod); continue }
             out.applied.insert(mod.from)
         }
         // Per line: every set, then every multiply, then every add.
@@ -230,7 +263,7 @@ enum RuleEvaluator {
             var value = line.value
             if let set = mine.compactMap(\.set).last { value = set }
             for factor in mine.compactMap(\.multiply) {
-                value = Int((Double(value) * factor).rounded(.towardZero))
+                value = Int(Double(value) * factor)   // Int(_:) truncates toward zero
             }
             value += mine.compactMap(\.add).reduce(0, +)
             out.lines[index].value = value
@@ -244,7 +277,11 @@ enum RuleEvaluator {
     private static func dropZeroLines(_ out: inout Evaluation) {
         let zero = out.lines.filter { $0.value == 0 }
         out.lines.removeAll { $0.value == 0 }
-        for line in zero where !out.lines.contains(where: { $0.ruleId == line.ruleId }) {
+        // One entry per rule, however many of its lines came to zero: the sheet
+        // says a rule did nothing, not how many of its lines did nothing.
+        var reported: Set<String> = []
+        for line in zero
+        where !out.lines.contains(where: { $0.ruleId == line.ruleId }) && reported.insert(line.ruleId).inserted {
             out.notApplied.append(NotApplied(ruleId: line.ruleId, name: line.name, reason: .netZero))
         }
     }
@@ -303,9 +340,11 @@ enum RuleEvaluator {
         case .heroHasRule(let id, let minTier):
             return (s.hero.ownedRuleTier(id) ?? 0) >= minTier ? .yes : .no
         case .heroState(let id, let minLevel):
-            // The "Zustand ignorieren" Schicksalspunkt switches every state
-            // predicate off, as StateModifiers did.
-            return !s.round.schipIgnoreZustand && s.hero.level(of: id) >= minLevel ? .yes : .no
+            // The "Zustand ignorieren" Schicksalspunkt switches the state
+            // predicates off, as StateModifiers did — all but the gear-derived
+            // ones, which it has never reached.
+            let suppressed = s.round.schipIgnoreZustand && !statesTheSchipCannotIgnore.contains(id)
+            return !suppressed && s.hero.level(of: id) >= minLevel ? .yes : .no
         case .heroFokusRule(let raw):
             return FokusRule(rawValue: raw).map(s.hero.isFokusRuleActive) == true ? .yes : .no
         case .loadoutWeapon(let technique, let item, let consecrated):

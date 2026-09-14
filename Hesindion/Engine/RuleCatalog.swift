@@ -205,7 +205,17 @@ extension RulePredicate: Decodable {
         case .opponentType:
             self = .opponentType(try c.named(RuleVocabulary.OpponentType.self, "value", "opponent type"))
         case .gmFact:
-            self = .gmFact(id: try c.string("id"), span: try c.named(FactSpan.self, "span", "span"))
+            // Only the roster entry holds facts today. A `hero`- or
+            // `round`-span fact would be asked on every roll and forgotten on
+            // the next, which reads as a broken rule rather than a missing
+            // store — so it is refused until each of them has one.
+            let span = try c.named(FactSpan.self, "span", "span")
+            guard span == .opponent || span == .attack else {
+                throw DecodingError.dataCorruptedError(
+                    forKey: RuleCodingKey("span"), in: c,
+                    debugDescription: "gm.fact span \(span.rawValue) has no store yet; only opponent and attack")
+            }
+            self = .gmFact(id: try c.string("id"), span: span)
         }
     }
 }

@@ -221,7 +221,16 @@ def _check_predicate(rid: str, p, vocab: dict, where: str) -> list[str]:
         sig = vocab["predicates"].get(name)
         if sig is None:
             return [f"{rid}: {where}: unknown predicate {name!r}"]
-        return _check_args(rid, name, arg, sig, vocab, where)
+        problems = _check_args(rid, name, arg, sig, vocab, where)
+        # One of the three rules the vocabulary's signatures cannot express
+        # (with `target: talent` needing an id and `modifyRule` naming an
+        # implemented entry, both in `_check_effect`): only the roster entry
+        # stores GM facts, so the other two spans have nowhere to live yet.
+        # `RulePredicate.init(from:)` refuses the same two.
+        if name == "gm.fact" and isinstance(arg, dict) and arg.get("span") not in ("opponent", "attack"):
+            problems.append(
+                f"{rid}: {where}: gm.fact span {arg.get('span')!r} has no store yet; only opponent and attack")
+        return problems
     return [f"{rid}: {where}: a predicate is a name, a {{name: argument}} mapping, or a list"]
 
 
@@ -242,6 +251,9 @@ def _check_effect(rid: str, eff, vocab: dict, where: str, implemented_ids: set[s
         return [f"{rid}: {where}: {name} takes a mapping"]
     arg = _with_talent_target(arg)
     problems = _check_args(rid, name, arg, sig, vocab, where)
+    # The other two of the three rules a signature cannot express (the third is
+    # gm.fact's span, in `_check_predicate`): an argument that is only required
+    # for one value of another, and a cross-entry reference.
     if arg.get("target") == "talent" and "talentId" not in arg:
         problems.append(f"{rid}: {where}: target talent needs an id")
     if name == "modifyRule":

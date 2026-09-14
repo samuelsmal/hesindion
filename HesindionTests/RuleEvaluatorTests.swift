@@ -161,6 +161,45 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(reason("COND_4", in: evaluate(rules, s)), .conditionFalse)
     }
 
+    /// Belastung is the armour the hero is still wearing, not a Zustand the
+    /// Schicksalspunkt can will away — `SharedModifiers.encumbrance` has never
+    /// checked the flag either.
+    func testBelastungSurvivesTheZustandIgnorierenSchip() {
+        hero.armors.append(Armor(name: "Kette", protectionValue: 4, encumbrance: 2, weight: 10, isEquipped: true))
+        hero.setStateLevel("furcht", level: 2)
+        let rules = [rule("COND_1", [passive([.meleeAttack], when: .heroState(id: "belastung", minLevel: 1),
+                                             [.add(target: .at, value: -1, per: nil)])]),
+                     rule("COND_4", [passive([.meleeAttack], when: .heroState(id: "furcht", minLevel: 1),
+                                             [.add(target: .at, value: -2, per: nil)])])]
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.round.schipIgnoreZustand = true
+        let e = evaluate(rules, s)
+        XCTAssertEqual(line("COND_1", in: e), -1, "the Schip does not take the armour off")
+        XCTAssertEqual(reason("COND_4", in: e), .conditionFalse)
+    }
+
+    func testPerDefencesThisRoundMultipliesByTheCount() {
+        let rules = [rule("GRW_x", [passive([.meleeParry, .meleeDodge], when: .situationDefencesThisRound(min: 1),
+                                            [.add(target: .vw, value: -3, per: .defencesThisRound)])])]
+        var s = Situation(hero: hero, domain: .meleeParry)
+        XCTAssertEqual(reason("GRW_x", in: evaluate(rules, s)), .conditionFalse, "the first parry is unmodified")
+        s.round.parriesThisRound = 2
+        XCTAssertEqual(line("GRW_x", in: evaluate(rules, s)), -6)
+        var dodge = Situation(hero: hero, domain: .meleeDodge)
+        dodge.round.parriesThisRound = 2
+        dodge.round.dodgesThisRound = 1
+        XCTAssertEqual(line("GRW_x", in: evaluate(rules, dodge)), -3, "dodges are counted apart")
+    }
+
+    func testAFixedTierOfferIgnoresTheOwnedTier() {
+        own("SA_1", tier: 3)
+        let rules = [rule("SA_1", [offer([.meleeAttack], tiers: .fixed(2), [.add(target: .at, value: -1, per: .tier)])])]
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        XCTAssertEqual(evaluate(rules, s).offers.first?.shape, .tiers(2))
+        s.announced["SA_1"] = 3
+        XCTAssertEqual(line("SA_1", in: evaluate(rules, s)), -2, "the rule has only two tiers")
+    }
+
     // MARK: - Order of application
 
     func testModifyRuleSetsThenMultipliesThenAddsAndMissesWhenTheRuleIsNotInEffect() {

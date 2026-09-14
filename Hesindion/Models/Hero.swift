@@ -465,9 +465,23 @@ final class Hero {
         return trait.tier ?? 1
     }
 
-    /// Every trait id on the sheet, for the not-applied list.
+    /// The same answer for every id at once, in one pass over the four lists.
+    /// The evaluator walks the whole catalog on every roll and would otherwise
+    /// search the sheet once per rule. First occurrence wins, as in
+    /// `ownedRuleTier` — an old import can file one ability in both SA lists.
+    var ownedRuleTiers: [String: Int] {
+        Dictionary((combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages)
+                       .map { ($0.ruleId, $0.tier ?? 1) },
+                   uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Every trait id on the sheet, for the not-applied list. Deduplicated,
+    /// order preserved: an ability filed in both SA lists is one line.
     var ownedRuleIds: [String] {
-        (combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages).map(\.ruleId)
+        var seen: Set<String> = []
+        return (combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages)
+            .map(\.ruleId)
+            .filter { seen.insert($0).inserted }
     }
 
     func has(_ ability: CombatAbility) -> Bool { hasSpecialAbility(ability.rawValue) }
