@@ -2,7 +2,6 @@ scripts/build_rules_db/venv/
 scripts/build_rules_db/rules.db
 scripts/build_rules_db/rules.db-shm
 scripts/build_rules_db/rules.db-wal
-Hesindion/Resources/rules.db
 Hesindion/Resources/*.tmp
 
 # Claude Code local settings

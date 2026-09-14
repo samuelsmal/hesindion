@@ -189,4 +189,4 @@ Keep `docs/` current with the state of the project:
 
 ## Data Policy
 
-- **No rules data in git**: Actual DSA rules content (e.g., `rules.db` files) must NEVER be committed to the repo
+- **The rules data the app ships is committed, deliberately.** `Hesindion/Resources/rules.db` and `specs/data/rules-catalog.yaml` are tracked: the tests read the database, the catalog is the coverage record, and a rebuild has to be reviewable as a diff. What stays out of the repo is the *source* — the Optolith YAML (`DSA_DATA`, a sibling checkout) — because it is someone else's repository, not because its content is secret. When the authoring pass (design §5) adds rule text to catalog entries, that text is committed too
