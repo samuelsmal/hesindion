@@ -17,10 +17,8 @@ import XCTest
 ///    Plänkler-Formation, Gezielter Angriff and Gezielter Schuss sat in the
 ///    general list while every lookup searched the combat one. Heroes imported
 ///    back then still carry that split.
-/// 3. **Nothing implements it.** Every ability the app handles is hand-wired;
-///    `RuleEffectModifiers` would read the `effects` table but is not wired into
-///    `ModifierEngine.shared` and nothing calls it, so having a row there buys an
-///    ability nothing at all (issue #27).
+/// 3. **Nothing implements it.** Where each ability is reached is recorded in
+///    the rules catalog; `RulesCatalogTests` checks the pointers (issue #27).
 ///
 /// None of that is visible on screen — the ability is on the hero sheet, and the
 /// roll is simply a little too low. So it is checked here instead.
@@ -126,58 +124,6 @@ final class CombatAbilityCoverageTests: XCTestCase {
             XCTAssertFalse(bare.has(ability), "\(ability)")
         }
         XCTAssertEqual(bare.wuchtschlagTier, 0)
-    }
-
-    // MARK: - Something actually implements it
-
-    /// `wiring` has to be true, not aspirational.
-    ///
-    /// A `.fromEffects` claim is checked end to end: a hero holding the ability
-    /// and nothing else must get a line out of the live `ModifierEngine`. Having
-    /// a row in the `effects` table is *not* enough to claim it — five abilities
-    /// have combat-scoped rows and none of them reach a roll that way, because
-    /// `RuleEffectModifiers` is not wired into the engine (issue #27). Checking
-    /// the table instead of the engine is exactly how this field would come to
-    /// describe a pipeline that does not run.
-    func testAFromEffectsClaimSurvivesTheLiveEngine() {
-        for ability in CombatAbility.allCases {
-            guard case .fromEffects = ability.wiring else { continue }
-            let hero = hero(with: ability, inCombatList: true, tier: 1)
-            let lines = CheckDomain.allCases.flatMap { domain in
-                ModifierEngine.shared.evaluate(context: ModifierContext(hero: hero, domain: domain))
-            }
-            XCTAssertFalse(
-                lines.isEmpty,
-                "\(ability) claims the engine drives it, but a hero holding it gets no line from any domain"
-            )
-        }
-    }
-
-    func testEveryHandWiredAbilitySaysWhatReachesIt() {
-        for ability in CombatAbility.allCases {
-            guard case .byHand(let note) = ability.wiring else { continue }
-            XCTAssertFalse(note.isEmpty, "\(ability) is hand-wired without saying what reaches it")
-        }
-    }
-
-    /// What the effects table would cover if it were wired up, recorded as a
-    /// number so the gap in issue #27 is a measurement and not an impression.
-    ///
-    /// Deliberately a floor, not an equality: adding rows to `rules.db` should
-    /// not fail a test. It fails if coverage goes *backwards*.
-    func testTheEffectsTableCoverageIsKnown() throws {
-        try requireDatabase()
-        let withCombatEffects = CombatAbility.allCases.filter {
-            RulesDatabase.shared.lookupEffects(ruleId: $0.rawValue).contains { $0.scope == "combat" }
-        }
-        XCTAssertGreaterThanOrEqual(
-            withCombatEffects.count, 5,
-            "Five of the eleven abilities the app handles have a combat-scoped effect row"
-        )
-        XCTAssertLessThan(
-            withCombatEffects.count, CombatAbility.allCases.count,
-            "If every ability has a row, the hand-wiring may be removable — see issue #27"
-        )
     }
 
     /// The other direction: every combat Sonderfertigkeit the sample hero

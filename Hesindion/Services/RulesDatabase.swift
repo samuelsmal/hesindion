@@ -18,17 +18,7 @@ struct RuleDetail: Identifiable {
     let cost: String?
     let levels: Int?
     let max: Int?
-    let effects: [RuleEffect]
     let spellDetail: SpellDetail?
-}
-
-struct RuleEffect {
-    let level: Int?
-    let type: String
-    let attribute: String?
-    let value: Double?
-    let scope: String?
-    let description: String?
 }
 
 struct SpellDetail {
@@ -194,14 +184,13 @@ final class RulesDatabase: @unchecked Sendable {
         let max = col_int_opt(stmt, 6)
         let groupId = col_int_opt(stmt, 7)
 
-        let effects = lookupEffects(ruleId: ruleId)
         let spellDetail = (category == "spell" || category == "liturgy")
             ? lookupSpellDetail(ruleId: ruleId)
             : nil
 
         return RuleDetail(
             id: ruleId, category: category, groupId: groupId, name: name, description: desc,
-            cost: cost, levels: levels, max: max, effects: effects,
+            cost: cost, levels: levels, max: max,
             spellDetail: spellDetail
         )
     }
@@ -295,28 +284,6 @@ final class RulesDatabase: @unchecked Sendable {
             durationShort: col_text_opt(stmt, 11),
             target: col_text_opt(stmt, 12)
         )
-    }
-
-    func lookupEffects(ruleId: String) -> [RuleEffect] {
-        let sql = "SELECT level, type, attribute, value, scope, description FROM effects WHERE rule_id = ? ORDER BY level"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-
-        sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
-
-        var results: [RuleEffect] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            results.append(RuleEffect(
-                level: col_int_opt(stmt, 0),
-                type: col_text(stmt, 1),
-                attribute: col_text_opt(stmt, 2),
-                value: col_double_opt(stmt, 3),
-                scope: col_text_opt(stmt, 4),
-                description: col_text_opt(stmt, 5)
-            ))
-        }
-        return results
     }
 
     // MARK: - SQLite helpers
