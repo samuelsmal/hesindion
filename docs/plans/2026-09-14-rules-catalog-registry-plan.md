@@ -21,8 +21,8 @@
 ## File structure
 
 **Create**
-- `Hesindion/Models/SpecialAbilityGroup.swift` — the four combat group ids from Optolith, checked against `rules.db` by name.
-- `HesindionTests/SpecialAbilityGroupTests.swift` — the ids name what they claim; the importer files every combat-group ability as combat.
+- `Hesindion/Models/CombatSpecialAbilityGroup.swift` — the four combat group ids from Optolith, checked against `rules.db` by name.
+- `HesindionTests/CombatSpecialAbilityGroupTests.swift` — the ids name what they claim; the importer files every combat-group ability as combat.
 - `scripts/build_rules_db/catalog.py` — load, validate, count, snapshot-check and write the catalog. Pure functions over dicts so they are testable without a database.
 - `scripts/build_rules_db/test_catalog.py` — `unittest` for `catalog.py`.
 - `scripts/build_rules_db/scaffold_catalog.py` — writes the one-time skeleton (every id as `todo`).
@@ -53,28 +53,28 @@ The Xcode project uses file-system synchronized groups, so adding and deleting S
 
 ### Task 1: Classify combat abilities by group, not by the effects table
 
-**Goal:** The importer files a Sonderfertigkeit as combat when Optolith's group says so, which fixes 216 of 226 combat abilities landing in the general list.
+**Goal:** The importer files a Sonderfertigkeit as combat when Optolith's group says so, which fixes 217 of 226 combat abilities landing in the general list.
 
 **Files:**
-- Create: `Hesindion/Models/SpecialAbilityGroup.swift`
-- Create: `HesindionTests/SpecialAbilityGroupTests.swift`
+- Create: `Hesindion/Models/CombatSpecialAbilityGroup.swift`
+- Create: `HesindionTests/CombatSpecialAbilityGroupTests.swift`
 - Modify: `Hesindion/Services/RulesDatabase.swift` (`RuleDetail`, `lookup(id:)`, new `lookupGroupName`)
 - Modify: `Hesindion/Services/OptolithImportService.swift:461-467`
 - Modify: `Hesindion/Models/Hero.swift:433-445` (comment only)
 - Modify: `CHANGELOG.md`
 
 **Acceptance Criteria:**
-- [ ] `SpecialAbilityGroup` has four cases whose raw values are the `groups.id` rows named Kampf, Kampf (erweitert), Kampfstile (bewaffnet), Kampfstile (unbewaffnet), and a test checks each name against `rules.db`.
+- [ ] `CombatSpecialAbilityGroup` has four cases whose raw values are the `groups.id` rows named Kampf, Kampf (erweitert), Kampfstile (bewaffnet), Kampfstile (unbewaffnet), and a test checks each name against `rules.db`.
 - [ ] After importing Boronmir, SA_884 is in `combatSpecialAbilities` and no trait in `generalSpecialAbilities` belongs to a combat group.
 - [ ] `OptolithImportService` no longer reads `rule.effects`.
 
-**Verify:** `make test-ui` → `** TEST SUCCEEDED **`, with `SpecialAbilityGroupTests` listed as passed.
+**Verify:** `make test-ui` → `** TEST SUCCEEDED **`, with `CombatSpecialAbilityGroupTests` listed as passed.
 
 **Steps:**
 
 - [ ] **Step 1: Write the failing tests**
 
-`HesindionTests/SpecialAbilityGroupTests.swift`:
+`HesindionTests/CombatSpecialAbilityGroupTests.swift`:
 
 ```swift
 import XCTest
@@ -85,7 +85,7 @@ import XCTest
 /// abilities, so Plänkler-Formation, Gezielter Angriff and 214 others landed in
 /// the general list. Optolith's group id is the classification the data
 /// actually carries; these tests hold the enum to the table it came from.
-final class SpecialAbilityGroupTests: XCTestCase {
+final class CombatSpecialAbilityGroupTests: XCTestCase {
 
     private func requireDatabase() throws {
         guard RulesDatabase.shared.lookup(id: "SA_67") != nil else {
@@ -93,7 +93,7 @@ final class SpecialAbilityGroupTests: XCTestCase {
         }
     }
 
-    private static let expected: [SpecialAbilityGroup: String] = [
+    private static let expected: [CombatSpecialAbilityGroup: String] = [
         .kampf: "Kampf",
         .kampfErweitert: "Kampf (erweitert)",
         .kampfstileBewaffnet: "Kampfstile (bewaffnet)",
@@ -102,16 +102,16 @@ final class SpecialAbilityGroupTests: XCTestCase {
 
     func testEveryIdNamesTheGroupItIsCalled() throws {
         try requireDatabase()
-        XCTAssertEqual(SpecialAbilityGroup.allCases.count, Self.expected.count)
-        for group in SpecialAbilityGroup.allCases {
+        XCTAssertEqual(CombatSpecialAbilityGroup.allCases.count, Self.expected.count)
+        for group in CombatSpecialAbilityGroup.allCases {
             XCTAssertEqual(RulesDatabase.shared.lookupGroupName(group.rawValue), Self.expected[group], "\(group)")
         }
     }
 
     func testAGroupOutsideTheFourIsNotCombat() {
-        XCTAssertFalse(SpecialAbilityGroup.isCombat(groupId: 1))    // Allgemein
-        XCTAssertFalse(SpecialAbilityGroup.isCombat(groupId: nil))
-        XCTAssertTrue(SpecialAbilityGroup.isCombat(groupId: 3))
+        XCTAssertFalse(CombatSpecialAbilityGroup.contains(groupId: 1))    // Allgemein
+        XCTAssertFalse(CombatSpecialAbilityGroup.contains(groupId: nil))
+        XCTAssertTrue(CombatSpecialAbilityGroup.contains(groupId: 3))
     }
 
     /// Plänkler-Formation (SA_884) is the ability that hid: no effects row, so
@@ -123,7 +123,7 @@ final class SpecialAbilityGroupTests: XCTestCase {
                       "Plänkler-Formation is filed as general")
         for trait in hero.generalSpecialAbilities {
             let groupId = RulesDatabase.shared.lookup(id: trait.ruleId)?.groupId
-            XCTAssertFalse(SpecialAbilityGroup.isCombat(groupId: groupId),
+            XCTAssertFalse(CombatSpecialAbilityGroup.contains(groupId: groupId),
                            "\(trait.ruleId) \(trait.name) is a combat ability filed as general")
         }
     }
@@ -137,7 +137,7 @@ Expected: build failure, `cannot find 'SpecialAbilityGroup' in scope` and `value
 
 - [ ] **Step 3: Add the enum**
 
-`Hesindion/Models/SpecialAbilityGroup.swift`:
+`Hesindion/Models/CombatSpecialAbilityGroup.swift`:
 
 ```swift
 import Foundation
@@ -145,18 +145,18 @@ import Foundation
 /// The Optolith special-ability groups that make an ability a *combat* one.
 ///
 /// The raw values are `groups.id` in `rules.db`, which is Optolith's `gr`.
-/// `SpecialAbilityGroupTests` checks each one against the group's name, so a
+/// `CombatSpecialAbilityGroupTests` checks each one against the group's name, so a
 /// wrong number fails a test instead of silently filing an ability out of reach.
-enum SpecialAbilityGroup: Int, CaseIterable {
+enum CombatSpecialAbilityGroup: Int, CaseIterable {
     case kampf = 3
     case kampfstileBewaffnet = 9
     case kampfstileUnbewaffnet = 10
     case kampfErweitert = 11
 
     /// Whether an ability in this group belongs in `Hero.combatSpecialAbilities`.
-    static func isCombat(groupId: Int?) -> Bool {
+    static func contains(groupId: Int?) -> Bool {
         guard let groupId else { return false }
-        return SpecialAbilityGroup(rawValue: groupId) != nil
+        return CombatSpecialAbilityGroup(rawValue: groupId) != nil
     }
 }
 ```
@@ -228,7 +228,7 @@ Replace `isCombatSpecialAbility` in `Hesindion/Services/OptolithImportService.sw
     /// Whether an ability belongs in `combatSpecialAbilities`: Optolith's group
     /// says so. The effects table used to decide this and covered ten abilities.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        SpecialAbilityGroup.isCombat(groupId: rules.lookup(id: id)?.groupId)
+        CombatSpecialAbilityGroup.contains(groupId: rules.lookup(id: id)?.groupId)
     }
 ```
 
@@ -240,7 +240,7 @@ In `Hesindion/Models/Hero.swift`, replace the doc comment above `func specialAbi
     /// A Sonderfertigkeit by rule id, wherever the importer filed it.
     ///
     /// The importer sorts an SA into `combatSpecialAbilities` or
-    /// `generalSpecialAbilities` by its Optolith group (`SpecialAbilityGroup`).
+    /// `generalSpecialAbilities` by its Optolith group (`CombatSpecialAbilityGroup`).
     /// It used to ask the effects table instead, which had rows for ten combat
     /// abilities, so Plänkler-Formation (SA_884), Gezielter Angriff (SA_160) and
     /// Gezielter Schuss (SA_161) all sat in the general list while every lookup
@@ -258,11 +258,11 @@ Expected: `** TEST SUCCEEDED **`. If `HeroDetailViewSnapshotTests` fails because
 Under `## [Unreleased]` → `### Fixed` in `CHANGELOG.md`, add as the first bullet:
 
 ```markdown
-- **216 of the 226 combat Sonderfertigkeiten were filed as general abilities.** The importer asked whether `rules.db` had a combat-scoped effects row for an ability, and that table had rows for ten of them. It reads Optolith's group now (`SpecialAbilityGroup`, checked against the database by name), so an imported Riposte or Sturmangriff lands in the combat list like Finte does
+- **217 of the 226 combat Sonderfertigkeiten were filed as general abilities.** The importer asked whether `rules.db` had a combat-scoped effects row for an ability, and that table had rows for nine of them. It reads Optolith's group now (`CombatSpecialAbilityGroup`, checked against the database by name), so an imported Riposte or Sturmangriff lands in the combat list like Finte does
 ```
 
 ```bash
-git add Hesindion/Models/SpecialAbilityGroup.swift HesindionTests/SpecialAbilityGroupTests.swift Hesindion/Services/RulesDatabase.swift Hesindion/Services/OptolithImportService.swift Hesindion/Models/Hero.swift CHANGELOG.md HesindionTests/Snapshots/__Snapshots__
+git add Hesindion/Models/CombatSpecialAbilityGroup.swift HesindionTests/CombatSpecialAbilityGroupTests.swift Hesindion/Services/RulesDatabase.swift Hesindion/Services/OptolithImportService.swift Hesindion/Models/Hero.swift CHANGELOG.md HesindionTests/Snapshots/__Snapshots__
 git commit -m "fix(import): a combat ability is one Optolith files under Kampf, not one the effects table knows"
 ```
 
@@ -1538,7 +1538,7 @@ git commit -m "feat(rules): the 46 rules the app handles are on record, and the 
 Replace the bullet beginning `- **Sonderfertigkeit ids live in \`CombatAbility\`` and the one beginning `- **Every ability is hand-wired today.**` with:
 
 ```markdown
-- **Sonderfertigkeit ids live in `CombatAbility`, never as bare strings, and every one of them is covered by a test.** An ability can be ignored silently in three ways — a wrong id, the importer filing it out of reach, or nothing implementing it — and none of them show on screen: the ability is on the hero sheet and the roll is merely a little low. So: `CombatAbilityCoverageTests` checks every id against `rules.db` by name, the importer files an ability as combat by its Optolith group (`SpecialAbilityGroup`), and `Hero.specialAbility(_:)` still searches both lists for heroes imported before that fix
+- **Sonderfertigkeit ids live in `CombatAbility`, never as bare strings, and every one of them is covered by a test.** An ability can be ignored silently in three ways — a wrong id, the importer filing it out of reach, or nothing implementing it — and none of them show on screen: the ability is on the hero sheet and the roll is merely a little low. So: `CombatAbilityCoverageTests` checks every id against `rules.db` by name, the importer files an ability as combat by its Optolith group (`CombatSpecialAbilityGroup`), and `Hero.specialAbility(_:)` still searches both lists for heroes imported before that fix
 - **The rules catalog says what the app does with every rule.** `specs/data/rules-catalog.yaml` has one entry per rule id in `rules.db` with a status — `implemented`, `byHand` (with a pointer to the Swift symbol), `noRollEffect`, `todo` — and `make rules-db` compiles it into the `catalog` table. The build fails on a missing or unknown id, a pointer that does not resolve, or status counts that drift from `specs/data/rules-catalog.snapshot.json` (`UPDATE_SNAPSHOT=1` rewrites it, and the snapshot goes in the same commit). `RulesCatalogTests` checks the same things against the bundled database and holds coverage at its floor. The rule detail screen shows the status. Adding an ability today means wiring it, adding it to `CombatAbility`, and moving its catalog entry from `todo` to `byHand`; **issue #27** and `docs/plans/2026-09-14-rules-catalog-design.md` are where `implemented` entries with clauses arrive (step 2)
 ```
 

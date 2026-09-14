@@ -198,7 +198,7 @@ A table test: hero traits and loadout, Situation, answers → expected lines, op
 
 Each step leaves the build green.
 
-**Step 0 — importer.** `isCombatSpecialAbility` reads Optolith's group id (Kampf, Kampf (erweitert), Kampfstile bewaffnet/unbewaffnet) instead of the effects table. Test: every SA in those groups is filed as combat. Fixes 216 misfilings; depends on nothing below.
+**Step 0 — importer.** `isCombatSpecialAbility` reads Optolith's group id (Kampf, Kampf (erweitert), Kampfstile bewaffnet/unbewaffnet) instead of the effects table. Test: every SA in those groups is filed as combat. Fixes 217 misfilings; depends on nothing below.
 
 **Step 1 — registry.** The catalog file with an entry for every id: `byHand` with pointers for the nineteen rules the app handles, `todo` for the rest. Build script compiles it; the effects table, `rules.yaml`, `RuleEffectModifiers` and the scraper are deleted. `CombatAbility.wiring` is replaced by the catalog status. Tests: structural checks and the snapshot. This alone makes coverage a measured number.
 
