@@ -11,6 +11,9 @@ struct RuleLine: Equatable, Hashable {
     var value: Int
     let reviewed: Bool
     let isZustand: Bool
+    /// What `value` was multiplied by (`per: tier` or `per: defencesThisRound`);
+    /// a `modifyRule` changes the per-unit value and this multiplies it again.
+    var times: Int = 1
 
     var modifierLine: ModifierLine {
         ModifierLine(value: value, source: name, isZustand: isZustand, ruleId: ruleId)
@@ -85,7 +88,10 @@ struct Evaluation: Equatable {
 ///
 /// - Rules are evaluated in ascending id order (`RuleCatalog.implemented` is
 ///   sorted), so that is the order lines, offers and questions come out in.
-/// - When several rules `set` the same line, the last one in that order wins.
+/// - A modification acts on the line's *per-unit* value, before `per` (tier,
+///   defences this round) multiplies it: Vinsalt-Stil `set`s Mehrfache
+///   Verteidigung's step to −2, which is −4 on the third defence, not −2.
+///   When several rules `set` the same line, the last one in that order wins.
 ///   Two rules setting the same line is a catalog mistake, not a rule; this
 ///   only says which of them the app will have obeyed.
 /// - `multiply` rounds toward zero, the house convention for halving a
@@ -224,7 +230,7 @@ enum RuleEvaluator {
                     case nil:                 1
                 }
                 out.lines.append(RuleLine(ruleId: rule.id, name: rule.name, target: target, value: value * times,
-                                          reviewed: rule.reviewed, isZustand: isZustand))
+                                          reviewed: rule.reviewed, isZustand: isZustand, times: times))
                 landed = true
             case .multiply(let target, let factor):
                 guard target.applies(in: s.domain, talentId: s.talentId) else { continue }
@@ -255,18 +261,21 @@ enum RuleEvaluator {
             guard hits else { missed.append(mod); continue }
             out.applied.insert(mod.from)
         }
-        // Per line: every set, then every multiply, then every add.
+        // Per line: every set, then every multiply, then every add — all on the
+        // per-unit value, which `per` then multiplies again. A rule that says
+        // "−2 per defence instead of −3" sets 2, not the finished line.
         for index in out.lines.indices {
             let line = out.lines[index]
             let mine = modifications.filter { $0.targetRule == line.ruleId && $0.target == line.target }
             guard !mine.isEmpty else { continue }
-            var value = line.value
-            if let set = mine.compactMap(\.set).last { value = set }
+            let times = max(line.times, 1)
+            var unit = line.value / times   // exact: `value` was `unit * times`
+            if let set = mine.compactMap(\.set).last { unit = set }
             for factor in mine.compactMap(\.multiply) {
-                value = Int(Double(value) * factor)   // Int(_:) truncates toward zero
+                unit = Int(Double(unit) * factor)   // Int(_:) truncates toward zero
             }
-            value += mine.compactMap(\.add).reduce(0, +)
-            out.lines[index].value = value
+            unit += mine.compactMap(\.add).reduce(0, +)
+            out.lines[index].value = unit * times
         }
         var reported: Set<String> = []
         for mod in missed where !out.applied.contains(mod.from) && reported.insert(mod.from).inserted {

@@ -221,6 +221,29 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(reason("GRW_x", in: missed), .conditionFalse)
     }
 
+    /// A rule that rewrites another one rewrites its *step*, not the finished
+    /// line: Vinsalt-Stil says "−2 per defence instead of −3", so the third
+    /// defence is −4. Setting the line itself would have made it −2 however
+    /// many defences the hero had already made.
+    func testAModificationChangesThePerUnitValueBeforePerMultiplies() {
+        own("SA_1"); own("SA_2")
+        let base = rule("GRW_x", [passive([.meleeParry], when: .situationDefencesThisRound(min: 1),
+                                          [.add(target: .vw, value: -3, per: .defencesThisRound)])])
+        let setsTheStep = rule("SA_1", [passive([.meleeParry],
+                                                [.modifyRule(id: "GRW_x", target: .vw, add: nil, set: -2, multiply: nil)])])
+        let softensTheStep = rule("SA_2", [passive([.meleeParry],
+                                                   [.modifyRule(id: "GRW_x", target: .vw, add: 1, set: nil, multiply: nil)])])
+        func parries(_ count: Int) -> Situation {
+            var s = Situation(hero: hero, domain: .meleeParry)
+            s.round.parriesThisRound = count
+            return s
+        }
+        XCTAssertEqual(line("GRW_x", in: evaluate([base, setsTheStep], parries(1))), -2)
+        XCTAssertEqual(line("GRW_x", in: evaluate([base, setsTheStep], parries(3))), -6, "a step of −2, three times")
+        // The add lands on the step the set left behind, not on the finished line.
+        XCTAssertEqual(line("GRW_x", in: evaluate([base, setsTheStep, softensTheStep], parries(2))), -2, "(−2 + 1) twice")
+    }
+
     func testALineThatComesToZeroIsDroppedAndSaidSo() {
         own("SA_1")
         let rules = [rule("GRW_x", [passive([.meleeAttack], [.add(target: .at, value: -2, per: nil)])]),

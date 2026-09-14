@@ -39,14 +39,14 @@
   reviewed: null
   sources:
     - { kind: optolith, src: US25007, page: 138 }
-  note: "Mehrfache Verteidigung at −2 per defence instead of −3 (Optolith: 'nicht Erschwernisse von jeweils 3, sondern nur von jeweils 2'), with an Armbrust, a Fechtwaffe or a Zweihandschwert in hand — the style's Kampftechniken. Written as a multiply, not the `set` the plan named: GRW_mehrfacheVerteidigung emits one line worth −3 × the defences made, and `set` replaces that whole line (RuleEvaluator.applyModifications), which would put a third defence at −2 instead of −4. The factor is 0.6667 rather than 2/3 because `multiply` truncates toward zero and 2/3 as a Double lands at −1.9999999999999998 on the first defence. `set` on a step is the thing to add when a RuleLine can carry its `per`."
+  note: "Mehrfache Verteidigung at −2 per defence instead of −3 (Optolith: 'nicht Erschwernisse von jeweils 3, sondern nur von jeweils 2'), with an Armbrust, a Fechtwaffe or a Zweihandschwert in hand — the style's Kampftechniken."
   cost: 20
   unlocks: [SA_197, SA_204, SA_965]
   applies_with: [{ loadout.weapon: { technique: [CT_1, CT_4, CT_16] } }]
   clauses:
     - kind: passive
       domains: [meleeParry, meleeDodge]
-      effects: [{ modifyRule: { id: GRW_mehrfacheVerteidigung, target: vw, multiply: 0.6667 } }]
+      effects: [{ modifyRule: { id: GRW_mehrfacheVerteidigung, target: vw, set: -2 } }]
 
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that
