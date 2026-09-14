@@ -933,7 +933,11 @@ class ClauseValidationTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def validate(self, *entries):
-        return catalog.validate(list(entries) + [entry(id="SA_2", name="Zweite")], RULES, self.root, vocabulary=VOCAB)
+        # Pad with a plain entry for every rules.db id the test did not supply,
+        # so the coverage check ("SA_1: no catalog entry") stays out of the way.
+        given = {e["id"] for e in entries}
+        pad = [entry(id=rid, name=name) for rid, name in RULES.items() if rid not in given]
+        return catalog.validate(list(entries) + pad, RULES, self.root, vocabulary=VOCAB)
 
     def test_the_design_example_is_valid(self):
         self.assertEqual(self.validate(GOLGARITEN, GRW), [])
