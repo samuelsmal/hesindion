@@ -10,7 +10,8 @@ enum MeleeModifiers {
     /// Golgariten-forced vorteilhafte Position (+2 AT when mounted with correct loadout).
     static let vorteilhaftePosition = ModifierDefinition(
         id: "vorteilhaftePosition",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["GRW_vorteilhaftePosition"]
     ) { ctx in
         guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 2, source: L("source.vorteilhaft"))
@@ -19,7 +20,8 @@ enum MeleeModifiers {
     /// Golgariten style bonus (+2 AT).
     static let golgariten = ModifierDefinition(
         id: "golgariten",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["SA_661"]
     ) { ctx in
         guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 2, source: L("source.golgariten"))
@@ -28,7 +30,8 @@ enum MeleeModifiers {
     /// Plänkler formation AT bonus (+1).
     static let plaenklerAT = ModifierDefinition(
         id: "plaenklerAT",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["SA_884"]
     ) { ctx in
         guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .at else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
@@ -44,7 +47,8 @@ enum MeleeModifiers {
     /// Weapon reach mismatch penalty.
     static let weaponReach = ModifierDefinition(
         id: "weaponReach",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["GRW_reichweite"]
     ) { ctx in
         let penalty = attackerReach(ctx).atPenaltyAgainst(ctx.opponent.reach)
         guard penalty != 0 else { return nil }
@@ -54,7 +58,8 @@ enum MeleeModifiers {
     /// Combat maneuver AT modifier.
     static let maneuverAT = ModifierDefinition(
         id: "maneuverAT",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["SA_48", "SA_67", "SA_66"]
     ) { ctx in
         guard ctx.maneuver.atModifier != 0 else { return nil }
         return ModifierLine(value: ctx.maneuver.atModifier, source: ctx.maneuver.sourceLabel)
@@ -63,7 +68,8 @@ enum MeleeModifiers {
     /// Dual-attack penalty (reduced by Beidhändiger Kampf level).
     static let dualAttackPenalty = ModifierDefinition(
         id: "dualAttackPenaltyAT",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["SA_42"]
     ) { ctx in
         guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty
@@ -74,7 +80,8 @@ enum MeleeModifiers {
     /// Off-hand penalty (-4 unless hero has Beidhändig advantage).
     static let offHandPenalty = ModifierDefinition(
         id: "offHandPenalty",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["ADV_5"]
     ) { ctx in
         guard ctx.isOffHand, ctx.hero.offHandPenalty != 0 else { return nil }
         return ModifierLine(value: ctx.hero.offHandPenalty, source: L("source.offHand"))
@@ -83,7 +90,8 @@ enum MeleeModifiers {
     /// Beengte Umgebung AT penalty (based on weapon reach).
     static let beengteUmgebungAT = ModifierDefinition(
         id: "beengteUmgebungAT",
-        domains: [.meleeAttack]
+        domains: [.meleeAttack],
+        rules: ["GRW_beengteUmgebung", "STATE_6"]
     ) { ctx in
         guard ctx.round.beengteUmgebung else { return nil }
         let penalty = attackerReach(ctx).beengteUmgebungPenalty

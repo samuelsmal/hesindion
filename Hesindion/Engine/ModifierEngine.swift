@@ -29,24 +29,39 @@ enum SpellModification: Hashable {
 struct ModifierDefinition: Identifiable {
     let id: String
     let domains: Set<CheckDomain>
+    /// The catalog ids this definition stands for, so the migration test can
+    /// refuse a rule that is implemented on both sides. Empty only for a rule
+    /// with no catalog entry yet.
+    var rules: [String] = []
     let evaluate: (Situation) -> ModifierLine?
 }
 
 // MARK: - ModifierEngine
 
+/// The union of the Swift definitions still in migration and the catalog
+/// (design §7 step 2). When the Swift list is empty this becomes a thin
+/// wrapper around `RuleEvaluator`.
 struct ModifierEngine {
-    private let modifiers: [ModifierDefinition]
+    let definitions: [ModifierDefinition]
+    let catalog: RuleCatalog
 
-    init(modifiers: [ModifierDefinition]) {
-        self.modifiers = modifiers
+    init(modifiers: [ModifierDefinition], catalog: RuleCatalog = .bundled) {
+        self.definitions = modifiers
+        self.catalog = catalog
     }
 
+    /// Everything the catalog says about this roll.
+    func evaluation(_ situation: Situation) -> Evaluation {
+        RuleEvaluator.evaluate(catalog: catalog, situation: situation)
+    }
+
+    /// The lines both sides produce, capped once.
     func evaluate(context situation: Situation) -> [ModifierLine] {
-        guard let domain = situation.checkDomain else { return [] }
-        let lines = modifiers
-            .filter { $0.domains.contains(domain) }
-            .compactMap { $0.evaluate(situation) }
-        return Self.applyingZustandCap(lines)
+        let swift: [ModifierLine] = situation.checkDomain.map { domain in
+            definitions.filter { $0.domains.contains(domain) }.compactMap { $0.evaluate(situation) }
+        } ?? []
+        let catalogLines = evaluation(situation).lines.map(\.modifierLine)
+        return Self.applyingZustandCap(swift + catalogLines)
     }
 
     /// GR: the combined Zustand penalty is capped at −5. Encumbrance and Schmerz count

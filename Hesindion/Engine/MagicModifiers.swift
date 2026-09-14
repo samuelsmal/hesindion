@@ -9,7 +9,8 @@ enum MagicModifiers {
     /// Penalty per maintained spell (-1 each).
     static let maintainedSpells = ModifierDefinition(
         id: "maintainedSpells",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         guard ctx.maintainedSpellCount > 0 else { return nil }
         return ModifierLine(value: -ctx.maintainedSpellCount, source: L("source.maintainedSpells"))
@@ -18,7 +19,8 @@ enum MagicModifiers {
     /// Foreign tradition penalty (-2).
     static let foreignTradition = ModifierDefinition(
         id: "foreignTradition",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         guard ctx.foreignTradition else { return nil }
         return ModifierLine(value: -2, source: L("source.foreignTradition"))
@@ -27,7 +29,8 @@ enum MagicModifiers {
     /// Omit gesture penalty (-2).
     static let omitGesture = ModifierDefinition(
         id: "omitGesture",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         guard ctx.omitGesture else { return nil }
         return ModifierLine(value: -2, source: L("source.omitGesture"))
@@ -36,7 +39,8 @@ enum MagicModifiers {
     /// Omit formula/incantation penalty (-2).
     static let omitFormula = ModifierDefinition(
         id: "omitFormula",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         guard ctx.omitFormula else { return nil }
         return ModifierLine(value: -2, source: L("source.omitFormula"))
@@ -46,7 +50,8 @@ enum MagicModifiers {
     /// Only affects arcane magic, not liturgies.
     static let ironBan = ModifierDefinition(
         id: "ironBan",
-        domains: [.spellCasting]
+        domains: [.spellCasting],
+        rules: []
     ) { ctx in
         let penalty = ctx.ironSteinCarried / 2
         guard penalty > 0 else { return nil }
@@ -56,7 +61,8 @@ enum MagicModifiers {
     /// Distraction modifier (0=none, 1=minor +3, 2=ship ±0, 3=freefall -3).
     static let distraction = ModifierDefinition(
         id: "distraction",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         let mods = [0, 3, 0, -3]
         guard ctx.distractionLevel > 0, ctx.distractionLevel < mods.count else { return nil }
@@ -68,7 +74,8 @@ enum MagicModifiers {
     /// Spell modification sum (reduce cast time -1, increase cast time +1, etc.).
     static let spellMods = ModifierDefinition(
         id: "spellModifications",
-        domains: [.spellCasting, .liturgyCasting]
+        domains: [.spellCasting, .liturgyCasting],
+        rules: []
     ) { ctx in
         guard !ctx.spellModifications.isEmpty else { return nil }
         var total = 0

@@ -10,7 +10,8 @@ enum SharedModifiers {
     /// never suppressed by the Schip — preserving prior behavior (only the old `pain` checked the flag).
     static let encumbrance = ModifierDefinition(
         id: "encumbrance",
-        domains: [.meleeAttack, .meleeParry, .meleeDodge, .rangedAttack, .spellCasting, .liturgyCasting]
+        domains: [.meleeAttack, .meleeParry, .meleeDodge, .rangedAttack, .spellCasting, .liturgyCasting],
+        rules: ["COND_1"]
     ) { ctx in
         let be = ctx.round.mounted ? max(0, ctx.hero.effectiveBE - 1) : ctx.hero.effectiveBE
         guard be > 0 else { return nil }

@@ -9,7 +9,8 @@ enum RangedModifiers {
     /// Distance modifier (+2 nah, 0 mittel, -2 weit).
     static let distanz = ModifierDefinition(
         id: "distanz",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [2, 0, -2]
         let val = mods[ctx.distanz]
@@ -20,7 +21,8 @@ enum RangedModifiers {
     /// Target size modifier (-8 winzig to +8 riesig).
     static let groesse = ModifierDefinition(
         id: "groesse",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [-8, -4, 0, 4, 8]
         let val = mods[ctx.groesse]
@@ -31,7 +33,8 @@ enum RangedModifiers {
     /// Target movement modifier.
     static let bewegungZiel = ModifierDefinition(
         id: "bewegungZiel",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [2, 0, -2, -4]
         let val = mods[ctx.bewegungZiel]
@@ -42,7 +45,8 @@ enum RangedModifiers {
     /// Shooter movement modifier.
     static let bewegungSchuetze = ModifierDefinition(
         id: "bewegungSchuetze",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [0, -2, -4]
         let val = mods[ctx.bewegungSchuetze]
@@ -53,7 +57,8 @@ enum RangedModifiers {
     /// Visibility modifier.
     static let sicht = ModifierDefinition(
         id: "sicht",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [0, -2, -4, -6]
         let val = mods[ctx.sicht]
@@ -64,7 +69,8 @@ enum RangedModifiers {
     /// Melee combat penalty (-2).
     static let kampfgetuemmel = ModifierDefinition(
         id: "kampfgetuemmel",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         guard ctx.kampfgetuemmel else { return nil }
         return ModifierLine(value: -2, source: L("source.kampfgetuemmel"))
@@ -73,7 +79,8 @@ enum RangedModifiers {
     /// Aiming bonus (0/+2/+4).
     static let zielen = ModifierDefinition(
         id: "zielen",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         let mods = [0, 2, 4]
         let val = mods[ctx.zielen]
@@ -84,7 +91,8 @@ enum RangedModifiers {
     /// Mounted shooting penalty (0/-4/-8).
     static let vomPferd = ModifierDefinition(
         id: "vomPferd",
-        domains: [.rangedAttack]
+        domains: [.rangedAttack],
+        rules: []
     ) { ctx in
         guard ctx.round.mounted else { return nil }
         let mods = [0, -4, -8]

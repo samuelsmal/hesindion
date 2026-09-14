@@ -16,7 +16,8 @@ enum DefenseModifiers {
     /// -3.
     static let multipleDefense = ModifierDefinition(
         id: "multipleDefense",
-        domains: [.meleeParry, .meleeDodge]
+        domains: [.meleeParry, .meleeDodge],
+        rules: ["GRW_mehrfacheVerteidigung"]
     ) { ctx in
         guard ctx.defencesThisRound > 0 else { return nil }
         return ModifierLine(value: -(ctx.defencesThisRound * 3), source: L("source.multipleDefense"))
@@ -25,7 +26,8 @@ enum DefenseModifiers {
     /// Schicksalspunkt defense boost (+4).
     static let schipDefenseBoost = ModifierDefinition(
         id: "schipDefenseBoost",
-        domains: [.meleeParry, .meleeDodge]
+        domains: [.meleeParry, .meleeDodge],
+        rules: []
     ) { ctx in
         guard ctx.round.schipDefenseBoost else { return nil }
         return ModifierLine(value: 4, source: L("source.schipDefense"))
@@ -34,7 +36,8 @@ enum DefenseModifiers {
     /// Golgariten PA bonus (parry only, +1).
     static let golgaritenPA = ModifierDefinition(
         id: "golgaritenPA",
-        domains: [.meleeParry]
+        domains: [.meleeParry],
+        rules: ["SA_661"]
     ) { ctx in
         guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 1, source: L("source.golgariten"))
@@ -47,7 +50,8 @@ enum DefenseModifiers {
     /// ability they had paid for got nothing for it while parrying.
     static let plaenklerVW = ModifierDefinition(
         id: "plaenklerVW",
-        domains: [.meleeParry, .meleeDodge]
+        domains: [.meleeParry, .meleeDodge],
+        rules: ["SA_884"]
     ) { ctx in
         guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .aw else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
@@ -56,7 +60,8 @@ enum DefenseModifiers {
     /// Mounted dodge penalty (-2 AW).
     static let mountedDodgePenalty = ModifierDefinition(
         id: "mountedDodgePenalty",
-        domains: [.meleeDodge]
+        domains: [.meleeDodge],
+        rules: []
     ) { ctx in
         guard ctx.round.mounted else { return nil }
         return ModifierLine(value: -2, source: L("source.mounted"))
@@ -65,7 +70,8 @@ enum DefenseModifiers {
     /// Dual-attack defense penalty.
     static let dualAttackDefense = ModifierDefinition(
         id: "dualAttackDefense",
-        domains: [.meleeParry, .meleeDodge]
+        domains: [.meleeParry, .meleeDodge],
+        rules: ["SA_42"]
     ) { ctx in
         guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty
@@ -79,7 +85,8 @@ enum DefenseModifiers {
     /// calculation the player can read.
     static let offHandParry = ModifierDefinition(
         id: "offHandParry",
-        domains: [.meleeParry]
+        domains: [.meleeParry],
+        rules: ["ADV_5"]
     ) { ctx in
         guard ctx.isOffHand, ctx.hero.offHandPenalty != 0 else { return nil }
         return ModifierLine(value: ctx.hero.offHandPenalty, source: L("source.offHand"))
@@ -89,7 +96,8 @@ enum DefenseModifiers {
     /// "+1 TP, -1 PA" the grip button promises.
     static let twoHandedGripPA = ModifierDefinition(
         id: "twoHandedGripPA",
-        domains: [.meleeParry]
+        domains: [.meleeParry],
+        rules: []
     ) { ctx in
         guard ctx.round.twoHandedGrip else { return nil }
         return ModifierLine(value: -1, source: L("source.twoHandedGrip"))
@@ -98,7 +106,8 @@ enum DefenseModifiers {
     /// Beengte Umgebung PA penalty (parry only, based on weapon reach).
     static let beengteUmgebungPA = ModifierDefinition(
         id: "beengteUmgebungPA",
-        domains: [.meleeParry]
+        domains: [.meleeParry],
+        rules: ["GRW_beengteUmgebung", "STATE_6"]
     ) { ctx in
         guard ctx.round.beengteUmgebung else { return nil }
         let heroReach: WeaponReach

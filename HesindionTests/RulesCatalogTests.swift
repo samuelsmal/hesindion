@@ -129,6 +129,9 @@ final class RulesCatalogTests: XCTestCase {
         let byHandStatePointers = RulesDatabase.shared.catalogEntries(status: .byHand)
             .compactMap(\.pointer)
             .filter { $0.file == statePointerFile }
+        for definition in StateCatalog.all {
+            XCTAssertNotNil(StateModifiers.ruleIds[definition.id], "\(definition.id) has no rule id in StateModifiers.ruleIds")
+        }
         for definition in StateCatalog.all where !displayOnlyExceptions.contains(definition.id) {
             let matches = byHandStatePointers.filter { $0.symbol == definition.id }
             XCTAssertEqual(matches.count, 1, definition.id)
