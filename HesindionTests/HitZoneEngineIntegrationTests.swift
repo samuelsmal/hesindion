@@ -19,7 +19,7 @@ final class HitZoneEngineIntegrationTests: XCTestCase {
 
     func testMeleeAttackWithKopfZoneAppliesTenPenaltyViaSharedEngine() {
         let hero = makeHero()
-        var context = ModifierContext(hero: hero, domain: .meleeAttack)
+        var context = Situation(hero: hero, domain: .meleeAttack)
         context.targetHitZone = .kopf
         let lines = ModifierEngine.shared.evaluate(context: context)
         XCTAssertTrue(lines.contains { $0.value == -10 }, "expected a -10 Trefferzone line, got \(lines)")
@@ -27,7 +27,7 @@ final class HitZoneEngineIntegrationTests: XCTestCase {
 
     func testRangedAttackWithKopfZoneAppliesTenPenaltyViaSharedEngine() {
         let hero = makeHero()
-        var context = ModifierContext(hero: hero, domain: .rangedAttack)
+        var context = Situation(hero: hero, domain: .rangedAttack)
         context.targetHitZone = .kopf
         let lines = ModifierEngine.shared.evaluate(context: context)
         XCTAssertTrue(lines.contains { $0.value == -10 }, "expected a -10 Trefferzone line, got \(lines)")
@@ -35,7 +35,7 @@ final class HitZoneEngineIntegrationTests: XCTestCase {
 
     func testNoZoneSelectedProducesNoTrefferzoneLine() {
         let hero = makeHero()
-        let context = ModifierContext(hero: hero, domain: .meleeAttack)
+        let context = Situation(hero: hero, domain: .meleeAttack)
         XCTAssertNil(context.targetHitZone)
         let lines = ModifierEngine.shared.evaluate(context: context)
         XCTAssertFalse(lines.contains { $0.source.contains(L("modifier.trefferzone")) })

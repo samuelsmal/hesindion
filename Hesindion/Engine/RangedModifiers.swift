@@ -86,7 +86,7 @@ enum RangedModifiers {
         id: "vomPferd",
         domains: [.rangedAttack]
     ) { ctx in
-        guard ctx.mounted else { return nil }
+        guard ctx.round.mounted else { return nil }
         let mods = [0, -4, -8]
         let val = mods[ctx.vomPferd]
         guard val != 0 else { return nil }

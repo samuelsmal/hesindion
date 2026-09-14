@@ -26,11 +26,11 @@ struct CombatFernkampfSetupView: View {
     // MARK: - Modifier computation (non-ViewBuilder helpers)
 
     private func buildModifierLines() -> [ModifierLine] {
-        var context = ModifierContext(hero: hero, domain: .rangedAttack)
+        var context = Situation(hero: hero, domain: .rangedAttack)
         context.targetHitZone = targetZone
-        context.targetIsSurprised = targetIsSurprised
-        context.mounted = mountedActive
-        context.schipIgnoreZustand = schipIgnoreZustandThisRound
+        context.opponents.current.isSurprised = targetIsSurprised
+        context.round.mounted = mountedActive
+        context.round.schipIgnoreZustand = schipIgnoreZustandThisRound
         context.distanz = distanz
         context.groesse = groesse
         context.bewegungZiel = bewegungZiel

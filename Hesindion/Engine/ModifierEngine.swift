@@ -24,65 +24,12 @@ enum SpellModification: Hashable {
     case omitFormula
 }
 
-// MARK: - ModifierContext
-
-struct ModifierContext {
-    let hero: Hero
-    let domain: CheckDomain
-
-    // Combat shared
-    var mounted: Bool = false
-    var schipIgnoreZustand: Bool = false
-    var dualAttackActive: Bool = false
-    var beengteUmgebung: Bool = false
-    var gottgefaellig: Bool = false
-
-    // Trefferzonen (Fokus-Regeln)
-    var targetHitZone: HitZone? = nil
-    /// GM-driven. The opponent is not modelled, so this cannot come from hero states.
-    var targetIsSurprised: Bool = false
-
-    // Melee specific
-    var opponentReach: WeaponReach? = nil
-    /// The reach of the thing actually in the hand. `nil` falls back to the
-    /// hero's main weapon, which is only right when that is what is being swung.
-    var attackerReach: WeaponReach? = nil
-    var maneuver: CombatManeuver = .normal
-    var isOffHand: Bool = false
-    var twoHandedGrip: Bool = false
-    var defenseCount: Int = 0
-    var schipDefenseBoost: Bool = false
-
-    // Ranged specific
-    var distanz: Int = 1
-    var groesse: Int = 2
-    var bewegungZiel: Int = 1
-    var bewegungSchuetze: Int = 0
-    var sicht: Int = 0
-    var kampfgetuemmel: Bool = false
-    var zielen: Int = 0
-    var vomPferd: Int = 0
-
-    // Magic specific
-    var maintainedSpellCount: Int = 0
-    var foreignTradition: Bool = false
-    var omitGesture: Bool = false
-    var omitFormula: Bool = false
-    var ironSteinCarried: Int = 0
-    var distractionLevel: Int = 0
-    var spellModifications: [SpellModification] = []
-
-    // Plaenkler
-    var plaenklerActive: Bool = false
-    var plaenklerBonus: PlaenklerBonus = .at
-}
-
 // MARK: - ModifierDefinition
 
 struct ModifierDefinition: Identifiable {
     let id: String
     let domains: Set<CheckDomain>
-    let evaluate: (ModifierContext) -> ModifierLine?
+    let evaluate: (Situation) -> ModifierLine?
 }
 
 // MARK: - ModifierEngine
@@ -94,10 +41,11 @@ struct ModifierEngine {
         self.modifiers = modifiers
     }
 
-    func evaluate(context: ModifierContext) -> [ModifierLine] {
+    func evaluate(context situation: Situation) -> [ModifierLine] {
+        guard let domain = situation.checkDomain else { return [] }
         let lines = modifiers
-            .filter { $0.domains.contains(context.domain) }
-            .compactMap { $0.evaluate(context) }
+            .filter { $0.domains.contains(domain) }
+            .compactMap { $0.evaluate(situation) }
         return Self.applyingZustandCap(lines)
     }
 
@@ -112,8 +60,8 @@ struct ModifierEngine {
         return lines + [ModifierLine(value: correction, source: L("source.zustandCap"), isZustand: false)]
     }
 
-    func totalModifier(context: ModifierContext) -> Int {
-        evaluate(context: context).reduce(0) { $0 + $1.value }
+    func totalModifier(context situation: Situation) -> Int {
+        evaluate(context: situation).reduce(0) { $0 + $1.value }
     }
 }
 

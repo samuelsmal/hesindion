@@ -126,8 +126,8 @@ struct CombatSpellSetupView: View {
         spell.value / 4
     }
 
-    private var modifierContext: ModifierContext {
-        var ctx = ModifierContext(
+    private var modifierContext: Situation {
+        var ctx = Situation(
             hero: hero,
             domain: .spellCasting
         )
@@ -137,8 +137,8 @@ struct CombatSpellSetupView: View {
         ctx.omitFormula = omitFormula
         ctx.ironSteinCarried = ironStein
         ctx.distractionLevel = distractionLevel
-        ctx.mounted = mountedActive
-        ctx.schipIgnoreZustand = schipIgnoreZustandThisRound
+        ctx.round.mounted = mountedActive
+        ctx.round.schipIgnoreZustand = schipIgnoreZustandThisRound
         ctx.gottgefaellig = gottgefaellig
         return ctx
     }

@@ -37,51 +37,75 @@ enum BodyPlanKind: String, CaseIterable, Identifiable {
     }
 }
 
-/// Everything the app has been *told* about the other side of the fight.
+/// Everything the app has been *told* about one opponent.
 ///
 /// The opponent is not modelled (ADR-0005): there is no LP, no RS and no sheet.
-/// What there is, is a handful of facts the GM states and several rules turn on
-/// — the reach of the weapon in their hand, the table their hit zones are rolled
-/// on, whether they are a demon — and until now the app had nowhere to keep any
-/// of them. The reach was asked for again on every single attack, and the zone
-/// table was the *hero's*, which is the wrong table for anything that is not
-/// another person.
-///
+/// What there is, is a handful of facts the GM states and several rules turn on.
 /// Split by how long each fact lasts: the shape of the opponent holds for the
-/// fight, their posture holds for this attack.
+/// fight, their posture and the GM's calls about this swing hold for the attack.
+///
+/// `states` and `facts` are what the catalog predicates read
+/// (`opponent.state`, `gm.fact`); the named flags below them are the same
+/// facts under the names the views bind to.
 struct OpponentProfile: Equatable {
+
+    /// What the GM calls this one ("der Ork links"). Empty for the unnamed
+    /// single opponent every fight starts with.
+    var label: String = ""
 
     // MARK: The opponent, for as long as the fight lasts
 
     var reach: WeaponReach = .mittel
     var bodyPlanKind: BodyPlanKind = .humanoid
     var size: CreatureSize = .mittel
-    /// A demon. Only a consecrated weapon has anything to say about it
-    /// (`KarmalWeapon`), so it is only asked for when the hero carries one.
+    /// A demon. Only a consecrated weapon has anything to say about it.
     var isDaemon: Bool = false
-    /// A demon of the deity this weapon is sworn against — doubled TP.
-    var isOfOpposingDeity: Bool = false
+    /// Fights on foot. `nil` means nobody has said; a mounted hero's
+    /// Vorteilhafte Position turns on it, so the evaluator asks.
+    var isOnFoot: Bool? = nil
 
     // MARK: This attack
 
-    /// The hero is better placed than the opponent: +2 AT (GRW, Vorteilhafte
-    /// Position). Relative to *this* opponent, which is why it lives here.
-    var advantageousPosition: Bool = false
+    /// Statuses the GM has stated for this attack, by `StateCatalog` id.
+    var states: Set<String> = []
+    /// GM answers about this opponent. A missing key is "not stated", which is
+    /// how a rule becomes a question rather than being silently off.
+    var facts: [FactKey: Bool] = [:]
+
+    // MARK: The same facts under the names the views bind to
+
+    /// Status Liegend: −2 on *their* defence. The penalty is theirs.
+    var isProne: Bool {
+        get { states.contains("liegend") }
+        set { if newValue { states.insert("liegend") } else { states.remove("liegend") } }
+    }
     /// Eases the Zonenaufschlag by 2 (Trefferzonen Fokusregel).
-    var isSurprised: Bool = false
-    /// Status Liegend: "Ihre Verteidigung ist um 2 erschwert, ihre Angriffe um
-    /// 4." The penalty is the opponent's, so it lands on their defence, not on
-    /// the hero's attack.
-    var isProne: Bool = false
+    var isSurprised: Bool {
+        get { states.contains("ueberrascht") }
+        set { if newValue { states.insert("ueberrascht") } else { states.remove("ueberrascht") } }
+    }
+    /// The hero is better placed than this opponent: Vorteilhafte Position.
+    var advantageousPosition: Bool {
+        get { facts[Self.advantageousPositionKey] == true }
+        set { facts[Self.advantageousPositionKey] = newValue ? true : nil }
+    }
+    /// A demon of the deity this weapon is sworn against — doubled TP. Lasts
+    /// the fight, like `isDaemon`: the same demon stays the same demon.
+    var isOfOpposingDeity: Bool {
+        get { facts[Self.opposingDeityKey] == true }
+        set { facts[Self.opposingDeityKey] = newValue ? true : nil }
+    }
+
+    static let advantageousPositionKey = FactKey(id: "advantageousPosition", span: .attack)
+    static let opposingDeityKey = FactKey(id: "opposingDeity", span: .opponent)
 
     /// The table their hit zones are rolled on.
     var bodyPlan: BodyPlan { bodyPlanKind.plan(size: size) }
 
     /// Everything that changes between one attack and the next, cleared.
     mutating func resetPerAttack() {
-        advantageousPosition = false
-        isSurprised = false
-        isProne = false
+        states = []
+        facts = facts.filter { $0.key.span != .attack }
     }
 
     /// What the announcement does to the opponent's own defence.

@@ -32,24 +32,15 @@ struct CombatSituation: Equatable {
     /// `isOffHand` is the second weapon of a dual-wield loadout — it parries at
     /// the same penalty it attacks with.
     func defenseModifiers(hero: Hero, isAusweichen: Bool, isOffHand: Bool = false) -> [ModifierLine] {
-        var context = ModifierContext(
-            hero: hero,
-            domain: isAusweichen ? .meleeDodge : .meleeParry
-        )
-        context.mounted = mounted
-        context.schipIgnoreZustand = schipIgnoreZustand
-        context.dualAttackActive = dualAttackActive
-        context.beengteUmgebung = beengteUmgebung
-        context.defenseCount = defensesSoFar(isAusweichen: isAusweichen)
-        context.schipDefenseBoost = schipDefenseBoost
-        context.plaenklerActive = plaenklerActive
-        context.plaenklerBonus = plaenklerBonus
-        context.isOffHand = isOffHand
-        // Only a parry can be made with a two-handed grip; `twoHandedGripPA` is
-        // scoped to that domain, so passing it for a dodge changes nothing.
-        context.twoHandedGrip = twoHandedGrip
+        // The round is this value itself; only what belongs to this one defence
+        // — which hand it is made with — sits beside it. `twoHandedGrip` rides
+        // along on the round: `twoHandedGripPA` is scoped to the parry domain,
+        // so it changes nothing for a dodge.
+        var situation = Situation(hero: hero, domain: isAusweichen ? .meleeDodge : .meleeParry)
+        situation.round = self
+        situation.isOffHand = isOffHand
 
-        return ModifierEngine.shared.evaluate(context: context)
+        return ModifierEngine.shared.evaluate(context: situation)
     }
 
     /// Defences of this kind already made this round.

@@ -19,8 +19,9 @@ struct TalentProbeModal: View {
     }
 
     private var modifierLines: [ModifierLine] {
-        let context = ModifierContext(hero: hero, domain: .talentCheck)
-        return ModifierEngine.shared.evaluate(context: context)
+        var situation = Situation(hero: hero, domain: .talentCheck)
+        situation.talentId = talent.ruleId
+        return ModifierEngine.shared.evaluate(context: situation)
     }
 
     private var hints: [SkillCheckHint] {

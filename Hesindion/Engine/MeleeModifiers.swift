@@ -12,7 +12,7 @@ enum MeleeModifiers {
         id: "vorteilhaftePosition",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.mounted) else { return nil }
+        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 2, source: L("source.vorteilhaft"))
     }
 
@@ -21,7 +21,7 @@ enum MeleeModifiers {
         id: "golgariten",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.mounted) else { return nil }
+        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 2, source: L("source.golgariten"))
     }
 
@@ -30,14 +30,14 @@ enum MeleeModifiers {
         id: "plaenklerAT",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.plaenklerActive, ctx.plaenklerBonus == .at else { return nil }
+        guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .at else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
     }
 
-    /// The reach of the thing being swung: the announced weapon where the screen
-    /// says which, the main weapon otherwise.
-    static func attackerReach(_ ctx: ModifierContext) -> WeaponReach {
-        if let reach = ctx.attackerReach { return reach }
+    /// The reach of the thing being swung: the announced loadout piece where the
+    /// screen says which, the main weapon otherwise.
+    static func attackerReach(_ ctx: Situation) -> WeaponReach {
+        if let name = ctx.loadoutName { return ctx.hero.reach(ofLoadoutNamed: name) }
         return WeaponReach(rawValue: ctx.hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
     }
 
@@ -46,8 +46,7 @@ enum MeleeModifiers {
         id: "weaponReach",
         domains: [.meleeAttack]
     ) { ctx in
-        guard let opponentReach = ctx.opponentReach else { return nil }
-        let penalty = attackerReach(ctx).atPenaltyAgainst(opponentReach)
+        let penalty = attackerReach(ctx).atPenaltyAgainst(ctx.opponent.reach)
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("source.reach"))
     }
@@ -66,7 +65,7 @@ enum MeleeModifiers {
         id: "dualAttackPenaltyAT",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.dualAttackActive else { return nil }
+        guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("source.dualAttack"))
@@ -86,7 +85,7 @@ enum MeleeModifiers {
         id: "beengteUmgebungAT",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.beengteUmgebung else { return nil }
+        guard ctx.round.beengteUmgebung else { return nil }
         let penalty = attackerReach(ctx).beengteUmgebungPenalty
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("beengteUmgebung"))

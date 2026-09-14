@@ -49,8 +49,8 @@ struct SpellProbeModal: View {
 
     // MARK: - Modifier context
 
-    private var modifierContext: ModifierContext {
-        var ctx = ModifierContext(
+    private var modifierContext: Situation {
+        var ctx = Situation(
             hero: hero,
             domain: isLiturgy ? .liturgyCasting : .spellCasting
         )

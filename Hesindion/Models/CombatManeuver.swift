@@ -128,4 +128,7 @@ struct ModifierLine: Identifiable {
     let value: Int
     let source: String
     var isZustand: Bool = false
+    /// The catalog rule that produced it; `nil` for a line a Swift definition
+    /// still makes. Tests look lines up by this, not by the label.
+    var ruleId: String? = nil
 }

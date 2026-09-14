@@ -71,6 +71,8 @@ final class WeaponReachTests: XCTestCase {
                         damage: "1W6+4", at: 14, pa: 7, reach: "Lang", weight: 2.0),
             MeleeWeapon(name: "Dolch", combatTechniqueId: "CT_1",
                         damage: "1W6+1", at: 12, pa: 5, reach: "Kurz", weight: 0.4),
+            MeleeWeapon(name: "Säbel", combatTechniqueId: "CT_12",
+                        damage: "1W6+3", at: 13, pa: 7, reach: "Mittel", weight: 1.2),
         ]
         hero.shields = [
             Shield(name: "Großschild", damage: "1W6", at: 8, pa: 5,
@@ -103,40 +105,40 @@ final class WeaponReachTests: XCTestCase {
 
     // MARK: - Through the engine
 
-    private func atPenalty(_ hero: Hero, attacker: WeaponReach?, opponent: WeaponReach) -> Int {
-        var context = ModifierContext(hero: hero, domain: .meleeAttack)
-        context.opponentReach = opponent
-        context.attackerReach = attacker
-        return ModifierEngine.shared.evaluate(context: context)
+    private func atPenalty(_ hero: Hero, loadout: String?, opponent: WeaponReach) -> Int {
+        var situation = Situation(hero: hero, domain: .meleeAttack)
+        situation.opponents.current.reach = opponent
+        situation.loadoutName = loadout
+        return ModifierEngine.shared.evaluate(context: situation)
             .filter { $0.source == L("source.reach") }
             .reduce(0) { $0 + $1.value }
     }
 
     func testTheEngineUsesTheAnnouncedWeaponNotTheMainOne() {
         let hero = armedHero()   // main weapon is Lang
-        XCTAssertEqual(atPenalty(hero, attacker: .lang, opponent: .lang), 0)
-        XCTAssertEqual(atPenalty(hero, attacker: .kurz, opponent: .lang), -4,
+        XCTAssertEqual(atPenalty(hero, loadout: "Langschwert", opponent: .lang), 0)
+        XCTAssertEqual(atPenalty(hero, loadout: "Dolch", opponent: .lang), -4,
                        "The dagger in the off hand reaches like a dagger")
     }
 
     func testTheEngineFallsBackToTheMainWeapon() {
-        XCTAssertEqual(atPenalty(armedHero(), attacker: nil, opponent: .lang), 0)
+        XCTAssertEqual(atPenalty(armedHero(), loadout: nil, opponent: .lang), 0)
     }
 
     /// Beengte Umgebung is the other rule keyed to reach, and it read the same
     /// wrong value: a long weapon is -8 in a corridor, a fist is not.
     func testBeengteUmgebungFollowsTheSameReach() {
         let hero = armedHero()
-        func penalty(_ reach: WeaponReach) -> Int {
-            var context = ModifierContext(hero: hero, domain: .meleeAttack)
-            context.beengteUmgebung = true
-            context.attackerReach = reach
-            return ModifierEngine.shared.evaluate(context: context)
+        func penalty(_ loadout: String) -> Int {
+            var situation = Situation(hero: hero, domain: .meleeAttack)
+            situation.round.beengteUmgebung = true
+            situation.loadoutName = loadout
+            return ModifierEngine.shared.evaluate(context: situation)
                 .filter { $0.source == L("beengteUmgebung") }
                 .reduce(0) { $0 + $1.value }
         }
-        XCTAssertEqual(penalty(.lang), -8)
-        XCTAssertEqual(penalty(.mittel), -4)
-        XCTAssertEqual(penalty(.kurz), 0)
+        XCTAssertEqual(penalty("Langschwert"), -8)
+        XCTAssertEqual(penalty("Säbel"), -4)
+        XCTAssertEqual(penalty("Dolch"), 0)
     }
 }

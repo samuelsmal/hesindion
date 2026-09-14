@@ -15,7 +15,7 @@ final class StateModifiersTests: XCTestCase {
 
     func testFurchtPenaltyAppliesToTalentChecks() {
         let hero = makeHero(); hero.setStateLevel("furcht", level: 2)
-        let lines = ModifierEngine.shared.evaluate(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let lines = ModifierEngine.shared.evaluate(context: Situation(hero: hero, domain: .talentCheck))
         XCTAssertTrue(lines.contains { $0.value == -2 })
     }
 
@@ -23,7 +23,7 @@ final class StateModifiersTests: XCTestCase {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 1)
         hero.setStateLevel("verwirrung", level: 2)
-        let total = ModifierEngine.shared.totalModifier(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let total = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .talentCheck))
         XCTAssertEqual(total, -3)
     }
 
@@ -31,7 +31,7 @@ final class StateModifiersTests: XCTestCase {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 4)
         hero.setStateLevel("verwirrung", level: 4)   // raw -8
-        let total = ModifierEngine.shared.totalModifier(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let total = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .talentCheck))
         XCTAssertEqual(total, -5, "Zustand penalties cap at -5")
     }
 
@@ -40,30 +40,30 @@ final class StateModifiersTests: XCTestCase {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 4)
         hero.setStateLevel("verwirrung", level: 4)
-        var ctx = ModifierContext(hero: hero, domain: .meleeDodge)
-        ctx.schipDefenseBoost = true
+        var ctx = Situation(hero: hero, domain: .meleeDodge)
+        ctx.round.schipDefenseBoost = true
         let total = ModifierEngine.shared.totalModifier(context: ctx)
         XCTAssertEqual(total, -5 + 4)
     }
 
     func testSchipIgnoreZustandRemovesPenalty() {
         let hero = makeHero(); hero.setStateLevel("furcht", level: 3)
-        var ctx = ModifierContext(hero: hero, domain: .talentCheck)
-        ctx.schipIgnoreZustand = true
+        var ctx = Situation(hero: hero, domain: .talentCheck)
+        ctx.round.schipIgnoreZustand = true
         XCTAssertEqual(ModifierEngine.shared.totalModifier(context: ctx), 0)
     }
 
     func testLiegendOnlyAffectsCombatDomains() {
         let hero = makeHero(); hero.setStateLevel("liegend", level: 1)
-        let talent = ModifierEngine.shared.totalModifier(context: ModifierContext(hero: hero, domain: .talentCheck))
-        let attack = ModifierEngine.shared.totalModifier(context: ModifierContext(hero: hero, domain: .meleeAttack))
+        let talent = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .talentCheck))
+        let attack = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .meleeAttack))
         XCTAssertEqual(talent, 0)
         XCTAssertEqual(attack, -4)
     }
 
     func testLiegendDefensePenaltyIsMinusTwo() {
         let hero = makeHero(); hero.setStateLevel("liegend", level: 1)
-        let parry = ModifierEngine.shared.totalModifier(context: ModifierContext(hero: hero, domain: .meleeParry))
+        let parry = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .meleeParry))
         XCTAssertEqual(parry, -2)
     }
 
@@ -82,7 +82,7 @@ final class StateModifiersTests: XCTestCase {
             schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
         XCTAssertEqual(hero.effectiveSchmerzLevel, 2)
         XCTAssertEqual(hero.schmerzPenalty, -2)
-        let lines = ModifierEngine.shared.evaluate(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let lines = ModifierEngine.shared.evaluate(context: Situation(hero: hero, domain: .talentCheck))
         // Exactly one Schmerz-sourced line, value -2, label unchanged (source.schmerz + roman).
         let schmerzLines = lines.filter { $0.source.hasPrefix(L("source.schmerz")) }
         XCTAssertEqual(schmerzLines.count, 1, "Schmerz must not be double-counted")
@@ -102,8 +102,8 @@ final class StateModifiersTests: XCTestCase {
         hero.armors.append(Armor(name: "Plattenpanzer", protectionValue: 8, encumbrance: 4, weight: 20, isEquipped: true))
         XCTAssertEqual(hero.effectiveBE, 4, "precondition: effectiveBE > 0")
 
-        var mctx = ModifierContext(hero: hero, domain: .meleeAttack)
-        mctx.schipIgnoreZustand = true
+        var mctx = Situation(hero: hero, domain: .meleeAttack)
+        mctx.round.schipIgnoreZustand = true
         let lines = ModifierEngine.shared.evaluate(context: mctx)
         let encumbranceLines = lines.filter { $0.source == L("source.belastung") }
         XCTAssertEqual(encumbranceLines.count, 1, "Belastung must survive schipIgnoreZustand")
@@ -112,15 +112,15 @@ final class StateModifiersTests: XCTestCase {
 
     func testEingeengtStatusDrivesBeengtePenaltyWithoutDoubleCount() {
         // Combat re-wires Beengte Umgebung onto the `eingeengt` status: building a melee
-        // ModifierContext with `beengteUmgebung = hero.hasState("eingeengt")` must produce
+        // Situation with `round.beengteUmgebung = hero.hasState("eingeengt")` must produce
         // the weapon-length penalty line, while StateModifiers (mechanic .eingeengt) emits
         // NO separate line — so the penalty is counted exactly once.
         let hero = makeHero()
         hero.setStateLevel("eingeengt", level: 1)
         XCTAssertTrue(hero.hasState("eingeengt"))
 
-        var ctx = ModifierContext(hero: hero, domain: .meleeAttack)
-        ctx.beengteUmgebung = hero.hasState("eingeengt")   // exactly how the combat views wire it
+        var ctx = Situation(hero: hero, domain: .meleeAttack)
+        ctx.round.beengteUmgebung = hero.hasState("eingeengt")   // exactly how the combat views wire it
         let lines = ModifierEngine.shared.evaluate(context: ctx)
 
         // The Beengte-Umgebung weapon-length line fires (default reach "Mittel" ⇒ −4).
@@ -140,17 +140,17 @@ final class StateModifiersTests: XCTestCase {
 
         // Default (gottgefaellig == false): Entrückung III applies as a -3 penalty.
         let penaltyLines = ModifierEngine.shared.evaluate(
-            context: ModifierContext(hero: hero, domain: .spellCasting))
+            context: Situation(hero: hero, domain: .spellCasting))
         let entLine = penaltyLines.first { $0.source.hasPrefix(L("state.entrueckung.name")) }
         XCTAssertNotNil(entLine, "Entrückung line must be present when not gottgefällig")
         XCTAssertEqual(entLine?.value, -3, "Entrückung III ⇒ -3 by default")
         XCTAssertEqual(
             ModifierEngine.shared.totalModifier(
-                context: ModifierContext(hero: hero, domain: .spellCasting)),
+                context: Situation(hero: hero, domain: .spellCasting)),
             -3)
 
         // Gottgefällige Probe: flips to a bonus of max(0, level-1) = +2.
-        var bonusCtx = ModifierContext(hero: hero, domain: .spellCasting)
+        var bonusCtx = Situation(hero: hero, domain: .spellCasting)
         bonusCtx.gottgefaellig = true
         let bonusLines = ModifierEngine.shared.evaluate(context: bonusCtx)
         let bonusLine = bonusLines.first { $0.source.hasPrefix(L("state.entrueckung.name")) }
@@ -162,7 +162,7 @@ final class StateModifiersTests: XCTestCase {
     func testEntrueckungGottgefaelligLevelOneEmitsNoLine() {
         let hero = makeHero()
         hero.setStateLevel("entrueckung", level: 1)
-        var ctx = ModifierContext(hero: hero, domain: .spellCasting)
+        var ctx = Situation(hero: hero, domain: .spellCasting)
         ctx.gottgefaellig = true   // max(0, 1-1) == 0 ⇒ no line
         let lines = ModifierEngine.shared.evaluate(context: ctx)
         XCTAssertFalse(
@@ -174,7 +174,7 @@ final class StateModifiersTests: XCTestCase {
         let hero = makeHero()
         hero.setStateLevel("furcht", level: 4)
         hero.setStateLevel("verwirrung", level: 4)   // raw -8, cap binds at -5
-        let lines = ModifierEngine.shared.evaluate(context: ModifierContext(hero: hero, domain: .talentCheck))
+        let lines = ModifierEngine.shared.evaluate(context: Situation(hero: hero, domain: .talentCheck))
         let capLines = lines.filter { $0.source == L("source.zustandCap") }
         XCTAssertEqual(capLines.count, 1, "cap correction line must be present when the cap binds")
         XCTAssertEqual(capLines.first?.isZustand, false, "cap correction must not itself count as a Zustand")

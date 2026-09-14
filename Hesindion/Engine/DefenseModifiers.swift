@@ -9,7 +9,7 @@ enum DefenseModifiers {
 
     /// Multiple defense penalty (-3 per defense already made this round).
     ///
-    /// `defenseCount` counts the defences *before* this one, so the first
+    /// `defencesThisRound` counts the defences *before* this one, so the first
     /// defence of a round is unmodified and the second is at -3. It used to be
     /// incremented as the button was tapped and then read back for the very
     /// defence that incremented it, which put every first parry of a round at
@@ -18,8 +18,8 @@ enum DefenseModifiers {
         id: "multipleDefense",
         domains: [.meleeParry, .meleeDodge]
     ) { ctx in
-        guard ctx.defenseCount > 0 else { return nil }
-        return ModifierLine(value: -(ctx.defenseCount * 3), source: L("source.multipleDefense"))
+        guard ctx.defencesThisRound > 0 else { return nil }
+        return ModifierLine(value: -(ctx.defencesThisRound * 3), source: L("source.multipleDefense"))
     }
 
     /// Schicksalspunkt defense boost (+4).
@@ -27,7 +27,7 @@ enum DefenseModifiers {
         id: "schipDefenseBoost",
         domains: [.meleeParry, .meleeDodge]
     ) { ctx in
-        guard ctx.schipDefenseBoost else { return nil }
+        guard ctx.round.schipDefenseBoost else { return nil }
         return ModifierLine(value: 4, source: L("source.schipDefense"))
     }
 
@@ -36,7 +36,7 @@ enum DefenseModifiers {
         id: "golgaritenPA",
         domains: [.meleeParry]
     ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.mounted) else { return nil }
+        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 1, source: L("source.golgariten"))
     }
 
@@ -49,7 +49,7 @@ enum DefenseModifiers {
         id: "plaenklerVW",
         domains: [.meleeParry, .meleeDodge]
     ) { ctx in
-        guard ctx.plaenklerActive, ctx.plaenklerBonus == .aw else { return nil }
+        guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .aw else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
     }
 
@@ -58,7 +58,7 @@ enum DefenseModifiers {
         id: "mountedDodgePenalty",
         domains: [.meleeDodge]
     ) { ctx in
-        guard ctx.mounted else { return nil }
+        guard ctx.round.mounted else { return nil }
         return ModifierLine(value: -2, source: L("source.mounted"))
     }
 
@@ -67,7 +67,7 @@ enum DefenseModifiers {
         id: "dualAttackDefense",
         domains: [.meleeParry, .meleeDodge]
     ) { ctx in
-        guard ctx.dualAttackActive else { return nil }
+        guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty
         guard penalty != 0 else { return nil }
         return ModifierLine(value: penalty, source: L("source.dualAttack"))
@@ -91,7 +91,7 @@ enum DefenseModifiers {
         id: "twoHandedGripPA",
         domains: [.meleeParry]
     ) { ctx in
-        guard ctx.twoHandedGrip else { return nil }
+        guard ctx.round.twoHandedGrip else { return nil }
         return ModifierLine(value: -1, source: L("source.twoHandedGrip"))
     }
 
@@ -100,7 +100,7 @@ enum DefenseModifiers {
         id: "beengteUmgebungPA",
         domains: [.meleeParry]
     ) { ctx in
-        guard ctx.beengteUmgebung else { return nil }
+        guard ctx.round.beengteUmgebung else { return nil }
         let heroReach: WeaponReach
         if let w = ctx.hero.selectedWeapon {
             heroReach = WeaponReach(rawValue: w.reach) ?? .mittel

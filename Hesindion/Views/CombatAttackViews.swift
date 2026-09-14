@@ -342,8 +342,8 @@ struct CombatAnnouncementView: View {
 
     /// The reach of the weapon being announced — the one named in the header, not
     /// whatever the hero has in the main hand. It is handed to the modifier
-    /// engine as `attackerReach`, so the chips cannot promise a penalty the roll
-    /// does not apply.
+    /// engine as the announced `loadoutName`, so the chips cannot promise a
+    /// penalty the roll does not apply.
     private var heroWeaponReach: WeaponReach {
         hero.reach(ofLoadoutNamed: weaponName)
     }
@@ -809,22 +809,26 @@ struct CombatAnnouncementView: View {
         .accessibilityIdentifier("combat.zone.roll")
     }
 
-    private func buildModifierLines() -> [ModifierLine] {
-        var context = ModifierContext(hero: hero, domain: .meleeAttack)
-        context.targetHitZone = targetZone
-        context.targetIsSurprised = opponent.isSurprised
-        context.mounted = mountedActive
-        context.schipIgnoreZustand = schipIgnoreZustandThisRound
-        context.dualAttackActive = dualAttackPenaltyActive
-        context.beengteUmgebung = beengteUmgebungActive
-        context.opponentReach = opponent.reach
-        context.attackerReach = heroWeaponReach
-        context.maneuver = selectedManeuver
-        context.isOffHand = isOffHand
-        context.plaenklerActive = plaenklerActive
-        context.plaenklerBonus = plaenklerBonus
+    /// Everything this attack is evaluated against, for whichever domain asks.
+    private func situation(_ domain: RuleDomain) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round.mounted = mountedActive
+        s.round.schipIgnoreZustand = schipIgnoreZustandThisRound
+        s.round.dualAttackActive = dualAttackPenaltyActive
+        s.round.beengteUmgebung = beengteUmgebungActive
+        s.round.twoHandedGrip = twoHandedGripActive
+        s.round.plaenklerActive = plaenklerActive
+        s.round.plaenklerBonus = plaenklerBonus
+        s.opponents = OpponentRoster([opponent])
+        s.loadoutName = weaponName
+        s.maneuver = selectedManeuver
+        s.isOffHand = isOffHand
+        s.targetHitZone = targetZone
+        return s
+    }
 
-        var lines = ModifierEngine.shared.evaluate(context: context)
+    private func buildModifierLines() -> [ModifierLine] {
+        var lines = ModifierEngine.shared.evaluate(context: situation(.meleeAttack))
 
         // Manual vorteilhafte Position toggle (not golgariten-forced)
         if !golgaritenForced && opponent.advantageousPosition {
