@@ -615,7 +615,7 @@ def write_catalog_table(conn, entries: list[dict]) -> None:
                 pointer.get("file"),
                 pointer.get("symbol"),
                 reviewed.get("by"),
-                str(reviewed["on"]) if reviewed.get("date") is not None else None,
+                str(reviewed["date"]) if reviewed.get("date") is not None else None,
             ),
         )
     conn.commit()
