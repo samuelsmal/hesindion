@@ -136,6 +136,7 @@ rules-db: test-rules-db
 		--catalog specs/data/rules-catalog.yaml \
 		--snapshot specs/data/rules-catalog.snapshot.json \
 		--repo-root . \
+		--vocabulary specs/data/rule-vocabulary.json \
 		$(if $(UPDATE_SNAPSHOT),--update-snapshot,) \
 		--output '$(RULES_DB)'
 

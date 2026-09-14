@@ -22,6 +22,8 @@ def parse_args():
                    help="Path to specs/data/rules-catalog.snapshot.json")
     p.add_argument("--repo-root", required=True, type=Path,
                    help="Repository root, against which catalog pointers are resolved")
+    p.add_argument("--vocabulary", required=True, type=Path,
+                   help="Path to specs/data/rule-vocabulary.json, the closed clause vocabulary")
     p.add_argument("--update-snapshot", action="store_true",
                    help="Rewrite the snapshot from the catalog instead of checking against it")
     p.add_argument("--output", default=Path("rules.db"), type=Path,
@@ -874,7 +876,7 @@ def main():
         import_blessings(conn, args.source)
 
         print("Importing the rules catalog...")
-        catalog.import_catalog(conn, args.catalog, args.snapshot, args.repo_root, args.update_snapshot)
+        catalog.import_catalog(conn, args.catalog, args.snapshot, args.repo_root, args.update_snapshot, args.vocabulary)
 
         print("Building FTS index...")
         build_fts_index(conn)

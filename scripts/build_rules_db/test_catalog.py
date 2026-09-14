@@ -105,10 +105,9 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("SA_1: unknown key 'spurious'", catalog.validate(entries, RULES, self.root))
 
     def test_implemented_needs_clauses(self):
-        ok = entry(status="implemented", clauses=[{}])
         no_clauses = entry(id="SA_2", name="Zweite", status="implemented")
-        self.assertEqual(catalog.validate([ok, no_clauses], RULES, self.root),
-                         ["SA_2: implemented without clauses"])
+        self.assertEqual(catalog.validate([entry(), no_clauses], RULES, self.root),
+                         ["SA_2: implemented needs a non-empty clauses list"])
 
 
 class LoadCatalogTests(unittest.TestCase):
@@ -156,11 +155,11 @@ class TableTests(unittest.TestCase):
                                   pointer={"file": "Hero.swift", "symbol": "x"},
                                   reviewed={"by": "sam", "date": "2026-09-14"})]
         catalog.write_catalog_table(conn, entries)
-        rows = conn.execute("SELECT rule_id, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on "
+        rows = conn.execute("SELECT rule_id, name, status, note, pointer_file, pointer_symbol, reviewed_by, reviewed_on "
                             "FROM catalog ORDER BY rule_id").fetchall()
         self.assertEqual(rows, [
-            ("SA_1", "todo", "not yet read", None, None, None, None),
-            ("SA_2", "byHand", "by hand", "Hero.swift", "x", "sam", "2026-09-14"),
+            ("SA_1", "Erste", "todo", "not yet read", None, None, None, None),
+            ("SA_2", "Zweite", "byHand", "by hand", "Hero.swift", "x", "sam", "2026-09-14"),
         ])
 
     def test_yaml_on_key_still_yields_a_date_string(self):
@@ -217,7 +216,8 @@ class ImportCatalogTests(unittest.TestCase):
         )
         conn = self._conn()
         catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
-                                update_snapshot=True)
+                                update_snapshot=True,
+                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
         rows = conn.execute("SELECT rule_id FROM catalog ORDER BY rule_id").fetchall()
         self.assertEqual(rows, [("SA_1",), ("SA_2",)])
 
@@ -226,7 +226,8 @@ class ImportCatalogTests(unittest.TestCase):
         conn = self._conn()
         with self.assertRaises(SystemExit):
             catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
-                                    update_snapshot=True)
+                                    update_snapshot=True,
+                                    vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
 
     def test_snapshot_drift_raises_and_update_snapshot_writes(self):
         self._write_catalog(
@@ -238,10 +239,12 @@ class ImportCatalogTests(unittest.TestCase):
 
         with self.assertRaises(SystemExit):
             catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
-                                    update_snapshot=False)
+                                    update_snapshot=False,
+                                    vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
 
         catalog.import_catalog(self._conn(), self.catalog_path, self.snapshot_path, self.root,
-                                update_snapshot=True)
+                                update_snapshot=True,
+                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
         snap = json.loads(self.snapshot_path.read_text())
         self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2})
 
@@ -252,10 +255,236 @@ class ImportCatalogTests(unittest.TestCase):
         )
         conn = self._conn()
         catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
-                                update_snapshot=True)
+                                update_snapshot=True,
+                                vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json")
         stored = conn.execute(
             "SELECT value FROM catalog_meta WHERE key = 'source_sha256'").fetchone()[0]
         self.assertEqual(stored, catalog.source_hash(self.catalog_path))
+
+    def test_the_vocabulary_hash_is_stored(self):
+        self._write_catalog(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+        )
+        conn = self._conn()
+        vocab = REPO_ROOT / "specs/data/rule-vocabulary.json"
+        catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
+                                update_snapshot=True, vocabulary_path=vocab)
+        stored = conn.execute(
+            "SELECT value FROM catalog_meta WHERE key = 'vocabulary_sha256'").fetchone()[0]
+        self.assertEqual(stored, catalog.source_hash(vocab))
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# A cut-down vocabulary with the same shape as specs/data/rule-vocabulary.json.
+VOCAB = {
+    "version": 1,
+    "combinators": ["all", "any", "not"],
+    "predicates": {
+        "situation.mounted": {"args": {}, "required": []},
+        "opponent.onFoot": {"args": {}, "required": []},
+        "hero.fokusRule": {"args": {}, "required": [], "value": "string"},
+        "loadout.reach": {"args": {}, "required": [], "value": "enum:reach"},
+        "situation.targetZone": {"args": {}, "required": [], "value": "list:zone"},
+        "loadout.weapon": {"args": {"technique": "strings", "item": "string", "consecrated": "bool"}, "required": []},
+        "loadout.shield": {"args": {"item": "string"}, "required": []},
+        "gm.fact": {"args": {"id": "string", "span": "enum:span"}, "required": ["id", "span"]},
+    },
+    "effects": {
+        "add": {"args": {"target": "enum:target", "talentId": "string", "value": "int", "per": "enum:per"},
+                "required": ["target", "value"]},
+        "modifyRule": {"args": {"id": "string", "target": "enum:target", "talentId": "string",
+                                "add": "int", "set": "int", "multiply": "number"},
+                       "required": ["id", "target"]},
+        "choice": {"args": {}, "required": [], "value": "list:effect"},
+    },
+    "enums": {
+        "target": ["at", "pa", "vw", "talent"],
+        "domain": ["meleeAttack", "meleeParry", "talentCheck"],
+        "span": ["hero", "opponent", "attack", "round"],
+        "per": ["tier", "defencesThisRound"],
+        "reach": ["Kurz", "Mittel", "Lang"],
+        "zone": ["kopf", "torso"],
+        "kind": ["passive", "offer"],
+        "tiers": ["owned"],
+    },
+}
+
+GOLGARITEN = {
+    "id": "SA_1", "name": "Erste", "group": "Kampf", "status": "implemented",
+    "applies_with": {"all": [
+        "situation.mounted",
+        {"any": [
+            {"loadout.weapon": {"technique": "CT_5", "item": "Rabenschnabel"}},
+            {"loadout.shield": {"item": "Großschild"}},
+        ]},
+    ]},
+    "clauses": [
+        {"kind": "passive", "domains": ["meleeAttack"], "when": ["opponent.onFoot"],
+         "effects": [{"modifyRule": {"id": "GRW_vorteilhaftePosition", "target": "at", "add": 2}}]},
+        {"kind": "passive", "domains": ["meleeParry"],
+         "effects": [{"add": {"target": "pa", "value": 1}}]},
+    ],
+}
+
+GRW = {"id": "GRW_vorteilhaftePosition", "name": "Vorteilhafte Position", "group": "Grundregel",
+       "status": "implemented",
+       "clauses": [{"kind": "passive", "domains": ["meleeAttack"], "when": ["situation.mounted", "opponent.onFoot"],
+                    "effects": [{"add": {"target": "at", "value": 2}}]}]}
+
+
+class ClauseValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def validate(self, *entries):
+        # Pad with a plain entry for every rules.db id the caller did not supply, so
+        # the coverage check ("no catalog entry") never masks the clause problems.
+        given = {e["id"] for e in entries}
+        pad = [entry(id=rid, name=name) for rid, name in RULES.items() if rid not in given]
+        return catalog.validate(list(entries) + pad, RULES, self.root, vocabulary=VOCAB)
+
+    def test_the_design_example_is_valid(self):
+        self.assertEqual(self.validate(GOLGARITEN, GRW), [])
+
+    def test_a_grw_id_needs_no_rules_row_but_others_still_do(self):
+        problems = self.validate(GRW, dict(GRW, id="GRX_nope"))
+        self.assertIn("GRX_nope: not in rules.db", problems)
+        self.assertFalse(any(p.startswith("GRW_vorteilhaftePosition:") for p in problems))
+
+    def test_a_grw_name_and_group_are_not_checked_against_the_database(self):
+        groups = {"SA_1": "Kampf", "SA_2": "Kampf"}
+        self.assertEqual(catalog.validate([entry(), entry(id="SA_2", name="Zweite"), GRW], RULES, self.root, groups, VOCAB), [])
+
+    def test_an_unknown_predicate_effect_target_domain_and_kind_are_named(self):
+        bad = dict(GRW, id="GRW_bad", clauses=[{
+            "kind": "sometimes", "domains": ["meleeAttack", "swimming"],
+            "when": ["situation.raining", {"gm.fact": {"id": "x", "span": "century"}}],
+            "effects": [{"add": {"target": "luck", "value": 1}}, {"sing": {}}],
+        }])
+        problems = self.validate(GRW, bad)
+        self.assertIn("GRW_bad: clause 0: kind 'sometimes' is not one of passive, offer", problems)
+        self.assertIn("GRW_bad: clause 0: unknown domain 'swimming'", problems)
+        self.assertIn("GRW_bad: clause 0: unknown predicate 'situation.raining'", problems)
+        self.assertIn("GRW_bad: clause 0: gm.fact.span is 'century', expected enum:span", problems)
+        self.assertIn("GRW_bad: clause 0 effect 0: add.target is 'luck', expected enum:target", problems)
+        self.assertIn("GRW_bad: clause 0 effect 1: unknown effect 'sing'", problems)
+
+    def test_an_unknown_clause_key_and_a_missing_argument_are_named(self):
+        bad = dict(GRW, id="GRW_bad", clauses=[{
+            "kind": "passive", "domains": ["meleeAttack"], "cost": 1,
+            "when": [{"gm.fact": {"id": "x"}}, {"loadout.weapon": {"colour": "red"}}],
+            "effects": [{"add": {"target": "at"}}],
+        }])
+        problems = self.validate(GRW, bad)
+        self.assertIn("GRW_bad: clause 0: unknown clause key 'cost'", problems)
+        self.assertIn("GRW_bad: clause 0: gm.fact needs span", problems)
+        self.assertIn("GRW_bad: clause 0: loadout.weapon has no argument 'colour'", problems)
+        self.assertIn("GRW_bad: clause 0 effect 0: add needs value", problems)
+
+    def test_a_scalar_predicate_takes_its_value_form(self):
+        ok = dict(GRW, id="GRW_ok", clauses=[{"kind": "passive", "domains": ["meleeAttack"],
+                  "when": [{"hero.fokusRule": "trefferzonen"}, {"loadout.reach": "Kurz"},
+                           {"situation.targetZone": ["kopf", "torso"]}],
+                  "effects": [{"add": {"target": "at", "value": -2}}]}])
+        self.assertEqual(self.validate(GRW, ok), [])
+        bad = dict(ok, id="GRW_bad", clauses=[{"kind": "passive", "domains": ["meleeAttack"],
+                   "when": [{"loadout.reach": "Weit"}, {"situation.targetZone": ["nase"]}, "hero.fokusRule"],
+                   "effects": [{"add": {"target": "at", "value": -2}}]}])
+        problems = self.validate(GRW, bad)
+        self.assertIn("GRW_bad: clause 0: loadout.reach is 'Weit', expected enum:reach", problems)
+        self.assertIn("GRW_bad: clause 0: situation.targetZone is ['nase'], expected list:zone", problems)
+        self.assertIn("GRW_bad: clause 0: hero.fokusRule needs an argument", problems)
+
+    def test_modify_rule_must_name_an_implemented_entry_and_do_something(self):
+        lonely = dict(GOLGARITEN)   # GRW not in the catalog
+        problems = self.validate(lonely)
+        self.assertIn("SA_1: clause 0 effect 0: modifyRule names 'GRW_vorteilhaftePosition', which is not an implemented entry", problems)
+        idle = dict(GOLGARITEN, clauses=[{"kind": "passive", "domains": ["meleeAttack"],
+                    "effects": [{"modifyRule": {"id": "GRW_vorteilhaftePosition", "target": "at"}}]}])
+        self.assertIn("SA_1: clause 0 effect 0: modifyRule needs add, set or multiply", self.validate(idle, GRW))
+
+    def test_a_talent_target_carries_its_id(self):
+        ok = dict(GRW, id="GRW_ok", clauses=[{"kind": "passive", "domains": ["talentCheck"],
+                  "effects": [{"add": {"target": {"talent": "TAL_8"}, "value": -2}}]}])
+        self.assertEqual(self.validate(GRW, ok), [])
+        bad = dict(ok, id="GRW_bad", clauses=[{"kind": "passive", "domains": ["talentCheck"],
+                   "effects": [{"add": {"target": "talent", "value": -2}}]}])
+        self.assertIn("GRW_bad: clause 0 effect 0: target talent needs an id", self.validate(GRW, bad))
+
+    def test_an_offer_with_a_choice_and_tiers(self):
+        ok = dict(GRW, id="GRW_ok", clauses=[{"kind": "offer", "domains": ["meleeAttack", "meleeParry"], "tiers": "owned",
+                  "effects": [{"choice": [{"add": {"target": "at", "value": 1}}, {"add": {"target": "vw", "value": 1}}]}]}])
+        self.assertEqual(self.validate(GRW, ok), [])
+        bad = dict(ok, id="GRW_bad", clauses=[{"kind": "passive", "domains": ["meleeAttack"], "tiers": 0,
+                   "effects": [{"choice": [{"add": {"target": "at", "value": 1}}]}]}])
+        problems = self.validate(GRW, bad)
+        self.assertIn("GRW_bad: clause 0: tiers is only for an offer", problems)
+        self.assertIn("GRW_bad: clause 0: tiers is 0, expected 'owned' or a positive integer", problems)
+        self.assertIn("GRW_bad: clause 0 effect 0: choice needs at least two options", problems)
+
+    def test_implemented_needs_a_non_empty_clause_list(self):
+        self.assertIn("GRW_bad: implemented needs a non-empty clauses list",
+                      self.validate(GRW, dict(GRW, id="GRW_bad", clauses=[])))
+        self.assertIn("GRW_bad: implemented needs a non-empty clauses list",
+                      self.validate(GRW, dict(GRW, id="GRW_bad", clauses="yes")))
+
+    def test_the_committed_vocabulary_accepts_the_design_example(self):
+        vocab = catalog.load_vocabulary(REPO_ROOT / "specs/data/rule-vocabulary.json")
+        problems = catalog.validate([GOLGARITEN, GRW, entry(id="SA_2", name="Zweite")], RULES, self.root, vocabulary=vocab)
+        self.assertEqual(problems, [])
+
+
+class NormalizeTests(unittest.TestCase):
+    def test_the_design_example_normalises(self):
+        applies, clauses = catalog.entry_json(GOLGARITEN)
+        self.assertEqual(json.loads(applies), {"all": [
+            {"is": "situation.mounted"},
+            {"any": [
+                {"is": "loadout.weapon", "technique": "CT_5", "item": "Rabenschnabel"},
+                {"is": "loadout.shield", "item": "Großschild"},
+            ]},
+        ]})
+        self.assertEqual(json.loads(clauses), [
+            {"kind": "passive", "domains": ["meleeAttack"], "when": {"all": [{"is": "opponent.onFoot"}]},
+             "effects": [{"effect": "modifyRule", "id": "GRW_vorteilhaftePosition", "target": "at", "add": 2}]},
+            {"kind": "passive", "domains": ["meleeParry"],
+             "effects": [{"effect": "add", "target": "pa", "value": 1}]},
+        ])
+
+    def test_scalars_choices_talents_and_not(self):
+        e = dict(GRW, clauses=[{"kind": "offer", "domains": ["meleeAttack"], "tiers": "owned",
+                 "when": {"not": {"hero.fokusRule": "trefferzonen"}},
+                 "effects": [{"choice": [{"add": {"target": "at", "value": 1}},
+                                         {"add": {"target": {"talent": "TAL_8"}, "value": -2}}]}]}])
+        _, clauses = catalog.entry_json(e)
+        self.assertEqual(json.loads(clauses), [
+            {"kind": "offer", "domains": ["meleeAttack"], "tiers": "owned",
+             "when": {"not": {"is": "hero.fokusRule", "value": "trefferzonen"}},
+             "effects": [{"effect": "choice", "options": [
+                 {"effect": "add", "target": "at", "value": 1},
+                 {"effect": "add", "target": "talent", "talentId": "TAL_8", "value": -2},
+             ]}]},
+        ])
+
+    def test_a_non_implemented_entry_has_no_json(self):
+        self.assertEqual(catalog.entry_json(entry()), (None, None))
+
+
+class ClauseTableTests(unittest.TestCase):
+    def test_the_table_carries_name_applies_with_and_clauses(self):
+        conn = sqlite3.connect(":memory:")
+        catalog.write_catalog_table(conn, [GOLGARITEN, entry(id="SA_2", name="Zweite")])
+        rows = conn.execute("SELECT rule_id, name, applies_with IS NOT NULL, clauses IS NOT NULL "
+                            "FROM catalog ORDER BY rule_id").fetchall()
+        self.assertEqual(rows, [("SA_1", "Erste", 1, 1), ("SA_2", "Zweite", 0, 0)])
+        clauses = json.loads(conn.execute("SELECT clauses FROM catalog WHERE rule_id = 'SA_1'").fetchone()[0])
+        self.assertEqual(clauses[1]["effects"], [{"effect": "add", "target": "pa", "value": 1}])
 
 
 if __name__ == "__main__":
