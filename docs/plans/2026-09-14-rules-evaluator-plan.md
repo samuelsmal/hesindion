@@ -2017,8 +2017,9 @@ git commit -m "feat(rules): the app decodes the catalog's clauses into typed rul
 - [ ] An offer not taken is listed in `offers` and as `offerNotTaken`; a `choice` offer taken applies only the chosen option; a tiered offer applies `per: tier` with the announced tier, capped at the hero's own.
 - [ ] `hero.state` is false under `round.schipIgnoreZustand`; `COND_*` lines are `isZustand`.
 - [ ] An owned `byHand`, `noRollEffect` or `todo` entry is listed as not applied with that reason.
+- [ ] Decided after review: the Schicksalspunkt suppresses every `hero.state` predicate except the gear-derived `belastung` (`RuleEvaluator.statesTheSchipCannotIgnore`, matching the COND_1 note); a `gm.fact` with span `hero` or `round` is refused by both `catalog.py` and the Swift decoder until those spans have a store; the evaluator computes the hero's owned tiers and the two offer bridges once per evaluation, not per rule; `netZero` and questions are deduplicated; the three tie-breaks (ascending id order, last `set` wins, `multiply` truncates toward zero) are in the evaluator's header comment.
 
-**Verify:** `make test-ui` → `RuleEvaluatorTests` passes (14 tests).
+**Verify:** `make test-ui` → `RuleEvaluatorTests` passes (fifteen tests, plus three added after review).
 
 **Steps:**
 
@@ -4650,6 +4651,9 @@ Found by the per-task reviews, judged not to block the task they were found in, 
 - **The Golgariten normalised JSON is hand-copied into both `test_catalog.py` and `RuleCatalogDecodingTests`.** A fixture file written by `entry_json()` and decoded by the Swift test would pin the cross-language contract instead of two copies that happen to agree.
 - **`combinators` in `rule-vocabulary.json` is required by `load_vocabulary` and read by nobody**; `clauses`/`applies_with` on a non-`implemented` entry are accepted unvalidated and dropped from the database (demoting an entry to `todo` silently stops checking its clauses). Both are Python-side one-liners for the authoring-pipeline plan.
 - **The two conditional rules the vocabulary cannot express** — `modifyRule` needs `add`, `set` or `multiply`; a `talent` target needs `talentId` — live in `catalog.py` and in the Swift decoder, not in `rule-vocabulary.json`. The authoring prompt (step 4) must state them.
+- **`hero`- and `round`-span GM facts have no store.** `OpponentProfile.facts` holds `opponent` and `attack` spans; the design puts hero-span facts on `Hero` and round-span facts on `CombatSituation`. Until step 3 adds those, `gm.fact` with either span is refused at build and decode time rather than asked forever.
+- **The Schicksalspunkt "Zustand ignorieren" and statuses.** The evaluator suppresses every `hero.state` predicate under it (statuses included, as `StateModifiers` did) except `belastung`. Whether a Status such as Liegend should survive the Schip is a rules question for the state batch.
+- **`tiers: <n>` on an offer replaces the ownership cap rather than tightening it** (`maxTier` is `n`, not `min(n, owned)`): a `fixed(4)` offer lets a hero with tier II announce IV. Intended for `GRW_` manoeuvres nobody owns; say so on `OfferTiers` before an SA entry uses a number.
 - `RuleCatalog.bundled` is MainActor-isolated by the project default; `RulesDatabase.shared` is reached from background queues. `nonisolated` when the evaluator is first called off the main actor.
 
 ## Self-review notes
