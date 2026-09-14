@@ -53,4 +53,12 @@ struct CombatSituation: Equatable {
     func pendingMultipleDefensePenalty(isAusweichen: Bool) -> Int {
         -(defensesSoFar(isAusweichen: isAusweichen) * 3)
     }
+
+    /// The fight-long choices as the catalog names them: rule id → option.
+    /// Plänkler-Formation (SA_884) is the only one until step 3 stores choices
+    /// by rule id; its option 0 is AT, option 1 the Verteidigungswert.
+    var chosenOptions: [String: Int] {
+        guard plaenklerActive else { return [:] }
+        return [CombatAbility.plaenklerFormation.rawValue: plaenklerBonus == .at ? 0 : 1]
+    }
 }

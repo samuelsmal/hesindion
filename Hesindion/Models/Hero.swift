@@ -452,6 +452,24 @@ final class Hero {
         return trait.tier ?? 1
     }
 
+    /// The tier of any trait the hero carries — Sonderfertigkeit, Vorteil or
+    /// Nachteil — or `nil` when the id is not on the sheet. A trait without a
+    /// tier in the export counts as I. This is design decision 6: a rule
+    /// applies exactly when its id is among the hero's traits.
+    func ownedRuleTier(_ ruleId: String) -> Int? {
+        let trait = combatSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? generalSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? advantages.first { $0.ruleId == ruleId }
+            ?? disadvantages.first { $0.ruleId == ruleId }
+        guard let trait else { return nil }
+        return trait.tier ?? 1
+    }
+
+    /// Every trait id on the sheet, for the not-applied list.
+    var ownedRuleIds: [String] {
+        (combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages).map(\.ruleId)
+    }
+
     func has(_ ability: CombatAbility) -> Bool { hasSpecialAbility(ability.rawValue) }
 
     func tier(of ability: CombatAbility) -> Int { specialAbilityTier(ability.rawValue) }

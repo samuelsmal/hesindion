@@ -110,6 +110,46 @@ struct Situation {
     var distractionLevel: Int = 0
     var spellModifications: [SpellModification] = []
 
+    // MARK: Offers taken
+
+    /// `choice` offers taken, rule id → option index, and tiered offers
+    /// announced, rule id → tier. Explicit entries win over the bridge from
+    /// the legacy fields (`round.plaenkler…`, `maneuver`) that the views still
+    /// set; step 3 writes these directly and the bridge goes.
+    var choices: [String: Int] = [:]
+    var announced: [String: Int] = [:]
+
+    var effectiveChoices: [String: Int] { round.chosenOptions.merging(choices) { _, explicit in explicit } }
+    var effectiveAnnounced: [String: Int] { Self.announced(for: maneuver).merging(announced) { _, explicit in explicit } }
+
+    /// The manoeuvre enum as the catalog names it: rule id → tier.
+    static func announced(for maneuver: CombatManeuver) -> [String: Int] {
+        switch maneuver {
+        case .normal:                  [:]
+        case .finte(let tier):         [CombatAbility.finte.rawValue: tier]
+        case .wuchtschlag(let tier):   [CombatAbility.wuchtschlag.rawValue: tier]
+        case .vorstoss:                [CombatAbility.vorstoss.rawValue: 1]
+        case .schildspalter:           [CombatAbility.schildspalter.rawValue: 1]
+        case .sturmangriff:            [CombatAbility.berittenerKampf.rawValue: 1]
+        }
+    }
+
+    // MARK: The loadout piece in the hand
+
+    /// The melee weapon being swung or parried with: the named one, else the
+    /// main weapon. `nil` for a shield, a fist, or a name that matches nothing.
+    var loadoutWeapon: MeleeWeapon? {
+        if let name = loadoutName { return hero.meleeWeapons.first { $0.name == name } }
+        return hero.selectedWeapon
+    }
+
+    /// Its reach. Bare hands are kurz (GRW, waffenlose Kampftechniken).
+    var loadoutReach: WeaponReach {
+        if let name = loadoutName { return hero.reach(ofLoadoutNamed: name) }
+        if let weapon = hero.selectedWeapon { return WeaponReach(rawValue: weapon.reach) ?? .mittel }
+        return .kurz
+    }
+
     init(hero: Hero, domain: RuleDomain) {
         self.hero = hero
         self.domain = domain
