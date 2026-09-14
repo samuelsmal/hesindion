@@ -855,6 +855,7 @@ git commit -m "feat(rules): the clause vocabulary is a closed list, exported for
 - [ ] `catalog` has columns `name`, `applies_with`, `clauses`; the design's Golgariten example normalises to the JSON in Step 3's test.
 - [ ] `--vocabulary` is required by `build_db.py` and passed by the Makefile.
 - [ ] `catalog_meta` carries `vocabulary_sha256`, the SHA-256 of the vocabulary file the build validated against, so a Swift test (Task 4) can tell a database built against a stale export.
+- [ ] `load_vocabulary` checks the vocabulary itself once, at load: every `args` value and every `value` in both tables is one of `string`, `strings`, `int`, `number`, `bool`, `enum:X` / `list:X` with `X` under `enums`, or the one documented exception `list:effect`; `enums` carries `kind`, `domain`, `target` and `span`; anything else is a `CatalogError` naming the table, the item and the token. `_check_type` rejects an unknown token rather than accepting it. (`VocabularyLoadTests`, seven cases; added after review.) The `INSERT INTO catalog` names its columns; `build_db.py` asserts the vocabulary file exists before the import.
 
 **Verify:** `make test-rules-db` → `OK`; `make rules-db` → the existing catalog (no clauses yet) builds, `git diff --stat` shows only `Hesindion/Resources/rules.db`.
 
