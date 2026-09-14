@@ -11,7 +11,9 @@ enum SharedModifiers {
     static let encumbrance = ModifierDefinition(
         id: "encumbrance",
         domains: [.meleeAttack, .meleeParry, .meleeDodge, .rangedAttack, .spellCasting, .liturgyCasting],
-        rules: ["COND_1"]
+        // SA_41 too: the line reads `Hero.effectiveBE`, which is where
+        // Belastungsgewöhnung has already taken its points off.
+        rules: ["COND_1", CombatAbility.belastungsgewoehnung.rawValue]
     ) { ctx in
         let be = ctx.round.mounted ? max(0, ctx.hero.effectiveBE - 1) : ctx.hero.effectiveBE
         guard be > 0 else { return nil }

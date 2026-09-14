@@ -34,7 +34,8 @@ enum HitZoneModifiers {
     static let zonenaufschlag = ModifierDefinition(
         id: "zonenaufschlag",
         domains: [.meleeAttack, .rangedAttack],
-        rules: ["GRW_zonenaufschlag", "SA_160", "SA_161", "STATE_13"]
+        rules: ["GRW_zonenaufschlag", CombatAbility.gezielterAngriff.rawValue,
+                CombatAbility.gezielterSchuss.rawValue, "STATE_13"]
     ) { ctx in
         guard let zone = ctx.targetHitZone else { return nil }
         let ruleId = ctx.domain == .rangedAttack ? "SA_161" : "SA_160"

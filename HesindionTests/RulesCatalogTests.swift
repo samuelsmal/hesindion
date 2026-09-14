@@ -126,16 +126,22 @@ final class RulesCatalogTests: XCTestCase {
         try requireDatabase()
         let statePointerFile = "Hesindion/Models/StateCatalog.swift"
         let displayOnlyExceptions: Set<String> = ["belastung"]
-        let byHandStatePointers = RulesDatabase.shared.catalogEntries(status: .byHand)
-            .compactMap(\.pointer)
-            .filter { $0.file == statePointerFile }
-        for definition in StateCatalog.all {
-            XCTAssertNotNil(StateModifiers.ruleIds[definition.id], "\(definition.id) has no rule id in StateModifiers.ruleIds")
-        }
+        let byHandStateEntries = RulesDatabase.shared.catalogEntries(status: .byHand)
+            .filter { $0.pointer?.file == statePointerFile }
+        let byHandStatePointers = byHandStateEntries.compactMap(\.pointer)
+        // `StateModifiers.ruleIds` is the engine's copy of the same fact the
+        // pointers record; the two must name each other, or a state's lines
+        // would be attributed to the wrong rule once the migration reads them.
         for definition in StateCatalog.all where !displayOnlyExceptions.contains(definition.id) {
             let matches = byHandStatePointers.filter { $0.symbol == definition.id }
             XCTAssertEqual(matches.count, 1, definition.id)
+            let entry = byHandStateEntries.first { $0.pointer?.symbol == definition.id }
+            XCTAssertEqual(StateModifiers.ruleIds[definition.id], entry?.id,
+                           "\(definition.id): StateModifiers.ruleIds and the catalog pointer disagree")
         }
+        // Belastung has no StateCatalog pointer (see above); its id is checked
+        // against the entry its own pointer belongs to, asserted at the end.
+        XCTAssertEqual(StateModifiers.ruleIds["belastung"], "COND_1")
         let stateIDs = Set(StateCatalog.all.map(\.id))
         for pointer in byHandStatePointers {
             XCTAssertTrue(stateIDs.contains(pointer.symbol), pointer.symbol)

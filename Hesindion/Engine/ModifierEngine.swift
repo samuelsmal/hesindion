@@ -32,6 +32,12 @@ struct ModifierDefinition: Identifiable {
     /// The catalog ids this definition stands for, so the migration test can
     /// refuse a rule that is implemented on both sides. Empty only for a rule
     /// with no catalog entry yet.
+    ///
+    /// A set in all but type: order and duplicates mean nothing, it is only
+    /// ever read as a membership test. It is a `var` rather than a `let` so
+    /// the synthesized memberwise init keeps the default — a `let` with a
+    /// default value is dropped from that init, and every call site without a
+    /// `rules:` argument would stop compiling.
     var rules: [String] = []
     let evaluate: (Situation) -> ModifierLine?
 }

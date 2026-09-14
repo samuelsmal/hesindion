@@ -37,7 +37,7 @@ enum DefenseModifiers {
     static let golgaritenPA = ModifierDefinition(
         id: "golgaritenPA",
         domains: [.meleeParry],
-        rules: ["SA_661"]
+        rules: [CombatAbility.golgaritenStil.rawValue]
     ) { ctx in
         guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 1, source: L("source.golgariten"))
@@ -51,7 +51,7 @@ enum DefenseModifiers {
     static let plaenklerVW = ModifierDefinition(
         id: "plaenklerVW",
         domains: [.meleeParry, .meleeDodge],
-        rules: ["SA_884"]
+        rules: [CombatAbility.plaenklerFormation.rawValue]
     ) { ctx in
         guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .aw else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
@@ -71,7 +71,7 @@ enum DefenseModifiers {
     static let dualAttackDefense = ModifierDefinition(
         id: "dualAttackDefense",
         domains: [.meleeParry, .meleeDodge],
-        rules: ["SA_42"]
+        rules: [CombatAbility.beidhaendigerKampf.rawValue]
     ) { ctx in
         guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty

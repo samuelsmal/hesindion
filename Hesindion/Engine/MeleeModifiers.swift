@@ -21,7 +21,7 @@ enum MeleeModifiers {
     static let golgariten = ModifierDefinition(
         id: "golgariten",
         domains: [.meleeAttack],
-        rules: ["SA_661"]
+        rules: [CombatAbility.golgaritenStil.rawValue]
     ) { ctx in
         guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
         return ModifierLine(value: 2, source: L("source.golgariten"))
@@ -31,7 +31,7 @@ enum MeleeModifiers {
     static let plaenklerAT = ModifierDefinition(
         id: "plaenklerAT",
         domains: [.meleeAttack],
-        rules: ["SA_884"]
+        rules: [CombatAbility.plaenklerFormation.rawValue]
     ) { ctx in
         guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .at else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
@@ -59,7 +59,8 @@ enum MeleeModifiers {
     static let maneuverAT = ModifierDefinition(
         id: "maneuverAT",
         domains: [.meleeAttack],
-        rules: ["SA_48", "SA_67", "SA_66"]
+        rules: [CombatAbility.finte.rawValue, CombatAbility.wuchtschlag.rawValue,
+                CombatAbility.vorstoss.rawValue]
     ) { ctx in
         guard ctx.maneuver.atModifier != 0 else { return nil }
         return ModifierLine(value: ctx.maneuver.atModifier, source: ctx.maneuver.sourceLabel)
@@ -69,7 +70,7 @@ enum MeleeModifiers {
     static let dualAttackPenalty = ModifierDefinition(
         id: "dualAttackPenaltyAT",
         domains: [.meleeAttack],
-        rules: ["SA_42"]
+        rules: [CombatAbility.beidhaendigerKampf.rawValue]
     ) { ctx in
         guard ctx.round.dualAttackActive else { return nil }
         let penalty = ctx.hero.dualAttackPenalty
