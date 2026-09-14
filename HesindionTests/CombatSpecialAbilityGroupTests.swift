@@ -3,7 +3,7 @@ import XCTest
 
 /// The importer used to file a Sonderfertigkeit as combat when `rules.db` had a
 /// combat-scoped *effects* row for it. That table covered nine of the 226 combat
-/// abilities, so Plänkler-Formation, Gezielter Angriff and 217 others landed in
+/// abilities, so Plänkler-Formation, Gezielter Angriff and 215 others landed in
 /// the general list. Optolith's group id is the classification the data
 /// actually carries; these tests hold the enum to the table it came from.
 final class CombatSpecialAbilityGroupTests: XCTestCase {

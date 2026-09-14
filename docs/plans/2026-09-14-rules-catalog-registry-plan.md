@@ -133,7 +133,7 @@ final class CombatSpecialAbilityGroupTests: XCTestCase {
 - [ ] **Step 2: Run the tests to see them fail**
 
 Run: `make test-ui`
-Expected: build failure, `cannot find 'SpecialAbilityGroup' in scope` and `value of type 'RuleDetail' has no member 'groupId'`.
+Expected: build failure, `cannot find 'CombatSpecialAbilityGroup' in scope` and `value of type 'RuleDetail' has no member 'groupId'`.
 
 - [ ] **Step 3: Add the enum**
 
