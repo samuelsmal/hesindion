@@ -25,7 +25,7 @@
     {
       "id": 4,
       "subject": "Task 4: Remove the effects layer from the app",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [
         2
       ],
@@ -69,5 +69,5 @@
       "description": "**Goal:** `AGENTS.md` and the changelog describe the catalog, not the effects table.\n\n**Files:**\n- Modify: `AGENTS.md:85-86` and the Build & Run make block\n- Modify: `CHANGELOG.md`\n\n**Acceptance Criteria:**\n- [ ] `grep -n \"effects table\\|RuleEffectModifiers\\|wiring\" AGENTS.md` prints nothing\n- [ ] AGENTS.md says how to rebuild rules.db and what fails the build\n\n**Verify:** the grep → no output; `git diff --stat` shows only the two files\n\n**Steps:** replace the two bullets; add the make rules-db line; changelog Added and Removed; commit.\n\n```json:metadata\n{\"files\": [\"AGENTS.md\", \"CHANGELOG.md\"], \"verifyCommand\": \"grep -n 'effects table\\\\|RuleEffectModifiers\\\\|wiring' AGENTS.md; test $? -eq 1\", \"acceptanceCriteria\": [\"AGENTS.md no longer mentions the effects table, RuleEffectModifiers or wiring\", \"AGENTS.md documents make rules-db and the build checks\"], \"modelTier\": \"mechanical\"}\n```"
     }
   ],
-  "lastUpdated": "2026-09-14T13:32:18.528690+00:00"
+  "lastUpdated": "2026-09-14T13:47:48.540900+00:00"
 }
