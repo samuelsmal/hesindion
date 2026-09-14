@@ -33,19 +33,24 @@ final class CombatSituationTests: XCTestCase {
         lines.first { $0.source == source }?.value
     }
 
+    /// A catalog line names its rule, not a localized source string.
+    private func value(ofRule ruleId: String, in lines: [ModifierLine]) -> Int? {
+        lines.first { $0.ruleId == ruleId }?.value
+    }
+
     // MARK: - Mehrfache Verteidigung
 
     /// The first defence of a round is unmodified. The count is incremented as a
     /// defence is *rolled*, so while the first one is being set up it is still 0.
     func testFirstDefenceOfTheRoundIsUnpenalised() {
         let l = lines(CombatSituation(parriesThisRound: 0))
-        XCTAssertNil(value(of: L("source.multipleDefense"), in: l))
+        XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: l))
     }
 
     func testSecondDefenceIsAtMinusThreeAndItIsCumulative() {
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: lines(CombatSituation(parriesThisRound: 1))), -3)
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: lines(CombatSituation(parriesThisRound: 2))), -6)
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: lines(CombatSituation(parriesThisRound: 3))), -9)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 1))), -3)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 2))), -6)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 3))), -9)
     }
 
     // MARK: - Parade and Ausweichen are counted apart
@@ -55,16 +60,16 @@ final class CombatSituationTests: XCTestCase {
     /// often the hero has already parried, and the other way round.
     func testParriesDoNotMakeTheFirstDodgeHarder() {
         let parriedTwice = CombatSituation(parriesThisRound: 2, dodgesThisRound: 0)
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: lines(parriedTwice)), -6,
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(parriedTwice)), -6,
                        "the third parry is at -6")
-        XCTAssertNil(value(of: L("source.multipleDefense"), in: lines(parriedTwice, isAusweichen: true)),
+        XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(parriedTwice, isAusweichen: true)),
                      "the first dodge of the round is unmodified")
     }
 
     func testDodgesDoNotMakeTheFirstParryHarder() {
         let dodgedTwice = CombatSituation(parriesThisRound: 0, dodgesThisRound: 2)
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: lines(dodgedTwice, isAusweichen: true)), -6)
-        XCTAssertNil(value(of: L("source.multipleDefense"), in: lines(dodgedTwice)))
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(dodgedTwice, isAusweichen: true)), -6)
+        XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(dodgedTwice)))
     }
 
     func testEachKindCountsItsOwnPendingPenalty() {
@@ -78,7 +83,7 @@ final class CombatSituationTests: XCTestCase {
     /// A dodge accumulates the same way a parry does, on its own count.
     func testTheDodgeAccumulatesOnItsOwnCount() {
         XCTAssertEqual(
-            value(of: L("source.multipleDefense"), in: lines(CombatSituation(dodgesThisRound: 2), isAusweichen: true)),
+            value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(dodgesThisRound: 2), isAusweichen: true)),
             -6)
     }
 
@@ -101,7 +106,7 @@ final class CombatSituationTests: XCTestCase {
             schipDefenseBoost: true
         )
         let l = lines(situation)
-        XCTAssertEqual(value(of: L("source.multipleDefense"), in: l), -3)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: l), -3)
         XCTAssertEqual(value(of: L("source.schipDefense"), in: l), 4)
         XCTAssertEqual(value(of: L("source.twoHandedGrip"), in: l), -1)
         XCTAssertEqual(value(of: L("source.dualAttack"), in: l), hero.dualAttackPenalty)

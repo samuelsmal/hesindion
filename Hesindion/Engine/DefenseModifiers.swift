@@ -2,26 +2,10 @@ import Foundation
 
 enum DefenseModifiers {
     static let all: [ModifierDefinition] = [
-        multipleDefense, schipDefenseBoost, golgaritenPA,
+        schipDefenseBoost, golgaritenPA,
         plaenklerVW, mountedDodgePenalty, dualAttackDefense,
         beengteUmgebungPA, offHandParry, twoHandedGripPA,
     ]
-
-    /// Multiple defense penalty (-3 per defense already made this round).
-    ///
-    /// `defencesThisRound` counts the defences *before* this one, so the first
-    /// defence of a round is unmodified and the second is at -3. It used to be
-    /// incremented as the button was tapped and then read back for the very
-    /// defence that incremented it, which put every first parry of a round at
-    /// -3.
-    static let multipleDefense = ModifierDefinition(
-        id: "multipleDefense",
-        domains: [.meleeParry, .meleeDodge],
-        rules: ["GRW_mehrfacheVerteidigung"]
-    ) { ctx in
-        guard ctx.defencesThisRound > 0 else { return nil }
-        return ModifierLine(value: -(ctx.defencesThisRound * 3), source: L("source.multipleDefense"))
-    }
 
     /// Schicksalspunkt defense boost (+4).
     static let schipDefenseBoost = ModifierDefinition(
