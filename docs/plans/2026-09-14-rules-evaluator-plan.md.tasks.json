@@ -28,7 +28,7 @@
     {
       "id": 4,
       "subject": "Task 4: Swift reads the compiled clauses",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** `RuleCatalog.bundled` holds every `implemented` entry of `rules.db` as typed `CatalogRule`s, decoded from the JSON the build wrote.\n\n**Files:**\n- Create: `Hesindion/Engine/RuleCatalog.swift`\n- Modify: `Hesindion/Services/RulesDatabase.swift:64-76, 297-365`\n- Test: `HesindionTests/RuleCatalogDecodingTests.swift`, `HesindionTests/RulesCatalogTests.swift`\n\n**Acceptance Criteria:**\n- [ ] The normalised Golgariten JSON from Task 3 decodes to the `CatalogRule` value in Step 1.\n- [ ] An unknown predicate, effect, target, reach, zone or span name throws a `DecodingError` naming it.\n- [ ] `RulesDatabase.shared.implementedRules().count == catalogStatusCounts()[.implemented] ?? 0`.\n- [ ] `CatalogEntry` carries `name`; `catalogEntries(idPrefix:)` and `allCatalogEntries()` exist.\n- [ ] `RulesDatabase.catalogVocabularyHash()` returns `catalog_meta.vocabulary_sha256`, and `RuleVocabularyTests.testTheDatabaseWasBuiltAgainstThisVocabulary` compares it with the SHA-256 of `RuleVocabulary.exportJSON()` — a `RuleVocabulary` edit without `make rules-db` fails there in seconds, not only in the record test.\n- [ ] The doc comment on `RuleVocabulary.Signature` says `list:effect` refers to the effects table, the one `list:` token with no entry under `enums`.\n\n**Verify:** `make test-ui` → `RuleCatalogDecodingTests`, `RuleVocabularyTests` and `RulesCatalogTests` pass.\n\n**Steps:**\n- Write the failing tests\n- Run to see the build fail\n- Create `RuleCatalog.swift`\n- `RulesDatabase` reads the new columns\n- Run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/RuleCatalog.swift\", \"HesindionTests/RuleCatalogDecodingTests.swift\", \"HesindionTests/RulesCatalogTests.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"The normalised Golgariten JSON from Task 3 decodes to the `CatalogRule` value in Step 1.\", \"An unknown predicate, effect, target, reach, zone or span name throws a `DecodingError` naming it.\", \"`RulesDatabase.shared.implementedRules().count == catalogStatusCounts()[.implemented] ?? 0`.\", \"`CatalogEntry` carries `name`; `catalogEntries(idPrefix:)` and `allCatalogEntries()` exist.\", \"`RulesDatabase.catalogVocabularyHash()` returns `catalog_meta.vocabulary_sha256`, and `RuleVocabularyTests.testTheDatabaseWasBuiltAgainstThisVocabulary` compares it with the SHA-256 of `RuleVocabulary.exportJSON()` — a `RuleVocabulary` edit without `make rules-db` fails there in seconds, not only in the record test.\", \"The doc comment on `RuleVocabulary.Signature` says `list:effect` refers to the effects table, the one `list:` token with no entry under `enums`.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         3
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-14T21:05:57+00:00"
+  "lastUpdated": "2026-09-14T21:32:05+00:00"
 }
