@@ -46,7 +46,7 @@
     {
       "id": 6,
       "subject": "Task 6: The union — Swift definitions and the evaluator, one engine",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** `ModifierEngine.evaluate` returns the Swift definitions' lines plus the evaluator's, capped once; each definition names the rule ids it implements; a test holds the two sets disjoint.\n\n**Files:**\n- Modify: `Hesindion/Engine/ModifierEngine.swift`\n- Modify: every `*Modifiers.swift` under `Hesindion/Engine/` (the `rules:` argument)\n- Test: `HesindionTests/ModifierEngineUnionTests.swift`\n\n**Acceptance Criteria:**\n- [ ] `ModifierDefinition` has `rules: [String]` and every definition in `ModifierEngine.shared` names the catalog ids it stands for (table in Step 3); `[]` only where the rule has no catalog entry yet.\n- [ ] `ModifierEngine.evaluate(context:)` = Swift lines + evaluator lines, then `applyingZustandCap` once over both; `evaluation(_:)` exposes the full `Evaluation`.\n- [ ] No `implemented` entry id appears in any definition's `rules`.\n\n**Verify:** `make test-ui` → `ModifierEngineUnionTests` passes; no snapshot changes.\n\n**Steps:**\n- Write the failing tests\n- Run to see the build fail\n- The definition names its rules; the engine unions\n- Run\n- Commit\n\n```json:metadata\n{\"files\": [\"*Modifiers.swift\", \"Hesindion/Engine/ModifierEngine.swift\", \"HesindionTests/ModifierEngineUnionTests.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"`ModifierDefinition` has `rules: [String]` and every definition in `ModifierEngine.shared` names the catalog ids it stands for (table in Step 3); `[]` only where the rule has no catalog entry yet.\", \"`ModifierEngine.evaluate(context:)` = Swift lines + evaluator lines, then `applyingZustandCap` once over both; `evaluation(_:)` exposes the full `Evaluation`.\", \"No `implemented` entry id appears in any definition's `rules`.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         5
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-14T22:04:28+00:00"
+  "lastUpdated": "2026-09-14T22:28:12+00:00"
 }

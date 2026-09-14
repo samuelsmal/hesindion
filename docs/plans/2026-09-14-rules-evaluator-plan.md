@@ -2957,6 +2957,8 @@ The per-status counts at the end of each task, for `UPDATE_SNAPSHOT=1 make rules
 
 The total is 2675 rules plus the `GRW_*` entries added so far. If a build prints other numbers, an entry was lost or duplicated — stop and look.
 
+Two things every fixture task does beside its own steps, added after the Task 6 review: a task that lands a `GRW_*` entry removes that id from `ModifierEngineUnionTests.stillToBeAuthored` (the allow-list of `rules:` ids no catalog entry has yet; the test refuses an id that exists in both); and a task that deletes a Swift definition checks that no `byHand` pointer into a `*Modifiers.swift` file still names it (`testEveryByHandPointerIntoAModifierFileIsClaimedByADefinition`).
+
 ---
 
 ### Task 7: Mehrfache Verteidigung and Vinsalt-Stil
@@ -4653,6 +4655,8 @@ Found by the per-task reviews, judged not to block the task they were found in, 
 - **The two conditional rules the vocabulary cannot express** — `modifyRule` needs `add`, `set` or `multiply`; a `talent` target needs `talentId` — live in `catalog.py` and in the Swift decoder, not in `rule-vocabulary.json`. The authoring prompt (step 4) must state them.
 - **`hero`- and `round`-span GM facts have no store.** `OpponentProfile.facts` holds `opponent` and `attack` spans; the design puts hero-span facts on `Hero` and round-span facts on `CombatSituation`. Until step 3 adds those, `gm.fact` with either span is refused at build and decode time rather than asked forever.
 - **The Schicksalspunkt "Zustand ignorieren" and statuses.** The evaluator suppresses every `hero.state` predicate under it (statuses included, as `StateModifiers` did) except `belastung`. Whether a Status such as Liegend should survive the Schip is a rules question for the state batch.
+- **Every roll now runs the whole evaluator, per SwiftUI render.** `ModifierEngine.evaluate(context:)` builds a full `Evaluation` (including the not-applied list over every owned trait) and keeps only `lines`; the first touch of `ModifierEngine.shared` loads all 2675 catalog rows into `RuleCatalog.bundled` on the main thread. Cheap today; measure before step 3 adds a second evaluation per screen, and let the views compute the `Evaluation` once and take `.lines` from it.
+- **Breakdown line order during the migration.** Swift lines come first, then catalog lines sorted by rule id, so each move shifts a line to the end of the box; fully migrated, the order is `ADV_ < COND_ < GRW_ < SA_ < STATE_` — alphabetical accident. Step 3 gives `RuleLine` a display rank (states and Belastung first, then situational, then abilities) and re-records the affected snapshots once.
 - **`tiers: <n>` on an offer replaces the ownership cap rather than tightening it** (`maxTier` is `n`, not `min(n, owned)`): a `fixed(4)` offer lets a hero with tier II announce IV. Intended for `GRW_` manoeuvres nobody owns; say so on `OfferTiers` before an SA entry uses a number.
 - `RuleCatalog.bundled` is MainActor-isolated by the project default; `RulesDatabase.shared` is reached from background queues. `nonisolated` when the evaluator is first called off the main actor.
 
