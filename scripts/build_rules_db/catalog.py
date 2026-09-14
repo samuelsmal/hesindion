@@ -140,7 +140,7 @@ def source_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def write_catalog_table(conn, entries: list[dict], source_hash: str | None = None) -> None:
+def write_catalog_table(conn, entries: list[dict], source_sha256: str | None = None) -> None:
     conn.execute("DROP TABLE IF EXISTS catalog")
     conn.execute("""
         CREATE TABLE catalog (
@@ -160,8 +160,8 @@ def write_catalog_table(conn, entries: list[dict], source_hash: str | None = Non
             value TEXT NOT NULL
         )
     """)
-    if source_hash is not None:
-        conn.execute("INSERT INTO catalog_meta VALUES (?, ?)", ("source_sha256", source_hash))
+    if source_sha256 is not None:
+        conn.execute("INSERT INTO catalog_meta VALUES (?, ?)", ("source_sha256", source_sha256))
     for e in entries:
         pointer = e.get("pointer") or {}
         reviewed = e.get("reviewed") or {}
