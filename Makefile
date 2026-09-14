@@ -124,7 +124,10 @@ clean:
 # Rebuild the bundled rules database from the Optolith YAML and the rules
 # catalog. Fails on a catalog problem or when the status counts drift from
 # specs/data/rules-catalog.snapshot.json; UPDATE_SNAPSHOT=1 rewrites the snapshot.
+# Rebuilds from scratch: the prerequisite importer uses plain INSERT, so
+# building over an existing file doubles its rows.
 rules-db:
+	rm -f '$(RULES_DB)'
 	python3 scripts/build_rules_db/build_db.py \
 		--source $(DSA_DATA) \
 		--catalog specs/data/rules-catalog.yaml \
