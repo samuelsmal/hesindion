@@ -854,6 +854,7 @@ git commit -m "feat(rules): the clause vocabulary is a closed list, exported for
 - [ ] `modifyRule.id` must name an `implemented` entry.
 - [ ] `catalog` has columns `name`, `applies_with`, `clauses`; the design's Golgariten example normalises to the JSON in Step 3's test.
 - [ ] `--vocabulary` is required by `build_db.py` and passed by the Makefile.
+- [ ] `catalog_meta` carries `vocabulary_sha256`, the SHA-256 of the vocabulary file the build validated against, so a Swift test (Task 4) can tell a database built against a stale export.
 
 **Verify:** `make test-rules-db` → `OK`; `make rules-db` → the existing catalog (no clauses yet) builds, `git diff --stat` shows only `Hesindion/Resources/rules.db`.
 
@@ -1070,6 +1071,23 @@ class ClauseTableTests(unittest.TestCase):
         self.assertEqual(rows, [("SA_1", "Erste", 1, 1), ("SA_2", "Zweite", 0, 0)])
         clauses = json.loads(conn.execute("SELECT clauses FROM catalog WHERE rule_id = 'SA_1'").fetchone()[0])
         self.assertEqual(clauses[1]["effects"], [{"effect": "add", "target": "pa", "value": 1}])
+```
+
+Add to the existing `ImportCatalogTests` class:
+
+```python
+    def test_the_vocabulary_hash_is_stored(self):
+        self._write_catalog(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+        )
+        conn = self._conn()
+        vocab = REPO_ROOT / "specs/data/rule-vocabulary.json"
+        catalog.import_catalog(conn, self.catalog_path, self.snapshot_path, self.root,
+                                update_snapshot=True, vocabulary_path=vocab)
+        stored = conn.execute(
+            "SELECT value FROM catalog_meta WHERE key = 'vocabulary_sha256'").fetchone()[0]
+        self.assertEqual(stored, catalog.source_hash(vocab))
 ```
 
 Also change the two existing `import_catalog` call sites in `ImportCatalogTests` to pass `vocabulary_path=REPO_ROOT / "specs/data/rule-vocabulary.json"` (all five calls), and `test_implemented_needs_clauses` in `ValidateTests` to expect the new wording:
@@ -1356,9 +1374,17 @@ def entry_json(e: dict) -> tuple[str | None, str | None]:
     return applies, dumps([normalize_clause(c) for c in e["clauses"]])
 ```
 
-Change `write_catalog_table`:
+Change `write_catalog_table` — its signature gains the vocabulary hash, written to `catalog_meta` beside the source hash:
 
 ```python
+def write_catalog_table(conn, entries: list[dict], source_sha256: str | None = None,
+                        vocabulary_sha256: str | None = None) -> None:
+    ...
+    if source_sha256 is not None:
+        conn.execute("INSERT INTO catalog_meta VALUES (?, ?)", ("source_sha256", source_sha256))
+    if vocabulary_sha256 is not None:
+        conn.execute("INSERT INTO catalog_meta VALUES (?, ?)", ("vocabulary_sha256", vocabulary_sha256))
+    ...
     conn.execute("""
         CREATE TABLE catalog (
             rule_id        TEXT PRIMARY KEY,
@@ -1406,7 +1432,11 @@ def import_catalog(conn: sqlite3.Connection, catalog_path: Path, snapshot_path: 
     vocabulary = load_vocabulary(vocabulary_path)
     ...
     problems = validate(entries, rules, repo_root, groups, vocabulary)
+    ...
+    write_catalog_table(conn, entries, source_hash(catalog_path), source_hash(vocabulary_path))
 ```
+
+(The `write_catalog_table` call at the end of `import_catalog` gains the vocabulary hash as its fourth argument.)
 
 `build_db.py`: add after `--repo-root`:
 
@@ -1444,8 +1474,10 @@ git commit -m "feat(rules): the build checks clauses against the vocabulary and 
 - [ ] An unknown predicate, effect, target, reach, zone or span name throws a `DecodingError` naming it.
 - [ ] `RulesDatabase.shared.implementedRules().count == catalogStatusCounts()[.implemented] ?? 0`.
 - [ ] `CatalogEntry` carries `name`; `catalogEntries(idPrefix:)` and `allCatalogEntries()` exist.
+- [ ] `RulesDatabase.catalogVocabularyHash()` returns `catalog_meta.vocabulary_sha256`, and `RuleVocabularyTests.testTheDatabaseWasBuiltAgainstThisVocabulary` compares it with the SHA-256 of `RuleVocabulary.exportJSON()` — a `RuleVocabulary` edit without `make rules-db` fails there in seconds, not only in the record test.
+- [ ] The doc comment on `RuleVocabulary.Signature` says `list:effect` refers to the effects table, the one `list:` token with no entry under `enums`.
 
-**Verify:** `make test-ui` → `RuleCatalogDecodingTests` and `RulesCatalogTests` pass.
+**Verify:** `make test-ui` → `RuleCatalogDecodingTests`, `RuleVocabularyTests` and `RulesCatalogTests` pass.
 
 **Steps:**
 
@@ -1569,6 +1601,22 @@ final class RuleCatalogDecodingTests: XCTestCase {
     }
 }
 ```
+
+Add to `RuleVocabularyTests.swift` (needs `import CryptoKit` at the top):
+
+```swift
+    /// `make rules-db` validated the catalog against the exported vocabulary and
+    /// wrote its hash; if the enums moved since, the bundled clauses were checked
+    /// against a contract the app no longer has.
+    func testTheDatabaseWasBuiltAgainstThisVocabulary() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
+        let expected = SHA256.hash(data: Data(RuleVocabulary.exportJSON().utf8)).map { String(format: "%02x", $0) }.joined()
+        XCTAssertEqual(RulesDatabase.shared.catalogVocabularyHash(), expected,
+                       "rules.db was built against another rule-vocabulary.json; run make test-ui (to re-export) and make rules-db")
+    }
+```
+
+In `Hesindion/Engine/RuleVocabulary.swift`, extend the `Signature` doc comment: "`list:effect` (used by `choice`) refers to the `effects` table itself, the one `list:` token with no entry under `enums`."
 
 In `RulesCatalogTests.swift`, `testTheCountsAddUpToTheRules` must allow the `GRW_*` entries that are about to arrive:
 
@@ -1894,6 +1942,17 @@ Add after `catalogEntries(status:)`:
             if let entry = catalogEntry(from: stmt) { results.append(entry) }
         }
         return results
+    }
+
+    /// The SHA-256 of the vocabulary JSON the bundled database was validated
+    /// against, so a test can tell a database that lags behind `RuleVocabulary`.
+    func catalogVocabularyHash() -> String? {
+        let sql = "SELECT value FROM catalog_meta WHERE key = 'vocabulary_sha256'"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return col_text(stmt, 0)
     }
 
     /// Every `implemented` entry with its clauses decoded. The build validated
@@ -4292,6 +4351,7 @@ git commit -m "feat(rules): Verweichlicht is applied where the rule says, on the
 **Acceptance Criteria:**
 - [ ] For every `implemented` entry, every clause and every domain it names, a hero and Situation built from its predicates make `evaluation.applied` contain the rule id — including clauses whose only effect is a `modifyRule`, by also satisfying the modified rule.
 - [ ] The test fails (not skips) if the bundled catalog has no `implemented` entry.
+- [ ] A second test asserts that every `RuleVocabulary.Predicate` and `.Effect` case is used by at least one `implemented` clause — the vocabulary holds exactly what the catalog needs, and an item nobody uses is an item nobody tested.
 - [ ] AGENTS.md describes the evaluator, the union, and how a rule moves; CHANGELOG lists the three behaviour changes (Golgariten-Stil, Vinsalt-Stil, Verweichlicht); the next-steps doc says what step 3 and the remaining moves are.
 
 **Verify:** `make test-ui` → `RuleReachabilityTests` passes; `git status` clean after the commit.
@@ -4333,6 +4393,56 @@ final class RuleReachabilityTests: XCTestCase {
                     )
                 }
             }
+        }
+    }
+
+    /// The other direction: the vocabulary is scoped to what the fixtures need,
+    /// so a predicate or effect no entry uses has no interpreter anyone exercised.
+    func testEveryVocabularyItemIsUsedByAnImplementedClause() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
+        var predicates: Set<RuleVocabulary.Predicate> = []
+        var effects: Set<RuleVocabulary.Effect> = []
+        for rule in RuleCatalog.bundled.implemented {
+            if let gate = rule.appliesWith { collect(gate, into: &predicates) }
+            for clause in rule.clauses {
+                if let when = clause.when { collect(when, into: &predicates) }
+                for effect in clause.effects { collect(effect, into: &effects) }
+            }
+        }
+        XCTAssertEqual(predicates, Set(RuleVocabulary.Predicate.allCases), "unused: \(Set(RuleVocabulary.Predicate.allCases).subtracting(predicates))")
+        XCTAssertEqual(effects, Set(RuleVocabulary.Effect.allCases), "unused: \(Set(RuleVocabulary.Effect.allCases).subtracting(effects))")
+    }
+
+    private func collect(_ p: RulePredicate, into set: inout Set<RuleVocabulary.Predicate>) {
+        switch p {
+        case .all(let parts), .any(let parts): parts.forEach { collect($0, into: &set) }
+        case .not(let part): collect(part, into: &set)
+        case .heroHasRule: set.insert(.heroHasRule)
+        case .heroState: set.insert(.heroState)
+        case .heroFokusRule: set.insert(.heroFokusRule)
+        case .loadoutWeapon: set.insert(.loadoutWeapon)
+        case .loadoutShield: set.insert(.loadoutShield)
+        case .loadoutReach: set.insert(.loadoutReach)
+        case .situationMounted: set.insert(.situationMounted)
+        case .situationBeengt: set.insert(.situationBeengt)
+        case .situationDefencesThisRound: set.insert(.situationDefencesThisRound)
+        case .situationTargetZone: set.insert(.situationTargetZone)
+        case .situationWoundEffect: set.insert(.situationWoundEffect)
+        case .opponentReach: set.insert(.opponentReach)
+        case .opponentOnFoot: set.insert(.opponentOnFoot)
+        case .opponentState: set.insert(.opponentState)
+        case .opponentType: set.insert(.opponentType)
+        case .gmFact: set.insert(.gmFact)
+        }
+    }
+
+    private func collect(_ e: RuleEffect, into set: inout Set<RuleVocabulary.Effect>) {
+        switch e {
+        case .add: set.insert(.add)
+        case .multiply: set.insert(.multiply)
+        case .opponentAdd: set.insert(.opponentAdd)
+        case .modifyRule: set.insert(.modifyRule)
+        case .choice(let options): set.insert(.choice); options.forEach { collect($0, into: &set) }
         }
     }
 
