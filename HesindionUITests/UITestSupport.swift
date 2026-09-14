@@ -43,7 +43,8 @@ enum UITest {
         weapon: String? = nil,
         consecrate: [String] = [],
         freshCombat: Bool = false,
-        mounted: Bool = false
+        mounted: Bool = false,
+        plaenkler: String? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
@@ -86,6 +87,11 @@ enum UITest {
         // out from horseback, so there is no reaching them from a seated hero.
         if mounted {
             app.launchArguments.append("-uitest-mounted")
+        }
+        // Plänkler-Formation on, with one of its two halves taken — the choice
+        // is made on the preparation screen, which a resumed fight skips.
+        if let plaenkler {
+            app.launchArguments += ["-uitest-plaenkler", plaenkler]
         }
         app.launch()
         return app

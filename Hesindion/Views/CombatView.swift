@@ -25,7 +25,7 @@ enum CombatStep {
     case mountDamage
     case takeDamage
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
     /// screen has to ask which defence this was — the app knows the hero parried,
@@ -404,7 +404,7 @@ struct CombatView: View {
             case .takeDamage:
                 CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
@@ -415,6 +415,7 @@ struct CombatView: View {
                     damageLines: damageLines,
                     opponentDefenseModifiers: opponentDefenseModifiers,
                     damageMultiplier: damageMultiplier,
+                    criticalDamageSource: criticalDamageSource,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     announcedZone: announcedZone,

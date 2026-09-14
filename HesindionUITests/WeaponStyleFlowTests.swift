@@ -55,6 +55,32 @@ final class WeaponStyleFlowTests: XCTestCase {
         captureScreenshot(app, named: "40-attack-mounted-style")
     }
 
+    /// Plänkler-Formation, taken as its AT half, on the roll it modifies.
+    ///
+    /// The section that offers the choice never rendered at all until the
+    /// ability lookup stopped caring which list the importer filed SA_884 in,
+    /// so the +1 had never reached an attack.
+    @MainActor
+    func testTheFormationBonusIsNamedInTheAttack() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", plaenkler: "at")
+
+        let attack = app.button(containing: "Angriff")
+        XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        attack.tap()
+        let oneHanded = app.button(containing: "Einhändig")
+        if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
+
+        let breakdown = app.descendants(matching: .any)["combat.announcement.atBreakdown"]
+        XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        XCTAssertTrue(
+            app.staticTexts["Plänkler"].exists,
+            "The formation should be a named row in the attack it modifies"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(breakdown, maxSwipes: 6))
+        captureScreenshot(app, named: "41-attack-plaenkler")
+    }
+
     /// Same hero, same weapon, on foot: the style pays nothing, and the screen
     /// says nothing about it.
     @MainActor

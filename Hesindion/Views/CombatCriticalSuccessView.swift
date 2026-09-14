@@ -511,7 +511,13 @@ struct CombatCriticalSuccessView: View {
                     rangedDefensePenalty: rangedDefensePenalty,
                     damageLines: damageLines,
                     damageMultiplier: damageMultiplier,
-                    opponentDefenseModifiers: opponentDefenseModifiers
+                    opponentDefenseModifiers: opponentDefenseModifiers,
+                    // The result's own name travels with its multiplier, so the
+                    // damage row says "Schwerer Treffer" rather than restating
+                    // that a multiplier affects the damage.
+                    criticalDamageSource: resolution == .basicRule
+                        ? table.map { L($0.basicRuleKey) }
+                        : category?.title
                 )
             }
         } else {

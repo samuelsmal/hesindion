@@ -95,6 +95,16 @@ enum UITestSeed {
         ProcessInfo.processInfo.arguments.contains(mountedArgument)
     }
 
+    /// `-uitest-plaenkler at` / `-uitest-plaenkler aw` resumes the fight with
+    /// Plänkler-Formation switched on and one of its two halves taken.
+    static let plaenklerArgument = "-uitest-plaenkler"
+
+    private static var requestedPlaenklerBonus: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: plaenklerArgument), index + 1 < args.count else { return nil }
+        return ["at", "aw"].contains(args[index + 1]) ? args[index + 1] : nil
+    }
+
     /// `-uitest-fresh-combat` leaves the hero *out* of a running fight, so
     /// entering combat starts at the armour screen and walks the preparation
     /// flow rather than resuming at the root.
@@ -210,6 +220,10 @@ enum UITestSeed {
             hero.activeCombatRound = 1
             hero.activeCombatInitiative = 12
             hero.activeCombatMounted = wantsMounted
+            if let bonus = requestedPlaenklerBonus {
+                hero.activeCombatPlaenkler = true
+                hero.activeCombatPlaenklerBonus = bonus
+            }
         }
 
         seedAdventure(into: context, hero: hero)

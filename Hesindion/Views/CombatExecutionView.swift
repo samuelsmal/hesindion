@@ -261,7 +261,8 @@ struct CombatExecutionView: View {
                         modifierLines: modifierLines,
                         damageLines: damageLines,
                         damageMultiplier: damageMultiplier,
-                        opponentDefenseModifiers: opponentDefenseModifiers
+                        opponentDefenseModifiers: opponentDefenseModifiers,
+                        criticalDamageSource: outcome == .kritischerErfolg ? L("critical.hit") : nil
                     )
                 }
             } label: {

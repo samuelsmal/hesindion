@@ -363,6 +363,27 @@ struct CombatRootView: View {
             // AKTION section
             combatSectionLabel(L("action.label"))
 
+            // Not a button: delaying is something the player *says*, to the
+            // table, and the app has no turn order to reorder. It is here
+            // because the option is easy to forget and there is no other place
+            // the rules would be read from.
+            HStack(spacing: 8) {
+                Image(systemName: "hourglass")
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(.secondary)
+                Text(L("action.delayHint"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, DSALayout.contentPadding)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(UIColor.secondarySystemBackground))
+            .dsaBox(.flush)
+            .padding(.bottom, 8)
+            .accessibilityIdentifier("combat.action.delayHint")
+
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
                 Button {

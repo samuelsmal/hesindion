@@ -98,6 +98,77 @@ final class KarmalWeaponFlowTests: XCTestCase {
         )
     }
 
+    /// Two doublings and an armour, in the order the rules put them.
+    ///
+    /// A confirmed critical against a demon of the weapon's opposing deity:
+    /// 1W6+4 with a scripted 5 is 9, doubled by the Weihe and doubled again by
+    /// the critical is 36, and the opponent's armour comes off *after* both —
+    /// "die Würfel werden geworfen, verdoppelt, dann wird der Rüstungsschutz
+    /// abgezogen". 36 − 4 = 32 LP. Subtracting the armour first would give 26.
+    @MainActor
+    func testACriticalAgainstTheOpposingDeityDoublesTwiceBeforeArmour() {
+        continueAfterFailure = false
+        // AT 1, confirmation 1, then 5 on the damage W6.
+        let app = UITest.launch(
+            path: "combat",
+            diceScript: "1,1,5",
+            fokusRules: ["karmaleObjekte"],
+            weapon: "Rabenschnabel",
+            consecrate: ["Rabenschnabel"]
+        )
+        let attack = app.button(containing: "Angriff")
+        XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        attack.tap()
+        let oneHanded = app.button(containing: "Einhändig")
+        if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
+
+        openOpponentSection(app)
+        app.buttons["combat.attack.daemon"].tap()
+        app.buttons["combat.attack.opposingDeity"].tap()
+
+        let weiter = app.buttons["combat.announcement.continue"]
+        XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")
+        weiter.tap()
+
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Attack execution screen not shown")
+        diceBox.tap()
+
+        let proceed = app.button(containing: "Weiter zur Verteidigung")
+        XCTAssertTrue(
+            proceed.waitForExistence(timeout: UITest.timeout),
+            "The scripted 1 + 1 did not confirm a critical"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(proceed))
+        proceed.tap()
+
+        app.button(containing: "Treffer geht durch").tap()
+
+        let damageBox = app.staticTexts["Antippen zum Würfeln"].firstMatch
+        if damageBox.waitForExistence(timeout: UITest.probeTimeout) { damageBox.tap() }
+
+        let breakdown = app.descendants(matching: .any)["combat.dealDamage.breakdown"]
+        XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No damage calculation")
+        XCTAssertTrue(app.staticTexts["36 TP"].exists, "9 doubled twice is 36")
+
+        // The opponent's armour, entered by hand and kept nowhere.
+        let moreRS = app.buttons["combat.dealDamage.increaseOpponentRS"]
+        XCTAssertTrue(moreRS.waitForExistence(timeout: UITest.timeout), "No opponent RS control")
+        _ = app.scrollUntilHittable(moreRS)
+        for _ in 0..<4 { moreRS.tap() }
+
+        XCTAssertTrue(
+            app.staticTexts["32 LP"].waitForExistence(timeout: UITest.timeout),
+            "Armour comes off after both doublings: 36 - 4 = 32, not 26"
+        )
+        // Each multiplier says where it came from, not that it affects damage.
+        XCTAssertTrue(app.staticTexts["Geweihte Waffe der Gegengottheit"].exists)
+        XCTAssertTrue(app.staticTexts["Kritischer Treffer"].exists)
+
+        app.scrollUntilHittable(breakdown, maxSwipes: 4)
+        captureScreenshot(app, named: "42-damage-karmal-critical")
+    }
+
     /// The whole way through: the doubling announced before the roll and applied
     /// after it. 1W6+4 with a scripted 5 is 9 TP; doubled, 18.
     @MainActor

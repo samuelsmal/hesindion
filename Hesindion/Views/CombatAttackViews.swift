@@ -914,7 +914,7 @@ struct CombatAnnouncementView: View {
         rows.append(contentsOf: damageBonusLines.map(BreakdownRow.line))
         if let label = karmalDamage.label {
             rows.append(BreakdownRow(
-                value: label, source: L("source.karmal"), tint: Color.groupCombat
+                value: label, source: L("source.karmal.opposing"), tint: Color.groupCombat
             ))
         }
         return rows
