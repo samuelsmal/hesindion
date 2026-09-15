@@ -16,9 +16,9 @@ final class ComplicatedAttackFlowTests: XCTestCase {
 
     private static let script = "1,1,5"
 
-    /// AT 14 base − 2 reach + 2 position − 4 Wuchtschlag II − 8 head (halved from
-    /// −10 by the surprise) = AT 2. Damage 5 (1W6) + 4 weapon + 4 Wuchtschlag II,
-    /// doubled = 26 TP.
+    /// AT 14 base − 2 reach + 2 position − 4 Wuchtschlag II − 8 head (the
+    /// Zonenaufschlag's −10, eased by 2 because the target is surprised) = AT 2.
+    /// Damage 5 (1W6) + 4 weapon + 4 Wuchtschlag II, doubled = 26 TP.
     @MainActor
     func testEveryModifierOnOneAttack() {
         continueAfterFailure = false
@@ -84,11 +84,18 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         weiter.tap()
 
         // Every modifier, named, on one screen — the point of the calculation box.
+        // Asked of the box itself: a rule's name can appear elsewhere in the app
+        // (the hero sheet under the combat cover lists the Sonderfertigkeiten),
+        // so an app-wide search would not be about this calculation at all.
         let diceBox = app.otherElements["combat.execution.diceBox"]
         XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Attack execution screen not shown")
-        for label in ["Reichweite", "Wuchtschlag II", "Trefferzone: Kopf"] {
+        let atCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(atCalculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        // The zone modifier is the catalog's GRW_vorteilhaftePosition sibling
+        // GRW_zonenaufschlag, and a catalog line carries the rule's own name.
+        for label in ["Reichweite", "Wuchtschlag II", "Zonenaufschlag"] {
             XCTAssertTrue(
-                app.staticTexts[label].exists,
+                atCalculation.staticTexts[label].exists,
                 "The calculation should name \(label)"
             )
         }
