@@ -110,7 +110,7 @@ final class WeaponReachTests: XCTestCase {
         situation.opponents.current.reach = opponent
         situation.loadoutName = loadout
         return ModifierEngine.shared.evaluate(context: situation)
-            .filter { $0.source == L("source.reach") }
+            .filter { $0.ruleId == "GRW_reichweite" }
             .reduce(0) { $0 + $1.value }
     }
 
@@ -132,7 +132,7 @@ final class WeaponReachTests: XCTestCase {
         var situation = Situation(hero: hero, domain: .meleeAttack)
         situation.loadoutName = "Dolch"
         XCTAssertEqual(ModifierEngine.shared.evaluate(context: situation)
-            .filter { $0.source == L("source.reach") }
+            .filter { $0.ruleId == "GRW_reichweite" }
             .reduce(0) { $0 + $1.value }, -2)
     }
 
@@ -145,7 +145,7 @@ final class WeaponReachTests: XCTestCase {
             situation.round.beengteUmgebung = true
             situation.loadoutName = loadout
             return ModifierEngine.shared.evaluate(context: situation)
-                .filter { $0.source == L("beengteUmgebung") }
+                .filter { $0.ruleId == "GRW_beengteUmgebung" }
                 .reduce(0) { $0 + $1.value }
         }
         XCTAssertEqual(penalty("Langschwert"), -8)

@@ -6,7 +6,7 @@ final class StateModifiersTests: XCTestCase {
     private func makeHero() -> Hero {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(
-            for: Hero.self, HeroStateEntry.self, DerivedValues.self,
+            for: Hero.self, HeroStateEntry.self, DerivedValues.self, MeleeWeapon.self,
             configurations: config)
         let ctx = ModelContext(container)
         let hero = Hero(name: "T"); ctx.insert(hero)
@@ -54,7 +54,13 @@ final class StateModifiersTests: XCTestCase {
     }
 
     func testLiegendOnlyAffectsCombatDomains() {
-        let hero = makeHero(); hero.setStateLevel("liegend", level: 1)
+        // A Mittel weapon keeps this test about Liegend alone: bare hands are
+        // Kurz now (GRW_reichweite), which would add its own −2 against the
+        // default Mittel opponent and confuse the assertion below.
+        let hero = makeHero()
+        hero.meleeWeapons = [MeleeWeapon(name: "Säbel", combatTechniqueId: "CT_12", damage: "1W6+3", at: 12, pa: 8, reach: "Mittel", weight: 1.5)]
+        hero.selectedWeaponName = "Säbel"
+        hero.setStateLevel("liegend", level: 1)
         let talent = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .talentCheck))
         let attack = ModifierEngine.shared.totalModifier(context: Situation(hero: hero, domain: .meleeAttack))
         XCTAssertEqual(talent, 0)
@@ -116,6 +122,8 @@ final class StateModifiersTests: XCTestCase {
         // the weapon-length penalty line, while StateModifiers (mechanic .eingeengt) emits
         // NO separate line — so the penalty is counted exactly once.
         let hero = makeHero()
+        hero.meleeWeapons = [MeleeWeapon(name: "Säbel", combatTechniqueId: "CT_12", damage: "1W6+3", at: 12, pa: 8, reach: "Mittel", weight: 1.5)]
+        hero.selectedWeaponName = "Säbel"
         hero.setStateLevel("eingeengt", level: 1)
         XCTAssertTrue(hero.hasState("eingeengt"))
 
@@ -123,8 +131,8 @@ final class StateModifiersTests: XCTestCase {
         ctx.round.beengteUmgebung = hero.hasState("eingeengt")   // exactly how the combat views wire it
         let lines = ModifierEngine.shared.evaluate(context: ctx)
 
-        // The Beengte-Umgebung weapon-length line fires (default reach "Mittel" ⇒ −4).
-        let beengteLines = lines.filter { $0.source == L("beengteUmgebung") }
+        // The Beengte-Umgebung line fires once, from the catalog (Mittel ⇒ −4).
+        let beengteLines = lines.filter { $0.ruleId == "GRW_beengteUmgebung" }
         XCTAssertEqual(beengteLines.count, 1, "Beengte Umgebung penalty must fire exactly once")
         XCTAssertEqual(beengteLines.first?.value, -4)
 

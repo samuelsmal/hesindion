@@ -4,7 +4,7 @@ enum DefenseModifiers {
     static let all: [ModifierDefinition] = [
         schipDefenseBoost, golgaritenPA,
         plaenklerVW, mountedDodgePenalty, dualAttackDefense,
-        beengteUmgebungPA, offHandParry, twoHandedGripPA,
+        offHandParry, twoHandedGripPA,
     ]
 
     /// Schicksalspunkt defense boost (+4).
@@ -85,23 +85,5 @@ enum DefenseModifiers {
     ) { ctx in
         guard ctx.round.twoHandedGrip else { return nil }
         return ModifierLine(value: -1, source: L("source.twoHandedGrip"))
-    }
-
-    /// Beengte Umgebung PA penalty (parry only, based on weapon reach).
-    static let beengteUmgebungPA = ModifierDefinition(
-        id: "beengteUmgebungPA",
-        domains: [.meleeParry],
-        rules: ["GRW_beengteUmgebung", "STATE_6"]
-    ) { ctx in
-        guard ctx.round.beengteUmgebung else { return nil }
-        let heroReach: WeaponReach
-        if let w = ctx.hero.selectedWeapon {
-            heroReach = WeaponReach(rawValue: w.reach) ?? .mittel
-        } else {
-            heroReach = .kurz
-        }
-        let penalty = heroReach.beengteUmgebungPenalty
-        guard penalty != 0 else { return nil }
-        return ModifierLine(value: penalty, source: L("beengteUmgebung"))
     }
 }

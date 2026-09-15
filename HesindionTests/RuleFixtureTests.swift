@@ -76,4 +76,49 @@ final class RuleFixtureTests: XCTestCase {
         arm("Rapier", technique: "CT_4", reach: "Mittel")
         XCTAssertEqual(reason("SA_923", in: evaluation(defence(.meleeParry))), .modifiedRuleNotInEffect, "no second defence yet")
     }
+
+    // MARK: - Reichweite (GRW)
+
+    func testTheShorterWeaponPaysForReach() {
+        arm("Dolch", technique: "CT_3", reach: "Kurz")
+        arm("Säbel", technique: "CT_12", reach: "Mittel", select: false)
+        arm("Speer", technique: "CT_13", reach: "Lang", select: false)
+        let expected: [String: [WeaponReach: Int?]] = [
+            "Dolch": [.kurz: nil, .mittel: -2, .lang: -4],
+            "Säbel": [.kurz: nil, .mittel: nil, .lang: -2],
+            "Speer": [.kurz: nil, .mittel: nil, .lang: nil],
+        ]
+        for (weapon, row) in expected {
+            for (opponent, penalty) in row {
+                var s = Situation(hero: hero, domain: .meleeAttack)
+                s.loadoutName = weapon
+                s.opponents.current.reach = opponent
+                XCTAssertEqual(value("GRW_reichweite", in: lines(s)), penalty, "\(weapon) against \(opponent.rawValue)")
+            }
+        }
+    }
+
+    // MARK: - Beengte Umgebung (GRW)
+
+    func testBeengteUmgebungFollowsTheReachOfThePieceInHandOnAttackAndParry() {
+        arm("Speer", technique: "CT_13", reach: "Lang")
+        arm("Säbel", technique: "CT_12", reach: "Mittel", select: false)
+        arm("Dolch", technique: "CT_3", reach: "Kurz", select: false)
+        func penalty(_ domain: RuleDomain, _ loadout: String?) -> Int? {
+            var s = Situation(hero: hero, domain: domain)
+            s.round.beengteUmgebung = true
+            s.loadoutName = loadout
+            return value("GRW_beengteUmgebung", in: lines(s))
+        }
+        XCTAssertEqual(penalty(.meleeAttack, "Speer"), -8)
+        XCTAssertEqual(penalty(.meleeParry, "Speer"), -8)
+        XCTAssertEqual(penalty(.meleeAttack, "Säbel"), -4)
+        XCTAssertEqual(penalty(.meleeParry, nil), -8, "nothing named: the main weapon, the Speer")
+        XCTAssertNil(penalty(.meleeAttack, "Dolch"))
+        XCTAssertNil(penalty(.meleeAttack, "Raufen"), "bare hands are kurz")
+        XCTAssertNil(penalty(.meleeDodge, "Speer"), "a dodge is not a parry")
+        var calm = Situation(hero: hero, domain: .meleeAttack)
+        calm.loadoutName = "Speer"
+        XCTAssertNil(value("GRW_beengteUmgebung", in: lines(calm)))
+    }
 }

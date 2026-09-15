@@ -28,6 +28,60 @@
       when: [{ situation.defencesThisRound: { min: 1 } }]
       effects: [{ add: { target: vw, value: -3, per: defencesThisRound } }]
 
+- id: GRW_reichweite
+  name: "Reichweite"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Regelwerk", page: 238 }
+  note: "The shorter weapon is penalised: Kurz gegen Mittel −2 AT, Kurz gegen Lang −4 AT, Mittel gegen Lang −2 AT; the longer side gets nothing (WeaponReach.atPenaltyAgainst is the same table for the announcement chips). The hero's side is the piece in the hand (Situation.loadoutReach, bare hands kurz); the opponent's reach is asked once per fight (OpponentProfile.reach)."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ loadout.reach: Kurz }, { opponent.reach: Mittel }]
+      effects: [{ add: { target: at, value: -2 } }]
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ loadout.reach: Kurz }, { opponent.reach: Lang }]
+      effects: [{ add: { target: at, value: -4 } }]
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ loadout.reach: Mittel }, { opponent.reach: Lang }]
+      effects: [{ add: { target: at, value: -2 } }]
+
+- id: GRW_beengteUmgebung
+  name: "Beengte Umgebung"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Regelwerk", page: 238 }
+  note: "Kurz 0, Mittel −4 AT/PA, Lang −8 AT/PA, by the reach of the piece in the hand. The eingeengt status (STATE_6) is the toggle; CombatSituation.beengteUmgebung carries it into the roll."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [situation.beengt, { loadout.reach: Mittel }]
+      effects: [{ add: { target: at, value: -4 } }, { add: { target: pa, value: -4 } }]
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [situation.beengt, { loadout.reach: Lang }]
+      effects: [{ add: { target: at, value: -8 } }, { add: { target: pa, value: -8 } }]
+
+- id: GRW_zustandsbegrenzung
+  name: "Zustände: höchstens −5"
+  group: "Grundregel"
+  status: byHand
+  pointer: { file: Hesindion/Engine/ModifierEngine.swift, symbol: applyingZustandCap }
+  note: "The combined Zustand penalty floors at −5. ModifierEngine.applyingZustandCap adds the correction line once, over Swift and catalog lines together (COND_ lines are tagged isZustand). The vocabulary has no cap effect, so this stays code; the evaluator's order puts it after every add and modification."
+
+- id: GRW_passierschlag
+  name: "Passierschlag"
+  group: "Grundregel"
+  status: byHand
+  pointer: { file: Hesindion/Views/CombatView.swift, symbol: passierschlag }
+  note: "A flow, not a modifier: CombatStep.passierschlag follows a critical parry (AGENTS.md, defence flow), or the Kritische Erfolge table replaces it (ADR-0011)."
+
 # ---------------------------------------------------------------------------
 # Implemented through the evaluator (status implemented): the clauses say what
 # the app does. reviewed is null until a person has read them against the text.
@@ -281,7 +335,7 @@
   group: "Status (binary)"
   status: byHand
   pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: eingeengt }
-  note: "Single source of truth for Beengte Umgebung: AT/PA penalty by weapon reach (MeleeModifiers.beengteUmgebungAT)."
+  note: "Single source of truth for Beengte Umgebung: AT/PA penalty by weapon reach (GRW_beengteUmgebung)."
 
 - id: STATE_7
   name: "Fixiert"

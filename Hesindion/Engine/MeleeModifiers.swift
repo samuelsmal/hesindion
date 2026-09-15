@@ -3,8 +3,8 @@ import Foundation
 enum MeleeModifiers {
     static let all: [ModifierDefinition] = [
         vorteilhaftePosition, golgariten, plaenklerAT,
-        weaponReach, maneuverAT, dualAttackPenalty,
-        offHandPenalty, beengteUmgebungAT,
+        maneuverAT, dualAttackPenalty,
+        offHandPenalty,
     ]
 
     /// Golgariten-forced vorteilhafte Position (+2 AT when mounted with correct loadout).
@@ -35,24 +35,6 @@ enum MeleeModifiers {
     ) { ctx in
         guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .at else { return nil }
         return ModifierLine(value: 1, source: L("source.plaenkler"))
-    }
-
-    /// The reach of the thing being swung: the announced loadout piece where the
-    /// screen says which, the main weapon otherwise.
-    static func attackerReach(_ ctx: Situation) -> WeaponReach {
-        if let name = ctx.loadoutName { return ctx.hero.reach(ofLoadoutNamed: name) }
-        return WeaponReach(rawValue: ctx.hero.selectedWeapon?.reach ?? "Mittel") ?? .mittel
-    }
-
-    /// Weapon reach mismatch penalty.
-    static let weaponReach = ModifierDefinition(
-        id: "weaponReach",
-        domains: [.meleeAttack],
-        rules: ["GRW_reichweite"]
-    ) { ctx in
-        let penalty = attackerReach(ctx).atPenaltyAgainst(ctx.opponent.reach)
-        guard penalty != 0 else { return nil }
-        return ModifierLine(value: penalty, source: L("source.reach"))
     }
 
     /// Combat maneuver AT modifier.
@@ -86,17 +68,5 @@ enum MeleeModifiers {
     ) { ctx in
         guard ctx.isOffHand, ctx.hero.offHandPenalty != 0 else { return nil }
         return ModifierLine(value: ctx.hero.offHandPenalty, source: L("source.offHand"))
-    }
-
-    /// Beengte Umgebung AT penalty (based on weapon reach).
-    static let beengteUmgebungAT = ModifierDefinition(
-        id: "beengteUmgebungAT",
-        domains: [.meleeAttack],
-        rules: ["GRW_beengteUmgebung", "STATE_6"]
-    ) { ctx in
-        guard ctx.round.beengteUmgebung else { return nil }
-        let penalty = attackerReach(ctx).beengteUmgebungPenalty
-        guard penalty != 0 else { return nil }
-        return ModifierLine(value: penalty, source: L("beengteUmgebung"))
     }
 }
