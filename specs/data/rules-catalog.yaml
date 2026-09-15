@@ -222,7 +222,7 @@
   group: "Kampf"
   status: implemented
   reviewed: null
-  sources: [{ kind: optolith, src: US25005 }]
+  sources: [{ kind: optolith, src: US25007, page: 129 }]
   note: "The formation agrees on +1 AT oder +1 VW for the fight. CombatSetupView asks which; CombatSituation.chosenOptions carries the answer to the evaluator (option 0 AT, option 1 VW) until step 3 stores choices by rule id. The page adds that only one fighter needs the ability for all to profit; the app offers the bonus to the owner only, which is what the setup toggle asked before."
   cost: 10
   clauses:
