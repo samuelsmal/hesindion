@@ -64,7 +64,7 @@
     {
       "id": 8,
       "subject": "Task 8: Reichweite, Beengte Umgebung, the cap and Passierschlag",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** The two reach-keyed core rules move to the catalog; the −5 cap and Passierschlag get `byHand` entries so a Sonderfertigkeit can name them and the not-applied list is complete.\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml`, `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`\n- Modify: `Hesindion/Engine/MeleeModifiers.swift` (delete `attackerReach`, `weaponReach`, `beengteUmgebungAT`), `Hesindion/Engine/DefenseModifiers.swift` (delete `beengteUmgebungPA`)\n- Test: `HesindionTests/RuleFixtureTests.swift`, `HesindionTests/WeaponReachTests.swift`, `HesindionTests/StateModifiersTests.swift`\n\n**Acceptance Criteria:**\n- [ ] The 3×3 reach matrix through `ModifierEngine.shared` matches `WeaponReach.atPenaltyAgainst`, found by `ruleId == \"GRW_reichweite\"`.\n- [ ] Beengte Umgebung: Lang −8 AT and −8 PA, Mittel −4, Kurz nothing, bare hands nothing — `ruleId == \"GRW_beengteUmgebung\"`.\n- [ ] `GRW_zustandsbegrenzung` and `GRW_passierschlag` are `byHand` with pointers that resolve.\n- [ ] Snapshot: implemented 4, byHand 47, todo 2629.\n\n**Verify:** `make rules-db` prints `implemented 4, byHand 47, noRollEffect 0, todo 2629`; `make test-ui` → `** TEST SUCCEEDED **`.\n\n**Steps:**\n- Fixture rows and the moved tests\n- Run to see them fail\n- The catalog entries\n- Delete the Swift definitions\n- Rebuild and run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/DefenseModifiers.swift\", \"Hesindion/Engine/MeleeModifiers.swift\", \"Hesindion/Resources/rules.db\", \"HesindionTests/RuleFixtureTests.swift\", \"HesindionTests/StateModifiersTests.swift\", \"HesindionTests/WeaponReachTests.swift\", \"specs/data/rules-catalog.snapshot.json\", \"specs/data/rules-catalog.yaml\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"The 3×3 reach matrix through `ModifierEngine.shared` matches `WeaponReach.atPenaltyAgainst`, found by `ruleId == \\\"GRW_reichweite\\\"`.\", \"Beengte Umgebung: Lang −8 AT and −8 PA, Mittel −4, Kurz nothing, bare hands nothing — `ruleId == \\\"GRW_beengteUmgebung\\\"`.\", \"`GRW_zustandsbegrenzung` and `GRW_passierschlag` are `byHand` with pointers that resolve.\", \"Snapshot: implemented 4, byHand 47, todo 2629.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         7
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-15T04:58:04+00:00"
+  "lastUpdated": "2026-09-15T05:30:49+00:00"
 }
