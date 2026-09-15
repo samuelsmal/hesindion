@@ -104,6 +104,24 @@
       when: [{ hero.fokusRule: trefferzonen }, { situation.targetZone: [arme, beine, vordereBeine, mittlereGliedmassen, hintereBeine, schwanz, fangarme] }]
       effects: [{ add: { target: at, value: -8 } }, { add: { target: fk, value: -8 } }]
 
+- id: GRW_vorteilhaftePosition
+  name: "Vorteilhafte Position"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Regelwerk", page: 238 }
+    - { kind: book, title: "Regelwerk", page: 240 }
+  note: "+2 AT and +2 PA when the hero is better placed. Two ways to be: the GM says so for this attack (the toggle on the announcement, gm.fact advantageousPosition), or the hero is mounted against a foot fighter (Regelwerk 240, Berittener Kampf — the opponent's onFoot is asked once per fight). Golgariten-Stil (SA_661) raises the AT half. The mounted branch comes first so a rider is asked about the opponent before the GM is asked about the position."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when:
+        - any:
+            - all: [situation.mounted, opponent.onFoot]
+            - { gm.fact: { id: advantageousPosition, span: attack } }
+      effects: [{ add: { target: at, value: 2 } }, { add: { target: pa, value: 2 } }]
+
 # ---------------------------------------------------------------------------
 # Implemented through the evaluator (status implemented): the clauses say what
 # the app does. reviewed is null until a person has read them against the text.
@@ -164,6 +182,41 @@
         - { modifyRule: { id: GRW_zonenaufschlag, target: at, add: 2 } }
         - { modifyRule: { id: GRW_zonenaufschlag, target: fk, add: 2 } }
 
+- id: SA_661
+  name: "Golgariten-Stil"
+  group: "Kampfstile (bewaffnet)"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Aventurisches Götterwirken I", page: 229 }
+    - { kind: book, title: "Kodex des Schwertes", page: 318 }
+  text: |
+    Kämpft der Held beritten gegen Fußkämpfer, erhöht sich die aus der vorteilhaften
+    Position resultierende Erleichterung auf AT um +2. Außerdem bekommt der Abenteurer
+    noch einen Bonus von +1 PA, wenn er sich auf dem Rücken eines Reittiers befindet.
+  note: >
+    Beritten mit Rabenschnabel oder Großschild: +1 PA. Gegen Fußkämpfer zusätzlich
+    +2 AT auf die Vorteilhafte Position, also +4 AT und +3 PA insgesamt. The code
+    used to demand Rabenschnabel *and* Großschild, grant the Vorteilhafte Position
+    itself, and add +1 TP from Optolith's stale prose; the page says otherwise on all three.
+  cost: 10
+  prerequisites: { attributes: { MU: 13 } }
+  unlocks: [SA_200, SA_207, SA_210]
+  applies_with:
+    all:
+      - situation.mounted
+      - any:
+          - { loadout.weapon: { technique: CT_5, item: Rabenschnabel } }
+          - { loadout.shield: { item: Großschild } }
+  clauses:
+    - kind: passive
+      domains: [meleeAttack]
+      when: [opponent.onFoot]
+      effects: [{ modifyRule: { id: GRW_vorteilhaftePosition, target: at, add: 2 } }]
+    - kind: passive
+      domains: [meleeParry]
+      effects: [{ add: { target: pa, value: 1 } }]
+
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that
 # reaches the rule; the build and RulesCatalogTests check it exists.
@@ -223,13 +276,6 @@
   status: byHand
   pointer: { file: Hesindion/Models/Hero.swift, symbol: wuchtschlagTier }
   note: "Offered as a manoeuvre, every tier up to the hero's selectable: AT −2 and TP +2 per tier (CombatManeuver, DamageModifiers)."
-
-- id: SA_661
-  name: "Golgariten-Stil"
-  group: "Kampfstile (bewaffnet)"
-  status: byHand
-  pointer: { file: Hesindion/Models/Hero.swift, symbol: golgaritenActive }
-  note: "Mounted with Rabenschnabel AND Großschild: a forced Vorteilhafte Position +2 AT plus the style's +2 AT (= +4 AT), +1 PA, +1 TP. Three divergences from the Regelwiki, all for step 2: the page says Rabenschnabel OR Großschild; the +2 applies only gegen Fußkämpfer and raises an existing Vorteilhafte Position rather than granting one; and the page gives +1 PA with no TP bonus (the +1 TP comes from Optolith's stale prose)."
 
 - id: SA_884
   name: "Plänkler-Formation"

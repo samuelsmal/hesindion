@@ -501,14 +501,6 @@ final class Hero {
     var hasGezielterAngriff: Bool { has(.gezielterAngriff) }
     var hasGezielterSchuss: Bool { has(.gezielterSchuss) }
 
-    /// Whether Golgariten-Stil conditions are met (mounted + Rabenschnabel + Großschild).
-    func golgaritenActive(mounted: Bool) -> Bool {
-        guard mounted, hasGolgaritenStil else { return false }
-        let hasRabenschnabel = selectedWeapon?.name == "Rabenschnabel"
-        let hasGrossschild = selectedShield?.name == "Großschild"
-        return hasRabenschnabel && hasGrossschild
-    }
-
     /// Horse GS for Sturmangriff damage.
     var mountGS: Int {
         pets.first?.speed ?? 0

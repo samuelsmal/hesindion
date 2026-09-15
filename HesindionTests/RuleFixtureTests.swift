@@ -199,4 +199,77 @@ final class RuleFixtureTests: XCTestCase {
             }
         }
     }
+
+    // MARK: - Vorteilhafte Position (GRW) and Golgariten-Stil (SA_661)
+
+    /// A mounted Golgarit with the style's weapon, and nothing else switched on.
+    private func golgarit(weapon: Bool = true, shield: Bool = false) {
+        own("SA_661", "Golgariten-Stil")
+        if weapon { arm("Rabenschnabel", technique: "CT_5", reach: "Mittel") }
+        if shield {
+            hero.shields = [Shield(name: "Großschild", damage: "1W6+1", at: 6, pa: 11, reach: "Kurz", structurePoints: 30, weight: 6)]
+            hero.selectedShieldName = "Großschild"
+        }
+    }
+
+    private func mounted(_ domain: RuleDomain, onFoot: Bool?) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round.mounted = true
+        s.opponents.current.isOnFoot = onFoot
+        return s
+    }
+
+    func testTheDesignsWorkedExample() {
+        golgarit()
+        let attack = lines(mounted(.meleeAttack, onFoot: true))
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: attack), 4, "Vorteilhafte Position +2, raised by Golgariten-Stil +2")
+        XCTAssertNil(value("SA_661", in: attack), "the style has no AT line of its own")
+        XCTAssertTrue(evaluation(mounted(.meleeAttack, onFoot: true)).applied.contains("SA_661"))
+        let parry = lines(mounted(.meleeParry, onFoot: true))
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: parry), 2)
+        XCTAssertEqual(value("SA_661", in: parry), 1)
+    }
+
+    func testAgainstAMountedOpponentOnlyTheParryBonusRemains() {
+        golgarit()
+        let attack = evaluation(mounted(.meleeAttack, onFoot: false))
+        XCTAssertTrue(attack.lines.isEmpty)
+        XCTAssertEqual(reason("GRW_vorteilhaftePosition", in: attack), .questionUnanswered, "no toggle, not on foot: the GM has not said")
+        XCTAssertEqual(reason("SA_661", in: attack), .conditionFalse)
+        XCTAssertEqual(value("SA_661", in: lines(mounted(.meleeParry, onFoot: false))), 1)
+    }
+
+    func testOnFootTheStylePaysNothingAndSaysWhy() {
+        golgarit()
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.opponents.current.isOnFoot = true
+        let e = evaluation(s)
+        XCTAssertTrue(e.lines.isEmpty)
+        XCTAssertEqual(reason("SA_661", in: e), .conditionFalse)
+    }
+
+    func testAnUnstatedOpponentIsAQuestion() {
+        golgarit()
+        let e = evaluation(mounted(.meleeAttack, onFoot: nil))
+        XCTAssertTrue(e.questions.contains(RuleQuestion(key: FactKey(id: "onFoot", span: .opponent), askedBy: "GRW_vorteilhaftePosition")))
+        XCTAssertTrue(e.questions.contains(RuleQuestion(key: FactKey(id: "onFoot", span: .opponent), askedBy: "SA_661")))
+        XCTAssertEqual(reason("SA_661", in: e), .questionUnanswered)
+    }
+
+    func testTheGrossschildAloneQualifiesAndALangschwertDoesNot() {
+        golgarit(weapon: false, shield: true)
+        arm("Langschwert", technique: "CT_12", reach: "Lang")
+        XCTAssertEqual(value("SA_661", in: lines(mounted(.meleeParry, onFoot: true))), 1, "Rabenschnabel *oder* Großschild")
+        hero.selectedShieldName = nil
+        XCTAssertEqual(reason("SA_661", in: evaluation(mounted(.meleeParry, onFoot: true))), .conditionFalse)
+    }
+
+    func testTheGMToggleIsVorteilhaftePositionOnFootToo() {
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.opponents.current.advantageousPosition = true
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(s)), 2)
+        var parry = Situation(hero: hero, domain: .meleeParry)
+        parry.opponents = s.opponents
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(parry)), 2)
+    }
 }

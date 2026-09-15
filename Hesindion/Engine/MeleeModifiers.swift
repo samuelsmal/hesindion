@@ -2,30 +2,10 @@ import Foundation
 
 enum MeleeModifiers {
     static let all: [ModifierDefinition] = [
-        vorteilhaftePosition, golgariten, plaenklerAT,
+        plaenklerAT,
         maneuverAT, dualAttackPenalty,
         offHandPenalty,
     ]
-
-    /// Golgariten-forced vorteilhafte Position (+2 AT when mounted with correct loadout).
-    static let vorteilhaftePosition = ModifierDefinition(
-        id: "vorteilhaftePosition",
-        domains: [.meleeAttack],
-        rules: ["GRW_vorteilhaftePosition"]
-    ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
-        return ModifierLine(value: 2, source: L("source.vorteilhaft"))
-    }
-
-    /// Golgariten style bonus (+2 AT).
-    static let golgariten = ModifierDefinition(
-        id: "golgariten",
-        domains: [.meleeAttack],
-        rules: [CombatAbility.golgaritenStil.rawValue]
-    ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
-        return ModifierLine(value: 2, source: L("source.golgariten"))
-    }
 
     /// Plänkler formation AT bonus (+1).
     static let plaenklerAT = ModifierDefinition(

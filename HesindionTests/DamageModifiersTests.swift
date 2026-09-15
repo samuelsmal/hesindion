@@ -73,29 +73,11 @@ final class DamageModifiersTests: XCTestCase {
 
     // MARK: - Golgariten-Stil (SA_661)
 
-    /// "+1 TP bei Nahkampfangriffen, wenn er sich auf dem Rücken eines Reittiers
-    /// befindet." The hero needs the style and the loadout it is written for.
-    ///
-    /// Built by hand rather than imported: the import reads `rules.db`, which
-    /// intermittently comes back empty (see AGENTS.md), and this test is about
-    /// the arithmetic, not the import.
-    func testGolgaritenAddsOneTPFromHorseback() {
+    /// The Regelwiki gives the style +1 PA and nothing on TP; the +1 TP the
+    /// app used to add came from Optolith's stale prose (catalog note, SA_661).
+    func testGolgaritenAddsNoTP() {
         let golgarit = golgaritenHero()
-
-        let mounted = DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true)
-        XCTAssertEqual(DamageModifiers.total(mounted), 1)
-
-        let afoot = DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: false)
-        XCTAssertTrue(afoot.isEmpty, "on foot the style pays nothing")
-    }
-
-    /// The style is written for one loadout — Rabenschnabel and Großschild — so
-    /// the same hero with a different weapon in hand gets nothing.
-    func testGolgaritenNeedsItsOwnLoadout() {
-        let golgarit = golgaritenHero()
-        golgarit.selectedWeaponName = "Langschwert"
-        XCTAssertTrue(
-            DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true).isEmpty)
+        XCTAssertTrue(DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true).isEmpty)
     }
 
     /// A mounted hero carrying the style's weapons, and nothing else switched on.

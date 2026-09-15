@@ -4,9 +4,7 @@ import Foundation
 ///
 /// The damage side had no equivalent of the `ModifierEngine`: each bonus was
 /// folded into the formula string at whichever screen thought of it. Two screens
-/// thought of the two-handed grip, so it was applied twice, and nothing at all
-/// thought of Golgariten-Stil's +1 TP (SA_661) even though the hero sheet says
-/// the hero has it.
+/// thought of the two-handed grip, so it was applied twice.
 ///
 /// The lines and the formula come from the same call, so the box the player
 /// reads and the formula the dice get cannot drift apart.
@@ -38,13 +36,6 @@ enum DamageModifiers {
         // Sturmangriff zu Pferd: +2 and half the mount's GS.
         if maneuver == .sturmangriff, hero.sturmangriffDamageBonus != 0 {
             lines.append(ModifierLine(value: hero.sturmangriffDamageBonus, source: L("source.sturmangriff")))
-        }
-
-        // Golgariten-Stil (SA_661): "+1 TP bei Nahkampfangriffen, wenn er sich
-        // auf dem Rücken eines Reittiers befindet". The AT half of the style was
-        // wired up; this half was not.
-        if hero.golgaritenActive(mounted: mounted) {
-            lines.append(ModifierLine(value: 1, source: L("source.golgariten")))
         }
 
         return lines

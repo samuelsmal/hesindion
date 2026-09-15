@@ -2,7 +2,7 @@ import Foundation
 
 enum DefenseModifiers {
     static let all: [ModifierDefinition] = [
-        schipDefenseBoost, golgaritenPA,
+        schipDefenseBoost,
         plaenklerVW, mountedDodgePenalty, dualAttackDefense,
         offHandParry, twoHandedGripPA,
     ]
@@ -15,16 +15,6 @@ enum DefenseModifiers {
     ) { ctx in
         guard ctx.round.schipDefenseBoost else { return nil }
         return ModifierLine(value: 4, source: L("source.schipDefense"))
-    }
-
-    /// Golgariten PA bonus (parry only, +1).
-    static let golgaritenPA = ModifierDefinition(
-        id: "golgaritenPA",
-        domains: [.meleeParry],
-        rules: [CombatAbility.golgaritenStil.rawValue]
-    ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.round.mounted) else { return nil }
-        return ModifierLine(value: 1, source: L("source.golgariten"))
     }
 
     /// Plänkler-Formation (SA_884): the formation agrees on "+1 AT **oder** +1 VW".

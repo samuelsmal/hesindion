@@ -367,10 +367,6 @@ struct CombatAnnouncementView: View {
 
     private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
 
-    private var golgaritenForced: Bool {
-        hero.golgaritenActive(mounted: mountedActive)
-    }
-
     private var availableManeuvers: [CombatManeuver] {
         var maneuvers: [CombatManeuver] = [.normal]
         if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
@@ -598,7 +594,7 @@ struct CombatAnnouncementView: View {
     private var opponentSummary: String {
         var parts: [String] = [opponent.reach.rawValue]
         if zonesActive { parts.append(L(opponent.size.nameKey)) }
-        if opponent.advantageousPosition || golgaritenForced { parts.append("AT +2") }
+        if opponent.advantageousPosition { parts.append("AT/PA +2") }
         if opponent.isProne { parts.append(L("opponent.prone")) }
         if opponent.isSurprised { parts.append(L("trefferzone.targetSurprised")) }
         if opponent.isDaemon { parts.append(L("daemon.target.short")) }
@@ -676,24 +672,16 @@ struct CombatAnnouncementView: View {
                 }
             }
 
-            // Vorteilhafte Position. Forced on for a mounted Golgarit, so that
-            // case renders the same row without the button.
-            if golgaritenForced {
-                DSAToggleRowLabel(
-                    title: "\(L("advantageousPosition")) (\(L("mounted")))",
-                    isOn: true,
-                    accent: combatAccent,
-                    detail: "AT +2"
-                )
-            } else {
-                DSAToggleRow(
-                    title: L("advantageousPosition"),
-                    isOn: $opponent.advantageousPosition,
-                    accent: combatAccent,
-                    detail: "AT +2",
-                    identifier: "combat.attack.advantageousPosition"
-                )
-            }
+            // Vorteilhafte Position. A mounted hero against a foot fighter has
+            // it without the toggle (GRW_vorteilhaftePosition asks the roster
+            // for onFoot).
+            DSAToggleRow(
+                title: L("advantageousPosition"),
+                isOn: $opponent.advantageousPosition,
+                accent: combatAccent,
+                detail: "AT/PA +2",
+                identifier: "combat.attack.advantageousPosition"
+            )
 
             // Status Liegend: the penalty is theirs, on their defence — the
             // rules give the attacker nothing for it.
@@ -828,14 +816,7 @@ struct CombatAnnouncementView: View {
     }
 
     private func buildModifierLines() -> [ModifierLine] {
-        var lines = ModifierEngine.shared.evaluate(context: situation(.meleeAttack))
-
-        // Manual vorteilhafte Position toggle (not golgariten-forced)
-        if !golgaritenForced && opponent.advantageousPosition {
-            lines.insert(ModifierLine(value: 2, source: L("source.vorteilhaft")), at: 0)
-        }
-
-        return lines
+        ModifierEngine.shared.evaluate(context: situation(.meleeAttack))
     }
 
     /// Where the extra TP come from. The box the player reads and the formula the

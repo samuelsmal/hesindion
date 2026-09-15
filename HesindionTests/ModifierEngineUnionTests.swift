@@ -34,9 +34,7 @@ final class ModifierEngineUnionTests: XCTestCase {
     /// the Swift definition goes, its id comes off this list, so the list only
     /// ever shrinks. The second assertion below enforces that — an id that has
     /// an entry is no longer "to be authored" and must not be excused here.
-    private let stillToBeAuthored: Set<String> = [
-        "GRW_vorteilhaftePosition",
-    ]
+    private let stillToBeAuthored: Set<String> = []
 
     /// The migration invariant. Every Swift definition names the rules it
     /// implements; once a catalog entry is `implemented`, the definition must
