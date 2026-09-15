@@ -73,7 +73,7 @@
     {
       "id": 9,
       "subject": "Task 9: Zonenaufschlag, Gezielter Angriff, Gezielter Schuss, Überrascht",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** The Trefferzonen penalty is a `GRW_zonenaufschlag` entry; SA_160 and SA_161 halve it through `modifyRule … multiply`, an überraschter opponent eases it through `modifyRule … add` on the STATE_13 entry, and the third fixture row exists.\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml`, `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`\n- Modify: `Hesindion/Engine/HitZoneModifiers.swift` (delete `all` and `zonenaufschlag`; keep `penalty(for:hasSonderfertigkeit:targetIsSurprised:)` for `CombatZonePicker`), `Hesindion/Engine/ModifierEngine.swift:120-130` (drop `HitZoneModifiers.all`)\n- Test: `HesindionTests/RuleFixtureTests.swift`, `HesindionTests/HitZoneEngineIntegrationTests.swift`, `HesindionTests/HitZoneModifiersTests.swift:56-70`, `HesindionTests/RulesCatalogTests.swift`\n\n**Acceptance Criteria:**\n- [ ] With the Trefferzonen rule on and Kopf announced: −10; with SA_160 in melee −5; überrascht on top −3; Torso with SA_160 and überrascht: no line, `netZero`. Without a zone SA_160 is `modifiedRuleNotInEffect`. SA_161 in melee is `wrongDomain`. With the rule off: nothing.\n- [ ] `CombatZonePicker`'s chips still show the same numbers (`HitZoneModifiers.penalty` unchanged; its pure tests pass).\n- [ ] `RulesCatalogTests.testEveryCatalogStateIsByHand` accepts an `implemented` state.\n- [ ] Snapshot: implemented 8, byHand 44, todo 2629.\n\n**Verify:** `make rules-db` prints `implemented 8, byHand 44, noRollEffect 0, todo 2629`; `make test-ui` → `** TEST SUCCEEDED **`.\n\n**Steps:**\n- Fixture rows and the moved tests\n- Run to see them fail\n- The catalog entries\n- Delete the Swift definition\n- Rebuild and run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/HitZoneModifiers.swift\", \"Hesindion/Resources/rules.db\", \"HesindionTests/HitZoneEngineIntegrationTests.swift\", \"HesindionTests/RuleFixtureTests.swift\", \"HesindionTests/RulesCatalogTests.swift\", \"specs/data/rules-catalog.snapshot.json\", \"specs/data/rules-catalog.yaml\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"With the Trefferzonen rule on and Kopf announced: −10; with SA_160 in melee −5; überrascht on top −3; Torso with SA_160 and überrascht: no line, `netZero`. Without a zone SA_160 is `modifiedRuleNotInEffect`. SA_161 in melee is `wrongDomain`. With the rule off: nothing.\", \"`CombatZonePicker`'s chips still show the same numbers (`HitZoneModifiers.penalty` unchanged; its pure tests pass).\", \"`RulesCatalogTests.testEveryCatalogStateIsByHand` accepts an `implemented` state.\", \"Snapshot: implemented 8, byHand 44, todo 2629.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         8
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-15T05:30:49+00:00"
+  "lastUpdated": "2026-09-15T05:59:17+00:00"
 }
