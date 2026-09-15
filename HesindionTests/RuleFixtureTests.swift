@@ -289,4 +289,36 @@ final class RuleFixtureTests: XCTestCase {
         parry.opponents = s.opponents
         XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(parry)), 2)
     }
+
+    // MARK: - Plänkler-Formation (SA_884)
+
+    private func formation(_ domain: RuleDomain, bonus: PlaenklerBonus?) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round.plaenklerActive = bonus != nil
+        s.round.plaenklerBonus = bonus ?? .at
+        return s
+    }
+
+    func testPlaenklerFormationIsAnOfferUntilTheFormationDecides() {
+        own("SA_884", "Plänkler-Formation")
+        let e = evaluation(formation(.meleeAttack, bonus: nil))
+        XCTAssertEqual(e.offers.map(\.ruleId), ["SA_884"])
+        guard case .choice(let options)? = e.offers.first?.shape else { return XCTFail("not a choice") }
+        XCTAssertEqual(options, [.add(target: .at, value: 1, per: nil), .add(target: .vw, value: 1, per: nil)])
+        XCTAssertEqual(reason("SA_884", in: e), .offerNotTaken)
+    }
+
+    func testTheChosenHalfAppliesAndTheOtherDoesNot() {
+        own("SA_884", "Plänkler-Formation")
+        XCTAssertEqual(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))), 1)
+        XCTAssertNil(value("SA_884", in: lines(formation(.meleeParry, bonus: .at))))
+        XCTAssertEqual(reason("SA_884", in: evaluation(formation(.meleeParry, bonus: .at))), .wrongDomain)
+        XCTAssertEqual(value("SA_884", in: lines(formation(.meleeParry, bonus: .aw))), 1, "VW is parry and dodge")
+        XCTAssertEqual(value("SA_884", in: lines(formation(.meleeDodge, bonus: .aw))), 1)
+        XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: .aw))))
+    }
+
+    func testWithoutTheAbilityTheFormationSettingDoesNothing() {
+        XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))))
+    }
 }

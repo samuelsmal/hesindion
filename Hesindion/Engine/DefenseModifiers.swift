@@ -3,7 +3,7 @@ import Foundation
 enum DefenseModifiers {
     static let all: [ModifierDefinition] = [
         schipDefenseBoost,
-        plaenklerVW, mountedDodgePenalty, dualAttackDefense,
+        mountedDodgePenalty, dualAttackDefense,
         offHandParry, twoHandedGripPA,
     ]
 
@@ -15,20 +15,6 @@ enum DefenseModifiers {
     ) { ctx in
         guard ctx.round.schipDefenseBoost else { return nil }
         return ModifierLine(value: 4, source: L("source.schipDefense"))
-    }
-
-    /// Plänkler-Formation (SA_884): the formation agrees on "+1 AT **oder** +1 VW".
-    ///
-    /// VW is the Verteidigungswert — parry and dodge both. The bonus used to be
-    /// scoped to `.meleeDodge` alone, so a hero who took the defensive half of an
-    /// ability they had paid for got nothing for it while parrying.
-    static let plaenklerVW = ModifierDefinition(
-        id: "plaenklerVW",
-        domains: [.meleeParry, .meleeDodge],
-        rules: [CombatAbility.plaenklerFormation.rawValue]
-    ) { ctx in
-        guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .aw else { return nil }
-        return ModifierLine(value: 1, source: L("source.plaenkler"))
     }
 
     /// Mounted dodge penalty (-2 AW).

@@ -2,20 +2,9 @@ import Foundation
 
 enum MeleeModifiers {
     static let all: [ModifierDefinition] = [
-        plaenklerAT,
         maneuverAT, dualAttackPenalty,
         offHandPenalty,
     ]
-
-    /// Plänkler formation AT bonus (+1).
-    static let plaenklerAT = ModifierDefinition(
-        id: "plaenklerAT",
-        domains: [.meleeAttack],
-        rules: [CombatAbility.plaenklerFormation.rawValue]
-    ) { ctx in
-        guard ctx.round.plaenklerActive, ctx.round.plaenklerBonus == .at else { return nil }
-        return ModifierLine(value: 1, source: L("source.plaenkler"))
-    }
 
     /// Combat maneuver AT modifier.
     static let maneuverAT = ModifierDefinition(
