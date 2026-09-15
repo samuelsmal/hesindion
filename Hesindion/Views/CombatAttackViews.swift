@@ -593,6 +593,7 @@ struct CombatAnnouncementView: View {
     /// What is set, read off the lid while the section is shut.
     private var opponentSummary: String {
         var parts: [String] = [opponent.reach.rawValue]
+        if opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
         if zonesActive { parts.append(L(opponent.size.nameKey)) }
         if opponent.advantageousPosition { parts.append("AT/PA +2") }
         if opponent.isProne { parts.append(L("opponent.prone")) }
@@ -670,6 +671,23 @@ struct CombatAnnouncementView: View {
                         identifier: { "combat.opponent.size.\($0.rawValue)" }
                     }
                 }
+            }
+
+            // Only a rider can be better placed for being mounted, so the
+            // question is only asked in the saddle. Off is "not stated", not
+            // "mounted opponent": the evaluator then asks for the fact and the
+            // calculation says the rule is waiting on an answer.
+            if mountedActive {
+                DSAToggleRow(
+                    title: L("opponent.onFoot"),
+                    isOn: Binding(
+                        get: { opponent.isOnFoot == true },
+                        set: { opponent.isOnFoot = $0 ? true : nil }
+                    ),
+                    accent: combatAccent,
+                    detail: L("advantageousPosition"),
+                    identifier: "combat.opponent.onFoot"
+                )
             }
 
             // Vorteilhafte Position. A mounted hero against a foot fighter has

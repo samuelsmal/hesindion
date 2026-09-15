@@ -2,11 +2,11 @@ import XCTest
 
 /// A style that pays out only for one weapon, in one situation.
 ///
-/// Golgariten-Stil (SA_661) gives +2 AT and +1 TP to a hero fighting from
-/// horseback with a Rabenschnabel and a Großschild — and nothing at all to the
-/// same hero on foot, or with the same weapon and no shield. The TP half of it
-/// went unapplied for a long time while the hero sheet said the hero had the
-/// style; this is the screen where it has to be visible.
+/// Golgariten-Stil (SA_661) is +2 AT on the Vorteilhafte Position against a foot
+/// fighter, +1 PA mounted, and no TP at all — with a Rabenschnabel *or* a
+/// Großschild, from horseback. It gives the same hero nothing on foot. The app
+/// used to demand both pieces, grant the position itself and add a +1 TP the
+/// page does not give; the catalog entry (SA_661) is the record of all three.
 final class WeaponStyleFlowTests: XCTestCase {
 
     @MainActor
@@ -30,29 +30,77 @@ final class WeaponStyleFlowTests: XCTestCase {
         return app
     }
 
-    /// The whole style on one screen: the position it grants, the AT it is worth
-    /// and the TP it adds.
+    /// Both halves of the style, each on the roll it belongs to: the raised
+    /// Vorteilhafte Position in the attack, the +1 PA in the parry.
+    ///
+    /// The style no longer grants the position — it raises the one the rules
+    /// already give a rider against a foot fighter — so the announcement has to
+    /// be told what the opponent is standing on before there is anything to
+    /// raise. Two launches, because a parry is a different way into the fight.
     @MainActor
     func testTheStyleIsNamedInBothCalculations() {
         continueAfterFailure = false
         let app = launchMountedAnnouncement()
 
-        // Forced on, so it is a stated fact rather than a toggle to remember.
+        // Mounted, so the question is asked; it is the rider's half of the rule.
+        let onFoot = app.buttons["combat.opponent.onFoot"]
         XCTAssertTrue(
-            app.descendants(matching: .any).containing(
-                NSPredicate(format: "label CONTAINS[c] %@", "Vorteilhafte Position")
-            ).firstMatch.exists,
-            "A mounted Golgarit is in an advantageous position by the style's own wording"
+            onFoot.waitForExistence(timeout: UITest.timeout),
+            "A mounted hero must be asked whether the opponent fights on foot"
         )
+        XCTAssertTrue(app.scrollUntilHittable(onFoot), "Could not reach the on-foot toggle")
+        onFoot.tap()
 
         let attack = app.descendants(matching: .any)["combat.announcement.atBreakdown"]
         XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "No attack calculation")
         XCTAssertTrue(
-            app.staticTexts["Golgariten"].exists,
-            "The style should be a named row, not folded into the total"
+            attack.staticTexts["Vorteilhafte Position"].exists,
+            "The position the style raises should be a named row, not folded into the total"
+        )
+        XCTAssertTrue(
+            attack.staticTexts["+4"].exists,
+            "+2 for the position and +2 more for the style is one +4 line"
         )
 
         captureScreenshot(app, named: "40-attack-mounted-style")
+
+        // The parry half. Nothing about the opponent is needed for it: from the
+        // saddle with the style's weapon it is +1 PA, whoever is being parried.
+        //
+        // Scoped to the calculation, like the attack above: the hero sheet under
+        // the combat cover lists the style by name, so an app-wide search for it
+        // would pass whether or not the roll ever saw the rule.
+        let parrying = launchMountedParry()
+        let parry = parrying.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "No parry calculation")
+        XCTAssertTrue(
+            parry.staticTexts["Golgariten-Stil"].exists,
+            "The style should name itself in the parry it pays for"
+        )
+        XCTAssertTrue(parry.staticTexts["+1"].exists, "Golgariten-Stil is worth +1 PA")
+        captureScreenshot(parrying, named: "42-parry-mounted-style")
+    }
+
+    /// A mounted parry with the style's weapon, at the roll screen.
+    @MainActor
+    private func launchMountedParry() -> XCUIApplication {
+        let app = UITest.launch(
+            path: "combat",
+            shield: true,
+            weapon: "Rabenschnabel",
+            mounted: true
+        )
+        let parry = app.buttons["combat.parry"]
+        XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        parry.tap()
+
+        // A shield in the loadout sends the parry through the weapon list.
+        let weaponRow = app.buttons["combat.weaponRow.Rabenschnabel"]
+        if weaponRow.waitForExistence(timeout: UITest.probeTimeout) { weaponRow.tap() }
+
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Parry roll screen not shown")
+        return app
     }
 
     /// Plänkler-Formation, taken as its AT half, on the roll it modifies.
@@ -98,8 +146,12 @@ final class WeaponStyleFlowTests: XCTestCase {
         weaponRow.tap()
 
         openOpponentSection(app)
+        // In the calculation, not in the app: the hero sheet under the combat
+        // cover names the style whether or not this roll pays for it.
+        let breakdown = app.descendants(matching: .any)["combat.announcement.atBreakdown"]
+        XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No attack calculation")
         XCTAssertFalse(
-            app.staticTexts["Golgariten"].exists,
+            breakdown.staticTexts["Golgariten-Stil"].exists,
             "The style is worth nothing on foot and should not be claimed"
         )
     }

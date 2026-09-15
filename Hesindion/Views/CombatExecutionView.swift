@@ -531,6 +531,11 @@ struct CombatExecutionView: View {
                 totalSource: L("source.effective"),
                 sectionLabel: L("calculation.label")
             )
+            // Named so a test can ask what *this calculation* says. The hero
+            // sheet under the combat cover lists every Sonderfertigkeit by
+            // name, so an app-wide search for one proves nothing.
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.execution.breakdown")
         } else {
             // Fallback: simple display (for defense/dodge without full breakdown)
             valueBox("\(attributeValue)", label: attrLabel)
