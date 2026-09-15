@@ -60,7 +60,8 @@ final class HitZoneModifiersTests: XCTestCase {
         XCTAssertFalse(lines.contains { $0.ruleId == "GRW_zonenaufschlag" })
     }
 
-    func testMeleeUsesSA160NotSA161() {
+    func testMeleeUsesSA160NotSA161() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
         let hero = makeHero()
         hero.setFokusRule(.trefferzonen, active: true)
         hero.combatSpecialAbilities = [HeroTrait(ruleId: "SA_161", name: "Gezielter Schuss", tier: nil, sid: nil)]

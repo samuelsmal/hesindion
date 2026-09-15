@@ -126,10 +126,11 @@ final class RuleFixtureTests: XCTestCase {
 
     // MARK: - Zonenaufschlag (Fokusregel), Gezielter Angriff (SA_160), Gezielter Schuss (SA_161), Überrascht (STATE_13)
 
-    private func aimed(_ domain: RuleDomain, at zone: HitZone?, surprised: Bool = false) -> Situation {
-        var s = Situation(hero: hero, domain: domain)
+    private func aimed(_ domain: RuleDomain, at zone: HitZone?, surprised: Bool = false, hero: Hero? = nil) -> Situation {
+        var s = Situation(hero: hero ?? self.hero, domain: domain)
         s.targetHitZone = zone
         s.opponents.current.isSurprised = surprised
+        // the test hero is bare-handed (kurz); a Mittel opponent would add a GRW_reichweite line
         s.opponents.current.reach = .kurz
         return s
     }
@@ -175,6 +176,27 @@ final class RuleFixtureTests: XCTestCase {
         for zone in HitZone.allCases {
             let v = value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: zone, surprised: true))) ?? 0
             XCTAssertLessThanOrEqual(v, 0, "\(zone)")
+        }
+    }
+
+    /// The evaluator's own arithmetic must agree with the table `CombatZonePicker` shows
+    /// on its chips (`HitZoneModifiers.penalty`) — the pattern Task 8 established for the
+    /// reach table (`testTheShorterWeaponPaysForReach`).
+    func testTheZoneChipsAndTheRollAgree() {
+        hero.setFokusRule(.trefferzonen, active: true)
+        let armedHero = Hero(name: "Armed")
+        context.insert(armedHero)
+        armedHero.setFokusRule(.trefferzonen, active: true)
+        armedHero.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_160", name: "Gezielter Angriff", tier: nil, sid: nil))
+        for zone in HitZone.allCases {
+            for sf in [false, true] {
+                for surprised in [false, true] {
+                    let subject = sf ? armedHero : hero!
+                    let rolled = value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: zone, surprised: surprised, hero: subject))) ?? 0
+                    let chip = HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: sf, targetIsSurprised: surprised)
+                    XCTAssertEqual(rolled, chip, "zone \(zone), sf \(sf), surprised \(surprised)")
+                }
+            }
         }
     }
 }

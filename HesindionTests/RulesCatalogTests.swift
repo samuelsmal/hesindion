@@ -133,8 +133,9 @@ final class RulesCatalogTests: XCTestCase {
         // pointers record; the two must name each other, or a state's lines
         // would be attributed to the wrong rule once the migration reads them.
         for definition in StateCatalog.all where !displayOnlyExceptions.contains(definition.id) {
-            let entry = RulesDatabase.shared.lookupCatalogEntry(ruleId: StateModifiers.ruleIds[definition.id]!)
-            if entry?.status == .implemented {
+            let ruleId = try XCTUnwrap(StateModifiers.ruleIds[definition.id], definition.id)
+            let entry = try XCTUnwrap(RulesDatabase.shared.lookupCatalogEntry(ruleId: ruleId), ruleId)
+            if entry.status == .implemented {
                 // A state whose clauses moved to the catalog has nothing to point at.
                 continue
             }
