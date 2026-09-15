@@ -125,7 +125,7 @@ final class WeaponStyleFlowTests: XCTestCase {
         let breakdown = app.descendants(matching: .any)["combat.announcement.atBreakdown"]
         XCTAssertTrue(breakdown.waitForExistence(timeout: UITest.timeout), "No attack calculation")
         XCTAssertTrue(
-            app.staticTexts["Plänkler"].exists,
+            breakdown.staticTexts["Plänkler-Formation"].exists,
             "The formation should be a named row in the attack it modifies"
         )
         XCTAssertTrue(app.scrollUntilHittable(breakdown, maxSwipes: 6))
