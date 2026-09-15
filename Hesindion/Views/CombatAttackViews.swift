@@ -593,7 +593,10 @@ struct CombatAnnouncementView: View {
     /// What is set, read off the lid while the section is shut.
     private var opponentSummary: String {
         var parts: [String] = [opponent.reach.rawValue]
-        if opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
+        // Only in the saddle, because only there is the toggle on the screen: a
+        // chip on the lid for a row the player cannot open and clear is a fact
+        // they cannot take back.
+        if mountedActive, opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
         if zonesActive { parts.append(L(opponent.size.nameKey)) }
         if opponent.advantageousPosition { parts.append("AT/PA +2") }
         if opponent.isProne { parts.append(L("opponent.prone")) }
@@ -685,7 +688,8 @@ struct CombatAnnouncementView: View {
                         set: { opponent.isOnFoot = $0 ? true : nil }
                     ),
                     accent: combatAccent,
-                    detail: L("advantageousPosition"),
+                    detail: "AT/PA +2",
+                    subtitle: L("advantageousPosition"),
                     identifier: "combat.opponent.onFoot"
                 )
             }
@@ -951,6 +955,9 @@ struct CombatWeaponSelectionView: View {
     /// Everything the round is in. A defence picked here is rolled straight from
     /// this screen, so this screen is where its modifiers have to come from.
     let situation: CombatSituation
+    /// And who the defence is against: a parry is modified by the other side as
+    /// well as by the round (GRW_vorteilhaftePosition reads `onFoot`).
+    let opponent: OpponentProfile
     var onDismiss: () -> Void
 
     private var headerLabel: String {
@@ -1062,7 +1069,8 @@ struct CombatWeaponSelectionView: View {
         return situation.defenseModifiers(
             hero: hero,
             isAusweichen: action == .ausweichen,
-            isOffHand: isOffHand
+            isOffHand: isOffHand,
+            opponents: OpponentRoster([opponent])
         )
     }
 

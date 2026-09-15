@@ -292,6 +292,7 @@ struct CombatView: View {
                     mountedActive: mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .leading))
@@ -313,6 +314,7 @@ struct CombatView: View {
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
                     situation: situation,
+                    opponent: opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -522,6 +524,7 @@ struct CombatView: View {
                     mountedActive: mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: opponent,
                     onDismiss: onDismiss,
                     castingSpell: (spell: spell, startRound: startRound, totalRounds: totalRounds, modifierLines: modifierLines)
                 )

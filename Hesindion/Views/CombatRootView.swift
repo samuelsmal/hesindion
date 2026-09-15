@@ -19,6 +19,10 @@ struct CombatRootView: View {
     let mountedActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
+    /// The other side, for the defences rolled straight from this screen. A
+    /// plain value, not a binding: the root reads the opponent, it never states
+    /// anything about them — the announcement screen is where that is done.
+    let opponent: OpponentProfile
     var onDismiss: () -> Void
     var castingSpell: (spell: HeroSpell, startRound: Int, totalRounds: Int, modifierLines: [ModifierLine])? = nil
 
@@ -43,7 +47,7 @@ struct CombatRootView: View {
     }
 
     private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
-        situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen)
+        situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen, opponents: OpponentRoster([opponent]))
     }
 
     /// "2. Parade · −3" under the button that charges it, so the cost of

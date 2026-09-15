@@ -31,7 +31,19 @@ struct CombatSituation: Equatable {
     /// Modifier lines for a defence, whichever screen is about to roll it.
     /// `isOffHand` is the second weapon of a dual-wield loadout — it parries at
     /// the same penalty it attacks with.
-    func defenseModifiers(hero: Hero, isAusweichen: Bool, isOffHand: Bool = false) -> [ModifierLine] {
+    ///
+    /// `opponents` is the other side as the GM has described it. A defence is
+    /// made against somebody, and rules say so: a mounted hero parrying a foot
+    /// fighter is in a vorteilhafte Position for that parry too. Defaulted, so
+    /// a caller with nothing to say about the opponent still gets the round's
+    /// own modifiers — which is all this took until the catalog had a rule that
+    /// asks.
+    func defenseModifiers(
+        hero: Hero,
+        isAusweichen: Bool,
+        isOffHand: Bool = false,
+        opponents: OpponentRoster = OpponentRoster()
+    ) -> [ModifierLine] {
         // The round is this value itself; only what belongs to this one defence
         // — which hand it is made with — sits beside it. `twoHandedGrip` rides
         // along on the round: `twoHandedGripPA` is scoped to the parry domain,
@@ -39,6 +51,7 @@ struct CombatSituation: Equatable {
         var situation = Situation(hero: hero, domain: isAusweichen ? .meleeDodge : .meleeParry)
         situation.round = self
         situation.isOffHand = isOffHand
+        situation.opponents = opponents
 
         return ModifierEngine.shared.evaluate(context: situation)
     }

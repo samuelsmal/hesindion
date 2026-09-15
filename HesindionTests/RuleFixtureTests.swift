@@ -264,6 +264,23 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(reason("SA_661", in: evaluation(mounted(.meleeParry, onFoot: true))), .conditionFalse)
     }
 
+    /// The parry is rolled from the combat root and from the weapon list, and
+    /// neither passes an announcement screen — so both have to hand the
+    /// evaluator the opponent, or a mounted Golgarit's parry loses the half of
+    /// the rule that turns on who is being parried.
+    func testTheParryScreenSeesTheOpponent() {
+        golgarit()
+        var afoot = OpponentProfile()
+        afoot.isOnFoot = true
+        let round = CombatSituation(mounted: true)
+        let against = round.defenseModifiers(hero: hero, isAusweichen: false, opponents: OpponentRoster([afoot]))
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: against), 2)
+        XCTAssertEqual(value("SA_661", in: against), 1)
+        let unstated = round.defenseModifiers(hero: hero, isAusweichen: false)
+        XCTAssertNil(value("GRW_vorteilhaftePosition", in: unstated), "nobody has said what the opponent is standing on")
+        XCTAssertEqual(value("SA_661", in: unstated), 1, "the style's own +1 PA needs no opponent")
+    }
+
     func testTheGMToggleIsVorteilhaftePositionOnFootToo() {
         var s = Situation(hero: hero, domain: .meleeAttack)
         s.opponents.current.advantageousPosition = true

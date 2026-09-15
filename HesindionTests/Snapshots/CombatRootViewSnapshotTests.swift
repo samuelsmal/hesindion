@@ -31,6 +31,7 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             mountedActive: false,
             plaenklerActive: false,
             plaenklerBonus: .at,
+            opponent: OpponentProfile(),
             onDismiss: {}
         )
         .modelContainer(container)
@@ -61,6 +62,7 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             mountedActive: false,
             plaenklerActive: false,
             plaenklerBonus: .at,
+            opponent: OpponentProfile(),
             onDismiss: {}
         )
         .modelContainer(container)

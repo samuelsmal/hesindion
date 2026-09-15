@@ -94,9 +94,12 @@ final class WeaponStyleFlowTests: XCTestCase {
         XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         parry.tap()
 
-        // A shield in the loadout sends the parry through the weapon list.
         let weaponRow = app.buttons["combat.weaponRow.Rabenschnabel"]
-        if weaponRow.waitForExistence(timeout: UITest.probeTimeout) { weaponRow.tap() }
+        XCTAssertTrue(
+            weaponRow.waitForExistence(timeout: UITest.probeTimeout),
+            "a shield in the loadout sends the parry through the weapon list"
+        )
+        weaponRow.tap()
 
         let diceBox = app.otherElements["combat.execution.diceBox"]
         XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Parry roll screen not shown")

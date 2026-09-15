@@ -43,9 +43,12 @@ struct DSAToggleRow: View {
     }
 }
 
-/// The row's surface without the button, for the cases where the option is
-/// forced on by a rule and cannot be toggled (a Golgarit on a mount always has
-/// the advantageous position).
+/// The row's surface without the button, for a caller that owns the tap itself.
+///
+/// The armour rows on the combat root and the preparation screen are the two:
+/// each is a `Button` that toggles `Armor.isEquipped`, so wrapping this row's
+/// own button inside theirs would nest one control in another. They draw the
+/// surface and keep the gesture.
 struct DSAToggleRowLabel: View {
     let title: String
     let isOn: Bool
