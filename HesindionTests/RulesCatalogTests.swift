@@ -122,7 +122,7 @@ final class RulesCatalogTests: XCTestCase {
     /// `belastung` (COND_1) is the one exception: its roll penalty lives in
     /// `SharedModifiers.encumbrance`, not `StateCatalog.swift`, and that is where
     /// its pointer points; the StateCatalog entry itself stays display-only.
-    func testEveryCatalogStateIsByHand() throws {
+    func testEveryCatalogStateIsByHandOrImplemented() throws {
         try requireDatabase()
         let statePointerFile = "Hesindion/Models/StateCatalog.swift"
         let displayOnlyExceptions: Set<String> = ["belastung"]
@@ -133,10 +133,15 @@ final class RulesCatalogTests: XCTestCase {
         // pointers record; the two must name each other, or a state's lines
         // would be attributed to the wrong rule once the migration reads them.
         for definition in StateCatalog.all where !displayOnlyExceptions.contains(definition.id) {
+            let entry = RulesDatabase.shared.lookupCatalogEntry(ruleId: StateModifiers.ruleIds[definition.id]!)
+            if entry?.status == .implemented {
+                // A state whose clauses moved to the catalog has nothing to point at.
+                continue
+            }
             let matches = byHandStatePointers.filter { $0.symbol == definition.id }
             XCTAssertEqual(matches.count, 1, definition.id)
-            let entry = byHandStateEntries.first { $0.pointer?.symbol == definition.id }
-            XCTAssertEqual(StateModifiers.ruleIds[definition.id], entry?.id,
+            let byHandEntry = byHandStateEntries.first { $0.pointer?.symbol == definition.id }
+            XCTAssertEqual(StateModifiers.ruleIds[definition.id], byHandEntry?.id,
                            "\(definition.id): StateModifiers.ruleIds and the catalog pointer disagree")
         }
         // Belastung has no StateCatalog pointer (see above); its id is checked

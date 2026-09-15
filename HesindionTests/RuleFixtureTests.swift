@@ -123,4 +123,58 @@ final class RuleFixtureTests: XCTestCase {
         calm.loadoutName = "Speer"
         XCTAssertNil(value("GRW_beengteUmgebung", in: lines(calm)))
     }
+
+    // MARK: - Zonenaufschlag (Fokusregel), Gezielter Angriff (SA_160), Gezielter Schuss (SA_161), Überrascht (STATE_13)
+
+    private func aimed(_ domain: RuleDomain, at zone: HitZone?, surprised: Bool = false) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.targetHitZone = zone
+        s.opponents.current.isSurprised = surprised
+        s.opponents.current.reach = .kurz
+        return s
+    }
+
+    func testTheZonenaufschlagNeedsTheFokusregelAndAZone() {
+        XCTAssertNil(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .kopf))), "rule off")
+        hero.setFokusRule(.trefferzonen, active: true)
+        XCTAssertNil(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: nil))))
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .kopf))), -10)
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.rangedAttack, at: .torso))), -4)
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .beine))), -8)
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .schwanz))), -8, "extra limbs take the limb value")
+    }
+
+    func testGezielterAngriffHalvesItInMeleeOnlyAndSurpriseEasesItByTwo() {
+        hero.setFokusRule(.trefferzonen, active: true)
+        own("SA_160", "Gezielter Angriff")
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .kopf))), -5)
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .kopf, surprised: true))), -3, "halved, then +2")
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.rangedAttack, at: .kopf))), -10, "the melee ability does not halve a shot")
+        let torso = evaluation(aimed(.meleeAttack, at: .torso, surprised: true))
+        XCTAssertTrue(torso.lines.isEmpty, "−4, halved −2, +2 = 0")
+        XCTAssertEqual(reason("GRW_zonenaufschlag", in: torso), .netZero)
+        XCTAssertTrue(torso.applied.isSuperset(of: ["SA_160", "STATE_13"]))
+        let unaimed = evaluation(aimed(.meleeAttack, at: nil))
+        XCTAssertEqual(reason("SA_160", in: unaimed), .modifiedRuleNotInEffect)
+        XCTAssertEqual(reason("STATE_13", in: unaimed), .conditionFalse)
+    }
+
+    func testGezielterSchussIsTheRangedHalf() {
+        hero.setFokusRule(.trefferzonen, active: true)
+        own("SA_161", "Gezielter Schuss")
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.rangedAttack, at: .kopf))), -5)
+        XCTAssertEqual(value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: .kopf))), -10)
+        XCTAssertEqual(reason("SA_161", in: evaluation(aimed(.meleeAttack, at: .kopf))), .wrongDomain)
+    }
+
+    /// Every combination the picker can produce is a penalty or nothing: the
+    /// evaluator has no clamp, so the arithmetic itself must never go positive.
+    func testTheZonenaufschlagIsNeverABonus() {
+        hero.setFokusRule(.trefferzonen, active: true)
+        own("SA_160", "Gezielter Angriff")
+        for zone in HitZone.allCases {
+            let v = value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: zone, surprised: true))) ?? 0
+            XCTAssertLessThanOrEqual(v, 0, "\(zone)")
+        }
+    }
 }

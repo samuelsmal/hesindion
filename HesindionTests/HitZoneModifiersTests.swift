@@ -55,17 +55,18 @@ final class HitZoneModifiersTests: XCTestCase {
 
     func testNoZoneProducesNoLine() {
         let hero = makeHero()
-        var ctx = Situation(hero: hero, domain: .meleeAttack)
-        ctx.targetHitZone = nil
-        XCTAssertNil(HitZoneModifiers.zonenaufschlag.evaluate(ctx))
+        hero.setFokusRule(.trefferzonen, active: true)
+        let lines = ModifierEngine.shared.evaluate(context: Situation(hero: hero, domain: .meleeAttack))
+        XCTAssertFalse(lines.contains { $0.ruleId == "GRW_zonenaufschlag" })
     }
 
     func testMeleeUsesSA160NotSA161() {
         let hero = makeHero()
+        hero.setFokusRule(.trefferzonen, active: true)
         hero.combatSpecialAbilities = [HeroTrait(ruleId: "SA_161", name: "Gezielter Schuss", tier: nil, sid: nil)]
-        var ctx = Situation(hero: hero, domain: .meleeAttack)
-        ctx.targetHitZone = .kopf
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.targetHitZone = .kopf
         // Ranged SF must not halve a melee attack.
-        XCTAssertEqual(HitZoneModifiers.zonenaufschlag.evaluate(ctx)?.value, -10)
+        XCTAssertEqual(ModifierEngine.shared.evaluate(context: s).first { $0.ruleId == "GRW_zonenaufschlag" }?.value, -10)
     }
 }

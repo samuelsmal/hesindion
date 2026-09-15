@@ -82,6 +82,28 @@
   pointer: { file: Hesindion/Views/CombatDefenseViews.swift, symbol: CombatPassierschlagView }
   note: "A flow, not a modifier: CombatStep.passierschlag follows a critical parry (AGENTS.md, defence flow), or the Kritische Erfolge table replaces it (ADR-0011). CombatPassierschlagView is the screen; CombatStep.passierschlag routes to it after a critical parry."
 
+- id: GRW_zonenaufschlag
+  name: "Zonenaufschlag"
+  group: "Fokusregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: optolith, id: FR_11, title: "Trefferzonen-Regeln", src: US25003, page: 128 }
+  note: "Trefferzonen Fokusregel: an announced zone costs Kopf −10, Torso −4, Gliedmaßen −8 on AT or FK. Gezielter Angriff (SA_160) and Gezielter Schuss (SA_161) halve it, an überraschter opponent (STATE_13) eases it by 2 — halved first, then eased, so Kopf comes to −3. The extra limb zones of non-humanoid plans take the limb value by analogy, as HitZoneModifiers.penalty does for the picker's chips."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, rangedAttack]
+      when: [{ hero.fokusRule: trefferzonen }, { situation.targetZone: [kopf] }]
+      effects: [{ add: { target: at, value: -10 } }, { add: { target: fk, value: -10 } }]
+    - kind: passive
+      domains: [meleeAttack, rangedAttack]
+      when: [{ hero.fokusRule: trefferzonen }, { situation.targetZone: [torso, koerper] }]
+      effects: [{ add: { target: at, value: -4 } }, { add: { target: fk, value: -4 } }]
+    - kind: passive
+      domains: [meleeAttack, rangedAttack]
+      when: [{ hero.fokusRule: trefferzonen }, { situation.targetZone: [arme, beine, vordereBeine, mittlereGliedmassen, hintereBeine, schwanz, fangarme] }]
+      effects: [{ add: { target: at, value: -8 } }, { add: { target: fk, value: -8 } }]
+
 # ---------------------------------------------------------------------------
 # Implemented through the evaluator (status implemented): the clauses say what
 # the app does. reviewed is null until a person has read them against the text.
@@ -101,6 +123,46 @@
     - kind: passive
       domains: [meleeParry, meleeDodge]
       effects: [{ modifyRule: { id: GRW_mehrfacheVerteidigung, target: vw, set: -2 } }]
+
+- id: SA_160
+  name: "Gezielter Angriff"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: optolith, src: US25003 }
+  note: "Halves the Zonenaufschlag (GRW_zonenaufschlag) in melee, Trefferzonen Fokusregel."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack]
+      effects: [{ modifyRule: { id: GRW_zonenaufschlag, target: at, multiply: 0.5 } }]
+
+- id: SA_161
+  name: "Gezielter Schuss"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: optolith, src: US25003 }
+  note: "Halves the Zonenaufschlag (GRW_zonenaufschlag) at range, Trefferzonen Fokusregel."
+  clauses:
+    - kind: passive
+      domains: [rangedAttack]
+      effects: [{ modifyRule: { id: GRW_zonenaufschlag, target: fk, multiply: 0.5 } }]
+
+- id: STATE_13
+  name: "Überrascht"
+  group: "Status (binary)"
+  status: implemented
+  reviewed: null
+  note: "The hero überrascht: reminder only (StateCatalog.ueberrascht has no modifier). The opponent überrascht: the Zonenaufschlag is 2 easier (Trefferzonen Fokusregel), stated per attack on the roster entry."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, rangedAttack]
+      when: [{ opponent.state: ueberrascht }]
+      effects:
+        - { modifyRule: { id: GRW_zonenaufschlag, target: at, add: 2 } }
+        - { modifyRule: { id: GRW_zonenaufschlag, target: fk, add: 2 } }
 
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that
@@ -161,20 +223,6 @@
   status: byHand
   pointer: { file: Hesindion/Models/Hero.swift, symbol: wuchtschlagTier }
   note: "Offered as a manoeuvre, every tier up to the hero's selectable: AT −2 and TP +2 per tier (CombatManeuver, DamageModifiers)."
-
-- id: SA_160
-  name: "Gezielter Angriff"
-  group: "Kampf"
-  status: byHand
-  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasGezielterAngriff }
-  note: "HitZoneModifiers halves the Zonenaufschlag in melee (Trefferzonen Fokusregel)."
-
-- id: SA_161
-  name: "Gezielter Schuss"
-  group: "Kampf"
-  status: byHand
-  pointer: { file: Hesindion/Models/Hero.swift, symbol: hasGezielterSchuss }
-  note: "HitZoneModifiers halves the Zonenaufschlag at range (Trefferzonen Fokusregel)."
 
 - id: SA_661
   name: "Golgariten-Stil"
@@ -378,13 +426,6 @@
   status: byHand
   pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: taub }
   note: "Reminder only."
-
-- id: STATE_13
-  name: "Überrascht"
-  group: "Status (binary)"
-  status: byHand
-  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: ueberrascht }
-  note: "Reminder only for the hero; the opponent's surprise is a GM flag (ModifierContext.targetIsSurprised)."
 
 - id: STATE_14
   name: "Unsichtbar"

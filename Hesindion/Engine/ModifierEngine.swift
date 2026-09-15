@@ -97,7 +97,6 @@ extension ModifierEngine {
         defs.append(contentsOf: DefenseModifiers.all)
         defs.append(contentsOf: RangedModifiers.all)
         defs.append(contentsOf: MagicModifiers.all)
-        defs.append(contentsOf: HitZoneModifiers.all)
         return ModifierEngine(modifiers: defs)
     }()
 }

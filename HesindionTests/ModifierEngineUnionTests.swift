@@ -35,7 +35,7 @@ final class ModifierEngineUnionTests: XCTestCase {
     /// ever shrinks. The second assertion below enforces that — an id that has
     /// an entry is no longer "to be authored" and must not be excused here.
     private let stillToBeAuthored: Set<String> = [
-        "GRW_vorteilhaftePosition", "GRW_zonenaufschlag",
+        "GRW_vorteilhaftePosition",
     ]
 
     /// The migration invariant. Every Swift definition names the rules it
