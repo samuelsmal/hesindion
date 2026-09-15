@@ -311,7 +311,9 @@ final class RuleFixtureTests: XCTestCase {
     func testTheChosenHalfAppliesAndTheOtherDoesNot() {
         own("SA_884", "Plänkler-Formation")
         XCTAssertEqual(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))), 1)
+        XCTAssertTrue(evaluation(formation(.meleeAttack, bonus: .at)).offers.isEmpty, "a taken choice is no longer offered")
         XCTAssertNil(value("SA_884", in: lines(formation(.meleeParry, bonus: .at))))
+        XCTAssertNil(value("SA_884", in: lines(formation(.meleeDodge, bonus: .at))))
         XCTAssertEqual(reason("SA_884", in: evaluation(formation(.meleeParry, bonus: .at))), .wrongDomain)
         XCTAssertEqual(value("SA_884", in: lines(formation(.meleeParry, bonus: .aw))), 1, "VW is parry and dodge")
         XCTAssertEqual(value("SA_884", in: lines(formation(.meleeDodge, bonus: .aw))), 1)
@@ -320,5 +322,37 @@ final class RuleFixtureTests: XCTestCase {
 
     func testWithoutTheAbilityTheFormationSettingDoesNothing() {
         XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))))
+    }
+
+    // MARK: - Wuchtschlag (SA_67)
+
+    private func swing(_ domain: RuleDomain, _ maneuver: CombatManeuver) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.maneuver = maneuver
+        return s
+    }
+
+    func testWuchtschlagIsOfferedUpToTheOwnedTier() {
+        own("SA_67", "Wuchtschlag", tier: 2)
+        let e = evaluation(swing(.meleeAttack, .normal))
+        XCTAssertEqual(e.offers.map(\.shape), [.tiers(2)])
+        XCTAssertEqual(reason("SA_67", in: e), .offerNotTaken)
+    }
+
+    func testTheAnnouncedTierCostsATAndPaysTP() {
+        own("SA_67", "Wuchtschlag", tier: 2)
+        XCTAssertEqual(value("SA_67", in: lines(swing(.meleeAttack, .wuchtschlag(tier: 1)))), -2)
+        XCTAssertEqual(value("SA_67", in: lines(swing(.meleeAttack, .wuchtschlag(tier: 2)))), -4)
+        XCTAssertEqual(value("SA_67", in: lines(swing(.meleeAttack, .wuchtschlag(tier: 3)))), -4, "the hero has II")
+        XCTAssertEqual(value("SA_67", in: DamageModifiers.lines(situation: swing(.damage, .wuchtschlag(tier: 2)))), 4)
+        XCTAssertNil(value("SA_67", in: lines(swing(.meleeParry, .wuchtschlag(tier: 2)))))
+    }
+
+    /// The row keeps the tier in its name, as the manoeuvre's label did: the
+    /// tier is what the player chose and what the UI tests read.
+    func testATieredOffersLineIsNamedWithItsTier() {
+        own("SA_67", "Wuchtschlag", tier: 3)
+        XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag II")
+        XCTAssertEqual(DamageModifiers.lines(situation: swing(.damage, .wuchtschlag(tier: 1))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag I")
     }
 }

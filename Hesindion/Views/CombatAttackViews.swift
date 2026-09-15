@@ -844,12 +844,7 @@ struct CombatAnnouncementView: View {
     /// Where the extra TP come from. The box the player reads and the formula the
     /// dice get are the same call, so they cannot disagree.
     private var damageBonusLines: [ModifierLine] {
-        DamageModifiers.lines(
-            hero: hero,
-            maneuver: selectedManeuver,
-            twoHandedGrip: twoHandedGripActive,
-            mounted: mountedActive
-        )
+        DamageModifiers.lines(situation: situation(.damage))
     }
 
     /// The AT as it will be rolled. Same box, same rows and the same "Basis /

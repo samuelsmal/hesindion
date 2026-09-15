@@ -6,13 +6,13 @@ enum MeleeModifiers {
         offHandPenalty,
     ]
 
-    /// Combat maneuver AT modifier.
+    /// Finte and Vorstoß. Wuchtschlag's AT half is the catalog's (SA_67).
     static let maneuverAT = ModifierDefinition(
         id: "maneuverAT",
         domains: [.meleeAttack],
-        rules: [CombatAbility.finte.rawValue, CombatAbility.wuchtschlag.rawValue,
-                CombatAbility.vorstoss.rawValue]
+        rules: [CombatAbility.finte.rawValue, CombatAbility.vorstoss.rawValue]
     ) { ctx in
+        if case .wuchtschlag = ctx.maneuver { return nil }
         guard ctx.maneuver.atModifier != 0 else { return nil }
         return ModifierLine(value: ctx.maneuver.atModifier, source: ctx.maneuver.sourceLabel)
     }

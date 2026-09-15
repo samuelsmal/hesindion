@@ -3,7 +3,8 @@ import Foundation
 // MARK: - What comes out
 
 /// A modifier a catalog rule produced. Converts to the `ModifierLine` the
-/// breakdown boxes already draw.
+/// breakdown boxes already draw. A line from a tiered offer carries the tier in
+/// its name ("Wuchtschlag II"), the way the manoeuvre's label did.
 struct RuleLine: Equatable, Hashable {
     let ruleId: String
     let name: String
@@ -184,11 +185,11 @@ enum RuleEvaluator {
             }
             switch clause.kind {
             case .passive:
-                landed = apply(clause.effects, tier: tier, rule, s, &out, &modifications) || landed
+                landed = apply(clause.effects, tier: tier, label: rule.name, rule, s, &out, &modifications) || landed
             case .offer:
                 if case .choice(let options)? = clause.effects.first {
                     if let chosen = choices[rule.id], options.indices.contains(chosen) {
-                        landed = apply([options[chosen]], tier: tier, rule, s, &out, &modifications) || landed
+                        landed = apply([options[chosen]], tier: tier, label: rule.name, rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .choice(options), reviewed: rule.reviewed))
                         reasons.append(.offerNotTaken)
@@ -199,7 +200,9 @@ enum RuleEvaluator {
                         case .owned?, nil:   tier
                     }
                     if let tierAnnounced = announced[rule.id] {
-                        landed = apply(clause.effects, tier: min(tierAnnounced, maxTier), rule, s, &out, &modifications) || landed
+                        let swung = min(tierAnnounced, maxTier)
+                        landed = apply(clause.effects, tier: swung, label: "\(rule.name) \(CombatManeuver.roman(swung))",
+                                       rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .tiers(maxTier), reviewed: rule.reviewed))
                         reasons.append(.offerNotTaken)
@@ -216,7 +219,9 @@ enum RuleEvaluator {
     }
 
     /// Applies the effects that belong to this domain. Returns whether any did.
-    private static func apply(_ effects: [RuleEffect], tier: Int, _ rule: CatalogRule, _ s: Situation,
+    /// `label` is what the lines are named: the rule's name, or the name with
+    /// the swung tier when the effects came from a tiered offer.
+    private static func apply(_ effects: [RuleEffect], tier: Int, label: String, _ rule: CatalogRule, _ s: Situation,
                               _ out: inout Evaluation, _ modifications: inout [Modification]) -> Bool {
         var landed = false
         let isZustand = rule.id.hasPrefix("COND_")
@@ -229,15 +234,15 @@ enum RuleEvaluator {
                     case .defencesThisRound?: s.defencesThisRound
                     case nil:                 1
                 }
-                out.lines.append(RuleLine(ruleId: rule.id, name: rule.name, target: target, value: value * times,
+                out.lines.append(RuleLine(ruleId: rule.id, name: label, target: target, value: value * times,
                                           reviewed: rule.reviewed, isZustand: isZustand, times: times))
                 landed = true
             case .multiply(let target, let factor):
                 guard target.applies(in: s.domain, talentId: s.talentId) else { continue }
-                out.multipliers.append(RuleMultiplier(ruleId: rule.id, name: rule.name, target: target, factor: factor, reviewed: rule.reviewed))
+                out.multipliers.append(RuleMultiplier(ruleId: rule.id, name: label, target: target, factor: factor, reviewed: rule.reviewed))
                 landed = true
             case .opponentAdd(let target, let value):
-                out.opponentLines.append(RuleLine(ruleId: rule.id, name: rule.name, target: target, value: value,
+                out.opponentLines.append(RuleLine(ruleId: rule.id, name: label, target: target, value: value,
                                                   reviewed: rule.reviewed, isZustand: false))
                 landed = true
             case .modifyRule(let id, let target, let add, let set, let multiply):

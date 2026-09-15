@@ -46,6 +46,7 @@ final class ModifierEngineUnionTests: XCTestCase {
             let both = implemented.intersection(definition.rules)
             XCTAssertTrue(both.isEmpty, "\(definition.id) still implements \(both.sorted()) in Swift")
         }
+        XCTAssertTrue(implemented.intersection(DamageModifiers.rules).isEmpty, "DamageModifiers still implements \(implemented.intersection(DamageModifiers.rules).sorted()) in Swift")
     }
 
     /// The invariant above is only as good as the ids it compares. A mistyped

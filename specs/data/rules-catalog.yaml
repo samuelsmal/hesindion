@@ -222,7 +222,8 @@
   group: "Kampf"
   status: implemented
   reviewed: null
-  note: "The formation agrees on +1 AT oder +1 VW for the fight. CombatSetupView asks which; CombatSituation.chosenOptions carries the answer to the evaluator (option 0 AT, option 1 VW) until step 3 stores choices by rule id."
+  sources: [{ kind: optolith, src: US25005 }]
+  note: "The formation agrees on +1 AT oder +1 VW for the fight. CombatSetupView asks which; CombatSituation.chosenOptions carries the answer to the evaluator (option 0 AT, option 1 VW) until step 3 stores choices by rule id. The page adds that only one fighter needs the ability for all to profit; the app offers the bonus to the owner only, which is what the setup toggle asked before."
   cost: 10
   clauses:
     - kind: offer
@@ -231,6 +232,21 @@
         - choice:
             - { add: { target: at, value: 1 } }
             - { add: { target: vw, value: 1 } }
+
+- id: SA_67
+  name: "Wuchtschlag"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  note: "A manoeuvre: AT −2 and TP +2 per tier, every tier up to the hero's own offered (CombatAttackViews.availableManeuvers). The announced tier reaches the evaluator through Situation.maneuver until step 3 announces by rule id; the line is named with its tier. Optolith lists Hiebwaffen, Kettenwaffen, Raufen and Schwerter; not expressed as applies_with because Raufen has no weapon row to match (issue #14) and the app offered it with any weapon before."
+  cost: [15, 20, 25]
+  clauses:
+    - kind: offer
+      domains: [meleeAttack, damage]
+      tiers: owned
+      effects:
+        - { add: { target: at, value: -2, per: tier } }
+        - { add: { target: tp, value: 2, per: tier } }
 
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that
@@ -284,13 +300,6 @@
   status: byHand
   pointer: { file: Hesindion/Models/CombatManeuver.swift, symbol: vorstoss }
   note: "Offered as a manoeuvre on the announcement screen: AT +2, no defence this round."
-
-- id: SA_67
-  name: "Wuchtschlag"
-  group: "Kampf"
-  status: byHand
-  pointer: { file: Hesindion/Models/Hero.swift, symbol: wuchtschlagTier }
-  note: "Offered as a manoeuvre, every tier up to the hero's selectable: AT −2 and TP +2 per tier (CombatManeuver, DamageModifiers)."
 
 - id: ADV_5
   name: "Beidhändig"

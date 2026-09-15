@@ -10,34 +10,26 @@ import Foundation
 /// reads and the formula the dice get cannot drift apart.
 enum DamageModifiers {
 
-    /// TP bonuses for a melee attack, in the order they are added.
-    ///
-    /// - Parameters:
-    ///   - maneuver: the announced manoeuvre (Wuchtschlag is the one with TP).
-    ///   - twoHandedGrip: the weapon is being held in both hands (+1 TP, -1 PA).
-    ///   - mounted: the hero is on a mount, which some styles pay for.
-    static func lines(
-        hero: Hero,
-        maneuver: CombatManeuver,
-        twoHandedGrip: Bool,
-        mounted: Bool
-    ) -> [ModifierLine] {
+    /// The catalog ids the Swift half below still stands for (the union test
+    /// holds these apart from the implemented entries). The grip has no rule id.
+    static let rules: [String] = [CombatAbility.berittenerKampf.rawValue]
+
+    /// TP bonuses for a melee attack: the two the Swift side still makes, then
+    /// what the catalog says for the `damage` domain.
+    static func lines(situation: Situation) -> [ModifierLine] {
+        precondition(situation.domain == .damage, "damage lines want the damage domain")
         var lines: [ModifierLine] = []
 
-        // Wuchtschlag (SA_67): +2 TP per tier, the attack 2 harder per tier.
-        if maneuver.damageBonus != 0 {
-            lines.append(ModifierLine(value: maneuver.damageBonus, source: maneuver.sourceLabel))
-        }
-
-        if twoHandedGrip {
+        if situation.round.twoHandedGrip {
             lines.append(ModifierLine(value: 1, source: L("source.twoHandedGrip")))
         }
 
         // Sturmangriff zu Pferd: +2 and half the mount's GS.
-        if maneuver == .sturmangriff, hero.sturmangriffDamageBonus != 0 {
-            lines.append(ModifierLine(value: hero.sturmangriffDamageBonus, source: L("source.sturmangriff")))
+        if situation.maneuver == .sturmangriff, situation.hero.sturmangriffDamageBonus != 0 {
+            lines.append(ModifierLine(value: situation.hero.sturmangriffDamageBonus, source: L("source.sturmangriff")))
         }
 
+        lines += ModifierEngine.shared.evaluation(situation).lines.map(\.modifierLine)
         return lines
     }
 

@@ -3,8 +3,7 @@ import SwiftData
 @testable import Hesindion
 
 /// The TP the app can work out for itself. Each of these used to be folded into
-/// a formula string by whichever screen remembered it — the grip by two of them,
-/// Golgariten-Stil by none.
+/// a formula string by whichever screen remembered it — the grip by two of them.
 @MainActor
 final class DamageModifiersTests: XCTestCase {
 
@@ -23,7 +22,15 @@ final class DamageModifiersTests: XCTestCase {
     }
 
     private func lines(maneuver: CombatManeuver = .normal, grip: Bool = false, mounted: Bool = false) -> [ModifierLine] {
-        DamageModifiers.lines(hero: hero, maneuver: maneuver, twoHandedGrip: grip, mounted: mounted)
+        var s = Situation(hero: hero, domain: .damage)
+        s.maneuver = maneuver
+        s.round.twoHandedGrip = grip
+        s.round.mounted = mounted
+        return DamageModifiers.lines(situation: s)
+    }
+
+    private func ownWuchtschlag(tier: Int) {
+        hero.combatSpecialAbilities = [HeroTrait(ruleId: "SA_67", name: "Wuchtschlag", tier: tier, sid: nil)]
     }
 
     // MARK: - Nothing to add
@@ -42,6 +49,7 @@ final class DamageModifiersTests: XCTestCase {
     /// "Bei Erfolg werden die Trefferpunkte um 2 pro Stufe der Sonderfertigkeit
     /// erhöht."
     func testWuchtschlagAddsTwoTPPerTier() {
+        ownWuchtschlag(tier: 3)
         XCTAssertEqual(DamageModifiers.total(lines(maneuver: .wuchtschlag(tier: 1))), 2)
         XCTAssertEqual(DamageModifiers.total(lines(maneuver: .wuchtschlag(tier: 2))), 4)
         XCTAssertEqual(DamageModifiers.total(lines(maneuver: .wuchtschlag(tier: 3))), 6)
@@ -66,6 +74,7 @@ final class DamageModifiersTests: XCTestCase {
     }
 
     func testTheGripStacksWithWuchtschlag() {
+        ownWuchtschlag(tier: 1)
         XCTAssertEqual(
             DamageModifiers.applied(to: "1W6+4", lines: lines(maneuver: .wuchtschlag(tier: 1), grip: true)),
             "1W6+7")
@@ -77,7 +86,9 @@ final class DamageModifiersTests: XCTestCase {
     /// app used to add came from Optolith's stale prose (catalog note, SA_661).
     func testGolgaritenAddsNoTP() {
         let golgarit = golgaritenHero()
-        XCTAssertTrue(DamageModifiers.lines(hero: golgarit, maneuver: .normal, twoHandedGrip: false, mounted: true).isEmpty)
+        var s = Situation(hero: golgarit, domain: .damage)
+        s.round.mounted = true
+        XCTAssertTrue(DamageModifiers.lines(situation: s).isEmpty)
     }
 
     /// A mounted hero carrying the style's weapons, and nothing else switched on.
@@ -120,10 +131,13 @@ final class DamageModifiersTests: XCTestCase {
         ]
         XCTAssertEqual(rider.sturmangriffDamageBonus, 2 + 12 / 2)
 
-        let charge = DamageModifiers.lines(hero: rider, maneuver: .sturmangriff, twoHandedGrip: false, mounted: true)
-        XCTAssertEqual(charge.first { $0.source == L("source.sturmangriff") }?.value, 8)
+        var charge = Situation(hero: rider, domain: .damage)
+        charge.maneuver = .sturmangriff
+        charge.round.mounted = true
+        XCTAssertEqual(DamageModifiers.lines(situation: charge).first { $0.source == L("source.sturmangriff") }?.value, 8)
 
-        let walk = DamageModifiers.lines(hero: rider, maneuver: .normal, twoHandedGrip: false, mounted: true)
-        XCTAssertNil(walk.first { $0.source == L("source.sturmangriff") })
+        var walk = Situation(hero: rider, domain: .damage)
+        walk.round.mounted = true
+        XCTAssertNil(DamageModifiers.lines(situation: walk).first { $0.source == L("source.sturmangriff") })
     }
 }

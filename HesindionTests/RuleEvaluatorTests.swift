@@ -60,6 +60,7 @@ final class RuleEvaluatorTests: XCTestCase {
         let e = evaluate(rules, Situation(hero: hero, domain: .meleeAttack))
         XCTAssertEqual(line("SA_1", in: e), 2)
         XCTAssertEqual(line("GRW_x", in: e), 2)
+        XCTAssertEqual(e.lines.map(\.name), ["GRW_x", "SA_1"])
         XCTAssertEqual(e.applied, ["SA_1", "GRW_x"])
     }
 
@@ -278,6 +279,7 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(open.offers.first?.shape, .tiers(2))
         s.announced["SA_1"] = 1
         XCTAssertEqual(line("SA_1", in: evaluate(rules, s)), -2)
+        XCTAssertEqual(evaluate(rules, s).lines.first?.name, "SA_1 I")
         s.announced["SA_1"] = 3
         XCTAssertEqual(line("SA_1", in: evaluate(rules, s)), -4, "the hero only has II")
     }
