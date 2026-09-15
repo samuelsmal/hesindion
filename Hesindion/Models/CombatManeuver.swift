@@ -110,15 +110,6 @@ enum WeaponReach: String, CaseIterable {
         default:               return 0
         }
     }
-
-    /// AT/PA penalty for beengte Umgebung.
-    var beengteUmgebungPenalty: Int {
-        switch self {
-        case .kurz:  return 0
-        case .mittel: return -4
-        case .lang:  return -8
-        }
-    }
 }
 
 // MARK: - Modifier Line

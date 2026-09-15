@@ -57,7 +57,7 @@
   reviewed: null
   sources:
     - { kind: book, title: "Regelwerk", page: 238 }
-  note: "Kurz 0, Mittel −4 AT/PA, Lang −8 AT/PA, by the reach of the piece in the hand. The eingeengt status (STATE_6) is the toggle; CombatSituation.beengteUmgebung carries it into the roll."
+  note: "Kurz 0, Mittel −4 AT/PA, Lang −8 AT/PA, by the reach of the piece in the hand (on a parry the main weapon, until step 3 names the parrying piece to CombatSituation.defenseModifiers). The eingeengt status (STATE_6) is the toggle; CombatSituation.beengteUmgebung carries it into the roll."
   clauses:
     - kind: passive
       domains: [meleeAttack, meleeParry]
@@ -79,8 +79,8 @@
   name: "Passierschlag"
   group: "Grundregel"
   status: byHand
-  pointer: { file: Hesindion/Views/CombatView.swift, symbol: passierschlag }
-  note: "A flow, not a modifier: CombatStep.passierschlag follows a critical parry (AGENTS.md, defence flow), or the Kritische Erfolge table replaces it (ADR-0011)."
+  pointer: { file: Hesindion/Views/CombatDefenseViews.swift, symbol: CombatPassierschlagView }
+  note: "A flow, not a modifier: CombatStep.passierschlag follows a critical parry (AGENTS.md, defence flow), or the Kritische Erfolge table replaces it (ADR-0011). CombatPassierschlagView is the screen; CombatStep.passierschlag routes to it after a critical parry."
 
 # ---------------------------------------------------------------------------
 # Implemented through the evaluator (status implemented): the clauses say what

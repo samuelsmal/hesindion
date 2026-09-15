@@ -94,6 +94,7 @@ final class RuleFixtureTests: XCTestCase {
                 s.loadoutName = weapon
                 s.opponents.current.reach = opponent
                 XCTAssertEqual(value("GRW_reichweite", in: lines(s)), penalty, "\(weapon) against \(opponent.rawValue)")
+                XCTAssertEqual(value("GRW_reichweite", in: lines(s)) ?? 0, hero.reach(ofLoadoutNamed: weapon).atPenaltyAgainst(opponent), "the announcement chips (WeaponReach.atPenaltyAgainst) and the roll must agree")
             }
         }
     }
@@ -113,6 +114,7 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(penalty(.meleeAttack, "Speer"), -8)
         XCTAssertEqual(penalty(.meleeParry, "Speer"), -8)
         XCTAssertEqual(penalty(.meleeAttack, "Säbel"), -4)
+        XCTAssertEqual(penalty(.meleeParry, "Säbel"), -4)
         XCTAssertEqual(penalty(.meleeParry, nil), -8, "nothing named: the main weapon, the Speer")
         XCTAssertNil(penalty(.meleeAttack, "Dolch"))
         XCTAssertNil(penalty(.meleeAttack, "Raufen"), "bare hands are kurz")
