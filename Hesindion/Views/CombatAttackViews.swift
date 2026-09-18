@@ -974,6 +974,7 @@ struct CombatWeaponSelectionView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
                 Spacer()
                 Text(headerLabel)
                     .font(.dsaHeading(.headline))

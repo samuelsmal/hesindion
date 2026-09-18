@@ -104,6 +104,7 @@ struct CombatExecutionView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
 
                 Spacer()
 
@@ -402,7 +403,7 @@ struct CombatExecutionView: View {
             title: L("takeDamage"),
             icon: "heart.slash.fill",
             identifier: "combat.execution.takeDamage"
-        ) { step = .takeDamage }
+        ) { step = .takeDamage() }
 
         CombatActionButton(
             title: L("newAction"),

@@ -23,7 +23,13 @@ enum CombatStep {
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
-    case takeDamage
+    /// "Schaden nehmen". `prefilledTP` lets a screen that has already worked out
+    /// what the hero takes — a Patzer's "Selbst verletzt" — hand the figure over
+    /// instead of applying LP itself, so the armour, the Wundschwelle and the one
+    /// LP write all stay on the screen that does them. `source` names where it
+    /// came from in the calculation's first row; `nil` is the plain "TP" the
+    /// player types in themselves.
+    case takeDamage(prefilledTP: Int? = nil, source: String? = nil)
     case flucht
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
@@ -403,9 +409,17 @@ struct CombatView: View {
                     )
                     .transition(.move(edge: .trailing))
                 }
-            case .takeDamage:
-                CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
-                    .transition(.move(edge: .trailing))
+            case .takeDamage(let prefilledTP, let source):
+                CombatTakeDamageView(
+                    hero: hero,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber,
+                    prefilledTP: prefilledTP,
+                    damageSource: source
+                )
+                .transition(.move(edge: .trailing))
             case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource):
                 CombatOpponentDefenseView(
                     hero: hero,

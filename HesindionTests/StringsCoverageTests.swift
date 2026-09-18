@@ -48,6 +48,19 @@ final class StringsCoverageTests: XCTestCase {
         ] { assertLocalized(key) }
     }
 
+    /// The Patzertabelle's help screen. Hand-written call sites, like the
+    /// critical table's above, so there is nowhere else to check them.
+    func testFumbleEffectKeysAreLocalized() {
+        for key in [
+            "fumble.title", "fumble.takeDamage", "fumble.rollTable",
+            "fumble.effect.label", "fumble.rollProbe", "fumble.cost.oneAction",
+            "fumble.itemDropped", "fumble.itemRecovered",
+            "fumble.fall.avoided", "fumble.stuck.failed",
+            "fumble.selfDamage.label", "fumble.selfDamage.doubled",
+            "fumble.damageSource", "fumble.gmOnly", "flucht.gsLiegend",
+        ] { assertLocalized(key) }
+    }
+
     /// M7: the melee and ranged zone pickers share one component but not one hint —
     /// SA_160 *Gezielter Angriff* halves in melee, SA_161 *Gezielter Schuss* at range.
     /// A single shared string was necessarily wrong on one of the two screens.

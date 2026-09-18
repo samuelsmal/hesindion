@@ -26,7 +26,7 @@ final class AnnouncedZoneTests: XCTestCase {
             .dualAttackSecond(name: "Dolch", attributeValue: 10, damageFormula: "1W6+2"),
             .mountPreCheck(onSuccess: .root),
             .mountDamage,
-            .takeDamage,
+            .takeDamage(),
             .flucht,
             .opponentDefense(weaponName: "Säbel", damageFormula: "1W6+4", isCriticalHit: false,
                              criticalDamage: .unchanged, modifierLines: nil),

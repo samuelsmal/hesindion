@@ -9,9 +9,31 @@ struct CombatTakeDamageView: View {
     var onDismiss: () -> Void
     let combatId: UUID
     let roundNumber: Int
+    /// What the TP are, where the screen did not have to be told by hand — a
+    /// Patzer's "Selbst verletzt", say. Named in the calculation's first row so
+    /// the figure in the stepper is accountable; `nil` falls back to plain "TP".
+    let damageSource: String?
+
+    init(
+        hero: Hero,
+        step: Binding<CombatStep>,
+        onDismiss: @escaping () -> Void,
+        combatId: UUID,
+        roundNumber: Int,
+        prefilledTP: Int? = nil,
+        damageSource: String? = nil
+    ) {
+        self.hero = hero
+        self._step = step
+        self.onDismiss = onDismiss
+        self.combatId = combatId
+        self.roundNumber = roundNumber
+        self.damageSource = damageSource
+        self._tpInput = State(initialValue: max(0, prefilledTP ?? 0))
+    }
 
     @Environment(\.modelContext) private var modelContext
-    @State private var tpInput: Int = 0
+    @State private var tpInput: Int
     @State private var confirmed: Bool = false
 
     // Trefferzonen (Fokus-Regel)
@@ -70,7 +92,7 @@ struct CombatTakeDamageView: View {
     /// whole subject is how much of the hit got through.
     private var damageRows: [BreakdownRow] {
         var rows: [BreakdownRow] = [
-            BreakdownRow(value: "\(tpInput)", source: L("tp"))
+            BreakdownRow(value: "\(tpInput)", source: damageSource ?? L("tp"))
         ]
         rows.append(.signed(-rs, L("rs")))
         if appliedExtraDamage > 0 {

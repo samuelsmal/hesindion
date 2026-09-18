@@ -48,6 +48,7 @@ struct StateChip: View {
         .onTapGesture { onTap() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label)
+        .accessibilityIdentifier("state.chip.\(def.id)")
     }
 
     @ViewBuilder private var borderOverlay: some View {

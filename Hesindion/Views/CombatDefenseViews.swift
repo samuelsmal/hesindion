@@ -577,6 +577,22 @@ struct CombatFumbleChoiceView: View {
     @State private var simpleDamageRoll: Int? = nil
     @State private var tableRoll: (die1: Int, die2: Int)? = nil
     @State private var tableEntry: FumbleTableEntry? = nil
+    /// `nil` until the result's own check is rolled — a Sturz applies nothing
+    /// until then, the same rule the Wundeffekt probe follows.
+    @State private var probeSucceeded: Bool? = nil
+    @State private var showingProbeModal = false
+    /// Resolved once when the modal is opened rather than per body pass: the
+    /// FW-0 fallback builds a fresh, never-inserted stand-in `Talent`.
+    @State private var probeTalent: Talent? = nil
+    /// Everything the fumble wrote to the hero, in the order it was written, for
+    /// the panel to report back.
+    @State private var writes: [BreakdownRow] = []
+    /// What left the loadout and from where, so a successful Kraftakt can put it
+    /// back in the slot it came from.
+    @State private var unequipped: (name: String, slot: Hero.LoadoutSlot)? = nil
+    /// The hero's own weapon damage on results 11 and 12, rolled here and shown,
+    /// then handed to the take-damage screen prefilled.
+    @State private var selfDamage: FumbleSelfDamage? = nil
 
     private enum FumbleChoiceKind { case simpleDamage, table }
 
@@ -599,8 +615,36 @@ struct CombatFumbleChoiceView: View {
         action == .ausweichen
     }
 
+    /// Whether the screen may offer a way out yet. An open question holds it:
+    /// a Sturz is not resolved until the Körperbeherrschung check has been
+    /// rolled, because the result *is* the check. Freeing a stuck weapon is
+    /// optional and does not hold anything.
     private var isResolved: Bool {
-        simpleDamageRoll != nil || tableEntry != nil
+        if simpleDamageRoll != nil { return true }
+        guard let entry = tableEntry else { return false }
+        return !FumbleEffectResolver.holdsTheWayOut(entry.effect, probeSucceeded: probeSucceeded)
+    }
+
+    /// What the fumble takes out of the hand. On the shield table it is the
+    /// shield, whatever the roll was made with; otherwise the thing that was
+    /// swung, and only if it is actually in the loadout (Raufen is not).
+    ///
+    /// An unarmed fighter and a dodge never reach results 2–6 at all — the +5
+    /// shift in `FumbleTable.lookup` starts them at 7 — so no item result can
+    /// fire without something to take.
+    private var affectedItemName: String? {
+        if tableType == .verteidigungSchild, !isDodge, let shield = hero.selectedShield {
+            return shield.name
+        }
+        return hero.loadoutSlot(ofNamed: weaponName) != nil ? weaponName : nil
+    }
+
+    /// The weapon's own damage string, wherever the loadout keeps it.
+    private var weaponDamageFormula: String? {
+        if let melee = hero.meleeWeapons.first(where: { $0.name == weaponName }) { return melee.damage }
+        if let ranged = hero.rangedWeapons.first(where: { $0.name == weaponName }) { return ranged.damage }
+        if let shield = hero.shields.first(where: { $0.name == weaponName }) { return shield.damage }
+        return nil
     }
 
     // MARK: - Body
@@ -627,6 +671,24 @@ struct CombatFumbleChoiceView: View {
             .padding(.bottom, 16)
             }
         }
+        // A modal is a sibling of the layout, not a child of a panel: hung on the
+        // whole screen so its scrim covers the whole screen.
+        .overlay {
+            if showingProbeModal, let talent = probeTalent, let probe = pendingProbe {
+                TalentProbeModal(
+                    talent: talent,
+                    hero: hero,
+                    onDismiss: { showingProbeModal = false },
+                    onRolled: { succeeded in applyProbeResult(succeeded) },
+                    initialModifier: probe.modifier,
+                    accent: combatAccent
+                )
+            }
+        }
+    }
+
+    private var pendingProbe: FumbleProbe? {
+        tableEntry.flatMap { FumbleEffectResolver.probe(for: $0.effect) }
     }
 
     // MARK: - Header
@@ -764,18 +826,13 @@ struct CombatFumbleChoiceView: View {
                     .dsaBox(.flush)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(entry.title)
-                    .font(.dsaHeading(.body))
-                Text(entry.description)
-                    .font(.dsaBody(.caption))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.groupCombat.opacity(0.1))
-            .dsaBox(.flush, stroke: Color.groupCombat)
+            CombatFumbleEffectPanel(
+                entry: entry,
+                writes: writes,
+                probeSucceeded: probeSucceeded,
+                selfDamage: selfDamage,
+                onRollProbe: openProbe
+            )
         }
     }
 
@@ -788,12 +845,32 @@ struct CombatFumbleChoiceView: View {
     /// nothing after all. An Angriff/Fernkampf fumble has no such consequence.
     @ViewBuilder
     private var resolvedActionButtons: some View {
-        if action == .parieren || action == .ausweichen {
+        if let entry = tableEntry, let damage = selfDamage {
+            // "Selbst verletzt": the TP are carried to the take-damage screen
+            // rather than applied here, so the armour, the Wundschwelle and the
+            // single LP write all stay in the one place that does them.
             CombatActionButton(
                 title: L("takeDamage"),
                 icon: "heart.slash.fill",
                 identifier: "combat.execution.takeDamage"
-            ) { step = .takeDamage }
+            ) {
+                step = .takeDamage(
+                    prefilledTP: damage.total,
+                    source: String(format: L("fumble.damageSource"), entry.title))
+            }
+
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                fill: Color.dsaDark,
+                identifier: "combat.execution.newAction.miss"
+            ) { step = .root }
+        } else if action == .parieren || action == .ausweichen {
+            CombatActionButton(
+                title: L("takeDamage"),
+                icon: "heart.slash.fill",
+                identifier: "combat.execution.takeDamage"
+            ) { step = .takeDamage() }
 
             CombatActionButton(
                 title: L("newAction"),
@@ -840,6 +917,76 @@ struct CombatFumbleChoiceView: View {
         let entry = FumbleTable.lookup(total, table: tableType, isUnarmed: isUnarmed || isDodge)
         tableEntry = entry
         logTableResult(entry, roll: total)
+        applyImmediateEffect(of: entry)
+    }
+
+    // MARK: - Effects
+
+    /// What the result writes the moment the table is rolled — the same timing
+    /// the 1W6+2 SP branch uses for its LP. Everything that needs an answer
+    /// first (a Sturz's check) waits for `applyProbeResult`.
+    private func applyImmediateEffect(of entry: FumbleTableEntry) {
+        switch entry.effect {
+        case .stupor:
+            let before = hero.level(of: FumbleEffectResolver.stuporStateID)
+            FumbleEffectResolver.applyStupor(to: hero)
+            let after = hero.level(of: FumbleEffectResolver.stuporStateID)
+            let name = L("state.betaeubung.name")
+            record(value: "\(L("level")) \(before) \u{2192} \(after)", source: name)
+            logEffect(entry, effect: "\(name) \(after)")
+
+        case .itemLost, .itemStuck:
+            guard let name = affectedItemName,
+                  let slot = hero.unequipFromLoadout(named: name) else { break }
+            unequipped = (name, slot)
+            let text = String(format: L("fumble.itemDropped"), name)
+            record(value: L("takeDamage.outcome.now"), source: text)
+            logEffect(entry, effect: text)
+
+        case .selfDamage(let doubled):
+            let formula = FumbleEffectResolver.selfDamageFormula(
+                weaponFormula: weaponDamageFormula, isUnarmed: isUnarmed || isDodge)
+            selfDamage = FumbleEffectResolver.rollSelfDamage(formula: formula, doubled: doubled)
+
+        case .fall, .stumble, .pain, .itemDamaged, .jam, .noDefense, .friendHit, .wildShot:
+            break
+        }
+    }
+
+    private func openProbe() {
+        guard let probe = pendingProbe else { return }
+        probeTalent = probe.talentRuleId == Talent.kraftaktRuleId ? hero.kraftakt : hero.koerperbeherrschung
+        showingProbeModal = true
+    }
+
+    /// Only a *failed* Körperbeherrschung check lays the hero out; only a
+    /// *successful* Kraftakt gets the weapon back.
+    private func applyProbeResult(_ succeeded: Bool) {
+        probeSucceeded = succeeded
+        guard let entry = tableEntry else { return }
+        switch entry.effect {
+        case .fall:
+            FumbleEffectResolver.applyFall(to: hero, probeSucceeded: succeeded)
+            guard !succeeded else { return }
+            let name = L("state.liegend.name")
+            record(value: L("takeDamage.outcome.now"), source: name)
+            logEffect(entry, effect: name)
+
+        case .itemStuck:
+            guard succeeded, let item = unequipped else { return }
+            hero.equipInLoadout(named: item.name, slot: item.slot)
+            unequipped = nil
+            let text = String(format: L("fumble.itemRecovered"), item.name)
+            record(value: L("takeDamage.outcome.now"), source: text, tint: Color.dsaPositive)
+            logEffect(entry, effect: text)
+
+        default:
+            return
+        }
+    }
+
+    private func record(value: String, source: String, tint: Color = Color.groupCombat) {
+        writes.append(BreakdownRow(value: value, source: source, tint: tint))
     }
 
     // MARK: - Persistence Helpers
@@ -867,6 +1014,31 @@ struct CombatFumbleChoiceView: View {
             hero: hero
         )
         modelContext.insert(entry)
+    }
+
+    /// A second line for what the result actually did — "Sturz → Liegend".
+    /// The table roll and its consequence are two moments (the check is rolled
+    /// after), so they are two entries rather than one that has to be rewritten.
+    private func logEffect(_ entry: FumbleTableEntry, effect: String) {
+        let logEntry = LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId,
+                round: roundNumber,
+                action: .fumble,
+                weaponName: weaponName,
+                rollValue: nil,
+                damageDealt: nil,
+                damageTaken: nil,
+                effectiveValue: nil,
+                outcome: "Patzertabelle",
+                schipAction: nil,
+                fumbleTableResult: "\(entry.title) \u{2192} \(effect)",
+                lpChange: 0
+            ),
+            hero: hero
+        )
+        modelContext.insert(logEntry)
     }
 
     private func logTableResult(_ entry: FumbleTableEntry, roll: Int) {
@@ -1002,7 +1174,7 @@ struct CombatFluchtView: View {
 
                 // Result display
                 if let outcome {
-                    let gs = hero.derivedValues?.geschwindigkeit.max ?? 8
+                    let gs = hero.effectiveGeschwindigkeit
                     switch outcome {
                     case .success:
                         HStack(spacing: 6) {
@@ -1021,6 +1193,8 @@ struct CombatFluchtView: View {
                             .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(.secondary)
 
+                        gsSourceNote
+
                     case .failure:
                         HStack(spacing: 6) {
                             Image(systemName: "xmark.circle.fill")
@@ -1037,6 +1211,8 @@ struct CombatFluchtView: View {
                         Text("GS/2 = \(gs / 2) Schritt")
                             .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(.secondary)
+
+                        gsSourceNote
                     }
 
                     // Neue Aktion
@@ -1058,6 +1234,19 @@ struct CombatFluchtView: View {
             .adaptiveContentWidth()
             .padding(.vertical, 16)
             }
+        }
+    }
+
+    /// Where the GS came from, when it is not simply the hero's own. A derived
+    /// number that is not the one on the sheet has to name its source, the way a
+    /// modifier row does — otherwise "GS 1 Schritt" reads as a bug.
+    @ViewBuilder
+    private var gsSourceNote: some View {
+        if hero.isLiegend {
+            Text(String(format: L("flucht.gsLiegend"), L("state.liegend.name")))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(Color.groupCombat)
+                .accessibilityIdentifier("combat.flucht.gsSource")
         }
     }
 

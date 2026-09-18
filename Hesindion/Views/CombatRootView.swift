@@ -628,7 +628,7 @@ struct CombatRootView: View {
 
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
-                    Button { step = .takeDamage } label: {
+                    Button { step = .takeDamage() } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "heart.slash.fill")
                             Text(L("takeDamage"))
