@@ -375,7 +375,8 @@ final class RuleFixtureTests: XCTestCase {
         s.opponents.current.reach = .kurz
         s.opponents.current.isProne = true
         let e = evaluation(s)
-        XCTAssertEqual(e.opponentLines.map { ($0.ruleId, $0.value) }.map { "\($0.0) \($0.1)" }, ["STATE_10 -2"])
+        XCTAssertEqual(e.opponentLines.map(\.ruleId), ["STATE_10"])
+        XCTAssertEqual(e.opponentLines.map(\.value), [-2])
         XCTAssertTrue(e.lines.isEmpty)
         XCTAssertTrue(evaluation(Situation(hero: hero, domain: .meleeAttack)).opponentLines.isEmpty)
     }

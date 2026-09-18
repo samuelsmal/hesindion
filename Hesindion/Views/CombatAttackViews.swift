@@ -864,9 +864,11 @@ struct CombatAnnouncementView: View {
         .accessibilityIdentifier("combat.announcement.atBreakdown")
     }
 
-    /// What the announcement costs the *other* side. Only Finte does anything
-    /// here, and it used to say so as grey subtitle text under the manoeuvre
-    /// row — the one modifier on the screen that was not a number in a column.
+    /// What the announcement costs the *other* side. Finte comes from
+    /// `OpponentProfile.defenseModifiers`, and it used to say so as grey
+    /// subtitle text under the manoeuvre row — the one modifier on the screen
+    /// that was not a number in a column. Every other opponent line is the
+    /// catalog's (`Evaluation.opponentLines`) — Liegend, so far.
     ///
     /// Nothing is applied: the opponent is not modelled (ADR-0005), so this is
     /// the figure the GM subtracts.

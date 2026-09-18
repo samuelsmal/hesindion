@@ -77,6 +77,18 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(surprised), "Could not reach the surprise toggle")
         surprised.tap()
 
+        // The announcement's own box for what the target's posture costs
+        // *them* (opponent.state liegend → STATE_10), shown before the roll.
+        let announcementOpponentDefense = app.descendants(matching: .any)["combat.announcement.opponentDefense"]
+        XCTAssertTrue(
+            announcementOpponentDefense.waitForExistence(timeout: UITest.timeout),
+            "The announcement's opponent-defence box is missing"
+        )
+        XCTAssertTrue(
+            announcementOpponentDefense.staticTexts["Liegend"].exists,
+            "The prone opponent's penalty should be named Liegend"
+        )
+
         captureScreenshot(app, named: "34-attack-announced-complicated")
 
         let weiter = app.button(containing: "Weiter")
@@ -100,7 +112,7 @@ final class ComplicatedAttackFlowTests: XCTestCase {
             )
         }
         XCTAssertFalse(
-            app.staticTexts["Ziel liegt"].exists,
+            atCalculation.staticTexts["Liegend"].exists,
             "A prone target costs the hero's attack nothing"
         )
         captureScreenshot(app, named: "35-attack-calculation-complicated")
@@ -125,6 +137,16 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(
             opponentDefense.waitForExistence(timeout: UITest.timeout),
             "The opponent's defence modifiers are missing"
+        )
+        // STATE_10 is the only opponent line in this flow (no Finte announced):
+        // Liegend, −2, and nothing else in the total.
+        XCTAssertTrue(
+            opponentDefense.staticTexts["Liegend"].exists,
+            "The prone opponent's penalty should be named Liegend"
+        )
+        XCTAssertTrue(
+            opponentDefense.staticTexts["Parieren -2"].exists,
+            "Liegend is the only opponent line here: −2"
         )
         // The recap of the hero's own AT modifiers is gone: it sat under a
         // MANÖVER heading, listing numbers already spent on a roll that had

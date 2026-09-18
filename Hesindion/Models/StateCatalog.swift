@@ -9,7 +9,8 @@ enum StateKind: Equatable {
 enum StatePenaltyValue: Equatable {
     /// value = -level (leveled Zustände, Schmerz).
     case perLevel
-    /// per-domain fixed value (binary Status like Liegend/Fixiert).
+    /// per-domain fixed value (binary Status like Fixiert). Liegend's numbers
+    /// are the catalog's (STATE_10, `StateMechanic.catalog`).
     case fixed([CheckDomain: Int])
 }
 
