@@ -34,7 +34,9 @@ struct CombatAftermath: Equatable {
     /// Schmerz and Belastung: shown, never offered. Both are derived — one from
     /// the LP total, one from the armour — and `setStateLevel` refuses them
     /// (`StateCatalog.derivedIDs`), so a control here would promise something it
-    /// could not do. The row states where the level comes from instead.
+    /// could not do. The row states where the level comes from and what ends it
+    /// instead; for Schmerz that is one line per origin, out of
+    /// `Hero.schmerzBreakdown`, because the two of them end differently.
     let derived: [CombatAftermathRow]
 
     /// What a Patzer dented. Not repaired here: that is a scene at a smithy and
@@ -96,6 +98,12 @@ struct CombatAftermathView: View {
     @State private var rows: [CombatAftermathRow] = []
     @State private var derivedRows: [CombatAftermathRow] = []
     @State private var damaged: [String] = []
+    /// Frozen with them, and for the same reason: "Fertig" clears the Patzer's
+    /// levels, and the row that says so must still be there to read while the
+    /// player is deciding.
+    @State private var schmerz = SchmerzBreakdown(
+        lebenspunkteLevel: 0, patzerLevel: 0, currentLP: nil, maxLP: nil, hasZaeherHund: false
+    )
 
     var body: some View {
         VStack(spacing: 0) {
@@ -155,6 +163,7 @@ struct CombatAftermathView: View {
             rows = aftermath.clearable
             derivedRows = aftermath.derived
             damaged = aftermath.damagedItems
+            schmerz = hero.schmerzBreakdown
         }
     }
 
@@ -264,11 +273,20 @@ struct CombatAftermathView: View {
         .accessibilityIdentifier("combat.aftermath.toggle.\(row.def.id)")
     }
 
-    /// Read-only, with the reason it is read-only: the level is a consequence of
-    /// something else and switching it off here would only be undone by the next
-    /// body pass.
+    /// Read-only — and, since this release, read-only *about something*.
+    ///
+    /// "Why is this listed as read-only? This usually goes away (depending on
+    /// the origin)" (owner report). It does, and the app knows by which route.
+    /// Belastung's is one sentence: the armour puts it there and taking the
+    /// armour off takes it away. Schmerz has two origins that end quite
+    /// differently — the life points' own thresholds go with healing, the
+    /// Patzertabelle's extra level goes with this very fight — so it gets a line
+    /// each, the second of them struck through, because "Fertig" is what ends
+    /// it. Zäher Hund and the cap at IV work on the *sum*, so whenever the lines
+    /// stop adding up to the level in the header there is a sentence saying why.
+    @ViewBuilder
     private func derivedRow(_ row: CombatAftermathRow) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Image(systemName: row.def.iconSystemName)
                     .font(.dsaBody(.body))
@@ -278,10 +296,15 @@ struct CombatAftermathView: View {
                     .font(.dsaMono(.body, emphasis: true))
                 Spacer()
             }
-            Text(L(row.def.causeKey))
-                .font(.dsaBody(.caption))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if row.def.id == "schmerz" {
+                ForEach(schmerz.parts, id: \.origin) { originRow($0) }
+                if schmerz.zaeherHundApplied { derivedNote(L("aftermath.schmerz.zaeherHund")) }
+                if schmerz.cappedAtFour { derivedNote(L("aftermath.schmerz.capped")) }
+            } else {
+                derivedNote(L(row.def.causeKey))
+                derivedNote(L(row.def.removalKey))
+            }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -294,6 +317,60 @@ struct CombatAftermathView: View {
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.aftermath.derived.\(row.def.id)")
+    }
+
+    /// One origin of the Schmerz: what it is worth, where it comes from, and the
+    /// sentence about what ends it.
+    ///
+    /// The Patzer's levels hang off the combat session, and "Fertig" clears the
+    /// session — so that line is struck through and badged "endet jetzt" in the
+    /// same words the cleared rows above use, rather than promising something
+    /// for later.
+    private func originRow(_ part: SchmerzOriginPart) -> some View {
+        let endsNow = part.origin.endsWithTheFight
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Text(originLevelText(part))
+                    .font(.dsaMono(.caption, emphasis: true))
+                    .foregroundStyle(combatAccent)
+                Text(originName(part.origin))
+                    .font(.dsaBody(.caption))
+                    .strikethrough(endsNow)
+                Spacer()
+                if endsNow {
+                    Text(L("aftermath.endsNow"))
+                        .font(.dsaMono(.caption2, emphasis: true))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            derivedNote(L(part.origin.removalKey))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.aftermath.origin.\(part.origin.rawValue)")
+    }
+
+    /// The LP part is a level of its own ("II"); the Patzer's is a level *added*
+    /// to it, and reads as one.
+    private func originLevelText(_ part: SchmerzOriginPart) -> String {
+        part.origin == .patzer ? "+\(part.level)" : StateCatalog.roman(part.level)
+    }
+
+    /// With the life points themselves when the app has them, because "II" alone
+    /// does not say how close the next threshold is.
+    private func originName(_ origin: SchmerzOrigin) -> String {
+        guard origin == .lebenspunkte,
+              let current = schmerz.currentLP,
+              let max = schmerz.maxLP, max > 0
+        else { return L(origin.nameKey) }
+        return String(format: L("schmerz.origin.lebenspunkte.withLP"), current, max)
+    }
+
+    private func derivedNote(_ text: String) -> some View {
+        Text(text)
+            .font(.dsaBody(.caption))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func damagedRow(_ name: String) -> some View {

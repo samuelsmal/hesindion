@@ -90,4 +90,25 @@ final class StringsCoverageTests: XCTestCase {
     func testSfHalvesHintsDifferPerDomain() {
         XCTAssertNotEqual(L("trefferzone.sfHalves.melee"), L("trefferzone.sfHalves.ranged"))
     }
+
+    /// The screen after the fight, and the sentences it prints about where a
+    /// derived state comes from and what ends it. Hand-written call sites like
+    /// the two above, and the origin keys are built from the enum's raw value,
+    /// so a renamed case would otherwise print its own key.
+    func testAftermathKeysAreLocalized() {
+        for key in [
+            "aftermath.title", "aftermath.intro", "aftermath.states",
+            "aftermath.derived", "aftermath.damaged", "aftermath.damaged.hint",
+            "aftermath.clear", "aftermath.restore", "aftermath.gone",
+            "aftermath.done", "aftermath.endsNow",
+            "aftermath.schmerz.zaeherHund", "aftermath.schmerz.capped",
+            "schmerz.origin.lebenspunkte.withLP",
+            "state.belastung.cause", "state.belastung.removal",
+        ] { assertLocalized(key) }
+
+        for origin in SchmerzOrigin.allCases {
+            assertLocalized(origin.nameKey)
+            assertLocalized(origin.removalKey)
+        }
+    }
 }

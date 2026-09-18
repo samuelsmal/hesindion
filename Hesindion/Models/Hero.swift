@@ -559,17 +559,25 @@ final class Hero {
     /// state detail sheet and the take-damage screen's before/after all follow
     /// without a second reader of the same fact. `effectiveSchmerzLevel` still
     /// caps the total and still applies Zäher Hund.
-    var schmerzLevel: Int {
-        guard let dv = derivedValues else { return temporarySchmerzLevel }
+    var schmerzLevel: Int { lebenspunkteSchmerzLevel + temporarySchmerzLevel }
+
+    /// The half of it the life points alone are worth: the four thresholds
+    /// (¾, ½, ¼ of the maximum, and "5 LP or fewer"), and nothing else.
+    ///
+    /// Split out from `schmerzLevel` so the aftermath screen can say where a
+    /// level came from — this one goes when the hero is healed, and there is
+    /// nothing to switch off — without a second copy of the thresholds.
+    var lebenspunkteSchmerzLevel: Int {
+        guard let dv = derivedValues else { return 0 }
         let current = dv.lebensenergie.current
         let maxLP = dv.lebensenergie.max
-        guard maxLP > 0 else { return temporarySchmerzLevel }
+        guard maxLP > 0 else { return 0 }
         var level = 0
         if current <= (maxLP * 3) / 4 { level = 1 }
         if current <= maxLP / 2 { level = 2 }
         if current <= maxLP / 4 { level = 3 }
         if current <= 5 { level += 1 }
-        return level + temporarySchmerzLevel
+        return level
     }
 
     /// True if hero has Zäher Hund (ADV_49).
@@ -582,6 +590,26 @@ final class Hero {
         let raw = schmerzLevel
         if raw >= 4 { return 4 }
         return hasZaeherHund ? max(0, raw - 1) : raw
+    }
+
+    /// Where the hero's Schmerz comes from, and what ends each part of it.
+    ///
+    /// Read by the screen after the fight, which used to print one inert row
+    /// ("Schmerz II") and leave the player to work out whether it was something
+    /// they were supposed to do anything about (owner report: "Why is this
+    /// listed as read-only? This usually goes away — depending on the origin").
+    /// It does go away, but by two different routes, and the app knows which:
+    /// the LP part ends with healing and the Patzer part ends with this very
+    /// fight. Pure, and derived from the same properties every other reader
+    /// uses, so the rows cannot drift from the chip.
+    var schmerzBreakdown: SchmerzBreakdown {
+        SchmerzBreakdown(
+            lebenspunkteLevel: lebenspunkteSchmerzLevel,
+            patzerLevel: temporarySchmerzLevel,
+            currentLP: derivedValues?.lebensenergie.current,
+            maxLP: derivedValues?.lebensenergie.max,
+            hasZaeherHund: hasZaeherHund
+        )
     }
 
     /// Penalty from Schmerz, applied to all checks.
