@@ -56,18 +56,20 @@ extension CombatManeuver {
         }
     }
 
-    /// Localized source label for modifier breakdown.
     /// I, II, III — how the rulebook writes an ability's tier, and how the two
     /// Wuchtschlag rows are told apart once both are offered.
     static func roman(_ tier: Int) -> String {
         ["", "I", "II", "III", "IV"][min(max(tier, 0), 4)]
     }
 
+    /// Localized source label for modifier breakdown.
     var sourceLabel: String {
         switch self {
         case .normal: return ""
         case .finte: return L("source.finte")
-        case .wuchtschlag(let tier): return "\(L("source.wuchtschlag")) \(Self.roman(tier))"
+        // Unreachable for output: MeleeModifiers.maneuverAT returns nil for
+        // Wuchtschlag, whose AT line the catalog labels instead (SA_67).
+        case .wuchtschlag: return ""
         case .vorstoss: return L("source.vorstoss")
         case .schildspalter: return ""
         case .sturmangriff: return L("source.sturmangriff")

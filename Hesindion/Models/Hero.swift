@@ -489,7 +489,6 @@ final class Hero {
     func tier(of ability: CombatAbility) -> Int { specialAbilityTier(ability.rawValue) }
 
     var hasAufmerksamkeit: Bool { has(.aufmerksamkeit) }
-    var hasGolgaritenStil: Bool { has(.golgaritenStil) }
     var hasBerittenerKampf: Bool { has(.berittenerKampf) }
     var finteTier: Int { tier(of: .finte) }
     var wuchtschlagTier: Int { tier(of: .wuchtschlag) }

@@ -350,9 +350,13 @@ struct CombatWoundEffectPanel: View {
     /// The Wundschwelle-based penalty plus whatever the engine adds to the same
     /// check (Verweichlicht/DISADV_57, a Zustand) — the modal this panel opens
     /// rolls at this same total, via the shared `Situation.woundEffectProbe`.
+    /// The talent id comes from the hero's own Selbstbeherrschung row, the same
+    /// source `CombatTakeDamageView` uses to build the modal it rolls, so the
+    /// two cannot disagree (falls back to `Talent.selbstbeherrschungRuleId` when
+    /// the hero has no such row, same as `Hero.selbstbeherrschung`).
     private var probeModifier: Int {
         let engineModifier = ModifierEngine.shared.evaluate(
-            context: Situation.woundEffectProbe(hero: hero, talentId: Talent.selbstbeherrschungRuleId)
+            context: Situation.woundEffectProbe(hero: hero, talentId: hero.selbstbeherrschung.ruleId)
         ).reduce(0) { $0 + $1.value }
         return WoundEffectResolver.probeModifier(damage: effectiveDamage, wundschwelle: wundschwelle) + engineModifier
     }

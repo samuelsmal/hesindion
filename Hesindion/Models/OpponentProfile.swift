@@ -119,7 +119,7 @@ struct OpponentProfile: Equatable {
     /// Nothing is applied — they have no PA to subtract from — so this is the
     /// figure the GM takes off theirs. The Finte line is still made here;
     /// every other opponent line is the catalog's (`Evaluation.opponentLines`).
-    func defenseModifiers(maneuver: CombatManeuver, isCriticalHit: Bool = false) -> [ModifierLine] {
+    func defenseModifiers(maneuver: CombatManeuver) -> [ModifierLine] {
         var lines: [ModifierLine] = []
         if case .finte(let tier) = maneuver {
             lines.append(ModifierLine(value: -tier * 2, source: L("maneuver.finte")))

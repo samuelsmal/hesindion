@@ -5,6 +5,8 @@ import Foundation
 /// One `ModifierDefinition` is generated per catalog state with a `.penalty` mechanic,
 /// plus a dedicated Entrückung definition. All Zustand-derived lines are tagged
 /// `isZustand: true` so `ModifierEngine` can apply the combined −5 Zustand cap.
+/// A state whose mechanic is `.catalog` (Liegend so far) has no definition
+/// here at all — its numbers come straight from the rules catalog.
 enum StateModifiers {
     static var all: [ModifierDefinition] { penaltyDefinitions + [entrueckungDef] }
 

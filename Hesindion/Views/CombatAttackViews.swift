@@ -933,13 +933,9 @@ struct CombatAnnouncementView: View {
     /// not rolled yet, so the multiplier stays in the label rather than being
     /// worked into the formula.
     private func effectiveDamageLabel(_ formula: String, _ bonus: [ModifierLine], _ karmal: CriticalDamage) -> String {
-        let added = adjustedDamage(bonus) ?? formula
+        let added = DamageModifiers.applied(to: damageFormula, lines: bonus) ?? formula
         guard let label = karmal.label else { return added }
         return "(\(added)) \(label)"
-    }
-
-    private func adjustedDamage(_ bonus: [ModifierLine]) -> String? {
-        DamageModifiers.applied(to: damageFormula, lines: bonus)
     }
 }
 

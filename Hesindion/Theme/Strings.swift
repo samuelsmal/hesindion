@@ -249,11 +249,7 @@ enum DSAStrings {
         "source.weapon":        "Weapon",
         "source.belastung":     "Encumbrance",
         "source.schmerz":       "Pain",
-        "source.vorteilhaft":   "Adv. Position",
-        "source.golgariten":    "Golgariten",
-        "source.plaenkler":     "Skirmisher",
         "source.finte":         "Feint",
-        "source.wuchtschlag":   "Powerful Blow",
         "source.vorstoss":      "Thrust",
         "source.sturmangriff":  "Mounted Charge",
         "source.dualAttack":    "Dual-attack",
@@ -331,7 +327,6 @@ enum DSAStrings {
 
         // Weapon Reach
         "opponentReach.label":          "OPPONENT REACH",
-        "source.reach":                 "Reach",
 
         // Opponent Defense
         "opponentDefense":              "Opponent Defense",
@@ -364,7 +359,6 @@ enum DSAStrings {
         "fumble.spIgnoresRS":           "SP not reduced by armor",
 
         // Multiple Defenses
-        "source.multipleDefense":       "Multiple Defense",
         "defense.nthParry":             "%d. parry \u{00B7} %d",
         "defense.nthDodge":             "%d. dodge \u{00B7} %d",
 
@@ -675,7 +669,6 @@ enum DSAStrings {
         "trefferzone.probe":            "Check: %@ %d",
         "trefferzone.dropWeapon":       "Drop weapon",
         "trefferzone.reminderTitle":    "Hit zone: %@",
-        "modifier.trefferzone":         "Hit Zone",
     ]
 
     private static let translations: [String: String] = [
@@ -913,11 +906,7 @@ enum DSAStrings {
         "source.weapon":        "Waffe",
         "source.belastung":     "Belastung",
         "source.schmerz":       "Schmerz",
-        "source.vorteilhaft":   "Vorteilh. Pos.",
-        "source.golgariten":    "Golgariten",
-        "source.plaenkler":     "Plänkler",
         "source.finte":         "Finte",
-        "source.wuchtschlag":   "Wuchtschlag",
         "source.vorstoss":      "Vorstoß",
         "source.sturmangriff":  "Sturmangriff",
         "source.dualAttack":    "Beidhändig",
@@ -996,7 +985,6 @@ enum DSAStrings {
 
         // Weapon Reach
         "opponentReach.label":          "GEGNER-REICHWEITE",
-        "source.reach":                 "Reichweite",
 
         // Opponent Defense
         "opponentDefense":              "Verteidigung des Gegners",
@@ -1029,7 +1017,6 @@ enum DSAStrings {
         "fumble.spIgnoresRS":           "SP werden nicht durch RS reduziert",
 
         // Multiple Defenses
-        "source.multipleDefense":       "Mehrfache Verteidigung",
         "defense.nthParry":             "%d. Parade \u{00B7} %d",
         "defense.nthDodge":             "%d. Ausweichen \u{00B7} %d",
 
@@ -1556,7 +1543,6 @@ enum DSAStrings {
         "trefferzone.probe":            "Probe: %@ %d",
         "trefferzone.dropWeapon":       "Waffe ablegen",
         "trefferzone.reminderTitle":    "Trefferzone: %@",
-        "modifier.trefferzone":         "Trefferzone",
     ]
 }
 

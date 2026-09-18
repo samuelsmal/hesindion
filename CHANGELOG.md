@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `ModifierContext` is `Situation`; the opponent is a roster entry with stated states and GM facts.
 - A modifier line from the catalog is labelled with the rule's name and carries its id.
 - The prone opponent's row in the opponent's defence box reads "Liegend" (the rule's name) instead of "Ziel liegt"; the toggle that sets it keeps that label.
-- The Zonenaufschlag catalog clause (`GRW_zonenaufschlag`) now checks the Trefferzonen Fokusregel itself, not only that a zone is set — the zone picker was already hidden with the rule off (both flows: `zonesActive`/`trefferzoneSection` gate it, and the ranged one also nulls the announced zone before it reaches the engine), so this closes a gap in the engine rather than fixing something a player could see.
+- The Zonenaufschlag catalog clause (`GRW_zonenaufschlag`) now checks the Trefferzonen Fokusregel itself, not only that a zone is set — the zone picker was already hidden with the rule off (both flows: `zonesActive`/`trefferzoneSection` gate it, and both also null the announced zone before it reaches the engine), so this closes a gap in the engine rather than fixing something a player could see.
 
 ### Removed
 
