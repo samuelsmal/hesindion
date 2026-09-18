@@ -65,10 +65,23 @@ final class StringsCoverageTests: XCTestCase {
             "fumble.stumble.write", "fumble.until.round", "fumble.untilNextAction",
             "fumble.jam.write", "fumble.jam.reason",
             "fumble.noDefense.write", "fumble.noDefense.reason",
-            "fumble.damaged.badge", "fumble.friendHit.selfDamage",
+            "fumble.damaged.badge", "fumble.damaged.badge.ranged",
+            "fumble.friendHit.selfDamage",
             "damagedItems.title", "damagedItems.subtitle", "damagedItems.repair",
             "schmerz.fromFumble",
+            // A result that wrote nothing, the opponent's blow after a defence
+            // Patzer, and the retreat a prone hero cannot make.
+            "fumble.unchanged", "fumble.incomingHit", "flucht.noRetreat",
         ] { assertLocalized(key) }
+    }
+
+    /// The damaged-equipment badge is the picker's whole reason to carry it — the
+    /// player chooses what to fight with there — so the number on it has to be
+    /// the one the roll will charge: −2 in melee, −4 at range
+    /// (`FumbleModifiers.beschaedigt`). One shared string was wrong on one of the
+    /// two rows, and the ranged one was the wrong one.
+    func testTheDamagedBadgeSaysADifferentNumberAtRange() {
+        XCTAssertNotEqual(L("fumble.damaged.badge"), L("fumble.damaged.badge.ranged"))
     }
 
     /// M7: the melee and ranged zone pickers share one component but not one hint —

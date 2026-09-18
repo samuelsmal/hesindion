@@ -212,6 +212,68 @@ final class FumbleTemporaryEffectTests: XCTestCase {
         XCTAssertFalse(hero.activeCombatNoDefense)
     }
 
+    /// The other end of "bis zur nächsten Aktion": a hero who takes no action at
+    /// all still gets a next round. An archer who spends two rounds reloading
+    /// never opens an action screen, and without this the fumble would bar every
+    /// parry and dodge for the rest of the fight.
+    func testZuKonzentriertAlsoEndsWithTheRound() {
+        hero.activeCombatNoDefense = true
+        hero.beginCombatRound()
+        XCTAssertFalse(hero.activeCombatNoDefense, "a new Kampfrunde lifts it too")
+    }
+
+    // MARK: - Re-rolled initiative
+
+    /// Re-rolling initiative sets the round back to 1, and both clocks are
+    /// absolute round numbers. Without rebasing, a Zerrung rolled in round 6 —
+    /// last round 8, two rounds left — would still say 8 in a count that has just
+    /// restarted at 1, and so run for eight more rounds.
+    func testRerolledInitiativeKeepsTheRoundsThatWereLeft() {
+        hero.activeCombatRound = 6
+        hero.addTemporarySchmerz(rolledInRound: 6)
+        hero.applyRangedJam(rolledInRound: 6)
+        XCTAssertEqual(hero.temporarySchmerzLastRound, 8)
+        XCTAssertEqual(hero.activeCombatJamUntilRound, 8)
+
+        // The fight reaches round 7 and initiative is rolled again.
+        hero.rebaseCombatClocks(fromRound: 7, toRound: 1)
+        hero.activeCombatRound = 1
+
+        XCTAssertEqual(hero.temporarySchmerzLastRound, 2, "rounds 7 and 8 became rounds 1 and 2")
+        XCTAssertEqual(hero.activeCombatJamUntilRound, 2)
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 1, "it is still running, with two rounds left")
+        XCTAssertTrue(hero.isRangedWeaponJammed)
+
+        hero.activeCombatRound = 2
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 1)
+        hero.activeCombatRound = 3
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 0, "and no more than the two")
+        XCTAssertFalse(hero.isRangedWeaponJammed)
+    }
+
+    func testRerolledInitiativeClearsAClockThatHadAlreadyRunOut() {
+        hero.activeCombatRound = 3
+        hero.addTemporarySchmerz(rolledInRound: 3)   // through round 5
+        hero.applyRangedJam(rolledInRound: 3)
+
+        hero.rebaseCombatClocks(fromRound: 7, toRound: 1)
+        hero.activeCombatRound = 1
+
+        XCTAssertEqual(hero.temporarySchmerzLevels, 0, "an expired clock is cleared, not shifted")
+        XCTAssertEqual(hero.temporarySchmerzLastRound, 0)
+        XCTAssertEqual(hero.activeCombatJamUntilRound, 0)
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 0)
+        XCTAssertFalse(hero.isRangedWeaponJammed)
+    }
+
+    func testRebasingLeavesAHeroWithNoClocksAlone() {
+        hero.activeCombatRound = 4
+        hero.rebaseCombatClocks(fromRound: 4, toRound: 1)
+        XCTAssertEqual(hero.temporarySchmerzLevels, 0)
+        XCTAssertEqual(hero.temporarySchmerzLastRound, 0)
+        XCTAssertEqual(hero.activeCombatJamUntilRound, 0)
+    }
+
     // MARK: - Which table a parry reads
 
     /// The fix the previous task's review turned up: a hero who parries with the

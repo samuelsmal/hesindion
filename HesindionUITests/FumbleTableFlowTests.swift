@@ -26,8 +26,10 @@ final class FumbleTableFlowTests: XCTestCase {
     private static let selfDamageScript = "20,20,5,6,3"
 
     /// 2W6 4+4 = 8 → "Stolpern": the next Handlung is 2 harder, and only the
-    /// next one.
-    private static let stumbleScript = "20,20,4,4"
+    /// next one. The 7 that follows is the parry that actually pays it — an
+    /// ordinary roll, neither a 1 nor a 20, so it settles without a confirmation
+    /// and without opening a branch of its own.
+    private static let stumbleScript = "20,20,4,4,7,7"
 
     /// 2W6 2+2 = 4 → "Waffe beschädigt": AT and PA 2 harder until it is
     /// repaired. The parry is made with the Langschwert, so the Langschwert is
@@ -81,11 +83,8 @@ final class FumbleTableFlowTests: XCTestCase {
 
         let paCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
         XCTAssertTrue(paCalculation.waitForExistence(timeout: UITest.timeout), "No parry calculation")
-        XCTAssertTrue(
-            paCalculation.staticTexts["Liegend"].exists,
-            "The parry does not name Liegend"
-        )
-        XCTAssertTrue(paCalculation.staticTexts["-2"].exists, "Liegend costs a defence 2")
+        assertRow(paCalculation, source: "Liegend", value: "-2",
+                  "Liegend should cost the parry 2")
 
         // Back to the root: parry execution → weapon list → root.
         app.buttons["combat.back"].tap()
@@ -107,11 +106,8 @@ final class FumbleTableFlowTests: XCTestCase {
 
         let atCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
         XCTAssertTrue(atCalculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
-        XCTAssertTrue(
-            atCalculation.staticTexts["Liegend"].exists,
-            "The attack does not name Liegend"
-        )
-        XCTAssertTrue(atCalculation.staticTexts["-4"].exists, "Liegend costs an attack 4")
+        assertRow(atCalculation, source: "Liegend", value: "-4",
+                  "Liegend should cost the attack 4")
         captureScreenshot(app, named: "41-fumble-liegend-attack-penalty")
     }
 
@@ -192,6 +188,48 @@ final class FumbleTableFlowTests: XCTestCase {
         // subtraction itself.
         XCTAssertTrue(formula.staticTexts["RS"].exists, "The armour has no row in the calculation")
         XCTAssertTrue(formula.staticTexts["7 LP"].exists, "7 TP less RS 0 is 7 LP")
+
+        // --- And the opponent's blow, which landed all the same.
+        //
+        // This Patzer was rolled on a *Parade*: the GM ruled the defence failed
+        // before the table was even reached, so the hero takes their own weapon's
+        // damage *and* the hit they failed to stop. One prefilled entry can only
+        // hold one of the two, and the incoming hit used to be the one that
+        // silently disappeared.
+        let confirm = app.buttons["combat.takeDamage.confirm"]
+        XCTAssertTrue(app.scrollUntilHittable(confirm), "No confirm on the take-damage screen")
+        confirm.tap()
+
+        let incoming = app.buttons["combat.takeDamage.incomingHit"]
+        XCTAssertTrue(
+            incoming.waitForExistence(timeout: UITest.timeout),
+            "A fumbled parry ended at the combat root with the opponent's blow unaccounted for"
+        )
+        XCTAssertFalse(
+            app.buttons["combat.takeDamage.newAction"].exists,
+            "\"Neue Aktion\" still offers the way out that drops the incoming hit"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(incoming), "Could not reach the opponent's-blow button")
+        incoming.tap()
+
+        // A second entry, empty and unconfirmed — the same `CombatStep` case as
+        // the first, so this is also what proves the screen's `@State` was reset
+        // rather than carried over already settled.
+        let second = app.descendants(matching: .any)["combat.takeDamage.formula"]
+        XCTAssertTrue(
+            second.waitForExistence(timeout: UITest.timeout),
+            "The second take-damage entry did not open"
+        )
+        XCTAssertTrue(
+            second.staticTexts["Treffer des Gegners"].exists,
+            "The second entry does not say whose blow it is"
+        )
+        XCTAssertTrue(second.staticTexts["0 LP"].exists, "The second entry should start empty")
+        XCTAssertTrue(
+            app.buttons["combat.takeDamage.confirm"].waitForExistence(timeout: UITest.timeout),
+            "The second entry opened already confirmed"
+        )
+        captureScreenshot(app, named: "47-fumble-parry-incoming-hit")
     }
 
     // MARK: - Stolpern
@@ -199,7 +237,12 @@ final class FumbleTableFlowTests: XCTestCase {
     /// "Nächste Handlung um –2 erschwert" used to be prose on a panel, and prose
     /// a player has to remember for exactly one roll is prose nobody applies.
     /// The −2 is a modifier line now, so it appears in the calculation of the
-    /// next roll — and, because the roll that pays it consumes it, in no other.
+    /// next roll — and, because the *roll* that pays it consumes it, in no other.
+    ///
+    /// The roll, not the screen. Opening Parieren, reading the −2 and backing out
+    /// again rolls nothing, so it must cost nothing: the effect used to be spent
+    /// in `onAppear`, which let a player look at the penalty and walk away from
+    /// it. So this goes through the screen twice before it rolls once.
     @MainActor
     func testStolpernCostsTheNextRollTwoAndOnlyTheNext() {
         continueAfterFailure = false
@@ -216,26 +259,77 @@ final class FumbleTableFlowTests: XCTestCase {
 
         backToRoot(app)
 
-        // --- The next parry names it and pays the −2.
+        // --- (a) The next parry names it and shows the −2 …
         app.buttons["combat.parry"].tap()
-        let firstCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
-        XCTAssertTrue(firstCalculation.waitForExistence(timeout: UITest.timeout), "No parry calculation")
-        XCTAssertTrue(
-            firstCalculation.staticTexts["Stolpern (Patzer)"].exists,
-            "The next roll does not name the Stolpern"
-        )
+        assertStumbleRow(app, present: true, "The next roll does not name the Stolpern")
         captureScreenshot(app, named: "44-fumble-stolpern-next-roll")
+
+        // … and backing out without rolling does not spend it.
+        backFromParryExecution(app)
+
+        app.buttons["combat.parry"].tap()
+        assertStumbleRow(
+            app, present: true,
+            "Opening the roll screen and leaving it spent the Stolpern — nothing was rolled")
+
+        // --- (b) This time the roll is actually made, which is what pays for it.
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "No dice on the parry screen")
+        diceBox.tap()
+        // Both a successful and a failed parry end in a "Neue Aktion" of this
+        // name — the failed one under "Schaden nehmen" — so it is the settled
+        // roll, whichever way the scripted 7 fell against the modified PA.
+        XCTAssertTrue(
+            app.buttons["combat.execution.newAction.miss"].waitForExistence(timeout: UITest.timeout),
+            "The scripted 7 did not settle the parry"
+        )
+        // The calculation still names it: the lines were built before the roll,
+        // so a Schicksalspunkt reroll of this same parry would keep the −2.
+        assertStumbleRow(
+            app, present: true,
+            "The roll that pays the −2 stopped showing it the moment it was spent")
 
         backFromParryExecution(app)
 
-        // --- And the one after it does not: the roll above consumed it.
+        // --- (c) And the one after it does not: the roll above consumed it.
         app.buttons["combat.parry"].tap()
-        let secondCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
-        XCTAssertTrue(secondCalculation.waitForExistence(timeout: UITest.timeout), "No second parry calculation")
-        XCTAssertFalse(
-            secondCalculation.staticTexts["Stolpern (Patzer)"].exists,
-            "The Stolpern was charged twice"
-        )
+        assertStumbleRow(app, present: false, "The Stolpern was charged twice")
+    }
+
+    /// The Stolpern row of the parry calculation, by row rather than by loose
+    /// text: a bare `staticTexts["-2"]` is satisfied by any −2 on the screen, and
+    /// this screen has several (Liegend, Mehrfache Verteidigung, a damaged
+    /// weapon), so it could pass while the Stolpern itself had gone.
+    @MainActor
+    private func assertStumbleRow(_ app: XCUIApplication, present: Bool, _ message: String) {
+        let calculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(calculation.waitForExistence(timeout: UITest.timeout), "No parry calculation")
+        if present {
+            assertRow(calculation, source: "Stolpern (Patzer)", value: "-2", message)
+        } else {
+            XCTAssertFalse(
+                calculation.descendants(matching: .any)["combat.breakdown.row.Stolpern (Patzer)"].exists,
+                message)
+        }
+    }
+
+    /// One row of a calculation, asserted as a row: the label and the number in
+    /// the same container. `staticTexts["-2"]` on the whole box is satisfied by
+    /// *any* −2 in it — and a parry can carry several (Liegend, Mehrfache
+    /// Verteidigung, a dented weapon, the Stolpern) — so it passed for a penalty
+    /// that had moved to another line or gone entirely.
+    @MainActor
+    private func assertRow(
+        _ box: XCUIElement, source: String, value: String, _ message: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let row = box.descendants(matching: .any)["combat.breakdown.row.\(source)"]
+        XCTAssertTrue(
+            row.waitForExistence(timeout: UITest.timeout),
+            "\(message): no \"\(source)\" row in the calculation", file: file, line: line)
+        XCTAssertTrue(
+            row.staticTexts[value].exists,
+            "\(message): the \"\(source)\" row does not say \(value)", file: file, line: line)
     }
 
     // MARK: - Waffe beschädigt
@@ -271,11 +365,8 @@ final class FumbleTableFlowTests: XCTestCase {
 
         let calculation = app.descendants(matching: .any)["combat.execution.breakdown"]
         XCTAssertTrue(calculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
-        XCTAssertTrue(
-            calculation.staticTexts["Langschwert beschädigt"].exists,
-            "The attack does not name the damaged weapon"
-        )
-        XCTAssertTrue(calculation.staticTexts["-2"].exists, "A damaged weapon costs 2")
+        assertRow(calculation, source: "Langschwert beschädigt", value: "-2",
+                  "A damaged weapon should cost the attack 2")
 
         // --- And the loadout picker marks it, which is where the player picks
         // what to fight with and so the one place the badge has to be. Back from
