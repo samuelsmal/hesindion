@@ -132,7 +132,7 @@
   text: |
     Angriffe mit geweihten Waffen bewirken bei Dämonen regulären Schaden. Angriffe mit
     geweihten Waffen der Gegengottheit erzeugen doppelte Trefferpunkte.
-  note: "Fokusregel karmaleObjekte. Which weapon is geweiht is a hero-span answer under the rule's toggle (Hero.consecratedWeapons; no Optolith export says so). Whether the demon is of the opposing deity is the GM's call, once per fight (gm.fact opposingDeity, span opponent). Regular damage to any other demon is stated on screen, not computed (KarmalWeapon.statesSomething)."
+  note: "Fokusregel karmaleObjekte. Which weapon is geweiht is a hero-span answer under the rule's toggle (Hero.consecratedWeapons; no Optolith export says so). Whether the demon is of the opposing deity is the GM's call, once per fight (gm.fact opposingDeity, span opponent). Regular damage to any other demon is stated on screen by the demon toggle's subtitle, not computed."
   clauses:
     - kind: passive
       domains: [damage]
@@ -274,7 +274,7 @@
   group: "Status (binary)"
   status: implemented
   reviewed: null
-  note: "The hero liegend: AT −4, PA und AW −2 (ein Status, außerhalb der −5-Zustandsgrenze). Der Gegner liegend: −2 auf *seine* Verteidigung, als Gegner-Zeile ausgewiesen — die Regeln geben dem Angreifer dafür nichts. Pro Angriff am Gegner-Eintrag angegeben (OpponentProfile.isProne)."
+  note: "The hero liegend: AT −4, PA and AW −2 (a Status, outside the −5 Zustand cap). The opponent liegend: −2 on *their* defence, printed as an opponent line — the rules give the attacker nothing for it. Stated per attack on the roster entry (OpponentProfile.isProne)."
   clauses:
     - kind: passive
       domains: [meleeAttack]

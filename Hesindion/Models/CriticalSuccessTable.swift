@@ -112,6 +112,22 @@ enum CriticalDamage: Equatable {
     }
 }
 
+extension CriticalDamage {
+    /// What a catalog `multiply` factor means to the damage screen. `nil` for a
+    /// factor no known result carries — `DamageModifiers.multiplier(situation:)`
+    /// is the only caller and asserts on `nil` rather than silently drop the
+    /// catalog's factor.
+    init?(factor: Double) {
+        switch factor {
+        case 1:   self = .unchanged
+        case 1.5: self = .oneAndAHalf
+        case 2:   self = .double
+        case 3:   self = .triple
+        default:  return nil
+        }
+    }
+}
+
 // MARK: - Reading a result without its damage clause
 
 /// Every table row that changes the damage says so in prose first — "Die

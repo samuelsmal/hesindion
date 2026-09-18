@@ -98,6 +98,32 @@ final class RulesCatalogTests: XCTestCase {
         XCTAssertEqual(RulesDatabase.shared.lookup(id: "SA_67")?.levelTexts.count, 0)
     }
 
+    /// `DamageModifiers.multiplier(situation:)` reads one `tp` multiplier and
+    /// maps its factor through `CriticalDamage(factor:)` — a guarantee about
+    /// the whole catalog, not only the fixtures that happen to exercise it.
+    /// A factor with no `CriticalDamage` case, or a second rule multiplying
+    /// `tp`, would otherwise be caught only by an `assertionFailure` no
+    /// Release build sees.
+    func testEveryTPMultiplierIsKnownAndAtMostOneRuleMultipliesTP() throws {
+        try requireDatabase()
+        func flatten(_ effects: [RuleEffect]) -> [RuleEffect] {
+            effects.flatMap { effect -> [RuleEffect] in
+                if case .choice(let options) = effect { return flatten(options) }
+                return [effect]
+            }
+        }
+        var rulesMultiplyingTP: Set<String> = []
+        for rule in RuleCatalog.bundled.implemented {
+            for effect in rule.clauses.flatMap({ flatten($0.effects) }) {
+                guard case .multiply(let target, let factor) = effect, target == .tp else { continue }
+                XCTAssertNotNil(CriticalDamage(factor: factor), "\(rule.id): factor \(factor) has no CriticalDamage")
+                rulesMultiplyingTP.insert(rule.id)
+            }
+        }
+        XCTAssertLessThanOrEqual(rulesMultiplyingTP.count, 1,
+                                 "the damage screen shows one multiplier; two need DamageModifiers.multiplier to combine them: \(rulesMultiplyingTP.sorted())")
+    }
+
     /// The floor. Adding entries must not fail this; losing one must.
     func testCoverageDoesNotGoBackwards() throws {
         try requireDatabase()

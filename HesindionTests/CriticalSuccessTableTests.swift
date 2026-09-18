@@ -160,6 +160,18 @@ final class CriticalSuccessTableTests: XCTestCase {
         XCTAssertEqual(CriticalDamage.triple.apply(to: 13), 39)
     }
 
+    /// The catalog's `multiply` factor, as `DamageModifiers.multiplier` reads it.
+    /// A factor with no case here is a catalog author's mistake, not something
+    /// this initializer should paper over with a guess.
+    func testCriticalDamageFromFactor() {
+        XCTAssertEqual(CriticalDamage(factor: 1), .unchanged)
+        XCTAssertEqual(CriticalDamage(factor: 1.5), .oneAndAHalf)
+        XCTAssertEqual(CriticalDamage(factor: 2), .double)
+        XCTAssertEqual(CriticalDamage(factor: 3), .triple)
+        XCTAssertNil(CriticalDamage(factor: 2.5))
+        XCTAssertNil(CriticalDamage(factor: 0))
+    }
+
     /// "veranderthalbfacht (aufgerundet)" — and DSA rounds up where the rules do
     /// not say otherwise anyway (ADR-0006). The odd cases are the ones worth
     /// pinning: 13 → 19.5 → 20, not 19.

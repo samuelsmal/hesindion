@@ -1,20 +1,23 @@
 import Foundation
 
-/// What a consecrated weapon *says* about a demon (Fokusregel *Karmale
-/// Objekte*). The doubling itself is the catalog's — `GRW_karmaleObjekte`,
-/// read through `DamageModifiers.multiplier(situation:)` — because it needs
-/// nothing this type does not: two facts the app can know neither of, whether
-/// the weapon is consecrated (a per-weapon setting the player makes) and
-/// whether the thing on the other side is a demon of the god this weapon is
-/// sworn against (the GM's to say, at the moment of the attack).
+/// Fokusregel *Karmale Objekte*.
 ///
 /// > "Angriffe mit geweihten Waffen bewirken bei Dämonen regulären Schaden.
 /// > Angriffe mit geweihten Waffen der Gegengottheit erzeugen doppelte
 /// > Trefferpunkte."
 ///
-/// What is left here is the half the catalog does not say: whether the
-/// screen has anything worth stating at all, since "regulärer Schaden" to an
-/// ordinary demon is itself the exception worth naming.
+/// The doubling is the catalog's — `GRW_karmaleObjekte`, read through
+/// `DamageModifiers.multiplier(situation:)` — and needs nothing this type
+/// does not already say: two facts the app can know neither of, whether the
+/// weapon is consecrated (a per-weapon setting the player makes) and whether
+/// the thing on the other side is a demon of the god this weapon is sworn
+/// against (the GM's to say, at the moment of the attack).
+///
+/// What the announcement screen says about an ordinary demon — "regulärer
+/// Schaden" is itself the exception worth naming — is a fixed subtitle on the
+/// toggle (`L("daemon.target.subtitle")`, `CombatAttackViews.swift`), not
+/// this type: `Target` and `statesSomething` below have no caller today
+/// outside their own tests.
 enum KarmalWeapon {
 
     /// What the target is, as far as this rule cares.

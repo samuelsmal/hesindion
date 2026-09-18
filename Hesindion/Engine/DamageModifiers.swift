@@ -38,18 +38,23 @@ enum DamageModifiers {
     }
 
     /// The multiplier the catalog puts on the rolled TP, as the damage screen
-    /// already understands it. Karmale Objekte is the only one today.
+    /// already understands it. `RulesCatalogTests.testEveryTPMultiplierIsKnownAndAtMostOneRuleMultipliesTP`
+    /// holds the whole catalog to one `tp` multiplier and a factor
+    /// `CriticalDamage(factor:)` knows, so both assertions below are a
+    /// test-time guarantee failing loudly rather than a path this call
+    /// expects to hit.
     static func multiplier(situation: Situation) -> CriticalDamage {
         precondition(situation.domain == .damage, "damage multipliers want the damage domain")
-        guard let first = ModifierEngine.shared.evaluation(situation).multipliers.first(where: { $0.target == .tp }) else {
+        let tpMultipliers = ModifierEngine.shared.evaluation(situation).multipliers.filter { $0.target == .tp }
+        guard let first = tpMultipliers.first else { return .unchanged }
+        if tpMultipliers.count > 1 {
+            assertionFailure("the damage screen shows one multiplier; two need DamageModifiers.multiplier to combine them")
+        }
+        guard let damage = CriticalDamage(factor: first.factor) else {
+            assertionFailure("no CriticalDamage for factor \(first.factor) from \(first.ruleId)")
             return .unchanged
         }
-        switch first.factor {
-        case 1.5: return .oneAndAHalf
-        case 2:   return .double
-        case 3:   return .triple
-        default:  return .unchanged
-        }
+        return damage
     }
 
     /// The weapon's formula with every bonus folded in — `nil` for an action that

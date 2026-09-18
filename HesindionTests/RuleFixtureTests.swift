@@ -438,8 +438,10 @@ final class RuleFixtureTests: XCTestCase {
         arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
         hero.setConsecrated("Rabenschnabel", true)
         XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .unchanged, "Fokusregel off")
+        XCTAssertEqual(reason("GRW_karmaleObjekte", in: evaluation(consecratedSwing(daemon: true, opposing: true))), .conditionFalse)
         hero.setFokusRule(.karmaleObjekte, active: true)
         hero.setConsecrated("Rabenschnabel", false)
         XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .unchanged, "an ordinary blade")
+        XCTAssertEqual(reason("GRW_karmaleObjekte", in: evaluation(consecratedSwing(daemon: true, opposing: true))), .conditionFalse)
     }
 }
