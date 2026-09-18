@@ -122,6 +122,27 @@
             - { gm.fact: { id: advantageousPosition, span: attack } }
       effects: [{ add: { target: at, value: 2 } }, { add: { target: pa, value: 2 } }]
 
+- id: GRW_karmaleObjekte
+  name: "Karmale Objekte"
+  group: "Fokusregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/Fokus_Karmale_Objekte.html", fetched: 2026-09-14 }
+  text: |
+    Angriffe mit geweihten Waffen bewirken bei Dämonen regulären Schaden. Angriffe mit
+    geweihten Waffen der Gegengottheit erzeugen doppelte Trefferpunkte.
+  note: "Fokusregel karmaleObjekte. Which weapon is geweiht is a hero-span answer under the rule's toggle (Hero.consecratedWeapons; no Optolith export says so). Whether the demon is of the opposing deity is the GM's call, once per fight (gm.fact opposingDeity, span opponent). Regular damage to any other demon is stated on screen, not computed (KarmalWeapon.statesSomething)."
+  clauses:
+    - kind: passive
+      domains: [damage]
+      when:
+        - { hero.fokusRule: karmaleObjekte }
+        - { loadout.weapon: { consecrated: true } }
+        - { opponent.type: demon }
+        - { gm.fact: { id: opposingDeity, span: opponent } }
+      effects: [{ multiply: { target: tp, factor: 2 } }]
+
 # ---------------------------------------------------------------------------
 # Implemented through the evaluator (status implemented): the clauses say what
 # the app does. reviewed is null until a person has read them against the text.

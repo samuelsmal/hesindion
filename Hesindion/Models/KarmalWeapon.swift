@@ -1,19 +1,20 @@
 import Foundation
 
-/// What a consecrated weapon does to a demon (Fokusregel *Karmale Objekte*).
+/// What a consecrated weapon *says* about a demon (Fokusregel *Karmale
+/// Objekte*). The doubling itself is the catalog's — `GRW_karmaleObjekte`,
+/// read through `DamageModifiers.multiplier(situation:)` — because it needs
+/// nothing this type does not: two facts the app can know neither of, whether
+/// the weapon is consecrated (a per-weapon setting the player makes) and
+/// whether the thing on the other side is a demon of the god this weapon is
+/// sworn against (the GM's to say, at the moment of the attack).
 ///
 /// > "Angriffe mit geweihten Waffen bewirken bei Dämonen regulären Schaden.
 /// > Angriffe mit geweihten Waffen der Gegengottheit erzeugen doppelte
 /// > Trefferpunkte."
 ///
-/// Two facts decide it and the app can know neither: whether the weapon is
-/// consecrated (a per-weapon setting the player makes) and whether the thing on
-/// the other side is a demon of the god this weapon is sworn against (the GM's
-/// to say, at the moment of the attack). So this is a lookup over two answers,
-/// not a derivation — see `HitZoneSizes` for the same discipline.
-///
-/// The doubling lands on the rolled TP before armour, which is where the
-/// damage screen applies every other multiplier.
+/// What is left here is the half the catalog does not say: whether the
+/// screen has anything worth stating at all, since "regulärer Schaden" to an
+/// ordinary demon is itself the exception worth naming.
 enum KarmalWeapon {
 
     /// What the target is, as far as this rule cares.
@@ -25,12 +26,6 @@ enum KarmalWeapon {
         case daemon
         /// A demon of the deity this weapon is consecrated against.
         case daemonOfOpposingDeity
-    }
-
-    /// The multiplier, or `.unchanged` where the rule adds nothing.
-    static func damage(consecrated: Bool, target: Target) -> CriticalDamage {
-        guard consecrated, target == .daemonOfOpposingDeity else { return .unchanged }
-        return .double
     }
 
     /// Whether there is anything worth saying on screen — a consecrated weapon

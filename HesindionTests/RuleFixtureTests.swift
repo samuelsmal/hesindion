@@ -401,4 +401,45 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag II")
         XCTAssertEqual(DamageModifiers.lines(situation: swing(.damage, .wuchtschlag(tier: 1))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag I")
     }
+
+    // MARK: - Karmale Objekte (Fokusregel)
+
+    private func consecratedSwing(daemon: Bool, opposing: Bool?) -> Situation {
+        var s = Situation(hero: hero, domain: .damage)
+        s.loadoutName = "Rabenschnabel"
+        s.opponents.current.isDaemon = daemon
+        if let opposing { s.opponents.current.facts[OpponentProfile.opposingDeityKey] = opposing }
+        return s
+    }
+
+    func testAConsecratedWeaponDoublesAgainstTheOpposingDeitysDemon() {
+        hero.setFokusRule(.karmaleObjekte, active: true)
+        arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
+        hero.setConsecrated("Rabenschnabel", true)
+        XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .double)
+        let e = evaluation(consecratedSwing(daemon: true, opposing: true))
+        XCTAssertEqual(e.multipliers.map(\.ruleId), ["GRW_karmaleObjekte"])
+    }
+
+    func testWhichDeityIsTheGMsQuestionAndOnlyForADemon() {
+        hero.setFokusRule(.karmaleObjekte, active: true)
+        arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
+        hero.setConsecrated("Rabenschnabel", true)
+        let unasked = evaluation(consecratedSwing(daemon: true, opposing: nil))
+        XCTAssertEqual(unasked.questions, [RuleQuestion(key: OpponentProfile.opposingDeityKey, askedBy: "GRW_karmaleObjekte")])
+        XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: nil)), .unchanged)
+        XCTAssertEqual(reason("GRW_karmaleObjekte", in: evaluation(consecratedSwing(daemon: true, opposing: false))), .conditionFalse)
+        let ordinary = evaluation(consecratedSwing(daemon: false, opposing: nil))
+        XCTAssertTrue(ordinary.questions.isEmpty, "no demon, nothing to ask")
+        XCTAssertEqual(reason("GRW_karmaleObjekte", in: ordinary), .conditionFalse)
+    }
+
+    func testTheRuleAndTheWeaponBothHaveToBeOn() {
+        arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
+        hero.setConsecrated("Rabenschnabel", true)
+        XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .unchanged, "Fokusregel off")
+        hero.setFokusRule(.karmaleObjekte, active: true)
+        hero.setConsecrated("Rabenschnabel", false)
+        XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .unchanged, "an ordinary blade")
+    }
 }

@@ -358,11 +358,7 @@ struct CombatAnnouncementView: View {
 
     /// The multiplier the Fokusregel adds, if any.
     private var karmalDamage: CriticalDamage {
-        KarmalWeapon.damage(
-            consecrated: weaponIsConsecrated,
-            target: !opponent.isDaemon ? .ordinary
-                : (opponent.isOfOpposingDeity ? .daemonOfOpposingDeity : .daemon)
-        )
+        DamageModifiers.multiplier(situation: situation(.damage))
     }
 
     private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
@@ -907,11 +903,13 @@ struct CombatAnnouncementView: View {
         // apparently welded to it.
         if let formula = damageFormula {
             // Once per render: the rows and the total are the same lines, and
-            // working them out asks the evaluator.
+            // working them out asks the evaluator. `karmalDamage` is a second
+            // catalog evaluation, so it is taken once here too.
             let bonus = damageBonusLines
+            let karmal = karmalDamage
             CombatBreakdownBox(
-                rows: damageRows(formula, bonus),
-                totalValue: effectiveDamageLabel(formula, bonus),
+                rows: damageRows(formula, bonus, karmal),
+                totalValue: effectiveDamageLabel(formula, bonus, karmal),
                 totalSource: L("source.effective"),
                 sectionLabel: L("damage.label")
             )
@@ -920,10 +918,10 @@ struct CombatAnnouncementView: View {
 
     /// Rows rather than the base/lines shorthand, because a multiplier is not a
     /// signed term and the shorthand can only add.
-    private func damageRows(_ formula: String, _ bonus: [ModifierLine]) -> [BreakdownRow] {
+    private func damageRows(_ formula: String, _ bonus: [ModifierLine], _ karmal: CriticalDamage) -> [BreakdownRow] {
         var rows: [BreakdownRow] = [BreakdownRow(value: formula, source: L("source.weapon"))]
         rows.append(contentsOf: bonus.map(BreakdownRow.line))
-        if let label = karmalDamage.label {
+        if let label = karmal.label {
             rows.append(BreakdownRow(
                 value: label, source: L("source.karmal.opposing"), tint: Color.groupCombat
             ))
@@ -934,9 +932,9 @@ struct CombatAnnouncementView: View {
     /// "1W6+8", or "(1W6+8) ×2" where the Fokusregel doubles it — the dice are
     /// not rolled yet, so the multiplier stays in the label rather than being
     /// worked into the formula.
-    private func effectiveDamageLabel(_ formula: String, _ bonus: [ModifierLine]) -> String {
+    private func effectiveDamageLabel(_ formula: String, _ bonus: [ModifierLine], _ karmal: CriticalDamage) -> String {
         let added = adjustedDamage(bonus) ?? formula
-        guard let label = karmalDamage.label else { return added }
+        guard let label = karmal.label else { return added }
         return "(\(added)) \(label)"
     }
 

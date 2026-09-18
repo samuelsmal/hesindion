@@ -11,41 +11,17 @@ import XCTest
 /// https://dsa.ulisses-regelwiki.de/Fokus_Karmale_Objekte.html
 final class KarmalWeaponTests: XCTestCase {
 
-    func testAnOrdinaryTargetIsNeverAffected() {
-        for consecrated in [true, false] {
-            XCTAssertEqual(
-                KarmalWeapon.damage(consecrated: consecrated, target: .ordinary), .unchanged
-            )
-        }
-    }
-
     /// The unremarkable case the rule spends most of its time in: a consecrated
     /// weapon reaches a demon, and does exactly what it does to anything else.
     func testAConsecratedWeaponDealsRegularDamageToADemon() {
-        XCTAssertEqual(KarmalWeapon.damage(consecrated: true, target: .daemon), .unchanged)
         XCTAssertTrue(KarmalWeapon.statesSomething(consecrated: true, target: .daemon),
                       "Worth saying on screen even though it changes no number")
-    }
-
-    func testTheOpposingDeityDoublesIt() {
-        XCTAssertEqual(
-            KarmalWeapon.damage(consecrated: true, target: .daemonOfOpposingDeity), .double
-        )
     }
 
     /// The doubling is the *weapon's*, not the wielder's conviction: an
     /// unconsecrated blade against the right demon still does nothing special.
     func testAnUnconsecratedWeaponNeverDoubles() {
-        XCTAssertEqual(
-            KarmalWeapon.damage(consecrated: false, target: .daemonOfOpposingDeity), .unchanged
-        )
         XCTAssertFalse(KarmalWeapon.statesSomething(consecrated: false, target: .daemon))
-    }
-
-    func testItDoublesTheRolledDamage() {
-        XCTAssertEqual(
-            KarmalWeapon.damage(consecrated: true, target: .daemonOfOpposingDeity).apply(to: 13), 26
-        )
     }
 
     // MARK: - Which weapons are consecrated

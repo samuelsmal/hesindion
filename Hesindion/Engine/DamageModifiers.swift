@@ -37,6 +37,21 @@ enum DamageModifiers {
         lines.reduce(0) { $0 + $1.value }
     }
 
+    /// The multiplier the catalog puts on the rolled TP, as the damage screen
+    /// already understands it. Karmale Objekte is the only one today.
+    static func multiplier(situation: Situation) -> CriticalDamage {
+        precondition(situation.domain == .damage, "damage multipliers want the damage domain")
+        guard let first = ModifierEngine.shared.evaluation(situation).multipliers.first(where: { $0.target == .tp }) else {
+            return .unchanged
+        }
+        switch first.factor {
+        case 1.5: return .oneAndAHalf
+        case 2:   return .double
+        case 3:   return .triple
+        default:  return .unchanged
+        }
+    }
+
     /// The weapon's formula with every bonus folded in — `nil` for an action that
     /// deals no damage.
     static func applied(to formula: String?, lines: [ModifierLine]) -> String? {
