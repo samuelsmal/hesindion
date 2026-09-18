@@ -96,6 +96,92 @@ final class StateModifiersTests: XCTestCase {
         XCTAssertEqual(schmerzLines.first?.source, L("source.schmerz") + " II")
     }
 
+    // MARK: - Zustände outside a fight
+
+    /// The owner's question: are Schmerz and the other Zustände applied to rolls
+    /// outside battle too — a plain Selbstbeherrschung probe, say?
+    ///
+    /// They are, and this pins it. The Zustand definitions cover
+    /// `Set(CheckDomain.allCases)`, so `.talentCheck` is in scope like every
+    /// other domain, and `TalentProbeModal` builds its lines from the same
+    /// `ModifierEngine` the combat screens use. A hero with Schmerz II and
+    /// Betäubung I rolls Selbstbeherrschung at −3, in two named rows, with no
+    /// fight anywhere near them.
+    func testZustaendeApplyToAPlainTalentCheckWithNoFightRunning() {
+        let hero = makeHero()
+        // Schmerz II is derived from the LP total: 10 of 20 is at or below half.
+        hero.derivedValues = makeDerivedValues(maxLP: 20, currentLP: 10)
+        hero.setStateLevel("betaeubung", level: 1)
+        XCTAssertNil(hero.activeCombatId, "precondition: no fight is running")
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 2)
+
+        var context = Situation(hero: hero, domain: .talentCheck)
+        context.talentId = Talent.selbstbeherrschungRuleId
+        let lines = ModifierEngine.shared.evaluate(context: context)
+
+        XCTAssertEqual(
+            lines.first { $0.source == L("source.schmerz") + " II" }?.value, -2,
+            "Schmerz II is −2 on a Selbstbeherrschung probe as much as on a parry")
+        XCTAssertEqual(
+            lines.first { $0.source == L("state.betaeubung.name") + " I" }?.value, -1,
+            "Betäubung I is −1 on the same roll")
+        XCTAssertEqual(ModifierEngine.shared.totalModifier(context: context), -3)
+    }
+
+    /// …and the DSA −5 Zustand cap is the same cap out of combat. Schmerz IV
+    /// plus Betäubung IV is −8 raw and −5 on the roll.
+    func testTheZustandCapAppliesToAPlainTalentCheckToo() {
+        let hero = makeHero()
+        // 1 of 40 LP: at or below an eighth → Schmerz IV.
+        hero.derivedValues = makeDerivedValues(maxLP: 40, currentLP: 1)
+        hero.setStateLevel("betaeubung", level: 4)
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 4)
+
+        var context = Situation(hero: hero, domain: .talentCheck)
+        context.talentId = Talent.selbstbeherrschungRuleId
+        XCTAssertEqual(ModifierEngine.shared.totalModifier(context: context), -5)
+    }
+
+    /// The other half of the same question. A Patzer's "1 Stufe Schmerz für 3
+    /// Kampfrunden" rides on the combat-session block, and a hero with no fight
+    /// has no round to count against — so the level a Patzertabelle added does
+    /// **not** follow them out of the fight and onto a Selbstbeherrschung probe
+    /// at the campfire.
+    func testTheTemporaryPatzerSchmerzNeedsARunningFight() {
+        let hero = makeHero()
+        hero.activeCombatId = UUID()
+        hero.activeCombatRound = 1
+        hero.addTemporarySchmerz(rolledInRound: 1)
+
+        var context = Situation(hero: hero, domain: .talentCheck)
+        context.talentId = Talent.selbstbeherrschungRuleId
+        XCTAssertEqual(
+            ModifierEngine.shared.totalModifier(context: context), -1,
+            "precondition: in the fight the Patzer's level is on the roll")
+
+        hero.activeCombatId = nil
+        XCTAssertEqual(hero.effectiveSchmerzLevel, 0)
+        XCTAssertTrue(
+            ModifierEngine.shared.evaluate(context: context)
+                .allSatisfy { $0.source != L("source.schmerz") + " I" },
+            "no fight, no temporary Schmerz")
+        XCTAssertEqual(ModifierEngine.shared.totalModifier(context: context), 0)
+    }
+
+    private func makeDerivedValues(maxLP: Int, currentLP: Int) -> DerivedValues {
+        DerivedValues(
+            lebensenergie: LifeEnergyValue(
+                base: maxLP, bonus: 0, purchased: 0, max: maxLP, current: currentLP),
+            astralenergie: nil, karmaenergie: nil,
+            seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
+            zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
+            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
+            geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
+            schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
+    }
+
     func testSchipIgnoreZustandDoesNotSuppressEncumbrance() {
         // Belastung is gear-derived: a "Zustand ignorieren" Schip must NOT will it away.
         let schema = Schema([

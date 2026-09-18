@@ -1040,7 +1040,11 @@ struct CombatFumbleChoiceView: View {
             hero.addTemporarySchmerz(rolledInRound: roundNumber)
             let after = hero.effectiveSchmerzLevel
             let until = String(format: L("fumble.until.round"), hero.temporarySchmerzLastRound)
-            let name = L("state.schmerz.name")
+            // Schmerz's catalog `nameKey` is `source.schmerz` — it shares its
+            // label with the modifier row, unlike every other state. Written out
+            // as `state.schmerz.name` here, which is not a key at all, so the
+            // panel and the log both printed the key itself.
+            let name = L(StateCatalog.definition(for: "schmerz")?.nameKey ?? "source.schmerz")
             record(value: "\(L("level")) \(before) \u{2192} \(after)", source: "\(name) \u{00B7} \(until)")
             logEffect(entry, effect: "\(name) \(after) (\(until))")
 
