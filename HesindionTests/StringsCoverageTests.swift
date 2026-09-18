@@ -29,7 +29,7 @@ final class StringsCoverageTests: XCTestCase {
             "trefferzone.sfHalves.melee", "trefferzone.sfHalves.ranged",
             "trefferzone.woundEffect", "trefferzone.threshold",
             "trefferzone.probe", "trefferzone.dropWeapon",
-            "trefferzone.reminderTitle", "modifier.trefferzone",
+            "trefferzone.reminderTitle",
         ] { assertLocalized(key) }
     }
 

@@ -97,8 +97,9 @@ final class RuleReachabilityTests: XCTestCase {
     ///   exercises the interpreter (`RuleEvaluator.test(_:_:)`, `.heroHasRule` case).
     ///
     /// Out of this test's scope entirely, not tracked here: `RuleVocabulary.Combinator`
-    /// (only `.not` has generator support below, and no entry uses it today —
-    /// see `satisfy(_:hero:situation:branch:cursor:rule:)`'s `.not` case),
+    /// (`.all` and `.any` have generator support below; `.not` does not — no
+    /// entry uses it today, and it fails loudly instead of silently doing
+    /// nothing — see `satisfy(_:hero:situation:branch:cursor:rule:)`'s `.not` case),
     /// `RuleVocabulary.Target.aw` and `RuleVocabulary.Per` (targets and `per`
     /// values are not independently checked for coverage, only predicates and
     /// effects are).
@@ -366,6 +367,10 @@ final class RuleReachabilityTests: XCTestCase {
             // under a freshly created Mittel weapon.
             let priorReach = s.loadoutName.flatMap { existing in hero.meleeWeapons.first { $0.name == existing }?.reach }
             let weapon = weapon(named: name, technique: technique?.first ?? "CT_12", hero: hero)
+            // "Mittel" stands in for "not set on purpose" — it's the constructor
+            // default (see the helper below), not a deliberate choice; this is
+            // wrong only if the same item is named twice and the second
+            // `loadout.reach` deliberately sets it back to Mittel.
             if let priorReach, weapon.name != s.loadoutName, weapon.reach == "Mittel" { weapon.reach = priorReach }
             hero.selectedWeaponName = weapon.name
             s.loadoutName = weapon.name

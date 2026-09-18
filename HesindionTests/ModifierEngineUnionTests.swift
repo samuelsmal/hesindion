@@ -62,6 +62,10 @@ final class ModifierEngineUnionTests: XCTestCase {
                               "\(definition.id) names \(id), which is not a catalog entry")
             }
         }
+        for id in DamageModifiers.rules where known[id] == nil {
+            XCTAssertTrue(stillToBeAuthored.contains(id),
+                          "DamageModifiers names \(id), which is not a catalog entry")
+        }
         for id in stillToBeAuthored.sorted() {
             XCTAssertNil(known[id], "\(id) has a catalog entry now; take it off stillToBeAuthored")
         }

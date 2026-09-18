@@ -188,4 +188,23 @@ extension XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+
+    /// Taps "Parieren" on the combat root and, when a shield in the loadout
+    /// sends the parry through the weapon list, taps the row for the named
+    /// weapon. Shared by `WeaponStyleFlowTests.launchMountedParry()` and
+    /// `DefenseModifierFlowTests.parry(_:expectingWeaponList:)`.
+    @MainActor
+    func tapParry(_ app: XCUIApplication, weapon: String, expectingWeaponList: Bool, timeout: TimeInterval = UITest.timeout) {
+        let parryButton = app.buttons["combat.parry"]
+        XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        parryButton.tap()
+
+        guard expectingWeaponList else { return }
+        let weaponRow = app.buttons["combat.weaponRow.\(weapon)"]
+        XCTAssertTrue(
+            weaponRow.waitForExistence(timeout: timeout),
+            "a shield in the loadout sends the parry through the weapon list"
+        )
+        weaponRow.tap()
+    }
 }

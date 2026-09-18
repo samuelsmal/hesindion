@@ -112,16 +112,18 @@ final class RulesCatalogTests: XCTestCase {
                 return [effect]
             }
         }
-        var rulesMultiplyingTP: Set<String> = []
+        // A list, not a set: a single rule with two `multiply`-on-`tp` clauses
+        // must fail this too, and a set would collapse its id down to one.
+        var tpMultiplyingClauseRuleIds: [String] = []
         for rule in RuleCatalog.bundled.implemented {
             for effect in rule.clauses.flatMap({ flatten($0.effects) }) {
                 guard case .multiply(let target, let factor) = effect, target == .tp else { continue }
                 XCTAssertNotNil(CriticalDamage(factor: factor), "\(rule.id): factor \(factor) has no CriticalDamage")
-                rulesMultiplyingTP.insert(rule.id)
+                tpMultiplyingClauseRuleIds.append(rule.id)
             }
         }
-        XCTAssertLessThanOrEqual(rulesMultiplyingTP.count, 1,
-                                 "the damage screen shows one multiplier; two need DamageModifiers.multiplier to combine them: \(rulesMultiplyingTP.sorted())")
+        XCTAssertLessThanOrEqual(tpMultiplyingClauseRuleIds.count, 1,
+                                 "the damage screen shows one multiplier; two `multiply`-on-`tp` clauses need DamageModifiers.multiplier to combine them: \(tpMultiplyingClauseRuleIds.sorted())")
     }
 
     /// The floor. Adding entries must not fail this; losing one must.

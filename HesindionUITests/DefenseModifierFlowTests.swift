@@ -94,18 +94,7 @@ final class DefenseModifierFlowTests: XCTestCase {
 
     @MainActor
     private func parry(_ app: XCUIApplication, expectingWeaponList: Bool) {
-        let parryButton = app.buttons["combat.parry"]
-        XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
-        parryButton.tap()
-
-        let weaponRow = app.buttons["combat.weaponRow.Langschwert"]
-        if expectingWeaponList {
-            XCTAssertTrue(
-                weaponRow.waitForExistence(timeout: UITest.timeout),
-                "A shield in the loadout should offer a choice of parrying weapon"
-            )
-            weaponRow.tap()
-        }
+        tapParry(app, weapon: "Langschwert", expectingWeaponList: expectingWeaponList)
     }
 
     @MainActor
