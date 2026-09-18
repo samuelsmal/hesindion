@@ -61,12 +61,6 @@ struct CombatSituation: Equatable {
         isAusweichen ? dodgesThisRound : parriesThisRound
     }
 
-    /// What the *next* defence of this kind will cost, as a signed number, for
-    /// the buttons that offer it. `0` while the first is still to come.
-    func pendingMultipleDefensePenalty(isAusweichen: Bool) -> Int {
-        -(defensesSoFar(isAusweichen: isAusweichen) * 3)
-    }
-
     /// The fight-long choices as the catalog names them: rule id → option.
     /// Plänkler-Formation (SA_884) is the only one until step 3 stores choices
     /// by rule id; its option 0 is AT, option 1 the Verteidigungswert.

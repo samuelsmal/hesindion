@@ -53,14 +53,28 @@ struct CombatRootView: View {
     /// "2. Parade · −3" under the button that charges it, so the cost of
     /// defending again is known before the next screen. Each button counts its
     /// own kind: parries and dodges are tracked apart.
+    ///
+    /// Read off `buildDefenseModifiers(isAusweichen:)` — the same lines the
+    /// button's own tap hands to the roll (`GRW_mehrfacheVerteidigung`), built
+    /// from the round's counters as they stand right now, before the defence
+    /// being offered increments them. A style that changes the step (Vinsalt,
+    /// SA_923) is a `modifyRule` on that same line, so the button can no longer
+    /// print a number the roll does not charge.
     private func defenseCostSubtitle(isAusweichen: Bool) -> String? {
         let made = situation.defensesSoFar(isAusweichen: isAusweichen)
         guard made > 0 else { return nil }
         return String(
             format: L(isAusweichen ? "defense.nthDodge" : "defense.nthParry"),
             made + 1,
-            situation.pendingMultipleDefensePenalty(isAusweichen: isAusweichen)
+            Self.pendingDefensePenalty(in: buildDefenseModifiers(isAusweichen: isAusweichen))
         )
+    }
+
+    /// The `GRW_mehrfacheVerteidigung` line's value among a defence's modifier
+    /// lines, or `0` if the round has none yet. Pure, so the number the button
+    /// prints can be asserted straight from the lines the roll would use.
+    static func pendingDefensePenalty(in lines: [ModifierLine]) -> Int {
+        lines.first { $0.ruleId == "GRW_mehrfacheVerteidigung" }?.value ?? 0
     }
 
     var body: some View {

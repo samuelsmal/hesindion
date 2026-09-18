@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Golgariten-Stil follows the Regelwiki: Rabenschnabel *or* Großschild, +2 AT only on top of an existing Vorteilhafte Position against a foot fighter, +1 PA mounted, and no TP bonus.
 - Vinsalt-Stil: Mehrfache Verteidigung at −2 instead of −3 with a Fechtwaffe, Armbrust or Zweihandschwert in hand (was not applied).
+- **The "n. Parade/Ausweichen · −x" preview under the defence buttons showed a number the roll did not charge.** It was a hard-coded −3 per defence already made; Vinsalt-Stil's own −2 step (SA_923) is a catalog rule on `GRW_mehrfacheVerteidigung`, so a Vinsalt hero read −3 on the button and was charged −2. The preview now reads the same `GRW_mehrfacheVerteidigung` line the roll itself uses.
 - Verweichlicht: the Wundeffekt's Selbstbeherrschung check is 2 harder (was not applied).
 - Vorteilhafte Position gives +2 PA as well as +2 AT, and a mounted hero has it against a foot fighter without the toggle.
 - **The Zustände showed a name and nothing else.** Belastung, Betäubung, Furcht, Paralyse, Schmerz and Verwirrung have no prose description; their content is the four level texts, which the rule screen never read. It reads them now, as Stufe I to IV

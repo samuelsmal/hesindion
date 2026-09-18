@@ -72,10 +72,8 @@ final class CombatSituationTests: XCTestCase {
         XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(dodgedTwice)))
     }
 
-    func testEachKindCountsItsOwnPendingPenalty() {
+    func testEachKindCountsItsOwnDefensesSoFar() {
         let s = CombatSituation(parriesThisRound: 1, dodgesThisRound: 3)
-        XCTAssertEqual(s.pendingMultipleDefensePenalty(isAusweichen: false), -3)
-        XCTAssertEqual(s.pendingMultipleDefensePenalty(isAusweichen: true), -9)
         XCTAssertEqual(s.defensesSoFar(isAusweichen: false), 1)
         XCTAssertEqual(s.defensesSoFar(isAusweichen: true), 3)
     }
@@ -87,11 +85,14 @@ final class CombatSituationTests: XCTestCase {
             -6)
     }
 
-    /// What the buttons print before you commit to another defence.
+    /// What the buttons print before you commit to another defence:
+    /// `CombatRootView.pendingDefensePenalty` reads the same
+    /// `GRW_mehrfacheVerteidigung` line the roll itself will use, so the
+    /// preview can never disagree with what gets charged.
     func testPendingPenaltyMatchesWhatTheNextDefenceWillCost() {
-        XCTAssertEqual(CombatSituation().pendingMultipleDefensePenalty(isAusweichen: false), 0)
-        XCTAssertEqual(CombatSituation(parriesThisRound: 1).pendingMultipleDefensePenalty(isAusweichen: false), -3)
-        XCTAssertEqual(CombatSituation(parriesThisRound: 2).pendingMultipleDefensePenalty(isAusweichen: false), -6)
+        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation())), 0)
+        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(parriesThisRound: 1))), -3)
+        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(parriesThisRound: 2))), -6)
     }
 
     // MARK: - The lines the weapon list used to lose
