@@ -364,6 +364,8 @@ VOCAB = {
     "effects": {
         "add": {"args": {"target": "enum:target", "talentId": "string", "value": "int", "per": "enum:per"},
                 "required": ["target", "value"]},
+        "multiply": {"args": {"target": "enum:target", "talentId": "string", "factor": "number"},
+                     "required": ["target", "factor"]},
         "modifyRule": {"args": {"id": "string", "target": "enum:target", "talentId": "string",
                                 "add": "int", "set": "int", "multiply": "number"},
                        "required": ["id", "target"]},
@@ -489,6 +491,40 @@ class ClauseValidationTests(unittest.TestCase):
         idle = dict(GOLGARITEN, clauses=[{"kind": "passive", "domains": ["meleeAttack"],
                     "effects": [{"modifyRule": {"id": "GRW_vorteilhaftePosition", "target": "at"}}]}])
         self.assertIn("SA_1: clause 0 effect 0: modifyRule needs add, set or multiply", self.validate(idle, GRW))
+
+    def test_a_multiply_effects_factor_must_stay_within_a_plausible_range(self):
+        # `RuleEvaluator` does `Int(Double(unit) * factor)`, which traps on an
+        # out-of-range result — the bound keeps the build from ever compiling
+        # a factor that could crash the app at roll time.
+        def clause(factor):
+            return dict(GRW, id="GRW_bad", clauses=[{
+                "kind": "passive", "domains": ["meleeAttack"],
+                "effects": [{"multiply": {"target": "at", "factor": factor}}],
+            }])
+        self.assertIn(
+            "GRW_bad: clause 0 effect 0: multiply.factor 1e+300 must be between 0 and 10",
+            self.validate(GRW, clause(1e300)))
+        self.assertIn(
+            "GRW_bad: clause 0 effect 0: multiply.factor -1 must be between 0 and 10",
+            self.validate(GRW, clause(-1)))
+        self.assertEqual(self.validate(GRW, clause(0.5)), [])
+        self.assertEqual(self.validate(GRW, clause(2)), [])
+
+    def test_modify_rules_multiply_factor_must_stay_within_a_plausible_range_too(self):
+        def golgariten(factor):
+            return dict(GOLGARITEN, clauses=[
+                {"kind": "passive", "domains": ["meleeAttack"], "when": ["opponent.onFoot"],
+                 "effects": [{"modifyRule": {"id": "GRW_vorteilhaftePosition", "target": "at", "multiply": factor}}]},
+                GOLGARITEN["clauses"][1],
+            ])
+        self.assertIn(
+            "SA_1: clause 0 effect 0: modifyRule.multiply 1e+300 must be between 0 and 10",
+            self.validate(golgariten(1e300), GRW))
+        self.assertIn(
+            "SA_1: clause 0 effect 0: modifyRule.multiply -5 must be between 0 and 10",
+            self.validate(golgariten(-5), GRW))
+        self.assertEqual(self.validate(golgariten(0.5), GRW), [])
+        self.assertEqual(self.validate(golgariten(2), GRW), [])
 
     def test_a_talent_target_carries_its_id(self):
         ok = dict(GRW, id="GRW_ok", clauses=[{"kind": "passive", "domains": ["talentCheck"],

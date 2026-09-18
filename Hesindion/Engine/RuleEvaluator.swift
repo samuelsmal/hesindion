@@ -200,7 +200,7 @@ enum RuleEvaluator {
                         case .owned?, nil:   tier
                     }
                     if let tierAnnounced = announced[rule.id] {
-                        let swung = min(tierAnnounced, maxTier)
+                        let swung = max(0, min(tierAnnounced, maxTier))
                         let label = swung > 0 ? "\(rule.name) \(CombatManeuver.roman(swung))" : rule.name
                         landed = apply(clause.effects, tier: swung, label: label, rule, s, &out, &modifications) || landed
                     } else {

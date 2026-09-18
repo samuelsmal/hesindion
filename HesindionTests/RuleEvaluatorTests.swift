@@ -303,6 +303,12 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(evaluate(rules, s).lines.first?.name, "SA_1 I")
         s.announced["SA_1"] = 3
         XCTAssertEqual(line("SA_1", in: evaluate(rules, s)), -4, "the hero only has II")
+        s.announced["SA_1"] = 0
+        XCTAssertNil(line("SA_1", in: evaluate(rules, s)), "tier 0: no line")
+        XCTAssertEqual(reason("SA_1", in: evaluate(rules, s)), .netZero)
+        s.announced["SA_1"] = -1
+        XCTAssertNil(line("SA_1", in: evaluate(rules, s)), "a negative announcement floors to tier 0: no line, no sign flip")
+        XCTAssertEqual(reason("SA_1", in: evaluate(rules, s)), .netZero)
     }
 
     // MARK: - The rest of the sheet

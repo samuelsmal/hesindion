@@ -353,10 +353,15 @@ struct CombatWoundEffectPanel: View {
     /// The talent id comes from the hero's own Selbstbeherrschung row, the same
     /// source `CombatTakeDamageView` uses to build the modal it rolls, so the
     /// two cannot disagree (falls back to `Talent.selbstbeherrschungRuleId` when
-    /// the hero has no such row, same as `Hero.selbstbeherrschung`).
+    /// the hero has no such row, same as `Hero.selbstbeherrschung` — but read
+    /// straight off `hero.talents` here rather than through that computed
+    /// property, which builds a fresh, never-inserted `Talent` on every access
+    /// for a hero without the row, and this is a render-time computed property)
     private var probeModifier: Int {
+        let selbstbeherrschungId = hero.talents.first { $0.name == Talent.selbstbeherrschungName }?.ruleId
+            ?? Talent.selbstbeherrschungRuleId
         let engineModifier = ModifierEngine.shared.evaluate(
-            context: Situation.woundEffectProbe(hero: hero, talentId: hero.selbstbeherrschung.ruleId)
+            context: Situation.woundEffectProbe(hero: hero, talentId: selbstbeherrschungId)
         ).reduce(0) { $0 + $1.value }
         return WoundEffectResolver.probeModifier(damage: effectiveDamage, wundschwelle: wundschwelle) + engineModifier
     }

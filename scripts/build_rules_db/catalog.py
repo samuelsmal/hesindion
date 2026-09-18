@@ -256,12 +256,29 @@ def _check_effect(rid: str, eff, vocab: dict, where: str, implemented_ids: set[s
     # for one value of another, and a cross-entry reference.
     if arg.get("target") == "talent" and "talentId" not in arg:
         problems.append(f"{rid}: {where}: target talent needs an id")
+    if name == "multiply":
+        problems.extend(_check_factor(rid, where, "multiply.factor", arg.get("factor")))
     if name == "modifyRule":
         if arg.get("id") not in implemented_ids:
             problems.append(f"{rid}: {where}: modifyRule names {arg.get('id')!r}, which is not an implemented entry")
         if not any(k in arg for k in ("add", "set", "multiply")):
             problems.append(f"{rid}: {where}: modifyRule needs add, set or multiply")
+        if "multiply" in arg:
+            problems.extend(_check_factor(rid, where, "modifyRule.multiply", arg.get("multiply")))
     return problems
+
+
+def _check_factor(rid: str, where: str, label: str, value) -> list[str]:
+    # `RuleEvaluator` does `Int(Double(unit) * factor)`, which traps on overflow —
+    # a factor has to stay in a range no plausible rule leaves (a multiplier
+    # never doubles more than a handful of times over). The type itself is
+    # `_check_type`'s job (`number`); this only bounds a value that is already
+    # numeric, so a wrong type is not reported twice.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return []
+    if not (0 <= value <= 10):
+        return [f"{rid}: {where}: {label} {value!r} must be between 0 and 10"]
+    return []
 
 
 def _with_talent_target(arg: dict) -> dict:

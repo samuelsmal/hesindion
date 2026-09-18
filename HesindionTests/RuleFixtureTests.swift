@@ -181,20 +181,32 @@ final class RuleFixtureTests: XCTestCase {
 
     /// The evaluator's own arithmetic must agree with the table `CombatZonePicker` shows
     /// on its chips (`HitZoneModifiers.penalty`) — the pattern Task 8 established for the
-    /// reach table (`testTheShorterWeaponPaysForReach`).
+    /// reach table (`testTheShorterWeaponPaysForReach`). `CombatZonePicker` is the same
+    /// component on both the melee announcement and `CombatFernkampfViews`'
+    /// `trefferzoneSection`, only `hasSonderfertigkeit` differs (`SA_160` vs `SA_161`), so
+    /// one chip table has to hold for both legs.
     func testTheZoneChipsAndTheRollAgree() {
         hero.setFokusRule(.trefferzonen, active: true)
         let armedHero = Hero(name: "Armed")
         context.insert(armedHero)
         armedHero.setFokusRule(.trefferzonen, active: true)
         armedHero.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_160", name: "Gezielter Angriff", tier: nil, sid: nil))
+        let marksHero = Hero(name: "Marksman")
+        context.insert(marksHero)
+        marksHero.setFokusRule(.trefferzonen, active: true)
+        marksHero.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_161", name: "Gezielter Schuss", tier: nil, sid: nil))
         for zone in HitZone.allCases {
             for sf in [false, true] {
                 for surprised in [false, true] {
+                    let chip = HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: sf, targetIsSurprised: surprised)
+
                     let subject = sf ? armedHero : hero!
                     let rolled = value("GRW_zonenaufschlag", in: lines(aimed(.meleeAttack, at: zone, surprised: surprised, hero: subject))) ?? 0
-                    let chip = HitZoneModifiers.penalty(for: zone, hasSonderfertigkeit: sf, targetIsSurprised: surprised)
                     XCTAssertEqual(rolled, chip, "zone \(zone), sf \(sf), surprised \(surprised)")
+
+                    let rangedSubject = sf ? marksHero : hero!
+                    let rolledRanged = value("GRW_zonenaufschlag", in: lines(aimed(.rangedAttack, at: zone, surprised: surprised, hero: rangedSubject))) ?? 0
+                    XCTAssertEqual(rolledRanged, chip, "ranged zone \(zone), sf \(sf), surprised \(surprised)")
                 }
             }
         }
