@@ -276,6 +276,49 @@ final class Hero {
         return WeaponIcon.forTechnique(.raufen)   // Raufen, and anything unlisted
     }
 
+    /// Which hand (or which slot) is holding the named thing.
+    ///
+    /// The loadout is four optional names, and a screen that has to take
+    /// something *out* of it — a Patzer that destroys, drops or jams the weapon —
+    /// only knows the name it was swinging. Guessing `selectedWeaponName` would
+    /// disarm the main hand for an off-hand fumble and leave a dropped shield in
+    /// the loadout.
+    enum LoadoutSlot: String, Equatable {
+        case mainHand, offHand, shield, ranged
+    }
+
+    func loadoutSlot(ofNamed name: String) -> LoadoutSlot? {
+        if selectedWeaponName == name { return .mainHand }
+        if selectedOffHandName == name { return .offHand }
+        if selectedShieldName == name { return .shield }
+        if selectedRangedWeaponName == name { return .ranged }
+        return nil
+    }
+
+    /// Takes the named thing out of the loadout and returns the slot it left, so
+    /// a caller that may have to put it back knows where it belongs. `nil` when
+    /// the name is not in the loadout at all — Raufen, or a weapon already gone.
+    @discardableResult
+    func unequipFromLoadout(named name: String) -> LoadoutSlot? {
+        guard let slot = loadoutSlot(ofNamed: name) else { return nil }
+        switch slot {
+        case .mainHand: selectedWeaponName = nil
+        case .offHand:  selectedOffHandName = nil
+        case .shield:   selectedShieldName = nil
+        case .ranged:   selectedRangedWeaponName = nil
+        }
+        return slot
+    }
+
+    func equipInLoadout(named name: String, slot: LoadoutSlot) {
+        switch slot {
+        case .mainHand: selectedWeaponName = name
+        case .offHand:  selectedOffHandName = name
+        case .shield:   selectedShieldName = name
+        case .ranged:   selectedRangedWeaponName = name
+        }
+    }
+
     /// Passive shield PA bonus applied to main weapon parade.
     var passiveShieldPABonus: Int {
         selectedShield?.paModifier ?? 0
@@ -418,6 +461,24 @@ final class Hero {
         return activeStates.contains { entry in
             entry.def.handlungsunfaehigAtLevel.map { entry.level >= $0 } ?? false
         }
+    }
+
+    /// Whether the hero is on the ground — stated outright, or implied by a state
+    /// that carries it (Bewusstlos implies Liegend).
+    var isLiegend: Bool {
+        hasState("liegend") || impliedStateIDs.contains("liegend")
+    }
+
+    /// The Geschwindigkeit a move actually happens at.
+    ///
+    /// A prone hero moves at GS 1 (Status Liegend), which is the third thing that
+    /// status does and the only one nothing in the app read: the AT −4 and the
+    /// PA/AW −2 are the catalog's `STATE_10`, but the flight screen took
+    /// `geschwindigkeit.max` straight off the derived values and offered a hero
+    /// lying in the mud their full eight paces.
+    var effectiveGeschwindigkeit: Int {
+        guard !isLiegend else { return 1 }
+        return derivedValues?.geschwindigkeit.max ?? 8
     }
 
     var isBewegungsunfaehig: Bool {
