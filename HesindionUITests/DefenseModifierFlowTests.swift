@@ -90,6 +90,59 @@ final class DefenseModifierFlowTests: XCTestCase {
         )
     }
 
+    /// A roll far beyond any plausible PA, so the parry fails outright without
+    /// landing on the confirm branch (1 or 20). Mirrors `TakeDamageFlowTests.failingDie`.
+    private static let failingRoll = "19"
+
+    /// A failed Parade no longer strands the player at "Neue Aktion" — the blow
+    /// got through, so the primary way off the screen goes straight to taking
+    /// the damage, with "Neue Aktion" kept underneath, visibly quieter, for the
+    /// GM who rules it did nothing (owner report: "upon a failed parade the user
+    /// should be prompted to enter the taken TP").
+    @MainActor
+    func testAFailedParryLeadsToTakingDamage() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.failingRoll, shield: true)
+
+        parry(app, expectingWeaponList: true)
+
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Defence roll screen not shown")
+        diceBox.tap()
+
+        let takeDamage = app.buttons["combat.execution.takeDamage"]
+        XCTAssertTrue(
+            app.scrollUntilHittable(takeDamage),
+            "No primary way to take the damage after a failed parry"
+        )
+        // The quiet way out is still there, just not the primary one.
+        XCTAssertTrue(
+            app.buttons["combat.execution.newAction.miss"].exists,
+            "\"Neue Aktion\" disappeared instead of stepping back"
+        )
+        takeDamage.tap()
+
+        XCTAssertTrue(
+            app.buttons["combat.takeDamage.increaseTP"].waitForExistence(timeout: UITest.timeout),
+            "Take-damage screen did not open"
+        )
+
+        let plus = app.buttons["combat.takeDamage.increaseTP"]
+        for _ in 0..<5 { plus.tap() }
+
+        let confirm = app.button(containing: "Bestätigen")
+        XCTAssertTrue(confirm.waitForExistence(timeout: UITest.timeout), "Confirm missing")
+        XCTAssertTrue(app.scrollUntilHittable(confirm), "Could not reach confirm")
+        confirm.tap()
+
+        let outcome = app.descendants(matching: .any)["combat.takeDamage.outcome"]
+        XCTAssertTrue(outcome.waitForExistence(timeout: UITest.timeout), "The confirm reported nothing back")
+        XCTAssertTrue(
+            app.staticTexts["LEBENSPUNKTE"].exists,
+            "The outcome should name the remaining life points"
+        )
+    }
+
     // MARK: - Navigation
 
     @MainActor

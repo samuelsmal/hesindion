@@ -383,9 +383,33 @@ struct CombatExecutionView: View {
                 .dsaBox(.raised)
             }
             .buttonStyle(.dsaMotion)
+        } else if outcome == .misserfolg, action == .parieren || action == .ausweichen, showNeueAktion {
+            // A failed Parade/Ausweichen means the blow got through — the next
+            // step is entering the damage, not leaving. "Neue Aktion" stays
+            // reachable underneath for the GM who rules it did nothing, quieter
+            // than the primary so the two do not read as equal choices.
+            takeDamageBlock()
         } else if showNeueAktion {
             neueAktionBlock()
         }
+    }
+
+    // MARK: - Failed defence → take damage
+
+    @ViewBuilder
+    private func takeDamageBlock() -> some View {
+        CombatActionButton(
+            title: L("takeDamage"),
+            icon: "heart.slash.fill",
+            identifier: "combat.execution.takeDamage"
+        ) { step = .takeDamage }
+
+        CombatActionButton(
+            title: L("newAction"),
+            icon: "arrow.counterclockwise",
+            fill: Color.dsaDark,
+            identifier: "combat.execution.newAction.miss"
+        ) { step = .root }
     }
 
     // MARK: - Neue Aktion / dual-wield block

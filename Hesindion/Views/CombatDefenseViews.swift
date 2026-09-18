@@ -619,7 +619,7 @@ struct CombatFumbleChoiceView: View {
                 }
 
                 if isResolved {
-                    newActionButton
+                    resolvedActionButtons
                 }
             }
             .padding(.top, 16)
@@ -780,6 +780,31 @@ struct CombatFumbleChoiceView: View {
     }
 
     // MARK: - New Action Button
+
+    /// A resolved Patzer on a Parade/Ausweichen still lands the blow — the GM
+    /// ruled the defence failed before the fumble was even rolled — so the way
+    /// forward is the same as after any other failed defence: "Schaden nehmen"
+    /// first, "Neue Aktion" beneath it for the GM who rules the blow did
+    /// nothing after all. An Angriff/Fernkampf fumble has no such consequence.
+    @ViewBuilder
+    private var resolvedActionButtons: some View {
+        if action == .parieren || action == .ausweichen {
+            CombatActionButton(
+                title: L("takeDamage"),
+                icon: "heart.slash.fill",
+                identifier: "combat.execution.takeDamage"
+            ) { step = .takeDamage }
+
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                fill: Color.dsaDark,
+                identifier: "combat.execution.newAction.miss"
+            ) { step = .root }
+        } else {
+            newActionButton
+        }
+    }
 
     private var newActionButton: some View {
         Button { step = .root } label: {
