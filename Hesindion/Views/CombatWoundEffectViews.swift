@@ -347,8 +347,14 @@ struct CombatWoundEffectPanel: View {
         WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)
     }
 
+    /// The Wundschwelle-based penalty plus whatever the engine adds to the same
+    /// check (Verweichlicht/DISADV_57, a Zustand) — the modal this panel opens
+    /// rolls at this same total, via the shared `Situation.woundEffectProbe`.
     private var probeModifier: Int {
-        WoundEffectResolver.probeModifier(damage: effectiveDamage, wundschwelle: wundschwelle)
+        let engineModifier = ModifierEngine.shared.evaluate(
+            context: Situation.woundEffectProbe(hero: hero, talentId: Talent.selbstbeherrschungRuleId)
+        ).reduce(0) { $0 + $1.value }
+        return WoundEffectResolver.probeModifier(damage: effectiveDamage, wundschwelle: wundschwelle) + engineModifier
     }
 
     var body: some View {

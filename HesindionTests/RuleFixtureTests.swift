@@ -456,12 +456,38 @@ final class RuleFixtureTests: XCTestCase {
 
     func testVerweichlichtMakesTheWundeffektProbeTwoHarder() {
         own("DISADV_57", "Verweichlicht", list: \.disadvantages)
-        XCTAssertEqual(value("DISADV_57", in: lines(probe(Talent.selbstbeherrschungRuleId, woundEffect: true))), -2)
+        let probeLines = lines(probe(Talent.selbstbeherrschungRuleId, woundEffect: true))
+        XCTAssertEqual(value("DISADV_57", in: probeLines), -2)
+        let line = probeLines.first { $0.ruleId == "DISADV_57" }
+        XCTAssertEqual(line?.isZustand, false, "a Nachteil's penalty, not a Zustand — it must not feed the −5 Zustand cap")
+        XCTAssertEqual(line?.source, "Verweichlicht")
         XCTAssertEqual(reason("DISADV_57", in: evaluation(probe(Talent.selbstbeherrschungRuleId, woundEffect: false))), .conditionFalse)
+        // wrongDomain here is the evaluator's fallback for "no clause landed and no
+        // reason was recorded" — DISADV_57's target is TAL_8, so on TAL_10 it is as
+        // silent as a rule about a domain this check is not.
         XCTAssertEqual(reason("DISADV_57", in: evaluation(probe(Talent.sinnesschaerfeRuleId, woundEffect: true))), .wrongDomain)
     }
 
     func testWithoutTheNachteilTheProbeIsUnmodified() {
         XCTAssertNil(value("DISADV_57", in: lines(probe(Talent.selbstbeherrschungRuleId, woundEffect: true))))
+    }
+
+    /// `Situation.woundEffectProbe` is what both `CombatWoundEffectPanel`'s preview
+    /// number and `TalentProbeModal`'s roll are built from — this is the total the
+    /// panel must add on top of `WoundEffectResolver.probeModifier` so the two agree.
+    private func woundEffectEngineTotal() -> Int {
+        ModifierEngine.shared.evaluate(
+            context: Situation.woundEffectProbe(hero: hero, talentId: Talent.selbstbeherrschungRuleId)
+        ).reduce(0) { $0 + $1.value }
+    }
+
+    func testWoundEffectProbeHelperIsWhatThePanelMustAddToItsPreview() {
+        XCTAssertEqual(woundEffectEngineTotal(), 0, "a plain hero adds nothing beyond the Wundschwelle penalty")
+        own("DISADV_57", "Verweichlicht", list: \.disadvantages)
+        XCTAssertEqual(woundEffectEngineTotal(), -2)
+        // Betäubung (COND_2) penalises every check domain, talentCheck included, so
+        // it stacks on top of Verweichlicht — the modal rolls with both.
+        hero.setStateLevel("betaeubung", level: 1)
+        XCTAssertEqual(woundEffectEngineTotal(), -3)
     }
 }

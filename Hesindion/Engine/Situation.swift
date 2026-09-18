@@ -160,3 +160,17 @@ struct Situation {
     /// Defences of this domain's kind already made this round.
     var defencesThisRound: Int { round.defensesSoFar(isAusweichen: domain == .meleeDodge) }
 }
+
+extension Situation {
+    /// The Selbstbeherrschung check a Wundeffekt demands — `CombatTakeDamageView`
+    /// opens `TalentProbeModal` with `isWoundEffectProbe: true` for it. Built in
+    /// one place so the wound panel's preview number (`CombatWoundEffectPanel`)
+    /// and the modal that actually rolls it read the same catalog lines —
+    /// Verweichlicht (DISADV_57) among them — and cannot drift apart.
+    static func woundEffectProbe(hero: Hero, talentId: String) -> Situation {
+        var situation = Situation(hero: hero, domain: .talentCheck)
+        situation.talentId = talentId
+        situation.isWoundEffectProbe = true
+        return situation
+    }
+}

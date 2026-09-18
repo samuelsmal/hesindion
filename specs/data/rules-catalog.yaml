@@ -75,7 +75,7 @@
   reviewed: null
   sources:
     - { kind: optolith, src: US25003, page: 133 }
-  note: "The Selbstbeherrschung check (TAL_8) a Wundeffekt demands is 2 harder (Optolith: 'Bei der Probe auf Selbstbeherrschung … bei Wundeffekten … eine Erschwernis von 2'). Only that probe — CombatWoundEffectPanel opens TalentProbeModal with isWoundEffectProbe — not every Selbstbeherrschung check."
+  note: "The Selbstbeherrschung check (TAL_8) a Wundeffekt demands is 2 harder (Optolith: 'Bei der Probe auf Selbstbeherrschung … bei Wundeffekten … eine Erschwernis von 2'). Only that probe — CombatTakeDamageView opens TalentProbeModal with isWoundEffectProbe (CombatWoundEffectPanel only previews it and asks to roll) — not every Selbstbeherrschung check."
   clauses:
     - kind: passive
       domains: [talentCheck]

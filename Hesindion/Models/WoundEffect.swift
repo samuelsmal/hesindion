@@ -87,6 +87,9 @@ enum WoundEffectResolver {
 
     /// The Selbstbeherrschung probe is harder by 1 per multiple of the Wundschwelle.
     /// Rules example: Wundschwelle 6 → −1 at 6 SP, −2 at 12, −3 at 18.
+    /// This is only the Wundschwelle part: whoever opens a probe with this modifier
+    /// must also pass `isWoundEffectProbe: true` (or use `Situation.woundEffectProbe`),
+    /// or catalog rules like Verweichlicht (DISADV_57) silently do not apply.
     static func probeModifier(damage: Int, wundschwelle: Int) -> Int {
         -multiple(damage: damage, wundschwelle: wundschwelle)
     }
