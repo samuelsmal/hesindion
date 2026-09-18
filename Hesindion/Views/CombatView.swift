@@ -37,6 +37,10 @@ enum CombatStep {
     /// root, which is where the incoming hit used to be dropped silently.
     case takeDamage(prefilledTP: Int? = nil, source: String? = nil, thenIncomingHit: Bool = false)
     case flucht
+    /// "Nach dem Kampf": the step between the end-combat button and leaving, on
+    /// which the states a fight set can be switched off again. Skipped entirely
+    /// when there is nothing to switch off (`CombatAftermath.isEmpty`).
+    case aftermath
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
@@ -67,6 +71,7 @@ extension CombatStep {
         case .dualAttackSecond: "dualAttackSecond"
         case .mountPreCheck: "mountPreCheck"
         case .flucht: "flucht"
+        case .aftermath: "aftermath"
         case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
@@ -256,6 +261,7 @@ struct CombatView: View {
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
         case .flucht: "flucht"
+        case .aftermath: "aftermath"
         case .spellSelection: "spellSelection"
         case .spellSetup: "spellSetup"
         case .spellCasting: "spellCasting"
@@ -505,6 +511,9 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .aftermath:
+                CombatAftermathView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             case .fernkampfSetup:
                 CombatFernkampfSetupView(
                     hero: hero,

@@ -392,6 +392,18 @@ enum DSAStrings {
         "indestructibleItems.title":    "Indestructible equipment",
         "indestructibleItems.subtitle": "A fumble drops these instead of destroying or denting them.",
         "indestructibleItems.forget":   "Breakable",
+
+        // After the fight
+        "aftermath.title":              "After the fight",
+        "aftermath.intro":              "What the fight left behind. Switch off what is over — the rest stays.",
+        "aftermath.states":             "STILL ACTIVE",
+        "aftermath.derived":            "FOLLOWS BY ITSELF",
+        "aftermath.damaged":            "STILL DAMAGED",
+        "aftermath.damaged.hint":       "Repaired under hero settings, not here.",
+        "aftermath.clear":              "Clear",
+        "aftermath.restore":            "Undo",
+        "aftermath.gone":               "cleared",
+        "aftermath.done":               "Done",
         "schmerz.fromFumble":           "+%d from a fumble, until end of round %d",
         "flucht.gsLiegend":             "GS 1 — %@",
 
@@ -1088,6 +1100,18 @@ enum DSAStrings {
         "indestructibleItems.title":    "Unzerstörbare Ausrüstung",
         "indestructibleItems.subtitle": "Ein Patzer lässt sie fallen, statt sie zu zerstören oder zu beschädigen.",
         "indestructibleItems.forget":   "Zerstörbar",
+
+        // Nach dem Kampf
+        "aftermath.title":              "Nach dem Kampf",
+        "aftermath.intro":              "Was der Kampf hinterlassen hat. Abhaken, was vorbei ist — der Rest bleibt.",
+        "aftermath.states":             "NOCH AKTIV",
+        "aftermath.derived":            "ERGIBT SICH VON SELBST",
+        "aftermath.damaged":            "NOCH BESCHÄDIGT",
+        "aftermath.damaged.hint":       "Wird in den Helden-Einstellungen repariert, nicht hier.",
+        "aftermath.clear":              "Entfernen",
+        "aftermath.restore":            "Zurücknehmen",
+        "aftermath.gone":               "entfernt",
+        "aftermath.done":               "Fertig",
         "schmerz.fromFumble":           "+%d aus Patzer bis Ende KR %d",
         "flucht.gsLiegend":             "GS 1 — %@",
 

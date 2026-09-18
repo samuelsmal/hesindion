@@ -395,6 +395,90 @@ final class FumbleTableFlowTests: XCTestCase {
         captureScreenshot(app, named: "46-fumble-damaged-loadout-badge")
     }
 
+    // MARK: - Nach dem Kampf
+
+    /// A fight sets states and never takes them off again.
+    ///
+    /// The Sturz above is the clearest case: the check fails, Liegend is set,
+    /// the fight ends — and the hero walks into the next scene still on the
+    /// ground, because nothing in the flow ever cleared it and the player would
+    /// have had to remember to open the hero sheet and swipe it away (owner
+    /// request). "Kampf beenden" now stops on the way out and offers the list.
+    @MainActor
+    func testEndingTheFightOffersTheStatesItSet() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.fallScript)
+
+        rollTheTable(app, expecting: "Sturz")
+        rollProbe(app)
+        backToRoot(app)
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)["state.chip.liegend"]
+                .waitForExistence(timeout: UITest.timeout),
+            "precondition: the failed Sturz laid the hero out"
+        )
+
+        let endCombat = app.button(containing: "Kampf beenden")
+        XCTAssertTrue(app.scrollUntilHittable(endCombat), "Could not reach the end-combat button")
+        endCombat.tap()
+
+        // --- The screen, with the state that is still running on it.
+        let row = app.descendants(matching: .any)["combat.aftermath.row.liegend"]
+        XCTAssertTrue(
+            row.waitForExistence(timeout: UITest.timeout),
+            "Ending the fight walked straight out with Liegend still set"
+        )
+        XCTAssertTrue(row.staticTexts["Liegend"].exists, "The row should name the state")
+        captureScreenshot(app, named: "50-aftermath")
+
+        // Liegend is a Status, so it is one button: off, and off again is back.
+        let toggle = app.buttons["combat.aftermath.toggle.liegend"]
+        XCTAssertTrue(app.scrollUntilHittable(toggle), "No control on the Liegend row")
+        toggle.tap()
+        XCTAssertTrue(
+            row.staticTexts["entfernt"].waitForExistence(timeout: UITest.timeout),
+            "The row does not say it was cleared"
+        )
+        captureScreenshot(app, named: "51-aftermath-cleared")
+
+        let done = app.buttons["combat.aftermath.done"]
+        XCTAssertTrue(app.scrollUntilHittable(done), "No \"Fertig\" on the aftermath screen")
+        done.tap()
+
+        // --- Out of the fight, and the hero is no longer on the ground.
+        XCTAssertTrue(
+            app.buttons["combat.parry"].waitForNonExistence(timeout: UITest.timeout),
+            "\"Fertig\" did not leave the fight"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["state.chip.liegend"].exists,
+            "Liegend survived the screen that exists to end it"
+        )
+        XCTAssertFalse(app.staticTexts["Liegend"].exists, "The hero sheet still lists Liegend")
+    }
+
+    /// And a fight that left nothing behind ends the way it always did: the
+    /// button leaves, with no screen in between.
+    @MainActor
+    func testAFightThatLeftNothingBehindEndsStraightAway() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat")
+
+        let endCombat = app.button(containing: "Kampf beenden")
+        XCTAssertTrue(app.scrollUntilHittable(endCombat), "Could not reach the end-combat button")
+        endCombat.tap()
+
+        XCTAssertTrue(
+            app.buttons["combat.parry"].waitForNonExistence(timeout: UITest.timeout),
+            "The end-combat button did not leave the fight"
+        )
+        XCTAssertFalse(
+            app.buttons["combat.aftermath.done"].exists,
+            "An empty \"Nach dem Kampf\" only asks the player to confirm nothing"
+        )
+    }
+
     // MARK: - Unzerstörbare Waffen
 
     /// AT 20, confirmation 20 → confirmed Patzer on the attack; 2W6 1+1 = 2 →

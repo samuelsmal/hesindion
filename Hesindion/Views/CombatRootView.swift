@@ -700,11 +700,23 @@ struct CombatRootView: View {
             .dsaOptionGroup()
 
             // End combat — not an action in the round, it leaves the screen, so
-            // it stays outside the group and keeps its own shadow. Clears the
-            // session.
+            // it stays outside the group and keeps its own shadow.
+            //
+            // It clears the session, but not before the player has had the one
+            // chance the app ever gave them to switch the fight's states off
+            // again: a failed Sturz check, a Beule, a Selbstbeherrschung probe
+            // and the Beengte-Umgebung toggle all set states that nothing in the
+            // flow ever took away, so Liegend walked out of the fight with the
+            // hero. With nothing to switch off, the button behaves exactly as it
+            // did — there is no point asking the player to confirm an empty
+            // list.
             Button {
-                hero.clearCombatSession()
-                onDismiss()
+                if CombatAftermath(hero: hero).isEmpty {
+                    hero.clearCombatSession()
+                    onDismiss()
+                } else {
+                    step = .aftermath
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "flag.fill")
