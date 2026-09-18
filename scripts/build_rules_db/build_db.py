@@ -3,20 +3,31 @@
 
 import argparse
 import json
+import os
 import sqlite3
 from pathlib import Path
 
 import yaml
 
+import catalog
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="Build rules.db from DSA YAML data")
     p.add_argument("--source", required=True, type=Path,
-                    help="Path to dsa_companion_data/Data/ directory")
-    p.add_argument("--effects", required=True, type=Path,
-                    help="Path to specs/data/rules.yaml")
+                   help="Path to dsa_companion_data/Data/ directory")
+    p.add_argument("--catalog", required=True, type=Path,
+                   help="Path to specs/data/rules-catalog.yaml")
+    p.add_argument("--snapshot", required=True, type=Path,
+                   help="Path to specs/data/rules-catalog.snapshot.json")
+    p.add_argument("--repo-root", required=True, type=Path,
+                   help="Repository root, against which catalog pointers are resolved")
+    p.add_argument("--vocabulary", required=True, type=Path,
+                   help="Path to specs/data/rule-vocabulary.json, the closed clause vocabulary")
+    p.add_argument("--update-snapshot", action="store_true",
+                   help="Rewrite the snapshot from the catalog instead of checking against it")
     p.add_argument("--output", default=Path("rules.db"), type=Path,
-                    help="Output SQLite database path")
+                   help="Output SQLite database path")
     return p.parse_args()
 
 
@@ -102,18 +113,7 @@ def create_schema(conn: sqlite3.Connection):
             group_id         INTEGER
         );
 
-        CREATE TABLE IF NOT EXISTS effects (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            rule_id     TEXT NOT NULL REFERENCES rules(id),
-            level       INTEGER,
-            type        TEXT NOT NULL,
-            attribute   TEXT,
-            value       REAL,
-            scope       TEXT,
-            target      TEXT,
-            condition   TEXT,
-            description TEXT
-        );
+        -- The catalog table is created by catalog.write_catalog_table (dropped and recreated on every build).
 
         CREATE TABLE IF NOT EXISTS spell_details (
             rule_id            TEXT PRIMARY KEY REFERENCES rules(id),
@@ -158,7 +158,6 @@ def create_schema(conn: sqlite3.Connection):
         CREATE INDEX IF NOT EXISTS idx_rules_group ON rules(group_id);
         CREATE INDEX IF NOT EXISTS idx_rules_i18n_locale ON rules_i18n(locale);
         CREATE INDEX IF NOT EXISTS idx_prerequisites_rule ON prerequisites(rule_id);
-        CREATE INDEX IF NOT EXISTS idx_effects_rule ON effects(rule_id);
     """)
     conn.commit()
 
@@ -789,71 +788,6 @@ def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {lang_count} languages, {script_count} scripts")
 
 
-def import_effects(conn: sqlite3.Connection, effects_path: Path):
-    with open(effects_path, "r", encoding="utf-8") as f:
-        doc = yaml.safe_load(f)
-
-    if doc is None:
-        print("  WARNING: effects file is empty")
-        return
-
-    count = 0
-
-    # Support two formats:
-    # 1. Dict with section keys → list of entries with "id" field (original hand-authored)
-    # 2. Flat list of entries with "rule_id" field (scraper output)
-    entries_list = []
-    if isinstance(doc, dict):
-        for section_key, entries in doc.items():
-            if isinstance(entries, list):
-                entries_list.extend(entries)
-    elif isinstance(doc, list):
-        entries_list = doc
-
-    for entry in entries_list:
-        rule_id = entry.get("id") or entry.get("rule_id")
-        if not rule_id:
-            continue
-        # Verify rule exists in DB
-        exists = conn.execute("SELECT 1 FROM rules WHERE id = ?", (rule_id,)).fetchone()
-        if not exists:
-            print(f"  WARNING: rule_id '{rule_id}' not found in DB, skipping")
-            continue
-
-        for item in entry.get("effects", []):
-            if "level" in item and "effects" in item:
-                # Level-grouped
-                level = item["level"]
-                for eff in item["effects"]:
-                    _insert_effect(conn, rule_id, level, eff)
-                    count += 1
-            elif "type" in item:
-                # Flat effect (may have level at top level)
-                _insert_effect(conn, rule_id, item.get("level"), item)
-                count += 1
-
-    conn.commit()
-    print(f"  Imported {count} effects")
-
-
-def _insert_effect(conn: sqlite3.Connection, rule_id: str, level, eff: dict):
-    conn.execute(
-        """INSERT INTO effects (rule_id, level, type, attribute, value, scope, target, condition, description)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (
-            rule_id,
-            level,
-            eff.get("type", ""),
-            eff.get("attribute"),
-            eff.get("value"),
-            eff.get("scope"),
-            eff.get("target"),
-            eff.get("condition"),
-            eff.get("description"),
-        ),
-    )
-
-
 def build_fts_index(conn: sqlite3.Connection):
     conn.execute("""
         INSERT INTO rules_fts (rule_id, name, description)
@@ -870,80 +804,91 @@ def print_stats(conn: sqlite3.Connection):
     print("\nDatabase summary:")
     for cat, count in cats:
         print(f"  {cat}: {count}")
-    effects_count = conn.execute("SELECT COUNT(*) FROM effects").fetchone()[0]
     prereqs_count = conn.execute("SELECT COUNT(*) FROM prerequisites").fetchone()[0]
-    print(f"  effects: {effects_count}")
     print(f"  prerequisites: {prereqs_count}")
 
 
 def main():
     args = parse_args()
     assert args.source.is_dir(), f"Source directory not found: {args.source}"
-    assert args.effects.is_file(), f"Effects file not found: {args.effects}"
+    assert args.catalog.is_file(), f"Catalog not found: {args.catalog}"
+    assert args.vocabulary.is_file(), f"Vocabulary not found: {args.vocabulary}"
 
-    conn = sqlite3.connect(str(args.output))
-    conn.execute("PRAGMA journal_mode=DELETE")
-    conn.execute("PRAGMA foreign_keys=ON")
+    tmp = args.output.with_suffix(".db.tmp")
+    if tmp.exists():
+        tmp.unlink()
 
-    create_schema(conn)
-    seed_base_data(conn)
+    # tmp.unlink in finally so a failed build (a raised SystemExit from a catalog
+    # problem, most days) never leaves a .tmp file in Hesindion/Resources — that
+    # folder is an Xcode file-system-synchronized group and would bundle it into
+    # the app. A no-op once os.replace has already moved the file away.
+    try:
+        conn = sqlite3.connect(str(tmp))
+        conn.execute("PRAGMA journal_mode=DELETE")
+        conn.execute("PRAGMA foreign_keys=ON")
 
-    print("Seeding groups...")
-    seed_groups(conn, args.source)
+        create_schema(conn)
+        seed_base_data(conn)
 
-    print("Importing conditions...")
-    import_conditions(conn, args.source)
-    print("Importing states...")
-    import_states(conn, args.source)
-    print("Importing advantages...")
-    import_advantages(conn, args.source)
-    print("Importing disadvantages...")
-    import_disadvantages(conn, args.source)
-    print("Importing combat techniques...")
-    import_combat_techniques(conn, args.source)
-    print("Importing special abilities...")
-    import_special_abilities(conn, args.source)
-    print("Importing languages and scripts...")
-    import_languages_and_scripts(conn, args.source)
-    print("Importing skills...")
-    import_skills(conn, args.source)
+        print("Seeding groups...")
+        seed_groups(conn, args.source)
 
-    print("Importing spells...")
-    import_spells(conn, args.source)
+        print("Importing conditions...")
+        import_conditions(conn, args.source)
+        print("Importing states...")
+        import_states(conn, args.source)
+        print("Importing advantages...")
+        import_advantages(conn, args.source)
+        print("Importing disadvantages...")
+        import_disadvantages(conn, args.source)
+        print("Importing combat techniques...")
+        import_combat_techniques(conn, args.source)
+        print("Importing special abilities...")
+        import_special_abilities(conn, args.source)
+        print("Importing languages and scripts...")
+        import_languages_and_scripts(conn, args.source)
+        print("Importing skills...")
+        import_skills(conn, args.source)
 
-    print("Importing cantrips...")
-    import_cantrips(conn, args.source)
+        print("Importing spells...")
+        import_spells(conn, args.source)
 
-    print("Importing curses...")
-    import_curses(conn, args.source)
-    print("Importing elven magical songs...")
-    import_elven_songs(conn, args.source)
-    print("Importing magical dances...")
-    import_magical_dances(conn, args.source)
-    print("Importing magical melodies...")
-    import_magical_melodies(conn, args.source)
-    print("Importing domination rituals...")
-    import_domination_rituals(conn, args.source)
-    print("Importing geode rituals...")
-    import_geode_rituals(conn, args.source)
-    print("Importing zibilja rituals...")
-    import_zibilja_rituals(conn, args.source)
+        print("Importing cantrips...")
+        import_cantrips(conn, args.source)
 
-    print("Importing liturgical chants...")
-    import_liturgical_chants(conn, args.source)
-    print("Importing blessings...")
-    import_blessings(conn, args.source)
+        print("Importing curses...")
+        import_curses(conn, args.source)
+        print("Importing elven magical songs...")
+        import_elven_songs(conn, args.source)
+        print("Importing magical dances...")
+        import_magical_dances(conn, args.source)
+        print("Importing magical melodies...")
+        import_magical_melodies(conn, args.source)
+        print("Importing domination rituals...")
+        import_domination_rituals(conn, args.source)
+        print("Importing geode rituals...")
+        import_geode_rituals(conn, args.source)
+        print("Importing zibilja rituals...")
+        import_zibilja_rituals(conn, args.source)
 
-    print("Importing hand-authored effects...")
-    import_effects(conn, args.effects)
+        print("Importing liturgical chants...")
+        import_liturgical_chants(conn, args.source)
+        print("Importing blessings...")
+        import_blessings(conn, args.source)
 
-    print("Building FTS index...")
-    build_fts_index(conn)
+        print("Importing the rules catalog...")
+        catalog.import_catalog(conn, args.catalog, args.snapshot, args.repo_root, args.update_snapshot, args.vocabulary)
 
-    print_stats(conn)
+        print("Building FTS index...")
+        build_fts_index(conn)
 
-    conn.close()
-    print(f"Built {args.output} successfully.")
+        print_stats(conn)
+
+        conn.close()
+        os.replace(tmp, args.output)
+        print(f"Built {args.output} successfully.")
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

@@ -23,12 +23,12 @@ struct RegenerierenSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(L("regeneration"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 8) {
                 diceBox
@@ -58,20 +58,20 @@ struct RegenerierenSheet: View {
         return VStack(spacing: 0) {
             VStack(spacing: 2) {
                 Text("\(display)")
-                    .font(.system(.largeTitle, weight: .black))
+                    .font(.dsaHeading(.largeTitle))
                     .fontDesign(.monospaced)
                 if !isRolled {
                     Text(L("tapToRoll"))
-                        .font(.system(.caption2, weight: .semibold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(!isRolled ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
             Text("W6")
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -80,48 +80,31 @@ struct RegenerierenSheet: View {
     private var modifierBox: some View {
         let locked = d6Result != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button { userModifier -= 1 } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(locked ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : Color.groupPersonalData)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : Color.groupPersonalData,
+                iconColor: locked ? .white : .black,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                onDecrement: { userModifier -= 1 },
+                onIncrement: { userModifier += 1 }
+            ) {
                 VStack(spacing: 2) {
                     Text(totalMod >= 0 ? "+\(totalMod)" : "\(totalMod)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .fontDesign(.monospaced)
                     if baseMod > 0 {
                         Text("\(L("improvedRegen")) +\(baseMod)")
-                            .font(.system(.caption2))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(minWidth: 64)
                 .padding(.vertical, 10)
-                .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
-                Button { userModifier += 1 } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(locked ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : Color.groupPersonalData)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
             Text(L("modifier"))
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -139,16 +122,16 @@ struct RegenerierenSheet: View {
         }
         return VStack(spacing: 4) {
             Text(formulaStr)
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .fontDesign(.monospaced)
             Text("\(currentLE) + \(healing) → \(newLE) / \(maxLE) LP")
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+        .dsaBox(.flush)
     }
 
     private var confirmButton: some View {
@@ -166,14 +149,14 @@ struct RegenerierenSheet: View {
             dismiss()
         } label: {
             Image(systemName: "checkmark")
-                .font(.system(.title2, weight: .bold))
+                .font(.dsaHeading(.title2))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Animation & Rolling
@@ -190,7 +173,7 @@ struct RegenerierenSheet: View {
     private func rollDie() {
         guard d6Result == nil else { return }
         animTask?.cancel()
-        d6Result = Int.random(in: 1...6)
+        d6Result = DiceRoller.roll(sides: 6)
     }
 }
 
@@ -220,13 +203,13 @@ struct CommandSearchOverlay: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(Color.black)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color.groupPersonalData)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
 
             // Results
             let maxHeight = UIScreen.main.bounds.height / 3
@@ -251,7 +234,7 @@ struct CommandSearchOverlay: View {
                                     Divider()
                                 }
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     } else if !query.isEmpty {
                         Text(L("noResults"))
@@ -265,7 +248,7 @@ struct CommandSearchOverlay: View {
             }
             .frame(maxHeight: maxHeight)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.flush)
         }
         .padding(.horizontal, 16)
         .gesture(
@@ -289,19 +272,19 @@ struct CommandModal: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.5)
+            Color.dsaOverlay
                 .ignoresSafeArea()
                 .onTapGesture { activeCommand = nil }
 
             VStack(spacing: 20) {
                 // Header
                 Text(command.displayName)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color.groupPersonalData)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
 
                 // Input
                 if let input = command.input, case .integerAmount(let label, let min, let max, _) = input {
@@ -316,39 +299,39 @@ struct CommandModal: View {
                         VStack(spacing: 8) {
                             if let max {
                                 Text("/ \(max)")
-                                    .font(.system(.subheadline))
+                                    .font(.dsaBody(.subheadline))
                                     .foregroundStyle(.secondary)
                             }
                             Text("\(amount)")
-                                .font(.system(.largeTitle, weight: .black))
+                                .font(.dsaHeading(.largeTitle))
 
                             HStack(spacing: 16) {
                                 Button {
                                     amount = Swift.max(min, amount - 1)
                                 } label: {
                                     Text("−")
-                                        .font(.system(.title, weight: .bold))
+                                        .font(.dsaHeading(.title))
                                         .foregroundStyle(Color.black)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                        .dsaBox(.raised)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.dsaMotion)
 
                                 Button {
                                     let cap = max.map { Swift.min($0, amount + 1) } ?? (amount + 1)
                                     amount = cap
                                 } label: {
                                     Text("+")
-                                        .font(.system(.title, weight: .bold))
+                                        .font(.dsaHeading(.title))
                                         .foregroundStyle(Color.black)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
                                         .background(Color.groupPersonalData)
-                                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                        .dsaBox(.raised)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.dsaMotion)
                             }
                         }
                         .accessibilityLabel(label)
@@ -365,18 +348,18 @@ struct CommandModal: View {
                     activeCommand = nil
                 } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(.title2, weight: .bold))
+                        .font(.dsaHeading(.title2))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupPersonalData)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(32)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
             .padding(32)
             .gesture(
                 DragGesture().onEnded { value in
@@ -414,12 +397,12 @@ struct MountDamageSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(L("mountTakesDamage"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupCombat)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 16) {
                 if !damageApplied {
@@ -448,51 +431,51 @@ struct MountDamageSheet: View {
     private var spInput: some View {
         VStack(spacing: 12) {
             Text(mount.name)
-                .font(.system(.title3, weight: .bold))
+                .font(.dsaHeading(.title3))
 
             HStack(spacing: 0) {
                 Button { if spAmount > 1 { spAmount -= 1 } } label: {
                     Text("−")
-                        .font(.system(.title, weight: .bold))
+                        .font(.dsaHeading(.title))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat.opacity(0.3))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Text("\(spAmount)")
-                    .font(.system(.largeTitle, weight: .black))
+                    .font(.dsaHeading(.largeTitle))
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.raised)
 
                 Button { spAmount += 1 } label: {
                     Text("+")
-                        .font(.system(.title, weight: .bold))
+                        .font(.dsaHeading(.title))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat.opacity(0.3))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
 
             Text(L("mountDamage.sp"))
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
                 .foregroundStyle(.secondary)
 
             if penalty > 0 {
                 Text(String(format: L("mountDamage.penalty"), penalty))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(Color.groupCombat)
             } else {
                 Text(L("mountDamage.noPenalty"))
-                    .font(.system(.caption, weight: .medium))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.secondary)
             }
 
@@ -507,14 +490,14 @@ struct MountDamageSheet: View {
                 withAnimation { damageApplied = true }
             } label: {
                 Text(L("mountDamage.apply"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.groupCombat)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -535,32 +518,32 @@ struct MountDamageSheet: View {
         VStack(spacing: 16) {
             Image(systemName: succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(succeeded ? Color.green : Color.groupCombat)
+                .foregroundStyle(succeeded ? Color.groupEquipment : Color.groupCombat)
 
             Text(succeeded ? L("reitenCheckPassed") : L("reitenCheckFailed"))
-                .font(.system(.title3, weight: .bold))
+                .font(.dsaHeading(.title3))
 
             if !succeeded {
                 Text(L("mountDamage.sturz"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(Color.groupCombat)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
                     .background(Color.groupCombat.opacity(0.1))
-                    .overlay(Rectangle().stroke(Color.groupCombat, lineWidth: 2))
+                    .dsaBox(.raised, stroke: Color.groupCombat)
             }
 
             Button { dismiss() } label: {
                 Image(systemName: "checkmark")
-                    .font(.system(.title2, weight: .bold))
+                    .font(.dsaHeading(.title2))
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.groupCombat)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -571,24 +554,24 @@ struct MountDamageSheet: View {
                 .foregroundStyle(Color.groupCombat)
 
             Text(L("reitenCheck"))
-                .font(.system(.title3, weight: .bold))
+                .font(.dsaHeading(.title3))
 
             if penalty > 0 {
                 Text(String(format: L("mountDamage.penalty"), penalty))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(Color.groupCombat)
             }
 
             Button { showingProbeModal = true } label: {
                 Text(L("rollReitenCheck"))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.groupCombat)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -599,36 +582,36 @@ struct MountDamageSheet: View {
                 .foregroundStyle(Color.groupCombat)
 
             Text(L("reitenCheckPrompt"))
-                .font(.system(.title3, weight: .bold))
+                .font(.dsaHeading(.title3))
 
             if penalty > 0 {
                 Text(String(format: L("mountDamage.penalty"), penalty))
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(Color.groupCombat)
             }
 
             HStack(spacing: 12) {
                 Button { probeSucceeded = false } label: {
                     Text(L("no"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
                 Button { probeSucceeded = true } label: {
                     Text(L("yes"))
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.groupCombat)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
         }
     }

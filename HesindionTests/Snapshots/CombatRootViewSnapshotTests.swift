@@ -24,12 +24,14 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             twoHandedGripActive: .constant(false),
             vorstossActiveThisRound: .constant(false),
             beengteUmgebungActive: .constant(false),
-            defenseCountThisRound: .constant(0),
+            parriesThisRound: .constant(0),
+            dodgesThisRound: .constant(0),
             schipDefenseBoostActive: .constant(false),
             schipIgnoreZustandThisRound: .constant(false),
             mountedActive: false,
             plaenklerActive: false,
             plaenklerBonus: .at,
+            opponent: OpponentProfile(),
             onDismiss: {}
         )
         .modelContainer(container)
@@ -53,12 +55,14 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             twoHandedGripActive: .constant(false),
             vorstossActiveThisRound: .constant(false),
             beengteUmgebungActive: .constant(false),
-            defenseCountThisRound: .constant(0),
+            parriesThisRound: .constant(0),
+            dodgesThisRound: .constant(0),
             schipDefenseBoostActive: .constant(false),
             schipIgnoreZustandThisRound: .constant(false),
             mountedActive: false,
             plaenklerActive: false,
             plaenklerBonus: .at,
+            opponent: OpponentProfile(),
             onDismiss: {}
         )
         .modelContainer(container)

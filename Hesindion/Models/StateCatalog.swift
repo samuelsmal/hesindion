@@ -9,7 +9,8 @@ enum StateKind: Equatable {
 enum StatePenaltyValue: Equatable {
     /// value = -level (leveled Zustände, Schmerz).
     case perLevel
-    /// per-domain fixed value (binary Status like Liegend/Fixiert).
+    /// per-domain fixed value (binary Status like Fixiert). Liegend's numbers
+    /// are the catalog's (STATE_10, `StateMechanic.catalog`).
     case fixed([CheckDomain: Int])
 }
 
@@ -23,6 +24,9 @@ enum StateMechanic: Equatable {
     case entrueckung
     /// No automatic math — reminder only.
     case reminderOnly
+    /// The rules catalog carries the numbers (design §7 step 2); `StateModifiers`
+    /// emits nothing for it. The chip shows no number, as for every Status.
+    case catalog
 }
 
 struct StateDefinition: Identifiable, Equatable {
@@ -166,8 +170,7 @@ enum StateCatalog {
     static let statuses: [StateDefinition] = [
         StateDefinition(id: "liegend", kind: .status, nameKey: "state.liegend.name",
             iconSystemName: "figure.fall",
-            mechanic: .penalty(domains: [.meleeAttack, .meleeParry, .meleeDodge],
-                               value: .fixed([.meleeAttack: -4, .meleeParry: -2, .meleeDodge: -2])),
+            mechanic: .catalog,
             levelEffectKeys: ["state.liegend.effect"], causeKey: "state.liegend.cause",
             removalKey: "state.liegend.removal", implies: [], handlungsunfaehigAtLevel: nil),
         StateDefinition(id: "fixiert", kind: .status, nameKey: "state.fixiert.name",

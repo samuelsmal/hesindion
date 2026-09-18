@@ -7,11 +7,11 @@ struct WeatherDayRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(weatherDay.date.formatted())
-                    .font(.system(.caption, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(Color.groupAdventure)
                 Spacer()
                 Text(weatherDay.region.displayName)
-                    .font(.system(.caption2, design: .monospaced, weight: .bold))
+                    .font(.dsaMono(.caption2, emphasis: true))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -32,17 +32,20 @@ struct WeatherDayRow: View {
                 weatherItem(icon: "cloud.rain", text: weatherDay.rain.displayName)
                 if !weatherDay.overrides.isEmpty {
                     Text(L("weather.edited"))
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(Color.groupAdventure.opacity(0.25))
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                 }
             }
         }
         .padding(DSALayout.contentPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
-        .padding(.bottom, -DSALayout.secondaryBorder)
+        // Rows are separated, not boxed. Each used to draw its own 2pt rectangle
+        // and then pull the next one up by exactly that much to collapse the
+        // seam — which still left a heavy black band between every day. One
+        // divider is what a list of days needs (ADR-0007).
+        .dsaRowDivider()
     }
 
     private var rangeText: String {
@@ -71,10 +74,10 @@ struct WeatherDayRow: View {
     private func weatherItem(icon: String, text: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .frame(width: 16)
-            Text(text).font(.system(.caption, weight: .bold))
+            Text(text).font(.dsaBody(.caption))
         }
     }
 }

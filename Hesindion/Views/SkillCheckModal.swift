@@ -63,7 +63,7 @@ struct SkillCheckModal: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.5)
+            Color.dsaOverlay
                 .ignoresSafeArea()
                 .onTapGesture { onDismiss() }
 
@@ -72,7 +72,13 @@ struct SkillCheckModal: View {
                 probeContent()
             }
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            // A modal on a scrim is the floating-container case the shadow is
+            // reserved for (ADR-0009). This panel was `.flush` while three
+            // controls *inside* it were `.raised`, so the only shadows on
+            // screen were cast by contents onto their own neighbours — the
+            // modifier row printed one across the hint box beneath it — while
+            // the panel itself sat flat on the scrim.
+            .dsaBox(.raised)
             .frame(maxWidth: 400)
             .padding(24)
             .gesture(
@@ -90,19 +96,19 @@ struct SkillCheckModal: View {
     private var headerView: some View {
         HStack {
             Text(config.title)
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
             Spacer()
             Text(config.name)
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
             Spacer()
             Text("\(config.skillValue)")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, DSALayout.headerVerticalPadding)
         .frame(maxWidth: .infinity)
         .background(config.accentColor)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.flush)
     }
 
     // MARK: - Probe Content
@@ -133,34 +139,38 @@ struct SkillCheckModal: View {
             ForEach(config.modifierLines) { line in
                 HStack(spacing: 8) {
                     Image(systemName: line.value < 0 ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(line.value < 0 ? Color.groupCombat : config.accentColor)
                     Text("\(line.source): \(line.value >= 0 ? "+" : "")\(line.value)")
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(line.value < 0 ? Color.groupCombat : config.accentColor)
                     Spacer()
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background((line.value < 0 ? Color.groupCombat : config.accentColor).opacity(0.1))
-                .overlay(Rectangle().stroke(line.value < 0 ? Color.groupCombat : config.accentColor, lineWidth: 2))
+                .dsaRowDivider()
             }
 
             // Hints
             ForEach(hints) { hint in
                 HStack(spacing: 8) {
                     Image(systemName: hint.icon)
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(hint.color)
                     Text(hint.text)
-                        .font(.system(.caption2, weight: .bold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(hint.color)
                     Spacer()
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(hint.color.opacity(0.1))
-                .overlay(Rectangle().stroke(hint.color, lineWidth: 2))
+                // A row in a spacing-0 stack must not stroke its own rectangle
+                // (ADR-0007): the neighbour drawn after it covers the shared
+                // edge, which is why this one came out with three borders. The
+                // tint carries the meaning; the divider carries the boundary.
+                .dsaRowDivider()
             }
 
             // Dice row — tap to roll; once failed with Schips available, tap to
@@ -174,6 +184,7 @@ struct SkillCheckModal: View {
                         selected: rerollEligible && rerollSelection.contains(i)
                     )
                     .contentShape(Rectangle())
+                    .accessibilityIdentifier("skillCheck.die.\(i)")
                     .onTapGesture {
                         if !hasResult {
                             roll()
@@ -211,22 +222,42 @@ struct SkillCheckModal: View {
                         Image(systemName: "sparkles")
                         Text(L("schip.reroll"))
                     }
-                    .font(.system(.body, weight: .black))
+                    .font(.dsaHeading(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .background(Color.dsaSchipGold)
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .disabled(rerollSelection.isEmpty)
                 .opacity(rerollSelection.isEmpty ? 0.5 : 1)
 
                 Text("\(schipsRemaining) \(L("schip.remaining"))")
-                    .font(.system(.caption2, weight: .bold))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 4)
+            }
+
+            // Closing the check is an explicit act, not automatic: the result is
+            // worth reading, and a Schip reroll is still on the table until it is
+            // dismissed. Before this the only ways out were a scrim tap or a drag,
+            // which are easy to miss and left the check sitting over the screen
+            // that sent you here.
+            if hasResult {
+                Button(action: onDismiss) {
+                    Text(L("confirm"))
+                        .font(.dsaHeading(.body))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(config.accentColor)
+                        .dsaBox(.flush)
+                }
+                .buttonStyle(.dsaMotion)
+                .padding(.top, 4)
+                .accessibilityIdentifier("skillCheck.confirm")
             }
         }
         .padding(16)
@@ -237,16 +268,16 @@ struct SkillCheckModal: View {
     private func attrBox(key: String, value: Int) -> some View {
         VStack(spacing: 4) {
             Text(key)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
                 .foregroundStyle(Color.attributeForeground(for: key))
             Text("\(value)")
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
                 .foregroundStyle(Color.attributeForeground(for: key))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color.attributeBackground(for: key))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
+        .dsaBox(.flush)
     }
 
     private func modBox(index: Int) -> some View {
@@ -255,58 +286,59 @@ struct SkillCheckModal: View {
         return HStack(spacing: 0) {
             Button { modifiers[index] -= 1 } label: {
                 Text("\u{2212}")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(locked ? .secondary : .primary)
+                    .font(.dsaBody(.body))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(segmentStyle(locked: locked))
             .disabled(locked)
 
             Text(mod >= 0 ? "+\(mod)" : "\(mod)")
-                .font(.system(.body, weight: .bold))
-                .foregroundStyle(locked ? Color.secondary : Color.primary)
+                .font(.dsaBody(.body))
+                .foregroundStyle(locked ? Color.dsaDisabledLabel : Color.primary)
                 .frame(minWidth: 28)
 
             Button { modifiers[index] += 1 } label: {
                 Text("+")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(locked ? .secondary : .primary)
+                    .font(.dsaBody(.body))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(segmentStyle(locked: locked))
             .disabled(locked)
         }
         .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+        .dsaBox(.flush)
+    }
+
+    /// Spec 010's colour flip, for segments with no shadow to press into.
+    private func segmentStyle(locked: Bool) -> DSASegmentPressStyle {
+        DSASegmentPressStyle(
+            tint: Color(UIColor.systemBackground),
+            foreground: locked ? Color.dsaDisabledLabel : Color.primary
+        )
     }
 
     private func diceBox(value: Int, isAnimating: Bool, selected: Bool) -> some View {
         Text("\(value)")
-            .font(.system(.title3, weight: .black))
+            .font(.dsaHeading(.title3))
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(isAnimating ? config.accentColor.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
-            .overlay(
-                Rectangle().stroke(
-                    selected ? Color(red: 0.6, green: 0.5, blue: 0.0) : Color.clear,
-                    lineWidth: 3
-                )
-            )
+            .dsaBox(.flush)
+            .dsaBox(.flush, stroke: selected ? Color.dsaSchipGold : Color.clear)
     }
 
     private func resultBox(value: Int) -> some View {
         Text("\(value)")
-            .font(.system(.body, weight: .bold))
+            .font(.dsaBody(.body))
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
     }
 
     // MARK: - Summary Bar
@@ -332,12 +364,12 @@ struct SkillCheckModal: View {
 
     private func summaryBar(rolls: [Int], result: CheckResult) -> some View {
         Text(summaryText(rolls: rolls, result: result))
-            .font(.system(.body, weight: .bold))
+            .font(.dsaBody(.body))
             .foregroundStyle(resultTextColor(result))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(resultBackground(result))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
     }
 
     // MARK: - Result Computation
@@ -379,7 +411,7 @@ struct SkillCheckModal: View {
     private func resultBackground(_ result: CheckResult) -> Color {
         switch result {
         case .kritischerPatzer: return .groupCombat
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .qs(let n) where n == 0: return .dsaDark
         case .qs(let n) where n == 1: return Color(red: 0x1a / 255.0, green: 0x5c / 255.0, blue: 0x2e / 255.0)
         case .qs(let n) where n == 2: return Color(red: 0x1e / 255.0, green: 0x7a / 255.0, blue: 0x3c / 255.0)
@@ -403,7 +435,12 @@ struct SkillCheckModal: View {
     private func startAnimation() {
         animationTask = Task { @MainActor in
             while !Task.isCancelled {
-                displayRolls = DiceRoller.roll(count: 3, sides: 20)
+                // `Int.random`, not `DiceRoller`: these are tumble frames.
+                // Drawing them from the queue emptied a `dice_script` before
+                // `roll()` ever reached it, so no talent, spell, liturgy or
+                // Reiten check could be driven to its Kritischer Erfolg or
+                // Patzer from a test.
+                displayRolls = (0..<3).map { _ in Int.random(in: 1...20) }
                 do {
                     try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
                 } catch {
@@ -431,7 +468,7 @@ struct SkillCheckModal: View {
 
         // Reroll only the selected dice; keep the others.
         var newRolls = current
-        for i in rerollSelection { newRolls[i] = Int.random(in: 1...20) }
+        for i in rerollSelection { newRolls[i] = DiceRoller.roll(sides: 20) }
         finalRolls = newRolls
 
         emitResult(rolls: newRolls, schipReroll: true)

@@ -11,11 +11,26 @@ struct CombatExecutionView: View {
     let damageFormula: String?
     let note: String?
     let modifierLines: [ModifierLine]?
+    /// TP bonuses on top of `damageFormula`, forwarded to whichever screen rolls
+    /// the damage.
+    var damageLines: [ModifierLine] = []
+    /// A multiplier the announcement already settled — a consecrated weapon
+    /// against a demon of its opposing deity. Travels beside the critical's own
+    /// multiplier rather than folded into it: they are two different rules and
+    /// the damage screen names each.
+    var damageMultiplier: CriticalDamage = .unchanged
+    /// What the announcement did to the opponent's defence, carried through to
+    /// the screen where the GM needs it.
+    var opponentDefenseModifiers: [ModifierLine] = []
     let secondAttackStep: CombatStep?
     let combatId: UUID
     let roundNumber: Int
     let beengteUmgebungActive: Bool
     @Binding var step: CombatStep
+    /// Called once when a *defence* is set up on this screen, so the round can
+    /// count it. The count drives Mehrfache Verteidigung for the **next**
+    /// defence — this one was already modified with the count as it stood.
+    var onDefenseAttempted: () -> Void = {}
     var onDismiss: () -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -28,11 +43,13 @@ struct CombatExecutionView: View {
     @State private var confirmAnimTask: Task<Void, Never>? = nil
     @State private var schipUsed: Bool = false
     @State private var hasLoggedRoll: Bool = false
+    /// Guards the round's defence count against a Schip reroll or a redraw
+    /// counting the same defence twice.
+    @State private var hasCountedDefense: Bool = false
+    /// The same guard for the Patzer effects this roll spends: a Schicksalspunkt
+    /// reroll is the *same* roll and must not pay for them a second time.
+    @State private var hasConsumedFumbleEffects: Bool = false
 
-    // Damage rolling state
-    @State private var damageDisplayRolls: [Int] = []
-    @State private var damageFinalRolls: [Int]? = nil
-    @State private var damageAnimTask: Task<Void, Never>? = nil
 
     private var attrLabel: String {
         switch action {
@@ -54,6 +71,30 @@ struct CombatExecutionView: View {
 
     private var effectiveValue: Int { attributeValue + modifier }
 
+    /// Whether the hero's table plays with the optional Kritische-Erfolge table
+    /// for *this* action (ADR-0011). An attack reads the Angriff table; a defence
+    /// reads one of the two defensive ones, and which of those it is depends on
+    /// the incoming attack, which is why the screen after this one may have to ask.
+    private var usesCriticalTable: Bool {
+        switch action {
+        case .angriff, .fernkampf:
+            hero.isFokusRuleActive(.kritischeErfolgeAngriff)
+        case .parieren, .ausweichen:
+            hero.isFokusRuleActive(.kritischeErfolgeNahkampf)
+                || hero.isFokusRuleActive(.kritischeErfolgeFernkampf)
+        }
+    }
+
+    /// `nil` asks. Pre-selected when only one of the two defensive tables is on,
+    /// which is the common case — a table either plays with ranged criticals or
+    /// does not.
+    private var defenseCriticalTable: CriticalSuccessTableType? {
+        let melee = hero.isFokusRuleActive(.kritischeErfolgeNahkampf)
+        let ranged = hero.isFokusRuleActive(.kritischeErfolgeFernkampf)
+        if melee && ranged { return nil }
+        return melee ? .verteidigungNahkampf : .verteidigungFernkampf
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -62,19 +103,20 @@ struct CombatExecutionView: View {
                     step = action == .ausweichen ? .root : .weaponSelection(action)
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
 
                 Spacer()
 
                 VStack(spacing: 1) {
                     Text(actionLabel)
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(.white)
                     Text(weaponName)
-                        .font(.system(.caption, weight: .semibold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.85))
                 }
 
@@ -82,17 +124,18 @@ struct CombatExecutionView: View {
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
+            ScrollView {
             VStack(spacing: 8) {
                 // Row 1: modifier breakdown or simple value
                 modifierBreakdown
@@ -129,21 +172,20 @@ struct CombatExecutionView: View {
                             logSchipUsed(action: "reroll")
                             finalRoll = nil
                             confirmRoll = nil
-                            damageFinalRolls = nil
                             startAnimation()
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "sparkles")
                                 Text(L("schip.reroll"))
                             }
-                            .font(.system(.body, weight: .black))
+                            .font(.dsaHeading(.body))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .background(Color.dsaSchipGold)
+                            .dsaBox(.raised)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
 
                     // Attack-specific post-outcome flow
@@ -156,14 +198,18 @@ struct CombatExecutionView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
-
-            Spacer()
+            }
         }
-        .onAppear { startAnimation() }
+        .onAppear {
+            startAnimation()
+            if action == .parieren || action == .ausweichen, !hasCountedDefense {
+                hasCountedDefense = true
+                onDefenseAttempted()
+            }
+        }
         .onDisappear {
             animationTask?.cancel()
             confirmAnimTask?.cancel()
-            damageAnimTask?.cancel()
         }
         .onChange(of: finalRoll) {
             logRollIfNeeded()
@@ -182,35 +228,62 @@ struct CombatExecutionView: View {
             // Critical hit info boxes
             if outcome == .kritischerErfolg {
                 infoBox(L("opponentDefense.halved"))
-                infoBox(L("opponentDefense.doubleDamage"))
+                // The halving is unconditional; the doubling is not. With the
+                // optional table in play it is the table that says what happens
+                // to the damage — announcing "doppelter Schaden" here and then
+                // rolling a +2 would state the outcome before it was decided.
+                if !usesCriticalTable {
+                    infoBox(L("opponentDefense.doubleDamage"))
+                }
             } else if finalRoll == 1 && confirmRoll != nil {
                 // Rolled 1 but confirm failed → still normal hit, but note that defense is halved
                 // (1 was rolled — even on failed confirmation the opponent defense is still halved)
                 infoBox(L("opponentDefense.halved"))
             }
 
-            // "Weiter zur Verteidigung" button
+            // "Weiter zur Verteidigung" button — or, on a confirmed critical with
+            // the optional table switched on, the table first: it is what decides
+            // what happens to the damage (ADR-0011).
             Button {
-                step = .opponentDefense(
-                    weaponName: weaponName,
-                    damageFormula: damageFormula,
-                    isCriticalHit: finalRoll == 1,
-                    isDoubleDamage: outcome == .kritischerErfolg,
-                    modifierLines: modifierLines
-                )
+                if outcome == .kritischerErfolg, usesCriticalTable {
+                    step = .criticalSuccess(
+                        table: .angriff,
+                        action: action,
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        modifierLines: modifierLines,
+                        damageLines: damageLines,
+                        damageMultiplier: damageMultiplier,
+                        opponentDefenseModifiers: opponentDefenseModifiers
+                    )
+                } else {
+                    step = .opponentDefense(
+                        weaponName: weaponName,
+                        damageFormula: damageFormula,
+                        isCriticalHit: finalRoll == 1,
+                        criticalDamage: outcome == .kritischerErfolg ? .double : .unchanged,
+                        modifierLines: modifierLines,
+                        damageLines: damageLines,
+                        damageMultiplier: damageMultiplier,
+                        opponentDefenseModifiers: opponentDefenseModifiers,
+                        criticalDamageSource: outcome == .kritischerErfolg ? L("critical.hit") : nil
+                    )
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "shield.fill")
-                    Text(L("proceedToDefense"))
+                    Text(usesCriticalTable && outcome == .kritischerErfolg
+                         ? L("critical.title")
+                         : L("proceedToDefense"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
         case .misserfolg:
             // showNeueAktion controls this — rendered in the unified block below
@@ -225,14 +298,14 @@ struct CombatExecutionView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                     Text(L("fumble.title"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
     }
 
@@ -240,38 +313,70 @@ struct CombatExecutionView: View {
 
     @ViewBuilder
     private func defenseOutcomeActions(_ outcome: CombatOutcome) -> some View {
-        // Critical parry success → Passierschlag info + button
-        if action == .parieren && outcome == .kritischerErfolg {
+        // A critical defence with the optional table on goes to the table, which
+        // *replaces* the Passierschlag — on results 2–6 it hands out a standing
+        // advantage instead, so the button must not be offered alongside it. An
+        // Ausweichen reaches the table too; only the Passierschlag was ever
+        // parry-only (ADR-0011).
+        if outcome == .kritischerErfolg, usesCriticalTable {
+            Button {
+                step = .criticalSuccess(
+                    table: defenseCriticalTable,
+                    action: action,
+                    weaponName: weaponName,
+                    damageFormula: damageFormula,
+                    modifierLines: modifierLines
+                )
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "die.face.6.fill")
+                    Text(L("critical.title"))
+                }
+                .font(.dsaHeading(.body))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(combatAccent)
+                .dsaBox(.raised)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("combat.execution.criticalTable")
+        } else if action == .parieren && outcome == .kritischerErfolg {
             HStack(spacing: 6) {
                 Image(systemName: "bolt.fill")
                 Text(L("passierschlag") + " " + L("passierschlag.info"))
             }
-            .font(.system(.caption2, weight: .bold))
+            .font(.dsaBody(.caption2))
             .foregroundStyle(combatAccent)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(combatAccent.opacity(0.1))
-            .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+            .dsaBox(.raised, stroke: combatAccent)
 
             Button { step = .passierschlag } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "bolt.fill")
                     Text(L("passierschlag"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         }
 
         if outcome == .kritischerPatzer {
             // Confirmed fumble on defense → fumble choice
-            let isShieldParry = action == .parieren && (hero.selectedShield != nil)
+            // The *shield* table is for a parry made with the shield, not for
+            // any parry a shield-carrying hero makes. `weaponName` is the piece
+            // the weapon list rolled with, so it is the answer; reading only
+            // "does the hero carry a shield" sent a sword parry to the Schild
+            // table, whose item results then took the shield out of the loadout.
+            let isShieldParry = action == .parieren && hero.isShieldInHand(weaponName)
             Button {
                 step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: isShieldParry)
             } label: {
@@ -279,17 +384,41 @@ struct CombatExecutionView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                     Text(L("fumble.title"))
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupCombat)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
+        } else if outcome == .misserfolg, action == .parieren || action == .ausweichen, showNeueAktion {
+            // A failed Parade/Ausweichen means the blow got through — the next
+            // step is entering the damage, not leaving. "Neue Aktion" stays
+            // reachable underneath for the GM who rules it did nothing, quieter
+            // than the primary so the two do not read as equal choices.
+            takeDamageBlock()
         } else if showNeueAktion {
             neueAktionBlock()
         }
+    }
+
+    // MARK: - Failed defence → take damage
+
+    @ViewBuilder
+    private func takeDamageBlock() -> some View {
+        CombatActionButton(
+            title: L("takeDamage"),
+            icon: "heart.slash.fill",
+            identifier: "combat.execution.takeDamage"
+        ) { step = .takeDamage() }
+
+        CombatActionButton(
+            title: L("newAction"),
+            icon: "arrow.counterclockwise",
+            fill: Color.dsaDark,
+            identifier: "combat.execution.newAction.miss"
+        ) { step = .root }
     }
 
     // MARK: - Neue Aktion / dual-wield block
@@ -303,51 +432,35 @@ struct CombatExecutionView: View {
                     Image(systemName: "bolt.fill")
                     Text(L("dualAttack") + " 2")
                 }
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
         } else if secondAttackStep != nil && computedOutcome == .kritischerPatzer {
             // Fumble — second attack lost
             Text(L("fumbleSecondLost"))
-                .font(.system(.body, weight: .black))
+                .font(.dsaHeading(.body))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.dsaDark)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.raised)
 
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.system(.body, weight: .black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            }
-            .buttonStyle(.plain)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.execution.newAction"
+            ) { step = .root }
         } else {
-            Button { step = .root } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text(L("newAction"))
-                }
-                .font(.system(.body, weight: .black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            }
-            .buttonStyle(.plain)
+            CombatActionButton(
+                title: L("newAction"),
+                icon: "arrow.counterclockwise",
+                identifier: "combat.execution.newAction.miss"
+            ) { step = .root }
         }
     }
 
@@ -356,15 +469,15 @@ struct CombatExecutionView: View {
     private func infoBox(_ text: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "info.circle.fill")
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
             Text(text)
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
         }
         .foregroundStyle(combatAccent)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(combatAccent.opacity(0.1))
-        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+        .dsaBox(.flush, stroke: combatAccent)
     }
 
     // MARK: - Box helpers
@@ -372,16 +485,16 @@ struct CombatExecutionView: View {
     private func valueBox(_ text: String, label: String? = nil, dark: Bool = false) -> some View {
         VStack(spacing: 0) {
             Text(text)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
                 .fontDesign(.monospaced)
                 .foregroundStyle(dark ? .white : .primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(dark ? Color.dsaDark : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             if let label {
                 Text(label)
-                    .font(.system(.caption2, weight: .bold))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
                     .padding(.top, 2)
             }
@@ -391,49 +504,34 @@ struct CombatExecutionView: View {
     private var modifierBox: some View {
         let locked = finalRoll != nil
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button {
-                    modifier -= 1
-                } label: {
-                    Image(systemName: "arrow.down")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : combatAccent)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: locked ? Color.dsaDisabled : combatAccent,
+                decrementDisabled: locked,
+                incrementDisabled: locked,
+                incrementIdentifier: "combat.execution.increaseModifier",
+                onDecrement: { modifier -= 1 },
+                onIncrement: { modifier += 1 }
+            ) {
                 Text(modifier >= 0 ? "+\(modifier)" : "\(modifier)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 64)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
-                Button {
-                    modifier += 1
-                } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(locked ? Color.gray : combatAccent)
-                }
-                .buttonStyle(.plain)
-                .disabled(locked)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                .accessibilityIdentifier("combat.execution.increaseModifier")
             }
-            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
-            Text(L("modifier"))
-                .font(.system(.caption2, weight: .bold))
-                .foregroundStyle(.secondary)
-                .padding(.top, 2)
+            fieldCaption(L("modifier"), clearsShadow: true)
         }
+    }
+
+    /// A caption under a control. The gap is measured from what the eye sees, so
+    /// a control that casts a shadow clears it first — otherwise "Mod" sat 2pt
+    /// closer to its box than "W20" did to the dice.
+    private func fieldCaption(_ text: String, clearsShadow: Bool) -> some View {
+        Text(text)
+            .font(.dsaBody(.caption2))
+            .foregroundStyle(.secondary)
+            .padding(.top, (clearsShadow ? DSALayout.shadowOffset : 0) + DSALayout.captionGap)
     }
 
     // MARK: - Modifier breakdown
@@ -445,74 +543,32 @@ struct CombatExecutionView: View {
         return attributeValue - linesSum
     }
 
+    /// Always the box, never a bare number, whenever the caller went through the
+    /// modifier engine — an empty calculation is itself the answer to "what is
+    /// modifying this roll?", and a roll that shows only its result cannot be
+    /// checked at all. The plain value box is left for the rolls that have no
+    /// engine behind them (a mount's attack).
     @ViewBuilder
     private var modifierBreakdown: some View {
-        if let lines = modifierLines, !lines.isEmpty {
-            VStack(spacing: 0) {
-                combatSectionLabel(L("calculation.label"))
-
-                // Base value row
-                HStack {
-                    Text("\(attrLabel) \(baseValue)")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                    Spacer()
-                    Text(L("source.basis"))
-                        .font(.system(.caption2, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-
-                // Modifier lines
-                ForEach(lines) { line in
-                    HStack {
-                        Text(line.value > 0 ? "+\(line.value)" : "\(line.value)")
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
-                            .foregroundStyle(line.value > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
-                        Spacer()
-                        Text(line.source)
-                            .font(.system(.caption2, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-                }
-
-                // Manual modifier row (only when non-zero)
-                if modifier != 0 {
-                    HStack {
-                        Text(modifier > 0 ? "+\(modifier)" : "\(modifier)")
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
-                            .foregroundStyle(modifier > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
-                        Spacer()
-                        Text(L("source.additional"))
-                            .font(.system(.caption2, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 1))
-                }
-
-                // Effective total row
-                HStack {
-                    Text("\(attrLabel) \(effectiveValue)")
-                        .font(.system(.body, design: .monospaced, weight: .black))
-                    Spacer()
-                    Text("Effektiv")
-                        .font(.system(.caption2, weight: .bold))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.dsaDark)
-                .foregroundStyle(.white)
-            }
+        if let lines = modifierLines {
+            // Only the total names the attribute. The modifier rows are bare
+            // numbers, so an "AT" on the base row alone made the column ragged
+            // and said nothing the total does not.
+            CombatBreakdownBox(
+                baseValue: "\(baseValue)",
+                baseSource: L("source.basis"),
+                lines: modifier == 0
+                    ? lines
+                    : lines + [ModifierLine(value: modifier, source: L("source.additional"))],
+                totalValue: "\(attrLabel) \(effectiveValue)",
+                totalSource: L("source.effective"),
+                sectionLabel: L("calculation.label")
+            )
+            // Named so a test can ask what *this calculation* says. The hero
+            // sheet under the combat cover lists every Sonderfertigkeit by
+            // name, so an app-wide search for one proves nothing.
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.execution.breakdown")
         } else {
             // Fallback: simple display (for defense/dodge without full breakdown)
             valueBox("\(attributeValue)", label: attrLabel)
@@ -525,22 +581,19 @@ struct CombatExecutionView: View {
         return VStack(spacing: 0) {
             VStack(spacing: 2) {
                 Text("\(display)")
-                    .font(.system(.largeTitle, weight: .black))
+                    .font(.dsaHeading(.largeTitle))
                     .fontDesign(.monospaced)
                 if isAnimating {
                     Text(L("tapToRoll"))
-                        .font(.system(.caption2, weight: .semibold))
+                        .font(.dsaBody(.caption2))
                         .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            Text("W20")
-                .font(.system(.caption2, weight: .bold))
-                .foregroundStyle(.secondary)
-                .padding(.top, 2)
+            .dsaBox(.flush)
+            fieldCaption("W20", clearsShadow: false)
         }
     }
 
@@ -552,14 +605,14 @@ struct CombatExecutionView: View {
         }()
         return VStack(spacing: 0) {
             Text(display)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
                 .fontDesign(.monospaced)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             Text(L("confirmation"))
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
         }
@@ -589,12 +642,12 @@ struct CombatExecutionView: View {
     private func outcomeBar(_ outcome: CombatOutcome) -> some View {
         let isCritical = outcome == .kritischerErfolg || outcome == .kritischerPatzer
         return Text(outcomeText(outcome))
-            .font(.system(isCritical ? .title3 : .body, weight: .bold))
+            .font(.dsaHeading(isCritical ? .title3 : .body))
             .foregroundStyle(outcomeTextColor(outcome))
             .frame(maxWidth: .infinity)
             .padding(.vertical, isCritical ? 14 : 10)
             .background(outcomeBackground(outcome))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
     }
 
     private func outcomeText(_ outcome: CombatOutcome) -> String {
@@ -608,9 +661,9 @@ struct CombatExecutionView: View {
 
     private func outcomeBackground(_ outcome: CombatOutcome) -> Color {
         switch outcome {
-        case .kritischerErfolg: return Color(red: 0x00 / 255.0, green: 0xc8 / 255.0, blue: 0x53 / 255.0)
+        case .kritischerErfolg: return Color.dsaCritical
         case .kritischerPatzer: return .groupCombat
-        case .erfolg:           return Color(red: 0x2E / 255.0, green: 0x7D / 255.0, blue: 0x32 / 255.0)
+        case .erfolg:           return Color.dsaPositive
         case .misserfolg:       return .dsaDark
         }
     }
@@ -642,15 +695,38 @@ struct CombatExecutionView: View {
         guard action != .angriff else { return false }
         // Fumble handled separately
         guard outcome != .kritischerPatzer else { return false }
+        // So is a critical that owes the player a table roll: its screen carries
+        // its own "Neue Aktion", and leaving early would skip the result.
+        guard !(outcome == .kritischerErfolg && usesCriticalTable) else { return false }
         return true
     }
 
     private func rollDice() {
         guard finalRoll == nil else { return }
         animationTask?.cancel()
-        let rolled = Int.random(in: 1...20)
+        // The settled roll goes through `DiceRoller` so `ScriptedDice` can put a
+        // UI test on a chosen branch — a confirmed critical, say. The tumbling
+        // `displayRoll` above deliberately does not: it is animation, and feeding
+        // it would drain the script before the real roll was taken.
+        let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
+        consumeFumbleEffects()
         if needsConfirm(rolled) { startConfirmAnimation() }
+    }
+
+    /// The Patzer's temporary effects are spent by the roll that pays for them,
+    /// not by the screen that offers it: opening Parieren, reading the −2 and
+    /// backing out again rolls nothing and so must cost nothing.
+    ///
+    /// `modifierLines` was built by the screen before this one and is a `let`, so
+    /// the −2 stays in the calculation after the flag is cleared — a
+    /// Schicksalspunkt reroll of this same roll rolls with it and does not pay
+    /// for it twice (this method's own guard, and `Hero.consumeStumble`'s).
+    private func consumeFumbleEffects() {
+        guard !hasConsumedFumbleEffects else { return }
+        hasConsumedFumbleEffects = true
+        hero.consumeStumble()
+        if action == .angriff { hero.beginOwnAction() }
     }
 
     private func logRollIfNeeded() {
@@ -730,95 +806,7 @@ struct CombatExecutionView: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            confirmRoll = Int.random(in: 1...20)
+            confirmRoll = DiceRoller.roll(sides: 20)
         }
-    }
-
-    // MARK: - Damage
-
-    private struct ParsedDamage {
-        let count: Int
-        let sides: Int
-        let bonus: Int
-    }
-
-    private func parseDamage(_ formula: String) -> ParsedDamage? {
-        // Matches formats like "1W6", "2W6+4", "1W6-1"
-        let pattern = /(\d+)W(\d+)([+-]\d+)?/
-        guard let match = formula.firstMatch(of: pattern) else { return nil }
-        let count = Int(match.1) ?? 1
-        let sides = Int(match.2) ?? 6
-        let bonus = match.3.flatMap { Int($0) } ?? 0
-        return ParsedDamage(count: count, sides: sides, bonus: bonus)
-    }
-
-    private func isHit(_ outcome: CombatOutcome) -> Bool {
-        outcome == .erfolg || outcome == .kritischerErfolg
-    }
-
-    private func damageSection(parsed: ParsedDamage) -> some View {
-        VStack(spacing: 0) {
-            combatSectionLabel(L("damage.label"))
-
-            let isAnimating = damageFinalRolls == nil
-            let rolls = damageFinalRolls ?? damageDisplayRolls
-
-            // Individual dice
-            HStack(spacing: 6) {
-                ForEach(0..<parsed.count, id: \.self) { i in
-                    Text(i < rolls.count ? "\(rolls[i])" : "-")
-                        .font(.system(.title3, weight: .black))
-                        .fontDesign(.monospaced)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(isAnimating ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                }
-            }
-
-            // Formula + total
-            if let finalRolls = damageFinalRolls {
-                let diceSum = finalRolls.reduce(0, +)
-                let total = max(0, diceSum + parsed.bonus)
-                let bonusStr = parsed.bonus > 0 ? "+\(parsed.bonus)" : parsed.bonus < 0 ? "\(parsed.bonus)" : ""
-
-                Text("\(diceSum)\(bonusStr) = \(total) TP")
-                    .font(.system(.title3, weight: .black))
-                    .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-                    .padding(.top, 6)
-            }
-
-            if isAnimating {
-                Text(L("tapToRoll"))
-                    .font(.system(.caption2, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { rollDamage(parsed: parsed) }
-        .onAppear { startDamageAnimation(parsed: parsed) }
-    }
-
-    private func startDamageAnimation(parsed: ParsedDamage) {
-        damageAnimTask?.cancel()
-        damageAnimTask = Task { @MainActor in
-            while !Task.isCancelled {
-                damageDisplayRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
-                do {
-                    try await Task.sleep(nanoseconds: DSAAnimation.diceTumbleInterval)
-                } catch { break }
-            }
-        }
-    }
-
-    private func rollDamage(parsed: ParsedDamage) {
-        guard damageFinalRolls == nil else { return }
-        damageAnimTask?.cancel()
-        damageFinalRolls = (0..<parsed.count).map { _ in Int.random(in: 1...parsed.sides) }
     }
 }

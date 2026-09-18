@@ -12,33 +12,77 @@ struct CombatRootView: View {
     @Binding var twoHandedGripActive: Bool
     @Binding var vorstossActiveThisRound: Bool
     @Binding var beengteUmgebungActive: Bool
-    @Binding var defenseCountThisRound: Int
+    @Binding var parriesThisRound: Int
+    @Binding var dodgesThisRound: Int
     @Binding var schipDefenseBoostActive: Bool
     @Binding var schipIgnoreZustandThisRound: Bool
     let mountedActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
+    /// The other side, for the defences rolled straight from this screen. A
+    /// plain value, not a binding: the root reads the opponent, it never states
+    /// anything about them — the announcement screen is where that is done.
+    let opponent: OpponentProfile
     var onDismiss: () -> Void
     var castingSpell: (spell: HeroSpell, startRound: Int, totalRounds: Int, modifierLines: [ModifierLine])? = nil
 
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
 
-    private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
-        var context = ModifierContext(
-            hero: hero,
-            domain: isAusweichen ? .meleeDodge : .meleeParry
+    /// The flags this round is in, as one value — the same one the weapon list
+    /// gets, so both ways into a defence are modified alike.
+    private var situation: CombatSituation {
+        CombatSituation(
+            mounted: mountedActive,
+            schipIgnoreZustand: schipIgnoreZustandThisRound,
+            dualAttackActive: dualAttackPenaltyActive,
+            beengteUmgebung: beengteUmgebungActive,
+            twoHandedGrip: twoHandedGripActive,
+            parriesThisRound: parriesThisRound,
+            dodgesThisRound: dodgesThisRound,
+            schipDefenseBoost: schipDefenseBoostActive,
+            plaenklerActive: plaenklerActive,
+            plaenklerBonus: plaenklerBonus
         )
-        context.mounted = mountedActive
-        context.schipIgnoreZustand = schipIgnoreZustandThisRound
-        context.dualAttackActive = dualAttackPenaltyActive
-        context.beengteUmgebung = beengteUmgebungActive
-        context.defenseCount = defenseCountThisRound
-        context.schipDefenseBoost = schipDefenseBoostActive
-        context.plaenklerActive = plaenklerActive
-        context.plaenklerBonus = plaenklerBonus
+    }
 
-        return ModifierEngine.shared.evaluate(context: context)
+    private func buildDefenseModifiers(isAusweichen: Bool) -> [ModifierLine] {
+        situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen, opponents: OpponentRoster([opponent]))
+    }
+
+    /// Whether a defence can be made at all this moment. Vorstoß gives it up for
+    /// the round; the Fernkampf-Patzer *Zu konzentriert* gives it up until the
+    /// hero's next own action. Two rules, one button state — and each says which
+    /// of them it is, underneath.
+    private var defenseBlocked: Bool {
+        vorstossActiveThisRound || hero.activeCombatNoDefense
+    }
+
+    /// "2. Parade · −3" under the button that charges it, so the cost of
+    /// defending again is known before the next screen. Each button counts its
+    /// own kind: parries and dodges are tracked apart.
+    ///
+    /// Read off `buildDefenseModifiers(isAusweichen:)` — the same lines the
+    /// button's own tap hands to the roll (`GRW_mehrfacheVerteidigung`), built
+    /// from the round's counters as they stand right now, before the defence
+    /// being offered increments them. A style that changes the step (Vinsalt,
+    /// SA_923) is a `modifyRule` on that same line, so the button can no longer
+    /// print a number the roll does not charge.
+    private func defenseCostSubtitle(isAusweichen: Bool) -> String? {
+        let made = situation.defensesSoFar(isAusweichen: isAusweichen)
+        guard made > 0 else { return nil }
+        return String(
+            format: L(isAusweichen ? "defense.nthDodge" : "defense.nthParry"),
+            made + 1,
+            Self.pendingDefensePenalty(in: buildDefenseModifiers(isAusweichen: isAusweichen))
+        )
+    }
+
+    /// The `GRW_mehrfacheVerteidigung` line's value among a defence's modifier
+    /// lines, or `0` if the round has none yet. Pure, so the number the button
+    /// prints can be asserted straight from the lines the roll would use.
+    static func pendingDefensePenalty(in lines: [ModifierLine]) -> Int {
+        lines.first { $0.ruleId == "GRW_mehrfacheVerteidigung" }?.value ?? 0
     }
 
     var body: some View {
@@ -46,86 +90,95 @@ struct CombatRootView: View {
             // Header
             HStack {
                 Text(L("combat"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Text(hero.name)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
+                .accessibilityLabel("Kampf schließen")
+                .accessibilityIdentifier("combat.close")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
             VStack(spacing: 0) {
             // RUNDE section
             combatSectionLabel(L("round.label"))
 
-            // INI + round counter + Neu button
+            // INI + round counter + Neu button — one control, like `DSAStepper`:
+            // the row owns the border and the shadow, its four segments are
+            // divided by rules. Previously each segment drew its own box and
+            // only the round counter was `.raised`, so the row read as a shadow
+            // stuck to the middle of a strip of joined boxes.
             HStack(spacing: 0) {
                 // INI box
                 VStack(spacing: 2) {
                     Text("INI")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(.white)
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
                 .frame(minWidth: 64)
+                .frame(maxHeight: .infinity)
                 .background(Color.dsaDark)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                roundRowRule
 
                 // Round counter
                 Text("\(L("roundPrefix")) \(roundNumber)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+
+                roundRowRule
 
                 // Next round button
                 Button { roundNumber += 1 } label: {
                     Image(systemName: "arrow.right")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.dsaBody(.body))
                         .frame(width: 52)
                         .frame(maxHeight: .infinity)
-                        .background(combatAccent)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DSASegmentPressStyle(tint: combatAccent, foreground: .white))
+                .accessibilityIdentifier("combat.nextRound")
+
+                roundRowRule
 
                 // Neuer Kampf compact button
                 Button { showInitiativeSheet = true } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "dice.fill")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                         Text(L("new"))
-                            .font(.system(.caption, weight: .black))
+                            .font(.dsaHeading(.caption))
                     }
-                    .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .frame(minWidth: 64)
                     .frame(maxHeight: .infinity)
-                    .background(Color.dsaDark)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DSASegmentPressStyle(tint: Color.dsaDark, foreground: .white))
             }
             .fixedSize(horizontal: false, vertical: true)
+            .dsaBox(.raised)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
@@ -135,6 +188,11 @@ struct CombatRootView: View {
                     mountName: hero.pets.first?.name
                 ) { result in
                     rolledInitiative = result
+                    // The round count starts over, and the Patzer clocks are
+                    // absolute round numbers: rebase them first, while the old
+                    // count is still readable, or a Zerrung from round 6 would
+                    // keep running until round 8 of the *new* count.
+                    hero.rebaseCombatClocks(fromRound: roundNumber, toRound: 1)
                     roundNumber = 1
                     showInitiativeSheet = false
                 }
@@ -145,17 +203,22 @@ struct CombatRootView: View {
                 // LEBENSPUNKTE section
                 combatSectionLabel(L("lifePoints.label"))
 
-                Text(L("hero"))
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
+                // Only worth printing when the mount's bar follows it: the label
+                // exists to tell the two bars apart, and on foot there is one bar
+                // under a heading that already says LEBENSPUNKTE.
+                if mountedActive, hero.pets.first != nil {
+                    Text(L("hero"))
+                        .font(.dsaMono(.caption, emphasis: true))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
+                }
 
                 lpBar
 
                 if mountedActive, let mount = hero.pets.first {
                     Text(mount.name)
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
@@ -205,9 +268,9 @@ struct CombatRootView: View {
                         ForEach(perRoundReminders, id: \.0.id) { def, reminder in
                             HStack(spacing: 6) {
                                 Image(systemName: def.iconSystemName)
-                                    .font(.system(.caption2, weight: .bold))
+                                    .font(.dsaBody(.caption2))
                                 Text("\(L(def.nameKey)): \(reminder)")
-                                    .font(.system(.caption2, design: .monospaced, weight: .bold))
+                                    .font(.dsaMono(.caption2, emphasis: true))
                             }
                             .foregroundStyle(combatAccent)
                         }
@@ -221,55 +284,72 @@ struct CombatRootView: View {
                 Button { beengteUmgebungActive.toggle() } label: {
                     HStack(spacing: 6) {
                         Image(systemName: beengteUmgebungActive ? "square.split.bottomrightquarter.fill" : "square.split.bottomrightquarter")
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                         Text(L("beengteUmgebung"))
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .font(.dsaMono(.caption, emphasis: true))
                     }
                     .foregroundStyle(beengteUmgebungActive ? .white : .secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(beengteUmgebungActive ? combatAccent : Color(UIColor.secondarySystemBackground))
-                    .overlay(Rectangle().stroke(beengteUmgebungActive ? combatAccent : Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush, stroke: beengteUmgebungActive ? combatAccent : Color.dsaBorder)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                // A spent Schip is a state of this round, not an action, so it
+                // is reported here rather than left as a dead button among live
+                // ones.
+                if schipDefenseBoostActive {
+                    schipSpentChip(icon: "shield.checkered", title: L("schip.defenseBoost"))
+                }
+                if schipIgnoreZustandThisRound {
+                    schipSpentChip(icon: "bandage", title: L("schip.ignoreZustand"))
+                }
 
                 // Loadout + Armor in one row
                 HStack(spacing: 8) {
                     if let weaponName = hero.selectedWeaponName {
-                        Image(systemName: "hammer.fill")
-                            .font(.system(.caption, weight: .bold))
+                        WeaponIconView(hero.loadoutIcon(for: weaponName))
+                            .font(.dsaBody(.caption))
                         Text(weaponName)
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .font(.dsaMono(.caption, emphasis: true))
                         if let offHandName = hero.selectedOffHandName {
                             Text("+")
-                                .font(.system(.caption, weight: .bold))
+                                .font(.dsaBody(.caption))
                                 .foregroundStyle(.secondary)
-                            let isShield = hero.selectedShield != nil
-                            Image(systemName: isShield ? "shield.fill" : "hammer.fill")
-                                .font(.system(.caption, weight: .bold))
+                            WeaponIconView(hero.loadoutIcon(for: offHandName))
+                                .font(.dsaBody(.caption))
                             Text(offHandName)
-                                .font(.system(.caption, design: .monospaced, weight: .black))
+                                .font(.dsaMono(.caption, emphasis: true))
                         }
                     }
 
                     Spacer()
 
-                    Button { showArmorSheet = true } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "shield.fill")
-                                .font(.system(.caption, weight: .bold))
-                            Text("\(L("rs")) \(hero.totalRS)")
-                                .font(.system(.caption, design: .monospaced, weight: .black))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.dsaDark)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    // Schicksalspunkte, beside RS. Both are at-a-glance
+                    // resources and this row is already where the eye goes for
+                    // them; the SCHICKSALSPUNKTE section that used to carry this
+                    // count existed only to hold two buttons that are now
+                    // actions among the actions.
+                    if let schips = hero.derivedValues?.schicksalspunkte, schips.max > 0 {
+                        resourceChip(
+                            icon: "sparkles",
+                            text: "\(schips.current)/\(schips.max)",
+                            fill: Color.dsaSchipGold
+                        )
+                        .accessibilityIdentifier("combat.schip.count")
                     }
-                    .buttonStyle(.plain)
+
+                    Button { showArmorSheet = true } label: {
+                        resourceChip(
+                            icon: "shield.fill",
+                            text: "\(L("rs")) \(hero.totalRS)",
+                            fill: Color.dsaDark
+                        )
+                    }
+                    .buttonStyle(.dsaMotion)
                 }
                 .foregroundStyle(.primary)
                 .padding(.top, 4)
@@ -286,33 +366,54 @@ struct CombatRootView: View {
                     Image(systemName: "wand.and.stars")
                         .foregroundStyle(.white)
                     Text(String(format: L("spellCasting.banner"), casting.spell.name, currentRound, casting.totalRounds))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Spacer()
                     if currentRound >= casting.totalRounds {
                         Button(L("continue")) {
                             step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
                         }
-                        .font(.system(.caption, weight: .black))
+                        .font(.dsaHeading(.caption))
                         .foregroundStyle(Color.groupMagic)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.white)
+                        .background(Color(UIColor.secondarySystemBackground))
                     }
                     Button(L("spellCasting.abort")) {
                         step = .root
                     }
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                     .foregroundStyle(.white.opacity(0.8))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(Color.groupMagic)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                .dsaBox(.flush)
             }
 
             // AKTION section
             combatSectionLabel(L("action.label"))
+
+            // Not a button: delaying is something the player *says*, to the
+            // table, and the app has no turn order to reorder. It is here
+            // because the option is easy to forget and there is no other place
+            // the rules would be read from.
+            HStack(spacing: 8) {
+                Image(systemName: "hourglass")
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(.secondary)
+                Text(L("action.delayHint"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, DSALayout.contentPadding)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(UIColor.secondarySystemBackground))
+            .dsaBox(.flush)
+            .padding(.bottom, 8)
+            .accessibilityIdentifier("combat.action.delayHint")
 
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
@@ -322,8 +423,7 @@ struct CombatRootView: View {
                     let canTwoHand: Bool = {
                         guard !isDualWield, !hasShield else { return false }
                         guard let w = hero.selectedWeapon else { return false }
-                        let excluded = ["CT_1", "CT_3"]
-                        return !excluded.contains(w.combatTechniqueId)
+                        return CombatTechniqueID(rawValue: w.combatTechniqueId)?.allowsTwoHandedGrip ?? true
                     }()
 
                     if isDualWield || canTwoHand || mountedActive {
@@ -343,32 +443,45 @@ struct CombatRootView: View {
                         Image(systemName: "bolt.fill")
                         Text(L("attack"))
                     }
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
 
-                // Fernkampf
+                // Fernkampf. A Ladehemmung (Fernkampf-Patzer 9) costs two
+                // complete Kampfrunden, so the entry point itself is shut and
+                // says until when — a shot that simply rolled worse would hide
+                // the rule the player is actually paying.
                 if hero.selectedRangedWeaponName != nil {
+                    let jammed = hero.isRangedWeaponJammed
                     Button {
                         step = .fernkampfSetup
                     } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "scope")
-                            Text(L("rangedAttack"))
+                        VStack(spacing: 2) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "scope")
+                                Text(L("rangedAttack"))
+                            }
+                            .font(.dsaHeading(.title3))
+                            if jammed {
+                                Text(String(format: L("fumble.jam.reason"), hero.activeCombatJamUntilRound))
+                                    .font(.dsaBody(.caption2))
+                                    .opacity(0.85)
+                            }
                         }
-                        .font(.system(.title3, weight: .black))
-                        .foregroundStyle(combatAccent)
+                        .foregroundStyle(jammed ? .white : combatAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
+                        .background(jammed ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: jammed ? Color.dsaDisabled : combatAccent)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
+                    .disabled(jammed)
+                    .accessibilityIdentifier("combat.rangedAttack")
                 }
 
                 // Zaubern (only if hero has AE)
@@ -380,25 +493,52 @@ struct CombatRootView: View {
                             Image(systemName: "wand.and.stars")
                             Text(L("castSpell"))
                         }
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(Color.groupMagic)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.groupMagic, lineWidth: 3))
+                        .dsaBox(.flush, stroke: Color.groupMagic)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
 
+                // Flucht is an action like any other, and was stranded between
+                // the bookkeeping buttons.
+                Button { step = .flucht } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.run")
+                        Text(L("flucht"))
+                    }
+                    .font(.dsaHeading(.title3))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: combatAccent)
+                }
+                .buttonStyle(.dsaMotion)
+
+            }
+            .dsaOptionGroup()
+
+            // Reactions: what the hero does on someone else's turn. They used to
+            // sit in one undifferentiated list with the actions, the bookkeeping
+            // and the Schip buys, so "Schaden nehmen" — which is not a rules
+            // action at all — sat between the two defences.
+            combatSectionLabel(L("reaction.label"))
+
+            VStack(spacing: 8) {
                 // Parieren -- secondary (outline)
                 Button {
-                    defenseCountThisRound += 1
                     let isDualWield = hero.isDualWielding
                     if isDualWield || hero.selectedShield != nil {
                         step = .weaponSelection(.parieren)
                     } else if let w = hero.selectedWeapon {
                         let mods = buildDefenseModifiers(isAusweichen: false)
-                        let basePA = w.pa + hero.passiveShieldPABonus + (twoHandedGripActive ? -1 : 0)
+                        // The grip's -1 is a modifier line now, so the base must
+                        // not carry it too.
+                        let basePA = w.pa + hero.passiveShieldPABonus
                         let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
                         step = .execution(.parieren, name: w.name, attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
                     } else if hero.selectedWeaponName == "Raufen" {
@@ -411,229 +551,186 @@ struct CombatRootView: View {
                         step = .weaponSelection(.parieren)
                     }
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "shield.fill")
-                        Text(L("parry"))
+                    VStack(spacing: 2) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "shield.fill")
+                            Text(L("parry"))
+                        }
+                        .font(.dsaHeading(.title3))
+                        if let cost = defenseCostSubtitle(isAusweichen: false) {
+                            Text(cost)
+                                .font(.dsaBody(.caption2))
+                                .opacity(0.85)
+                        }
                     }
-                    .font(.system(.title3, weight: .black))
-                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
+                    .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
                 }
-                .buttonStyle(.plain)
-                .disabled(vorstossActiveThisRound)
+                .buttonStyle(.dsaMotion)
+                .disabled(defenseBlocked)
+                .accessibilityIdentifier("combat.parry")
 
                 // Ausweichen -- tertiary (outline)
                 Button {
-                    defenseCountThisRound += 1
                     let mods = buildDefenseModifiers(isAusweichen: true)
                     let baseAW = hero.derivedValues?.ausweichen.value ?? 0
                     let effectiveAW = baseAW + mods.reduce(0) { $0 + $1.value }
                     step = .execution(.ausweichen, name: "Ausweichen", attributeValue: effectiveAW, damageFormula: nil, note: nil, modifierLines: mods)
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "figure.walk")
-                        Text(L("dodge"))
+                    VStack(spacing: 2) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "figure.walk")
+                            Text(L("dodge"))
+                        }
+                        .font(.dsaHeading(.title3))
+                        if let cost = defenseCostSubtitle(isAusweichen: true) {
+                            Text(cost)
+                                .font(.dsaBody(.caption2))
+                                .opacity(0.85)
+                        }
                     }
-                    .font(.system(.title3, weight: .black))
-                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.gray : Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(vorstossActiveThisRound ? Color.gray : combatAccent, lineWidth: 3))
+                    .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
                 }
-                .buttonStyle(.plain)
-                .disabled(vorstossActiveThisRound)
+                .buttonStyle(.dsaMotion)
+                .disabled(defenseBlocked)
+                .accessibilityIdentifier("combat.dodge")
 
                 // Vorstoß warning
                 if vorstossActiveThisRound {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(.caption2, weight: .bold))
-                        Text(L("noDefenseWarning"))
-                            .font(.system(.caption2, weight: .bold))
-                    }
-                    .foregroundStyle(combatAccent)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
+                    defenseBlockedReason(L("noDefenseWarning"))
                 }
 
-                // Damage buttons — side by side when mounted, full width otherwise
+                // …and the Fernkampf-Patzer's own. A disabled button with no
+                // reason under it reads as a bug, and the two rules end at
+                // different moments, so each says which one it is.
+                if hero.activeCombatNoDefense {
+                    defenseBlockedReason(L("fumble.noDefense.reason"))
+                        .accessibilityIdentifier("combat.noDefense.fumble")
+                }
+            }
+            // One raised group with flat options inside — the same container the
+            // Manöver and Trefferzone lists use on the announcement screen. This
+            // is ADR-0009's "containers" half, which that decision recorded as
+            // undelivered: nine full-width actions each casting their own shadow
+            // was the stack of shadows it set out to remove.
+            .dsaOptionGroup()
+
+            // What a Schicksalspunkt buys. Grouped because the cost is the thing
+            // they have in common — the gold fill says it too, but a player
+            // deciding whether to spend one wants them in one place.
+            if schipsAvailable > 0,
+               !schipDefenseBoostActive || (!schipIgnoreZustandThisRound && hero.hasIgnorableZustand) {
+                combatSectionLabel(L("fateAction.label"))
+
+                VStack(spacing: 8) {
+                    if !schipDefenseBoostActive {
+                        schipActionButton(icon: "shield.checkered", title: L("schip.defenseBoost")) {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipDefenseBoostActive = true
+                        }
+                    }
+
+                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
+                        schipActionButton(icon: "bandage", title: L("schip.ignoreZustand")) {
+                            hero.derivedValues?.schicksalspunkte.current -= 1
+                            schipIgnoreZustandThisRound = true
+                        }
+                    }
+                }
+                .dsaOptionGroup()
+            }
+
+            // Neither an action nor a reaction: writing down what happened, and
+            // swapping kit. Dark, because nothing here is rolled — the teal on
+            // "Ausrüstung wechseln" was a colour used nowhere else in the app.
+            combatSectionLabel(L("recordAction.label"))
+
+            VStack(spacing: 8) {
                 HStack(spacing: 8) {
-                    // Schaden nehmen -- dark
-                    Button { step = .takeDamage } label: {
+                    Button { step = .takeDamage() } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "heart.slash.fill")
                             Text(L("takeDamage"))
                         }
-                        .font(.system(.title3, weight: .black))
+                        .font(.dsaHeading(.title3))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(Color.dsaDark)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     if mountedActive {
-                        Button {
-                            step = .mountDamage
-                        } label: {
+                        Button { step = .mountDamage } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "heart.slash.fill")
                                 Text(L("mountTakesDamage"))
                             }
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.dsaDark)
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
                 }
 
-                // Flucht
-                Button { step = .flucht } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "figure.run")
-                        Text(L("flucht"))
-                    }
-                    .font(.system(.body, weight: .black))
-                    .foregroundStyle(combatAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
-                }
-                .buttonStyle(.plain)
-
-                // Change loadout -- visually distinct (teal)
                 Button { step = .loadoutEquipment } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(.body, weight: .bold))
                         Text(L("changeLoadout"))
-                            .font(.system(.body, weight: .bold))
                     }
+                    .font(.dsaHeading(.body))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0x0d / 255, green: 0x96 / 255, blue: 0x88 / 255)) // teal
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                    .background(Color.dsaDark)
+                    .dsaBox(.flush)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
+            }
+            .dsaOptionGroup()
 
-                // SCHICKSALSPUNKTE section
-                let schipsAvailable = hero.derivedValues?.schicksalspunkte.current ?? 0
-
-                if schipsAvailable > 0 || schipDefenseBoostActive || schipIgnoreZustandThisRound {
-                    combatSectionLabel(L("schip.label"))
-
-                    // Show current Schip count
-                    HStack {
-                        Text("\(hero.derivedValues?.schicksalspunkte.current ?? 0)")
-                            .font(.system(.title3, weight: .black))
-                            .fontDesign(.monospaced)
-                        Text("/ \(hero.derivedValues?.schicksalspunkte.max ?? 0)")
-                            .font(.system(.caption, weight: .bold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-
-                    // Verteidigung stärken
-                    if !schipDefenseBoostActive {
-                        if schipsAvailable > 0 {
-                            Button {
-                                hero.derivedValues?.schicksalspunkte.current -= 1
-                                schipDefenseBoostActive = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "shield.checkered")
-                                    Text(L("schip.defenseBoost"))
-                                }
-                                .font(.system(.body, weight: .black))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } else {
-                        HStack(spacing: 6) {
-                            Image(systemName: "shield.checkered")
-                            Text(L("schip.defenseBoost"))
-                            Image(systemName: "checkmark")
-                        }
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
-                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    // Zustand ignorieren
-                    if !schipIgnoreZustandThisRound && hero.hasIgnorableZustand {
-                        if schipsAvailable > 0 {
-                            Button {
-                                hero.derivedValues?.schicksalspunkte.current -= 1
-                                schipIgnoreZustandThisRound = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "bandage")
-                                    Text(L("schip.ignoreZustand"))
-                                }
-                                .font(.system(.body, weight: .black))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(red: 0.6, green: 0.5, blue: 0.0))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } else if schipIgnoreZustandThisRound {
-                        HStack(spacing: 6) {
-                            Image(systemName: "bandage")
-                            Text(L("schip.ignoreZustand"))
-                            Image(systemName: "checkmark")
-                        }
-                        .font(.system(.caption, weight: .bold))
-                        .foregroundStyle(Color(red: 0.6, green: 0.5, blue: 0.0))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(red: 0.6, green: 0.5, blue: 0.0).opacity(0.1))
-                        .overlay(Rectangle().stroke(Color(red: 0.6, green: 0.5, blue: 0.0), lineWidth: 2))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                // End combat -- clears session
-                Button {
+            // End combat — not an action in the round, it leaves the screen, so
+            // it stays outside the group and keeps its own shadow.
+            //
+            // It clears the session, but not before the player has had the one
+            // chance the app ever gave them to switch the fight's states off
+            // again: a failed Sturz check, a Beule, a Selbstbeherrschung probe
+            // and the Beengte-Umgebung toggle all set states that nothing in the
+            // flow ever took away, so Liegend walked out of the fight with the
+            // hero. With nothing to switch off, the button behaves exactly as it
+            // did — there is no point asking the player to confirm an empty
+            // list.
+            Button {
+                if CombatAftermath(hero: hero).isEmpty {
                     hero.clearCombatSession()
                     onDismiss()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "flag.fill")
-                        Text(L("endCombat"))
-                    }
-                    .font(.system(.body, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.dsaDark)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                } else {
+                    step = .aftermath
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 16)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "flag.fill")
+                    Text(L("endCombat"))
+                }
+                .font(.dsaHeading(.body))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.dsaDark)
+                .dsaBox(.raised)
             }
+            .buttonStyle(.dsaMotion)
+            .padding(.top, 16)
 
             } // inner VStack
             .adaptiveContentWidth()
@@ -641,25 +738,121 @@ struct CombatRootView: View {
         }
     }
 
+    /// Why the two defence buttons are dark. One builder, because Vorstoß and
+    /// the Patzer say the same kind of thing in the same place.
+    private func defenseBlockedReason(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.dsaBody(.caption2))
+            Text(text)
+                .font(.dsaBody(.caption2))
+        }
+        .foregroundStyle(combatAccent)
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+    }
+
+    /// The two at-a-glance resources beside each other: Schicksalspunkte and RS.
+    ///
+    /// One builder, because they were two copies of the same layout and came out
+    /// a hair apart — SF Symbols have different bounding boxes, so `sparkles` and
+    /// `shield.fill` gave the two chips different heights. The icon frame fixes
+    /// the line height so the glyph cannot set it.
+    private func resourceChip(icon: String, text: String, fill: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.dsaBody(.caption))
+                .frame(height: DSALayout.chipIconHeight)
+            Text(text)
+                .font(.dsaMono(.caption, emphasis: true))
+                .frame(height: DSALayout.chipIconHeight)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(fill)
+        .dsaBox(.flush)
+    }
+
+    private var schipsAvailable: Int {
+        hero.derivedValues?.schicksalspunkte.current ?? 0
+    }
+
+    /// A Schip-funded action, sitting in the AKTION group with the rest. The
+    /// gold fill and the printed cost are what mark the Schip; nothing about its
+    /// position does.
+    private func schipActionButton(
+        icon: String,
+        title: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            // The label is centred like every other action in the group; the cost
+            // rides in a trailing overlay so it cannot pull the label off centre.
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.dsaHeading(.body))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .overlay(alignment: .trailing) {
+                Text(L("schip.cost"))
+                    .font(.dsaMono(.caption, emphasis: true))
+                    .foregroundStyle(.white)
+                    .padding(.trailing, 14)
+            }
+            .background(Color.dsaSchipGold)
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+    }
+
+    /// The counterpart statement once the Schip is spent.
+    private func schipSpentChip(icon: String, title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+            Text(title)
+            Image(systemName: "checkmark")
+        }
+        .font(.dsaBody(.caption))
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.dsaSchipGold)
+        .dsaBox(.flush, stroke: Color.dsaSchipGold)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 4)
+    }
+
+    /// A divider between two segments of the round row, at border weight.
+    private var roundRowRule: some View {
+        Rectangle()
+            .fill(Color.dsaBorder)
+            .frame(width: DSALayout.border)
+    }
+
     /// Full-width, high-contrast incapacitation banner — `Color.groupCombat` fill, white
     /// bold uppercase text, thick `Color.dsaBorder` rectangle. Impossible to miss.
     private func combatWarningBanner(icon: String, text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
             Text(text)
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .textCase(.uppercase)
             Spacer()
             Image(systemName: icon)
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
         .background(Color.groupCombat)
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.flush)
         .padding(.top, 6)
     }
 
@@ -692,30 +885,30 @@ struct CombatArmorManagementSheet: View {
             // Header
             HStack {
                 Text(L("armorSelection"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button { dismiss() } label: {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             if hero.armors.isEmpty {
                 VStack(spacing: 8) {
                     Spacer()
                     Image(systemName: "shield.slash")
-                        .font(.system(.largeTitle))
+                        .font(.dsaHeading(.largeTitle))
                         .foregroundStyle(.secondary)
                     Text(L("noArmor"))
-                        .font(.system(.body, weight: .semibold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -737,19 +930,19 @@ struct CombatArmorManagementSheet: View {
             HStack(spacing: 16) {
                 HStack(spacing: 4) {
                     Text(L("rs"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.totalRS)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
                 HStack(spacing: 4) {
                     Text(L("encumbrance"))
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.7))
                     Text("\(hero.effectiveBE)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .fontDesign(.monospaced)
                         .foregroundStyle(.white)
                 }
@@ -758,7 +951,7 @@ struct CombatArmorManagementSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color.dsaDark)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
         }
     }
 
@@ -766,28 +959,18 @@ struct CombatArmorManagementSheet: View {
         Button {
             armor.isEquipped.toggle()
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: armor.isEquipped ? "checkmark.circle.fill" : "circle")
-                    .font(.system(.title3, weight: .semibold))
-                    .foregroundStyle(armor.isEquipped ? combatAccent : .secondary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(armor.name)
-                        .font(.system(.body, weight: armor.isEquipped ? .bold : .regular))
-                        .foregroundStyle(.primary)
-                    Text("\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)")
-                        .font(.system(.caption, design: .monospaced, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .background(armor.isEquipped ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(armor.isEquipped ? combatAccent : Color.dsaBorder, lineWidth: armor.isEquipped ? 3 : 2))
+            // Equipped is the fill, like every other option (ADR-0010). This row
+            // was the last `checkmark.circle` left, so on the setup screen the
+            // Plattenrüstung showed a ring while "Beritten" two sections down
+            // showed a fill.
+            DSAToggleRowLabel(
+                title: armor.name,
+                isOn: armor.isEquipped,
+                accent: combatAccent,
+                subtitle: "\(L("rs")) \(armor.protectionValue)  \(L("encumbrance")) \(armor.encumbrance)"
+            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -813,12 +996,12 @@ struct CombatInitiativeSheet: View {
         VStack(spacing: 0) {
             // Header
             Text(L("newInitiative"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(combatAccent)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 0) {
                 // Base selector
@@ -839,32 +1022,32 @@ struct CombatInitiativeSheet: View {
                         VStack(spacing: 0) {
                             VStack(spacing: 2) {
                                 Text("\(d6Result ?? d6Display)")
-                                    .font(.system(.largeTitle, weight: .black))
+                                    .font(.dsaHeading(.largeTitle))
                                     .fontDesign(.monospaced)
                                 if d6Result == nil {
                                     Text(L("rolling"))
-                                        .font(.system(.caption2, weight: .semibold))
+                                        .font(.dsaBody(.caption2))
                                         .foregroundStyle(.secondary)
                                 }
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(d6Result == nil ? combatAccent.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                            .dsaBox(.flush)
                             Text("W6")
-                                .font(.system(.caption2, weight: .bold))
+                                .font(.dsaBody(.caption2))
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 2)
                         }
 
                         // Calculation box
                         Text("\(base) + \(d6Result ?? d6Display) = \(base + (d6Result ?? d6Display))")
-                            .font(.system(.title3, weight: .black))
+                            .font(.dsaHeading(.title3))
                             .fontDesign(.monospaced)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.flush)
                             .opacity(d6Result == nil ? 0.4 : 1)
 
                         if let t = total {
@@ -873,14 +1056,14 @@ struct CombatInitiativeSheet: View {
                                 onConfirm(t)
                             } label: {
                                 Text("\(L("confirmIni")) \(t)")
-                                    .font(.system(.body, weight: .black))
+                                    .font(.dsaHeading(.body))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(combatAccent)
-                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                                    .dsaBox(.raised)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.dsaMotion)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -903,17 +1086,17 @@ struct CombatInitiativeSheet: View {
         } label: {
             VStack(spacing: 2) {
                 Text(label)
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text("\(value)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
             }
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     private func startD6Animation() {
@@ -928,7 +1111,7 @@ struct CombatInitiativeSheet: View {
                 count += 1
             }
             guard !Task.isCancelled else { return }
-            d6Result = Int.random(in: 1...6)
+            d6Result = DiceRoller.roll(sides: 6)
         }
     }
 }
