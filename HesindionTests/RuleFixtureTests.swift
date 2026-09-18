@@ -354,6 +354,32 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).reduce(0) { $0 + $1.value }, -4)
     }
 
+    // MARK: - Liegend (STATE_10)
+
+    func testAProneHeroAttacksAtMinusFourAndDefendsAtMinusTwo() {
+        hero.setStateLevel("liegend", level: 1)
+        XCTAssertEqual(value("STATE_10", in: lines(Situation(hero: hero, domain: .meleeAttack))), -4)
+        XCTAssertEqual(value("STATE_10", in: lines(Situation(hero: hero, domain: .meleeParry))), -2)
+        XCTAssertEqual(value("STATE_10", in: lines(Situation(hero: hero, domain: .meleeDodge))), -2)
+        XCTAssertEqual(lines(Situation(hero: hero, domain: .meleeAttack)).first { $0.ruleId == "STATE_10" }?.isZustand, false, "a Status, not a Zustand: outside the −5 cap")
+        XCTAssertEqual(reason("STATE_10", in: evaluation(Situation(hero: hero, domain: .talentCheck))), .wrongDomain)
+        var ignored = Situation(hero: hero, domain: .meleeAttack)
+        ignored.round.schipIgnoreZustand = true
+        XCTAssertNil(value("STATE_10", in: lines(ignored)))
+    }
+
+    func testAProneOpponentIsTheirPenaltyNotTheHerosBonus() {
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        // The test hero is bare-handed (kurz); a Mittel opponent would add its
+        // own GRW_reichweite line and e.lines would no longer be empty.
+        s.opponents.current.reach = .kurz
+        s.opponents.current.isProne = true
+        let e = evaluation(s)
+        XCTAssertEqual(e.opponentLines.map { ($0.ruleId, $0.value) }.map { "\($0.0) \($0.1)" }, ["STATE_10 -2"])
+        XCTAssertTrue(e.lines.isEmpty)
+        XCTAssertTrue(evaluation(Situation(hero: hero, domain: .meleeAttack)).opponentLines.isEmpty)
+    }
+
     /// The picker draws its own chips from `CombatManeuver`; the roll comes from
     /// the catalog. Same pattern as the reach and zone tables.
     func testTheManoeuvrePickerAndTheCatalogAgreeOnWuchtschlag() {

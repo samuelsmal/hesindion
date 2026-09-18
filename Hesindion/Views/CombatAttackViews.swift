@@ -891,6 +891,7 @@ struct CombatAnnouncementView: View {
 
     private var opponentDefenseLines: [ModifierLine] {
         opponent.defenseModifiers(maneuver: selectedManeuver)
+            + ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines.map(\.modifierLine)
     }
 
     /// The TP calculation, for the same reason the AT one exists: a manoeuvre

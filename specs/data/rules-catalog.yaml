@@ -248,6 +248,26 @@
         - { add: { target: at, value: -2, per: tier } }
         - { add: { target: tp, value: 2, per: tier } }
 
+- id: STATE_10
+  name: "Liegend"
+  group: "Status (binary)"
+  status: implemented
+  reviewed: null
+  note: "The hero liegend: AT −4, PA und AW −2 (ein Status, außerhalb der −5-Zustandsgrenze). Der Gegner liegend: −2 auf *seine* Verteidigung, als Gegner-Zeile ausgewiesen — die Regeln geben dem Angreifer dafür nichts. Pro Angriff am Gegner-Eintrag angegeben (OpponentProfile.isProne)."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ hero.state: { id: liegend } }]
+      effects: [{ add: { target: at, value: -4 } }]
+    - kind: passive
+      domains: [meleeParry, meleeDodge]
+      when: [{ hero.state: { id: liegend } }]
+      effects: [{ add: { target: vw, value: -2 } }]
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ opponent.state: liegend }]
+      effects: [{ opponentAdd: { target: vw, value: -2 } }]
+
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that
 # reaches the rule; the build and RulesCatalogTests check it exists.
@@ -468,13 +488,6 @@
   status: byHand
   pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: krank }
   note: "Reminder only."
-
-- id: STATE_10
-  name: "Liegend"
-  group: "Status (binary)"
-  status: byHand
-  pointer: { file: Hesindion/Models/StateCatalog.swift, symbol: liegend }
-  note: "Hero: AT −4, PA/AW −2 (StateModifiers). Opponent: −2 on their defence as an opponent line (OpponentProfile.isProne)."
 
 - id: STATE_11
   name: "Stumm"

@@ -74,7 +74,8 @@ struct OpponentProfile: Equatable {
 
     // MARK: The same facts under the names the views bind to
 
-    /// Status Liegend: −2 on *their* defence. The penalty is theirs.
+    /// Status Liegend, stated for this attack. `STATE_10` turns it into the
+    /// opponent line.
     var isProne: Bool {
         get { states.contains(Self.proneStateId) }
         set { if newValue { states.insert(Self.proneStateId) } else { states.remove(Self.proneStateId) } }
@@ -116,14 +117,12 @@ struct OpponentProfile: Equatable {
     /// What the announcement does to the opponent's own defence.
     ///
     /// Nothing is applied — they have no PA to subtract from — so this is the
-    /// figure the GM takes off theirs.
+    /// figure the GM takes off theirs. The Finte line is still made here;
+    /// every other opponent line is the catalog's (`Evaluation.opponentLines`).
     func defenseModifiers(maneuver: CombatManeuver, isCriticalHit: Bool = false) -> [ModifierLine] {
         var lines: [ModifierLine] = []
         if case .finte(let tier) = maneuver {
             lines.append(ModifierLine(value: -tier * 2, source: L("maneuver.finte")))
-        }
-        if isProne {
-            lines.append(ModifierLine(value: -2, source: L("opponent.prone")))
         }
         return lines
     }
