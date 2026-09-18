@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `ModifierContext` is `Situation`; the opponent is a roster entry with stated states and GM facts.
 - A modifier line from the catalog is labelled with the rule's name and carries its id.
+- The prone opponent's row in the opponent's defence box reads "Liegend" (the rule's name) instead of "Ziel liegt"; the toggle that sets it keeps that label.
+- The Zonenaufschlag catalog clause (`GRW_zonenaufschlag`) now checks the Trefferzonen Fokusregel itself, not only that a zone is set — the zone picker was already hidden with the rule off (both flows: `zonesActive`/`trefferzoneSection` gate it, and the ranged one also nulls the announced zone before it reaches the engine), so this closes a gap in the engine rather than fixing something a player could see.
 
 ### Removed
 
@@ -28,7 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Vinsalt-Stil: Mehrfache Verteidigung at −2 instead of −3 with a Fechtwaffe, Armbrust or Zweihandschwert in hand (was not applied).
 - Verweichlicht: the Wundeffekt's Selbstbeherrschung check is 2 harder (was not applied).
 - Vorteilhafte Position gives +2 PA as well as +2 AT, and a mounted hero has it against a foot fighter without the toggle.
-- The Zonenaufschlag needs the Trefferzonen Fokusregel to be on, not only a zone.
 - **The Zustände showed a name and nothing else.** Belastung, Betäubung, Furcht, Paralyse, Schmerz and Verwirrung have no prose description; their content is the four level texts, which the rule screen never read. It reads them now, as Stufe I to IV
 - **Beidhändiger Kampf was found by searching the ability's name.** An export that carried it under a different or untranslated name gave no reduction of the dual-attack penalty at all. It is read by its id (SA_42) now, like every other ability the app handles
 - **217 of the 226 combat Sonderfertigkeiten were filed as general abilities.** The importer asked whether `rules.db` had a combat-scoped effects row for an ability, and that table had rows for nine of them. It reads Optolith's group now (`CombatSpecialAbilityGroup`, checked against the database by name), so an imported Riposte or Sturmangriff lands in the combat list like Finte does. A hero imported before this keeps the old split on the sheet until re-imported; every rule lookup already searches both lists, so nothing mechanical changes for them
