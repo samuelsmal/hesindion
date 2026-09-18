@@ -28,6 +28,16 @@ struct CombatLoadoutPicker: View {
         hero.combatTechniques.first(where: { $0.name == "Raufen" })
     }
 
+    /// A Patzer's "beschädigt" badge in front of whatever the row already says.
+    /// The picker is where a player chooses what to fight with, so it is where a
+    /// dented weapon has to be visible — the −2 otherwise first appears in the
+    /// calculation of a roll already committed to.
+    private func note(_ existing: String?, damaged name: String) -> String? {
+        guard hero.isItemDamaged(name) else { return existing }
+        guard let existing, !existing.isEmpty else { return L("fumble.damaged.badge") }
+        return "\(L("fumble.damaged.badge")) \u{00B7} \(existing)"
+    }
+
     var items: [Item] {
         var items: [Item] = []
         for w in hero.meleeWeapons {
@@ -36,7 +46,7 @@ struct CombatLoadoutPicker: View {
             items.append(Item(
                 name: w.name,
                 detail: "AT \(w.at) / PA \(w.pa)",
-                note: (mountedActive && isTwoHanded) ? "(\(L("mounted")))" : nil,
+                note: note((mountedActive && isTwoHanded) ? "(\(L("mounted")))" : nil, damaged: w.name),
                 icon: WeaponIcon.forTechnique(technique),
                 isShield: false, isRaufen: false, isTwoHandedOnly: isTwoHanded
             ))
@@ -45,7 +55,7 @@ struct CombatLoadoutPicker: View {
             items.append(Item(
                 name: s.name,
                 detail: "AT \(s.at) / PA \(s.pa)",
-                note: s.note.isEmpty ? nil : s.note,
+                note: note(s.note.isEmpty ? nil : s.note, damaged: s.name),
                 icon: .system("shield.fill"),
                 isShield: true, isRaufen: false, isTwoHandedOnly: false
             ))
@@ -167,6 +177,11 @@ struct CombatLoadoutPicker: View {
                     }
                     .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.secondary)
+                    if hero.isItemDamaged(weapon.name) {
+                        Text(L("fumble.damaged.badge"))
+                            .font(.dsaBody(.caption2))
+                            .foregroundStyle(isSelected ? Color.white.opacity(0.85) : combatAccent)
+                    }
                 }
                 Spacer()
             }

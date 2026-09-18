@@ -24,6 +24,11 @@ struct CombatFumbleEffectPanel: View {
     /// The hero's own weapon damage, once rolled (results 11 and 12).
     let selfDamage: FumbleSelfDamage?
     var onRollProbe: () -> Void
+    /// "Kein solches Ziel: Selbst verletzt" — the fallback the Fernkampf table
+    /// prints under *Kamerad getroffen*. Whether there is a friend in the line
+    /// of fire is the GM's to say, so this is a quiet second button rather than
+    /// something the table roll does on its own.
+    var onSelfDamageFallback: (() -> Void)? = nil
 
     private var effect: FumbleEffect { entry.effect }
     private var probe: FumbleProbe? { FumbleEffectResolver.probe(for: effect) }
@@ -62,10 +67,29 @@ struct CombatFumbleEffectPanel: View {
                 selfDamageSection(selfDamage)
             }
 
-            // The seam. `stumble`, `pain`, `itemDamaged`, `jam`, `noDefense`,
-            // `friendHit` and `wildShot` are temporary modifiers or events on the
-            // other side of the table; the app has no mechanism for either yet,
-            // so it says so rather than pretending the text is the whole answer.
+            // The Fernkampf table's "Kein solches Ziel" branch. Secondary, and
+            // only until it has been taken — once the dice are on screen the
+            // panel is reporting, not asking.
+            if effect == .friendHit, selfDamage == nil, let onSelfDamageFallback {
+                Button(action: onSelfDamageFallback) {
+                    Text(L("fumble.friendHit.selfDamage"))
+                        .font(.dsaHeading(.caption))
+                        .foregroundStyle(combatAccent)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 10)
+                        .background(Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: combatAccent)
+                }
+                .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.fumble.selfDamageFallback")
+            }
+
+            // The seam. `friendHit` and `wildShot` are events on the *other*
+            // side of the table — a bystander, a shop sign — and opponents and
+            // scenery are not modelled (ADR-0005), so the app says so rather
+            // than pretending the text is the whole answer.
             if !effect.isAutomated {
                 Text(L("fumble.gmOnly"))
                     .font(.dsaBody(.caption))

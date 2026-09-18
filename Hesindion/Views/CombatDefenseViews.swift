@@ -831,7 +831,8 @@ struct CombatFumbleChoiceView: View {
                 writes: writes,
                 probeSucceeded: probeSucceeded,
                 selfDamage: selfDamage,
-                onRollProbe: openProbe
+                onRollProbe: openProbe,
+                onSelfDamageFallback: { rollSelfDamage(doubled: false) }
             )
         }
     }
@@ -944,13 +945,56 @@ struct CombatFumbleChoiceView: View {
             logEffect(entry, effect: text)
 
         case .selfDamage(let doubled):
-            let formula = FumbleEffectResolver.selfDamageFormula(
-                weaponFormula: weaponDamageFormula, isUnarmed: isUnarmed || isDodge)
-            selfDamage = FumbleEffectResolver.rollSelfDamage(formula: formula, doubled: doubled)
+            rollSelfDamage(doubled: doubled)
 
-        case .fall, .stumble, .pain, .itemDamaged, .jam, .noDefense, .friendHit, .wildShot:
+        case .stumble:
+            hero.activeCombatStumble = true
+            record(value: "-2", source: L("fumble.stumble.write"))
+            logEffect(entry, effect: "\(L("fumble.stumble.write")) -2")
+
+        case .pain:
+            // Schmerz is derived from LP and `setStateLevel` refuses it, so the
+            // extra level rides on the combat session instead and
+            // `Hero.schmerzLevel` adds it. The before/after is read off
+            // `effectiveSchmerzLevel`, which is what every other screen shows.
+            let before = hero.effectiveSchmerzLevel
+            hero.addTemporarySchmerz(rolledInRound: roundNumber)
+            let after = hero.effectiveSchmerzLevel
+            let until = String(format: L("fumble.until.round"), hero.temporarySchmerzLastRound)
+            let name = L("state.schmerz.name")
+            record(value: "\(L("level")) \(before) \u{2192} \(after)", source: "\(name) \u{00B7} \(until)")
+            logEffect(entry, effect: "\(name) \(after) (\(until))")
+
+        case .itemDamaged:
+            guard let name = affectedItemName else { break }
+            hero.setItemDamaged(name, true)
+            let text = String(format: L("fumble.modifier.damaged"), name)
+            record(value: action == .fernkampf ? "-4" : "-2", source: text)
+            logEffect(entry, effect: text)
+
+        case .jam:
+            hero.applyRangedJam(rolledInRound: roundNumber)
+            let until = String(format: L("fumble.until.round"), hero.activeCombatJamUntilRound)
+            record(value: until, source: L("fumble.jam.write"))
+            logEffect(entry, effect: "\(L("fumble.jam.write")) \(until)")
+
+        case .noDefense:
+            hero.activeCombatNoDefense = true
+            record(value: L("fumble.untilNextAction"), source: L("fumble.noDefense.write"))
+            logEffect(entry, effect: "\(L("fumble.noDefense.write")) \(L("fumble.untilNextAction"))")
+
+        case .fall, .friendHit, .wildShot:
             break
         }
+    }
+
+    /// The hero's own weapon damage, rolled here and shown, then handed to the
+    /// take-damage screen. Shared by results 11/12 and by *Kamerad getroffen*'s
+    /// "Kein solches Ziel" fallback, which is the same help on a button.
+    private func rollSelfDamage(doubled: Bool) {
+        let formula = FumbleEffectResolver.selfDamageFormula(
+            weaponFormula: weaponDamageFormula, isUnarmed: isUnarmed || isDodge)
+        selfDamage = FumbleEffectResolver.rollSelfDamage(formula: formula, doubled: doubled)
     }
 
     private func openProbe() {

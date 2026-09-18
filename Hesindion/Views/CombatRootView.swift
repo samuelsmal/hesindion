@@ -50,6 +50,14 @@ struct CombatRootView: View {
         situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen, opponents: OpponentRoster([opponent]))
     }
 
+    /// Whether a defence can be made at all this moment. Vorstoß gives it up for
+    /// the round; the Fernkampf-Patzer *Zu konzentriert* gives it up until the
+    /// hero's next own action. Two rules, one button state — and each says which
+    /// of them it is, underneath.
+    private var defenseBlocked: Bool {
+        vorstossActiveThisRound || hero.activeCombatNoDefense
+    }
+
     /// "2. Parade · −3" under the button that charges it, so the cost of
     /// defending again is known before the next screen. Each button counts its
     /// own kind: parries and dodges are tracked apart.
@@ -439,23 +447,36 @@ struct CombatRootView: View {
                 }
                 .buttonStyle(.dsaMotion)
 
-                // Fernkampf
+                // Fernkampf. A Ladehemmung (Fernkampf-Patzer 9) costs two
+                // complete Kampfrunden, so the entry point itself is shut and
+                // says until when — a shot that simply rolled worse would hide
+                // the rule the player is actually paying.
                 if hero.selectedRangedWeaponName != nil {
+                    let jammed = hero.isRangedWeaponJammed
                     Button {
                         step = .fernkampfSetup
                     } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "scope")
-                            Text(L("rangedAttack"))
+                        VStack(spacing: 2) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "scope")
+                                Text(L("rangedAttack"))
+                            }
+                            .font(.dsaHeading(.title3))
+                            if jammed {
+                                Text(String(format: L("fumble.jam.reason"), hero.activeCombatJamUntilRound))
+                                    .font(.dsaBody(.caption2))
+                                    .opacity(0.85)
+                            }
                         }
-                        .font(.dsaHeading(.title3))
-                        .foregroundStyle(combatAccent)
+                        .foregroundStyle(jammed ? .white : combatAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: combatAccent)
+                        .background(jammed ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: jammed ? Color.dsaDisabled : combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
+                    .disabled(jammed)
+                    .accessibilityIdentifier("combat.rangedAttack")
                 }
 
                 // Zaubern (only if hero has AE)
@@ -537,14 +558,14 @@ struct CombatRootView: View {
                                 .opacity(0.85)
                         }
                     }
-                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
+                    .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(vorstossActiveThisRound)
+                .disabled(defenseBlocked)
                 .accessibilityIdentifier("combat.parry")
 
                 // Ausweichen -- tertiary (outline)
@@ -566,27 +587,27 @@ struct CombatRootView: View {
                                 .opacity(0.85)
                         }
                     }
-                    .foregroundStyle(vorstossActiveThisRound ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(vorstossActiveThisRound ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: vorstossActiveThisRound ? Color.dsaDisabled : combatAccent)
+                    .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(vorstossActiveThisRound)
+                .disabled(defenseBlocked)
                 .accessibilityIdentifier("combat.dodge")
 
                 // Vorstoß warning
                 if vorstossActiveThisRound {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.dsaBody(.caption2))
-                        Text(L("noDefenseWarning"))
-                            .font(.dsaBody(.caption2))
-                    }
-                    .foregroundStyle(combatAccent)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
+                    defenseBlockedReason(L("noDefenseWarning"))
+                }
+
+                // …and the Fernkampf-Patzer's own. A disabled button with no
+                // reason under it reads as a bug, and the two rules end at
+                // different moments, so each says which one it is.
+                if hero.activeCombatNoDefense {
+                    defenseBlockedReason(L("fumble.noDefense.reason"))
+                        .accessibilityIdentifier("combat.noDefense.fumble")
                 }
             }
             // One raised group with flat options inside — the same container the
@@ -698,6 +719,20 @@ struct CombatRootView: View {
             .adaptiveContentWidth()
             } // ScrollView
         }
+    }
+
+    /// Why the two defence buttons are dark. One builder, because Vorstoß and
+    /// the Patzer say the same kind of thing in the same place.
+    private func defenseBlockedReason(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.dsaBody(.caption2))
+            Text(text)
+                .font(.dsaBody(.caption2))
+        }
+        .foregroundStyle(combatAccent)
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
     }
 
     /// The two at-a-glance resources beside each other: Schicksalspunkte and RS.

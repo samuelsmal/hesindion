@@ -504,5 +504,8 @@ struct CombatSpellExecutionView: View {
                 .frame(maxWidth: .infinity)
             }
         }
+        // Casting is the hero's own action, and "Zu konzentriert" (Patzer,
+        // Fernkampf 10) lasts only until they take one.
+        .onAppear { hero.beginOwnAction() }
     }
 }

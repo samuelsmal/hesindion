@@ -1060,18 +1060,23 @@ struct CombatWeaponSelectionView: View {
 
     /// Modifier lines for a defence rolled from this row, or `nil` on the attack
     /// path where the announcement screen builds them instead.
-    private func defenseLines(isOffHand: Bool) -> [ModifierLine]? {
+    ///
+    /// `itemInHand` is the piece this row parries with, handed to the engine as
+    /// `Situation.itemInHand` so a rule that keys on the *thing* — a Patzer that
+    /// damaged the shield — reads the shield rather than the main weapon.
+    private func defenseLines(isOffHand: Bool, itemInHand: String?) -> [ModifierLine]? {
         guard action != .angriff else { return nil }
         return situation.defenseModifiers(
             hero: hero,
             isAusweichen: action == .ausweichen,
             isOffHand: isOffHand,
-            opponents: OpponentRoster([opponent])
+            opponents: OpponentRoster([opponent]),
+            itemInHand: itemInHand
         )
     }
 
     private func weaponRow(name: String, statLabel: String, baseValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
-        let lines = defenseLines(isOffHand: isOffHand)
+        let lines = defenseLines(isOffHand: isOffHand, itemInHand: action == .parieren ? name : nil)
         let shownValue = baseValue + (lines?.reduce(0) { $0 + $1.value } ?? 0)
         return Button {
             if dualAttackPenaltyActive && action == .angriff {

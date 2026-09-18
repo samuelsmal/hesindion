@@ -522,7 +522,15 @@ struct CombatFernkampfExecutionView: View {
 
             Spacer()
         }
-        .onAppear { startAnimation() }
+        .onAppear {
+            startAnimation()
+            // Same seam as `CombatExecutionView`: the shot's lines were built on
+            // the setup screen, so the Stolpern −2 is already in them, and the
+            // shot is the hero's own action — which is what "Zu konzentriert"
+            // lasts until.
+            hero.consumeStumble()
+            hero.beginOwnAction()
+        }
         .onDisappear {
             animationTask?.cancel()
             confirmAnimTask?.cancel()

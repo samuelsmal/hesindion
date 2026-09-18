@@ -44,6 +44,7 @@ struct StateDetailSheet: View {
             header
             VStack(alignment: .leading, spacing: 16) {
                 levelControl
+                temporarySchmerzNote
                 effectTable
                 causeBlock
                 removalCallout
@@ -149,6 +150,22 @@ struct StateDetailSheet: View {
             .frame(maxWidth: .infinity)
             .background(accent.opacity(0.1))
             .dsaBox(.flush)
+        }
+    }
+
+    /// Where an extra level came from. Schmerz is derived from LP, so a hero at
+    /// full health showing Schmerz I is a contradiction on its face unless the
+    /// sheet says a Patzer put it there and when it goes.
+    @ViewBuilder private var temporarySchmerzNote: some View {
+        if def.id == "schmerz", hero.temporarySchmerzActive {
+            Text(String(
+                format: L("schmerz.fromFumble"),
+                hero.temporarySchmerzLevel,
+                hero.temporarySchmerzLastRound))
+                .font(.dsaBody(.caption))
+                .foregroundStyle(accent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("state.schmerz.fromFumble")
         }
     }
 

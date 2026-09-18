@@ -75,7 +75,18 @@ struct HeroSettingsView: View {
                         }
                     }
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, 16)
+
+                // Not a Fokus-Regel and not a per-fight choice: a Patzer dented
+                // something and it stays dented until somebody at a smithy says
+                // otherwise, which is why `clearCombatSession()` leaves the list
+                // alone and this is the one place that empties it. Hidden while
+                // nothing is damaged — an always-present empty section would be
+                // a setting for a thing that has never happened.
+                if !hero.damagedItems.isEmpty {
+                    damagedItemsSection
+                        .padding(.bottom, 32)
+                }
             }
         }
         .background(Color(UIColor.systemBackground))
@@ -177,6 +188,49 @@ struct HeroSettingsView: View {
         .padding(.horizontal, 16)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("heroSettings.consecratedWeapons")
+    }
+
+    /// Everything a Patzertabelle result "beschädigt" marked, with the one
+    /// button that undoes it. The mark is per item name, so the row is the item
+    /// and the button is the repair.
+    private var damagedItemsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("damagedItems.title"))
+                .font(.dsaHeading(.title3))
+            Text(L("damagedItems.subtitle"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+
+            ForEach(hero.damagedItems, id: \.self) { name in
+                HStack(spacing: 12) {
+                    Text(name)
+                        .font(.dsaBody(.body))
+                    Spacer()
+                    Button {
+                        hero.setItemDamaged(name, false)
+                    } label: {
+                        Text(L("damagedItems.repair"))
+                            .font(.dsaHeading(.caption))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.groupCombat)
+                            .dsaBox(.flush)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .accessibilityIdentifier("heroSettings.repair.\(name)")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(UIColor.systemBackground))
+                .dsaBox(.flush)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("heroSettings.damagedItems")
     }
 
     private func fokusRuleRow(_ rule: FokusRule) -> some View {

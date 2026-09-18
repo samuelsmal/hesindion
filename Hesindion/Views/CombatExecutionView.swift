@@ -203,6 +203,12 @@ struct CombatExecutionView: View {
                 hasCountedDefense = true
                 onDefenseAttempted()
             }
+            // The Patzer's temporary effects, spent at the same moment the
+            // round's defence count is: the roll is *set up*. `modifierLines`
+            // were built by the screen before this one, so the −2 is already in
+            // them and survives a Schicksalspunkt reroll of this same roll.
+            hero.consumeStumble()
+            if action == .angriff { hero.beginOwnAction() }
         }
         .onDisappear {
             animationTask?.cancel()
