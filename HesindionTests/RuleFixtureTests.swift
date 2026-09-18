@@ -329,6 +329,8 @@ final class RuleFixtureTests: XCTestCase {
     private func swing(_ domain: RuleDomain, _ maneuver: CombatManeuver) -> Situation {
         var s = Situation(hero: hero, domain: domain)
         s.maneuver = maneuver
+        // the test hero is bare-handed (kurz); a Mittel opponent would add a GRW_reichweite line
+        s.opponents.current.reach = .kurz
         return s
     }
 
@@ -346,6 +348,23 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(value("SA_67", in: lines(swing(.meleeAttack, .wuchtschlag(tier: 3)))), -4, "the hero has II")
         XCTAssertEqual(value("SA_67", in: DamageModifiers.lines(situation: swing(.damage, .wuchtschlag(tier: 2)))), 4)
         XCTAssertNil(value("SA_67", in: lines(swing(.meleeParry, .wuchtschlag(tier: 2)))))
+        // The Swift manoeuvre line has no ruleId, so value(_:in:) would not see
+        // it: count the rows and add them up instead.
+        XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).filter { $0.source.hasPrefix("Wuchtschlag") }.count, 1, "one row, from the catalog")
+        XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).reduce(0) { $0 + $1.value }, -4)
+    }
+
+    /// The picker draws its own chips from `CombatManeuver`; the roll comes from
+    /// the catalog. Same pattern as the reach and zone tables.
+    func testTheManoeuvrePickerAndTheCatalogAgreeOnWuchtschlag() {
+        own("SA_67", "Wuchtschlag", tier: 3)
+        for tier in 1...3 {
+            let maneuver = CombatManeuver.wuchtschlag(tier: tier)
+            XCTAssertEqual(maneuver.atModifier, value("SA_67", in: lines(swing(.meleeAttack, maneuver))),
+                           "the picker's chips (CombatManeuver) and the roll must agree")
+            XCTAssertEqual(maneuver.damageBonus, value("SA_67", in: DamageModifiers.lines(situation: swing(.damage, maneuver))),
+                           "the picker's chips (CombatManeuver) and the roll must agree")
+        }
     }
 
     /// The row keeps the tier in its name, as the manoeuvre's label did: the

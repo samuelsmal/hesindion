@@ -201,8 +201,8 @@ enum RuleEvaluator {
                     }
                     if let tierAnnounced = announced[rule.id] {
                         let swung = min(tierAnnounced, maxTier)
-                        landed = apply(clause.effects, tier: swung, label: "\(rule.name) \(CombatManeuver.roman(swung))",
-                                       rule, s, &out, &modifications) || landed
+                        let label = swung > 0 ? "\(rule.name) \(CombatManeuver.roman(swung))" : rule.name
+                        landed = apply(clause.effects, tier: swung, label: label, rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .tiers(maxTier), reviewed: rule.reviewed))
                         reasons.append(.offerNotTaken)

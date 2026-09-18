@@ -13,6 +13,9 @@ enum CombatManeuver: Equatable, Hashable {
 
 extension CombatManeuver {
     /// AT modifier from this maneuver.
+    ///
+    /// For Wuchtschlag these are the picker's mirror of the catalog's SA_67;
+    /// `RuleFixtureTests` holds them to it.
     var atModifier: Int {
         switch self {
         case .normal: return 0
@@ -24,7 +27,8 @@ extension CombatManeuver {
         }
     }
 
-    /// Extra damage from this maneuver.
+    /// Extra damage from this maneuver. The picker's mirror of SA_67 too; the
+    /// TP the dice get are the catalog's.
     var damageBonus: Int {
         switch self {
         case .wuchtschlag(let tier): return tier * 2
@@ -75,8 +79,8 @@ extension CombatManeuver {
         switch self {
         case .finte(let t):
             return "\(L("opponentPA")) -\(t * 2)"
-        case .wuchtschlag(let t):
-            return "\(L("damageBonus")) +\(t * 2)"
+        case .wuchtschlag:
+            return "\(L("damageBonus")) +\(damageBonus)"
         case .vorstoss:
             return "⚠ \(L("noDefenseWarning"))"
         case .schildspalter:

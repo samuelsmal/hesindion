@@ -903,9 +903,12 @@ struct CombatAnnouncementView: View {
         // an unmodified swing left the screen ending on the AT with the "Weiter"
         // apparently welded to it.
         if let formula = damageFormula {
+            // Once per render: the rows and the total are the same lines, and
+            // working them out asks the evaluator.
+            let bonus = damageBonusLines
             CombatBreakdownBox(
-                rows: damageRows(formula),
-                totalValue: effectiveDamageLabel(formula),
+                rows: damageRows(formula, bonus),
+                totalValue: effectiveDamageLabel(formula, bonus),
                 totalSource: L("source.effective"),
                 sectionLabel: L("damage.label")
             )
@@ -914,9 +917,9 @@ struct CombatAnnouncementView: View {
 
     /// Rows rather than the base/lines shorthand, because a multiplier is not a
     /// signed term and the shorthand can only add.
-    private func damageRows(_ formula: String) -> [BreakdownRow] {
+    private func damageRows(_ formula: String, _ bonus: [ModifierLine]) -> [BreakdownRow] {
         var rows: [BreakdownRow] = [BreakdownRow(value: formula, source: L("source.weapon"))]
-        rows.append(contentsOf: damageBonusLines.map(BreakdownRow.line))
+        rows.append(contentsOf: bonus.map(BreakdownRow.line))
         if let label = karmalDamage.label {
             rows.append(BreakdownRow(
                 value: label, source: L("source.karmal.opposing"), tint: Color.groupCombat
@@ -928,14 +931,14 @@ struct CombatAnnouncementView: View {
     /// "1W6+8", or "(1W6+8) ×2" where the Fokusregel doubles it — the dice are
     /// not rolled yet, so the multiplier stays in the label rather than being
     /// worked into the formula.
-    private func effectiveDamageLabel(_ formula: String) -> String {
-        let added = adjustedDamage() ?? formula
+    private func effectiveDamageLabel(_ formula: String, _ bonus: [ModifierLine]) -> String {
+        let added = adjustedDamage(bonus) ?? formula
         guard let label = karmalDamage.label else { return added }
         return "(\(added)) \(label)"
     }
 
-    private func adjustedDamage() -> String? {
-        DamageModifiers.applied(to: damageFormula, lines: damageBonusLines)
+    private func adjustedDamage(_ bonus: [ModifierLine]) -> String? {
+        DamageModifiers.applied(to: damageFormula, lines: bonus)
     }
 }
 

@@ -11,6 +11,7 @@ final class DamageModifiersTests: XCTestCase {
     private var hero: Hero!
 
     override func setUpWithError() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
         context = ModelContext(try TestData.makeContainer())
         hero = Hero(name: "Test")
         context.insert(hero)
