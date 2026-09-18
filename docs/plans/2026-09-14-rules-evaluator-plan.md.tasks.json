@@ -118,7 +118,7 @@
     {
       "id": 14,
       "subject": "Task 14: Karmale Objekte, the multiplier and the GM's question",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** The Fokusregel is a `GRW_karmaleObjekte` entry: a consecrated weapon against a demon of its opposing deity doubles TP; whether the demon is of the opposing deity is a `gm.fact` question with opponent span (it lasts the fight, as it did before).\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml`, `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`\n- Modify: `Hesindion/Engine/DamageModifiers.swift` (`multiplier(situation:)`), `Hesindion/Models/KarmalWeapon.swift` (delete `damage(consecrated:target:)`)\n- Modify: `Hesindion/Views/CombatAttackViews.swift:359-366`\n- Test: `HesindionTests/RuleFixtureTests.swift`, `HesindionTests/KarmalWeaponTests.swift:14-49`\n\n**Acceptance Criteria:**\n- [ ] Rule on, weapon consecrated, demon, opposing deity stated: `DamageModifiers.multiplier` is `.double`; opposing deity unstated: `.unchanged` and a question `opposingDeity` (span `opponent`); not a demon: `conditionFalse` and no question; rule off or weapon not consecrated: `.unchanged`.\n- [ ] `KarmalWeapon.statesSomething` and the consecrated-weapon setting tests are untouched.\n- [ ] Snapshot: implemented 14, byHand 40, todo 2629 (total 2683).\n\n**Verify:** `make rules-db` prints `implemented 14, byHand 40, noRollEffect 0, todo 2629`; `make test-ui` → `** TEST SUCCEEDED **`.\n\n**Steps:**\n- Fixture rows and the moved tests\n- Run to see the build fail\n- The catalog entry\n- The Swift side\n- Rebuild and run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/DamageModifiers.swift\", \"Hesindion/Models/KarmalWeapon.swift\", \"Hesindion/Resources/rules.db\", \"HesindionTests/RuleFixtureTests.swift\", \"specs/data/rules-catalog.snapshot.json\", \"specs/data/rules-catalog.yaml\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"Rule on, weapon consecrated, demon, opposing deity stated: `DamageModifiers.multiplier` is `.double`; opposing deity unstated: `.unchanged` and a question `opposingDeity` (span `opponent`); not a demon: `conditionFalse` and no question; rule off or weapon not consecrated: `.unchanged`.\", \"`KarmalWeapon.statesSomething` and the consecrated-weapon setting tests are untouched.\", \"Snapshot: implemented 14, byHand 40, todo 2629 (total 2683).\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         13
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-18T07:23:25+00:00"
+  "lastUpdated": "2026-09-18T07:51:58+00:00"
 }
