@@ -487,6 +487,13 @@ struct CombatSpellExecutionView: View {
                     onDismiss: { step = .root },
                     onResult: { result in
                         deductCost(result: result)
+                        // Casting is the hero's own action, and "Zu konzentriert"
+                        // (Patzer, Fernkampf 10) lasts only until they take one —
+                        // which is the roll, not the screen that offers it. A
+                        // screen opened and left again casts nothing.
+                        // `Hero.beginOwnAction` guards itself, so the Schip
+                        // reroll's second call writes nothing.
+                        hero.beginOwnAction()
                     },
                     hints: costHints
                 )
@@ -504,8 +511,5 @@ struct CombatSpellExecutionView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        // Casting is the hero's own action, and "Zu konzentriert" (Patzer,
-        // Fernkampf 10) lasts only until they take one.
-        .onAppear { hero.beginOwnAction() }
     }
 }

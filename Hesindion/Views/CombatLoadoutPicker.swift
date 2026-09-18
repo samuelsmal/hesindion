@@ -178,7 +178,11 @@ struct CombatLoadoutPicker: View {
                     .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.secondary)
                     if hero.isItemDamaged(weapon.name) {
-                        Text(L("fumble.damaged.badge"))
+                        // A ranged row pays −4, not the melee −2
+                        // (`FumbleModifiers.beschaedigt`), and a badge that names
+                        // the wrong number is worse than none: the picker exists
+                        // to make the choice before the roll.
+                        Text(L("fumble.damaged.badge.ranged"))
                             .font(.dsaBody(.caption2))
                             .foregroundStyle(isSelected ? Color.white.opacity(0.85) : combatAccent)
                     }

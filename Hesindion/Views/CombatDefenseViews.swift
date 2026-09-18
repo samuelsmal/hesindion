@@ -850,6 +850,12 @@ struct CombatFumbleChoiceView: View {
             // "Selbst verletzt": the TP are carried to the take-damage screen
             // rather than applied here, so the armour, the Wundschwelle and the
             // single LP write all stay in the one place that does them.
+            //
+            // On a *defence* the self-damage is not the only thing the hero
+            // takes: the parry failed, so the opponent's blow landed too. One
+            // prefilled entry cannot hold both — it would silently replace the
+            // incoming hit with the hero's own weapon — so the screen is told to
+            // lead on to a second, empty entry once this one is confirmed.
             CombatActionButton(
                 title: L("takeDamage"),
                 icon: "heart.slash.fill",
@@ -857,7 +863,8 @@ struct CombatFumbleChoiceView: View {
             ) {
                 step = .takeDamage(
                     prefilledTP: damage.total,
-                    source: String(format: L("fumble.damageSource"), entry.title))
+                    source: String(format: L("fumble.damageSource"), entry.title),
+                    thenIncomingHit: action == .parieren || action == .ausweichen)
             }
 
             CombatActionButton(
@@ -927,22 +934,30 @@ struct CombatFumbleChoiceView: View {
     /// the 1W6+2 SP branch uses for its LP. Everything that needs an answer
     /// first (a Sturz's check) waits for `applyProbeResult`.
     private func applyImmediateEffect(of entry: FumbleTableEntry) {
+        // What takes the thing out of the hand is `FumbleEffectResolver`'s call,
+        // not a second list of cases here — otherwise `FumbleEffectTests` guards
+        // a copy of the decision rather than the one production makes.
+        guard !FumbleEffectResolver.unequipsItem(entry.effect) else {
+            applyUnequip(entry)
+            return
+        }
+
         switch entry.effect {
         case .stupor:
             let before = hero.level(of: FumbleEffectResolver.stuporStateID)
             FumbleEffectResolver.applyStupor(to: hero)
             let after = hero.level(of: FumbleEffectResolver.stuporStateID)
             let name = L("state.betaeubung.name")
-            record(value: "\(L("level")) \(before) \u{2192} \(after)", source: name)
+            // `setStateLevel` clamps at IV, so a Beule on a hero already there
+            // writes nothing. "Stufe 4 → 4" reported a write that did not happen;
+            // a screen that says what it wrote has to be able to say "nothing".
+            if after == before {
+                record(value: "\(L("level")) \(after)",
+                       source: String(format: L("fumble.unchanged"), name))
+            } else {
+                record(value: "\(L("level")) \(before) \u{2192} \(after)", source: name)
+            }
             logEffect(entry, effect: "\(name) \(after)")
-
-        case .itemLost, .itemStuck:
-            guard let name = affectedItemName,
-                  let slot = hero.unequipFromLoadout(named: name) else { break }
-            unequipped = (name, slot)
-            let text = String(format: L("fumble.itemDropped"), name)
-            record(value: L("takeDamage.outcome.now"), source: text)
-            logEffect(entry, effect: text)
 
         case .selfDamage(let doubled):
             rollSelfDamage(doubled: doubled)
@@ -985,7 +1000,22 @@ struct CombatFumbleChoiceView: View {
 
         case .fall, .friendHit, .wildShot:
             break
+
+        case .itemLost, .itemStuck:
+            break   // handled above, by the resolver's own answer
         }
+    }
+
+    /// Zerstört / verloren / stecken geblieben: all three take the thing out of
+    /// the hand, and `Hero.unequipFromLoadout(named:)` returns the slot so a
+    /// successful Kraftakt can put it back where it came from.
+    private func applyUnequip(_ entry: FumbleTableEntry) {
+        guard let name = affectedItemName,
+              let slot = hero.unequipFromLoadout(named: name) else { return }
+        unequipped = (name, slot)
+        let text = String(format: L("fumble.itemDropped"), name)
+        record(value: L("takeDamage.outcome.now"), source: text)
+        logEffect(entry, effect: text)
     }
 
     /// The hero's own weapon damage, rolled here and shown, then handed to the
@@ -1252,7 +1282,11 @@ struct CombatFluchtView: View {
                         .background(Color.groupCombat.opacity(0.1))
                         .dsaBox(.flush, stroke: Color.groupCombat)
 
-                        Text("GS/2 = \(gs / 2) Schritt")
+                        // A hero on the ground has GS 1, and "GS/2 = 0 Schritt"
+                        // reads as an arithmetic bug rather than as the rule it
+                        // is. Half of nothing is no retreat, and the note below
+                        // says where the 1 came from.
+                        Text(gs / 2 == 0 ? L("flucht.noRetreat") : "GS/2 = \(gs / 2) Schritt")
                             .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(.secondary)
 

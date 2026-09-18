@@ -452,6 +452,9 @@ struct CombatFernkampfExecutionView: View {
     @State private var confirmAnimTask: Task<Void, Never>? = nil
     @State private var schipUsed: Bool = false
     @State private var hasLoggedRoll: Bool = false
+    /// Guards the Patzer effects this shot spends: a Schicksalspunkt reroll is the
+    /// *same* shot and must not pay for them a second time.
+    @State private var hasConsumedFumbleEffects: Bool = false
 
     // MARK: - Computed
 
@@ -524,12 +527,6 @@ struct CombatFernkampfExecutionView: View {
         }
         .onAppear {
             startAnimation()
-            // Same seam as `CombatExecutionView`: the shot's lines were built on
-            // the setup screen, so the Stolpern −2 is already in them, and the
-            // shot is the hero's own action — which is what "Zu konzentriert"
-            // lasts until.
-            hero.consumeStumble()
-            hero.beginOwnAction()
         }
         .onDisappear {
             animationTask?.cancel()
@@ -867,7 +864,20 @@ struct CombatFernkampfExecutionView: View {
         animationTask?.cancel()
         let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
+        consumeFumbleEffects()
         if needsConfirm(rolled) { startConfirmAnimation() }
+    }
+
+    /// Same seam as `CombatExecutionView`: the shot is the hero's own action, and
+    /// an action is a roll — a setup screen opened and left again is not one. The
+    /// shot's lines were built on the setup screen, so the Stolpern −2 stays in
+    /// them after the flag is cleared and a Schicksalspunkt reroll of this same
+    /// shot neither loses it nor pays for it twice.
+    private func consumeFumbleEffects() {
+        guard !hasConsumedFumbleEffects else { return }
+        hasConsumedFumbleEffects = true
+        hero.consumeStumble()
+        hero.beginOwnAction()
     }
 
     // MARK: - Logging

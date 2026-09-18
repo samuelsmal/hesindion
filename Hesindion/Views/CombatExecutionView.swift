@@ -46,6 +46,9 @@ struct CombatExecutionView: View {
     /// Guards the round's defence count against a Schip reroll or a redraw
     /// counting the same defence twice.
     @State private var hasCountedDefense: Bool = false
+    /// The same guard for the Patzer effects this roll spends: a Schicksalspunkt
+    /// reroll is the *same* roll and must not pay for them a second time.
+    @State private var hasConsumedFumbleEffects: Bool = false
 
 
     private var attrLabel: String {
@@ -203,12 +206,6 @@ struct CombatExecutionView: View {
                 hasCountedDefense = true
                 onDefenseAttempted()
             }
-            // The Patzer's temporary effects, spent at the same moment the
-            // round's defence count is: the roll is *set up*. `modifierLines`
-            // were built by the screen before this one, so the −2 is already in
-            // them and survives a Schicksalspunkt reroll of this same roll.
-            hero.consumeStumble()
-            if action == .angriff { hero.beginOwnAction() }
         }
         .onDisappear {
             animationTask?.cancel()
@@ -713,7 +710,23 @@ struct CombatExecutionView: View {
         // it would drain the script before the real roll was taken.
         let rolled = DiceRoller.roll(sides: 20)
         finalRoll = rolled
+        consumeFumbleEffects()
         if needsConfirm(rolled) { startConfirmAnimation() }
+    }
+
+    /// The Patzer's temporary effects are spent by the roll that pays for them,
+    /// not by the screen that offers it: opening Parieren, reading the −2 and
+    /// backing out again rolls nothing and so must cost nothing.
+    ///
+    /// `modifierLines` was built by the screen before this one and is a `let`, so
+    /// the −2 stays in the calculation after the flag is cleared — a
+    /// Schicksalspunkt reroll of this same roll rolls with it and does not pay
+    /// for it twice (this method's own guard, and `Hero.consumeStumble`'s).
+    private func consumeFumbleEffects() {
+        guard !hasConsumedFumbleEffects else { return }
+        hasConsumedFumbleEffects = true
+        hero.consumeStumble()
+        if action == .angriff { hero.beginOwnAction() }
     }
 
     private func logRollIfNeeded() {

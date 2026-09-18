@@ -117,5 +117,13 @@ struct CombatBreakdownBox: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .dsaRowDivider()
+        // The row is a container, named after what it says. A bare
+        // `staticTexts["-2"]` in a test is satisfied by *any* −2 in the
+        // calculation, so a penalty that moved to a different line — or one that
+        // vanished while another appeared — still passed. `children: .contain`
+        // keeps both texts individually queryable, so nothing that already
+        // asserts on them breaks.
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.breakdown.row.\(source)")
     }
 }

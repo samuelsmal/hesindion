@@ -29,7 +29,13 @@ enum CombatStep {
     /// LP write all stay on the screen that does them. `source` names where it
     /// came from in the calculation's first row; `nil` is the plain "TP" the
     /// player types in themselves.
-    case takeDamage(prefilledTP: Int? = nil, source: String? = nil)
+    ///
+    /// `thenIncomingHit` is the defence Patzer's second half: a Parade that
+    /// fumbled *and* cost the hero their own weapon's damage owes two entries,
+    /// because the opponent's blow still landed. The screen's last action then
+    /// leads to a fresh, empty `takeDamage` for that blow instead of back to the
+    /// root, which is where the incoming hit used to be dropped silently.
+    case takeDamage(prefilledTP: Int? = nil, source: String? = nil, thenIncomingHit: Bool = false)
     case flucht
     case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
@@ -409,7 +415,7 @@ struct CombatView: View {
                     )
                     .transition(.move(edge: .trailing))
                 }
-            case .takeDamage(let prefilledTP, let source):
+            case .takeDamage(let prefilledTP, let source, let thenIncomingHit):
                 CombatTakeDamageView(
                     hero: hero,
                     step: $step,
@@ -417,8 +423,14 @@ struct CombatView: View {
                     combatId: combatId,
                     roundNumber: roundNumber,
                     prefilledTP: prefilledTP,
-                    damageSource: source
+                    damageSource: source,
+                    thenIncomingHit: thenIncomingHit
                 )
+                // Two take-damage entries in a row are the *same* branch of this
+                // switch, so SwiftUI would keep the first one's `@State` — its
+                // confirmed flag, its TP, its zone — and the second entry would
+                // open already settled. The identity has to change with the step.
+                .id("takeDamage-\(prefilledTP ?? -1)-\(source ?? "")-\(thenIncomingHit)")
                 .transition(.move(edge: .trailing))
             case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource):
                 CombatOpponentDefenseView(
@@ -604,6 +616,11 @@ struct CombatView: View {
             schipDefenseBoostActive = false
             schipIgnoreZustandThisRound = false
             announcedZone = nil
+            // "Zu konzentriert" ends at the hero's next action — and a hero who
+            // takes none still gets a next round. Without this an archer who
+            // spends two rounds reloading never opens an action screen and so
+            // never parries again for the rest of the fight.
+            hero.beginCombatRound()
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in

@@ -73,7 +73,7 @@ enum FumbleEffect: Equatable {
     /// Whether the app writes anything for this result, or only states it.
     ///
     /// Read by the panel to decide between help and prose, and by
-    /// `FumbleTableTests` so that moving a case between the two halves has to be
+    /// `FumbleEffectTests` so that moving a case between the two halves has to be
     /// a deliberate edit in both places.
     var isAutomated: Bool {
         switch self {

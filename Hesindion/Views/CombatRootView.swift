@@ -188,6 +188,11 @@ struct CombatRootView: View {
                     mountName: hero.pets.first?.name
                 ) { result in
                     rolledInitiative = result
+                    // The round count starts over, and the Patzer clocks are
+                    // absolute round numbers: rebase them first, while the old
+                    // count is still readable, or a Zerrung from round 6 would
+                    // keep running until round 8 of the *new* count.
+                    hero.rebaseCombatClocks(fromRound: roundNumber, toRound: 1)
                     roundNumber = 1
                     showInitiativeSheet = false
                 }

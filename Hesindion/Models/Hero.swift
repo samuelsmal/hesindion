@@ -353,22 +353,64 @@ final class Hero {
         activeCombatJamUntilRound = round + 2
     }
 
-    /// Stolpern is paid for by the next roll and then gone. Called *after* that
-    /// roll's modifier lines were built, so a Schicksalspunkt reroll of the very
-    /// same roll still carries the −2 it was announced with.
+    /// Stolpern is paid for by the roll that pays for it: called the moment the
+    /// W20 is first settled, not when the screen appears. Opening a roll screen
+    /// and backing out again rolls nothing, so it must cost nothing — and the
+    /// lines the roll was announced with were built by the screen before, so a
+    /// Schicksalspunkt reroll of that same roll still carries the −2.
     ///
-    /// Guarded on the current value: these are called from `onAppear`, and
-    /// writing a stored property that already holds that value still dirties the
-    /// model and redraws the screen that just appeared.
+    /// Guarded on the current value: a reroll calls this again, and writing a
+    /// stored property that already holds that value still dirties the model and
+    /// redraws the screen mid-roll.
     func consumeStumble() {
         guard activeCombatStumble else { return }
         activeCombatStumble = false
     }
 
-    /// The hero's own next action lifts "Zu konzentriert".
+    /// The hero's own next action lifts "Zu konzentriert" — the action, again,
+    /// being the roll, not the screen that offers it.
     func beginOwnAction() {
         guard activeCombatNoDefense else { return }
         activeCombatNoDefense = false
+    }
+
+    /// A new Kampfrunde lifts it too.
+    ///
+    /// "Bis zur nächsten Aktion" ends at the hero's next action, and a hero who
+    /// takes none still has a next round. Without this an archer who spends two
+    /// rounds reloading — or anyone who simply does not act — would be barred
+    /// from parrying and dodging for the rest of the fight, which is not a thing
+    /// the card says.
+    func beginCombatRound() {
+        guard activeCombatNoDefense else { return }
+        activeCombatNoDefense = false
+    }
+
+    /// Re-rolling initiative starts the round count over at 1, and the Patzer
+    /// clocks are *absolute* round numbers. A Zerrung rolled in round 6 runs
+    /// until round 8; without rebasing it would still say 8 after the reset and
+    /// so last eight more rounds instead of the two it had left.
+    ///
+    /// The shift is what the counter lost, so the remaining rounds are preserved;
+    /// a clock that had already run out is cleared rather than dragged into the
+    /// new count as a negative.
+    func rebaseCombatClocks(fromRound oldRound: Int, toRound newRound: Int) {
+        let shift = oldRound - newRound
+        if temporarySchmerzLevels > 0 {
+            if temporarySchmerzLastRound < oldRound {
+                temporarySchmerzLevels = 0
+                temporarySchmerzLastRound = 0
+            } else {
+                temporarySchmerzLastRound -= shift
+            }
+        }
+        if activeCombatJamUntilRound > 0 {
+            if activeCombatJamUntilRound < oldRound {
+                activeCombatJamUntilRound = 0
+            } else {
+                activeCombatJamUntilRound -= shift
+            }
+        }
     }
 
     /// Whether the named piece of the loadout is the shield in the hero's hand.

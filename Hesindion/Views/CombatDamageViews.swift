@@ -13,6 +13,11 @@ struct CombatTakeDamageView: View {
     /// Patzer's "Selbst verletzt", say. Named in the calculation's first row so
     /// the figure in the stepper is accountable; `nil` falls back to plain "TP".
     let damageSource: String?
+    /// Whether one more blow is still owed after this entry — a defence Patzer
+    /// that hurt the hero with their own weapon has not yet accounted for the
+    /// opponent's hit, which landed all the same. The last action then leads to a
+    /// second, empty entry rather than back to the combat root.
+    let thenIncomingHit: Bool
 
     init(
         hero: Hero,
@@ -21,7 +26,8 @@ struct CombatTakeDamageView: View {
         combatId: UUID,
         roundNumber: Int,
         prefilledTP: Int? = nil,
-        damageSource: String? = nil
+        damageSource: String? = nil,
+        thenIncomingHit: Bool = false
     ) {
         self.hero = hero
         self._step = step
@@ -29,6 +35,7 @@ struct CombatTakeDamageView: View {
         self.combatId = combatId
         self.roundNumber = roundNumber
         self.damageSource = damageSource
+        self.thenIncomingHit = thenIncomingHit
         self._tpInput = State(initialValue: max(0, prefilledTP ?? 0))
     }
 
@@ -274,6 +281,16 @@ struct CombatTakeDamageView: View {
                         title: L("confirm"),
                         identifier: "combat.takeDamage.confirm"
                     ) { applyDamage() }
+                } else if thenIncomingHit {
+                    // The blow the fumbled parry failed to stop still landed, and
+                    // it is a hit of its own: its own TP, its own armour, its own
+                    // LP write. Leading there is the only thing that keeps it from
+                    // being dropped between the two screens.
+                    CombatActionButton(
+                        title: L("fumble.incomingHit"),
+                        icon: "arrow.right",
+                        identifier: "combat.takeDamage.incomingHit"
+                    ) { step = .takeDamage(source: L("fumble.incomingHit")) }
                 } else {
                     CombatActionButton(
                         title: L("newAction"),
