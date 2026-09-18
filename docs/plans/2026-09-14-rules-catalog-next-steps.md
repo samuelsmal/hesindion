@@ -42,27 +42,35 @@ Gone: the `effects` table, `specs/data/rules.yaml`, `scripts/scrape_effects/`, `
 - Rules data the app ships (`rules.db`, the catalog, later the rule text) is committed on purpose (AGENTS.md Data Policy). The Optolith source stays a sibling checkout at `../../dsa_companion_data/Data`.
 - Prügel (group 21, 9 abilities) and Befehle (group 12, 6) are outside the four combat groups by the design's count. Revisit when the authoring pass reaches them; the enum's doc comment says so.
 
-## Next: step 2, the evaluator (design §7 step 2)
+## Step 2 landed (plan: `docs/plans/2026-09-14-rules-evaluator-plan.md`)
 
-Write a plan for it with the writing-plans skill, from design §3, §4, §6. The order the design fixes:
+`Situation`, `RuleVocabulary` + `specs/data/rule-vocabulary.json`, the Python clause validator and JSON compile, `RuleCatalog` decoding, `RuleEvaluator`, the union in `ModifierEngine`, eight `GRW_*` entries, the nine fixtures (`RuleFixtureTests`), the reachability test. Snapshot: implemented 15, byHand 40, todo 2628.
 
-1. **`Situation`** — one struct, a plain value the view assembles, absorbing `ModifierContext`; `CombatSituation` and `OpponentProfile` become its round and opponent parts and keep their names; an opponent roster with a current target; the GM answers keyed by fact id, span, subject.
-2. **The vocabulary** — `Hesindion/Engine/RuleVocabulary.swift`: closed enums for predicates (hero / loadout / situation / opponent / gm), effects (`add`, `multiply`, `choice`, `opponentAdd`, `modifyRule`, `modifyState`, `restrict`, `formula`, `gmNote`), targets, domains (+ `damage`, `initiative`), spans; exported as a JSON schema the Python validator reads. `catalog.validate` already rejects unknown top-level keys and requires `clauses` on `implemented`; it needs the clause-level vocabulary check and the `GRW_*` exemption (today a `GRW_` id is rejected because it is not in `rules.db`, and `testTheCountsAddUpToTheRules` would also fail on one).
-3. **`GRW_*` entries** for the core rules: Vorteilhafte Position (+2 AT and +2 PA, mounted vs foot or GM toggle), Mehrfache Verteidigung, reach, Beengte Umgebung, the −5 Zustand cap, Passierschlag.
-4. **`RuleEvaluator`** returning the five-part `Evaluation` (lines, opponent lines, offers, questions, not-applied); during migration `ModifierEngine.evaluate` returns the union with a test that no rule id is produced by both; the 37 Swift `ModifierDefinition`s move one at a time, each move deleting a definition, adding an entry, keeping the definition's test.
-5. **Fixtures first** (design §6): Plänkler-Formation (choice), Gezielter Angriff/Schuss (multiply, fokus rule), Golgariten-Stil (`applies_with`, `modifyRule`, `opponent.onFoot`; the current code is wrong three ways, see its catalog note), Karmale Objekte (hero-span fact, `opponent.type(demon)`, `gm.fact`), Wuchtschlag (offer with tiers), Liegend (opponent line, attack span), Mehrfache Verteidigung (`situation.defencesThisRound`), Verweichlicht (talent target, currently not applied at all), Vinsalt-Stil (`modifyRule … set` on a `GRW_*`).
-6. **Reachability test**: for every `implemented` clause, a generated hero + Situation satisfying its predicates yields a line/offer/opponent line.
+## Next: finish the moves, then step 3
 
-Then step 3 (views read the Evaluation) and step 4 (the authoring pipeline, `scripts/author_catalog`, wiki fetch mandatory, batches: sample heroes' rules → four combat groups → Vorteile/Nachteile/Zustände → the rest).
+Still in Swift, each a delete-the-definition / add-the-entry / keep-the-test move like Tasks 7–15 of the evaluator plan:
+
+- `SharedModifiers.encumbrance` (COND_1) — needs a `hero.belastung` predicate or `hero.state(belastung)` with a per-level value and the mounted −1 forgiveness.
+- `StateModifiers` per-level Zustände (COND_2 Betäubung, COND_4 Furcht, COND_5 Paralyse, COND_6 Schmerz, COND_7 Verwirrung, STATE_7 Fixiert) — needs `per: level` on `add`; `entrueckungDef` (COND_3) needs the gottgefällig sign flip.
+- `MeleeModifiers.maneuverAT` (SA_48 Finte, SA_66 Vorstoß), `dualAttackPenalty` / `DefenseModifiers.dualAttackDefense` (SA_42), `offHandPenalty` / `offHandParry` (ADV_5) — need `situation.dualAttack`, `situation.offHand`, and Finte's opponent line.
+- `DefenseModifiers.schipDefenseBoost`, `mountedDodgePenalty`, `twoHandedGripPA`; `DamageModifiers`' grip and Sturmangriff (SA_43) — `GRW_*` entries and `situation.twoHandedGrip`, `situation.schip…` predicates.
+- `RangedModifiers` (eight) and `MagicModifiers` (seven) — `GRW_*` entries with enumerated `gm.fact`s (distance, size, movement, visibility, aiming, distraction) or numeric ones (maintained spells, iron carried): the vocabulary needs non-boolean facts first.
+
+When the Swift list is empty, `ModifierDefinition`, the union and `Situation`'s flat ranged/magic fields go.
+
+Step 3 (views read the Evaluation): the announcement builds manoeuvres from `offers`, opponent questions from `questions` (a boolean fact is a toggle, `onFoot` and `advantageousPosition` first), shows the not-applied list under the breakdown and "ungeprüft" on unreviewed lines; `CombatView` holds the roster with a current target; `CombatSituation.pendingMultipleDefensePenalty` and `CombatZonePicker`'s chips read the evaluation instead of their own arithmetic; `Situation.choices` / `announced` replace the Plänkler and manoeuvre bridges. Then step 4 (the authoring pipeline).
+
+The per-task reviews left a list of step-3 questions in the evaluator plan's "Follow-ups recorded during execution" section (per-render evaluation cost, display rank of lines, opponent-line labels, offers without a span, `Evaluation.questions` without a reader, off toggle = not stated, the Schip and statuses); read it before designing step 3.
 
 ## Small chores, independent of step 2
 
-- **Weapon-order snapshot flake**: `CombatViewSnapshotTests.testPreparation` swaps the two melee rows between runs because `hero.meleeWeapons` is an unordered SwiftData to-many. Stable sort in `CombatLoadoutPicker` (and wherever weapons are listed), delete the 12 references, re-record with `make test-ui-record-only ONLY=HesindionTests/CombatViewSnapshotTests`. Listed in AGENTS.md as the fourth intermittent.
+- **Weapon-order snapshot flake**: `CombatViewSnapshotTests.testPreparation` swaps the two melee rows between runs because `hero.meleeWeapons` is an unordered SwiftData to-many. Stable sort in `CombatLoadoutPicker` (and wherever weapons are listed), delete the 12 references, re-record with `make test-ui-record-only ONLY=HesindionTests/CombatViewSnapshotTests`. Listed in AGENTS.md as the fifth intermittent.
 - `RuleDetailView`: the level label is `.frame(width: 100)` in front of a localized string; no snapshot test covers the view.
 - `catalog.note` conflates `note` and `why`; `RulesCatalogTests.testCoverageDoesNotGoBackwards` hard-codes 45 (could read the snapshot JSON); `build_db.py` validates args with `assert`.
 - The player-facing labels "Automatisch angewendet" and "Von der App umgesetzt" both mean "the app handles it"; decide whether the screen should collapse them.
 - Advantages and disadvantages carry `group: "Vorteil"` / `"Nachteil"`; Optolith's Allgemein/Magisch/Karmal split for them is not in `groups` (seed rows for `advantage`/`disadvantage` if the authoring pass wants it).
 - Issue #14 (no equipment table) means item predicates (`Rabenschnabel`, `Großschild`) match by name string.
+- `reviewed: null` on all fifteen implemented entries: read each against its page and put your name and the date on it.
 
 ## Working in this repo, learned the hard way
 

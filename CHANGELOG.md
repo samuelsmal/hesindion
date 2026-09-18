@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Rules evaluator (issue #27, step 2): `implemented` catalog entries drive the roll through `RuleEvaluator`; the calculation lists every owned rule that did not apply and why, offers manoeuvres and choices from the catalog, and asks the GM for facts a rule needs (rendered in step 3). Fifteen entries are implemented: Mehrfache Verteidigung, Reichweite, Beengte Umgebung, Vorteilhafte Position, Zonenaufschlag, Karmale Objekte, Gezielter Angriff, Gezielter Schuss, Wuchtschlag, Plänkler-Formation, Golgariten-Stil, Vinsalt-Stil, Verweichlicht, Liegend, Überrascht.
+- `specs/data/rule-vocabulary.json`: the closed clause vocabulary, exported from Swift and enforced by `make rules-db`.
+- The announcement's opponent section asks, when the hero is mounted, whether the opponent fights on foot; Vorteilhafte Position and Golgariten-Stil read the answer.
+
+### Changed
+
+- `ModifierContext` is `Situation`; the opponent is a roster entry with stated states and GM facts.
+- A modifier line from the catalog is labelled with the rule's name and carries its id.
+
 ### Removed
 
 - The `effects` table, `specs/data/rules.yaml`, the Regelwiki scraper and `RuleEffectModifiers`. Seventy-nine hand-written rows for 26 rules, read by code nothing called; the catalog replaces all of it
@@ -13,6 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Golgariten-Stil follows the Regelwiki: Rabenschnabel *or* Großschild, +2 AT only on top of an existing Vorteilhafte Position against a foot fighter, +1 PA mounted, and no TP bonus.
+- Vinsalt-Stil: Mehrfache Verteidigung at −2 instead of −3 with a Fechtwaffe, Armbrust or Zweihandschwert in hand (was not applied).
+- Verweichlicht: the Wundeffekt's Selbstbeherrschung check is 2 harder (was not applied).
+- Vorteilhafte Position gives +2 PA as well as +2 AT, and a mounted hero has it against a foot fighter without the toggle.
+- The Zonenaufschlag needs the Trefferzonen Fokusregel to be on, not only a zone.
 - **The Zustände showed a name and nothing else.** Belastung, Betäubung, Furcht, Paralyse, Schmerz and Verwirrung have no prose description; their content is the four level texts, which the rule screen never read. It reads them now, as Stufe I to IV
 - **Beidhändiger Kampf was found by searching the ability's name.** An export that carried it under a different or untranslated name gave no reduction of the dual-attack penalty at all. It is read by its id (SA_42) now, like every other ability the app handles
 - **217 of the 226 combat Sonderfertigkeiten were filed as general abilities.** The importer asked whether `rules.db` had a combat-scoped effects row for an ability, and that table had rows for nine of them. It reads Optolith's group now (`CombatSpecialAbilityGroup`, checked against the database by name), so an imported Riposte or Sturmangriff lands in the combat list like Finte does. A hero imported before this keeps the old split on the sheet until re-imported; every rule lookup already searches both lists, so nothing mechanical changes for them
@@ -83,7 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `DefenseModifierFlowTests` drives two parries in one round on a seeded shield loadout, `DamageBreakdownFlowTests` a Wuchtschlag through to its TP, and five screenshots of the two; `-uitest-shield` puts the shield in the loadout that sends a parry through the weapon list
 - `ComplicatedAttackFlowTests` drives one attack carrying five modifiers at once — a longer opponent weapon, an advantageous position, a surprised target's head, Wuchtschlag II — confirmed as a critical and doubled, and asserts the 26 TP that comes out the far end. Each part was already covered on its own; this is the one that checks they still add up together (screenshots `34`–`36`). `-uitest-wuchtschlag` raises the seeded hero's tier
 - `WeaponReachTests` covers the reach matrix, all nine combinations, which had no cover at all, and `HeroBodyPlanTests` the species → table lookup and its override. `WeaponReachTests` now also covers *whose* reach it is — the off-hand weapon, the shield, the fist — through the engine
-- `CombatAbilityCoverageTests` — the ids against the rules, the lookup against both lists the importer might use, and the sample hero against the set of abilities the app implements. `CombatTechniqueIDTests` checks all 21 combat-technique ids against `rules.db`, and the three rules keyed to them; `KarmalWeaponTests` the consecrated-weapon rule and its per-hero setting; `CombatPreparationFlowTests` and `KarmalWeaponFlowTests` the two new flows end to end, with four screenshots (`37`–`40`). `WeaponStyleFlowTests` the other half of the question — Golgariten-Stil pays +2 AT and +1 TP to a mounted hero with a Rabenschnabel and a Großschild, and nothing at all to the same hero on foot (screenshot `40`). `-uitest-weapon`, `-uitest-consecrate`, `-uitest-mounted`, `-uitest-plaenkler` and `-uitest-fresh-combat` pick the weapon, mark it geweiht, resume the fight in the saddle or in formation, and leave the hero *out* of a running fight so the preparation flow can be walked
+- `CombatAbilityCoverageTests` — the ids against the rules, the lookup against both lists the importer might use, and the sample hero against the set of abilities the app implements. `CombatTechniqueIDTests` checks all 21 combat-technique ids against `rules.db`, and the three rules keyed to them; `KarmalWeaponTests` the per-hero consecrated-weapon setting (the doubling rule itself, `GRW_karmaleObjekte`, later moved to `RuleFixtureTests` with the rules catalog); `CombatPreparationFlowTests` and `KarmalWeaponFlowTests` the two new flows end to end, with four screenshots (`37`–`40`). `WeaponStyleFlowTests` the other half of the question — Golgariten-Stil pays +2 AT and +1 TP to a mounted hero with a Rabenschnabel and a Großschild, and nothing at all to the same hero on foot (screenshot `40`). `-uitest-weapon`, `-uitest-consecrate`, `-uitest-mounted`, `-uitest-plaenkler` and `-uitest-fresh-combat` pick the weapon, mark it geweiht, resume the fight in the saddle or in formation, and leave the hero *out* of a running fight so the preparation flow can be walked
 - `WundschwelleFlowTests` and `CombatLogDeletionFlowTests` — the Wundschwelle without the focus rule, and a fight deleted from the log; `-uitest-fokus-off` switches a Fokus-Regel back off for a test, which the seed otherwise turns on for everybody
 - `WoundEffectPayload` carries the `combatId` of the fight it was recorded in, so deleting that fight takes it too. Optional, because entries written before the field existed have no value for it
 

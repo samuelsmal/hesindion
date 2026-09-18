@@ -14,7 +14,7 @@ Issue #27 asked for six measurements before any design. Their results:
 
 - The slice that touches a roll the app makes is around **226 combat Sonderfertigkeiten** plus the combat-relevant Vorteile, Nachteile, Zustände and Status. The other ~1300 SAs (Zeremonialgegenstände, Paktgeschenke, Zauberstile, Stabzauber, …) do not.
 - Within that slice, roughly half the rules are **offers** (a manoeuvre with a cost, preconditions, restrictions, and an outcome for the GM), and about a fifth **modify another rule** rather than a value. Unconditional flat modifiers are the rare case.
-- Two rules the existing flows should already honour and do not: Verweichlicht (DISADV_57, Selbstbeherrschung on wound effects +2 harder) and Vinsalt-Stil (SA_923, Mehrfache Verteidigung at −2 instead of −3).
+- Two rules the existing flows used not to honour: Verweichlicht (DISADV_57, Selbstbeherrschung on wound effects +2 harder) and Vinsalt-Stil (SA_923, Mehrfache Verteidigung at −2 instead of −3) — both honoured since step 2.
 
 **2. Source data.** Optolith carries no mechanics. Its structured fields are cost, prerequisites, levels, `combatTechniques` (which weapons an SA applies with, 215 SAs) and `extended` (which abilities a style unlocks). Its prose has a `penalty` string on 65 of the 226 combat SAs. The 79-row `effects` table was hand-authored in `specs/data/rules.yaml`; the Regelwiki scraper only ever had a hardcoded fallback for six rules. Nothing generates mechanics and nothing can. Every rule's mechanic has to be read, and the Regelwiki is the only complete and authoritative text (Optolith's prose lags: for Golgariten-Stil it says +1 TP where the page says +1 PA, and the app applies both).
 
@@ -191,7 +191,7 @@ A table test: hero traits and loadout, Situation, answers → expected lines, op
 | Wuchtschlag SA_67 | offer with `tiers`, `perTier`, `damage` domain |
 | Liegend (opponent) | `opponentAdd`, `attack` span |
 | Mehrfache Verteidigung GRW | `situation.defencesThisRound`, per-kind counting |
-| Verweichlicht DISADV_57 | `talent(Selbstbeherrschung)` target in a non-combat flow |
+| Verweichlicht DISADV_57 | `talent(Selbstbeherrschung)` target on the in-combat Wundeffekt probe (`CombatTakeDamageView` opens `TalentProbeModal` with `isWoundEffectProbe`) |
 | Vinsalt-Stil SA_923 | `modifyRule … set` on a `GRW_*` rule |
 
 ## 7. Landing it
