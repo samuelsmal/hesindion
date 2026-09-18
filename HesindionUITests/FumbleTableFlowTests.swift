@@ -395,7 +395,171 @@ final class FumbleTableFlowTests: XCTestCase {
         captureScreenshot(app, named: "46-fumble-damaged-loadout-badge")
     }
 
+    // MARK: - Unzerstörbare Waffen
+
+    /// AT 20, confirmation 20 → confirmed Patzer on the attack; 2W6 1+1 = 2 →
+    /// "Waffe zerstört", the one result the escape clause is about.
+    private static let destroyedScript = "20,20,1,1"
+
+    /// "Certain weapons cannot be destroyed. The wizard's staff for example.
+    /// Let's confirm with the user; if the user says it's indestructible it
+    /// should be treated as a rolled 5." (owner report)
+    ///
+    /// The table has always printed the clause — "Bei unzerstörbaren Waffen:
+    /// Waffe verloren" — and the app has always ignored it, because nothing in
+    /// an Optolith export says which weapons it is about. So the screen asks,
+    /// and until it is answered it writes nothing and offers no way on.
+    @MainActor
+    func testAnIndestructibleWeaponIsDroppedRatherThanDestroyed() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.destroyedScript)
+
+        rollTheAttackTable(app, expecting: "Waffe zerstört")
+
+        // Nothing yet: the result is a question first.
+        XCTAssertFalse(
+            app.buttons["combat.execution.newAction.miss"].exists,
+            "The screen offered a way out while the question was still open"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["combat.fumble.writes"].exists,
+            "The weapon was destroyed before anybody was asked"
+        )
+
+        let question = app.descendants(matching: .any)["combat.fumble.indestructible"]
+        XCTAssertTrue(question.waitForExistence(timeout: UITest.timeout), "The question was not asked")
+        XCTAssertTrue(
+            question.staticTexts["Ist Langschwert unzerstörbar?"].exists,
+            "The question should name the thing in the hand"
+        )
+        captureScreenshot(app, named: "48-fumble-indestructible-question")
+
+        let yes = app.buttons["combat.fumble.indestructible.yes"]
+        XCTAssertTrue(app.scrollUntilHittable(yes), "No \"Ja\" on the question")
+        yes.tap()
+
+        // --- It became the table's own result 5.
+        let panel = app.descendants(matching: .any)["combat.fumbleEffectPanel"]
+        XCTAssertTrue(
+            panel.staticTexts["Waffe verloren"].waitForExistence(timeout: UITest.timeout),
+            "A \"Ja\" should turn the 2 into the table's fifth result"
+        )
+        XCTAssertTrue(
+            panel.staticTexts["Die Waffe ist zu Boden gefallen."].exists,
+            "The applied result should carry result 5's own text, not result 2's"
+        )
+        // Both halves of the sentence: what was rolled, and what it became.
+        XCTAssertTrue(
+            app.descendants(matching: .any)["combat.fumble.indestructible.applied"]
+                .waitForExistence(timeout: UITest.timeout),
+            "The screen does not say why the result changed"
+        )
+
+        let writes = app.descendants(matching: .any)["combat.fumble.writes"]
+        XCTAssertTrue(writes.waitForExistence(timeout: UITest.timeout), "The screen did not report what it wrote")
+        XCTAssertTrue(writes.staticTexts["Langschwert abgelegt"].exists, "The weapon should leave the loadout")
+        XCTAssertTrue(writes.staticTexts["Unzerstörbar"].exists, "The answer should be reported as remembered")
+        captureScreenshot(app, named: "49-fumble-indestructible-applied")
+
+        // --- And the answer outlives the fight: the hero settings screen is
+        //     where it is taken back, beside the damaged equipment.
+        let newAction = app.button(containing: "Neue Aktion")
+        XCTAssertTrue(app.scrollUntilHittable(newAction), "No way back to the combat root")
+        newAction.tap()
+
+        let close = app.buttons["combat.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        close.tap()
+
+        let field = app.openCommandPalette()
+        XCTAssertTrue(field.waitForExistence(timeout: UITest.timeout), "Command palette did not open")
+        field.typeText("Einstellungen")
+        let command = app.button(containing: "Einstellungen für")
+        XCTAssertTrue(command.waitForExistence(timeout: UITest.timeout), "Settings command not offered")
+        command.tap()
+
+        let section = app.descendants(matching: .any)["heroSettings.indestructibleItems"]
+        XCTAssertTrue(section.waitForExistence(timeout: UITest.timeout), "Hero settings did not open")
+        XCTAssertTrue(app.scrollUntilHittable(section), "Could not reach the indestructible-equipment section")
+        XCTAssertTrue(
+            app.buttons["heroSettings.breakable.Langschwert"].exists,
+            "The remembered answer has no way back"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["heroSettings.damagedItems"].exists,
+            "A dropped weapon is not a dented one"
+        )
+    }
+
+    /// The other answer. An ordinary Langschwert on a rolled 2 is gone for good,
+    /// exactly as before this question existed.
+    @MainActor
+    func testAnOrdinaryWeaponIsStillDestroyed() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.destroyedScript)
+
+        rollTheAttackTable(app, expecting: "Waffe zerstört")
+
+        let no = app.buttons["combat.fumble.indestructible.no"]
+        XCTAssertTrue(app.scrollUntilHittable(no), "No \"Nein\" on the question")
+        no.tap()
+
+        let panel = app.descendants(matching: .any)["combat.fumbleEffectPanel"]
+        XCTAssertTrue(
+            panel.staticTexts["Waffe zerstört"].waitForExistence(timeout: UITest.timeout),
+            "A \"Nein\" should leave the rolled result alone"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["combat.fumble.indestructible.applied"].exists,
+            "Nothing was substituted"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["combat.fumble.indestructible"].exists,
+            "The question should be gone once it is answered"
+        )
+
+        let writes = app.descendants(matching: .any)["combat.fumble.writes"]
+        XCTAssertTrue(writes.waitForExistence(timeout: UITest.timeout), "The screen did not report what it wrote")
+        XCTAssertTrue(writes.staticTexts["Langschwert abgelegt"].exists, "The weapon should leave the loadout")
+        XCTAssertFalse(
+            writes.staticTexts["Unzerstörbar"].exists,
+            "A \"Nein\" is not remembered — the next Langschwert may be an ordinary one"
+        )
+    }
+
     // MARK: - Navigation
+
+    /// Combat root → Angriff → announcement → roll → confirmed Patzer →
+    /// Patzertabelle. The attack table, not the defence one: destroying the
+    /// weapon is the attacker's own Patzer as much as the parrier's.
+    @MainActor
+    private func rollTheAttackTable(_ app: XCUIApplication, expecting title: String) {
+        goToMeleeAnnouncement(app)
+
+        let weiter = app.buttons["combat.announcement.continue"]
+        XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")
+        weiter.tap()
+
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Attack roll screen not shown")
+        diceBox.tap()
+
+        let toFumble = app.button(containing: "Patzer")
+        XCTAssertTrue(
+            toFumble.waitForExistence(timeout: UITest.timeout),
+            "The scripted 20 + 20 did not confirm a Patzer"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(toFumble), "Could not reach the Patzer button")
+        toFumble.tap()
+
+        let rollTable = app.button(containing: "Patzertabelle")
+        XCTAssertTrue(rollTable.waitForExistence(timeout: UITest.timeout), "The fumble choice was not offered")
+        rollTable.tap()
+
+        let panel = app.descendants(matching: .any)["combat.fumbleEffectPanel"]
+        XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "No effect panel after the table roll")
+        XCTAssertTrue(panel.staticTexts[title].exists, "The scripted 2W6 did not land on \"\(title)\"")
+    }
 
     /// Combat root → Parieren → roll → confirmed Patzer → Patzertabelle.
     @MainActor

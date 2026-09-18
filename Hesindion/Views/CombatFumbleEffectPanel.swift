@@ -29,6 +29,15 @@ struct CombatFumbleEffectPanel: View {
     /// of fire is the GM's to say, so this is a quiet second button rather than
     /// something the table roll does on its own.
     var onSelfDamageFallback: (() -> Void)? = nil
+    /// The name of the thing the table wants to destroy, while the app is still
+    /// asking whether it can be. `nil` once the question is answered — or was
+    /// never asked, which is every result but the first three of three tables.
+    var indestructibleItem: String? = nil
+    var onIndestructible: ((Bool) -> Void)? = nil
+    /// What the dice actually said, when the answer turned it into `entry`.
+    /// Shown because a player who rolled "Waffe zerstört" and got "Waffe
+    /// verloren" is owed both halves of that sentence.
+    var rolledInstead: (item: String, title: String)? = nil
 
     private var effect: FumbleEffect { entry.effect }
     private var probe: FumbleProbe? { FumbleEffectResolver.probe(for: effect) }
@@ -45,6 +54,24 @@ struct CombatFumbleEffectPanel: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Why the result on the line above is not the one the dice named.
+            if let rolledInstead {
+                Text(String(
+                    format: L("fumble.indestructible.applied"),
+                    rolledInstead.item, entry.title, rolledInstead.title))
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(combatAccent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("combat.fumble.indestructible.applied")
+            }
+
+            // The question the table asks before it can be applied at all. Same
+            // grammar as the Sturz check above: while it is open nothing is
+            // written and the screen offers no way on.
+            if let indestructibleItem, let onIndestructible {
+                indestructibleQuestion(item: indestructibleItem, answer: onIndestructible)
+            }
 
             if !writes.isEmpty {
                 VStack(spacing: 0) {
@@ -103,6 +130,55 @@ struct CombatFumbleEffectPanel: View {
         .dsaBox(.flush, stroke: Color.groupCombat)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.fumbleEffectPanel")
+    }
+
+    // MARK: - Unzerstörbar?
+
+    /// "Ist der Magierstab unzerstörbar?" — the one thing the first three
+    /// results of these tables need before they mean anything, and the one thing
+    /// no export can answer. Two buttons, because it is a yes/no the GM settles
+    /// in a second; a "Ja" is remembered for the hero so the same staff is asked
+    /// about once.
+    private func indestructibleQuestion(item: String, answer: @escaping (Bool) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(format: L("fumble.indestructible.ask"), item))
+                .font(.dsaHeading(.caption))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(L("fumble.indestructible.hint"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 8) {
+                answerButton(L("yes"), identifier: "combat.fumble.indestructible.yes",
+                             fill: combatAccent) { answer(true) }
+                answerButton(L("no"), identifier: "combat.fumble.indestructible.no",
+                             fill: Color.dsaDark) { answer(false) }
+            }
+            .dsaOptionGroup()
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(UIColor.systemBackground))
+        .dsaBox(.flush, stroke: combatAccent)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.fumble.indestructible")
+    }
+
+    private func answerButton(
+        _ title: String, identifier: String, fill: Color, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.dsaHeading(.caption))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(fill)
+                .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier(identifier)
     }
 
     // MARK: - The check

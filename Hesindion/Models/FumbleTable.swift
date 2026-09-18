@@ -114,6 +114,40 @@ enum FumbleTable {
         allEntries(for: type)
     }
 
+    // MARK: - Unzerstörbare Waffen
+
+    /// The escape clause three of the four tables print on their first three
+    /// results: "Bei unzerstörbaren Waffen: Waffe verloren" (and the Schild
+    /// table's "Bei unzerstörbaren Schilden: Schild verloren").
+    ///
+    /// Matched on the table's own text rather than on a list of roll numbers, so
+    /// the clause and the rule that reads it cannot drift apart: an entry that
+    /// stops printing it stops asking the question.
+    private static let indestructibleClause = "unzerstörbar"
+
+    /// The result the clause points at. The same number in every table that has
+    /// it, and looked up rather than written out, so the title, the text and the
+    /// effect are the table's own.
+    static let indestructibleSubstituteRoll = 5
+
+    /// What a result becomes when the thing in the hand cannot be destroyed, or
+    /// `nil` where the question does not arise.
+    ///
+    /// A wizard's staff, a dwarven runic axe, anything the GM rules unbreakable:
+    /// the rules do not simply leave it intact, they drop it on the floor. So
+    /// "Waffe zerstört", "Waffe schwer beschädigt" and "Waffe beschädigt" all
+    /// become that table's own result 5, with its own text and its own effect —
+    /// the thing leaves the loadout, nothing is marked destroyed and nothing is
+    /// marked damaged. Every other result answers `nil`, including all of the
+    /// Fernkampf table's later ones: they say nothing about destroying anything,
+    /// so there is nothing to ask.
+    static func indestructibleSubstitute(
+        for entry: FumbleTableEntry, table: FumbleTableType
+    ) -> FumbleTableEntry? {
+        guard entry.description.localizedStandardContains(indestructibleClause) else { return nil }
+        return entries(for: table).first { $0.roll == indestructibleSubstituteRoll }
+    }
+
     static let allTypes: [FumbleTableType] = [
         .nahkampfAttacke, .verteidigungWaffe, .verteidigungSchild, .fernkampf,
     ]

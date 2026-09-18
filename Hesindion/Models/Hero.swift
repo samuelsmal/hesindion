@@ -75,6 +75,19 @@ final class Hero {
     /// `consecratedWeapons` and the loadout, so a re-import keeps the answer.
     var damagedItems: [String] = []
 
+    /// Names of the weapons and shields the player has said cannot be destroyed
+    /// — a magier's staff, a dwarven runic axe, anything the GM rules unbreakable.
+    ///
+    /// The Patzertabellen print the rule ("Bei unzerstörbaren Waffen: Waffe
+    /// verloren") but nothing in an Optolith export says which weapons it is
+    /// about, so the app asks the player the first time it matters and remembers
+    /// the answer for this hero. Like `damagedItems` and `consecratedWeapons`:
+    /// names rather than ids, **not** part of the combat-session block — a staff
+    /// is no more breakable after the fight than during it — and cleared only on
+    /// the hero settings screen. A *no* is not remembered: the next Langschwert
+    /// may be an ordinary one bought at the next market.
+    var indestructibleItems: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -322,6 +335,22 @@ final class Hero {
             damagedItems.append(name)
         } else {
             damagedItems.removeAll { $0 == name }
+        }
+    }
+
+    // MARK: - Unzerstörbare Ausrüstung
+
+    func isItemIndestructible(_ name: String?) -> Bool {
+        guard let name else { return false }
+        return indestructibleItems.contains(name)
+    }
+
+    func setItemIndestructible(_ name: String, _ indestructible: Bool) {
+        if indestructible {
+            guard !indestructibleItems.contains(name) else { return }
+            indestructibleItems.append(name)
+        } else {
+            indestructibleItems.removeAll { $0 == name }
         }
     }
 
@@ -768,7 +797,8 @@ final class Hero {
         activeCombatMounted = false
         // The Patzertabelle's temporary effects last a few rounds of *this*
         // fight, so they go with it. `damagedItems` does not: it lasts until
-        // the thing is repaired.
+        // the thing is repaired. Nor does `indestructibleItems`: what a staff
+        // is made of does not change when the fight ends.
         temporarySchmerzLevels = 0
         temporarySchmerzLastRound = 0
         activeCombatStumble = false

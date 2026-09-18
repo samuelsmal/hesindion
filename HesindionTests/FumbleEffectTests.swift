@@ -177,6 +177,64 @@ final class FumbleEffectTests: XCTestCase {
         XCTAssertFalse(FumbleEffectResolver.unequipsItem(.fall))
     }
 
+    // MARK: - Unzerstörbare Waffen
+
+    /// "Bei unzerstörbaren Waffen: Waffe verloren" is printed on results 2, 3
+    /// and 4 of every table that can destroy something, and it points at that
+    /// table's own result 5. All three tables, all eleven rolls, so a fourth
+    /// table or a changed text cannot quietly stop asking.
+    func testResultsTwoThreeAndFourBecomeTheTablesOwnFive() {
+        for table in FumbleTable.allTypes {
+            let five = FumbleTable.entries(for: table)
+                .first { $0.roll == FumbleTable.indestructibleSubstituteRoll }
+            XCTAssertNotNil(five, "\(table) has no result 5")
+
+            for entry in FumbleTable.entries(for: table) {
+                let substitute = FumbleTable.indestructibleSubstitute(for: entry, table: table)
+                if [2, 3, 4].contains(entry.roll) {
+                    XCTAssertEqual(substitute?.roll, 5, "\(table) \(entry.roll) should become 5")
+                    XCTAssertEqual(substitute?.title, five?.title)
+                    XCTAssertEqual(substitute?.effect, .itemLost(permanently: false),
+                                   "an indestructible thing is dropped, not destroyed or dented")
+                } else {
+                    XCTAssertNil(
+                        substitute,
+                        "\(table) \(entry.roll) (\(entry.title)) says nothing about indestructibility")
+                }
+            }
+        }
+    }
+
+    /// The Schild table names the shield, not the weapon, and the substitute has
+    /// to be *that* table's fifth result rather than the melee one's.
+    func testTheShieldTableSubstitutesTheShieldResult() {
+        let destroyed = FumbleTable.lookup(2, table: .verteidigungSchild, isUnarmed: false)
+        XCTAssertEqual(destroyed.title, "Schild zerstört")
+        let substitute = FumbleTable.indestructibleSubstitute(for: destroyed, table: .verteidigungSchild)
+        XCTAssertEqual(substitute?.title, "Schild verloren")
+    }
+
+    /// The answer is the hero's, lasts past the fight, and is taken back only on
+    /// the hero settings screen — like `damagedItems`, and for the same reason:
+    /// a staff is no more breakable once the fighting stops.
+    func testTheRememberedAnswerSurvivesTheEndOfTheFight() {
+        let hero = makeHero()
+        XCTAssertFalse(hero.isItemIndestructible("Magierstab"))
+
+        hero.setItemIndestructible("Magierstab", true)
+        hero.setItemIndestructible("Magierstab", true)
+        XCTAssertEqual(hero.indestructibleItems, ["Magierstab"], "asked once, stored once")
+
+        hero.activeCombatId = UUID()
+        hero.clearCombatSession()
+        XCTAssertTrue(hero.isItemIndestructible("Magierstab"),
+                      "ending the fight does not make the staff breakable")
+
+        hero.setItemIndestructible("Magierstab", false)
+        XCTAssertFalse(hero.isItemIndestructible("Magierstab"))
+        XCTAssertFalse(hero.isItemIndestructible(nil))
+    }
+
     // MARK: - Selbst verletzt
 
     func testTheSelfDamageFormulaIsTheWeaponsOwnAndRaufenWhenUnarmed() {

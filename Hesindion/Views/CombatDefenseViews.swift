@@ -593,6 +593,14 @@ struct CombatFumbleChoiceView: View {
     /// The hero's own weapon damage on results 11 and 12, rolled here and shown,
     /// then handed to the take-damage screen prefilled.
     @State private var selfDamage: FumbleSelfDamage? = nil
+    /// The result the dice named, held unapplied while the screen asks whether
+    /// the thing in the hand can be destroyed at all. Nothing is written and no
+    /// way on is offered until it is answered — the same grammar as the Sturz
+    /// check, and for the same reason: breaking a magier's staff is not a thing
+    /// to undo afterwards.
+    @State private var pendingIndestructible: (entry: FumbleTableEntry, roll: Int, item: String)? = nil
+    /// What the dice said, once a "Ja" turned it into another result.
+    @State private var indestructibleRolled: (item: String, title: String)? = nil
 
     private enum FumbleChoiceKind { case simpleDamage, table }
 
@@ -621,6 +629,7 @@ struct CombatFumbleChoiceView: View {
     /// optional and does not hold anything.
     private var isResolved: Bool {
         if simpleDamageRoll != nil { return true }
+        guard pendingIndestructible == nil else { return false }
         guard let entry = tableEntry else { return false }
         return !FumbleEffectResolver.holdsTheWayOut(entry.effect, probeSucceeded: probeSucceeded)
     }
@@ -832,7 +841,10 @@ struct CombatFumbleChoiceView: View {
                 probeSucceeded: probeSucceeded,
                 selfDamage: selfDamage,
                 onRollProbe: openProbe,
-                onSelfDamageFallback: { rollSelfDamage(doubled: false) }
+                onSelfDamageFallback: { rollSelfDamage(doubled: false) },
+                indestructibleItem: pendingIndestructible?.item,
+                onIndestructible: answerIndestructible,
+                rolledInstead: indestructibleRolled
             )
         }
     }
@@ -922,10 +934,62 @@ struct CombatFumbleChoiceView: View {
         let d2 = DiceRoller.roll(sides: 6)
         let total = d1 + d2
         tableRoll = (d1, d2)
-        let entry = FumbleTable.lookup(total, table: tableType, isUnarmed: isUnarmed || isDodge)
+        let rolled = FumbleTable.lookup(total, table: tableType, isUnarmed: isUnarmed || isDodge)
+
+        // "Bei unzerstörbaren Waffen: Waffe verloren." Whether this one is such
+        // a weapon is the GM's call — no export carries it — so the first three
+        // results of these tables are a question before they are a result, and
+        // nothing is written until it is answered. An unarmed fighter and a
+        // dodge cannot reach them at all (the +5 shift), which is the same thing
+        // `affectedItemName` says by coming back `nil`.
+        if let item = affectedItemName,
+           let substitute = FumbleTable.indestructibleSubstitute(for: rolled, table: tableType) {
+            if hero.isItemIndestructible(item) {
+                // Asked once per hero and per item: the staff was unbreakable
+                // last time and has not changed since.
+                apply(substitute, roll: total, insteadOf: (item, rolled.title))
+            } else {
+                tableEntry = rolled
+                pendingIndestructible = (rolled, total, item)
+            }
+            return
+        }
+
+        apply(rolled, roll: total, insteadOf: nil)
+    }
+
+    /// The result that actually counts: shown, logged and written, in that
+    /// order. `insteadOf` names what the dice said when an indestructible item
+    /// turned it into something else.
+    private func apply(
+        _ entry: FumbleTableEntry, roll: Int, insteadOf rolled: (item: String, title: String)?
+    ) {
         tableEntry = entry
-        logTableResult(entry, roll: total)
+        indestructibleRolled = rolled
+        logTableResult(
+            rolled.map { "\($0.title) \u{2192} \(entry.title)" } ?? entry.title,
+            roll: roll)
         applyImmediateEffect(of: entry)
+    }
+
+    /// The GM's answer. "Ja" is remembered for this hero — the same staff is
+    /// asked about once — and turns the result into the table's own entry 5.
+    /// "Nein" is not: the next Langschwert may be an ordinary one.
+    private func answerIndestructible(_ indestructible: Bool) {
+        guard let pending = pendingIndestructible else { return }
+        pendingIndestructible = nil
+
+        guard indestructible,
+              let substitute = FumbleTable.indestructibleSubstitute(
+                for: pending.entry, table: tableType)
+        else {
+            apply(pending.entry, roll: pending.roll, insteadOf: nil)
+            return
+        }
+
+        hero.setItemIndestructible(pending.item, true)
+        record(value: L("fumble.indestructible.short"), source: pending.item)
+        apply(substitute, roll: pending.roll, insteadOf: (pending.item, pending.entry.title))
     }
 
     // MARK: - Effects
@@ -1115,7 +1179,7 @@ struct CombatFumbleChoiceView: View {
         modelContext.insert(logEntry)
     }
 
-    private func logTableResult(_ entry: FumbleTableEntry, roll: Int) {
+    private func logTableResult(_ title: String, roll: Int) {
         let logEntry = LogEntry.create(
             kind: "combatAction",
             payload: CombatActionPayload(
@@ -1129,7 +1193,7 @@ struct CombatFumbleChoiceView: View {
                 effectiveValue: nil,
                 outcome: "Patzertabelle",
                 schipAction: nil,
-                fumbleTableResult: entry.title,
+                fumbleTableResult: title,
                 lpChange: 0
             ),
             hero: hero

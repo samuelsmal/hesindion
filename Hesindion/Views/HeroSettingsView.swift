@@ -87,6 +87,16 @@ struct HeroSettingsView: View {
                     damagedItemsSection
                         .padding(.bottom, 32)
                 }
+
+                // Same shape, same reason: a Patzer asked "ist der Magierstab
+                // unzerstörbar?", the player said yes, and the answer outlives
+                // the fight. Hidden until there is one, and the button is the
+                // way to take it back — a staff that was replaced by an ordinary
+                // one would otherwise never be destroyable again.
+                if !hero.indestructibleItems.isEmpty {
+                    indestructibleItemsSection
+                        .padding(.bottom, 32)
+                }
             }
         }
         .background(Color(UIColor.systemBackground))
@@ -231,6 +241,48 @@ struct HeroSettingsView: View {
         .padding(.horizontal, 16)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("heroSettings.damagedItems")
+    }
+
+    /// Everything the player has told a Patzertabelle cannot be destroyed, with
+    /// the one button that takes the answer back.
+    private var indestructibleItemsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("indestructibleItems.title"))
+                .font(.dsaHeading(.title3))
+            Text(L("indestructibleItems.subtitle"))
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+
+            ForEach(hero.indestructibleItems, id: \.self) { name in
+                HStack(spacing: 12) {
+                    Text(name)
+                        .font(.dsaBody(.body))
+                    Spacer()
+                    Button {
+                        hero.setItemIndestructible(name, false)
+                    } label: {
+                        Text(L("indestructibleItems.forget"))
+                            .font(.dsaHeading(.caption))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.groupCombat)
+                            .dsaBox(.flush)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .accessibilityIdentifier("heroSettings.breakable.\(name)")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(UIColor.systemBackground))
+                .dsaBox(.flush)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("heroSettings.indestructibleItems")
     }
 
     private func fokusRuleRow(_ rule: FokusRule) -> some View {
