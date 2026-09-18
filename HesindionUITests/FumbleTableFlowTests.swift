@@ -344,6 +344,14 @@ final class FumbleTableFlowTests: XCTestCase {
 
         rollTheTable(app, expecting: "Waffe beschädigt")
 
+        // Result 4 prints the escape clause too — "Bei unzerstörbaren Waffen:
+        // Waffe verloren" — so the screen asks before it dents anything, and
+        // while the question is open it writes nothing at all. An ordinary
+        // Langschwert is a "Nein", which is what leaves this test its subject.
+        let breakable = app.buttons["combat.fumble.indestructible.no"]
+        XCTAssertTrue(app.scrollUntilHittable(breakable), "No \"Nein\" on the indestructibility question")
+        breakable.tap()
+
         let writes = app.descendants(matching: .any)["combat.fumble.writes"]
         XCTAssertTrue(
             writes.waitForExistence(timeout: UITest.timeout),
