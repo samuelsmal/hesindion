@@ -75,7 +75,7 @@ struct HeroSettingsView: View {
                         }
                     }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, 32)
 
                 // Not a Fokus-Regel and not a per-fight choice: a Patzer dented
                 // something and it stays dented until somebody at a smithy says

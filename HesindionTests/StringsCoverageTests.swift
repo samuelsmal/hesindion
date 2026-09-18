@@ -58,6 +58,16 @@ final class StringsCoverageTests: XCTestCase {
             "fumble.fall.avoided", "fumble.stuck.failed",
             "fumble.selfDamage.label", "fumble.selfDamage.doubled",
             "fumble.damageSource", "fumble.gmOnly", "flucht.gsLiegend",
+            // The temporary effects: the two modifier labels, what the panel
+            // reports having written, the two reasons a button is dark, the
+            // loadout badge and the repair row.
+            "fumble.modifier.stumble", "fumble.modifier.damaged",
+            "fumble.stumble.write", "fumble.until.round", "fumble.untilNextAction",
+            "fumble.jam.write", "fumble.jam.reason",
+            "fumble.noDefense.write", "fumble.noDefense.reason",
+            "fumble.damaged.badge", "fumble.friendHit.selfDamage",
+            "damagedItems.title", "damagedItems.subtitle", "damagedItems.repair",
+            "schmerz.fromFumble",
         ] { assertLocalized(key) }
     }
 

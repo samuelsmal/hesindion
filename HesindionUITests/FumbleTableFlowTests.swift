@@ -25,6 +25,15 @@ final class FumbleTableFlowTests: XCTestCase {
     /// 1W6+4 → 7 TP against the hero.
     private static let selfDamageScript = "20,20,5,6,3"
 
+    /// 2W6 4+4 = 8 → "Stolpern": the next Handlung is 2 harder, and only the
+    /// next one.
+    private static let stumbleScript = "20,20,4,4"
+
+    /// 2W6 2+2 = 4 → "Waffe beschädigt": AT and PA 2 harder until it is
+    /// repaired. The parry is made with the Langschwert, so the Langschwert is
+    /// what the result dents.
+    private static let damagedScript = "20,20,2,2"
+
     // MARK: - Sturz
 
     /// The owner's report: "upon 'Sturz' the direct probe check is not there …
@@ -185,6 +194,116 @@ final class FumbleTableFlowTests: XCTestCase {
         XCTAssertTrue(formula.staticTexts["7 LP"].exists, "7 TP less RS 0 is 7 LP")
     }
 
+    // MARK: - Stolpern
+
+    /// "Nächste Handlung um –2 erschwert" used to be prose on a panel, and prose
+    /// a player has to remember for exactly one roll is prose nobody applies.
+    /// The −2 is a modifier line now, so it appears in the calculation of the
+    /// next roll — and, because the roll that pays it consumes it, in no other.
+    @MainActor
+    func testStolpernCostsTheNextRollTwoAndOnlyTheNext() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.stumbleScript)
+
+        rollTheTable(app, expecting: "Stolpern")
+
+        let writes = app.descendants(matching: .any)["combat.fumble.writes"]
+        XCTAssertTrue(
+            writes.waitForExistence(timeout: UITest.timeout),
+            "The screen did not report the Stolpern it wrote"
+        )
+        captureScreenshot(app, named: "43-fumble-stolpern")
+
+        backToRoot(app)
+
+        // --- The next parry names it and pays the −2.
+        app.buttons["combat.parry"].tap()
+        let firstCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(firstCalculation.waitForExistence(timeout: UITest.timeout), "No parry calculation")
+        XCTAssertTrue(
+            firstCalculation.staticTexts["Stolpern (Patzer)"].exists,
+            "The next roll does not name the Stolpern"
+        )
+        captureScreenshot(app, named: "44-fumble-stolpern-next-roll")
+
+        backFromParryExecution(app)
+
+        // --- And the one after it does not: the roll above consumed it.
+        app.buttons["combat.parry"].tap()
+        let secondCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(secondCalculation.waitForExistence(timeout: UITest.timeout), "No second parry calculation")
+        XCTAssertFalse(
+            secondCalculation.staticTexts["Stolpern (Patzer)"].exists,
+            "The Stolpern was charged twice"
+        )
+    }
+
+    // MARK: - Waffe beschädigt
+
+    /// "Alle Proben auf AT und PA um –2 erschwert, bis sie repariert wird."
+    /// Unlike the Stolpern, this one does *not* expire: the −2 is still on the
+    /// next attack, and the loadout picker says which weapon is carrying it.
+    @MainActor
+    func testADamagedWeaponCostsEveryRollUntilItIsRepaired() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.damagedScript)
+
+        rollTheTable(app, expecting: "Waffe beschädigt")
+
+        let writes = app.descendants(matching: .any)["combat.fumble.writes"]
+        XCTAssertTrue(
+            writes.waitForExistence(timeout: UITest.timeout),
+            "The screen did not report the damage it wrote"
+        )
+        XCTAssertTrue(
+            writes.staticTexts["Langschwert beschädigt"].exists,
+            "The write should name the weapon the parry was made with"
+        )
+        captureScreenshot(app, named: "45-fumble-weapon-damaged")
+
+        backToRoot(app)
+
+        // --- The next attack pays for it.
+        goToMeleeAnnouncement(app)
+        let weiter = app.button(containing: "Weiter")
+        XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")
+        weiter.tap()
+
+        let calculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(calculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        XCTAssertTrue(
+            calculation.staticTexts["Langschwert beschädigt"].exists,
+            "The attack does not name the damaged weapon"
+        )
+        XCTAssertTrue(calculation.staticTexts["-2"].exists, "A damaged weapon costs 2")
+
+        // --- And the loadout picker marks it, which is where the player picks
+        // what to fight with and so the one place the badge has to be. Back from
+        // an attack roll is the weapon list, and back from that is the root.
+        app.buttons["combat.back"].tap()
+        XCTAssertTrue(
+            app.buttons["combat.weaponRow.Langschwert"].waitForExistence(timeout: UITest.timeout),
+            "Back from the attack roll should land on the weapon list"
+        )
+        app.buttons["combat.back"].tap()
+        XCTAssertTrue(
+            app.buttons["combat.parry"].waitForExistence(timeout: UITest.timeout),
+            "Back from the weapon list should land on the combat root"
+        )
+
+        let changeLoadout = app.button(containing: "Ausrüstung wechseln")
+        XCTAssertTrue(app.scrollUntilHittable(changeLoadout), "Could not reach the loadout screen")
+        changeLoadout.tap()
+
+        let row = app.buttons["combat.loadout.Langschwert"]
+        XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "The loadout picker did not open")
+        XCTAssertTrue(
+            row.label.contains("Beschädigt"),
+            "The loadout row does not mark the damaged weapon: \(row.label)"
+        )
+        captureScreenshot(app, named: "46-fumble-damaged-loadout-badge")
+    }
+
     // MARK: - Navigation
 
     /// Combat root → Parieren → roll → confirmed Patzer → Patzertabelle.
@@ -237,6 +356,34 @@ final class FumbleTableFlowTests: XCTestCase {
         XCTAssertTrue(confirm.waitForExistence(timeout: UITest.timeout), "Probe confirm missing")
         confirm.tap()
         XCTAssertTrue(die.waitForNonExistence(timeout: UITest.timeout), "Probe modal did not close")
+    }
+
+    /// The resolved fumble screen back to the combat root.
+    @MainActor
+    private func backToRoot(_ app: XCUIApplication) {
+        let newAction = app.buttons["combat.execution.newAction.miss"]
+        XCTAssertTrue(app.scrollUntilHittable(newAction), "No way back to the combat root")
+        newAction.tap()
+        XCTAssertTrue(
+            app.buttons["combat.parry"].waitForExistence(timeout: UITest.timeout),
+            "Combat root not shown"
+        )
+    }
+
+    /// A parry roll back to the root: the execution screen's back button lands on
+    /// the weapon list, whose own back button lands on the root.
+    @MainActor
+    private func backFromParryExecution(_ app: XCUIApplication) {
+        app.buttons["combat.back"].tap()
+        XCTAssertTrue(
+            app.buttons["combat.weaponRow.Langschwert"].waitForExistence(timeout: UITest.timeout),
+            "Back from the parry roll should land on the weapon list"
+        )
+        app.buttons["combat.back"].tap()
+        XCTAssertTrue(
+            app.buttons["combat.parry"].waitForExistence(timeout: UITest.timeout),
+            "Back from the weapon list should land on the combat root"
+        )
     }
 
     /// Combat root → Angriff → (grip choice) → melee announcement.

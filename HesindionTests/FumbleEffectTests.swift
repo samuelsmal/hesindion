@@ -68,15 +68,20 @@ final class FumbleEffectTests: XCTestCase {
     /// Which half of the enum each case is in. The panel renders help for the
     /// automated ones and prose for the rest, so moving a case between the two
     /// has to be a deliberate edit in both places.
-    func testTheAutomatedHalfIsExactlyTheFiveEffectsThisTaskBuilt() {
+    ///
+    /// Everything that lands on the hero's own sheet is automated — the five
+    /// the first task built, plus the five temporary ones the combat session
+    /// now holds. What is left is the two results that happen on the *other*
+    /// side of the table, where there is nothing to write to (ADR-0005).
+    func testTheAutomatedHalfIsEverythingThatLandsOnTheHerosOwnSheet() {
         for effect in [FumbleEffect.fall, .stupor, .itemLost(permanently: true),
                        .itemLost(permanently: false), .itemStuck,
-                       .selfDamage(doubled: false), .selfDamage(doubled: true)] {
+                       .selfDamage(doubled: false), .selfDamage(doubled: true),
+                       .stumble, .pain, .itemDamaged, .jam, .noDefense] {
             XCTAssertTrue(effect.isAutomated, "\(effect) should be automated")
         }
-        for effect in [FumbleEffect.stumble, .pain, .itemDamaged, .jam,
-                       .noDefense, .friendHit, .wildShot] {
-            XCTAssertFalse(effect.isAutomated, "\(effect) is stated only for now")
+        for effect in [FumbleEffect.friendHit, .wildShot] {
+            XCTAssertFalse(effect.isAutomated, "\(effect) belongs to the other side of the table")
         }
     }
 
