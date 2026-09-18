@@ -338,6 +338,8 @@ struct CombatAnnouncementView: View {
     /// `CombatView` so that the screens resolving *this* swing — the roll, the
     /// opponent's defence, the damage — all read the same answers. Cleared here
     /// as the announcement opens: a new announcement may be at a new opponent.
+    /// `CombatView` clears it again on the way back to the root, so a defence
+    /// rolled from there does not inherit this announcement's answers either.
     @Binding var opponent: OpponentProfile
     var onDismiss: () -> Void
 
@@ -391,6 +393,7 @@ struct CombatAnnouncementView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
                 Spacer()
                 VStack(spacing: 1) {
                     Text(L("announcement"))

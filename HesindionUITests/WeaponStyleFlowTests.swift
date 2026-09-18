@@ -149,4 +149,62 @@ final class WeaponStyleFlowTests: XCTestCase {
             "The style is worth nothing on foot and should not be claimed"
         )
     }
+
+    /// The defence after an attack is a defence against a fresh opponent.
+    ///
+    /// "Gegner kämpft zu Fuß" is stated on the announcement, and the parry that
+    /// comes next is rolled from the combat root, which reads the very same
+    /// `OpponentProfile` — so the fact used to follow the hero out of the
+    /// announcement and go on paying +2 Vorteilhafte Position against whoever
+    /// swung at them next. Every interaction may be with somebody else, so the
+    /// profile is cleared on the way back to the root as well.
+    ///
+    /// The mounted rider is the case where the difference is visible: nothing
+    /// else on the parry screen would say who the +2 was about.
+    @MainActor
+    func testTheDefenceAfterAnAttackDoesNotInheritTheAnnouncedOpponent() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", shield: true, weapon: "Rabenschnabel", mounted: true)
+
+        // --- Announce an attack and state that the opponent is on foot.
+        let attack = app.button(containing: "Angriff")
+        XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        attack.tap()
+        let heroWeapon = app.button(containing: "Rabenschnabel")
+        XCTAssertTrue(heroWeapon.waitForExistence(timeout: UITest.timeout), "No hero attack offered")
+        heroWeapon.tap()
+
+        openOpponentSection(app)
+        let onFoot = app.buttons["combat.opponent.onFoot"]
+        XCTAssertTrue(onFoot.waitForExistence(timeout: UITest.timeout), "No on-foot toggle")
+        XCTAssertTrue(app.scrollUntilHittable(onFoot), "Could not reach the on-foot toggle")
+        onFoot.tap()
+
+        let announced = app.descendants(matching: .any)["combat.announcement.atBreakdown"]
+        XCTAssertTrue(announced.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        XCTAssertTrue(
+            announced.staticTexts["Vorteilhafte Position"].exists,
+            "The stated fact should reach the attack it was stated for"
+        )
+
+        // --- Back to the root: the announcement, and with it the opponent, is over.
+        app.buttons["combat.back"].tap()
+        let weaponRow = app.buttons["combat.weaponRow.Rabenschnabel"]
+        XCTAssertTrue(weaponRow.waitForExistence(timeout: UITest.timeout), "The back button did not reach the weapon list")
+        app.buttons["combat.back"].tap()
+
+        // --- Parry. Nobody has said anything about the one swinging now.
+        tapParry(app, weapon: "Rabenschnabel", expectingWeaponList: true)
+        let parry = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "No parry calculation")
+        XCTAssertTrue(
+            parry.staticTexts["Golgariten-Stil"].exists,
+            "This should still be the mounted parry the style pays for"
+        )
+        XCTAssertFalse(
+            parry.staticTexts["Vorteilhafte Position"].exists,
+            "The last announcement's \"Gegner kämpft zu Fuß\" followed the hero into the next defence"
+        )
+        captureScreenshot(app, named: "43-parry-fresh-opponent")
+    }
 }

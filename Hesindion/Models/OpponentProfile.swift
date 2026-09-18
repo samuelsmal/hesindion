@@ -42,22 +42,26 @@ enum BodyPlanKind: String, CaseIterable, Identifiable {
 /// The opponent is not modelled (ADR-0005): there is no LP, no RS and no sheet.
 /// What there is, is a handful of facts the GM states and several rules turn on.
 ///
-/// **One announcement, one opponent.** Nothing here outlives the announcement
-/// that stated it: a new swing may well be at somebody else, and a reach, a body
-/// plan or a "das ist ein Dämon" carried over from the last one is a fact about
-/// a creature that is no longer in front of the hero. `reset()` clears the lot,
-/// and `CombatAnnouncementView` calls it as each announcement opens. Everything
-/// that belongs to the *same* swing — the off-hand half of a dual attack, the
-/// opponent's defence lines, the Karmale-Objekte multiplier, the hit-zone table
-/// — is carried in the `CombatStep` payload from that one announcement, so it
-/// still sees the opponent it was announced against.
+/// **One interaction, one opponent.** Nothing here outlives the attack or the
+/// defence that stated it: the next one may well be with somebody else, and a
+/// reach, a body plan or a "das ist ein Dämon" carried over from the last one is
+/// a fact about a creature that is no longer in front of the hero. `reset()`
+/// clears the lot, and two seams call it: `CombatView` whenever the step becomes
+/// `.root`, which is where every interaction ends, and `CombatAnnouncementView`
+/// as each announcement opens. The root's own defences need the second-to-last
+/// answer gone as much as an attack does — a Parade rolled from the root reads
+/// this profile through `OpponentRoster`. Everything that belongs to the *same*
+/// swing — the off-hand half of a dual attack, the opponent's defence lines, the
+/// Karmale-Objekte multiplier, the hit-zone table — is carried in the
+/// `CombatStep` payload from that one announcement, so it still sees the
+/// opponent it was announced against.
 ///
 /// `states` and `facts` are what the catalog predicates read
 /// (`opponent.state`, `gm.fact`); the named flags below them are the same
 /// facts under the names the views bind to. `FactKey.span` still says how long
 /// a fact is *meant* to be good for — it is the catalog's vocabulary, and the
 /// roster this lives in is where a named second opponent would keep its own
-/// answers — but with one profile per announcement the app clears them all
+/// answers — but with one profile per interaction the app clears them all
 /// together.
 struct OpponentProfile: Equatable {
 
@@ -123,8 +127,8 @@ struct OpponentProfile: Equatable {
     /// Back to "nobody has said anything".
     ///
     /// Everything, not only the posture: the reach, the body plan, the size, the
-    /// demon and the opposing deity went too, because the next announcement may
-    /// be at somebody else entirely and an unasked question is a better default
+    /// demon and the opposing deity went too, because the next interaction may
+    /// be with somebody else entirely and an unasked question is a better default
     /// than last swing's answer about a different creature (owner report). The
     /// facts the fight really does keep are the *hero's* — the loadout, the
     /// states, the Fokus-Regeln — and none of them live here.

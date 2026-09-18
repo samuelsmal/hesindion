@@ -196,8 +196,10 @@ struct CombatView: View {
     /// because every screen that resolves the announced swing — the AT roll, the
     /// opponent's defence, the damage — has to read the same answers.
     ///
-    /// It does **not** outlive the announcement: `CombatAnnouncementView` resets
-    /// it as each one opens, because the next attack may be at somebody else.
+    /// It does **not** outlive one interaction. Two seams clear it: arriving at
+    /// `.root` (below, in `onChange(of: step.persistenceKey)`) ends the last
+    /// interaction, and `CombatAnnouncementView` clears it again as each
+    /// announcement opens, because the next attack may be at somebody else.
     @State private var opponent = OpponentProfile()
     @State private var vorstossActiveThisRound: Bool = false
     /// Beengte Umgebung is now backed by the `eingeengt` player status (single source of
@@ -640,6 +642,19 @@ struct CombatView: View {
                 announcedZone = nil
             }
             if newKey == "root" {
+                // An interaction is over, and the next one may well be with
+                // somebody else — the announcement's own reset only covers the
+                // attack path, and a Parade or Ausweichen rolled straight from
+                // the root read whatever the *last* announcement had stated
+                // ("Gegner kämpft zu Fuß" feeding GRW_vorteilhaftePosition for a
+                // mounted hero, and every other fact the defence lines take off
+                // the roster). Clearing it here is the one seam every way back
+                // to the root goes through — the roll screens' "Neue Aktion",
+                // the header's back button, the swipe-down gesture, and the
+                // restore of a saved session, which arrives at the root too.
+                // Nothing that belongs to a swing is lost: that travels in the
+                // `CombatStep` payload, never on this profile.
+                opponent.reset()
                 persistCombatState()
             }
         }
