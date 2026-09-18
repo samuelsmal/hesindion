@@ -136,12 +136,12 @@
     {
       "id": 16,
       "subject": "Task 16: Reachability, and the record",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Every `implemented` clause is proven to fire from a generated hero and Situation, and the docs say where step 2 landed.\n\n**Files:**\n- Create: `HesindionTests/RuleReachabilityTests.swift`\n- Modify: `AGENTS.md` (the rules-catalog bullet), `CHANGELOG.md`, `docs/plans/2026-09-14-rules-catalog-next-steps.md`\n\n**Acceptance Criteria:**\n- [ ] For every `implemented` entry, every clause and every domain it names, a hero and Situation built from its predicates make `evaluation.applied` contain the rule id — including clauses whose only effect is a `modifyRule`, by also satisfying the modified rule.\n- [ ] The test fails (not skips) if the bundled catalog has no `implemented` entry.\n- [ ] A second test asserts that every `RuleVocabulary.Predicate` and `.Effect` case is used by at least one `implemented` clause — the vocabulary holds exactly what the catalog needs, and an item nobody uses is an item nobody tested.\n- [ ] AGENTS.md describes the evaluator, the union, and how a rule moves; CHANGELOG lists the three behaviour changes (Golgariten-Stil, Vinsalt-Stil, Verweichlicht); the next-steps doc says what step 3 and the remaining moves are.\n\n**Verify:** `make test-ui` → `RuleReachabilityTests` passes; `git status` clean after the commit.\n\n**Steps:**\n- The reachability test\n- Run\n- AGENTS.md\n- CHANGELOG.md\n- The next-steps doc\n- Commit\n\n```json:metadata\n{\"files\": [\"AGENTS.md\", \"CHANGELOG.md\", \"HesindionTests/RuleReachabilityTests.swift\", \"docs/plans/2026-09-14-rules-catalog-next-steps.md\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"For every `implemented` entry, every clause and every domain it names, a hero and Situation built from its predicates make `evaluation.applied` contain the rule id — including clauses whose only effect is a `modifyRule`, by also satisfying the modified rule.\", \"The test fails (not skips) if the bundled catalog has no `implemented` entry.\", \"A second test asserts that every `RuleVocabulary.Predicate` and `.Effect` case is used by at least one `implemented` clause — the vocabulary holds exactly what the catalog needs, and an item nobody uses is an item nobody tested.\", \"AGENTS.md describes the evaluator, the union, and how a rule moves; CHANGELOG lists the three behaviour changes (Golgariten-Stil, Vinsalt-Stil, Verweichlicht); the next-steps doc says what step 3 and the remaining moves are.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         15
       ]
     }
   ],
-  "lastUpdated": "2026-09-18T08:12:04+00:00"
+  "lastUpdated": "2026-09-18T08:55:11+00:00"
 }
