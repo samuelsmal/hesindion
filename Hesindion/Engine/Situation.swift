@@ -15,9 +15,17 @@ enum RuleDomain: String, CaseIterable, Codable {
 enum FactSpan: String, CaseIterable, Codable {
     /// Until changed in settings. Lives on `Hero`.
     case hero
-    /// The fight. Lives on the roster entry.
+    /// This opponent, for as long as they are the one being fought. Lives on
+    /// the roster entry.
     case opponent
-    /// This attack. Lives on the roster entry, cleared by `resetPerAttack`.
+    /// This attack. Lives on the roster entry too.
+    ///
+    /// The app holds one profile at a time and `OpponentProfile.reset()` clears
+    /// both spans as each announcement opens — the next swing may be at somebody
+    /// else — so today the two have the same lifetime in the UI. The distinction
+    /// is the catalog's vocabulary and stays: it is what a rule *means* by its
+    /// fact, and a named roster of several opponents would keep the `.opponent`
+    /// ones per entry.
     case attack
     /// The round. Lives on `CombatSituation`.
     case round

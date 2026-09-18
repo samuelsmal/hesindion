@@ -80,24 +80,44 @@ final class SituationTests: XCTestCase {
         XCTAssertNil(o.facts[FactKey(id: "advantageousPosition", span: .attack)], "false is not stated, it is withdrawn")
     }
 
-    func testResetPerAttackKeepsWhatLastsTheFight() {
+    /// The next announcement may be at somebody else, so nothing survives it —
+    /// not the posture and not the shape. The reach was the fact that made this
+    /// obvious: a hero who fought a spear-carrier in round one kept attacking at
+    /// −2 for the rest of the fight, whoever they turned to.
+    func testResetLeavesNothingOfTheLastOpponent() {
         var o = OpponentProfile()
+        o.label = "der Ork links"
         o.reach = .lang
+        o.bodyPlanKind = .vierbeinig
+        o.size = .gross
         o.isDaemon = true
         o.isOnFoot = true
         o.facts[FactKey(id: "knownLocation", span: .opponent)] = true
         o.isOfOpposingDeity = true
         o.isProne = true
         o.advantageousPosition = true
-        o.resetPerAttack()
-        XCTAssertEqual(o.reach, .lang)
-        XCTAssertTrue(o.isDaemon)
-        XCTAssertEqual(o.isOnFoot, true)
-        XCTAssertTrue(o.isOfOpposingDeity)
-        XCTAssertEqual(o.facts, [FactKey(id: "knownLocation", span: .opponent): true,
-                                 OpponentProfile.opposingDeityKey: true])
+
+        o.reset()
+
+        XCTAssertEqual(o, OpponentProfile(), "a reset opponent is an unasked question")
+        XCTAssertEqual(o.reach, .mittel)
+        XCTAssertEqual(o.bodyPlanKind, .humanoid)
+        XCTAssertEqual(o.size, .mittel)
+        XCTAssertFalse(o.isDaemon)
+        XCTAssertNil(o.isOnFoot)
+        XCTAssertFalse(o.isOfOpposingDeity)
+        XCTAssertTrue(o.facts.isEmpty, "an .opponent-span fact goes with the opponent")
         XCTAssertTrue(o.states.isEmpty)
         XCTAssertFalse(o.advantageousPosition)
+        XCTAssertEqual(o.label, "")
+    }
+
+    /// The span vocabulary is the catalog's and stays, whatever the app does
+    /// with it: a rule says what its fact is a fact *about*.
+    func testTheFactSpansAreStillTheCatalogsVocabulary() {
+        XCTAssertEqual(OpponentProfile.advantageousPositionKey.span, .attack)
+        XCTAssertEqual(OpponentProfile.opposingDeityKey.span, .opponent)
+        XCTAssertEqual(Set(FactSpan.allCases), [.hero, .opponent, .attack, .round])
     }
 
     func testTheOpponentStateIdsAreStateCatalogIds() {

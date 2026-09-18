@@ -169,4 +169,111 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         app.scrollUntilHittable(breakdown, maxSwipes: 4)
         captureScreenshot(app, named: "36-damage-complicated")
     }
+
+    // MARK: - The next attack is at somebody else
+
+    /// Everything the GM said about the other side belongs to the swing it was
+    /// said for.
+    ///
+    /// The reach, the Körperbau, the Größe and the Dämon used to last the whole
+    /// fight, and only the posture was cleared per attack. The owner's question
+    /// is the one that breaks it: *"What if I attack someone else?"* — a Lang
+    /// picked for the spear-carrier went on charging −2 against the dagger three
+    /// rounds later, and nothing on the screen said why.
+    ///
+    /// A scripted 19 misses whatever the modifiers do (base AT 14, so 19 clears
+    /// it either way) and is not a 20, so the attack settles without a
+    /// confirmation and leads straight back to the combat root.
+    @MainActor
+    func testTheNextAttackStartsWithAFreshOpponent() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: "19")
+
+        goToAnnouncement(app)
+        openOpponentSection(app)
+
+        // --- One attack, with the other side described in full.
+        let longReach = app.buttons["combat.reach.Lang"]
+        XCTAssertTrue(longReach.waitForExistence(timeout: UITest.timeout), "Announcement screen not shown")
+        longReach.tap()
+
+        let large = app.buttons["combat.opponent.size.gross"]
+        XCTAssertTrue(app.scrollUntilHittable(large), "Could not reach the size chips")
+        large.tap()
+
+        let prone = app.buttons["combat.attack.prone"]
+        XCTAssertTrue(app.scrollUntilHittable(prone), "Could not reach the prone toggle")
+        prone.tap()
+
+        let lid = app.buttons["combat.attack.opponent.toggle"]
+        XCTAssertTrue(lid.waitForExistence(timeout: UITest.timeout), "No opponent section")
+        for stated in ["Lang", "Groß", "Ziel liegt"] {
+            XCTAssertTrue(
+                lid.label.contains(stated),
+                "The lid should read back what was stated, got \(lid.label)"
+            )
+        }
+
+        // The reach is really in the roll, not only on the lid.
+        let weiter = app.buttons["combat.announcement.continue"]
+        XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")
+        weiter.tap()
+
+        let firstCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(firstCalculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        XCTAssertTrue(
+            firstCalculation.staticTexts["Reichweite"].exists,
+            "Mittel against Lang should cost the attack 2"
+        )
+
+        // --- The attack is made and missed, and the fight goes on.
+        let diceBox = app.otherElements["combat.execution.diceBox"]
+        XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "No dice on the attack screen")
+        diceBox.tap()
+
+        let newAction = app.buttons["combat.execution.newAction.miss"]
+        XCTAssertTrue(newAction.waitForExistence(timeout: UITest.timeout), "The scripted 19 did not settle")
+        XCTAssertTrue(app.scrollUntilHittable(newAction), "No way back to the combat root")
+        newAction.tap()
+
+        // --- The next announcement knows nothing about anybody.
+        goToAnnouncement(app)
+
+        let secondLid = app.buttons["combat.attack.opponent.toggle"]
+        XCTAssertTrue(secondLid.waitForExistence(timeout: UITest.timeout), "No opponent section")
+        for stale in ["Lang", "Groß", "Ziel liegt"] {
+            XCTAssertFalse(
+                secondLid.label.contains(stale),
+                "\(stale) was stated about the last opponent, not this one: \(secondLid.label)"
+            )
+        }
+        XCTAssertTrue(
+            secondLid.label.contains("Mittel"),
+            "The lid should be back to the defaults, got \(secondLid.label)"
+        )
+        captureScreenshot(app, named: "37-attack-fresh-opponent")
+
+        // And the roll is back to the unmodified AT: no reach row at all.
+        let secondWeiter = app.buttons["combat.announcement.continue"]
+        XCTAssertTrue(app.scrollUntilHittable(secondWeiter), "Could not reach Weiter")
+        secondWeiter.tap()
+
+        let secondCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(secondCalculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
+        XCTAssertFalse(
+            secondCalculation.staticTexts["Reichweite"].exists,
+            "The new opponent's reach was never stated, so nothing should be charged for it"
+        )
+    }
+
+    /// Combat root → Angriff → (grip choice) → melee announcement.
+    @MainActor
+    private func goToAnnouncement(_ app: XCUIApplication) {
+        let angriff = app.button(containing: "Angriff")
+        XCTAssertTrue(angriff.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        angriff.tap()
+
+        let oneHanded = app.button(containing: "Einhändig")
+        if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
+    }
 }

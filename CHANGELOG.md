@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Every attack starts with a fresh opponent.** Reach, Körperbau, Größe, "Dämon" and "Dämon der Gegengottheit" used to be kept for the whole fight, and only the posture (Liegend, Überrascht, Vorteilhafte Position) was cleared per swing. But the next attack is often at somebody else — "What if I attack someone else?" (owner report) — and the app has no way of knowing it is not, so a Lang picked for the spear-carrier in round one went on charging the hero −2 against the dagger in round four. The GEGNER section on the announcement screen now opens with every question unanswered. It is shut by default and most swings answer nothing in it; the second half of a dual attack, the opponent's defence lines and the damage screen still see the opponent the swing was announced against.
 - `ModifierContext` is `Situation`; the opponent is a roster entry with stated states and GM facts.
 - A modifier line from the catalog is labelled with the rule's name and carries its id.
 - The prone opponent's row in the opponent's defence box reads "Liegend" (the rule's name) instead of "Ziel liegt"; the toggle that sets it keeps that label.

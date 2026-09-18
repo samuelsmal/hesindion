@@ -188,8 +188,11 @@ struct CombatView: View {
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
     /// The other side of the fight. Held here, not on the announcement screen,
-    /// because the same opponent is still the same opponent in round four — the
-    /// reach used to be asked for again on every single attack.
+    /// because every screen that resolves the announced swing — the AT roll, the
+    /// opponent's defence, the damage — has to read the same answers.
+    ///
+    /// It does **not** outlive the announcement: `CombatAnnouncementView` resets
+    /// it as each one opens, because the next attack may be at somebody else.
     @State private var opponent = OpponentProfile()
     @State private var vorstossActiveThisRound: Bool = false
     /// Beengte Umgebung is now backed by the `eingeengt` player status (single source of

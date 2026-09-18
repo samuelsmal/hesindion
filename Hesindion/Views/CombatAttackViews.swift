@@ -335,8 +335,9 @@ struct CombatAnnouncementView: View {
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
     /// The other side of the fight, as far as the app has been told. Owned by
-    /// `CombatView` so it outlives one attack: the same opponent has the same
-    /// reach and the same body plan in round four as in round one.
+    /// `CombatView` so that the screens resolving *this* swing — the roll, the
+    /// opponent's defence, the damage — all read the same answers. Cleared here
+    /// as the announcement opens: a new announcement may be at a new opponent.
     @Binding var opponent: OpponentProfile
     var onDismiss: () -> Void
 
@@ -526,9 +527,19 @@ struct CombatAnnouncementView: View {
             if isMountCharge {
                 selectedManeuver = .sturmangriff
             }
-            // The shape of the opponent holds for the fight; their posture does
-            // not. A new announcement is a new swing.
-            opponent.resetPerAttack()
+            // A new announcement is a new opponent. Not only the posture: the
+            // reach, the body plan, the size and the Dämon go as well, because
+            // the hero may well be swinging at somebody else this time and the
+            // app has no way of knowing that they are not.
+            //
+            // Coming *back* here from the execution screen re-fires this and so
+            // asks again. That is the same rule read the same way — the player
+            // is standing in front of the announcement, about to announce — and
+            // the alternative (remembering which announcement this used to be)
+            // would keep a stale opponent alive for exactly the case the reset
+            // exists for. The section is shut by default, so an attack that
+            // answers nothing notices nothing.
+            opponent.reset()
         }
         .overlay {
             if showingZoneRoll {

@@ -41,19 +41,31 @@ enum BodyPlanKind: String, CaseIterable, Identifiable {
 ///
 /// The opponent is not modelled (ADR-0005): there is no LP, no RS and no sheet.
 /// What there is, is a handful of facts the GM states and several rules turn on.
-/// Split by how long each fact lasts: the shape of the opponent holds for the
-/// fight, their posture and the GM's calls about this swing hold for the attack.
+///
+/// **One announcement, one opponent.** Nothing here outlives the announcement
+/// that stated it: a new swing may well be at somebody else, and a reach, a body
+/// plan or a "das ist ein Dämon" carried over from the last one is a fact about
+/// a creature that is no longer in front of the hero. `reset()` clears the lot,
+/// and `CombatAnnouncementView` calls it as each announcement opens. Everything
+/// that belongs to the *same* swing — the off-hand half of a dual attack, the
+/// opponent's defence lines, the Karmale-Objekte multiplier, the hit-zone table
+/// — is carried in the `CombatStep` payload from that one announcement, so it
+/// still sees the opponent it was announced against.
 ///
 /// `states` and `facts` are what the catalog predicates read
 /// (`opponent.state`, `gm.fact`); the named flags below them are the same
-/// facts under the names the views bind to.
+/// facts under the names the views bind to. `FactKey.span` still says how long
+/// a fact is *meant* to be good for — it is the catalog's vocabulary, and the
+/// roster this lives in is where a named second opponent would keep its own
+/// answers — but with one profile per announcement the app clears them all
+/// together.
 struct OpponentProfile: Equatable {
 
     /// What the GM calls this one ("der Ork links"). Empty for the unnamed
     /// single opponent every fight starts with.
     var label: String = ""
 
-    // MARK: The opponent, for as long as the fight lasts
+    // MARK: The shape of the opponent
 
     var reach: WeaponReach = .mittel
     var bodyPlanKind: BodyPlanKind = .humanoid
@@ -90,8 +102,8 @@ struct OpponentProfile: Equatable {
         get { facts[Self.advantageousPositionKey] == true }
         set { facts[Self.advantageousPositionKey] = newValue ? true : nil }
     }
-    /// A demon of the deity this weapon is sworn against — doubled TP. Lasts
-    /// the fight, like `isDaemon`: the same demon stays the same demon.
+    /// A demon of the deity this weapon is sworn against — doubled TP. Stated
+    /// beside `isDaemon`, and cleared with it when the next announcement opens.
     var isOfOpposingDeity: Bool {
         get { facts[Self.opposingDeityKey] == true }
         set { facts[Self.opposingDeityKey] = newValue ? true : nil }
@@ -108,10 +120,16 @@ struct OpponentProfile: Equatable {
     /// The table their hit zones are rolled on.
     var bodyPlan: BodyPlan { bodyPlanKind.plan(size: size) }
 
-    /// Everything that changes between one attack and the next, cleared.
-    mutating func resetPerAttack() {
-        states = []
-        facts = facts.filter { $0.key.span != .attack }
+    /// Back to "nobody has said anything".
+    ///
+    /// Everything, not only the posture: the reach, the body plan, the size, the
+    /// demon and the opposing deity went too, because the next announcement may
+    /// be at somebody else entirely and an unasked question is a better default
+    /// than last swing's answer about a different creature (owner report). The
+    /// facts the fight really does keep are the *hero's* — the loadout, the
+    /// states, the Fokus-Regeln — and none of them live here.
+    mutating func reset() {
+        self = OpponentProfile()
     }
 
     /// What the announcement does to the opponent's own defence.
