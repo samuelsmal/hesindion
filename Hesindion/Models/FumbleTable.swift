@@ -18,14 +18,17 @@ enum FumbleTableType: String {
 ///
 /// Two halves, deliberately:
 ///
-/// - **Automated** — `fall`, `stupor`, `itemLost`, `itemStuck`, `selfDamage`. Each
-///   writes something the app already models: a Status, a Zustand level, the
-///   loadout, the hero's own LP by way of the take-damage screen.
-/// - **Stated only** — `stumble`, `pain`, `itemDamaged`, `jam`, `noDefense`,
-///   `friendHit`, `wildShot`. Every one of them is a *temporary* modifier ("die
-///   nächste Handlung", "für 3 Kampfrunden", "bis zur nächsten Aktion") or an
-///   event on the other side of the table, and the app has no mechanism for
-///   either yet. They render their entry's text and nothing more; see
+/// - **Automated** — everything that lands on the hero's own sheet: a Status, a
+///   Zustand level, the loadout, the hero's own LP by way of the take-damage
+///   screen, and the temporary modifiers the combat session now holds
+///   (`Hero.temporarySchmerzLevels`, `activeCombatStumble`, `damagedItems`,
+///   `activeCombatJamUntilRound`, `activeCombatNoDefense`).
+/// - **Stated only** — `friendHit` and `wildShot`. Both are events on the *other*
+///   side of the table: a bystander hit, a shop sign shot off its hinges.
+///   Opponents and scenery are not modelled (ADR-0005) and nothing about them
+///   can be written to the hero, so they render their entry's text and nothing
+///   more. `friendHit` does offer its own fallback ("Kein solches Ziel: Selbst
+///   verletzt"), which runs the automated self-damage help. See
 ///   `CombatFumbleEffectPanel`.
 enum FumbleEffect: Equatable {
 
@@ -45,9 +48,9 @@ enum FumbleEffect: Equatable {
     /// The hero takes their own weapon's damage, doubled on a 12.
     case selfDamage(doubled: Bool)
 
-    // MARK: Stated only (the next task builds the temporary-effect mechanics)
+    // MARK: Automated — the temporary effects the combat session holds
 
-    /// Stolpern: the next action is 2 harder.
+    /// Stolpern: the next combat roll is 2 harder.
     case stumble
     /// Fuß verdreht / Zerrung: a level of Schmerz for 3 Kampfrunden.
     case pain
@@ -57,7 +60,12 @@ enum FumbleEffect: Equatable {
     case jam
     /// Zu konzentriert: no defences until the next action.
     case noDefense
+
+    // MARK: Stated only — the other side of the table
+
     /// The shot hits a friend or a bystander — the other side of the table.
+    /// Its "Kein solches Ziel" fallback is the hero's own damage, and that half
+    /// the panel does offer.
     case friendHit
     /// A spectacular miss that hits an object — the GM's scene, not the hero.
     case wildShot
@@ -69,9 +77,10 @@ enum FumbleEffect: Equatable {
     /// a deliberate edit in both places.
     var isAutomated: Bool {
         switch self {
-        case .fall, .stupor, .itemLost, .itemStuck, .selfDamage:
+        case .fall, .stupor, .itemLost, .itemStuck, .selfDamage,
+             .stumble, .pain, .itemDamaged, .jam, .noDefense:
             true
-        case .stumble, .pain, .itemDamaged, .jam, .noDefense, .friendHit, .wildShot:
+        case .friendHit, .wildShot:
             false
         }
     }

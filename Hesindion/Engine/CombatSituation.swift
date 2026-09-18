@@ -38,11 +38,17 @@ struct CombatSituation: Equatable {
     /// a caller with nothing to say about the opponent still gets the round's
     /// own modifiers — which is all this took until the catalog had a rule that
     /// asks.
+    /// `itemInHand` is the piece the parry is actually made with, where the
+    /// caller knows it (the weapon list does; the root's own parry is the main
+    /// weapon and says nothing). Only rules that key on the *item* read it — a
+    /// Patzer-damaged shield — not the reach rules, which still read the main
+    /// weapon on a parry.
     func defenseModifiers(
         hero: Hero,
         isAusweichen: Bool,
         isOffHand: Bool = false,
-        opponents: OpponentRoster = OpponentRoster()
+        opponents: OpponentRoster = OpponentRoster(),
+        itemInHand: String? = nil
     ) -> [ModifierLine] {
         // The round is this value itself; only what belongs to this one defence
         // — which hand it is made with — sits beside it. `twoHandedGrip` rides
@@ -52,6 +58,7 @@ struct CombatSituation: Equatable {
         situation.round = self
         situation.isOffHand = isOffHand
         situation.opponents = opponents
+        situation.itemInHand = itemInHand
 
         return ModifierEngine.shared.evaluate(context: situation)
     }

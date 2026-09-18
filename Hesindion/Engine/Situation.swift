@@ -77,6 +77,17 @@ struct Situation {
     /// The loadout piece in the hand — a weapon, a shield, or "Raufen". `nil`
     /// means the main weapon.
     var loadoutName: String? = nil
+    /// The piece of the loadout this roll is made **with**, where the caller
+    /// knows it and `loadoutName` does not say: the shield or the off-hand
+    /// weapon on a parry.
+    ///
+    /// Separate from `loadoutName` on purpose. `loadoutName` also decides the
+    /// *reach* the catalog reads, and on a parry that is still the main weapon
+    /// (`GRW_beengteUmgebung`'s note says so, until step 3 names the parrying
+    /// piece there). Naming the shield through `loadoutName` would change that
+    /// rule as a side effect of a Patzer; this field only answers "which thing
+    /// is in the hand", which is all a damaged item asks.
+    var itemInHand: String? = nil
     var maneuver: CombatManeuver = .normal
     var isOffHand = false
     var targetHitZone: HitZone? = nil
@@ -141,6 +152,17 @@ struct Situation {
     var loadoutWeapon: MeleeWeapon? {
         if let name = loadoutName { return hero.meleeWeapons.first { $0.name == name } }
         return hero.selectedWeapon
+    }
+
+    /// The name of the thing this roll uses, for rules that key on the *item*
+    /// rather than on its reach — a Patzer-damaged weapon or shield, so far.
+    /// A shot uses the slung ranged weapon; everything else uses what the
+    /// caller named, and the main weapon when it named nothing.
+    var itemInHandName: String? {
+        if let itemInHand { return itemInHand }
+        if domain == .rangedAttack { return hero.selectedRangedWeaponName }
+        if let loadoutName { return loadoutName }
+        return hero.selectedWeaponName
     }
 
     /// Its reach. Bare hands are kurz (GRW, waffenlose Kampftechniken).

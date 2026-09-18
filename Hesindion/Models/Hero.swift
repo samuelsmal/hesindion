@@ -65,6 +65,16 @@ final class Hero {
     /// rebuilds the weapon rows does not lose the answer.
     var consecratedWeapons: [String] = []
 
+    /// Names of the weapons and shields a Patzer has damaged — "Alle Proben auf
+    /// AT und PA um –2 erschwert, bis sie repariert wird".
+    ///
+    /// Deliberately **not** part of the combat-session block: the damage lasts
+    /// until somebody repairs the thing, which is a scene at a smithy and not
+    /// the end of the fight, so `clearCombatSession()` leaves it alone and the
+    /// hero settings screen is where it is cleared. Names rather than ids, like
+    /// `consecratedWeapons` and the loadout, so a re-import keeps the answer.
+    var damagedItems: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -82,6 +92,42 @@ final class Hero {
     var activeCombatMounted: Bool = false
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
+
+    // MARK: - Temporary combat effects (Patzertabelle)
+    //
+    // Plain stored properties with defaults, so SwiftData's lightweight
+    // migration adds them the way `activeCombatBeengt` and `consecratedWeapons`
+    // were added. All of them belong to the running fight and are cleared by
+    // `clearCombatSession()`; `damagedItems` above deliberately is not.
+
+    /// Schmerz levels a Patzer added on top of the LP-derived ones ("1 Stufe
+    /// Schmerz für 3 Kampfrunden"). Zero when nothing is running.
+    var temporarySchmerzLevels: Int = 0
+
+    /// The last round those levels still count.
+    ///
+    /// **Convention:** rolled in round *n* → counts through round *n+2*, i.e.
+    /// the rest of round *n* and the two rounds after it. Three Kampfrunden are
+    /// named on the card and three round numbers see the penalty; "the rest of
+    /// this round does not count as one of them" would be a fourth.
+    ///
+    /// A second such Patzer while one is still running **adds a level and
+    /// restarts the clock** — the simplest reading, and the one that does not
+    /// need a list of expiry dates on the hero.
+    var temporarySchmerzLastRound: Int = 0
+
+    /// Stolpern: the hero's next combat roll of any kind is 2 harder. Consumed
+    /// by the roll that pays for it (`FumbleModifiers.stolpern`).
+    var activeCombatStumble: Bool = false
+
+    /// Ladehemmung: the last round in which the ranged weapon is still being
+    /// cleared. Same convention as the Schmerz clock — rolled in round *n*, the
+    /// two complete Kampfrunden it costs are *n+1* and *n+2*, so the weapon is
+    /// unusable through round *n+2* and ready again in *n+3*.
+    var activeCombatJamUntilRound: Int = 0
+
+    /// Zu konzentriert: no defences until the hero's next own action.
+    var activeCombatNoDefense: Bool = false
 
     init(
         name: String,
@@ -263,6 +309,81 @@ final class Hero {
         }
     }
 
+    // MARK: - Beschädigte Ausrüstung
+
+    func isItemDamaged(_ name: String?) -> Bool {
+        guard let name else { return false }
+        return damagedItems.contains(name)
+    }
+
+    func setItemDamaged(_ name: String, _ damaged: Bool) {
+        if damaged {
+            guard !damagedItems.contains(name) else { return }
+            damagedItems.append(name)
+        } else {
+            damagedItems.removeAll { $0 == name }
+        }
+    }
+
+    // MARK: - Temporary combat effects
+
+    /// Whether the Patzer's extra Schmerz is still running. It belongs to a
+    /// fight, so a hero with no session has none however the counters stand.
+    var temporarySchmerzActive: Bool {
+        activeCombatId != nil
+            && temporarySchmerzLevels > 0
+            && activeCombatRound <= temporarySchmerzLastRound
+    }
+
+    /// The levels it currently contributes — zero once the round has passed.
+    var temporarySchmerzLevel: Int { temporarySchmerzActive ? temporarySchmerzLevels : 0 }
+
+    /// Adds one level and (re)starts the clock from the round that rolled it.
+    func addTemporarySchmerz(rolledInRound round: Int) {
+        temporarySchmerzLevels = temporarySchmerzActive ? temporarySchmerzLevels + 1 : 1
+        temporarySchmerzLastRound = round + 2
+    }
+
+    /// Ladehemmung: whether the ranged weapon is still out of action.
+    var isRangedWeaponJammed: Bool {
+        activeCombatId != nil && activeCombatRound <= activeCombatJamUntilRound
+    }
+
+    func applyRangedJam(rolledInRound round: Int) {
+        activeCombatJamUntilRound = round + 2
+    }
+
+    /// Stolpern is paid for by the next roll and then gone. Called *after* that
+    /// roll's modifier lines were built, so a Schicksalspunkt reroll of the very
+    /// same roll still carries the −2 it was announced with.
+    ///
+    /// Guarded on the current value: these are called from `onAppear`, and
+    /// writing a stored property that already holds that value still dirties the
+    /// model and redraws the screen that just appeared.
+    func consumeStumble() {
+        guard activeCombatStumble else { return }
+        activeCombatStumble = false
+    }
+
+    /// The hero's own next action lifts "Zu konzentriert".
+    func beginOwnAction() {
+        guard activeCombatNoDefense else { return }
+        activeCombatNoDefense = false
+    }
+
+    /// Whether the named piece of the loadout is the shield in the hero's hand.
+    ///
+    /// A parry made with the sword while a shield hangs on the other arm is a
+    /// *weapon* parry: it reads the Verteidigung-Waffe table, and letting the
+    /// shield's presence alone decide sent it to the Schild table, whose item
+    /// results then took the shield out of the loadout for a fumble it had no
+    /// part in. The weapon list names the piece it rolled with, so that name is
+    /// the answer.
+    func isShieldInHand(_ name: String?) -> Bool {
+        guard let name, let shield = selectedShield else { return false }
+        return shield.name == name
+    }
+
     /// The glyph for one named piece of the loadout — the weapon's own combat
     /// technique where it has one, a shield where it is one, a fist otherwise.
     func loadoutIcon(for name: String) -> WeaponIcon {
@@ -357,18 +478,27 @@ final class Hero {
 
     // MARK: - Schmerz (Pain)
 
-    /// Raw Schmerz level from LP thresholds (0–4+).
+    /// Raw Schmerz level from LP thresholds (0–4+), **plus** any levels a Patzer
+    /// added for a few rounds (`temporarySchmerzLevel`).
+    ///
+    /// Schmerz is otherwise derived from LP alone, which is why `setStateLevel`
+    /// refuses it: there is nothing to store. "1 Stufe Schmerz für 3
+    /// Kampfrunden" is not an LP loss, so it is held beside the LP total and
+    /// added here — one place, so the modifier lines, the states strip, the
+    /// state detail sheet and the take-damage screen's before/after all follow
+    /// without a second reader of the same fact. `effectiveSchmerzLevel` still
+    /// caps the total and still applies Zäher Hund.
     var schmerzLevel: Int {
-        guard let dv = derivedValues else { return 0 }
+        guard let dv = derivedValues else { return temporarySchmerzLevel }
         let current = dv.lebensenergie.current
         let maxLP = dv.lebensenergie.max
-        guard maxLP > 0 else { return 0 }
+        guard maxLP > 0 else { return temporarySchmerzLevel }
         var level = 0
         if current <= (maxLP * 3) / 4 { level = 1 }
         if current <= maxLP / 2 { level = 2 }
         if current <= maxLP / 4 { level = 3 }
         if current <= 5 { level += 1 }
-        return level
+        return level + temporarySchmerzLevel
     }
 
     /// True if hero has Zäher Hund (ADV_49).
@@ -594,6 +724,14 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
+        // The Patzertabelle's temporary effects last a few rounds of *this*
+        // fight, so they go with it. `damagedItems` does not: it lasts until
+        // the thing is repaired.
+        temporarySchmerzLevels = 0
+        temporarySchmerzLastRound = 0
+        activeCombatStumble = false
+        activeCombatJamUntilRound = 0
+        activeCombatNoDefense = false
     }
 
     func isFokusRuleActive(_ rule: FokusRule) -> Bool {

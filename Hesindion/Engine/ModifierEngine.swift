@@ -96,6 +96,7 @@ extension ModifierEngine {
         defs.append(contentsOf: MeleeModifiers.all)
         defs.append(contentsOf: DefenseModifiers.all)
         defs.append(contentsOf: RangedModifiers.all)
+        defs.append(contentsOf: FumbleModifiers.all)
         defs.append(contentsOf: MagicModifiers.all)
         return ModifierEngine(modifiers: defs)
     }()
