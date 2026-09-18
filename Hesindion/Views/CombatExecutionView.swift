@@ -131,6 +131,7 @@ struct CombatExecutionView: View {
             .background(combatAccent)
             .dsaBox(.raised)
 
+            ScrollView {
             VStack(spacing: 8) {
                 // Row 1: modifier breakdown or simple value
                 modifierBreakdown
@@ -193,8 +194,7 @@ struct CombatExecutionView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
-
-            Spacer()
+            }
         }
         .onAppear {
             startAnimation()

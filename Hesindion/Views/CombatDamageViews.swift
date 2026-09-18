@@ -142,6 +142,7 @@ struct CombatTakeDamageView: View {
             .background(combatAccent)
             .dsaBox(.raised)
 
+            ScrollView {
             VStack(spacing: 16) {
                 VStack(spacing: 16) {
                 // TP input stepper
@@ -260,8 +261,8 @@ struct CombatTakeDamageView: View {
                 }
             }
             .adaptiveContentWidth()
-
-            Spacer()
+            .padding(.bottom, 16)
+            }
         }
         // A different zone resists with a different Anwendungsgebiet, and a different
         // damage total changes the modifier — either way the old probe is void.
@@ -634,15 +635,26 @@ struct CombatMountDamageView: View {
             .background(combatAccent)
             .dsaBox(.raised)
 
-            Spacer()
+            // A GeometryReader'd ScrollView rather than a bare Spacer sandwich:
+            // the content centres exactly as before when it fits the screen, and
+            // scrolls instead of running off the bottom edge when it does not
+            // (landscape, mostly — see LandscapeScrollFlowTests).
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
 
-            if !damageApplied {
-                spInputPhase
-            } else {
-                reitenCheckPhase
+                        if !damageApplied {
+                            spInputPhase
+                        } else {
+                            reitenCheckPhase
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                    .frame(minWidth: proxy.size.width, minHeight: proxy.size.height)
+                }
             }
-
-            Spacer()
         }
         .overlay {
             if showingProbeModal, let talent = reitenTalent {
@@ -925,16 +937,26 @@ struct CombatMountPreCheckView: View {
             .background(combatAccent)
             .dsaBox(.raised)
 
-            Spacer()
+            // Same fit-then-scroll shape as `CombatMountDamageView`: centred
+            // when the three nodes fit, scrollable rather than clipped when
+            // they do not.
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
 
-            VStack(spacing: 0) {
-                galoppNode
-                connectorArrow
-                reitenNode
+                        VStack(spacing: 0) {
+                            galoppNode
+                            connectorArrow
+                            reitenNode
+                        }
+                        .adaptiveContentWidth()
+
+                        Spacer(minLength: 0)
+                    }
+                    .frame(minWidth: proxy.size.width, minHeight: proxy.size.height)
+                }
             }
-            .adaptiveContentWidth()
-
-            Spacer()
         }
         .overlay {
             if showingProbeModal, let talent = reitenTalent {

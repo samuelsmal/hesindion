@@ -101,6 +101,7 @@ struct CombatOpponentDefenseView: View {
             .dsaBox(.raised)
 
             // MARK: Body
+            ScrollView {
             VStack(spacing: 8) {
                 // Critical hit info boxes
                 if isCriticalHit {
@@ -255,8 +256,7 @@ struct CombatOpponentDefenseView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
-
-            Spacer()
+            }
         }
         .onDisappear {
             damageAnimTask?.cancel()
@@ -608,6 +608,7 @@ struct CombatFumbleChoiceView: View {
     var body: some View {
         VStack(spacing: 0) {
             fumbleHeader
+            ScrollView {
             VStack(spacing: 16) {
                 if choice == nil {
                     choiceButtons
@@ -623,8 +624,8 @@ struct CombatFumbleChoiceView: View {
             }
             .padding(.top, 16)
             .adaptiveContentWidth()
-
-            Spacer()
+            .padding(.bottom, 16)
+            }
         }
     }
 
@@ -909,6 +910,7 @@ struct CombatFluchtView: View {
             .background(combatAccent)
             .dsaBox(.raised)
 
+            ScrollView {
             VStack(spacing: 16) {
                 // Info
                 HStack(spacing: 8) {
@@ -1030,8 +1032,7 @@ struct CombatFluchtView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
-
-            Spacer()
+            }
         }
     }
 
@@ -1123,6 +1124,7 @@ struct CombatPassierschlagView: View {
             .dsaBox(.raised)
 
             // MARK: Body
+            ScrollView {
             VStack(spacing: 8) {
                 // Info bar
                 infoBox(L("passierschlag.info"))
@@ -1167,8 +1169,7 @@ struct CombatPassierschlagView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
-
-            Spacer()
+            }
         }
         .onAppear { startAnimation() }
         .onDisappear {
