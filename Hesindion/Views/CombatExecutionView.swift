@@ -368,7 +368,12 @@ struct CombatExecutionView: View {
 
         if outcome == .kritischerPatzer {
             // Confirmed fumble on defense → fumble choice
-            let isShieldParry = action == .parieren && (hero.selectedShield != nil)
+            // The *shield* table is for a parry made with the shield, not for
+            // any parry a shield-carrying hero makes. `weaponName` is the piece
+            // the weapon list rolled with, so it is the answer; reading only
+            // "does the hero carry a shield" sent a sword parry to the Schild
+            // table, whose item results then took the shield out of the loadout.
+            let isShieldParry = action == .parieren && hero.isShieldInHand(weaponName)
             Button {
                 step = .fumbleChoice(action: action, weaponName: weaponName, isShieldParry: isShieldParry)
             } label: {
