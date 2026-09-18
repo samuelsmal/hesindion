@@ -68,6 +68,20 @@
       when: [situation.beengt, { loadout.reach: Lang }]
       effects: [{ add: { target: at, value: -8 } }, { add: { target: pa, value: -8 } }]
 
+- id: DISADV_57
+  name: "Verweichlicht"
+  group: "Nachteil"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: optolith, src: US25003, page: 133 }
+  note: "The Selbstbeherrschung check (TAL_8) a Wundeffekt demands is 2 harder (Optolith: 'Bei der Probe auf Selbstbeherrschung … bei Wundeffekten … eine Erschwernis von 2'). Only that probe — CombatWoundEffectPanel opens TalentProbeModal with isWoundEffectProbe — not every Selbstbeherrschung check."
+  clauses:
+    - kind: passive
+      domains: [talentCheck]
+      when: [situation.woundEffect]
+      effects: [{ add: { target: { talent: TAL_8 }, value: -2 } }]
+
 - id: GRW_zustandsbegrenzung
   name: "Zustände: höchstens −5"
   group: "Grundregel"
@@ -767,7 +781,6 @@
 - { id: DISADV_53, name: "Wilde Magie", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_54, name: "Zauberanfällig", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_55, name: "Zerbrechlich", group: "Nachteil", status: todo, why: not yet read }
-- { id: DISADV_57, name: "Verweichlicht", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_58, name: "Instabiler Zauberer", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_60, name: "Schwache Zaubermelodien", group: "Nachteil", status: todo, why: not yet read }

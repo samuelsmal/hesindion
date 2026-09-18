@@ -444,4 +444,24 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertEqual(DamageModifiers.multiplier(situation: consecratedSwing(daemon: true, opposing: true)), .unchanged, "an ordinary blade")
         XCTAssertEqual(reason("GRW_karmaleObjekte", in: evaluation(consecratedSwing(daemon: true, opposing: true))), .conditionFalse)
     }
+
+    // MARK: - Verweichlicht (DISADV_57)
+
+    private func probe(_ talentId: String, woundEffect: Bool) -> Situation {
+        var s = Situation(hero: hero, domain: .talentCheck)
+        s.talentId = talentId
+        s.isWoundEffectProbe = woundEffect
+        return s
+    }
+
+    func testVerweichlichtMakesTheWundeffektProbeTwoHarder() {
+        own("DISADV_57", "Verweichlicht", list: \.disadvantages)
+        XCTAssertEqual(value("DISADV_57", in: lines(probe(Talent.selbstbeherrschungRuleId, woundEffect: true))), -2)
+        XCTAssertEqual(reason("DISADV_57", in: evaluation(probe(Talent.selbstbeherrschungRuleId, woundEffect: false))), .conditionFalse)
+        XCTAssertEqual(reason("DISADV_57", in: evaluation(probe(Talent.sinnesschaerfeRuleId, woundEffect: true))), .wrongDomain)
+    }
+
+    func testWithoutTheNachteilTheProbeIsUnmodified() {
+        XCTAssertNil(value("DISADV_57", in: lines(probe(Talent.selbstbeherrschungRuleId, woundEffect: true))))
+    }
 }

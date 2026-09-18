@@ -338,6 +338,7 @@ struct CombatTakeDamageView: View {
                     onRolled: { succeeded in probeSucceeded = succeeded },
                     initialModifier: WoundEffectResolver.probeModifier(
                         damage: effectiveDamage, wundschwelle: wundschwelle),
+                    isWoundEffectProbe: true,
                     accent: combatAccent
                 )
             }

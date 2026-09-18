@@ -8,6 +8,9 @@ struct TalentProbeModal: View {
     var onDismiss: () -> Void
     var onRolled: ((Bool) -> Void)? = nil
     var initialModifier: Int = 0
+    /// The Selbstbeherrschung check a Wundeffekt demands (`CombatWoundEffectPanel`),
+    /// which Verweichlicht (DISADV_57) makes harder. A free-standing check is not.
+    var isWoundEffectProbe: Bool = false
     /// The colour the modal wears. A Talentprobe raised from the hero sheet is a
     /// personal-data thing; the same probe raised mid-fight is a combat thing,
     /// and arriving in the sheet's gold read as a different app's dialog.
@@ -21,6 +24,7 @@ struct TalentProbeModal: View {
     private var modifierLines: [ModifierLine] {
         var situation = Situation(hero: hero, domain: .talentCheck)
         situation.talentId = talent.ruleId
+        situation.isWoundEffectProbe = isWoundEffectProbe
         return ModifierEngine.shared.evaluate(context: situation)
     }
 
