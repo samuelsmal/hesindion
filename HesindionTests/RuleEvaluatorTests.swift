@@ -64,6 +64,23 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(e.applied, ["SA_1", "GRW_x"])
     }
 
+    /// No fixture needs it yet — every `needsOwnership` gate today is a rule
+    /// checking its *own* id (`RuleEvaluator.evaluate(_:in:...)`, `ownedTier`) —
+    /// but the vocabulary has `hero.hasRule` for a `when` that gates on owning
+    /// a *different* rule, at a tier: `RuleReachabilityTests.notYetUsed`.
+    func testHeroHasRuleGatesOnOwnershipOfAnotherRuleAtAGivenTier() {
+        let gated: RulePredicate = .heroHasRule(id: "SA_2", minTier: 2)
+        let rules = [rule("GRW_x", [passive([.meleeAttack], when: gated, plusTwoAT)])]
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        XCTAssertEqual(reason("GRW_x", in: evaluate(rules, s)), .conditionFalse, "SA_2 is not owned at all")
+        own("SA_2", tier: 1)
+        XCTAssertEqual(reason("GRW_x", in: evaluate(rules, s)), .conditionFalse, "tier 1 is below minTier 2")
+        hero.combatSpecialAbilities.removeAll { $0.ruleId == "SA_2" }
+        own("SA_2", tier: 2)
+        s = Situation(hero: hero, domain: .meleeAttack)
+        XCTAssertEqual(line("GRW_x", in: evaluate(rules, s)), 2, "tier 2 meets minTier 2")
+    }
+
     func testAClauseInAnotherDomainIsWrongDomainAndAnUnmetConditionIsConditionFalse() {
         own("SA_1"); own("SA_2")
         let rules = [rule("SA_1", [passive([.meleeParry], plusTwoAT)]),
