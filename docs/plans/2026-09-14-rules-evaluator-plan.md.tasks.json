@@ -127,7 +127,7 @@
     {
       "id": 15,
       "subject": "Task 15: Verweichlicht, a talent target in the wound-effect probe",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** DISADV_57 makes the Selbstbeherrschung check of a Wundeffekt 2 harder — a rule the app owned and never applied.\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml` (delete the todo line, add the entry), `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`\n- Modify: `Hesindion/Views/TalentProbeModal.swift:5-12, 21-25`, `Hesindion/Views/CombatDamageViews.swift:334-342`\n- Test: `HesindionTests/RuleFixtureTests.swift`\n\n**Acceptance Criteria:**\n- [ ] Hero with DISADV_57, `talentCheck` on TAL_8 with `isWoundEffectProbe`: −2 (`ruleId == \"DISADV_57\"`); the same check without the wound effect: `conditionFalse`; a wound-effect probe on another talent: `wrongDomain`.\n- [ ] `TalentProbeModal` has `isWoundEffectProbe: Bool = false` and the wound-effect overlay in `CombatDamageViews` passes `true`.\n- [ ] Snapshot: implemented 15, byHand 40, todo 2628.\n\n**Verify:** `make rules-db` prints `implemented 15, byHand 40, noRollEffect 0, todo 2628`; `make test-ui` → `** TEST SUCCEEDED **`.\n\n**Steps:**\n- Fixture rows\n- Run to see them fail\n- The catalog entry\n- The views say which probe it is\n- Rebuild and run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Resources/rules.db\", \"HesindionTests/RuleFixtureTests.swift\", \"specs/data/rules-catalog.snapshot.json\", \"specs/data/rules-catalog.yaml\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"Hero with DISADV_57, `talentCheck` on TAL_8 with `isWoundEffectProbe`: −2 (`ruleId == \\\"DISADV_57\\\"`); the same check without the wound effect: `conditionFalse`; a wound-effect probe on another talent: `wrongDomain`.\", \"`TalentProbeModal` has `isWoundEffectProbe: Bool = false` and the wound-effect overlay in `CombatDamageViews` passes `true`.\", \"Snapshot: implemented 15, byHand 40, todo 2628.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         14
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-18T07:51:58+00:00"
+  "lastUpdated": "2026-09-18T08:12:04+00:00"
 }
