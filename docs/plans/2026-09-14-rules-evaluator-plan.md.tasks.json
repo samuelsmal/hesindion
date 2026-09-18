@@ -109,7 +109,7 @@
     {
       "id": 13,
       "subject": "Task 13: Liegend, the hero's and the opponent's",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** STATE_10 is one entry with both sides: the hero's own −4 AT / −2 VW (the first state to leave `StateModifiers`) and the `opponentAdd` line for a prone opponent.\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml`, `specs/data/rules-catalog.snapshot.json`, `Hesindion/Resources/rules.db`\n- Modify: `Hesindion/Models/StateCatalog.swift:16-26, 167-171` (`StateMechanic.catalog`), `Hesindion/Models/OpponentProfile.swift` (`defenseModifiers` loses the prone line)\n- Modify: `Hesindion/Views/CombatAttackViews.swift:890-892`\n- Test: `HesindionTests/RuleFixtureTests.swift`, `HesindionTests/StateModifiersTests.swift:56-67`\n\n**Acceptance Criteria:**\n- [ ] Hero liegend: AT −4, PA −2, AW −2 with `ruleId == \"STATE_10\"`, not `isZustand`; a talent check unaffected (`wrongDomain`); under `schipIgnoreZustand` nothing.\n- [ ] Opponent prone: one opponent line −2 (`vw`) on `meleeAttack`, and no hero line.\n- [ ] `StateCatalog.liegend.mechanic == .catalog`; `StateModifiers.all` has no `state.liegend`.\n- [ ] The two existing Liegend tests in `StateModifiersTests` pass unchanged.\n- [ ] Snapshot: implemented 13, byHand 40, todo 2629.\n\n**Verify:** `make rules-db` prints `implemented 13, byHand 40, noRollEffect 0, todo 2629`; `make test-ui` → `** TEST SUCCEEDED **`.\n\n**Steps:**\n- Fixture rows\n- Run to see them fail\n- The catalog entry\n- The Swift side\n- Rebuild and run\n- Commit\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/OpponentProfile.swift\", \"Hesindion/Resources/rules.db\", \"HesindionTests/RuleFixtureTests.swift\", \"specs/data/rules-catalog.snapshot.json\", \"specs/data/rules-catalog.yaml\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"Hero liegend: AT −4, PA −2, AW −2 with `ruleId == \\\"STATE_10\\\"`, not `isZustand`; a talent check unaffected (`wrongDomain`); under `schipIgnoreZustand` nothing.\", \"Opponent prone: one opponent line −2 (`vw`) on `meleeAttack`, and no hero line.\", \"`StateCatalog.liegend.mechanic == .catalog`; `StateModifiers.all` has no `state.liegend`.\", \"The two existing Liegend tests in `StateModifiersTests` pass unchanged.\", \"Snapshot: implemented 13, byHand 40, todo 2629.\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         12
@@ -143,5 +143,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-18T06:58:26+00:00"
+  "lastUpdated": "2026-09-18T07:23:25+00:00"
 }
