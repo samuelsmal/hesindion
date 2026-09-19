@@ -300,6 +300,35 @@ final class RuleFixtureTests: XCTestCase {
         var parry = Situation(hero: hero, domain: .meleeParry)
         parry.opponents = s.opponents
         XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(parry)), 2)
+        var dodge = Situation(hero: hero, domain: .meleeDodge)
+        dodge.opponents = s.opponents
+        XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(dodge)), 2)
+    }
+
+    func testVorteilhaftePositionEasesEveryDefence() {
+        for domain in [RuleDomain.meleeParry, .meleeDodge] {
+            var s = Situation(hero: hero, domain: domain)
+            s.opponents.current.advantageousPosition = true
+            XCTAssertEqual(value("GRW_vorteilhaftePosition", in: lines(s)), 2, "\(domain)")
+        }
+    }
+
+    // MARK: - Angriff von hinten (GRW)
+
+    func testAttackedFromBehindCostsFourOnEveryDefence() {
+        for domain in [RuleDomain.meleeParry, .meleeDodge] {
+            var s = Situation(hero: hero, domain: domain)
+            s.opponents.current.fromBehind = true
+            XCTAssertEqual(value("GRW_angriffVonHinten", in: lines(s)), -4, "\(domain)")
+        }
+    }
+
+    func testAttackingFromBehindIsAnOpponentLine() {
+        arm("Schwert", technique: "CT_12", reach: "Mittel")
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.opponents.current.fromBehind = true
+        XCTAssertNil(value("GRW_angriffVonHinten", in: lines(s)), "nothing on the hero's own AT")
+        XCTAssertEqual(evaluation(s).opponentLines.first { $0.ruleId == "GRW_angriffVonHinten" }?.value, -4)
     }
 
     // MARK: - Plänkler-Formation (SA_884)

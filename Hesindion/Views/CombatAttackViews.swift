@@ -609,7 +609,8 @@ struct CombatAnnouncementView: View {
         // they cannot take back.
         if mountedActive, opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
         if zonesActive { parts.append(L(opponent.size.nameKey)) }
-        if opponent.advantageousPosition { parts.append("AT/PA +2") }
+        if opponent.advantageousPosition { parts.append("AT/VW +2") }
+        if opponent.fromBehind { parts.append(L("fromBehind")) }
         if opponent.isProne { parts.append(L("opponent.prone")) }
         if opponent.isSurprised { parts.append(L("trefferzone.targetSurprised")) }
         if opponent.isDaemon { parts.append(L("daemon.target.short")) }
@@ -699,7 +700,7 @@ struct CombatAnnouncementView: View {
                         set: { opponent.isOnFoot = $0 ? true : nil }
                     ),
                     accent: combatAccent,
-                    detail: "AT/PA +2",
+                    detail: "AT/VW +2",
                     subtitle: L("advantageousPosition"),
                     identifier: "combat.opponent.onFoot"
                 )
@@ -712,8 +713,19 @@ struct CombatAnnouncementView: View {
                 title: L("advantageousPosition"),
                 isOn: $opponent.advantageousPosition,
                 accent: combatAccent,
-                detail: "AT/PA +2",
+                detail: "AT/VW +2",
                 identifier: "combat.attack.advantageousPosition"
+            )
+
+            // Angriff von hinten: an opponent line on the announcement (their
+            // defence, subtracted by the GM); the same fact costs the hero's
+            // own VW when it is the hero being attacked (Task 5, defence screen).
+            DSAToggleRow(
+                title: L("fromBehind"),
+                isOn: $opponent.fromBehind,
+                accent: combatAccent,
+                detail: L("fromBehind.attackDetail"),
+                identifier: "combat.attack.fromBehind"
             )
 
             // Status Liegend: the penalty is theirs, on their defence — the
@@ -890,7 +902,7 @@ struct CombatAnnouncementView: View {
         if !lines.isEmpty {
             CombatBreakdownBox(
                 rows: lines.map(BreakdownRow.line),
-                totalValue: "PA \(signed(lines.reduce(0) { $0 + $1.value }))",
+                totalValue: "VW \(signed(lines.reduce(0) { $0 + $1.value }))",
                 totalSource: L("source.opponentDefense"),
                 sectionLabel: L("opponentDefense.label")
             )

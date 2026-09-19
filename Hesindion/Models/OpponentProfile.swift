@@ -106,6 +106,12 @@ struct OpponentProfile: Equatable {
         get { facts[Self.advantageousPositionKey] == true }
         set { facts[Self.advantageousPositionKey] = newValue ? true : nil }
     }
+    /// The attack comes from behind — the hero's, or the one the hero is defending
+    /// against; the domain says which side pays (GRW_angriffVonHinten).
+    var fromBehind: Bool {
+        get { facts[Self.fromBehindKey] == true }
+        set { facts[Self.fromBehindKey] = newValue ? true : nil }
+    }
     /// A demon of the deity this weapon is sworn against — doubled TP. Stated
     /// beside `isDaemon`, and cleared with it when the next announcement opens.
     var isOfOpposingDeity: Bool {
@@ -114,6 +120,7 @@ struct OpponentProfile: Equatable {
     }
 
     static let advantageousPositionKey = FactKey(id: "advantageousPosition", span: .attack)
+    static let fromBehindKey = FactKey(id: "fromBehind", span: .attack)
     static let opposingDeityKey = FactKey(id: "opposingDeity", span: .opponent)
 
     /// `StateCatalog` ids. The status is the opponent's, but the id is the

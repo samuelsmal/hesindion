@@ -126,15 +126,38 @@
   sources:
     - { kind: book, title: "Regelwerk", page: 238 }
     - { kind: book, title: "Regelwerk", page: 240 }
-  note: "+2 AT and +2 PA when the hero is better placed. Two ways to be: the GM says so for this attack (the toggle on the announcement, gm.fact advantageousPosition), or the hero is mounted against a foot fighter (Regelwerk 240, Berittener Kampf — the opponent's onFoot is asked once per fight). Golgariten-Stil (SA_661) raises the AT half. The mounted branch comes first so a rider is asked about the opponent before the GM is asked about the position."
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/GR_Kampf-VorteilhaftePosition.html", fetched: 2026-09-18 }
+  note: "+2 AT and +2 on every defence, Ausweichen included — the page: 'Erleichterungen von jeweils 2 auf Attacke und Verteidigungen'. Two ways to be: the GM says so for this attack (the toggle on the announcement, gm.fact advantageousPosition), or the hero is mounted against a foot fighter (Regelwerk 240, Berittener Kampf — the opponent's onFoot is asked once per fight). Golgariten-Stil (SA_661) raises the AT half. The mounted branch comes first so a rider is asked about the opponent before the GM is asked about the position."
   clauses:
     - kind: passive
-      domains: [meleeAttack, meleeParry]
+      domains: [meleeAttack, meleeParry, meleeDodge]
       when:
         - any:
             - all: [situation.mounted, opponent.onFoot]
             - { gm.fact: { id: advantageousPosition, span: attack } }
-      effects: [{ add: { target: at, value: 2 } }, { add: { target: pa, value: 2 } }]
+      effects: [{ add: { target: at, value: 2 } }, { add: { target: vw, value: 2 } }]
+
+- id: GRW_angriffVonHinten
+  name: "Angriff von hinten"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Regelwerk", page: 238 }
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/GR_Kampf-AngriffVonHinten.html", fetched: 2026-09-18 }
+  text: |
+    Wenn dies geschieht, so ist die Verteidigung des Gegners um -4 erschwert, da er den
+    Angriff nur schlecht sieht oder spät wahrnimmt.
+  note: "One fact per interaction (gm.fact fromBehind, span attack): asked on the announcement when the hero attacks — an opponent line the GM subtracts — and on the defence screen (Task 5) when the hero is attacked, where it costs the hero's own VW."
+  clauses:
+    - kind: passive
+      domains: [meleeParry, meleeDodge]
+      when: [{ gm.fact: { id: fromBehind, span: attack } }]
+      effects: [{ add: { target: vw, value: -4 } }]
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ gm.fact: { id: fromBehind, span: attack } }]
+      effects: [{ opponentAdd: { target: vw, value: -4 } }]
 
 - id: GRW_kampfImWasser
   name: "Kampf im Wasser"
