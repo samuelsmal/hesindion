@@ -668,10 +668,7 @@ struct CombatAnnouncementView: View {
                 captioned(L("opponent.bodyPlan")) {
                     chipRow(BodyPlanKind.allCases, id: \.id, isSelected: { $0 == opponent.bodyPlanKind }) { kind in
                         opponent.bodyPlanKind = kind
-                        if let first = kind.publishedSizes.first,
-                           !kind.publishedSizes.contains(opponent.size) {
-                            opponent.size = first
-                        }
+                        opponent.size = kind.size(keeping: opponent.size)
                     } label: { L($0.nameKey) } identifier: { "combat.opponent.plan.\($0.rawValue)" }
                 }
             }

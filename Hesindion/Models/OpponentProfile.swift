@@ -26,6 +26,14 @@ enum BodyPlanKind: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The size to keep when this plan is picked: `current` if the plan has a
+    /// table for it — compared by table key, so winzig survives wherever klein
+    /// is published — otherwise the plan's first published size.
+    func size(keeping current: CreatureSize) -> CreatureSize {
+        guard let first = publishedSizes.first, !publishedSizes.contains(current.tableSize) else { return current }
+        return first
+    }
+
     func plan(size: CreatureSize) -> BodyPlan {
         switch self {
         case .humanoid:              .humanoid(size)

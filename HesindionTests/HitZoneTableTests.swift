@@ -110,6 +110,15 @@ final class HitZoneTableTests: XCTestCase {
         XCTAssertEqual(HitZoneTable.zones(for: .humanoid(.winzig)), HitZoneTable.zones(for: .humanoid(.klein)))
     }
 
+    /// The announcement's body-plan picker keeps a size the plan has a table
+    /// for (by table key) and otherwise resets to the plan's first published one.
+    func testBodyPlanPickerKeepsOrResetsTheSize() {
+        XCTAssertEqual(BodyPlanKind.humanoid.size(keeping: .winzig), .winzig)
+        XCTAssertEqual(BodyPlanKind.fangarme.size(keeping: .winzig), .mittel)
+        XCTAssertEqual(BodyPlanKind.sechsbeinigMitSchwanz.size(keeping: .klein), .gross)
+        XCTAssertEqual(BodyPlanKind.keineZonen.size(keeping: .winzig), .winzig)
+    }
+
     /// Fangarme is the one table where Torso precedes Kopf — pin the boundaries so a
     /// future "tidy-up" cannot silently normalise the order.
     func testFangarmeBoundaries() {
