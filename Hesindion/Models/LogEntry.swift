@@ -22,6 +22,8 @@ enum CombatActionType: String, Codable {
     case passierschlag
     case flucht
     case opponentDefense
+    /// Status Blutend: 1 SP at the end of a Kampfrunde.
+    case bleeding
 }
 
 // MARK: - Payload Types

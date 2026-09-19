@@ -755,6 +755,13 @@ enum DSAStrings {
         "trefferzone.probe":            "Check: %@ %d",
         "trefferzone.dropWeapon":       "Drop weapon",
         "trefferzone.reminderTitle":    "Hit zone: %@",
+        "bleeding.rollDuration":        "Duration: roll Selbstbeherrschung",
+        "bleeding.roundsLeft":          "%d KR left · 1 SP at the end of each round",
+        "bleeding.unknownDuration":     "duration unknown · 1 SP at the end of each round",
+        "bleeding.heilkunde":           "Heilkunde Wunden +2 (1 action)",
+        "bleeding.heilkunde.effect":    "shortens by QS/2 rounds",
+        "bleeding.log":                 "Bleeding: 1 SP",
+        "state.blutend.removal":        "After 7−QS rounds (Selbstbeherrschung). Heilkunde Wunden +2 (1 action) shortens it by QS/2 rounds.",
     ]
 
     private static let translations: [String: String] = [
@@ -1495,7 +1502,7 @@ enum DSAStrings {
         "state.blutend.name":    "Blutend",
         "state.blutend.effect":  "Am Ende jeder KR 1 SP durch starke Nachblutungen.",
         "state.blutend.cause":   "Tiefe Wunden oder kritische Treffer.",
-        "state.blutend.removal": "Heilkunde (Wunden) +2 oder nach Ablauf der Dauer.",
+        "state.blutend.removal": "Nach 7−QS KR (Selbstbeherrschung). Heilkunde Wunden +2 (1 Aktion) verkürzt um QS/2 KR.",
         "state.blutend.perRound": "1 SP am Ende jeder KR",
 
         "state.brennend.name":    "Brennend",
@@ -1711,6 +1718,12 @@ enum DSAStrings {
         "trefferzone.probe":            "Probe: %@ %d",
         "trefferzone.dropWeapon":       "Waffe ablegen",
         "trefferzone.reminderTitle":    "Trefferzone: %@",
+        "bleeding.rollDuration":        "Dauer: Selbstbeherrschung würfeln",
+        "bleeding.roundsLeft":          "noch %d KR · 1 SP am Ende jeder KR",
+        "bleeding.unknownDuration":     "Dauer unbekannt · 1 SP am Ende jeder KR",
+        "bleeding.heilkunde":           "Heilkunde Wunden +2 (1 Aktion)",
+        "bleeding.heilkunde.effect":    "verkürzt um QS/2 KR",
+        "bleeding.log":                 "Blutend: 1 SP",
     ]
 }
 

@@ -366,6 +366,8 @@ struct LogPanelView: View {
         case .flucht:
             let success = p.outcome == "success" ? "gelungen" : "misslungen"
             return "Flucht — \(success)"
+        case .bleeding:
+            return L("bleeding.log")
         case .opponentDefense:
             switch p.outcome {
             case "parried": return "\(weapon) — Gegner pariert"

@@ -29,6 +29,8 @@ struct CombatRootView: View {
 
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
+    /// The Blutend probe whose modal is up, with the result it has so far.
+    @State private var bleedingSession: BleedingProbeSession? = nil
 
     /// The flags this round is in, as one value — the same one the weapon list
     /// gets, so both ways into a defence are modified alike.
@@ -260,9 +262,21 @@ struct CombatRootView: View {
                 StatesStrip(hero: hero, accent: combatAccent)
                     .padding(.top, 4)
 
-                // Per-round reminders for timed effects (Blutend, Brennend, …).
+                // Blutend has its own panel: the clock, and the probes that set
+                // and shorten it.
+                if hero.hasState(BleedingRules.stateId) {
+                    CombatBleedingPanel(
+                        hero: hero,
+                        accent: combatAccent,
+                        onRollSelbstbeherrschung: { bleedingSession = BleedingProbeSession(probe: .selbstbeherrschung) },
+                        onRollHeilkunde: { bleedingSession = BleedingProbeSession(probe: .heilkunde) }
+                    )
+                }
+
+                // Per-round reminders for timed effects (Brennend, …).
                 let perRoundReminders = hero.activeStates.compactMap { entry -> (StateDefinition, String)? in
-                    guard let key = entry.def.perRoundReminderKey else { return nil }
+                    guard entry.def.id != BleedingRules.stateId,
+                          let key = entry.def.perRoundReminderKey else { return nil }
                     return (entry.def, L(key))
                 }
                 if !perRoundReminders.isEmpty {
@@ -778,6 +792,25 @@ struct CombatRootView: View {
             } // inner VStack
             .adaptiveContentWidth()
             } // ScrollView
+        }
+        // A modal is a sibling of the layout: hung on the whole screen so its
+        // scrim covers the whole screen.
+        .overlay {
+            if let session = bleedingSession {
+                TalentProbeModal(
+                    talent: session.probe == .selbstbeherrschung ? hero.selbstbeherrschung : hero.heilkundeWunden,
+                    hero: hero,
+                    onDismiss: {
+                        // Applied here, once, with the final result: a Schip
+                        // reroll fires `onResult` a second time.
+                        bleedingSession?.finish(on: hero)
+                        bleedingSession = nil
+                    },
+                    onResult: { result in bleedingSession?.record(result) },
+                    initialModifier: session.probe == .heilkunde ? 2 : 0,
+                    accent: combatAccent
+                )
+            }
         }
     }
 

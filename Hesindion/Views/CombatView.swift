@@ -658,7 +658,12 @@ struct CombatView: View {
         .onChange(of: hero.isLiegend) { _, isDown in
             if isDown && mountedActive { mountedActive = false }
         }
-        .onChange(of: roundNumber) { _, _ in
+        .onChange(of: roundNumber) { old, new in
+            // Blutend: 1 SP at the end of each Kampfrunde, logged. Only the
+            // next-round button counts — "Neu" sets the count back to 1.
+            if let entry = Self.roundBleedingEntry(hero: hero, from: old, to: new, combatId: combatId) {
+                modelContext.insert(entry)
+            }
             dualAttackPenaltyActive = false
             twoHandedGripActive = false
             vorstossActiveThisRound = false
@@ -712,6 +717,33 @@ struct CombatView: View {
             }
         }
         } // SplitContentLayout
+    }
+
+    /// The end of Kampfrunde `old` for a bleeding hero: takes the SP
+    /// (`endOfRoundBleeding`) and returns the log entry to insert, or `nil`
+    /// when nothing bled. Only a forward step bleeds: new initiative resets
+    /// the count to 1, and restoring a saved session sets the count to the
+    /// round already persisted on the hero (`activeCombatRound == new`) —
+    /// neither is the end of a round.
+    static func roundBleedingEntry(hero: Hero, from old: Int, to new: Int, combatId: UUID) -> LogEntry? {
+        guard new > old, new != hero.activeCombatRound else { return nil }
+        let lpBefore = hero.derivedValues?.lebensenergie.current ?? 0
+        guard hero.endOfRoundBleeding() > 0 else { return nil }
+        let lpAfter = hero.derivedValues?.lebensenergie.current ?? 0
+        return LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId, round: old,
+                action: .bleeding, weaponName: nil,
+                rollValue: nil, damageDealt: nil, damageTaken: 1,
+                effectiveValue: nil, outcome: nil,
+                schipAction: nil, fumbleTableResult: nil,
+                // The LP actually lost — at 0 LP there is nothing left to
+                // take, and deleting the entry must not give back one.
+                lpChange: lpAfter - lpBefore
+            ),
+            hero: hero
+        )
     }
 
     private func persistCombatState() {
