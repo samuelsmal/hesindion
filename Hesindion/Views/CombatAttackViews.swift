@@ -608,7 +608,7 @@ struct CombatAnnouncementView: View {
         // chip on the lid for a row the player cannot open and clear is a fact
         // they cannot take back.
         if mountedActive, opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
-        if zonesActive { parts.append(L(opponent.size.nameKey)) }
+        if opponent.size != .mittel { parts.append(L(opponent.size.nameKey)) }
         if opponent.advantageousPosition { parts.append("AT/VW +2") }
         if opponent.fromBehind { parts.append(L("fromBehind")) }
         if opponent.isProne { parts.append(L("opponent.prone")) }
@@ -674,18 +674,17 @@ struct CombatAnnouncementView: View {
                         }
                     } label: { L($0.nameKey) } identifier: { "combat.opponent.plan.\($0.rawValue)" }
                 }
+            }
 
-                if !opponent.bodyPlanKind.publishedSizes.isEmpty {
-                    captioned(L("opponent.size")) {
-                        chipRow(
-                            opponent.bodyPlanKind.publishedSizes,
-                            id: \.id,
-                            isSelected: { $0 == opponent.size }
-                        ) { opponent.size = $0 }
-                        label: { L($0.nameKey) }
-                        identifier: { "combat.opponent.size.\($0.rawValue)" }
-                    }
-                }
+            // Größenkategorie. Asked with or without the Trefferzonen rule: a
+            // winzig target costs the attack −4 (GRW_groessenkategorie). A size
+            // the body plan has no table for rolls on the nearest one.
+            captioned(L("opponent.size")) {
+                CreatureSizeChipRow(
+                    size: $opponent.size,
+                    detail: { $0 == .winzig ? "AT −4" : nil },
+                    identifierPrefix: "combat.opponent.size"
+                )
             }
 
             // Only a rider can be better placed for being mounted, so the
@@ -983,6 +982,14 @@ struct CombatWeaponSelectionView: View {
     let opponent: OpponentProfile
     var onDismiss: () -> Void
 
+    /// What the attacker's size leaves a parry (`SizeCategoryRules`). Only a
+    /// parry is restricted; the attack path lists everything.
+    private var allowedDefenses: Set<SizeCategoryRules.Defense> {
+        SizeCategoryRules.allowedDefenses(against: opponent.size)
+    }
+    private var weaponParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.weaponParry) }
+    private var shieldParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.shieldParry) }
+
     private var headerLabel: String {
         switch action {
         case .angriff:    return L("attack")
@@ -1030,8 +1037,9 @@ struct CombatWeaponSelectionView: View {
                     // again by the modifier engine on the next screen, so a
                     // dual-wield attack was penalised twice.
 
-                    // Main weapon option
-                    if let w = hero.selectedWeapon {
+                    // Main weapon option. Against a groß or riesig attacker a
+                    // weapon cannot parry (SizeCategoryRules): only the shield.
+                    if !weaponParryBlocked, let w = hero.selectedWeapon {
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
                         weaponRow(
                             name: w.name,
@@ -1041,7 +1049,7 @@ struct CombatWeaponSelectionView: View {
                             note: nil,
                             isOffHand: false
                         )
-                    } else if hero.selectedWeaponName == "Raufen" {
+                    } else if !weaponParryBlocked, hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
                         weaponRow(
@@ -1055,7 +1063,7 @@ struct CombatWeaponSelectionView: View {
                     }
 
                     // Off-hand weapon (dual-wield)
-                    if let offW = hero.selectedOffHandWeapon {
+                    if !weaponParryBlocked, let offW = hero.selectedOffHandWeapon {
                         combatSectionLabel("\(L("offHandWeapon")) (\(statLabel))")
                         weaponRow(
                             name: offW.name,
@@ -1068,7 +1076,7 @@ struct CombatWeaponSelectionView: View {
                     }
 
                     // Shield option
-                    if let s = hero.selectedShield {
+                    if !shieldParryBlocked, let s = hero.selectedShield {
                         combatSectionLabel("\(L("shieldOption")) (\(statLabel))")
                         weaponRow(
                             name: s.name,

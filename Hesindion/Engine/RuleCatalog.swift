@@ -39,6 +39,7 @@ indirect enum RulePredicate: Equatable {
     case situationWater([WaterDepth])
     case situationWoundEffect
     case opponentReach(WeaponReach)
+    case opponentSize(CreatureSize)
     case opponentOnFoot
     case opponentState(String)
     case opponentType(RuleVocabulary.OpponentType)
@@ -207,6 +208,8 @@ extension RulePredicate: Decodable {
             self = .situationWoundEffect
         case .opponentReach:
             self = .opponentReach(try c.named(WeaponReach.self, "value", "reach"))
+        case .opponentSize:
+            self = .opponentSize(try c.named(CreatureSize.self, "value", "size"))
         case .opponentOnFoot:
             self = .opponentOnFoot
         case .opponentState:

@@ -14,6 +14,8 @@ import SwiftUI
 /// there.
 struct CombatActionButton: View {
     let title: String
+    /// A second, smaller line under the title — why a disabled button is.
+    var subtitle: String? = nil
     var icon: String? = nil
     /// The accent by default. `Color.dsaDark` for a secondary route offered
     /// beside a primary one.
@@ -46,14 +48,23 @@ struct CombatActionButton: View {
 
     private var content: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon {
-                    Image(systemName: icon)
+            VStack(spacing: 2) {
+                HStack(spacing: 8) {
+                    if let icon {
+                        Image(systemName: icon)
+                    }
+                    Text(title)
                 }
-                Text(title)
+                .font(.dsaHeading(.title3))
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.dsaBody(.caption2))
+                        .opacity(0.85)
+                }
             }
-            .font(.dsaHeading(.title3))
-            .foregroundStyle(.white)
+            // `dsaDisabled` is the system background, so white on it is
+            // invisible; a disabled button has something to say (the reason).
+            .foregroundStyle(isEnabled ? Color.white : Color.dsaDisabledLabel)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(isEnabled ? fill : Color.dsaDisabled)

@@ -386,6 +386,8 @@ enum RuleEvaluator {
             return s.isWoundEffectProbe ? .yes : .no
         case .opponentReach(let reach):
             return s.opponent.reach == reach ? .yes : .no
+        case .opponentSize(let size):
+            return s.opponent.size == size ? .yes : .no
         case .opponentOnFoot:
             switch s.opponent.isOnFoot {
             case true?: return .yes

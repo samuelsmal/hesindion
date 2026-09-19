@@ -593,4 +593,20 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), "−2 + 2 is still dropped at hüfthoch")
         XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))), "Unterwasserkampf already removes it; SA_163 must not add +2 on top")
     }
+
+    // MARK: - Größenkategorie (GRW)
+
+    private func attacking(_ size: CreatureSize) -> Situation {
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.opponents.current.size = size
+        s.opponents.current.reach = .kurz   // keep GRW_reichweite out of the lines
+        return s
+    }
+
+    func testAWinzigTargetCostsFourOnTheAttack() {
+        XCTAssertEqual(value("GRW_groessenkategorie", in: lines(attacking(.winzig))), -4)
+        for size in [CreatureSize.klein, .mittel, .gross, .riesig] {
+            XCTAssertNil(value("GRW_groessenkategorie", in: lines(attacking(size))), "\(size)")
+        }
+    }
 }

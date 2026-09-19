@@ -188,6 +188,20 @@
       when: [{ situation.water: [huefthoch] }]
       effects: [{ add: { target: at, value: -2 } }, { add: { target: pa, value: -2 } }]
 
+- id: GRW_groessenkategorie
+  name: "Größenkategorie"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/groessenkategorie.html", fetched: 2026-09-18 }
+  note: "Winzig −4 AT for the hero's attack. The defence restrictions against a groß (shield parry or dodge) or riesig (dodge only) attacker are SizeCategoryRules.allowedDefenses, read by CombatDefenseSetupView and the weapon list — the vocabulary cannot forbid a defence. The opponent's size is asked per interaction (OpponentProfile.size)."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack]
+      when: [{ opponent.size: winzig }]
+      effects: [{ add: { target: at, value: -4 } }]
+
 - id: GRW_karmaleObjekte
   name: "Karmale Objekte"
   group: "Fokusregel"

@@ -89,6 +89,13 @@
       "Mittel",
       "Lang"
     ],
+    "size" : [
+      "winzig",
+      "klein",
+      "mittel",
+      "gross",
+      "riesig"
+    ],
     "span" : [
       "hero",
       "opponent",
@@ -205,6 +212,15 @@
 
       ],
       "value" : "enum:reach"
+    },
+    "opponent.size" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "enum:size"
     },
     "opponent.state" : {
       "args" : {

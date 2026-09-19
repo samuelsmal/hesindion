@@ -51,4 +51,27 @@ final class CombatDefenseSetupViewSnapshotTests: XCTestCase {
 
         assertAllVariants(of: view, named: "dodgeFromBehind")
     }
+
+    /// A riesig attacker: no parry at all. The button says so, disabled, and
+    /// offers Ausweichen instead.
+    @MainActor
+    func testParryAgainstARiesigAttacker() throws {
+        let container = try TestData.makeContainer()
+        let hero = try TestData.importBoronmir(into: container)
+        var opponent = OpponentProfile()
+        opponent.size = .riesig
+
+        let view = CombatDefenseSetupView(
+            hero: hero,
+            action: .parieren,
+            situation: CombatSituation(),
+            mountedActive: false,
+            opponent: .constant(opponent),
+            step: .constant(.defenseSetup(.parieren)),
+            onDismiss: {}
+        )
+        .modelContainer(container)
+
+        assertAllVariants(of: view, named: "parryAgainstRiesig")
+    }
 }

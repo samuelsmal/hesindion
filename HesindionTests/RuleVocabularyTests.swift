@@ -41,6 +41,7 @@ final class RuleVocabularyTests: XCTestCase {
         XCTAssertEqual(enums["reach"], WeaponReach.allCases.map(\.rawValue))
         XCTAssertEqual(enums["zone"], HitZone.allCases.map(\.rawValue))
         XCTAssertEqual(enums["water"], ["huefthoch", "unterWasser"])
+        XCTAssertEqual(enums["size"], ["winzig", "klein", "mittel", "gross", "riesig"])
         XCTAssertEqual(enums["kind"], RuleVocabulary.ClauseKind.allCases.map(\.rawValue))
         XCTAssertEqual(root["version"] as? Int, RuleVocabulary.version)
     }

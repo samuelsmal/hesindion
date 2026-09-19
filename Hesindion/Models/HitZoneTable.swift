@@ -1,10 +1,29 @@
 import Foundation
 
+/// Größenkategorie (Regelwerk). `winzig` has no Trefferzonen table of its own;
+/// `tableSize` is the one it rolls on.
 enum CreatureSize: String, CaseIterable, Identifiable {
-    case klein, mittel, gross, riesig
+    case winzig, klein, mittel, gross, riesig
 
     var id: String { rawValue }
     var nameKey: String { "creatureSize.\(rawValue)" }
+
+    /// The size a Trefferzonen table is looked up by: nothing is printed for
+    /// winzig, so it uses the klein tables.
+    var tableSize: CreatureSize { self == .winzig ? .klein : self }
+}
+
+extension BodyPlan {
+    /// The same plan with its size as the tables key it (`CreatureSize.tableSize`).
+    var tableKeyed: BodyPlan {
+        switch self {
+        case .humanoid(let size):              .humanoid(size.tableSize)
+        case .vierbeinig(let size):            .vierbeinig(size.tableSize)
+        case .sechsbeinigMitSchwanz(let size): .sechsbeinigMitSchwanz(size.tableSize)
+        case .fangarme(let size):              .fangarme(size.tableSize)
+        case .keineZonen:                      .keineZonen
+        }
+    }
 }
 
 /// Body plans with a published Trefferzonen table.
@@ -71,8 +90,9 @@ enum HitZoneTable {
 
     /// Unlisted size combinations fall back to the nearest published table
     /// (`.gross` for six-limbed, `.mittel` for the rest) rather than trapping.
+    /// Winzig rolls on the klein table (`CreatureSize.tableSize`).
     private static func ranges(for plan: BodyPlan) -> [ZoneRange] {
-        switch plan {
+        switch plan.tableKeyed {
         case .humanoid(.klein):   humanoidKlein
         case .humanoid(.gross), .humanoid(.riesig): humanoidGross
         case .humanoid:           humanoidMittel

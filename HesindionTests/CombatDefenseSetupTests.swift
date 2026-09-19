@@ -27,7 +27,7 @@ final class CombatDefenseSetupTests: XCTestCase {
 
     func testParryWithAWeaponRollsItsPAPlusTheLines() {
         armWithSword()
-        let step = DefenseRoute.next(.parieren, hero: hero, lines: [line(2)])
+        let step = DefenseRoute.next(.parieren, hero: hero, size: .mittel, lines: [line(2)])
         if case .execution(let action, let name, let value, _, _, let lines, _, _, _, _) = step {
             XCTAssertEqual(action, .parieren)
             XCTAssertEqual(name, "Schwert")
@@ -42,7 +42,7 @@ final class CombatDefenseSetupTests: XCTestCase {
         armWithSword()
         hero.shields = [Shield(name: "Großschild", damage: "1W6+1", at: 6, pa: 11, reach: "Kurz", structurePoints: 30, weight: 6)]
         hero.selectedShieldName = "Großschild"
-        let step = DefenseRoute.next(.parieren, hero: hero, lines: [line(2)])
+        let step = DefenseRoute.next(.parieren, hero: hero, size: .mittel, lines: [line(2)])
         if case .weaponSelection(let action) = step {
             XCTAssertEqual(action, .parieren)
         } else {
@@ -51,7 +51,7 @@ final class CombatDefenseSetupTests: XCTestCase {
     }
 
     func testParryWithNoWeaponGoesToTheWeaponList() {
-        let step = DefenseRoute.next(.parieren, hero: hero, lines: [])
+        let step = DefenseRoute.next(.parieren, hero: hero, size: .mittel, lines: [])
         if case .weaponSelection(.parieren) = step {} else {
             XCTFail("expected .weaponSelection, got \(step.persistenceKey)")
         }
@@ -69,11 +69,60 @@ final class CombatDefenseSetupTests: XCTestCase {
             wundschwelle: ComputedValue(value: 5, bonus: 0, max: 5),
             schicksalspunkte: MutableResourceValue(current: 3, bonus: 0, max: 3)
         )
-        let step = DefenseRoute.next(.ausweichen, hero: hero, lines: [line(-4)])
+        let step = DefenseRoute.next(.ausweichen, hero: hero, size: .mittel, lines: [line(-4)])
         if case .execution(let action, _, let value, _, _, _, _, _, _, _) = step {
             XCTAssertEqual(action, .ausweichen)
             XCTAssertEqual(value, 2)
         } else {
+            XCTFail("expected .execution, got \(step.persistenceKey)")
+        }
+    }
+
+    // MARK: - Größenkategorie
+
+    private func holdShield() {
+        hero.shields = [Shield(name: "Großschild", damage: "1W6+1", at: 6, pa: 11, reach: "Kurz", structurePoints: 30, weight: 6)]
+        hero.selectedShieldName = "Großschild"
+    }
+
+    func testAGrossAttackerIsParriedWithTheShieldFromTheWeaponList() {
+        armWithSword()
+        holdShield()
+        XCTAssertTrue(DefenseRoute.parryPossible(hero: hero, size: .gross))
+        let step = DefenseRoute.next(.parieren, hero: hero, size: .gross, lines: [])
+        if case .weaponSelection(.parieren) = step {} else {
+            XCTFail("expected .weaponSelection, got \(step.persistenceKey)")
+        }
+        XCTAssertNil(DefenseRoute.baseValue(.parieren, hero: hero, size: .gross))
+    }
+
+    func testAGrossAttackerCannotBeParriedWithAWeapon() {
+        armWithSword()
+        XCTAssertFalse(DefenseRoute.parryPossible(hero: hero, size: .gross))
+        XCTAssertNil(DefenseRoute.baseValue(.parieren, hero: hero, size: .gross))
+        let step = DefenseRoute.next(.parieren, hero: hero, size: .gross, lines: [])
+        if case .defenseSetup(.ausweichen) = step {} else {
+            XCTFail("expected .defenseSetup(.ausweichen), got \(step.persistenceKey)")
+        }
+    }
+
+    func testARiesigAttackerCannotBeParriedEvenWithAShield() {
+        armWithSword()
+        holdShield()
+        XCTAssertFalse(DefenseRoute.parryPossible(hero: hero, size: .riesig))
+    }
+
+    func testSmallerAttackersAreParriedAsBefore() {
+        armWithSword()
+        for size in [CreatureSize.winzig, .klein, .mittel] {
+            XCTAssertTrue(DefenseRoute.parryPossible(hero: hero, size: size), "\(size)")
+            XCTAssertEqual(DefenseRoute.baseValue(.parieren, hero: hero, size: size), 8, "\(size)")
+        }
+    }
+
+    func testADodgeIsAlwaysPossible() {
+        let step = DefenseRoute.next(.ausweichen, hero: hero, size: .riesig, lines: [])
+        if case .execution(.ausweichen, _, _, _, _, _, _, _, _, _) = step {} else {
             XCTFail("expected .execution, got \(step.persistenceKey)")
         }
     }

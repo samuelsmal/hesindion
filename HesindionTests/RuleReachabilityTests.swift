@@ -143,6 +143,7 @@ final class RuleReachabilityTests: XCTestCase {
         case .situationWater: set.insert(.situationWater)
         case .situationWoundEffect: set.insert(.situationWoundEffect)
         case .opponentReach: set.insert(.opponentReach)
+        case .opponentSize: set.insert(.opponentSize)
         case .opponentOnFoot: set.insert(.opponentOnFoot)
         case .opponentState: set.insert(.opponentState)
         case .opponentType: set.insert(.opponentType)
@@ -409,6 +410,8 @@ final class RuleReachabilityTests: XCTestCase {
             s.isWoundEffectProbe = true
         case .opponentReach(let reach):
             s.opponents.current.reach = reach
+        case .opponentSize(let size):
+            s.opponents.current.size = size
         case .opponentOnFoot:
             s.opponents.current.isOnFoot = true
         case .opponentState(let id):

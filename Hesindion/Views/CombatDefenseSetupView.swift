@@ -5,12 +5,25 @@ import SwiftUI
 /// Where a defence goes once its questions are answered. Pure, so the routing
 /// the root used to do inline is tested without a view.
 enum DefenseRoute {
-    static func next(_ action: CombatAction, hero: Hero, lines: [ModifierLine]) -> CombatStep {
+    /// Whether the hero can parry an attacker of this size at all: a weapon
+    /// parry where the Größenkategorie allows one, or else the shield in hand
+    /// where it allows that (`SizeCategoryRules`).
+    static func parryPossible(hero: Hero, size: CreatureSize) -> Bool {
+        let allowed = SizeCategoryRules.allowedDefenses(against: size)
+        return allowed.contains(.weaponParry) || (allowed.contains(.shieldParry) && hero.selectedShield != nil)
+    }
+
+    /// A parry the attacker's size rules out goes to Ausweichen instead; the
+    /// screen disables its button first, so this is the fallback, not the path.
+    /// Against a groß attacker the parry is the shield's, picked on the weapon
+    /// list, which shows only the shield then.
+    static func next(_ action: CombatAction, hero: Hero, size: CreatureSize, lines: [ModifierLine]) -> CombatStep {
         let total = lines.reduce(0) { $0 + $1.value }
         if action == .ausweichen {
             let aw = hero.derivedValues?.ausweichen.value ?? 0
             return .execution(.ausweichen, name: "Ausweichen", attributeValue: aw + total, damageFormula: nil, note: nil, modifierLines: lines)
         }
+        guard parryPossible(hero: hero, size: size) else { return .defenseSetup(.ausweichen) }
         if hero.isDualWielding || hero.selectedShield != nil { return .weaponSelection(.parieren) }
         if let w = hero.selectedWeapon {
             // The grip's −1 is a modifier line, so the base must not carry it too.
@@ -25,9 +38,10 @@ enum DefenseRoute {
 
     /// The value the defence is rolled against before its lines, or `nil`
     /// when the weapon list decides it per piece (a shield, two weapons, or no
-    /// weapon chosen yet).
-    static func baseValue(_ action: CombatAction, hero: Hero) -> Int? {
+    /// weapon chosen yet) or no parry is possible against this size.
+    static func baseValue(_ action: CombatAction, hero: Hero, size: CreatureSize) -> Int? {
         if action == .ausweichen { return hero.derivedValues?.ausweichen.value ?? 0 }
+        guard parryPossible(hero: hero, size: size) else { return nil }
         if hero.isDualWielding || hero.selectedShield != nil { return nil }
         if let w = hero.selectedWeapon { return w.pa + hero.passiveShieldPABonus }
         if hero.selectedWeaponName == "Raufen" {
@@ -62,6 +76,20 @@ struct CombatDefenseSetupView: View {
 
     private var isAusweichen: Bool { action == .ausweichen }
 
+    /// A parry the attacker's size rules out (`SizeCategoryRules`).
+    private var blocked: Bool {
+        !isAusweichen && !DefenseRoute.parryPossible(hero: hero, size: opponent.size)
+    }
+
+    /// What the attacker's size leaves, shown under the size chips.
+    private var restriction: String? {
+        switch opponent.size {
+        case .gross:  L("size.shieldOnly")
+        case .riesig: L("size.dodgeOnly")
+        case .winzig, .klein, .mittel: nil
+        }
+    }
+
     private var lines: [ModifierLine] {
         situation.defenseModifiers(hero: hero, isAusweichen: isAusweichen, opponents: OpponentRoster([opponent]))
     }
@@ -77,6 +105,26 @@ struct CombatDefenseSetupView: View {
             ScrollView {
                 VStack(spacing: 8) {
                     combatSectionLabel(L("defense.attacker.label"))
+
+                    // Größenkategorie: a groß attacker leaves shield parry or
+                    // dodge, a riesig one only dodge.
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L("opponent.size"))
+                            .font(.dsaBody(.caption2))
+                            .foregroundStyle(.secondary)
+                        CreatureSizeChipRow(
+                            size: $opponent.size,
+                            identifierPrefix: "combat.defense.size"
+                        )
+                        // On a blocked parry the button says it instead.
+                        if !isAusweichen, !blocked, let restriction {
+                            Text(restriction)
+                                .font(.dsaBody(.caption2))
+                                .foregroundStyle(combatAccent)
+                                .accessibilityIdentifier("combat.defense.sizeRestriction")
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     DSAToggleRow(
                         title: L("advantageousPosition"),
@@ -113,10 +161,23 @@ struct CombatDefenseSetupView: View {
                     breakdown
 
                     CombatActionButton(
-                        title: L("defense.roll"),
-                        identifier: "combat.defense.continue"
+                        title: blocked ? L("size.parryImpossible") : L("defense.roll"),
+                        subtitle: blocked ? restriction : nil,
+                        identifier: "combat.defense.continue",
+                        isEnabled: !blocked
                     ) {
-                        step = DefenseRoute.next(action, hero: hero, lines: lines)
+                        step = DefenseRoute.next(action, hero: hero, size: opponent.size, lines: lines)
+                    }
+
+                    if blocked {
+                        // `.defenseSetup`, not `.root`: the answers above survive.
+                        CombatActionButton(
+                            title: L("defense.switchToDodge"),
+                            fill: Color.dsaDark,
+                            identifier: "combat.defense.switchToDodge"
+                        ) {
+                            step = .defenseSetup(.ausweichen)
+                        }
                     }
                 }
                 .adaptiveContentWidth()
@@ -132,7 +193,7 @@ struct CombatDefenseSetupView: View {
     private var breakdown: some View {
         let label = isAusweichen ? "AW" : "PA"
         let sum = lines.reduce(0) { $0 + $1.value }
-        let base = DefenseRoute.baseValue(action, hero: hero)
+        let base = DefenseRoute.baseValue(action, hero: hero, size: opponent.size)
         return CombatBreakdownBox(
             baseValue: base.map { "\($0)" } ?? "—",
             baseSource: L("source.basis"),
@@ -143,5 +204,51 @@ struct CombatDefenseSetupView: View {
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("combat.defense.breakdown")
+    }
+}
+
+// MARK: - CreatureSizeChipRow
+
+/// The five Größenkategorien as a chip row, each with an optional detail line
+/// (the announcement prints what a size costs the hero's attack). Shared by
+/// the announcement and the defence screen.
+struct CreatureSizeChipRow: View {
+    @Binding var size: CreatureSize
+    var options: [CreatureSize] = CreatureSize.allCases
+    var detail: (CreatureSize) -> String? = { _ in nil }
+    let identifierPrefix: String
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { chips }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) { chips }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .dsaOptionGroup()
+    }
+
+    private var chips: some View {
+        ForEach(options) { option in
+            let selected = option == size
+            Button { size = option } label: {
+                VStack(spacing: 2) {
+                    Text(L(option.nameKey))
+                        .font(.dsaHeading(.caption))
+                    if let text = detail(option) {
+                        Text(text)
+                            .font(.dsaMono(.caption2, emphasis: true))
+                            .opacity(selected ? 0.85 : 0.6)
+                    }
+                }
+                .foregroundStyle(selected ? .white : .primary)
+                .frame(maxWidth: .infinity, minHeight: 22)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .background(selected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                .dsaBox(.flush)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("\(identifierPrefix).\(option.rawValue)")
+        }
     }
 }

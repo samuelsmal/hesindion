@@ -28,6 +28,7 @@ enum RuleVocabulary {
         case situationWater = "situation.water"
         case situationWoundEffect = "situation.woundEffect"
         case opponentReach = "opponent.reach"
+        case opponentSize = "opponent.size"
         case opponentOnFoot = "opponent.onFoot"
         case opponentState = "opponent.state"
         case opponentType = "opponent.type"
@@ -80,6 +81,7 @@ enum RuleVocabulary {
         .situationWater: Signature(value: "list:water"),
         .situationWoundEffect: Signature(),
         .opponentReach: Signature(value: "enum:reach"),
+        .opponentSize: Signature(value: "enum:size"),
         .opponentOnFoot: Signature(),
         .opponentState: Signature(value: "string"),
         .opponentType: Signature(value: "enum:opponentType"),
@@ -113,6 +115,7 @@ enum RuleVocabulary {
                 "per": Per.allCases.map(\.rawValue),
                 "reach": WeaponReach.allCases.map(\.rawValue),
                 "zone": HitZone.allCases.map(\.rawValue),
+                "size": CreatureSize.allCases.map(\.rawValue),
                 "water": WaterDepth.allCases.filter { $0 != .none }.map(\.rawValue),
                 "opponentType": OpponentType.allCases.map(\.rawValue),
                 "kind": ClauseKind.allCases.map(\.rawValue),
