@@ -196,10 +196,17 @@
   status: implemented
   reviewed: null
   sources: [{ kind: optolith }]
-  note: "Eases GRW_kampfImWasser by 2 on AT and PA."
+  note: "Eases GRW_kampfImWasser by 2 on AT and PA. Gated off under water when the hero also owns Unterwasserkampf (SA_418) or Wasserlebewesen (ADV_71): those already remove the underwater penalty entirely (modifyRule set: 0), and the evaluator applies every modifyRule's set before its add, so an unconditional +2 here would land on top of the 0 and read as a +2 bonus instead of nil. At hüfthoch neither SA_418 nor ADV_71 has anything to say, so the ease still applies there."
   clauses:
     - kind: passive
       domains: [meleeAttack, meleeParry]
+      when:
+        - not:
+            all:
+              - { situation.water: [unterWasser] }
+              - any:
+                  - { hero.hasRule: { id: SA_418 } }
+                  - { hero.hasRule: { id: ADV_71 } }
       effects:
         - { modifyRule: { id: GRW_kampfImWasser, target: at, add: 2 } }
         - { modifyRule: { id: GRW_kampfImWasser, target: pa, add: 2 } }

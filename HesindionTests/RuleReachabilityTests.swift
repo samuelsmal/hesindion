@@ -85,25 +85,23 @@ final class RuleReachabilityTests: XCTestCase {
                       "clause B alone, unmounted, must not fire — the reduction removes A's mask and lets B's own failure show")
     }
 
-    /// Vocabulary the fifteen `implemented` entries do not reach yet. Not a
+    /// Vocabulary the `implemented` entries do not reach yet. Not a
     /// license to grow the vocabulary further without saying why — each entry
     /// here names the rule that will use it and the test that, meanwhile,
     /// exercises its interpreter directly so it is not untested in between.
     ///
-    /// - `.heroHasRule`: every `implemented` entry today gates on its *own*
-    ///   ownership (`needsOwnership`); nothing yet gates on owning a
-    ///   *different* rule at a tier, the way e.g. a prerequisite chain would.
-    ///   `RuleEvaluatorTests.testHeroHasRuleGatesOnOwnershipOfAnotherRuleAtAGivenTier`
-    ///   exercises the interpreter (`RuleEvaluator.test(_:_:)`, `.heroHasRule` case).
+    /// Nothing is allow-listed here today: `.heroHasRule` used to be, until
+    /// `SA_163` gated its ease off under water with `not { all: [situation.water
+    /// is unterWasser, any: [hero.hasRule SA_418, hero.hasRule ADV_71]] }` —
+    /// the first entry to gate on owning a *different* rule at a tier, and the
+    /// first to use `.not` (see that case in
+    /// `satisfy(_:hero:situation:branch:cursor:rule:)` below for what "negate"
+    /// was taught to mean).
     ///
-    /// Out of this test's scope entirely, not tracked here: `RuleVocabulary.Combinator`
-    /// (`.all` and `.any` have generator support below; `.not` does not — no
-    /// entry uses it today, and it fails loudly instead of silently doing
-    /// nothing — see `satisfy(_:hero:situation:branch:cursor:rule:)`'s `.not` case),
-    /// `RuleVocabulary.Target.aw` and `RuleVocabulary.Per` (targets and `per`
-    /// values are not independently checked for coverage, only predicates and
-    /// effects are).
-    private let notYetUsed: Set<RuleVocabulary.Predicate> = [.heroHasRule]
+    /// Out of this test's scope entirely, not tracked here: `RuleVocabulary.Target.aw`
+    /// and `RuleVocabulary.Per` (targets and `per` values are not independently
+    /// checked for coverage, only predicates and effects are).
+    private let notYetUsed: Set<RuleVocabulary.Predicate> = []
     private let notYetUsedEffects: Set<RuleVocabulary.Effect> = []
 
     /// The other direction: the vocabulary is scoped to what the fixtures need,
@@ -347,10 +345,18 @@ final class RuleReachabilityTests: XCTestCase {
             let index = parts.indices.contains(chosen) ? chosen : 0
             satisfy(parts[index], hero: hero, situation: &s, branch: branch, cursor: &cursor, rule: ruleId)
         case .not:
-            // No entry uses `.not` today (`RuleVocabularyTests`/the catalog
-            // scan agree); when one does, this must be taught what "negate"
-            // means for that predicate rather than silently doing nothing.
-            XCTFail("the generator cannot negate yet: \(ruleId)")
+            // Satisfied by doing nothing: this generator only ever *sets*
+            // facts to make a predicate true (a fresh `Hero`/`Situation` owns
+            // nothing and every round flag defaults to its off/none case), so
+            // a predicate nobody has asserted anything for is already false —
+            // which is exactly what `not` needs. This holds for every
+            // predicate in the vocabulary today (SA_163's `not { all: [water
+            // is unterWasser, any hasRule SA_418/ADV_71] }` among them: water
+            // defaults to `.none` and neither rule is owned by default). It
+            // would stop holding for a predicate whose *unset* state reads
+            // true — none exist yet — and that case must be taught here
+            // rather than silently assumed.
+            break
         case .heroHasRule(let id, let minTier):
             if (hero.ownedRuleTier(id) ?? 0) < minTier {
                 hero.combatSpecialAbilities.removeAll { $0.ruleId == id }

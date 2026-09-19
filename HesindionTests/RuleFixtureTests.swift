@@ -542,4 +542,26 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))))
         XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), -2, "only under water")
     }
+
+    /// A realistic build owns both: SA_418 requires ADV_71, and SA_163 needs
+    /// only KK 13. Without the gate on SA_163's clause, the evaluator's fixed
+    /// order (every modifyRule's `set` before its `add`) would apply ADV_71's
+    /// `set: 0` first and then SA_163's `+2` on top, reading as a +2 *bonus*
+    /// for fighting underwater — the opposite of what "the penalty does not
+    /// apply" means.
+    func testKampfImWasserDoesNotStackWithWasserlebewesen() {
+        own("SA_163", "Kampf im Wasser", list: \.generalSpecialAbilities)
+        own("ADV_71", "Wasserlebewesen", list: \.advantages)
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), "−2 + 2 is still dropped at hüfthoch")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))), "Wasserlebewesen already removes it; SA_163 must not add +2 on top")
+    }
+
+    func testKampfImWasserDoesNotStackWithUnterwasserkampf() {
+        own("SA_163", "Kampf im Wasser", list: \.generalSpecialAbilities)
+        own("SA_418", "Unterwasserkampf", list: \.generalSpecialAbilities)
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), "−2 + 2 is still dropped at hüfthoch")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))), "Unterwasserkampf already removes it; SA_163 must not add +2 on top")
+    }
 }
