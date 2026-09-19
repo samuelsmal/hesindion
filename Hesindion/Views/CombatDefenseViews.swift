@@ -1220,8 +1220,22 @@ struct CombatFluchtView: View {
     @State private var opponentCount: Int = 1
     @State private var outcome: FluchtOutcome? = nil
     @State private var showingProbe = false
+    /// Guards `logFlucht` against firing twice: `SkillCheckModal.emitResult`
+    /// runs once from `roll()` and again from `reroll()` (the Schip reroll
+    /// offered on a plain failure), so `onRolled` can update `outcome` more
+    /// than once for a single Flucht. The log entry itself is written only
+    /// once, with whichever outcome was final when the probe closed.
+    @State private var fluchtLogged = false
 
     private enum FluchtOutcome { case success, failure }
+
+    /// Whether the probe's close should write the Flucht log entry now — a
+    /// final outcome exists and nothing has logged it yet. Free-standing
+    /// (rather than inline in the `onDismiss` closure) so the guard itself is
+    /// unit-testable without a SwiftUI harness.
+    static func shouldLogOutcome(hasOutcome: Bool, alreadyLogged: Bool) -> Bool {
+        hasOutcome && !alreadyLogged
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1381,10 +1395,20 @@ struct CombatFluchtView: View {
                 TalentProbeModal(
                     talent: hero.koerperbeherrschung,
                     hero: hero,
-                    onDismiss: { showingProbe = false },
+                    onDismiss: {
+                        showingProbe = false
+                        // A Schip reroll fires `onRolled` a second time before
+                        // the modal closes, so the log is written here — once,
+                        // on close, with whichever outcome was final — rather
+                        // than from `onRolled` itself.
+                        if Self.shouldLogOutcome(hasOutcome: outcome != nil, alreadyLogged: fluchtLogged),
+                           let outcome {
+                            logFlucht(succeeded: outcome == .success)
+                            fluchtLogged = true
+                        }
+                    },
                     onRolled: { succeeded in
                         outcome = succeeded ? .success : .failure
-                        logFlucht(succeeded: succeeded)
                     },
                     initialModifier: -opponentCount,
                     accent: combatAccent
