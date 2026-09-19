@@ -31,6 +31,12 @@ enum UITest {
     /// which uses the no-generator roll overloads, so ADR-0003's injectable RNG —
     /// enough for unit tests — cannot reach it. Without a script, a branching
     /// flow can only be rolled for repeatedly and hoped at.
+    /// `orientation` is set on the simulator before `app.launch()` and defaults
+    /// to `.portrait` — simulator orientation persists across app launches
+    /// within a run, so without this every test after one that rotates the
+    /// device (or a run that stops mid-test) starts, and can be left, in
+    /// landscape. A test that needs landscape passes it here instead of calling
+    /// `XCUIDevice.shared.orientation` itself.
     @MainActor
     static func launch(
         path: String? = nil,
@@ -45,8 +51,10 @@ enum UITest {
         unconsecrate: [String] = [],
         freshCombat: Bool = false,
         mounted: Bool = false,
-        plaenkler: String? = nil
+        plaenkler: String? = nil,
+        orientation: UIDeviceOrientation = .portrait
     ) -> XCUIApplication {
+        XCUIDevice.shared.orientation = orientation
         let app = XCUIApplication()
         app.launchArguments = [seedArgument, "debug", "load_default"]
         if let path { app.launchArguments += ["path", path] }

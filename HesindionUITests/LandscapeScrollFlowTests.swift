@@ -23,9 +23,8 @@ final class LandscapeScrollFlowTests: XCTestCase {
     @MainActor
     func testNeueAktionIsReachableInLandscapeOnTheDamageScreen() {
         continueAfterFailure = false
-        XCUIDevice.shared.orientation = .landscapeLeft
 
-        let app = UITest.launch(path: "combat", diceScript: Self.plainRoll)
+        let app = UITest.launch(path: "combat", diceScript: Self.plainRoll, orientation: .landscapeLeft)
 
         // --- Drive a plain attack through to the opponent-defence/damage
         // screen, the same route `DamageBreakdownFlowTests` uses.
