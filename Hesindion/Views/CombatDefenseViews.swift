@@ -602,6 +602,10 @@ struct CombatFumbleChoiceView: View {
     @State private var pendingIndestructible: (entry: FumbleTableEntry, roll: Int, item: String)? = nil
     /// What the dice said, once a "Ja" turned it into another result.
     @State private var indestructibleRolled: (item: String, title: String)? = nil
+    /// Guards the weapon's own Waffennachteil (`WeaponFumbleExtras`) against
+    /// firing again on a re-render or a return from back navigation: the
+    /// screen's `onAppear` can run more than once for the same confirmed Patzer.
+    @State private var weaponExtrasApplied = false
 
     private enum FumbleChoiceKind { case simpleDamage, table }
 
@@ -693,6 +697,18 @@ struct CombatFumbleChoiceView: View {
                     initialModifier: probe.modifier,
                     accent: combatAccent
                 )
+            }
+        }
+        // The weapon's own Waffennachteil (e.g. the Rabenschnabel's Betäubung):
+        // fires once for this confirmed Patzer, guarded so a re-render or a
+        // return from back navigation does not stack it again.
+        .onAppear {
+            if !weaponExtrasApplied {
+                weaponExtrasApplied = true
+                for extra in WeaponFumbleExtras.extraStates(weaponName: weaponName, action: action) {
+                    hero.setStateLevel(extra.stateId, level: hero.level(of: extra.stateId) + extra.levels)
+                    record(value: "+\(extra.levels)", source: String(format: L("fumble.weaponExtra.betaeubung"), weaponName))
+                }
             }
         }
     }

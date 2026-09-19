@@ -273,6 +273,34 @@ final class FumbleEffectTests: XCTestCase {
         XCTAssertEqual(damage.total, (damage.rolls.reduce(0, +) + 3) * 2)
     }
 
+    // MARK: - WeaponFumbleExtras (issue #14: the Rabenschnabel's Waffennachteil)
+
+    /// "Nach einem bestätigten Patzer bei einer Attacke erhält der Träger
+    /// zusätzlich 1 Stufe Betäubung." — only on an attack, only for this weapon.
+    func testTheRabenschnabelAddsBetaeubungOnlyOnAConfirmedAttackPatzer() {
+        let onAttack = WeaponFumbleExtras.extraStates(weaponName: "Rabenschnabel", action: .angriff)
+        XCTAssertEqual(onAttack.count, 1)
+        XCTAssertEqual(onAttack.first?.stateId, "betaeubung")
+        XCTAssertEqual(onAttack.first?.levels, 1)
+
+        XCTAssertTrue(
+            WeaponFumbleExtras.extraStates(weaponName: "Rabenschnabel", action: .parieren).isEmpty,
+            "a shield-parry (or any) Patzer with the Rabenschnabel is not an attack")
+        XCTAssertTrue(
+            WeaponFumbleExtras.extraStates(weaponName: "Langschwert", action: .angriff).isEmpty,
+            "only the Rabenschnabel carries this Waffennachteil")
+    }
+
+    /// Ties the Swift table to the imported text (Task 12's `EquipmentEntry`):
+    /// the online Regelwiki is the golden truth (owner decision 2026-09-18).
+    func testRabenschnabelDisadvantageAgreesWithTheCatalog() throws {
+        let entry = try XCTUnwrap(RulesDatabase.shared.equipment(named: "Rabenschnabel"))
+        let disadvantage = try XCTUnwrap(entry.disadvantage)
+        XCTAssertTrue(
+            disadvantage.contains("Betäubung"),
+            "the imported Waffennachteil should still mention Betäubung: \(disadvantage)")
+    }
+
     // MARK: - Helpers
 
     private func makeHero() -> Hero {
