@@ -520,6 +520,8 @@ struct CombatView: View {
             case .passierschlag:
                 CombatPassierschlagView(
                     hero: hero,
+                    situation: situation,
+                    opponent: opponent,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,

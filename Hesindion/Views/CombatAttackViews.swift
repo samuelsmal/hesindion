@@ -381,6 +381,8 @@ struct CombatAnnouncementView: View {
         if hero.hasVorstoss { maneuvers.append(.vorstoss) }
         if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
         if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
+        // Everyone may strike a Passierschlag (GRW); it goes to its own screen.
+        maneuvers.append(.passierschlag)
         return maneuvers
     }
 
@@ -429,7 +431,11 @@ struct CombatAnnouncementView: View {
                     VStack(spacing: 8) {
                     ForEach(availableManeuvers, id: \.self) { maneuver in
                         let isSelected = selectedManeuver == maneuver
-                        Button { selectedManeuver = maneuver } label: {
+                        Button {
+                            selectedManeuver = maneuver
+                            // A Passierschlag takes no manoeuvre, so no zone either.
+                            if maneuver == .passierschlag { targetZone = nil }
+                        } label: {
                             // Selection is the accent fill, the same signal the zone
                             // and reach chips use. The radio circle that used to sit
                             // here was a second, different way of saying the same
@@ -477,7 +483,7 @@ struct CombatAnnouncementView: View {
                     // Trefferzone (Fokus-Regel). The zones on offer are the
                     // opponent's, not the hero's: a four-legged opponent has no
                     // Arme, and a 1W20 against them lands on their own table.
-                    if zonesActive, opponent.bodyPlanKind != .keineZonen {
+                    if zonesActive, opponent.bodyPlanKind != .keineZonen, selectedManeuver != .passierschlag {
                         CombatZonePicker(
                             selection: $targetZone,
                             targetIsSurprised: $opponent.isSurprised,
@@ -573,6 +579,8 @@ struct CombatAnnouncementView: View {
     }
 
     private func proceed() {
+        // Its own screen rolls it; the opponent's answers stay on CombatView.
+        if selectedManeuver == .passierschlag { step = .passierschlag; return }
         activeManeuver = selectedManeuver
         if selectedManeuver.preventsDefense {
             vorstossActiveThisRound = true

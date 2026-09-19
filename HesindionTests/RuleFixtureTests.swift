@@ -343,8 +343,9 @@ final class RuleFixtureTests: XCTestCase {
     func testPlaenklerFormationIsAnOfferUntilTheFormationDecides() {
         own("SA_884", "Plänkler-Formation")
         let e = evaluation(formation(.meleeAttack, bonus: nil))
-        XCTAssertEqual(e.offers.map(\.ruleId), ["SA_884"])
-        guard case .choice(let options)? = e.offers.first?.shape else { return XCTFail("not a choice") }
+        // GRW_passierschlag is offered on every melee attack as well.
+        XCTAssertEqual(e.offers.map(\.ruleId).filter { $0 != "GRW_passierschlag" }, ["SA_884"])
+        guard case .choice(let options)? = e.offers.first(where: { $0.ruleId == "SA_884" })?.shape else { return XCTFail("not a choice") }
         XCTAssertEqual(options, [.add(target: .at, value: 1, per: nil), .add(target: .vw, value: 1, per: nil)])
         XCTAssertEqual(reason("SA_884", in: e), .offerNotTaken)
     }
@@ -352,7 +353,7 @@ final class RuleFixtureTests: XCTestCase {
     func testTheChosenHalfAppliesAndTheOtherDoesNot() {
         own("SA_884", "Plänkler-Formation")
         XCTAssertEqual(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))), 1)
-        XCTAssertTrue(evaluation(formation(.meleeAttack, bonus: .at)).offers.isEmpty, "a taken choice is no longer offered")
+        XCTAssertFalse(evaluation(formation(.meleeAttack, bonus: .at)).offers.contains { $0.ruleId == "SA_884" }, "a taken choice is no longer offered")
         XCTAssertNil(value("SA_884", in: lines(formation(.meleeParry, bonus: .at))))
         XCTAssertNil(value("SA_884", in: lines(formation(.meleeDodge, bonus: .at))))
         XCTAssertEqual(reason("SA_884", in: evaluation(formation(.meleeParry, bonus: .at))), .wrongDomain)
@@ -378,7 +379,7 @@ final class RuleFixtureTests: XCTestCase {
     func testWuchtschlagIsOfferedUpToTheOwnedTier() {
         own("SA_67", "Wuchtschlag", tier: 2)
         let e = evaluation(swing(.meleeAttack, .normal))
-        XCTAssertEqual(e.offers.map(\.shape), [.tiers(2)])
+        XCTAssertEqual(e.offers.filter { $0.ruleId == "SA_67" }.map(\.shape), [.tiers(2)], "GRW_passierschlag is offered beside it")
         XCTAssertEqual(reason("SA_67", in: e), .offerNotTaken)
     }
 
@@ -441,6 +442,22 @@ final class RuleFixtureTests: XCTestCase {
         own("SA_67", "Wuchtschlag", tier: 3)
         XCTAssertEqual(lines(swing(.meleeAttack, .wuchtschlag(tier: 2))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag II")
         XCTAssertEqual(DamageModifiers.lines(situation: swing(.damage, .wuchtschlag(tier: 1))).first { $0.ruleId == "SA_67" }?.source, "Wuchtschlag I")
+    }
+
+    // MARK: - Passierschlag (GRW)
+
+    /// "Es handelt sich um eine um −4 erschwerte Attacke." An offer without
+    /// tiers: the line is "Passierschlag", no numeral.
+    func testAPassierschlagIsAnAttackAtMinusFour() {
+        own("SA_67", "Wuchtschlag", tier: 2)
+        let swung = lines(swing(.meleeAttack, .passierschlag))
+        XCTAssertEqual(value("GRW_passierschlag", in: swung), -4)
+        XCTAssertEqual(swung.first { $0.ruleId == "GRW_passierschlag" }?.source, "Passierschlag")
+        XCTAssertNil(value("SA_67", in: swung), "no Wuchtschlag was announced")
+        XCTAssertEqual(swung.reduce(0) { $0 + $1.value }, -4)
+        XCTAssertNil(value("GRW_passierschlag", in: lines(swing(.meleeAttack, .normal))), "offered, not applied, on a plain attack")
+        XCTAssertEqual(reason("GRW_passierschlag", in: evaluation(swing(.meleeAttack, .normal))), .offerNotTaken)
+        XCTAssertNil(value("GRW_passierschlag", in: DamageModifiers.lines(situation: swing(.damage, .passierschlag))), "the TP are the weapon's")
     }
 
     // MARK: - Karmale Objekte (Fokusregel)

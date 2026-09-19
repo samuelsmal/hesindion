@@ -150,6 +150,7 @@ struct Situation {
         case .vorstoss:                [CombatAbility.vorstoss.rawValue: 1]
         case .schildspalter:           [CombatAbility.schildspalter.rawValue: 1]
         case .sturmangriff:            [CombatAbility.berittenerKampf.rawValue: 1]
+        case .passierschlag:           ["GRW_passierschlag": 1]
         }
     }
 

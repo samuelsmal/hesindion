@@ -9,6 +9,9 @@ enum CombatManeuver: Equatable, Hashable {
     case vorstoss
     case schildspalter
     case sturmangriff
+    /// A free attack, no action, no defence against it (GRW). Its AT −4 is
+    /// the catalog's (`GRW_passierschlag`), not this enum's.
+    case passierschlag
 }
 
 extension CombatManeuver {
@@ -24,6 +27,7 @@ extension CombatManeuver {
         case .vorstoss: return 2
         case .schildspalter: return 0
         case .sturmangriff: return 0
+        case .passierschlag: return 0
         }
     }
 
@@ -53,6 +57,7 @@ extension CombatManeuver {
         case .vorstoss: return L("maneuver.vorstoss")
         case .schildspalter: return L("maneuver.schildspalter")
         case .sturmangriff: return L("maneuver.sturmangriff")
+        case .passierschlag: return L("passierschlag")
         }
     }
 
@@ -73,6 +78,7 @@ extension CombatManeuver {
         case .vorstoss: return L("source.vorstoss")
         case .schildspalter: return ""
         case .sturmangriff: return L("source.sturmangriff")
+        case .passierschlag: return L("source.passierschlag")
         }
     }
 
@@ -87,6 +93,8 @@ extension CombatManeuver {
             return "⚠ \(L("noDefenseWarning"))"
         case .schildspalter:
             return L("targetShield")
+        case .passierschlag:
+            return L("passierschlag.info")
         default:
             return nil
         }

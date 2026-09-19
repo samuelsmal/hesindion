@@ -92,9 +92,18 @@
 - id: GRW_passierschlag
   name: "Passierschlag"
   group: "Grundregel"
-  status: byHand
-  pointer: { file: Hesindion/Views/CombatDefenseViews.swift, symbol: CombatPassierschlagView }
-  note: "A flow, not a modifier: CombatStep.passierschlag follows a critical parry (AGENTS.md, defence flow), or the Kritische Erfolge table replaces it (ADR-0011). CombatPassierschlagView is the screen; CombatStep.passierschlag routes to it after a critical parry."
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/GR_Kampf-Passierschlag.html", fetched: 2026-09-18 }
+  text: |
+    Ein Passierschlag ist ein Nahkampfangriff, der keine Handlung erfordert und auf den nicht
+    mit einer Verteidigung reagiert werden kann. Es handelt sich um eine um -4 erschwerte Attacke.
+  note: "Announced from the Manöver list (CombatManeuver.passierschlag → Situation.announced) or reached after a critical parry; CombatPassierschlagView rolls it with no critical success, no Patzer and no defence (Swift, a flow). Suffered by the hero after a failed Flucht (Task 8): the take-damage screen."
+  clauses:
+    - kind: offer
+      domains: [meleeAttack]
+      effects: [{ add: { target: at, value: -4 } }]
 
 - id: GRW_zonenaufschlag
   name: "Zonenaufschlag"

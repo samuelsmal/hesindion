@@ -1420,6 +1420,11 @@ struct CombatFluchtView: View {
 
 struct CombatPassierschlagView: View {
     let hero: Hero
+    /// The fight's round flags (mounted, water, …) and the opponent as the
+    /// announcement left them: the Passierschlag is rolled with every modifier
+    /// the hero has, not a bare AT −4.
+    let situation: CombatSituation
+    let opponent: OpponentProfile
     @Binding var step: CombatStep
     var onDismiss: () -> Void
     let combatId: UUID
@@ -1433,18 +1438,29 @@ struct CombatPassierschlagView: View {
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
 
-    // AT -4, using selected weapon
+    // The selected weapon; the −4 is the catalog's GRW_passierschlag.
     private var weapon: MeleeWeapon? { hero.selectedWeapon }
     private var weaponName: String { weapon?.name ?? "Raufen" }
-    private var baseAT: Int {
-        let raw = weapon?.at ?? (hero.combatTechniques.first { $0.name == "Raufen" }?.at ?? 0)
-        return raw - 4  // Passierschlag penalty
-    }
     private var damageFormula: String { weapon?.damage ?? "1W6" }
+
+    private func situation(_ domain: RuleDomain) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round = situation
+        s.opponents = OpponentRoster([opponent])
+        s.loadoutName = weaponName
+        s.maneuver = .passierschlag
+        return s
+    }
+    private var rawAT: Int { weapon?.at ?? (hero.combatTechniques.first { $0.name == "Raufen" }?.at ?? 0) }
+    private var lines: [ModifierLine] { ModifierEngine.shared.evaluate(context: situation(.meleeAttack)) }
+    private var effectiveAT: Int { rawAT + lines.reduce(0) { $0 + $1.value } }
+    private var effectiveDamage: String {
+        DamageModifiers.applied(to: damageFormula, lines: DamageModifiers.lines(situation: situation(.damage))) ?? damageFormula
+    }
 
     private var isHit: Bool {
         guard let roll = finalRoll else { return false }
-        return roll <= baseAT  // No criticals: 1 is just a success, 20 is just a miss
+        return roll <= effectiveAT  // No criticals: 1 is just a success, 20 is just a miss
     }
 
     var body: some View {
@@ -1490,19 +1506,16 @@ struct CombatPassierschlagView: View {
                 // Info bar
                 infoBox(L("passierschlag.info"))
 
-                // Effective AT value
-                HStack {
-                    Text("AT \(baseAT)")
-                        .font(.dsaMono(.body, emphasis: true))
-                    Spacer()
-                    Text(L("source.passierschlag"))
-                        .font(.dsaBody(.caption2))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.dsaDark)
-                .foregroundStyle(.white)
+                // Weapon AT, every line the hero's modifiers make (the −4
+                // among them), the total the die is rolled against.
+                CombatBreakdownBox(
+                    baseValue: "\(rawAT)",
+                    baseSource: L("source.basis"),
+                    lines: lines,
+                    totalValue: "AT \(effectiveAT)",
+                    totalSource: L("source.effective"),
+                    sectionLabel: L("attack.label")
+                )
 
                 // Dice box
                 diceBox
@@ -1515,7 +1528,7 @@ struct CombatPassierschlagView: View {
 
                     if isHit {
                         // Damage section
-                        if let parsed = DamageFormula.parse(damageFormula) {
+                        if let parsed = DamageFormula.parse(effectiveDamage) {
                             damageSection(parsed: parsed)
                         }
 
@@ -1714,7 +1727,7 @@ struct CombatPassierschlagView: View {
                 action: .passierschlag, weaponName: weaponName,
                 rollValue: finalRoll,
                 damageDealt: nil, damageTaken: nil,
-                effectiveValue: baseAT,
+                effectiveValue: effectiveAT,
                 outcome: isHit ? "hit" : "miss",
                 schipAction: nil, fumbleTableResult: nil,
                 lpChange: 0

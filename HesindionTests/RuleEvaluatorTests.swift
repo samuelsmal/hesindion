@@ -311,6 +311,19 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(reason("SA_1", in: evaluate(rules, s)), .netZero)
     }
 
+    /// A roman numeral is how the rulebook names an ability's tier. An offer
+    /// without tiers (the Passierschlag) has none to name, so its line is the
+    /// rule's name alone.
+    func testAnOfferWithoutTiersIsNamedWithoutANumeral() {
+        let untiered = [rule("GRW_x", name: "Passierschlag", [offer([.meleeAttack], tiers: nil, [.add(target: .at, value: -4, per: nil)])])]
+        let tiered = [rule("GRW_x", name: "Passierschlag", [offer([.meleeAttack], tiers: .owned, [.add(target: .at, value: -4, per: nil)])])]
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        s.announced["GRW_x"] = 1
+        XCTAssertEqual(evaluate(untiered, s).lines.first?.name, "Passierschlag")
+        XCTAssertEqual(line("GRW_x", in: evaluate(untiered, s)), -4)
+        XCTAssertEqual(evaluate(tiered, s).lines.first?.name, "Passierschlag I")
+    }
+
     // MARK: - The rest of the sheet
 
     func testOwnedRulesTheCatalogDoesNotImplementAreListedWithTheirStatus() {
