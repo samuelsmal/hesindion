@@ -115,6 +115,20 @@ def create_schema(conn: sqlite3.Connection):
 
         -- The catalog table is created by catalog.write_catalog_table (dropped and recreated on every build).
 
+        CREATE TABLE IF NOT EXISTS equipment (
+            id               TEXT PRIMARY KEY,
+            name             TEXT NOT NULL,
+            gr               INTEGER,
+            combat_technique TEXT,
+            damage           TEXT,
+            at               INTEGER,
+            pa               INTEGER,
+            reach            INTEGER,
+            note             TEXT,
+            advantage        TEXT,
+            disadvantage     TEXT
+        );
+
         CREATE TABLE IF NOT EXISTS spell_details (
             rule_id            TEXT PRIMARY KEY REFERENCES rules(id),
             check_attr_1       TEXT,
@@ -748,6 +762,40 @@ def import_blessings(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {len(de_data)} blessings")
 
 
+def _text(s):
+    return s.replace("<br>", "\n").strip() if isinstance(s, str) else None
+
+
+def import_equipment(conn: sqlite3.Connection, source: Path):
+    de_by_id = {e["id"]: e for e in load_yaml(source / "de-DE" / "Equipment.yaml")}
+    count = 0
+    for u in load_yaml(source / "univ" / "Equipment.yaml"):
+        if u.get("gr") not in (1, 2):
+            continue
+        de = de_by_id.get(u["id"])
+        if not de:
+            continue
+        versions = de.get("versions") or []
+        if isinstance(versions, dict):
+            versions = [versions]
+        note = next((_text(v["note"]) for v in versions if v.get("note")), None)
+        rich = [v for v in versions if v.get("advantage") or v.get("disadvantage")]
+        adv = _text(rich[-1].get("advantage")) if rich else None
+        dis = _text(rich[-1].get("disadvantage")) if rich else None
+        sp = u.get("special") or {}
+        damage = None
+        if sp.get("damageDiceNumber"):
+            flat = sp.get("damageFlat") or 0
+            damage = f"{sp['damageDiceNumber']}W{sp.get('damageDiceSides', 6)}" + (f"{flat:+d}" if flat else "")
+        conn.execute(
+            "INSERT INTO equipment VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (u["id"], de["name"], u["gr"], sp.get("combatTechnique"), damage,
+             sp.get("at"), sp.get("pa"), sp.get("reach"), note, adv, dis))
+        count += 1
+    conn.commit()
+    return count
+
+
 def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
     """Extract language (SA_29) and script (SA_27) select options into LANG_/SCRIPT_ entries."""
     de_data = load_yaml(source / "de-DE" / "SpecialAbilities.yaml")
@@ -847,6 +895,9 @@ def main():
         import_special_abilities(conn, args.source)
         print("Importing languages and scripts...")
         import_languages_and_scripts(conn, args.source)
+        print("Importing equipment...")
+        count = import_equipment(conn, args.source)
+        print(f"  Imported {count} equipment templates")
         print("Importing skills...")
         import_skills(conn, args.source)
 
