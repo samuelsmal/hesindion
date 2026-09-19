@@ -111,4 +111,12 @@ final class StringsCoverageTests: XCTestCase {
             assertLocalized(origin.removalKey)
         }
     }
+
+    /// Boronmir owns Berittener Kampf (SA_43), not Sturmangriff (SA_62). The
+    /// app's manoeuvre is Sturmangriff zu Pferd, and only its German label was
+    /// wrong — it read "Sturmangriff", which is easily confused with the SF.
+    func testMountedChargeIsNotConfusedWithTheSFSturmangriff() {
+        XCTAssertEqual(L("maneuver.sturmangriff"), "Sturmangriff zu Pferd")
+        XCTAssertEqual(L("source.sturmangriff"), "Sturmangriff zu Pferd")
+    }
 }
