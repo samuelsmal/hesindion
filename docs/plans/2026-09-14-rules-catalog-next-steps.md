@@ -62,6 +62,10 @@ Step 3 (views read the Evaluation): the announcement builds manoeuvres from `off
 
 The per-task reviews left a list of step-3 questions in the evaluator plan's "Follow-ups recorded during execution" section (per-render evaluation cost, display rank of lines, opponent-line labels, offers without a span, `Evaluation.questions` without a reader, off toggle = not stated, the Schip and statuses); read it before designing step 3.
 
+## Vocabulary grown since (2026-09-18 combat bug round)
+
+The predicates `situation.water` (`none | huefthoch | unterWasser`, `GRW_kampfImWasser`/`SA_163`/`SA_418`/`ADV_71`) and `opponent.size` (`CreatureSize`, now with `winzig`; `GRW_groessenkategorie`) and the target `rs` (opponent-only, always via `opponentAdd`, `ITEMTPL_19`'s Dornenspitze) joined the closed vocabulary. An offer's line carries a roman numeral only when its clause has `tiers`: `GRW_passierschlag` is a plain `-4 AT` offer and reads "Passierschlag", not "Passierschlag I"; Wuchtschlag's `tiers: owned` still reads "Wuchtschlag I/II" (`RuleEvaluator`, the `clause.tiers != nil` check). Catalog ids are no longer only `rules.db` ability rows: an id starting `ITEMTPL_` (Optolith's own weapon templates, e.g. `ITEMTPL_19` Rabenschnabel) is validated by id and name against the new `equipment` table instead, and — unlike every other id — is optional, since a weapon with no template entry is fine. The step-3 open question "literal toggle labels not tied to the catalog" (`AT/PA +2` on the advantageous-position toggles, `Parieren −2` on the prone toggle, `TP ×2` on the opposing-deity toggle) now also covers `weaponOffer.<id>` — a weapon-template offer's own toggle text (`weaponOffer.ITEMTPL_19` "Dornenspitze") is written by hand in `Strings.swift`, the same as the others, even though the line it produces once taken is labelled from the rule's `name`; step 3 should draw all of them from the evaluation together.
+
 ## Small chores, independent of step 2
 
 - **Weapon-order snapshot flake**: `CombatViewSnapshotTests.testPreparation` swaps the two melee rows between runs because `hero.meleeWeapons` is an unordered SwiftData to-many. Stable sort in `CombatLoadoutPicker` (and wherever weapons are listed), delete the 12 references, re-record with `make test-ui-record-only ONLY=HesindionTests/CombatViewSnapshotTests`. Listed in AGENTS.md as the fifth intermittent.
@@ -69,7 +73,7 @@ The per-task reviews left a list of step-3 questions in the evaluator plan's "Fo
 - `catalog.note` conflates `note` and `why`; `RulesCatalogTests.testCoverageDoesNotGoBackwards` hard-codes 45 (could read the snapshot JSON); `build_db.py` validates args with `assert`.
 - The player-facing labels "Automatisch angewendet" and "Von der App umgesetzt" both mean "the app handles it"; decide whether the screen should collapse them.
 - Advantages and disadvantages carry `group: "Vorteil"` / `"Nachteil"`; Optolith's Allgemein/Magisch/Karmal split for them is not in `groups` (seed rows for `advantage`/`disadvantage` if the authoring pass wants it).
-- Issue #14 (no equipment table) means item predicates (`Rabenschnabel`, `Großschild`) match by name string.
+- Issue #14's equipment table landed (Task 11 of the combat bug round: `rules.db`'s `equipment` table, `EquipmentEntry`), but item predicates (`Rabenschnabel`, `Großschild`) still match by name string — the table itself is looked up by loadout *name* too (`Hero.equipmentEntry(forLoadoutNamed:)`), since names, not ids, are what the loadout and `applies_with: { loadout.weapon: { item: … } }` identify a weapon by.
 - `reviewed: null` on all fifteen implemented entries: read each against its page and put your name and the date on it.
 
 ## Working in this repo, learned the hard way
