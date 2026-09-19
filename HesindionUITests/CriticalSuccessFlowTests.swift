@@ -129,6 +129,7 @@ final class CriticalSuccessFlowTests: XCTestCase {
         let parry = app.button(containing: "Parieren")
         XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         parry.tap()
+        continueDefense(app)
 
         let diceBox = app.otherElements["combat.execution.diceBox"]
         XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Parry execution screen not shown")

@@ -80,6 +80,7 @@ final class FumbleTableFlowTests: XCTestCase {
         let parry = app.buttons["combat.parry"]
         XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         parry.tap()
+        continueDefense(app)
 
         let paCalculation = app.descendants(matching: .any)["combat.execution.breakdown"]
         XCTAssertTrue(paCalculation.waitForExistence(timeout: UITest.timeout), "No parry calculation")
@@ -261,6 +262,7 @@ final class FumbleTableFlowTests: XCTestCase {
 
         // --- (a) The next parry names it and shows the −2 …
         app.buttons["combat.parry"].tap()
+        continueDefense(app)
         assertStumbleRow(app, present: true, "The next roll does not name the Stolpern")
         captureScreenshot(app, named: "44-fumble-stolpern-next-roll")
 
@@ -268,6 +270,7 @@ final class FumbleTableFlowTests: XCTestCase {
         backFromParryExecution(app)
 
         app.buttons["combat.parry"].tap()
+        continueDefense(app)
         assertStumbleRow(
             app, present: true,
             "Opening the roll screen and leaving it spent the Stolpern — nothing was rolled")
@@ -293,6 +296,7 @@ final class FumbleTableFlowTests: XCTestCase {
 
         // --- (c) And the one after it does not: the roll above consumed it.
         app.buttons["combat.parry"].tap()
+        continueDefense(app)
         assertStumbleRow(app, present: false, "The Stolpern was charged twice")
     }
 
@@ -659,6 +663,7 @@ final class FumbleTableFlowTests: XCTestCase {
         let parry = app.buttons["combat.parry"]
         XCTAssertTrue(parry.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         parry.tap()
+        continueDefense(app)
 
         let diceBox = app.otherElements["combat.execution.diceBox"]
         XCTAssertTrue(diceBox.waitForExistence(timeout: UITest.timeout), "Parry roll screen not shown")

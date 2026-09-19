@@ -189,7 +189,19 @@ extension XCTestCase {
         add(attachment)
     }
 
-    /// Taps "Parieren" on the combat root and, when a shield in the loadout
+    /// Past the defence screen Parieren and Ausweichen open on the combat root:
+    /// its questions about the attacker are left unanswered and "Würfeln"
+    /// routes on to the roll (or, with a shield, to the weapon list).
+    @MainActor
+    func continueDefense(_ app: XCUIApplication) {
+        let roll = app.buttons["combat.defense.continue"]
+        XCTAssertTrue(roll.waitForExistence(timeout: UITest.timeout), "Defence screen not shown")
+        XCTAssertTrue(app.scrollUntilHittable(roll), "\"Würfeln\" is not reachable on the defence screen")
+        roll.tap()
+    }
+
+    /// Taps "Parieren" on the combat root, continues past the defence screen,
+    /// and, when a shield in the loadout
     /// sends the parry through the weapon list, taps the row for the named
     /// weapon. Shared by `WeaponStyleFlowTests.launchMountedParry()` and
     /// `DefenseModifierFlowTests.parry(_:expectingWeaponList:)`.
@@ -198,6 +210,7 @@ extension XCTestCase {
         let parryButton = app.buttons["combat.parry"]
         XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         parryButton.tap()
+        continueDefense(app)
 
         guard expectingWeaponList else { return }
         let weaponRow = app.buttons["combat.weaponRow.\(weapon)"]

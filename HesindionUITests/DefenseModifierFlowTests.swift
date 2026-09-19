@@ -143,6 +143,39 @@ final class DefenseModifierFlowTests: XCTestCase {
         )
     }
 
+    /// Owner report #3: a defence asks who is attacking. "Angriff von hinten"
+    /// on the defence screen costs the dodge 4, shows it before the roll, and
+    /// the roll screen charges the same line.
+    @MainActor
+    func testTheDefenceScreenAsksAboutTheAttacker() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.plainRoll)
+
+        let dodge = app.buttons["combat.dodge"]
+        XCTAssertTrue(dodge.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        dodge.tap()
+
+        let fromBehind = app.buttons["combat.defense.fromBehind"]
+        XCTAssertTrue(fromBehind.waitForExistence(timeout: UITest.timeout), "Defence screen not shown")
+        XCTAssertTrue(app.buttons["combat.defense.advantageousPosition"].exists, "No Vorteilhafte Position toggle")
+        XCTAssertFalse(app.buttons["combat.defense.onFoot"].exists, "The on-foot question is for a rider only")
+        fromBehind.tap()
+
+        let setupBox = app.descendants(matching: .any)["combat.defense.breakdown"]
+        XCTAssertTrue(setupBox.waitForExistence(timeout: UITest.timeout), "No defence calculation")
+        let setupRow = setupBox.descendants(matching: .any)["combat.breakdown.row.Angriff von hinten"]
+        XCTAssertTrue(setupRow.waitForExistence(timeout: UITest.timeout), "Angriff von hinten not on the defence screen")
+        XCTAssertTrue(setupRow.staticTexts["-4"].exists, "Angriff von hinten should cost the dodge 4")
+
+        continueDefense(app)
+
+        let rollBox = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(rollBox.waitForExistence(timeout: UITest.timeout), "No dodge calculation")
+        let rollRow = rollBox.descendants(matching: .any)["combat.breakdown.row.Angriff von hinten"]
+        XCTAssertTrue(rollRow.waitForExistence(timeout: UITest.timeout), "The roll lost the defence screen's answer")
+        XCTAssertTrue(rollRow.staticTexts["-4"].exists, "The roll does not charge Angriff von hinten")
+    }
+
     // MARK: - Navigation
 
     @MainActor

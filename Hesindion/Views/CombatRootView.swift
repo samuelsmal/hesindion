@@ -20,9 +20,9 @@ struct CombatRootView: View {
     @Binding var waterDepth: WaterDepth
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
-    /// The other side, for the defences rolled straight from this screen. A
-    /// plain value, not a binding: the root reads the opponent, it never states
-    /// anything about them — the announcement screen is where that is done.
+    /// The other side, for the defence cost printed under the buttons. A plain
+    /// value, not a binding: the root reads the opponent, it never states
+    /// anything about them — the announcement and the defence screen do.
     let opponent: OpponentProfile
     var onDismiss: () -> Void
     var castingSpell: (spell: HeroSpell, startRound: Int, totalRounds: Int, modifierLines: [ModifierLine])? = nil
@@ -65,7 +65,7 @@ struct CombatRootView: View {
     /// own kind: parries and dodges are tracked apart.
     ///
     /// Read off `buildDefenseModifiers(isAusweichen:)` — the same lines the
-    /// button's own tap hands to the roll (`GRW_mehrfacheVerteidigung`), built
+    /// defence screen hands to the roll (`GRW_mehrfacheVerteidigung`), built
     /// from the round's counters as they stand right now, before the defence
     /// being offered increments them. A style that changes the step (Vinsalt,
     /// SA_923) is a `modifyRule` on that same line, so the button can no longer
@@ -592,27 +592,10 @@ struct CombatRootView: View {
             combatSectionLabel(L("reaction.label"))
 
             VStack(spacing: 8) {
-                // Parieren -- secondary (outline)
+                // Parieren -- secondary (outline). The defence screen asks
+                // about the attacker, then routes on (`DefenseRoute`).
                 Button {
-                    let isDualWield = hero.isDualWielding
-                    if isDualWield || hero.selectedShield != nil {
-                        step = .weaponSelection(.parieren)
-                    } else if let w = hero.selectedWeapon {
-                        let mods = buildDefenseModifiers(isAusweichen: false)
-                        // The grip's -1 is a modifier line now, so the base must
-                        // not carry it too.
-                        let basePA = w.pa + hero.passiveShieldPABonus
-                        let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
-                        step = .execution(.parieren, name: w.name, attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
-                    } else if hero.selectedWeaponName == "Raufen" {
-                        let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        let mods = buildDefenseModifiers(isAusweichen: false)
-                        let basePA = raufen?.pa ?? 0
-                        let effectivePA = basePA + mods.reduce(0) { $0 + $1.value }
-                        step = .execution(.parieren, name: "Raufen", attributeValue: effectivePA, damageFormula: nil, note: nil, modifierLines: mods)
-                    } else {
-                        step = .weaponSelection(.parieren)
-                    }
+                    step = .defenseSetup(.parieren)
                 } label: {
                     VStack(spacing: 2) {
                         HStack(spacing: 6) {
@@ -638,10 +621,7 @@ struct CombatRootView: View {
 
                 // Ausweichen -- tertiary (outline)
                 Button {
-                    let mods = buildDefenseModifiers(isAusweichen: true)
-                    let baseAW = hero.derivedValues?.ausweichen.value ?? 0
-                    let effectiveAW = baseAW + mods.reduce(0) { $0 + $1.value }
-                    step = .execution(.ausweichen, name: "Ausweichen", attributeValue: effectiveAW, damageFormula: nil, note: nil, modifierLines: mods)
+                    step = .defenseSetup(.ausweichen)
                 } label: {
                     VStack(spacing: 2) {
                         HStack(spacing: 6) {

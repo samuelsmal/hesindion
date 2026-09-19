@@ -13,6 +13,9 @@ enum CombatStep {
     case loadoutEquipment           // merged from loadoutWeapon + loadoutShield
     case root
     case attackChoice               // pre-attack: one/both weapons, one/two-handed
+    /// Parieren/Ausweichen from the root: who is attacking, and the VW that
+    /// makes, before the roll (`CombatDefenseSetupView`).
+    case defenseSetup(CombatAction)
     case weaponSelection(CombatAction)
     case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?, isMountCharge: Bool)
     /// `damageFormula` is the weapon's **own** damage and `damageLines` the TP
@@ -65,6 +68,7 @@ extension CombatStep {
         case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
         case .attackChoice: "attackChoice"
+        case .defenseSetup: "defenseSetup"
         case .weaponSelection: "weaponSelection"
         case .announcement: "announcement"
         case .execution: "execution"
@@ -253,6 +257,7 @@ struct CombatView: View {
         case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
         case .attackChoice: "attackChoice"
+        case .defenseSetup: "defenseSetup"
         case .weaponSelection: "weaponSelection"
         case .announcement: "announcement"
         case .execution: "execution"
@@ -331,6 +336,17 @@ struct CombatView: View {
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
                     mountedActive: mountedActive,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
+            case .defenseSetup(let action):
+                CombatDefenseSetupView(
+                    hero: hero,
+                    action: action,
+                    situation: situation,
+                    mountedActive: mountedActive,
+                    opponent: $opponent,
+                    step: $step,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -595,6 +611,8 @@ struct CombatView: View {
                 case .root:
                     onDismiss()
                 case .attackChoice:
+                    step = .root
+                case .defenseSetup:
                     step = .root
                 case .announcement(let action, _, _, _, _, _, _):
                     step = .weaponSelection(action)
