@@ -45,6 +45,7 @@ final class RuleCatalogDecodingTests: XCTestCase {
         XCTAssertEqual(try predicate(#"{"is": "loadout.reach", "value": "Kurz"}"#), .loadoutReach(.kurz))
         XCTAssertEqual(try predicate(#"{"is": "opponent.reach", "value": "Lang"}"#), .opponentReach(.lang))
         XCTAssertEqual(try predicate(#"{"is": "situation.targetZone", "value": ["kopf", "torso"]}"#), .situationTargetZone([.kopf, .torso]))
+        XCTAssertEqual(try predicate(#"{"is": "situation.water", "value": ["huefthoch", "unterWasser"]}"#), .situationWater([.huefthoch, .unterWasser]))
         XCTAssertEqual(try predicate(#"{"is": "opponent.state", "value": "liegend"}"#), .opponentState("liegend"))
         XCTAssertEqual(try predicate(#"{"is": "opponent.type", "value": "demon"}"#), .opponentType(.demon))
         XCTAssertEqual(try predicate(#"{"is": "loadout.weapon", "technique": ["CT_1", "CT_4"], "consecrated": true}"#),

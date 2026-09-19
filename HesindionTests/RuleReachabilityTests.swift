@@ -142,6 +142,7 @@ final class RuleReachabilityTests: XCTestCase {
         case .situationBeengt: set.insert(.situationBeengt)
         case .situationDefencesThisRound: set.insert(.situationDefencesThisRound)
         case .situationTargetZone: set.insert(.situationTargetZone)
+        case .situationWater: set.insert(.situationWater)
         case .situationWoundEffect: set.insert(.situationWoundEffect)
         case .opponentReach: set.insert(.opponentReach)
         case .opponentOnFoot: set.insert(.opponentOnFoot)
@@ -396,6 +397,8 @@ final class RuleReachabilityTests: XCTestCase {
             s.round.dodgesThisRound = min
         case .situationTargetZone(let zones):
             s.targetHitZone = zones.first
+        case .situationWater(let depths):
+            s.round.water = depths.first ?? .huefthoch
         case .situationWoundEffect:
             s.isWoundEffectProbe = true
         case .opponentReach(let reach):

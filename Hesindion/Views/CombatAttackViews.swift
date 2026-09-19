@@ -322,6 +322,7 @@ struct CombatAnnouncementView: View {
     let damageFormula: String?
     let isOffHand: Bool
     let mountedActive: Bool
+    let waterDepth: WaterDepth
     let isMountCharge: Bool
     let beengteUmgebungActive: Bool
     let schipIgnoreZustandThisRound: Bool
@@ -833,6 +834,7 @@ struct CombatAnnouncementView: View {
     private func situation(_ domain: RuleDomain) -> Situation {
         var s = Situation(hero: hero, domain: domain)
         s.round.mounted = mountedActive
+        s.round.water = waterDepth
         s.round.schipIgnoreZustand = schipIgnoreZustandThisRound
         s.round.dualAttackActive = dualAttackPenaltyActive
         s.round.beengteUmgebung = beengteUmgebungActive

@@ -334,6 +334,13 @@ enum DSAStrings {
         "combat.mounted.off":           "On foot",
         "combat.mounted.fellOff":       "Prone — no longer in the saddle",
 
+        // Kampf im Wasser
+        "water.label":                  "WATER",
+        "water.none":                   "—",
+        "water.huefthoch":              "Waist-deep",
+        "water.unterWasser":            "Underwater",
+        "water.noRanged":               "No ranged attacks under water",
+
         // Weapon Reach
         "opponentReach.label":          "OPPONENT REACH",
 
@@ -1054,6 +1061,13 @@ enum DSAStrings {
         "combat.mounted.on":            "Beritten: %@",
         "combat.mounted.off":           "Zu Fuß",
         "combat.mounted.fellOff":       "Liegend — nicht mehr im Sattel",
+
+        // Kampf im Wasser
+        "water.label":                  "WASSER",
+        "water.none":                   "—",
+        "water.huefthoch":              "hüfthoch",
+        "water.unterWasser":            "unter Wasser",
+        "water.noRanged":               "Unter Wasser kein Fernkampf",
 
         // Weapon Reach
         "opponentReach.label":          "GEGNER-REICHWEITE",

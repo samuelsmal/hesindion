@@ -36,6 +36,7 @@ indirect enum RulePredicate: Equatable {
     case situationBeengt
     case situationDefencesThisRound(min: Int)
     case situationTargetZone([HitZone])
+    case situationWater([WaterDepth])
     case situationWoundEffect
     case opponentReach(WeaponReach)
     case opponentOnFoot
@@ -193,6 +194,14 @@ extension RulePredicate: Decodable {
                     throw DecodingError.dataCorruptedError(forKey: RuleCodingKey("value"), in: c, debugDescription: "unknown zone \(raw)")
                 }
                 return zone
+            })
+        case .situationWater:
+            let raws = try c.decode([String].self, forKey: RuleCodingKey("value"))
+            self = .situationWater(try raws.map { raw in
+                guard let depth = WaterDepth(rawValue: raw), depth != .none else {
+                    throw DecodingError.dataCorruptedError(forKey: RuleCodingKey("value"), in: c, debugDescription: "unknown water depth \(raw)")
+                }
+                return depth
             })
         case .situationWoundEffect:
             self = .situationWoundEffect

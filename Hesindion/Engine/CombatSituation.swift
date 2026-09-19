@@ -27,6 +27,8 @@ struct CombatSituation: Equatable {
     var schipDefenseBoost: Bool = false
     var plaenklerActive: Bool = false
     var plaenklerBonus: PlaenklerBonus = .at
+    /// Regelwerk 239, Kampf im Wasser: hüfthoch is AT/PA −2, unter Wasser −6.
+    var water: WaterDepth = .none
 
     /// Modifier lines for a defence, whichever screen is about to roll it.
     /// `isOffHand` is the second weapon of a dual-wield loadout — it parries at

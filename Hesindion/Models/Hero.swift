@@ -105,6 +105,9 @@ final class Hero {
     var activeCombatMounted: Bool = false
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
+    /// `WaterDepth.rawValue`; "" means `.none` (no water). Kampf im Wasser
+    /// (Regelwerk 239) is a round situation like Beengte Umgebung.
+    var activeCombatWater: String = ""
 
     // MARK: - Temporary combat effects (Patzertabelle)
     //
@@ -823,6 +826,7 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
+        activeCombatWater = ""
         // The Patzertabelle's temporary effects last a few rounds of *this*
         // fight, so they go with it. `damagedItems` does not: it lasts until
         // the thing is repaired. Nor does `indestructibleItems`: what a staff

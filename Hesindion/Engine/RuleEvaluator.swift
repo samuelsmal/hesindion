@@ -380,6 +380,8 @@ enum RuleEvaluator {
             return s.defencesThisRound >= min ? .yes : .no
         case .situationTargetZone(let zones):
             return s.targetHitZone.map(zones.contains) == true ? .yes : .no
+        case .situationWater(let depths):
+            return depths.contains(s.round.water) ? .yes : .no
         case .situationWoundEffect:
             return s.isWoundEffectProbe ? .yes : .no
         case .opponentReach(let reach):

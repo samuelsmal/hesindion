@@ -192,6 +192,9 @@ struct CombatView: View {
     @State private var plaenklerActive: Bool = false
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
+    /// Kampf im Wasser (Regelwerk 239): how deep the hero is standing, a round
+    /// situation like `mountedActive`.
+    @State private var waterDepth: WaterDepth = .none
     /// The other side of the fight. Held here, not on the announcement screen,
     /// because every screen that resolves the announced swing — the AT roll, the
     /// opponent's defence, the damage — has to read the same answers.
@@ -238,7 +241,8 @@ struct CombatView: View {
             dodgesThisRound: dodgesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
             plaenklerActive: plaenklerActive,
-            plaenklerBonus: plaenklerBonus
+            plaenklerBonus: plaenklerBonus,
+            water: waterDepth
         )
     }
 
@@ -313,6 +317,7 @@ struct CombatView: View {
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
+                    waterDepth: $waterDepth,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
                     opponent: opponent,
@@ -350,6 +355,7 @@ struct CombatView: View {
                     damageFormula: dmgFormula,
                     isOffHand: isOffHand,
                     mountedActive: mountedActive,
+                    waterDepth: waterDepth,
                     isMountCharge: isMountCharge,
                     beengteUmgebungActive: beengteUmgebungActive,
                     schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
@@ -562,6 +568,7 @@ struct CombatView: View {
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
+                    waterDepth: $waterDepth,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
                     opponent: opponent,
@@ -621,6 +628,7 @@ struct CombatView: View {
             }
         })
         .onChange(of: mountedActive) { _, _ in persistCombatState() }
+        .onChange(of: waterDepth) { _, _ in persistCombatState() }
         // A hero on the ground is not in the saddle: the Patzer's Sturz and every
         // other way to Liegend unseat a rider.
         .onChange(of: hero.isLiegend) { _, isDown in
@@ -674,6 +682,7 @@ struct CombatView: View {
                     plaenklerBonus = bonus == "at" ? .at : .aw
                 }
                 mountedActive = hero.activeCombatMounted
+                waterDepth = WaterDepth(rawValue: hero.activeCombatWater) ?? .none
                 // Beengte Umgebung restores automatically via the `eingeengt` status (SwiftData).
                 step = .root
             }
@@ -688,6 +697,7 @@ struct CombatView: View {
         hero.activeCombatPlaenkler = plaenklerActive
         hero.activeCombatPlaenklerBonus = plaenklerBonus == .at ? "at" : "aw"
         hero.activeCombatMounted = mountedActive
+        hero.activeCombatWater = waterDepth.rawValue
         // Beengte Umgebung is the `eingeengt` status now and persists itself; no field to write.
     }
 }

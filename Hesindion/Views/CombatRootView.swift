@@ -17,6 +17,7 @@ struct CombatRootView: View {
     @Binding var schipDefenseBoostActive: Bool
     @Binding var schipIgnoreZustandThisRound: Bool
     @Binding var mountedActive: Bool
+    @Binding var waterDepth: WaterDepth
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
     /// The other side, for the defences rolled straight from this screen. A
@@ -42,7 +43,8 @@ struct CombatRootView: View {
             dodgesThisRound: dodgesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
             plaenklerActive: plaenklerActive,
-            plaenklerBonus: plaenklerBonus
+            plaenklerBonus: plaenklerBonus,
+            water: waterDepth
         )
     }
 
@@ -323,6 +325,34 @@ struct CombatRootView: View {
                     .accessibilityIdentifier("combat.mounted.toggle")
                 }
 
+                // Kampf im Wasser (Regelwerk 239) — a three-way chip row, like the
+                // manoeuvre and reach chips elsewhere: the depth is a round
+                // situation, so it belongs beside the other round toggles rather
+                // than behind a fold.
+                Text(L("water.label"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 6) {
+                    ForEach(WaterDepth.allCases) { depth in
+                        let selected = waterDepth == depth
+                        Button { waterDepth = depth } label: {
+                            Text(L(depth.nameKey))
+                                .font(.dsaMono(.caption, emphasis: true))
+                                .foregroundStyle(selected ? .white : .secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(selected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                                .dsaBox(.flush, stroke: selected ? combatAccent : Color.dsaBorder)
+                        }
+                        .buttonStyle(.dsaMotion)
+                        .accessibilityIdentifier("combat.water.\(depth.rawValue)")
+                    }
+                }
+                .padding(.top, 2)
+
                 // A spent Schip is a state of this round, not an action, so it
                 // is reported here rather than left as a dead button among live
                 // ones.
@@ -483,6 +513,10 @@ struct CombatRootView: View {
                 // the rule the player is actually paying.
                 if hero.selectedRangedWeaponName != nil {
                     let jammed = hero.isRangedWeaponJammed
+                    // Regelwerk 239: no ranged attacks under water at all — not a
+                    // modifier the evaluator can express, so the entry point
+                    // itself is shut, same as a Ladehemmung.
+                    let underwater = waterDepth == .unterWasser
                     Button {
                         step = .fernkampfSetup
                     } label: {
@@ -496,16 +530,20 @@ struct CombatRootView: View {
                                 Text(String(format: L("fumble.jam.reason"), hero.activeCombatJamUntilRound))
                                     .font(.dsaBody(.caption2))
                                     .opacity(0.85)
+                            } else if underwater {
+                                Text(L("water.noRanged"))
+                                    .font(.dsaBody(.caption2))
+                                    .opacity(0.85)
                             }
                         }
-                        .foregroundStyle(jammed ? .white : combatAccent)
+                        .foregroundStyle(jammed || underwater ? .white : combatAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(jammed ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: jammed ? Color.dsaDisabled : combatAccent)
+                        .background(jammed || underwater ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: jammed || underwater ? Color.dsaDisabled : combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
-                    .disabled(jammed)
+                    .disabled(jammed || underwater)
                     .accessibilityIdentifier("combat.rangedAttack")
                 }
 

@@ -107,6 +107,10 @@
     "tiers" : [
       "owned"
     ],
+    "water" : [
+      "huefthoch",
+      "unterWasser"
+    ],
     "zone" : [
       "kopf",
       "torso",
@@ -252,6 +256,15 @@
 
       ],
       "value" : "list:zone"
+    },
+    "situation.water" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "list:water"
     },
     "situation.woundEffect" : {
       "args" : {

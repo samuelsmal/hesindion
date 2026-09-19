@@ -502,4 +502,44 @@ final class RuleFixtureTests: XCTestCase {
         hero.setStateLevel("betaeubung", level: 1)
         XCTAssertEqual(woundEffectEngineTotal(), -3)
     }
+
+    // MARK: - Kampf im Wasser (GRW), Kampf im Wasser (SA_163), Unterwasserkampf (SA_418)
+
+    private func inWater(_ domain: RuleDomain, _ depth: WaterDepth) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round.water = depth
+        s.opponents.current.reach = .kurz   // keep GRW_reichweite out of the lines
+        return s
+    }
+
+    func testWaterCostsTwoWaistDeepAndSixUnderwaterOnATAndPA() {
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .none))))
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), -2)
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeParry, .huefthoch))), -2)
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))), -6)
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeParry, .unterWasser))), -6)
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeDodge, .unterWasser))), "the page names AT and PA")
+    }
+
+    func testKampfImWasserEasesByTwo() {
+        own("SA_163", "Kampf im Wasser", list: \.generalSpecialAbilities)
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), "−2 + 2 is dropped")
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))), -4)
+    }
+
+    func testUnterwasserkampfRemovesTheUnderwaterPenalty() {
+        own("SA_418", "Unterwasserkampf", list: \.generalSpecialAbilities)
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))))
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), -2, "only under water")
+    }
+
+    func testWasserlebewesenAlsoRemovesTheUnderwaterPenalty() {
+        own("ADV_71", "Wasserlebewesen", list: \.advantages)
+        arm("Schwert", technique: "CT_12", reach: "Kurz")
+        XCTAssertNil(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .unterWasser))))
+        XCTAssertEqual(value("GRW_kampfImWasser", in: lines(inWater(.meleeAttack, .huefthoch))), -2, "only under water")
+    }
 }

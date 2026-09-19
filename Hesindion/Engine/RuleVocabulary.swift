@@ -25,6 +25,7 @@ enum RuleVocabulary {
         case situationBeengt = "situation.beengt"
         case situationDefencesThisRound = "situation.defencesThisRound"
         case situationTargetZone = "situation.targetZone"
+        case situationWater = "situation.water"
         case situationWoundEffect = "situation.woundEffect"
         case opponentReach = "opponent.reach"
         case opponentOnFoot = "opponent.onFoot"
@@ -76,6 +77,7 @@ enum RuleVocabulary {
         .situationBeengt: Signature(),
         .situationDefencesThisRound: Signature(args: ["min": "int"], required: ["min"]),
         .situationTargetZone: Signature(value: "list:zone"),
+        .situationWater: Signature(value: "list:water"),
         .situationWoundEffect: Signature(),
         .opponentReach: Signature(value: "enum:reach"),
         .opponentOnFoot: Signature(),
@@ -111,6 +113,7 @@ enum RuleVocabulary {
                 "per": Per.allCases.map(\.rawValue),
                 "reach": WeaponReach.allCases.map(\.rawValue),
                 "zone": HitZone.allCases.map(\.rawValue),
+                "water": WaterDepth.allCases.filter { $0 != .none }.map(\.rawValue),
                 "opponentType": OpponentType.allCases.map(\.rawValue),
                 "kind": ClauseKind.allCases.map(\.rawValue),
                 "tiers": ["owned"],

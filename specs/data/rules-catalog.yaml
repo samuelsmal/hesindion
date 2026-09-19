@@ -136,6 +136,35 @@
             - { gm.fact: { id: advantageousPosition, span: attack } }
       effects: [{ add: { target: at, value: 2 } }, { add: { target: pa, value: 2 } }]
 
+- id: GRW_kampfImWasser
+  name: "Kampf im Wasser"
+  group: "Grundregel"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: book, title: "Regelwerk", page: 239 }
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/GR_Kampf-Wasser.html", fetched: 2026-09-18 }
+  text: |
+    Wer sich im Wasser aufhält, kann sich in der Regel schlechter bewegen als an Land und
+    erleidet Erschwernisse auf Attacke und Parade. Bei etwa hüfthohem Wasser beträgt diese
+    Erschwernis jeweils -2. Unter Wasser steigen die Erschwernisse auf jeweils -6.
+  note: "The depth is a round situation (CombatSituation.water), set on the combat root and persisted in Hero.activeCombatWater. AT and PA only, as the page says; Ausweichen is untouched. No ranged attack under water is Swift: the root disables the Fernkampf button (the vocabulary has no forbid effect)."
+  clauses:
+    # unterWasser first: SA_418/ADV_71 modify this rule from their own
+    # `situation.water: [unterWasser]` clause, and RuleReachabilityTests'
+    # `satisfy` picks the modified rule's *first* domain/target-matching
+    # clause as the one to satisfy — putting unterWasser first keeps that
+    # pick consistent with the modifying clause's own `when` (see the test's
+    # `base` comment). Evaluation itself does not care about clause order.
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [{ situation.water: [unterWasser] }]
+      effects: [{ add: { target: at, value: -6 } }, { add: { target: pa, value: -6 } }]
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [{ situation.water: [huefthoch] }]
+      effects: [{ add: { target: at, value: -2 } }, { add: { target: pa, value: -2 } }]
+
 - id: GRW_karmaleObjekte
   name: "Karmale Objekte"
   group: "Fokusregel"
@@ -161,6 +190,50 @@
 # Implemented through the evaluator (status implemented): the clauses say what
 # the app does. reviewed is null until a person has read them against the text.
 # ---------------------------------------------------------------------------
+- id: SA_163
+  name: "Kampf im Wasser"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  sources: [{ kind: optolith }]
+  note: "Eases GRW_kampfImWasser by 2 on AT and PA."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      effects:
+        - { modifyRule: { id: GRW_kampfImWasser, target: at, add: 2 } }
+        - { modifyRule: { id: GRW_kampfImWasser, target: pa, add: 2 } }
+
+- id: SA_418
+  name: "Unterwasserkampf"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  sources: [{ kind: optolith }]
+  note: "Under water GRW_kampfImWasser does not apply (set to 0, dropped). Waist-deep water still costs 2."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [{ situation.water: [unterWasser] }]
+      effects:
+        - { modifyRule: { id: GRW_kampfImWasser, target: at, set: 0 } }
+        - { modifyRule: { id: GRW_kampfImWasser, target: pa, set: 0 } }
+
+- id: ADV_71
+  name: "Wasserlebewesen"
+  group: "Vorteil"
+  status: implemented
+  reviewed: null
+  sources: [{ kind: optolith }]
+  note: "Grants Unterwasserkampf (SA_418); same clauses."
+  clauses:
+    - kind: passive
+      domains: [meleeAttack, meleeParry]
+      when: [{ situation.water: [unterWasser] }]
+      effects:
+        - { modifyRule: { id: GRW_kampfImWasser, target: at, set: 0 } }
+        - { modifyRule: { id: GRW_kampfImWasser, target: pa, set: 0 } }
+
 - id: SA_923
   name: "Vinsalt-Stil"
   group: "Kampfstile (bewaffnet)"
@@ -634,7 +707,6 @@
 - { id: ADV_68, name: "Hass auf", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_69, name: "Saumagen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_70, name: "Tierfreund", group: "Vorteil", status: todo, why: not yet read }
-- { id: ADV_71, name: "Wasserlebewesen", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_72, name: "Allerweltsname", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_73, name: "Gutes Namensgedächtnis", group: "Vorteil", status: todo, why: not yet read }
 - { id: ADV_74, name: "Heldenhafter Name", group: "Vorteil", status: todo, why: not yet read }
@@ -1370,7 +1442,6 @@
 - { id: SA_158, name: "Eisenhagel", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_159, name: "Festnageln", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_162, name: "Herunterstoßen", group: "Kampf", status: todo, why: not yet read }
-- { id: SA_163, name: "Kampf im Wasser", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_164, name: "Kampfstil-Kombination", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_165, name: "Klingensturm", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_166, name: "Meister der improvisierten Waffen", group: "Kampf", status: todo, why: not yet read }
@@ -1625,7 +1696,6 @@
 - { id: SA_415, name: "Alter Adersin-Stil", group: "Kampfstile (bewaffnet)", status: todo, why: not yet read }
 - { id: SA_416, name: "Gift melken (Land- und Lufttiere)", group: "Allgemein", status: todo, why: not yet read }
 - { id: SA_417, name: "Gift melken (Wassertiere)", group: "Allgemein", status: todo, why: not yet read }
-- { id: SA_418, name: "Unterwasserkampf", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_419, name: "Heraldikspezialist", group: "Allgemein", status: todo, why: not yet read }
 - { id: SA_420, name: "Namensschmeichler", group: "Allgemein", status: todo, why: not yet read }
 - { id: SA_421, name: "Kampftrinker", group: "Allgemein", status: todo, why: not yet read }
