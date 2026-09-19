@@ -651,8 +651,19 @@ struct CombatView: View {
                 }
             }
         })
-        .onChange(of: mountedActive) { _, _ in persistCombatState() }
-        .onChange(of: waterDepth) { _, _ in persistCombatState() }
+        // Both toggles also live on the preparation screen, before initiative is
+        // rolled — a `mountedActive`/`waterDepth` @Binding change there must not
+        // start writing `hero.activeCombatId`. Doing so would leave a session
+        // behind once the sheet closes: the next time the hero enters combat,
+        // `onAppear` finds `activeCombatId` set, skips preparation, and jumps
+        // straight to `.root` with `temporarySchmerzActive`/`isRangedWeaponJammed`
+        // switched on (they gate on `activeCombatId != nil`).
+        .onChange(of: mountedActive) { _, _ in
+            if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
+        }
+        .onChange(of: waterDepth) { _, _ in
+            if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
+        }
         // A hero on the ground is not in the saddle: the Patzer's Sturz and every
         // other way to Liegend unseat a rider.
         .onChange(of: hero.isLiegend) { _, isDown in
@@ -744,6 +755,15 @@ struct CombatView: View {
             ),
             hero: hero
         )
+    }
+
+    /// Whether a situational toggle (Beritten, Kampf im Wasser) reaching the
+    /// preparation screen should write `hero.activeCombatId`. Only a session
+    /// that already exists — initiative rolled, `.root` reached at least once —
+    /// may be touched; a `nil` id means the hero has not entered combat yet, and
+    /// persisting here would start a phantom running fight from the prep screen.
+    static func shouldPersistSituationChange(activeCombatId: UUID?) -> Bool {
+        activeCombatId != nil
     }
 
     private func persistCombatState() {

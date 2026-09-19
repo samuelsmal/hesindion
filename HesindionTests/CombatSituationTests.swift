@@ -150,4 +150,22 @@ final class CombatSituationTests: XCTestCase {
         XCTAssertNil(value(ofRule: "SA_661", in: lines(CombatSituation(mounted: false))), "on foot, the style's own PA bonus does not apply")
         XCTAssertEqual(value(ofRule: "SA_661", in: lines(CombatSituation(mounted: true))), 1, "mounted, the +1 PA applies")
     }
+
+    // MARK: - Beritten on the preparation screen must not start a phantom fight
+
+    /// The mount and Kampf-im-Wasser toggles live on the preparation screen too
+    /// (before initiative is rolled), sharing the same `@Binding` the root uses.
+    /// Flipping either there must not write `hero.activeCombatId` — that would
+    /// leave a session behind once the sheet closes, so the next combat skips
+    /// preparation and switches on `temporarySchmerzActive`/`isRangedWeaponJammed`
+    /// (both gate on `activeCombatId != nil`).
+    func testSituationChangeIsNotPersistedBeforeASessionExists() {
+        XCTAssertFalse(CombatView.shouldPersistSituationChange(activeCombatId: nil),
+                        "no session yet — the prep screen's toggle must not start one")
+    }
+
+    func testSituationChangeIsPersistedOnceASessionExists() {
+        XCTAssertTrue(CombatView.shouldPersistSituationChange(activeCombatId: UUID()),
+                       "a running fight's own toggles must still persist")
+    }
 }
