@@ -43,6 +43,12 @@ extension Hero {
         basicTalent(name: Talent.kraftaktName, ruleId: Talent.kraftaktRuleId)
     }
 
+    /// The hero's Heilkunde Wunden row, or a Fertigkeitswert-0 stand-in.
+    /// Rolled to shorten the Blutend clock (`BleedingRules.treatmentReduction`).
+    var heilkundeWunden: Talent {
+        basicTalent(name: Talent.heilkundeWundenName, ruleId: Talent.heilkundeWundenRuleId)
+    }
+
     /// Shared fallback for the basic abilities the app rolls on the player's
     /// behalf. See `selbstbeherrschung` above for why a missing row is answered
     /// with a stand-in rather than a refusal.
@@ -65,4 +71,7 @@ extension Talent {
     /// Kraftakt — "Ziehen & Zerren", the check that frees a stuck weapon.
     static let kraftaktName = "Kraftakt"
     static let kraftaktRuleId = "TAL_5"
+    /// Heilkunde Wunden — shortens the Blutend clock by QS/2, rounded up.
+    static let heilkundeWundenName = "Heilkunde Wunden"
+    static let heilkundeWundenRuleId = "TAL_50"
 }

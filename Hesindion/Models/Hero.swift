@@ -145,6 +145,13 @@ final class Hero {
     /// Zu konzentriert: no defences until the hero's next own action.
     var activeCombatNoDefense: Bool = false
 
+    /// Status Blutend: rounds still left on the clock, or `nil` when the status
+    /// was never rolled with a known duration ("Blutend" applied without a
+    /// probe — `setStateLevel` directly — still costs the SP each round, it
+    /// just never counts down). A *relative* count, unlike the round-number
+    /// clocks above, so `rebaseCombatClocks` leaves it alone.
+    var bleedingRoundsLeft: Int? = nil
+
     init(
         name: String,
         avatar: Data? = nil,
@@ -638,6 +645,7 @@ final class Hero {
             return def?.kind == .status ? 1 : min(rawLevel, 4)
         }()
         let existing = states.first { $0.stateID == stateID }
+        if stateID == BleedingRules.stateId && clamped == 0 { bleedingRoundsLeft = nil }
         if clamped == 0 {
             if let e = existing {
                 states.removeAll { $0 === e }
@@ -836,6 +844,7 @@ final class Hero {
         activeCombatStumble = false
         activeCombatJamUntilRound = 0
         activeCombatNoDefense = false
+        bleedingRoundsLeft = nil
     }
 
     func isFokusRuleActive(_ rule: FokusRule) -> Bool {

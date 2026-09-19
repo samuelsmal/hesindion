@@ -56,4 +56,19 @@ enum TestData {
         let payload = DiceRollPayload(count: 3, sides: 6, results: [4, 2, 6], total: 12)
         return LogEntry.create(kind: "diceRoll", payload: payload, hero: hero)
     }
+
+    /// A minimal `DerivedValues` with only Lebensenergie populated — current == max == `lp`,
+    /// no bonus/purchased. Everything else is zeroed, the way `HeroStateTests` builds one.
+    static func derivedValues(lp: Int) -> DerivedValues {
+        DerivedValues(
+            lebensenergie: LifeEnergyValue(base: lp, bonus: 0, purchased: 0, max: lp, current: lp),
+            astralenergie: nil, karmaenergie: nil,
+            seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
+            zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
+            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
+            geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
+            schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
+    }
 }
