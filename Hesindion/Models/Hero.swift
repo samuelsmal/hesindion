@@ -55,15 +55,27 @@ final class Hero {
     /// means "not answered": `sizeCategory` then falls back to the species list.
     var hitZoneSize: String?
 
-    /// Names of the melee weapons the player has marked as consecrated (geweiht
-    /// or heilig).
+    /// Names of the weapons the player has marked as consecrated (geweiht or
+    /// heilig) although the inventory does not say so — the player's override
+    /// in one direction.
     ///
-    /// Set by hand on the hero settings screen, never derived: no Optolith export
-    /// carries a Weihe, and a weapon's name says nothing about it — a
-    /// Rabenschnabel is Boron's symbol and also an ordinary war pick sold by the
-    /// hundred. Names rather than ids, like the loadout, so a re-import that
-    /// rebuilds the weapon rows does not lose the answer.
+    /// The default comes from Optolith's own inventory: a weapon whose template
+    /// note starts "geweiht (…)" — the Rabenschnabel of Boron — is consecrated
+    /// (owner decision 2026-09-18). `unconsecratedWeapons` is the override in
+    /// the other direction. The default is read by the weapon's *name* across
+    /// every template (`consecratedDeity(ofLoadoutNamed:)`): the Regelwiki,
+    /// which is the authority, has one Rabenschnabel and it is geweiht, even
+    /// though Optolith's duplicate ITEMTPL_796 drops the note. Both lists are set
+    /// on the hero settings screen through `setConsecrated`, which keeps a name
+    /// in at most one of them and in neither when it matches the default. Names
+    /// rather than ids, like the loadout, so a re-import that rebuilds the
+    /// weapon rows does not lose the answer.
     var consecratedWeapons: [String] = []
+
+    /// Names of the weapons the inventory marks "geweiht (…)" that the player
+    /// has said are not — the other half of the override (see
+    /// `consecratedWeapons`).
+    var unconsecratedWeapons: [String] = []
 
     /// Names of the weapons and shields a Patzer has damaged — "Alle Proben auf
     /// AT und PA um –2 erschwert, bis sie repariert wird".
@@ -318,18 +330,46 @@ final class Hero {
 
     // MARK: - Karmale Objekte
 
-    func isConsecrated(_ weaponName: String?) -> Bool {
-        guard let weaponName else { return false }
-        return consecratedWeapons.contains(weaponName)
+    /// The inventory template of the hero's weapon or shield called `name`: by
+    /// the template id Optolith exported, else — heroes imported before it was
+    /// kept, or a name the hero does not carry — by the name.
+    func equipmentEntry(forLoadoutNamed name: String) -> EquipmentEntry? {
+        let templateId = meleeWeapons.first { $0.name == name }?.templateId
+            ?? shields.first { $0.name == name }?.templateId
+            ?? rangedWeapons.first { $0.name == name }?.templateId
+        if let templateId, let entry = RulesDatabase.shared.equipment(id: templateId) { return entry }
+        return RulesDatabase.shared.equipment(named: name)
     }
 
+    /// The deity the rules consecrate this weapon to by default: by its name
+    /// across every inventory template (`RulesDatabase.consecratedDeity(forWeaponNamed:)`
+    /// — the Regelwiki has one Rabenschnabel, and it is Boron's), else by the
+    /// name of the template it was bought from, for a weapon the player renamed.
+    func consecratedDeity(ofLoadoutNamed name: String) -> String? {
+        let rules = RulesDatabase.shared
+        if let deity = rules.consecratedDeity(forWeaponNamed: name) { return deity }
+        guard let templateName = equipmentEntry(forLoadoutNamed: name)?.name, templateName != name else { return nil }
+        return rules.consecratedDeity(forWeaponNamed: templateName)
+    }
+
+    private func isConsecratedByDefault(_ weaponName: String) -> Bool {
+        consecratedDeity(ofLoadoutNamed: weaponName) != nil
+    }
+
+    func isConsecrated(_ weaponName: String?) -> Bool {
+        guard let weaponName else { return false }
+        if consecratedWeapons.contains(weaponName) { return true }
+        if unconsecratedWeapons.contains(weaponName) { return false }
+        return isConsecratedByDefault(weaponName)
+    }
+
+    /// Records the player's answer as an override of the inventory's default,
+    /// or as no override at all when it matches it.
     func setConsecrated(_ weaponName: String, _ consecrated: Bool) {
-        if consecrated {
-            guard !consecratedWeapons.contains(weaponName) else { return }
-            consecratedWeapons.append(weaponName)
-        } else {
-            consecratedWeapons.removeAll { $0 == weaponName }
-        }
+        consecratedWeapons.removeAll { $0 == weaponName }
+        unconsecratedWeapons.removeAll { $0 == weaponName }
+        guard consecrated != isConsecratedByDefault(weaponName) else { return }
+        if consecrated { consecratedWeapons.append(weaponName) } else { unconsecratedWeapons.append(weaponName) }
     }
 
     // MARK: - Beschädigte Ausrüstung

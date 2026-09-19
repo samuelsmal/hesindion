@@ -238,12 +238,15 @@ struct FieldRow: View {
 struct SubfieldBlock: View {
     let label: String
     let subfields: [(String, String)]
+    /// An ⓘ at the end of the heading — the weapon rows' way to the rules text.
+    var info: WeaponInfoButton? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Text(label).font(.dsaBody(.body))
                 Spacer()
+                if let info { info.padding(.vertical, -10) }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

@@ -12,6 +12,7 @@ struct CombatLoadoutPicker: View {
     let mountedActive: Bool
     @Binding var selected: Set<String>
     @Binding var selectedRanged: String?
+    @State private var weaponInfo: WeaponInfoTarget?
 
     /// One selectable thing, with everything the rows and the rules need.
     struct Item {
@@ -107,6 +108,20 @@ struct CombatLoadoutPicker: View {
                 ForEach(hero.rangedWeapons, id: \.name) { rangedRow($0) }
             }
         }
+        .sheet(item: $weaponInfo) { target in
+            WeaponInfoSheet(hero: hero, name: target.name)
+                .presentationCornerRadius(0)
+        }
+    }
+
+    /// The ⓘ laid over the row's trailing edge — a sibling of the row's button,
+    /// not inside it, so tapping it opens the rules without picking the weapon.
+    private func infoButton(_ name: String, selected: Bool) -> some View {
+        WeaponInfoButton(name: name, tint: selected ? .white : .secondary) {
+            weaponInfo = WeaponInfoTarget(name: name)
+        }
+        .padding(.trailing, 4)
+        .padding(.bottom, 4)
     }
 
     private func row(_ item: Item) -> some View {
@@ -143,7 +158,7 @@ struct CombatLoadoutPicker: View {
                             .foregroundStyle(isSelected ? Color.white.opacity(0.85) : combatAccent)
                     }
                 }
-                Spacer()
+                Spacer(minLength: 44) // room for the ⓘ overlay
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -155,6 +170,9 @@ struct CombatLoadoutPicker: View {
         .disabled(!enabled)
         .accessibilityIdentifier("combat.loadout.\(item.name)")
         .padding(.bottom, 4)
+        .overlay(alignment: .trailing) {
+            if !item.isRaufen { infoButton(item.name, selected: isSelected) }
+        }
     }
 
     private func rangedRow(_ weapon: RangedWeapon) -> some View {
@@ -187,7 +205,7 @@ struct CombatLoadoutPicker: View {
                             .foregroundStyle(isSelected ? Color.white.opacity(0.85) : combatAccent)
                     }
                 }
-                Spacer()
+                Spacer(minLength: 44) // room for the ⓘ overlay
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -198,6 +216,7 @@ struct CombatLoadoutPicker: View {
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier("combat.loadout.\(weapon.name)")
         .padding(.bottom, 4)
+        .overlay(alignment: .trailing) { infoButton(weapon.name, selected: isSelected) }
     }
 
     // MARK: - Reading and writing the hero's loadout

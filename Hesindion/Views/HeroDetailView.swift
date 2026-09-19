@@ -27,6 +27,7 @@ struct HeroDetailView: View {
     @State private var activeSpellProbe: HeroSpell? = nil
     @State private var activeSpellIsLiturgy: Bool = false
     @State private var showRecordedStats = false
+    @State private var weaponInfo: WeaponInfoTarget?
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -179,6 +180,10 @@ struct HeroDetailView: View {
                 )
                 .presentationCornerRadius(0)
             }
+        }
+        .sheet(item: $weaponInfo) { target in
+            WeaponInfoSheet(hero: hero, name: target.name)
+                .presentationCornerRadius(0)
         }
         .fullScreenCover(isPresented: $showHeroSettings) {
             HeroSettingsView(hero: hero) { showHeroSettings = false }
@@ -966,7 +971,7 @@ struct HeroDetailView: View {
                             ("PA", "\(w.pa)"),
                             ("reach", w.reach),
                             ("weight", String(format: "%.2f st", w.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) })
                     }
                 }
             }
@@ -988,7 +993,7 @@ struct HeroDetailView: View {
                             ("FK", "\(w.at)"),
                             ("range", w.range),
                             ("weight", String(format: "%.2f st", w.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) })
                     }
                 }
             }
@@ -1011,7 +1016,7 @@ struct HeroDetailView: View {
                             ("reach", s.reach),
                             ("SP", "\(s.structurePoints)"),
                             ("weight", String(format: "%.2f st", s.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: s.name) { weaponInfo = WeaponInfoTarget(name: s.name) })
                     }
                 }
             }

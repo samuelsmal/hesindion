@@ -167,7 +167,9 @@ struct HeroSettingsView: View {
     }
 
     /// Which weapons are geweiht. A list of the hero's own melee weapons, one
-    /// toggle each — not a text field and not a guess from the name.
+    /// toggle each. A toggle starts on where Optolith's inventory marks the
+    /// weapon's template "geweiht (…)"; switching it records an override
+    /// (`Hero.setConsecrated`).
     private var consecratedWeaponsRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L("consecrated.title"))

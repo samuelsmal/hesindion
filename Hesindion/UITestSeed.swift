@@ -82,8 +82,21 @@ enum UITestSeed {
     static let consecrateArgument = "-uitest-consecrate"
 
     private static var consecratedWeaponNames: [String] {
+        names(after: consecrateArgument)
+    }
+
+    /// `-uitest-unconsecrate Rabenschnabel` switches a weapon's inventory
+    /// default off: the seed hero's Rabenschnabel is Optolith's "geweiht
+    /// (Boron)" one, so a flow about an *ordinary* weapon has to say so.
+    static let unconsecrateArgument = "-uitest-unconsecrate"
+
+    private static var unconsecratedWeaponNames: [String] {
+        names(after: unconsecrateArgument)
+    }
+
+    private static func names(after argument: String) -> [String] {
         let args = ProcessInfo.processInfo.arguments
-        guard let index = args.firstIndex(of: consecrateArgument), index + 1 < args.count else { return [] }
+        guard let index = args.firstIndex(of: argument), index + 1 < args.count else { return [] }
         return args[index + 1].split(separator: ",").map(String.init)
     }
 
@@ -214,7 +227,8 @@ enum UITestSeed {
         hero.selectedWeaponName = requestedWeaponName ?? weaponName
         hero.selectedOffHandName = nil
         hero.selectedShieldName = wantsShield ? shieldName : nil
-        hero.consecratedWeapons = consecratedWeaponNames
+        for name in consecratedWeaponNames { hero.setConsecrated(name, true) }
+        for name in unconsecratedWeaponNames { hero.setConsecrated(name, false) }
         if !wantsFreshCombat {
             hero.activeCombatId = UUID()
             hero.activeCombatRound = 1

@@ -37,36 +37,49 @@ final class KarmalWeaponTests: XCTestCase {
         return hero
     }
 
-    /// Nothing is consecrated until the player says so. The app must not read it
-    /// off a name: a Rabenschnabel is Boron's symbol and also an ordinary war
-    /// pick sold by the hundred.
-    func testNothingIsConsecratedByDefault() {
+    /// Optolith's own inventory marks the Rabenschnabel "geweiht (Boron)", and
+    /// that is the default (owner decision 2026-09-18). Nothing else is.
+    func testTheInventorysGeweihtIsTheDefault() {
         let hero = self.hero()
-        XCTAssertFalse(hero.isConsecrated("Rabenschnabel"))
+        XCTAssertTrue(hero.isConsecrated("Rabenschnabel"))
         XCTAssertFalse(hero.isConsecrated("Langschwert"))
         XCTAssertFalse(hero.isConsecrated(nil))
     }
 
+    /// Optolith's second Rabenschnabel template (ITEMTPL_796) drops the note,
+    /// but the Regelwiki — the authority — has one Rabenschnabel, Boron's.
+    func testTheDuplicateTemplateIsConsecratedToo() {
+        let hero = self.hero()
+        hero.meleeWeapons.first { $0.name == "Rabenschnabel" }?.templateId = "ITEMTPL_796"
+        XCTAssertTrue(hero.isConsecrated("Rabenschnabel"))
+    }
+
     func testTheSettingIsPerWeapon() {
         let hero = self.hero()
-        hero.setConsecrated("Rabenschnabel", true)
-        XCTAssertTrue(hero.isConsecrated("Rabenschnabel"))
-        XCTAssertFalse(hero.isConsecrated("Langschwert"))
+        hero.setConsecrated("Langschwert", true)
+        XCTAssertTrue(hero.isConsecrated("Langschwert"))
+        hero.setConsecrated("Rabenschnabel", false)
+        XCTAssertFalse(hero.isConsecrated("Rabenschnabel"))
+        XCTAssertTrue(hero.isConsecrated("Langschwert"))
     }
 
     func testSettingItTwiceDoesNotDuplicate() {
         let hero = self.hero()
-        hero.setConsecrated("Rabenschnabel", true)
-        hero.setConsecrated("Rabenschnabel", true)
-        XCTAssertEqual(hero.consecratedWeapons, ["Rabenschnabel"])
+        hero.setConsecrated("Langschwert", true)
+        hero.setConsecrated("Langschwert", true)
+        XCTAssertEqual(hero.consecratedWeapons, ["Langschwert"])
+        hero.setConsecrated("Rabenschnabel", false)
+        hero.setConsecrated("Rabenschnabel", false)
+        XCTAssertEqual(hero.unconsecratedWeapons, ["Rabenschnabel"])
     }
 
     func testItCanBeTakenBack() {
         let hero = self.hero()
-        hero.setConsecrated("Rabenschnabel", true)
-        hero.setConsecrated("Rabenschnabel", false)
-        XCTAssertFalse(hero.isConsecrated("Rabenschnabel"))
+        hero.setConsecrated("Langschwert", true)
+        hero.setConsecrated("Langschwert", false)
+        XCTAssertFalse(hero.isConsecrated("Langschwert"))
         XCTAssertTrue(hero.consecratedWeapons.isEmpty)
+        XCTAssertTrue(hero.unconsecratedWeapons.isEmpty)
     }
 
     /// The rule is a Fokusregel: off unless the table plays with it.

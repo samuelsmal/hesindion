@@ -295,6 +295,100 @@ final class RulesDatabase: @unchecked Sendable {
         return col_text(stmt, 0)
     }
 
+    // MARK: - Equipment (Optolith's weapon inventory)
+
+    /// Entries never change at runtime, so each lookup is asked of SQLite once.
+    /// Guarded because the singleton is reached from several threads.
+    private let equipmentLock = NSLock()
+    private nonisolated(unsafe) var equipmentById: [String: EquipmentEntry?] = [:]
+    private nonisolated(unsafe) var equipmentByName: [String: EquipmentEntry?] = [:]
+    private nonisolated(unsafe) var consecratedDeityByName: [String: String?] = [:]
+
+    private static let equipmentColumns =
+        "id, name, combat_technique, damage, at, pa, reach, note, advantage, disadvantage"
+
+    /// The inventory template with this Optolith id ("ITEMTPL_19").
+    func equipment(id: String) -> EquipmentEntry? {
+        equipmentLock.lock()
+        defer { equipmentLock.unlock() }
+        if let cached = equipmentById[id] { return cached }
+        let entry = queryEquipment(where: "id = ?", bind: id)
+        equipmentById[id] = entry
+        return entry
+    }
+
+    /// The inventory template called `name`. Names are not unique in Optolith
+    /// — the Rabenschnabel is ITEMTPL_19 and ITEMTPL_796 — so of several the
+    /// lowest template number wins: the core-rules one, which Optolith lists
+    /// first. Prefer `equipment(id:)` whenever the hero's weapon carries its
+    /// template id; for consecration use `consecratedDeity(forWeaponNamed:)`.
+    func equipment(named name: String) -> EquipmentEntry? {
+        equipmentLock.lock()
+        defer { equipmentLock.unlock() }
+        if let cached = equipmentByName[name] { return cached }
+        let entry = queryEquipment(
+            where: "name = ? ORDER BY CAST(substr(id, length('ITEMTPL_') + 1) AS INTEGER) LIMIT 1",
+            bind: name)
+        equipmentByName[name] = entry
+        return entry
+    }
+
+    /// The deity a weapon of this name is consecrated to by default, if any
+    /// `equipment` row of that name carries a "geweiht (X)" note.
+    ///
+    /// Read by name across all templates, not off one template: the Ulisses
+    /// Regelwiki is the authority for weapons (owner ruling 2026-09-18) and has
+    /// one Rabenschnabel page, "geweiht (Boron)". Optolith's duplicate
+    /// templates may drop the note — its ITEMTPL_796 Rabenschnabel has the
+    /// same stats and texts but none — and that is not a second, ordinary
+    /// weapon as far as the app is concerned.
+    func consecratedDeity(forWeaponNamed name: String) -> String? {
+        equipmentLock.lock()
+        defer { equipmentLock.unlock() }
+        if let cached = consecratedDeityByName[name] { return cached }
+        let sql = """
+            SELECT note FROM equipment WHERE name = ? AND substr(note, 1, 9) = 'geweiht ('
+            ORDER BY CAST(substr(id, length('ITEMTPL_') + 1) AS INTEGER) LIMIT 1
+            """
+        var deity: String?
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_text(stmt, 1, name, -1, SQLITE_TRANSIENT)
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                deity = EquipmentEntry.consecratedDeity(inNote: col_text_opt(stmt, 0))
+            }
+        }
+        sqlite3_finalize(stmt)
+        consecratedDeityByName[name] = deity
+        return deity
+    }
+
+    private func queryEquipment(where clause: String, bind: String) -> EquipmentEntry? {
+        let sql = "SELECT \(Self.equipmentColumns) FROM equipment WHERE \(clause)"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, bind, -1, SQLITE_TRANSIENT)
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return EquipmentEntry(
+            id: col_text(stmt, 0),
+            name: col_text(stmt, 1),
+            combatTechniqueId: col_text_opt(stmt, 2),
+            damage: col_text_opt(stmt, 3),
+            at: col_int_opt(stmt, 4),
+            pa: col_int_opt(stmt, 5),
+            reach: col_int_opt(stmt, 6),
+            note: nonEmpty(col_text_opt(stmt, 7)),
+            advantage: nonEmpty(col_text_opt(stmt, 8)),
+            disadvantage: nonEmpty(col_text_opt(stmt, 9))
+        )
+    }
+
+    private func nonEmpty(_ text: String?) -> String? {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return nil }
+        return text
+    }
+
     // MARK: - Catalog
 
     private static let catalogColumns =

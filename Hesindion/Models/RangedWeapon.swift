@@ -9,6 +9,10 @@ final class RangedWeapon {
     var at: Int
     var range: String
     var weight: Double
+    /// Optolith's inventory template ("ITEMTPL_19"), which names do not identify:
+    /// two Rabenschnäbel share one. Nil for heroes imported before it was kept;
+    /// `Hero.equipmentEntry(forLoadoutNamed:)` then falls back to the name.
+    var templateId: String? = nil
 
     init(name: String, combatTechniqueId: String, damage: String, at: Int, range: String, weight: Double) {
         self.name = name

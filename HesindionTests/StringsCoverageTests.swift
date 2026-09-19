@@ -33,6 +33,15 @@ final class StringsCoverageTests: XCTestCase {
         ] { assertLocalized(key) }
     }
 
+    /// The weapon info sheet (`WeaponInfoSheet`).
+    func testWeaponInfoKeysAreLocalized() {
+        for key in [
+            "weapon.info.title", "weapon.info.hero", "weapon.info.template",
+            "weapon.atPaMod", "weapon.advantage", "weapon.disadvantage", "weapon.note",
+            "weapon.consecratedTo",
+        ] { assertLocalized(key) }
+    }
+
     /// The critical-table screen's own chrome. The table titles and the
     /// "replaces …" notes are covered by `CriticalSuccessTableTests`, which can
     /// derive them from the enum; these are hand-written call sites and so have

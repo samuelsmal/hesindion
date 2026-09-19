@@ -6,8 +6,9 @@ import XCTest
 /// > Angriffe mit geweihten Waffen der Gegengottheit erzeugen doppelte
 /// > Trefferpunkte." — Fokusregel *Karmale Objekte*
 ///
-/// The hero carries a Rabenschnabel, Boron's own weapon, and the seed marks it
-/// consecrated the way the hero settings screen would.
+/// The hero carries a Rabenschnabel, Boron's own weapon, which Optolith's
+/// inventory marks "geweiht (Boron)"; the ordinary-weapon case switches that off
+/// the way the hero settings screen would.
 final class KarmalWeaponFlowTests: XCTestCase {
 
     /// The Rabenschnabel is 1W6+4, so a scripted 5 gives 9 TP before anything
@@ -21,7 +22,10 @@ final class KarmalWeaponFlowTests: XCTestCase {
             diceScript: "\(Self.die)",
             fokusRules: rule ? ["karmaleObjekte"] : [],
             weapon: "Rabenschnabel",
-            consecrate: consecrated ? ["Rabenschnabel"] : []
+            consecrate: consecrated ? ["Rabenschnabel"] : [],
+            // The Rabenschnabel is Boron's and geweiht by default (Optolith's
+            // inventory); "not consecrated" is the player switching that off.
+            unconsecrate: consecrated ? [] : ["Rabenschnabel"]
         )
         let attack = app.button(containing: "Angriff")
         XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
@@ -36,8 +40,8 @@ final class KarmalWeaponFlowTests: XCTestCase {
 
     // MARK: - When the question is asked at all
 
-    /// Only for a weapon the player has marked. Every other weapon would get a
-    /// question the rule has no answer for.
+    /// Only for a consecrated weapon. Every other weapon would get a question
+    /// the rule has no answer for.
     @MainActor
     func testAnOrdinaryWeaponIsNotAskedAboutDemons() {
         continueAfterFailure = false

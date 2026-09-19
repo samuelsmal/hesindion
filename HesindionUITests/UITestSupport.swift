@@ -42,6 +42,7 @@ enum UITest {
         wuchtschlagTier: Int? = nil,
         weapon: String? = nil,
         consecrate: [String] = [],
+        unconsecrate: [String] = [],
         freshCombat: Bool = false,
         mounted: Bool = false,
         plaenkler: String? = nil
@@ -77,6 +78,11 @@ enum UITest {
         }
         if !consecrate.isEmpty {
             app.launchArguments += ["-uitest-consecrate", consecrate.joined(separator: ",")]
+        }
+        // The seed hero's Rabenschnabel is consecrated by Optolith's inventory;
+        // a test about an ordinary weapon switches that off.
+        if !unconsecrate.isEmpty {
+            app.launchArguments += ["-uitest-unconsecrate", unconsecrate.joined(separator: ",")]
         }
         // Without this the seed drops the hero into a fight already in progress,
         // which is what makes every other test start at the combat root.

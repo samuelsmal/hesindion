@@ -151,6 +151,9 @@ final class RuleEvaluatorTests: XCTestCase {
 
     func testAnyNotAndTheLoadoutPredicates() {
         hero.meleeWeapons = [MeleeWeapon(name: "Rabenschnabel", combatTechniqueId: "CT_5", damage: "1W6+4", at: 12, pa: 8, reach: "Mittel", weight: 2)]
+        // The Rabenschnabel is Boron's and geweiht by default; switched off so
+        // that nothing is consecrated until the test says so.
+        hero.setConsecrated("Rabenschnabel", false)
         hero.shields = [Shield(name: "Großschild", damage: "1W6+1", at: 6, pa: 11, reach: "Kurz", structurePoints: 30, weight: 6)]
         hero.selectedWeaponName = "Rabenschnabel"
         let either: RulePredicate = .any([.loadoutWeapon(technique: ["CT_5"], item: "Rabenschnabel", consecrated: nil),

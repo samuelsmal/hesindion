@@ -615,6 +615,7 @@ struct OptolithImportService {
                         structurePoints: stp,
                         weight: weight
                     ))
+                    shields.last?.templateId = template.isEmpty ? nil : template
                 } else {
                     let ctVal = ctValues[ctId] ?? 6
                     let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
@@ -642,6 +643,7 @@ struct OptolithImportService {
                         reach: reach,
                         weight: weight
                     ))
+                    weapons.last?.templateId = item["template"] as? String
                 }
 
             case 2:
@@ -673,6 +675,7 @@ struct OptolithImportService {
                     range: range,
                     weight: weight
                 ))
+                rangedWeapons.last?.templateId = item["template"] as? String
 
             case 4:
                 // Armor
