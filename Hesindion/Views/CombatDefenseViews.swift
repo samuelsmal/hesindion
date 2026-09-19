@@ -139,7 +139,7 @@ struct CombatOpponentDefenseView: View {
                 if !opponentDefenseLines.isEmpty {
                     CombatBreakdownBox(
                         rows: opponentDefenseLines.map(BreakdownRow.line),
-                        totalValue: "\(L("parry")) \(signedTotal(opponentDefenseLines))",
+                        totalValue: "VW \(signedTotal(opponentDefenseLines))",
                         totalSource: L("source.opponentDefense"),
                         sectionLabel: L("opponentDefense.label")
                     )
@@ -442,8 +442,9 @@ struct CombatOpponentDefenseView: View {
     }
 
     /// What the announcement left on the other side's defence. Halving is not a
-    /// modifier line — it is stated in its own banner above — so this is the
-    /// Finte and the Liegend penalty, the two things that subtract.
+    /// modifier line — it is stated in its own banner above — so this is Finte
+    /// and the catalog's opponent lines (Liegend, Angriff von hinten), the
+    /// things that subtract.
     private var opponentDefenseLines: [ModifierLine] { opponentDefenseModifiers }
 
     private func signedTotal(_ lines: [ModifierLine]) -> String {

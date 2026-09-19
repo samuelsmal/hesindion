@@ -145,7 +145,7 @@ final class ComplicatedAttackFlowTests: XCTestCase {
             "The prone opponent's penalty should be named Liegend"
         )
         XCTAssertTrue(
-            opponentDefense.staticTexts["Parieren -2"].exists,
+            opponentDefense.staticTexts["VW -2"].exists,
             "Liegend is the only opponent line here: −2"
         )
         // The recap of the hero's own AT modifiers is gone: it sat under a
