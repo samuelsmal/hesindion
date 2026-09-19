@@ -56,10 +56,19 @@ struct CombatRootView: View {
 
     /// Whether a defence can be made at all this moment. Vorstoß gives it up for
     /// the round; the Fernkampf-Patzer *Zu konzentriert* gives it up until the
-    /// hero's next own action. Two rules, one button state — and each says which
-    /// of them it is, underneath.
+    /// hero's next own action; Handlungsunfähig gives up every defence while it
+    /// lasts. Three rules, one button state — and each says which of them it is,
+    /// underneath.
     private var defenseBlocked: Bool {
-        vorstossActiveThisRound || hero.activeCombatNoDefense
+        vorstossActiveThisRound || hero.activeCombatNoDefense || actionsBlocked
+    }
+
+    /// Status Handlungsunfähig (Regelwerk 36): no actions and no defences at
+    /// all — only speaking, as a free action, at the GM's discretion. Every
+    /// entry point that is an action or a reaction is shut; recording damage
+    /// and ending the fight stay open, since they are bookkeeping.
+    private var actionsBlocked: Bool {
+        hero.isHandlungsunfaehig
     }
 
     /// "2. Parade · −3" under the button that charges it, so the cost of
@@ -438,7 +447,7 @@ struct CombatRootView: View {
                         .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Spacer()
-                    if currentRound >= casting.totalRounds {
+                    if currentRound >= casting.totalRounds, !actionsBlocked {
                         Button(L("continue")) {
                             step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
                         }
@@ -513,13 +522,15 @@ struct CombatRootView: View {
                         Text(L("attack"))
                     }
                     .font(.dsaHeading(.title3))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(combatAccent)
+                    .background(actionsBlocked ? Color.dsaDisabled : combatAccent)
                     .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
+                .disabled(actionsBlocked)
+                .accessibilityIdentifier("combat.attack")
 
                 // Fernkampf. A Ladehemmung (Fernkampf-Patzer 9) costs two
                 // complete Kampfrunden, so the entry point itself is shut and
@@ -531,6 +542,7 @@ struct CombatRootView: View {
                     // modifier the evaluator can express, so the entry point
                     // itself is shut, same as a Ladehemmung.
                     let underwater = waterDepth == .unterWasser
+                    let rangedShut = jammed || underwater || actionsBlocked
                     Button {
                         step = .fernkampfSetup
                     } label: {
@@ -550,14 +562,14 @@ struct CombatRootView: View {
                                     .opacity(0.85)
                             }
                         }
-                        .foregroundStyle(jammed || underwater ? .white : combatAccent)
+                        .foregroundStyle(rangedShut ? Color.dsaDisabledLabel : combatAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(jammed || underwater ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: jammed || underwater ? Color.dsaDisabled : combatAccent)
+                        .background(rangedShut ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: rangedShut ? Color.dsaBorder : combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
-                    .disabled(jammed || underwater)
+                    .disabled(rangedShut)
                     .accessibilityIdentifier("combat.rangedAttack")
                 }
 
@@ -571,13 +583,14 @@ struct CombatRootView: View {
                             Text(L("castSpell"))
                         }
                         .font(.dsaHeading(.title3))
-                        .foregroundStyle(Color.groupMagic)
+                        .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : Color.groupMagic)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: Color.groupMagic)
+                        .background(actionsBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : Color.groupMagic)
                     }
                     .buttonStyle(.dsaMotion)
+                    .disabled(actionsBlocked)
                 }
 
                 // Flucht is an action like any other, and was stranded between
@@ -588,13 +601,20 @@ struct CombatRootView: View {
                         Text(L("flucht"))
                     }
                     .font(.dsaHeading(.title3))
-                    .foregroundStyle(combatAccent)
+                    .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: combatAccent)
+                    .background(actionsBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
+                .disabled(actionsBlocked)
+                .accessibilityIdentifier("combat.flucht")
+
+                if actionsBlocked {
+                    defenseBlockedReason(L("incapacitated.noActions"))
+                        .accessibilityIdentifier("combat.incapacitated.reason")
+                }
 
             }
             .dsaOptionGroup()
@@ -623,11 +643,11 @@ struct CombatRootView: View {
                                 .opacity(0.85)
                         }
                     }
-                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? Color.dsaDisabledLabel : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(defenseBlocked)
@@ -649,11 +669,11 @@ struct CombatRootView: View {
                                 .opacity(0.85)
                         }
                     }
-                    .foregroundStyle(defenseBlocked ? .white : combatAccent)
+                    .foregroundStyle(defenseBlocked ? Color.dsaDisabledLabel : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(defenseBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaDisabled : combatAccent)
+                    .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
                 .disabled(defenseBlocked)
@@ -667,7 +687,9 @@ struct CombatRootView: View {
                 // …and the Fernkampf-Patzer's own. A disabled button with no
                 // reason under it reads as a bug, and the two rules end at
                 // different moments, so each says which one it is.
-                if hero.activeCombatNoDefense {
+                if actionsBlocked {
+                    defenseBlockedReason(L("incapacitated.noDefense"))
+                } else if hero.activeCombatNoDefense {
                     defenseBlockedReason(L("fumble.noDefense.reason"))
                         .accessibilityIdentifier("combat.noDefense.fumble")
                 }
@@ -683,11 +705,12 @@ struct CombatRootView: View {
             // they have in common — the gold fill says it too, but a player
             // deciding whether to spend one wants them in one place.
             if schipsAvailable > 0,
-               !schipDefenseBoostActive || (!schipIgnoreZustandThisRound && hero.hasIgnorableZustand) {
+               (!schipDefenseBoostActive && !actionsBlocked) || (!schipIgnoreZustandThisRound && hero.hasIgnorableZustand) {
                 combatSectionLabel(L("fateAction.label"))
 
                 VStack(spacing: 8) {
-                    if !schipDefenseBoostActive {
+                    // A defence bonus is worth nothing to a hero who cannot defend.
+                    if !schipDefenseBoostActive && !actionsBlocked {
                         schipActionButton(icon: "shield.checkered", title: L("schip.defenseBoost")) {
                             hero.derivedValues?.schicksalspunkte.current -= 1
                             schipDefenseBoostActive = true
@@ -746,13 +769,15 @@ struct CombatRootView: View {
                         Text(L("changeLoadout"))
                     }
                     .font(.dsaHeading(.body))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.dsaDark)
+                    .background(actionsBlocked ? Color.dsaDisabled : Color.dsaDark)
                     .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
+                // Drawing or swapping a weapon is an action.
+                .disabled(actionsBlocked)
             }
             .dsaOptionGroup()
 
