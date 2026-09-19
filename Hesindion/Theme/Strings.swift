@@ -329,6 +329,11 @@ enum DSAStrings {
         "beengteUmgebung":              "Confined Space",
         "beengteUmgebung.label":        "ENVIRONMENT",
 
+        // Mounted switch
+        "combat.mounted.on":            "Mounted: %@",
+        "combat.mounted.off":           "On foot",
+        "combat.mounted.fellOff":       "Prone — no longer in the saddle",
+
         // Weapon Reach
         "opponentReach.label":          "OPPONENT REACH",
 
@@ -1044,6 +1049,11 @@ enum DSAStrings {
         // Beengte Umgebung
         "beengteUmgebung":              "Beengte Umgebung",
         "beengteUmgebung.label":        "UMGEBUNG",
+
+        // Mounted switch
+        "combat.mounted.on":            "Beritten: %@",
+        "combat.mounted.off":           "Zu Fuß",
+        "combat.mounted.fellOff":       "Liegend — nicht mehr im Sattel",
 
         // Weapon Reach
         "opponentReach.label":          "GEGNER-REICHWEITE",

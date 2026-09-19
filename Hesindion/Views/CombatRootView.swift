@@ -16,7 +16,7 @@ struct CombatRootView: View {
     @Binding var dodgesThisRound: Int
     @Binding var schipDefenseBoostActive: Bool
     @Binding var schipIgnoreZustandThisRound: Bool
-    let mountedActive: Bool
+    @Binding var mountedActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
     /// The other side, for the defences rolled straight from this screen. A
@@ -297,6 +297,31 @@ struct CombatRootView: View {
                 .buttonStyle(.dsaMotion)
                 .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Beritten/Zu Fuß toggle — only when the hero brought a mount into
+                // this fight. Flipping it feeds every later roll through
+                // `situation.mounted`, not just the setup-time flag; the LP bar for
+                // the mount and the mount attack section above already read
+                // `mountedActive` and follow along.
+                if hero.hasMount, let mount = hero.pets.first {
+                    Button { mountedActive.toggle() } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: mountedActive ? "figure.equestrian.sports" : "figure.walk")
+                                .font(.dsaBody(.caption))
+                            Text(mountedActive ? String(format: L("combat.mounted.on"), mount.name) : L("combat.mounted.off"))
+                                .font(.dsaMono(.caption, emphasis: true))
+                        }
+                        .foregroundStyle(mountedActive ? .white : .secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(mountedActive ? combatAccent : Color(UIColor.secondarySystemBackground))
+                        .dsaBox(.flush, stroke: mountedActive ? combatAccent : Color.dsaBorder)
+                    }
+                    .buttonStyle(.dsaMotion)
+                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("combat.mounted.toggle")
+                }
 
                 // A spent Schip is a state of this round, not an action, so it
                 // is reported here rather than left as a dead button among live

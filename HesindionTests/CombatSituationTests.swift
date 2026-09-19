@@ -133,4 +133,21 @@ final class CombatSituationTests: XCTestCase {
         XCTAssertEqual(value(of: L("source.mounted"), in: lines(CombatSituation(mounted: true), isAusweichen: true)), -2)
         XCTAssertNil(value(of: L("source.mounted"), in: lines(CombatSituation(mounted: true))))
     }
+
+    // MARK: - Task 2: the mounted switch, not the setup-time flag, feeds the roll
+
+    /// Golgariten-Stil (SA_661) needs `situation.mounted` plus a Rabenschnabel
+    /// (or Großschild) in hand. A hero who started the fight mounted but has
+    /// since dismounted must lose the style's +1 PA — the root's toggle is the
+    /// only thing this line reads, never whatever `hero.activeCombatMounted`
+    /// was set to when the fight began.
+    func testGolgaritenStilFollowsTheMountedSwitchNotTheSetupFlag() {
+        hero.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_661", name: "Golgariten-Stil", tier: nil, sid: nil))
+        let rabenschnabel = MeleeWeapon(name: "Rabenschnabel", combatTechniqueId: "CT_5", damage: "1W6+3", at: 12, pa: 8, reach: "Mittel", weight: 1.5)
+        hero.meleeWeapons.append(rabenschnabel)
+        hero.selectedWeaponName = "Rabenschnabel"
+
+        XCTAssertNil(value(ofRule: "SA_661", in: lines(CombatSituation(mounted: false))), "on foot, the style's own PA bonus does not apply")
+        XCTAssertEqual(value(ofRule: "SA_661", in: lines(CombatSituation(mounted: true))), 1, "mounted, the +1 PA applies")
+    }
 }

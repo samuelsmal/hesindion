@@ -312,7 +312,7 @@ struct CombatView: View {
                     dodgesThisRound: $dodgesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
-                    mountedActive: mountedActive,
+                    mountedActive: $mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
                     opponent: opponent,
@@ -561,7 +561,7 @@ struct CombatView: View {
                     dodgesThisRound: $dodgesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
-                    mountedActive: mountedActive,
+                    mountedActive: $mountedActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
                     opponent: opponent,
@@ -620,6 +620,12 @@ struct CombatView: View {
                 }
             }
         })
+        .onChange(of: mountedActive) { _, _ in persistCombatState() }
+        // A hero on the ground is not in the saddle: the Patzer's Sturz and every
+        // other way to Liegend unseat a rider.
+        .onChange(of: hero.isLiegend) { _, isDown in
+            if isDown && mountedActive { mountedActive = false }
+        }
         .onChange(of: roundNumber) { _, _ in
             dualAttackPenaltyActive = false
             twoHandedGripActive = false
