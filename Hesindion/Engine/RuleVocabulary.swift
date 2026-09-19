@@ -38,8 +38,9 @@ enum RuleVocabulary {
     enum Effect: String, CaseIterable { case add, multiply, opponentAdd, modifyRule, choice }
 
     /// `vw` is the Verteidigungswert — parry and dodge both. `talent` carries
-    /// a `talentId`.
-    enum Target: String, CaseIterable { case at, pa, aw, vw, fk, tp, talent }
+    /// a `talentId`. `rs` is the opponent's armour: only ever an `opponentAdd`
+    /// line the GM applies (ADR-0005), never a number of the hero's.
+    enum Target: String, CaseIterable { case at, pa, aw, vw, fk, tp, talent, rs }
 
     /// What an `add` value is multiplied by.
     enum Per: String, CaseIterable, Codable { case tier, defencesThisRound }

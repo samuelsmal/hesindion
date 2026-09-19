@@ -12,6 +12,12 @@ enum DSAStrings {
         return englishFallback[key] ?? key
     }
 
+    /// Whether `key` is in the English *and* the German table. `L` falls back
+    /// from one to the other, so `L(key) != key` cannot tell.
+    static func isInBothTables(_ key: String) -> Bool {
+        englishFallback[key] != nil && translations[key] != nil
+    }
+
     // MARK: - Field Labels (PersonalData, Experience, DerivedValues)
 
     private static let englishFallback: [String: String] = [
@@ -683,6 +689,11 @@ enum DSAStrings {
         "opponent.bodyPlan":            "Body plan",
         "opponent.size":                "Size",
         "opponent.prone":               "Target is prone",
+        // A weapon's own offer (catalog ITEMTPL_ entries, a toggle on the
+        // announcement) and the opponent-RS note it prints.
+        "weaponOffer.ITEMTPL_19":       "Thorn spike",
+        "opponentRS":                   "Opponent RS",
+        "ITEMTPL_19.rsNote":            "only against RS 6 or more",
         "opponent.prone.effect":        "Their defence is 2 harder (their own attacks are 4 harder).",
         "opponent.onFoot":              "Opponent fights on foot",
         "opponent.onFoot.short":        "on foot",
@@ -1654,6 +1665,9 @@ enum DSAStrings {
         "opponent.bodyPlan":            "Körperbau",
         "opponent.size":                "Größe",
         "opponent.prone":               "Ziel liegt",
+        "weaponOffer.ITEMTPL_19":       "Dornenspitze",
+        "opponentRS":                   "Gegner-RS",
+        "ITEMTPL_19.rsNote":            "nur gegen RS 6 oder mehr",
         "opponent.prone.effect":        "Seine Verteidigung ist um 2 erschwert (seine Angriffe um 4).",
         "opponent.onFoot":              "Gegner kämpft zu Fuß",
         "opponent.onFoot.short":        "zu Fuß",

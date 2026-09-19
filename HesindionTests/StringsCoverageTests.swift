@@ -128,4 +128,19 @@ final class StringsCoverageTests: XCTestCase {
         XCTAssertEqual(L("maneuver.sturmangriff"), "Sturmangriff zu Pferd")
         XCTAssertEqual(L("source.sturmangriff"), "Sturmangriff zu Pferd")
     }
+
+    /// A weapon's offer is a toggle on the announcement titled
+    /// `weaponOffer.<id>`; one without that key would show the raw id.
+    func testEveryWeaponOfferHasItsToggleTitle() throws {
+        guard RulesDatabase.shared.lookup(id: "SA_67") != nil else { throw XCTSkip("rules.db unavailable") }
+        let offering = RuleCatalog.bundled.implemented
+            .filter { $0.id.hasPrefix("ITEMTPL_") && $0.clauses.contains { $0.kind == .offer } }
+            .map(\.id)
+        XCTAssertTrue(offering.contains("ITEMTPL_19"), "the Rabenschnabel's Dornenspitze is an offer")
+        for id in offering {
+            XCTAssertTrue(DSAStrings.isInBothTables("weaponOffer.\(id)"), "weaponOffer.\(id) missing in EN or DE")
+        }
+        XCTAssertTrue(DSAStrings.isInBothTables("opponentRS"))
+        XCTAssertTrue(DSAStrings.isInBothTables("ITEMTPL_19.rsNote"))
+    }
 }

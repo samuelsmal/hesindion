@@ -109,7 +109,8 @@
       "vw",
       "fk",
       "tp",
-      "talent"
+      "talent",
+      "rs"
     ],
     "tiers" : [
       "owned"

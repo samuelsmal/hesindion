@@ -354,6 +354,9 @@ struct CombatAnnouncementView: View {
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
     @State private var showingZoneRoll = false
+    /// The weapon's own offers the player took (catalog `ITEMTPL_` ids, e.g.
+    /// the Rabenschnabel's Dornenspitze). Announced into every `situation(_:)`.
+    @State private var weaponOffers: Set<String> = []
 
     /// Whether this weapon has anything to say about demons at all.
     private var weaponIsConsecrated: Bool {
@@ -483,6 +486,11 @@ struct CombatAnnouncementView: View {
                     .dsaOptionGroup()
                     } // end if !isMountCharge
 
+                    // The weapon's own offers (catalog ITEMTPL_ entries): the
+                    // Rabenschnabel's Dornenspitze. Not a manoeuvre — it goes
+                    // with whichever one is chosen, a mounted charge included.
+                    weaponOfferToggles
+
                     // Trefferzone (Fokus-Regel). The zones on offer are the
                     // opponent's, not the hero's: a four-legged opponent has no
                     // Arme, and a 1W20 against them lands on their own table.
@@ -525,6 +533,8 @@ struct CombatAnnouncementView: View {
 
                     // What the manoeuvre just did to the damage, if anything.
                     damageBreakdown
+                    // And what the GM takes off the opponent's armour.
+                    opponentRSNotes
 
                     CombatActionButton(
                         title: L("continue"),
@@ -553,6 +563,8 @@ struct CombatAnnouncementView: View {
             // exists for. The section is shut by default, so an attack that
             // answers nothing notices nothing.
             opponent.reset()
+            // A weapon offer is aimed at an opponent's armour: it goes with them.
+            weaponOffers = []
         }
         .overlay {
             if showingZoneRoll {
@@ -595,7 +607,10 @@ struct CombatAnnouncementView: View {
 
         let modifiers = buildModifierLines()
         let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }
-        let note = selectedManeuver.infoText()
+        // The opponent-RS lines are the GM's to subtract (ADR-0005); the
+        // execution screen carries them in its note.
+        let noteParts = [selectedManeuver.infoText()].compactMap { $0 } + opponentRSLines.map(rsText)
+        let note: String? = noteParts.isEmpty ? nil : noteParts.joined(separator: "\n")
 
         // The weapon's own damage and the bonuses travel apart: the damage
         // screen prints every part, and nothing can fold the same bonus in twice.
@@ -868,7 +883,95 @@ struct CombatAnnouncementView: View {
         s.maneuver = selectedManeuver
         s.isOffHand = isOffHand
         s.targetHitZone = targetZone
+        for id in weaponOffers { s.announced[id] = 1 }
         return s
+    }
+
+    // MARK: - The weapon's own offers
+
+    /// The weapon's offers on this attack, taken or not: evaluated with the
+    /// taken ones withdrawn, since a taken offer is no longer in `offers`.
+    /// None for a Passierschlag, which is rolled on its own screen.
+    private var availableWeaponOffers: [RuleOffer] {
+        guard selectedManeuver != .passierschlag else { return [] }
+        var s = situation(.meleeAttack)
+        for id in weaponOffers { s.announced[id] = nil }
+        return ModifierEngine.shared.evaluation(s).offers.filter { $0.ruleId.hasPrefix("ITEMTPL_") }
+    }
+
+    @ViewBuilder
+    private var weaponOfferToggles: some View {
+        let offers = availableWeaponOffers
+        if !offers.isEmpty {
+            VStack(spacing: 8) {
+                ForEach(offers, id: \.ruleId) { offer in
+                    DSAToggleRow(
+                        title: L("weaponOffer.\(offer.ruleId)"),
+                        isOn: Binding(
+                            get: { weaponOffers.contains(offer.ruleId) },
+                            set: { on in
+                                if on { weaponOffers.insert(offer.ruleId) } else { weaponOffers.remove(offer.ruleId) }
+                            }
+                        ),
+                        accent: combatAccent,
+                        detail: weaponOfferDetail(offer.ruleId),
+                        subtitle: offer.name,
+                        identifier: "combat.attack.weaponOffer.\(offer.ruleId)"
+                    )
+                }
+            }
+        }
+    }
+
+    /// What taking the offer costs the opponent's armour, e.g. "RS −2", read
+    /// off the evaluation with the offer announced.
+    private func weaponOfferDetail(_ id: String) -> String? {
+        var s = situation(.meleeAttack)
+        s.announced[id] = 1
+        let rs = ModifierEngine.shared.evaluation(s).opponentLines.filter { $0.ruleId == id && $0.target == .rs }
+        return rs.isEmpty ? nil : "RS \(rsValue(rs.reduce(0) { $0 + $1.value }))"
+    }
+
+    /// The opponent-RS lines of the offers taken. Not part of the VW total:
+    /// armour is not a defence, and the app has no opponent RS to apply it to.
+    private var opponentRSLines: [RuleLine] {
+        guard selectedManeuver != .passierschlag else { return [] }
+        return ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines.filter { $0.target == .rs }
+    }
+
+    /// "Gegner-RS −2 · Rabenschnabel (nur gegen RS 6 oder mehr)". The
+    /// parenthesis is the rule's own `<id>.rsNote`, when it has one.
+    private func rsText(_ line: RuleLine) -> String {
+        "\(L("opponentRS")) \(rsValue(line.value)) · \(rsSource(line))"
+    }
+
+    private func rsValue(_ value: Int) -> String {
+        value < 0 ? "\u{2212}\(-value)" : "+\(value)"
+    }
+
+    private func rsSource(_ line: RuleLine) -> String {
+        let key = "\(line.ruleId).rsNote"
+        let note = L(key)
+        return note == key ? line.name : "\(line.name) (\(note))"
+    }
+
+    @ViewBuilder
+    private var opponentRSNotes: some View {
+        let lines = opponentRSLines
+        if !lines.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(lines, id: \.self) { line in
+                    CombatBreakdownBox.row(
+                        value: rsValue(line.value),
+                        source: "\(L("opponentRS")) · \(rsSource(line))",
+                        tint: line.value < 0 ? Color.groupCombat : Color.dsaPositive
+                    )
+                }
+            }
+            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.announcement.opponentRS")
+        }
     }
 
     private func buildModifierLines() -> [ModifierLine] {
@@ -927,7 +1030,9 @@ struct CombatAnnouncementView: View {
 
     private var opponentDefenseLines: [ModifierLine] {
         opponent.defenseModifiers(maneuver: selectedManeuver)
-            + ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines.map(\.modifierLine)
+            + ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines
+                .filter { $0.target != .rs }   // armour, not defence: opponentRSNotes
+                .map(\.modifierLine)
     }
 
     /// The TP calculation, for the same reason the AT one exists: a manoeuvre

@@ -120,6 +120,17 @@ final class RuleCatalogDecodingTests: XCTestCase {
         XCTAssertFalse(rule("GRW_reichweite").needsOwnership)
         XCTAssertFalse(rule("COND_6").needsOwnership)
         XCTAssertFalse(rule("STATE_10").needsOwnership)
+        XCTAssertFalse(rule("ITEMTPL_19").needsOwnership, "a weapon's rules are gated by applies_with, not by the hero owning the id")
+    }
+
+    /// The opponent's armour: only ever an `opponentAdd` line, so it lands in
+    /// no domain of the hero's.
+    func testRSDecodesAndAppliesToNoDomain() throws {
+        let decoded = try clauses(#"[{"kind": "offer", "domains": ["meleeAttack"], "effects": [{"effect": "opponentAdd", "target": "rs", "value": -2}]}]"#)
+        XCTAssertEqual(decoded[0].effects, [.opponentAdd(target: .rs, value: -2)])
+        for domain in RuleDomain.allCases {
+            XCTAssertFalse(RuleTarget.rs.applies(in: domain, talentId: nil), "\(domain)")
+        }
     }
 
     // MARK: - Against the bundled database

@@ -1,5 +1,6 @@
 # The rules catalog — docs/plans/2026-09-14-rules-catalog-design.md §4.
-# One entry per rule id in rules.db. The build fails on a missing or unknown id,
+# One entry per rule id in rules.db (weapon templates, ITEMTPL_, optionally).
+# The build fails on a missing or unknown id,
 # an unknown status, a byHand pointer that does not resolve, a byHand without
 # note, a todo without why, a noRollEffect without note, a name or group that
 # does not match rules.db, a duplicate id, or counts that differ from
@@ -428,6 +429,39 @@
       domains: [meleeAttack]
       when: [{ opponent.state: liegend }]
       effects: [{ opponentAdd: { target: vw, value: -2 } }]
+
+# ---------------------------------------------------------------------------
+# A weapon's own rules (Waffenvorteil/-nachteil), keyed by its Optolith
+# template id. ITEMTPL_ ids are checked against the equipment table (id and
+# name) instead of rules.db, and are optional: a weapon without an entry is
+# fine. The Regelwiki is the text of record for weapons; where Optolith
+# differs, the wiki wins. applies_with names the weapon in hand.
+# ---------------------------------------------------------------------------
+
+- id: ITEMTPL_19
+  name: "Rabenschnabel"
+  group: "Waffe"
+  status: implemented
+  reviewed: null
+  sources:
+    - { kind: optolith, src: US25208, page: 83 }
+    - { kind: wiki, url: "https://dsa.ulisses-regelwiki.de/rabenschnabel.html", fetched: 2026-09-18 }
+  text: |
+    Statt mit der Hammerseite anzugreifen, kann der Held auch die Dornenspitze verwenden. Die
+    Dornenspitze verursacht ebenfalls 1W6+4 TP. Rüstungen mit RS 6 oder mehr erleiden dadurch
+    einen Malus von -2 auf RS. Von einem Reittier aus geführt, bekommt der Träger des
+    Rabenschnabels einen Bonus von +1 TP.
+    Nach einem bestätigten Patzer bei einer Attacke erhält der Träger zusätzlich 1 Stufe Betäubung.
+  note: "Dornenspitze: an offer the announcement shows as a toggle; the RS −2 is an opponent line (target rs) the GM applies only against RS 6+, the app has no opponent RS (ADR-0005). +1 TP when mounted, whichever end is used. The Patzer's Betäubung is Swift (WeaponFumbleExtras, Task 14): the vocabulary has no state effect. geweiht (Boron) comes from the equipment table (Hero.isConsecrated)."
+  applies_with: [{ loadout.weapon: { item: Rabenschnabel } }]
+  clauses:
+    - kind: passive
+      domains: [damage]
+      when: [situation.mounted]
+      effects: [{ add: { target: tp, value: 1 } }]
+    - kind: offer
+      domains: [meleeAttack]
+      effects: [{ opponentAdd: { target: rs, value: -2 } }]
 
 # ---------------------------------------------------------------------------
 # Handled by the app today (status byHand). The pointer names the symbol that

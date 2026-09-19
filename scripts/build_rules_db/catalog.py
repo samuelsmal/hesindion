@@ -29,6 +29,10 @@ CLAUSE_KEYS = {"kind", "domains", "when", "effects", "tiers"}
 # Entries for core rules that have no Optolith id (design §4). Exempt from the
 # rules.db checks; everything else about them is checked like any other entry.
 CORE_PREFIX = "GRW_"
+# Entries for a weapon's own rules, keyed by its Optolith template id. Checked
+# against the `equipment` table instead of `rules`, and optional: a template
+# without an entry is not a problem (the completeness check only walks `rules`).
+WEAPON_PREFIX = "ITEMTPL_"
 
 
 class CatalogError(Exception):
@@ -81,13 +85,15 @@ def load_catalog(path: Path) -> list[dict]:
 
 
 def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
-             groups: dict[str, str] | None = None, vocabulary: dict | None = None) -> list[str]:
+             groups: dict[str, str] | None = None, vocabulary: dict | None = None,
+             equipment: dict[str, str] | None = None) -> list[str]:
     """Every problem with the catalog, as one line each. Empty means valid.
 
     `rules` maps every rule id in rules.db to its German name. `groups`, when given,
     maps every rule id to its expected group label; omit it to skip that check.
     `vocabulary`, when given, is what `implemented` clauses are checked against;
-    omit it to check statuses and pointers only.
+    omit it to check statuses and pointers only. `equipment` maps every weapon
+    template id to its German name; an `ITEMTPL_` entry must name one of them.
     """
     problems: list[str] = []
     seen: set[str] = set()
@@ -109,7 +115,14 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
             problems.append(f"{rid}: listed twice")
         seen.add(rid)
         core = isinstance(rid, str) and rid.startswith(CORE_PREFIX)
-        if not core:
+        weapon = isinstance(rid, str) and rid.startswith(WEAPON_PREFIX)
+        if weapon:
+            if equipment is None or rid not in equipment:
+                problems.append(f"{rid}: not in equipment")
+                continue
+            if e["name"] != equipment[rid]:
+                problems.append(f"{rid}: name is {e['name']!r}, equipment says {equipment[rid]!r}")
+        elif not core:
             if rid not in rules:
                 problems.append(f"{rid}: not in rules.db")
                 continue
@@ -256,6 +269,10 @@ def _check_effect(rid: str, eff, vocab: dict, where: str, implemented_ids: set[s
     # for one value of another, and a cross-entry reference.
     if arg.get("target") == "talent" and "talentId" not in arg:
         problems.append(f"{rid}: {where}: target talent needs an id")
+    # The opponent's armour is never the hero's number: the app does not model it
+    # (ADR-0005), so `rs` only appears as a line the GM applies.
+    if arg.get("target") == "rs" and name != "opponentAdd":
+        problems.append(f"{rid}: {where}: target rs is only for opponentAdd")
     if name == "multiply":
         problems.extend(_check_factor(rid, where, "multiply.factor", arg.get("factor")))
     if name == "modifyRule":
@@ -472,7 +489,9 @@ def import_catalog(conn: sqlite3.Connection, catalog_path: Path, snapshot_path: 
         JOIN categories c ON c.id = r.category
         LEFT JOIN groups g ON g.id = r.group_id AND g.category = r.category
     """).fetchall())
-    problems = validate(entries, rules, repo_root, groups, vocabulary)
+    equipment = dict(conn.execute("SELECT id, name FROM equipment").fetchall()) if conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'equipment'").fetchone() else {}
+    problems = validate(entries, rules, repo_root, groups, vocabulary, equipment)
     if problems:
         for p in problems:
             print(f"  catalog: {p}", file=sys.stderr)

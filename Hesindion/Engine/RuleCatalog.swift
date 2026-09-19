@@ -4,6 +4,9 @@ import Foundation
 enum RuleTarget: Equatable, Hashable {
     case at, pa, aw, vw, fk, tp
     case talent(String)
+    /// The opponent's Rüstungsschutz. Only an `opponentAdd` line (which never
+    /// checks the domain), so it lands in no domain of the hero's.
+    case rs
 
     /// Whether a line with this target belongs to the domain being evaluated.
     /// An effect on another target is simply not this domain's business: a
@@ -17,6 +20,7 @@ enum RuleTarget: Equatable, Hashable {
         case .fk:              domain == .rangedAttack
         case .tp:              domain == .damage
         case .talent(let id):  domain == .talentCheck && talentId == id
+        case .rs:              false
         }
     }
 }
@@ -80,9 +84,11 @@ struct CatalogRule: Equatable {
 
     /// Sonderfertigkeiten, Vorteile and Nachteile apply only when the hero
     /// carries the id (design decision 6). Core rules, Zustände and Status
-    /// apply to everyone; their `when` gates them.
+    /// apply to everyone; their `when` gates them. A weapon's own rules
+    /// (`ITEMTPL_`) are gated by `applies_with` naming the weapon in hand.
     var needsOwnership: Bool {
-        !(id.hasPrefix("GRW_") || id.hasPrefix("COND_") || id.hasPrefix("STATE_"))
+        !(id.hasPrefix("GRW_") || id.hasPrefix("COND_") || id.hasPrefix("STATE_")
+          || id.hasPrefix("ITEMTPL_"))
     }
 }
 
@@ -242,6 +248,7 @@ extension RuleTarget {
         case .fk: .fk
         case .tp: .tp
         case .talent: .talent(try c.string("talentId"))
+        case .rs: .rs
         }
     }
 }

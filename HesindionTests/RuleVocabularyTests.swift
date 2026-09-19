@@ -37,6 +37,7 @@ final class RuleVocabularyTests: XCTestCase {
         let enums = try XCTUnwrap(root["enums"] as? [String: [String]])
         XCTAssertEqual(enums["domain"], RuleDomain.allCases.map(\.rawValue))
         XCTAssertEqual(enums["target"], RuleVocabulary.Target.allCases.map(\.rawValue))
+        XCTAssertEqual(enums["target"], ["at", "pa", "aw", "vw", "fk", "tp", "talent", "rs"])
         XCTAssertEqual(enums["span"], FactSpan.allCases.map(\.rawValue))
         XCTAssertEqual(enums["reach"], WeaponReach.allCases.map(\.rawValue))
         XCTAssertEqual(enums["zone"], HitZone.allCases.map(\.rawValue))

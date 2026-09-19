@@ -369,10 +369,11 @@ VOCAB = {
         "modifyRule": {"args": {"id": "string", "target": "enum:target", "talentId": "string",
                                 "add": "int", "set": "int", "multiply": "number"},
                        "required": ["id", "target"]},
+        "opponentAdd": {"args": {"target": "enum:target", "value": "int"}, "required": ["target", "value"]},
         "choice": {"args": {}, "required": [], "value": "list:effect"},
     },
     "enums": {
-        "target": ["at", "pa", "vw", "talent"],
+        "target": ["at", "pa", "vw", "tp", "talent", "rs"],
         "domain": ["meleeAttack", "meleeParry", "talentCheck"],
         "span": ["hero", "opponent", "attack", "round"],
         "per": ["tier", "defencesThisRound"],
@@ -555,6 +556,83 @@ class ClauseValidationTests(unittest.TestCase):
         vocab = catalog.load_vocabulary(VOCABULARY_PATH)
         problems = catalog.validate([GOLGARITEN, GRW, entry(id="SA_2", name="Zweite")], RULES, self.root, vocabulary=vocab)
         self.assertEqual(problems, [])
+
+
+EQUIPMENT = {"ITEMTPL_19": "Rabenschnabel", "ITEMTPL_796": "Rabenschnabel"}
+
+RABENSCHNABEL = {
+    "id": "ITEMTPL_19", "name": "Rabenschnabel", "group": "Waffe", "status": "implemented",
+    "applies_with": [{"loadout.weapon": {"item": "Rabenschnabel"}}],
+    "clauses": [
+        {"kind": "passive", "domains": ["meleeAttack"], "when": ["situation.mounted"],
+         "effects": [{"add": {"target": "at", "value": 1}}]},
+        {"kind": "offer", "domains": ["meleeAttack"],
+         "effects": [{"opponentAdd": {"target": "rs", "value": -2}}]},
+    ],
+}
+
+
+class WeaponTemplateTests(unittest.TestCase):
+    """ITEMTPL_ ids are checked against the equipment table, and never required."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def validate(self, *entries, equipment=EQUIPMENT):
+        pad = [entry(), entry(id="SA_2", name="Zweite")]
+        return catalog.validate(pad + list(entries), RULES, self.root,
+                                {"SA_1": "Kampf", "SA_2": "Kampf"}, VOCAB, equipment)
+
+    def test_a_template_with_its_equipment_name_passes(self):
+        self.assertEqual(self.validate(RABENSCHNABEL), [])
+
+    def test_a_template_needs_no_entry(self):
+        self.assertEqual(self.validate(), [])
+
+    def test_a_wrong_name_is_a_problem(self):
+        self.assertIn("ITEMTPL_19: name is 'Rabe', equipment says 'Rabenschnabel'",
+                      self.validate(dict(RABENSCHNABEL, name="Rabe")))
+
+    def test_an_unknown_template_is_a_problem(self):
+        self.assertIn("ITEMTPL_999: not in equipment",
+                      self.validate(dict(RABENSCHNABEL, id="ITEMTPL_999")))
+
+    def test_without_an_equipment_table_a_template_is_a_problem(self):
+        self.assertIn("ITEMTPL_19: not in equipment",
+                      self.validate(RABENSCHNABEL, equipment=None))
+
+    def test_rs_is_only_an_opponent_line(self):
+        bad = dict(RABENSCHNABEL, clauses=[{"kind": "passive", "domains": ["damage"],
+                   "effects": [{"add": {"target": "rs", "value": -2}}]}])
+        self.assertIn("ITEMTPL_19: clause 0 effect 0: target rs is only for opponentAdd",
+                      catalog.validate([entry(), entry(id="SA_2", name="Zweite"), bad], RULES, self.root,
+                                       vocabulary=dict(VOCAB, enums=dict(VOCAB["enums"], domain=["damage"])),
+                                       equipment=EQUIPMENT))
+
+    def test_the_committed_vocabulary_accepts_rs(self):
+        vocab = catalog.load_vocabulary(VOCABULARY_PATH)
+        self.assertIn("rs", vocab["enums"]["target"])
+        problems = catalog.validate([entry(), entry(id="SA_2", name="Zweite"), RABENSCHNABEL], RULES,
+                                    self.root, vocabulary=vocab, equipment=EQUIPMENT)
+        self.assertEqual(problems, [])
+
+    def test_import_reads_the_equipment_table(self):
+        catalog_path = self.root / "catalog.yaml"
+        catalog_path.write_text(
+            "- { id: SA_1, name: Erste, group: Kampf, status: todo, why: x }\n"
+            "- { id: SA_2, name: Zweite, group: Sonderfertigkeit, status: todo, why: x }\n"
+            "- { id: ITEMTPL_19, name: Rabenschnabel, group: Waffe, status: todo, why: x }\n")
+        conn = ImportCatalogTests._conn(self)
+        conn.execute("CREATE TABLE equipment (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+        conn.execute("INSERT INTO equipment VALUES ('ITEMTPL_19', 'Rabenschnabel')")
+        catalog.import_catalog(conn, catalog_path, self.root / "snap.json", self.root,
+                                update_snapshot=True, vocabulary_path=VOCABULARY_PATH)
+        rows = conn.execute("SELECT rule_id FROM catalog ORDER BY rule_id").fetchall()
+        self.assertEqual(rows, [("ITEMTPL_19",), ("SA_1",), ("SA_2",)])
 
 
 class NormalizeTests(unittest.TestCase):

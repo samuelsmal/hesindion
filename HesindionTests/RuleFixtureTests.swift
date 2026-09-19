@@ -626,4 +626,35 @@ final class RuleFixtureTests: XCTestCase {
             XCTAssertNil(value("GRW_groessenkategorie", in: lines(attacking(size))), "\(size)")
         }
     }
+
+    // MARK: - Rabenschnabel (ITEMTPL_19)
+
+    func testRabenschnabelHitsHarderFromTheSaddle() {
+        arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
+        var s = Situation(hero: hero, domain: .damage)
+        XCTAssertNil(value("ITEMTPL_19", in: DamageModifiers.lines(situation: s)))
+        s.round.mounted = true
+        XCTAssertEqual(value("ITEMTPL_19", in: DamageModifiers.lines(situation: s)), 1)
+    }
+
+    func testTheDornenspitzeIsAnOfferThatCostsTheOpponentsArmour() {
+        arm("Rabenschnabel", technique: "CT_5", reach: "Mittel")
+        var s = Situation(hero: hero, domain: .meleeAttack)
+        XCTAssertTrue(evaluation(s).offers.contains { $0.ruleId == "ITEMTPL_19" })
+        XCTAssertFalse(evaluation(s).opponentLines.contains { $0.ruleId == "ITEMTPL_19" })
+        s.announced["ITEMTPL_19"] = 1
+        let line = evaluation(s).opponentLines.first { $0.ruleId == "ITEMTPL_19" }
+        XCTAssertEqual(line?.value, -2)
+        XCTAssertEqual(line?.target, .rs)
+        XCTAssertEqual(line?.name, "Rabenschnabel", "no tiers, so no roman numeral")
+        XCTAssertNil(value("ITEMTPL_19", in: lines(s)), "the RS line never lands on the hero's AT")
+    }
+
+    func testOtherWeaponsGetNothingFromTheRabenschnabel() {
+        arm("Langschwert", technique: "CT_12", reach: "Mittel")
+        var s = Situation(hero: hero, domain: .damage)
+        s.round.mounted = true
+        XCTAssertNil(value("ITEMTPL_19", in: DamageModifiers.lines(situation: s)))
+        XCTAssertFalse(evaluation(Situation(hero: hero, domain: .meleeAttack)).offers.contains { $0.ruleId == "ITEMTPL_19" })
+    }
 }

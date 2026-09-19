@@ -89,7 +89,11 @@ final class DamageModifiersTests: XCTestCase {
         let golgarit = golgaritenHero()
         var s = Situation(hero: golgarit, domain: .damage)
         s.round.mounted = true
-        XCTAssertTrue(DamageModifiers.lines(situation: s).isEmpty)
+        // The style's weapon is a Rabenschnabel, which brings its own +1 TP
+        // from the saddle (ITEMTPL_19); the style itself adds nothing.
+        let l = DamageModifiers.lines(situation: s)
+        XCTAssertFalse(l.contains { $0.ruleId == "SA_661" }, "\(l)")
+        XCTAssertEqual(l.map(\.ruleId), ["ITEMTPL_19"])
     }
 
     /// A mounted hero carrying the style's weapons, and nothing else switched on.
