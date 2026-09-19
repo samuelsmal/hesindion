@@ -447,8 +447,9 @@ enum DSAStrings {
         "flucht.success":               "Succeeded — GS movement",
         "flucht.failure":               "Failed — GS/2 movement, free strike suffered",
         "flucht.noRetreat":             "No retreat possible",
-        "flucht.succeeded":             "Succeeded",
-        "flucht.failed":                "Failed",
+        "flucht.roll":                  "Roll Body Control",
+        "flucht.takePassierschlag":     "Take the free strike",
+        "flucht.noDefense":             "No defence against the free strike",
 
         // Fernkampf
         "rangedAttack":                 "Ranged Attack",
@@ -1186,8 +1187,9 @@ enum DSAStrings {
         "flucht.success":               "Gelungen — GS Schritt Bewegung",
         "flucht.failure":               "Misslungen — GS/2 Bewegung, Passierschlag erlitten",
         "flucht.noRetreat":             "Kein Rückzug möglich",
-        "flucht.succeeded":             "Gelungen",
-        "flucht.failed":                "Misslungen",
+        "flucht.roll":                  "Körperbeherrschung würfeln",
+        "flucht.takePassierschlag":     "Passierschlag erleiden",
+        "flucht.noDefense":             "Keine Verteidigung gegen den Passierschlag",
 
         // Fernkampf
         "rangedAttack":                 "Fernkampf",

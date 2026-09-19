@@ -1219,6 +1219,7 @@ struct CombatFluchtView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var opponentCount: Int = 1
     @State private var outcome: FluchtOutcome? = nil
+    @State private var showingProbe = false
 
     private enum FluchtOutcome { case success, failure }
 
@@ -1285,34 +1286,11 @@ struct CombatFluchtView: View {
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.secondary)
 
-                    // Outcome buttons
-                    Button {
-                        outcome = .success
-                        logFlucht(succeeded: true)
-                    } label: {
-                        Text(L("flucht.succeeded"))
-                            .font(.dsaHeading(.title3))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.dsaPositive)
-                            .dsaBox(.raised)
-                    }
-                    .buttonStyle(.dsaMotion)
-
-                    Button {
-                        outcome = .failure
-                        logFlucht(succeeded: false)
-                    } label: {
-                        Text(L("flucht.failed"))
-                            .font(.dsaHeading(.title3))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.groupCombat)
-                            .dsaBox(.raised)
-                    }
-                    .buttonStyle(.dsaMotion)
+                    // Roll
+                    CombatActionButton(
+                        title: L("flucht.roll"),
+                        identifier: "combat.flucht.roll"
+                    ) { showingProbe = true }
                 }
 
                 // Result display
@@ -1360,6 +1338,20 @@ struct CombatFluchtView: View {
                             .foregroundStyle(.secondary)
 
                         gsSourceNote
+
+                        Text(L("flucht.noDefense"))
+                            .font(.dsaBody(.caption))
+                            .foregroundStyle(.secondary)
+
+                        CombatActionButton(
+                            title: L("flucht.takePassierschlag"),
+                            identifier: "combat.flucht.takePassierschlag"
+                        ) {
+                            step = .takeDamage(
+                                prefilledTP: nil,
+                                source: L("source.passierschlag"),
+                                thenIncomingHit: false)
+                        }
                     }
 
                     // Neue Aktion
@@ -1380,6 +1372,23 @@ struct CombatFluchtView: View {
             }
             .adaptiveContentWidth()
             .padding(.vertical, 16)
+            }
+        }
+        // A modal is a sibling of the layout, not a child of a panel: hung on
+        // the whole screen so its scrim covers the whole screen.
+        .overlay {
+            if showingProbe {
+                TalentProbeModal(
+                    talent: hero.koerperbeherrschung,
+                    hero: hero,
+                    onDismiss: { showingProbe = false },
+                    onRolled: { succeeded in
+                        outcome = succeeded ? .success : .failure
+                        logFlucht(succeeded: succeeded)
+                    },
+                    initialModifier: -opponentCount,
+                    accent: combatAccent
+                )
             }
         }
     }

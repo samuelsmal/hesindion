@@ -7,6 +7,9 @@ struct TalentProbeModal: View {
     let hero: Hero
     var onDismiss: () -> Void
     var onRolled: ((Bool) -> Void)? = nil
+    /// The full result, for a caller that needs more than the pass/fail
+    /// `onRolled` gives (rolls, quality level, criticals, remaining points).
+    var onResult: ((SkillCheckResult) -> Void)? = nil
     var initialModifier: Int = 0
     /// The Selbstbeherrschung check a Wundeffekt demands, opened by
     /// `CombatTakeDamageView` (`CombatWoundEffectPanel` only shows its preview
@@ -64,7 +67,7 @@ struct TalentProbeModal: View {
                 ),
                 hero: hero,
                 onDismiss: onDismiss,
-                onResult: { result in onRolled?(result.succeeded) },
+                onResult: { result in onRolled?(result.succeeded); onResult?(result) },
                 initialModifier: initialModifier,
                 hints: hints
             )
