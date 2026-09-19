@@ -1425,6 +1425,10 @@ struct CombatPassierschlagView: View {
     /// the hero has, not a bare AT −4.
     let situation: CombatSituation
     let opponent: OpponentProfile
+    /// The piece the announcement named, and whether it is the off hand;
+    /// `nil` for the main weapon (the critical-parry route).
+    var announcedWeaponName: String? = nil
+    var isOffHand: Bool = false
     @Binding var step: CombatStep
     var onDismiss: () -> Void
     let combatId: UUID
@@ -1438,25 +1442,16 @@ struct CombatPassierschlagView: View {
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
 
-    // The selected weapon; the −4 is the catalog's GRW_passierschlag.
-    private var weapon: MeleeWeapon? { hero.selectedWeapon }
-    private var weaponName: String { weapon?.name ?? "Raufen" }
-    private var damageFormula: String { weapon?.damage ?? "1W6" }
-
-    private func situation(_ domain: RuleDomain) -> Situation {
-        var s = Situation(hero: hero, domain: domain)
-        s.round = situation
-        s.opponents = OpponentRoster([opponent])
-        s.loadoutName = weaponName
-        s.maneuver = .passierschlag
-        return s
+    // The arithmetic; the −4 is the catalog's GRW_passierschlag.
+    private var roll: PassierschlagRoll {
+        PassierschlagRoll(hero: hero, round: situation, opponent: opponent,
+                          weaponName: announcedWeaponName, isOffHand: isOffHand)
     }
-    private var rawAT: Int { weapon?.at ?? (hero.combatTechniques.first { $0.name == "Raufen" }?.at ?? 0) }
-    private var lines: [ModifierLine] { ModifierEngine.shared.evaluate(context: situation(.meleeAttack)) }
-    private var effectiveAT: Int { rawAT + lines.reduce(0) { $0 + $1.value } }
-    private var effectiveDamage: String {
-        DamageModifiers.applied(to: damageFormula, lines: DamageModifiers.lines(situation: situation(.damage))) ?? damageFormula
-    }
+    private var weaponName: String { roll.weaponName }
+    private var rawAT: Int { roll.rawAT }
+    private var lines: [ModifierLine] { roll.lines }
+    private var effectiveAT: Int { roll.effectiveAT }
+    private var effectiveDamage: String { roll.effectiveDamage }
 
     private var isHit: Bool {
         guard let roll = finalRoll else { return false }

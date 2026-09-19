@@ -523,7 +523,7 @@ struct CombatCriticalSuccessView: View {
         } else {
             if grantsPassierschlag {
                 actionButton(L("passierschlag"), icon: "bolt.fill", identifier: "combat.critical.passierschlag") {
-                    step = .passierschlag
+                    step = .passierschlag()
                 }
             }
             actionButton(L("newAction"), icon: "arrow.counterclockwise", identifier: "combat.critical.newAction") {

@@ -382,7 +382,10 @@ struct CombatAnnouncementView: View {
         if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
         if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
         // Everyone may strike a Passierschlag (GRW); it goes to its own screen.
-        maneuvers.append(.passierschlag)
+        // Not from a dual-attack announcement: the Passierschlag is one blow
+        // with one weapon, and choosing it here would leave the round flagged
+        // as a dual attack that never happened. Pick one weapon instead.
+        if secondAttack == nil { maneuvers.append(.passierschlag) }
         return maneuvers
     }
 
@@ -580,7 +583,10 @@ struct CombatAnnouncementView: View {
 
     private func proceed() {
         // Its own screen rolls it; the opponent's answers stay on CombatView.
-        if selectedManeuver == .passierschlag { step = .passierschlag; return }
+        if selectedManeuver == .passierschlag {
+            step = .passierschlag(weaponName: weaponName, isOffHand: isOffHand)
+            return
+        }
         activeManeuver = selectedManeuver
         if selectedManeuver.preventsDefense {
             vorstossActiveThisRound = true

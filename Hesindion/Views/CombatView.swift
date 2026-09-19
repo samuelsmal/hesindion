@@ -50,7 +50,9 @@ enum CombatStep {
     /// screen has to ask which defence this was — the app knows the hero parried,
     /// not whether the incoming attack was melee or ranged.
     case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
-    case passierschlag
+    /// `weaponName`/`isOffHand` are what the announcement named; the
+    /// critical-parry routes leave them out and strike with the main weapon.
+    case passierschlag(weaponName: String? = nil, isOffHand: Bool = false)
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
     case spellSelection
@@ -517,11 +519,13 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .passierschlag:
+            case .passierschlag(let passName, let passOffHand):
                 CombatPassierschlagView(
                     hero: hero,
                     situation: situation,
                     opponent: opponent,
+                    announcedWeaponName: passName,
+                    isOffHand: passOffHand,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,

@@ -354,7 +354,7 @@ struct CombatExecutionView: View {
             .background(combatAccent.opacity(0.1))
             .dsaBox(.raised, stroke: combatAccent)
 
-            Button { step = .passierschlag } label: {
+            Button { step = .passierschlag() } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "bolt.fill")
                     Text(L("passierschlag"))
