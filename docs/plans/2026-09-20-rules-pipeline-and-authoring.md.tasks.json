@@ -37,7 +37,7 @@
     {
       "id": 4,
       "subject": "Task 5: rules-sync-check — deterministic drift detection",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Answer \"which encodings rest on text the wiki has since changed?\" with no model involved.\n\n**Files:**\n- Create: `scripts/rules_sync/normalise.py`, `scripts/rules_sync/check.py`, `tests/rules/test_normalise.py`, `tests/rules/fixtures/*.html`\n- Modify: `Makefile` (`rules-sync-check`)\n\n**Acceptance Criteria:**\n- [ ] Two differently-formatted captures of the same rule text hash identically\n- [ ] Each rule reports `ok`, `drifted` or `unverified`; exit 0 only when nothing drifted\n- [ ] Requests cached on disk, rate-limited to one per second; a cached run makes no network calls\n\n**Verify:** `python3 -m pytest tests/rules/test_normalise.py -v && make rules-sync-check`\n\n```json:metadata\n{\"files\": [\"scripts/rules_sync/normalise.py\", \"scripts/rules_sync/check.py\", \"tests/rules/test_normalise.py\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_normalise.py -v && make rules-sync-check\", \"acceptanceCriteria\": [\"normalisation stable across markup variants\", \"three-state drift report\", \"cached run makes no network calls\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         2
@@ -80,5 +80,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-20"
+  "lastUpdated": "2026-09-21"
 }
