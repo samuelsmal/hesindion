@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -135,6 +135,9 @@ rules-db:
 
 rules-db-verify:
 	python3 scripts/build_rules_db/verify_db.py "$(RULES_DB)" "$(RULES_SOURCE)" "$(RULES_EFFECTS)"
+
+rules-lint:
+	python3 scripts/rules_lint/lint.py
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

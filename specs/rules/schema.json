@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hesindion.app/specs/rules/schema.json",
+  "title": "Authored DSA 5 rule",
+  "description": "One machine-checkable shape for an authored rule file under specs/rules/. Carries mechanical encoding plus provenance and no rule text (Data Policy, AGENTS.md). This schema is the contract the combat engine (ADR-0008) consumes.",
+  "type": "object",
+  "required": ["id", "subgroup", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "id":       { "type": "string", "pattern": "^(SA|ADV|DISADV|COND|CT)_[0-9]+$" },
+    "subgroup": { "enum": ["passiv", "basismanoever", "spezialmanoever", "none"] },
+    "source": {
+      "type": "object",
+      "required": ["url", "checked", "hash"],
+      "additionalProperties": false,
+      "properties": {
+        "url":     { "type": "string", "format": "uri" },
+        "book":    { "type": "string" },
+        "page":    { "type": "integer" },
+        "checked": { "type": "string", "format": "date" },
+        "hash":    { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "excludes": { "type": "array", "items": { "type": "string" } },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "description": "The closed eight-case effect union (ADR-0008). Unhandled cases are a compile error in the engine rather than a silent no-op, so this enum is non-negotiable.",
+            "enum": ["modifier", "parameterOverride", "dice", "actionEconomy",
+                     "probe", "legality", "stateGain", "reminder"]
+          },
+          "tier": {
+            "description": "The ability's Stufe (I-III), where the effect scales per tier (e.g. a shiftSteps parameterOverride multiplies by tier).",
+            "type": "integer", "minimum": 1, "maximum": 3
+          },
+          "when": {
+            "description": "Preconditions, ANDed together. The closed ten-predicate set (ADR-0008); a novel condition costs an enum case, not a new string.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "maxProperties": 1,
+              "propertyNames": { "enum": ["combatTechnique", "targetState", "mounted",
+                                          "targetSize", "attribute", "runUp", "weaponReach",
+                                          "defenseCount", "armorAtMost", "offHandWeapon"] }
+            }
+          },
+          "stacks": {
+            "description": "Explicit opt-out of the default rule that effects from different abilities stack (ADR-0008). Omit (or true) to stack normally; false marks an effect as participating in a 'strongest applies' exception that must otherwise be stated in the data (e.g. two `set` overrides of the same parameter).",
+            "type": "boolean"
+          },
+          "value": {
+            "description": "modifier: the flat numeric modifier applied to the hero's own check (AT/PA/AW/FK/probe, ...).",
+            "type": "number"
+          },
+          "parameter": {
+            "description": "parameterOverride: dotted path of the named DSA constant being overridden, e.g. `defense.multiplePenaltyPerStep`, `reach.matrix`, or a wildcard family such as `zone.*`.",
+            "type": "string"
+          },
+          "set": {
+            "description": "parameterOverride: replace the named parameter's value outright (e.g. Meisterparade: set defense.multiplePenaltyPerStep = -2).",
+            "type": "number"
+          },
+          "shiftSteps": {
+            "description": "parameterOverride: shift the named parameter by this many steps, scaled by the effect's `tier` (e.g. Unterlaufen: shiftSteps reach.matrix by tier).",
+            "type": "integer"
+          },
+          "scale": {
+            "description": "parameterOverride: multiply the named parameter by this factor (e.g. Gezielter Angriff: scale zone.* by 0.5).",
+            "type": "number"
+          },
+          "add": {
+            "description": "dice: a damage/value expression to add, evaluated against the check context (e.g. \"2 + ceil(self.gs / 2)\", \"1W6\"). Free-form because the corpus's dice formulas are not closed the way effect types and predicates are.",
+            "type": "string"
+          },
+          "grants": {
+            "description": "actionEconomy: what the ability grants or changes about action economy (e.g. \"freeAction\", \"extraManeuver\"). Free-form: ADR-0008 closes effect types and predicates, not this vocabulary.",
+            "type": "string"
+          },
+          "skill": {
+            "description": "probe: which skill/check the probe is made against, when it is not simply the acting check (e.g. \"Selbstbeherrschung\").",
+            "type": "string"
+          },
+          "state": {
+            "description": "stateGain: the Zustand/Status id granted (StateCatalog id), e.g. \"betaeubung\".",
+            "type": "string"
+          },
+          "level": {
+            "description": "stateGain: the level granted, for leveled Zustände (I-IV).",
+            "type": "integer", "minimum": 1, "maximum": 4
+          },
+          "action": {
+            "description": "legality: the otherwise-illegal action this effect makes legal, e.g. \"basismanoever+spezialmanoever\". Optional — some legality grants need no further qualification.",
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "type": { "const": "parameterOverride" } }, "required": ["type"] },
+            "then": {
+              "required": ["parameter"],
+              "oneOf": [
+                { "required": ["set"] },
+                { "required": ["shiftSteps"] },
+                { "required": ["scale"] }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
