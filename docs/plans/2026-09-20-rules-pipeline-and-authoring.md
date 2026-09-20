@@ -392,14 +392,37 @@ database builds from `specs/rules/`.
 
 **Acceptance Criteria:**
 - [ ] 26 files under `specs/rules/`, all passing `make rules-lint`.
-- [ ] `make rules-db && make rules-db-verify` green, and the `effects` table has the same 79 rows as
-      before the migration.
+- [ ] `make rules-db && make rules-db-verify` green.
+- [ ] **No legacy row is lost.** Every one of the 79 rows maps per the ten-row table below, and the
+      migrator prints a reconciliation report (legacy row → authored effect) that accounts for all
+      79. The count may exceed 79 where a row needs a sibling effect.
+- [ ] The `effects` table carries a new `payload` column holding each authored effect as JSON.
+- [ ] The eight rows whose free-text `condition` is not a combat predicate carry a `gmFlag`
+      predicate — they must **not** become unconditional.
 - [ ] `grep -rn "HARDCODED_EFFECTS\|specs/data/rules.yaml" .` returns nothing.
 
 **Verify:**
 ```bash
-make rules-db && sqlite3 Hesindion/Resources/rules.db "select count(*) from effects;"   # → 79
+make rules-lint && make rules-db && make rules-db-verify
+sqlite3 Hesindion/Resources/rules.db "select count(*) from effects where payload is null;"   # → 0
 ```
+
+**Controller rulings (three, made after querying the live data):**
+
+1. **An eleventh `when` predicate, `gmFlag`.** Ten legacy rows carry a free-text `condition`; only
+   `mounted` (SA_43, SA_661) maps to an existing predicate. The other eight — `SA_22` "at known
+   location", `SA_40` "ambush detection", `SA_661` "mounted vs foot fighter", `ADV_75` "anaesthesia
+   or intoxicated", `DISADV_34` "principles violated", `DISADV_35` ×2 — would otherwise become
+   **unconditional**, which is worse than today's behaviour: `SA_22` would grant +1 Gassenwissen
+   always. `gmFlag` takes a camelCase slug (`knownLocation`, `ambush`, `principlesViolated`),
+   constrained by `pattern: ^[a-z][A-Za-z]+$` so prose cannot enter through it. The engine surfaces
+   it as a GM toggle, exactly as `ModifierContext.targetIsSurprised` already works under ADR-0005.
+   Add it to `specs/rules/schema.json` and to ADR-0008's predicate list.
+2. **`effects` gains a `payload` TEXT column** holding the authored effect as JSON verbatim, with
+   the legacy columns still populated where they map directly (`type`, `target`→`attribute`,
+   `value`, `scope`, `tier`→`level`). Adding a schema field later then costs no DB migration.
+3. **A byte-identical round-trip is impossible** — the `description` column has no authored home —
+   so the criterion is the reconciliation report, not a row count.
 
 **Steps:**
 

@@ -10,7 +10,7 @@
     {
       "id": 1,
       "subject": "Task 2: Authored-rule schema and linter",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** An authored rule file has one machine-checkable shape, and that shape is the contract the engine plan consumes.\n\n**Files:**\n- Create: `specs/rules/schema.json`, `scripts/rules_lint/lint.py`, `scripts/rules_lint/requirements.txt`, `tests/rules/test_lint.py`\n- Modify: `Makefile` (`rules-lint`)\n\n**Acceptance Criteria:**\n- [ ] Valid file passes; unknown effect type, unknown predicate, missing `source.hash`, and a `text:` key each fail with a message naming file and key\n- [ ] Filename must match `id`\n- [ ] `make rules-lint` exits non-zero on any invalid file\n\n**Verify:** `python3 -m pytest tests/rules/test_lint.py -v` → 6 passed\n\n```json:metadata\n{\"files\": [\"specs/rules/schema.json\", \"scripts/rules_lint/lint.py\", \"tests/rules/test_lint.py\", \"Makefile\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_lint.py -v\", \"acceptanceCriteria\": [\"6 lint tests pass\", \"text key rejected citing Data Policy\", \"closed enums enforced for effect types and predicates\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         0

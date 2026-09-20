@@ -66,11 +66,18 @@ schema against the 79 existing effect rows before any rule was authored:
 `actionEconomy` has **`forbids`** as well as `grants`: *"keine Verteidigung in dieser KR"* is a
 removal, and encoding it as a grant reads backwards.
 
-**Conditions are a closed predicate set, not a string.** The corpus needs exactly ten:
+**Conditions are a closed predicate set, not a string.** The combat corpus needs exactly ten:
 `combatTechnique(in:)` (34 rules), `targetState(_)` (23), `mounted` (20), `targetSize(≤)` (16),
 `attribute(_, ≥)` (16), `runUp(≥)` (13), `weaponReach(_)` (6), `defenseCount(≥)` (4),
 `armorAtMost(_)` (3), `offHandWeapon` (1). Six already exist as `ModifierContext` fields. No
 expression language, no interpreter: a novel condition costs an enum case and is greppable.
+
+An eleventh predicate, **`gmFlag(<slug>)`**, carries the conditions no mechanical predicate can
+express — *"at known location"*, *"ambush detection"*, *"principles violated"*. It takes a
+constrained camelCase slug, never prose, and the engine surfaces it as a GM toggle rather than
+applying it, the way `ModifierContext.targetIsSurprised` already works under ADR-0005. Without it,
+conditional bonuses silently become unconditional, which is worse than not modelling them: `SA_22`
+would grant its +1 everywhere rather than at a known location.
 
 **DSA constants become named parameters** (`defense.multiplePenaltyPerStep`, `dualWield.penalty`,
 `reach.matrix`, `zone.*`, `passierschlag.penalty`, …) that abilities override with an explicit
