@@ -407,12 +407,27 @@ make rules-db && sqlite3 Hesindion/Resources/rules.db "select count(*) from effe
 - [ ] **Step 2: Write and run the one-shot migrator** — read `specs/data/rules.yaml`, emit one file
       per rule with the **unverified provenance marker**
       `source: {url: https://dsa.ulisses-regelwiki.de/UNVERIFIED, checked: 1970-01-01, hash: sha256:<64×0>}`
-      and the existing effects mapped onto the new type names (`damageModifier` → `dice`,
-      `restriction` → `actionEconomy`, `negation` → `legality`).
+      and the existing effects mapped onto the new types. **The complete mapping** (controller
+      ruling after the Task 2 review verified every legacy row against the schema — the plan's
+      original three-entry table was wrong in two places):
 
-      **Controller ruling (pre-flight):** the marker URL must be a syntactically valid URI, not
-      `TODO`, or the schema's `format: uri` rejects all 26 migrated files. `check.py` (Task 5)
-      recognises the zero hash as `unverified`.
+      | legacy type | rows | new encoding |
+      |---|---:|---|
+      | `modifier` | 56 | `modifier` **with `target` and `scope` carried over** |
+      | `incapacitated` | 6 | `actionEconomy` with `forbids: allActions` |
+      | `recovery` | 3 | `recovery` |
+      | `opponentModifier` | 3 | `modifier` with `side: opponent` |
+      | `damageModifier` | 3 | `dice` |
+      | `restriction` | 2 | `actionEconomy` with **`forbids`**, not `grants` — these are removals |
+      | `negation` | 2 | **`parameterOverride` … `set: 0`**, not `legality` |
+      | `narrative` | 2 | `reminder` |
+      | `stateGain` | 1 | `stateGain` |
+      | `damageRedirect` | 1 | `dice` with `recipient: defenderShield` |
+
+      **Controller ruling (pre-flight, amended):** the marker URL must match the schema's enforced
+      `pattern: ^https?://`, so `TODO` is rejected. (The original ruling cited `format: uri`; the
+      Task 2 review established that `format: uri` is not enforced by `jsonschema` at all, and it
+      was replaced by the pattern.) `check.py` (Task 5) recognises the zero hash as `unverified`.
 - [ ] **Step 3: Teach `build_db.py` to read a directory** — replace the single-file load of
       `--effects` with `sorted(pathlib.Path(arg).glob("*.yaml"))`, skipping `SOURCES.yaml` and
       `schema.json`, and keep the same insert path.
@@ -461,15 +476,19 @@ source:
   page: 249
   checked: 2026-09-20
   hash: sha256:…
-excludes: [SA_48]          # "kann nicht mit dem Basismanöver Finte kombiniert werden"
+excludes: [SA_48]          # combination ban stated by the rule
 effects:
   - type: dice
-    add: "2 + ceil(self.gs / 2)"       # TP +2 und die halbe GS des Angreifers
+    add: "2 + ceil(self.gs / 2)"       # bonus damage clause
     when: [{runUp: 4}, {attribute: {gs: 4}}]
   - type: actionEconomy
     grants: opponentPassierschlagOnFailure
-  - type: reminder                      # "kann regulär abgewehrt werden"
+  - type: reminder                      # defensibility clause, GM-adjudicated
 ```
+
+**Note the comments.** They describe *which clause* an effect came from, in English. Quoting the
+German rule text into a comment walks prose into git through the back door and defeats the Data
+Policy — the linter scans comments for exactly this.
 
 Note the rounding: `ceil`, per ADR-0006 — the rule says *"die halbe GS"*, not *"je volle 2"*.
 

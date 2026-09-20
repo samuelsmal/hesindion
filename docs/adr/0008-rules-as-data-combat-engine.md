@@ -47,9 +47,24 @@ an existing mechanism costs one authored file (ADR-0007) and a database rebuild.
 `reminders`. Resolution order is `parameters → overrides → modifiers → Zustand cap → outputs`; the
 −5 Zustand cap runs after modifiers and never sees parameter overrides.
 
-**Effects are a closed typed union** of eight cases — `modifier`, `parameterOverride`, `dice`,
-`actionEconomy`, `probe`, `legality`, `stateGain`, `reminder`. Closed, so an unhandled case is a
-compile error rather than a silent no-op.
+**Effects are a closed typed union** of nine cases — `modifier`, `parameterOverride`, `dice`,
+`actionEconomy`, `probe`, `legality`, `stateGain`, `recovery`, `reminder`. Closed, so an unhandled
+case is a compile error rather than a silent no-op.
+
+Three qualifiers carry information the union would otherwise lose, all established by checking the
+schema against the 79 existing effect rows before any rule was authored:
+
+- `modifier` carries **`target`** (which check: at/pa/aw/fk/ini/gs/be/le/talent/all) and **`scope`**.
+  Dropping these is the precise defect this ADR rejects its first alternative for; a union that
+  cannot say *which* value a modifier moves reproduces it.
+- `modifier` carries **`side: hero | opponent`**. An opponent-side modifier is display-only — it
+  states a number for the GM, as `CombatManeuver.infoText()` already does for Finte ("Gegner PA −4")
+  — so it does not reverse ADR-0005. Without it, the tiered numbers of a Basismanöver exist in
+  neither the effects data nor the i18n fallback.
+- `dice` carries **`recipient`**, because Schildspalter's damage lands on the defender's shield.
+
+`actionEconomy` has **`forbids`** as well as `grants`: *"keine Verteidigung in dieser KR"* is a
+removal, and encoding it as a grant reads backwards.
 
 **Conditions are a closed predicate set, not a string.** The corpus needs exactly ten:
 `combatTechnique(in:)` (34 rules), `targetState(_)` (23), `mounted` (20), `targetSize(≤)` (16),
