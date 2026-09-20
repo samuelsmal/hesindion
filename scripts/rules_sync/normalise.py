@@ -36,18 +36,26 @@ _NBSP = "\xa0"
 # nests it differently.
 _DYNAMIC_WIDGET_SELECTOR = ".t4c_quickcontact_form, .captcha_text, [id^='captcha_text_']"
 
-# Fix round 2: tags whose *boundary* (open and close) is a word break even
-# with no whitespace in the source -- these are block-level elements, where
-# HTML rendering itself forces a line break, so "<td>A</td><td>B</td>" reads
-# as two words to a person even though the markup has no space between them.
-# Chosen to match the ruling's list exactly: p/div/li/tr/td/th/headings/
-# section/article. `br` is handled separately (it has no content of its own
-# to bracket -- it *becomes* the boundary, see below), and deliberately not
-# included here.
+# Fix round 2 (extended in fix round 3): tags whose *boundary* (open and
+# close) is a word break even with no whitespace in the source -- these are
+# block-level elements, where HTML rendering itself forces a line break, so
+# "<td>A</td><td>B</td>" reads as two words to a person even though the
+# markup has no space between them. `br` is handled separately (it has no
+# content of its own to bracket -- it *becomes* the boundary, see below), and
+# deliberately not included here. `table`/`ul`/`ol` are deliberately left out
+# too: they don't directly contain text nodes in normal markup (their
+# `tr`/`li` children already carry the boundary).
+#
+# Fix round 3 added `dl`/`dt`/`dd`/`blockquote`/`pre` -- the round-2 ruling's
+# list (written from memory) omitted these; a definition list is exactly the
+# shape a stat block takes on a rules wiki ("<dl><dt>LE</dt><dd>30</dd>...")
+# and was gluing without them, a regression against round 1's blanket
+# separator that *did* separate these.
 _BLOCK_BOUNDARY_TAGS = (
     "p", "div", "li", "tr", "td", "th",
     "h1", "h2", "h3", "h4", "h5", "h6",
     "section", "article",
+    "dl", "dt", "dd", "blockquote", "pre",
 )
 
 # Inline tags (b, i, span, a, strong, em, sup, ...) are deliberately *not* in

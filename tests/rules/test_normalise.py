@@ -165,6 +165,45 @@ def test_missing_container_raises_content_container_not_found():
         normalise_html("<html><body><p>Kein main und kein #main hier.</p></body></html>")
 
 
+# --- Fix round 3: dl/dt/dd/blockquote/pre were missing from the block list -
+#
+# The round-2 ruling's block-tag list, written from memory, omitted five
+# genuinely block-level, text-bearing tags -- a definition list is exactly
+# the shape a stat block takes on a rules wiki
+# ("<dl><dt>LE</dt><dd>30</dd>...") and was gluing without them, a
+# regression against round 1's blanket separator (which *did* separate
+# these). `rule_g_dl_blockquote_pre.html` exercises all five with zero
+# whitespace between adjacent tags of each kind.
+
+def test_definition_list_terms_and_descriptions_do_not_glue_together():
+    text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+    assert "LE30" not in text
+    assert "30AE" not in text
+    assert "LE 30 AE 20" in text
+
+
+def test_adjacent_blockquotes_do_not_glue_together():
+    text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+    assert "Erstes Zitat.Zweites" not in text
+    assert "Erstes Zitat. Zweites Zitat." in text
+
+
+def test_adjacent_pre_blocks_do_not_glue_together():
+    text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+    assert "ZeileZweite" not in text
+    assert "Erste Zeile Zweite Zeile" in text
+
+
+def test_reviewer_repro_dl_and_blockquote_are_not_glued():
+    # The exact two snippets from the fix round 3 review.
+    assert normalise_html(
+        "<main><dl><dt>LE</dt><dd>30</dd><dt>AE</dt><dd>20</dd></dl></main>"
+    ) == "LE 30 AE 20"
+    assert normalise_html(
+        "<main><blockquote>Eins</blockquote><blockquote>Zwei</blockquote></main>"
+    ) == "Eins Zwei"
+
+
 def test_body_fallback_no_longer_silently_used():
     # Fix round 1's chain fell back to <body> (and then the whole document);
     # fix round 2 drops both rungs -- only #main or a real <main> tag count.
