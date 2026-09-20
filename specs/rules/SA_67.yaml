@@ -1,31 +1,40 @@
 id: SA_67
 subgroup: basismanoever
+note: Tier ladder (Stufe I-III), engine matches effect tier to owned Stufe exactly
 source:
-  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
-  checked: '1970-01-01'
-  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  url: https://dsa.ulisses-regelwiki.de/KSF_Wuchtschlag.html
+  book: US25001
+  page: 250
+  checked: '2026-09-21'
+  hash: sha256:c8879fc3fa907ba1f5185f6ce8c0bc721cb77671a5883168ecf9fbef024da9ba
 effects:
 - type: modifier
   target: at
   scope: combat
   value: -2
   tier: 1
+  note: Stufe I - the AT penalty, matching the Erschwernis line on the page
 - type: dice
   add: '2'
   tier: 1
+  note: Stufe I - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die
 - type: modifier
   target: at
   scope: combat
   value: -4
   tier: 2
+  note: Stufe II - the AT penalty, matching the Erschwernis line on the page
 - type: dice
   add: '4'
   tier: 2
+  note: Stufe II - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die
 - type: modifier
   target: at
   scope: combat
   value: -6
   tier: 3
+  note: Stufe III - the AT penalty, matching the Erschwernis line on the page
 - type: dice
   add: '6'
   tier: 3
+  note: Stufe III - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die

@@ -1,0 +1,29 @@
+id: SA_62
+subgroup: spezialmanoever
+note: The run-up movement is part of the attack action. The two preconditions gate manoeuvre selection and are carried on the damage row
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Sturmangriff.html
+  book: US25001
+  page: 249
+  checked: '2026-09-21'
+  hash: sha256:1e5488e3a8ad7a671cbe960a53f3fa442e75e91d93a76e0932c5f6ec1ef047fd
+excludes:
+- SA_48
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: -2
+  note: Erschwernis line on the page - a flat -2 on the attack, encoded the way SA_48 and SA_67 carry theirs
+- type: dice
+  add: 2 + ceil(self.gs / 2)
+  when:
+  - runUp: 4
+  - attribute:
+      gs: 4
+  note: Bonus damage clause - 2 plus half GS, ceil per ADR-0006 because the rule says half GS rather than per full 2. The page also caps the bonus; this expression does not
+- type: actionEconomy
+  grants: opponentPassierschlagOnFailure
+  note: Failure clause - a failed charge hands the defender a Passierschlag. Opponent-side, so the engine states it for the GM
+- type: reminder
+  note: Defensibility clause - the charge can be defended against normally, which is GM-adjudicated
