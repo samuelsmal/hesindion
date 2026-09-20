@@ -89,6 +89,13 @@ Two known pre-existing flakes — not regressions: `SkillCheckModalSnapshotTests
 - **Eingeengt**: the `eingeengt` status is the single source of truth for the Beengte-Umgebung combat penalty (the toggle reads/writes it)
 - **Entrückung**: a "gottgefällig" toggle in spell/liturgy casting
 
+### Rules Data
+
+- **The Regelwiki is the source of truth.** Where a local copy and <https://dsa.ulisses-regelwiki.de/> disagree, the wiki wins and the local copy is the bug — see **ADR-0007**. One YAML file per rule under `specs/rules/` carries our mechanical encoding plus provenance (`source.url`, `book`, `page`, `checked`, `hash`) and **no rule text** — the Data Policy below applies. `Hesindion/Resources/rules.db` is a **generated, untracked build artifact** (`make rules-db`), never edited by hand. Optolith supplies the rule ID namespace and the initial seed, pinned by `specs/rules/SOURCES.yaml`, nothing more.
+- **Rules are data, not code** — see **ADR-0008**. A special ability that uses an existing mechanism is an authored file plus a database rebuild, with no Swift change. Effects are a closed typed union, conditions a closed predicate set, and DSA constants are named parameters that abilities override, so errata change a value rather than a code path.
+- **An ability with no structured effects must still be visible**, rendered as a rule-text reminder card. Silence is the failure mode this exists to prevent. Opponent-side effects stay GM-adjudicated (ADR-0005).
+- **Maneuver slots come from `rules.subgroup_id`** (`1` Passiv, `2` Basismanöver, `3` Spezialmanöver): a Kampfrunde allows one Basismanöver plus one active Spezialmanöver plus any number of passives, with `excludes` edges in the data for the named exceptions.
+
 ## Design
 
 The UI follows a **Neo-Brutalist** design theme.

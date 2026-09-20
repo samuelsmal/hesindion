@@ -1,0 +1,84 @@
+{
+  "planPath": "docs/plans/2026-09-20-rules-pipeline-and-authoring.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Untrack rules.db, pin source, fix SA classification",
+      "status": "pending",
+      "description": "**Goal:** `rules.db` becomes a generated, untracked artifact with a reproducible build, and the import classification stops depending on hand-authored effects.\n\n**Files:**\n- Modify: `Makefile` (new targets after `clean:` at line 116; RULES_EFFECTS stays the legacy `specs/data/rules.yaml` until Task 3 — controller ruling)\n- Modify: `Hesindion/Services/OptolithImportService.swift:463-467`\n- Create: `specs/rules/SOURCES.yaml`, `scripts/build_rules_db/verify_db.py`\n- Modify: `HesindionTests/HeroImportTests.swift:62-64`, `AGENTS.md`\n\n**Acceptance Criteria:**\n- [ ] `git ls-files Hesindion/Resources/rules.db` prints nothing\n- [ ] `make rules-db` rebuilds from the pinned source; `make rules-db-verify` exits 0\n- [ ] `make rules-db` fails by name when the source is missing or checksums mismatch\n- [ ] Boronmir import puts SA_884 and SA_661 in combatSpecialAbilities\n- [ ] `hero.hasPlaenklerFormation == true` for that hero\n\n**Verify:** `make rules-db && make rules-db-verify && make test-ui` → all green\n\n```json:metadata\n{\"files\": [\"Makefile\", \"Hesindion/Services/OptolithImportService.swift\", \"Hesindion/Services/RulesDatabase.swift\", \"specs/rules/SOURCES.yaml\", \"scripts/build_rules_db/verify_db.py\", \"HesindionTests/HeroImportTests.swift\"], \"verifyCommand\": \"make rules-db && make rules-db-verify && make test-ui\", \"acceptanceCriteria\": [\"rules.db untracked\", \"rules-db-verify exits 0\", \"build fails loudly on missing/mismatched source\", \"SA_884 and SA_661 classify as combat\", \"hasPlaenklerFormation true for Boronmir\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: Authored-rule schema and linter",
+      "status": "pending",
+      "description": "**Goal:** An authored rule file has one machine-checkable shape, and that shape is the contract the engine plan consumes.\n\n**Files:**\n- Create: `specs/rules/schema.json`, `scripts/rules_lint/lint.py`, `scripts/rules_lint/requirements.txt`, `tests/rules/test_lint.py`\n- Modify: `Makefile` (`rules-lint`)\n\n**Acceptance Criteria:**\n- [ ] Valid file passes; unknown effect type, unknown predicate, missing `source.hash`, and a `text:` key each fail with a message naming file and key\n- [ ] Filename must match `id`\n- [ ] `make rules-lint` exits non-zero on any invalid file\n\n**Verify:** `python3 -m pytest tests/rules/test_lint.py -v` → 6 passed\n\n```json:metadata\n{\"files\": [\"specs/rules/schema.json\", \"scripts/rules_lint/lint.py\", \"tests/rules/test_lint.py\", \"Makefile\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_lint.py -v\", \"acceptanceCriteria\": [\"6 lint tests pass\", \"text key rejected citing Data Policy\", \"closed enums enforced for effect types and predicates\"], \"modelTier\": \"standard\"}\n```",
+      "blockedBy": [
+        0
+      ]
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: Migrate 26 effect sets, delete duplicate sources",
+      "status": "pending",
+      "description": "**Goal:** One authored store. `specs/data/rules.yaml` and `HARDCODED_EFFECTS` are gone, and the database builds from `specs/rules/`.\n\n**Files:**\n- Create: `specs/rules/*.yaml` (26), `scripts/rules_lint/migrate_legacy.py` (one-shot, deleted in the same commit)\n- Modify: `scripts/build_rules_db/build_db.py` (`--effects` takes a directory)\n- Delete: `specs/data/rules.yaml`, `HARDCODED_EFFECTS` in `scripts/scrape_effects/scrape_effects.py`\n\n**Acceptance Criteria:**\n- [ ] 26 files under `specs/rules/`, all passing `make rules-lint`\n- [ ] `effects` table has the same 79 rows as before the migration\n- [ ] `grep -rn \"HARDCODED_EFFECTS\\|specs/data/rules.yaml\" .` returns nothing\n\n**Verify:** `make rules-db && sqlite3 Hesindion/Resources/rules.db \"select count(*) from effects;\"` → 79\n\n```json:metadata\n{\"files\": [\"specs/rules/\", \"scripts/build_rules_db/build_db.py\", \"scripts/scrape_effects/scrape_effects.py\"], \"verifyCommand\": \"make rules-lint && make rules-db && sqlite3 Hesindion/Resources/rules.db 'select count(*) from effects;'\", \"acceptanceCriteria\": [\"26 authored files lint clean\", \"79 effect rows preserved\", \"no references to the deleted sources remain\"], \"modelTier\": \"standard\"}\n```",
+      "blockedBy": [
+        1
+      ]
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: Golden corpus — ten rules authored by hand",
+      "status": "pending",
+      "description": "**Goal:** A reference encoding that the agent pipeline must reproduce before it is trusted with 232 rules.\n\n**Files:**\n- Modify: the 9 migrated files (SA_40, 41, 43, 48, 59, 65, 66, 67, 661) — real provenance and hashes\n- Create: `specs/rules/SA_62.yaml`, `tests/rules/golden/`\n\n**Acceptance Criteria:**\n- [ ] Each of the ten has a real `source.url`, `book`, `page`, today's `checked`, and a hash matching live wiki text\n- [ ] SA_62 encodes runUp ≥ 4 and gs ≥ 4, `dice: 2 + ceil(self.gs / 2)`, `opponentPassierschlagOnFailure`, `excludes: [SA_48]`, `subgroup: spezialmanoever`\n- [ ] SA_43's BE effect carries `when: [{mounted: true}]`\n\n**Verify:** `make rules-lint && python3 scripts/rules_sync/check.py --only specs/rules/SA_62.yaml` → `0 drifted`\n\n```json:metadata\n{\"files\": [\"specs/rules/SA_62.yaml\", \"tests/rules/golden/\"], \"verifyCommand\": \"make rules-lint\", \"acceptanceCriteria\": [\"ten rules carry real provenance\", \"SA_62 encodes all four clauses of its rule text\", \"SA_43 carries the mounted condition\"], \"modelTier\": \"frontier\"}\n```",
+      "blockedBy": [
+        4
+      ]
+    },
+    {
+      "id": 4,
+      "subject": "Task 5: rules-sync-check — deterministic drift detection",
+      "status": "pending",
+      "description": "**Goal:** Answer \"which encodings rest on text the wiki has since changed?\" with no model involved.\n\n**Files:**\n- Create: `scripts/rules_sync/normalise.py`, `scripts/rules_sync/check.py`, `tests/rules/test_normalise.py`, `tests/rules/fixtures/*.html`\n- Modify: `Makefile` (`rules-sync-check`)\n\n**Acceptance Criteria:**\n- [ ] Two differently-formatted captures of the same rule text hash identically\n- [ ] Each rule reports `ok`, `drifted` or `unverified`; exit 0 only when nothing drifted\n- [ ] Requests cached on disk, rate-limited to one per second; a cached run makes no network calls\n\n**Verify:** `python3 -m pytest tests/rules/test_normalise.py -v && make rules-sync-check`\n\n```json:metadata\n{\"files\": [\"scripts/rules_sync/normalise.py\", \"scripts/rules_sync/check.py\", \"tests/rules/test_normalise.py\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_normalise.py -v && make rules-sync-check\", \"acceptanceCriteria\": [\"normalisation stable across markup variants\", \"three-state drift report\", \"cached run makes no network calls\"], \"modelTier\": \"standard\"}\n```",
+      "blockedBy": [
+        2
+      ]
+    },
+    {
+      "id": 5,
+      "subject": "Task 6: Authoring subagents and their driver",
+      "status": "pending",
+      "description": "**Goal:** Rule text in, reviewable encoding out — with a second agent that never sees the first one's answer.\n\n**Files:**\n- Create: `.claude/agents/rule-author.md`, `.claude/agents/rule-verifier.md`, `scripts/rules_sync/propose.py`, `tests/rules/test_propose.py`\n\n**Acceptance Criteria:**\n- [ ] `propose.py --ids SA_63,SA_56` writes both YAML files (lint-clean) plus `.proposals/<id>.review.md` with rationale, the verifier's independent encoding, and their diff\n- [ ] Disagreements are stated at the top of the review file and left as a comment in the YAML — never silently resolved\n- [ ] Batches of at most 12 rules per author agent, batches run in parallel\n- [ ] Selectors `--ids`, `--group`, `--subgroup` (Task 9 drives waves by group); `.proposals/` git-ignored\n- [ ] The script commits nothing\n\n**Verify:** `python3 -m pytest tests/rules/test_propose.py -v` (recorded agent outputs; no live calls)\n\n```json:metadata\n{\"files\": [\".claude/agents/rule-author.md\", \".claude/agents/rule-verifier.md\", \"scripts/rules_sync/propose.py\", \"tests/rules/test_propose.py\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_propose.py -v\", \"acceptanceCriteria\": [\"two files written and lint-clean\", \"disagreement surfaced not resolved\", \"batch size 12 with parallel dispatch\", \"no commits from the script\"], \"modelTier\": \"frontier\"}\n```",
+      "blockedBy": [
+        3
+      ]
+    },
+    {
+      "id": 6,
+      "subject": "Task 7: Calibration gate — reproduce the golden corpus",
+      "status": "pending",
+      "description": "**Goal:** Prove the authoring setup is trustworthy before pointing it at 232 rules.\n\n**USER-ORDERED GATE — NON-SKIPPABLE.** This task was requested by the user in the current conversation. It MUST NOT be closed by walking around it, by declaring it \"verified inline\", or by substituting a cheaper check. Close only after every item in `acceptanceCriteria` has been re-validated independently, with output captured.\n\n**Files:**\n- Create: `tests/rules/test_calibration.py`\n- Modify: `.claude/agents/rule-author.md` (iterate the brief until it passes)\n\n**Acceptance Criteria:**\n- [ ] `propose.py` over the ten golden ids into a scratch directory reproduces the hand-authored effect rows for all ten — same types, values, conditions, tiers\n- [ ] Author and verifier agree on all ten\n- [ ] The run's summary table is captured in the close comment\n\n**Verify:** `python3 scripts/rules_sync/propose.py --ids $(ls tests/rules/golden | sed 's/.yaml//' | paste -sd, -) --out /tmp/calibration && python3 -m pytest tests/rules/test_calibration.py -v` → 10 passed, all `agree`\n\n```json:metadata\n{\"files\": [\"tests/rules/test_calibration.py\", \".claude/agents/rule-author.md\"], \"verifyCommand\": \"python3 scripts/rules_sync/propose.py --ids $(ls tests/rules/golden | sed 's/.yaml//' | paste -sd, -) --out /tmp/calibration && python3 -m pytest tests/rules/test_calibration.py -v\", \"acceptanceCriteria\": [\"ten of ten golden rules reproduced semantically\", \"author and verifier agree on all ten\", \"summary table captured in the close comment\"], \"userGate\": true, \"tags\": [\"user-gate\"], \"gateScope\": \"task\", \"failurePolicy\": \"fix-the-brief-not-the-golden-files\", \"modelTier\": \"frontier\"}\n```",
+      "blockedBy": [
+        5
+      ]
+    },
+    {
+      "id": 7,
+      "subject": "Task 8: Coverage ratchet",
+      "status": "pending",
+      "description": "**Goal:** Missing coverage becomes a number that can only go down, and absence can never be silent.\n\n**Files:**\n- Create: `tests/rules/test_coverage.py`, `specs/rules/COVERAGE.md`, `HesindionTests/RuleCoverageTests.swift`\n\n**Acceptance Criteria:**\n- [ ] Python test counts combat rules (group_id IN 3,9,10,11,12) without authored effects and fails above the recorded baseline\n- [ ] Swift test asserts every rule on the UITestHero yields either structured effects or a reminder — never nothing\n- [ ] `COVERAGE.md` lists, by subgroup, which rules are authored and which are reminder-only\n\n**Verify:** `python3 -m pytest tests/rules/test_coverage.py -v && make test-ui`\n\n```json:metadata\n{\"files\": [\"tests/rules/test_coverage.py\", \"specs/rules/COVERAGE.md\", \"HesindionTests/RuleCoverageTests.swift\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_coverage.py -v && make test-ui\", \"acceptanceCriteria\": [\"ratchet fails when coverage regresses\", \"no-silent-absence test green on the seeded hero\", \"COVERAGE.md regenerated\"], \"modelTier\": \"standard\"}\n```",
+      "blockedBy": [
+        6
+      ]
+    },
+    {
+      "id": 8,
+      "subject": "Task 9: Authoring waves 1-3",
+      "status": "pending",
+      "description": "**Goal:** Complete coverage of what the engine can express, in reviewable increments.\n\n**Files:** `specs/rules/*.yaml` (one PR per wave)\n\n**Acceptance Criteria:**\n- [ ] Wave 1: all 5 Basismanöver and 35 Spezialmanöver of group 3 (40 rules)\n- [ ] Wave 2: the 49 passive abilities of group 3\n- [ ] Wave 3: groups 9, 10, 11, 12 (143 rules)\n- [ ] Every wave lints, sync-checks, ratchets coverage down, and is one PR\n- [ ] No wave merges with an unresolved author/verifier disagreement\n\n**Verify:** `make rules-lint && make rules-sync-check && python3 -m pytest tests/rules/ -v && make rules-db-verify`\n\n```json:metadata\n{\"files\": [\"specs/rules/\", \"specs/rules/COVERAGE.md\", \"CHANGELOG.md\"], \"verifyCommand\": \"make rules-lint && make rules-sync-check && python3 -m pytest tests/rules/ -v && make rules-db-verify\", \"acceptanceCriteria\": [\"wave 1 covers all 40 maneuvers\", \"wave 2 covers 49 passives\", \"wave 3 covers the extended groups\", \"no unresolved disagreements merged\"], \"modelTier\": \"frontier\"}\n```",
+      "blockedBy": [
+        7
+      ]
+    }
+  ],
+  "lastUpdated": "2026-09-20"
+}

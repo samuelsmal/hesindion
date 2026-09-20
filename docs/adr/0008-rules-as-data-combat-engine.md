@@ -1,0 +1,141 @@
+# ADR-0008: Rules as Data — the Combat Rule Engine
+
+## Status
+
+Accepted
+
+## Context
+
+A hero with the Sonderfertigkeit *Sturmangriff* (`SA_62`) cannot use it, and would get the wrong
+damage if they could. Investigating why showed the cause is structural, not a missed case:
+
+- **The data-driven path is dead code.** `Hesindion/Engine/RuleEffectModifiers.swift` — the only
+  code that turns database effects into modifiers — has no callers. `ModifierEngine.shared` is a
+  static list of hand-written Swift definitions, and the `effects` table reaches the app only
+  through `RuleDetail`, i.e. for *display* in the rule browser. No combat number comes from data.
+- **The import classification is circular.** `OptolithImportService.isCombatSpecialAbility(id:)`
+  answers "is this a combat ability?" with "does it already have a hand-written combat effect?".
+  Nine rules qualify. Every other combat SF is filed under `generalSpecialAbilities`, where no
+  combat code looks — so `SA_62` would not work even if a `hasSturmangriff` check were added.
+  This already misfires in shipped features: `SA_884` (Plänkler-Formation) and `SA_160`/`SA_161`
+  (Gezielter Angriff/Schuss, the Trefferzonen halving) can never be true from a real import. Tests
+  miss it because they assign `combatSpecialAbilities` directly.
+- **One mechanism is expressible, and there are ten.** A census of all 232 combat special abilities
+  (`group_id IN (3, 9, 10, 11, 12)`) by what their rule text asks for: 90 have opponent-side
+  outcomes, 73 are flat modifiers on the hero's own check, 50 call for a probe, 40 inflict a
+  Zustand, 33 add a **die** rather than a number, 33 carry preconditions, 29 touch action economy,
+  27 **override an existing constant**, 18 scale per Stufe, 9 grant legality. `ModifierDefinition`
+  is `(ModifierContext) -> ModifierLine?` folded into an `Int`: it covers the 73 and nothing else.
+- **The constants those 27 abilities rewrite are Swift literals** — `-(defenseCount * 3)` in
+  `DefenseModifiers`, the reach matrix in `CombatManeuver`, the zone penalties in
+  `HitZoneModifiers`, the dual-wield base in `Hero`.
+- **Maneuvers are a closed Swift enum.** `CombatManeuver` has six cases and
+  `CombatAttackViews.availableManeuvers` is a hand-maintained list — the line that forgot
+  Sturmangriff.
+
+The data vocabulary was never the problem: `rules.yaml` already declares ten effect types
+(`modifier`, `damageModifier`, `opponentModifier`, `restriction`, `stateGain`, `negation`,
+`damageRedirect`, `narrative`, `recovery`, `incapacitated`). The engine grew a handler for one.
+
+## Decision
+
+**Rules are data. Adding an ability is authoring, not programming.** A new special ability that uses
+an existing mechanism costs one authored file (ADR-0007) and a database rebuild. No Swift.
+
+**The engine returns a result, not a number.** `resolve(context) -> EngineResult`, carrying
+`lines` (the existing `ModifierLine` breakdown), `dice`, `parameters`, `restrictions`, `probes` and
+`reminders`. Resolution order is `parameters → overrides → modifiers → Zustand cap → outputs`; the
+−5 Zustand cap runs after modifiers and never sees parameter overrides.
+
+**Effects are a closed typed union** of eight cases — `modifier`, `parameterOverride`, `dice`,
+`actionEconomy`, `probe`, `legality`, `stateGain`, `reminder`. Closed, so an unhandled case is a
+compile error rather than a silent no-op.
+
+**Conditions are a closed predicate set, not a string.** The corpus needs exactly ten:
+`combatTechnique(in:)` (34 rules), `targetState(_)` (23), `mounted` (20), `targetSize(≤)` (16),
+`attribute(_, ≥)` (16), `runUp(≥)` (13), `weaponReach(_)` (6), `defenseCount(≥)` (4),
+`armorAtMost(_)` (3), `offHandWeapon` (1). Six already exist as `ModifierContext` fields. No
+expression language, no interpreter: a novel condition costs an enum case and is greppable.
+
+**DSA constants become named parameters** (`defense.multiplePenaltyPerStep`, `dualWield.penalty`,
+`reach.matrix`, `zone.*`, `passierschlag.penalty`, …) that abilities override with an explicit
+operation — `set`, `shiftSteps`, `scale`. Meisterparade becomes
+`set defense.multiplePenaltyPerStep = -2`, Unterlaufen `shiftSteps reach.matrix by tier`, Gezielter
+Angriff `scale zone.* by 0.5`. Errata and house rules then change a value, not a code path. The
+per-hero Fokus-Regeln (`FokusRule`) are re-expressed as parameter override sets, so optional rules
+and abilities share one mechanism.
+
+**Stacking.** Effects from different abilities stack — a hero may combine a Basismanöver, one active
+Spezialmanöver and any number of passive abilities in a Kampfrunde, and all of their effects apply.
+The single exception is two `set` overrides of the *same* parameter: Meisterparade (−3 → −2) and
+Machtvolle Meisterparade (−3 → −1) each rewrite the same constant from the same base, so the
+strongest applies rather than accumulating. Any other exception must be stated in the data.
+
+**Maneuver selection is slotted, and the slots come from the data.** `rules.subgroup_id` already
+classifies every combat SF as `1 = Passiv`, `2 = Basismanöver`, `3 = Spezialmanöver` — subgroup 2 is
+exactly Finte, Präziser Schuss/Wurf, Präziser Stich, Wuchtschlag, Unterlaufen. Selection is
+therefore one Basismanöver plus one active Spezialmanöver plus the hero's passives, with `excludes`
+edges in the data for the named exceptions (*Sturmangriff kann nicht mit Finte kombiniert werden*,
+*Riposte kann nicht mit einem Basismanöver kombiniert werden*). The current single-select picker is
+replaced: it does not merely fail to ban illegal pairs, it forbids legal ones.
+
+**Damage becomes an expression, not a string.** 33 abilities add a die (`+1W6` Todesstoß, `1W3`
+Entwaffnen). `MeleeWeapon.damage: String` and the regex in `CombatAttackViews.adjustedDamage()`
+cannot carry that, so a `DamageExpression` value type replaces the string through the `CombatStep`
+payloads and the views that render them.
+
+**An unmodelled ability degrades to its rule text — never to silence.** Every ability a hero owns
+that has no structured effects emits a `reminder` carrying its text from `rules_i18n`, rendered like
+the existing `WoundEffectReminderCard`. All 232 are covered from day one. Structured effects are
+then authored where the table needs them, and coverage is a visible number rather than a hidden gap.
+
+**Opponent-side effects stay GM-adjudicated, per ADR-0005** — 90 of 232 abilities touch the
+opponent, and the opponent is still not modelled. They are promoted from "missing" to a first-class
+`reminder` output: the app applies the hero-side AT modifier, shows the damage die, and states the
+consequence for the GM.
+
+**Import classification is fixed at the source**: an ability is a combat ability when
+`rules.group_id IN (3, 9, 10, 11, 12)`, not when someone has already hand-written an effect for it.
+
+## Considered Alternatives
+
+- **Wire up `RuleEffectModifiers` as written and stop there.** Rejected. It covers the 73 flat
+  modifiers and mis-encodes the rest: it drops `effect.attribute` entirely and ignores
+  `effect.condition`, so `SA_43`'s "BE −1 *while mounted*" would apply as −1 on AT/PA/AW, on foot,
+  permanently. Fixing it is part of this decision, not an alternative to it.
+- **Modifiers and maneuvers as data, everything else in Swift.** Rejected: it leaves the 27
+  constant-overriding and 33 dice-adding abilities as per-ability Swift work, which schedules the
+  next refactor rather than avoiding it.
+- **Model a lightweight opponent** so Entwaffnen, Zu Fall bringen and Betäubungsschlag resolve in
+  app. Rejected — reverses ADR-0005 and pulls in NPC defence values, states and initiative that the
+  GM already tracks.
+- **A general expression language for conditions and formulas.** Rejected as overengineering: ten
+  predicates cover the entire combat corpus, and an interpreter would be harder to test than the
+  rules it evaluates.
+- **Incremental migration behind a flag.** Considered seriously and rejected by the maintainer: two
+  engines running side by side is the four-authorities problem of ADR-0007 in a new place.
+
+## Consequences
+
+- Adding an ability with a known mechanism is an authoring change. Adding a genuinely new *mechanism*
+  is a new case in the effect union plus one handler — bounded, additive, and rare: the census finds
+  ten mechanisms across the whole combat corpus, of which this decision implements eight.
+- **A parity harness is a precondition, not a follow-up.** Today's engine output is captured as
+  golden files across the nine wired abilities × all `CheckDomain`s before the swap, and asserted
+  identical after. A single-pass engine replacement without it is an unverifiable rewrite.
+- A coverage test replaces the failure that produced this ADR: for every rule a hero owns, assert
+  either structured effects or an explicit reminder. Sturmangriff would have failed it loudly.
+- The Flutter port benefits directly. A Swift-hardcoded ruleset has to be rewritten for
+  `hesindion_app`; `rules.db` plus this schema is portable, so the rules stop being implemented
+  twice.
+- Reminder cards will be noisy at first, because most abilities start unstructured. That is the
+  intended trade: visible and unmodelled beats invisible.
+- `CombatManeuver`, `availableManeuvers`, `adjustedDamage()` and the `CombatStep` damage payloads all
+  change. This is the largest single cost and it is in the views, not the engine.
+- Rule constants stop being greppable as literals. `defense.multiplePenaltyPerStep` is one
+  indirection away from `-3`, which is the price of making errata a data change.
+
+## Related
+
+- **ADR-0005** — why opponent-side effects are GM-adjudicated; reaffirmed here.
+- **ADR-0007** — where rule data comes from and how it is kept true to the Regelwiki.
