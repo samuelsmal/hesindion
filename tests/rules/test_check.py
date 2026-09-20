@@ -7,6 +7,7 @@ acceptance criterion). No real network access and no real rule text:
 `Fetcher` is driven with an in-memory HTTP double, and the placeholder rule
 text below is invented, not a capture of any real page.
 """
+import hashlib
 import textwrap
 import time
 
@@ -163,6 +164,63 @@ def test_missing_content_container_is_reported_structure_changed(tmp_path, monke
     assert url in result.detail  # ruling: message must name the URL
 
 
+def test_empty_content_container_is_reported_structure_changed(tmp_path, monkeypatch):
+    # Fix round 4: `#main` present but empty (five real index pages on the
+    # live site do this -- their content is client-side rendered or sits
+    # outside the container). Before this round it normalised to "" and
+    # hashed to the SHA-256 of the empty string, which would have been
+    # recorded as verified provenance and compared `ok` forever.
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    url = "https://example.invalid/Platzhalter_Uebersicht.html"
+    write_rule(tmp_path, "SA_TEST.yaml", url=url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    html_with_empty_container = (
+        '<html><body><div id="main"></div><p>Inhalt ausserhalb</p></body></html>'
+    )
+    fetcher, _ = make_fetcher(tmp_path, {url: html_with_empty_container})
+
+    result = check_rule(tmp_path / "SA_TEST.yaml", fetcher)
+
+    assert result.status == "structure-changed"
+    assert url in result.detail  # ruling: message must name the URL
+    assert "empty" in result.detail  # ... and say *which* structural failure
+
+
+def test_empty_container_never_compares_ok_against_the_empty_string_hash(tmp_path, monkeypatch):
+    # The exact silent failure: a rule whose recorded hash *is* sha256("")
+    # (what an empty container used to produce) must not be reported `ok`.
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    url = "https://example.invalid/Platzhalter_Uebersicht.html"
+    empty_string_hash = "sha256:" + hashlib.sha256(b"").hexdigest()
+    write_rule(tmp_path, "SA_TEST.yaml", url=url, checked="2026-09-20", hash_=empty_string_hash)
+    fetcher, _ = make_fetcher(tmp_path, {url: '<html><body><div id="main">   </div></body></html>'})
+
+    result = check_rule(tmp_path / "SA_TEST.yaml", fetcher)
+
+    assert result.status == "structure-changed"
+
+
+def test_missing_and_empty_containers_report_different_details(tmp_path, monkeypatch):
+    # Same state, different remedy: "the site's markup changed" vs "the
+    # content is not in the fetched HTML at all".
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    missing_url = "https://example.invalid/Platzhalter_Ohne.html"
+    empty_url = "https://example.invalid/Platzhalter_Leer.html"
+    write_rule(tmp_path, "SA_MISSING.yaml", url=missing_url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    write_rule(tmp_path, "SA_EMPTY.yaml", url=empty_url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    fetcher, _ = make_fetcher(tmp_path, {
+        missing_url: "<html><body><p>Kein Container.</p></body></html>",
+        empty_url: '<html><body><div id="main"></div></body></html>',
+    })
+
+    missing = check_rule(tmp_path / "SA_MISSING.yaml", fetcher)
+    empty = check_rule(tmp_path / "SA_EMPTY.yaml", fetcher)
+
+    assert missing.status == empty.status == "structure-changed"
+    assert missing.detail != empty.detail
+    assert "no content container" in missing.detail
+    assert "empty" in empty.detail
+
+
 def test_fetch_failure_is_reported_drifted_not_a_crash(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
     url = "https://example.invalid/Platzhalter.html"
@@ -225,6 +283,21 @@ def test_run_exits_nonzero_when_structure_changed(tmp_path, monkeypatch, capsys)
     out = capsys.readouterr().out
     assert "SA_STRUCT" in out and "structure-changed" in out
     assert "1 structure-changed" in out
+
+
+def test_run_exits_nonzero_when_container_is_empty(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    url = "https://example.invalid/Platzhalter_Uebersicht.html"
+    write_rule(tmp_path, "SA_EMPTY.yaml", url=url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    fetcher, _ = make_fetcher(tmp_path, {url: '<html><body><div id="main"></div></body></html>'})
+
+    code = run(rules_dir=tmp_path, fetcher=fetcher)
+
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "SA_EMPTY" in out and "structure-changed" in out
+    assert "1 structure-changed" in out
+    assert url in out
 
 
 def test_non_rule_yaml_files_are_skipped(tmp_path):

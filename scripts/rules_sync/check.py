@@ -19,14 +19,27 @@ Reports each rule as one of:
                      never been checked against a real page. Resolving real
                      URLs for these is a separate task's job; this script
                      only reports the marker, it never guesses.
-  structure-changed  the fetched page has neither `id="main"` nor a `<main>`
-                     element (normalise.py's `ContentContainerNotFound`) --
-                     this normaliser no longer knows what part of the page is
-                     the rule text, so it refuses to guess (fix round 2: the
-                     previous fallback to `<body>` silently picked up a
-                     dynamic widget and reported permanent false drift; see
-                     the report). This needs a human to look at the page and
-                     update the normaliser, not a routine re-check.
+  structure-changed  the fetched page yielded no rule text at all
+                     (normalise.py's `ContentContainerError`), in one of two
+                     ways the detail string distinguishes, because the
+                     remedies differ:
+                       * *no content container* -- neither `id="main"` nor
+                         `<main>` exists: the site's markup changed, so
+                         normalise.py's container selection needs updating
+                         (fix round 2: the previous fallback to `<body>`
+                         silently picked up a dynamic widget and reported
+                         permanent false drift; see the report).
+                       * *empty content container* -- the container exists
+                         but normalises to "": the rule text is not in the
+                         fetched HTML at all (rendered client-side, or
+                         outside the container -- five real index pages on
+                         this site are like that), so the URL is probably
+                         not usable as a rule's `source.url`. Before fix
+                         round 4 these hashed to the SHA-256 of the empty
+                         string, i.e. identically for every such page, and
+                         would have compared `ok` forever.
+                     Either way a human has to look at the page; this is not
+                     a routine re-check.
 
 Exit code is 0 unless at least one rule is `drifted` or `structure-changed`
 -- an `unverified` rule does not fail the build.
@@ -50,7 +63,7 @@ from typing import NamedTuple
 import requests
 import yaml
 
-from scripts.rules_sync.normalise import ContentContainerNotFound, hash_html
+from scripts.rules_sync.normalise import ContentContainerError, hash_html
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = REPO_ROOT / "specs" / "rules"
@@ -133,11 +146,14 @@ def _is_unverified(url: str, checked: str, recorded_hash: str) -> bool:
 def check_rule(path: Path, fetcher: Fetcher) -> Result:
     """Check one authored rule file against the wiki. Never raises on a
     fetch failure -- that is reported as `drifted` with the error as detail,
-    not a crash that would take the whole run down. A missing content
-    container (`ContentContainerNotFound`) is reported as `structure-changed`,
-    not `drifted` -- it is a categorically different failure (the page's
-    template changed, not its text) that needs a human to update the
-    normaliser, not a routine re-check."""
+    not a crash that would take the whole run down. A page that yields no
+    rule text (`ContentContainerError`: no container, or a container that is
+    present but empty) is reported as `structure-changed`, not `drifted` --
+    it is a categorically different failure (the page no longer serves the
+    rule text where we look for it, rather than serving different text) that
+    needs a human to look at the page, not a routine re-check. The exception
+    message, which names which of the two it is, goes into the detail
+    alongside the URL."""
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     rule_id = doc.get("id", path.stem)
     source = doc.get("source") or {}
@@ -155,7 +171,7 @@ def check_rule(path: Path, fetcher: Fetcher) -> Result:
 
     try:
         current_hash = hash_html(html)
-    except ContentContainerNotFound as exc:
+    except ContentContainerError as exc:
         return Result(rule_id, "structure-changed", f"{url}: {exc}")
 
     if current_hash == recorded_hash:

@@ -21,11 +21,18 @@ per-render challenge text in each fixture, once outside `#main` and once
 the cheap, fixture-only check that would have caught the original bug
 without a live fetch.
 """
+import hashlib
 import pathlib
 
 import pytest
 
-from scripts.rules_sync.normalise import ContentContainerNotFound, hash_html, normalise_html
+from scripts.rules_sync.normalise import (
+    ContentContainerEmpty,
+    ContentContainerError,
+    ContentContainerNotFound,
+    hash_html,
+    normalise_html,
+)
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 
@@ -209,3 +216,94 @@ def test_body_fallback_no_longer_silently_used():
     # fix round 2 drops both rungs -- only #main or a real <main> tag count.
     with pytest.raises(ContentContainerNotFound):
         normalise_html("<html><body><div id='not-main'><p>Text</p></div></body></html>")
+
+
+# --- Fix round 4: an *empty* container was as silent as a missing one ------
+#
+# `ContentContainerNotFound` only fired when `#main`/`<main>` was absent. Five
+# real pages on the live site (sf_kampfsonderfertigkeiten.html,
+# Best_Tiere.html, ruestkammer.html, RS_Waffen.html, RS_Ruestung.html) have a
+# *present but empty* `#main` -- their content is rendered client-side or sits
+# outside the container in the raw HTML. Those normalised to `""` and hashed
+# to the SHA-256 of the empty string, so every such page carried the same
+# plausible-looking hash and would have compared `ok` forever once recorded as
+# a rule's provenance. Same failure class as a missing container, so it raises
+# too -- but with its own type and message, because the remedies differ (the
+# site's markup changed vs. the content is not in the fetched HTML at all).
+
+def test_empty_container_raises_content_container_empty():
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html('<html><body><div id="main"></div><p>Inhalt ausserhalb</p></body></html>')
+
+
+def test_whitespace_only_container_raises_content_container_empty():
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html('<html><body><div id="main">\n\t   \n</div></body></html>')
+
+
+def test_container_holding_only_nbsp_raises_content_container_empty():
+    # &nbsp; is whitespace after step 7, so this is still an empty extraction.
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html('<html><body><div id="main">&nbsp;&#160;</div></body></html>')
+
+
+def test_container_holding_only_a_script_raises_content_container_empty():
+    # The container looks non-empty in the source, but everything in it is
+    # stripped before extraction -- exactly the client-side-rendered index
+    # page shape. Must not hash as "".
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html(
+            '<html><body><div id="main">'
+            '<script>document.write("Platzhalter");</script>'
+            "</div></body></html>"
+        )
+
+
+def test_container_holding_only_the_captcha_widget_raises_content_container_empty():
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html(
+            '<html><body><div id="main">'
+            '<div class="t4c_quickcontact_form">'
+            '<span id="captcha_text_107" class="captcha_text">Bitte addieren Sie 2 und 3.</span>'
+            "</div></div></body></html>"
+        )
+
+
+def test_empty_container_fixture_raises_instead_of_hashing_the_empty_string():
+    # rule_h_empty_container.html models the live site's index-page shape:
+    # #main present but empty, real content outside it under #sub_header.
+    html = _read("rule_h_empty_container.html")
+    with pytest.raises(ContentContainerEmpty):
+        normalise_html(html)
+    with pytest.raises(ContentContainerEmpty):
+        hash_html(html)
+
+
+def test_empty_and_missing_container_are_the_same_failure_class_but_distinguishable():
+    # Both must be catchable as one class (check.py reports one state for
+    # both) while naming different remedies in their messages.
+    assert issubclass(ContentContainerEmpty, ContentContainerError)
+    assert issubclass(ContentContainerNotFound, ContentContainerError)
+    assert not issubclass(ContentContainerEmpty, ContentContainerNotFound)
+
+    with pytest.raises(ContentContainerError) as missing:
+        normalise_html("<html><body><p>Kein Container.</p></body></html>")
+    with pytest.raises(ContentContainerError) as empty:
+        normalise_html('<html><body><div id="main"></div></body></html>')
+
+    assert "no content container" in str(missing.value)
+    assert "empty" in str(empty.value)
+    assert str(missing.value) != str(empty.value)
+
+
+def test_an_empty_extraction_never_reaches_the_empty_string_hash():
+    # The concrete bug: sha256("") == e3b0c442...b855, recorded as a rule's
+    # verified provenance, compares ok forever.
+    empty_string_hash = "sha256:" + hashlib.sha256(b"").hexdigest()
+    for html in (
+        '<html><body><div id="main"></div></body></html>',
+        "<html><body><main>   </main></body></html>",
+        '<html><body><div id="main"><script>x=1;</script></div></body></html>',
+    ):
+        with pytest.raises(ContentContainerError):
+            assert hash_html(html) != empty_string_hash

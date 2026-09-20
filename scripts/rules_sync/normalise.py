@@ -66,7 +66,19 @@ _BLOCK_BOUNDARY_TAGS = (
 # repro that caught the previous `get_text(" ")` approach getting this wrong.
 
 
-class ContentContainerNotFound(Exception):
+class ContentContainerError(Exception):
+    """Base class for "this page yielded no usable rule text" failures.
+
+    A missing content container and a present-but-empty one are the same
+    failure class -- in both cases this normaliser cannot say what part of
+    the page is the rule text, so it must fail loudly rather than hand back
+    a plausible-looking hash. check.py catches *this* class and surfaces
+    both as its single `structure-changed` state; the two subclasses below
+    exist because the remedies differ, and the message has to say which.
+    """
+
+
+class ContentContainerNotFound(ContentContainerError):
     """Raised when a page has neither `id="main"` nor a `<main>` element.
 
     Fix round 2: this site has no `<main>` element on any real page (fix
@@ -79,6 +91,36 @@ class ContentContainerNotFound(Exception):
     or "the network hiccuped" -- it means this normaliser no longer knows
     what part of the page is the rule, so it must fail loudly rather than
     guess. check.py surfaces this as its own `structure-changed` state.
+
+    Remedy: the site's markup changed -- look at the page and update the
+    container selection in `normalise_html` (or the rule's `source.url`).
+    """
+
+
+class ContentContainerEmpty(ContentContainerError):
+    """Raised when the content container exists but yields no text.
+
+    Fix round 4. `ContentContainerNotFound` only covered an *absent*
+    container. Five real pages on the live site --
+    `sf_kampfsonderfertigkeiten.html`, `Best_Tiere.html`,
+    `ruestkammer.html`, `RS_Waffen.html`, `RS_Ruestung.html` -- have a
+    present but **empty** `#main` in their raw HTML: their content is
+    rendered client-side, or (verified for the first of them) sits outside
+    `#main` entirely, under `#sub_header`. Those normalised to `""` and
+    hashed to `sha256:e3b0c442...b855`, the SHA-256 of the empty string.
+    Every such page therefore produced the *same* valid-looking hash, which,
+    once written into a rule's `source.hash`, would have compared `ok`
+    forever while verifying nothing -- the same class of silent failure as
+    the pre-fix-round-1 CAPTCHA bug, just inverted (constant instead of
+    always-changing).
+
+    A container that is only whitespace, or only elements this module
+    strips (`<script>`/`<style>`, the quick-contact/CAPTCHA widget), is the
+    same case: after normalisation there is no rule text to hash.
+
+    Remedy: the content is **not in the fetched HTML at all**, so no change
+    to the container selector will help -- the URL is probably an index or
+    client-rendered page and is not usable as a rule's `source.url`.
     """
 
 
@@ -128,10 +170,18 @@ def normalise_html(html: str) -> str:
     9. NFC-normalise so a precomposed character (e.g. "ö", U+00F6) and its
        decomposed form (`o` + combining diaeresis, U+006F U+0308) hash
        identically.
+    10. Fail if the result is empty. An empty extraction is never a valid
+       rule page; it is the same "we don't know where the rule text is"
+       failure as a missing container, and letting it through would hand
+       every such page the SHA-256 of the empty string as a plausible,
+       permanently-`ok` provenance hash -- see `ContentContainerEmpty`.
 
     Raises:
         ContentContainerNotFound: neither `id="main"` nor `<main>` exists in
             `html`.
+        ContentContainerEmpty: the container exists but normalises to "".
+        Both are `ContentContainerError`; callers that treat the two the
+        same (check.py does, as one `structure-changed` state) catch that.
     """
     soup = BeautifulSoup(html, "html.parser")
 
@@ -144,7 +194,9 @@ def normalise_html(html: str) -> str:
     content = soup.find(id="main") or soup.find("main")
     if content is None:
         raise ContentContainerNotFound(
-            'neither id="main" nor a <main> element was found in this page'
+            'no content container: neither id="main" nor a <main> element '
+            "exists in this page -- the site's markup changed; look at the "
+            "page and update normalise.py's container selection"
         )
 
     for br in content.find_all("br"):
@@ -159,6 +211,14 @@ def normalise_html(html: str) -> str:
     text = _WHITESPACE_RE.sub(" ", text).strip()
     text = unicodedata.normalize("NFC", text)
 
+    if not text:
+        raise ContentContainerEmpty(
+            'empty content container: id="main"/<main> exists but contains no '
+            "text after normalisation -- the rule text is not in the fetched "
+            "HTML at all (rendered client-side, or outside the container), so "
+            "this page cannot be hashed as rule provenance"
+        )
+
     return text
 
 
@@ -167,7 +227,9 @@ def hash_html(html: str) -> str:
     shape) for a wiki page's normalised rule text.
 
     Raises:
-        ContentContainerNotFound: see `normalise_html`.
+        ContentContainerError (`ContentContainerNotFound` /
+            `ContentContainerEmpty`): see `normalise_html`. In particular
+            this function never returns the hash of the empty string.
     """
     normalised = normalise_html(html)
     digest = hashlib.sha256(normalised.encode("utf-8")).hexdigest()
