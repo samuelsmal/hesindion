@@ -1,0 +1,27 @@
+description: >-
+  The golden corpus: the ten rules authored by hand against the live
+  Regelwiki, which the LLM authoring pipeline must reproduce before it is
+  trusted with the remaining 222. This file freezes them by content hash
+  instead of by a second copy of the bodies (Task 4 fix round 1, Q5): a
+  duplicate under tests/ could drift from specs/rules/ silently, and was
+  also the one place in the repo where a `text:` key or a German comment
+  would have passed CI unchecked, since `make rules-lint` globs
+  specs/rules/ only.
+
+  Each value is the SHA-256 of the authored file's bytes, so any edit to a
+  golden rule fails tests/rules/test_golden.py with the remedy in the
+  message. That is the intent: changing one of these files invalidates the
+  pipeline's calibration and means re-running it, which should be a
+  deliberate act, not a side effect.
+
+rules:
+  SA_40: sha256:6cd20df659537366d2ce07500a48e3cbbc4497702ef0fd68ef99c857d97b47b0
+  SA_41: sha256:f15b6f5b0fad1887d485acfb4a9472291d40ff1317e407c9e90f8a79f2df2772
+  SA_43: sha256:bbdfa6748be46613e8165fa7417f764169f60d01f6c577c78cb424e363cb018f
+  SA_48: sha256:97ddfc3fba852d343214759aa1333784f8d80325cd91cfdd6d5870c7e04fe9e4
+  SA_59: sha256:d76ed4b39286ad73d34779cdf501bf69f70a2396fbf83576376b809929a66382
+  SA_62: sha256:cc27ce7d6d9f19ecf1151d5c9c33ab347048ccdb8cc9224726d776f4cd66614b
+  SA_65: sha256:3387c91564d9abaa985ee152189a3c1d480f991e0e12d9e208c03bbdeaf56b03
+  SA_66: sha256:4c3cf7604d75149ccfc37a2fb64ff6f04d53aee1a593d8f87942495dee613d16
+  SA_67: sha256:4de4b8819e7475bffa71dd953df84929a0700a3e872f978c3ca6119b5cc0afca
+  SA_661: sha256:6d094ea9f91098bc83f9fb0179f8a30d493132d75af1d8a4c1912debce3bc821

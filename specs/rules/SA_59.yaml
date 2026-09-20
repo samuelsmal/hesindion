@@ -1,6 +1,6 @@
 id: SA_59
 subgroup: spezialmanoever
-note: Schildspalter is two mechanical effects plus one GM reminder, and the whole manoeuvre only applies against an opponent who carries a shield
+note: Clause 6 gates every mechanical effect here; it is GM-adjudicated because the opponent is not modelled (ADR-0005). See gmFlag opponentUsesShield in vocabulary.yaml
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Schildspalter.html
   book: US25001
@@ -8,16 +8,18 @@ source:
   checked: '2026-09-21'
   hash: sha256:5067af68a00702f4d92778681fd7db7db69aa1e16b267239e8f2009b388917be
 effects:
+- type: reminder
+  note: Clause 2 - the defensibility clause, naming a non-default defence set; GM-adjudicated, and encoded the same way as SA_62's (ADR-0005)
 - type: parameterOverride
   parameter: shield.paBonus
   set: 0
   when:
   - gmFlag: opponentUsesShield
-  note: Second clause - the shield's parry bonus cannot be used against this attack. Whether the opponent has a shield is GM-adjudicated (ADR-0005)
+  note: Clause 3 - suppresses a named DSA constant for this attack rather than adding a modifier, which is what parameterOverride is for
 - type: dice
   recipient: defenderShield
   when:
   - gmFlag: opponentUsesShield
-  note: Third clause - the attack's own damage is redirected to the shield's structure points, so this row adds no dice of its own
+  note: Clause 4 - redirects the attack's own damage to a non-default recipient; no dice are added, which is why add is absent
 - type: reminder
-  note: Destruction clause - the shield is destroyed once its structure points reach 0. Opponent-side, so the GM applies it (ADR-0005)
+  note: Clause 5 - an opponent-side outcome with no hero-side number, promoted to a reminder rather than dropped (ADR-0005, ADR-0008)

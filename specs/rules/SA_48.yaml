@@ -1,6 +1,6 @@
 id: SA_48
 subgroup: basismanoever
-note: Tier ladder (Stufe I-III). The rule penalises the opponent's defence, which is PA or AW, so each tier carries two opponent-side rows
+note: Tier ladder (Stufe I-III). Clause 1 penalises the opponent's defence, which is PA or AW, so each Stufe carries two opponent rows rather than one
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Finte.html
   book: US25001
@@ -13,58 +13,58 @@ effects:
   scope: combat
   value: -1
   tier: 1
-  note: Stufe I - the attacker's own AT penalty, matching the Erschwernis line on the page
+  note: Stufe I - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: modifier
   target: pa
   scope: combat
   side: opponent
   value: -2
   tier: 1
-  note: Stufe I - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+  note: Stufe I - clause 1's opponent-side effect, conditional on the attack succeeding; display-only (ADR-0005)
 - type: modifier
   target: aw
   scope: combat
   side: opponent
   value: -2
   tier: 1
-  note: Stufe I - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target
+  note: Stufe I - the dodge half of the same opponent-side effect; the target enum has no combined defence value
 - type: modifier
   target: at
   scope: combat
   value: -2
   tier: 2
-  note: Stufe II - the attacker's own AT penalty, matching the Erschwernis line on the page
+  note: Stufe II - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: modifier
   target: pa
   scope: combat
   side: opponent
   value: -4
   tier: 2
-  note: Stufe II - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+  note: Stufe II - clause 1's opponent-side effect, conditional on the attack succeeding; display-only (ADR-0005)
 - type: modifier
   target: aw
   scope: combat
   side: opponent
   value: -4
   tier: 2
-  note: Stufe II - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target
+  note: Stufe II - the dodge half of the same opponent-side effect; the target enum has no combined defence value
 - type: modifier
   target: at
   scope: combat
   value: -3
   tier: 3
-  note: Stufe III - the attacker's own AT penalty, matching the Erschwernis line on the page
+  note: Stufe III - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: modifier
   target: pa
   scope: combat
   side: opponent
   value: -6
   tier: 3
-  note: Stufe III - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+  note: Stufe III - clause 1's opponent-side effect, conditional on the attack succeeding; display-only (ADR-0005)
 - type: modifier
   target: aw
   scope: combat
   side: opponent
   value: -6
   tier: 3
-  note: Stufe III - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target
+  note: Stufe III - the dodge half of the same opponent-side effect; the target enum has no combined defence value

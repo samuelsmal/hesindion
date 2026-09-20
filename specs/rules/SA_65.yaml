@@ -1,6 +1,6 @@
 id: SA_65
 subgroup: passiv
-note: Announced at the start of the Kampfrunde. Verteidigungswert is PA and AW, so the +4 is two rows
+note: 'UNENCODED: clause 3, the announcement-timing clause - a selection-time concern with no effect encoding. Clause 1 is two rows because Verteidigungswert is PA and AW'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html
   book: US25001
@@ -12,12 +12,12 @@ effects:
   target: pa
   scope: combat
   value: 4
-  note: First clause - +4 on parry for the current Kampfrunde
+  note: Clause 1 - the parry half; one of two rows, since Verteidigungswert is PA and AW
 - type: modifier
   target: aw
   scope: combat
   value: 4
-  note: First clause - the same +4 on dodge, since Verteidigungswert covers both
+  note: Clause 1 - the dodge half of the same clause
 - type: actionEconomy
   forbids: furtherActions
-  note: Second clause - no Aktionen remain this Kampfrunde. Reaktionen (defences) are unaffected, which is why this is not allActions
+  note: Clause 2 - the cost this SF charges for clause 1. See furtherActions in vocabulary.yaml for why it is not allActions

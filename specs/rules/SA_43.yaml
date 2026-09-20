@@ -1,6 +1,6 @@
 id: SA_43
 subgroup: passiv
-note: The wiki rule paragraph states only the mounted-command clause; the BE row below has no clause on the page and is inherited from the legacy engine - verify against the print book
+note: A -1 BE row was removed in fix round 1 - no clause on the page, none in the Optolith seed, and no Swift implementation. Re-add only if the print book states it
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_BerittenerKampf.html
   book: US25001
@@ -8,15 +8,8 @@ source:
   checked: '2026-09-21'
   hash: sha256:57b0e2ef5564dd5605c8e7ddae82ec810788e9661ad9b3eb327e45f9f97db822
 effects:
-- type: modifier
-  target: be
-  scope: combat
-  value: -1
-  when:
-  - mounted: true
-  note: Legacy engine effect with no supporting clause on the wiki page; kept with its mounted condition rather than dropped, and flagged in the task-4 report
 - type: legality
   action: mountedCombatCommands
   when:
   - mounted: true
-  note: The one clause the rule paragraph does state - this SF is what lets a rider issue mounted combat commands such as a ride-down or a mounted charge
+  note: Clause 1 of 1 - the page's only clause; it unlocks actions rather than changing a number, which is what legality is for. See vocabulary.yaml

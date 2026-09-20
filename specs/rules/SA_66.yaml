@@ -1,6 +1,6 @@
 id: SA_66
 subgroup: spezialmanoever
-note: Announced at the start of the Kampfrunde
+note: 'UNENCODED: clause 3, the announcement-timing clause - a selection-time concern with no effect encoding'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Vorsto%C3%9F.html
   book: US25001
@@ -12,9 +12,9 @@ effects:
   target: at
   scope: combat
   value: 2
-  note: First clause - +2 on attack for the current Kampfrunde
+  note: Clause 1 - flat attack bonus for the current Kampfrunde
 - type: actionEconomy
   forbids: defense
-  note: Second clause - no defence remains this Kampfrunde
+  note: Clause 2 - the cost this SF charges for clause 1. See defense in vocabulary.yaml
 - type: reminder
-  note: Legality clause - unavailable while the hero is prone; the closed predicate set has no self-state predicate (ADR-0008), so this degrades to a reminder
+  note: 'UNENCODED: clause 4, a legality bar keyed on the hero''s own state; the closed predicate set has no self-state predicate (ADR-0008), so it degrades to a reminder'

@@ -1,6 +1,6 @@
 id: SA_41
 subgroup: passiv
-note: Tier ladder (Stufe I-II), engine matches effect tier to owned Stufe exactly. Encodes the BE column of the armour-table row shift only; the GS/INI extra-penalty column is not modelled
+note: 'UNENCODED: the armour table''s extra GS/INI penalty column. Tier ladder (Stufe I-II); the engine matches effect tier to owned Stufe exactly, as in SA_48 and SA_67'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html
   book: US25001
@@ -13,10 +13,10 @@ effects:
   scope: all
   value: -1
   tier: 1
-  note: Stufe I - armour counts two rows higher in the armour table, which works out as BE -1 for every armour with BE of at least 1
+  note: Stufe I - derived from the armour table's two-row shift, which works out as BE -1 for any armour with BE of at least 1
 - type: modifier
   target: be
   scope: all
   value: -2
   tier: 2
-  note: Stufe II - two rows per Stufe, so four rows, which works out as BE -2. scope all is the open question ADR-0008 records for BE, not a settled answer
+  note: Stufe II - four rows. scope all is the open question ADR-0008 records for BE, not a settled answer; no CheckDomain covers INI or GS

@@ -13,28 +13,28 @@ effects:
   scope: combat
   value: -2
   tier: 1
-  note: Stufe I - the AT penalty, matching the Erschwernis line on the page
+  note: Stufe I - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: dice
   add: '2'
   tier: 1
-  note: Stufe I - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die
+  note: Stufe I - clause 2's benefit; a flat number rather than a die, which dice.add carries as an expression either way
 - type: modifier
   target: at
   scope: combat
   value: -4
   tier: 2
-  note: Stufe II - the AT penalty, matching the Erschwernis line on the page
+  note: Stufe II - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: dice
   add: '4'
   tier: 2
-  note: Stufe II - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die
+  note: Stufe II - clause 2's benefit; a flat number rather than a die, which dice.add carries as an expression either way
 - type: modifier
   target: at
   scope: combat
   value: -6
   tier: 3
-  note: Stufe III - the AT penalty, matching the Erschwernis line on the page
+  note: Stufe III - clause 1's attacker-side cost, matching the page's Erschwernis line
 - type: dice
   add: '6'
   tier: 3
-  note: Stufe III - flat bonus damage on a successful hit, 2 per Stufe; a number rather than a die
+  note: Stufe III - clause 2's benefit; a flat number rather than a die, which dice.add carries as an expression either way
