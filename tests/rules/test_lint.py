@@ -394,3 +394,139 @@ def test_recovery_add_with_attribute_passes(tmp_path):
     p = tmp_path / "ADV_75.yaml"
     p.write_text(_recovery_doc("attribute: LE\n    value: 1\n    operation: add\n    per: regenerationCycle"))
     assert lint_file(p) == []
+
+
+# --- Task 4 fix round 1 (Q4): open-vocabulary slug shape + registration ---
+#
+# ADR-0008 leaves `grants`/`forbids`/`legality.action`/`gmFlag` open because
+# they are not finite over 232 rules. Open was previously *unconstrained*:
+# `forbids: "keine Verteidigung in dieser KR"` linted clean, which is a Data
+# Policy hole, not untidiness. Two layers now close it -- a slug pattern in
+# schema.json, and registration in specs/rules/vocabulary.yaml -- and the
+# second is the one that catches the failure an open vocabulary actually dies
+# of: a well-formed synonym nobody agreed on.
+
+def _action_economy_doc(field: str, token: str) -> str:
+    return textwrap.dedent("""
+        id: SA_66
+        subgroup: spezialmanoever
+        source:
+          url: https://dsa.ulisses-regelwiki.de/SA_66.html
+          checked: 2026-09-20
+          hash: sha256:{h}
+        effects:
+          - type: actionEconomy
+            {field}: {token}
+    """).format(h="0" * 64, field=field, token=token)
+
+
+def test_registered_forbids_token_is_accepted(tmp_path):
+    p = tmp_path / "SA_66.yaml"
+    p.write_text(_action_economy_doc("forbids", "defense"))
+    assert lint_file(p) == []
+
+
+def test_unregistered_but_well_formed_forbids_token_is_rejected(tmp_path):
+    p = tmp_path / "SA_66.yaml"
+    p.write_text(_action_economy_doc("forbids", "noDefense"))
+    errs = lint_file(p)
+    assert any("noDefense" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_unregistered_grants_token_is_rejected(tmp_path):
+    p = tmp_path / "SA_66.yaml"
+    p.write_text(_action_economy_doc("grants", "freeAction"))
+    errs = lint_file(p)
+    assert any("freeAction" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_rule_prose_in_forbids_is_rejected_by_the_slug_pattern(tmp_path):
+    # The hole this pattern closes: before it, `type: string` accepted a
+    # whole German clause here, and the linter's `text`-key and comment scans
+    # do not look inside a legitimately free-form string field (AGENTS.md
+    # records that known limit).
+    p = tmp_path / "SA_66.yaml"
+    p.write_text(_action_economy_doc("forbids", '"keine Verteidigung in dieser KR"'))
+    errs = lint_file(p)
+    assert any("does not match" in e for e in errs)
+
+
+def test_unregistered_gm_flag_is_rejected(tmp_path):
+    body = textwrap.dedent("""
+        id: SA_22
+        subgroup: none
+        source:
+          url: https://dsa.ulisses-regelwiki.de/SA_22.html
+          checked: 2026-09-20
+          hash: sha256:{h}
+        effects:
+          - type: modifier
+            target: at
+            scope: combat
+            value: 1
+            when: [{{gmFlag: phaseOfMoon}}]
+    """).format(h="0" * 64)
+    p = tmp_path / "SA_22.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("phaseOfMoon" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_unregistered_legality_action_is_rejected(tmp_path):
+    body = textwrap.dedent("""
+        id: SA_43
+        subgroup: passiv
+        source:
+          url: https://dsa.ulisses-regelwiki.de/SA_43.html
+          checked: 2026-09-20
+          hash: sha256:{h}
+        effects:
+          - type: legality
+            action: teleportAtWill
+    """).format(h="0" * 64)
+    p = tmp_path / "SA_43.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("teleportAtWill" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_legality_action_pattern_allows_the_schemas_own_example():
+    # `legality.action`'s documented example is "basismanoever+spezialmanoever".
+    # A naive camelCase-only pattern would have rejected the schema's own
+    # worked example, so the `+`-joined form is allowed deliberately.
+    import re
+    from scripts.rules_lint.lint import SCHEMA
+    pattern = SCHEMA["properties"]["effects"]["items"]["properties"]["action"]["pattern"]
+    assert re.fullmatch(pattern, "basismanoever+spezialmanoever")
+    assert not re.fullmatch(pattern, "eine Kombination aus zwei Manoevern")
+
+
+def test_vocabulary_registry_itself_lints_clean():
+    from scripts.rules_lint.lint import lint_vocabulary
+    assert lint_vocabulary() == []
+
+
+def test_vocabulary_rejects_a_non_ascii_gloss(tmp_path):
+    from scripts.rules_lint.lint import lint_vocabulary
+    p = tmp_path / "vocabulary.yaml"
+    p.write_text("forbids:\n  defense: Keine Verteidigung möglich\n", encoding="utf-8")
+    errs = lint_vocabulary(p)
+    assert any("ASCII" in e and "Data Policy" in e for e in errs)
+
+
+def test_vocabulary_rejects_an_unknown_section(tmp_path):
+    from scripts.rules_lint.lint import lint_vocabulary
+    p = tmp_path / "vocabulary.yaml"
+    p.write_text("modifiers:\n  at: something\n", encoding="utf-8")
+    errs = lint_vocabulary(p)
+    assert any("unknown section" in e for e in errs)
+
+
+def test_every_token_the_corpus_uses_is_registered():
+    """The end-to-end guarantee, over the real corpus rather than a fixture."""
+    from scripts.rules_lint.lint import NON_RULE_FILES, REPO_ROOT, lint_file as _lint
+    rules_dir = REPO_ROOT / "specs" / "rules"
+    errors = [e for p in sorted(rules_dir.glob("*.yaml"))
+              if p.name not in NON_RULE_FILES
+              for e in _lint(p)]
+    assert errors == []

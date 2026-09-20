@@ -793,9 +793,13 @@ def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
 
 def import_effects(conn: sqlite3.Connection, effects_dir: Path):
     """Import authored rule files from specs/rules/ (schema.json): one YAML
-    file per rule, skipping SOURCES.yaml (pins, not a rule) and schema.json
-    itself (glob("*.yaml") already excludes it)."""
-    files = sorted(p for p in effects_dir.glob("*.yaml") if p.name != "SOURCES.yaml")
+    file per rule, skipping SOURCES.yaml (pins, not a rule), vocabulary.yaml
+    (the open-vocabulary registry, which the DB does not consume) and
+    schema.json itself (glob("*.yaml") already excludes it). Kept in sync by
+    hand with the same list in scripts/rules_lint/lint.py and
+    scripts/rules_sync/check.py."""
+    non_rule_files = {"SOURCES.yaml", "vocabulary.yaml"}
+    files = sorted(p for p in effects_dir.glob("*.yaml") if p.name not in non_rule_files)
 
     count = 0
     for path in files:

@@ -16,7 +16,7 @@
     "id":       { "$ref": "#/$defs/ruleId" },
     "subgroup": { "enum": ["passiv", "basismanoever", "spezialmanoever", "none"] },
     "note": {
-      "description": "English, non-prose annotation of which clause/mechanic this rule's authoring encodes — never German rule text (Data Policy) and never a substitute for `source`. ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could.",
+      "description": "English, non-prose annotation of which clause/mechanic this rule's authoring encodes — never German rule text (Data Policy) and never a substitute for `source`. ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could. **Convention (Task 4 fix round 1, I-3): identify the clause by position and mechanism, never restate its content.** \"Clause 3 - opponent-side outcome with no hero-side number, promoted to a reminder\" is a note; \"the shield is destroyed once its structure points reach 0\" is a translation of the clause, i.e. the Data Policy back door a free-text field leaves open — and a `reminder` effect, which has no field but `note`, is exactly where that pressure lands. Where a note must record a clause the grammar cannot express, prefix it `UNENCODED:` so `grep -r UNENCODED specs/rules` enumerates the whole debt.",
       "type": "string",
       "pattern": "^[\\x20-\\x7E]+$",
       "maxLength": 200
@@ -59,7 +59,7 @@
             "type": "integer", "minimum": 1, "maximum": 7
           },
           "note": {
-            "description": "English, non-prose annotation of which clause/mechanic this effect encodes — never German rule text (Data Policy). ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could.",
+            "description": "English, non-prose annotation of which clause/mechanic this effect encodes — never German rule text (Data Policy). ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could. Same convention and `UNENCODED:` prefix as the rule-root `note` above; the numbers live in the effect's own fields, so a note that repeats them is restating the clause rather than locating it.",
             "type": "string",
             "pattern": "^[\\x20-\\x7E]+$",
             "maxLength": 200
@@ -174,12 +174,14 @@
             "default": "target"
           },
           "grants": {
-            "description": "actionEconomy: what the ability grants (e.g. \"freeAction\", \"extraManeuver\"). Free-form: ADR-0008 closes effect types and predicates, not this vocabulary.",
-            "type": "string"
+            "description": "actionEconomy: what the ability grants (e.g. \"freeAction\", \"extraManeuver\"). Not an enum — the vocabulary is not finite over 232 rules, and closing it would make every novel ability a schema PR, the trade ADR-0008 refused for `dice.add`. It is nonetheless a *slug*, not prose: the camelCase pattern below is what stops `grants: \"der Gegner erhält einen Passierschlag\"` from linting clean, which the unconstrained `type: string` allowed (Task 4 fix round 1, Q4). Every token must also be registered with an English gloss in `specs/rules/vocabulary.yaml`, which `lint.py` enforces — a new token is then a reviewable one-line diff rather than an invisible invention, and that registry becomes the enum once the corpus stops growing.",
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z]+$"
           },
           "forbids": {
-            "description": "actionEconomy: what the ability removes (e.g. \"allActions\" for Handlungsunfähig-like incapacitation, \"defense\" for \"keine Verteidigung in dieser KR\"). A separate field from `grants` because a removal encoded as a grant reads backwards. Free-form, same reasoning as `grants`.",
-            "type": "string"
+            "description": "actionEconomy: what the ability removes (e.g. \"allActions\" for Handlungsunfähig-like incapacitation, \"defense\" for a lost defence). A separate field from `grants` because a removal encoded as a grant reads backwards. Same slug pattern and same `vocabulary.yaml` registration as `grants`.",
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z]+$"
           },
           "skill": {
             "description": "probe: which skill/check the probe is made against, when it is not simply the acting check (e.g. \"Selbstbeherrschung\").",
@@ -194,8 +196,9 @@
             "type": "integer", "minimum": 1, "maximum": 4
           },
           "action": {
-            "description": "legality: the otherwise-illegal action this effect makes legal, e.g. \"basismanoever+spezialmanoever\". Optional — some legality grants need no further qualification.",
-            "type": "string"
+            "description": "legality: the otherwise-illegal action this effect makes legal, e.g. \"basismanoever+spezialmanoever\". Optional — some legality grants need no further qualification. Same registration requirement as `grants`/`forbids` (`specs/rules/vocabulary.yaml`). The pattern allows `+`-joined camelCase segments, because this field's own worked example is a *combination* of two named things; a naive camelCase-only pattern would have rejected the schema's own example.",
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z]*(\\+[a-z][A-Za-z]*)*$"
           },
           "attribute": {
             "description": "recovery: which stat is recovered (e.g. \"LE\", \"AsP\", \"KP\"). Free-form: not closed by ADR-0008.",

@@ -77,7 +77,11 @@ DELAY = 1.0
 HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 
 # Files under specs/rules/ that are not one-rule-per-file authored specs.
-NON_RULE_FILES = {"schema.json", "SOURCES.yaml"}
+# `vocabulary.yaml` (the open-vocabulary registry, Task 4 fix round 1) joins
+# them: it has no `source`, so without this it would be reported as a rule
+# permanently `unverified`. Kept in sync by hand with the same list in
+# scripts/rules_lint/lint.py and scripts/build_rules_db/build_db.py.
+NON_RULE_FILES = {"schema.json", "SOURCES.yaml", "vocabulary.yaml"}
 
 UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"
 UNVERIFIED_HASH = "sha256:" + "0" * 64

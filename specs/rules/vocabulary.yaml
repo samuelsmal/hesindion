@@ -1,0 +1,67 @@
+description: >-
+  Registry of every open-vocabulary token an authored rule may use in
+  actionEconomy.grants, actionEconomy.forbids, legality.action or a gmFlag
+  predicate. ADR-0008 closes the effect types and the condition predicates but
+  deliberately leaves these four open, because they are not finite over 232
+  rules and a premature enum would make every novel ability a schema PR. Open
+  is not the same as unrecorded: schema.json constrains each to a slug, and
+  lint.py rejects any slug that is not glossed here, so introducing one is a
+  reviewable one-line diff rather than an invisible invention. When the corpus
+  stops growing, this file is the enum.
+
+  Glosses are English, ASCII-only, and describe the mechanism the engine is
+  expected to implement -- never a translation of a German rule clause (Data
+  Policy, AGENTS.md). A token used by no rule is allowed and is not an error:
+  removing the last rule that used one should not force an edit here.
+
+grants:
+  opponentPassierschlagOnFailure: >-
+    On a failed check by the acting hero, the defender gains one Passierschlag
+    (free attack). Opponent-side and therefore display-only under ADR-0005: the
+    engine states it for the GM rather than resolving it.
+
+forbids:
+  allActions: >-
+    Total incapacitation: neither Aktionen nor Reaktionen remain. This is the
+    Handlungsunfaehig case (COND_1 / COND_5 at Stufe IV); it suppresses defence
+    as well, so it is the wrong token for any ability the hero chooses.
+  furtherActions: >-
+    No Aktion remains for the current Kampfrunde, but Reaktionen are untouched,
+    so the hero still defends. DSA 5 separates the two, and conflating them
+    with allActions would suppress the very defence a defensive stance exists
+    to improve (SA_65).
+  defense: >-
+    No Reaktion remains for the current Kampfrunde: the hero forfeits parry and
+    dodge until the round ends, while Aktionen are untouched. The mirror image
+    of furtherActions (SA_66).
+
+legalityAction:
+  mountedCombatCommands: >-
+    Unlocks the mounted-combat command set for a rider who has this SF. It
+    makes otherwise-unavailable actions selectable rather than changing any
+    number, which is what distinguishes a legality effect from a modifier.
+
+gmFlag:
+  ambush: >-
+    The situation is an ambush, or the GM is adjudicating whether the hero is
+    surprised by one. No mechanical predicate exists for "is this an ambush",
+    so the engine surfaces it as a GM toggle (SA_40).
+  anaesthesiaOrIntoxicated: >-
+    The hero is anaesthetised or intoxicated, as judged by the GM. Neither is a
+    modelled Zustand, so this cannot be a targetState predicate.
+  knownLocation: >-
+    The check concerns the specific place this SF was bought for. Without it
+    SA_22's bonus would apply everywhere, which is worse than not modelling it
+    at all (ADR-0008).
+  opponentOnFoot: >-
+    The opponent is fighting on foot. The opponent is not modelled (ADR-0005),
+    so their stance can only be a GM toggle (SA_661).
+  opponentUsesShield: >-
+    The opponent carries and fights with a shield. Same reasoning as
+    opponentOnFoot; it gates the whole of SA_59.
+  principlesViolated: >-
+    The hero has acted against the principles their rule names, as judged by
+    the GM. A narrative condition with no mechanical predicate.
+  sleepwalked: >-
+    The hero sleepwalked during the preceding night, as tracked by the GM
+    between sessions rather than by any in-app state.
