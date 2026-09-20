@@ -52,6 +52,7 @@ enum UITest {
         freshCombat: Bool = false,
         mounted: Bool = false,
         plaenkler: String? = nil,
+        states: [String] = [],
         orientation: UIDeviceOrientation = .portrait
     ) -> XCUIApplication {
         XCUIDevice.shared.orientation = orientation
@@ -106,6 +107,12 @@ enum UITest {
         // is made on the preparation screen, which a resumed fight skips.
         if let plaenkler {
             app.launchArguments += ["-uitest-plaenkler", plaenkler]
+        }
+        // Zustände the hero is already carrying, as "id:level" — the only way to
+        // reach a Stufe IV, and so a status like Handlungsunfähig, without four
+        // taps in the state picker for every level.
+        if !states.isEmpty {
+            app.launchArguments += ["-uitest-state", states.joined(separator: ",")]
         }
         app.launch()
         return app

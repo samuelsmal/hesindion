@@ -100,6 +100,21 @@ enum UITestSeed {
         return args[index + 1].split(separator: ",").map(String.init)
     }
 
+    /// `-uitest-state furcht:4,schmerz:1` puts the hero into the fight already
+    /// carrying those Zustände, at those levels. Reaching a level IV through the
+    /// state picker takes four taps per step and says nothing about the screen
+    /// under test — the flows this serves are about what the *combat root* does
+    /// once a status is on (Handlungsunfähig).
+    static let stateArgument = "-uitest-state"
+
+    private static var requestedStates: [(id: String, level: Int)] {
+        names(after: stateArgument).compactMap { pair in
+            let parts = pair.split(separator: ":")
+            guard parts.count == 2, let level = Int(parts[1]) else { return nil }
+            return (String(parts[0]), level)
+        }
+    }
+
     /// `-uitest-mounted` resumes the fight with the hero in the saddle — the
     /// state the combat setup screen would otherwise have to be walked to reach.
     static let mountedArgument = "-uitest-mounted"
@@ -229,6 +244,7 @@ enum UITestSeed {
         hero.selectedShieldName = wantsShield ? shieldName : nil
         for name in consecratedWeaponNames { hero.setConsecrated(name, true) }
         for name in unconsecratedWeaponNames { hero.setConsecrated(name, false) }
+        for state in requestedStates { hero.setStateLevel(state.id, level: state.level) }
         if !wantsFreshCombat {
             hero.activeCombatId = UUID()
             hero.activeCombatRound = 1
