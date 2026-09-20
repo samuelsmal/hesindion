@@ -201,10 +201,12 @@ INDEX_PAGES: list[dict[str, str]] = [
 # Main orchestration
 # ---------------------------------------------------------------------------
 
-def scrape_all(verbose: bool = False) -> list[dict]:
+def scrape_all(verbose: bool = False) -> tuple[list[dict], list[str]]:
     """Scrape effects from wiki pages. A rule with no scraped effects is
-    reported as missing, not silently substituted (ADR-0007)."""
+    reported as missing, not silently substituted (ADR-0007) — the caller
+    prints `missing` unconditionally, not only under --verbose."""
     results: dict[str, dict] = {}
+    missing: list[str] = []
 
     # ------------------------------------------------------------------
     # Phase 1: try scraping known rules directly
@@ -235,6 +237,7 @@ def scrape_all(verbose: bool = False) -> list[dict]:
             if verbose:
                 print(f"  Found {len(effects)} effects (scraped)")
         else:
+            missing.append(rule_id)
             if verbose:
                 print(f"  No effects found")
 
@@ -276,7 +279,7 @@ def scrape_all(verbose: bool = False) -> list[dict]:
                 if verbose:
                     print(f"  {link['name']}: {len(effects)} effects")
 
-    return list(results.values())
+    return list(results.values()), missing
 
 
 def clean_for_output(entries: list[dict]) -> list[dict]:
@@ -307,7 +310,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    entries = scrape_all(verbose=args.verbose)
+    entries, missing = scrape_all(verbose=args.verbose)
 
     output_data = clean_for_output(entries)
 
@@ -329,6 +332,13 @@ def main() -> None:
         sources[src] = sources.get(src, 0) + 1
     for src, count in sorted(sources.items()):
         print(f"  {src}: {count}")
+
+    # A missing rule is reported, never silently dropped (ADR-0007) — printed
+    # unconditionally, not only under --verbose.
+    if missing:
+        print(f"MISSING ({len(missing)} rule id(s) with no scraped effects):")
+        for rule_id in missing:
+            print(f"  {rule_id}")
 
 
 if __name__ == "__main__":

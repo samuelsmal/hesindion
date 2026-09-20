@@ -824,11 +824,30 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
 
 def _insert_effect(conn: sqlite3.Connection, rule_id: str, level, eff: dict):
     # Legacy columns are populated only where the authored effect (schema.json)
-    # maps onto them directly (type, target->attribute, value, scope,
-    # tier->level); `target` (old shieldSP-style field) and `condition` (old
-    # free-text condition, replaced by `when`) have no authored counterpart
-    # any more and stay NULL. `payload` carries the effect exactly as authored,
-    # so a schema field added later costs no DB migration.
+    # maps onto them directly (type, scope, tier->level); `target` (old
+    # shieldSP-style field) and `condition` (old free-text condition, replaced
+    # by `when`) have no authored counterpart any more and stay NULL.
+    # `payload` carries the effect exactly as authored, so a schema field
+    # added later costs no DB migration.
+    #
+    # `attribute`/`value` are display columns (Hesindion/Views/RuleDetailView.swift
+    # is a live consumer, not the dead RuleEffectModifiers.swift engine path), so
+    # each falls back across the effect type's own "which thing"/"how much" field
+    # instead of only ever reading `target`/`value` (fix round 1, I3) -- otherwise
+    # a parameterOverride, actionEconomy, dice or stateGain row renders as a bare
+    # type token with nothing else. Priority order matches how each type actually
+    # carries its one salient identifier/number; at most one of these is ever
+    # non-None for a given effect, since the fields are type-specific.
+    attribute = (
+        eff.get("target") or eff.get("attribute") or eff.get("state")
+        or eff.get("parameter") or eff.get("forbids") or eff.get("grants")
+        or eff.get("recipient") or eff.get("action")
+    )
+    value = eff.get("value")
+    if value is None:
+        value = eff.get("level")
+    if value is None:
+        value = eff.get("add")
     conn.execute(
         """INSERT INTO effects (rule_id, level, type, attribute, value, scope, target, condition, description, payload)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -836,8 +855,8 @@ def _insert_effect(conn: sqlite3.Connection, rule_id: str, level, eff: dict):
             rule_id,
             level,
             eff.get("type", ""),
-            eff.get("target"),
-            eff.get("value"),
+            attribute,
+            value,
             eff.get("scope"),
             None,
             None,

@@ -1,5 +1,6 @@
 id: ADV_44
 subgroup: none
+note: Tier ladder (Stufe I-III), value is the running total so an exact-tier match gives the right amount
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
   checked: '1970-01-01'
@@ -10,3 +11,16 @@ effects:
   value: 1
   operation: add
   per: regenerationCycle
+  tier: 1
+- type: recovery
+  attribute: LE
+  value: 2
+  operation: add
+  per: regenerationCycle
+  tier: 2
+- type: recovery
+  attribute: LE
+  value: 3
+  operation: add
+  per: regenerationCycle
+  tier: 3

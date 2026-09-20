@@ -1,5 +1,6 @@
 id: SA_59
 subgroup: spezialmanoever
+note: Schildspalter is two effects, removes the shield PA bonus and redirects damage to the shield
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
   checked: '1970-01-01'

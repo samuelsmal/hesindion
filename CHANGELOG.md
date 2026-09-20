@@ -8,18 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- `specs/rules/*.yaml` — the 26 hand-authored rule files (79 effect rows) migrated from the legacy `specs/data/rules.yaml`/`HARDCODED_EFFECTS` stores per the ten-type mapping in ADR-0007/ADR-0008, one file per rule, all passing `make rules-lint`
-- An eleventh `when` predicate, `gmFlag(<slug>)` — a GM-adjudicated condition (e.g. "at a known location", "principles violated") for the eight legacy free-text conditions with no mechanical predicate, surfaced as a GM toggle rather than silently becoming unconditional
-- `effects.payload` column in `rules.db` — the authored effect stored as JSON verbatim, so a schema field added later costs no DB migration
-
-### Changed
-
-- `scripts/build_rules_db/build_db.py`: `--effects` now takes the `specs/rules/` directory (one authored YAML file per rule) instead of a single hand-authored file; `RULES_EFFECTS` in the `Makefile` now defaults to `specs/rules`
-
-### Removed
-
-- `specs/data/rules.yaml` and `HARDCODED_EFFECTS` (plus the scraper's fallback path) in `scripts/scrape_effects/scrape_effects.py` — `specs/rules/` is now the single authored store for rule mechanics (ADR-0007)
-
 - `specs/rules/schema.json` — the authored-rule schema (draft 2020-12): the contract for one YAML file per DSA rule, closing the nine ADR-0008 effect types and ten condition predicates as enums, requiring `source.hash` provenance, and forbidding a `text` key (recursively, plus a comment scan) so rule prose stays out of git (Data Policy). `modifier` carries `target`/`scope`/`side`, `dice` carries `recipient`, `actionEconomy` carries `forbids` alongside `grants`, and `recovery` is now a ninth effect type — all per ADR-0008's fix-round-1 amendment closing the contract gaps a review found against the live 79-row effect corpus. `make rules-lint` (`scripts/rules_lint/lint.py`) validates every `specs/rules/*.yaml` file against it and exits non-zero on any violation
 - `make rules-db` / `make rules-db-verify` — `Hesindion/Resources/rules.db` is now a generated, untracked build artifact rebuilt from the local Optolith source data (`RULES_SOURCE`), whose checksums are pinned in `specs/rules/SOURCES.yaml` and checked before every build (`scripts/build_rules_db/check_sources.py`)
 - Trefferzonen (DSA 5 Fokus-Regeln) — optional hit-zone rules, off by default and switchable per hero. Attacking: a zone picker feeds the Zonenaufschlag (Kopf −10, Torso −4, Gliedmaßen −8, halved by Gezielter Angriff/Schuss, eased by 2 against a surprised target) into the attack roll, and a read-only card states the zone's wound effect for the GM. Taking damage: the zone is tapped or rolled on 1W20, damage is compared against the Wundschwelle, and a failed Selbstbeherrschung check applies Betäubung (Kopf), Liegend (Beine) or an extra 1W3+1 SP (Torso). All ten published zone tables are implemented — humanoid, vierbeinig, sechsbeinig mit Schwanz, Fangarme, and creatures without distinct zones
@@ -46,11 +34,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Per-ability **recorded success rate** (overall %, number of Proben, sessions, and best session), revealed under every talent row at once via the Talents section's **"Aufgezeichnete Werte"** toggle
 - **Session grouping** of the action log into play sessions separated by ≥ 8h gaps (`SessionGrouper`), with per-session success-rate headers in the Log panel
 - `TalentStatistics` engine for aggregating recorded checks, plus tests (`SessionGrouperTests`, `TalentStatisticsTests`, `SuccessProbabilityTests`)
+- `specs/rules/*.yaml` — the 26 hand-authored rule files (89 effect rows: the 79-row legacy migration plus 10 rows added in fix round 1 — restored tier ladders for `SA_41`/`ADV_25`/`ADV_44` and a `reminder` for `COND_4`'s Stufe IV) migrated from the legacy `specs/data/rules.yaml`/`HARDCODED_EFFECTS` stores per the ten-type mapping in ADR-0007/ADR-0008, one file per rule, all passing `make rules-lint`
+- An eleventh `when` predicate, `gmFlag(<slug>)` — a GM-adjudicated condition (e.g. "at a known location", "principles violated") for the eight legacy free-text conditions with no mechanical predicate, surfaced as a GM toggle rather than silently becoming unconditional
+- `effects.payload` column in `rules.db` — the authored effect stored as JSON verbatim, so a schema field added later costs no DB migration
+- `note` key in `specs/rules/schema.json` (rule root and effect level; ASCII-only, length-capped) — an English annotation of which clause/mechanic a non-obvious authored encoding carries, since `lint.py` bans every `#` comment and the corpus otherwise carries no trace of what an effect means
+- `docs/rules-migration-reconciliation.md` — the tracked reconciliation report tying all 79 legacy `specs/data/rules.yaml` rows to their authored `specs/rules/*.yaml` effect (plus the 10 rows added in fix round 1), so the migration's evidence survives independent of `.superpowers/` (gitignored)
 
 ### Changed
 
 - `DiceRollSheet` and `SkillCheckModal` now route all rolls through `DiceRoller` instead of calling `Int.random(in:)` inline
 - Recorded talent stats moved from per-row tap-to-expand to a single section-level toggle, keeping rows uncluttered while still showing the theoretical % inline
+- `scripts/build_rules_db/build_db.py`: `--effects` now takes the `specs/rules/` directory (one authored YAML file per rule) instead of a single hand-authored file; `RULES_EFFECTS` in the `Makefile` now defaults to `specs/rules`
+- `specs/rules/schema.json`: `recovery`'s `attribute` is now required only when `operation: add` (a `scale`/`duration` recovery like `ADV_75` has no "stat recovered"); the `modifier.target` enum drops `duration`/`offHandPenalty`/`shieldPaBonus`/`anaesthesia`/`defense` — the exact legacy attributes the migration moved onto other effect types, so leaving them in `target` invited authoring `modifier target: shieldPaBonus` instead of the correct `parameterOverride`
+
+### Removed
+
+- `specs/data/rules.yaml` and `HARDCODED_EFFECTS` (plus the scraper's fallback path) in `scripts/scrape_effects/scrape_effects.py` — `specs/rules/` is now the single authored store for rule mechanics (ADR-0007)
 
 ### Fixed
 
@@ -62,6 +61,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Trefferzonen: a hero without a Selbstbeherrschung talent row had the Wundeffekt applied automatically, with no probe offered. Selbstbeherrschung is a DSA 5 basic ability every hero has, so that case was never a rules outcome — the probe is now always offered (falling back to Fertigkeitswert 0 if the row is missing), and a wound effect is applied only on a rolled, failed probe. Not rolling now means "the GM has not adjudicated" and applies nothing, removing the asymmetry where declining to roll was better than rolling
 - Trefferzonen: the Arme Wundeffekt's "Waffe ablegen" button cleared the hero's equipped weapon immediately instead of participating in the confirm transaction, so navigating away from an unconfirmed take-damage flow left the hero disarmed with no LP change and no log entry. The action is now staged and only applied on confirm, alongside the single LP write and the log entry
 - `make test`/`test-ui`/`test-ui-record` no longer clone the simulator per test worker (`-parallel-testing-enabled NO`, `-maximum-concurrent-test-simulator-destinations 1`); `test-ui-record` uses the correct `SNAPSHOT_TESTING_RECORD=all` value
+- **`SA_41`/`ADV_25`/`ADV_44` lost their Stufe ladder in the rules migration.** All three are leveled (`levels` 2/7/3) but were authored as one flat effect, so `RuleEffectModifiers`'s exact-tier match fired that single value at *every* owned Stufe (`SA_41` gave −2 BE at Stufe I instead of −1; `ADV_25` gave +1 LE at Stufe VII instead of +7; `ADV_44` gave +1 LE/cycle at Stufe III instead of +3). The migration had in fact kept the wrong one of the two duplicate legacy sources — `HARDCODED_EFFECTS` held `SA_41` correctly as two tiered rows before it was deleted. All three are now authored as full tier ladders
+- `scripts/build_rules_db/build_db.py`: the `effects.attribute`/`.value` display columns now fall back across each effect type's own field (`state`, `parameter`, `forbids`, `grants`, `recipient`, `add`, `level`, `action`) instead of reading only `target`/`value`, so the live `RuleDetailView` no longer renders a `parameterOverride`, `actionEconomy`, `dice` or `stateGain` row as a bare, empty type token (e.g. `SA_59`, `SA_65`, `SA_67`)
+- `specs/rules/SA_661.yaml`: the "mounted vs. foot fighter" AT bonus was encoded as one opaque `gmFlag`, discarding the half of the condition (`mounted`) the engine already checks mechanically elsewhere in the same file. `when` now ANDs `{mounted: true}` with a narrower `{gmFlag: opponentOnFoot}`
+- `scripts/rules_lint/lint.py` printed "27 rule file(s)" while linting 26 — the file count included `SOURCES.yaml`, which is deliberately excluded from linting
+- `scripts/scrape_effects/scrape_effects.py` silently dropped rules it couldn't scrape and couldn't fall back for; it now collects every missing rule id and prints them unconditionally at the end, per ADR-0007's "a missing rule must be visibly missing"
 
 ### Changed
 

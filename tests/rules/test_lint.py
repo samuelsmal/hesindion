@@ -142,6 +142,10 @@ def test_action_economy_forbids_is_accepted(tmp_path):
 
 
 def test_recovery_effect_requires_its_fields(tmp_path):
+    # `attribute` is no longer unconditionally required (fix round 1, M1: it's
+    # only required when `operation: add` — see test_recovery_scale_without_
+    # attribute_is_accepted / test_recovery_add_without_attribute_is_still_rejected
+    # below). `value`/`operation`/`per` stay required regardless.
     body = textwrap.dedent("""
         id: SA_1
         subgroup: none
@@ -155,9 +159,9 @@ def test_recovery_effect_requires_its_fields(tmp_path):
     p = tmp_path / "SA_1.yaml"
     p.write_text(body)
     errs = lint_file(p)
-    assert any("attribute" in e for e in errs)
     assert any("operation" in e for e in errs)
     assert any("per" in e for e in errs)
+    assert any("value" in e for e in errs)
 
 
 def test_recovery_effect_complete_passes(tmp_path):
@@ -312,3 +316,81 @@ def test_gmflag_with_prose_is_rejected(tmp_path):
     p = tmp_path / "SA_62.yaml"
     p.write_text(body)
     assert lint_file(p)  # rejected: spaces not allowed, prose can't enter through it
+
+
+# --- note key (fix round 1, M6: English annotation, comment ban stays) ---
+
+def test_note_at_root_is_accepted(tmp_path):
+    body = VALID.replace(
+        "subgroup: spezialmanoever",
+        "subgroup: spezialmanoever\nnote: Tier ladder scaled per Stufe, see task-3 fix round 1",
+    )
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p) == []
+
+
+def test_note_on_effect_is_accepted(tmp_path):
+    body = VALID.replace(
+        'add: "2 + ceil(self.gs / 2)"',
+        'add: "2 + ceil(self.gs / 2)"\n    note: Half of the AT penalty is added as flat damage',
+    )
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p) == []
+
+
+def test_note_with_non_ascii_is_rejected(tmp_path):
+    # A German umlaut is exactly what `note` must keep out (Data Policy).
+    body = VALID.replace(
+        "subgroup: spezialmanoever",
+        "subgroup: spezialmanoever\nnote: Prüfung gelingt automatisch",
+    )
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: non-ASCII
+
+
+def test_note_over_length_cap_is_rejected(tmp_path):
+    body = VALID.replace(
+        "subgroup: spezialmanoever",
+        f"subgroup: spezialmanoever\nnote: {'a' * 201}",
+    )
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: over the 200-char cap
+
+
+# --- recovery conditional relaxation (fix round 1, M1) ---
+
+def _recovery_doc(extra: str) -> str:
+    return textwrap.dedent("""
+        id: ADV_75
+        subgroup: none
+        source:
+          url: https://dsa.ulisses-regelwiki.de/ADV_75.html
+          checked: 2026-09-20
+          hash: sha256:{h}
+        effects:
+          - type: recovery
+            {extra}
+    """).format(h="0" * 64, extra=extra)
+
+
+def test_recovery_scale_without_attribute_is_accepted(tmp_path):
+    p = tmp_path / "ADV_75.yaml"
+    p.write_text(_recovery_doc("value: 0.5\n    operation: scale\n    per: duration"))
+    assert lint_file(p) == []
+
+
+def test_recovery_add_without_attribute_is_still_rejected(tmp_path):
+    p = tmp_path / "ADV_75.yaml"
+    p.write_text(_recovery_doc("value: 1\n    operation: add\n    per: regenerationCycle"))
+    errs = lint_file(p)
+    assert any("attribute" in e for e in errs)
+
+
+def test_recovery_add_with_attribute_passes(tmp_path):
+    p = tmp_path / "ADV_75.yaml"
+    p.write_text(_recovery_doc("attribute: LE\n    value: 1\n    operation: add\n    per: regenerationCycle"))
+    assert lint_file(p) == []

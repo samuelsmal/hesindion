@@ -85,8 +85,8 @@ def lint_file(path: pathlib.Path) -> list[str]:
 
 
 def main(root: str = "specs/rules") -> int:
-    files = sorted(pathlib.Path(root).glob("*.yaml"))
-    errors = [e for f in files if f.name != "SOURCES.yaml" for e in lint_file(f)]
+    files = [f for f in sorted(pathlib.Path(root).glob("*.yaml")) if f.name != "SOURCES.yaml"]
+    errors = [e for f in files for e in lint_file(f)]
     for e in errors:
         print(e, file=sys.stderr)
     print(f"{len(files)} rule file(s), {len(errors)} error(s)")

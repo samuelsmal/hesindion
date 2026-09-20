@@ -15,6 +15,12 @@
   "properties": {
     "id":       { "$ref": "#/$defs/ruleId" },
     "subgroup": { "enum": ["passiv", "basismanoever", "spezialmanoever", "none"] },
+    "note": {
+      "description": "English, non-prose annotation of which clause/mechanic this rule's authoring encodes — never German rule text (Data Policy) and never a substitute for `source`. ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could.",
+      "type": "string",
+      "pattern": "^[\\x20-\\x7E]+$",
+      "maxLength": 200
+    },
     "source": {
       "type": "object",
       "required": ["url", "checked", "hash"],
@@ -51,6 +57,12 @@
           "tier": {
             "description": "The ability's Stufe, where the effect scales per tier (e.g. a shiftSteps parameterOverride multiplies by tier). Range covers the corpus's longest ladders (ADV_24/DISADV_27 run to VII).",
             "type": "integer", "minimum": 1, "maximum": 7
+          },
+          "note": {
+            "description": "English, non-prose annotation of which clause/mechanic this effect encodes — never German rule text (Data Policy). ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could.",
+            "type": "string",
+            "pattern": "^[\\x20-\\x7E]+$",
+            "maxLength": 200
           },
           "when": {
             "description": "Preconditions, ANDed together. The closed eleven-predicate set (ADR-0008), each with its own value shape so a malformed predicate value (e.g. `{mounted: banana}`) fails to lint rather than silently no-op in the engine. Ten predicates cover the combat corpus; the eleventh, `gmFlag`, carries a non-combat precondition on an ADV/DISADV/COND rule (e.g. \"at a known location\", \"sleepwalked last night\") as a GM-adjudicated toggle rather than letting the rule silently become unconditional (ADR-0008's \"never to silence\" rule).",
@@ -119,10 +131,9 @@
             "type": "boolean"
           },
           "target": {
-            "description": "modifier: which value the modifier moves. Closed set, established against the 79 existing effect rows before any rule was authored (ADR-0008).",
+            "description": "modifier: which value the modifier moves. Closed set, established against the 79 existing effect rows before any rule was authored (ADR-0008). `duration`, `offHandPenalty`, `shieldPaBonus`, `anaesthesia` and `defense` were pruned from this set (Task 3 fix round 1): they were exactly the legacy attribute names the migration moved onto other effect types (`recovery.attribute`, `parameterOverride.parameter`, `stateGain.state`, `actionEconomy.forbids`) and zero of the corpus's effects use them as a `modifier.target` — leaving them invited authoring `modifier target: shieldPaBonus` instead of the correct `parameterOverride`.",
             "enum": ["at", "pa", "aw", "ini", "gs", "be", "le", "talent", "all",
-                     "painLevel", "duration", "offHandPenalty", "shieldPaBonus",
-                     "sinnesschaerfe", "anaesthesia", "defense", "Gassenwissen", "Orientierung"]
+                     "painLevel", "sinnesschaerfe", "Gassenwissen", "Orientierung"]
           },
           "scope": {
             "description": "modifier: the domain the modifier applies within. Closed set, established against the 79 existing effect rows (ADR-0008).",
@@ -217,7 +228,11 @@
           },
           {
             "if": { "properties": { "type": { "const": "recovery" } }, "required": ["type"] },
-            "then": { "required": ["attribute", "value", "operation", "per"] }
+            "then": {
+              "required": ["value", "operation", "per"],
+              "if": { "properties": { "operation": { "const": "add" } }, "required": ["operation"] },
+              "then": { "required": ["attribute"] }
+            }
           }
         ]
       }
