@@ -125,8 +125,7 @@ clean:
 RULES_SOURCE ?= /Users/SamuelvonBaussnern/proj/50_priv/dsa_companion_data/Data
 RULES_DB     := Hesindion/Resources/rules.db
 
-# Task 3 flips this to specs/rules
-RULES_EFFECTS ?= specs/data/rules.yaml
+RULES_EFFECTS ?= specs/rules
 
 rules-db:
 	@test -d "$(RULES_SOURCE)" || { echo "Rules source not found: $(RULES_SOURCE) (set RULES_SOURCE=…)"; exit 1; }

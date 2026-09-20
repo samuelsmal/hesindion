@@ -1,0 +1,11 @@
+id: ADV_25
+subgroup: none
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: le
+  scope: derived
+  value: 1

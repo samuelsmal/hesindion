@@ -2,8 +2,7 @@
 """Scrape DSA 5 rule effects from ulisses-regelwiki.de.
 
 Produces a YAML file with structured effects data suitable for import
-into the iDSACompanion effects table. Falls back to hardcoded data
-for critical combat special abilities when scraping fails.
+into the iDSACompanion effects table.
 """
 
 import argparse
@@ -55,135 +54,6 @@ DEFAULT_SCOPE: dict[str, str] = {
     "gs": "all",
     "fk": "ranged",
 }
-
-# ---------------------------------------------------------------------------
-# Hardcoded fallback — manually verified effects for critical combat SAs
-# ---------------------------------------------------------------------------
-HARDCODED_EFFECTS: list[dict] = [
-    {
-        "rule_id": "SA_48",
-        "name": "Finte",
-        "effects": [
-            {
-                "level": 1,
-                "type": "modifier",
-                "attribute": "at",
-                "value": -1,
-                "scope": "meleeAttack",
-                "description": "Finte I: AT-1, Gegner PA-2",
-            },
-            {
-                "level": 2,
-                "type": "modifier",
-                "attribute": "at",
-                "value": -2,
-                "scope": "meleeAttack",
-                "description": "Finte II: AT-2, Gegner PA-4",
-            },
-            {
-                "level": 3,
-                "type": "modifier",
-                "attribute": "at",
-                "value": -3,
-                "scope": "meleeAttack",
-                "description": "Finte III: AT-3, Gegner PA-6",
-            },
-        ],
-    },
-    {
-        "rule_id": "SA_67",
-        "name": "Wuchtschlag",
-        "effects": [
-            {
-                "level": 1,
-                "type": "modifier",
-                "attribute": "at",
-                "value": -2,
-                "scope": "meleeAttack",
-                "description": "Wuchtschlag I: AT-2, TP+2",
-            },
-            {
-                "level": 1,
-                "type": "damageModifier",
-                "attribute": "tp",
-                "value": 2,
-                "scope": "meleeAttack",
-            },
-            {
-                "level": 2,
-                "type": "modifier",
-                "attribute": "at",
-                "value": -4,
-                "scope": "meleeAttack",
-                "description": "Wuchtschlag II: AT-4, TP+4",
-            },
-            {
-                "level": 2,
-                "type": "damageModifier",
-                "attribute": "tp",
-                "value": 4,
-                "scope": "meleeAttack",
-            },
-        ],
-    },
-    {
-        "rule_id": "SA_66",
-        "name": "Vorstoß",
-        "effects": [
-            {
-                "type": "modifier",
-                "attribute": "at",
-                "value": 2,
-                "scope": "meleeAttack",
-                "description": "AT+2, keine Verteidigung möglich",
-            },
-            {
-                "type": "restriction",
-                "attribute": "defense",
-                "scope": "meleeAttack",
-            },
-        ],
-    },
-    {
-        "rule_id": "SA_65",
-        "name": "Verteidigungshaltung",
-        "effects": [
-            {
-                "type": "modifier",
-                "attribute": "pa",
-                "value": 4,
-                "scope": "meleeDefense",
-                "description": "PA+4, kein Angriff möglich",
-            },
-            {
-                "type": "restriction",
-                "attribute": "at",
-                "scope": "combat",
-            },
-        ],
-    },
-    {
-        "rule_id": "SA_41",
-        "name": "Belastungsgewöhnung",
-        "effects": [
-            {
-                "level": 1,
-                "type": "modifier",
-                "attribute": "be",
-                "value": -1,
-                "scope": "all",
-            },
-            {
-                "level": 2,
-                "type": "modifier",
-                "attribute": "be",
-                "value": -2,
-                "scope": "all",
-            },
-        ],
-    },
-]
-
 
 # ---------------------------------------------------------------------------
 # Network helpers
@@ -331,14 +201,9 @@ INDEX_PAGES: list[dict[str, str]] = [
 # Main orchestration
 # ---------------------------------------------------------------------------
 
-def build_hardcoded_index() -> dict[str, dict]:
-    """Index hardcoded effects by rule_id for quick lookup."""
-    return {entry["rule_id"]: entry for entry in HARDCODED_EFFECTS}
-
-
 def scrape_all(verbose: bool = False) -> list[dict]:
-    """Scrape effects from wiki pages, falling back to hardcoded data."""
-    hardcoded = build_hardcoded_index()
+    """Scrape effects from wiki pages. A rule with no scraped effects is
+    reported as missing, not silently substituted (ADR-0007)."""
     results: dict[str, dict] = {}
 
     # ------------------------------------------------------------------
@@ -369,14 +234,9 @@ def scrape_all(verbose: bool = False) -> list[dict]:
             }
             if verbose:
                 print(f"  Found {len(effects)} effects (scraped)")
-        elif rule_id in hardcoded:
-            results[rule_id] = dict(hardcoded[rule_id])
-            results[rule_id]["_source"] = "hardcoded"
-            if verbose:
-                print(f"  Using hardcoded fallback")
         else:
             if verbose:
-                print(f"  No effects found, no fallback available")
+                print(f"  No effects found")
 
     # ------------------------------------------------------------------
     # Phase 2: discover additional rules from index pages
@@ -416,14 +276,6 @@ def scrape_all(verbose: bool = False) -> list[dict]:
                 if verbose:
                     print(f"  {link['name']}: {len(effects)} effects")
 
-    # ------------------------------------------------------------------
-    # Phase 3: ensure all hardcoded entries are present
-    # ------------------------------------------------------------------
-    for rule_id, entry in hardcoded.items():
-        if rule_id not in results:
-            results[rule_id] = dict(entry)
-            results[rule_id]["_source"] = "hardcoded"
-
     return list(results.values())
 
 
@@ -448,11 +300,6 @@ def main() -> None:
         help="Output YAML file path (default: effects.yaml)",
     )
     parser.add_argument(
-        "--hardcoded-only",
-        action="store_true",
-        help="Skip web scraping; emit only the hardcoded fallback data",
-    )
-    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -460,15 +307,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.hardcoded_only:
-        entries = HARDCODED_EFFECTS
-        if args.verbose:
-            print(
-                f"Using hardcoded data only ({len(entries)} rules)",
-                file=sys.stderr,
-            )
-    else:
-        entries = scrape_all(verbose=args.verbose)
+    entries = scrape_all(verbose=args.verbose)
 
     output_data = clean_for_output(entries)
 
@@ -486,7 +325,7 @@ def main() -> None:
     # Summary
     sources = {}
     for entry in entries:
-        src = entry.get("_source", "hardcoded")
+        src = entry.get("_source", "scraped")
         sources[src] = sources.get(src, 0) + 1
     for src, count in sorted(sources.items()):
         print(f"  {src}: {count}")

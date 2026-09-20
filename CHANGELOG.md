@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `specs/rules/*.yaml` — the 26 hand-authored rule files (79 effect rows) migrated from the legacy `specs/data/rules.yaml`/`HARDCODED_EFFECTS` stores per the ten-type mapping in ADR-0007/ADR-0008, one file per rule, all passing `make rules-lint`
+- An eleventh `when` predicate, `gmFlag(<slug>)` — a GM-adjudicated condition (e.g. "at a known location", "principles violated") for the eight legacy free-text conditions with no mechanical predicate, surfaced as a GM toggle rather than silently becoming unconditional
+- `effects.payload` column in `rules.db` — the authored effect stored as JSON verbatim, so a schema field added later costs no DB migration
+
+### Changed
+
+- `scripts/build_rules_db/build_db.py`: `--effects` now takes the `specs/rules/` directory (one authored YAML file per rule) instead of a single hand-authored file; `RULES_EFFECTS` in the `Makefile` now defaults to `specs/rules`
+
+### Removed
+
+- `specs/data/rules.yaml` and `HARDCODED_EFFECTS` (plus the scraper's fallback path) in `scripts/scrape_effects/scrape_effects.py` — `specs/rules/` is now the single authored store for rule mechanics (ADR-0007)
+
 - `specs/rules/schema.json` — the authored-rule schema (draft 2020-12): the contract for one YAML file per DSA rule, closing the nine ADR-0008 effect types and ten condition predicates as enums, requiring `source.hash` provenance, and forbidding a `text` key (recursively, plus a comment scan) so rule prose stays out of git (Data Policy). `modifier` carries `target`/`scope`/`side`, `dice` carries `recipient`, `actionEconomy` carries `forbids` alongside `grants`, and `recovery` is now a ninth effect type — all per ADR-0008's fix-round-1 amendment closing the contract gaps a review found against the live 79-row effect corpus. `make rules-lint` (`scripts/rules_lint/lint.py`) validates every `specs/rules/*.yaml` file against it and exits non-zero on any violation
 - `make rules-db` / `make rules-db-verify` — `Hesindion/Resources/rules.db` is now a generated, untracked build artifact rebuilt from the local Optolith source data (`RULES_SOURCE`), whose checksums are pinned in `specs/rules/SOURCES.yaml` and checked before every build (`scripts/build_rules_db/check_sources.py`)
 - Trefferzonen (DSA 5 Fokus-Regeln) — optional hit-zone rules, off by default and switchable per hero. Attacking: a zone picker feeds the Zonenaufschlag (Kopf −10, Torso −4, Gliedmaßen −8, halved by Gezielter Angriff/Schuss, eased by 2 against a surprised target) into the attack roll, and a read-only card states the zone's wound effect for the GM. Taking damage: the zone is tapped or rolled on 1W20, damage is compared against the Wundschwelle, and a failed Selbstbeherrschung check applies Betäubung (Kopf), Liegend (Beine) or an extra 1W3+1 SP (Torso). All ten published zone tables are implemented — humanoid, vierbeinig, sechsbeinig mit Schwanz, Fangarme, and creatures without distinct zones

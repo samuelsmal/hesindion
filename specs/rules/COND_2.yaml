@@ -1,0 +1,25 @@
+id: COND_2
+subgroup: none
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: all
+  scope: all
+  value: -1
+  tier: 1
+- type: modifier
+  target: all
+  scope: all
+  value: -2
+  tier: 2
+- type: modifier
+  target: all
+  scope: all
+  value: -3
+  tier: 3
+- type: actionEconomy
+  forbids: allActions
+  tier: 4

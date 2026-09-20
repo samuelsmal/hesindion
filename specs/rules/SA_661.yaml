@@ -1,0 +1,19 @@
+id: SA_661
+subgroup: none
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: 2
+  when:
+  - gmFlag: mountedVsFootFighter
+- type: modifier
+  target: pa
+  scope: combat
+  value: 1
+  when:
+  - mounted: true

@@ -14,7 +14,8 @@ def parse_args():
     p.add_argument("--source", required=True, type=Path,
                     help="Path to dsa_companion_data/Data/ directory")
     p.add_argument("--effects", required=True, type=Path,
-                    help="Path to specs/data/rules.yaml")
+                    help="Path to specs/rules/ — one authored YAML file per rule "
+                         "(schema.json), skipping SOURCES.yaml")
     p.add_argument("--output", default=Path("rules.db"), type=Path,
                     help="Output SQLite database path")
     return p.parse_args()
@@ -112,7 +113,8 @@ def create_schema(conn: sqlite3.Connection):
             scope       TEXT,
             target      TEXT,
             condition   TEXT,
-            description TEXT
+            description TEXT,
+            payload     TEXT
         );
 
         CREATE TABLE IF NOT EXISTS spell_details (
@@ -789,67 +791,58 @@ def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
     print(f"  Imported {lang_count} languages, {script_count} scripts")
 
 
-def import_effects(conn: sqlite3.Connection, effects_path: Path):
-    with open(effects_path, "r", encoding="utf-8") as f:
-        doc = yaml.safe_load(f)
-
-    if doc is None:
-        print("  WARNING: effects file is empty")
-        return
+def import_effects(conn: sqlite3.Connection, effects_dir: Path):
+    """Import authored rule files from specs/rules/ (schema.json): one YAML
+    file per rule, skipping SOURCES.yaml (pins, not a rule) and schema.json
+    itself (glob("*.yaml") already excludes it)."""
+    files = sorted(p for p in effects_dir.glob("*.yaml") if p.name != "SOURCES.yaml")
 
     count = 0
-
-    # Support two formats:
-    # 1. Dict with section keys → list of entries with "id" field (original hand-authored)
-    # 2. Flat list of entries with "rule_id" field (scraper output)
-    entries_list = []
-    if isinstance(doc, dict):
-        for section_key, entries in doc.items():
-            if isinstance(entries, list):
-                entries_list.extend(entries)
-    elif isinstance(doc, list):
-        entries_list = doc
-
-    for entry in entries_list:
-        rule_id = entry.get("id") or entry.get("rule_id")
-        if not rule_id:
+    for path in files:
+        doc = load_yaml(path)
+        if not doc:
             continue
+
+        rule_id = doc.get("id")
+        if not rule_id:
+            print(f"  WARNING: {path.name} has no id, skipping")
+            continue
+
         # Verify rule exists in DB
         exists = conn.execute("SELECT 1 FROM rules WHERE id = ?", (rule_id,)).fetchone()
         if not exists:
             print(f"  WARNING: rule_id '{rule_id}' not found in DB, skipping")
             continue
 
-        for item in entry.get("effects", []):
-            if "level" in item and "effects" in item:
-                # Level-grouped
-                level = item["level"]
-                for eff in item["effects"]:
-                    _insert_effect(conn, rule_id, level, eff)
-                    count += 1
-            elif "type" in item:
-                # Flat effect (may have level at top level)
-                _insert_effect(conn, rule_id, item.get("level"), item)
-                count += 1
+        for eff in doc.get("effects", []):
+            _insert_effect(conn, rule_id, eff.get("tier"), eff)
+            count += 1
 
     conn.commit()
-    print(f"  Imported {count} effects")
+    print(f"  Imported {count} effects from {len(files)} rule file(s)")
 
 
 def _insert_effect(conn: sqlite3.Connection, rule_id: str, level, eff: dict):
+    # Legacy columns are populated only where the authored effect (schema.json)
+    # maps onto them directly (type, target->attribute, value, scope,
+    # tier->level); `target` (old shieldSP-style field) and `condition` (old
+    # free-text condition, replaced by `when`) have no authored counterpart
+    # any more and stay NULL. `payload` carries the effect exactly as authored,
+    # so a schema field added later costs no DB migration.
     conn.execute(
-        """INSERT INTO effects (rule_id, level, type, attribute, value, scope, target, condition, description)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        """INSERT INTO effects (rule_id, level, type, attribute, value, scope, target, condition, description, payload)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             rule_id,
             level,
             eff.get("type", ""),
-            eff.get("attribute"),
+            eff.get("target"),
             eff.get("value"),
             eff.get("scope"),
-            eff.get("target"),
-            eff.get("condition"),
-            eff.get("description"),
+            None,
+            None,
+            None,
+            json.dumps(eff, ensure_ascii=False),
         ),
     )
 
@@ -879,7 +872,7 @@ def print_stats(conn: sqlite3.Connection):
 def main():
     args = parse_args()
     assert args.source.is_dir(), f"Source directory not found: {args.source}"
-    assert args.effects.is_file(), f"Effects file not found: {args.effects}"
+    assert args.effects.is_dir(), f"Effects directory not found: {args.effects}"
 
     # Tables like `effects` and `prerequisites` are populated with plain INSERT (not
     # INSERT OR REPLACE), so connecting to a pre-existing output file would duplicate

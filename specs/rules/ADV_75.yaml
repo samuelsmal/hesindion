@@ -1,0 +1,14 @@
+id: ADV_75
+subgroup: none
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: recovery
+  attribute: duration
+  value: 0.5
+  operation: scale
+  per: duration
+  when:
+  - gmFlag: anaesthesiaOrIntoxicated

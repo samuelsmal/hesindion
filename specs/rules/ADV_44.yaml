@@ -1,0 +1,12 @@
+id: ADV_44
+subgroup: none
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: recovery
+  attribute: LE
+  value: 1
+  operation: add
+  per: regenerationCycle

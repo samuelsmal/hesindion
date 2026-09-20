@@ -1,0 +1,12 @@
+id: SA_59
+subgroup: spezialmanoever
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: parameterOverride
+  parameter: shield.paBonus
+  set: 0
+- type: dice
+  recipient: defenderShield

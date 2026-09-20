@@ -282,3 +282,33 @@ def test_excludes_with_invalid_id_is_rejected(tmp_path):
     p = tmp_path / "SA_62.yaml"
     p.write_text(body)
     assert lint_file(p)  # rejected
+
+
+# --- gmFlag predicate (eleventh predicate, Task 3 controller ruling) ---
+
+def test_gmflag_valid_slug_is_accepted(tmp_path):
+    body = VALID.replace("runUp: 4", "gmFlag: knownLocation")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p) == []
+
+
+def test_gmflag_with_digit_is_rejected(tmp_path):
+    body = VALID.replace("runUp: 4", "gmFlag: ambush2")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: pattern is letters only
+
+
+def test_gmflag_with_uppercase_first_char_is_rejected(tmp_path):
+    body = VALID.replace("runUp: 4", "gmFlag: Ambush")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: must start lowercase
+
+
+def test_gmflag_with_prose_is_rejected(tmp_path):
+    body = VALID.replace("runUp: 4", "gmFlag: 'at known location'")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: spaces not allowed, prose can't enter through it

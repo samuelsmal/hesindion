@@ -53,7 +53,7 @@
             "type": "integer", "minimum": 1, "maximum": 7
           },
           "when": {
-            "description": "Preconditions, ANDed together. The closed ten-predicate set (ADR-0008), each with its own value shape so a malformed predicate value (e.g. `{mounted: banana}`) fails to lint rather than silently no-op in the engine. This set covers the combat corpus only — a non-combat precondition on an ADV/DISADV/COND rule (e.g. \"at a known location\", \"sleepwalked last night\") has no predicate here by design and that rule degrades to a `reminder` instead (ADR-0008's \"never to silence\" rule).",
+            "description": "Preconditions, ANDed together. The closed eleven-predicate set (ADR-0008), each with its own value shape so a malformed predicate value (e.g. `{mounted: banana}`) fails to lint rather than silently no-op in the engine. Ten predicates cover the combat corpus; the eleventh, `gmFlag`, carries a non-combat precondition on an ADV/DISADV/COND rule (e.g. \"at a known location\", \"sleepwalked last night\") as a GM-adjudicated toggle rather than letting the rule silently become unconditional (ADR-0008's \"never to silence\" rule).",
             "type": "array",
             "items": {
               "type": "object",
@@ -105,6 +105,11 @@
                 "offHandWeapon": {
                   "description": "The check uses the off-hand weapon.",
                   "type": "boolean"
+                },
+                "gmFlag": {
+                  "description": "gmFlag(<slug>) — a GM-adjudicated condition with no mechanical predicate (e.g. \"at a known location\", \"ambush detection\", \"principles violated\"). The engine surfaces it as a GM toggle rather than applying it automatically, exactly as ModifierContext.targetIsSurprised already works under ADR-0005. The slug is a constrained camelCase identifier so rule prose cannot enter through it.",
+                  "type": "string",
+                  "pattern": "^[a-z][A-Za-z]+$"
                 }
               }
             }

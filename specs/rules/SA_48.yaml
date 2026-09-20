@@ -1,0 +1,40 @@
+id: SA_48
+subgroup: basismanoever
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: -1
+  tier: 1
+- type: modifier
+  target: pa
+  scope: combat
+  value: -2
+  side: opponent
+  tier: 1
+- type: modifier
+  target: at
+  scope: combat
+  value: -2
+  tier: 2
+- type: modifier
+  target: pa
+  scope: combat
+  value: -4
+  side: opponent
+  tier: 2
+- type: modifier
+  target: at
+  scope: combat
+  value: -3
+  tier: 3
+- type: modifier
+  target: pa
+  scope: combat
+  value: -6
+  side: opponent
+  tier: 3
