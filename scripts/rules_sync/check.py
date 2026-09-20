@@ -9,17 +9,27 @@ LLM authoring agent on top of it.
 
 Reports each rule as one of:
 
-  ok          `source.hash` still matches a fresh fetch of `source.url`.
-  drifted     it no longer matches -- the wiki text looks like it changed
-              since `source.checked`, or the URL could not be fetched.
-  unverified  the file still carries the placeholder every migrated rule was
-              seeded with (`url: .../UNVERIFIED`, `checked: 1970-01-01`,
-              `hash: sha256:<64 zeros>`) and has never been checked against a
-              real page. Resolving real URLs for these is a separate task's
-              job; this script only reports the marker, it never guesses.
+  ok                `source.hash` still matches a fresh fetch of `source.url`.
+  drifted           it no longer matches -- the wiki text looks like it
+                     changed since `source.checked`, or the URL could not be
+                     fetched.
+  unverified        the file still carries the placeholder every migrated
+                     rule was seeded with (`url: .../UNVERIFIED`,
+                     `checked: 1970-01-01`, `hash: sha256:<64 zeros>`) and has
+                     never been checked against a real page. Resolving real
+                     URLs for these is a separate task's job; this script
+                     only reports the marker, it never guesses.
+  structure-changed  the fetched page has neither `id="main"` nor a `<main>`
+                     element (normalise.py's `ContentContainerNotFound`) --
+                     this normaliser no longer knows what part of the page is
+                     the rule text, so it refuses to guess (fix round 2: the
+                     previous fallback to `<body>` silently picked up a
+                     dynamic widget and reported permanent false drift; see
+                     the report). This needs a human to look at the page and
+                     update the normaliser, not a routine re-check.
 
-Exit code is 0 unless at least one rule is `drifted` -- an `unverified` rule
-does not fail the build.
+Exit code is 0 unless at least one rule is `drifted` or `structure-changed`
+-- an `unverified` rule does not fail the build.
 
 Requests are cached on disk under `.cache/rules_sync/` (git-ignored) and
 rate-limited to one per second between actual network fetches, matching the
@@ -40,7 +50,7 @@ from typing import NamedTuple
 import requests
 import yaml
 
-from scripts.rules_sync.normalise import hash_html
+from scripts.rules_sync.normalise import ContentContainerNotFound, hash_html
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = REPO_ROOT / "specs" / "rules"
@@ -65,7 +75,7 @@ __all__ = ["Fetcher", "Result", "check_rule", "iter_rule_files", "run", "main"]
 
 class Result(NamedTuple):
     rule_id: str
-    status: str  # "ok" | "drifted" | "unverified"
+    status: str  # "ok" | "drifted" | "unverified" | "structure-changed"
     detail: str
 
 
@@ -123,7 +133,11 @@ def _is_unverified(url: str, checked: str, recorded_hash: str) -> bool:
 def check_rule(path: Path, fetcher: Fetcher) -> Result:
     """Check one authored rule file against the wiki. Never raises on a
     fetch failure -- that is reported as `drifted` with the error as detail,
-    not a crash that would take the whole run down."""
+    not a crash that would take the whole run down. A missing content
+    container (`ContentContainerNotFound`) is reported as `structure-changed`,
+    not `drifted` -- it is a categorically different failure (the page's
+    template changed, not its text) that needs a human to update the
+    normaliser, not a routine re-check."""
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     rule_id = doc.get("id", path.stem)
     source = doc.get("source") or {}
@@ -139,7 +153,11 @@ def check_rule(path: Path, fetcher: Fetcher) -> Result:
     except requests.RequestException as exc:
         return Result(rule_id, "drifted", f"fetch failed: {exc}")
 
-    current_hash = hash_html(html)
+    try:
+        current_hash = hash_html(html)
+    except ContentContainerNotFound as exc:
+        return Result(rule_id, "structure-changed", f"{url}: {exc}")
+
     if current_hash == recorded_hash:
         return Result(rule_id, "ok", "")
     return Result(rule_id, "drifted", f"recorded {recorded_hash} != current {current_hash}")
@@ -147,13 +165,13 @@ def check_rule(path: Path, fetcher: Fetcher) -> Result:
 
 def run(rules_dir: Path = RULES_DIR, fetcher: "Fetcher | None" = None) -> int:
     """Check every authored rule file, print a table, return the process exit
-    code (0 unless something drifted)."""
+    code (0 unless something drifted or a page's structure changed)."""
     fetcher = fetcher or Fetcher()
     results = [check_rule(path, fetcher) for path in iter_rule_files(rules_dir)]
 
     id_width = max((len(r.rule_id) for r in results), default=2)
     for r in results:
-        line = f"{r.rule_id.ljust(id_width)}  {r.status:<10}"
+        line = f"{r.rule_id.ljust(id_width)}  {r.status:<18}"
         if r.detail:
             line += f"  {r.detail}"
         print(line)
@@ -161,12 +179,14 @@ def run(rules_dir: Path = RULES_DIR, fetcher: "Fetcher | None" = None) -> int:
     ok = [r for r in results if r.status == "ok"]
     drifted = [r for r in results if r.status == "drifted"]
     unverified = [r for r in results if r.status == "unverified"]
+    structure_changed = [r for r in results if r.status == "structure-changed"]
     print(
-        f"\n{len(ok)} ok, {len(drifted)} drifted, {len(unverified)} unverified "
-        f"out of {len(results)} rule(s) -- {fetcher.network_calls} network call(s) made"
+        f"\n{len(ok)} ok, {len(drifted)} drifted, {len(unverified)} unverified, "
+        f"{len(structure_changed)} structure-changed out of {len(results)} rule(s) "
+        f"-- {fetcher.network_calls} network call(s) made"
     )
 
-    return 1 if drifted else 0
+    return 1 if (drifted or structure_changed) else 0
 
 
 def main() -> None:

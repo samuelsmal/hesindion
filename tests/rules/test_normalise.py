@@ -25,7 +25,7 @@ import pathlib
 
 import pytest
 
-from scripts.rules_sync.normalise import hash_html, normalise_html
+from scripts.rules_sync.normalise import ContentContainerNotFound, hash_html, normalise_html
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 
@@ -125,3 +125,48 @@ def test_dynamic_captcha_widget_inside_main_is_still_stripped():
 
 def test_same_rule_text_with_different_dynamic_widget_content_hashes_identically():
     assert hash_html(_read("rule_d_dynamic1.html")) == hash_html(_read("rule_d_dynamic2.html"))
+
+
+# --- Fix round 2: block boundary vs. inline mid-word, structure-changed ----
+#
+# `get_text(" ")` (fix round 1's fix for table-cell gluing) turned out to
+# insert a separator between *every* node, including an inline tag placed
+# mid-word with no surrounding whitespace -- a false-drift source in the same
+# category fix round 1 existed to eliminate, just triggered by a different
+# markup edit (reviewer repro: `Der <b>Wucht</b>schlag` -> "Der Wucht schlag").
+# Fixed by inserting a boundary only around block-level tags
+# (`_BLOCK_BOUNDARY_TAGS`) and letting inline tags concatenate with no
+# separator, matching how a browser renders them. Both fixtures below use the
+# same `id="main"` shape fix round 1 verified against the real site.
+
+def test_block_boundary_tags_insert_a_word_boundary_even_with_no_source_whitespace():
+    text = normalise_html(_read("rule_e_block_boundary.html"))
+    assert text == "Erste Spalte Zweite Spalte Zeile eins. Zeile zwei."
+
+
+def test_inline_tags_do_not_insert_a_boundary_mid_word():
+    text = normalise_html(_read("rule_f_inline_midword.html"))
+    assert "Platzhalter begriff" not in text
+    assert "Platzhalterbegriff" in text
+    assert "Zwischen ablauf" not in text
+    assert "Zwischenablaufverhalten" in text
+
+
+def test_reviewer_repro_inline_tag_mid_word_is_not_split():
+    # The exact two snippets from the fix round 2 review.
+    assert normalise_html(
+        "<main><p>Der <b>Wucht</b>schlag ist eine Sonderfertigkeit.</p></main>"
+    ) == "Der Wuchtschlag ist eine Sonderfertigkeit."
+    assert normalise_html("<main><p>Ein<i>fach</i>er Test.</p></main>") == "Einfacher Test."
+
+
+def test_missing_container_raises_content_container_not_found():
+    with pytest.raises(ContentContainerNotFound):
+        normalise_html("<html><body><p>Kein main und kein #main hier.</p></body></html>")
+
+
+def test_body_fallback_no_longer_silently_used():
+    # Fix round 1's chain fell back to <body> (and then the whole document);
+    # fix round 2 drops both rungs -- only #main or a real <main> tag count.
+    with pytest.raises(ContentContainerNotFound):
+        normalise_html("<html><body><div id='not-main'><p>Text</p></div></body></html>")

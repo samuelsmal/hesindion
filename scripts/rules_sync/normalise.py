@@ -10,10 +10,10 @@ identically. A capture whose rule *text* actually changed must not.
 This module has no model and no network access -- see check.py for the piece
 that fetches pages and compares hashes. See the Task 5 report
 (.superpowers/sdd/2026-09-20-rules-pipeline-and-authoring/task-5-report.md,
-including the fix-round-1 section) for the live-site evidence behind the
-`#main` container choice and the quick-contact/CAPTCHA strip below -- both
-were verified against real https://dsa.ulisses-regelwiki.de/ pages, not
-guessed.
+including the fix-round-1 and fix-round-2 sections) for the live-site
+evidence behind the `#main` container choice and the quick-contact/CAPTCHA
+strip below -- both were verified against real
+https://dsa.ulisses-regelwiki.de/ pages, not guessed.
 """
 from __future__ import annotations
 
@@ -36,6 +36,43 @@ _NBSP = "\xa0"
 # nests it differently.
 _DYNAMIC_WIDGET_SELECTOR = ".t4c_quickcontact_form, .captcha_text, [id^='captcha_text_']"
 
+# Fix round 2: tags whose *boundary* (open and close) is a word break even
+# with no whitespace in the source -- these are block-level elements, where
+# HTML rendering itself forces a line break, so "<td>A</td><td>B</td>" reads
+# as two words to a person even though the markup has no space between them.
+# Chosen to match the ruling's list exactly: p/div/li/tr/td/th/headings/
+# section/article. `br` is handled separately (it has no content of its own
+# to bracket -- it *becomes* the boundary, see below), and deliberately not
+# included here.
+_BLOCK_BOUNDARY_TAGS = (
+    "p", "div", "li", "tr", "td", "th",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "section", "article",
+)
+
+# Inline tags (b, i, span, a, strong, em, sup, ...) are deliberately *not* in
+# the list above and get no inserted boundary: "Der <b>Wucht</b>schlag" must
+# stay "Wuchtschlag", not become "Wucht schlag" -- a cross-reference link or
+# emphasis tag placed mid-word must not manufacture a space that was never in
+# the rendered text. See the fix-round-2 report section for the reviewer's
+# repro that caught the previous `get_text(" ")` approach getting this wrong.
+
+
+class ContentContainerNotFound(Exception):
+    """Raised when a page has neither `id="main"` nor a `<main>` element.
+
+    Fix round 2: this site has no `<main>` element on any real page (fix
+    round 1's finding) and its actual content container is `#main` -- but a
+    future redesign could rename or drop that id. The original fallback
+    chain (`#main` -> `<main>` -> `<body>` -> whole document) would silently
+    degrade to `<body>` in that case, picking up the CAPTCHA widget again and
+    reproducing the exact bug fix round 1 closed, just quietly. A missing
+    content container is architecturally different from "the text changed"
+    or "the network hiccuped" -- it means this normaliser no longer knows
+    what part of the page is the rule, so it must fail loudly rather than
+    guess. check.py surfaces this as its own `structure-changed` state.
+    """
+
 
 def normalise_html(html: str) -> str:
     """Reduce a wiki page's HTML to a stable plain-text form of its rule text.
@@ -52,34 +89,41 @@ def normalise_html(html: str) -> str:
        from.
     3. Scope extraction to `#main` (verified present, unique, and containing
        the rule text on every real page fetched -- see module docstring),
-       falling back to the semantic `<main>` tag, then `<body>`, then the
-       whole document, for robustness against a page this site doesn't use
-       the same template for. This keeps navigation/header/footer chrome,
-       which changes for reasons unrelated to any single rule, out of the
-       hash.
+       falling back only to the semantic `<main>` tag. If neither is present,
+       raise `ContentContainerNotFound` rather than silently falling back to
+       `<body>`/the whole document -- see that class's docstring. This keeps
+       navigation/header/footer chrome, which changes for reasons unrelated
+       to any single rule, out of the hash.
     4. Turn every `<br>` (`<br>`, `<br/>`, `<br />` -- the HTML parser folds
        all of these to the same tag regardless of how the source spelled it)
        into a literal newline before the tag structure is discarded, so text
        on either side of an intentional line break doesn't get glued together
        into one word.
-    5. Extract text with a space separator between nodes (`get_text(" ")`),
-       so adjacent tags with no whitespace between them in the source (e.g.
-       `<td>A</td><td>B</td>`) don't get glued into one word either. Combined
-       with the whitespace-run collapse in step 7, an extra separator where
-       the source already had real whitespace is harmless -- it collapses
-       right back down to the single space that was already going to be
-       there.
-    6. Replace non-breaking spaces (both the decoded `&nbsp;`/`&#160;`
+    5. Insert a newline before and after every *block-level* tag
+       (`_BLOCK_BOUNDARY_TAGS`) -- so `<td>A</td><td>B</td>` still reads as
+       "A B", matching how a browser renders it. *Inline* tags (`<b>`, `<i>`,
+       `<span>`, `<a>`, ...) get no inserted boundary, so `Der
+       <b>Wucht</b>schlag` stays "Wuchtschlag", not "Wucht schlag" -- fix
+       round 2's correction of a fix-round-1 regression that inserted a
+       separator between *every* node, including mid-word inline tags.
+    6. Extract text with no separator (`get_text()`) -- the boundaries
+       inserted in steps 4 and 5 are now real text nodes, so no separator
+       argument is needed or wanted; adding one again would reintroduce the
+       mid-word-inline-tag bug this round fixed.
+    7. Replace non-breaking spaces (both the decoded `&nbsp;`/`&#160;`
        entity, which BeautifulSoup turns into U+00A0, and a raw U+00A0 byte)
        with a regular space.
-    7. Collapse any run of whitespace (spaces, tabs, the newlines introduced
-       above, real newlines from source indentation, the separators from
-       step 5) down to a single space, then strip leading/trailing
-       whitespace -- markup reflow or re-indentation must not register as a
-       rule change.
-    8. NFC-normalise so a precomposed character (e.g. "ö", U+00F6) and its
+    8. Collapse any run of whitespace (spaces, tabs, the newlines introduced
+       above, real newlines from source indentation) down to a single space,
+       then strip leading/trailing whitespace -- markup reflow or re-
+       indentation must not register as a rule change.
+    9. NFC-normalise so a precomposed character (e.g. "ö", U+00F6) and its
        decomposed form (`o` + combining diaeresis, U+006F U+0308) hash
        identically.
+
+    Raises:
+        ContentContainerNotFound: neither `id="main"` nor `<main>` exists in
+            `html`.
     """
     soup = BeautifulSoup(html, "html.parser")
 
@@ -89,12 +133,20 @@ def normalise_html(html: str) -> str:
     for widget in soup.select(_DYNAMIC_WIDGET_SELECTOR):
         widget.decompose()
 
-    content = soup.find(id="main") or soup.find("main") or soup.find("body") or soup
+    content = soup.find(id="main") or soup.find("main")
+    if content is None:
+        raise ContentContainerNotFound(
+            'neither id="main" nor a <main> element was found in this page'
+        )
 
     for br in content.find_all("br"):
         br.replace_with("\n")
 
-    text = content.get_text(" ")
+    for tag in content.find_all(_BLOCK_BOUNDARY_TAGS):
+        tag.insert_before("\n")
+        tag.insert_after("\n")
+
+    text = content.get_text()
     text = text.replace(_NBSP, " ")
     text = _WHITESPACE_RE.sub(" ", text).strip()
     text = unicodedata.normalize("NFC", text)
@@ -104,7 +156,11 @@ def normalise_html(html: str) -> str:
 
 def hash_html(html: str) -> str:
     """Return the `sha256:<hex>` provenance hash (schema.json's `source.hash`
-    shape) for a wiki page's normalised rule text."""
+    shape) for a wiki page's normalised rule text.
+
+    Raises:
+        ContentContainerNotFound: see `normalise_html`.
+    """
     normalised = normalise_html(html)
     digest = hashlib.sha256(normalised.encode("utf-8")).hexdigest()
     return f"sha256:{digest}"

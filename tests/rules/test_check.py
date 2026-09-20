@@ -1,10 +1,11 @@
 """Tests for scripts/rules_sync/check.py.
 
-Exercises the three-state report (ok / drifted / unverified) and the on-disk
-cache/rate-limit contract -- a second run against a warm cache must make zero
-network calls (Task 5 acceptance criterion). No real network access and no
-real rule text: `Fetcher` is driven with an in-memory HTTP double, and the
-placeholder rule text below is invented, not a capture of any real page.
+Exercises the four-state report (ok / drifted / unverified / structure-changed
+-- the last added in fix round 2) and the on-disk cache/rate-limit contract --
+a second run against a warm cache must make zero network calls (Task 5
+acceptance criterion). No real network access and no real rule text:
+`Fetcher` is driven with an in-memory HTTP double, and the placeholder rule
+text below is invented, not a capture of any real page.
 """
 import textwrap
 import time
@@ -147,6 +148,21 @@ def test_mismatched_hash_is_reported_drifted(tmp_path, monkeypatch):
     assert result.status == "drifted"
 
 
+def test_missing_content_container_is_reported_structure_changed(tmp_path, monkeypatch):
+    # Fix round 2: a page with neither id="main" nor <main> must not be
+    # silently treated as drifted (or ok) -- it's a distinct, louder state.
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    url = "https://example.invalid/Platzhalter.html"
+    write_rule(tmp_path, "SA_TEST.yaml", url=url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    html_without_container = "<html><body><p>Kein main und kein #main hier.</p></body></html>"
+    fetcher, _ = make_fetcher(tmp_path, {url: html_without_container})
+
+    result = check_rule(tmp_path / "SA_TEST.yaml", fetcher)
+
+    assert result.status == "structure-changed"
+    assert url in result.detail  # ruling: message must name the URL
+
+
 def test_fetch_failure_is_reported_drifted_not_a_crash(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
     url = "https://example.invalid/Platzhalter.html"
@@ -195,6 +211,20 @@ def test_run_exits_nonzero_when_something_drifted(tmp_path, monkeypatch):
     code = run(rules_dir=tmp_path, fetcher=fetcher)
 
     assert code == 1
+
+
+def test_run_exits_nonzero_when_structure_changed(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr("scripts.rules_sync.check.time.sleep", lambda s: None)
+    url = "https://example.invalid/Platzhalter.html"
+    write_rule(tmp_path, "SA_STRUCT.yaml", url=url, checked="2026-09-20", hash_="sha256:" + "1" * 64)
+    fetcher, _ = make_fetcher(tmp_path, {url: "<html><body><p>Kein Container.</p></body></html>"})
+
+    code = run(rules_dir=tmp_path, fetcher=fetcher)
+
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "SA_STRUCT" in out and "structure-changed" in out
+    assert "1 structure-changed" in out
 
 
 def test_non_rule_yaml_files_are_skipped(tmp_path):
