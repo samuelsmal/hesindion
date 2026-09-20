@@ -736,6 +736,17 @@ final class Hero {
 
     var isHandlungsunfaehig: Bool {
         if hasState("handlungsunfaehig") || impliedStateIDs.contains("handlungsunfaehig") { return true }
+        return isHandlungsunfaehigFromZustaende
+    }
+
+    /// Whether the status is carried by *Zustände* — a Stufe IV, or eight levels
+    /// in sum — rather than stated outright or implied by a Status.
+    ///
+    /// The Schicksalspunkt "Zustand ignorieren" buys the round back from the
+    /// first kind (owner ruling, 2026-09-20) and nothing from the second: a
+    /// Schip does not wake a bewusstlos hero, and it does not un-petrify a
+    /// versteinert one.
+    var isHandlungsunfaehigFromZustaende: Bool {
         if totalZustandLevels >= 8 { return true }
         // Any Zustand at its handlungsunfaehig level (most level IV).
         return activeStates.contains { entry in

@@ -31,6 +31,16 @@ struct CombatRootView: View {
     @State private var showArmorSheet = false
     /// The Blutend probe whose modal is up, with the result it has so far.
     @State private var bleedingSession: BleedingProbeSession? = nil
+    /// The action a handlungsunfähig hero has reached for, waiting on the
+    /// GM's permission. Held rather than run, so "Nein" costs nothing.
+    @State private var permissionRequest: GMPermissionRequest? = nil
+
+    /// One tap on a shut action, kept until the answer comes back.
+    private struct GMPermissionRequest: Identifiable {
+        let id = UUID()
+        /// What the button would have done.
+        let perform: () -> Void
+    }
 
     /// The flags this round is in, as one value — the same one the weapon list
     /// gets, so both ways into a defence are modified alike.
@@ -60,15 +70,40 @@ struct CombatRootView: View {
     /// lasts. Three rules, one button state — and each says which of them it is,
     /// underneath.
     private var defenseBlocked: Bool {
-        vorstossActiveThisRound || hero.activeCombatNoDefense || actionsBlocked
+        defenseHardBlocked || actionsBlocked
     }
 
-    /// Status Handlungsunfähig (Regelwerk 36): no actions and no defences at
-    /// all — only speaking, as a free action, at the GM's discretion. Every
-    /// entry point that is an action or a reaction is shut; recording damage
-    /// and ending the fight stay open, since they are bookkeeping.
+    /// The two of those three that nobody at the table can wave through: the
+    /// round's own Vorstoß, and the Fernkampf-Patzer. Handlungsunfähig is not
+    /// among them — the GM may allow an action — so its buttons still answer a
+    /// tap, with the question below.
+    private var defenseHardBlocked: Bool {
+        vorstossActiveThisRound || hero.activeCombatNoDefense
+    }
+
+    /// Status Handlungsunfähig (Regelwerk 36): no actions and no defences —
+    /// except that "der Meister kann freie Aktionen erlauben". So the buttons
+    /// read as shut and ask before they act (`guarded`) rather than refusing
+    /// outright; recording damage and ending the fight are not actions and are
+    /// never in the way.
+    ///
+    /// The Schicksalspunkt "Zustand ignorieren" lifts it for the round when the
+    /// status is carried by Zustände (owner ruling, 2026-09-20) — the same Schip
+    /// that already ignores their modifiers. A Status that carries it instead
+    /// (Bewusstlos, Versteinert) is not something a Schip ignores.
     private var actionsBlocked: Bool {
-        hero.isHandlungsunfaehig
+        guard hero.isHandlungsunfaehig else { return false }
+        if schipIgnoreZustandThisRound && hero.isHandlungsunfaehigFromZustaende { return false }
+        return true
+    }
+
+    /// Runs `perform`, or — while the hero is handlungsunfähig — puts the
+    /// question to the GM first. Every action and reaction on this screen goes
+    /// through it, so the rule is enforced in one place and answered in one
+    /// dialog.
+    private func guarded(_ perform: @escaping () -> Void) {
+        guard actionsBlocked else { return perform() }
+        permissionRequest = GMPermissionRequest(perform: perform)
     }
 
     /// "2. Parade · −3" under the button that charges it, so the cost of
@@ -258,6 +293,11 @@ struct CombatRootView: View {
                         icon: "hand.raised.slash.fill",
                         text: L("states.handlungsunfaehig.banner")
                     )
+                    // Why the buttons below are live although the banner is up.
+                    if !actionsBlocked {
+                        defenseBlockedReason(L("incapacitated.schipLifts"))
+                            .accessibilityIdentifier("combat.incapacitated.schipLifts")
+                    }
                 }
                 if hero.isBewegungsunfaehig {
                     combatWarningBanner(
@@ -447,9 +487,11 @@ struct CombatRootView: View {
                         .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
                     Spacer()
-                    if currentRound >= casting.totalRounds, !actionsBlocked {
+                    if currentRound >= casting.totalRounds {
                         Button(L("continue")) {
-                            step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
+                            guarded {
+                                step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
+                            }
                         }
                         .font(.dsaHeading(.caption))
                         .foregroundStyle(Color.groupMagic)
@@ -496,6 +538,7 @@ struct CombatRootView: View {
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
                 Button {
+                  guarded {
                     let isDualWield = hero.isDualWielding
                     let hasShield = hero.selectedShield != nil
                     let canTwoHand: Bool = {
@@ -516,6 +559,7 @@ struct CombatRootView: View {
                     } else {
                         step = .loadoutEquipment
                     }
+                  }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "bolt.fill")
@@ -529,7 +573,6 @@ struct CombatRootView: View {
                     .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(actionsBlocked)
                 .accessibilityIdentifier("combat.attack")
 
                 // Fernkampf. A Ladehemmung (Fernkampf-Patzer 9) costs two
@@ -542,9 +585,10 @@ struct CombatRootView: View {
                     // modifier the evaluator can express, so the entry point
                     // itself is shut, same as a Ladehemmung.
                     let underwater = waterDepth == .unterWasser
+                    // Two of the three refuse outright; the status asks first.
                     let rangedShut = jammed || underwater || actionsBlocked
                     Button {
-                        step = .fernkampfSetup
+                        guarded { step = .fernkampfSetup }
                     } label: {
                         VStack(spacing: 2) {
                             HStack(spacing: 6) {
@@ -569,14 +613,14 @@ struct CombatRootView: View {
                         .dsaBox(.flush, stroke: rangedShut ? Color.dsaBorder : combatAccent)
                     }
                     .buttonStyle(.dsaMotion)
-                    .disabled(rangedShut)
+                    .disabled(jammed || underwater)
                     .accessibilityIdentifier("combat.rangedAttack")
                 }
 
                 // Zaubern (only if hero has AE)
                 if let ae = hero.derivedValues?.astralenergie, ae.max > 0 {
                     Button {
-                        step = .spellSelection
+                        guarded { step = .spellSelection }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "wand.and.stars")
@@ -590,12 +634,11 @@ struct CombatRootView: View {
                         .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : Color.groupMagic)
                     }
                     .buttonStyle(.dsaMotion)
-                    .disabled(actionsBlocked)
                 }
 
                 // Flucht is an action like any other, and was stranded between
                 // the bookkeeping buttons.
-                Button { step = .flucht } label: {
+                Button { guarded { step = .flucht } } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.run")
                         Text(L("flucht"))
@@ -608,13 +651,13 @@ struct CombatRootView: View {
                     .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(actionsBlocked)
                 .accessibilityIdentifier("combat.flucht")
 
                 if actionsBlocked {
                     defenseBlockedReason(L("incapacitated.noActions"))
                         .accessibilityIdentifier("combat.incapacitated.reason")
                 }
+
 
             }
             .dsaOptionGroup()
@@ -629,7 +672,7 @@ struct CombatRootView: View {
                 // Parieren -- secondary (outline). The defence screen asks
                 // about the attacker, then routes on (`DefenseRoute`).
                 Button {
-                    step = .defenseSetup(.parieren)
+                    guarded { step = .defenseSetup(.parieren) }
                 } label: {
                     VStack(spacing: 2) {
                         HStack(spacing: 6) {
@@ -650,12 +693,12 @@ struct CombatRootView: View {
                     .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(defenseBlocked)
+                .disabled(defenseHardBlocked)
                 .accessibilityIdentifier("combat.parry")
 
                 // Ausweichen -- tertiary (outline)
                 Button {
-                    step = .defenseSetup(.ausweichen)
+                    guarded { step = .defenseSetup(.ausweichen) }
                 } label: {
                     VStack(spacing: 2) {
                         HStack(spacing: 6) {
@@ -676,7 +719,7 @@ struct CombatRootView: View {
                     .dsaBox(.flush, stroke: defenseBlocked ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
-                .disabled(defenseBlocked)
+                .disabled(defenseHardBlocked)
                 .accessibilityIdentifier("combat.dodge")
 
                 // Vorstoß warning
@@ -763,7 +806,7 @@ struct CombatRootView: View {
                     }
                 }
 
-                Button { step = .loadoutEquipment } label: {
+                Button { guarded { step = .loadoutEquipment } } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath")
                         Text(L("changeLoadout"))
@@ -777,7 +820,7 @@ struct CombatRootView: View {
                 }
                 .buttonStyle(.dsaMotion)
                 // Drawing or swapping a weapon is an action.
-                .disabled(actionsBlocked)
+                .accessibilityIdentifier("combat.changeLoadout")
             }
             .dsaOptionGroup()
 
@@ -821,6 +864,32 @@ struct CombatRootView: View {
         // A modal is a sibling of the layout: hung on the whole screen so its
         // scrim covers the whole screen.
         .overlay {
+            if let request = permissionRequest {
+                DSAModal(title: L("incapacitated.confirm.title"), accent: combatAccent) {
+                    Text(L("incapacitated.confirm.message"))
+                        .font(.dsaBody(.subheadline))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    DSAModalButton(
+                        title: L("incapacitated.confirm.allow"),
+                        accent: combatAccent,
+                        identifier: "combat.incapacitated.allow"
+                    ) {
+                        let perform = request.perform
+                        permissionRequest = nil
+                        perform()
+                    }
+
+                    DSAModalButton(
+                        title: L("cancel"),
+                        accent: combatAccent,
+                        filled: false,
+                        identifier: "combat.incapacitated.cancel"
+                    ) {
+                        permissionRequest = nil
+                    }
+                }
+            }
             if let session = bleedingSession {
                 TalentProbeModal(
                     talent: session.probe == .selbstbeherrschung ? hero.selbstbeherrschung : hero.heilkundeWunden,

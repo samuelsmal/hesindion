@@ -71,6 +71,23 @@ final class HeroStateTests: XCTestCase {
         XCTAssertTrue(hero.isHandlungsunfaehig)
     }
 
+    /// Which of the two kinds carries the status decides whether the
+    /// Schicksalspunkt "Zustand ignorieren" can buy the round back: it ignores
+    /// Zustände, and Bewusstlos is a Status.
+    func testHandlungsunfaehigFromZustaendeIsToldApartFromAStatusCarryingIt() throws {
+        let ctx = try makeContext()
+        let zustand = Hero(name: "Furcht IV"); ctx.insert(zustand)
+        zustand.setStateLevel("furcht", level: 4)
+        XCTAssertTrue(zustand.isHandlungsunfaehig)
+        XCTAssertTrue(zustand.isHandlungsunfaehigFromZustaende)
+
+        let status = Hero(name: "Bewusstlos"); ctx.insert(status)
+        status.setStateLevel("bewusstlos", level: 1)
+        XCTAssertTrue(status.isHandlungsunfaehig, "Bewusstlos implies the status")
+        XCTAssertFalse(status.isHandlungsunfaehigFromZustaende,
+                       "a Schip does not wake a bewusstlos hero")
+    }
+
     func testParalyseFourImpliesBewegungsunfaehig() throws {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)
