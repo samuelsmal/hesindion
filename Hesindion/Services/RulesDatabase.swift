@@ -283,6 +283,16 @@ final class RulesDatabase: @unchecked Sendable {
         )
     }
 
+    func lookupGroupId(_ ruleId: String) -> Int? {
+        let sql = "SELECT group_id FROM rules WHERE id = ?"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        return Int(sqlite3_column_int(stmt, 0))
+    }
+
     func lookupEffects(ruleId: String) -> [RuleEffect] {
         let sql = "SELECT level, type, attribute, value, scope, description FROM effects WHERE rule_id = ? ORDER BY level"
         var stmt: OpaquePointer?

@@ -458,12 +458,12 @@ struct OptolithImportService {
         )
     }
 
-    /// Check if a special ability is combat-related using the rules database.
-    /// Falls back to `false` (general SA) if the rule is not found.
+    /// A rule is a combat special ability when the ruleset says so — Kampf, Kampfstile
+    /// (bewaffnet/unbewaffnet), Kampf (erweitert) and Befehle — not when someone has already
+    /// hand-written an effect for it. See ADR-0008.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        guard let rule = rules.lookup(id: id) else { return false }
-        // The rules.db effects with scope "combat" indicate combat special abilities
-        return rule.effects.contains { $0.scope == "combat" }
+        guard let groupId = rules.lookupGroupId(id) else { return false }
+        return [3, 9, 10, 11, 12].contains(groupId)
     }
 
     // MARK: - Talents

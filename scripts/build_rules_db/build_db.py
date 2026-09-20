@@ -881,6 +881,13 @@ def main():
     assert args.source.is_dir(), f"Source directory not found: {args.source}"
     assert args.effects.is_file(), f"Effects file not found: {args.effects}"
 
+    # Tables like `effects` and `prerequisites` are populated with plain INSERT (not
+    # INSERT OR REPLACE), so connecting to a pre-existing output file would duplicate
+    # every row on each rebuild. Always start from a clean file so the build is idempotent.
+    for sidecar in ("", "-shm", "-wal", "-journal"):
+        stale = args.output.with_name(args.output.name + sidecar)
+        stale.unlink(missing_ok=True)
+
     conn = sqlite3.connect(str(args.output))
     conn.execute("PRAGMA journal_mode=DELETE")
     conn.execute("PRAGMA foreign_keys=ON")

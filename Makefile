@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -116,6 +116,25 @@ deploy-kombucha:
 clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -sdk $(SDK) clean
 	rm -rf $(DERIVED_DATA)
+
+# ── Rules database ───────────────────────────────────────────────────────────
+
+# rules.db is a generated, untracked build artifact (Data Policy in AGENTS.md:
+# no DSA rules content in git). RULES_SOURCE points at the local, non-version-
+# controlled Optolith data export; override it if yours lives elsewhere.
+RULES_SOURCE ?= /Users/SamuelvonBaussnern/proj/50_priv/dsa_companion_data/Data
+RULES_DB     := Hesindion/Resources/rules.db
+
+# Task 3 flips this to specs/rules
+RULES_EFFECTS ?= specs/data/rules.yaml
+
+rules-db:
+	@test -d "$(RULES_SOURCE)" || { echo "Rules source not found: $(RULES_SOURCE) (set RULES_SOURCE=…)"; exit 1; }
+	python3 scripts/build_rules_db/check_sources.py --source "$(RULES_SOURCE)" --pins specs/rules/SOURCES.yaml
+	python3 scripts/build_rules_db/build_db.py --source "$(RULES_SOURCE)" --effects "$(RULES_EFFECTS)" --output "$(RULES_DB)"
+
+rules-db-verify:
+	python3 scripts/build_rules_db/verify_db.py "$(RULES_DB)" "$(RULES_SOURCE)" "$(RULES_EFFECTS)"
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

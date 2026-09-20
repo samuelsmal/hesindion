@@ -60,8 +60,11 @@ struct HeroImportTests {
 
         // Special abilities (SA_ entries, excluding SA_29 languages and SA_27 scripts)
         #expect(!hero.generalSpecialAbilities.isEmpty || !hero.combatSpecialAbilities.isEmpty)
-        let allSAs = hero.generalSpecialAbilities + hero.combatSpecialAbilities
-        #expect(allSAs.count >= 8)
+        // Combat SAs are classified from the ruleset's own grouping (ADR-0008), so Plänkler-Formation
+        // and Golgariten-Stil are combat abilities even though only one of them has authored effects.
+        #expect(hero.combatSpecialAbilities.contains { $0.ruleId == "SA_884" })
+        #expect(hero.combatSpecialAbilities.contains { $0.ruleId == "SA_661" })
+        #expect(hero.generalSpecialAbilities.allSatisfy { !$0.ruleId.hasPrefix("SA_88") })
 
         // Languages (from SA_29)
         #expect(hero.languages.count == 3)

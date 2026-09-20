@@ -25,6 +25,19 @@ make clean        # Clean build artifacts
 - **Device families:** iPhone and iPad
 - **No external dependencies** — uses only Apple frameworks
 
+`Hesindion/Resources/rules.db` is a generated, untracked build artifact — it is never committed
+(Data Policy below) and the app won't build/run correctly without it:
+
+```bash
+make rules-db          # rebuild rules.db from the pinned Optolith source (RULES_SOURCE)
+make rules-db-verify   # confirm the shipped rules.db matches what a rebuild produces
+```
+
+`make rules-db` reads from `RULES_SOURCE` (defaults to the local, non-version-controlled
+`dsa_companion_data/Data` checkout — override with `RULES_SOURCE=` if yours lives elsewhere),
+checks its checksums against `specs/rules/SOURCES.yaml`, and fails with a named message if the
+source directory is missing or its checksums have drifted.
+
 ### Testing
 
 **Always run one xcodebuild-backed target at a time, and never widen the destination set.** The `NO_CLONE` flags in the Makefile pin every test run to the single named simulator; test parallelisation otherwise clones the device and boots several simulators at once.
