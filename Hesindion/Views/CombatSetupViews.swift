@@ -151,7 +151,7 @@ struct CombatSetupView: View {
                     if hero.hasMount {
                         combatSectionLabel(L("mount.label"))
 
-                        let mountName = hero.pets.first?.name ?? L("mount")
+                        let mountName = hero.mount?.name ?? L("mount")
                         DSAToggleRow(
                             title: "\(L("mounted")) (\(mountName))",
                             isOn: $mountedActive,
@@ -224,13 +224,13 @@ struct CombatInitiativeRollView: View {
     }
 
     private var mountBaseINI: Int? {
-        hero.pets.first.flatMap { pet in
+        hero.mount.flatMap { pet in
             Int(pet.initiative.split(separator: "+").first ?? "")
         }
     }
 
     private var mountName: String? {
-        hero.pets.first?.name
+        hero.mount?.name
     }
 
     /// The mount's base is only on offer while the hero is actually mounted —

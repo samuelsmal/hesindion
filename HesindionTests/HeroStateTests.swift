@@ -88,6 +88,21 @@ final class HeroStateTests: XCTestCase {
                        "a Schip does not wake a bewusstlos hero")
     }
 
+    /// `states` is a SwiftData to-many with no order, so the strip used to
+    /// reshuffle its chips between launches. They follow the catalog's order now.
+    func testActiveStatesFollowTheCatalogsOrder() throws {
+        let ctx = try makeContext()
+        let hero = Hero(name: "Test"); ctx.insert(hero)
+        // Added back to front: liegend sits after furcht in StateCatalog.all.
+        hero.setStateLevel("liegend", level: 1)
+        hero.setStateLevel("furcht", level: 1)
+
+        let ids = hero.activeStates.map(\.def.id)
+        let rank = { (id: String) in StateCatalog.all.firstIndex { $0.id == id } }
+        XCTAssertEqual(ids, ids.sorted { (rank($0) ?? .max) < (rank($1) ?? .max) },
+                       "got \(ids)")
+    }
+
     func testParalyseFourImpliesBewegungsunfaehig() throws {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)

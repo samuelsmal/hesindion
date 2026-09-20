@@ -439,7 +439,7 @@ struct CombatView: View {
                 )
                 .transition(.move(edge: .trailing))
             case .mountDamage:
-                if let mount = hero.pets.first {
+                if let mount = hero.mount {
                     CombatMountDamageView(
                         hero: hero,
                         mount: mount,

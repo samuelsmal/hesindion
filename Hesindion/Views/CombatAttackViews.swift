@@ -63,7 +63,7 @@ struct CombatAttackChoiceView: View {
                         Color.clear.onAppear { proceedSingleAttack() }
                     }
 
-                    if mountedActive, let mount = hero.pets.first {
+                    if mountedActive, let mount = hero.mount {
                         mountAttackSection(mount: mount)
                     }
                 }

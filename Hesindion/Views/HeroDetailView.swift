@@ -145,7 +145,7 @@ struct HeroDetailView: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showMountDamageSheet) {
-            if let mount = hero.pets.first {
+            if let mount = hero.mount {
                 MountDamageSheet(hero: hero, mount: mount)
                     .presentationCornerRadius(0)
                     .presentationDetents([.large])
@@ -162,7 +162,7 @@ struct HeroDetailView: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showMountHealingSheet) {
-            if let mount = hero.pets.first {
+            if let mount = hero.mount {
                 MountHealingSheet(hero: hero, mount: mount)
                     .presentationCornerRadius(0)
                     .presentationDetents([.medium])
@@ -656,7 +656,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var languagesSection: some View {
         if !hero.languages.isEmpty {
             CollapsibleSection(L("languages")) {
-                ForEach(hero.languages, id: \.persistentModelID) { lang in
+                ForEach(hero.languagesInOrder, id: \.persistentModelID) { lang in
                     FieldRow(label: lang.name, value: lang.level)
                 }
             }
@@ -692,7 +692,7 @@ struct HeroDetailView: View {
     }
 
     @ViewBuilder private var talentsSections: some View {
-        let grouped = Dictionary(grouping: hero.talents, by: \.category)
+        let grouped = Dictionary(grouping: hero.talentsInOrder, by: \.category)
         let checks = talentChecks
         recordedStatsToggle
         ForEach(talentCategoryOrder, id: \.self) { category in
@@ -770,7 +770,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var spellsSection: some View {
         if !hero.spells.isEmpty {
             CollapsibleSection(L("spells.section")) {
-                ForEach(hero.spells, id: \.persistentModelID) { spell in
+                ForEach(hero.spellsInOrder, id: \.persistentModelID) { spell in
                     SwipeActionRow(
                         label: spell.name,
                         value: "\(spell.value)",
@@ -785,7 +785,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var liturgiesSection: some View {
         if !hero.liturgies.isEmpty {
             CollapsibleSection(L("liturgies.section")) {
-                ForEach(hero.liturgies, id: \.persistentModelID) { spell in
+                ForEach(hero.liturgiesInOrder, id: \.persistentModelID) { spell in
                     SwipeActionRow(
                         label: spell.name,
                         value: "\(spell.value)",
@@ -838,7 +838,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var combatTechniquesSection: some View {
         if !hero.combatTechniques.isEmpty {
             CollapsibleSection(L("combatTechniques")) {
-                ForEach(hero.combatTechniques, id: \.persistentModelID) { ct in
+                ForEach(hero.combatTechniquesInOrder, id: \.persistentModelID) { ct in
                     VStack(spacing: 0) {
                         SwipeActionRow(
                             label: ct.name,
@@ -888,7 +888,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var equipmentSection: some View {
         CollapsibleSection(L("equipment")) {
-            ForEach(hero.equipment, id: \.persistentModelID) { item in
+            ForEach(hero.equipmentInOrder, id: \.persistentModelID) { item in
                 SwipeActionRow(
                     label: item.name,
                     value: String(format: "%.2f st", item.weight),
@@ -1095,7 +1095,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var petsSection: some View {
         if !hero.pets.isEmpty {
             CollapsibleSection(L("pets")) {
-                ForEach(hero.pets, id: \.persistentModelID) { pet in
+                ForEach(hero.petsInOrder, id: \.persistentModelID) { pet in
                     VStack(spacing: 0) {
                         HStack {
                             Text(pet.name).font(.dsaBody(.body))

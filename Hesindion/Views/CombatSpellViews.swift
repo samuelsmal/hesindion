@@ -52,7 +52,7 @@ struct CombatSpellSelectionView: View {
 
             ScrollView {
                 VStack(spacing: 4) {
-                    ForEach(hero.spells.sorted(by: { $0.name < $1.name }), id: \.persistentModelID) { spell in
+                    ForEach(hero.spellsInOrder, id: \.persistentModelID) { spell in
                         Button {
                             step = .spellSetup(spell: spell)
                         } label: {

@@ -230,10 +230,10 @@ struct CombatRootView: View {
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
                     heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
-                    mountBaseINI: hero.pets.first.flatMap { pet in
+                    mountBaseINI: hero.mount.flatMap { pet in
                         Int(pet.initiative.split(separator: "+").first ?? "")
                     },
-                    mountName: hero.pets.first?.name
+                    mountName: hero.mount?.name
                 ) { result in
                     rolledInitiative = result
                     // The round count starts over, and the Patzer clocks are
@@ -254,7 +254,7 @@ struct CombatRootView: View {
                 // Only worth printing when the mount's bar follows it: the label
                 // exists to tell the two bars apart, and on foot there is one bar
                 // under a heading that already says LEBENSPUNKTE.
-                if mountedActive, hero.pets.first != nil {
+                if mountedActive, hero.mount != nil {
                     Text(L("hero"))
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.secondary)
@@ -264,7 +264,7 @@ struct CombatRootView: View {
 
                 lpBar
 
-                if mountedActive, let mount = hero.pets.first {
+                if mountedActive, let mount = hero.mount {
                     Text(mount.name)
                         .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.secondary)
@@ -368,7 +368,7 @@ struct CombatRootView: View {
                 // `situation.mounted`, not just the setup-time flag; the LP bar for
                 // the mount and the mount attack section above already read
                 // `mountedActive` and follow along.
-                if hero.hasMount, let mount = hero.pets.first {
+                if hero.hasMount, let mount = hero.mount {
                     Button { mountedActive.toggle() } label: {
                         HStack(spacing: 6) {
                             Image(systemName: mountedActive ? "figure.equestrian.sports" : "figure.walk")

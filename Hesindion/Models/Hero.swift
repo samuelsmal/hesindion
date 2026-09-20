@@ -314,6 +314,49 @@ final class Hero {
         armors.sorted { ($0.name, $0.protectionValue) < ($1.name, $1.protectionValue) }
     }
 
+    var talentsInOrder: [Talent] {
+        talents.sorted { ($0.name, $0.ruleId) < ($1.name, $1.ruleId) }
+    }
+
+    var combatTechniquesInOrder: [CombatTechnique] {
+        combatTechniques.sorted { ($0.name, $0.ruleId) < ($1.name, $1.ruleId) }
+    }
+
+    var equipmentInOrder: [EquipmentItem] {
+        equipment.sorted { ($0.name, $0.weight) < ($1.name, $1.weight) }
+    }
+
+    var languagesInOrder: [Language] {
+        languages.sorted { ($0.name, $0.level) < ($1.name, $1.level) }
+    }
+
+    var spellsInOrder: [HeroSpell] {
+        spells.sorted { ($0.name, $0.value) < ($1.name, $1.value) }
+    }
+
+    var liturgiesInOrder: [HeroSpell] {
+        liturgies.sorted { ($0.name, $0.value) < ($1.name, $1.value) }
+    }
+
+    /// The pets in a fixed order. Which one is *the mount* is read off this, so
+    /// the order is not only about how the list looks — see `mount`.
+    var petsInOrder: [Pet] {
+        pets.sorted { ($0.name, $0.petId) < ($1.name, $1.petId) }
+    }
+
+    /// The animal the hero rides: the first pet that has an initiative, in the
+    /// fixed order above.
+    ///
+    /// This used to be `pets.first`, which is whatever the store handed over —
+    /// so a hero with two animals could go into one fight on the horse and the
+    /// next on the mule, with the mount's LP bar, its GS in the Sturmangriff
+    /// damage and its attacks all following the coin toss. A pet with no
+    /// initiative is not a mount (`hasMount` always said so); now it is also
+    /// skipped rather than hiding a mount standing behind it.
+    var mount: Pet? {
+        petsInOrder.first { !$0.initiative.isEmpty }
+    }
+
     // MARK: - Loadout computed helpers
 
     var selectedRangedWeapon: RangedWeapon? {
@@ -736,11 +779,17 @@ final class Hero {
         if let b = StateCatalog.definition(for: "belastung"), effectiveBE > 0 {
             result.append((b, min(effectiveBE, 4)))
         }
-        for entry in states {
-            if let def = StateCatalog.definition(for: entry.stateID) {
-                result.append((def, entry.level))
+        // In the catalog's own order, not the store's: `states` is a SwiftData
+        // to-many, so the strip otherwise reshuffled its chips between launches
+        // and the same Zustand was never twice in the same place.
+        let catalogRank = StateCatalog.all.enumerated().reduce(into: [String: Int]()) { $0[$1.element.id] = $1.offset }
+        let stored = states
+            .compactMap { entry -> (StateDefinition, Int)? in
+                guard let def = StateCatalog.definition(for: entry.stateID) else { return nil }
+                return (def, entry.level)
             }
-        }
+            .sorted { catalogRank[$0.0.id, default: .max] < catalogRank[$1.0.id, default: .max] }
+        result.append(contentsOf: stored)
         return result
     }
 
@@ -883,7 +932,7 @@ final class Hero {
 
     /// Horse GS for Sturmangriff damage.
     var mountGS: Int {
-        pets.first?.speed ?? 0
+        mount?.speed ?? 0
     }
 
     /// Sturmangriff bonus damage: +2 + (horse GS / 2).
@@ -893,7 +942,7 @@ final class Hero {
 
     /// True if hero has a mount (pet with initiative).
     var hasMount: Bool {
-        pets.first.map { !$0.initiative.isEmpty } ?? false
+        mount != nil
     }
 
     /// Whether combat setup screen is needed.
