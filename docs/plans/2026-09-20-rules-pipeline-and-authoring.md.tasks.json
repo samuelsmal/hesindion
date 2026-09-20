@@ -28,7 +28,7 @@
     {
       "id": 3,
       "subject": "Task 4: Golden corpus — ten rules authored by hand",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A reference encoding that the agent pipeline must reproduce before it is trusted with 232 rules.\n\n**Files:**\n- Modify: the 9 migrated files (SA_40, 41, 43, 48, 59, 65, 66, 67, 661) — real provenance and hashes\n- Create: `specs/rules/SA_62.yaml`, `tests/rules/golden/`\n\n**Acceptance Criteria:**\n- [ ] Each of the ten has a real `source.url`, `book`, `page`, today's `checked`, and a hash matching live wiki text\n- [ ] SA_62 encodes runUp ≥ 4 and gs ≥ 4, `dice: 2 + ceil(self.gs / 2)`, `opponentPassierschlagOnFailure`, `excludes: [SA_48]`, `subgroup: spezialmanoever`\n- [ ] SA_43's BE effect carries `when: [{mounted: true}]`\n\n**Verify:** `make rules-lint && python3 scripts/rules_sync/check.py --only specs/rules/SA_62.yaml` → `0 drifted`\n\n```json:metadata\n{\"files\": [\"specs/rules/SA_62.yaml\", \"tests/rules/golden/\"], \"verifyCommand\": \"make rules-lint\", \"acceptanceCriteria\": [\"ten rules carry real provenance\", \"SA_62 encodes all four clauses of its rule text\", \"SA_43 carries the mounted condition\"], \"modelTier\": \"frontier\"}\n```",
       "blockedBy": [
         4
