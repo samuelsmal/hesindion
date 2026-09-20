@@ -22,9 +22,11 @@ Exit code is 0 unless at least one rule is `drifted` -- an `unverified` rule
 does not fail the build.
 
 Requests are cached on disk under `.cache/rules_sync/` (git-ignored) and
-rate-limited to one per second between actual network fetches, reusing the
-`DELAY`/`HEADERS`/`BASE_URL` conventions from `scripts/scrape_effects/
-scrape_effects.py`. A cache hit makes no network call and does not sleep.
+rate-limited to one per second between actual network fetches, matching the
+`DELAY`/`HEADERS` politeness convention `scripts/scrape_effects/
+scrape_effects.py` already uses for this host (the value is not imported
+from there -- ADR-0007 slates that module for deletion, and this one should
+not depend on it). A cache hit makes no network call and does not sleep.
 """
 from __future__ import annotations
 
@@ -39,11 +41,17 @@ import requests
 import yaml
 
 from scripts.rules_sync.normalise import hash_html
-from scripts.scrape_effects.scrape_effects import DELAY, HEADERS
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = REPO_ROOT / "specs" / "rules"
 CACHE_DIR = REPO_ROOT / ".cache" / "rules_sync"
+
+# Politeness convention for dsa.ulisses-regelwiki.de -- same values as
+# scripts/scrape_effects/scrape_effects.py, defined locally rather than
+# imported from it (that module is slated for deletion, ADR-0007; this one
+# should not depend on it).
+DELAY = 1.0
+HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 
 # Files under specs/rules/ that are not one-rule-per-file authored specs.
 NON_RULE_FILES = {"schema.json", "SOURCES.yaml"}

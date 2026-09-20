@@ -1,13 +1,25 @@
 """Tests for scripts/rules_sync/normalise.py.
 
-The two fixtures (`rule_a.html`, `rule_b.html`) are invented placeholder markup,
-not captures of real DSA rule pages (Data Policy, AGENTS.md) -- they carry the
-same made-up "Platzhalter-Regel" text but differ in every markup dimension the
-normaliser needs to be stable across: `<br>` vs `<br/>`, `&nbsp;` vs the `&#160;`
-numeric entity, whitespace runs from re-indentation, an extra wrapping `<span>`
-around inline text, and entirely different `<head>`/`<style>`/`<script>`/`<nav>`/
-`<footer>` chrome around the same `<main>` content. `rule_c_different.html`
-carries genuinely different placeholder text, to prove the hash isn't constant.
+The fixtures are invented placeholder markup, not captures of real DSA rule
+pages (Data Policy, AGENTS.md).
+
+`rule_a.html`/`rule_b.html` carry the same made-up "Platzhalter-Regel" text
+but differ in every markup dimension the normaliser needs to be stable
+across: `<br>` vs `<br/>`, `&nbsp;` vs the `&#160;` numeric entity, whitespace
+runs from re-indentation, an extra wrapping `<span>` around inline text, and
+entirely different `<head>`/`<style>`/`<script>`/`<nav>`/`<footer>` chrome
+around the same content. `rule_c_different.html` carries genuinely different
+placeholder text, to prove the hash isn't constant.
+
+`rule_d_dynamic1.html`/`rule_d_dynamic2.html` (fix round 1, ruling 3) are a
+regression guard modelled on the real bug this round fixed: they reproduce
+dsa.ulisses-regelwiki.de's actual DOM shape (`#main` > `.mod_article` >
+`.ce_text`, verified by fetching 6 real pages -- see task-5-report.md) with a
+`.t4c_quickcontact_form`/`.captcha_text` CAPTCHA widget carrying *different*
+per-render challenge text in each fixture, once outside `#main` and once
+(deliberately) inside it. Same rule text, different dynamic noise -- this is
+the cheap, fixture-only check that would have caught the original bug
+without a live fetch.
 """
 import pathlib
 
@@ -84,3 +96,32 @@ def test_nfc_normalises_combining_characters():
 @pytest.mark.parametrize("name", ["rule_a.html", "rule_b.html", "rule_c_different.html"])
 def test_normalise_never_raises_on_the_fixtures(name):
     normalise_html(_read(name))
+
+
+# --- Fix round 1: real DOM shape, per-render-random CAPTCHA widget ---------
+
+def test_table_cells_with_no_separating_whitespace_do_not_glue_together():
+    # <td>A</td><td>B</td> with nothing between the tags must not become "AB".
+    html = "<main><table><tr><td>Erste Spalte</td><td>Zweite Spalte</td></tr></table></main>"
+    text = normalise_html(html)
+    assert "Erste SpalteZweite Spalte" not in text
+    assert "Erste Spalte Zweite Spalte" in text
+
+
+def test_dynamic_captcha_widget_outside_main_does_not_affect_the_hash():
+    text = normalise_html(_read("rule_d_dynamic1.html"))
+    assert "addieren" not in text
+    assert "captcha" not in text.lower()
+
+
+def test_dynamic_captcha_widget_inside_main_is_still_stripped():
+    # rule_d_dynamic2.html deliberately puts the widget *inside* #main --
+    # the explicit selector strip must catch it there too, not just rely on
+    # #main scoping to exclude it structurally.
+    text = normalise_html(_read("rule_d_dynamic2.html"))
+    assert "Summe" not in text
+    assert "captcha" not in text.lower()
+
+
+def test_same_rule_text_with_different_dynamic_widget_content_hashes_identically():
+    assert hash_html(_read("rule_d_dynamic1.html")) == hash_html(_read("rule_d_dynamic2.html"))
