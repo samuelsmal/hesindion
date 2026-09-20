@@ -1,0 +1,25 @@
+id: SA_661
+subgroup: none
+note: Style SF (Optolith group 9), so no manoeuvre subgroup. The page's weapon restriction is an eligibility line like every page's Kampftechniken row, not an effect condition
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/golgariten-stil.html
+  book: US25005
+  page: 229
+  checked: '2026-09-21'
+  hash: sha256:cca1a7e9bad5018cdf7ca194abec24fa84de6593a6a35515c577e99002af1995
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: 2
+  when:
+  - mounted: true
+  - gmFlag: opponentOnFoot
+  note: First clause - raises the advantageous-position AT ease by 2. The opponent fighting on foot is GM-adjudicated (ADR-0005)
+- type: modifier
+  target: pa
+  scope: combat
+  value: 1
+  when:
+  - mounted: true
+  note: Second clause - +1 parry while on a mount. The wiki says PA where the local Optolith copy says TP, and the wiki wins (ADR-0007)

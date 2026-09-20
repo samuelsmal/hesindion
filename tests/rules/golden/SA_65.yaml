@@ -1,0 +1,23 @@
+id: SA_65
+subgroup: passiv
+note: Announced at the start of the Kampfrunde. Verteidigungswert is PA and AW, so the +4 is two rows
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html
+  book: US25001
+  page: 250
+  checked: '2026-09-21'
+  hash: sha256:87ea00a9fdefa59c6bc6ffaed0d98c446015aa5a9b2a7ea4809cb8d01efe7a7d
+effects:
+- type: modifier
+  target: pa
+  scope: combat
+  value: 4
+  note: First clause - +4 on parry for the current Kampfrunde
+- type: modifier
+  target: aw
+  scope: combat
+  value: 4
+  note: First clause - the same +4 on dodge, since Verteidigungswert covers both
+- type: actionEconomy
+  forbids: furtherActions
+  note: Second clause - no Aktionen remain this Kampfrunde. Reaktionen (defences) are unaffected, which is why this is not allActions

@@ -1,0 +1,70 @@
+id: SA_48
+subgroup: basismanoever
+note: Tier ladder (Stufe I-III). The rule penalises the opponent's defence, which is PA or AW, so each tier carries two opponent-side rows
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Finte.html
+  book: US25001
+  page: 247
+  checked: '2026-09-21'
+  hash: sha256:c936cb60f83f68bdb8eba120c2a2a742a33f3dca104108de2068f69d0119b18a
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: -1
+  tier: 1
+  note: Stufe I - the attacker's own AT penalty, matching the Erschwernis line on the page
+- type: modifier
+  target: pa
+  scope: combat
+  side: opponent
+  value: -2
+  tier: 1
+  note: Stufe I - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+- type: modifier
+  target: aw
+  scope: combat
+  side: opponent
+  value: -2
+  tier: 1
+  note: Stufe I - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target
+- type: modifier
+  target: at
+  scope: combat
+  value: -2
+  tier: 2
+  note: Stufe II - the attacker's own AT penalty, matching the Erschwernis line on the page
+- type: modifier
+  target: pa
+  scope: combat
+  side: opponent
+  value: -4
+  tier: 2
+  note: Stufe II - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+- type: modifier
+  target: aw
+  scope: combat
+  side: opponent
+  value: -4
+  tier: 2
+  note: Stufe II - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target
+- type: modifier
+  target: at
+  scope: combat
+  value: -3
+  tier: 3
+  note: Stufe III - the attacker's own AT penalty, matching the Erschwernis line on the page
+- type: modifier
+  target: pa
+  scope: combat
+  side: opponent
+  value: -6
+  tier: 3
+  note: Stufe III - opponent parry penalty, and only when the attack succeeds; display-only for the GM (ADR-0005)
+- type: modifier
+  target: aw
+  scope: combat
+  side: opponent
+  value: -6
+  tier: 3
+  note: Stufe III - same clause as the parry row; the rule penalises defence, which is PA or AW, and the schema has no combined defence target

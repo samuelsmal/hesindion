@@ -1,0 +1,17 @@
+id: SA_40
+subgroup: passiv
+note: The bonus lands on a perception check, not on a combat check, so scope is all; combat would gate it out of the only domain it ever fires in
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Aufmerksamkeit.html
+  book: US25001
+  page: 246
+  checked: '2026-09-21'
+  hash: sha256:1ce76b71643d824a4cb18f1441932e04be1228b7e234a0774831f81c8f8d806b
+effects:
+- type: modifier
+  target: sinnesschaerfe
+  scope: all
+  value: 2
+  when:
+  - gmFlag: ambush
+  note: Single rule clause - +2 to spot attackers when ambushed or when checking whether the hero is surprised; the GM decides when that situation holds
