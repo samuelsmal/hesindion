@@ -19,7 +19,7 @@
     {
       "id": 2,
       "subject": "Task 3: Migrate 26 effect sets, delete duplicate sources",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** One authored store. `specs/data/rules.yaml` and `HARDCODED_EFFECTS` are gone, and the database builds from `specs/rules/`.\n\n**Files:**\n- Create: `specs/rules/*.yaml` (26), `scripts/rules_lint/migrate_legacy.py` (one-shot, deleted in the same commit)\n- Modify: `scripts/build_rules_db/build_db.py` (`--effects` takes a directory)\n- Delete: `specs/data/rules.yaml`, `HARDCODED_EFFECTS` in `scripts/scrape_effects/scrape_effects.py`\n\n**Acceptance Criteria:**\n- [ ] 26 files under `specs/rules/`, all passing `make rules-lint`\n- [ ] `effects` table has the same 79 rows as before the migration\n- [ ] `grep -rn \"HARDCODED_EFFECTS\\|specs/data/rules.yaml\" .` returns nothing\n\n**Verify:** `make rules-db && sqlite3 Hesindion/Resources/rules.db \"select count(*) from effects;\"` → 79\n\n```json:metadata\n{\"files\": [\"specs/rules/\", \"scripts/build_rules_db/build_db.py\", \"scripts/scrape_effects/scrape_effects.py\"], \"verifyCommand\": \"make rules-lint && make rules-db && sqlite3 Hesindion/Resources/rules.db 'select count(*) from effects;'\", \"acceptanceCriteria\": [\"26 authored files lint clean\", \"79 effect rows preserved\", \"no references to the deleted sources remain\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         1

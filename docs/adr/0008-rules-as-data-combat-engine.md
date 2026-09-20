@@ -156,6 +156,14 @@ consequence for the GM.
   change. This is the largest single cost and it is in the views, not the engine.
 - Rule constants stop being greppable as literals. `defense.multiplePenaltyPerStep` is one
   indirection away from `-3`, which is the price of making errata a data change.
+- **`CheckDomain` has no domain for INI or GS.** It covers melee attack/parry/dodge, ranged attack,
+  spell and liturgy casting, and talent checks — so no `scope` value can express what Belastung and
+  Belastungsgewöhnung actually reach, which is AT/PA/AW *and* INI *and* GS. `scope: combat`
+  under-covers and `scope: all` over-covers into spell and liturgy casting. Today this is invisible
+  because the data-driven path is dead and `Hero.belastungPenalty` computes it in Swift. The engine
+  work must either add the two domains or keep BE as a derived value outside the domain model; it
+  cannot be settled by choosing a scope string. Found while migrating `SA_41`, whose two duplicate
+  legacy sources disagreed on exactly this.
 
 ## Related
 
