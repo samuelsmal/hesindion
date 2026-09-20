@@ -168,3 +168,4 @@ Keep `docs/` current with the state of the project:
 ## Data Policy
 
 - **No rules data in git**: Actual DSA rules content (e.g., `rules.db` files) must NEVER be committed to the repo
+- `scripts/rules_lint/lint.py` (`make rules-lint`) rejects a `text` key anywhere in an authored `specs/rules/*.yaml` file (including nested, e.g. inside a `when` predicate value) and rejects any `#` comment, since both are routes rule prose could otherwise reach git. **Known limit**: it cannot catch prose smuggled into a legitimately free-form string field (`dice.add`, `actionEconomy.grants`/`forbids`, `parameter`, `skill`, `state`, `action`, `attribute`) — there is no way to distinguish a short expression/identifier from a sentence by shape alone. Authors and reviewers are the backstop for that route.

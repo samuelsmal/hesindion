@@ -1,5 +1,5 @@
 """Validate authored rule files. Schema first, then the repo rules the schema cannot express."""
-import json, pathlib, sys
+import json, pathlib, re, sys
 import yaml
 from jsonschema import Draft202012Validator
 
@@ -21,26 +21,60 @@ SCHEMA = json.loads((pathlib.Path(__file__).parents[2] / "specs/rules/schema.jso
 
 # Format checking is opt-in in `jsonschema` — a bare Draft202012Validator ignores
 # "format" keywords entirely. We enable the library's default FormatChecker so
-# `source.checked` (format: date) is actually validated. We deliberately do not
-# add the `rfc3987` extra that would make `source.url` (format: uri) strict:
-# without it, "uri" is simply not a registered checker and the keyword is a
-# no-op for that field, same as leaving format checking off for it. That keeps
-# this linter from ever rejecting a syntactically odd-but-intentional
-# provenance URL — including Task 3's deliberate placeholder,
-# `https://dsa.ulisses-regelwiki.de/UNVERIFIED` for unverified sources, which
-# is a well-formed URL anyway and would pass either way.
+# `source.checked` (format: date) is actually validated. `source.url` no longer
+# uses `format: uri` at all (it was a no-op without the `rfc3987` extra, which
+# this repo does not add) — it uses an enforced `pattern` instead.
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=Draft202012Validator.FORMAT_CHECKER)
+
+# A '#' that starts a token is a YAML comment (a '#' inside an unquoted scalar
+# only starts a comment when preceded by whitespace or at line start; we don't
+# attempt to special-case '#' inside quoted scalars — this repo's authored
+# files have no legitimate reason to contain one, so any match is rejected).
+_COMMENT_RE = re.compile(r"(?:^|\s)#")
+
+
+def _first_comment_line(raw: str) -> int | None:
+    for lineno, line in enumerate(raw.splitlines(), start=1):
+        if _COMMENT_RE.search(line):
+            return lineno
+    return None
+
+
+def _contains_text_key(node) -> bool:
+    """Recursively look for a 'text' key anywhere in the parsed document —
+    not just at the root or one level into `effects`, so it also catches a
+    `text` key smuggled into a `when` predicate value or any other nesting."""
+    if isinstance(node, dict):
+        if "text" in node:
+            return True
+        return any(_contains_text_key(v) for v in node.values())
+    if isinstance(node, list):
+        return any(_contains_text_key(v) for v in node)
+    return False
 
 
 def lint_file(path: pathlib.Path) -> list[str]:
     errors: list[str] = []
+    raw = path.read_text()
     try:
-        doc = yaml.load(path.read_text(), Loader=_RuleLoader) or {}
+        doc = yaml.load(raw, Loader=_RuleLoader)
     except yaml.YAMLError as exc:
         return [f"{path.name}: unparseable YAML: {exc}"]
 
-    if "text" in doc or any("text" in e for e in doc.get("effects", []) if isinstance(e, dict)):
+    if doc is None:
+        doc = {}
+    if not isinstance(doc, dict):
+        return [f"{path.name}: root must be a YAML mapping (one rule per file), got {type(doc).__name__}"]
+
+    if _contains_text_key(doc):
         errors.append(f"{path.name}: 'text' is not allowed — rule prose stays out of git (Data Policy)")
+
+    comment_line = _first_comment_line(raw)
+    if comment_line is not None:
+        errors.append(
+            f"{path.name}: line {comment_line}: '#' comments are not allowed — "
+            "rule prose stays out of git (Data Policy)"
+        )
 
     for err in VALIDATOR.iter_errors(doc):
         errors.append(f"{path.name}: {'.'.join(str(p) for p in err.absolute_path) or '<root>'}: {err.message}")

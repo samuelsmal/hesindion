@@ -6,22 +6,36 @@
   "type": "object",
   "required": ["id", "subgroup", "source"],
   "additionalProperties": false,
+  "$defs": {
+    "ruleId": {
+      "type": "string",
+      "pattern": "^(SA|ADV|DISADV|COND|CT)_[0-9]+$"
+    }
+  },
   "properties": {
-    "id":       { "type": "string", "pattern": "^(SA|ADV|DISADV|COND|CT)_[0-9]+$" },
+    "id":       { "$ref": "#/$defs/ruleId" },
     "subgroup": { "enum": ["passiv", "basismanoever", "spezialmanoever", "none"] },
     "source": {
       "type": "object",
       "required": ["url", "checked", "hash"],
       "additionalProperties": false,
       "properties": {
-        "url":     { "type": "string", "format": "uri" },
+        "url": {
+          "description": "Provenance URL. `format: uri` is not enforced by the default jsonschema FormatChecker (no `uri` checker registered without the `rfc3987` extra, which this repo does not add), so this is a real, enforced `pattern` instead of a decorative `format`.",
+          "type": "string",
+          "pattern": "^https?://"
+        },
         "book":    { "type": "string" },
         "page":    { "type": "integer" },
         "checked": { "type": "string", "format": "date" },
         "hash":    { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       }
     },
-    "excludes": { "type": "array", "items": { "type": "string" } },
+    "excludes": {
+      "description": "Rule ids this rule cannot be combined with in the same Kampfrunde (e.g. Sturmangriff excludes Finte).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/ruleId" }
+    },
     "effects": {
       "type": "array",
       "items": {
@@ -30,31 +44,92 @@
         "additionalProperties": false,
         "properties": {
           "type": {
-            "description": "The closed eight-case effect union (ADR-0008). Unhandled cases are a compile error in the engine rather than a silent no-op, so this enum is non-negotiable.",
+            "description": "The closed nine-case effect union (ADR-0008). Unhandled cases are a compile error in the engine rather than a silent no-op, so this enum is non-negotiable.",
             "enum": ["modifier", "parameterOverride", "dice", "actionEconomy",
-                     "probe", "legality", "stateGain", "reminder"]
+                     "probe", "legality", "stateGain", "recovery", "reminder"]
           },
           "tier": {
-            "description": "The ability's Stufe (I-III), where the effect scales per tier (e.g. a shiftSteps parameterOverride multiplies by tier).",
-            "type": "integer", "minimum": 1, "maximum": 3
+            "description": "The ability's Stufe, where the effect scales per tier (e.g. a shiftSteps parameterOverride multiplies by tier). Range covers the corpus's longest ladders (ADV_24/DISADV_27 run to VII).",
+            "type": "integer", "minimum": 1, "maximum": 7
           },
           "when": {
-            "description": "Preconditions, ANDed together. The closed ten-predicate set (ADR-0008); a novel condition costs an enum case, not a new string.",
+            "description": "Preconditions, ANDed together. The closed ten-predicate set (ADR-0008), each with its own value shape so a malformed predicate value (e.g. `{mounted: banana}`) fails to lint rather than silently no-op in the engine. This set covers the combat corpus only — a non-combat precondition on an ADV/DISADV/COND rule (e.g. \"at a known location\", \"sleepwalked last night\") has no predicate here by design and that rule degrades to a `reminder` instead (ADR-0008's \"never to silence\" rule).",
             "type": "array",
             "items": {
               "type": "object",
+              "minProperties": 1,
               "maxProperties": 1,
-              "propertyNames": { "enum": ["combatTechnique", "targetState", "mounted",
-                                          "targetSize", "attribute", "runUp", "weaponReach",
-                                          "defenseCount", "armorAtMost", "offHandWeapon"] }
+              "additionalProperties": false,
+              "properties": {
+                "combatTechnique": {
+                  "description": "combatTechnique(in:) — membership in a set of combat technique ids (CT_...).",
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "minItems": 1
+                },
+                "targetState": {
+                  "description": "targetState(_) — the opponent carries this Zustand/Status id.",
+                  "type": "string"
+                },
+                "mounted": {
+                  "description": "The hero is mounted.",
+                  "type": "boolean"
+                },
+                "targetSize": {
+                  "description": "targetSize(≤) — opponent size at most this category, matching the existing ModifierContext.groesse scale (0=winzig .. 4=riesig).",
+                  "type": "integer", "minimum": 0, "maximum": 4
+                },
+                "attribute": {
+                  "description": "attribute(_, ≥) — a single stat-name/threshold pair, e.g. {gs: 4} for GS ≥ 4.",
+                  "type": "object",
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "additionalProperties": { "type": "integer" }
+                },
+                "runUp": {
+                  "description": "runUp(≥) — required run-up distance in Schritt.",
+                  "type": "integer", "minimum": 0
+                },
+                "weaponReach": {
+                  "description": "The hero's weapon reach, matching WeaponReach's raw values (Hesindion/Models/CombatManeuver.swift).",
+                  "enum": ["Kurz", "Mittel", "Lang"]
+                },
+                "defenseCount": {
+                  "description": "defenseCount(≥) — number of defenses already made this Kampfrunde.",
+                  "type": "integer", "minimum": 0
+                },
+                "armorAtMost": {
+                  "description": "armorAtMost(_) — opponent/hero RS at most this value.",
+                  "type": "integer", "minimum": 0
+                },
+                "offHandWeapon": {
+                  "description": "The check uses the off-hand weapon.",
+                  "type": "boolean"
+                }
+              }
             }
           },
           "stacks": {
             "description": "Explicit opt-out of the default rule that effects from different abilities stack (ADR-0008). Omit (or true) to stack normally; false marks an effect as participating in a 'strongest applies' exception that must otherwise be stated in the data (e.g. two `set` overrides of the same parameter).",
             "type": "boolean"
           },
+          "target": {
+            "description": "modifier: which value the modifier moves. Closed set, established against the 79 existing effect rows before any rule was authored (ADR-0008).",
+            "enum": ["at", "pa", "aw", "ini", "gs", "be", "le", "talent", "all",
+                     "painLevel", "duration", "offHandPenalty", "shieldPaBonus",
+                     "sinnesschaerfe", "anaesthesia", "defense", "Gassenwissen", "Orientierung"]
+          },
+          "scope": {
+            "description": "modifier: the domain the modifier applies within. Closed set, established against the 79 existing effect rows (ADR-0008).",
+            "enum": ["combat", "all", "movement", "derived", "socialTalents"]
+          },
+          "side": {
+            "description": "modifier: whose check this modifies. Default `hero`. `opponent` is display-only — it states a number for the GM (as CombatManeuver.infoText() already does for Finte), so it does not reverse ADR-0005.",
+            "enum": ["hero", "opponent"],
+            "default": "hero"
+          },
           "value": {
-            "description": "modifier: the flat numeric modifier applied to the hero's own check (AT/PA/AW/FK/probe, ...).",
+            "description": "modifier: the flat numeric modifier. recovery: the amount recovered (with `operation`/`per`).",
             "type": "number"
           },
           "parameter": {
@@ -77,8 +152,17 @@
             "description": "dice: a damage/value expression to add, evaluated against the check context (e.g. \"2 + ceil(self.gs / 2)\", \"1W6\"). Free-form because the corpus's dice formulas are not closed the way effect types and predicates are.",
             "type": "string"
           },
+          "recipient": {
+            "description": "dice: who the added damage lands on. Defaults to the attack's own target; `defenderShield` covers Schildspalter (SA_59), which lands on the defender's shield instead. Non-hero recipients are display-only, per ADR-0005.",
+            "enum": ["target", "defenderShield"],
+            "default": "target"
+          },
           "grants": {
-            "description": "actionEconomy: what the ability grants or changes about action economy (e.g. \"freeAction\", \"extraManeuver\"). Free-form: ADR-0008 closes effect types and predicates, not this vocabulary.",
+            "description": "actionEconomy: what the ability grants (e.g. \"freeAction\", \"extraManeuver\"). Free-form: ADR-0008 closes effect types and predicates, not this vocabulary.",
+            "type": "string"
+          },
+          "forbids": {
+            "description": "actionEconomy: what the ability removes (e.g. \"allActions\" for Handlungsunfähig-like incapacitation, \"defense\" for \"keine Verteidigung in dieser KR\"). A separate field from `grants` because a removal encoded as a grant reads backwards. Free-form, same reasoning as `grants`.",
             "type": "string"
           },
           "skill": {
@@ -96,6 +180,18 @@
           "action": {
             "description": "legality: the otherwise-illegal action this effect makes legal, e.g. \"basismanoever+spezialmanoever\". Optional — some legality grants need no further qualification.",
             "type": "string"
+          },
+          "attribute": {
+            "description": "recovery: which stat is recovered (e.g. \"LE\", \"AsP\", \"KP\"). Free-form: not closed by ADR-0008.",
+            "type": "string"
+          },
+          "operation": {
+            "description": "recovery: how `value` is applied.",
+            "enum": ["add", "scale"]
+          },
+          "per": {
+            "description": "recovery: the cadence `value` applies over.",
+            "enum": ["regenerationCycle", "duration"]
           }
         },
         "allOf": [
@@ -109,6 +205,14 @@
                 { "required": ["scale"] }
               ]
             }
+          },
+          {
+            "if": { "properties": { "type": { "const": "modifier" } }, "required": ["type"] },
+            "then": { "required": ["target", "scope"] }
+          },
+          {
+            "if": { "properties": { "type": { "const": "recovery" } }, "required": ["type"] },
+            "then": { "required": ["attribute", "value", "operation", "per"] }
           }
         ]
       }
