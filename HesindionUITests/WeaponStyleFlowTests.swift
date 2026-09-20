@@ -62,7 +62,7 @@ final class WeaponStyleFlowTests: XCTestCase {
             "+2 for the position and +2 more for the style is one +4 line"
         )
 
-        captureScreenshot(app, named: "40-attack-mounted-style")
+        captureScreenshot(app, named: "41-attack-mounted-style")
 
         // The parry half. Nothing about the opponent is needed for it: from the
         // saddle with the style's weapon it is +1 PA, whoever is being parried.
@@ -120,7 +120,7 @@ final class WeaponStyleFlowTests: XCTestCase {
             "The formation should be a named row in the attack it modifies"
         )
         XCTAssertTrue(app.scrollUntilHittable(breakdown, maxSwipes: 6))
-        captureScreenshot(app, named: "41-attack-plaenkler")
+        captureScreenshot(app, named: "43-attack-plaenkler")
     }
 
     /// Same hero, same weapon, on foot: the style pays nothing, and the screen
@@ -205,6 +205,6 @@ final class WeaponStyleFlowTests: XCTestCase {
             parry.staticTexts["Vorteilhafte Position"].exists,
             "The last announcement's \"Gegner kämpft zu Fuß\" followed the hero into the next defence"
         )
-        captureScreenshot(app, named: "43-parry-fresh-opponent")
+        captureScreenshot(app, named: "45-parry-fresh-opponent")
     }
 }

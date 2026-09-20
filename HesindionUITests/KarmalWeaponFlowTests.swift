@@ -164,7 +164,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Verlorene Lebenspunkte"].exists)
 
         app.scrollUntilHittable(breakdown, maxSwipes: 4)
-        captureScreenshot(app, named: "42-damage-karmal-critical")
+        captureScreenshot(app, named: "40-damage-karmal-critical")
     }
 
     /// The whole way through: the doubling announced before the roll and applied

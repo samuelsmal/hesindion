@@ -251,7 +251,7 @@ final class ComplicatedAttackFlowTests: XCTestCase {
             secondLid.label.contains("Mittel"),
             "The lid should be back to the defaults, got \(secondLid.label)"
         )
-        captureScreenshot(app, named: "37-attack-fresh-opponent")
+        captureScreenshot(app, named: "44-attack-fresh-opponent")
 
         // And the roll is back to the unmodified AT: no reach row at all.
         let secondWeiter = app.buttons["combat.announcement.continue"]

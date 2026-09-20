@@ -32,6 +32,6 @@ final class HandlungsunfaehigFlowTests: XCTestCase {
         XCTAssertTrue(app.button(containing: "Schaden nehmen").isEnabled,
                       "Schaden nehmen must stay open")
 
-        captureScreenshot(app, named: "52-combat-handlungsunfaehig")
+        captureScreenshot(app, named: "58-combat-handlungsunfaehig")
     }
 }

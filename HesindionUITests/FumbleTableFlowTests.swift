@@ -63,7 +63,7 @@ final class FumbleTableFlowTests: XCTestCase {
             "The screen did not report what it wrote"
         )
         XCTAssertTrue(writes.staticTexts["Liegend"].exists, "A failed Sturz check applies Liegend")
-        captureScreenshot(app, named: "40-fumble-sturz-liegend")
+        captureScreenshot(app, named: "46-fumble-sturz-liegend")
 
         // --- Back at the root, the hero is visibly on the ground.
         let newAction = app.buttons["combat.execution.newAction.miss"]
@@ -109,7 +109,7 @@ final class FumbleTableFlowTests: XCTestCase {
         XCTAssertTrue(atCalculation.waitForExistence(timeout: UITest.timeout), "No attack calculation")
         assertRow(atCalculation, source: "Liegend", value: "-4",
                   "Liegend should cost the attack 4")
-        captureScreenshot(app, named: "41-fumble-liegend-attack-penalty")
+        captureScreenshot(app, named: "47-fumble-liegend-attack-penalty")
     }
 
     /// The other half of the same rule: a passed check applies nothing. An
@@ -164,7 +164,7 @@ final class FumbleTableFlowTests: XCTestCase {
         )
         // 1W6+4, a scripted 3.
         XCTAssertTrue(selfDamage.staticTexts["7 TP"].exists, "3 on a 1W6+4 is 7 TP")
-        captureScreenshot(app, named: "42-fumble-self-injury")
+        captureScreenshot(app, named: "48-fumble-self-injury")
 
         let takeDamage = app.buttons["combat.execution.takeDamage"]
         XCTAssertTrue(app.scrollUntilHittable(takeDamage), "No way to the take-damage screen")
@@ -230,7 +230,7 @@ final class FumbleTableFlowTests: XCTestCase {
             app.buttons["combat.takeDamage.confirm"].waitForExistence(timeout: UITest.timeout),
             "The second entry opened already confirmed"
         )
-        captureScreenshot(app, named: "47-fumble-parry-incoming-hit")
+        captureScreenshot(app, named: "53-fumble-parry-incoming-hit")
     }
 
     // MARK: - Stolpern
@@ -256,7 +256,7 @@ final class FumbleTableFlowTests: XCTestCase {
             writes.waitForExistence(timeout: UITest.timeout),
             "The screen did not report the Stolpern it wrote"
         )
-        captureScreenshot(app, named: "43-fumble-stolpern")
+        captureScreenshot(app, named: "49-fumble-stolpern")
 
         backToRoot(app)
 
@@ -264,7 +264,7 @@ final class FumbleTableFlowTests: XCTestCase {
         app.buttons["combat.parry"].tap()
         continueDefense(app)
         assertStumbleRow(app, present: true, "The next roll does not name the Stolpern")
-        captureScreenshot(app, named: "44-fumble-stolpern-next-roll")
+        captureScreenshot(app, named: "50-fumble-stolpern-next-roll")
 
         // … and backing out without rolling does not spend it.
         backFromParryExecution(app)
@@ -365,7 +365,7 @@ final class FumbleTableFlowTests: XCTestCase {
             writes.staticTexts["Langschwert beschädigt"].exists,
             "The write should name the weapon the parry was made with"
         )
-        captureScreenshot(app, named: "45-fumble-weapon-damaged")
+        captureScreenshot(app, named: "51-fumble-weapon-damaged")
 
         backToRoot(app)
 
@@ -404,7 +404,7 @@ final class FumbleTableFlowTests: XCTestCase {
             row.label.contains("Beschädigt"),
             "The loadout row does not mark the damaged weapon: \(row.label)"
         )
-        captureScreenshot(app, named: "46-fumble-damaged-loadout-badge")
+        captureScreenshot(app, named: "52-fumble-damaged-loadout-badge")
     }
 
     // MARK: - Nach dem Kampf
@@ -442,7 +442,7 @@ final class FumbleTableFlowTests: XCTestCase {
             "Ending the fight walked straight out with Liegend still set"
         )
         XCTAssertTrue(row.staticTexts["Liegend"].exists, "The row should name the state")
-        captureScreenshot(app, named: "50-aftermath")
+        captureScreenshot(app, named: "56-aftermath")
 
         // Liegend is a Status, so it is one button: off, and off again is back.
         let toggle = app.buttons["combat.aftermath.toggle.liegend"]
@@ -452,7 +452,7 @@ final class FumbleTableFlowTests: XCTestCase {
             row.staticTexts["entfernt"].waitForExistence(timeout: UITest.timeout),
             "The row does not say it was cleared"
         )
-        captureScreenshot(app, named: "51-aftermath-cleared")
+        captureScreenshot(app, named: "57-aftermath-cleared")
 
         let done = app.buttons["combat.aftermath.done"]
         XCTAssertTrue(app.scrollUntilHittable(done), "No \"Fertig\" on the aftermath screen")
@@ -528,7 +528,7 @@ final class FumbleTableFlowTests: XCTestCase {
             question.staticTexts["Ist Langschwert unzerstörbar?"].exists,
             "The question should name the thing in the hand"
         )
-        captureScreenshot(app, named: "48-fumble-indestructible-question")
+        captureScreenshot(app, named: "54-fumble-indestructible-question")
 
         let yes = app.buttons["combat.fumble.indestructible.yes"]
         XCTAssertTrue(app.scrollUntilHittable(yes), "No \"Ja\" on the question")
@@ -555,7 +555,7 @@ final class FumbleTableFlowTests: XCTestCase {
         XCTAssertTrue(writes.waitForExistence(timeout: UITest.timeout), "The screen did not report what it wrote")
         XCTAssertTrue(writes.staticTexts["Langschwert abgelegt"].exists, "The weapon should leave the loadout")
         XCTAssertTrue(writes.staticTexts["Unzerstörbar"].exists, "The answer should be reported as remembered")
-        captureScreenshot(app, named: "49-fumble-indestructible-applied")
+        captureScreenshot(app, named: "55-fumble-indestructible-applied")
 
         // --- And the answer outlives the fight: the hero settings screen is
         //     where it is taken back, beside the damaged equipment.
