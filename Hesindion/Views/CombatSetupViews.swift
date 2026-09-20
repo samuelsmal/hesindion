@@ -32,7 +32,7 @@ struct CombatArmorPicker: View {
                 .dsaBox(.flush)
             } else {
                 VStack(spacing: 4) {
-                    ForEach(hero.armors, id: \.persistentModelID) { armor in
+                    ForEach(hero.armorsInOrder, id: \.persistentModelID) { armor in
                         armorRow(armor)
                     }
                 }

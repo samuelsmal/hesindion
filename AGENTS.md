@@ -46,13 +46,14 @@ The app launches into an empty store, so UI tests use a **debug-only seed**: `UI
 
 Elements the UI tests drive carry `.accessibilityIdentifier`s (`heroSettings.fokusRules`, `commandPalette.search`, `combat.zone.<zone>`, `combat.woundEffectPanel`, `combat.woundEffectReminder`, `combat.takeDamage.increaseTP`, `combat.opponent.onFoot` (the announcement's "fights on foot" toggle), `combat.execution.breakdown` (the execution screen's calculation box, which the UI tests scope their row assertions to), `combat.execution.*`). Prefer adding an identifier to an existing element over reshaping a view for a test.
 
-Five known intermittent failures — none of them regressions:
+Four known intermittent failures — none of them regressions:
 
 - `SkillCheckModalSnapshotTests.testFailureWithNoSchips` — intermittent SIGTRAP, passes in isolation.
 - `DiceRollerTests.testD20IsUniform` — unseeded chi-square, fails ~1 run in 200 by construction.
 - `DiceRollerTests.testD6IsUniform` — the same unseeded chi-square on the D6; it fired once during Task 12, 16.83 against a 16.75 critical value.
 - `HeroImportTests.importBoronmirFromOptolith` — fails on `combatTechniques.count == 0` roughly 1 full run in 4, passes in isolation and on rerun. The techniques come from `rules.db`, and `RulesDatabase.allCombatTechniqueIds()` returns `[]` on any `sqlite3_prepare_v2` failure, so a transient one is indistinguishable from an empty table. Worth chasing — the same silent empty would import a hero with no combat techniques.
-- `CombatViewSnapshotTests.testPreparation` — the two melee weapon rows swap places between runs; `hero.meleeWeapons` is a SwiftData to-many with no guaranteed order and the reference encodes one of them. Needs a stable sort in the loadout picker, then a re-record.
+
+A SwiftData to-many relationship has **no order**: `hero.meleeWeapons` and its siblings come back differently between launches, which is what made `CombatViewSnapshotTests.testPreparation` swap its two melee rows (fixed 2026-09-20). List them through `Hero.meleeWeaponsInOrder` / `rangedWeaponsInOrder` / `shieldsInOrder` / `armorsInOrder`, never the relationship itself — a new screen that iterates the raw array brings the flake back. The other relationships (spells, talents, combat techniques, languages) have the same property and no such accessor yet; sort at the point of use.
 
 ## Architecture
 

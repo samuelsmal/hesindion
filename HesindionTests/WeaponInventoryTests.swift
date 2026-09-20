@@ -172,4 +172,39 @@ final class WeaponInventoryTests: XCTestCase {
         XCTAssertTrue(hero.isConsecrated("Rabenschnabel"), "Boronmir's Rabenschnabel is geweiht (Boron)")
         XCTAssertFalse(hero.isConsecrated("Langschwert"))
     }
+
+    // MARK: - Listing order
+
+    /// A SwiftData to-many relationship hands its rows back in no order at all,
+    /// which is what made `CombatViewSnapshotTests.testPreparation` swap the two
+    /// melee rows between runs. Everything that lists weapons sorts first.
+    func testWeaponsAreListedInAStableOrder() throws {
+        let container = try TestData.makeContainer()
+        let hero = try TestData.importBoronmir(into: container)
+
+        XCTAssertEqual(hero.meleeWeaponsInOrder.map(\.name), hero.meleeWeaponsInOrder.map(\.name).sorted())
+        XCTAssertEqual(Set(hero.meleeWeaponsInOrder.map(\.name)), Set(hero.meleeWeapons.map(\.name)),
+                       "sorting lists the same weapons, not fewer")
+        XCTAssertEqual(hero.shieldsInOrder.map(\.name), hero.shieldsInOrder.map(\.name).sorted())
+        XCTAssertEqual(hero.rangedWeaponsInOrder.map(\.name), hero.rangedWeaponsInOrder.map(\.name).sorted())
+        XCTAssertEqual(hero.armorsInOrder.map(\.name), hero.armorsInOrder.map(\.name).sorted())
+    }
+
+    /// Two weapons of the same name — Optolith has two Rabenschnabel templates —
+    /// are still put in a fixed order, by template id.
+    func testWeaponsOfTheSameNameAreOrderedByTemplateId() throws {
+        let container = try TestData.makeContainer()
+        let context = ModelContext(container)
+        let hero = Hero(name: "Test")
+        context.insert(hero)
+        let duplicate = MeleeWeapon(name: "Rabenschnabel", combatTechniqueId: "CT_5", damage: "1W6+4",
+                                    at: 0, pa: 0, reach: "mittel", weight: 1.5)
+        duplicate.templateId = "ITEMTPL_796"
+        let borons = MeleeWeapon(name: "Rabenschnabel", combatTechniqueId: "CT_5", damage: "1W6+4",
+                                 at: 0, pa: 0, reach: "mittel", weight: 1.5)
+        borons.templateId = "ITEMTPL_19"
+        hero.meleeWeapons = [duplicate, borons]
+
+        XCTAssertEqual(hero.meleeWeaponsInOrder.map(\.templateId), ["ITEMTPL_19", "ITEMTPL_796"])
+    }
 }

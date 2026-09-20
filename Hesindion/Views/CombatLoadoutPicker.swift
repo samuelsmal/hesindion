@@ -41,7 +41,7 @@ struct CombatLoadoutPicker: View {
 
     var items: [Item] {
         var items: [Item] = []
-        for w in hero.meleeWeapons {
+        for w in hero.meleeWeaponsInOrder {
             let technique = CombatTechniqueID(rawValue: w.combatTechniqueId)
             let isTwoHanded = technique?.isTwoHandedOnly ?? false
             items.append(Item(
@@ -52,7 +52,7 @@ struct CombatLoadoutPicker: View {
                 isShield: false, isRaufen: false, isTwoHandedOnly: isTwoHanded
             ))
         }
-        for s in hero.shields {
+        for s in hero.shieldsInOrder {
             items.append(Item(
                 name: s.name,
                 detail: "AT \(s.at) / PA \(s.pa)",
@@ -105,7 +105,7 @@ struct CombatLoadoutPicker: View {
 
             if !hero.rangedWeapons.isEmpty {
                 combatSectionLabel(L("fernkampf.rangedWeapons.label"))
-                ForEach(hero.rangedWeapons, id: \.name) { rangedRow($0) }
+                ForEach(hero.rangedWeaponsInOrder, id: \.name) { rangedRow($0) }
             }
         }
         .sheet(item: $weaponInfo) { target in

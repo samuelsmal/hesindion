@@ -896,16 +896,16 @@ struct HeroDetailView: View {
                 )
                 Divider()
             }
-            ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+            ForEach(hero.meleeWeaponsInOrder, id: \.persistentModelID) { w in
                 weightRow(name: w.name, weight: w.weight)
             }
-            ForEach(hero.shields, id: \.persistentModelID) { s in
+            ForEach(hero.shieldsInOrder, id: \.persistentModelID) { s in
                 weightRow(name: s.name, weight: s.weight)
             }
-            ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+            ForEach(hero.rangedWeaponsInOrder, id: \.persistentModelID) { w in
                 weightRow(name: w.name, weight: w.weight)
             }
-            ForEach(hero.armors, id: \.persistentModelID) { a in
+            ForEach(hero.armorsInOrder, id: \.persistentModelID) { a in
                 weightRow(name: a.name, weight: a.weight)
             }
             capacityRow
@@ -960,7 +960,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var meleeWeaponsSection: some View {
         if !hero.meleeWeapons.isEmpty {
             CollapsibleSection(L("meleeWeapons")) {
-                ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+                ForEach(hero.meleeWeaponsInOrder, id: \.persistentModelID) { w in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
@@ -983,7 +983,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var rangedWeaponsSection: some View {
         if !hero.rangedWeapons.isEmpty {
             CollapsibleSection(L("rangedWeapons")) {
-                ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+                ForEach(hero.rangedWeaponsInOrder, id: \.persistentModelID) { w in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
@@ -1005,7 +1005,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var shieldSection: some View {
         if !hero.shields.isEmpty {
             CollapsibleSection(L("shields")) {
-                ForEach(hero.shields, id: \.persistentModelID) { s in
+                ForEach(hero.shieldsInOrder, id: \.persistentModelID) { s in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {

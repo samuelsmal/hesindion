@@ -285,6 +285,35 @@ final class Hero {
         belastungPenalty + armorGsModifier
     }
 
+    // MARK: - Listing order
+
+    // A SwiftData to-many relationship has no order: the same hero's weapons
+    // come back in whatever order the store hands them over, and that order
+    // changes between launches. Every screen that *lists* them sorts first, so
+    // the loadout picker does not swap its two rows between runs
+    // (`CombatViewSnapshotTests.testPreparation` failed on exactly that) and a
+    // player's eye finds the same weapon in the same place twice running.
+    //
+    // By name, because that is what the rows are read by. The template id
+    // breaks a tie, since Optolith's names are not unique (two Rabenschnabel
+    // templates), and a weapon with none sorts before one that has it.
+
+    var meleeWeaponsInOrder: [MeleeWeapon] {
+        meleeWeapons.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var rangedWeaponsInOrder: [RangedWeapon] {
+        rangedWeapons.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var shieldsInOrder: [Shield] {
+        shields.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var armorsInOrder: [Armor] {
+        armors.sorted { ($0.name, $0.protectionValue) < ($1.name, $1.protectionValue) }
+    }
+
     // MARK: - Loadout computed helpers
 
     var selectedRangedWeapon: RangedWeapon? {

@@ -184,7 +184,7 @@ struct HeroSettingsView: View {
                     .foregroundStyle(Color.groupCombat)
             }
 
-            ForEach(hero.meleeWeapons, id: \.name) { weapon in
+            ForEach(hero.meleeWeaponsInOrder, id: \.name) { weapon in
                 DSAToggleRow(
                     title: weapon.name,
                     isOn: Binding(
