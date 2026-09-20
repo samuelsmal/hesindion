@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint rules-sync-check test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -137,6 +137,14 @@ rules-db-verify:
 
 rules-lint:
 	python3 scripts/rules_lint/lint.py
+
+# Deterministic (no model) drift check: does specs/rules/*.yaml's source.hash
+# still match the text source.url serves today? Requests are cached on disk
+# under .cache/rules_sync/ (git-ignored) and rate-limited to one per second;
+# a warm cache makes no network calls. Reports ok/drifted/unverified per rule
+# and exits non-zero only if something drifted.
+rules-sync-check:
+	python3 -m scripts.rules_sync.check
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

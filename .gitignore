@@ -19,3 +19,8 @@ DerivedData/
 # Snapshot test failure artifacts
 **/failures/
 .superpowers/
+
+# rules-sync-check's on-disk HTTP cache -- raw wiki page captures, so this is
+# also a Data Policy boundary (no DSA rules content in git), not just a build
+# artifact.
+.cache/
