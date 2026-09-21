@@ -1,5 +1,5 @@
 """Validate authored rule files. Schema first, then the repo rules the schema cannot express."""
-import json, pathlib, re, sys
+import json, pathlib, re, sys, unicodedata, urllib.parse
 import yaml
 from jsonschema import Draft202012Validator
 
@@ -56,6 +56,68 @@ _COMMENT_RE = re.compile(r"(?:^|\s)#")
 # disagreement must not reach `main` either, so the default lint rejects it and
 # only the driver that writes it passes `allow_disagreement=True`.
 DISAGREEMENT_PREFIX = "DISAGREEMENT:"
+
+# Chapter rules (schema.json, `#/$defs/ruleId`). A chapter page has no Optolith
+# id, so its id is derived from the one identifier it does have: the page its
+# `source.url` already records. The checks below are what makes that a rule
+# rather than a convention -- without them "the id is the page slug" is a
+# sentence in a schema description that nothing enforces, and two files could
+# encode the same page under two ids, or one id could drift off its page while
+# both still lint clean.
+CHAPTER_PREFIX = "CHAP_"
+
+# Transliterated rather than stripped: the site's URLs carry umlauts
+# percent-encoded (e.g. KSF_Vorsto%C3%9F.html), and dropping them would fold
+# two different pages onto one slug. German transliteration first, then an
+# ASCII fold for anything else, then non-alphanumerics out.
+_TRANSLITERATE = {
+    "ä": "ae", "ö": "oe", "ü": "ue",
+    "Ä": "Ae", "Ö": "Oe", "Ü": "Ue",
+    "ß": "ss",
+}
+
+# The placeholder every migrated rule was seeded with (see
+# scripts/rules_sync/check.py). Spelled locally rather than imported: lint.py
+# must not grow a `requests` dependency to know one string.
+_UNVERIFIED_STEM = "UNVERIFIED"
+
+
+def chapter_slug(url: str) -> str:
+    """The ASCII PascalCase slug a chapter id must carry, derived from its page URL."""
+    stem = urllib.parse.unquote(urllib.parse.urlparse(url).path).rsplit("/", 1)[-1]
+    stem = re.sub(r"\.html?$", "", stem, flags=re.IGNORECASE)
+    for source, replacement in _TRANSLITERATE.items():
+        stem = stem.replace(source, replacement)
+    stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^A-Za-z0-9]", "", stem)
+
+
+def _lint_chapter_rule(doc: dict) -> list[str]:
+    """The three invariants a `CHAP_` file carries beyond the schema."""
+    rule_id = str(doc.get("id") or "")
+    if not rule_id.startswith(CHAPTER_PREFIX):
+        return []
+
+    errors = []
+    if doc.get("subgroup") != "none":
+        errors.append(
+            f"chapter rule {rule_id}: subgroup must be 'none' -- a chapter page is a "
+            "situation, not a maneuver a hero selects in a Kampfrunde"
+        )
+
+    url = str((doc.get("source") or {}).get("url", ""))
+    slug = chapter_slug(url)
+    if not slug or slug == _UNVERIFIED_STEM:
+        errors.append(
+            f"chapter rule {rule_id}: needs a real source.url -- a chapter id *is* its "
+            "page, so the UNVERIFIED placeholder leaves the id deriving from nothing"
+        )
+    elif rule_id != CHAPTER_PREFIX + slug:
+        errors.append(
+            f"chapter rule {rule_id}: id must be '{CHAPTER_PREFIX}{slug}', derived from "
+            f"source.url ({url}) -- one file per page, and the id says which page"
+        )
+    return errors
 
 
 def _first_comment_line(raw: str) -> int | None:
@@ -187,6 +249,7 @@ def lint_file(path: pathlib.Path, *, allow_disagreement: bool = False) -> list[s
         errors.append(f"{path.name}: {'.'.join(str(p) for p in err.absolute_path) or '<root>'}: {err.message}")
 
     errors.extend(f"{path.name}: {e}" for e in _unregistered_tokens(doc))
+    errors.extend(f"{path.name}: {e}" for e in _lint_chapter_rule(doc))
 
     if not allow_disagreement and str(doc.get("note") or "").startswith(DISAGREEMENT_PREFIX):
         errors.append(

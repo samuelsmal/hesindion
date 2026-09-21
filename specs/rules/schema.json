@@ -2,19 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hesindion.app/specs/rules/schema.json",
   "title": "Authored DSA 5 rule",
-  "description": "One machine-checkable shape for an authored rule file under specs/rules/. Carries mechanical encoding plus provenance and no rule text (Data Policy, AGENTS.md). This schema is the contract the combat engine (ADR-0008) consumes.",
+  "description": "One machine-checkable shape for an authored rule file under specs/rules/. Carries mechanical encoding plus provenance and no rule text (Data Policy, AGENTS.md). This schema is the contract the combat engine (ADR-0008) consumes. A file is either one Optolith-identified rule or one page of chapter rules — see `#/$defs/ruleId`.",
   "type": "object",
   "required": ["id", "subgroup", "source"],
   "additionalProperties": false,
   "$defs": {
     "ruleId": {
+      "description": "An authored file's own id. Two disjoint namespaces. **Optolith ids** (`SA_`/`ADV_`/`DISADV_`/`COND_`/`CT_` + digits) name an ability, advantage, disadvantage, Zustand or Kampftechnik, and are the join key hero exports already use (ADR-0007). **Chapter ids** (`CHAP_` + a PascalCase page slug) name a *page of chapter rules* that binds anyone in the situation it describes, ability or not — mounted combat, Beengte Umgebung, multiple defences. Optolith has no id for those, and the app hardcoded their constants in Swift because the corpus had nowhere to put them, which is exactly what ADR-0008 says should be data. The two namespaces cannot collide by construction: every Optolith id ends in digits and every chapter id ends in letters. The slug is the `source.url` page stem, ASCII-folded (see `scripts/rules_lint/lint.py`, which enforces the derivation) — so the id is a stable handle to one page, checkable against the provenance already in the file rather than against a registry that could drift.",
+      "type": "string",
+      "pattern": "^((SA|ADV|DISADV|COND|CT)_[0-9]+|CHAP_[A-Z][A-Za-z]+)$"
+    },
+    "optolithId": {
+      "description": "An Optolith id only — the pre-chapter-rule `ruleId` pattern, unchanged. `excludes` keeps it: an excludes edge is a Kampfrunde-combination ban between two selectable maneuvers, and a chapter rule is never selected, so a chapter id on that side of the edge would be meaningless rather than merely unused.",
       "type": "string",
       "pattern": "^(SA|ADV|DISADV|COND|CT)_[0-9]+$"
     }
   },
   "properties": {
     "id":       { "$ref": "#/$defs/ruleId" },
-    "subgroup": { "enum": ["passiv", "basismanoever", "spezialmanoever", "none"] },
+    "subgroup": {
+      "description": "The maneuver slot this rule occupies, mirroring `rules.subgroup_id` (ADR-0008). A chapter rule (`CHAP_` id) is always `none` — it is a situation, not something a hero selects in a Kampfrunde — and `lint.py` enforces that, so a chapter page cannot silently claim a Basismanöver slot.",
+      "enum": ["passiv", "basismanoever", "spezialmanoever", "none"]
+    },
     "note": {
       "description": "English, non-prose annotation of which clause/mechanic this rule's authoring encodes — never German rule text (Data Policy) and never a substitute for `source`. ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could. **Convention (Task 4 fix round 1, I-3): identify the clause by position and mechanism, never restate its content.** \"Clause 3 - opponent-side outcome with no hero-side number, promoted to a reminder\" is a note; \"the shield is destroyed once its structure points reach 0\" is a translation of the clause, i.e. the Data Policy back door a free-text field leaves open — and a `reminder` effect, which has no field but `note`, is exactly where that pressure lands. Where a note must record a clause the grammar cannot express, prefix it `UNENCODED:` so `grep -r UNENCODED specs/rules` enumerates the whole debt.",
       "type": "string",
@@ -38,9 +47,9 @@
       }
     },
     "excludes": {
-      "description": "Rule ids this rule cannot be combined with in the same Kampfrunde (e.g. Sturmangriff excludes Finte).",
+      "description": "Rule ids this rule cannot be combined with in the same Kampfrunde (e.g. Sturmangriff excludes Finte). Optolith ids only — see `#/$defs/optolithId`.",
       "type": "array",
-      "items": { "$ref": "#/$defs/ruleId" }
+      "items": { "$ref": "#/$defs/optolithId" }
     },
     "effects": {
       "description": "The rule's encoding. At least one row: a rule that reduces to zero effects is not an encoding, it is a refusal to encode -- and two agents that both return nothing agree with each other and lint clean (Task 6 fix round 1, C3). Every authored rule in the corpus has at least one row, so the bound costs nothing and turns a systematic authoring failure from a clean run into a loud one. A clause the grammar cannot express is a `reminder` with an `UNENCODED:` note, never an empty list.",

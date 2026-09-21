@@ -8,6 +8,12 @@ from pathlib import Path
 
 import yaml
 
+# Chapter-rule id prefix (specs/rules/schema.json, `#/$defs/ruleId`). Kept in
+# sync by hand with scripts/rules_lint/lint.py's CHAPTER_PREFIX, matching the
+# NON_RULE_FILES precedent already set between this module, the linter and
+# scripts/rules_sync/check.py.
+CHAPTER_PREFIX = "CHAP_"
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="Build rules.db from DSA YAML data")
@@ -181,6 +187,7 @@ def seed_base_data(conn: sqlite3.Connection):
         ("skill", "Talent"),
         ("spell", "Zauber"),
         ("liturgy", "Liturgie"),
+        ("chapter", "Regelkapitel"),
     ]
     conn.executemany("INSERT OR IGNORE INTO categories VALUES (?, ?)", categories)
     conn.execute("INSERT OR IGNORE INTO locales VALUES (?)", ("de-DE",))
@@ -811,6 +818,18 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
         if not rule_id:
             print(f"  WARNING: {path.name} has no id, skipping")
             continue
+
+        # A chapter rule (schema.json `#/$defs/ruleId`) has no Optolith id, so
+        # no importer above created a row for it -- the existence check below
+        # would skip its effects with a warning, which is the silent-drop
+        # failure ADR-0008 exists to stop. It owns its row instead: the
+        # authored file is the whole of it, and it carries no rules_i18n text
+        # because there is no prose to carry (Data Policy).
+        if rule_id.startswith(CHAPTER_PREFIX):
+            conn.execute(
+                "INSERT OR IGNORE INTO rules (id, category) VALUES (?, 'chapter')",
+                (rule_id,),
+            )
 
         # Verify rule exists in DB
         exists = conn.execute("SELECT 1 FROM rules WHERE id = ?", (rule_id,)).fetchone()

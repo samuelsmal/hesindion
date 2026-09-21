@@ -530,3 +530,94 @@ def test_every_token_the_corpus_uses_is_registered():
               if p.name not in NON_RULE_FILES
               for e in _lint(p)]
     assert errors == []
+
+
+# --- Chapter rules: the second id namespace (schema.json `#/$defs/ruleId`) ---
+#
+# A chapter page binds anyone in the situation it describes and has no Optolith
+# id, so its id is derived from the page its `source.url` already records. The
+# derivation is the whole guarantee -- without these checks "the id is the page
+# slug" is a schema description nothing enforces.
+
+CHAPTER = textwrap.dedent("""
+    id: CHAP_Reiterkampf
+    subgroup: none
+    source:
+      url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
+      book: US25001
+      page: 239
+      checked: 2026-09-21
+      hash: sha256:{h}
+    effects:
+      - type: modifier
+        target: aw
+        scope: combat
+        value: -2
+        when: [{{mounted: true}}]
+""").format(h="0" * 64)
+
+
+def test_chapter_rule_is_accepted(tmp_path):
+    p = tmp_path / "CHAP_Reiterkampf.yaml"
+    p.write_text(CHAPTER)
+    assert lint_file(p) == []
+
+
+def test_chapter_id_that_does_not_match_its_page_is_rejected(tmp_path):
+    body = CHAPTER.replace("id: CHAP_Reiterkampf", "id: CHAP_Berittenerkampf")
+    p = tmp_path / "CHAP_Berittenerkampf.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("CHAP_Reiterkampf" in e and "source.url" in e for e in errs)
+
+
+def test_chapter_id_may_not_be_a_maneuver_slot(tmp_path):
+    body = CHAPTER.replace("subgroup: none", "subgroup: basismanoever")
+    p = tmp_path / "CHAP_Reiterkampf.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("subgroup must be 'none'" in e for e in errs)
+
+
+def test_chapter_id_needs_a_real_page(tmp_path):
+    body = textwrap.dedent("""
+        id: CHAP_UNVERIFIED
+        subgroup: none
+        source:
+          url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+          checked: 1970-01-01
+          hash: sha256:{h}
+        effects:
+          - type: reminder
+            note: 'UNENCODED: placeholder'
+    """).format(h="0" * 64)
+    p = tmp_path / "CHAP_UNVERIFIED.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("needs a real source.url" in e for e in errs)
+
+
+def test_chapter_id_and_optolith_id_namespaces_cannot_collide():
+    """Every Optolith id ends in digits, every chapter id in letters."""
+    import re
+    from scripts.rules_lint.lint import SCHEMA
+    pattern = SCHEMA["$defs"]["ruleId"]["pattern"]
+    assert re.fullmatch(pattern, "CHAP_Reiterkampf")
+    assert re.fullmatch(pattern, "SA_43")
+    assert not re.fullmatch(pattern, "CHAP_43")
+    assert not re.fullmatch(pattern, "SA_Reiterkampf")
+
+
+def test_excludes_still_refuses_a_chapter_id(tmp_path):
+    """An excludes edge bans a Kampfrunde combination between two selectable
+    maneuvers; a chapter rule is never selected, so it cannot sit on that edge."""
+    body = VALID.replace("excludes: [SA_48]", "excludes: [CHAP_Reiterkampf]")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected
+
+
+def test_chapter_slug_transliterates_a_percent_encoded_umlaut():
+    from scripts.rules_lint.lint import chapter_slug
+    assert chapter_slug("https://dsa.ulisses-regelwiki.de/Vorsto%C3%9F.html") == "Vorstoss"
+    assert chapter_slug("https://dsa.ulisses-regelwiki.de/Beengte-Umgebung.html") == "BeengteUmgebung"
