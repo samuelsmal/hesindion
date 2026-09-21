@@ -82,15 +82,25 @@ blind to it. Your rationale is the only place that can flag it.
     rule or a Fokus-Regel is not `core`**, however ordinary its effects are, and a rule from the
     standard chapters is `core` however exotic they are. A heading, a sidebar, or a sentence saying
     the rule is optional is the signal; the absence of one is not proof.
-    **When the text does not make it obvious, say so in your rationale and write `core`.** Not
-    because `core` is likely — because the two ways of being wrong are not symmetric. A rule wrongly
-    marked `core` fires for a table that did not choose it, and someone notices a number that should
-    not be there; a rule wrongly marked `focus.` fires for nobody, and nothing anywhere says so.
-    ADR-0008's rule is that visible-and-wrong beats silent, so guess in the visible direction and
-    leave the flag in your rationale for the reviewer. Never invent a `focus.` slug to express doubt:
-    a `focus.`/`house.` slug must already be glossed in `specs/rules/vocabulary.yaml`, exactly like
-    hard rule 8's tokens, and if none fits, name the one you think right in your rationale so the
-    reviewer adds the one-line gloss.
+    **When the text does not make it obvious, write `core` AND mark the guess.** `core` is not the
+    likely answer; it is the *visible* one. The two ways of being wrong are not symmetric: a rule
+    wrongly marked `core` fires for a table that did not choose it, and someone notices a number that
+    should not be there; a rule wrongly marked `focus.` fires for nobody, and nothing anywhere says
+    so. ADR-0008's rule is that visible-and-wrong beats silent, so guess in the visible direction.
+    But a silent guess is still a guess, and a rationale is not part of the corpus — it lives in a
+    review file under the git-ignored `.proposals/` and is gone once the rule is committed. So the
+    mark goes in the rule itself:
+
+    > **Prefix the rule's root `note` with `UNCLEAR-RULESET:`** whenever the page does not state
+    > which set the rule belongs to. Greppable exactly like `UNENCODED:` and `DISAGREEMENT:`, so
+    > `grep -r UNCLEAR-RULESET specs/rules` enumerates every rule whose set was guessed rather than
+    > read. It is a marker, not prose: name the ambiguity, never restate the clause.
+
+    Say the same thing in your rationale as well, at more length — the marker is what survives into
+    the corpus, the rationale is what the reviewer reads while deciding. Never invent a `focus.` slug
+    to express doubt: a `focus.`/`house.` slug must already be glossed in
+    `specs/rules/vocabulary.yaml`, exactly like hard rule 8's tokens, and if none fits, name the one
+    you think right in your rationale so the reviewer adds the one-line gloss.
 
 ## The `note` convention — read this twice
 
