@@ -92,13 +92,33 @@ _UNVERIFIED_STEM = "UNVERIFIED"
 
 
 def chapter_slug(url: str) -> str:
-    """The ASCII PascalCase slug a chapter id must carry, derived from its page URL."""
+    """The ASCII PascalCase slug a chapter id must carry, derived from its page URL.
+
+    **Letters only, and the first one upper-case.** This has to agree exactly
+    with `schema.json`'s `#/$defs/ruleId` pattern (`CHAP_[A-Z][A-Za-z]+`), and
+    it did not: the slug kept digits and left the first character's case alone,
+    so a page like `Regel_2.html` produced `Regel2` -- an id the linter
+    *demanded* and the schema *rejected*, two contradictory errors on one file
+    with no spelling that satisfies both. The bug was in this function, not in
+    the pattern.
+
+    The pattern must stay letters-only. It is the whole of why the two id
+    namespaces cannot collide: **every Optolith id ends in digits and every
+    chapter id ends in letters** (ADR-0007's amendment), which is a property of
+    the shapes rather than of anybody remembering to check. Widening it to admit
+    digits would make `CHAP_Regel2` legal and reduce disjointness to a
+    convention -- and a future Optolith prefix or a renamed page could then
+    collide silently. So digits are dropped from the derived slug instead, and a
+    page whose stem is *only* digits derives an empty slug, which
+    `_lint_chapter_rule` already rejects as "needs a real source.url".
+    """
     stem = urllib.parse.unquote(urllib.parse.urlparse(url).path).rsplit("/", 1)[-1]
     stem = re.sub(r"\.html?$", "", stem, flags=re.IGNORECASE)
     for source, replacement in _TRANSLITERATE.items():
         stem = stem.replace(source, replacement)
     stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode("ascii")
-    return re.sub(r"[^A-Za-z0-9]", "", stem)
+    stem = re.sub(r"[^A-Za-z]", "", stem)
+    return stem[:1].upper() + stem[1:]
 
 
 def _lint_chapter_rule(doc: dict) -> list[str]:

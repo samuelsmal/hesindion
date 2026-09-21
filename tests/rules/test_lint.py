@@ -635,6 +635,49 @@ def test_chapter_slug_transliterates_a_percent_encoded_umlaut():
     assert chapter_slug("https://dsa.ulisses-regelwiki.de/Beengte-Umgebung.html") == "BeengteUmgebung"
 
 
+def test_chapter_slug_agrees_with_the_schema_pattern():
+    """The slug the linter demands must be an id the schema accepts.
+
+    It was not: digits survived into the slug and the first character's case was
+    left alone, while `#/$defs/ruleId` is `CHAP_[A-Z][A-Za-z]+`. A page like
+    `Regel_2.html` therefore failed twice, contradictorily, with no spelling
+    that could satisfy both. The pattern is the half that must not move --
+    letters-only is what makes the chapter and Optolith namespaces disjoint by
+    construction -- so the slug is what changed.
+    """
+    import re
+    from scripts.rules_lint.lint import CHAPTER_PREFIX, SCHEMA, chapter_slug
+
+    pattern = re.compile(SCHEMA["$defs"]["ruleId"]["pattern"])
+    for url in (
+        "https://dsa.ulisses-regelwiki.de/Regel_2.html",
+        "https://dsa.ulisses-regelwiki.de/reiterkampf.html",
+        "https://dsa.ulisses-regelwiki.de/Vorsto%C3%9F.html",
+        "https://dsa.ulisses-regelwiki.de/Beengte-Umgebung.html",
+        "https://dsa.ulisses-regelwiki.de/Reiterkampf.html",
+    ):
+        slug = chapter_slug(url)
+        assert slug.isalpha(), f"{url} -> {slug!r} is not letters-only"
+        assert pattern.fullmatch(CHAPTER_PREFIX + slug), f"{url} -> schema rejects CHAP_{slug}"
+
+
+def test_a_digits_only_page_stem_is_rejected_rather_than_widened(tmp_path):
+    """A stem with no letters derives an empty slug, and an empty slug is the
+    existing "needs a real source.url" error -- one loud failure, not a legal
+    `CHAP_2`. Pinned because the tempting fix for the contradiction above is to
+    admit digits into the pattern, which is exactly what must not happen."""
+    from scripts.rules_lint.lint import chapter_slug
+
+    assert chapter_slug("https://dsa.ulisses-regelwiki.de/2.html") == ""
+    body = CHAPTER.replace(
+        "https://dsa.ulisses-regelwiki.de/Reiterkampf.html",
+        "https://dsa.ulisses-regelwiki.de/2.html",
+    )
+    p = tmp_path / "CHAP_Reiterkampf.yaml"
+    p.write_text(body)
+    assert any("needs a real source.url" in e for e in lint_file(p))
+
+
 # --- ruleset: which set of rules this one belongs to (ADR-0009) ---
 #
 # The engine applies only the sets a hero plays with, so this field decides

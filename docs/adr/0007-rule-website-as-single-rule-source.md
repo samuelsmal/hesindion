@@ -167,6 +167,16 @@ Why the URL stem rather than a number:
 - **It is stable exactly as far as the provenance is.** If the page moves, `make rules-sync-check`
   says so; renaming the file is then the same deliberate act as re-verifying the rule.
 
+The ASCII fold is not injective, and two known ways it can collapse two pages onto one slug are
+recorded here rather than coded around: the transliteration order keeps `Grätsche`/`Gratsche` apart
+(the umlaut becomes `ae` before the fold) but collapses `Vorstoß`/`Vorstoss` (both become
+`Vorstoss`), and `_TRANSLITERATE` is keyed on precomposed characters with no NFC normalisation, so an
+NFD-encoded URL would skip the table entirely and lose the umlaut to the fold. Neither pair is
+reachable from today's site, and both fail loudly rather than silently — one file per page plus
+"filename must match id" means two pages sharing a slug cannot both be authored — so the cost of
+carrying them is a paragraph, while normalising pre-emptively would be a guess at which of two
+spellings the site will one day use.
+
 Consequences, beyond those of the original decision:
 
 - Chapter rules have no `rules_i18n` row, because there is no Optolith entry to carry text. The
