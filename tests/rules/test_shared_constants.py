@@ -26,11 +26,14 @@ from scripts.build_rules_db.build_db import CHAPTER_PREFIX as BUILD_DB_CHAPTER_P
 from scripts.build_rules_db.build_db import NON_RULE_FILES as BUILD_DB_NON_RULE_FILES
 from scripts.build_rules_db.verify_db import CHAPTER_PREFIX as VERIFY_DB_CHAPTER_PREFIX
 from scripts.build_rules_db.verify_db import NON_RULE_FILES as VERIFY_DB_NON_RULE_FILES
+from scripts.build_rules_db.verify_db import RESOLVED_MAP as VERIFY_DB_RESOLVED_MAP
 from scripts.rules_lint.lint import CHAPTER_PREFIX as LINT_CHAPTER_PREFIX
 from scripts.rules_lint.lint import NON_RULE_FILES as LINT_NON_RULE_FILES
+from scripts.build_rules_db.build_db import DEFAULT_RESOLVED_MAP as BUILD_DB_RESOLVED_MAP
 from scripts.build_rules_db.build_db import UNVERIFIED_URL as BUILD_DB_UNVERIFIED_URL
 from scripts.rules_sync.check import NON_RULE_FILES as CHECK_NON_RULE_FILES
 from scripts.rules_sync.check import UNVERIFIED_URL as CHECK_UNVERIFIED_URL
+from scripts.rules_sync.resolve import RESOLVED_MAP_PATH as RESOLVE_RESOLVED_MAP
 
 
 def test_lint_verify_db_and_build_db_non_rule_files_agree():
@@ -64,3 +67,29 @@ def test_unverified_url_spellings_agree():
     instance of finding 5's defect class, closed the same way the other two
     were."""
     assert BUILD_DB_UNVERIFIED_URL == CHECK_UNVERIFIED_URL
+
+
+def test_the_three_resolved_map_paths_are_the_same_file():
+    """`scripts/rules_sync/resolve.py` writes the name -> URL resolution,
+    `scripts/build_rules_db/build_db.py` reads it into `rules.source_url`, and
+    `scripts/build_rules_db/verify_db.py` reads it again to check that it got
+    there. Three modules, three `Path` expressions, one file.
+
+    **What this pins is a silent skip, not a typo.** The three are computed
+    (`parents[2]` from three different depths), so the way they diverge is a
+    file moving, not a mis-spelling -- and the consequence is not an error.
+    `verify_db.check_resolution_reached_the_db` treats a map it cannot find as
+    "no resolve run has happened yet", which is a legitimate state on a fresh
+    checkout: it prints a note, **skips the check entirely, and reports
+    "rules.db is current"**. So a build writing to one path and a verifier
+    reading another looks exactly like a clean clone, while the column the
+    authoring driver is about to read sits empty. That is the failure class
+    this branch has drawn a red line under -- the same one that made
+    `verify_db.py` check against the authored files rather than against a dump
+    of its own output.
+
+    The paths are resolved before comparing, so this is about the file each
+    module ends up at and not about how each spells the way there.
+    """
+    assert RESOLVE_RESOLVED_MAP.resolve() == BUILD_DB_RESOLVED_MAP.resolve()
+    assert BUILD_DB_RESOLVED_MAP.resolve() == VERIFY_DB_RESOLVED_MAP.resolve()
