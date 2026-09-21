@@ -15,6 +15,13 @@ that does all three live fetches once and hands the results to both tests.
 Nothing fetched here is written to disk or committed (Data Policy);
 scripts/rules_sync/check.py's on-disk cache is a separate, git-ignored
 concern this test does not touch.
+
+Marked `live` (whole-branch review, finding 11): plain
+`python3 -m pytest tests/ -q` -- the command `docs/rules-pipeline-status.md`
+§9 gives for resuming cold -- collected this module with no way to deselect
+it, so the documented test count was silently network-dependent.
+`-m "not live"` deselects it; `pytest.ini` registers the marker so it does
+not warn unregistered.
 """
 import time
 
@@ -22,6 +29,8 @@ import pytest
 import requests
 
 from scripts.rules_sync.normalise import hash_html
+
+pytestmark = pytest.mark.live
 
 _HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 _URL_A = "https://dsa.ulisses-regelwiki.de/KSF_Finte.html"
