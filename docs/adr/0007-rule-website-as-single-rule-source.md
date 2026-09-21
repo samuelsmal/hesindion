@@ -1,4 +1,4 @@
-# ADR-0007: Regelwiki as the Single Rule Source, rules.db as a Build Artifact
+# ADR-0007: The Rule Website as the Single Rule Source, rules.db as a Build Artifact
 
 ## Status
 
@@ -31,14 +31,14 @@ The actual source of truth — <https://dsa.ulisses-regelwiki.de/>, already name
 reference in `AGENTS.md` — is consulted by no automated step. `scrape_effects.py` was written to do
 this but knows six rule pages by hand and falls back to its hardcoded table.
 
-Both editable copies can drift from the wiki, from each other, and from the printed rules as errata
+Both editable copies can drift from the rule website, from each other, and from the printed rules as errata
 land. The practical consequence is that a rule can be wrong in the app with no signal anywhere that
 it is wrong, and there is no answer to the question "which file do I edit to fix a rule?" other than
 "both, and also the script".
 
 ## Decision
 
-**The Regelwiki is normative.** Where the wiki and any local copy disagree, the wiki wins, and the
+**The rule website is normative.** Where the rule website and any local copy disagree, the rule website wins, and the
 disagreement is a bug to be resolved by updating the local copy — never by editing the app.
 
 **One authored store, and it holds no rule prose.** The Data Policy stands: DSA rule text is not
@@ -53,7 +53,7 @@ source:
   book:    US25001
   page:    249
   checked: 2026-09-20
-  hash:    sha256:…            # of the normalised wiki text — drift detection without storing it
+  hash:    sha256:…            # of the normalised rule-website text — drift detection without storing it
 effects: …                      # schema per ADR-0008
 ```
 
@@ -79,8 +79,8 @@ directory remains a prerequisite; an *unverified* one no longer is.
 
 **Reconciliation is two steps, and only the first is deterministic.**
 
-1. `make rules-sync-check` — fetch each rule's wiki page, normalise the text, compare against
-   `source.hash`. Pure code: no model involved. Output is a drift report naming the rules whose wiki
+1. `make rules-sync-check` — fetch each rule's rule-website page, normalise the text, compare against
+   `source.hash`. Pure code: no model involved. Output is a drift report naming the rules whose rule-website
    text no longer matches what we authored. Politeness delay and caching as in the existing scraper.
 2. `make rules-sync-propose` — an LLM agent reads the drifted (or not-yet-authored) rule, and
    proposes a patch to that rule's YAML file: updated text, updated or new structured effects,
@@ -101,20 +101,20 @@ visibly missing, not quietly substituted.
 - **Make the database the authored store and drop the YAML.** Rejected: a 2.9 MB binary cannot be
   code-reviewed. The whole point of the agent flow is that a human reads the proposed change, and a
   diff of a SQLite file is unreadable.
-- **Scrape the wiki at build time, with no authored copy.** Rejected on three counts: the build stops
+- **Scrape the rule website at build time, with no authored copy.** Rejected on three counts: the build stops
   being reproducible and offline; structured effects cannot be derived from prose reliably enough to
   go unreviewed; and it puts avoidable load on someone else's server on every build.
 - **Fully automatic sync — the agent commits its own patches.** Rejected. A wrong effect row is
   indistinguishable from a right one at the table until a rule misfires mid-session. Review is the
   control that makes the rest of this safe.
-- **Keep Optolith as the text authority and use the wiki only to spot-check.** Rejected: Optolith
+- **Keep Optolith as the text authority and use the rule website only to spot-check.** Rejected: Optolith
   lags errata, and this ADR exists because "two authorities, no arbiter" is the current bug.
 
 ## Consequences
 
 - There is one answer to "where do I fix a rule": its file under `specs/rules/`. The database is
   never edited, and the second hand-authored copy is gone.
-- Drift from the wiki becomes **detectable and dated**. `source.checked` says when a rule was last
+- Drift from the rule website becomes **detectable and dated**. `source.checked` says when a rule was last
   verified; `make rules-sync-check` says which rules have moved since.
 - The build becomes **verifiable** rather than inherited: the database is generated, and the source
   data it is generated from is checksummed against `SOURCES.yaml`. It does not become
@@ -124,10 +124,10 @@ visibly missing, not quietly substituted.
 - The Data Policy becomes enforceable for the first time: `git rm --cached Hesindion/Resources/rules.db`
   makes the long-dormant `.gitignore` entry effective, and nothing in `specs/rules/` carries rule
   text.
-- Bootstrapping costs a one-time mapping from rule ID to wiki URL. The Optolith data carries
+- Bootstrapping costs a one-time mapping from rule ID to rule-website URL. The Optolith data carries
   `src: {id, firstPage}` for every rule, which narrows the search but does not eliminate the manual
   confirmation. This is a real cost, paid once per rule, and only for rules we choose to author.
-- Rules the wiki changes but nobody re-authors stay at their last verified text and are reported as
+- Rules the rule website changes but nobody re-authors stay at their last verified text and are reported as
   drifted. Stale-but-labelled is the intended failure mode; silently-wrong is the one we are leaving.
 - Ulisses' rule text is redistributed through the bundled database, as before, but it stops being
   redistributed through git. `source.url` and `source.hash` make the origin of each encoded rule

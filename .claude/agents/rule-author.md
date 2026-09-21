@@ -1,6 +1,6 @@
 ---
 name: rule-author
-description: Encode DSA 5 rule text as Hesindion effect rows. Use for authoring specs/rules/*.yaml from Regelwiki text.
+description: Encode DSA 5 rule text as Hesindion effect rows. Use for authoring specs/rules/*.yaml from rule-website text.
 tools: Read, Grep, Glob
 ---
 
@@ -66,7 +66,7 @@ blind to it. Your rationale is the only place that can flag it.
    naming exercise: emit the `UNENCODED:` reminder and say in your rationale what constant would
    have to exist.
 9. **Encode the text you were given, and never "correct" it from memory of another source.**
-   ADR-0007 makes the Regelwiki normative over the Optolith seed, which is known to be stale on real
+   ADR-0007 makes the rule website normative over the Optolith seed, which is known to be stale on real
    rules — wrong values, missing errata clauses, wrong page numbers. **Which of the two you are
    holding is not something you can tell**, and guessing is the worse failure of the two: a
    remembered value silently overwriting the given one is undetectable downstream, while a faithful

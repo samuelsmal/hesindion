@@ -10,7 +10,7 @@ LLM authoring agent on top of it.
 Reports each rule as one of:
 
   ok                `source.hash` still matches a fresh fetch of `source.url`.
-  drifted           it no longer matches -- the wiki text looks like it
+  drifted           it no longer matches -- the rule-website text looks like it
                      changed since `source.checked`, or the URL could not be
                      fetched.
   unverified        the file still carries the placeholder every migrated
@@ -148,7 +148,7 @@ def _is_unverified(url: str, checked: str, recorded_hash: str) -> bool:
 
 
 def check_rule(path: Path, fetcher: Fetcher) -> Result:
-    """Check one authored rule file against the wiki. Never raises on a
+    """Check one authored rule file against the rule website. Never raises on a
     fetch failure -- that is reported as `drifted` with the error as detail,
     not a crash that would take the whole run down. A page that yields no
     rule text (`ContentContainerError`: no container, or a container that is

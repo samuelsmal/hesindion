@@ -149,7 +149,7 @@ class RuleInput:
     name: str = ""
     #: `rules.levels` -- how many Stufen this rule has, or `None` for a rule with
     #: no ladder. It is passed to the agents because the *text* frequently does
-    #: not carry it: a Basismanoever whose wiki page is titled "<name> I-III"
+    #: not carry it: a Basismanoever whose rule-website page is titled "<name> I-III"
     #: reaches `rules.db` as a bare description saying "pro Stufe der
     #: Sonderfertigkeit", with the ladder's extent only in the title and the
     #: Erschwernis line, neither of which the seed keeps. Task 7's first

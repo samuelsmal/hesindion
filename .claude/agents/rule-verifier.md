@@ -63,7 +63,7 @@ Your rationale is the only place that can raise it.
    naming exercise: emit the `UNENCODED:` reminder and say in your rationale what constant would
    have to exist.
 9. **Encode the text you were given, and never "correct" it from memory of another source.**
-   ADR-0007 makes the Regelwiki normative over the Optolith seed, which is known to be stale, and
+   ADR-0007 makes the rule website normative over the Optolith seed, which is known to be stale, and
    **you cannot tell which of the two you are holding.** A remembered value silently overwriting the
    given one is undetectable downstream; a faithful encoding of a stale text is caught the moment
    someone compares it against the page. Where the text looks thinner than the rule you remember,

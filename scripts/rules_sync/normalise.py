@@ -1,6 +1,6 @@
-"""Deterministic normalisation of a DSA 5 rule-wiki page's rule text.
+"""Deterministic normalisation of a DSA 5 rule-website page's rule text.
 
-Given the raw HTML of a wiki page, extracts the visible rule text and reduces
+Given the raw HTML of a rule-website page, extracts the visible rule text and reduces
 it to a stable, hashable form. The goal: two captures of the *same* rule text
 that differ only in markup (a `<br>` written as `<br/>`, a non-breaking space
 where the other capture has a regular one, re-indented/reflowed whitespace, an
@@ -125,7 +125,7 @@ class ContentContainerEmpty(ContentContainerError):
 
 
 def normalise_html(html: str) -> str:
-    """Reduce a wiki page's HTML to a stable plain-text form of its rule text.
+    """Reduce a rule-website page's HTML to a stable plain-text form of its rule text.
 
     Steps, in order:
     1. Drop `<script>`/`<style>` tags entirely -- their content is not rule
@@ -224,7 +224,7 @@ def normalise_html(html: str) -> str:
 
 def hash_html(html: str) -> str:
     """Return the `sha256:<hex>` provenance hash (schema.json's `source.hash`
-    shape) for a wiki page's normalised rule text.
+    shape) for a rule-website page's normalised rule text.
 
     Raises:
         ContentContainerError (`ContentContainerNotFound` /

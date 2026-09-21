@@ -168,4 +168,4 @@ consequence for the GM.
 ## Related
 
 - **ADR-0005** — why opponent-side effects are GM-adjudicated; reaffirmed here.
-- **ADR-0007** — where rule data comes from and how it is kept true to the Regelwiki.
+- **ADR-0007** — where rule data comes from and how it is kept true to the rule website.

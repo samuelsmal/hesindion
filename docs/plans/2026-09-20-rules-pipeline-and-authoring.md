@@ -4,19 +4,19 @@
 > (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make rule data single-sourced, verifiable against the Regelwiki, and complete — so that a
+**Goal:** Make rule data single-sourced, verifiable against the rule website, and complete — so that a
 special ability reaches the app by being authored, never by being programmed.
 
 **Architecture:** One authored YAML file per rule under `specs/rules/` holding our mechanical
 encoding plus provenance and **no rule prose**; `rules.db` becomes a generated, untracked artifact;
-a deterministic drift checker compares the Regelwiki against recorded hashes; and a two-agent
+a deterministic drift checker compares the rule website against recorded hashes; and a two-agent
 authoring pipeline (author + independent verifier) proposes encodings for human review, calibrated
 against a hand-authored golden corpus before it is run at scale.
 
 **Tech Stack:** Python 3 (pyyaml, requests, beautifulsoup4, jsonschema, pytest), SQLite, Make,
 Claude Code subagents (`.claude/agents/`).
 
-**Spec:** `docs/adr/0007-regelwiki-as-single-rule-source.md` and
+**Spec:** `docs/adr/0007-rule-website-as-single-rule-source.md` and
 `docs/adr/0008-rules-as-data-combat-engine.md`
 
 ## Scope
@@ -58,7 +58,7 @@ shipped bugs today.
 | `specs/rules/SOURCES.yaml` | Pinned Optolith snapshot: version + per-file SHA-256. |
 | `specs/rules/schema.json` | JSON Schema for an authored rule file. The contract between this plan and the engine plan. |
 | `scripts/rules_lint/lint.py` | Validates every authored file against the schema + repo rules (no prose, known ids). |
-| `scripts/rules_sync/check.py` | Deterministic: fetch wiki page, normalise, hash, compare, report drift. |
+| `scripts/rules_sync/check.py` | Deterministic: fetch rule-website page, normalise, hash, compare, report drift. |
 | `scripts/rules_sync/propose.py` | Batches rules, fans out to subagents, collects YAML, lints, writes for review. |
 | `scripts/rules_sync/normalise.py` | Shared text normalisation (used by both check and propose). |
 | `scripts/build_rules_db/build_db.py` | Existing builder; reads `specs/rules/` instead of `specs/data/rules.yaml`. |
@@ -477,7 +477,7 @@ sqlite3 Hesindion/Resources/rules.db "select count(*) from effects where payload
 
 **Acceptance Criteria:**
 - [ ] Each of the ten has a real `source.url`, `book`, `page`, today's `checked`, and a hash that
-      matches the live wiki text.
+      matches the live rule-website text.
 - [ ] `SA_62` encodes: `runUp ≥ 4` and `gs ≥ 4` preconditions, `dice: 2 + ceil(self.gs / 2)`,
       `actionEconomy: opponentPassierschlagOnFailure`, `excludes: [SA_48]`, `subgroup: spezialmanoever`.
 - [ ] `SA_43`'s BE effect carries `when: [{mounted: true}]` — the condition the dead loader dropped.
@@ -486,7 +486,7 @@ sqlite3 Hesindion/Resources/rules.db "select count(*) from effects where payload
 
 **Steps:**
 
-- [ ] **Step 1: For each of the ten, open its Regelwiki page, copy the URL, and record `book`/`page`
+- [ ] **Step 1: For each of the ten, open its rule-website page, copy the URL, and record `book`/`page`
       from the Optolith `src:` block** (`SpecialAbilities.yaml` carries `src: [{id, firstPage}]`).
 - [ ] **Step 2: Author `SA_62.yaml`** (this is the shape every later rule follows):
 
@@ -522,7 +522,7 @@ Note the rounding: `ceil`, per ADR-0006 — the rule says *"die halbe GS"*, not 
 
 ### Task 5: `rules-sync-check` — deterministic drift detection
 
-**Goal:** Answer "which of our encodings are based on text the wiki has since changed?" with no model
+**Goal:** Answer "which of our encodings are based on text the rule website has since changed?" with no model
 involved.
 
 **Files:**
@@ -586,12 +586,12 @@ outputs — no live agent calls in tests).
 ```markdown
 ---
 name: rule-author
-description: Encode DSA 5 rule text as Hesindion effect rows. Use for authoring specs/rules/*.yaml from Regelwiki text.
+description: Encode DSA 5 rule text as Hesindion effect rows. Use for authoring specs/rules/*.yaml from rule-website text.
 tools: Read, Write, Grep
 ---
 
 You encode DSA 5 rules as structured effects for a rules engine. You are given a rule's id,
-its Regelwiki text, and its `subgroup`. You return YAML conforming to `specs/rules/schema.json`.
+its rule-website text, and its `subgroup`. You return YAML conforming to `specs/rules/schema.json`.
 
 ## Hard rules
 
@@ -757,3 +757,67 @@ maneuver slots and the parity harness — the engine plan.
 **Open question deferred to the engine plan.** Ruleset versioning (pinning a printing so errata can be
 swapped) is not in this schema. Adding a `ruleset:` key later is additive; retrofitting per-printing
 *values* is not. Decide it before Wave 1 authors 40 rules against an unversioned schema.
+
+---
+
+### Task 10: Resolve every rule to its page on the rule website, by name
+
+**Goal:** Every rule the app can author gains a verified `source.url` on
+`https://dsa.ulisses-regelwiki.de/`, resolved from its name through the site's own category
+indexes — never guessed from its id.
+
+**Why this exists:** the calibration gate (Task 7) failed partly because the driver feeds agents the
+Optolith seed text, while ADR-0007 makes the rule website normative and specifies the propose step
+as reading the fetched, normalised page. This is the unbuilt half of that decision, not new scope.
+
+**Files:**
+- Create: `scripts/rules_sync/resolve.py`, `tests/rules/test_resolve.py`, `tests/rules/fixtures/index_*.html`
+- Modify: `scripts/build_rules_db/build_db.py` (carry the resolved URL into the generated db), `Makefile` (`rules-resolve`)
+
+**Acceptance Criteria:**
+- [ ] Crawling the category indexes for combat groups 3, 9, 10, 11 and 12 yields a name → URL map
+      covering the rules the app can author, built from anchor text and `href`, not extrapolation.
+- [ ] Index pages are handled on their own path: their `#main` is **empty** and their link lists sit
+      outside it, so `normalise_html` raises `ContentContainerEmpty` on them by design.
+- [ ] A name that matches no anchor, or matches more than one, is **reported** — never guessed. The
+      report names the rule id, the Optolith name, and the candidates considered.
+- [ ] Identity is confirmed per rule by the three signals Task 4 established: page title, rule text
+      against the Optolith text, and the `Publikation(en):` line against Optolith's `src:` block.
+- [ ] The map is generated into the untracked `rules.db`; no ability names enter git (Data Policy).
+      Authored files keep carrying only `source.url`, as they already do.
+- [ ] Known-awkward cases resolve correctly: `Vorstoß` → `KSF_Vorsto%C3%9F.html`, and Golgariten-Stil
+      under `SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/`.
+- [ ] The ten golden rules resolve to exactly the URLs their authored files already record.
+
+**Verify:** `python3 -m pytest tests/rules/test_resolve.py -v && make rules-resolve && make rules-db`
+
+---
+
+### Task 11: Measure per-rule stability before any wave
+
+**Goal:** Replace a single-sample gate score with per-rule hit rates, so the pipeline's reliability
+is a measurement rather than a draw.
+
+**Why this exists:** Task 7's 7/10 was the best of four runs; pooled, the rate is ≈0.58 with a 95%
+interval of roughly [0.40, 0.89]. `SA_43` — one `legality` row, one predicate — dropped its
+`when: [{mounted: true}]` gate in 2 of 5 passes on identical input, which is ADR-0008's named
+failure: a conditional bonus silently becoming unconditional. At that spread the gate cannot
+attribute a fix, cannot distinguish 6 from 8, and cannot certify what it is being asked to certify.
+
+**Files:**
+- Create: `tests/rules/calibration/<date>-stability/`, `docs/rules-pipeline-stability.md` (tracked; carries no rule prose)
+- Modify: `tests/rules/test_calibration.py` (grade a multi-pass run)
+
+**Acceptance Criteria:**
+- [ ] Five passes over the ten golden rules, **on rule-website text** (Task 10's URLs), same model,
+      same briefs, same workspace — one variable, repeated.
+- [ ] Per-rule hit rate reported for all ten, not a single fraction; plus the author/verifier
+      agreement rate per rule.
+- [ ] Every rule that ever loses a `when` predicate across passes is named, since that failure is
+      invisible to both the linter and the cross-check.
+- [ ] `SA_41`'s shape is checked specifically — the `shiftSteps` brief fix from Task 7's fix round is
+      deductively correct but has never been exercised by a live run.
+- [ ] A stated pass bar, fixed before the runs: which per-rule rate, over how many passes, would
+      justify a wave — and the honest answer if the data does not reach it.
+
+**Verify:** `python3 -m pytest tests/rules/test_calibration.py -v` (grades recorded output; no model calls)

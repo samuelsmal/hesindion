@@ -20,7 +20,7 @@ HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 DELAY = 1.0  # polite delay between requests
 
 # ---------------------------------------------------------------------------
-# Known rule IDs → wiki page names (German)
+# Known rule IDs → rule-website page names (German)
 # ---------------------------------------------------------------------------
 KNOWN_RULES: dict[str, str] = {
     "SA_48": "Finte",
@@ -60,7 +60,7 @@ DEFAULT_SCOPE: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 def fetch_page(url: str) -> BeautifulSoup:
-    """Fetch and parse a wiki page with polite delay."""
+    """Fetch and parse a rule-website page with polite delay."""
     time.sleep(DELAY)
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
@@ -75,7 +75,7 @@ def discover_links(index_url: str) -> list[dict[str, str]]:
     soup = fetch_page(index_url)
     links: list[dict[str, str]] = []
 
-    # Wiki index pages typically list rules as <a> links inside the main
+    # Rule-website index pages typically list rules as <a> links inside the main
     # content area.  We look for anchors whose href is a relative .html path.
     for a_tag in soup.select("a[href]"):
         href = a_tag["href"]
@@ -202,7 +202,7 @@ INDEX_PAGES: list[dict[str, str]] = [
 # ---------------------------------------------------------------------------
 
 def scrape_all(verbose: bool = False) -> tuple[list[dict], list[str]]:
-    """Scrape effects from wiki pages. A rule with no scraped effects is
+    """Scrape effects from rule-website pages. A rule with no scraped effects is
     reported as missing, not silently substituted (ADR-0007) — the caller
     prints `missing` unconditionally, not only under --verbose."""
     results: dict[str, dict] = {}
