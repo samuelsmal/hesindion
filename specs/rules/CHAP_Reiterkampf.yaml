@@ -1,0 +1,52 @@
+id: CHAP_Reiterkampf
+subgroup: none
+note: Chapter rules, not an ability - they bind any mounted hero, SF or not. Holds two constants the app hardcoded in Swift. SA_43 does not own the BE row; see its note
+source:
+  url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
+  book: US25001
+  page: 239
+  checked: '2026-09-21'
+  hash: sha256:6738b2923e6ca81762c9f04efc705c6e9219050640cb6a9c379641c871f052cd
+effects:
+- type: modifier
+  target: be
+  scope: combat
+  value: -1
+  when:
+  - mounted: true
+  note: 'Clause 7 - scope is the load-bearing field here. OPEN: SharedModifiers.encumbrance applies it in spellCasting/liturgyCasting too; unruled, Swift left unchanged'
+- type: modifier
+  target: aw
+  scope: combat
+  value: -2
+  when:
+  - mounted: true
+  note: 'Clause 6 - the dodge half of the defence clause. UNENCODED: its stated exception turns on an unmodelled action, so this row does not carry it'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clauses 1-2, the initiative base and the positional advantage - both read off the mount, which is not a modelled entity'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clause 3, a maneuver-slot bar - legality.action grants an action and cannot withhold one, and the slots live in rules.subgroup_id'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clauses 4-5, legality keyed on weapon grip and shield facing - the app models neither, and facing is opponent-side (ADR-0005)'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clauses 8-9 and 12, the mount-control probes and the free action - they check a talent against a mount the app does not model'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clause 10, the fall check and its per-5-SP escalation - it keys on damage dealt to the mount, which is not tracked'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clause 11, a Passierschlag targeting restriction - opponent-side and GM-adjudicated (ADR-0005)'
+- type: reminder
+  when:
+  - mounted: true
+  note: 'UNENCODED: clauses 13-15, the commands SA_43''s legality row unlocks - their damage and probes are the mount''s, and the mount is not modelled'
