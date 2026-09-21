@@ -4,6 +4,7 @@ ruleset: core
 note: Chapter rules, not an ability - they bind any mounted hero, SF or not. Holds three constants the app hardcoded in Swift. SA_43 does not own the BE row; see its note
 source:
   url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
+  title: Reiterkampf
   book: US25001
   page: 239
   checked: '2026-09-21'

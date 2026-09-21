@@ -100,7 +100,10 @@ ASCII-folded, and `lint.py` already enforces that it is. `source.title` restores
 prose — the same line the id itself already walks.
 
 `source.title` is specified here and added with the chapter-rule wave (Task 12), not now: there is
-one chapter file today and no engine to read it.
+one chapter file today and no engine to read it. *(Implemented 2026-09-21 instead — see the
+Consequences. The deferral assumed the only consumer was a future engine; the requirement that the
+UI explain where a number comes from makes the missing name a gap in the data, and a gap with one
+instance is the cheapest possible time to close it.)*
 
 ### 2. Rule sets are data — sets now, versions later
 
@@ -223,9 +226,26 @@ Swift file and line each currently occupies, the way it already does for the cha
 - The recorded calibration proposals predate the field and are linted with a one-key waiver
   (`allow_missing_ruleset`), because editing captured agent output would falsify the measurement the
   gate grades. The next recorded run gets no waiver.
-- **`rules.db` does not carry `ruleset` yet** and the build ignores the field. Filtering by active
-  set, and the `source.title` column chapter rules need, are the engine plan's work; this ADR is the
-  data half and the contract.
+- **`rules.db` carries `ruleset` and `source.title`** (2026-09-21). This consequence originally read
+  "`rules.db` does not carry `ruleset` yet and the build ignores the field", deferring both columns
+  to the engine plan. That was wrong about which half this ADR is: the engine reads the *database*,
+  not `specs/rules/`, so a `ruleset` that stops at the YAML is a decision with no effect — the field
+  is declared, linted, glossed and backfilled across 28 files, and every rule still applies to every
+  hero. `rules` gains a `ruleset` column and a `title` column, `build_db.py` populates both from the
+  authored files, and `make rules-db-verify` checks them *against the files* rather than against
+  another copy of the build's own output. The dump comparison cannot do that job: a field the build
+  drops is dropped identically on both sides, so two NULL columns compare equal and the check passes.
+  A rule row with no authored file keeps `ruleset` NULL, which is correct rather than missing — it has
+  no authored encoding and therefore no effects to filter. What remains the engine plan's work is the
+  *filtering*: reading a hero's active sets and applying only those rules.
+- **`source.title` is implemented, and its Data Policy guard is a fold rather than a length cap.**
+  This ADR argued the field is admissible because "the id *is* the page title, ASCII-folded, and
+  `lint.py` already enforces that". `lint.py` now enforces the converse too: a chapter rule's
+  `source.title` must ASCII-fold to exactly the slug its id derives from the URL. The argument
+  becomes a check, and the field's one real risk — it is the only German a chapter file holds, so it
+  is the obvious route for rule prose to reach git — is closed by construction. A sentence folds to
+  something that is not the page slug; only the display spelling of a name the repository already
+  holds can pass.
 - The app gains an answerable question — *which rules are affecting this hero right now* — and, once
   the engine carries ids, a breakdown in which every line is a link. The three defects in the Context
   would each have been visible as a wrong citation rather than a plausible number.

@@ -883,8 +883,21 @@ because a derived value has no rule to point at.
 
 **`source.title` on chapter files (ADR-0009).** A chapter rule has no `rules_i18n` row, so a
 breakdown line citing one has no name to display. Each `CHAP_` file authored by this task carries its
-page title in `source.title`, and `build_db.py` writes it into the chapter rule's `rules` row. The
-schema addition lands with the first file that needs it, not before.
+page title in `source.title`, and `build_db.py` writes it into the chapter rule's `rules` row.
+
+*Done 2026-09-21, ahead of the wave.* The schema field, the linter rule, the `rules.title` column
+and `CHAP_Reiterkampf`'s own title all exist; `make rules-db-verify` checks the column against the
+files. The linter requires a chapter `source.title` and requires it to **ASCII-fold to the id's own
+slug**, which is ADR-0009's argument for admitting the field turned into a check — a description of
+the page cannot pass, only the page's name in its display spelling. Every `CHAP_` file this task
+authors therefore needs the field or it will not lint.
+
+**`ruleset` reaches `rules.db`, and `rules-db-verify` checks it (ADR-0009).** Also done
+2026-09-21. The engine reads the database, not `specs/rules/`, so the field had to become a `rules`
+column before "the engine applies only the sets a hero plays with" could be anything but a sentence.
+`make rules-db-verify` compares the column against the authored files rather than against another
+copy of the build's output, because a dropped field is dropped identically on both sides of a dump
+comparison.
 
 **Acceptance Criteria:**
 - [ ] Each page is one authored file, id `CHAP_<PageSlug>` derived from `source.url`, with a real

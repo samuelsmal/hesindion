@@ -114,15 +114,20 @@ def chapter_slug(url: str) -> str:
     """
     stem = urllib.parse.unquote(urllib.parse.urlparse(url).path).rsplit("/", 1)[-1]
     stem = re.sub(r"\.html?$", "", stem, flags=re.IGNORECASE)
+    return _ascii_slug(stem)
+
+
+def _ascii_slug(text: str) -> str:
+    """The ASCII PascalCase fold shared by a chapter id's two derivations."""
     for source, replacement in _TRANSLITERATE.items():
-        stem = stem.replace(source, replacement)
-    stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode("ascii")
-    stem = re.sub(r"[^A-Za-z]", "", stem)
-    return stem[:1].upper() + stem[1:]
+        text = text.replace(source, replacement)
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^A-Za-z]", "", text)
+    return text[:1].upper() + text[1:]
 
 
 def _lint_chapter_rule(doc: dict) -> list[str]:
-    """The three invariants a `CHAP_` file carries beyond the schema."""
+    """The invariants a `CHAP_` file carries beyond the schema."""
     rule_id = str(doc.get("id") or "")
     if not rule_id.startswith(CHAPTER_PREFIX):
         return []
@@ -134,7 +139,8 @@ def _lint_chapter_rule(doc: dict) -> list[str]:
             "situation, not a maneuver a hero selects in a Kampfrunde"
         )
 
-    url = str((doc.get("source") or {}).get("url", ""))
+    source = doc.get("source") or {}
+    url = str(source.get("url", ""))
     slug = chapter_slug(url)
     if not slug or slug == _UNVERIFIED_STEM:
         errors.append(
@@ -146,7 +152,47 @@ def _lint_chapter_rule(doc: dict) -> list[str]:
             f"chapter rule {rule_id}: id must be '{CHAPTER_PREFIX}{slug}', derived from "
             f"source.url ({url}) -- one file per page, and the id says which page"
         )
+
+    errors.extend(_lint_chapter_title(rule_id, source, slug))
     return errors
+
+
+def _lint_chapter_title(rule_id: str, source: dict, slug: str) -> list[str]:
+    """`source.title` on a chapter rule: required, and provably a name.
+
+    ADR-0009. A chapter rule has no `rules_i18n` row -- there is no Optolith
+    entry behind it -- so a breakdown line citing one would have nothing to
+    display but its id. The file carries the page title, and `build_db.py`
+    writes it into the chapter rule's `rules` row.
+
+    The title is the one field in a chapter file that holds German, which makes
+    it the obvious route for rule prose to reach git (Data Policy). The guard is
+    not a length cap or a hopeful pattern: **the title must ASCII-fold to the
+    same slug the id does.** That is the argument ADR-0009 makes for allowing
+    the field at all -- "the id *is* the page title, ASCII-folded" -- turned into
+    a check. A sentence cannot pass it, because a sentence folds to something
+    that is not the page slug; only the display spelling of the name already in
+    the id can.
+    """
+    title = source.get("title")
+    if title is None:
+        return [
+            f"chapter rule {rule_id}: source.title is required -- a chapter rule has no "
+            "rules_i18n row, so without it a breakdown line citing this rule has no "
+            "name to display (ADR-0009)"
+        ]
+    if not isinstance(title, str) or not title.strip():
+        return [f"chapter rule {rule_id}: source.title must be a non-empty string"]
+    if not slug:
+        return []
+    if _ascii_slug(title) != slug:
+        return [
+            f"chapter rule {rule_id}: source.title {title!r} folds to "
+            f"'{_ascii_slug(title)}', not '{slug}' -- the title is the display spelling "
+            "of the page name the id already carries, never a description of it "
+            "(Data Policy)"
+        ]
+    return []
 
 
 def _first_comment_line(raw: str) -> int | None:

@@ -45,6 +45,12 @@
           "type": "string",
           "pattern": "^https?://"
         },
+        "title": {
+          "description": "The page's own title, in its display spelling (umlauts, spaces). Required on a chapter rule (`CHAP_` id) and meaningless on an Optolith one: a chapter rule has no `rules_i18n` row, because there is no Optolith entry behind it, so a breakdown line citing one would have nothing to render but its id (ADR-0009). `build_db.py` writes it into the chapter rule's `rules` row, and the UI explains the number with that title, a link to `source.url`, and the rule's own authored `reminder` notes. This is the one field in a chapter file that holds German, so it is not guarded by a length cap alone: `scripts/rules_lint/lint.py` requires it to ASCII-fold to exactly the slug the id derives from the URL. That is ADR-0009's own argument for allowing the field — the id *is* the page title, ASCII-folded — made mechanical. A sentence folds to something that is not the page slug and is rejected; only the display spelling of a name the repository already holds can pass (Data Policy).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
         "book":    { "type": "string" },
         "page":    { "type": "integer" },
         "checked": { "type": "string", "format": "date" },

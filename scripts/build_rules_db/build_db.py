@@ -58,7 +58,9 @@ def create_schema(conn: sqlite3.Connection):
             levels       INTEGER,
             max          INTEGER DEFAULT 1,
             is_active    BOOLEAN,
-            has_no_parry BOOLEAN
+            has_no_parry BOOLEAN,
+            ruleset      TEXT,
+            title        TEXT
         );
 
         CREATE TABLE IF NOT EXISTS rules_i18n (
@@ -824,7 +826,10 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
         # would skip its effects with a warning, which is the silent-drop
         # failure ADR-0008 exists to stop. It owns its row instead: the
         # authored file is the whole of it, and it carries no rules_i18n text
-        # because there is no prose to carry (Data Policy).
+        # because there is no prose to carry (Data Policy). `source.title` is
+        # the one thing it does carry for display: with no rules_i18n row there
+        # is no name for a breakdown line citing this rule to render, which
+        # ADR-0009 turns from a curiosity into a blocker.
         if rule_id.startswith(CHAPTER_PREFIX):
             conn.execute(
                 "INSERT OR IGNORE INTO rules (id, category) VALUES (?, 'chapter')",
@@ -836,6 +841,17 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
         if not exists:
             print(f"  WARNING: rule_id '{rule_id}' not found in DB, skipping")
             continue
+
+        # ADR-0009's data half, in the place the engine actually reads. The
+        # engine applies only the sets a hero plays with, and it reads the
+        # database, not `specs/rules/` -- so a `ruleset` that stops at the YAML
+        # is a decision with no effect. A rule row with no authored file keeps
+        # `ruleset` NULL, which is correct rather than missing: it has no
+        # authored encoding and therefore no effects to filter.
+        conn.execute(
+            "UPDATE rules SET ruleset = ?, title = ? WHERE id = ?",
+            (doc.get("ruleset"), (doc.get("source") or {}).get("title"), rule_id),
+        )
 
         for eff in doc.get("effects", []):
             _insert_effect(conn, rule_id, eff.get("tier"), eff)

@@ -555,6 +555,7 @@ CHAPTER = textwrap.dedent("""
     ruleset: core
     source:
       url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
+      title: Reiterkampf
       book: US25001
       page: 239
       checked: 2026-09-21
@@ -677,6 +678,48 @@ def test_a_digits_only_page_stem_is_rejected_rather_than_widened(tmp_path):
     p.write_text(body)
     assert any("needs a real source.url" in e for e in lint_file(p))
 
+
+
+# --- source.title: the name a chapter rule has to display (ADR-0009) ---
+#
+# A chapter rule has no `rules_i18n` row, because there is no Optolith entry
+# behind it, so a breakdown line citing one would render its id and nothing
+# else. It is also the one field in a chapter file that holds German, which
+# makes it the obvious route for rule prose to reach git -- hence the fold
+# check rather than a length cap.
+
+def test_chapter_rule_without_a_title_is_rejected(tmp_path):
+    body = CHAPTER.replace("  title: Reiterkampf\n", "")
+    p = tmp_path / "CHAP_Reiterkampf.yaml"
+    p.write_text(body)
+    assert any("source.title is required" in e for e in lint_file(p))
+
+
+def test_chapter_title_must_fold_to_the_id_slug(tmp_path):
+    """ADR-0009 allows the field because the id *is* the page title,
+    ASCII-folded. This is that argument as a check: a description of the page
+    folds to something that is not the slug, and only the display spelling of
+    the name already in the id can pass."""
+    body = CHAPTER.replace("title: Reiterkampf", "title: Rules for fighting on horseback")
+    p = tmp_path / "CHAP_Reiterkampf.yaml"
+    p.write_text(body)
+    assert any("folds to" in e and "Data Policy" in e for e in lint_file(p))
+
+
+def test_a_title_with_umlauts_folds_to_its_slug():
+    """The display spelling is the point of the field: the id cannot hold an
+    umlaut and the UI should not show the folded form."""
+    from scripts.rules_lint.lint import _ascii_slug
+    assert _ascii_slug("Beengte Umgebung") == "BeengteUmgebung"
+    assert _ascii_slug("Gr\u00e4tsche") == "Graetsche"
+
+
+def test_an_optolith_rule_needs_no_title(tmp_path):
+    """The field is meaningless on an Optolith id, which has a `rules_i18n`
+    row with the real name in it."""
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(VALID)
+    assert lint_file(p) == []
 
 # --- ruleset: which set of rules this one belongs to (ADR-0009) ---
 #
