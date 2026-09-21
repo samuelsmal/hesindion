@@ -509,6 +509,7 @@ def make_db(tmp_path):
         ("SA_903", 3, 2, 3, "Platzhalter C", TEXT_A, "Stufe eins Platzhalter"),
         ("SA_904", 9, 1, None, "Platzhalter D", TEXT_B, None),
         ("SA_905", 3, 2, 1, "Platzhalter E", None, None),
+        ("SA_906", 3, 2, 1, "Platzhalter F", TEXT_A, None),
     ]
     for rule_id, group, subgroup, levels, name, description, level1 in rows:
         conn.execute("INSERT INTO rules VALUES (?,?,?,?)", (rule_id, group, subgroup, levels))
@@ -530,7 +531,8 @@ def test_ids_selector_preserves_the_order_asked_for(tmp_path):
 
 def test_group_selector(tmp_path):
     db = make_db(tmp_path)
-    assert [r.rule_id for r in load_rule_inputs(db, group=3)] == ["SA_901", "SA_902", "SA_903"]
+    assert [r.rule_id for r in load_rule_inputs(db, group=3)] == [
+        "SA_901", "SA_902", "SA_903", "SA_906"]
     assert [r.rule_id for r in load_rule_inputs(db, group=9)] == ["SA_904"]
 
 
@@ -538,7 +540,7 @@ def test_subgroup_selector(tmp_path):
     """Task 9 drives its waves by group and subgroup, so both flags ship here."""
     db = make_db(tmp_path)
     rules = load_rule_inputs(db, subgroup=(3, 2))
-    assert [r.rule_id for r in rules] == ["SA_903"]
+    assert [r.rule_id for r in rules] == ["SA_903", "SA_906"]
     assert rules[0].subgroup == "basismanoever"
     assert "Stufe 1: Stufe eins Platzhalter" in rules[0].text
 
@@ -557,6 +559,14 @@ def test_the_tier_count_reaches_the_agents_and_a_one_tier_rule_carries_none(tmp_
     # levels 1 and NULL both mean "no ladder"; only one of them is spelled NULL in
     # rules.db, and a `tiers: 1` line would invite a spurious `tier:` on every row.
     assert flat.levels is None
+    # `levels: 1` is a rule with no ladder spelled the other way round; it must
+    # reach RuleInput as None, or every non-laddered rule in a wave gets a
+    # `tiers: 1` line and a spurious `tier:` on every row. SA_905 carries the
+    # same value but no text and is dropped before this point, so the branch
+    # needs a row of its own.
+    one_level = load_rule_inputs(db, ids=["SA_906"])[0]
+    assert one_level.levels is None
+    assert "tiers:" not in build_verifier_prompt(one_level)
 
     for prompt in (build_author_prompt([laddered]), build_verifier_prompt(laddered)):
         assert "tiers: 3" in prompt
@@ -566,7 +576,8 @@ def test_the_tier_count_reaches_the_agents_and_a_one_tier_rule_carries_none(tmp_
 
 def test_a_rule_with_no_text_is_skipped_rather_than_proposed_from_nothing(tmp_path):
     db = make_db(tmp_path)
-    assert [r.rule_id for r in load_rule_inputs(db, subgroup=(3, 2))] == ["SA_903"]  # not SA_905
+    assert [r.rule_id for r in load_rule_inputs(db, subgroup=(3, 2))] == [
+        "SA_903", "SA_906"]  # not SA_905, which has no text
 
 
 def test_unknown_ids_and_bad_selectors_fail_loudly(tmp_path):

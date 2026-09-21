@@ -62,12 +62,19 @@ expected:
 
 failures:
   SA_41: >-
-    Modelling divergence, not an error. The pipeline encodes the clause as
-    parameterOverride + shiftSteps on the armour table, which is the shape
-    schema.json documents for exactly this case; the golden encodes the table
-    shift's net effect as two modifier rows. The golden's own note calls that
-    reading derived, and the table it is derived from is not in the rule text
-    the driver supplies.
+    A genuine error, on three independent grounds; the first recording of this
+    run called it a defensible modelling divergence and was wrong. (1) The
+    parameter path it invents, `armor.beColumn`, appears nowhere in the corpus,
+    nowhere in schema.json and in no registry -- `parameter` is a free string
+    that lint.py does not validate, so an invented DSA constant lints clean and
+    encodes to nothing. Hard rule 4's UNENCODED: reminder is the case for a
+    constant that does not exist. (2) Its numbers are wrong under the very
+    schema sentence that appeared to endorse the shape: shiftSteps is defined as
+    "scaled by the effect's tier", so 2 at tier 1 and 4 at tier 2 shifts eight
+    steps at Stufe II. The proposal's own note quotes this task's new
+    running-total instruction as its justification, which is how that
+    instruction's missing exception was found. (3) It fails on wiki text too, so
+    unlike SA_62 and SA_661 it is not attributable to the input source.
   SA_62: >-
     Not written: the author reached for an actionEconomy grants token that is
     not registered in vocabulary.yaml, which the linter rejects by design. The

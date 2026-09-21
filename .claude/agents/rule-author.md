@@ -51,12 +51,20 @@ blind to it. Your rationale is the only place that can flag it.
    one of the eleven, emit a `reminder` stating the mechanism instead of inventing a predicate.
    `gmFlag` is the escape hatch for a GM-adjudicated condition, not a place to put prose: it takes
    a camelCase slug that must already be glossed in `specs/rules/vocabulary.yaml`.
-8. **Open-vocabulary tokens must already be registered.** `actionEconomy.grants`,
-   `actionEconomy.forbids`, `legality.action` and `gmFlag` slugs are checked against
-   `specs/rules/vocabulary.yaml` by the linter. Prefer an existing token over a synonym — a second
-   spelling of the same idea (`noDefense` beside `defense`) is the failure an open vocabulary dies
-   of. If no token fits, use the one you think right, and say in your rationale that it needs a new
-   gloss, so the reviewer adds a one-line diff rather than discovering an invention.
+8. **Open-vocabulary tokens must already be registered, and `parameterOverride.parameter` is the
+   one that nothing checks.** `actionEconomy.grants`, `actionEconomy.forbids`, `legality.action`
+   and `gmFlag` slugs are checked against `specs/rules/vocabulary.yaml` by the linter. Prefer an
+   existing token over a synonym — a second spelling of the same idea (`noDefense` beside
+   `defense`) is the failure an open vocabulary dies of. If no token fits, use the one you think
+   right, and say in your rationale that it needs a new gloss, so the reviewer adds a one-line diff
+   rather than discovering an invention.
+   **`parameterOverride.parameter` is the one open field nothing checks.** It is a free string that
+   no registry and no validator constrains, so a dotted path you invent lints clean, writes clean,
+   and names a DSA constant that does not exist — an encoding that silently does nothing, which is
+   the failure ADR-0008 exists to prevent. Use only a path already present in the corpus or named in
+   `schema.json`. If the constant a rule needs has no path, that is hard rule 4's case rather than a
+   naming exercise: emit the `UNENCODED:` reminder and say in your rationale what constant would
+   have to exist.
 9. **Encode the text you were given, and never "correct" it from memory of another source.**
    ADR-0007 makes the Regelwiki normative over the Optolith seed, which is known to be stale on real
    rules — wrong values, missing errata clauses, wrong page numbers. **Which of the two you are
@@ -178,9 +186,18 @@ them are often withheld from your workspace — they may be the very rules you a
     by 3") and leaves the extent to the page's title and cost line, neither of which reaches you.
     Encoding Stufe I alone because the text stops there is the failure this line exists to prevent;
     it is not an `UNENCODED:` case, because the number you need is in front of you.
-  - **Each tier's rows carry that tier's running total, not its increment.** A rate of 3 per Stufe
-    over three Stufen is `value: -3` at `tier: 1`, `-6` at `tier: 2`, `-9` at `tier: 3`. Writing
-    `-3` on all three, or on tier 3 alone, is wrong in a way nothing downstream can detect.
+  - **An absolute-value field carries that tier's running total, not its increment.** `value`,
+    `add` and `set` state a final number, so a rate of 3 per Stufe over three Stufen is `value: -3`
+    at `tier: 1`, `-6` at `tier: 2`, `-9` at `tier: 3`. Writing `-3` on all three, or on tier 3
+    alone, is wrong in a way nothing downstream can detect.
+  - **`shiftSteps` is the exception, and it is the opposite.** `schema.json` defines it as *shifted
+    by this many steps, **scaled by the effect's `tier`***, so the engine multiplies it by the tier
+    itself. A per-tier running total there is counted twice: a rate of 3 steps per Stufe written as
+    `shiftSteps: 3` at `tier: 1` and `9` at `tier: 3` shifts **twenty-seven** steps at Stufe III,
+    not nine. Write the *per-tier increment* on every tier of a `shiftSteps` ladder, or, better,
+    write one untiered row, since the engine scales it anyway. Before writing any laddered field,
+    read its description in `schema.json` and check which of the two it is; the running-total rule
+    above is the default, not a law.
   - A ladder multiplies rows: a rule with two clauses and three Stufen is six rows, and one whose
     per-tier set is three rows is nine.
 - **A clause that suppresses or replaces a named DSA constant is a `parameterOverride`,** not a

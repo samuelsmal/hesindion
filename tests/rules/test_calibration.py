@@ -38,6 +38,7 @@ artefact of grading all ten at once, not a property of a production wave.
 """
 import json
 import pathlib
+import re
 
 import pytest
 import yaml
@@ -83,12 +84,29 @@ def _load(path):
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def _normalise(field, value):
+    """Two spellings of one mechanic are one mechanic.
+
+    `when` is defined by schema.json as *"preconditions, ANDed together"* -- a
+    set, not a sequence -- so two encodings listing `runUp` and `attribute` in
+    opposite orders state the same gate. `add` is a free-form expression string,
+    so `'2 + ceil(self.gs / 2)'` and `'2 + ceil(self.gs/2)'` are the same
+    expression. Both are latent false-failure sources at 222 rules; neither has
+    fired yet on the recorded run, which is exactly when to close them.
+    """
+    if field == "when" and isinstance(value, list):
+        return sorted(json.dumps(p, sort_keys=True, ensure_ascii=True, default=str) for p in value)
+    if field == "add" and isinstance(value, str):
+        return re.sub(r"\s+", "", value)
+    return value
+
+
 def _mechanics(row):
     """One effect row reduced to what Tier 1 grades."""
     if not isinstance(row, dict):
         return {"<malformed>": repr(row)}
     return {
-        k: v for k, v in row.items()
+        k: _normalise(k, v) for k, v in row.items()
         if k in TIER1_FIELDS and not (k in SCHEMA_DEFAULTS and v == SCHEMA_DEFAULTS[k])
     }
 
@@ -138,6 +156,24 @@ def tier1_verdict(rule_id):
     )
 
 
+def test_the_rubric_does_not_fail_on_two_spellings_of_one_mechanic():
+    """`when` is a set per schema.json and `add` is an expression, so neither
+    may be compared as written. Nothing in the recorded run exercises either,
+    which is precisely why it is pinned: a false failure at 222 rules would look
+    exactly like a real one."""
+    reordered = {"type": "dice", "when": [{"attribute": {"gs": 4}}, {"runUp": 4}]}
+    as_authored = {"type": "dice", "when": [{"runUp": 4}, {"attribute": {"gs": 4}}]}
+    assert _key(reordered) == _key(as_authored)
+
+    spaced = {"type": "dice", "add": "2 + ceil(self.gs / 2)"}
+    tight = {"type": "dice", "add": "2+ceil(self.gs/2)"}
+    assert _key(spaced) == _key(tight)
+
+    # …and it still distinguishes mechanics that differ.
+    assert _key(spaced) != _key({"type": "dice", "add": "3 + ceil(self.gs / 2)"})
+    assert _key(as_authored) != _key({"type": "dice", "when": [{"runUp": 4}]})
+
+
 def test_the_recorded_run_covers_the_whole_golden_corpus():
     """A gate that silently graded nine rules would report nine of nine."""
     assert sorted(RUN["expected"]) == sorted(GOLDEN_IDS)
@@ -148,12 +184,21 @@ def test_the_recorded_run_covers_the_whole_golden_corpus():
 def test_tier_1_matches_what_the_calibration_recorded(rule_id):
     """Each rule's Tier 1 verdict is pinned to what the live run actually earned.
 
-    This is not "assert the failures away". A `false` in RUN.yaml is a recorded
-    measurement with a recorded reason, and flipping one is a claim about the
-    pipeline that has to be re-measured live. What this test protects is the
-    other direction: a brief edit, a driver change or a schema change that
-    quietly moves a rule from matching to not is a failure here, without anyone
-    spending twenty model calls to notice.
+    Be clear about what this can and cannot catch. It never runs the pipeline,
+    so a brief edit or a driver change cannot fail it -- only a *live re-run*
+    can show what those did, and the first version of this docstring claimed
+    otherwise. What it pins is the recorded measurement against the two things
+    that can move underneath it without a re-run: the golden files (an edit to
+    one changes the comparison, which `test_golden.py` catches by hash and this
+    catches by meaning) and the rubric itself (widening or narrowing
+    `TIER1_FIELDS`, or the normalisation in `_normalise`, silently changes what
+    7 of 10 meant). It is a regression pin on a measurement, not a test of the
+    pipeline, and the twenty calls are the only thing that tests the pipeline.
+
+    It is also not "assert the failures away". A `false` in RUN.yaml is a
+    recorded measurement with a recorded reason, and flipping one is a claim
+    that has to be re-measured live -- which is why it is pinned in both
+    directions.
     """
     passed, detail = tier1_verdict(rule_id)
     expected = RUN["expected"][rule_id]
