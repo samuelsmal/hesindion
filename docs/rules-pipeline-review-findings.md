@@ -669,3 +669,39 @@ rule with an authored neighbour are suggestive rather than measured.
 
 Not a merge blocker: it degrades a measurement that this branch already declares failed, and it
 cannot produce a wrong encoding in the app.
+
+### Correction, 2026-09-21 (Task 11a) — the ruling stands; one piece of its evidence does not
+
+**The text above is left as written and its ruling is unchanged.** The generalisation is correct and
+load-bearing, the mechanism it required is built (`scripts/rules_sync/rule_graph.py`, commits
+`0d55ce3..7a79e92`), and building it found a *second* adjacency of the same class that this section
+did not know about — see the note at the end of this correction. What fails is one sentence of
+evidence, and it is corrected here rather than edited above so that a later reader sees both.
+
+**"`SA_661`'s current Tier 1 pass may rest on this channel" is wrong on both halves.** Two checks,
+either of which settles it:
+
+- **It was not a pass.** `tests/rules/calibration/2026-09-21-sonnet/RUN.yaml` records
+  `expected: SA_661: false`, and its `summary_table` shows `SA_661  DISAGREE  ok  disagreement`. It
+  is one of the three Tier 1 failures that make the score 7/10, and §1 of
+  `docs/rules-pipeline-status.md` already explains it as input-caused.
+- **The recorded run could not have used the channel.** `specs/rules/CHAP_Reiterkampf.yaml` was added
+  in `78802fb`, six commits *after* the calibration run was recorded in `505c721` — which is this
+  section's own observation ("new since the 7/10 was measured"), and it cuts the other way from the
+  conclusion drawn from it. A leak channel can only move a verdict *toward* the golden file, so a
+  failure recorded before the channel existed is not called into question by it.
+
+**Therefore no recorded number changes, and "treat `SA_661`'s result as unmeasured" does not apply to
+the recorded run.** The risk this section identified was always prospective: every run from the day
+the chapter file landed would have been exposed, including one that flipped that recorded `false` to
+`true` for a reason nobody could attribute to a fix. That is what the closure removes, and it is why
+the requirement it states — withhold the transitive set, and report what was withheld — is unchanged.
+
+**A second instance, found by building the mechanism this section asked for.** `SA_43`'s whole
+encoding is one axis-less row plus one `when` predicate, and a chapter file carrying that same gate
+on every one of its own rows — and naming `SA_43` in two notes, so redaction rewrites them and leaves
+the mechanical half standing — sat in its workspace untouched by the first three edges. A
+`when`-predicate edge closes it. `SA_43` is the source of the 2-of-5 gate-dropping datum Task 11
+exists to quantify, so this one sits on the rule the measurement most depends on. Recorded here
+because it is the same class this section generalised, and because it is evidence *for* the
+generalisation where the `SA_661` sentence above is not.

@@ -968,14 +968,25 @@ un-withheld authored file that encodes the very clause `SA_661` modifies, and it
 left the answer standing in a file the agent was entitled to read. The class generalises as the
 corpus grows from 28 files toward 232.
 
-**What was built:** `scripts/rules_sync/rule_graph.py` — the corpus as a graph over three edges
+**What was built:** `scripts/rules_sync/rule_graph.py` — the corpus as a graph over four edges
 computed from fields the schema already requires (`excludes` walked undirected; a shared
 `parameterOverride.parameter` path; a non-reminder effect row agreeing on `type`+`target`+`scope`+
-`side`, the axes Tier 1 grades a row's shape by). `prepare_workspace` withholds the **transitive
-closure** of the run's rules over that graph, and the run writes `WITHHELD.md` beside its other
-artefacts naming what was withheld for which rule under which edge. Per the controller's ruling, no
-declared `related:`/`modifies:` schema field was added: the adjacency that leaked is the kind nobody
-spots, so an edge depending on an author spotting it inherits the defect.
+`side`, the axes Tier 1 grades a row's shape by, with `scope` colliding by subsumption as well as
+equality; and two non-reminder rows gated on the same `when` predicate). `prepare_workspace`
+withholds the **transitive closure** of the run's rules over that graph, and the run writes
+`WITHHELD.md` beside its other artefacts naming what was withheld for which rule under which edge.
+Per the controller's ruling, no declared `related:`/`modifies:` schema field was added: the adjacency
+that leaked is the kind nobody spots, so an edge depending on an author spotting it inherits the
+defect.
+
+**Fix round 1 (review: 0 critical, 2 important, 6 minor — all accepted).** The last two properties
+above are its two Important findings, each a live channel the first three edges left standing and
+each found by measuring the corpus rather than by arguing: `scope` equality left the corpus's only
+other `modifier target: be` row in `SA_41`'s workspace, and no edge at all reached `SA_43`, whose
+whole encoding is one axis-less row plus one predicate. It also corrected `docs/adr/0008`'s two
+passages restating the withheld pair (third repair round on it), and added a dated correction to
+`docs/rules-pipeline-review-findings.md` §6 — whose ruling stands, but whose evidence sentence about
+`SA_661`'s "current Tier 1 pass" is wrong twice over.
 
 **Why Task 11 may not run before this:** the five passes cost ≈110 live model calls, and a `SA_661`
 number measured through the leak would be a number nobody could attribute. See
@@ -1000,12 +1011,18 @@ rule with an authored neighbour would have been suggestive rather than measured.
 for the acceptance criteria below, both recorded in `docs/rules-pipeline-status.md` §2:
 
 - The run must state **which configuration it used** — the ten ids in one command, as the recorded
-  calibration run did, or each rule on its own. They withhold different amounts (12 of 28 files
-  against 8 of 28 per rule), so the two are not comparable and a mixed set is not a measurement.
-- `SA_661`'s hit rate must be reported **separately**, not folded into an aggregate: after the
-  closure it is the only golden rule with no worked precedent for any row shape it must produce, so
-  its passes measure something the other nine's do not. The run's own `WITHHELD.md` belongs with the
-  recorded output, as the statement of what the measurement controlled for.
+  calibration run did, or each rule on its own. They withhold different amounts (18 of 28 files for
+  the batch; 16 of 28 for each of eight rules run alone, 1 for `SA_40` and `SA_59`), so the two are
+  not comparable and a mixed set is not a measurement.
+- **The per-rule rates are a new baseline, not a delta.** The recorded run withheld exactly the ten;
+  the batch now withholds eighteen, so no rule's next number is comparable to its recorded verdict
+  and a drop is the leak being removed rather than a regression. Nine of the ten now encode with no
+  worked precedent for any row shape they must produce (all but `SA_59`), which makes this a harder
+  question than the 7/10 answered — the honest one, once neighbours are recognised as answer keys,
+  but not the same one. The run's own `WITHHELD.md` belongs with the recorded output, as the
+  statement of what the measurement controlled for.
+- **The pass bar must be set against that**, not against 7/10. A bar carried over from a measurement
+  taken with eight more precedent files in the tree would be a bar for a different experiment.
 
 **Goal:** Replace a single-sample gate score with per-rule hit rates, so the pipeline's reliability
 is a measurement rather than a draw.

@@ -188,20 +188,29 @@ page, and the Swift had implemented it all along.
 
 **The corpus therefore covers chapter rules as well as abilities**, under the `CHAP_` id namespace
 ADR-0007's amendment defines. Nothing about the effect union, the predicate set or the parameter
-vocabulary changes: `CHAP_Reiterkampf` encodes its three constants as ordinary `modifier` rows gated
-on the `mounted` predicate this ADR already lists, and its remaining clauses are `reminder` rows
-with `UNENCODED:` notes.
+vocabulary changes: the mounted-combat page's constants are encoded with effect types this ADR
+already defines and predicates it already lists, and the clauses its grammar cannot express are
+`reminder` rows with `UNENCODED:` notes. See `specs/rules/CHAP_Reiterkampf.yaml` for which clause is
+which and for every row's fields — not restated here.
 
-This count was wrong once already, and in the way the amendment itself warns about. The file
-originally filed clause 2 — the rider's advantageous position against an opponent on foot — as an
-`UNENCODED:` reminder on the reasoning that it "reads off the mount, which is not a modelled entity"
-— true of the initiative-base clause it was bundled with, and false of this one, which reads off the
-*opponent's* stance and needs no mount at all. An authored ability rule already encodes exactly that
-shape, using only predicates this ADR's grammar already lists and tokens `vocabulary.yaml` already
-registers (see `specs/rules/SA_661.yaml`), and its own note says it *raises an existing situational
-AT ease* — so the baseline it raises was sitting unowned on an ability, which is the `SA_43` error
-repeated on the page that corrects it. Corrected 2026-09-21: the clause is an encoded `modifier` row
-and the reminder now covers clause 1 alone.
+This split between encoded rows and reminders was wrong once already, and in the way the amendment
+itself warns about. One clause was originally filed as an `UNENCODED:` reminder on the reasoning that
+it "reads off the mount, which is not a modelled entity" — true of the clause it had been bundled
+with, and false of that one, which turns on the opponent rather than on the mount and so needs
+nothing the app does not model. An authored ability rule already encoded a clause of the same shape,
+using only predicates this ADR's grammar lists and tokens `vocabulary.yaml` already registers, and
+the relationship between the two was recorded in the ability's own note — so the baseline was sitting
+unowned on an ability, which is the `SA_43` error repeated on the page that corrects it. Corrected
+2026-09-21: the clause is encoded rather than deferred, and the reminder that had absorbed it now
+covers only the clause it was written for. Both files carry the details; cite them rather than this
+paragraph.
+
+*(Reworded 2026-09-21, Task 11a fix round 1 — third repair round on this pair. The previous version
+named the chapter file's row count, effect type and gating predicate, and stated the ability's target
+and the class of its gate in English. Since Task 11a the workspace withholds the graph closure, so
+both files are withheld together whenever either is graded — and a passage restating one of them
+defeats withholding the other exactly as ADR-0008's earlier two repairs did. The convention those
+settled: name a clause by its position and mechanism, cite `specs/rules/<id>.yaml` for its contents.)*
 
 This matters for the scope of the engine rewrite. Authoring all 232 abilities would still have left
 the mounted-combat, Beengte-Umgebung and multiple-defence constants in Swift — a rule that fires for

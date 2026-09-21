@@ -67,8 +67,10 @@ above, and they point in opposite directions:
   used. `SA_661`'s recorded Tier 1 verdict is also `false`, and a leak channel can only move a
   verdict toward the golden file. The 7/10 is therefore not overstated by this channel, and §6's
   wording — "`SA_661`'s current Tier 1 pass may rest on this channel" — is wrong on both counts:
-  it was not a pass, and the channel post-dated it. **Recorded here as a correction, not as a fix
-  to the review; the review document is left as written.**
+  it was not a pass, and the channel post-dated it. **§6 now carries a dated correction saying so
+  at source (Task 11a fix round 1); its text and its ruling are unchanged, because only that
+  sentence of evidence fails — the generalisation it supports is sound and a second instance has
+  since been found.**
 - **Every run from today would have been exposed to it.** `expected: SA_661: false` in
   `tests/rules/calibration/2026-09-21-sonnet/RUN.yaml` is a gate booleans anyone re-measuring will
   compare against, and the next run could have flipped it to `true` for a reason that is not the
@@ -145,32 +147,63 @@ carrying neither its id nor its German name, so neither removing the graded file
 two tokens reaches it. `specs/rules/CHAP_Reiterkampf.yaml` ↔ `SA_661` is the instance the
 whole-branch review recorded as its §6; the class generalises, and grows as the corpus goes from 28
 files toward 232. `prepare_workspace` now withholds the **transitive closure** of the run's rules
-over three edges computed from the corpus itself — `excludes` (undirected), a shared
-`parameterOverride.parameter` path, and a non-reminder effect row agreeing on every axis Tier 1
-grades a row's shape by (`type`, `target`, `scope`, `side`). There is deliberately **no declared
+over four edges computed from the corpus itself — `excludes` (undirected); a shared
+`parameterOverride.parameter` path; a non-reminder effect row agreeing on every axis Tier 1 grades a
+row's shape by (`type`, `target`, `scope`, `side`), where `scope` collides by **subsumption** as well
+as equality because `all` is a domain filter covering `combat` rather than a different label; and two
+non-reminder rows gated on the same `when` predicate. There is deliberately **no declared
 `related:`/`modifies:` schema field**: the adjacency that leaked is exactly the kind nobody spots,
 so an edge depending on an author spotting it inherits the defect. See
 `scripts/rules_sync/rule_graph.py`, and the run's own `WITHHELD.md` artefact, which names what was
 withheld for which rule under which edge — without it a later reader cannot tell "this rule had no
 neighbour" from "the graph missed it".
 
-**What the closure costs the next measurement, and it is not small.** Over the ten golden rules run
-as one batch (the recorded command), it withholds 12 of the 28 authored files rather than 10:
-`CHAP_Reiterkampf` and `COND_1` join the ten. What leaves with them is **every `scope: combat`
-modifier row in the corpus** — after the closure the workspace holds no worked example of
-`modifier … scope: combat` at all, on any target or side, plus no `modifier talent/movement`. Six of
-the ten golden rules encode combat modifiers, and all six now encode them with no in-domain
-precedent in front of them. Three of those six (`SA_65`, `SA_66`, `SA_661`) previously had precedent
-for every row shape they encode and now have none for their combat rows.
+The last two of those four came from fix round 1, each after the first three were measured against
+the corpus and found to leave a live channel standing:
 
-**`SA_661` is the one to name.** Both of its non-reminder rows are combat modifiers, so after the
-closure *every* row shape it must produce has zero worked precedent in the workspace — it is the
-only golden rule this change moves from full precedent to none. `SA_40`, `SA_41`, `SA_43` and
-`SA_59` were already in that position for their own shapes before this change and are untouched by
-it (the graph finds them no neighbours at all). Any stability write-up must therefore report
-`SA_661` per-rule rather than folding it into an aggregate: its next result measures something
-different from the others'. This is the correct direction — a combat-axis neighbour *is* the answer
-key — but it is a property of the measurement, not a build detail, which is why it is recorded here.
+- **`scope` subsumption.** `SA_41` carries the corpus's only `modifier target: be scope: all` row and
+  `CHAP_Reiterkampf` its only `modifier target: be scope: combat` row. Under exact equality the
+  second stayed in the first's workspace — a worked `modifier target: be` row in front of the rule
+  whose recorded failure is that it invented a `parameterOverride` path instead of one, and the only
+  golden rule that has never passed in five runs. `target: all` was measured and deliberately **not**
+  widened the same way: it links every modifier row to every other and takes the batch to 22 of 28.
+- **`when`-predicate identity.** `SA_43`'s entire encoding is one axis-less `legality` row plus one
+  predicate, so the first three edges found it no neighbour at all, while a chapter file carrying
+  that same gate on every one of its rows — and naming `SA_43` in two notes, so redaction rewrites
+  them and leaves the mechanical half standing — sat in its workspace. `SA_43` is the source of the
+  2-of-5 gate-dropping datum Task 11 exists to quantify.
+
+**What the closure costs the next measurement, and it is not small.** Over the ten golden rules run
+as one batch (the recorded command), it withholds **18 of the 28** authored files rather than 10:
+`CHAP_Reiterkampf`, `COND_1`, `COND_2`, `COND_4`, `COND_5`, `COND_6`, `COND_7` and `DISADV_34` join
+the ten. Run rule-by-rule instead, `SA_40` and `SA_59` have no neighbour under any edge and withhold
+1 file as before; the other eight withhold **16** each. Pinned by
+`tests/rules/test_rule_graph.py::test_the_ten_rule_batch_withholds_exactly_the_documented_set` and
+its per-rule companion, so an edge change cannot silently rewrite this arithmetic.
+
+**What leaves with them is every `scope: combat` modifier row in the corpus**, checked rather than
+asserted (`test_no_surviving_file_carries_a_combat_scoped_modifier_row`). The batch workspace is left
+with ten authored files carrying eight distinct non-reminder row shapes, none of them combat:
+`modifier` on `le/derived`, `painLevel/all`, `talent/socialTalents`, `Gassenwissen/all`,
+`Orientierung/all`, plus `parameterOverride`, `recovery` and `stateGain`.
+
+**Which rule loses all worked precedent? After fix round 1, nine of the ten.** In both
+configurations every row shape `SA_40`, `SA_41`, `SA_43`, `SA_48`, `SA_62`, `SA_65`, `SA_66`,
+`SA_67` and `SA_661` must produce has zero surviving example in the workspace. `SA_59` is the only
+exception: run alone it keeps precedent for both its shapes, and in the batch it keeps
+`parameterOverride` and loses `dice`. Four of the nine (`SA_40`, `SA_41`, `SA_43`, `SA_48`) were
+already partly or wholly in that position under the old rule; five were not.
+
+Two consequences the stability write-up must carry rather than discover:
+
+- **No rule's next number is comparable to its recorded verdict.** The recorded run withheld exactly
+  the ten; the batch now withholds eighteen, so every rule sees eight fewer precedent files than the
+  run that produced the 7/10. A drop is not evidence of regression — it is the leak being removed —
+  and per-rule hit rates must be reported as a new baseline, not as a delta.
+- **It is measuring a harder question than the recorded run did**: "can the pipeline encode this rule
+  from its text with no worked example of the row shape in front of it". That is the honest question
+  once neighbours are recognised as answer keys, and it is the one the corpus can support today. It
+  is not the same question the 7/10 answered, and an aggregate across the two would be meaningless.
 
 ## 3. The five blockers on any 222-rule wave
 
