@@ -46,7 +46,7 @@ Claude Code subagents (`.claude/agents/`).
 | 8 — coverage ratchet | **not started** | — |
 | 9 — authoring waves | **BLOCKED on Task 7's five blockers** | — |
 | 10 — resolve rules to their page by name | **done** — 201/232 resolved, 10/10 golden; backfill left to a separate act | `fe7e944..14e23af` |
-| 11a — withholding follows the rule graph | **done** — mechanism + withholding report, no live run | `0d55ce3..e382600` |
+| 11a — withholding follows the rule graph | **done**, 1 fix round — mechanism + withholding report, no live run | `0d55ce3..7a387a1` |
 | 11 — measure per-rule stability | **not started**, prerequisite 11a now done | plan text `e564c86` |
 | 12 — author the rules the app hardcodes | **started**: `CHAP_Reiterkampf` authored, backlog open | `c93105a..2e468fd`, `9aef3d2`, `a3508e2`, `1ceb48d` |
 | 13 — GS is a species rule | **Swift done**, corpus half open (belongs to Task 12) | `f276b14` |
@@ -959,7 +959,7 @@ as reading the fetched, normalised page. This is the unbuilt half of that decisi
 
 ### Task 11a: Withholding follows the rule graph, not just the rule id
 
-**Status: DONE.** Commits `0d55ce3..e382600`. Mechanism only — **no live run was made.**
+**Status: DONE.** Commits `0d55ce3..7a387a1`. Mechanism only — **no live run was made.**
 
 **Why it exists:** the whole-branch review's §6 (`docs/rules-pipeline-review-findings.md`), recorded
 as a controller ruling after the blocker fixes. `specs/rules/CHAP_Reiterkampf.yaml` is a legitimate,
@@ -1005,7 +1005,7 @@ model calls, no network.
 it is the one that has to come first: until the run-to-run spread is known, a ten-rule gate cannot
 attribute a fix, so Task 10's effect on the score would not be measurable either.
 
-**Prerequisite: Task 11a, above — DONE (`0d55ce3..e382600`).** Until it landed, a workspace handed the
+**Prerequisite: Task 11a, above — DONE (`0d55ce3..7a387a1`).** Until it landed, a workspace handed the
 agents an authored file encoding the clause a graded rule modifies, so a per-rule number for any
 rule with an authored neighbour would have been suggestive rather than measured. Two consequences
 for the acceptance criteria below, both recorded in `docs/rules-pipeline-status.md` §2:
