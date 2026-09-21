@@ -26,6 +26,20 @@ NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
 # asserts the three spellings agree.
 CHAPTER_PREFIX = "CHAP_"
 
+# Where `scripts/rules_sync/resolve.py` leaves the name -> URL resolution it
+# read off the rule website's own category indexes (Task 10). It lives under
+# the git-ignored `.cache/`, because it names abilities and the Data Policy
+# (AGENTS.md) keeps those out of git; this builder is what carries it into the
+# equally untracked `rules.db`, which is the map's actual home. The file is
+# optional: a build with no resolve run behind it simply leaves `source_url`
+# NULL for every rule that has no authored file, which is what it was before.
+DEFAULT_RESOLVED_MAP = Path(__file__).resolve().parents[2] / ".cache" / "rules_resolve" / "resolved_urls.json"
+
+# The placeholder every migrated rule file was seeded with. It is not a URL and
+# must not reach the database as one -- see scripts/rules_sync/check.py, which
+# reports a file still carrying it as `unverified`.
+UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="Build rules.db from DSA YAML data")
@@ -36,6 +50,9 @@ def parse_args():
                          "(schema.json), skipping SOURCES.yaml")
     p.add_argument("--output", default=Path("rules.db"), type=Path,
                     help="Output SQLite database path")
+    p.add_argument("--resolved-map", default=DEFAULT_RESOLVED_MAP, type=Path,
+                    help="Name -> URL resolution written by `make rules-resolve`; "
+                         "skipped if absent (default: %(default)s)")
     return p.parse_args()
 
 
@@ -72,7 +89,8 @@ def create_schema(conn: sqlite3.Connection):
             is_active    BOOLEAN,
             has_no_parry BOOLEAN,
             ruleset      TEXT,
-            title        TEXT
+            title        TEXT,
+            source_url   TEXT
         );
 
         CREATE TABLE IF NOT EXISTS rules_i18n (
@@ -856,9 +874,20 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
         # is a decision with no effect. A rule row with no authored file keeps
         # `ruleset` NULL, which is correct rather than missing: it has no
         # authored encoding and therefore no effects to filter.
+        # `source_url` joins them: the authored file's `source.url` is a URL a
+        # person reviewed and committed, so it outranks anything
+        # `import_resolved_urls` wrote for the same rule. The `UNVERIFIED`
+        # placeholder is not a URL and is deliberately not carried -- writing
+        # it would overwrite a resolved URL with a marker meaning "nobody has
+        # looked", which is worse than the NULL it replaces.
+        source = doc.get("source") or {}
+        authored_url = source.get("url")
+        if authored_url == UNVERIFIED_URL:
+            authored_url = None
         conn.execute(
-            "UPDATE rules SET ruleset = ?, title = ? WHERE id = ?",
-            (doc.get("ruleset"), (doc.get("source") or {}).get("title"), rule_id),
+            "UPDATE rules SET ruleset = ?, title = ?, "
+            "source_url = COALESCE(?, source_url) WHERE id = ?",
+            (doc.get("ruleset"), source.get("title"), authored_url, rule_id),
         )
 
         for eff in doc.get("effects", []):
@@ -867,6 +896,41 @@ def import_effects(conn: sqlite3.Connection, effects_dir: Path):
 
     conn.commit()
     print(f"  Imported {count} effects from {len(files)} rule file(s)")
+
+
+def import_resolved_urls(conn: sqlite3.Connection, map_path: Path):
+    """Carry `make rules-resolve`'s name -> URL resolution into the database.
+
+    This is the map's home (Task 10): `rules.db` is a generated, untracked
+    build artifact, so recording a rule's page here puts it where the authoring
+    driver reads from without any ability name entering git. Only rules the
+    resolver *confirmed* are in the file -- a page whose three identity signals
+    did not all agree is reported for a human, not written -- so this function
+    does not re-judge anything, it only copies.
+
+    `import_effects` runs after this one and overwrites the few rules that have
+    an authored file with what the file records: a URL a person reviewed and
+    committed outranks one a crawl resolved, and the two agree anyway for every
+    rule where both exist (that is the closed-loop check on the golden ten).
+    """
+    if not map_path.exists():
+        print(f"  No resolution at {map_path} -- run `make rules-resolve` to add source URLs")
+        return
+
+    payload = json.loads(map_path.read_text(encoding="utf-8"))
+    resolved = payload.get("resolved") or {}
+    applied = missing = 0
+    for rule_id, url in sorted(resolved.items()):
+        if not url:
+            continue
+        cur = conn.execute("UPDATE rules SET source_url = ? WHERE id = ?", (url, rule_id))
+        if cur.rowcount:
+            applied += 1
+        else:
+            missing += 1
+    conn.commit()
+    note = f", {missing} not in the DB" if missing else ""
+    print(f"  Applied {applied} resolved source URL(s) from {map_path.name}{note}")
 
 
 def _insert_effect(conn: sqlite3.Connection, rule_id: str, level, eff: dict):
@@ -999,6 +1063,9 @@ def main():
     import_liturgical_chants(conn, args.source)
     print("Importing blessings...")
     import_blessings(conn, args.source)
+
+    print("Importing resolved source URLs...")
+    import_resolved_urls(conn, args.resolved_map)
 
     print("Importing hand-authored effects...")
     import_effects(conn, args.effects)
