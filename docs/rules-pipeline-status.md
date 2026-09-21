@@ -242,10 +242,14 @@ closed are marked so and left visible rather than deleted.
 
 **Corpus and tooling**
 
-- `NON_RULE_FILES` exists in **four** hand-synced copies with two spellings:
+- *(closed)* `NON_RULE_FILES` exists in **four** hand-synced copies with two spellings:
   `scripts/rules_lint/lint.py:29`, `scripts/rules_sync/check.py:84` (which additionally lists
   `schema.json`), `scripts/build_rules_db/verify_db.py:21`, and `build_db.py:810` as a local
   lowercase `non_rule_files`. A file added to one and not the others is a silent skip.
+  `build_db.py`'s copy is now a module-level `NON_RULE_FILES` matching the other three's spelling,
+  the cross-reference comments name all four sites, and `tests/rules/test_shared_constants.py`
+  asserts the stated relationship (three equal; `check.py` equal plus `schema.json`) and fails if
+  a site is missed.
 - The linter's glob is non-recursive (`glob("*.yaml")`, `lint.py:389`) — a rule file in a
   subdirectory of `specs/rules/` is silently unlinted.
 - Duplicate YAML keys are last-wins and unreported.
@@ -276,8 +280,12 @@ closed are marked so and left visible rather than deleted.
   unexercised and rate limits at 12 rules × 2 agents are unmeasured.
 - `--restricted`'s out-of-cwd denial is evidenced only by a live run, never by a constructed negative
   test.
-- `exclude_names` wiring in `main()` has no end-to-end `FakeRunner` test; it is covered by
-  `prepare_workspace` unit tests plus the live run.
+- *(closed)* `exclude_names` wiring in `main()` has no end-to-end `FakeRunner` test; it is covered
+  by `prepare_workspace` unit tests plus the live run. `main()` now takes a `runner_factory` seam,
+  and `test_main_end_to_end_redacts_the_workspace_it_builds` (`tests/rules/test_propose.py`) drives
+  `main()` end to end with a `FakeRunner` and asserts that neither the withheld rule's id nor its
+  German name survives the workspace `main()` built — it fails if `exclude_names=[r.name for r in
+  rules]` regresses to `[r.rule_id for r in rules]`.
 - A failing model reply reaches `proposal.error` at up to 400 characters
   (`scripts/rules_sync/propose.py:645,654`) and may quote German. It reaches the terminal and the
   git-ignored review file only, so it is not a git leak.
@@ -384,11 +392,16 @@ which is why blocker 1 is blocker 1.
 ## 9. Resuming cold
 
 ```bash
-make rules-lint                 # 28 rule file(s), 0 error(s)
-python3 -m pytest tests/ -q     # 258 passed
+make rules-lint                       # 28 rule file(s), 0 error(s)
+python3 -m pytest tests/ -q           # 271 passed (includes 2 live tests, network)
+python3 -m pytest tests/ -q -m "not live"   # 269 passed, 2 deselected (offline)
 make rules-db && make rules-db-verify
-make rules-sync-check           # network; 11 ok, 17 unverified
+make rules-sync-check                 # network; 11 ok, 17 unverified
 ```
+
+`tests/rules/test_normalise_live.py` is marked `live` (whole-branch review, finding 11):
+it fetches the rule website three times and is the only thing that makes the full-suite
+count network-dependent. `-m "not live"` deselects it for a cold, offline resume.
 
 Then read, in this order: this file, `docs/plans/2026-09-20-rules-pipeline-and-authoring.md` for what
 is done and what is left, and ADR-0007/0008/0009 for why. `CHANGELOG.md` under `[Unreleased]` carries
