@@ -462,9 +462,22 @@ struct OptolithImportService {
     /// (bewaffnet/unbewaffnet), Kampf (erweitert) and Befehle — not when someone has already
     /// hand-written an effect for it. See ADR-0008.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        guard let groupId = rules.lookupGroupId(id) else { return false }
-        return [3, 9, 10, 11, 12].contains(groupId)
+        Self.isCombatSpecialAbility(groupId: rules.lookupGroupId(id))
     }
+
+    /// The Optolith groups that make a special ability a combat one: Kampf, Kampfstile
+    /// (bewaffnet/unbewaffnet), Kampf (erweitert) and Befehle. See ADR-0008.
+    ///
+    /// This is the single source of truth for that membership test — the import above and
+    /// `SpecialAbilityClassificationRepair` both call this static function rather than each
+    /// carrying their own copy of the group list, which is exactly the duplication
+    /// ADR-0007 exists to remove (whole-branch review finding 3).
+    static func isCombatSpecialAbility(groupId: Int?) -> Bool {
+        guard let groupId else { return false }
+        return combatSpecialAbilityGroups.contains(groupId)
+    }
+
+    static let combatSpecialAbilityGroups: Set<Int> = [3, 9, 10, 11, 12]
 
     // MARK: - Talents
 

@@ -284,3 +284,24 @@ re-introduction of the shapes it can recognise; its docstring is honest about th
 
 - **ADR-0005** — why opponent-side effects are GM-adjudicated; reaffirmed here.
 - **ADR-0007** — where rule data comes from and how it is kept true to the rule website.
+
+## Amendment (2026-09-21): stored heroes are migrated by repair, not by re-import
+
+The Decision above fixed `OptolithImportService.isCombatSpecialAbility` to classify by Optolith
+group rather than by whether someone had already hand-authored an effect for the rule — "Import
+classification is fixed at the source." That statement was true of new imports and silent about
+existing ones: `combatSpecialAbilities` and `generalSpecialAbilities` are written once, at import,
+and stay whatever they were classified as at the time. A hero imported before this decision keeps
+the old split forever unless something touches it again.
+
+The whole-branch review named this (finding 3) and the user ruled: add a reclassification repair
+pass rather than requiring re-import. The precedent is `DerivedValueRepair` (ADR-0006), which
+exists for the identical shape of problem — a formula fix at import time that does not reach heroes
+already in the store — and is run once, idempotently, from `ContentView`'s `.task`. This decision's
+own classification fix is the same shape one namespace over: not a derived value but a
+classification, so it is a sibling pass, `SpecialAbilityClassificationRepair`, rather than an
+addition to `DerivedValueRepair`'s attribute- and species-keyed contract. It re-splits a hero's two
+special-ability arrays through the same predicate the import now uses, is idempotent by
+construction, and is wired in beside `DerivedValueRepair.repairAll` with the same
+save-only-if-changed discipline. See `CHANGELOG.md` under `[Unreleased]` → `Fixed` for what changes
+at the table for an existing hero.

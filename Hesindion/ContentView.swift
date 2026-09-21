@@ -18,6 +18,10 @@ struct ContentView: View {
                 guard !didRepair else { return }
                 didRepair = true
                 DerivedValueRepair.repairAll(in: modelContext)
+                SpecialAbilityClassificationRepair.repairAll(
+                    in: modelContext,
+                    lookupGroupId: RulesDatabase.shared.lookupGroupId
+                )
             }
     }
 }
