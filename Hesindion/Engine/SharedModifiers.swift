@@ -8,6 +8,12 @@ enum SharedModifiers {
     /// Zauber-, Liturgie- or Talentprobe keeps the hero's full Belastung while mounted.
     /// This is the whole of the `scope: combat` the authored chapter rule carries; the
     /// *unmounted* penalty is unaffected and still applies in every domain below.
+    ///
+    /// This is one of two Swift readings of that authored `scope: combat` token.
+    /// `RuleEffectModifiers.domainsForScope("combat")` (RuleEffectModifiers.swift:53) reads
+    /// the same token differently. `RuleEffectModifiers` has no callers today, so this
+    /// definition is the one the authored row is actually implemented by — see ADR-0008's
+    /// Consequences (whole-branch review finding 4) before wiring the other one up.
     static let mountedReliefDomains: Set<CheckDomain> = [
         .meleeAttack, .meleeParry, .meleeDodge, .rangedAttack,
     ]

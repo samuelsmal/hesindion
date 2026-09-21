@@ -122,6 +122,15 @@ struct ModifierEngine {
 // MARK: - Shared Instance
 
 extension ModifierEngine {
+    /// Wiring `RuleEffectModifiers.load` into this list is not a matter of appending it.
+    /// The hand-written definitions below (`SharedModifiers`, `MeleeModifiers`,
+    /// `DefenseModifiers`, …) and the 109 authored effect rows `RuleEffectModifiers.load`
+    /// would read encode the same mechanics — the corpus is the documented authority
+    /// (ADR-0008), but nothing here enforces it yet. Appending the authored path to this
+    /// list as written would fire every migrated rule twice. Whoever wires the data path in
+    /// must delete the hand-written definition it replaces in the same commit that starts
+    /// reading its authored row, not add a fourth line here. See ADR-0008's Consequences
+    /// (whole-branch review finding 4).
     static let shared: ModifierEngine = {
         var defs: [ModifierDefinition] = []
         defs.append(contentsOf: SharedModifiers.all)

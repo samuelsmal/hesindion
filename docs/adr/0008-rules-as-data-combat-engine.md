@@ -305,3 +305,41 @@ special-ability arrays through the same predicate the import now uses, is idempo
 construction, and is wired in beside `DerivedValueRepair.repairAll` with the same
 save-only-if-changed discipline. See `CHANGELOG.md` under `[Unreleased]` → `Fixed` for what changes
 at the table for an existing hero.
+
+## Amendment (2026-09-21): the CheckDomain seam has two rows to reconcile, and wiring the data path in is not an append
+
+The whole-branch review (finding 4) named a live instance of the pattern ADR-0007 exists to
+remove, one file apart from where this ADR's own census was taken. `Hesindion/Engine/SharedModifiers.swift`'s
+`mountedReliefDomains` and `Hesindion/Engine/RuleEffectModifiers.swift`'s `domainsForScope("combat")`
+are two independent Swift readings of the one authored `scope` token `specs/rules/CHAP_Reiterkampf.yaml`'s
+mounted-relief row carries, and the two readings disagree. It is invisible today only because
+`RuleEffectModifiers` still has no callers; both sites now carry a comment naming the other and
+saying which one the authored row is implemented by (`SharedModifiers.swift:11-13`,
+`RuleEffectModifiers.swift:49-59`).
+
+**The engine plan inherits a double-count hazard, not only a disagreement.** `ModifierEngine.shared`
+(`ModifierEngine.swift:124-134`) registers the hand-written `SharedModifiers`/`MeleeModifiers`/
+`DefenseModifiers` definitions, which encode the same mechanics as the 109 authored effect rows the
+build now loads into `rules.db`. Appending `RuleEffectModifiers.load`'s output to that registry as
+written would fire every migrated rule twice. **Wiring the data path in means deleting the
+hand-written definition it replaces in the same commit that starts reading its authored row — never
+appending to the list.**
+
+**The CheckDomain consequence above names one seam; the branch has since made a second one
+concrete** (whole-branch review §3, "Ruling on item 3"). That paragraph records the seam at the
+unmounted Belastung penalty's row — no `CheckDomain` case for INI or GS, so no single `scope` value
+can express what that row reaches. The mounted relief's own row has since diverged the same way, in
+a second place: what `SharedModifiers.encumbrance`'s own `domains` list
+(`SharedModifiers.swift:22`) declares and what `RuleEffectModifiers.domainsForScope`
+(`RuleEffectModifiers.swift:49-59`) would compute for the same authored token disagree, exactly as
+`mountedReliefDomains` and `domainsForScope("combat")` disagree above. **The engine plan therefore
+has two rows to reconcile against `CheckDomain`, not one:** the unmounted penalty's row
+(`specs/rules/SA_41.yaml`, read through `domainsForScope`) and the mounted relief's row
+(`specs/rules/CHAP_Reiterkampf.yaml`, implemented directly in `SharedModifiers.encumbrance`).
+Neither row's encoded scope value or domain count is restated here — see the cited files. This is
+not settled by picking a string for either row; `docs/rules-pipeline-status.md` §8 records why for
+the first, and the same reasoning holds for the second.
+
+Do not change `RuleEffectModifiers.domainsForScope` to make the two Swift readings agree — that is a
+behaviour change to a dead code path, and it is the engine plan's decision to make once it settles
+what `CheckDomain` covers, not this documentation task's.
