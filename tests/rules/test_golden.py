@@ -10,12 +10,20 @@ git unchecked (Data Policy, AGENTS.md).
 `MANIFEST.yaml` replaces it: the same freeze semantics (an edit to a golden
 rule is a loud failure naming the remedy), no second copy, and the drift class
 stops existing rather than being detected.
+
+**Two hashes, because the freeze and the calibration gate are not the same
+thing.** `bytes` freezes the file. `graded` freezes the file reduced to what
+`test_calibration`'s Tier 1 actually grades, and it is what makes the
+calibration carve-out checkable instead of merely asserted -- see
+`MANIFEST.yaml`'s description and `test_calibration.graded_digest`.
 """
 import hashlib
 import pathlib
 
 import pytest
 import yaml
+
+from tests.rules.test_calibration import graded_digest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 MANIFEST_PATH = REPO_ROOT / "tests" / "rules" / "golden" / "MANIFEST.yaml"
@@ -32,30 +40,93 @@ EXPECTED_IDS = {
     "SA_62", "SA_65", "SA_66", "SA_67", "SA_661",
 }
 
-REMEDY = (
-    "golden corpus drifted -- re-run calibration. If this change to the "
-    "authored rule is intended, update tests/rules/golden/MANIFEST.yaml with "
-    "the new hash in the same commit and re-run the pipeline calibration "
-    "(Task 7); the ten golden files are its reference encoding. The one "
-    "exception is an edit confined to fields Tier 1 does not grade -- `note`, "
-    "`source.checked` -- which no re-run could re-measure: update the hash and "
-    "record why under `golden_edits` in the recorded run's RUN.yaml instead. "
-    "See MANIFEST.yaml's description for the full carve-out."
+BYTES_REMEDY = (
+    "golden corpus drifted -- the file's bytes no longer match "
+    "tests/rules/golden/MANIFEST.yaml. If this change to the authored rule is "
+    "intended, update its `bytes` hash in the same commit. Whether that is the "
+    "whole remedy is what the `graded` hash decides: if the companion `graded` "
+    "assertion still passes, the edit touched nothing Tier 1 grades -- record "
+    "why under `golden_edits` in the recorded run's RUN.yaml and stop there. If "
+    "it fails too, this is a mechanical change to the pipeline's reference "
+    "encoding and it means re-running the calibration (Task 7). See "
+    "MANIFEST.yaml's description for the full carve-out."
+)
+
+GRADED_REMEDY = (
+    "a golden rule's *graded* encoding changed -- re-run calibration. This hash "
+    "covers exactly what tests/rules/test_calibration.py's Tier 1 grades: the "
+    "non-reminder effect rows, reduced to TIER1_FIELDS and normalised the way "
+    "tier1_verdict normalises them. `note`, `source.checked` and the rule root "
+    "are not inputs, so a note-only edit cannot reach this hash. That it moved "
+    "means a recorded verdict was computed from bytes that no longer exist, and "
+    "no `golden_edits` justification can substitute for a live re-run. (If "
+    "TIER1_FIELDS or _normalise is what changed, the gate's rubric moved and "
+    "the recorded 7/10 means something different -- which is the other thing "
+    "this hash is here to make loud.)"
 )
 
 
 def test_manifest_covers_exactly_the_ten_golden_rules():
-    assert set(GOLDEN) == EXPECTED_IDS, REMEDY
+    assert set(GOLDEN) == EXPECTED_IDS, BYTES_REMEDY
 
 
 @pytest.mark.parametrize("rule_id", sorted(GOLDEN))
 def test_golden_rule_matches_its_recorded_hash(rule_id):
     path = RULES_DIR / f"{rule_id}.yaml"
-    assert path.exists(), f"{path} is missing -- {REMEDY}"
+    assert path.exists(), f"{path} is missing -- {BYTES_REMEDY}"
     actual = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-    assert actual == GOLDEN[rule_id], (
-        f"{path.name}: recorded {GOLDEN[rule_id]} != current {actual} -- {REMEDY}"
+    assert actual == GOLDEN[rule_id]["bytes"], (
+        f"{path.name}: recorded {GOLDEN[rule_id]['bytes']} != current {actual} -- {BYTES_REMEDY}"
     )
+
+
+@pytest.mark.parametrize("rule_id", sorted(GOLDEN))
+def test_golden_rule_matches_its_recorded_graded_hash(rule_id):
+    """The mechanical half of the calibration carve-out.
+
+    Before this existed, a byte hash plus an English `golden_edits` entry was
+    all that separated a legitimate note-only edit from "call it note-only and
+    skip the gate" -- the two produce identical evidence. This hash cannot be
+    moved by a note-only edit and cannot be left still by a mechanical one.
+    """
+    path = RULES_DIR / f"{rule_id}.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    actual = graded_digest(doc)
+    assert actual == GOLDEN[rule_id]["graded"], (
+        f"{path.name}: recorded {GOLDEN[rule_id]['graded']} != current {actual} -- {GRADED_REMEDY}"
+    )
+
+
+def test_the_two_hashes_answer_different_questions():
+    """Pin the property the carve-out rests on, rather than asserting it in prose.
+
+    A `note` edit moves the byte hash and not the graded one; a `value` edit
+    moves both. If this ever stopped holding -- by `note` entering
+    `TIER1_FIELDS`, or by `graded_digest` accidentally reading the whole file --
+    the carve-out would silently become either useless or unusable, and every
+    other test here would still pass.
+    """
+    base = {
+        "id": "SA_65", "subgroup": "passiv", "ruleset": "core",
+        "effects": [
+            {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
+             "note": "Clause 1 - the defensive stance's PA bonus"},
+            {"type": "reminder", "note": "UNENCODED: clause 2"},
+        ],
+    }
+    note_edited = {**base, "effects": [
+        {**base["effects"][0], "note": "Clause 1 - reworded, same mechanic"},
+        base["effects"][1],
+    ]}
+    value_edited = {**base, "effects": [
+        {**base["effects"][0], "value": 2},
+        base["effects"][1],
+    ]}
+    root_edited = {**base, "ruleset": "focus.trefferzonen"}
+
+    assert graded_digest(note_edited) == graded_digest(base)
+    assert graded_digest(root_edited) == graded_digest(base)
+    assert graded_digest(value_edited) != graded_digest(base)
 
 
 def test_golden_directory_holds_no_duplicate_rule_bodies():

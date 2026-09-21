@@ -36,6 +36,7 @@ to a rule id requires the corpus entry for that rule, which the calibration
 workspace withholds *because it is one of the ten being graded*. That is an
 artefact of grading all ten at once, not a property of a production wave.
 """
+import hashlib
 import json
 import pathlib
 import re
@@ -123,6 +124,32 @@ def _rows(doc, *, reminders):
 
 def _run_path(rule_id):
     return RUN_DIR / f"{rule_id}.yaml"
+
+
+def graded_digest(doc) -> str:
+    """The SHA-256 of one authored rule reduced to exactly what Tier 1 grades.
+
+    `tests/rules/golden/MANIFEST.yaml` records this beside each golden file's
+    byte hash, and `test_golden.py` checks both. That turns the calibration
+    carve-out from a promise into a mechanism. Before it, a golden file's byte
+    hash plus an English `golden_edits` entry was the whole of what separated a
+    legitimate note-only edit from "call it note-only and skip the gate": both
+    look identical to CI, and only a reader comparing the diff against the claim
+    could tell them apart.
+
+    With it, the claim is checkable. A note-only edit provably *cannot* move this
+    digest -- `note` is not in `TIER1_FIELDS`, and the rule root is not read here
+    at all -- and a mechanical edit provably *does* move it, however plausible
+    the justification and however carefully the byte hash was updated.
+
+    It is derived from `tier1_verdict`'s own comparison (the sorted multiset of
+    `_key` over the non-reminder rows) rather than reimplemented beside it, so
+    the guard cannot drift from the thing it guards: widening `TIER1_FIELDS` or
+    changing `_normalise` moves both at once.
+    """
+    payload = json.dumps(sorted(_key(e) for e in _rows(doc, reminders=False)),
+                         ensure_ascii=True)
+    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def tier1_verdict(rule_id):

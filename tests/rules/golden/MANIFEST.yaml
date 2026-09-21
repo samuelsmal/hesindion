@@ -1,6 +1,6 @@
 description: >-
-  The golden corpus: the ten rules authored by hand against the live
-  Regelwiki, which the LLM authoring pipeline must reproduce before it is
+  The golden corpus: the ten rules authored by hand against the live rule
+  website, which the LLM authoring pipeline must reproduce before it is
   trusted with the remaining 222. This file freezes them by content hash
   instead of by a second copy of the bodies (Task 4 fix round 1, Q5): a
   duplicate under tests/ could drift from specs/rules/ silently, and was
@@ -8,31 +8,74 @@ description: >-
   would have passed CI unchecked, since `make rules-lint` globs
   specs/rules/ only.
 
-  Each value is the SHA-256 of the authored file's bytes, so any edit to a
-  golden rule fails tests/rules/test_golden.py with the remedy in the
-  message. That is the intent: changing one of these files invalidates the
-  pipeline's calibration and means re-running it, which should be a
-  deliberate act, not a side effect.
+  Each rule carries **two** hashes, and they answer two different questions.
 
-  One carve-out, and only one: the hash covers the whole file, but the
-  calibration gate does not. `test_calibration.py`'s Tier 1 grades *effect
-  rows* on `TIER1_FIELDS`, with `note` explicitly excluded -- so an edit
-  that touches neither cannot move a single verdict, and there is nothing
-  for a re-run to re-measure. Three shapes qualify so far: `note`,
-  `source.checked`, and a rule-root key that is not an effect row at all
-  (`ruleset`, added by ADR-0009). Such an edit updates the hash here and
-  records its reasoning under `golden_edits` in the recorded run's
-  `RUN.yaml`. An edit that touches any Tier 1 field of any effect row is
-  the other case, and that one does mean a live re-run.
+  `bytes` is the SHA-256 of the authored file as it sits on disk. It freezes
+  the file: any edit at all fails `tests/rules/test_golden.py` with the
+  remedy in the message. That is the intent -- changing one of these files
+  normally invalidates the pipeline's calibration and means re-running it,
+  which should be a deliberate act, not a side effect.
+
+  `graded` is the SHA-256 of the same file **reduced to exactly what the
+  calibration gate grades**: the sorted multiset of every non-reminder effect
+  row, each cut down to `test_calibration.TIER1_FIELDS` and normalised the
+  way `tier1_verdict` normalises it. It is computed by
+  `test_calibration.graded_digest`, which is built on `tier1_verdict`'s own
+  comparison rather than reimplemented beside it, so it cannot drift from the
+  gate it stands in for.
+
+  The second hash exists because of the carve-out below. The hash covers the
+  whole file, but the calibration gate does not: Tier 1 grades *effect rows*
+  on `TIER1_FIELDS`, with `note` excluded, so an edit that touches neither
+  cannot move a single verdict and there is nothing for a re-run to
+  re-measure. Three shapes qualify so far: `note`, `source.checked`, and a
+  rule-root key that is not an effect row at all (`ruleset`, added by
+  ADR-0009; `source.title`, added for chapter rules). Such an edit updates
+  `bytes` here and records its reasoning under `golden_edits` in the recorded
+  run's `RUN.yaml`. An edit that touches any Tier 1 field of any effect row
+  is the other case, and that one does mean a live re-run.
+
+  With only `bytes`, that carve-out rested entirely on an English
+  justification: "note-only, so no re-run" and "mechanical, but I called it
+  note-only" produce byte-identical evidence, and only a reader diffing the
+  file against the claim could tell them apart. `graded` makes the claim
+  mechanical. A genuinely note-only edit **provably cannot move it**, because
+  no field it touched is an input. A mechanical edit **provably does move
+  it**, however plausible the `golden_edits` prose and however carefully
+  `bytes` was refreshed -- and the failure names the gate, not the file.
+
+  So: updating `bytes` alone is the carve-out, and is cheap. Updating
+  `graded` is a claim that the pipeline's reference encoding changed, and the
+  only thing that may settle it is a live re-run.
 
 rules:
-  SA_40: sha256:07ee42bbcf6d9bd1865fb313e46b5a8d3433e6c719f132dcd11934e4604f845b
-  SA_41: sha256:06c4bfd611d00028416d5cf8674755008ea08096cd1b58c089a84b67b6d9c3c8
-  SA_43: sha256:d566abf98f22e18a04bd857f693d4198b27f316ee09bba1242e66147daf6ba2c
-  SA_48: sha256:8d4c3e167f0dd7ec3b1d7522e7417f19f790eae53e3ce06d264348beabe986de
-  SA_59: sha256:0432a6c1059f36e3cb04294074c7f709e7b661224ca7c34c52c31fde9f9542da
-  SA_62: sha256:d30745f1275b8efb8a797b458c5da5bd5c7690fcea69eaaa7a81a14dc262dd50
-  SA_65: sha256:cec3eb2e4c486328acd3080e8cae5a486d1ccdd292463f931b0f7bdf05055a9c
-  SA_66: sha256:281810e624f674112dfe5f80fe4747aa15bccd67ce60c1fcc0ac6199c9d75208
-  SA_67: sha256:e8bed78f5a143631feb03c6d4dee8ace50696456e047e4961b57482f06607e42
-  SA_661: sha256:e606f00afa7ffa68c0bdf1f4f1b1b70434d07d34e4883df6f17bee352c1e47d6
+  SA_40:
+    bytes:  sha256:07ee42bbcf6d9bd1865fb313e46b5a8d3433e6c719f132dcd11934e4604f845b
+    graded: sha256:4ff2ab60673c11dfa2cdd418764609c290ffd52f578a2864ff4bc4e3b3db272d
+  SA_41:
+    bytes:  sha256:06c4bfd611d00028416d5cf8674755008ea08096cd1b58c089a84b67b6d9c3c8
+    graded: sha256:fe1f0b37745725b39d80787ac381ad90f0d117f8ef138e9269d13a5d6d82ea4f
+  SA_43:
+    bytes:  sha256:d566abf98f22e18a04bd857f693d4198b27f316ee09bba1242e66147daf6ba2c
+    graded: sha256:4e83c27a1baf0ccca4918a29bccbf3ff120d17b231849a69ad9e9c2e049e2f11
+  SA_48:
+    bytes:  sha256:8d4c3e167f0dd7ec3b1d7522e7417f19f790eae53e3ce06d264348beabe986de
+    graded: sha256:13fa726c77c891ed0573a6f9ad1d72c970ec9096d133b4c4be8f2175e5463987
+  SA_59:
+    bytes:  sha256:0432a6c1059f36e3cb04294074c7f709e7b661224ca7c34c52c31fde9f9542da
+    graded: sha256:aeecfb6f362cea5e1c75b3c58de78ed911578c886618a2e37b211c3d161eac02
+  SA_62:
+    bytes:  sha256:d30745f1275b8efb8a797b458c5da5bd5c7690fcea69eaaa7a81a14dc262dd50
+    graded: sha256:1ead9c9ab81e8d5f59f241c2927d83eceb8fd1ac06bcf283f206f0553499e3cc
+  SA_65:
+    bytes:  sha256:cec3eb2e4c486328acd3080e8cae5a486d1ccdd292463f931b0f7bdf05055a9c
+    graded: sha256:65148914ea9285abd5200438d176fa92bdf639ff92856b808f908fd1a7fdc0fa
+  SA_66:
+    bytes:  sha256:281810e624f674112dfe5f80fe4747aa15bccd67ce60c1fcc0ac6199c9d75208
+    graded: sha256:fb06b9438d13970d39b58a40b7097700709398b31e731569b8b1e918163447e0
+  SA_67:
+    bytes:  sha256:e8bed78f5a143631feb03c6d4dee8ace50696456e047e4961b57482f06607e42
+    graded: sha256:447f26c12412d2dc1bba92b0328d1b1430740353ea4dce8eebc12ceb347db765
+  SA_661:
+    bytes:  sha256:e606f00afa7ffa68c0bdf1f4f1b1b70434d07d34e4883df6f17bee352c1e47d6
+    graded: sha256:27324dba6312aad9daeaa62a42ecdd69cc8f566fb42f6c1b033999f188b4e760

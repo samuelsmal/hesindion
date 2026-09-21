@@ -65,6 +65,13 @@ expected:
 # not: `tests/rules/golden/MANIFEST.yaml` hashes whole files, so touching one is
 # normally a re-run. An entry here is a claim that the edit lies entirely
 # outside what `test_calibration.py` grades, and it has to name the fields.
+#
+# Since 2026-09-21 that claim is also *checked*, not only argued: each golden
+# rule carries a second `graded` hash in MANIFEST.yaml, taken over the file
+# reduced to the Tier 1 fields of its non-reminder rows. An edit that is really
+# note-only cannot move it; a mechanical edit moves it even with a refreshed
+# byte hash and a plausible entry below. The prose here says *why* the edit was
+# made; the hash says whether the "outside what the gate grades" part is true.
 golden_edits:
   - date: '2026-09-21'
     rule: all ten
