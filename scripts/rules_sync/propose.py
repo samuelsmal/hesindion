@@ -55,6 +55,15 @@ for every rule in the run -- and redacts every surviving mention of those ids,
 because `vocabulary.yaml` and `schema.json` gloss several of the golden ten *by
 id* and an ADR restates one's mechanics from a stale paragraph. A hint both agents
 can `grep` pushes them toward agreeing with each other, not toward being right.
+
+Withholding follows the rule, not the id. An authored file that encodes the same
+mechanic as a graded rule is that rule's answer key whether or not it carries its
+id or its German name, so neither removing the file nor redacting the token
+reaches it. The workspace therefore withholds the transitive closure of the run's
+rules over the corpus's own mechanical adjacency -- `scripts/rules_sync/rule_graph.py`
+owns the three edges and says why they are those three -- and the run writes a
+report of what it withheld for which rule and under which edge, so a reader of the
+measurement can see what it controlled for (whole-branch review section 6).
 `ids_named_in_agent_briefs` covers what a workspace cannot: a brief reaches the
 model as a system prompt, so a worked example that is one of the rules in the run
 would be a copy by construction, and the driver refuses such a run outright.
@@ -93,6 +102,7 @@ import yaml
 
 from scripts.rules_lint.lint import lint_file
 from scripts.rules_sync import check as sync_check
+from scripts.rules_sync import rule_graph
 from scripts.rules_sync.normalise import ContentContainerError, hash_html
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -352,9 +362,18 @@ rather than toward being right.
 (This paragraph names no rule for the same reason. The test that greps this tree
 for withheld names caught the first draft of it, which did.)
 
-{withheld_count} rule(s) are withheld from this run. They are deliberately not
-named here: naming them would tell you which answer key was hidden, which is most
-of the hint back.
+{withheld_count} rule(s) are withheld from this run: the ones being encoded, and
+every authored file the corpus's own mechanical adjacency links to them -- a rule
+named in an `excludes` edge, a rule overriding the same parameter path, a rule
+whose effect rows share a graded axis. A neighbour that encodes the same mechanic
+is an answer key too, and it carries neither the id nor the name that redaction
+can find. That is why the precedent here is thinner than the corpus is, and it is
+not a defect you should route around: encode from the rule text.
+
+They are deliberately not named here: naming them would tell you which answer key
+was hidden, which is most of the hint back. The run's own artefacts carry that
+list, outside this tree, so the measurement stays auditable without being visible
+from inside it.
 """
 
 _WITHHELD = "a withheld rule"
@@ -426,23 +445,47 @@ def prepare_workspace(
     exclude_ids: Iterable[str],
     repo_root: Path = REPO_ROOT,
     exclude_names: Iterable[str] = (),
+    report_path: Path | None = None,
 ) -> Path:
     """Build the read-only reference tree an agent runs against.
 
     Copies the schema, the vocabulary registry, the ADRs, `AGENTS.md` and every
-    authored rule *except* those being encoded in this run -- so precedent is
-    available and the answer is not -- and redacts every surviving reference to a
-    withheld rule, by id *and* by German ability name (see `_redact_references`;
-    `exclude_names` comes from `rules_i18n.name` via `RuleInput.name`).
-    `rules.db` is never copied: the driver passes
-    each agent exactly the one rule text it needs, and a database of all 232 would
-    hand it the rest for nothing.
+    authored rule *except* those being encoded in this run **and every authored
+    file the rule graph links to them** -- so precedent is available and the
+    answer is not -- and redacts every surviving reference to a rule in the run,
+    by id *and* by German ability name (see `_redact_references`; `exclude_names`
+    comes from `rules_i18n.name` via `RuleInput.name`). `rules.db` is never
+    copied: the driver passes each agent exactly the one rule text it needs, and
+    a database of all 232 would hand it the rest for nothing.
+
+    **Withheld and redacted are two different sets, on purpose.** The graph's
+    neighbours are withheld as *files*, because the file is the answer key; they
+    are not added to the redaction token set. Redaction exists to stop a
+    surviving sentence from attaching a graded number to the rule being encoded,
+    and its cost is that the sentence loses its pointer -- Task 6 fix round 2
+    ruled the registries' glosses stay usable as precedent ("lose the pointer,
+    keep the mechanics"). Redacting every neighbour id as well would strip those
+    glosses for rules nobody is encoding, and it could only ever be done by id:
+    a neighbour's German name is not an input here, and a half-redaction that
+    removes `SA_NN` while leaving the German name standing is the exact bug
+    round 2 was opened to fix. What it leaves standing is reference prose that
+    states a *neighbour's* row without naming it; `tests/rules/test_workspace_leaks.py`
+    is the probe for that class, and any instance is a documentation fix, not a
+    widening of this function.
+
+    `report_path`, when given, receives the run's withholding report -- which
+    files were withheld for which graded rule, under which edge. It is written
+    **outside** `dest` by construction: the list of withheld files is itself the
+    hint the workspace README refuses to give, so it belongs with the run's
+    artefacts and not in the tree the agents read.
 
     What this cannot reach is the agent briefs themselves, which arrive as a
     system prompt rather than a file -- `ids_named_in_agent_briefs` is that guard.
     """
-    excluded = set(exclude_ids)
-    withheld = excluded | {n.strip() for n in exclude_names if n and n.strip()}
+    graded = list(dict.fromkeys(exclude_ids))
+    plan = rule_graph.withholding(graded, rules_dir=repo_root / "specs" / "rules")
+    excluded = plan.files
+    withheld = set(graded) | {n.strip() for n in exclude_names if n and n.strip()}
     rules_dest = dest / "specs" / "rules"
     rules_dest.mkdir(parents=True, exist_ok=True)
 
@@ -466,6 +509,10 @@ def prepare_workspace(
     (dest / "README.md").write_text(
         WORKSPACE_README.format(withheld_count=len(excluded)), encoding="utf-8"
     )
+    if report_path is not None:
+        report_path = Path(report_path)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(plan.render(), encoding="utf-8")
     return dest
 
 
@@ -1392,9 +1439,11 @@ def main(
 
     fetcher = sync_check.Fetcher() if args.verify_source else None
 
+    withheld_report = args.proposals_dir / "WITHHELD.md"
     with tempfile.TemporaryDirectory(prefix="rules-propose-ws-") as workspace:
         prepare_workspace(Path(workspace), run_ids,
-                          exclude_names=[r.name for r in rules])
+                          exclude_names=[r.name for r in rules],
+                          report_path=withheld_report)
         # `runner_factory` is the seam that makes this whole function reachable by
         # a test: `tests/conftest.py`'s autouse guard forbids the real `claude`
         # binary, so `main()` was previously untestable end to end and the
@@ -1427,9 +1476,10 @@ def main(
     # (`test_main_end_to_end_redacts_the_workspace_it_builds`).
     print(
         f"Agents ran against a workspace built to withhold the authored file for, and redact "
-        f"every mention of, the {len(run_ids)} rule(s) in this run; precedent was available, the "
-        f"answer was not."
+        f"every mention of, the {len(run_ids)} rule(s) in this run -- plus every authored file "
+        f"the rule graph links to them; precedent was available, the answer was not."
     )
+    print(f"Which files that withheld, for which rule and under which edge: {withheld_report}")
     print(toolchain_note.replace("**", ""))
     return 1 if any(p.status in ("lint-failed", "error") for p in proposals) else 0
 

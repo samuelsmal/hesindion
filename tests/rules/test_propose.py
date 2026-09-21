@@ -755,16 +755,103 @@ def test_the_workspace_withholds_the_authored_file_for_every_rule_in_the_run(tmp
 
     assert not (ws / "specs" / "rules" / "SA_65.yaml").exists()
     assert not (ws / "specs" / "rules" / "SA_66.yaml").exists()
-    # precedent the briefs name by path is still there
-    assert (ws / "specs" / "rules" / "SA_67.yaml").exists()
-    assert (ws / "specs" / "rules" / "SA_48.yaml").exists()
+    # Precedent that is neither in the run nor adjacent to it is still there.
+    # `SA_67` and `SA_48` used to stand here and no longer can: both share the
+    # graded axis `modifier/at/combat/hero` with `SA_66`, so Task 11a's closure
+    # withholds them. Two rules the graph does not reach carry the same point --
+    # "a rule outside the run survives" -- without asserting the presence of a
+    # file the new rule must withhold. (Neither pair is named by the agent briefs;
+    # the briefs name only `schema.json` and `vocabulary.yaml` by path.)
+    assert (ws / "specs" / "rules" / "SA_41.yaml").exists()
+    assert (ws / "specs" / "rules" / "SA_43.yaml").exists()
     assert (ws / "specs" / "rules" / "schema.json").exists()
     assert (ws / "specs" / "rules" / "vocabulary.yaml").exists()
     assert (ws / "docs" / "adr" / "0008-rules-as-data-combat-engine.md").exists()
     # M3: the README must not name what was withheld -- that is most of the hint
     readme = (ws / "README.md").read_text()
     assert "SA_65" not in readme and "SA_66" not in readme
-    assert "2 rule(s) are withheld" in readme
+    # The count is the whole withheld set, graph neighbours included: a count of
+    # the graded rules alone would understate how thin the precedent is. Checked
+    # against the tree rather than against a literal, so it stays an invariant
+    # ("the README does not lie about how much is missing") as the corpus grows.
+    from scripts.rules_sync.propose import REPO_ROOT
+    from scripts.rules_lint.lint import NON_RULE_FILES
+    authored = {p.stem for p in (REPO_ROOT / "specs" / "rules").glob("*.yaml")
+                if p.name not in NON_RULE_FILES}
+    present = {p.stem for p in (ws / "specs" / "rules").glob("*.yaml")
+               if p.name not in NON_RULE_FILES}
+    assert f"{len(authored - present)} rule(s) are withheld" in readme
+    assert len(authored - present) > 2, (
+        "the graph pulled in nothing at all for two rules that share a graded axis "
+        "with five other authored files -- the closure is not being applied")
+
+
+def test_the_workspace_withholds_the_neighbour_that_encodes_a_graded_rules_clause(tmp_path):
+    """Section 6's instance, written against the real files because that is what
+    it is about.
+
+    `SA_661` is one of the golden ten. A second authored file encodes the very
+    clause `SA_661` modifies -- same `type`, `target`, `scope`, `side`, same
+    value, same gate -- with a root note stating the relationship outright. It
+    carries neither `SA_661` nor its German ability name, so withholding the
+    graded file and redacting its two tokens left it standing: an agent grading
+    `SA_661` could read the answer out of a file it was entitled to see.
+
+    That file was authored *after* the recorded 7/10, so `SA_661`'s Tier 1 pass
+    is to be treated as unmeasured until a run withholds the two together
+    (`docs/rules-pipeline-status.md` section 1).
+
+    Asserted on the file's absence and on the absence of the colliding row --
+    not on a hash of either, which would go green the moment anyone re-authored
+    a note and tell nobody what it had stopped checking.
+    """
+    import yaml as _yaml
+    from scripts.rules_sync.propose import REPO_ROOT
+
+    graded, neighbour = "SA_661", "CHAP_Reiterkampf"
+    authored = _yaml.safe_load((REPO_ROOT / "specs" / "rules" / f"{graded}.yaml").read_text())
+    axes = ("type", "target", "scope", "side", "value", "when")
+    colliding = [{k: row.get(k) for k in axes}
+                 for row in authored["effects"] if row.get("type") != "reminder"]
+    assert colliding, f"{graded} has no non-reminder row; this test has lost its subject"
+
+    ws = prepare_workspace(tmp_path / "ws", [graded])
+
+    assert not (ws / "specs" / "rules" / f"{neighbour}.yaml").exists(), (
+        f"{neighbour} encodes the clause {graded} modifies and is still in the workspace")
+
+    offenders = []
+    for path in sorted((ws / "specs" / "rules").glob("*.yaml")):
+        doc = _yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        for row in doc.get("effects") or []:
+            if not isinstance(row, dict):
+                continue
+            shape = {k: row.get(k) for k in axes}
+            if shape in colliding:
+                offenders.append(f"{path.name}: {shape}")
+    assert offenders == [], (
+        "a file left in the workspace states one of the graded rule's own rows:\n  "
+        + "\n  ".join(offenders))
+
+
+def test_the_withholding_report_is_written_outside_the_workspace(tmp_path):
+    """Section 6's second requirement. The report names what was withheld, which
+    is the one thing the workspace README deliberately refuses to say -- so it is
+    a run artefact and must not be reachable from the tree the agents read."""
+    report = tmp_path / "artefacts" / "WITHHELD.md"
+    ws = prepare_workspace(tmp_path / "ws", ["SA_661"], report_path=report)
+
+    body = report.read_text()
+    assert "## SA_661" in body
+    assert "specs/rules/CHAP_Reiterkampf.yaml" in body
+    assert "graded-axis" in body
+    # not inside the tree the agents read, and not produced as a side effect of
+    # anything the agents can see
+    assert report.resolve() not in {p.resolve() for p in ws.rglob("*")}
+    assert not list(ws.rglob("WITHHELD.md"))
+    for path in ws.rglob("*"):
+        if path.is_file():
+            assert "WITHHELD" not in path.read_text(encoding="utf-8", errors="ignore")
 
 
 def test_the_workspace_never_carries_the_rule_database(tmp_path):
@@ -1090,6 +1177,34 @@ def test_main_end_to_end_redacts_the_workspace_it_builds(tmp_path):
     assert rc == 0
     assert captured, "runner_factory was never called"
     assert offenders == [], offenders
+
+
+def test_main_writes_the_withholding_report_beside_the_runs_other_artefacts(tmp_path):
+    """Section 6's second requirement, through `main()`'s real wiring rather
+    than through `prepare_workspace` alone -- the same seam finding 7 added,
+    for the same reason: a report nothing calls is a report nothing writes."""
+    from scripts.rules_sync import propose as mod
+
+    rule_id = "SA_661"
+    encoding = ENCODING_A.replace("SA_901", rule_id)
+    proposals = tmp_path / "prop"
+
+    def make_runner(**kwargs):
+        return FakeRunner({
+            ("rule-author", "batch-1"): envelope(rule_id, encoding),
+            ("rule-verifier", rule_id): envelope(rule_id, encoding),
+        })
+
+    rc = mod.main(
+        ["--ids", rule_id, "--db", str(mod.DEFAULT_DB),
+         "--rules-dir", str(tmp_path / "scratch"),
+         "--proposals-dir", str(proposals)],
+        runner_factory=make_runner,
+    )
+    assert rc == 0
+    body = (proposals / "WITHHELD.md").read_text()
+    assert f"## {rule_id}" in body
+    assert "specs/rules/CHAP_Reiterkampf.yaml" in body
 
 
 # ── fix round 1: two empty encodings are not an agreement ────────────────────
