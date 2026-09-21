@@ -191,15 +191,19 @@ that dimension forever. Reversible: a version dimension would extend `ruleset` a
 rather than replace them. **Nothing needs deciding until a group deliberately plays an older
 printing.**
 
-**(b) The `golgaritenActive` gate on the *baseline* advantageous position — a live wrong number.**
-`Hesindion/Engine/MeleeModifiers.swift:15` guards the chapter rule's +2 AT with
-`ctx.hero.golgaritenActive(mounted:)`, which requires `SA_661` *plus* a specific weapon *plus* a
-specific shield. So a mounted hero without that combat style gets no automatic +2 from a rule that
-binds every rider. The manual toggle in `CombatAttackViews` still reaches the number, so it is not
-unreachable — just not automatic. The authored row is `specs/rules/CHAP_Reiterkampf.yaml`'s and the
-Swift is the copy that disagrees. **This is not a documentation defect; correcting it changes numbers
-at the table, so it is the user's call.** Task 12 acceptance criterion: divergences are recorded and
-left for a ruling.
+**(b) ~~The `golgaritenActive` gate on the *baseline* advantageous position.~~ ANSWERED — the user
+authorised the fix, which landed in `6df4d21`.** Kept here because the reasoning is the clearest
+worked example of what this corpus is for. `MeleeModifiers` held two `+2 AT` definitions, both
+guarded by `golgaritenActive(mounted:)` — which demands `SA_661` *plus* a Rabenschnabel *plus* a
+Großschild. Reading both source pages together settled it: `CHAP_Reiterkampf` clause 2 grants the
+advantageous position to **every** mounted hero facing someone on foot, while `SA_661` clause 1 says
+*"erhöht sich die aus der vorteilhaften Position resultierende Erleichterung auf AT um +2"* — it
+raises an ease that already exists, so it cannot be the thing being raised. The arithmetic (+2
+baseline plus +2 style = +4) was right; the gating was wrong **in both directions**: a rider without
+the style got nothing automatic, and a Golgarite against *another rider* was handed +4 that no rule
+grants. `ModifierContext` gained an `opponentOnFoot` GM flag on the `targetIsSurprised` pattern
+(ADR-0005) — a name both authored files had already used, before anyone looked at the Swift. Neither
+page alone would have shown the bug.
 
 **(c) `rules.title` versus `rules_i18n.name` for chapter-rule display — settle before the engine
 reads it.** ADR-0009 says a chapter rule's page title goes in "the chapter rule's `rules` row as its
