@@ -62,5 +62,15 @@ run once from `ContentView`'s `.task`, saving only when something actually chang
 - Persisting `speciesId` makes a latent bug visible: the species tables cover only `R_1`–`R_4`
   (Mensch, Elf, Halbelf, Zwerg) and silently fall back to *human* values for anything else. Now
   detectable rather than invisible. Not fixed here.
+  **Follow-up, 2026-09-21:** it found a real one. GS was not keyed on species at all — the import
+  wrote a flat `base: 8` for every hero, so every dwarf (GS 6) was two Schritt too fast. The fix uses
+  `speciesId` exactly as this ADR anticipated, and `DerivedValueFormulas` gains its first
+  species-keyed formula; the file's docstring said *attribute-only*, which described its contents
+  rather than its contract, and the contract — the import path and the repair path cannot drift — is
+  precisely what GS needed once `DerivedValueRepair` learned about it. The fallback itself is
+  unchanged and still human, but it is now an explicit `nil` from the formula that each caller
+  decides about: the import substitutes the human value so a hero has something to display, the
+  repair declines to write a number it cannot derive. See `CHANGELOG.md` under *Fixed* and Task 13 of
+  `docs/plans/2026-09-20-rules-pipeline-and-authoring.md`.
 - A future contributor who reads `ausweichen` and expects `GE / 2` will find `ceil`. The convention
   is recorded in `AGENTS.md` so it applies beyond this change.

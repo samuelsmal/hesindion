@@ -878,7 +878,7 @@ because a derived value has no rule to point at.
 |---|---|
 | Species base LP | `Hesindion/Services/OptolithImportService.swift:796` (`speciesBaseLP`) |
 | Species base SK / ZK | `Hesindion/Services/OptolithImportService.swift:803`, `:810` |
-| GS | `Hesindion/Services/OptolithImportService.swift:888` — a flat `base: 8` for every hero, though GS is a species rule; worth checking against the page before authoring |
+| GS | **Swift fixed 2026-09-21 (Task 13); still unauthored.** Was a flat `base: 8` for every hero at `OptolithImportService.swift:888`; now `DerivedValueFormulas.geschwindigkeit(speciesId:)` |
 | Wundschwelle, Ausweichen, Initiative | `Hesindion/Engine/DerivedValueFormulas.swift:15`, `:28`, `:33` |
 
 **`source.title` on chapter files (ADR-0009).** A chapter rule has no `rules_i18n` row, so a
@@ -920,3 +920,56 @@ comparison.
       authoring.
 
 **Verify:** `make rules-lint && python3 -m pytest tests/ -q && make rules-db && make rules-sync-check`
+
+---
+
+### Task 13: GS is a species rule, and the app gave every hero the human value
+
+**Status:** Swift done 2026-09-21. The corpus half is open and belongs to Task 12.
+
+**What was wrong:** `OptolithImportService.swift:888` read
+`let geschwindigkeit = ResourceValue(base: 8, bonus: 0, max: 8)`, commented *"GS = 8 (Mensch base)"*.
+GS is keyed on species — the pinned Optolith source carries `mov` per race in `Data/univ/Races.yaml`,
+and **Zwerge are 6**, while Menschen, Elfen and Halbelfen are 8. Every dwarf hero was two Schritt too
+fast, and `RaceVariants.yaml` overrides `mov` for none of the ten variants, so those four values are
+the whole of what the pinned source knows.
+
+**Blast radius, because GS is displayed and derived from:** `HeroDetailView.swift:545-546` shows it
+with `Hero.totalGsPenalty` (`belastungPenalty + armorGsModifier`) beside it;
+`CombatDefenseViews.swift:855-887` renders the Flucht outcome as *"GS n Schritt"* and *"GS/2 = n
+Schritt"*; and `COND_1`, `COND_5` and `COND_6` all carry `target: gs` modifier rows for the engine
+that will read them. `Hero.sturmangriffDamageBonus` is **not** affected — it reads `mountGS`, the
+pet's speed, not the hero's.
+
+**What was done** (`3c3ff91`, the Belastungsgewöhnung fix, is the precedent this copies):
+
+- `DerivedValueFormulas.geschwindigkeit(speciesId:) -> Int?` holds the table. It is species-keyed
+  rather than attribute-only, which that file's docstring used to claim as its scope; the file's
+  actual contract is "the import path and the repair path cannot drift", and GS needs exactly that.
+  The species base LP/SK/ZK tables stay in `OptolithImportService`, because each still has one
+  caller — `DerivedValueRepair` does not touch those three (ADR-0006).
+- **Unknown species returns `nil`, not `8`.** The import falls back to
+  `geschwindigkeitFallback` (8) because a hero must have a GS to display and that fallback is
+  ADR-0006's already-recorded status quo; the repair *skips* the hero instead, because writing the
+  human value is the very thing being corrected, over a number somebody may have fixed by hand.
+- `DerivedValueRepair` gains GS, keyed on `PersonalData.speciesId` — the field ADR-0006 began
+  persisting so that a species-aware recompute would become possible. Heroes imported before that
+  have `speciesId == nil` and are left alone, which is the honest outcome: their species is not
+  recorded anywhere the app can read.
+
+**Still open:** GS has no rule to cite. It is on Task 12's derived-value list and ADR-0009 puts
+derived-value rules in our own id namespace; authoring it would have made this bug a *wrong citation*
+rather than a plausible constant. Fixing the Swift first was the right order — the number is wrong at
+the table today and the corpus cannot yet be read by anything — but the authoring is what stops the
+next one.
+
+**Acceptance Criteria:**
+- [x] GS comes from the species, with the four values taken from the pinned source rather than from
+      the code being replaced.
+- [x] The unknown-species branch is a deliberate, tested choice, and the import and the repair make
+      *different* deliberate choices for it.
+- [x] `DerivedValueRepair` stays idempotent, by test.
+- [x] `CHANGELOG.md` under `Fixed`, naming what changes at the table.
+- [ ] GS authored as a derived-value rule with provenance (Task 12).
+
+**Verify:** `make test-ui`
