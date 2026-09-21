@@ -199,10 +199,13 @@ Consequences:
   makes those rows load-bearing rather than optional.
 - `CHAP_Reiterkampf`'s BE row is `scope: combat`, matching the clause, while
   `SharedModifiers.encumbrance` applies the same relief in `spellCasting` and `liturgyCasting`. That
-  divergence is recorded in the authored file's note and in `CHANGELOG.md` as an open question; it
-  is not settled here, and no Swift was changed. It is the same unresolved seam as this ADR's last
-  consequence about `CheckDomain` having no domain for INI or GS — a mounted Zauberprobe is where
-  `scope` and `CheckDomain` disagree in the other direction.
+  divergence was recorded in the authored file's note and in `CHANGELOG.md` as an open question; it
+  was not settled here, and no Swift was changed at the time. **Settled 2026-09-21 in the data's
+  favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief reaches no
+  non-combat action, and `SharedModifiers.encumbrance` now scopes it to the four combat domains —
+  see `CHANGELOG.md` under *Fixed*. The *other* half of the seam stands: this ADR's last consequence
+  about `CheckDomain` having no domain for INI or GS is still open, and the unmounted Belastung
+  penalty still reaches values no `scope` value can name.
 
 ## Related
 

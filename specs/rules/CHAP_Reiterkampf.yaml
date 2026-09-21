@@ -14,7 +14,7 @@ effects:
   value: -1
   when:
   - mounted: true
-  note: 'Clause 7 - scope is the load-bearing field here. OPEN: SharedModifiers.encumbrance applies it in spellCasting/liturgyCasting too; unruled, Swift left unchanged'
+  note: 'Clause 7 - scope is the load-bearing field here. Ruled 2026-09-21: combat domains only, so SharedModifiers.encumbrance no longer eases spellCasting/liturgyCasting'
 - type: modifier
   target: aw
   scope: combat
