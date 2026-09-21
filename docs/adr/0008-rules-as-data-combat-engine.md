@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted — amended 2026-09-21 (see *Amendment* below)
 
 ## Context
 
@@ -164,6 +164,45 @@ consequence for the GM.
   work must either add the two domains or keep BE as a derived value outside the domain model; it
   cannot be settled by choosing a scope string. Found while migrating `SA_41`, whose two duplicate
   legacy sources disagreed on exactly this.
+
+## Amendment (2026-09-21): "rules are data" includes the rules no ability owns
+
+This ADR's census counts abilities — 232 combat special abilities, 73 flat modifiers, 27 constant
+overrides — and its decision is written in terms of them. The constants it wants moved out of Swift
+are not all owned by abilities, and the difference was invisible until a ruling went wrong.
+
+<https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes two
+of its mechanics: `Hesindion/Engine/SharedModifiers.swift`'s mounted BE relief and
+`Hesindion/Engine/DefenseModifiers.swift`'s `mountedDodgePenalty`. Both bind any mounted hero, with
+or without `SA_43`. They are exactly the kind of literal this ADR says should be data, and nothing
+in the corpus could hold them, because an authored file needed an Optolith id and a chapter page has
+none. The near-miss: `SA_43`'s file recorded the BE clause as non-existent — the clause is on that
+page, and the Swift had implemented it all along.
+
+**The corpus therefore covers chapter rules as well as abilities**, under the `CHAP_` id namespace
+ADR-0007's amendment defines. Nothing about the effect union, the predicate set or the parameter
+vocabulary changes: `CHAP_Reiterkampf` encodes its two constants as ordinary `modifier` rows gated
+on the `mounted` predicate this ADR already lists, and its remaining clauses are `reminder` rows
+with `UNENCODED:` notes.
+
+This matters for the scope of the engine rewrite. Authoring all 232 abilities would still have left
+the mounted-combat, Beengte-Umgebung and multiple-defence constants in Swift — a rule that fires for
+every hero, hidden in a file nobody reviews as rule data, while the corpus reported full coverage.
+The coverage ratchet counts abilities; it cannot count what it has no id for.
+
+Consequences:
+
+- The remaining chapter pages the app hardcodes are follow-on work, tracked as Task 12 in
+  `docs/plans/2026-09-20-rules-pipeline-and-authoring.md`. They are not authored by this amendment.
+- A chapter rule cannot degrade to rule text: there is no `rules_i18n` row for it, because there is
+  no Optolith entry. "Never to silence" is held by its own authored `reminder` rows instead, which
+  makes those rows load-bearing rather than optional.
+- `CHAP_Reiterkampf`'s BE row is `scope: combat`, matching the clause, while
+  `SharedModifiers.encumbrance` applies the same relief in `spellCasting` and `liturgyCasting`. That
+  divergence is recorded in the authored file's note and in `CHANGELOG.md` as an open question; it
+  is not settled here, and no Swift was changed. It is the same unresolved seam as this ADR's last
+  consequence about `CheckDomain` having no domain for INI or GS — a mounted Zauberprobe is where
+  `scope` and `CheckDomain` disagree in the other direction.
 
 ## Related
 

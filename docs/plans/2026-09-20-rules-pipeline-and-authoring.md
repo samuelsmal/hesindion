@@ -821,3 +821,52 @@ attribute a fix, cannot distinguish 6 from 8, and cannot certify what it is bein
       justify a wave — and the honest answer if the data does not reach it.
 
 **Verify:** `python3 -m pytest tests/rules/test_calibration.py -v` (grades recorded output; no model calls)
+
+---
+
+### Task 12: Author the remaining chapter rules the app hardcodes
+
+**Goal:** Every DSA 5 chapter rule whose constants currently live as Swift literals has an authored
+`CHAP_` file, so the engine rewrite has data to read instead of a number to keep.
+
+**Why this exists:** the corpus was built around Optolith ids, and a chapter page has none — so the
+rules that bind *anyone in a situation* rather than anyone with an ability had nowhere to go, and
+stayed in Swift. Authoring all 232 abilities would have left them there while coverage read as
+complete. `CHAP_Reiterkampf` is the first one and establishes the shape (ADR-0007 and ADR-0008,
+amendments of 2026-09-21); this task is the rest. It also exposed a live ruling error: `SA_43`'s
+note claimed a clause did not exist when it did, because the corpus had no shape that could hold it.
+
+**Files:**
+- Create: `specs/rules/CHAP_<Page>.yaml`, one per chapter page
+- Modify: `docs/rules-migration-reconciliation.md` (coverage), `CHANGELOG.md`
+
+**The known backlog**, each already a Swift literal, each a page on the rule website:
+
+| Mechanic | Swift today |
+|---|---|
+| Beengte Umgebung, AT/PA by weapon reach | `Hesindion/Models/CombatManeuver.swift:109` (`beengteUmgebungPenalty`), applied in `MeleeModifiers.swift:79` and `DefenseModifiers.swift:67` |
+| Multiple defences, cumulative per Kampfrunde | `Hesindion/Engine/DefenseModifiers.swift:16` (`-(ctx.defenseCount * 3)`) |
+| Weapon reach mismatch, AT penalty | `Hesindion/Models/CombatManeuver.swift:100-105` |
+| Dual wield, base penalty | `Hero` (ADR-0008's census) |
+| Passierschlag | `passierschlag.penalty` per ADR-0008's parameter list |
+
+The table is a starting point, not a closed list: the first step is to enumerate the chapter pages
+the combat engine reads from, and a mechanic that turns out to belong to an ability after all is
+authored there instead — which is the mistake `SA_43` made in the other direction.
+
+**Acceptance Criteria:**
+- [ ] Each page is one authored file, id `CHAP_<PageSlug>` derived from `source.url`, with a real
+      `source.hash` verified by `make rules-sync-check` — never a placeholder, which `lint.py`
+      rejects for a chapter id by construction.
+- [ ] Constants that ADR-0008 names as parameters are authored as `parameterOverride` against paths
+      that already exist in the corpus or in `schema.json` — `parameter` is the field nothing
+      validates, so an invented path lints clean and encodes to nothing (RUN.yaml, `SA_41`).
+- [ ] Every clause the grammar cannot express is a `reminder` with an `UNENCODED:` note, so
+      `grep -r UNENCODED specs/rules` still enumerates the whole debt.
+- [ ] No Swift changes in this task. The engine plan consumes the data; this one writes it.
+- [ ] Any divergence found between an authored clause and the Swift that implements it today is
+      **recorded** under `[Unreleased]` in `CHANGELOG.md` and left for a ruling — as
+      `CHAP_Reiterkampf`'s BE scope was. Numbers at the table do not change as a side effect of
+      authoring.
+
+**Verify:** `make rules-lint && python3 -m pytest tests/ -q && make rules-db && make rules-sync-check`

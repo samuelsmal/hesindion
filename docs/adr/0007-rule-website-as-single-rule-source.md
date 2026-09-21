@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted — amended 2026-09-21 (see *Amendment* below)
 
 ## Context
 
@@ -134,6 +134,51 @@ visibly missing, not quietly substituted.
   explicit, which is the precondition for honouring a future licensing request.
 - The agent flow is an *authoring* tool. It runs on a developer machine against the repository; the
   app ships no model dependency and no network dependency for rules.
+
+## Amendment (2026-09-21): the authored store covers chapter rules, not only rules with an Optolith id
+
+The original decision says "one YAML file per rule under `specs/rules/`" and takes for granted that
+a rule has an Optolith id, because Optolith supplies the id namespace. Some rules do not. A DSA 5
+*chapter* page states mechanics that bind anyone in the situation it describes — mounted combat,
+Beengte Umgebung, multiple defences — and no ability owns them, so Optolith has no id for them and
+the corpus had nowhere to put them.
+
+That gap had a cost already being paid: the app hardcoded those constants in Swift, and the corpus
+looked complete without them. It also produced a wrong ruling. `SA_43`'s authored file recorded that
+a −1 BE effect had been dropped because no clause existed; the clause exists, on
+<https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, and the app had implemented it for months. The
+removal was right, the reason was not — the effect is the chapter page's, not the ability's — and
+"there is no clause" is what a reviewer concludes when the corpus has no shape that could hold one.
+
+**Chapter pages are authored files like any other, under a second id namespace.** A chapter id is
+`CHAP_` plus the page's own URL stem, ASCII-folded (`CHAP_Reiterkampf`). Everything else is
+unchanged: same schema, same linter, same `source` block, same `make rules-sync-check` drift
+detection, no rule prose.
+
+Why the URL stem rather than a number:
+
+- **It cannot collide with Optolith.** Every Optolith id ends in digits and every chapter id ends in
+  letters, so the two namespaces are disjoint by construction rather than by convention — including
+  against Optolith ids that do not exist yet.
+- **It needs no registry.** A sequential `CHAP_1` would need a file mapping numbers to pages, and
+  this ADR exists because "two authorities, no arbiter" is a bug. The id derives from `source.url`,
+  which is already in the file, and `scripts/rules_lint/lint.py` checks the derivation — so "one
+  file per page, and the id says which page" is enforced, not documented.
+- **It is stable exactly as far as the provenance is.** If the page moves, `make rules-sync-check`
+  says so; renaming the file is then the same deliberate act as re-verifying the rule.
+
+Consequences, beyond those of the original decision:
+
+- Chapter rules have no `rules_i18n` row, because there is no Optolith entry to carry text. The
+  "degrade to rule text" fallback (ADR-0008) therefore cannot fire for them; they degrade to their
+  own authored `reminder` rows instead, which is why `CHAP_Reiterkampf` carries seven of them.
+- `scripts/build_rules_db/build_db.py` creates the `rules` row for a chapter id itself, under a new
+  `chapter` category. Without that its effects would be skipped with a warning — the silent-drop
+  failure this pipeline exists to stop.
+- The pipeline does not propose chapter rules. `scripts/rules_sync/propose.py` selects by Optolith
+  group and subgroup out of `rules.db`, so a chapter page has to be authored by hand against its
+  page, as `CHAP_Reiterkampf` was. Whether the two-agent pipeline should learn to read them is a
+  question for after the calibration gate passes.
 
 ## Related
 
