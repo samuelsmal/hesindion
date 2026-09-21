@@ -1018,6 +1018,16 @@ def test_main_end_to_end_redacts_the_workspace_it_builds(tmp_path):
     written proposal, not on what the agents were shown -- refusing to fail on
     that slip is exactly finding 7's point (verified by making that exact
     substitution and confirming this test fails on it, per the task report).
+
+    The id half of this guard is insensitive to that bug by construction --
+    `exclude_ids` withholds an id regardless of `exclude_names` -- so the name
+    half carries the entire signal, and that signal depends on `name` still
+    being glossed somewhere in the real reference tree. That is exactly the
+    kind of passage finding 1 already edited once to strip. The positive
+    control below fails loudly if a later documentation pass removes the last
+    such gloss, rather than leaving this test silently unable to fail (fix
+    round 1, important 2 -- this is what SA_65 demonstrated when tried first:
+    a test that passed with the bug present because it had nothing to lose).
     """
     from scripts.rules_sync import propose as mod
 
@@ -1027,6 +1037,21 @@ def test_main_end_to_end_redacts_the_workspace_it_builds(tmp_path):
     # to be, so picking it would make this test pass regardless of the wiring.
     rule_id = "SA_48"
     name = GOLDEN_NAMES[rule_id]
+
+    # Positive control: build a faithful, nothing-withheld copy of the same
+    # reference tree and require `name` to appear in it at least once. Without
+    # this, a documentation pass that strips the last gloss of `name` would
+    # make the offenders check below vacuously pass forever, with nothing to
+    # say the test had stopped covering anything.
+    control = prepare_workspace(tmp_path / "control", [])
+    assert any(name in p.read_text(encoding="utf-8", errors="ignore")
+               for p in control.rglob("*") if p.is_file()), (
+        f"positive control failed: {name!r} ({rule_id}) no longer appears anywhere in "
+        "the unredacted reference tree prepare_workspace copies. This test has lost "
+        "its only signal -- pick a different GOLDEN_NAMES entry that schema.json or "
+        "an ADR still glosses by name."
+    )
+
     offenders = []
     captured = {}
 

@@ -75,7 +75,10 @@ DISAGREEMENT_PREFIX = "DISAGREEMENT:"
 # rather than a convention -- without them "the id is the page slug" is a
 # sentence in a schema description that nothing enforces, and two files could
 # encode the same page under two ids, or one id could drift off its page while
-# both still lint clean.
+# both still lint clean. Kept in sync by hand with
+# scripts/build_rules_db/build_db.py's and scripts/build_rules_db/verify_db.py's
+# CHAPTER_PREFIX; `tests/rules/test_shared_constants.py` asserts the three
+# spellings agree.
 CHAPTER_PREFIX = "CHAP_"
 
 # Transliterated rather than stripped: the site's URLs carry umlauts

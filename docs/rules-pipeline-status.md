@@ -237,7 +237,7 @@ answering different questions on purpose — nobody has decided which.
 ## 7. Deferred minors
 
 Parked for a final review pass that has not happened. Each was judged real but not worth interrupting
-the task that found it. Verified against the tree as of `f276b14`; the two that have since been
+the task that found it. Verified against the tree as of `f276b14`; the four that have since been
 closed are marked so and left visible rather than deleted.
 
 **Corpus and tooling**

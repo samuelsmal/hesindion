@@ -239,7 +239,7 @@ def test_tier_1_matches_what_the_calibration_recorded(rule_id):
         )
 
 
-def test_the_tier_1_result_is_the_fraction_the_gate_reported():
+def test_the_tier_1_result_is_the_fraction_the_gate_reported(request):
     """The gate's headline number, derived from the files rather than restated.
 
     Whole-branch review finding 6: `python3 -m pytest tests/ -q` exits 0 and
@@ -248,10 +248,18 @@ def test_the_tier_1_result_is_the_fraction_the_gate_reported():
     not make the test fail on the gate result, which `test_calibration.py:212-228`
     (above) argues is deliberate and right. It only makes the failure visible to
     whoever ran the suite and only glanced at the exit code.
+
+    Fix round 1: a plain `print()` is captured by pytest and shown only for a
+    *failing* test -- this one passes by design, so under plain
+    `python3 -m pytest tests/ -q` (no `-s`) the line was silently swallowed and
+    the symptom finding 6 names was unchanged. `request.config.get_terminal_
+    writer()` writes through pytest's own terminal-reporter channel, which is
+    not subject to per-test output capturing, so the line reaches the terminal
+    under `-q` exactly as it would under `-v` or `-s`.
     """
     passing = [r for r in GOLDEN_IDS if tier1_verdict(r)[0]]
     assert len(passing) == sum(1 for v in RUN["expected"].values() if v)
-    print(
+    request.config.get_terminal_writer().line(
         f"CALIBRATION GATE: FAILED — Tier 1 {len(passing)}/{len(GOLDEN_IDS)} — "
         "no authoring wave (docs/rules-pipeline-status.md §3)"
     )
