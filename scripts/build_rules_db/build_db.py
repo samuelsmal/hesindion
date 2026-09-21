@@ -36,8 +36,11 @@ CHAPTER_PREFIX = "CHAP_"
 DEFAULT_RESOLVED_MAP = Path(__file__).resolve().parents[2] / ".cache" / "rules_resolve" / "resolved_urls.json"
 
 # The placeholder every migrated rule file was seeded with. It is not a URL and
-# must not reach the database as one -- see scripts/rules_sync/check.py, which
-# reports a file still carrying it as `unverified`.
+# must not reach the database as one -- scripts/rules_sync/check.py reports a
+# file still carrying it as `unverified`. Kept in sync by hand with that
+# module's UNVERIFIED_URL — two small local constants rather than a shared
+# module, the same arrangement NON_RULE_FILES and CHAPTER_PREFIX already use
+# here, and `tests/rules/test_shared_constants.py` asserts the two agree.
 UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"
 
 

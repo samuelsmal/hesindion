@@ -88,6 +88,10 @@ HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 # stated relationship holds.
 NON_RULE_FILES = {"schema.json", "SOURCES.yaml", "vocabulary.yaml"}
 
+# Kept in sync by hand with scripts/build_rules_db/build_db.py's UNVERIFIED_URL,
+# which needs it to avoid writing the placeholder into rules.db's `source_url`
+# as though it were a page. `tests/rules/test_shared_constants.py` asserts the
+# two agree — the same arrangement NON_RULE_FILES uses, for the same reason.
 UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"
 UNVERIFIED_HASH = "sha256:" + "0" * 64
 UNVERIFIED_CHECKED = "1970-01-01"

@@ -8,7 +8,13 @@ sync comments had already drifted before anyone added a fifth call site.
 it is "kept in sync by hand" with the others -- but nothing ever checked that, and the
 comments themselves had already gone stale, naming only some of the other sites.
 
-The four-small-local-constants arrangement (rather than a shared module) is a
+`UNVERIFIED_URL` joined them (Task 10): `scripts/rules_sync/check.py` reports a rule
+still carrying the placeholder as `unverified`, and `scripts/build_rules_db/build_db.py`
+needs the same string to know not to write it into `rules.source_url` as though it were
+a page. It arrived in new code *without* the convention, which is this finding's defect
+class recurring; it is closed here the same way.
+
+The small-local-constants arrangement (rather than a shared module) is a
 deliberate preference stated in each site's comment. This test does not change that;
 it makes the preference safe rather than merely stated, by asserting the relationship
 the comments claim: `lint.py`, `verify_db.py` and `build_db.py` agree exactly;
@@ -22,7 +28,9 @@ from scripts.build_rules_db.verify_db import CHAPTER_PREFIX as VERIFY_DB_CHAPTER
 from scripts.build_rules_db.verify_db import NON_RULE_FILES as VERIFY_DB_NON_RULE_FILES
 from scripts.rules_lint.lint import CHAPTER_PREFIX as LINT_CHAPTER_PREFIX
 from scripts.rules_lint.lint import NON_RULE_FILES as LINT_NON_RULE_FILES
+from scripts.build_rules_db.build_db import UNVERIFIED_URL as BUILD_DB_UNVERIFIED_URL
 from scripts.rules_sync.check import NON_RULE_FILES as CHECK_NON_RULE_FILES
+from scripts.rules_sync.check import UNVERIFIED_URL as CHECK_UNVERIFIED_URL
 
 
 def test_lint_verify_db_and_build_db_non_rule_files_agree():
@@ -45,3 +53,14 @@ def test_chapter_prefix_spellings_agree():
     from its source.url stem using this prefix. check.py has no chapter-id
     concept, so it carries no CHAPTER_PREFIX to check."""
     assert LINT_CHAPTER_PREFIX == VERIFY_DB_CHAPTER_PREFIX == BUILD_DB_CHAPTER_PREFIX
+
+
+def test_unverified_url_spellings_agree():
+    """`check.py` reports a rule still carrying the placeholder as `unverified`;
+    `build_db.py` needs the same string to know not to write it into
+    `rules.source_url` as though it were a page. Two spellings drifting apart
+    would put `.../UNVERIFIED` in the database as a real URL for the driver to
+    fetch — the exact silent-write this constant exists to prevent. Third
+    instance of finding 5's defect class, closed the same way the other two
+    were."""
+    assert BUILD_DB_UNVERIFIED_URL == CHECK_UNVERIFIED_URL
