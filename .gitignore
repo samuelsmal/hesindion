@@ -20,6 +20,11 @@ DerivedData/
 **/failures/
 .superpowers/
 
+# propose.py's review files. They quote rule clauses in the agents' rationales
+# -- that is what makes them reviewable -- so this is a Data Policy boundary
+# (no DSA rules content in git), exactly like .cache/ above.
+.proposals/
+
 # rules-sync-check's on-disk HTTP cache -- raw wiki page captures, so this is
 # also a Data Policy boundary (no DSA rules content in git), not just a build
 # artifact.

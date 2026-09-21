@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint rules-sync-check test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint rules-sync-check rules-propose test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -145,6 +145,21 @@ rules-lint:
 # and exits non-zero only if something drifted.
 rules-sync-check:
 	python3 -m scripts.rules_sync.check
+
+# The authoring half: two independent agents encode a rule from its text, and
+# this driver batches them, lints, diffs and writes for human review. Nothing is
+# committed and nothing is resolved silently -- where the two readings disagree,
+# the review file says so at the top and the YAML carries a DISAGREEMENT: note.
+# Selectors: RULES=SA_63,SA_56 | GROUP=3 | SUBGROUP=3,2 (Task 9 drives waves by
+# group and subgroup). Review files land in .proposals/, which is git-ignored:
+# they quote rule clauses in the agents' rationales (Data Policy).
+rules-propose:
+	@test -n "$(RULES)$(GROUP)$(SUBGROUP)" || { echo "Set one of RULES=SA_63,SA_56 | GROUP=3 | SUBGROUP=3,2"; exit 1; }
+	python3 -m scripts.rules_sync.propose \
+		$(if $(RULES),--ids "$(RULES)") \
+		$(if $(GROUP),--group "$(GROUP)") \
+		$(if $(SUBGROUP),--subgroup "$(SUBGROUP)") \
+		$(if $(PROPOSE_ARGS),$(PROPOSE_ARGS))
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
