@@ -154,6 +154,7 @@ rules-sync-check:
 # group and subgroup). Review files land in .proposals/, which is git-ignored:
 # they quote rule clauses in the agents' rationales (Data Policy).
 rules-propose:
+	@echo "WARNING: calibration gate FAILED (Tier 1 7/10, see docs/rules-pipeline-status.md §3) -- no authoring wave. Proposals from this run are not pre-approved for a wave; review each one against its source.url page."
 	@test -n "$(RULES)$(GROUP)$(SUBGROUP)" || { echo "Set one of RULES=SA_63,SA_56 | GROUP=3 | SUBGROUP=3,2"; exit 1; }
 	python3 -m scripts.rules_sync.propose \
 		$(if $(RULES),--ids "$(RULES)") \

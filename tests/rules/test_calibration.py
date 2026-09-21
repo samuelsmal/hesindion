@@ -240,9 +240,21 @@ def test_tier_1_matches_what_the_calibration_recorded(rule_id):
 
 
 def test_the_tier_1_result_is_the_fraction_the_gate_reported():
-    """The gate's headline number, derived from the files rather than restated."""
+    """The gate's headline number, derived from the files rather than restated.
+
+    Whole-branch review finding 6: `python3 -m pytest tests/ -q` exits 0 and
+    prints no verdict, so a failed gate reads as a green suite. This print is
+    additive -- it does not change what the assertions below check, and it does
+    not make the test fail on the gate result, which `test_calibration.py:212-228`
+    (above) argues is deliberate and right. It only makes the failure visible to
+    whoever ran the suite and only glanced at the exit code.
+    """
     passing = [r for r in GOLDEN_IDS if tier1_verdict(r)[0]]
     assert len(passing) == sum(1 for v in RUN["expected"].values() if v)
+    print(
+        f"CALIBRATION GATE: FAILED — Tier 1 {len(passing)}/{len(GOLDEN_IDS)} — "
+        "no authoring wave (docs/rules-pipeline-status.md §3)"
+    )
     assert len(passing) == 7, (
         f"Tier 1 is {len(passing)}/10, recorded as 7/10. "
         "A live re-run is the only thing that may change this number."
