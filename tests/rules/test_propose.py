@@ -756,14 +756,22 @@ def test_the_workspace_withholds_the_authored_file_for_every_rule_in_the_run(tmp
     assert not (ws / "specs" / "rules" / "SA_65.yaml").exists()
     assert not (ws / "specs" / "rules" / "SA_66.yaml").exists()
     # Precedent that is neither in the run nor adjacent to it is still there.
-    # `SA_67` and `SA_48` used to stand here and no longer can: both share the
-    # graded axis `modifier/at/combat/hero` with `SA_66`, so Task 11a's closure
-    # withholds them. Two rules the graph does not reach carry the same point --
-    # "a rule outside the run survives" -- without asserting the presence of a
-    # file the new rule must withhold. (Neither pair is named by the agent briefs;
+    # This pair has moved twice, which is itself the point: `SA_67`/`SA_48` stood
+    # here until Task 11a's closure withheld them for sharing a graded axis with
+    # `SA_66`, and `SA_41`/`SA_43` until fix round 1's `scope` subsumption and
+    # `when`-predicate edge pulled both into the same component. So the invariant
+    # is asserted twice over -- two named survivors that the graph does not
+    # reach, *and* a bound saying the tree still holds real precedent, which is
+    # the property that would actually be worth failing on if a later edge
+    # swallowed the corpus. (The named files are not the ones the briefs cite;
     # the briefs name only `schema.json` and `vocabulary.yaml` by path.)
-    assert (ws / "specs" / "rules" / "SA_41.yaml").exists()
-    assert (ws / "specs" / "rules" / "SA_43.yaml").exists()
+    assert (ws / "specs" / "rules" / "ADV_5.yaml").exists()
+    assert (ws / "specs" / "rules" / "SA_22.yaml").exists()
+    surviving = [p for p in (ws / "specs" / "rules").glob("*.yaml")
+                 if p.name not in {"SOURCES.yaml", "vocabulary.yaml"}]
+    assert len(surviving) >= 8, (
+        f"only {len(surviving)} authored rule(s) left as precedent -- the closure has "
+        "stopped being a control and started being the whole corpus")
     assert (ws / "specs" / "rules" / "schema.json").exists()
     assert (ws / "specs" / "rules" / "vocabulary.yaml").exists()
     assert (ws / "docs" / "adr" / "0008-rules-as-data-combat-engine.md").exists()
@@ -832,6 +840,63 @@ def test_the_workspace_withholds_the_neighbour_that_encodes_a_graded_rules_claus
     assert offenders == [], (
         "a file left in the workspace states one of the graded rule's own rows:\n  "
         + "\n  ".join(offenders))
+
+
+def test_the_workspace_withholds_the_neighbour_that_states_a_graded_rules_gate(tmp_path):
+    """Fix round 1's second Important finding, against the real corpus.
+
+    `SA_43`'s entire golden encoding is one `legality` row with one `when`
+    predicate. It declares no axis, overrides no parameter and names nothing in
+    `excludes`, so the first three edges found it no neighbour at all -- while a
+    chapter file whose every row carries that same gate, and which names `SA_43`
+    in two of its notes, stayed in its workspace. Redaction rewrites the notes
+    and leaves what survives stating that the withheld rule has a `legality` row
+    and what class of action it unlocks.
+
+    That is a fuller answer key than the section 6 instance, and it sits on the
+    rule the stability measurement most depends on: `SA_43` is the source of the
+    2-of-5 `when`-dropping datum Task 11 exists to quantify. A neighbour that
+    states its gate is not collateral.
+    """
+    import yaml as _yaml
+    from scripts.rules_sync.propose import REPO_ROOT
+
+    graded, neighbour = "SA_43", "CHAP_Reiterkampf"
+    authored = _yaml.safe_load((REPO_ROOT / "specs" / "rules" / f"{graded}.yaml").read_text())
+    gates = [row.get("when") for row in authored["effects"]
+             if row.get("type") != "reminder" and row.get("when")]
+    assert gates, f"{graded} no longer carries a gated row; this test has lost its subject"
+
+    ws = prepare_workspace(tmp_path / "ws", [graded])
+    assert not (ws / "specs" / "rules" / f"{neighbour}.yaml").exists(), (
+        f"{neighbour} carries {graded}'s gate on every row and names it in its notes, "
+        "and is still in the workspace")
+
+    # and no surviving authored file states that gate on a non-reminder row
+    offenders = []
+    for path in sorted((ws / "specs" / "rules").glob("*.yaml")):
+        doc = _yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        for row in doc.get("effects") or []:
+            if not isinstance(row, dict) or row.get("type") == "reminder":
+                continue
+            for predicate in row.get("when") or []:
+                if any(predicate in gate for gate in gates):
+                    offenders.append(f"{path.name}: {sorted(predicate)}")
+    assert offenders == [], (
+        "a file left in the workspace is gated on the graded rule's own predicate:\n  "
+        + "\n  ".join(offenders))
+
+
+def test_a_report_path_inside_the_workspace_is_refused(tmp_path):
+    """Fix round 1, minor 7. The docstring promised the report lands outside the
+    tree the agents read, and nothing enforced it -- a caller passing a path
+    inside `dest` would have dropped every withheld id into the workspace in one
+    file, which is the whole hint the README refuses to give."""
+    dest = tmp_path / "ws"
+    with pytest.raises(ValueError, match="inside the workspace"):
+        prepare_workspace(dest, ["SA_661"], report_path=dest / "notes" / "WITHHELD.md")
+    # refused before anything was written, not half-way through
+    assert not dest.exists()
 
 
 def test_the_withholding_report_is_written_outside_the_workspace(tmp_path):

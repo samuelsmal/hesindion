@@ -19,8 +19,8 @@ nobody had spotted, so an edge that depends on an author spotting it inherits th
 defect it is supposed to remove. Every edge below is derivable from fields the
 schema already requires and the linter already checks.
 
-The three edges
----------------
+The four edges
+--------------
 1. ``excludes`` (:data:`EDGE_EXCLUDES`) -- ``A.excludes`` naming ``B``. Walked
    **undirected**: if ``B`` is the graded rule, ``A`` still names it and still
    states a Tier 2 field of it, so the edge leaks in both directions even though
@@ -34,7 +34,18 @@ The three edges
    ``scope`` and ``side``. A file whose rows collide with a graded rule's rows on
    those axes encodes the same mechanic on the same value, whether or not anybody
    declared a relationship, and that is what makes it an answer key. This is the
-   edge that catches the section 6 instance.
+   edge that catches the section 6 instance. ``scope`` collides by **subsumption**
+   as well as by equality -- see :func:`_scopes_collide` for the ruling and for
+   why ``target`` is deliberately not widened the same way.
+4. ``when``-predicate identity (:data:`EDGE_PREDICATE`) -- two non-reminder rows
+   gated on the same predicate. Added in fix round 1 after the first three were
+   measured against the corpus and found to leave ``SA_43`` adjacent to nothing:
+   its whole encoding is one ``legality`` row with one ``when`` predicate, it
+   declares no axis, and the file that carries that same gate on every one of its
+   own rows -- and names ``SA_43`` in two notes -- stayed in its workspace. A
+   neighbour that states the gate is a fuller answer key for that rule than a
+   neighbour that states the shape, and ``SA_43`` is the rule the stability
+   measurement most depends on (it is the source of the ``when``-dropping datum).
 
 A row that declares **none** of ``target``/``scope``/``side`` has no axis to
 collide on, and edge 3 does not fire on it. That is not an oversight and it is not
@@ -46,7 +57,9 @@ detail, precisely because parameter identity rather than row shape is what makes
 two overrides neighbours. Two ``dice`` rows, two ``actionEconomy`` rows and two
 ``recovery`` rows are likewise not neighbours by virtue of sharing an effect type;
 `grants`, `forbids`, `state` and `recipient` would each be a *further* edge, and
-adding one is a ruling, not an implementation detail.
+adding one is a ruling, not an implementation detail. What reaches an axis-less
+row instead is edge 4, which is about the row's *gate* rather than its shape --
+that is the boundary's cost, measured and then closed.
 
 Over-withholding is the safe direction. Every edge here is an over-approximation
 of "encodes the same mechanic" on purpose: two rules that both ease AT in combat
@@ -60,6 +73,7 @@ names, axis values and edge kinds only (Data Policy, `AGENTS.md`).
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -78,6 +92,7 @@ RULES_DIR = REPO_ROOT / "specs" / "rules"
 EDGE_EXCLUDES = "excludes"
 EDGE_PARAMETER = "parameter-path"
 EDGE_AXIS = "graded-axis"
+EDGE_PREDICATE = "when-predicate"
 
 #: `side`'s schema default. One row spelling it and another leaving it implicit is
 #: one axis, exactly as `test_calibration.SCHEMA_DEFAULTS` treats it for grading.
@@ -88,10 +103,11 @@ SIDE_DEFAULT = "hero"
 AXES: tuple[str, ...] = ("target", "scope", "side")
 
 __all__ = [
-    "EDGE_EXCLUDES", "EDGE_PARAMETER", "EDGE_AXIS", "AXES", "SIDE_DEFAULT",
+    "EDGE_EXCLUDES", "EDGE_PARAMETER", "EDGE_AXIS", "EDGE_PREDICATE",
+    "AXES", "SIDE_DEFAULT",
     "Edge", "Reason", "Withholding",
     "load_corpus", "axis_keys", "parameter_paths", "excludes_of",
-    "build_graph", "withholding",
+    "when_predicates", "build_graph", "withholding",
 ]
 
 
@@ -121,11 +137,21 @@ class Reason:
     auditable: "withheld because it collides with a rule that collides with the
     graded one" and "withheld because it collides with the graded one" are
     different facts about a measurement.
+
+    `edges` holds **every** edge running between `via` and `rule_id`, sorted, not
+    the first or cheapest one. A pair joined by both `excludes` and a graded-axis
+    collision is a different fact from a pair joined by `excludes` alone, and a
+    report that shows one of the two understates what it controlled for.
     """
     hops: int
     rule_id: str
     via: str
-    edge: Edge
+    edges: tuple[Edge, ...]
+
+    @property
+    def summary(self) -> str:
+        """The edges, as one line of report detail."""
+        return "; ".join(f"{e.kind}: {e.detail}" for e in self.edges)
 
 
 # ── reading the corpus ───────────────────────────────────────────────────────
@@ -176,9 +202,79 @@ def axis_keys(doc: dict) -> set[tuple[str, str, str, str]]:
     return keys
 
 
-def _axis_detail(key: tuple[str, str, str, str]) -> str:
-    kind, target, scope, side = key
-    return f"type={kind} target={target} scope={scope} side={side}"
+def _scopes_collide(a: str, b: str) -> bool:
+    """Whether two rows' `scope` values put them in the same domain.
+
+    Equal scopes collide. So does `all` against any narrower scope, in one
+    direction only: `scope` is a **domain filter, not a label** -- `all` means
+    every domain and `combat` means the combat domains -- so a `scope: all` row
+    mechanically subsumes a `scope: combat` row on the same target, and the two
+    encode the same mechanic over an overlapping domain.
+
+    Ruled 2026-09-21 (Task 11a fix round 1) after the exact-equality reading was
+    measured against the corpus and found to leave a live channel: `SA_41` (the
+    one golden rule that has never passed) carries the corpus's only
+    `modifier target: be scope: all` row, `CHAP_Reiterkampf` carries its only
+    `modifier target: be scope: combat` row, and under exact equality the second
+    stayed in the first's workspace -- a worked `modifier target: be` row in
+    front of the rule whose recorded failure is that it invented a
+    `parameterOverride` path instead of one.
+
+    **`target` is deliberately not widened the same way.** `target: all` reads as
+    a wildcard too, and wildcarding it links every modifier row to every other:
+    measured, that takes nine of the ten golden rules to 20 withheld files and
+    the ten-rule batch to 22 of 28. That is the swallow-everything failure the
+    axis-less boundary above exists to avoid, and it buys no channel that this
+    one does not already close.
+    """
+    return a == b or a == "all" or b == "all"
+
+
+def _axis_collisions(
+    a: set[tuple[str, str, str, str]],
+    b: set[tuple[str, str, str, str]],
+) -> list[str]:
+    """Every graded-axis collision between two rules' key sets, as report detail.
+
+    Pairwise rather than a set intersection, because `scope` collides by
+    subsumption and not only by equality (see `_scopes_collide`).
+    """
+    details = set()
+    for kind_a, target_a, scope_a, side_a in a:
+        for kind_b, target_b, scope_b, side_b in b:
+            if (kind_a, target_a, side_a) != (kind_b, target_b, side_b):
+                continue
+            if not _scopes_collide(scope_a, scope_b):
+                continue
+            if scope_a == scope_b:
+                scope = f"scope={scope_a}"
+            else:
+                wider, narrower = (scope_a, scope_b) if scope_a == "all" else (scope_b, scope_a)
+                scope = f"scope={wider} subsumes {narrower}"
+            details.add(f"type={kind_a} target={target_a} {scope} side={side_a}")
+    return sorted(details)
+
+
+def when_predicates(doc: dict) -> set[str]:
+    """Every `when` predicate this rule's non-reminder rows are gated on, each as
+    canonical JSON.
+
+    A predicate is a single-key mapping and `when` ANDs them, so one shared
+    predicate is one shared gate -- the unit the edge is about. Rows with no
+    `when` contribute nothing: an ungated row shares no gate with another ungated
+    row, and treating "both unconditional" as an edge would link most of the
+    corpus to most of the corpus for no leak, which is the same failure the
+    axis-less boundary rejects.
+
+    Reminders are excluded for consistency with the other edges. On the corpus as
+    it stands, including them would change no edge: every predicate a reminder
+    row carries is already carried by a non-reminder row of the same file.
+    """
+    out = set()
+    for row in _rows(doc):
+        for predicate in row.get("when") or []:
+            out.add(json.dumps(predicate, sort_keys=True, ensure_ascii=True, default=str))
+    return out
 
 
 def parameter_paths(doc: dict) -> set[str]:
@@ -196,13 +292,16 @@ def excludes_of(doc: dict) -> set[str]:
 # ── the graph ────────────────────────────────────────────────────────────────
 
 def build_graph(corpus: dict[str, dict]) -> dict[str, dict[str, frozenset[Edge]]]:
-    """Undirected adjacency over the three edges, as `{a: {b: {edges}}}`.
+    """Undirected adjacency over the four edges, as `{a: {b: {edges}}}`.
 
     Symmetric by construction: every edge is written to both ends, including
-    `excludes`, which the corpus writes on one side only.
+    `excludes`, which the corpus writes on one side only, and graded-axis
+    collision, whose `scope` subsumption is one-sided per row but symmetric per
+    pair.
     """
     keys = {rid: axis_keys(doc) for rid, doc in corpus.items()}
     params = {rid: parameter_paths(doc) for rid, doc in corpus.items()}
+    gates = {rid: when_predicates(doc) for rid, doc in corpus.items()}
     names = sorted(corpus)
 
     graph: dict[str, dict[str, set[Edge]]] = {rid: {} for rid in names}
@@ -217,17 +316,24 @@ def build_graph(corpus: dict[str, dict]) -> dict[str, dict[str, frozenset[Edge]]
                 link(a, b, Edge(EDGE_EXCLUDES, "excludes"))
             for path in sorted(params[a] & params[b]):
                 link(a, b, Edge(EDGE_PARAMETER, path))
-            for key in sorted(keys[a] & keys[b]):
-                link(a, b, Edge(EDGE_AXIS, _axis_detail(key)))
+            for detail in _axis_collisions(keys[a], keys[b]):
+                link(a, b, Edge(EDGE_AXIS, detail))
+            for predicate in sorted(gates[a] & gates[b]):
+                link(a, b, Edge(EDGE_PREDICATE, predicate))
 
     return {a: {b: frozenset(edges) for b, edges in sorted(nbrs.items())}
             for a, nbrs in graph.items()}
 
 
 def _closure_for(graph: dict[str, dict[str, frozenset[Edge]]], seed: str) -> list[Reason]:
-    """Breadth-first closure of one graded rule, each neighbour recorded with the
-    edge and the file that first reached it. Deterministic: neighbours are
-    visited in sorted order and the cheapest edge of a pair is the one reported.
+    """Breadth-first closure of one graded rule, each neighbour recorded with
+    **every** edge that runs to the file it first hung off.
+
+    All of them, not the cheapest: the report's job is to say what the
+    measurement controlled for, and "withheld because of an `excludes` edge"
+    reads as a Tier 2 adjacency when the same pair also collides on the axes
+    Tier 1 grades. Deterministic -- neighbours are visited in sorted order and
+    the edge list is sorted.
     """
     if seed not in graph:
         return []
@@ -240,7 +346,7 @@ def _closure_for(graph: dict[str, dict[str, frozenset[Edge]]], seed: str) -> lis
             if neighbour in seen:
                 continue
             seen.add(neighbour)
-            reasons.append(Reason(hops + 1, neighbour, node, min(sorted(edges))))
+            reasons.append(Reason(hops + 1, neighbour, node, tuple(sorted(edges))))
             frontier.append((neighbour, hops + 1))
     return reasons
 
@@ -257,13 +363,19 @@ neighbour" from "the graph missed the neighbour it had", and a measurement whose
 controls are unstated is not a measurement.
 
 Each graded rule's own authored file is withheld, as it always was. Beyond that,
-the run withholds the **transitive closure** of the graded rules over three edges
+the run withholds the **transitive closure** of the graded rules over four edges
 computed from the corpus itself (`scripts/rules_sync/rule_graph.py`):
 
 - `{excludes}` -- one rule's `excludes` names the other. Walked in both directions.
 - `{parameter}` -- both rules override the same `parameterOverride.parameter` path.
 - `{axis}` -- a non-reminder effect row of each agrees on every axis Tier 1 grades
-  a row's shape by: `type`, `target`, `scope`, `side`.
+  a row's shape by: `type`, `target`, `scope`, `side`. `scope` collides by
+  subsumption as well as by equality, which the detail spells out when it applies.
+- `{predicate}` -- a non-reminder row of each is gated on the same `when` predicate.
+
+Every edge between a pair is listed, not the first one found: a pair joined by
+both `{excludes}` and `{axis}` is a different control from a pair joined by
+`{excludes}` alone.
 
 `hops 1` means the edge runs to the graded rule itself; `hops 2` and beyond mean it
 runs to a file already withheld for it, named as `via`.
@@ -294,7 +406,8 @@ class Withholding:
     def render(self) -> str:
         """The run's withholding report, as Markdown."""
         out = [REPORT_PREAMBLE.format(
-            excludes=EDGE_EXCLUDES, parameter=EDGE_PARAMETER, axis=EDGE_AXIS)]
+            excludes=EDGE_EXCLUDES, parameter=EDGE_PARAMETER, axis=EDGE_AXIS,
+            predicate=EDGE_PREDICATE)]
         out.append(
             f"**{len(self.files)} authored file(s) withheld** for "
             f"{len(self.graded)} graded rule(s): {len(self.graded)} graded, "
@@ -311,7 +424,7 @@ class Withholding:
             if not rs:
                 out.append(
                     "**No neighbours.** This rule is adjacent to no authored file under any of "
-                    "the three edges, so its own file is the whole of what was withheld for it. "
+                    "the four edges, so its own file is the whole of what was withheld for it. "
                     "Stated rather than left silent: an empty section here means the graph was "
                     "walked and found nothing, not that it was not walked.\n")
                 continue
@@ -319,7 +432,7 @@ class Withholding:
             for r in rs:
                 via = "the graded rule" if r.via == rule_id else f"`{r.via}`"
                 out.append(
-                    f"- `specs/rules/{r.rule_id}.yaml` -- {r.edge.kind}: {r.edge.detail} "
+                    f"- `specs/rules/{r.rule_id}.yaml` -- {r.summary} "
                     f"(hops {r.hops}, via {via})")
             out.append("")
         return "\n".join(out).rstrip() + "\n"

@@ -61,7 +61,7 @@ mechanic as a graded rule is that rule's answer key whether or not it carries it
 id or its German name, so neither removing the file nor redacting the token
 reaches it. The workspace therefore withholds the transitive closure of the run's
 rules over the corpus's own mechanical adjacency -- `scripts/rules_sync/rule_graph.py`
-owns the three edges and says why they are those three -- and the run writes a
+owns the four edges and says why they are those four -- and the run writes a
 report of what it withheld for which rule and under which edge, so a reader of the
 measurement can see what it controlled for (whole-branch review section 6).
 `ids_named_in_agent_briefs` covers what a workspace cannot: a brief reaches the
@@ -363,17 +363,23 @@ rather than toward being right.
 for withheld names caught the first draft of it, which did.)
 
 {withheld_count} rule(s) are withheld from this run: the ones being encoded, and
-every authored file the corpus's own mechanical adjacency links to them -- a rule
-named in an `excludes` edge, a rule overriding the same parameter path, a rule
-whose effect rows share a graded axis. A neighbour that encodes the same mechanic
-is an answer key too, and it carries neither the id nor the name that redaction
-can find. That is why the precedent here is thinner than the corpus is, and it is
-not a defect you should route around: encode from the rule text.
+every authored file mechanically close enough to one of them to encode the same
+answer. A neighbour that encodes the same mechanic is an answer key too, and it
+carries neither the id nor the name that redaction can find.
 
-They are deliberately not named here: naming them would tell you which answer key
-was hidden, which is most of the hint back. The run's own artefacts carry that
-list, outside this tree, so the measurement stays auditable without being visible
-from inside it.
+So the precedent here is thinner than the corpus is, and it is thinnest exactly
+where the rules in this run live. That is deliberate and it is not a defect to
+route around. **Encode from the rule text you were given.** Do not reason from
+what is missing: the absence of a shape from this tree tells you nothing about
+whether your rule has it, and treating it as a signal would turn a control into
+a hint.
+
+Neither the withheld rules nor the reason each was withheld is named here --
+naming them would tell you which answer key was hidden, which is most of the hint
+back, and stating the rule by which they were chosen would let you read the same
+hint off the files that remain. The run's own artefacts carry that list, outside
+this tree, so the measurement stays auditable without being visible from inside
+it.
 """
 
 _WITHHELD = "a withheld rule"
@@ -474,14 +480,27 @@ def prepare_workspace(
     widening of this function.
 
     `report_path`, when given, receives the run's withholding report -- which
-    files were withheld for which graded rule, under which edge. It is written
-    **outside** `dest` by construction: the list of withheld files is itself the
-    hint the workspace README refuses to give, so it belongs with the run's
-    artefacts and not in the tree the agents read.
+    files were withheld for which graded rule, under which edge. It must lie
+    **outside** `dest`, and a path inside it is refused rather than written: the
+    list of withheld files is itself the hint the workspace README refuses to
+    give, so a report dropped into the tree the agents read would hand them
+    every withheld id in one file. That was a docstring promise and a caller
+    convention until fix round 1; it is now a precondition this function
+    enforces.
 
     What this cannot reach is the agent briefs themselves, which arrive as a
     system prompt rather than a file -- `ids_named_in_agent_briefs` is that guard.
     """
+    if report_path is not None:
+        report_path = Path(report_path)
+        workspace_root = Path(dest).resolve()
+        if workspace_root == report_path.resolve() or workspace_root in report_path.resolve().parents:
+            raise ValueError(
+                f"refusing to write the withholding report inside the workspace "
+                f"({report_path}): it names every withheld file, which is the hint "
+                f"the workspace README deliberately withholds. Write it with the "
+                f"run's other artefacts."
+            )
     graded = list(dict.fromkeys(exclude_ids))
     plan = rule_graph.withholding(graded, rules_dir=repo_root / "specs" / "rules")
     excluded = plan.files
@@ -510,7 +529,6 @@ def prepare_workspace(
         WORKSPACE_README.format(withheld_count=len(excluded)), encoding="utf-8"
     )
     if report_path is not None:
-        report_path = Path(report_path)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(plan.render(), encoding="utf-8")
     return dest
