@@ -978,7 +978,7 @@ def test_the_driver_refuses_to_overwrite_a_golden_rule_in_specs_rules(capsys, tm
     assert "golden corpus" in err and "--rules-dir" in err and "--force" in err
 
 
-def test_a_scratch_rules_dir_is_not_guarded(monkeypatch, tmp_path):
+def test_a_scratch_rules_dir_is_not_guarded(tmp_path):
     """Task 7's calibration writes golden ids somewhere harmless, and must not
     need --force to do it."""
     from scripts.rules_sync import propose as mod
@@ -986,15 +986,85 @@ def test_a_scratch_rules_dir_is_not_guarded(monkeypatch, tmp_path):
     fake = agreeing_runner()
     fake.responses[("rule-author", "batch-1")] = envelope("SA_65", ENCODING_A.replace("SA_901", "SA_65"))
     fake.responses[("rule-verifier", "SA_65")] = envelope("SA_65", ENCODING_A.replace("SA_901", "SA_65"))
-    monkeypatch.setattr(mod, "SubprocessRunner", lambda **kw: fake)
 
     rc = mod.main(["--ids", "SA_65", "--db", str(mod.DEFAULT_DB),
                    "--rules-dir", str(tmp_path / "scratch"),
-                   "--proposals-dir", str(tmp_path / "prop")])
+                   "--proposals-dir", str(tmp_path / "prop")],
+                  runner_factory=lambda **kw: fake)
     assert rc == 0
     assert (tmp_path / "scratch" / "SA_65.yaml").exists()
     # and the tracked corpus was not touched
     assert "DISAGREEMENT" not in (mod.RULES_DIR / "SA_65.yaml").read_text()
+
+
+def test_main_end_to_end_redacts_the_workspace_it_builds(tmp_path):
+    """Finding 7 item 2. `main()` built its own `SubprocessRunner` inline, so
+    `propose.py`'s workspace-sanitising call --
+    `prepare_workspace(..., exclude_names=[r.name for r in rules])` -- was
+    reachable only by a live run: `prepare_workspace`'s own excellent unit
+    coverage (including `test_no_withheld_id_or_name_survives_anywhere_in_the_
+    workspace` above) drives `prepare_workspace` directly and never through
+    `main()`'s actual wiring. `runner_factory` is the seam that closes that.
+
+    The fake runner below captures the tempdir `main()` built, from inside the
+    fake agent call -- i.e. before the `with tempfile.TemporaryDirectory()`
+    block in `main()` tears it down -- and scans it for the withheld golden
+    rule's id and its German ability name, the same two shapes the workspace
+    test above guards.
+
+    Concrete failure this must catch: someone changes `exclude_names=[r.name
+    for r in rules]` to `exclude_names=[r.rule_id for r in rules]`. Every
+    other test in this module still passes, because they assert on the
+    written proposal, not on what the agents were shown -- refusing to fail on
+    that slip is exactly finding 7's point (verified by making that exact
+    substitution and confirming this test fails on it, per the task report).
+    """
+    from scripts.rules_sync import propose as mod
+
+    # SA_48 ("Finte"), not SA_65: the name must actually be glossed by real
+    # reference material (schema.json, ADR-0007, ADR-0008) for this test to be
+    # sensitive to the id-instead-of-name bug -- SA_65's own name happens not
+    # to be, so picking it would make this test pass regardless of the wiring.
+    rule_id = "SA_48"
+    name = GOLDEN_NAMES[rule_id]
+    offenders = []
+    captured = {}
+
+    def scan_workspace():
+        ws = captured["cwd"]
+        for path in sorted(Path(ws).rglob("*")):
+            if not path.is_file():
+                continue
+            contents = path.read_text(encoding="utf-8", errors="ignore")
+            if re.search(rf"\b{rule_id}\b", contents):
+                offenders.append(f"{path.relative_to(ws)}: id {rule_id}")
+            if name in contents:
+                offenders.append(f"{path.relative_to(ws)}: name {name}")
+
+    def respond(rid, body):
+        def _callable(prompt):
+            scan_workspace()
+            return envelope(rid, body)
+        return _callable
+
+    encoding = ENCODING_A.replace("SA_901", rule_id)
+
+    def make_runner(**kwargs):
+        captured["cwd"] = kwargs["cwd"]
+        return FakeRunner({
+            ("rule-author", "batch-1"): respond(rule_id, encoding),
+            ("rule-verifier", rule_id): respond(rule_id, encoding),
+        })
+
+    rc = mod.main(
+        ["--ids", rule_id, "--db", str(mod.DEFAULT_DB),
+         "--rules-dir", str(tmp_path / "scratch"),
+         "--proposals-dir", str(tmp_path / "prop")],
+        runner_factory=make_runner,
+    )
+    assert rc == 0
+    assert captured, "runner_factory was never called"
+    assert offenders == [], offenders
 
 
 # ── fix round 1: two empty encodings are not an agreement ────────────────────

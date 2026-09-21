@@ -1317,7 +1317,11 @@ def _parse_subgroup(value: str) -> tuple[int, int]:
     return g, sg
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    runner_factory: Callable[..., Runner] = SubprocessRunner,
+) -> int:
     parser = argparse.ArgumentParser(
         prog="python3 -m scripts.rules_sync.propose",
         description="Propose authored rule files from rule text via two independent agents.",
@@ -1391,7 +1395,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     with tempfile.TemporaryDirectory(prefix="rules-propose-ws-") as workspace:
         prepare_workspace(Path(workspace), run_ids,
                           exclude_names=[r.name for r in rules])
-        runner = SubprocessRunner(
+        # `runner_factory` is the seam that makes this whole function reachable by
+        # a test: `tests/conftest.py`'s autouse guard forbids the real `claude`
+        # binary, so `main()` was previously untestable end to end and the
+        # workspace-sanitising call above (`exclude_names=[r.name for r in
+        # rules]`) was covered by nothing but a live run (whole-branch review,
+        # finding 7). A `FakeRunner`-returning factory closes that.
+        runner = runner_factory(
             model=args.model, tools=args.runner_tools, timeout=args.timeout, cwd=Path(workspace)
         )
         toolchain_note = runner.toolchain_note()
@@ -1407,9 +1417,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             toolchain_note=toolchain_note,
         )
     print(render_summary(proposals))
+    # Reworded (whole-branch review, finding 7 item 3) from an unconditional claim
+    # of achieved state ("holding no authored file for, and no mention of") to
+    # what was requested of `prepare_workspace` above: this print runs after the
+    # workspace has already been torn down (the `with` block above exited), so
+    # nothing here can re-inspect it to verify redaction actually held. What
+    # verifies that is `prepare_workspace`'s own unit coverage plus the
+    # `runner_factory`-driven end-to-end test this finding added
+    # (`test_main_end_to_end_redacts_the_workspace_it_builds`).
     print(
-        f"Agents ran against a sanitised workspace holding no authored file for, and no mention "
-        f"of, the {len(run_ids)} rule(s) in this run; precedent was available, the answer was not."
+        f"Agents ran against a workspace built to withhold the authored file for, and redact "
+        f"every mention of, the {len(run_ids)} rule(s) in this run; precedent was available, the "
+        f"answer was not."
     )
     print(toolchain_note.replace("**", ""))
     return 1 if any(p.status in ("lint-failed", "error") for p in proposals) else 0
