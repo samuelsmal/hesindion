@@ -640,3 +640,32 @@ So a later session does not re-derive these:
   otherwise only live in prose (`test_ruleset_is_outside_what_tier_1_grades`,
   `test_the_two_hashes_answer_different_questions`, `test_this_module_is_covered_by_the_shared_live_agent_guard`).
   I looked for tests passing for the wrong reason and did not find one.
+
+---
+
+## 6. Follow-up recorded after the blocker fixes (controller ruling, 2026-09-21)
+
+**Withholding must follow the rule graph, not just the rule id.** Closing finding 1 surfaced a
+leak channel no guard can reach: `specs/rules/CHAP_Reiterkampf.yaml` is a legitimate, un-withheld
+authored file that sits in the calibration workspace and encodes the very clause `SA_661` modifies —
+same target, scope, value and gate, with a note stating that the withheld rule "raises" it. An agent
+grading `SA_661` can read the answer out of a file it is entitled to see.
+
+Two properties make this worth writing down rather than fixing in place:
+
+- It is **new since the 7/10 was measured.** `CHAP_Reiterkampf` was authored after that run, so
+  `SA_661`'s current Tier 1 pass may rest on this channel rather than on the pipeline's judgment.
+  Treat `SA_661`'s result as unmeasured until a run withholds the chapter file alongside it.
+- It **generalises**. Any authored file that encodes a clause a graded rule modifies — a chapter rule
+  an ability raises, a parameter an ability overrides, a rule named in another's `excludes` edge — is
+  an answer key for that rule. As the corpus grows past 28 files toward 232, this class of adjacency
+  grows with it, and id-and-name redaction does not touch it.
+
+**Required before Task 11 (stability measurement) produces a number anyone acts on:** the workspace
+builder withholds the transitive set — the graded rule plus every authored file whose effects
+reference it or whose clauses it modifies — and the run reports which files were withheld for each
+rule, so a reader can tell what the measurement controlled for. Until then, per-rule results for any
+rule with an authored neighbour are suggestive rather than measured.
+
+Not a merge blocker: it degrades a measurement that this branch already declares failed, and it
+cannot produce a wrong encoding in the app.
