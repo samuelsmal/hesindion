@@ -46,7 +46,7 @@
     {
       "id": 5,
       "subject": "Task 6: Authoring subagents and their driver",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Rule text in, reviewable encoding out — with a second agent that never sees the first one's answer.\n\n**Files:**\n- Create: `.claude/agents/rule-author.md`, `.claude/agents/rule-verifier.md`, `scripts/rules_sync/propose.py`, `tests/rules/test_propose.py`\n\n**Acceptance Criteria:**\n- [ ] `propose.py --ids SA_63,SA_56` writes both YAML files (lint-clean) plus `.proposals/<id>.review.md` with rationale, the verifier's independent encoding, and their diff\n- [ ] Disagreements are stated at the top of the review file and left as a comment in the YAML — never silently resolved\n- [ ] Batches of at most 12 rules per author agent, batches run in parallel\n- [ ] Selectors `--ids`, `--group`, `--subgroup` (Task 9 drives waves by group); `.proposals/` git-ignored\n- [ ] The script commits nothing\n\n**Verify:** `python3 -m pytest tests/rules/test_propose.py -v` (recorded agent outputs; no live calls)\n\n```json:metadata\n{\"files\": [\".claude/agents/rule-author.md\", \".claude/agents/rule-verifier.md\", \"scripts/rules_sync/propose.py\", \"tests/rules/test_propose.py\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_propose.py -v\", \"acceptanceCriteria\": [\"two files written and lint-clean\", \"disagreement surfaced not resolved\", \"batch size 12 with parallel dispatch\", \"no commits from the script\"], \"modelTier\": \"frontier\"}\n```",
       "blockedBy": [
         3
