@@ -79,8 +79,13 @@ HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 # Files under specs/rules/ that are not one-rule-per-file authored specs.
 # `vocabulary.yaml` (the open-vocabulary registry, Task 4 fix round 1) joins
 # them: it has no `source`, so without this it would be reported as a rule
-# permanently `unverified`. Kept in sync by hand with the same list in
-# scripts/rules_lint/lint.py and scripts/build_rules_db/build_db.py.
+# permanently `unverified`. This set deliberately also carries `schema.json`,
+# which the other three sites' sets do not -- it is the other three sites'
+# set plus {"schema.json"}, never equal to them. Kept in sync by hand with the
+# same list in scripts/rules_lint/lint.py, scripts/build_rules_db/verify_db.py
+# and scripts/build_rules_db/build_db.py — four small local constants rather
+# than a shared module. `tests/rules/test_shared_constants.py` asserts the
+# stated relationship holds.
 NON_RULE_FILES = {"schema.json", "SOURCES.yaml", "vocabulary.yaml"}
 
 UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"

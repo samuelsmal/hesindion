@@ -8,10 +8,22 @@ from pathlib import Path
 
 import yaml
 
+# Files under specs/rules/ that are not one-rule-per-file authored specs:
+# SOURCES.yaml (pins, not a rule) and vocabulary.yaml (the open-vocabulary
+# registry, which the DB does not consume) -- schema.json itself is already
+# excluded by glob("*.yaml") below. Kept in sync by hand with
+# scripts/rules_lint/lint.py's NON_RULE_FILES, scripts/rules_sync/check.py's
+# NON_RULE_FILES (which additionally carries schema.json -- it is
+# deliberately not equal to this one) and scripts/build_rules_db/verify_db.py's
+# NON_RULE_FILES — four small local constants rather than a shared module.
+# `tests/rules/test_shared_constants.py` asserts the four stay in the stated
+# relationship.
+NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
+
 # Chapter-rule id prefix (specs/rules/schema.json, `#/$defs/ruleId`). Kept in
-# sync by hand with scripts/rules_lint/lint.py's CHAPTER_PREFIX, matching the
-# NON_RULE_FILES precedent already set between this module, the linter and
-# scripts/rules_sync/check.py.
+# sync by hand with scripts/rules_lint/lint.py's and
+# scripts/build_rules_db/verify_db.py's CHAPTER_PREFIX; the same test above
+# asserts the three spellings agree.
 CHAPTER_PREFIX = "CHAP_"
 
 
@@ -802,13 +814,9 @@ def import_languages_and_scripts(conn: sqlite3.Connection, source: Path):
 
 def import_effects(conn: sqlite3.Connection, effects_dir: Path):
     """Import authored rule files from specs/rules/ (schema.json): one YAML
-    file per rule, skipping SOURCES.yaml (pins, not a rule), vocabulary.yaml
-    (the open-vocabulary registry, which the DB does not consume) and
-    schema.json itself (glob("*.yaml") already excludes it). Kept in sync by
-    hand with the same list in scripts/rules_lint/lint.py and
-    scripts/rules_sync/check.py."""
-    non_rule_files = {"SOURCES.yaml", "vocabulary.yaml"}
-    files = sorted(p for p in effects_dir.glob("*.yaml") if p.name not in non_rule_files)
+    file per rule, skipping the files NON_RULE_FILES names (see its comment
+    at the top of this module)."""
+    files = sorted(p for p in effects_dir.glob("*.yaml") if p.name not in NON_RULE_FILES)
 
     count = 0
     for path in files:

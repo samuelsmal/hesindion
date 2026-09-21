@@ -21,11 +21,14 @@ REPO_ROOT = pathlib.Path(__file__).parents[2]
 SCHEMA = json.loads((REPO_ROOT / "specs/rules/schema.json").read_text())
 
 # Files under specs/rules/ that are not one-rule-per-file authored specs. Kept
-# in sync by hand with `scripts/rules_sync/check.py`'s NON_RULE_FILES and
-# `scripts/build_rules_db/build_db.py`'s `import_effects` skip list — three
-# small local constants rather than a shared module, matching the DELAY/HEADERS
-# precedent already set between check.py and the old scraper. Adding a fourth
-# non-rule file means editing all three.
+# in sync by hand with `scripts/rules_sync/check.py`'s NON_RULE_FILES (which
+# additionally carries `schema.json`, deliberately -- see that module's
+# comment), `scripts/build_rules_db/verify_db.py`'s NON_RULE_FILES and
+# `scripts/build_rules_db/build_db.py`'s NON_RULE_FILES — four small local
+# constants rather than a shared module, matching the DELAY/HEADERS precedent
+# already set between check.py and the old scraper. Adding a fourth non-rule
+# file means editing all four; `tests/rules/test_shared_constants.py` fails if
+# one site is missed.
 NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
 
 # The open-vocabulary registry (Task 4 fix round 1, Q4). ADR-0008 leaves

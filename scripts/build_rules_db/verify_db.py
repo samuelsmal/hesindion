@@ -15,10 +15,17 @@ import hashlib, pathlib, sqlite3, subprocess, sys, tempfile
 
 import yaml
 
-# Kept in sync by hand with `scripts/rules_lint/lint.py`'s NON_RULE_FILES and
-# `build_db.py`'s `import_effects` skip list -- the same three small local
-# constants those two already note.
+# Kept in sync by hand with scripts/rules_lint/lint.py's NON_RULE_FILES,
+# scripts/rules_sync/check.py's NON_RULE_FILES (which additionally carries
+# schema.json -- it is deliberately not equal to this one) and
+# scripts/build_rules_db/build_db.py's NON_RULE_FILES — four small local
+# constants rather than a shared module, the same precedent lint.py's comment
+# states. `tests/rules/test_shared_constants.py` asserts the four stay in the
+# stated relationship.
 NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
+# Kept in sync by hand with scripts/rules_lint/lint.py's and
+# scripts/build_rules_db/build_db.py's CHAPTER_PREFIX; the same test above
+# asserts the three spellings agree.
 CHAPTER_PREFIX = "CHAP_"
 
 
