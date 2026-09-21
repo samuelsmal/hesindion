@@ -149,4 +149,34 @@ final class DerivedValueRepairTests: XCTestCase {
         XCTAssertFalse(DerivedValueRepair.repair(hero), "second run must report no change")
         XCTAssertEqual(hero.derivedValues?.geschwindigkeit.max, 6)
     }
+
+    // MARK: - Geschwindigkeit `max` keeps a nonzero bonus (whole-branch review finding 9)
+    //
+    // The repair used to write `max: gs`, dropping any bonus out of the ceiling. `max`
+    // must be `base + bonus`, matching wundschwelle. Nothing writes a nonzero
+    // `geschwindigkeit.bonus` today, so this is a construction the repair must handle
+    // correctly if it ever becomes reachable, not a currently-live bug.
+
+    private func makeHero(speciesId: String?, storedGS: Int, storedMax: Int, bonus: Int) -> Hero {
+        let hero = makeHero(speciesId: speciesId, storedGS: storedGS)
+        hero.derivedValues?.geschwindigkeit = ResourceValue(base: storedGS, bonus: bonus, max: storedMax)
+        return hero
+    }
+
+    func testGeschwindigkeitRepairKeepsBonusInMax() {
+        // base 8, bonus 2, max 10 (stale: a prior repair wrote max: gs, i.e. max 8).
+        let hero = makeHero(speciesId: "R_1", storedGS: 8, storedMax: 8, bonus: 2)
+        XCTAssertTrue(DerivedValueRepair.repair(hero))
+        XCTAssertEqual(hero.derivedValues?.geschwindigkeit.base, 8)
+        XCTAssertEqual(hero.derivedValues?.geschwindigkeit.bonus, 2)
+        XCTAssertEqual(hero.derivedValues?.geschwindigkeit.max, 10, "max must be base + bonus, not the bare species base")
+    }
+
+    func testGeschwindigkeitRepairWithBonusIsIdempotent() {
+        let hero = makeHero(speciesId: "R_1", storedGS: 8, storedMax: 8, bonus: 2)
+        XCTAssertTrue(DerivedValueRepair.repair(hero))
+        XCTAssertEqual(hero.derivedValues?.geschwindigkeit.max, 10)
+        XCTAssertFalse(DerivedValueRepair.repair(hero), "second run must report no change once max reflects base + bonus")
+        XCTAssertEqual(hero.derivedValues?.geschwindigkeit.max, 10)
+    }
 }

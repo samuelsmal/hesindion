@@ -283,6 +283,14 @@ final class RulesDatabase: @unchecked Sendable {
         )
     }
 
+    /// - Returns: the rule's Optolith group id, `nil` if the rule is unknown, and — this is
+    ///   the case that matters — `nil` if the rule is known but its `group_id` is SQL NULL,
+    ///   rather than the `0` a bare `sqlite3_column_int` would otherwise return for both a
+    ///   NULL and a genuine group 0 (whole-branch review finding 10; 110 special abilities
+    ///   in the built database have a NULL group). Today's one caller
+    ///   (`OptolithImportService.isCombatSpecialAbility`) already treats `nil` as "not
+    ///   combat" and `0` was never in the combat group set, so this changes no behaviour —
+    ///   it removes a trap for the next caller who writes `if lookupGroupId(id) != nil`.
     func lookupGroupId(_ ruleId: String) -> Int? {
         let sql = "SELECT group_id FROM rules WHERE id = ?"
         var stmt: OpaquePointer?
@@ -290,6 +298,7 @@ final class RulesDatabase: @unchecked Sendable {
         defer { sqlite3_finalize(stmt) }
         sqlite3_bind_text(stmt, 1, ruleId, -1, SQLITE_TRANSIENT)
         guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        guard sqlite3_column_type(stmt, 0) != SQLITE_NULL else { return nil }
         return Int(sqlite3_column_int(stmt, 0))
     }
 

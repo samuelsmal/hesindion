@@ -40,6 +40,15 @@ enum DerivedValueRepair {
             changed = true
         }
 
+        // NOTE on `max` convention: this file is inconsistent about what `max` means, and
+        // that inconsistency is deliberate to leave alone here. Wundschwelle (above) and
+        // Geschwindigkeit (below) treat `max` as `base + bonus` — the ceiling a bonus trait
+        // or piece of equipment can push the value to. Ausweichen and Initiative (here)
+        // treat `max` as the bare computed value, with `bonus` preserved but not folded in.
+        // The pair's own convention is pre-existing and out of scope for this repair — it
+        // is not "fixed" to match Wundschwelle/GS because doing so would change numbers at
+        // the table for any hero with a nonzero ausweichen/initiative bonus, which nobody
+        // has authorised (finding 9, whole-branch review).
         let aw = DerivedValueFormulas.ausweichen(ge: attributes.ge)
         if dv.ausweichen.value != aw || dv.ausweichen.max != aw {
             dv.ausweichen = ComputedValue(value: aw, bonus: dv.ausweichen.bonus, max: aw)
@@ -57,10 +66,20 @@ enum DerivedValueRepair {
         // pinned Optolith source; in both cases the right answer is "leave it alone",
         // not "assume human" — assuming would write the very value this repair exists
         // to correct, and do it over a number somebody may have fixed by hand.
-        if let gs = DerivedValueFormulas.geschwindigkeit(speciesId: hero.personalData?.speciesId),
-           dv.geschwindigkeit.base != gs || dv.geschwindigkeit.max != gs {
-            dv.geschwindigkeit = ResourceValue(base: gs, bonus: dv.geschwindigkeit.bonus, max: gs)
-            changed = true
+        //
+        // `max` is `base + bonus`, matching wundschwelle, not the bare `gs` — the GS repair
+        // originally set `max: gs`, silently dropping any bonus out of the ceiling (a hero
+        // with base 8, bonus 2, max 10 would be rewritten to max 8). The guard below compares
+        // against the corrected `max` too, so a hero with a bonus does not get rewritten on
+        // every launch (whole-branch review finding 9). Latent today: nothing writes a
+        // nonzero `geschwindigkeit.bonus`, so this changes no number at the table yet.
+        if let gs = DerivedValueFormulas.geschwindigkeit(speciesId: hero.personalData?.speciesId) {
+            let gsBonus = dv.geschwindigkeit.bonus
+            let gsExpected = ResourceValue(base: gs, bonus: gsBonus, max: gs + gsBonus)
+            if dv.geschwindigkeit.base != gsExpected.base || dv.geschwindigkeit.max != gsExpected.max {
+                dv.geschwindigkeit = gsExpected
+                changed = true
+            }
         }
 
         return changed
