@@ -28,12 +28,23 @@ description: >-
   whole file, but the calibration gate does not: Tier 1 grades *effect rows*
   on `TIER1_FIELDS`, with `note` excluded, so an edit that touches neither
   cannot move a single verdict and there is nothing for a re-run to
-  re-measure. Three shapes qualify so far: `note`, `source.checked`, and a
-  rule-root key that is not an effect row at all (`ruleset`, added by
-  ADR-0009; `source.title`, added for chapter rules). Such an edit updates
-  `bytes` here and records its reasoning under `golden_edits` in the recorded
-  run's `RUN.yaml`. An edit that touches any Tier 1 field of any effect row
-  is the other case, and that one does mean a live re-run.
+  re-measure. The carve-out is exactly four shapes, enumerated rather than
+  described by exclusion: `note`, `source.checked`, `ruleset` (added by
+  ADR-0009) and `source.title` (added for chapter rules). Such an edit
+  updates `bytes` here and records its reasoning under `golden_edits` in the
+  recorded run's `RUN.yaml`. An edit that touches any Tier 1 field of any
+  effect row is the other case, and that one does mean a live re-run.
+
+  **A passing `graded` assertion is necessary evidence for the carve-out, not
+  sufficient.** `subgroup`, `excludes` and `id` also leave `graded`
+  unchanged -- `graded_digest` only ever reads the non-reminder effect rows,
+  never the rule root -- and none of the three is safe to treat as note-only.
+  `subgroup` selects which maneuver slot a hero may declare it in
+  (`AGENTS.md`, "Maneuver slots come from `rules.subgroup_id`"); `excludes`
+  is Tier 2 but mechanical, not cosmetic (`test_calibration.py`); `id` is the
+  rule's own identity. An edit to any of those three still means a live
+  re-run even though the `graded` assertion below stays green -- it is
+  outside what this hash was built to carve out, not an instance of it.
 
   With only `bytes`, that carve-out rested entirely on an English
   justification: "note-only, so no re-run" and "mechanical, but I called it

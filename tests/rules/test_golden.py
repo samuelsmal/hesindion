@@ -19,6 +19,7 @@ calibration carve-out checkable instead of merely asserted -- see
 """
 import hashlib
 import pathlib
+import re
 
 import pytest
 import yaml
@@ -45,9 +46,14 @@ BYTES_REMEDY = (
     "tests/rules/golden/MANIFEST.yaml. If this change to the authored rule is "
     "intended, update its `bytes` hash in the same commit. Whether that is the "
     "whole remedy is what the `graded` hash decides: if the companion `graded` "
-    "assertion still passes, the edit touched nothing Tier 1 grades -- record "
-    "why under `golden_edits` in the recorded run's RUN.yaml and stop there. If "
-    "it fails too, this is a mechanical change to the pipeline's reference "
+    "assertion still passes AND the only root keys you touched are `note`, "
+    "`source.checked`, `ruleset` or `source.title` -- the enumerated carve-out, "
+    "not every root key -- record why under `golden_edits` in the recorded "
+    "run's RUN.yaml and stop there. If you touched `subgroup`, `excludes` or "
+    "`id`, the `graded` assertion still passes but this is NOT the carve-out: "
+    "those three are table-visible (maneuver slot, a Tier 2 mechanical field, "
+    "and the rule's own identity) and still mean a live re-run. If `graded` "
+    "fails too, this is a mechanical change to the pipeline's reference "
     "encoding and it means re-running the calibration (Task 7). See "
     "MANIFEST.yaml's description for the full carve-out."
 )
@@ -101,13 +107,23 @@ def test_the_two_hashes_answer_different_questions():
     """Pin the property the carve-out rests on, rather than asserting it in prose.
 
     A `note` edit moves the byte hash and not the graded one; a `value` edit
-    moves both. If this ever stopped holding -- by `note` entering
-    `TIER1_FIELDS`, or by `graded_digest` accidentally reading the whole file --
-    the carve-out would silently become either useless or unusable, and every
-    other test here would still pass.
+    moves both; an edit to one of the enumerated *safe* root keys (`ruleset`,
+    `source.title`, alongside `source.checked`) moves neither. That is the
+    narrow claim MANIFEST.yaml's description now makes -- "this enumerated
+    set", not "any root key that is not an effect row". If this ever stopped
+    holding -- by `note` entering `TIER1_FIELDS`, or by `graded_digest`
+    accidentally reading the whole file -- the carve-out would silently become
+    either useless or unusable, and every other test here would still pass.
+
+    `subgroup`, `excludes` and `id` also leave `graded` unchanged and are
+    deliberately *not* exercised as a "still equal" case here: they are the
+    keys the carve-out does not cover despite passing this same assertion, and
+    `test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun`
+    below is where that distinction is pinned.
     """
     base = {
         "id": "SA_65", "subgroup": "passiv", "ruleset": "core",
+        "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},
         "effects": [
             {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
              "note": "Clause 1 - the defensive stance's PA bonus"},
@@ -122,11 +138,72 @@ def test_the_two_hashes_answer_different_questions():
         {**base["effects"][0], "value": 2},
         base["effects"][1],
     ]}
-    root_edited = {**base, "ruleset": "focus.trefferzonen"}
+    safe_root_edited = {
+        **base,
+        "ruleset": "focus.trefferzonen",
+        "source": {"title": "A Different Page Title", "checked": "2027-06-01"},
+    }
 
     assert graded_digest(note_edited) == graded_digest(base)
-    assert graded_digest(root_edited) == graded_digest(base)
+    assert graded_digest(safe_root_edited) == graded_digest(base)
     assert graded_digest(value_edited) != graded_digest(base)
+
+
+#: The root keys that pass the `graded` assertion above (`graded_digest` never
+#: reads the rule root) and are still not part of the carve-out -- table-visible
+#: facts the calibration doesn't grade at all, not fields the carve-out was
+#: written for. See MANIFEST.yaml's description and BYTES_REMEDY.
+NOT_SAFE_DESPITE_PASSING_GRADED = ("subgroup", "excludes", "id")
+
+
+@pytest.mark.parametrize("key, mutated_value", [
+    ("subgroup", "spezialmanoever"),
+    ("excludes", ["SA_67"]),
+    ("id", "SA_66"),
+])
+def test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun(key, mutated_value):
+    """The coupling test finding 8 asks for.
+
+    The safe-set enumeration used to live only in prose (MANIFEST.yaml's
+    description, BYTES_REMEDY), and nothing failed if that prose and
+    `graded_digest`'s actual behaviour disagreed -- a passing `graded`
+    assertion looks identical whether the key touched is genuinely safe or
+    merely un-graded. This closes the gap two ways: if `graded_digest` ever
+    starts moving on one of these keys, the first assertion below catches it;
+    if the prose ever stops naming one of them as still requiring a re-run
+    despite passing, the second and third assertions do.
+    """
+    assert key in NOT_SAFE_DESPITE_PASSING_GRADED
+    base = {
+        "id": "SA_65", "subgroup": "passiv", "ruleset": "core", "excludes": [],
+        "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},
+        "effects": [
+            {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
+             "note": "Clause 1 - the defensive stance's PA bonus"},
+            {"type": "reminder", "note": "UNENCODED: clause 2"},
+        ],
+    }
+    mutated = {**base, key: mutated_value}
+
+    assert graded_digest(mutated) == graded_digest(base), (
+        f"`{key}` used to leave `graded` unchanged and no longer does -- "
+        "MANIFEST.yaml's description and BYTES_REMEDY must stop naming it as "
+        "an exception, since the carve-out's own mechanism now catches it"
+    )
+    # A plain substring check would pass on "id" for the wrong reason -- it is
+    # a substring of "invalidates", "side", "identical" and more, so an "id in
+    # text" assertion could stay green with no mention of the field at all.
+    # Prose here quotes a field name in backticks (`` `id` ``, `` `subgroup` ``),
+    # so that is what is checked for.
+    backticked = re.compile(rf"`{re.escape(key)}`")
+    assert backticked.search(MANIFEST["description"]), (
+        f"`{key}` passes the `graded` assertion but is not named in "
+        "MANIFEST.yaml's description as still requiring a re-run despite that"
+    )
+    assert backticked.search(BYTES_REMEDY), (
+        f"`{key}` passes the `graded` assertion but is not named in "
+        "BYTES_REMEDY as still requiring a re-run despite that"
+    )
 
 
 def test_golden_directory_holds_no_duplicate_rule_bodies():
