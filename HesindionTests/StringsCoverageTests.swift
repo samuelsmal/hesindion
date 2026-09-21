@@ -30,6 +30,7 @@ final class StringsCoverageTests: XCTestCase {
             "trefferzone.woundEffect", "trefferzone.threshold",
             "trefferzone.probe", "trefferzone.dropWeapon",
             "trefferzone.reminderTitle", "modifier.trefferzone",
+            "advantageousPosition", "opponentOnFoot",
         ] { assertLocalized(key) }
     }
 

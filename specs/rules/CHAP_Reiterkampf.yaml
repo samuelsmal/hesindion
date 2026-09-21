@@ -31,7 +31,7 @@ effects:
   when:
   - mounted: true
   - gmFlag: opponentOnFoot
-  note: Clause 2 - the mounted-vs-on-foot AT ease, which SA_661 raises rather than adding to. MeleeModifiers.vorteilhaftePosition gates it on golgaritenActive; opponent stance is a GM toggle (ADR-0005)
+  note: Clause 2 - the mounted-vs-on-foot AT ease, which SA_661 raises rather than adding to. MeleeModifiers.vorteilhaftePosition carries it for every rider; opponent stance is a GM toggle (ADR-0005)
 - type: reminder
   when:
   - mounted: true

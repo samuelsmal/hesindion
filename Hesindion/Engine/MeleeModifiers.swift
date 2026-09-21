@@ -7,21 +7,35 @@ enum MeleeModifiers {
         offHandPenalty, beengteUmgebungAT,
     ]
 
-    /// Golgariten-forced vorteilhafte Position (+2 AT when mounted with correct loadout).
+    /// Reiterkampf chapter rule (`CHAP_Reiterkampf`, clause 2): a mounted hero counts as being
+    /// in a vorteilhafte Position against a fighter on foot, +2 AT. It binds *every* rider —
+    /// no Sonderfertigkeit, no particular weapon and no particular shield. The opponent's
+    /// stance is a GM flag, because the opponent is not modelled (ADR-0005).
     static let vorteilhaftePosition = ModifierDefinition(
         id: "vorteilhaftePosition",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.mounted) else { return nil }
+        guard emitsVorteilhaftePosition(mounted: ctx.mounted, opponentOnFoot: ctx.opponentOnFoot) else { return nil }
         return ModifierLine(value: 2, source: L("source.vorteilhaft"))
     }
 
-    /// Golgariten style bonus (+2 AT).
+    /// Whether `vorteilhaftePosition` will emit its line for this situation — i.e. whether the
+    /// engine already supplies the +2. A screen that also offers a *manual* vorteilhafte
+    /// Position toggle must ask this first and suppress its own line, or the hero gets the
+    /// ease twice. Lives next to the definition, and is used by it, so the two cannot drift.
+    static func emitsVorteilhaftePosition(mounted: Bool, opponentOnFoot: Bool) -> Bool {
+        mounted && opponentOnFoot
+    }
+
+    /// Golgariten-Stil (`SA_661`, clause 1): *raises* the ease that the advantageous position
+    /// already grants by a further +2 AT, for a total of +4 — it is not an independent bonus,
+    /// so it needs the same mounted-against-foot situation that `vorteilhaftePosition` needs,
+    /// on top of the style's own loadout requirement.
     static let golgariten = ModifierDefinition(
         id: "golgariten",
         domains: [.meleeAttack]
     ) { ctx in
-        guard ctx.hero.golgaritenActive(mounted: ctx.mounted) else { return nil }
+        guard ctx.hero.golgaritenActive(mounted: ctx.mounted), ctx.opponentOnFoot else { return nil }
         return ModifierLine(value: 2, source: L("source.golgariten"))
     }
 

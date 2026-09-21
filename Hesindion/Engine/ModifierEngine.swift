@@ -32,6 +32,11 @@ struct ModifierContext {
 
     // Combat shared
     var mounted: Bool = false
+    /// GM-driven, exactly like `targetIsSurprised`: the opponent is not modelled, so whether
+    /// the hero's target stands on its own feet or sits on a mount is adjudicated at the table
+    /// (ADR-0005). Only meaningful together with `mounted` — it gates the Reiterkampf
+    /// advantageous-position ease and the Golgariten-Stil raise on top of it.
+    var opponentOnFoot: Bool = false
     var schipIgnoreZustand: Bool = false
     var dualAttackActive: Bool = false
     var beengteUmgebung: Bool = false

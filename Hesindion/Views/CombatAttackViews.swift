@@ -351,9 +351,21 @@ struct CombatAnnouncementView: View {
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
     @State private var targetIsSurprised = false
+    /// GM flag (ADR-0005). Riding down foot fighters is the common case, so it starts on;
+    /// it only has an effect while mounted, and the toggle only shows there.
+    @State private var opponentOnFoot = true
 
-    private var golgaritenForced: Bool {
-        hero.golgaritenActive(mounted: mountedActive)
+    /// Whether the engine already supplies the vorteilhafte Position +2, in which case the
+    /// screen shows it as a read-only fact rather than a toggle — and `buildModifierLines`
+    /// must not insert a second one.
+    ///
+    /// This used to mean "the hero has Golgariten-Stil with the right loadout", because that
+    /// was the only way `MeleeModifiers.vorteilhaftePosition` fired. It no longer is: the
+    /// advantageous position is a Reiterkampf chapter rule binding every rider, and the
+    /// Golgariten style merely raises it. So "forced" now means the *situation* — mounted,
+    /// opponent on foot — and has nothing to do with the style.
+    private var positionForced: Bool {
+        MeleeModifiers.emitsVorteilhaftePosition(mounted: mountedActive, opponentOnFoot: opponentOnFoot)
     }
 
     private var availableManeuvers: [CombatManeuver] {
@@ -401,8 +413,32 @@ struct CombatAnnouncementView: View {
 
             ScrollView {
                 VStack(spacing: 8) {
+                    // Opponent stance — GM-adjudicated, and only while the hero is mounted:
+                    // it is what turns the Reiterkampf position rule on (and the Golgariten
+                    // raise with it). Sits above the position row so tapping it changes the
+                    // row below rather than making the control itself jump.
+                    if mountedActive {
+                        Button { opponentOnFoot.toggle() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: opponentOnFoot ? "checkmark.square.fill" : "square")
+                                    .font(.system(.title3, weight: .semibold))
+                                    .foregroundStyle(opponentOnFoot ? combatAccent : .secondary)
+                                Text(L("opponentOnFoot"))
+                                    .font(.system(.body, weight: opponentOnFoot ? .bold : .regular))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .background(opponentOnFoot ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
+                            .overlay(Rectangle().stroke(opponentOnFoot ? combatAccent : Color.dsaBorder, lineWidth: opponentOnFoot ? 3 : 2))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("combat.opponentOnFoot")
+                    }
+
                     // Vorteilhafte Position
-                    if golgaritenForced {
+                    if positionForced {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.square.fill")
                                 .font(.system(.body, weight: .semibold))
@@ -583,6 +619,7 @@ struct CombatAnnouncementView: View {
         context.targetHitZone = targetZone
         context.targetIsSurprised = targetIsSurprised
         context.mounted = mountedActive
+        context.opponentOnFoot = opponentOnFoot
         context.schipIgnoreZustand = schipIgnoreZustandThisRound
         context.dualAttackActive = dualAttackPenaltyActive
         context.beengteUmgebung = beengteUmgebungActive
@@ -594,8 +631,10 @@ struct CombatAnnouncementView: View {
 
         var lines = ModifierEngine.shared.evaluate(context: context)
 
-        // Manual vorteilhafte Position toggle (not golgariten-forced)
-        if !golgaritenForced && vorteilhaftePosition {
+        // Manual vorteilhafte Position toggle — only for situations the engine cannot see.
+        // When `positionForced`, `MeleeModifiers.vorteilhaftePosition` has already emitted
+        // the +2, so inserting here would double-count it.
+        if !positionForced && vorteilhaftePosition {
             lines.insert(ModifierLine(value: 2, source: L("source.vorteilhaft")), at: 0)
         }
 
