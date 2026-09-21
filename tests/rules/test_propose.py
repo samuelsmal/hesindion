@@ -34,7 +34,7 @@ from scripts.rules_sync.propose import (
     chunk,
     diff_effects,
     load_rule_inputs,
-    _redact_ids,
+    _redact_references,
     golden_ids,
     ids_named_in_agent_briefs,
     parse_agent_output,
@@ -47,33 +47,6 @@ from scripts.rules_sync.propose import (
 # Invented placeholder rule text -- not a capture of any real Regelwiki page.
 TEXT_A = "Der Held erhaelt einen Bonus von 2 auf seine Attacke, solange er beritten kaempft."
 TEXT_B = "Die Verteidigung des Helden ist um 4 erleichtert. Dafuer verliert er seine Aktion."
-
-
-@pytest.fixture(autouse=True)
-def no_live_agent_calls(monkeypatch):
-    """Enforce the module docstring's contract instead of asserting it in prose.
-
-    A fix-round-1 test called `main()` with the real `SubprocessRunner` and
-    spawned two live agents; nothing failed, and the only symptom was the suite
-    taking 16 seconds longer. A guard is cheap and the alternative is a test
-    suite that quietly bills for model calls.
-
-    A test that fakes `subprocess.run` itself replaces this wrapper, which is
-    what `test_subprocess_runner_*` rely on; everything else passes through, so
-    the git-status test still runs real `git`.
-    """
-    real = subprocess.run
-
-    def guarded(argv, **kwargs):
-        first = argv[0] if isinstance(argv, (list, tuple)) and argv else argv
-        if Path(str(first)).name == "claude":
-            raise AssertionError(
-                f"a test tried to spawn the real agent ({argv!r}). "
-                "Inject a FakeRunner: this suite makes zero model calls."
-            )
-        return real(argv, **kwargs)
-
-    monkeypatch.setattr(subprocess, "run", guarded)
 
 
 def envelope(rule_id: str, body: str, rationale: str = "clause 1 -> row 1") -> str:
@@ -778,15 +751,48 @@ def test_an_empty_exclusion_set_is_allowed(tmp_path):
 
 GOLDEN = ["SA_40", "SA_41", "SA_43", "SA_48", "SA_59", "SA_62", "SA_65", "SA_66", "SA_67", "SA_661"]
 
+# The German ability names, which identify a rule to a model that has read the
+# rules exactly as precisely as the id does. Spelled out rather than read from
+# rules.db, so this test says what it is guarding against.
+GOLDEN_NAMES = {
+    "SA_40": "Aufmerksamkeit", "SA_41": "Belastungsgewöhnung",
+    "SA_43": "Berittener Kampf", "SA_48": "Finte", "SA_59": "Schildspalter",
+    "SA_62": "Sturmangriff", "SA_65": "Verteidigungshaltung", "SA_66": "Vorstoß",
+    "SA_67": "Wuchtschlag", "SA_661": "Golgariten-Stil",
+}
 
-def test_no_withheld_id_survives_anywhere_in_the_workspace(tmp_path):
-    """C1. `prepare_workspace` removed the authored *files* and left the
-    citations: `vocabulary.yaml` glossed four of the golden ten by id,
-    `schema.json` named a fifth, `docs/adr/0008` restated a sixth's mechanics
-    -- from a paragraph now stale, so it would have misled as well as leaked.
-    Both agents have `Grep`, and a hint they can both find pushes them toward
-    agreeing with each other rather than toward being right."""
-    ws = prepare_workspace(tmp_path / "ws", GOLDEN)
+
+def test_the_names_are_the_ones_the_database_has():
+    """If a name here drifts from `rules_i18n`, the test below silently stops
+    guarding that rule."""
+    import sqlite3
+    from scripts.rules_sync.propose import DEFAULT_DB
+
+    conn = sqlite3.connect(f"file:{DEFAULT_DB}?mode=ro", uri=True)
+    try:
+        rows = dict(conn.execute(
+            "SELECT rule_id, name FROM rules_i18n WHERE locale = 'de-DE' AND rule_id IN "
+            f"({','.join('?' * len(GOLDEN))})", GOLDEN).fetchall())
+    finally:
+        conn.close()
+    assert rows == GOLDEN_NAMES
+
+
+def test_no_withheld_id_or_name_survives_anywhere_in_the_workspace(tmp_path):
+    """C1, both halves.
+
+    Round 1 removed the authored *files* and left the citations: `vocabulary.yaml`
+    glossed four of the golden ten by id, `schema.json` named a fifth,
+    `docs/adr/0008` restated a sixth's mechanics from a paragraph now stale.
+
+    Round 2 closed the half that a token-shaped grep could not see. The names
+    stayed bare in sentences that state the mechanical answer -- `schema.json`
+    said `defenderShield` "covers Schildspalter, which lands on the defender's
+    shield" (that rule's exact `dice.recipient`) and its `excludes` example read
+    "e.g. Sturmangriff excludes Finte" (that rule's exact `excludes` field). The
+    round-1 version of this test passed because it only grepped `SA_NN`.
+    """
+    ws = prepare_workspace(tmp_path / "ws", GOLDEN, exclude_names=GOLDEN_NAMES.values())
     offenders = []
     for path in sorted(ws.rglob("*")):
         if not path.is_file():
@@ -794,8 +800,23 @@ def test_no_withheld_id_survives_anywhere_in_the_workspace(tmp_path):
         body = path.read_text(encoding="utf-8")
         for rule_id in GOLDEN:
             if re.search(rf"\b{rule_id}\b", body):
-                offenders.append(f"{path.relative_to(ws)}: {rule_id}")
+                offenders.append(f"{path.relative_to(ws)}: id {rule_id}")
+            # plain substring for names: an inflection or an embedded identifier
+            # (`hasSturmangriff`) names the rule just as well
+            if GOLDEN_NAMES[rule_id] in body:
+                offenders.append(f"{path.relative_to(ws)}: name {GOLDEN_NAMES[rule_id]}")
     assert offenders == [], offenders
+
+
+def test_the_sentences_around_a_redacted_name_stay_usable_as_precedent():
+    """The standard the ruling set: lose the pointer, keep the mechanics."""
+    redacted = _redact_references(
+        "`defenderShield` covers Schildspalter, which lands on the defender's shield instead.",
+        {"SA_59", "Schildspalter"},
+    )
+    assert "defenderShield" in redacted
+    assert "lands on the defender's shield" in redacted
+    assert "Schildspalter" not in redacted
 
 
 def test_redaction_keeps_the_mechanics_and_drops_only_the_pointer(tmp_path):
@@ -820,9 +841,16 @@ def test_redaction_keeps_the_mechanics_and_drops_only_the_pointer(tmp_path):
     ("SA_661 and SA_66", {"SA_66"}, "SA_661 and a withheld rule"),
     ("SA_661 and SA_66", {"SA_661"}, "a withheld rule and SA_66"),
     ("nothing to do", set(), "nothing to do"),
+    # names: swallow inflections and embedded identifiers, drop the whole
+    # parenthetical, and never leave a multi-word name as its common tail
+    ("covers Schildspalter, landing", {"Schildspalter"}, "covers a withheld rule, landing"),
+    ("a hasSturmangriff check", {"Sturmangriff"}, "a a withheld rule check"),
+    ("combine (e.g. Sturmangriff excludes Finte).", {"Sturmangriff", "Finte"}, "combine."),
+    ("Berittener Kampf needs Kampf words", {"Berittener Kampf"}, "a withheld rule needs Kampf words"),
+    ("uses Vorstoß here", {"Vorstoß"}, "uses a withheld rule here"),
 ])
-def test_redact_ids(text, excluded, expected):
-    assert _redact_ids(text, excluded) == expected
+def test_redact_references(text, excluded, expected):
+    assert _redact_references(text, excluded) == expected
 
 
 def test_the_workspace_is_a_faithful_copy_when_nothing_is_withheld(tmp_path):
@@ -873,8 +901,10 @@ def test_ids_named_in_agent_briefs_finds_a_contaminated_brief(tmp_path):
     assert ids_named_in_agent_briefs(["SA_6"], agents_dir=agents) == {}  # no partial match
 
 
-def test_the_suite_cannot_spawn_a_real_agent():
-    """The guard above, tested. Without it a `main()` test silently went live."""
+def test_this_module_is_covered_by_the_shared_live_agent_guard():
+    """The guard itself lives in `tests/conftest.py` and is proved to reach
+    other modules by `tests/test_no_live_model_calls.py`; this asserts it
+    reaches the module that needs it most."""
     with pytest.raises(AssertionError, match="zero model calls"):
         subprocess.run(["claude", "-p"], capture_output=True)
 

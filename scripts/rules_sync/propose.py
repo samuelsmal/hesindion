@@ -324,11 +324,20 @@ observed, not hypothesised: the first end-to-end run reproduced two hand-authore
 files down to the wording of every note.
 
 Every reference to a withheld rule has also been removed from the files above and
-reads `a withheld rule`. That is not tidiness: `vocabulary.yaml` glossed four of
-the golden ten by id, `schema.json` named a fifth, and an ADR restated a sixth's
-mechanics -- from a stale paragraph, so it would have misled as well as leaked.
-Both agents have `Grep`, and a hint both of them find pushes them toward agreeing
-with each other rather than toward being right.
+reads `a withheld rule` -- **by German ability name as well as by id**, and any
+parenthetical that mentioned one is dropped outright. That is not tidiness:
+`vocabulary.yaml` glossed four of the golden ten by id, `schema.json` named a
+fifth, and an ADR restated a sixth's mechanics from a stale paragraph, so it
+would have misled as well as leaked. Redacting only the `SA_NN` token left the
+worse half standing: several of those sentences named the ability in German
+instead, and stated its exact encoding while doing so -- which field a `dice`
+row uses, which rule another one excludes. To a model that has read the rules, a
+German ability name identifies it as precisely as its id does. Both agents have
+`Grep`, and a hint both of them find pushes them toward agreeing with each other
+rather than toward being right.
+
+(This paragraph names no rule for the same reason. The test that greps this tree
+for withheld names caught the first draft of it, which did.)
 
 {withheld_count} rule(s) are withheld from this run. They are deliberately not
 named here: naming them would tell you which answer key was hidden, which is most
@@ -337,37 +346,82 @@ of the hint back.
 
 _WITHHELD = "a withheld rule"
 
+_RULE_ID_RE = re.compile(r"^(?:SA|ADV|DISADV|COND|CT)_[0-9]+$")
 
-def _redact_ids(text: str, excluded: set[str]) -> str:
-    """Remove every mention of a withheld rule id from reference material.
 
-    Two passes, because the corpus cites ids in two shapes. A parenthetical that
-    holds nothing but withheld ids -- `furtherActions (SA_65)` -- goes entirely,
-    since the sentence reads correctly without it. Anything left, backticked or
-    bare or possessive, becomes `a withheld rule`, so the mechanics stay readable
-    as precedent while losing the pointer that ties them to a rule in this run.
-    Longest id first, so `SA_661` is not half-eaten by a pattern for `SA_66`.
+def _withheld_pattern(withheld: set[str]) -> str:
+    """One regex matching any withheld reference, ids and names matched by
+    their own rules (see `_redact_references`)."""
+    ids = sorted((t for t in withheld if _RULE_ID_RE.match(t)), key=len, reverse=True)
+    names = sorted((t for t in withheld if not _RULE_ID_RE.match(t)), key=len, reverse=True)
+    branches = []
+    if ids:
+        branches.append(r"\b(?:" + "|".join(re.escape(t) for t in ids) + r")\b")
+    if names:
+        branches.append(r"\w*(?:" + "|".join(re.escape(t) for t in names) + r")\w*")
+    return "|".join(branches)
+
+
+def _redact_references(text: str, withheld: set[str]) -> str:
+    """Remove every reference to a withheld rule from reference material.
+
+    `withheld` holds both the rule ids and their German ability names, because
+    the two identify a rule equally well to a model that has read the rules. The
+    id-only version of this function passed its own test and left
+    `defenderShield` "covers Schildspalter, which lands on the defender's
+    shield" standing in `schema.json` -- a sentence that states a withheld
+    rule's exact encoding (Task 6 fix round 2).
+
+    Three passes:
+
+    1. a parenthetical that mentions anything withheld goes entirely. It used to
+       go only when it held nothing *but* ids; widening it is strictly safer,
+       because `(e.g. Sturmangriff excludes Finte)` redacted token-wise still
+       says an `excludes` edge runs between two rules in this run.
+    2. a backticked reference becomes the placeholder without its backticks, so
+       the sentence does not read as a code identifier that no longer exists.
+    3. anything left becomes the placeholder, swallowing adjacent word
+       characters so an inflection or an embedded identifier (`hasSturmangriff`,
+       a genitive `-s`) goes with it.
+
+    Longest token first, so `Berittener Kampf` is not left as a bare `Kampf`.
+    Ids and names are *not* matched the same way, and conflating them was a bug
+    caught by this function's own test: an id is anchored on word boundaries, so
+    a pattern for `SA_66` cannot eat `SA_661`, while a name swallows adjacent
+    word characters, so `hasSturmangriff` and a genitive `-s` go with it.
     """
-    if not excluded:
+    if not withheld:
         return text
-    alt = "|".join(re.escape(i) for i in sorted(excluded, key=len, reverse=True))
-    text = re.sub(rf"[ \t]*\((?:{alt})(?:\s*[,/]\s*(?:{alt}))*\)", "", text)
-    text = re.sub(rf"`(?:{alt})`", _WITHHELD, text)
-    return re.sub(rf"\b(?:{alt})\b", _WITHHELD, text)
+    pattern = _withheld_pattern(withheld)
+    text = re.sub(rf"[ \t]*\([^()]*(?:{pattern})[^()]*\)", "", text)
+    text = re.sub(rf"`(?:{pattern})`", _WITHHELD, text)
+    return re.sub(pattern, _WITHHELD, text)
 
 
-def _copy_redacted(src: Path, dest: Path, excluded: set[str]) -> None:
+# Kept as the old name so callers and tests that only have ids still read
+# naturally; ids and names go through the same machinery.
+_redact_ids = _redact_references
+
+
+def _copy_redacted(src: Path, dest: Path, withheld: set[str]) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(_redact_ids(src.read_text(encoding="utf-8"), excluded), encoding="utf-8")
+    dest.write_text(_redact_references(src.read_text(encoding="utf-8"), withheld), encoding="utf-8")
 
 
-def prepare_workspace(dest: Path, exclude_ids: Iterable[str], repo_root: Path = REPO_ROOT) -> Path:
+def prepare_workspace(
+    dest: Path,
+    exclude_ids: Iterable[str],
+    repo_root: Path = REPO_ROOT,
+    exclude_names: Iterable[str] = (),
+) -> Path:
     """Build the read-only reference tree an agent runs against.
 
     Copies the schema, the vocabulary registry, the ADRs, `AGENTS.md` and every
     authored rule *except* those being encoded in this run -- so precedent is
     available and the answer is not -- and redacts every surviving reference to a
-    withheld id (see `_redact_ids`). `rules.db` is never copied: the driver passes
+    withheld rule, by id *and* by German ability name (see `_redact_references`;
+    `exclude_names` comes from `rules_i18n.name` via `RuleInput.name`).
+    `rules.db` is never copied: the driver passes
     each agent exactly the one rule text it needs, and a database of all 232 would
     hand it the rest for nothing.
 
@@ -375,25 +429,26 @@ def prepare_workspace(dest: Path, exclude_ids: Iterable[str], repo_root: Path = 
     system prompt rather than a file -- `ids_named_in_agent_briefs` is that guard.
     """
     excluded = set(exclude_ids)
+    withheld = excluded | {n.strip() for n in exclude_names if n and n.strip()}
     rules_dest = dest / "specs" / "rules"
     rules_dest.mkdir(parents=True, exist_ok=True)
 
     schema = repo_root / "specs" / "rules" / "schema.json"
     if schema.exists():
-        _copy_redacted(schema, rules_dest / "schema.json", excluded)
+        _copy_redacted(schema, rules_dest / "schema.json", withheld)
     for path in sorted((repo_root / "specs" / "rules").glob("*.yaml")):
         if path.stem in excluded:
             continue
-        _copy_redacted(path, rules_dest / path.name, excluded)
+        _copy_redacted(path, rules_dest / path.name, withheld)
 
     adr_src = repo_root / "docs" / "adr"
     if adr_src.is_dir():
         for path in sorted(adr_src.glob("*.md")):
-            _copy_redacted(path, dest / "docs" / "adr" / path.name, excluded)
+            _copy_redacted(path, dest / "docs" / "adr" / path.name, withheld)
     for name in ("AGENTS.md", "CLAUDE.md"):
         src = repo_root / name
         if src.exists():
-            _copy_redacted(src, dest / name, excluded)
+            _copy_redacted(src, dest / name, withheld)
 
     (dest / "README.md").write_text(
         WORKSPACE_README.format(withheld_count=len(excluded)), encoding="utf-8"
@@ -1181,7 +1236,7 @@ def propose(
             if leak:
                 proposal.lint_errors.append(
                     f"{rule.rule_id}.yaml: rule text leaked into the encoding "
-                    f"(five consecutive source words: {' '.join(leak)!r}) -- "
+                    f"({LEAK_WINDOW} consecutive source words: {' '.join(leak)!r}) -- "
                     "rule prose stays out of git (Data Policy)"
                 )
 
@@ -1313,7 +1368,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     fetcher = sync_check.Fetcher() if args.verify_source else None
 
     with tempfile.TemporaryDirectory(prefix="rules-propose-ws-") as workspace:
-        prepare_workspace(Path(workspace), run_ids)
+        prepare_workspace(Path(workspace), run_ids,
+                          exclude_names=[r.name for r in rules])
         runner = SubprocessRunner(
             model=args.model, tools=args.runner_tools, timeout=args.timeout, cwd=Path(workspace)
         )
