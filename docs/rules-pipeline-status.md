@@ -55,6 +55,30 @@ matters, because the first reading of the gate recorded one of the three as a de
   Stufe II; (c) it fails on rule-website text too. The golden corpus does **not** need revisiting —
   compare `specs/rules/SA_41.yaml` against `tests/rules/calibration/2026-09-21-sonnet/SA_41.yaml`.
 
+**`SA_661`'s next verdict is not comparable to its recorded one, and the recorded one still stands
+(Task 11a, 2026-09-21).** The whole-branch review's §6 found that `specs/rules/CHAP_Reiterkampf.yaml`
+encodes the same clause `SA_661` modifies — same `type`, `target`, `scope`, `side`, value and gate —
+and that the workspace handed it to the agents, because it carries neither `SA_661` nor its German
+ability name and so redaction could not see it. Two facts qualify what that means for the number
+above, and they point in opposite directions:
+
+- **The recorded run was not exposed to it.** The chapter file landed six commits *after* the
+  calibration run was recorded (`78802fb` after `505c721`), so it was not in the workspace the run
+  used. `SA_661`'s recorded Tier 1 verdict is also `false`, and a leak channel can only move a
+  verdict toward the golden file. The 7/10 is therefore not overstated by this channel, and §6's
+  wording — "`SA_661`'s current Tier 1 pass may rest on this channel" — is wrong on both counts:
+  it was not a pass, and the channel post-dated it. **Recorded here as a correction, not as a fix
+  to the review; the review document is left as written.**
+- **Every run from today would have been exposed to it.** `expected: SA_661: false` in
+  `tests/rules/calibration/2026-09-21-sonnet/RUN.yaml` is a gate booleans anyone re-measuring will
+  compare against, and the next run could have flipped it to `true` for a reason that is not the
+  pipeline's judgment — an improvement nobody could attribute. That is what Task 11a removes: the
+  workspace now withholds the chapter file alongside `SA_661` (`scripts/rules_sync/rule_graph.py`),
+  and the run reports which files it withheld for which rule.
+
+So: no recorded number changes, and any *future* `SA_661` result is measured under a materially
+thinner workspace than the recorded one — see §2 for what "thinner" costs, by rule.
+
 The gate's own headline finding is that **the driver feeds agents `rules_i18n.description` from
 `rules.db` — the Optolith seed — while ADR-0007 makes the rule website normative and the golden ten
 were authored from it.** Where the two disagree the pipeline is confidently wrong, and the second
@@ -113,6 +137,40 @@ the encoding still defeats it.
   paragraph as its reason for `scope: all`. This is the closer call of the two. No observed effect:
   `SA_41` diverged on a different axis entirely and no run ever produced the shape the leak would
   suggest.
+
+**A third leak channel is now closed rather than accepted: graph adjacency (Task 11a, 2026-09-21).**
+The two above are sentences that survive redaction. This one is a *file* that survives withholding:
+a different authored rule encoding the same mechanic as a graded one is that rule's answer key while
+carrying neither its id nor its German name, so neither removing the graded file nor redacting its
+two tokens reaches it. `specs/rules/CHAP_Reiterkampf.yaml` ↔ `SA_661` is the instance the
+whole-branch review recorded as its §6; the class generalises, and grows as the corpus goes from 28
+files toward 232. `prepare_workspace` now withholds the **transitive closure** of the run's rules
+over three edges computed from the corpus itself — `excludes` (undirected), a shared
+`parameterOverride.parameter` path, and a non-reminder effect row agreeing on every axis Tier 1
+grades a row's shape by (`type`, `target`, `scope`, `side`). There is deliberately **no declared
+`related:`/`modifies:` schema field**: the adjacency that leaked is exactly the kind nobody spots,
+so an edge depending on an author spotting it inherits the defect. See
+`scripts/rules_sync/rule_graph.py`, and the run's own `WITHHELD.md` artefact, which names what was
+withheld for which rule under which edge — without it a later reader cannot tell "this rule had no
+neighbour" from "the graph missed it".
+
+**What the closure costs the next measurement, and it is not small.** Over the ten golden rules run
+as one batch (the recorded command), it withholds 12 of the 28 authored files rather than 10:
+`CHAP_Reiterkampf` and `COND_1` join the ten. What leaves with them is **every `scope: combat`
+modifier row in the corpus** — after the closure the workspace holds no worked example of
+`modifier … scope: combat` at all, on any target or side, plus no `modifier talent/movement`. Six of
+the ten golden rules encode combat modifiers, and all six now encode them with no in-domain
+precedent in front of them. Three of those six (`SA_65`, `SA_66`, `SA_661`) previously had precedent
+for every row shape they encode and now have none for their combat rows.
+
+**`SA_661` is the one to name.** Both of its non-reminder rows are combat modifiers, so after the
+closure *every* row shape it must produce has zero worked precedent in the workspace — it is the
+only golden rule this change moves from full precedent to none. `SA_40`, `SA_41`, `SA_43` and
+`SA_59` were already in that position for their own shapes before this change and are untouched by
+it (the graph finds them no neighbours at all). Any stability write-up must therefore report
+`SA_661` per-rule rather than folding it into an aggregate: its next result measures something
+different from the others'. This is the correct direction — a combat-axis neighbour *is* the answer
+key — but it is a property of the measurement, not a build detail, which is why it is recorded here.
 
 ## 3. The five blockers on any 222-rule wave
 

@@ -46,7 +46,8 @@ Claude Code subagents (`.claude/agents/`).
 | 8 — coverage ratchet | **not started** | — |
 | 9 — authoring waves | **BLOCKED on Task 7's five blockers** | — |
 | 10 — resolve rules to their page by name | **done** — 201/232 resolved, 10/10 golden; backfill left to a separate act | `fe7e944..14e23af` |
-| 11 — measure per-rule stability | **not started** | plan text `e564c86` |
+| 11a — withholding follows the rule graph | **done** — mechanism + withholding report, no live run | `0d55ce3` |
+| 11 — measure per-rule stability | **not started**, prerequisite 11a now done | plan text `e564c86` |
 | 12 — author the rules the app hardcodes | **started**: `CHAP_Reiterkampf` authored, backlog open | `c93105a..2e468fd`, `9aef3d2`, `a3508e2`, `1ceb48d` |
 | 13 — GS is a species rule | **Swift done**, corpus half open (belongs to Task 12) | `f276b14` |
 
@@ -956,11 +957,55 @@ as reading the fetched, normalised page. This is the unbuilt half of that decisi
 
 ---
 
+### Task 11a: Withholding follows the rule graph, not just the rule id
+
+**Status: DONE.** Commits `0d55ce3`. Mechanism only — **no live run was made.**
+
+**Why it exists:** the whole-branch review's §6 (`docs/rules-pipeline-review-findings.md`), recorded
+as a controller ruling after the blocker fixes. `specs/rules/CHAP_Reiterkampf.yaml` is a legitimate,
+un-withheld authored file that encodes the very clause `SA_661` modifies, and it carries neither
+`SA_661` nor its German ability name, so withholding the graded file and redacting its two tokens
+left the answer standing in a file the agent was entitled to read. The class generalises as the
+corpus grows from 28 files toward 232.
+
+**What was built:** `scripts/rules_sync/rule_graph.py` — the corpus as a graph over three edges
+computed from fields the schema already requires (`excludes` walked undirected; a shared
+`parameterOverride.parameter` path; a non-reminder effect row agreeing on `type`+`target`+`scope`+
+`side`, the axes Tier 1 grades a row's shape by). `prepare_workspace` withholds the **transitive
+closure** of the run's rules over that graph, and the run writes `WITHHELD.md` beside its other
+artefacts naming what was withheld for which rule under which edge. Per the controller's ruling, no
+declared `related:`/`modifies:` schema field was added: the adjacency that leaked is the kind nobody
+spots, so an edge depending on an author spotting it inherits the defect.
+
+**Why Task 11 may not run before this:** the five passes cost ≈110 live model calls, and a `SA_661`
+number measured through the leak would be a number nobody could attribute. See
+`docs/rules-pipeline-status.md` §1 and §2 for the cost, and for the one golden rule the closure
+leaves with no in-domain worked precedent.
+
+**Verify:** `python3 -m pytest tests/rules/test_rule_graph.py tests/rules/test_propose.py
+tests/rules/test_workspace_leaks.py -v` and `make rules-lint` (28 rule file(s), 0 error(s)). No
+model calls, no network.
+
+---
+
 ### Task 11: Measure per-rule stability before any wave
 
 **Status: NOT STARTED.** Added to this plan in `e564c86`. Nothing exists. **This is blocker 4**, and
 it is the one that has to come first: until the run-to-run spread is known, a ten-rule gate cannot
 attribute a fix, so Task 10's effect on the score would not be measurable either.
+
+**Prerequisite: Task 11a, above — DONE (`0d55ce3`).** Until it landed, a workspace handed the
+agents an authored file encoding the clause a graded rule modifies, so a per-rule number for any
+rule with an authored neighbour would have been suggestive rather than measured. Two consequences
+for the acceptance criteria below, both recorded in `docs/rules-pipeline-status.md` §2:
+
+- The run must state **which configuration it used** — the ten ids in one command, as the recorded
+  calibration run did, or each rule on its own. They withhold different amounts (12 of 28 files
+  against 8 of 28 per rule), so the two are not comparable and a mixed set is not a measurement.
+- `SA_661`'s hit rate must be reported **separately**, not folded into an aggregate: after the
+  closure it is the only golden rule with no worked precedent for any row shape it must produce, so
+  its passes measure something the other nine's do not. The run's own `WITHHELD.md` belongs with the
+  recorded output, as the statement of what the measurement controlled for.
 
 **Goal:** Replace a single-sample gate score with per-rule hit rates, so the pipeline's reliability
 is a measurement rather than a draw.
