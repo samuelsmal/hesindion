@@ -269,9 +269,9 @@ def _fold(text: str) -> str:
 def normalise_name(name: str) -> str:
     """Reduce an ability name or an anchor text to a comparable key.
 
-    `_fold`, plus a trailing Stufen ladder stripped: `Wuchtschlag I-III` and
-    `Wuchtschlag` are the same ability under two spellings -- the site titles
-    the page with the ladder, Optolith names the rule without it.
+    `_fold`, plus a trailing Stufen ladder stripped: `<name> I-III` and
+    `<name>` are the same ability under two spellings -- the site titles the
+    page with the ladder, Optolith names the rule without it.
 
     Deliberately not used on a book title. A trailing roman numeral there is a
     *volume*, not a ladder, and stripping it would quietly make `Aventurisches

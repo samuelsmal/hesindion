@@ -41,7 +41,7 @@ SITE = {
     "PH_Eins.html": "rule_i_publication.html",
     "PH_Zwei.html": "rule_j_ladder_title.html",
     "PH_Drei.html": "rule_k_publication_drift.html",
-    "PH_Vorsto%C3%9F.html": "rule_m_umlaut_slug.html",
+    "PH_Gru%C3%9F.html": "rule_m_umlaut_slug.html",
     "PH_DoppelA.html": "rule_n_doppel.html",
     "PH_DoppelB.html": "rule_n_doppel.html",
     "PH_Qual.html": "rule_n_doppel.html",
@@ -91,7 +91,7 @@ TARGETS = [
     target("PH_3", "Platzhalter-Drei", 3,
            "Der Platzhalter verschiebt den erfundenen Beispielwert einmal pro Platzhalter-Runde.",
            "Platzhalter-Regelwerk", 44),
-    target("PH_4", "Platzhalter-Vorstoß", 3,
+    target("PH_4", "Platzhalter-Gruß", 3,
            "Der Platzhalter ruecke um eine erfundene Beispielstrecke vor.",
            "Platzhalter-Regelwerk", 45),
     target("PH_5", "Platzhalter-Doppel", 3,
@@ -125,14 +125,18 @@ def resolve_fixture_site():
 
 # ── name reduction ───────────────────────────────────────────────────────────
 
+# Every string below is a placeholder, not an ability name (Data Policy,
+# AGENTS.md). What is real is the *shape*: a ladder suffix, an en dash, a
+# typographic apostrophe, doubled whitespace and an eszett all occur in the
+# site's anchor texts, and each is what the case is here to exercise.
 @pytest.mark.parametrize("left, right", [
-    ("Wuchtschlag I-III", "Wuchtschlag"),
-    ("Auf Distanz halten I-II", "Auf Distanz halten"),
-    ("Belastungsgewöhnung I-II", "Belastungsgewöhnung"),
-    ("Ausfall I–II", "Ausfall"),                 # en dash, as the site mixes them
-    ("Al’Drakorhim-Stil", "Al'Drakorhim-Stil"),  # typographic vs plain apostrophe
+    ("Platzhalter-Eins I-III", "Platzhalter-Eins"),
+    ("Platzhalter Zwei Worte I-II", "Platzhalter Zwei Worte"),
+    ("Platzhalter-Drei I", "Platzhalter-Drei"),
+    ("Platzhalter-Vier I–II", "Platzhalter-Vier"),        # en dash, as the site mixes them
+    ("Platzhalter’Fünf-Stil", "Platzhalter'Fünf-Stil"),   # typographic vs plain apostrophe
     ("  Doppelte   Leerzeichen ", "Doppelte Leerzeichen"),
-    ("VORSTOSS", "vorstoss"),
+    ("PLATZHALTER", "platzhalter"),
 ])
 def test_normalise_name_makes_the_site_and_the_seed_spellings_compare_equal(left, right):
     """The site titles a laddered ability `<name> I-III` and the seed names it
@@ -142,18 +146,19 @@ def test_normalise_name_makes_the_site_and_the_seed_spellings_compare_equal(left
 
 
 def test_normalise_name_keeps_genuinely_different_names_apart():
-    assert resolve.normalise_name("Finte") != resolve.normalise_name("Feinte")
-    assert resolve.normalise_name("Vorstoß") != resolve.normalise_name("Vorstoßen")
-    assert resolve.normalise_name("Boxer-Stil") != resolve.normalise_name("Boxer Stil")
+    assert resolve.normalise_name("Platzhalter") != resolve.normalise_name("Platzhaltar")
+    assert resolve.normalise_name("Platzhalter-Gruß") != resolve.normalise_name("Platzhalter-Grüße")
+    assert resolve.normalise_name("Platzhalter-Stil") != resolve.normalise_name("Platzhalter Stil")
 
 
 def test_normalise_name_folds_eszett_the_way_casefold_does():
-    """`str.casefold` maps ß to ss, so `Vorstoß` and `Vorstoss` compare equal.
-    That is recorded here rather than worked around: no two abilities in the
-    combat groups differ only in that spelling, and the *URL* is still taken
-    from the site's own href -- `KSF_Vorsto%C3%9F.html` -- never respelled from
-    the folded name."""
-    assert resolve.normalise_name("Vorstoß") == resolve.normalise_name("Vorstoss")
+    """`str.casefold` maps ß to ss, so the two spellings of an eszett name
+    compare equal. That is recorded here rather than worked around: no two
+    abilities in the combat groups differ only in that spelling, and the *URL*
+    is still taken from the site's own percent-encoded href, never respelled
+    from the folded name -- `test_a_percent_encoded_href_resolves_to_exactly_what_the_site_publishes`
+    is the guard on that."""
+    assert resolve.normalise_name("Platzhalter-Gruß") == resolve.normalise_name("Platzhalter-Gruss")
 
 
 # ── index pages are their own path ───────────────────────────────────────────
@@ -275,7 +280,7 @@ def test_crawl_carries_the_href_through_verbatim():
     produces a different URL, and a 404 at the other end."""
     _, crawls = crawl_fixture_site()
     urls = {e.name: e.url for e in crawls[3].entries}
-    assert urls["Platzhalter-Vorstoß"] == BASE + "PH_Vorsto%C3%9F.html"
+    assert urls["Platzhalter-Gruß"] == BASE + "PH_Gru%C3%9F.html"
 
 
 def test_crawl_fetches_each_page_once_within_a_group():
@@ -389,7 +394,7 @@ def test_a_ladder_titled_page_resolves_to_the_rule_named_without_the_ladder():
 def test_a_percent_encoded_href_resolves_to_exactly_what_the_site_publishes():
     results, _ = resolve_fixture_site()
     assert results["PH_4"].status == "resolved"
-    assert results["PH_4"].url == BASE + "PH_Vorsto%C3%9F.html"
+    assert results["PH_4"].url == BASE + "PH_Gru%C3%9F.html"
 
 
 def test_a_rule_two_index_levels_down_resolves():
@@ -475,7 +480,7 @@ def test_write_map_records_only_confirmed_rules_and_reports_the_rest(tmp_path):
     payload = json.loads(path.read_text(encoding="utf-8"))
 
     assert set(payload["resolved"]) == {"PH_1", "PH_2", "PH_4", "PH_7"}
-    assert payload["resolved"]["PH_4"] == BASE + "PH_Vorsto%C3%9F.html"
+    assert payload["resolved"]["PH_4"] == BASE + "PH_Gru%C3%9F.html"
     reported = {entry["id"]: entry for entry in payload["reported"]}
     assert set(reported) == {"PH_3", "PH_5", "PH_6", "PH_8"}
     assert reported["PH_5"]["candidates"]
