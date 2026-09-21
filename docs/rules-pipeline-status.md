@@ -116,12 +116,30 @@ the encoding still defeats it.
 
 ## 3. The five blockers on any 222-rule wave
 
-All five are open. None is an authoring agent's to work around; they are a human's to close.
+All five are open. Blocker 1 has had half of its machinery built (Task 10) and is still open — read its
+entry for which half. None is an authoring agent's to work around; they are a human's to close.
 
-1. **Resolve each rule's text from its `source.url`, not from `rules.db`.** Necessary, and **not
-   demonstrated sufficient** — the ten-rule pass on rule-website text scored 6/10, *below* the seed
-   run. The hard part is that the 222 unauthored rules have no `source.url` yet, so this needs an
-   id → URL resolution step that does not exist. Plan Task 10, staged and never dispatched.
+1. **Resolve each rule's text from its `source.url`, not from `rules.db`.** **Resolution built;
+   backfill and driver change still open — this blocker is NOT closed.** Necessary, and **not
+   demonstrated sufficient**: the ten-rule pass on rule-website text scored 6/10, *below* the seed
+   run, so having the URL is a precondition for the fix, not the fix.
+
+   *What is now done.* `make rules-resolve` (Task 10, `scripts/rules_sync/resolve.py`) resolves each
+   combat rule to its page from the site's own category indexes, by anchor text and `href`, never
+   from a rule id. Live run over combat groups 3, 9, 10, 11 and 12: 232 rules, **201 resolved, 26
+   needs-review, 5 unresolved, 0 ambiguous**, and the ten golden rules resolve to exactly the URLs
+   their authored files already record (10/10). The map reaches the untracked `rules.db` as a
+   `rules.source_url` column.
+
+   *What is still open, and why this blocker stays open.* Three things. **(a)** The 31 rules the
+   resolver reported rather than confirmed need a human: an unresolved rule has no URL, and a
+   needs-review rule has one whose identity signals did not all agree. **(b)** No authored file was
+   rewritten. Resolving a URL and *authoring provenance* are different acts — a `source.hash` is a
+   claim that a specific page was fetched and normalised, and ADR-0007's second 2026-09-21 amendment
+   gives that to the driver — so the 17 `UNVERIFIED` files still say `unverified` and
+   `make rules-sync-check` still reports them that way. **(c)** `propose.py` still hands the agents
+   `rules_i18n.description`. Until it fetches `source_url` and normalises it, the gate's headline
+   finding stands unaddressed, and the URL being available changes nothing on its own.
 2. **Register `parameterOverride.parameter` paths in `specs/rules/vocabulary.yaml` and lint them**,
    the way `grants`, `forbids`, `legality.action` and `gmFlag` already are. It is currently a free
    string that nothing validates. It produced both a false disagreement and `SA_41`'s invented

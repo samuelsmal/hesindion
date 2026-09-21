@@ -45,7 +45,7 @@ Claude Code subagents (`.claude/agents/`).
 | 7 — calibration gate (user-ordered) | **FAILED, closed honestly — Tier 1 7/10** | `ae67901..505c721`, fix round `22ee6d2` |
 | 8 — coverage ratchet | **not started** | — |
 | 9 — authoring waves | **BLOCKED on Task 7's five blockers** | — |
-| 10 — resolve rules to their page by name | **not started**; brief written, never dispatched | plan text `e564c86` |
+| 10 — resolve rules to their page by name | **done** — 201/232 resolved, 10/10 golden; backfill left to a separate act | `fe7e944..<head>` |
 | 11 — measure per-rule stability | **not started** | plan text `e564c86` |
 | 12 — author the rules the app hardcodes | **started**: `CHAP_Reiterkampf` authored, backlog open | `c93105a..2e468fd`, `9aef3d2`, `a3508e2`, `1ceb48d` |
 | 13 — GS is a species rule | **Swift done**, corpus half open (belongs to Task 12) | `f276b14` |
@@ -901,8 +901,18 @@ swapped) is not in this schema. Adding a `ruleset:` key later is additive; retro
 
 ### Task 10: Resolve every rule to its page on the rule website, by name
 
-**Status: NOT STARTED.** Added to this plan in `e564c86` after the gate failed; a dispatch brief was
-written and never dispatched. Nothing exists. **This is blocker 1 and the next piece of work.**
+**Status: DONE.** Added to this plan in `e564c86` after the gate failed; dispatched and built
+2026-09-21. `make rules-resolve` resolves every combat rule to its page from the site's own category
+indexes. Live run over groups 3, 9, 10, 11 and 12: 232 rules, 315 pages indexed across 6 index pages,
+**201 resolved, 26 needs-review, 5 unresolved, 0 ambiguous**; the ten golden rules resolve to exactly
+the URLs their authored files already record, 10 of 10; a second run makes zero network calls.
+
+**Blocker 1 is not closed by this.** The task produces the resolution and the report; what remains is
+(a) a human's decision on the 31 rules reported rather than confirmed, (b) backfilling the 17
+`UNVERIFIED` authored files, which is a separate reviewable act because a `source.hash` is a claim
+that a specific page was fetched and normalised (ADR-0007's second 2026-09-21 amendment gives that to
+the driver, not to this resolver), and (c) changing `propose.py` to read `source_url` instead of
+`rules_i18n.description`. `docs/rules-pipeline-status.md` §3 says which half closed.
 
 **Goal:** Every rule the app can author gains a verified `source.url` on
 `https://dsa.ulisses-regelwiki.de/`, resolved from its name through the site's own category
@@ -917,19 +927,30 @@ as reading the fetched, normalised page. This is the unbuilt half of that decisi
 - Modify: `scripts/build_rules_db/build_db.py` (carry the resolved URL into the generated db), `Makefile` (`rules-resolve`)
 
 **Acceptance Criteria:**
-- [ ] Crawling the category indexes for combat groups 3, 9, 10, 11 and 12 yields a name → URL map
+- [x] Crawling the category indexes for combat groups 3, 9, 10, 11 and 12 yields a name → URL map
       covering the rules the app can author, built from anchor text and `href`, not extrapolation.
-- [ ] Index pages are handled on their own path: their `#main` is **empty** and their link lists sit
-      outside it, so `normalise_html` raises `ContentContainerEmpty` on them by design.
-- [ ] A name that matches no anchor, or matches more than one, is **reported** — never guessed. The
-      report names the rule id, the Optolith name, and the candidates considered.
-- [ ] Identity is confirmed per rule by the three signals Task 4 established: page title, rule text
+      232 rules in scope; 315 pages indexed across 6 index pages.
+- [x] Index pages are handled on their own path: their `#main` is **empty** and their link lists sit
+      outside it, so `normalise_html` raises `ContentContainerEmpty` on them by design. **Extended,
+      not violated:** that holds for five of the six index pages and is asserted by test, but the
+      group-11 category publishes its links *inside* a non-empty `#main`, so the classifier keys on
+      the `a.ulSubMenu` anchors rather than on the container. Keying on the container alone reported
+      all 74 rules in that group unresolved — found by running it, not by reasoning.
+- [x] A name that matches no anchor, or matches more than one, is **reported** — never guessed. The
+      report names the rule id, the Optolith name, and the candidates considered. 5 unresolved,
+      0 ambiguous; 4 of the 5 are reported with the anchor a reviewer will almost certainly pick.
+- [x] Identity is confirmed per rule by the three signals Task 4 established: page title, rule text
       against the Optolith text, and the `Publikation(en):` line against Optolith's `src:` block.
-- [ ] The map is generated into the untracked `rules.db`; no ability names enter git (Data Policy).
-      Authored files keep carrying only `source.url`, as they already do.
-- [ ] Known-awkward cases resolve correctly: `Vorstoß` → `KSF_Vorsto%C3%9F.html`, and Golgariten-Stil
+      All three must agree; 26 rules where one did not are reported, not recorded. **Read signal 2
+      for what it is:** a lexical containment of the seed's words in the page, which answers "is this
+      the same rule's page" and cannot answer "does the page say what the seed says" — the question
+      the pipeline exists to ask. It would not have caught `SA_661` by itself.
+- [x] The map is generated into the untracked `rules.db`; no ability names enter git (Data Policy).
+      Authored files keep carrying only `source.url`, as they already do — none was rewritten.
+- [x] Known-awkward cases resolve correctly: `Vorstoß` → `KSF_Vorsto%C3%9F.html`, and Golgariten-Stil
       under `SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/`.
-- [ ] The ten golden rules resolve to exactly the URLs their authored files already record.
+- [x] The ten golden rules resolve to exactly the URLs their authored files already record. **10/10**,
+      and `SA_62` is independently flagged for the same page discrepancy Task 4 found by hand.
 
 **Verify:** `python3 -m pytest tests/rules/test_resolve.py -v && make rules-resolve && make rules-db`
 
