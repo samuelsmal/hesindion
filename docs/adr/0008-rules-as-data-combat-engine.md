@@ -171,9 +171,11 @@ This ADR's census counts abilities — 232 combat special abilities, 73 flat mod
 overrides — and its decision is written in terms of them. The constants it wants moved out of Swift
 are not all owned by abilities, and the difference was invisible until a ruling went wrong.
 
-<https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes two
-of its mechanics: `Hesindion/Engine/SharedModifiers.swift`'s mounted BE relief and
-`Hesindion/Engine/DefenseModifiers.swift`'s `mountedDodgePenalty`. Both bind any mounted hero, with
+<https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes
+**three** of its mechanics: `Hesindion/Engine/SharedModifiers.swift`'s mounted BE relief,
+`Hesindion/Engine/DefenseModifiers.swift`'s `mountedDodgePenalty`, and
+`Hesindion/Engine/MeleeModifiers.swift:11-17`'s `vorteilhaftePosition` (+2 AT against a foot
+opponent, rendered by `CombatAttackViews.swift:404-443`). All three bind any mounted hero, with
 or without `SA_43`. They are exactly the kind of literal this ADR says should be data, and nothing
 in the corpus could hold them, because an authored file needed an Optolith id and a chapter page has
 none. The near-miss: `SA_43`'s file recorded the BE clause as non-existent — the clause is on that
@@ -181,9 +183,19 @@ page, and the Swift had implemented it all along.
 
 **The corpus therefore covers chapter rules as well as abilities**, under the `CHAP_` id namespace
 ADR-0007's amendment defines. Nothing about the effect union, the predicate set or the parameter
-vocabulary changes: `CHAP_Reiterkampf` encodes its two constants as ordinary `modifier` rows gated
+vocabulary changes: `CHAP_Reiterkampf` encodes its three constants as ordinary `modifier` rows gated
 on the `mounted` predicate this ADR already lists, and its remaining clauses are `reminder` rows
 with `UNENCODED:` notes.
+
+This count was wrong once already, and in the way the amendment itself warns about. The file
+originally filed the +2 AT clause as an `UNENCODED:` reminder on the reasoning that it "reads off the
+mount, which is not a modelled entity" — true of the initiative-base clause it was bundled with, and
+false of this one, which reads off the *opponent's* stance and needs no mount at all. `SA_661`
+already encodes exactly that shape (`modifier target: at, scope: combat, value: 2`, gated on
+`mounted` plus `gmFlag: opponentOnFoot`), and its own note says it *raises an existing situational AT
+ease* — so the baseline it raises was sitting unowned on an ability, which is the `SA_43` error
+repeated on the page that corrects it. Corrected 2026-09-21: the clause is an encoded `modifier` row
+and the reminder now covers clause 1 alone.
 
 This matters for the scope of the engine rewrite. Authoring all 232 abilities would still have left
 the mounted-combat, Beengte-Umgebung and multiple-defence constants in Swift — a rule that fires for

@@ -1,7 +1,7 @@
 id: CHAP_Reiterkampf
 subgroup: none
 ruleset: core
-note: Chapter rules, not an ability - they bind any mounted hero, SF or not. Holds two constants the app hardcoded in Swift. SA_43 does not own the BE row; see its note
+note: Chapter rules, not an ability - they bind any mounted hero, SF or not. Holds three constants the app hardcoded in Swift. SA_43 does not own the BE row; see its note
 source:
   url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
   book: US25001
@@ -23,18 +23,26 @@ effects:
   when:
   - mounted: true
   note: 'Clause 6 - the dodge half of the defence clause. UNENCODED: its stated exception turns on an unmodelled action, so this row does not carry it'
+- type: modifier
+  target: at
+  scope: combat
+  value: 2
+  when:
+  - mounted: true
+  - gmFlag: opponentOnFoot
+  note: Clause 2 - the mounted-vs-on-foot AT ease, which SA_661 raises rather than adding to. MeleeModifiers.vorteilhaftePosition gates it on golgaritenActive; opponent stance is a GM toggle (ADR-0005)
 - type: reminder
   when:
   - mounted: true
-  note: 'UNENCODED: clauses 1-2, the initiative base and the positional advantage - both read off the mount, which is not a modelled entity'
+  note: 'UNENCODED: clause 1, the initiative base - it reads off the mount, which is not a modelled entity'
 - type: reminder
   when:
   - mounted: true
-  note: 'UNENCODED: clause 3, a maneuver-slot bar - legality.action grants an action and cannot withhold one, and the slots live in rules.subgroup_id'
+  note: 'UNENCODED: clause 3, a maneuver-slot bar. Open question: actionEconomy.forbids is an open vocabulary and could carry it, but the slots themselves live in rules.subgroup_id'
 - type: reminder
   when:
   - mounted: true
-  note: 'UNENCODED: clauses 4-5, legality keyed on weapon grip and shield facing - the app models neither, and facing is opponent-side (ADR-0005)'
+  note: 'UNENCODED: clauses 4-5, legality keyed on weapon grip and shield facing. Grip is modelled (CombatView.twoHandedGripActive); facing is not, and is opponent-side (ADR-0005)'
 - type: reminder
   when:
   - mounted: true
@@ -42,7 +50,7 @@ effects:
 - type: reminder
   when:
   - mounted: true
-  note: 'UNENCODED: clause 10, the fall check and its per-5-SP escalation - it keys on damage dealt to the mount, which is not tracked'
+  note: 'UNENCODED: clause 10, the fall check and its damage-scaled escalation - it keys on damage dealt to the mount, which is not tracked'
 - type: reminder
   when:
   - mounted: true
