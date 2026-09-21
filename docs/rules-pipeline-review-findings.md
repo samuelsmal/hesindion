@@ -60,7 +60,9 @@ violated between two live Swift readings of the same `scope` token.
 
 ### Finding 1 — Documentation added after the leak audit now hands agents the golden answers
 
-**Severity: blocker for merge.**
+**Severity: blocker for merge.** *Closed 2026-09-21 — ten passages reworded (four more than the six
+listed below), plus `tests/rules/test_workspace_leaks.py`. See `CHANGELOG.md` under `[Unreleased]`,
+`docs/rules-pipeline-status.md` §2, and the dated notes in ADR-0008 and ADR-0009.*
 
 **Where:**
 - `docs/adr/0009-rule-provenance-and-rule-sets.md:13` — states `SA_41`'s complete tier ladder as a
@@ -120,7 +122,10 @@ are on record" is now wrong, and a future reader trusting it will not go looking
 
 ### Finding 2 — Verbatim German rule prose is committed, in files that claim it is not
 
-**Severity: blocker for merge.** Binding constraint: *no DSA rule prose in git, including YAML
+**Severity: blocker for merge.** *Closed 2026-09-21 — all five sites below reworded, plus two the
+review did not list (`CHANGELOG.md`'s open-vocabulary entry and `tests/rules/test_lint.py`'s
+prose-in-`forbids` fixture). `docs/adr/0006:15` is still open, as this finding says it should be.*
+Binding constraint: *no DSA rule prose in git, including YAML
 comments, `note` fields, test fixtures and documentation.*
 
 **Where:**

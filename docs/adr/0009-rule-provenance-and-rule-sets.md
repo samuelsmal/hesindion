@@ -9,19 +9,19 @@ Accepted — 2026-09-21
 Three defects surfaced in one session's work on the rules corpus. None of them announced itself;
 each was found because somebody happened to look.
 
-- **A wrong formula.** `Hero.effectiveBE` reduced Belastung by `2 * belastungsgewoehnungLevel`.
-  `specs/rules/SA_41.yaml` had the correct ladder (−1 at Stufe I, −2 at Stufe II) the whole time. The
-  two never met, and every hero with the ability got double the relief for months.
-- **A number with no attribution.** `DefenseModifiers`' mounted `−2` on Ausweichen is a real clause
-  on <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, but nothing in the code, the breakdown or
-  the corpus said so. It read as a magic constant, and a magic constant is indistinguishable from a
-  mistake.
+- **A wrong formula.** `Hero.effectiveBE` scaled the relief per Stufe by a factor the page does not
+  state. `specs/rules/SA_41.yaml` had the correct tier ladder the whole time. The two never met, and
+  every hero with the ability got twice the relief the rule grants, for months.
+- **A number with no attribution.** `DefenseModifiers`' mounted penalty on Ausweichen is a real
+  clause on <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, but nothing in the code, the
+  breakdown or the corpus said so. It read as a magic constant, and a magic constant is
+  indistinguishable from a mistake.
 - **Two sources disagreeing.** `SA_41` existed twice in the legacy stores with different `scope`
   values, which is ADR-0007's founding bug still producing new instances.
 
 What these share is not a category of rule. It is that **a number the app displays cannot say where
 it came from.** `ModifierLine` is `(value: Int, source: String, isZustand: Bool)`, and `source` is a
-localised *label* — `L("source.belastung")` — not a citation. A `−1 BE` line in a combat breakdown
+localised *label* — `L("source.belastung")` — not a citation. A BE line in a combat breakdown
 cannot name the Reiterkampf chapter, cannot link its page, and cannot be asked whether the app is
 even applying the right rule. The same `encumbrance` definition serves six `CheckDomain`s and stands
 in for two different rules (the armour's Belastung and the mounted relief), and its one label
@@ -251,6 +251,19 @@ Swift file and line each currently occupies, the way it already does for the cha
   would each have been visible as a wrong citation rather than a plausible number.
 - A rule can now be wrong in a new way: right mechanics, wrong set. It is at least a *stated* claim in
   a reviewable file, which none of the current Swift branches are.
+
+## Note (2026-09-21): the Context's three defects are named, not quantified
+
+The three findings in the Context were edited on 2026-09-21 to drop the numbers they carried: a tier
+ladder given as a parenthetical pair of values, a chapter clause's dodge penalty, and an example
+breakdown line's value. Each still names the defect, the file it lived in and why it was invisible,
+which is the whole of what the argument needs; none of them now states what the authored file
+encodes.
+
+Same reason as ADR-0008's note of the same date, and the sharper case of the two. The tier ladder
+belonged to the one golden rule that has never passed the calibration gate in five runs, and this
+ADR is copied into the workspace those runs are graded in. See that note for the convention and
+`tests/rules/test_workspace_leaks.py` for the check.
 
 ## Related
 

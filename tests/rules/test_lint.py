@@ -406,9 +406,9 @@ def test_recovery_add_with_attribute_passes(tmp_path):
 # --- Task 4 fix round 1 (Q4): open-vocabulary slug shape + registration ---
 #
 # ADR-0008 leaves `grants`/`forbids`/`legality.action`/`gmFlag` open because
-# they are not finite over 232 rules. Open was previously *unconstrained*:
-# `forbids: "keine Verteidigung in dieser KR"` linted clean, which is a Data
-# Policy hole, not untidiness. Two layers now close it -- a slug pattern in
+# they are not finite over 232 rules. Open was previously *unconstrained*: a
+# `forbids` value spelled as a whole German clause lifted from a rule page
+# linted clean, which is a Data Policy hole, not untidiness. Two layers now close it -- a slug pattern in
 # schema.json, and registration in specs/rules/vocabulary.yaml -- and the
 # second is the one that catches the failure an open vocabulary actually dies
 # of: a well-formed synonym nobody agreed on.
@@ -454,7 +454,9 @@ def test_rule_prose_in_forbids_is_rejected_by_the_slug_pattern(tmp_path):
     # do not look inside a legitimately free-form string field (AGENTS.md
     # records that known limit).
     p = tmp_path / "SA_66.yaml"
-    p.write_text(_action_economy_doc("forbids", '"keine Verteidigung in dieser KR"'))
+    # a German sentence of our own invention, not a rule clause: the fixture
+    # only has to be prose, and the Data Policy covers test fixtures too
+    p.write_text(_action_economy_doc("forbids", '"ein ganzer Satz statt eines Slugs"'))
     errs = lint_file(p)
     assert any("does not match" in e for e in errs)
 

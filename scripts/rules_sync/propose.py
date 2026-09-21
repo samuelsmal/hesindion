@@ -150,9 +150,9 @@ class RuleInput:
     #: `rules.levels` -- how many Stufen this rule has, or `None` for a rule with
     #: no ladder. It is passed to the agents because the *text* frequently does
     #: not carry it: a Basismanoever whose rule-website page is titled "<name> I-III"
-    #: reaches `rules.db` as a bare description saying "pro Stufe der
-    #: Sonderfertigkeit", with the ladder's extent only in the title and the
-    #: Erschwernis line, neither of which the seed keeps. Task 7's first
+    #: reaches `rules.db` as a bare description that states only a per-Stufe
+    #: rate, with the ladder's extent only in the title and the Erschwernis
+    #: line, neither of which the seed keeps. Task 7's first
     #: calibration run encoded Stufe I alone for both laddered rules in the
     #: golden ten and said so in its rationale -- the agents were right that the
     #: extent was not stated, and the driver was wrong not to state it.

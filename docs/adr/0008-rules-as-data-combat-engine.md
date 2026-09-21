@@ -58,13 +58,15 @@ schema against the 79 existing effect rows before any rule was authored:
   Dropping these is the precise defect this ADR rejects its first alternative for; a union that
   cannot say *which* value a modifier moves reproduces it.
 - `modifier` carries **`side: hero | opponent`**. An opponent-side modifier is display-only — it
-  states a number for the GM, as `CombatManeuver.infoText()` already does for Finte ("Gegner PA −4")
-  — so it does not reverse ADR-0005. Without it, the tiered numbers of a Basismanöver exist in
-  neither the effects data nor the i18n fallback.
-- `dice` carries **`recipient`**, because Schildspalter's damage lands on the defender's shield.
+  states a number for the GM, the way `CombatManeuver.infoText()` already renders a maneuver's
+  opponent-side line — so it does not reverse ADR-0005. Without it, the tiered numbers of a
+  Basismanöver exist in neither the effects data nor the i18n fallback.
+- `dice` carries **`recipient`**, because a die a rule adds does not always land on the target: a
+  clause can direct it at a piece of the opponent's equipment instead, and the union has no other
+  way to say where the damage goes.
 
-`actionEconomy` has **`forbids`** as well as `grants`: *"keine Verteidigung in dieser KR"* is a
-removal, and encoding it as a grant reads backwards.
+`actionEconomy` has **`forbids`** as well as `grants`: a clause that *takes away* a defence or an
+action for the round is a removal, and encoding it as a grant reads backwards.
 
 **Conditions are a closed predicate set, not a string.** The combat corpus needs exactly ten:
 `combatTechnique(in:)` (34 rules), `targetState(_)` (23), `mounted` (20), `targetSize(≤)` (16),
@@ -73,11 +75,13 @@ removal, and encoding it as a grant reads backwards.
 expression language, no interpreter: a novel condition costs an enum case and is greppable.
 
 An eleventh predicate, **`gmFlag(<slug>)`**, carries the conditions no mechanical predicate can
-express — *"at known location"*, *"ambush detection"*, *"principles violated"*. It takes a
-constrained camelCase slug, never prose, and the engine surfaces it as a GM toggle rather than
-applying it, the way `ModifierContext.targetIsSurprised` already works under ADR-0005. Without it,
-conditional bonuses silently become unconditional, which is worse than not modelling them: `SA_22`
-would grant its +1 everywhere rather than at a known location.
+express — the circumstances that are the GM's to rule on rather than the app's to evaluate, of which
+the corpus already holds several and `specs/rules/vocabulary.yaml` registers each one by one. It
+takes a constrained camelCase slug, never prose, and the engine surfaces it as a GM toggle rather
+than applying it, the way `ModifierContext.targetIsSurprised` already works under ADR-0005. Without
+it, a bonus a page grants only in a stated situation silently becomes unconditional, which is worse
+than not modelling it at all: the rule fires on every check and the breakdown gives no sign that it
+should not have.
 
 **DSA constants become named parameters** (`defense.multiplePenaltyPerStep`, `dualWield.penalty`,
 `reach.matrix`, `zone.*`, `passierschlag.penalty`, …) that abilities override with an explicit
@@ -97,8 +101,8 @@ strongest applies rather than accumulating. Any other exception must be stated i
 classifies every combat SF as `1 = Passiv`, `2 = Basismanöver`, `3 = Spezialmanöver` — subgroup 2 is
 exactly Finte, Präziser Schuss/Wurf, Präziser Stich, Wuchtschlag, Unterlaufen. Selection is
 therefore one Basismanöver plus one active Spezialmanöver plus the hero's passives, with `excludes`
-edges in the data for the named exceptions (*Sturmangriff kann nicht mit Finte kombiniert werden*,
-*Riposte kann nicht mit einem Basismanöver kombiniert werden*). The current single-select picker is
+edges in the data for the exceptions the pages state — some bar one named other maneuver, others bar
+the Basismanöver slot as a whole. The current single-select picker is
 replaced: it does not merely fail to ban illegal pairs, it forbids legal ones.
 
 **Damage becomes an expression, not a string.** 33 abilities add a die (`+1W6` Todesstoß, `1W3`
@@ -123,8 +127,9 @@ consequence for the GM.
 
 - **Wire up `RuleEffectModifiers` as written and stop there.** Rejected. It covers the 73 flat
   modifiers and mis-encodes the rest: it drops `effect.attribute` entirely and ignores
-  `effect.condition`, so `SA_43`'s "BE −1 *while mounted*" would apply as −1 on AT/PA/AW, on foot,
-  permanently. Fixing it is part of this decision, not an alternative to it.
+  `effect.condition`, so an encumbrance row an authored file gates on `mounted` would apply to a
+  hero on foot, permanently, at its full value. Fixing it is part of this decision, not an
+  alternative to it.
 - **Modifiers and maneuvers as data, everything else in Swift.** Rejected: it leaves the 27
   constant-overriding and 33 dice-adding abilities as per-ability Swift work, which schedules the
   next refactor rather than avoiding it.
@@ -174,8 +179,8 @@ are not all owned by abilities, and the difference was invisible until a ruling 
 <https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes
 **three** of its mechanics: `Hesindion/Engine/SharedModifiers.swift`'s mounted BE relief,
 `Hesindion/Engine/DefenseModifiers.swift`'s `mountedDodgePenalty`, and
-`Hesindion/Engine/MeleeModifiers.swift:11-17`'s `vorteilhaftePosition` (+2 AT against a foot
-opponent, rendered by `CombatAttackViews.swift:404-443`). All three bind any mounted hero, with
+`Hesindion/Engine/MeleeModifiers.swift:11-17`'s `vorteilhaftePosition` (the rider's AT ease against
+an opponent on foot, rendered by `CombatAttackViews.swift:404-443`). All three bind any mounted hero, with
 or without `SA_43`. They are exactly the kind of literal this ADR says should be data, and nothing
 in the corpus could hold them, because an authored file needed an Optolith id and a chapter page has
 none. The near-miss: `SA_43`'s file recorded the BE clause as non-existent — the clause is on that
@@ -188,12 +193,13 @@ on the `mounted` predicate this ADR already lists, and its remaining clauses are
 with `UNENCODED:` notes.
 
 This count was wrong once already, and in the way the amendment itself warns about. The file
-originally filed the +2 AT clause as an `UNENCODED:` reminder on the reasoning that it "reads off the
-mount, which is not a modelled entity" — true of the initiative-base clause it was bundled with, and
-false of this one, which reads off the *opponent's* stance and needs no mount at all. `SA_661`
-already encodes exactly that shape (`modifier target: at, scope: combat, value: 2`, gated on
-`mounted` plus `gmFlag: opponentOnFoot`), and its own note says it *raises an existing situational AT
-ease* — so the baseline it raises was sitting unowned on an ability, which is the `SA_43` error
+originally filed clause 2 — the rider's advantageous position against an opponent on foot — as an
+`UNENCODED:` reminder on the reasoning that it "reads off the mount, which is not a modelled entity"
+— true of the initiative-base clause it was bundled with, and false of this one, which reads off the
+*opponent's* stance and needs no mount at all. An authored ability rule already encodes exactly that
+shape, using only predicates this ADR's grammar already lists and tokens `vocabulary.yaml` already
+registers (see `specs/rules/SA_661.yaml`), and its own note says it *raises an existing situational
+AT ease* — so the baseline it raises was sitting unowned on an ability, which is the `SA_43` error
 repeated on the page that corrects it. Corrected 2026-09-21: the clause is an encoded `modifier` row
 and the reminder now covers clause 1 alone.
 
@@ -248,6 +254,31 @@ introduces is the list it should be checked against.
 The general rule this states, for fields added later: a field whose values are not enumerable in
 advance is registered and linted, never left free. The failure mode of an unregistered open field is
 silent and indistinguishable from success, which is the failure mode this whole ADR exists to remove.
+
+## Note (2026-09-21): a worked example cites its rule file instead of restating it
+
+The Decision and both amendments above were edited on 2026-09-21 to remove the *graded values* of
+individual rules: a row spelled out in schema field names, an opponent-side value quoted as a German
+display string, a `dice` row's recipient named in English, an encumbrance row's value and gate, the
+AT ease a chapter clause grants, and three registered `gmFlag` slugs quoted as the conditions they
+stand for. **No decision changed and no argument was dropped** — a qualifier that exists because an
+opponent-side number is display-only loses nothing by not naming the rule whose number it was. What
+went is only the part from which one rule's encoding could be reconstructed.
+
+The reason is mechanical rather than editorial. `prepare_workspace`
+(`scripts/rules_sync/propose.py`) copies every file under `docs/adr/` into the sanitised workspace
+the authoring agents run in, and redaction there removes a withheld rule's id and its German ability
+name and nothing else. A row stated in field names carries neither token, so it survived intact —
+and four of the ten rules the calibration gate grades had their answers sitting in this file. The
+gate's own rubric (`tests/rules/test_calibration.py`, `docs/rules-pipeline-status.md` §2) reads a
+reproduction of the golden encoding as evidence of contamination rather than success, so the next
+run would have scored higher and measured less.
+
+The convention that replaces it is the one the authored `note` fields already follow: **name the
+clause by position and mechanism, and cite `specs/rules/<id>.yaml` for its contents** — a citation
+that is precedent to a human with the repository and nothing at all to an agent, because the
+workspace withholds exactly that file. `tests/rules/test_workspace_leaks.py` fails on a
+re-introduction of the shapes it can recognise; its docstring is honest about the ones it cannot.
 
 ## Related
 

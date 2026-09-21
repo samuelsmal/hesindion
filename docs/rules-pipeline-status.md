@@ -91,7 +91,19 @@ every remaining mention of those rules — **by German ability name as well as b
 identifies a rule to a model with DSA training knowledge as precisely as an id does. A genuine run
 therefore *diverges* from the golden notes, and the grader must expect that.
 
-Two residual leaks are on record, both judged and both accepted as shipped:
+**Two residual leaks were on record from the Task 6 audit. That count was wrong by the end of the
+branch, and is corrected here (whole-branch review, finding 1).** The two below are still there and
+are still accepted. What the audit could not have seen is that the branch's *final documentation
+commits* then added ten more passages — ADR prose stating graded rows outright, in schema field
+names, as a tier ladder, as a quoted opponent-side display value and as a `dice` row's recipient in
+English, for four of the ten golden rules and for the chapter rule besides. None of them carried a
+rule id or a German ability name, so redaction passed over every one, and so did the workspace test,
+which greps for exactly those two tokens. The review named six of the ten; the other four surfaced
+when the guard below was written. All ten are reworded (2026-09-21) and
+`tests/rules/test_workspace_leaks.py` now builds the workspace and reads it back for four shapes an
+encoding has actually been restated in. Read that module's docstring before trusting it: it is a
+ratchet against shapes already seen, and a leak paraphrased into prose that shares no tokens with
+the encoding still defeats it.
 
 - Redaction removes the identifying token, not the sentence. `AGENTS.md` still carries an
   unattributed mechanical statement next to a `a withheld rule` placeholder. Dropping whole
@@ -196,9 +208,9 @@ authorised the fix, which landed in `6df4d21`.** Kept here because the reasoning
 worked example of what this corpus is for. `MeleeModifiers` held two `+2 AT` definitions, both
 guarded by `golgaritenActive(mounted:)` — which demands `SA_661` *plus* a Rabenschnabel *plus* a
 Großschild. Reading both source pages together settled it: `CHAP_Reiterkampf` clause 2 grants the
-advantageous position to **every** mounted hero facing someone on foot, while `SA_661` clause 1 says
-*"erhöht sich die aus der vorteilhaften Position resultierende Erleichterung auf AT um +2"* — it
-raises an ease that already exists, so it cannot be the thing being raised. The arithmetic (+2
+advantageous position to **every** mounted hero facing someone on foot, while `SA_661` clause 1
+*raises* the AT ease that the advantageous position already confers, rather than granting one of its
+own — it raises an ease that already exists, so it cannot be the thing being raised. The arithmetic (+2
 baseline plus +2 style = +4) was right; the gating was wrong **in both directions**: a rider without
 the style got nothing automatic, and a Golgarite against *another rider* was handed +4 that no rule
 grants. `ModifierContext` gained an `opponentOnFoot` GM flag on the `targetIsSurprised` pattern

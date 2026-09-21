@@ -145,7 +145,7 @@ the corpus had nowhere to put them.
 
 That gap had a cost already being paid: the app hardcoded those constants in Swift, and the corpus
 looked complete without them. It also produced a wrong ruling. `SA_43`'s authored file recorded that
-a −1 BE effect had been dropped because no clause existed; the clause exists, on
+its encumbrance effect had been dropped because no clause existed; the clause exists, on
 <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, and the app had implemented it for months. The
 removal was right, the reason was not — the effect is the chapter page's, not the ability's — and
 "there is no clause" is what a reviewer concludes when the corpus has no shape that could hold one.
