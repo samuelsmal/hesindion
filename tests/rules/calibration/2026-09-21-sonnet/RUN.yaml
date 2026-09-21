@@ -60,6 +60,32 @@ expected:
   SA_67: true
   SA_661: false
 
+# Edits made to a golden file under specs/rules/ *after* this run was recorded,
+# with the argument for why the run still stands. The default is that it does
+# not: `tests/rules/golden/MANIFEST.yaml` hashes whole files, so touching one is
+# normally a re-run. An entry here is a claim that the edit lies entirely
+# outside what `test_calibration.py` grades, and it has to name the fields.
+golden_edits:
+  - date: '2026-09-21'
+    rule: SA_43
+    change: >-
+      Root `note` only. The removed -1 BE row was justified by three claims, two
+      of which were false: the clause does exist on the rule website, and the
+      app has implemented it in Swift since before the corpus existed. Removing
+      the row from this file was still right, for the reason the note now gives
+      -- the effect belongs to the mounted context, not to this SF -- and it is
+      now authored as CHAP_Reiterkampf.
+    rerun_required: false
+    why: >-
+      `test_calibration.py`'s Tier 1 compares effect rows on TIER1_FIELDS, which
+      lists every field of the effect union *except* `note`, and the root `note`
+      is not an effect row at all. No byte this edit changed is an input to any
+      of the ten `expected` verdicts, so a re-run would spend twenty model calls
+      to reproduce the same ten booleans. The manifest hash is updated in the
+      same commit because the manifest freezes files, not fields. Had the edit
+      touched `effects` -- even to add a row this note now points elsewhere for
+      -- this entry would not exist and the gate would have to be re-run.
+
 failures:
   SA_41: >-
     A genuine error, on three independent grounds; the first recording of this

@@ -14,10 +14,19 @@ description: >-
   pipeline's calibration and means re-running it, which should be a
   deliberate act, not a side effect.
 
+  One carve-out, and only one: the hash covers the whole file, but the
+  calibration gate does not. `test_calibration.py`'s Tier 1 grades effect
+  rows with `note` explicitly excluded, so an edit confined to `note` or
+  `source.checked` cannot move a single verdict -- there is nothing for a
+  re-run to re-measure. Such an edit updates the hash here and records its
+  reasoning under `golden_edits` in the recorded run's `RUN.yaml`. An edit
+  that touches any Tier 1 field of any effect row is the other case, and
+  that one does mean a live re-run.
+
 rules:
   SA_40: sha256:6cd20df659537366d2ce07500a48e3cbbc4497702ef0fd68ef99c857d97b47b0
   SA_41: sha256:f15b6f5b0fad1887d485acfb4a9472291d40ff1317e407c9e90f8a79f2df2772
-  SA_43: sha256:bbdfa6748be46613e8165fa7417f764169f60d01f6c577c78cb424e363cb018f
+  SA_43: sha256:b769038b37ca0ea8628a8ea0f58cdf7b6371e2b2d92f3d97eb7e3e97face9adb
   SA_48: sha256:97ddfc3fba852d343214759aa1333784f8d80325cd91cfdd6d5870c7e04fe9e4
   SA_59: sha256:d76ed4b39286ad73d34779cdf501bf69f70a2396fbf83576376b809929a66382
   SA_62: sha256:cc27ce7d6d9f19ecf1151d5c9c33ab347048ccdb8cc9224726d776f4cd66614b

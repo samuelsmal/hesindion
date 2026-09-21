@@ -36,7 +36,11 @@ REMEDY = (
     "golden corpus drifted -- re-run calibration. If this change to the "
     "authored rule is intended, update tests/rules/golden/MANIFEST.yaml with "
     "the new hash in the same commit and re-run the pipeline calibration "
-    "(Task 7); the ten golden files are its reference encoding."
+    "(Task 7); the ten golden files are its reference encoding. The one "
+    "exception is an edit confined to fields Tier 1 does not grade -- `note`, "
+    "`source.checked` -- which no re-run could re-measure: update the hash and "
+    "record why under `golden_edits` in the recorded run's RUN.yaml instead. "
+    "See MANIFEST.yaml's description for the full carve-out."
 )
 
 
