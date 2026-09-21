@@ -111,7 +111,7 @@ Two known pre-existing flakes — not regressions: `SkillCheckModalSnapshotTests
 - **Rules are data, not code** — see **ADR-0008**. A special ability that uses an existing mechanism is an authored file plus a database rebuild, with no Swift change. Effects are a closed typed union, conditions a closed predicate set, and DSA constants are named parameters that abilities override, so errata change a value rather than a code path.
 - **An ability with no structured effects must still be visible**, rendered as a rule-text reminder card. Silence is the failure mode this exists to prevent. Opponent-side effects stay GM-adjudicated (ADR-0005).
 - **Authoring a rule is a two-agent pipeline, not a hand edit.** `make rules-propose RULES=SA_63,SA_56` (or `GROUP=3`, or `SUBGROUP=3,2`) hands each rule's text to `rule-author` and, independently, to `rule-verifier` — which never sees the author's answer — then lints both, diffs them, writes `specs/rules/<id>.yaml` and a review file under the git-ignored `.proposals/`. A disagreement is never resolved silently: it heads the review file and prefixes the YAML's root note with `DISAGREEMENT:`, which `make rules-lint` rejects — so a proposal cannot be committed until someone has decided which reading is right. The script commits nothing; you review, resolve, and `git add`. Overwriting a golden-corpus rule needs `--force`. Provenance is not the agents' to give — see `scripts/rules_sync/propose.py`'s module docstring.
-- **The authoring pipeline is calibrated, and it does not yet pass.** `tests/rules/test_calibration.py` grades a recorded live run over the ten golden rules: **7 of 10** on the mechanical rubric (effect type, target, value, tier, conditions, side, recipient, parameter, vocabulary token), and 23 of 40 pooled over four runs of the same ten — the run-to-run spread is wide enough that no single pass certifies anything. **Do not start a wave.** The blocker is recorded under `[Unreleased]` in `CHANGELOG.md`; it is a defect in the driver, and it is a human's to fix before the next run, not an authoring agent's to work around. Review every proposal against the rule's `source.url` page before accepting it.
+- **The authoring pipeline is calibrated, and it does not yet pass.** `tests/rules/test_calibration.py` grades a recorded live run over the ten golden rules: **7 of 10** on the mechanical rubric (effect type, target, value, tier, conditions, side, recipient, parameter, vocabulary token), and 23 of 40 pooled over four runs of the same ten — the run-to-run spread is wide enough that no single pass certifies anything. **Do not start a wave.** **`docs/rules-pipeline-status.md` is the operational state of this pipeline — the gate result and what composes it, the two-tier grading rubric (byte equality with the golden corpus means contamination, not success), the five blockers on a wave, the open questions awaiting a ruling, and the corrections already settled. Read it before running anything here.** The evidence for each of its claims is under `[Unreleased]` in `CHANGELOG.md`. The blockers are defects in the driver and in the corpus vocabulary; they are a human's to fix before the next run, not an authoring agent's to work around. Review every proposal against the rule's `source.url` page before accepting it.
 - **Maneuver slots come from `rules.subgroup_id`** (`1` Passiv, `2` Basismanöver, `3` Spezialmanöver): a Kampfrunde allows one Basismanöver plus one active Spezialmanöver plus any number of passives, with `excludes` edges in the data for the named exceptions.
 
 ## Design
@@ -168,6 +168,14 @@ Keep `docs/` current with the state of the project:
 
 - Update or create documentation when adding major features or changing architecture
 - Plans live in `docs/plans/`, ADRs in `docs/adr/`
+- **Plans are ephemeral; ADRs are not.** A plan is a current-state document — every task carries its
+  status and the commit range where it landed — and it is superseded when the work is done. A
+  decision that outlives the plan belongs in an ADR, as an amendment where one already covers the
+  area; existing ADR text is amended below, never reworded.
+- Operational state that is neither a decision nor a task — a gate's result, a measurement, an open
+  ruling, a deferred minor — goes in a tracked status document beside the plan.
+  `docs/rules-pipeline-status.md` is the one for the rules pipeline, and it is the file to read
+  before running any part of it.
 - Sample data lives in `docs/sample_heros/`
 
 ## Data Policy

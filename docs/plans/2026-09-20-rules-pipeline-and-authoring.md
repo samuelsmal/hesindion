@@ -4,6 +4,18 @@
 > (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **How to read this file (updated 2026-09-21, branch `feat/rules-data-pipeline`, head `f276b14`).**
+> This is a current-state document, not the aspirational one it started as. Each task carries a
+> **Status** line naming what happened and the commit range where it landed. The **Acceptance
+> Criteria** boxes are authoritative and are ticked where met, with an annotation where a criterion
+> was amended or superseded by evidence. The **Steps** blocks are the recipe as originally written
+> and are deliberately *not* ticked: several were amended by controller rulings during execution, so
+> a step's text is a record of the plan, not a description of the code. Read the code, the ADRs and
+> `docs/rules-pipeline-status.md` for what is true now.
+>
+> **Before running anything, read `docs/rules-pipeline-status.md`.** The calibration gate (Task 7)
+> failed and no authoring wave may start.
+
 **Goal:** Make rule data single-sourced, verifiable against the rule website, and complete — so that a
 special ability reaches the app by being authored, never by being programmed.
 
@@ -18,6 +30,29 @@ Claude Code subagents (`.claude/agents/`).
 
 **Spec:** `docs/adr/0007-rule-website-as-single-rule-source.md` and
 `docs/adr/0008-rules-as-data-combat-engine.md`
+
+## Status board
+
+| Task | Status | Commits |
+|---|---|---|
+| 1 — untrack and generate `rules.db` | **done** | `ef01e80..5529a74` |
+| 2 — authored-rule schema and linter | **done**, 1 fix round | `5529a74..2758121`, ADR amendment `66bac80`, rulings `4f36aab` |
+| 3 — migrate the legacy effect sets | **done**, 1 fix round, 1 parked ruling | `4f36aab..7953f0d`, `faabe52` |
+| 4 — the golden corpus | **done**, 1 fix round | `6806b0d..284f378` |
+| 5 — `rules-sync-check` drift detection | **done**, 4 fix rounds | `faabe52..b616f48` |
+| 6 — authoring subagents and driver | **done**, 2 fix rounds | `e6cbd61..ae67901` |
+| 7 — calibration gate (user-ordered) | **FAILED, closed honestly — Tier 1 7/10** | `ae67901..505c721`, fix round `22ee6d2` |
+| 8 — coverage ratchet | **not started** | — |
+| 9 — authoring waves | **BLOCKED on Task 7's five blockers** | — |
+| 10 — resolve rules to their page by name | **not started**; brief written, never dispatched | plan text `e564c86` |
+| 11 — measure per-rule stability | **not started** | plan text `e564c86` |
+| 12 — author the rules the app hardcodes | **started**: `CHAP_Reiterkampf` authored, backlog open | `c93105a..2e468fd`, `9aef3d2`, `a3508e2`, `1ceb48d` |
+| 13 — GS is a species rule | **Swift done**, corpus half open (belongs to Task 12) | `f276b14` |
+
+Work on this branch that belongs to no task: the doubled-relief fix `3c3ff91`, the "rule website"
+terminology correction `877cb6c`, the combat-scoped mounted relief `030230e`, ADR-0009 and rule sets
+as data `693b123`, the calibration carve-out guard `113cb27`, the lint-waiver lifetime `98125a5`, and
+the `UNCLEAR-RULESET:` marker `6f90201`. All are described in `CHANGELOG.md` under `[Unreleased]`.
 
 ## Scope
 
@@ -73,6 +108,9 @@ Deleted by this plan: `specs/data/rules.yaml`, `HARDCODED_EFFECTS` in
 
 ### Task 1: Stop shipping a stale, committed database
 
+**Status: DONE** — `ef01e80..5529a74`. Review clean. One deferred minor (a redundant retained
+assertion in `HesindionTests/HeroImportTests.swift`), listed in `docs/rules-pipeline-status.md` §7.
+
 **Goal:** `rules.db` becomes a generated, untracked artifact with a reproducible build, and the
 import classification stops depending on hand-authored effects.
 
@@ -85,13 +123,13 @@ import classification stops depending on hand-authored effects.
 - Modify: `AGENTS.md` (Build & Run: the rules-db step)
 
 **Acceptance Criteria:**
-- [ ] `git ls-files Hesindion/Resources/rules.db` prints nothing.
-- [ ] `make rules-db` rebuilds the database from the pinned source; `make rules-db-verify` exits 0.
-- [ ] `make rules-db` fails with a named message when the source directory is missing or its
+- [x] `git ls-files Hesindion/Resources/rules.db` prints nothing.
+- [x] `make rules-db` rebuilds the database from the pinned source; `make rules-db-verify` exits 0.
+- [x] `make rules-db` fails with a named message when the source directory is missing or its
       checksums do not match `SOURCES.yaml`.
-- [ ] Importing `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json` puts `SA_884` and
+- [x] Importing `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json` puts `SA_884` and
       `SA_661` in `combatSpecialAbilities`, not `generalSpecialAbilities`.
-- [ ] `hero.hasPlaenklerFormation == true` for that hero.
+- [x] `hero.hasPlaenklerFormation == true` for that hero.
 
 **Verify:** `make rules-db && make rules-db-verify && make test-ui` → all green.
 
@@ -213,6 +251,14 @@ git add -A && git commit -m "build(rules): generate rules.db, pin its source, cl
 
 ### Task 2: The authored-rule schema and its linter
 
+**Status: DONE** — `5529a74..2758121`, after one fix round of eleven findings. The review passed the
+spec and did *not* approve the first schema as a 232-file contract: `modifier` gained required
+`target` and `scope` plus `side: hero|opponent`, `dice` gained `recipient`, `actionEconomy` gained
+`forbids` beside `grants`, and a ninth effect type `recovery` was added — ADR-0008 was amended to
+nine types in `66bac80`, before any file was authored, because that was the cheap moment. Six minors
+were deferred; two of them are closed today and the rest are in
+`docs/rules-pipeline-status.md` §7.
+
 **Goal:** An authored rule file has one machine-checkable shape, and the shape is the contract the
 engine plan consumes.
 
@@ -223,9 +269,9 @@ engine plan consumes.
 - Modify: `Makefile` (target `rules-lint`)
 
 **Acceptance Criteria:**
-- [ ] A valid file passes; unknown effect `type`, unknown condition predicate, missing `source.hash`
+- [x] A valid file passes; unknown effect `type`, unknown condition predicate, missing `source.hash`
       and a `text:` key each fail with a message naming the file and the offending key.
-- [ ] `make rules-lint` exits non-zero if any file under `specs/rules/` is invalid.
+- [x] `make rules-lint` exits non-zero if any file under `specs/rules/` is invalid.
 
 **Verify:** `python3 -m pytest tests/rules/test_lint.py -v` → 6 passed.
 
@@ -381,6 +427,13 @@ if __name__ == "__main__":
 
 ### Task 3: Migrate the existing 26 effect sets, delete the duplicates
 
+**Status: DONE** — `4f36aab..7953f0d`, after one fix round. 79 legacy rows became 89 authored effect
+rows: the migration had flattened three leveled rules and so kept the worse of two duplicate legacy
+sources. One ruling is **parked, not settled**: `SA_41`'s `scope: all` cannot be right, because
+`CheckDomain` has no domain for INI or GS at all — recorded in ADR-0008's Consequences (`faabe52`)
+as a binding input to the engine plan rather than settled by picking a string. Do not "fix" it by
+changing the scope value.
+
 **Goal:** One authored store. `specs/data/rules.yaml` and `HARDCODED_EFFECTS` are gone, and the
 database builds from `specs/rules/`.
 
@@ -391,15 +444,19 @@ database builds from `specs/rules/`.
 - Delete: `specs/data/rules.yaml`, `HARDCODED_EFFECTS` block in `scripts/scrape_effects/scrape_effects.py`
 
 **Acceptance Criteria:**
-- [ ] 26 files under `specs/rules/`, all passing `make rules-lint`.
-- [ ] `make rules-db && make rules-db-verify` green.
-- [ ] **No legacy row is lost.** Every one of the 79 rows maps per the ten-row table below, and the
+- [x] 26 files under `specs/rules/`, all passing `make rules-lint`. *(28 today: `SA_62`, authored
+      in Task 4, and `CHAP_Reiterkampf`, authored after the chapter-rule amendments.)*
+- [x] `make rules-db && make rules-db-verify` green.
+- [x] **No legacy row is lost.** Every one of the 79 rows maps per the ten-row table below, and the
       migrator prints a reconciliation report (legacy row → authored effect) that accounts for all
       79. The count may exceed 79 where a row needs a sibling effect.
-- [ ] The `effects` table carries a new `payload` column holding each authored effect as JSON.
-- [ ] The eight rows whose free-text `condition` is not a combat predicate carry a `gmFlag`
+- [x] The `effects` table carries a new `payload` column holding each authored effect as JSON.
+- [x] The eight rows whose free-text `condition` is not a combat predicate carry a `gmFlag`
       predicate — they must **not** become unconditional.
-- [ ] `grep -rn "HARDCODED_EFFECTS\|specs/data/rules.yaml" .` returns nothing.
+- [x] `grep -rn "HARDCODED_EFFECTS\|specs/data/rules.yaml" .` returns nothing. *(Amended by
+      controller ruling to scope to code paths — `Makefile`, `scripts/`, `specs/`, `Hesindion/`.
+      `CHANGELOG.md` and the ADRs cannot describe a removal without naming what was removed, and a
+      true statement about the past stays.)*
 
 **Verify:**
 ```bash
@@ -464,6 +521,14 @@ sqlite3 Hesindion/Resources/rules.db "select count(*) from effects where payload
 
 ### Task 4: The golden corpus — ten rules authored by hand
 
+**Status: DONE** — `6806b0d..284f378`, after one fix round of five rulings and nine findings. The
+reviewer re-fetched all ten URLs itself: 10/10 serve the claimed rule and 10/10 hashes reproduce
+from a cold cache. Three substantive rules findings came out of actually consulting the site, all
+vindicating ADR-0007's premise, and the pass also found the first of this branch's two live app bugs
+(the doubled Belastungsgewöhnung relief, fixed in `3c3ff91`). `tests/rules/golden/` holds a
+`MANIFEST.yaml` of hashes rather than duplicate rule bodies — a second copy that can silently
+diverge from what it calibrates would let Task 7 grade against a stale reference and pass.
+
 > **Controller ruling (pre-flight): Task 5 runs before this one.** A real `source.hash` cannot be
 > computed without `scripts/rules_sync/normalise.py`, and this task's Verify calls `check.py`. Both
 > arrive in Task 5.
@@ -476,13 +541,21 @@ sqlite3 Hesindion/Resources/rules.db "select count(*) from effects where payload
 - Create: `tests/rules/golden/` (a copy of the ten, used as pipeline fixtures)
 
 **Acceptance Criteria:**
-- [ ] Each of the ten has a real `source.url`, `book`, `page`, today's `checked`, and a hash that
+- [x] Each of the ten has a real `source.url`, `book`, `page`, today's `checked`, and a hash that
       matches the live rule-website text.
-- [ ] `SA_62` encodes: `runUp ≥ 4` and `gs ≥ 4` preconditions, `dice: 2 + ceil(self.gs / 2)`,
+- [x] `SA_62` encodes: `runUp ≥ 4` and `gs ≥ 4` preconditions, `dice: 2 + ceil(self.gs / 2)`,
       `actionEconomy: opponentPassierschlagOnFailure`, `excludes: [SA_48]`, `subgroup: spezialmanoever`.
-- [ ] `SA_43`'s BE effect carries `when: [{mounted: true}]` — the condition the dead loader dropped.
+- [~] **SUPERSEDED by the evidence.** `SA_43`'s BE effect carries `when: [{mounted: true}]` — the
+      condition the dead loader dropped. *There is no BE effect on `SA_43` any more: the clause is
+      the mounted-combat chapter page's, not the ability's, and it is authored in
+      `CHAP_Reiterkampf`. The `mounted` condition survives on `SA_43`'s `legality` row, which is
+      where the page's clause puts it. An acceptance criterion written before the evidence does not
+      outrank the evidence. See `docs/rules-pipeline-status.md` §8 — the first reason given for the
+      removal was wrong and the correction is itself a settled item.*
 
-**Verify:** `make rules-lint && python3 scripts/rules_sync/check.py --only specs/rules/SA_62.yaml` → `0 drifted`.
+**Verify:** `make rules-lint && python3 -m scripts.rules_sync.check --only specs/rules/SA_62.yaml` → `0 drifted`.
+*(The `-m` form is required — invoking the file by path raises `ModuleNotFoundError`, as the Makefile
+target already knew. This was a defect in the plan text, not in the code.)*
 
 **Steps:**
 
@@ -522,6 +595,14 @@ Note the rounding: `ceil`, per ADR-0006 — the rule says *"die halbe GS"*, not 
 
 ### Task 5: `rules-sync-check` — deterministic drift detection
 
+**Status: DONE** — `faabe52..b616f48`, after **four** fix rounds, and it ran before Task 4 by
+pre-flight ruling (a real `source.hash` cannot be computed without the normaliser). The first
+implementation was fatal as built: the site has no `<main>`, so every page fell through to `<body>`,
+which carries a per-response anti-spam challenge — three fetches of one page gave three different
+hashes and drift detection would have reported 100% drift forever. The binding acceptance test
+became idempotence across two live fetches rather than fixture equality. Two deferred minors, in
+`docs/rules-pipeline-status.md` §7.
+
 **Goal:** Answer "which of our encodings are based on text the rule website has since changed?" with no model
 involved.
 
@@ -531,11 +612,11 @@ involved.
 - Modify: `Makefile` (`rules-sync-check`)
 
 **Acceptance Criteria:**
-- [ ] Normalisation is stable across whitespace, `<br>` variants and non-breaking spaces — the same
+- [x] Normalisation is stable across whitespace, `<br>` variants and non-breaking spaces — the same
       rule text hashes identically from two differently-formatted captures of the same page.
-- [ ] `check.py` reports each rule as `ok`, `drifted` or `unverified` (the `1970-01-01` marker),
+- [x] `check.py` reports each rule as `ok`, `drifted` or `unverified` (the `1970-01-01` marker),
       exits 0 when nothing has drifted, 1 otherwise.
-- [ ] Requests are cached on disk and rate-limited to one per second (reuse `DELAY` from the existing
+- [x] Requests are cached on disk and rate-limited to one per second (reuse `DELAY` from the existing
       scraper); a cached run makes no network calls.
 
 **Verify:** `python3 -m pytest tests/rules/test_normalise.py -v && make rules-sync-check`
@@ -554,6 +635,15 @@ involved.
 
 ### Task 6: The authoring subagents and their driver
 
+**Status: DONE** — `e6cbd61..ae67901`, after two fix rounds. The plan's driver design was
+unimplementable as written (a shell script cannot dispatch subagents), resolved with a pluggable
+Runner so the test suite makes zero model and zero network calls. **The task's own headline is that
+its first end-to-end run measured nothing**: with the repository as cwd both agents read the
+hand-authored file and returned it byte-identical. See `docs/rules-pipeline-status.md` §2 — this is
+why byte equality with the golden corpus is now evidence of contamination. Three deferred minors
+plus the security position, both in §7 and §8 of that document; the security position is now
+recorded as an amendment to ADR-0007.
+
 **Goal:** Rule text in, reviewable encoding out — with a second agent that never sees the first one's
 answer.
 
@@ -563,17 +653,23 @@ answer.
 - Create: `tests/rules/test_propose.py`
 
 **Acceptance Criteria:**
-- [ ] `propose.py --ids SA_63,SA_56` writes `specs/rules/SA_63.yaml` and `SA_56.yaml`, each passing
+- [x] `propose.py --ids SA_63,SA_56` writes `specs/rules/SA_63.yaml` and `SA_56.yaml`, each passing
       the linter, plus `.proposals/<id>.review.md` holding the author's rationale, the verifier's
       independent encoding, and their diff.
-- [ ] Where author and verifier disagree, the review file says so at the top and the YAML is written
-      with the disagreement as a comment — never silently resolved.
-- [ ] The driver batches at most 12 rules per author agent and runs batches in parallel.
-- [ ] Selectors: `--ids`, **and `--group N` / `--subgroup N,M`** (Task 9 drives waves by group and
+- [x] Where author and verifier disagree, the review file says so at the top and the YAML is written
+      with the disagreement as a comment — never silently resolved. *(Not literally met and could
+      not be: `lint.py` rejects every `#` comment as a Data Policy hole, while the same criterion
+      demands a lint-clean file. Resolved as a root `note` with a `DISAGREEMENT:` prefix, greppable
+      like `UNENCODED:`, which `make rules-lint` then rejects until a human resolves it — so a
+      proposal cannot be committed unresolved. Where the author's note will not fit inside the
+      schema's 200-character cap beside the marker, the marker wins and the note survives verbatim
+      in the review file.)*
+- [x] The driver batches at most 12 rules per author agent and runs batches in parallel.
+- [x] Selectors: `--ids`, **and `--group N` / `--subgroup N,M`** (Task 9 drives waves by group and
       subgroup, so the flags ship here — controller ruling, pre-flight).
-- [ ] `.proposals/` is added to `.gitignore`. Review files quote rule clauses in their rationale, so
+- [x] `.proposals/` is added to `.gitignore`. Review files quote rule clauses in their rationale, so
       they must never be committable (Global Constraint: no prose in git).
-- [ ] Nothing is committed by the script, and `git status` after a run shows only untracked/modified
+- [x] Nothing is committed by the script, and `git status` after a run shows only untracked/modified
       files for review.
 
 **Verify:** `python3 -m pytest tests/rules/test_propose.py -v` (driver logic against recorded agent
@@ -644,6 +740,16 @@ The model does the encoding. Nothing here commits.
 
 ### Task 7: Calibration gate — the pipeline must reproduce the golden corpus
 
+**Status: FAILED, and closed honestly as a failure** — `ae67901..505c721`, fix round `22ee6d2`. The
+acceptance criteria below are **not met** and are deliberately left unticked. Tier 1 scored 7 of 10
+and that is the best of four runs of the same ten rules; pooled it is 23/40 ≈ 0.58 with a 95%
+interval of roughly [0.40, 0.89]. The three failures are one genuine pipeline error and two caused
+by the driver feeding agents the Optolith seed text while ADR-0007 makes the rule website normative.
+**The full result, the rubric, the five blockers and the variance datum are in
+`docs/rules-pipeline-status.md` §§1–4. Do not start a wave.** Note that criterion 1 below says
+"reproduces the hand-authored effect rows for all ten" — read §2 of that document beside it, because
+byte-identical output now means the run was contaminated, not that it passed.
+
 **Goal:** Prove the authoring setup is trustworthy before it is pointed at 232 rules.
 
 > **USER-ORDERED GATE — NON-SKIPPABLE.** This task was requested by the user in the current
@@ -664,10 +770,18 @@ The model does the encoding. Nothing here commits.
 
 **Verify:**
 ```bash
-python3 scripts/rules_sync/propose.py --ids $(ls tests/rules/golden | sed 's/.yaml//' | paste -sd, -) \
+python3 -m scripts.rules_sync.propose --ids $(ls tests/rules/golden | sed 's/.yaml//' | paste -sd, -) \
     --out /tmp/calibration && python3 -m pytest tests/rules/test_calibration.py -v
 ```
 Expected: `10 passed`, summary table showing `agree` for all ten.
+
+*As built this is wrong in two ways. `tests/rules/golden/` holds only `MANIFEST.yaml` now — the
+duplicate rule bodies were deleted in Task 4's fix round precisely so a second copy could not
+silently diverge — so the id list comes from the manifest, not from `ls`. And `test_calibration.py`
+grades a **recorded** run under `tests/rules/calibration/<date>-<model>/` rather than running the
+pipeline, so `pytest` costs no model calls; re-recording is a deliberate act that updates `RUN.yaml`
+in the same commit. The actual command that produced the recorded run is `RUN.yaml`'s `command:`
+field.*
 
 **Steps:**
 
@@ -684,6 +798,12 @@ Expected: `10 passed`, summary table showing `agree` for all ten.
 ---
 
 ### Task 8: Coverage ratchet
+
+**Status: NOT STARTED.** Nothing exists: no `tests/rules/test_coverage.py`, no
+`specs/rules/COVERAGE.md`, no `HesindionTests/RuleCoverageTests.swift`. It does not depend on the
+calibration gate and could be done at any time. Note that ADR-0008's amendment records its known
+limit in advance: the ratchet counts abilities and cannot count a chapter rule, which has no
+Optolith id.
 
 **Goal:** Missing coverage becomes a number that can only go down, and absence can never be silent.
 
@@ -714,6 +834,11 @@ Expected: `10 passed`, summary table showing `agree` for all ten.
 ---
 
 ### Task 9: Authoring waves
+
+**Status: BLOCKED.** The calibration gate failed; five blockers stand between here and a wave, and
+they are enumerated in `docs/rules-pipeline-status.md` §3. At the measured rate a 222-rule wave
+would produce roughly 65–90 wrong encodings, the majority arriving as `agree / ok / written`. When
+it does run, **a wave is a review queue, not an authoring pass.**
 
 **Goal:** Complete coverage of what the engine can express, in reviewable increments.
 
@@ -758,9 +883,25 @@ maneuver slots and the parity harness — the engine plan.
 swapped) is not in this schema. Adding a `ruleset:` key later is additive; retrofitting per-printing
 *values* is not. Decide it before Wave 1 authors 40 rules against an unversioned schema.
 
+> **Answered 2026-09-21 by ADR-0009, and this paragraph conflated two things.** The `ruleset:` key
+> exists — it is required, has no default, and reaches `rules.db` as a column — but it names which
+> *set* a rule belongs to (`core`, `focus.<slug>`, `house.<slug>`), not which *printing*. Versioning
+> proper is deliberately out of scope: one current text per rule, with `book`/`page`/`checked`/`hash`
+> recording which printing it was verified against and `make rules-sync-check` catching a change.
+> `SA_62` is the worked example of what that defers; see ADR-0009 and
+> `docs/rules-pipeline-status.md` §6a. It stays reversible — a version dimension would extend
+> `ruleset` and the `source` block rather than replace them — so it does not gate Wave 1.
+
+> **Note on spec coverage above:** Task 8's half of it (coverage and no-silent-absence) is **not
+> started**, so ADR-0008's coverage ratchet is unbuilt. ADR-0008's amendment also records the
+> ratchet's known limit in advance: it counts abilities, and it cannot count a chapter rule.
+
 ---
 
 ### Task 10: Resolve every rule to its page on the rule website, by name
+
+**Status: NOT STARTED.** Added to this plan in `e564c86` after the gate failed; a dispatch brief was
+written and never dispatched. Nothing exists. **This is blocker 1 and the next piece of work.**
 
 **Goal:** Every rule the app can author gains a verified `source.url` on
 `https://dsa.ulisses-regelwiki.de/`, resolved from its name through the site's own category
@@ -795,6 +936,10 @@ as reading the fetched, normalised page. This is the unbuilt half of that decisi
 
 ### Task 11: Measure per-rule stability before any wave
 
+**Status: NOT STARTED.** Added to this plan in `e564c86`. Nothing exists. **This is blocker 4**, and
+it is the one that has to come first: until the run-to-run spread is known, a ten-rule gate cannot
+attribute a fix, so Task 10's effect on the score would not be measurable either.
+
 **Goal:** Replace a single-sample gate score with per-rule hit rates, so the pipeline's reliability
 is a measurement rather than a draw.
 
@@ -825,6 +970,15 @@ attribute a fix, cannot distinguish 6 from 8, and cannot certify what it is bein
 ---
 
 ### Task 12: Author the rules the app hardcodes, under our own id namespace
+
+**Status: STARTED, most of the backlog open.** `CHAP_Reiterkampf` is authored (`c93105a..2e468fd`),
+establishing the `CHAP_<PageSlug>` namespace, the linter's id derivation and the `chapter` category
+in `build_db.py`. Two corrections landed on top: the chapter page's third hardcoded mechanic
+(`9aef3d2`) and a linter/schema contradiction over chapter ids (`a3508e2`). ADR-0009's two database
+columns — `ruleset` and `source.title` — are implemented ahead of the wave (`1ceb48d`), so every
+`CHAP_` file this task authors needs `source.title` or it will not lint. **Not started:** every other
+chapter page, the named combat constants, and the derived-value rules. One divergence found by
+authoring is recorded and awaits a ruling (`docs/rules-pipeline-status.md` §6b).
 
 **Goal:** Every DSA 5 chapter rule whose constants currently live as Swift literals has an authored
 `CHAP_` file, so the engine rewrite has data to read instead of a number to keep.
@@ -924,6 +1078,10 @@ comparison.
 ---
 
 ### Task 13: GS is a species rule, and the app gave every hero the human value
+
+**Status: Swift DONE** — `f276b14`. The corpus half is open and belongs to Task 12. This was the
+second of the branch's two live app bugs; how it was found, and why the method is the reusable part,
+is in `docs/rules-pipeline-status.md` §5.
 
 **Status:** Swift done 2026-09-21. The corpus half is open and belongs to Task 12.
 

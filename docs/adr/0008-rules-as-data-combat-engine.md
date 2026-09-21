@@ -219,6 +219,36 @@ Consequences:
   about `CheckDomain` having no domain for INI or GS is still open, and the unmounted Belastung
   penalty still reaches values no `scope` value can name.
 
+## Amendment (2026-09-21): the fields this decision leaves open are registered, not free
+
+This ADR closes two vocabularies — nine effect types and eleven condition predicates — and says
+nothing about the fields it deliberately leaves open. Several are open on purpose:
+`actionEconomy.grants` and `forbids`, `legality.action`, the `gmFlag` slug, and
+`parameterOverride.parameter`. Closing them to enums was considered and rejected for the reason this
+ADR already gives for `dice.add`: they are not finite over 232 rules, and a premature enum makes
+every novel ability a schema pull request.
+
+**Open is not the same as unrecorded.** Each open token must be glossed in one line in
+`specs/rules/vocabulary.yaml`, and `scripts/rules_lint/lint.py` rejects an unregistered one. A new
+token is then a one-line reviewable diff instead of a string nobody has ever read, the whole set of
+tokens the engine will have to handle is enumerable before the engine is written, and the registry
+becomes the enum later, when the corpus says what its members are. This also closes the *shape* of
+those fields — a slug pattern, so a free-text sentence cannot enter through them, which was a Data
+Policy hole the closed enums had disguised.
+
+**`parameterOverride.parameter` is the one open field with no registry, and it has already cost a
+rule.** It is a free string that nothing validates, so a parameter path that names no DSA constant
+lints clean, encodes to a silent no-op, and reads as a confident encoding. A calibration proposal for
+`SA_41` invented one — where the authoring brief's `UNENCODED:` escape hatch was the mandated answer
+— and both the linter and the author/verifier cross-check passed it. Until it is registered and
+linted like the others, **a `parameter` value is a claim nothing checks**, and that is a blocker on
+any authoring wave rather than a quality improvement. The named-parameter vocabulary this ADR
+introduces is the list it should be checked against.
+
+The general rule this states, for fields added later: a field whose values are not enumerable in
+advance is registered and linted, never left free. The failure mode of an unregistered open field is
+silent and indistinguishable from success, which is the failure mode this whole ADR exists to remove.
+
 ## Related
 
 - **ADR-0005** — why opponent-side effects are GM-adjudicated; reaffirmed here.

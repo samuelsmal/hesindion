@@ -190,6 +190,41 @@ Consequences, beyond those of the original decision:
   page, as `CHAP_Reiterkampf` was. Whether the two-agent pipeline should learn to read them is a
   question for after the calibration gate passes.
 
+## Amendment (2026-09-21): provenance is the deterministic half's, and the cross-check has one blind spot
+
+This ADR's Decision describes the propose step as an agent that proposes "updated text, updated or
+new structured effects, refreshed `checked`/`hash`". The last of those is withdrawn, and the reason
+is the ADR's own: a hash is a claim that a specific page was fetched and normalised, and an agent
+cannot make that claim truthfully. A guessed URL or an invented hash is worse than none, because it
+converts "unverified" — a state `make rules-sync-check` reports and a reviewer can act on — into a
+silent, permanent `ok`.
+
+**An authoring agent never emits a `source:` block.** Provenance is computed by the driver, which has
+exactly three outcomes and invents nothing: carry forward the existing file's real provenance; else
+write the `unverified` placeholder this ADR's checker already reports; else, with `--verify-source`,
+re-fetch through the checker's own fetcher and re-hash through the shared normaliser — and on a
+network or content-container failure, carry the old values forward rather than fabricate new ones. A
+`source:` block that appears in agent output anyway is discarded **and reported**, because silently
+dropping it would hide an agent doing the one thing it was told not to.
+
+**The two-agent cross-check detects independent error and has no defence against a shared input.**
+This ADR justifies the propose step's safety with "the agent proposes; a human commits", and the
+implementation strengthened that with a second agent that never sees the first one's answer. That
+design's guarantee is narrower than it looks: both agents read the *same* third-party rule text, so
+anything wrong with that text — stale prose, or instructions injected into it — steers both
+identically, and the run reports `agree / ok / written`. The gate demonstrated the benign half of
+this for real, on two rules, with both agents confidently agreeing on an encoding the normative page
+contradicts.
+
+The accepted position, stated so it is not rediscovered as news: **exfiltration risk is low**
+(read-only tools by construction, git-ignored output, a closed schema), **integrity risk is medium**,
+and the mitigation — fencing the rule text and declaring it untrusted data in both prompts and both
+briefs, plus keeping only the first envelope per rule id so an injected marker cannot re-open a
+resolved one — is a *prompt instruction, not a mechanism*. That is acceptable while the pipeline runs
+on a developer machine against a human review queue, which is what this ADR already requires. It is
+not acceptable as the basis for trusting a run at wave scale, and it is a standing reason why "author
+and verifier agree" is a weaker signal than it reads as.
+
 ## Related
 
 - **ADR-0008** — the effect schema the authored files carry, and the engine that consumes it.
