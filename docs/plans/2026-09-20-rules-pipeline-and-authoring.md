@@ -4,7 +4,8 @@
 > (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **How to read this file (updated 2026-09-21, branch `feat/rules-data-pipeline`, head `f276b14`).**
+> **How to read this file (updated 2026-09-21, branch `feat/rules-data-pipeline`; last
+> code/corpus commit `f276b14`, this update `cdcb332`).**
 > This is a current-state document, not the aspirational one it started as. Each task carries a
 > **Status** line naming what happened and the commit range where it landed. The **Acceptance
 > Criteria** boxes are authoritative and are ticked where met, with an annotation where a criterion

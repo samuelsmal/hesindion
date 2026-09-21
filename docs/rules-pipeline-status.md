@@ -1,6 +1,7 @@
 # Rules Pipeline — Operational Status
 
-**As of 2026-09-21, branch `feat/rules-data-pipeline`, head `f276b14`.**
+**As of 2026-09-21, branch `feat/rules-data-pipeline`, last code/corpus commit `f276b14`
+(this document landed at `cdcb332`, which changed no code).**
 
 This document holds the state of the rules pipeline that is neither a decision nor a task: what the
 calibration gate measured, what that measurement blocks, what is waiting on a ruling, and what was
