@@ -150,14 +150,15 @@ final class Hero {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.encumbrance }
     }
 
-    /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 2.
+    /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 1
+    /// (see `specs/rules/SA_41.yaml`: Stufe I -1, Stufe II -2).
     var belastungsgewoehnungLevel: Int {
         combatSpecialAbilities.first(where: { $0.ruleId == "SA_41" })?.tier ?? 0
     }
 
     /// Effective BE after Belastungsgewöhnung reduction.
     var effectiveBE: Int {
-        max(0, totalEquippedBE - 2 * belastungsgewoehnungLevel)
+        max(0, totalEquippedBE - belastungsgewoehnungLevel)
     }
 
     /// Belastung penalty applied to AT, PA, AW, INI, GS. Equals negative effectiveBE.
