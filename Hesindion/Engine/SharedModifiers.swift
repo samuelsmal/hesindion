@@ -10,10 +10,11 @@ enum SharedModifiers {
     /// *unmounted* penalty is unaffected and still applies in every domain below.
     ///
     /// This is one of two Swift readings of that authored `scope: combat` token.
-    /// `RuleEffectModifiers.domainsForScope("combat")` (RuleEffectModifiers.swift:53) reads
+    /// `RuleEffectModifiers.domainsForScope("combat")` (RuleEffectModifiers.swift:60) reads
     /// the same token differently. `RuleEffectModifiers` has no callers today, so this
     /// definition is the one the authored row is actually implemented by — see ADR-0008's
-    /// Consequences (whole-branch review finding 4) before wiring the other one up.
+    /// 2026-09-21 "CheckDomain seam has two rows to reconcile" amendment (whole-branch review
+    /// finding 4) before wiring the other one up.
     static let mountedReliefDomains: Set<CheckDomain> = [
         .meleeAttack, .meleeParry, .meleeDodge, .rangedAttack,
     ]

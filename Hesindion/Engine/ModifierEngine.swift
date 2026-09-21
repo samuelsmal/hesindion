@@ -129,8 +129,8 @@ extension ModifierEngine {
     /// (ADR-0008), but nothing here enforces it yet. Appending the authored path to this
     /// list as written would fire every migrated rule twice. Whoever wires the data path in
     /// must delete the hand-written definition it replaces in the same commit that starts
-    /// reading its authored row, not add a fourth line here. See ADR-0008's Consequences
-    /// (whole-branch review finding 4).
+    /// reading its authored row, not add a fourth line here. See ADR-0008's 2026-09-21
+    /// "CheckDomain seam has two rows to reconcile" amendment (whole-branch review finding 4).
     static let shared: ModifierEngine = {
         var defs: [ModifierDefinition] = []
         defs.append(contentsOf: SharedModifiers.all)

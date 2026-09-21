@@ -51,11 +51,12 @@ enum RuleEffectModifiers {
         case "meleeAttack":    return [.meleeAttack]
         case "meleeDefense":   return [.meleeParry, .meleeDodge]
         // Second Swift reading of the authored `scope: combat` token. SharedModifiers.swift's
-        // `mountedReliefDomains` (SharedModifiers.swift:11-13) reads the same token
+        // `mountedReliefDomains` (SharedModifiers.swift:18-20) reads the same token
         // differently. This function has no callers today, so `mountedReliefDomains` is the
         // reading the authored `CHAP_Reiterkampf` row is actually implemented by — see
-        // ADR-0008's Consequences (whole-branch review finding 4) before changing this case;
-        // it is a behaviour change to a dead path, and the engine plan's to make.
+        // ADR-0008's 2026-09-21 "CheckDomain seam has two rows to reconcile" amendment
+        // (whole-branch review finding 4) before changing this case; it is a behaviour change
+        // to a dead path, and the engine plan's to make.
         case "combat":         return [.meleeAttack, .meleeParry, .meleeDodge]
         case "ranged":         return [.rangedAttack]
         case "magic":          return [.spellCasting]

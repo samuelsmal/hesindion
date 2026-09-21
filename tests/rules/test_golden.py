@@ -103,33 +103,39 @@ def test_golden_rule_matches_its_recorded_graded_hash(rule_id):
     )
 
 
+#: A rule shape shared by this test module's synthetic fixtures -- not a real
+#: rule, so it can never be mistaken for one of the golden ten.
+_SYNTHETIC_RULE = {
+    "id": "SA_65", "subgroup": "passiv", "ruleset": "core",
+    "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},
+    "effects": [
+        {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
+         "note": "Clause 1 - the defensive stance's PA bonus"},
+        {"type": "reminder", "note": "UNENCODED: clause 2"},
+    ],
+}
+
+
 def test_the_two_hashes_answer_different_questions():
     """Pin the property the carve-out rests on, rather than asserting it in prose.
 
-    A `note` edit moves the byte hash and not the graded one; a `value` edit
-    moves both; an edit to one of the enumerated *safe* root keys (`ruleset`,
-    `source.title`, alongside `source.checked`) moves neither. That is the
-    narrow claim MANIFEST.yaml's description now makes -- "this enumerated
-    set", not "any root key that is not an effect row". If this ever stopped
-    holding -- by `note` entering `TIER1_FIELDS`, or by `graded_digest`
-    accidentally reading the whole file -- the carve-out would silently become
-    either useless or unusable, and every other test here would still pass.
+    An effect row's `note` edit moves the byte hash and not the graded one; a
+    `value` edit moves both. If this ever stopped holding -- by `note`
+    entering `TIER1_FIELDS`, or by `graded_digest` accidentally reading the
+    whole file -- the carve-out would silently become either useless or
+    unusable, and every other test here would still pass.
 
-    `subgroup`, `excludes` and `id` also leave `graded` unchanged and are
-    deliberately *not* exercised as a "still equal" case here: they are the
-    keys the carve-out does not cover despite passing this same assertion, and
+    Each *safe root key* (`ruleset`, `source.title`, `source.checked`) is
+    exercised individually in `test_a_safe_root_key_leaves_graded_unchanged`
+    below, not bundled here, so a regression on one of them says which key
+    broke rather than just that "the safe set" did. `subgroup`, `excludes`
+    and `id` also leave `graded` unchanged and are deliberately *not*
+    exercised as a "still equal" case here or there: they are the keys the
+    carve-out does not cover despite passing this same assertion, and
     `test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun`
-    below is where that distinction is pinned.
+    is where that distinction is pinned.
     """
-    base = {
-        "id": "SA_65", "subgroup": "passiv", "ruleset": "core",
-        "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},
-        "effects": [
-            {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
-             "note": "Clause 1 - the defensive stance's PA bonus"},
-            {"type": "reminder", "note": "UNENCODED: clause 2"},
-        ],
-    }
+    base = _SYNTHETIC_RULE
     note_edited = {**base, "effects": [
         {**base["effects"][0], "note": "Clause 1 - reworded, same mechanic"},
         base["effects"][1],
@@ -138,30 +144,105 @@ def test_the_two_hashes_answer_different_questions():
         {**base["effects"][0], "value": 2},
         base["effects"][1],
     ]}
-    safe_root_edited = {
-        **base,
-        "ruleset": "focus.trefferzonen",
-        "source": {"title": "A Different Page Title", "checked": "2027-06-01"},
-    }
 
     assert graded_digest(note_edited) == graded_digest(base)
-    assert graded_digest(safe_root_edited) == graded_digest(base)
     assert graded_digest(value_edited) != graded_digest(base)
 
+
+def _set_dotted(doc: dict, dotted_key: str, value) -> dict:
+    """A copy of `doc` with `dotted_key` (`"ruleset"` or `"source.title"`) set
+    to `value`, one level of nesting deep -- enough for this module's fixtures."""
+    if "." in dotted_key:
+        top, sub = dotted_key.split(".", 1)
+        return {**doc, top: {**doc.get(top, {}), sub: value}}
+    return {**doc, dotted_key: value}
+
+
+@pytest.mark.parametrize("key, mutated_value", [
+    ("ruleset", "focus.trefferzonen"),
+    ("source.title", "A Different Page Title"),
+    ("source.checked", "2027-06-01"),
+])
+def test_a_safe_root_key_leaves_graded_unchanged(key, mutated_value):
+    """Each of the three root-level safe keys, exercised on its own so a
+    regression names which one broke (the bundled version of this test
+    mutated all three under one assertion -- see git history)."""
+    mutated = _set_dotted(_SYNTHETIC_RULE, key, mutated_value)
+    assert graded_digest(mutated) == graded_digest(_SYNTHETIC_RULE), (
+        f"`{key}` used to leave `graded` unchanged and no longer does -- it "
+        "is one of SAFE_ROOT_KEYS and named in MANIFEST.yaml's description "
+        "as such; both need to change together if this is deliberate"
+    )
+
+
+#: The four keys the carve-out mechanism actually treats as safe: mutating any
+#: of them leaves `graded` unchanged (pinned in `test_the_two_hashes_answer_
+#: different_questions` above) and MANIFEST.yaml's description names exactly
+#: these as the enumeration (pinned below, by content, not by presence).
+SAFE_ROOT_KEYS = ("note", "source.checked", "ruleset", "source.title")
 
 #: The root keys that pass the `graded` assertion above (`graded_digest` never
 #: reads the rule root) and are still not part of the carve-out -- table-visible
 #: facts the calibration doesn't grade at all, not fields the carve-out was
-#: written for. See MANIFEST.yaml's description and BYTES_REMEDY.
-NOT_SAFE_DESPITE_PASSING_GRADED = ("subgroup", "excludes", "id")
+#: written for. See MANIFEST.yaml's description and BYTES_REMEDY. A dict, not a
+#: tuple, so the parametrize below is *derived* from it rather than duplicating
+#: it -- deleting an entry here removes its test case instead of leaving a
+#: hardcoded parametrize list and this constant free to drift apart.
+NOT_SAFE_DESPITE_PASSING_GRADED = {
+    "subgroup": "spezialmanoever",
+    "excludes": ["SA_67"],
+    "id": "SA_66",
+}
+
+# Field names in backticks, extracted from the two prose strings' own
+# enumeration sentences rather than assumed -- an anchor on the sentence that
+# follows the list, so a field name's internal `.` (`source.checked`,
+# `source.title`) cannot be mistaken for a sentence boundary.
+_MANIFEST_ENUMERATION = re.compile(
+    r"enumerated rather than described by exclusion:\s*(.*?)\.\s*Such an edit updates"
+)
+_BYTES_REMEDY_ENUMERATION = re.compile(
+    r"the only root keys you touched are\s*(.*?)\s*--\s*the enumerated carve-out"
+)
 
 
-@pytest.mark.parametrize("key, mutated_value", [
-    ("subgroup", "spezialmanoever"),
-    ("excludes", ["SA_67"]),
-    ("id", "SA_66"),
-])
-def test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun(key, mutated_value):
+def _backticked_fields(text: str) -> list[str]:
+    return re.findall(r"`([\w.]+)`", text)
+
+
+def test_the_manifest_and_bytes_remedy_enumerate_exactly_the_safe_root_keys():
+    """Pins the carve-out's enumeration by content, not by mere presence.
+
+    `test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun`
+    below checks that `subgroup`/`excludes`/`id` appear backticked *somewhere*
+    in each string -- necessary, but a widening that moved one of them *into*
+    the "exactly four shapes" enumeration (the shape CHANGELOG.md's finding-8
+    entry calls out) would keep it backticked and stay green there. This
+    extracts each string's own enumeration sentence and asserts it names
+    exactly `SAFE_ROOT_KEYS` -- no fewer (a dropped safe key) and no more (a
+    near-miss folded in).
+    """
+    for pattern, label in (
+        (_MANIFEST_ENUMERATION, "MANIFEST.yaml's description"),
+        (_BYTES_REMEDY_ENUMERATION, "BYTES_REMEDY"),
+    ):
+        text = MANIFEST["description"] if label.startswith("MANIFEST") else BYTES_REMEDY
+        match = pattern.search(text)
+        assert match, f"{label} no longer states the carve-out as an enumerated list"
+        enumerated = set(_backticked_fields(match.group(1)))
+        assert enumerated == set(SAFE_ROOT_KEYS), (
+            f"{label} enumerates {sorted(enumerated)}, not exactly "
+            f"{sorted(SAFE_ROOT_KEYS)}"
+        )
+        assert not enumerated & set(NOT_SAFE_DESPITE_PASSING_GRADED), (
+            f"{label}'s enumeration now includes a near-miss key "
+            f"({sorted(enumerated & set(NOT_SAFE_DESPITE_PASSING_GRADED))}) -- "
+            "that is the exact widening this test exists to catch"
+        )
+
+
+@pytest.mark.parametrize("key", sorted(NOT_SAFE_DESPITE_PASSING_GRADED))
+def test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun(key):
     """The coupling test finding 8 asks for.
 
     The safe-set enumeration used to live only in prose (MANIFEST.yaml's
@@ -170,10 +251,13 @@ def test_a_root_key_that_passes_graded_is_still_named_as_needing_a_rerun(key, mu
     assertion looks identical whether the key touched is genuinely safe or
     merely un-graded. This closes the gap two ways: if `graded_digest` ever
     starts moving on one of these keys, the first assertion below catches it;
-    if the prose ever stops naming one of them as still requiring a re-run
-    despite passing, the second and third assertions do.
+    if the prose ever stops naming one of them at all, the second and third
+    assertions do. (Naming a key does not by itself mean naming it *outside*
+    the safe set -- that stronger claim is
+    `test_the_manifest_and_bytes_remedy_enumerate_exactly_the_safe_root_keys`
+    above.)
     """
-    assert key in NOT_SAFE_DESPITE_PASSING_GRADED
+    mutated_value = NOT_SAFE_DESPITE_PASSING_GRADED[key]
     base = {
         "id": "SA_65", "subgroup": "passiv", "ruleset": "core", "excludes": [],
         "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},

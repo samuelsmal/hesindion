@@ -215,11 +215,11 @@ Consequences:
 - A chapter rule cannot degrade to rule text: there is no `rules_i18n` row for it, because there is
   no Optolith entry. "Never to silence" is held by its own authored `reminder` rows instead, which
   makes those rows load-bearing rather than optional.
-- `CHAP_Reiterkampf`'s BE row is `scope: combat`, matching the clause, while
-  `SharedModifiers.encumbrance` applies the same relief in `spellCasting` and `liturgyCasting`. That
-  divergence was recorded in the authored file's note and in `CHANGELOG.md` as an open question; it
-  was not settled here, and no Swift was changed at the time. **Settled 2026-09-21 in the data's
-  favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief reaches no
+- `CHAP_Reiterkampf`'s BE row's authored scope and what `SharedModifiers.encumbrance` actually
+  applied relief to diverged — see `specs/rules/CHAP_Reiterkampf.yaml` for the row, not restated
+  here. That divergence was recorded in the authored file's note and in `CHANGELOG.md` as an open
+  question; it was not settled here, and no Swift was changed at the time. **Settled 2026-09-21 in
+  the data's favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief reaches no
   non-combat action, and `SharedModifiers.encumbrance` now scopes it to the four combat domains —
   see `CHANGELOG.md` under *Fixed*. The *other* half of the seam stands: this ADR's last consequence
   about `CheckDomain` having no domain for INI or GS is still open, and the unmounted Belastung
@@ -310,12 +310,12 @@ at the table for an existing hero.
 
 The whole-branch review (finding 4) named a live instance of the pattern ADR-0007 exists to
 remove, one file apart from where this ADR's own census was taken. `Hesindion/Engine/SharedModifiers.swift`'s
-`mountedReliefDomains` and `Hesindion/Engine/RuleEffectModifiers.swift`'s `domainsForScope("combat")`
-are two independent Swift readings of the one authored `scope` token `specs/rules/CHAP_Reiterkampf.yaml`'s
-mounted-relief row carries, and the two readings disagree. It is invisible today only because
-`RuleEffectModifiers` still has no callers; both sites now carry a comment naming the other and
-saying which one the authored row is implemented by (`SharedModifiers.swift:11-13`,
-`RuleEffectModifiers.swift:49-59`).
+`mountedReliefDomains`, and the case `Hesindion/Engine/RuleEffectModifiers.swift`'s
+`domainsForScope` selects for `specs/rules/CHAP_Reiterkampf.yaml`'s mounted-relief row, are two
+independent Swift readings of that row's authored `scope` token, and the two readings disagree. It
+is invisible today only because `RuleEffectModifiers` still has no callers; both sites now carry a
+comment naming the other and saying which one the authored row is implemented by
+(`SharedModifiers.swift:18-20`, `RuleEffectModifiers.swift:49-67`).
 
 **The engine plan inherits a double-count hazard, not only a disagreement.** `ModifierEngine.shared`
 (`ModifierEngine.swift:124-134`) registers the hand-written `SharedModifiers`/`MeleeModifiers`/
@@ -326,19 +326,18 @@ hand-written definition it replaces in the same commit that starts reading its a
 appending to the list.**
 
 **The CheckDomain consequence above names one seam; the branch has since made a second one
-concrete** (whole-branch review §3, "Ruling on item 3"). That paragraph records the seam at the
-unmounted Belastung penalty's row — no `CheckDomain` case for INI or GS, so no single `scope` value
-can express what that row reaches. The mounted relief's own row has since diverged the same way, in
-a second place: what `SharedModifiers.encumbrance`'s own `domains` list
-(`SharedModifiers.swift:22`) declares and what `RuleEffectModifiers.domainsForScope`
-(`RuleEffectModifiers.swift:49-59`) would compute for the same authored token disagree, exactly as
-`mountedReliefDomains` and `domainsForScope("combat")` disagree above. **The engine plan therefore
-has two rows to reconcile against `CheckDomain`, not one:** the unmounted penalty's row
-(`specs/rules/SA_41.yaml`, read through `domainsForScope`) and the mounted relief's row
-(`specs/rules/CHAP_Reiterkampf.yaml`, implemented directly in `SharedModifiers.encumbrance`).
-Neither row's encoded scope value or domain count is restated here — see the cited files. This is
-not settled by picking a string for either row; `docs/rules-pipeline-status.md` §8 records why for
-the first, and the same reasoning holds for the second.
+concrete** (whole-branch review §3, "Ruling on item 3") — see that consequence, not restated here,
+for why no `scope` value can settle it. The mounted relief's own row has since diverged the same
+way, in a second place: what `SharedModifiers.encumbrance`'s own `domains` list
+(`SharedModifiers.swift:29`) declares and what the case `RuleEffectModifiers.domainsForScope`
+(`RuleEffectModifiers.swift:49-67`) selects for the same authored token disagree, exactly as
+`mountedReliefDomains` and that case disagree above. **The engine plan therefore has two rows to
+reconcile against `CheckDomain`, not one:** the unmounted penalty's row (`specs/rules/SA_41.yaml`,
+read through `domainsForScope`) and the mounted relief's row (`specs/rules/CHAP_Reiterkampf.yaml`,
+implemented directly in `SharedModifiers.encumbrance`). Neither row's authored scope value, target
+or domain count is stated anywhere in this amendment — see the cited files for both. This is not
+settled by picking a string for either row; `docs/rules-pipeline-status.md` §8 records why for the
+first, and the same reasoning holds for the second.
 
 Do not change `RuleEffectModifiers.domainsForScope` to make the two Swift readings agree — that is a
 behaviour change to a dead code path, and it is the engine plan's decision to make once it settles
