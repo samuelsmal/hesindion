@@ -50,6 +50,13 @@ VALIDATOR = Draft202012Validator(SCHEMA, format_checker=Draft202012Validator.FOR
 # files have no legitimate reason to contain one, so any match is rejected).
 _COMMENT_RE = re.compile(r"(?:^|\s)#")
 
+# `propose.py` marks a rule whose two independent encodings disagreed by
+# prefixing its root note (Task 6). The marker is a note rather than a `#`
+# comment because comments are rejected outright above -- but an unresolved
+# disagreement must not reach `main` either, so the default lint rejects it and
+# only the driver that writes it passes `allow_disagreement=True`.
+DISAGREEMENT_PREFIX = "DISAGREEMENT:"
+
 
 def _first_comment_line(raw: str) -> int | None:
     for lineno, line in enumerate(raw.splitlines(), start=1):
@@ -145,7 +152,15 @@ def lint_vocabulary(path: pathlib.Path | None = None) -> list[str]:
     return errors
 
 
-def lint_file(path: pathlib.Path) -> list[str]:
+def lint_file(path: pathlib.Path, *, allow_disagreement: bool = False) -> list[str]:
+    """Validate one authored rule file.
+
+    `allow_disagreement` exists for `scripts/rules_sync/propose.py` alone: it
+    writes a file whose root note carries the `DISAGREEMENT:` marker on purpose,
+    for a human to resolve. Everywhere else -- `make rules-lint`, CI -- an
+    unresolved disagreement is an error, so a proposal cannot be committed
+    without someone deciding which of the two readings is right.
+    """
     errors: list[str] = []
     raw = path.read_text()
     try:
@@ -172,6 +187,14 @@ def lint_file(path: pathlib.Path) -> list[str]:
         errors.append(f"{path.name}: {'.'.join(str(p) for p in err.absolute_path) or '<root>'}: {err.message}")
 
     errors.extend(f"{path.name}: {e}" for e in _unregistered_tokens(doc))
+
+    if not allow_disagreement and str(doc.get("note") or "").startswith(DISAGREEMENT_PREFIX):
+        errors.append(
+            f"{path.name}: unresolved {DISAGREEMENT_PREFIX} marker on the root note -- the two "
+            "independent encodings of this rule disagreed. Read .proposals/"
+            f"{path.stem}.review.md, decide which reading is right, fix the file and remove the "
+            "marker. A proposal is not an authored rule until someone has chosen."
+        )
 
     if doc.get("id") and path.stem != doc["id"]:
         errors.append(f"{path.name}: filename must match id ({doc['id']}.yaml)")

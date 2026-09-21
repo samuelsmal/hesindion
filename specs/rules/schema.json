@@ -43,7 +43,9 @@
       "items": { "$ref": "#/$defs/ruleId" }
     },
     "effects": {
+      "description": "The rule's encoding. At least one row: a rule that reduces to zero effects is not an encoding, it is a refusal to encode -- and two agents that both return nothing agree with each other and lint clean (Task 6 fix round 1, C3). Every authored rule in the corpus has at least one row, so the bound costs nothing and turns a systematic authoring failure from a clean run into a loud one. A clause the grammar cannot express is a `reminder` with an `UNENCODED:` note, never an empty list.",
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": ["type"],
