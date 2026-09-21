@@ -21,7 +21,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint rules-sync-check rules-propose test test-ui test-ui-record test-ui-record-only screenshots
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha rules-db rules-db-verify rules-lint rules-sync-check rules-resolve rules-propose test test-ui test-ui-record test-ui-record-only screenshots
 
 build:
 	xcodebuild \
@@ -145,6 +145,19 @@ rules-lint:
 # and exits non-zero only if something drifted.
 rules-sync-check:
 	python3 -m scripts.rules_sync.check
+
+# Deterministic (no model) name -> URL resolution: every combat rule's page on
+# the rule website, found by following the site's own category indexes from its
+# own anchor text, never extrapolated from a rule id. Reports a name that
+# matches no anchor or more than one, with the candidates considered, and a
+# page whose three identity signals (title, rule text, Publikation(en)) do not
+# all agree -- those are results for a reviewer, not failures. Requests go
+# through the same disk cache as rules-sync-check, so a second run makes zero
+# network calls. The resolution lands under the git-ignored .cache/ and reaches
+# the untracked rules.db on the next `make rules-db`; run the two in that order.
+rules-resolve:
+	@test -d "$(RULES_SOURCE)" || { echo "Rules source not found: $(RULES_SOURCE) (set RULES_SOURCE=…)"; exit 1; }
+	python3 -m scripts.rules_sync.resolve --source "$(RULES_SOURCE)" --db "$(RULES_DB)"
 
 # The authoring half: two independent agents encode a rule from its text, and
 # this driver batches them, lints, diffs and writes for human review. Nothing is

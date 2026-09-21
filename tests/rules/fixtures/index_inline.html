@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <base href="https://wiki.invalid/">
+    <title>Platzhalter-Erweitert - Platzhalter-Wiki</title>
+</head>
+<body>
+    <!-- Synthetic index page that does NOT have the shape its siblings have:
+         div#main is present and carries text, and the link list sits *inside*
+         it rather than under #sub_header. normalise_html therefore succeeds on
+         this page, and a crawl that classified pages by the content container
+         alone would file it as a rule and never descend -- which is exactly
+         what the first live run did, reporting every rule in that category as
+         unresolved. The anchors, not the container, are what says "index".
+         Placeholder text only (Data Policy, AGENTS.md). -->
+    <header id="header"><nav><a href="index.html">Platzhalter-Navigation</a></nav></header>
+    <div id="sub_header"><div class="inside"><div class="mod_breadcrumb block"><ul>
+        <li class="first"><a href="" title="Platzhalter-Wiki">Platzhalter-Wiki</a></li>
+        <li class="active last">Platzhalter-Erweitert</li>
+    </ul></div></div></div>
+    <div id="main">
+      <div class="mod_article container">
+        <h1>Platzhalter-Erweitert</h1>
+        <p>Platzhalter-Einleitung ohne Regelinhalt.</p>
+        <p>Alle (ungefiltert)</p>
+        <div class="ulSubMenuRTable ulSubMenuRTable-4cols ulSubMenuRTable-collapse">
+          <div class="ulSubMenuRTable-cell"><a class="ulSubMenu" href="PH_Eins.html" title="Platzhalter-Eins">Platzhalter-Eins</a></div>
+          <div class="ulSubMenuRTable-cell"></div>
+        </div>
+      </div>
+    </div>
+    <footer><p>Platzhalter-Fusszeile, kein echter Regeltext.</p></footer>
+</body>
+</html>

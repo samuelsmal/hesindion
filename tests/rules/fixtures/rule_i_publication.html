@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Platzhalter-Eins - Platzhalter-Wiki</title>
+</head>
+<body>
+    <!-- Synthetic *rule* page, as opposed to the index_*.html fixtures beside
+         it: div#main is present and non-empty, so normalise_html yields text
+         and the crawl classifies it as a leaf. Models the three identity
+         signals the resolver checks: the h1 title line, the rule paragraph,
+         and the trailing Publikation(en) block with its "<Buch>, Seite <N>"
+         entries (including the edition qualifier the real site puts on some
+         of them). All placeholder text, no real rule prose (Data Policy). -->
+    <header id="header"><nav><a href="index.html">Platzhalter-Navigation</a></nav></header>
+    <div id="sub_header"><div class="inside"><div class="mod_breadcrumb block"><ul>
+        <li class="first"><a href="ph_kategorie.html" title="Platzhalter-Kategorie">Platzhalter-Kategorie</a></li>
+        <li class="active last">Platzhalter-Eins</li>
+    </ul></div></div></div>
+    <div id="main">
+      <div class="mod_article container">
+        <div class="ce_text block">
+          <h1>Platzhalter-Eins</h1>
+          <p>(passiv)</p>
+          <p>Regel: Der Platzhalter erhoeht den erfundenen Beispielwert um zwei Punkte, solange die erfundene Beispielbedingung gilt.</p>
+          <p>Voraussetzungen: keine Platzhalter-Voraussetzung</p>
+          <p>AP-Wert: 10 Platzhalterpunkte</p>
+        </div>
+        <div class="ce_t4c_dividers line solid width_100 default block"></div>
+        <div class="ce_text default block">
+          <p>Publikation(en):</p>
+          <p>Platzhalter-Regelwerk (4. Auflage), Seite 42<br>Platzhalter-Kompendium, Seite 7</p>
+        </div>
+      </div>
+    </div>
+    <footer><p>Platzhalter-Fusszeile, kein echter Regeltext.</p></footer>
+</body>
+</html>
