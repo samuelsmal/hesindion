@@ -219,9 +219,11 @@ Consequences:
   applied relief to diverged — see `specs/rules/CHAP_Reiterkampf.yaml` for the row, not restated
   here. That divergence was recorded in the authored file's note and in `CHANGELOG.md` as an open
   question; it was not settled here, and no Swift was changed at the time. **Settled 2026-09-21 in
-  the data's favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief reaches no
-  non-combat action, and `SharedModifiers.encumbrance` now scopes it to the four combat domains —
-  see `CHANGELOG.md` under *Fixed*. The *other* half of the seam stands: this ADR's last consequence
+  the data's favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief
+  reaches no non-combat action, and `SharedModifiers.encumbrance` was brought into line with the
+  chapter row's scope — see `specs/rules/CHAP_Reiterkampf.yaml` for the row and
+  `Hesindion/Engine/SharedModifiers.swift` for what the code now does, neither restated here. See
+  `CHANGELOG.md` under *Fixed* for the change. The *other* half of the seam stands: this ADR's last consequence
   about `CheckDomain` having no domain for INI or GS is still open, and the unmounted Belastung
   penalty still reaches values no `scope` value can name.
 
