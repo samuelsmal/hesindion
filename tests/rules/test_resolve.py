@@ -21,6 +21,7 @@ import sqlite3
 from pathlib import Path
 
 import pytest
+import requests
 import yaml
 
 from scripts.rules_sync import check as sync_check
@@ -105,7 +106,7 @@ TARGETS = [
            "Platzhalter-Regelwerk", 70),
     target("PH_7", "Platzhalter-Stil", 9,
            "Der Platzhalter-Stil gewaehrt dem Platzhalter einen erfundenen Beispielvorteil.",
-           "Platzhalter-Kompendium", 229),
+           "Platzhalter-Kompendium", 21),
 ]
 
 
@@ -212,6 +213,18 @@ def test_classify_page_separates_indexes_from_rule_pages(fixture, kind):
     )[0] == kind
 
 
+def test_classify_page_reports_a_page_with_neither_rule_text_nor_anchors():
+    """`rule_h_empty_container.html` models the five real pages Task 5 fix round
+    4 found whose `#main` is present and empty with no link list either. That is
+    a property of the site, not a failure of the crawl -- so it is classified
+    `broken`, reported with the normaliser's own message, and yields no entry."""
+    kind, detail = resolve.classify_page(
+        (FIXTURES / "rule_h_empty_container.html").read_text(encoding="utf-8")
+    )
+    assert kind == "broken"
+    assert "empty content container" in detail
+
+
 def test_an_index_whose_main_is_not_empty_is_still_an_index():
     """`index_inline.html` normalises to text, because its link list sits
     inside a non-empty `#main` rather than outside it. Classifying by the
@@ -302,13 +315,13 @@ def test_parse_publications_splits_run_together_entries_and_drops_the_edition():
     the site adds are not part of a book's name and Optolith has neither."""
     text = (
         "Publikation(en): Platzhalter-Regelwerk (4. Auflage), Seite 42 "
-        "Platzhalter-Kompendium, Seite 233 [Platzhalter-Waffen] "
-        "Platzhalter-Goetterwirken I, Seite 229"
+        "Platzhalter-Kompendium, Seite 18 [Platzhalter-Waffen] "
+        "Platzhalter-Goetterwirken I, Seite 21"
     )
     assert resolve.parse_publications(text) == [
         ("Platzhalter-Regelwerk", 42, 42),
-        ("Platzhalter-Kompendium", 233, 233),
-        ("Platzhalter-Goetterwirken I", 229, 229),
+        ("Platzhalter-Kompendium", 18, 18),
+        ("Platzhalter-Goetterwirken I", 21, 21),
     ]
 
 
@@ -325,10 +338,10 @@ def test_parse_publications_accepts_every_heading_the_site_writes(heading):
 
 
 @pytest.mark.parametrize("text, expected", [
-    ("Publikation: Platzhalter-Werk, Seiten 246 - 247", [("Platzhalter-Werk", 246, 247)]),
-    ("Publikation: Platzhalter-Werk Seite 151", [("Platzhalter-Werk", 151, 151)]),
-    ("Publikation: Platzhalter-Werk, Seite 59; Platzhalter-Kodex, Seite 434",
-     [("Platzhalter-Werk", 59, 59), ("Platzhalter-Kodex", 434, 434)]),
+    ("Publikation: Platzhalter-Werk, Seiten 16 - 17", [("Platzhalter-Werk", 16, 17)]),
+    ("Publikation: Platzhalter-Werk Seite 19", [("Platzhalter-Werk", 19, 19)]),
+    ("Publikation: Platzhalter-Werk, Seite 59; Platzhalter-Kodex, Seite 22",
+     [("Platzhalter-Werk", 59, 59), ("Platzhalter-Kodex", 22, 22)]),
 ])
 def test_parse_publications_handles_the_sites_four_punctuations(text, expected):
     """A page range, an entry with no comma before `Seite`, and a
@@ -357,11 +370,11 @@ def test_a_books_volume_numeral_is_a_spelling_not_a_different_book(seed, site, s
 
 
 def test_a_page_range_contains_the_page_the_seed_records():
-    """A rule printed across a page break is listed as `Seiten 246 - 247` and
-    the seed records the first of them."""
+    """A rule printed across a page break is listed as `Seiten N - M` and the
+    seed records the first of them."""
     ok, detail = resolve._publication_verdict(
-        (("Platzhalter-Werk", 247),),
-        [("Platzhalter-Werk", 246, 247)],
+        (("Platzhalter-Werk", 17),),
+        [("Platzhalter-Werk", 16, 17)],
     )
     assert ok, detail
 
@@ -426,8 +439,21 @@ def test_a_name_published_at_two_urls_is_reported_with_both_candidates():
     assert res.status == "ambiguous"
     assert res.url is None
     assert sorted(res.candidates) == [
-        BASE + "PH_DoppelA.html", BASE + "PH_DoppelB.html"
+        "Platzhalter-Doppel -> " + BASE + "PH_DoppelA.html",
+        "Platzhalter-Doppel -> " + BASE + "PH_DoppelB.html",
     ]
+
+
+def test_every_candidate_is_printed_in_one_shape():
+    """`render_report` prints them all under one `candidate:` label, so an
+    ambiguous rule's candidates and an unresolved rule's must not be two
+    different shapes."""
+    results, _ = resolve_fixture_site()
+    reported = [r for r in results.values() if r.candidates]
+    assert {r.status for r in reported} == {"ambiguous", "unresolved"}
+    for res in reported:
+        for candidate in res.candidates:
+            assert " -> " + BASE in candidate, (res.rule_id, candidate)
 
 
 def test_a_name_on_no_index_is_reported_with_the_candidates_considered():
@@ -590,3 +616,227 @@ def test_the_resolver_fetches_through_the_shared_fetcher():
     """Not a second fetcher with its own delay and its own User-Agent."""
     assert resolve.Fetcher is sync_check.Fetcher
     assert resolve.CACHE_DIR == sync_check.CACHE_DIR
+
+
+# ── crawl problems are fatal; per-rule results are not ───────────────────────
+
+class BrokenFetcher(FakeFetcher):
+    """Serves the fixture site but refuses one URL, the way a network hiccup or
+    a renamed page does."""
+
+    def __init__(self, broken):
+        super().__init__()
+        self.broken = broken
+
+    def get(self, url):
+        if url == self.broken:
+            raise requests.RequestException("simulated failure")
+        return super().get(url)
+
+
+def test_a_page_that_could_not_be_fetched_is_a_fatal_crawl_problem():
+    """Not a per-rule result: a page that did not arrive may have been an index,
+    and everything behind it is missing from the map with no sign in any
+    individual rule's line."""
+    fetcher = BrokenFetcher(BASE + "PH_Eins.html")
+    index = resolve.follow_trail(fetcher, BASE + "frefre.html", TRAIL[3])
+    result = resolve.crawl(fetcher, index, 3)
+    assert [p.detail for p in result.fatal_problems] == [
+        BASE + "PH_Eins.html" + ": fetch failed: simulated failure"
+    ]
+
+
+def test_a_page_with_no_rule_text_and_no_anchors_is_not_fatal():
+    """The site has several of these (Task 5 fix round 4 found five). They yield
+    no entry, which is a property of the site rather than a failure of the run."""
+    site = dict(SITE)
+    site["PH_Eins.html"] = "rule_h_empty_container.html"
+    fetcher = FakeFetcher(site)
+    index = resolve.follow_trail(fetcher, BASE + "frefre.html", TRAIL[3])
+    result = resolve.crawl(fetcher, index, 3)
+    assert result.problems and not result.fatal_problems
+
+
+def test_a_truncated_subtree_is_fatal():
+    """`max_depth` firing means the map is missing everything below that point,
+    which is not something any single rule's `unresolved` line would reveal."""
+    fetcher = FakeFetcher()
+    index = resolve.follow_trail(fetcher, BASE + "frefre.html", TRAIL[9])
+    result = resolve.crawl(fetcher, index, 9, max_depth=1)
+    assert any("max depth" in p.detail for p in result.fatal_problems)
+    assert result.entries == [], "nothing below the truncation point was reached"
+
+
+def test_a_group_root_that_is_a_rule_page_is_fatal():
+    site = dict(SITE)
+    site["ph_kategorie.html"] = "rule_i_publication.html"
+    fetcher = FakeFetcher(site)
+    result = resolve.crawl(fetcher, BASE + "ph_kategorie.html", 3)
+    assert any("expected a category index" in p.detail for p in result.fatal_problems)
+
+
+def test_render_report_warns_when_a_crawl_problem_was_fatal():
+    crawls = {3: resolve.CrawlResult(problems=[resolve.Problem(True, "boom")])}
+    report = resolve.render_report([], crawls)
+    assert "FATAL" in report
+    assert "did not look where it said it would" in report
+
+
+def test_render_report_does_not_cry_fatal_over_a_note():
+    crawls = {3: resolve.CrawlResult(problems=[resolve.Problem(False, "a page with no rule text")])}
+    report = resolve.render_report([], crawls)
+    assert "Crawl problems:" in report
+    assert "FATAL" not in report
+
+
+def _run_against_the_fixture_site(monkeypatch, tmp_path, trail, fetcher=None):
+    """`run()` end to end over the fixture site, with a two-rule seed database
+    and a two-book Optolith export built in `tmp_path`."""
+    db, source = tmp_path / "rules.db", tmp_path / "Data"
+    _seed_db(db)
+    _seed_source(source)
+    monkeypatch.setattr(resolve, "GROUP_INDEX_TRAIL", trail)
+    return resolve.run(
+        db, source, groups=tuple(trail), fetcher=fetcher or FakeFetcher(),
+        map_path=tmp_path / "resolved_urls.json", base_url=BASE,
+    )
+
+
+def test_run_exits_zero_when_only_per_rule_results_need_a_human(monkeypatch, tmp_path):
+    """`unresolved` and `needs-review` are legitimate results a reviewer clears
+    one at a time. They must not fail the command -- 31 of them is a normal
+    live run."""
+    assert _run_against_the_fixture_site(monkeypatch, tmp_path, {3: TRAIL[3]}) == 0
+
+
+def test_run_exits_nonzero_when_a_category_cannot_be_reached(monkeypatch, tmp_path, capsys):
+    """The site renaming a category used to append to `problems` and exit 0,
+    with every rule in that group reported `unresolved`. That is precisely the
+    shape of the first live run's group-11 failure, which only a human reading
+    stdout caught."""
+    code = _run_against_the_fixture_site(
+        monkeypatch, tmp_path, {3: ("Platzhalter-Umbenannt",)}
+    )
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "FATAL" in out
+    assert "its index could not be reached" in out
+
+
+def test_run_exits_nonzero_when_a_page_could_not_be_fetched(monkeypatch, tmp_path):
+    assert _run_against_the_fixture_site(
+        monkeypatch, tmp_path, {3: TRAIL[3]}, BrokenFetcher(BASE + "PH_Eins.html")
+    ) == 1
+
+
+def test_run_writes_the_map_even_when_a_crawl_problem_was_fatal(monkeypatch, tmp_path):
+    """So the partial result is inspectable rather than lost. The non-zero exit
+    is what says not to trust it."""
+    _run_against_the_fixture_site(
+        monkeypatch, tmp_path, {3: TRAIL[3]}, BrokenFetcher(BASE + "PH_Eins.html")
+    )
+    assert (tmp_path / "resolved_urls.json").exists()
+
+
+# ── the closed loop ──────────────────────────────────────────────────────────
+#
+# Plan Task 10's last acceptance criterion -- "the ten golden rules resolve to
+# exactly the URLs their authored files already record" -- is the one that says
+# the resolver *works* rather than merely runs, and until now it was a number in
+# a report rather than a ratchet. These two close that.
+#
+# **Do not reimplement this against `rules.db`.** It would pass unconditionally:
+# `build_db.import_effects` writes the authored `source.url` over whatever
+# `import_resolved_urls` put in the same column, so in the database the two can
+# never disagree. The only comparison with anything to say is the resolver's own
+# map against the authored files, which is what these do.
+#
+# Data Policy: rule ids and `source.url`s are already tracked in
+# `specs/rules/*.yaml`, so nothing new enters git here. Ability *names* are read
+# from the (untracked) map and never asserted on.
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+AUTHORED_RULES = REPO_ROOT / "specs" / "rules"
+GOLDEN_MANIFEST = REPO_ROOT / "tests" / "rules" / "golden" / "MANIFEST.yaml"
+
+needs_a_resolution = pytest.mark.skipif(
+    not resolve.RESOLVED_MAP_PATH.exists(),
+    reason=f"no resolution at {resolve.RESOLVED_MAP_PATH} -- run `make rules-resolve`",
+)
+
+
+def _resolution_map():
+    return json.loads(resolve.RESOLVED_MAP_PATH.read_text(encoding="utf-8"))
+
+
+def _resolver_verdict(payload, rule_id):
+    """`(url, status)` for one rule, across both halves of the map: `resolved`
+    holds the confirmed ones, `reported` the rest -- and a reported rule may
+    still carry the URL the resolver arrived at, which is the thing being
+    compared. `(None, "absent")` when the resolver had no opinion at all (a
+    chapter rule, or a group outside the crawl's scope)."""
+    if rule_id in payload["resolved"]:
+        return payload["resolved"][rule_id], "resolved"
+    for entry in payload["reported"]:
+        if entry["id"] == rule_id:
+            return entry["url"], entry["status"]
+    return None, "absent"
+
+
+def _authored_urls():
+    """`{rule_id: url}` for every authored file carrying a real URL. The 17 that
+    still hold the `UNVERIFIED` placeholder have nothing to compare."""
+    out = {}
+    for path in sorted(AUTHORED_RULES.glob("*.yaml")):
+        if path.name in sync_check.NON_RULE_FILES:
+            continue
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        url = (doc.get("source") or {}).get("url")
+        if doc.get("id") and url and url != sync_check.UNVERIFIED_URL:
+            out[doc["id"]] = url
+    return out
+
+
+@needs_a_resolution
+def test_the_ten_golden_rules_resolve_to_the_urls_their_files_record():
+    """**The criterion the supplement calls the real test**, mechanised.
+
+    Every one of the ten must be in the map -- a rule quietly dropping out of
+    the crawl's scope is a regression this would otherwise not see -- and every
+    one's resolved URL must equal, byte for byte, what its authored file
+    records. The confirmation verdict is deliberately *not* asserted: `SA_62`
+    resolves to the right page and is `needs-review` because its publication
+    line and the seed disagree on a page number, which is a true report about
+    the sources and not a failure of the resolver.
+    """
+    payload = _resolution_map()
+    authored = _authored_urls()
+    golden = yaml.safe_load(GOLDEN_MANIFEST.read_text(encoding="utf-8"))["rules"]
+
+    mismatches, missing = [], []
+    for rule_id in sorted(golden):
+        url, status = _resolver_verdict(payload, rule_id)
+        if status == "absent":
+            missing.append(rule_id)
+        elif url != authored.get(rule_id):
+            mismatches.append(f"{rule_id}: resolved {url!r} != authored {authored.get(rule_id)!r}")
+
+    assert not missing, f"golden rules the resolver has no opinion on: {missing}"
+    assert not mismatches, "\n".join(mismatches)
+    assert len(golden) == 10, "the golden corpus is ten rules; this check is about those ten"
+
+
+@needs_a_resolution
+def test_no_authored_url_disagrees_with_what_the_resolver_resolved():
+    """The same check widened past the golden ten: wherever a human has recorded
+    a URL *and* the resolver has an opinion, the two must agree. A rule the
+    resolver never saw (a chapter rule, or one outside the crawled groups) is
+    skipped rather than failed."""
+    payload = _resolution_map()
+    mismatches = [
+        f"{rule_id}: resolved {url!r} != authored {authored_url!r} ({status})"
+        for rule_id, authored_url in sorted(_authored_urls().items())
+        for url, status in [_resolver_verdict(payload, rule_id)]
+        if status != "absent" and url != authored_url
+    ]
+    assert not mismatches, "\n".join(mismatches)

@@ -88,6 +88,7 @@ import sys
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import NamedTuple
 from urllib.parse import urljoin, urlsplit
 
 import requests
@@ -173,15 +174,16 @@ _BRACKET_RE = re.compile(r"\[[^\]]*\]")
 #: `Publikationen(en):`. Matching only the first of them read 28 pages as
 #: having no publication line at all.
 _PUBLICATION_RE = re.compile(r"Publikation(?:en)?(?:\(en\))?\s*:\s*(.*)$")
-#: The entry separator on a `Publikation(en):` line, as five live shapes
-#: spell it: `, Seite 250`, a bare ` Seite 151`, `; Seite 228`,
-#: `, Seiten 246 - 247` and `, Seiten 29 - 30`. Splitting on this rather
-#: than on a separator between entries, because between entries there is
+#: The entry separator on a `Publikation(en):` line, as five live shapes spell
+#: it -- written here with invented page numbers, because a real one is seed
+#: data and one of them is a golden rule's: `, Seite 11`, a bare ` Seite 12`,
+#: `; Seite 13`, `, Seiten 14 - 15` and `, Seiten 16 - 17`. Splitting on this
+#: rather than on a separator between entries, because between entries there is
 #: frequently no separator at all.
 _PUB_SPLIT_RE = re.compile(r"[,;]?\s*Seiten?\s+(\d+)(?:\s*[-\u2013\u2014]\s*(\d+))?")
 
 __all__ = [
-    "IndexEntry", "CrawlResult", "SignalVerdict", "Resolution", "RuleTarget",
+    "IndexEntry", "CrawlResult", "Problem", "SignalVerdict", "Resolution", "RuleTarget",
     "normalise_name", "index_anchors", "page_base", "page_title", "parse_publications",
     "text_containment", "classify_page", "crawl", "follow_trail",
     "confirm_identity", "resolve_targets", "load_targets", "render_report",
@@ -200,11 +202,36 @@ class IndexEntry:
     index_url: str
 
 
+class Problem(NamedTuple):
+    """Something that went wrong while crawling, and whether it means the crawl
+    did not do what it was asked to do.
+
+    A crawl *problem* and a per-rule *result* are different things and must exit
+    differently. `unresolved` and `needs-review` are legitimate results a human
+    clears one at a time. A category that could not be reached, a subtree that
+    was truncated, or a page that could not be fetched means the run did not
+    look where it said it would -- every rule behind it reports `unresolved`
+    for a reason that has nothing to do with that rule. The first full live run
+    was exactly this shape: 74 rules silently unresolved because one index page
+    was misread, caught only because a human read stdout. `fatal` is what makes
+    the next one fail the command instead.
+    """
+    fatal: bool
+    detail: str
+
+    def __str__(self) -> str:                      # pragma: no cover - display
+        return f"{'FATAL' if self.fatal else 'note '}  {self.detail}"
+
+
 @dataclass
 class CrawlResult:
     entries: list[IndexEntry] = field(default_factory=list)
     index_urls: list[str] = field(default_factory=list)
-    problems: list[str] = field(default_factory=list)
+    problems: list[Problem] = field(default_factory=list)
+
+    @property
+    def fatal_problems(self) -> list[Problem]:
+        return [p for p in self.problems if p.fatal]
 
     def by_name(self) -> dict[str, list[IndexEntry]]:
         """Anchor entries keyed by their normalised name. Duplicate (name, url)
@@ -274,9 +301,8 @@ def normalise_name(name: str) -> str:
     page with the ladder, Optolith names the rule without it.
 
     Deliberately not used on a book title. A trailing roman numeral there is a
-    *volume*, not a ladder, and stripping it would quietly make `Aventurisches
-    Kompendium II` the same book as `Aventurisches Kompendium`. `_book_key` has
-    its own rule.
+    *volume*, not a ladder, and stripping it would quietly make `<Buch> II` the
+    same book as `<Buch>`. `_book_key` has its own rule.
     """
     return _fold(_LADDER_SUFFIX_RE.sub("", unicodedata.normalize("NFC", name or "")))
 
@@ -364,13 +390,20 @@ def parse_publications(page_text: str) -> list[tuple[str, int, int]]:
     """`(book, first page, last page)` triples from a `Publikation(en):` line.
 
     The normalised text runs the entries together and punctuates them four
-    different ways -- `Regelwerk (4. Auflage), Seite 250 Kodex des Schwertes,
-    Seite 304`, a bare `Aventurisches Kompendium Seite 151` with no comma, a
-    `; `-joined list, and `Seiten 246 - 247` for a rule that spans a page
-    break. So the split is on the page numbers themselves, taking the
-    separator, the singular/plural and the range as optional. A single page is
-    returned as a one-page range, so the caller has one shape to compare
-    against.
+    different ways. All four are live on the site; the examples here are
+    written with placeholder book titles and invented pages, the same
+    convention the test fixtures use, because a real title and a real page
+    number are the seed data this repository deliberately does not carry in
+    git (the authored corpus stores a book as an opaque id, `book: US25001`):
+
+        <Buch> (4. Auflage), Seite 11 <Anderes Buch>, Seite 12
+        <Buch> Seite 13                       -- no comma before `Seite`
+        <Buch>, Seite 14; <Anderes Buch>, Seite 15
+        <Buch>, Seiten 16 - 17                -- a rule spanning a page break
+
+    So the split is on the page numbers themselves, taking the separator, the
+    singular/plural and the range as optional. A single page is returned as a
+    one-page range, so the caller has one shape to compare against.
 
     Edition qualifiers (`(4. Auflage)`) and the bracketed weapon-group notes
     some entries carry are dropped: neither is part of a book's name and
@@ -384,9 +417,10 @@ def parse_publications(page_text: str) -> list[tuple[str, int, int]]:
     # parts alternates book, first, last, book, first, last, ..., remainder.
     for i in range(0, len(parts) - 2, 3):
         book = _clean_book(parts[i])
-        first = parts[i + 1]
-        last = parts[i + 2]
-        if not book or first is None:
+        # `_PUB_SPLIT_RE`'s first group is a mandatory `(\d+)`, so `first` is
+        # always a digit string here; only the range's second group is optional.
+        first, last = parts[i + 1], parts[i + 2]
+        if not book:
             continue
         out.append((book, int(first), int(last) if last else int(first)))
     return out
@@ -407,20 +441,20 @@ _ROMAN = {"i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5, "vi": 6, "vii": 7, "viii":
 def _book_key(book: str) -> str:
     """A book title reduced for comparison.
 
-    Beyond `normalise_name`, one spelling rule: a **trailing volume numeral is
-    normalised**, roman to arabic, and a volume 1 to no volume at all. The seed
-    writes `Aventurisches Kompendium II` and the site writes `Aventurisches
-    Kompendium 2`; the seed writes `Aventurisches Kompendium I` and the site,
-    which published that volume before there was a second, writes it with no
-    numeral at all. These are two spellings of one book, and 55 of the 96
-    book-not-listed reports in the first full live run were this and nothing
-    else -- noise that would have buried the real disagreements.
+    Beyond `_fold`, one spelling rule: a **trailing volume numeral is
+    normalised**, roman to arabic, and a volume 1 to no volume at all. For a
+    book the seed calls `<Buch> II` the site writes `<Buch> 2`; for the one the
+    seed calls `<Buch> I` the site, which published that volume before there
+    was a second, writes `<Buch>` with no numeral at all. These are two
+    spellings of one book, and **55 of the 96 book-not-listed reports in the
+    first full live run were this and nothing else** -- noise that would have
+    buried the seventeen real disagreements.
 
-    It is a spelling rule and not a judgement: `X II` and `X 2` denote the same
-    volume under any reading, and a seed `X` still does not match a site `X 2`.
-    Where the two sources genuinely differ on a title -- the site carries three
-    spellings of one series name and two outright typos -- nothing here papers
-    over it and the rule is reported.
+    It is a spelling rule and not a judgement: `<Buch> II` and `<Buch> 2` denote
+    the same volume under any reading, and a seed `<Buch>` still does not match
+    a site `<Buch> 2`. Where the two sources genuinely differ on a title -- the
+    site carries three spellings of one series name and two outright typos --
+    nothing here papers over it and the rule is reported.
     """
     text = _fold(_clean_book(book))
     match = _VOLUME_RE.search(text)
@@ -504,7 +538,6 @@ def crawl(
     *,
     max_depth: int = MAX_DEPTH,
     max_pages: int = MAX_PAGES,
-    visited: set[str] | None = None,
 ) -> CrawlResult:
     """Breadth-first walk of one group's index subtree.
 
@@ -519,7 +552,7 @@ def crawl(
     mistaken for a list of rules.
     """
     result = CrawlResult()
-    seen = visited if visited is not None else set()
+    seen: set[str] = set()
     kinds: dict[str, str] = {}
     parents: dict[str, str] = {}
     anchor_texts: dict[str, list[str]] = {}
@@ -529,35 +562,45 @@ def crawl(
     while queue:
         url, depth = queue.pop(0)
         if len(seen) > max_pages:
-            result.problems.append(
+            result.problems.append(Problem(True,
                 f"crawl stopped at {max_pages} pages (group {group_id}); "
                 "the index subtree is larger than expected -- look at the site"
-            )
+            ))
             break
         try:
             html = fetcher.get(url)
         except requests.RequestException as exc:
-            result.problems.append(f"{url}: fetch failed: {exc}")
+            # Fatal: a page that could not be fetched may have been an index,
+            # and everything behind it is missing from the map with no sign in
+            # any individual rule's result. A retry costs nothing -- the pages
+            # that did arrive are on disk.
+            result.problems.append(Problem(True, f"{url}: fetch failed: {exc}"))
             continue
 
         kind, detail = classify_page(html)
         kinds[url] = kind
         if kind == "broken":
-            result.problems.append(f"{url}: {detail}")
+            # Not fatal: a page that carries no rule text and no anchors is a
+            # property of this site (Task 5 fix round 4 found five of them), not
+            # a failure of the crawl. It simply yields no entry.
+            result.problems.append(Problem(False, f"{url}: {detail}"))
             continue
         if kind == "rule":
             if url == start_url:
-                result.problems.append(
+                result.problems.append(Problem(True,
                     f"{url}: expected a category index for group {group_id}, "
-                    "but the page yields rule text"
-                )
+                    "but the page yields rule text -- this group resolved nothing"
+                ))
             continue
 
         # index page -- `classify_page` only says so when there are anchors
         result.index_urls.append(url)
         anchors = index_anchors(html)
         if depth >= max_depth:
-            result.problems.append(f"{url}: max depth {max_depth} reached, not descending")
+            result.problems.append(Problem(True,
+                f"{url}: max depth {max_depth} reached, not descending -- the "
+                "subtree below it is missing from the map"
+            ))
             continue
         base = page_base(html, url)
         for text, href in anchors:
@@ -623,7 +666,7 @@ def _publication_verdict(
     page agree; the book is listed at a different page (an edition difference
     or an erratum -- Task 4 found one of these among the ten golden rules by
     hand); or the seed's book is not on the page's list at all. Only the first
-    is agreement. A range (`Seiten 246 - 247`) contains its pages: a rule that
+    is agreement. A range (`Seiten 16 - 17`) contains its pages: a rule that
     spans a page break is printed on both, and the seed records the first.
     """
     if not seed_sources:
@@ -656,6 +699,14 @@ def _format_span(book: str, first: int, last: int) -> str:
 
 # ── resolution ───────────────────────────────────────────────────────────────
 
+def _candidate_line(entry: IndexEntry) -> str:
+    """One candidate, in the one shape `render_report` prints under
+    `candidate:`. Both the ambiguous and the unresolved branch build their
+    candidates through this, so a reader never has to work out which of two
+    shapes a line is in."""
+    return f"{entry.name} -> {entry.url}"
+
+
 def _candidates_for(key: str, by_name: dict[str, list[IndexEntry]]) -> tuple[str, ...]:
     """What an unresolved rule is reported *with*: the anchors a reviewer should
     look at, never a resolution.
@@ -672,11 +723,11 @@ def _candidates_for(key: str, by_name: dict[str, list[IndexEntry]]) -> tuple[str
     out: list[str] = []
     for name_key, entries in by_name.items():
         if _PAREN_SUFFIX_RE.sub("", name_key).strip() == key:
-            out.extend(f"{e.name} -> {e.url}" for e in entries)
+            out.extend(_candidate_line(e) for e in entries)
     near = difflib.get_close_matches(key, list(by_name), n=CANDIDATE_COUNT, cutoff=CANDIDATE_CUTOFF)
     for name_key in near:
         for entry in by_name[name_key]:
-            line = f"{entry.name} -> {entry.url}"
+            line = _candidate_line(entry)
             if line not in out:
                 out.append(line)
     return tuple(out[:CANDIDATE_COUNT])
@@ -706,7 +757,7 @@ def resolve_targets(
         if len(matches) > 1:
             resolutions.append(Resolution(
                 target.rule_id, target.name, target.group_id, "ambiguous", None,
-                candidates=tuple(m.url for m in matches),
+                candidates=tuple(_candidate_line(m) for m in matches),
                 detail=f"{len(matches)} pages published under this name",
             ))
             continue
@@ -864,6 +915,13 @@ def render_report(resolutions: list[Resolution], crawls: dict[int, CrawlResult])
         lines.append("")
         lines.append("Crawl problems:")
         lines.extend(f"  {p}" for p in problems)
+        if any(p.fatal for p in problems):
+            lines.append(
+                "  A FATAL crawl problem means this run did not look where it said "
+                "it would: rules behind it report `unresolved` for a reason that "
+                "has nothing to do with them. Fix it and re-run before reading the "
+                "counts below."
+            )
 
     counts = {status: 0 for status in ("resolved", "needs-review", "unresolved", "ambiguous")}
     for res in resolutions:
@@ -928,12 +986,14 @@ def run(
     for group_id in groups:
         trail = GROUP_INDEX_TRAIL.get(group_id)
         if trail is None:
-            crawls[group_id] = CrawlResult(problems=[f"group {group_id}: no index trail known"])
+            crawls[group_id] = CrawlResult(
+                problems=[Problem(True, f"group {group_id}: no index trail known")])
             continue
         try:
             index_url = follow_trail(fetcher, root_url, trail)
         except (LookupError, requests.RequestException) as exc:
-            crawls[group_id] = CrawlResult(problems=[f"group {group_id}: {exc}"])
+            crawls[group_id] = CrawlResult(problems=[Problem(
+                True, f"group {group_id}: its index could not be reached: {exc}")])
             continue
         # Each group gets its own visited set: two groups whose subtrees
         # overlap must each record the pages they list, and a page fetched
@@ -946,7 +1006,13 @@ def run(
     print(f"\nwrote {map_path} -- run `make rules-db` to carry it into rules.db")
     print(f"{fetcher.network_calls} network call(s) made")
 
-    fatal = [p for result in crawls.values() for p in result.problems if ": no index trail" in p]
+    fatal = [p for result in crawls.values() for p in result.fatal_problems]
+    if fatal:
+        print(
+            f"\n{len(fatal)} FATAL crawl problem(s) -- the resolution above is "
+            "incomplete and the map was written anyway so the partial result is "
+            "inspectable. Fix and re-run."
+        )
     return 1 if fatal else 0
 
 

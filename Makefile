@@ -155,6 +155,21 @@ rules-sync-check:
 # through the same disk cache as rules-sync-check, so a second run makes zero
 # network calls. The resolution lands under the git-ignored .cache/ and reaches
 # the untracked rules.db on the next `make rules-db`; run the two in that order.
+#
+# FIRST RUN ON A FRESH CHECKOUT IS `make rules-db` FIRST, then rules-resolve,
+# then rules-db again. The dependency is circular by one step: rules-resolve
+# reads rule names and seed text out of rules.db, and rules-db wants the
+# resolution rules-resolve produces. A build with no resolution behind it is a
+# legitimate state and says so; `make rules-db-verify` says so too, rather than
+# reporting "current" and leaving source_url empty in silence.
+#
+# Exits non-zero on a *crawl* problem -- a category that could not be reached, a
+# truncated subtree, a page that would not fetch -- because those mean the run
+# did not look where it said it would. Per-rule `unresolved`/`needs-review` are
+# results a human clears and do not fail the target.
+#
+# `tests/rules/test_resolve.py` re-checks the ten golden rules' resolved URLs
+# against what their authored files record, whenever a resolution is present.
 rules-resolve:
 	@test -d "$(RULES_SOURCE)" || { echo "Rules source not found: $(RULES_SOURCE) (set RULES_SOURCE=…)"; exit 1; }
 	python3 -m scripts.rules_sync.resolve --source "$(RULES_SOURCE)" --db "$(RULES_DB)"
