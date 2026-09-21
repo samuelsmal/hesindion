@@ -281,8 +281,18 @@ def lint_file(
     (ADR-0009). Adding the field to them would be writing agent output the
     agents never produced, which falsifies the measurement the gate grades; the
     alternative -- leaving them unlinted -- is the hole Task 4 closed once
-    already. So they are linted with this one field waived, and the *next*
-    recorded run has no waiver, because the briefs now ask for the field.
+    already. So they are linted with this one field waived.
+
+    **Its lifetime is one recorded calibration run.** Both agent briefs now ask
+    for `ruleset`, so the next run under `tests/rules/calibration/` produces it
+    and needs no waiver. When that run is recorded and
+    `test_calibration.RUN_DIR` points at it, delete this parameter and the
+    `waived_ruleset` branch below -- do not keep it "in case". A waiver with no
+    stated end is the kind of thing that outlives its reason and then quietly
+    excuses a real omission: `ruleset` decides whether a rule fires for
+    everybody or for nobody, and a corpus that lints clean without it is exactly
+    the silence ADR-0009 added the field to prevent. Nothing but this paragraph
+    schedules the removal, which is why it names the trigger rather than a date.
     """
     errors: list[str] = []
     raw = path.read_text()
