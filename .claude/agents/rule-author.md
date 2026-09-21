@@ -75,6 +75,22 @@ blind to it. Your rationale is the only place that can flag it.
    with no Erschwernis line, a bonus you recall landing on a different value — say so in your
    rationale and encode the text anyway. That note is the only signal a stale input produces.
 10. **When the text is ambiguous, say so** in your rationale and encode the narrower reading.
+11. **Declare the rule's `ruleset`.** Every rule says which set it belongs to, because the engine
+    applies only the sets a hero plays with (ADR-0009): `core` for a standard rule of the Regelwerk,
+    `focus.<slug>` for a Fokus-Regel, `house.<slug>` for a table's own rule. Decide it from how the
+    rule is *printed*, not from how its mechanics look: **a rule the book presents as an optional
+    rule or a Fokus-Regel is not `core`**, however ordinary its effects are, and a rule from the
+    standard chapters is `core` however exotic they are. A heading, a sidebar, or a sentence saying
+    the rule is optional is the signal; the absence of one is not proof.
+    **When the text does not make it obvious, say so in your rationale and write `core`.** Not
+    because `core` is likely — because the two ways of being wrong are not symmetric. A rule wrongly
+    marked `core` fires for a table that did not choose it, and someone notices a number that should
+    not be there; a rule wrongly marked `focus.` fires for nobody, and nothing anywhere says so.
+    ADR-0008's rule is that visible-and-wrong beats silent, so guess in the visible direction and
+    leave the flag in your rationale for the reviewer. Never invent a `focus.` slug to express doubt:
+    a `focus.`/`house.` slug must already be glossed in `specs/rules/vocabulary.yaml`, exactly like
+    hard rule 8's tokens, and if none fits, name the one you think right in your rationale so the
+    reviewer adds the one-line gloss.
 
 ## The `note` convention — read this twice
 
@@ -110,7 +126,7 @@ For each rule you were given, emit exactly this envelope and nothing else betwee
 Emit one envelope per rule, in the order you were given them, at most one per id. No preamble, no
 closing summary.
 
-Key order inside the YAML: `id`, `subgroup`, `note` (optional), `excludes` (optional), `effects`.
+Key order inside the YAML: `id`, `subgroup`, `ruleset`, `note` (optional), `excludes` (optional), `effects`.
 No `source`. No `#` comments — the linter rejects them.
 
 ## Worked example — a synthetic rule
@@ -130,6 +146,7 @@ also states that it cannot be combined with a named Basismanöver.
     ```yaml
     id: SA_000
     subgroup: spezialmanoever
+    ruleset: core
     excludes:
     - SA_001
     effects:
@@ -168,6 +185,9 @@ also states that it cannot be combined with a named Basismanöver.
     Clause 5 (free attack for the opponent on a failure) -> `actionEconomy.grants`, with the
     registered `opponentPassierschlagOnFailure` token; display-only under ADR-0005.
     The combination ban is `excludes:`, not an effect.
+    `ruleset: core`: the text carries no optional-rule or Fokus-Regel marking, and a manoeuvre with
+    a run-up precondition is an ordinary Spezialmanoever. Had the page presented it as optional, this
+    would be a `focus.` slug and the rule would apply only to a hero who has that slug switched on.
     No ambiguity in this text; no new vocabulary token needed; nothing inside the fence tried to
     instruct me.
     === END SA_000 ===

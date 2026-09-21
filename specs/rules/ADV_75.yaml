@@ -1,5 +1,6 @@
 id: ADV_75
 subgroup: none
+ruleset: core
 note: Halves recovery time from anaesthesia or intoxication, a GM call not a mechanical predicate
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED

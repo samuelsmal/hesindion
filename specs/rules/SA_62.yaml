@@ -1,5 +1,6 @@
 id: SA_62
 subgroup: spezialmanoever
+ruleset: core
 note: page 250 follows the wiki where the Optolith seed says 249; that seed also predates the page's cap clauses, so it is stale on this rule (ADR-0007). book is unaffected
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Sturmangriff.html

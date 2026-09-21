@@ -1,5 +1,6 @@
 id: SA_66
 subgroup: spezialmanoever
+ruleset: core
 note: 'UNENCODED: clause 3, the announcement-timing clause - a selection-time concern with no effect encoding'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Vorsto%C3%9F.html

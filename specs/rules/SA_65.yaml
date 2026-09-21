@@ -1,5 +1,6 @@
 id: SA_65
 subgroup: passiv
+ruleset: core
 note: 'UNENCODED: clause 3, the announcement-timing clause - a selection-time concern with no effect encoding. Clause 1 is two rows because Verteidigungswert is PA and AW'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html

@@ -1,5 +1,6 @@
 id: COND_4
 subgroup: none
+ruleset: core
 note: Stufe IV is Flucht oder Handlungsunfaehig; reminder marks the dropped disjunction alongside the actionEconomy effect
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED

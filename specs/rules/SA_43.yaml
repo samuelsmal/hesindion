@@ -1,5 +1,6 @@
 id: SA_43
 subgroup: passiv
+ruleset: core
 note: A -1 BE row was removed in fix round 1 - it is not this SF's effect but a mounted-context rule binding any rider. It lives in CHAP_Reiterkampf, authored from that chapter page
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_BerittenerKampf.html

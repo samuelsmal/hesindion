@@ -4,7 +4,7 @@
   "title": "Authored DSA 5 rule",
   "description": "One machine-checkable shape for an authored rule file under specs/rules/. Carries mechanical encoding plus provenance and no rule text (Data Policy, AGENTS.md). This schema is the contract the combat engine (ADR-0008) consumes. A file is either one Optolith-identified rule or one page of chapter rules — see `#/$defs/ruleId`.",
   "type": "object",
-  "required": ["id", "subgroup", "source"],
+  "required": ["id", "subgroup", "ruleset", "source"],
   "additionalProperties": false,
   "$defs": {
     "ruleId": {
@@ -23,6 +23,11 @@
     "subgroup": {
       "description": "The maneuver slot this rule occupies, mirroring `rules.subgroup_id` (ADR-0008). A chapter rule (`CHAP_` id) is always `none` — it is a situation, not something a hero selects in a Kampfrunde — and `lint.py` enforces that, so a chapter page cannot silently claim a Basismanöver slot.",
       "enum": ["passiv", "basismanoever", "spezialmanoever", "none"]
+    },
+    "ruleset": {
+      "description": "Which set of rules this one belongs to, and therefore when the engine applies it (ADR-0009). `core` is a standard rule of the Regelwerk and is always active. `focus.<slug>` is a Fokus-Regel — an optional rule the Regelwerk prints as optional — and applies only to a hero who has that slug switched on (`Hero.fokusRules`). `house.<slug>` is a table's own rule and works the same way. Required on every authored rule and deliberately without a default: `core` is the common case, but defaulting to it would make an unmarked Fokus-Regel apply to everyone, which is the failure this field exists to prevent — the one an author is least likely to notice, because the rule then works. A `focus.`/`house.` slug must also be glossed in `specs/rules/vocabulary.yaml`, the same registration `gmFlag` and the actionEconomy tokens carry, so the set of optional rules is itself data rather than a hand-maintained Swift enum. The slug is camelCase and carries no prose (Data Policy).",
+      "type": "string",
+      "pattern": "^(core|(focus|house)\\.[a-z][A-Za-z0-9]*)$"
     },
     "note": {
       "description": "English, non-prose annotation of which clause/mechanic this rule's authoring encodes — never German rule text (Data Policy) and never a substitute for `source`. ASCII-only and length-capped so it cannot carry smuggled rule prose the way a free-form field could. **Convention (Task 4 fix round 1, I-3): identify the clause by position and mechanism, never restate its content.** \"Clause 3 - opponent-side outcome with no hero-side number, promoted to a reminder\" is a note; \"the shield is destroyed once its structure points reach 0\" is a translation of the clause, i.e. the Data Policy back door a free-text field leaves open — and a `reminder` effect, which has no field but `note`, is exactly where that pressure lands. Where a note must record a clause the grammar cannot express, prefix it `UNENCODED:` so `grep -r UNENCODED specs/rules` enumerates the whole debt.",

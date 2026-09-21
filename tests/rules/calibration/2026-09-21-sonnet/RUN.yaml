@@ -67,6 +67,32 @@ expected:
 # outside what `test_calibration.py` grades, and it has to name the fields.
 golden_edits:
   - date: '2026-09-21'
+    rule: all ten
+    change: >-
+      A rule-root `ruleset: core` key added to every authored file, the ten
+      golden ones included (ADR-0009). Every rule now declares which set it
+      belongs to -- core, focus.<slug> or house.<slug> -- so the engine can
+      apply only the sets a hero plays with instead of a Swift branch checking
+      a flag. All ten are Regelwerk standard rules, so all ten are `core`.
+    rerun_required: false
+    why: >-
+      `test_calibration.py`'s Tier 1 grades effect rows, field by field, against
+      `TIER1_FIELDS`. `ruleset` is not in that list and is not an effect-row
+      field at all: it sits at the rule root, beside `id` and `subgroup`, and the
+      only root key the gate reads anywhere is `excludes`, in the Tier 2 report.
+      No effect row changed, so the ten `expected` verdicts are computed from the
+      same bytes as before and a re-run would spend twenty model calls to
+      reproduce them. The claim is pinned rather than left here as prose:
+      `test_ruleset_is_outside_what_tier_1_grades` fails if `ruleset` is ever
+      added to `TIER1_FIELDS` or appears on an effect row, which is the one way
+      this argument could quietly stop being true. The manifest hashes are
+      updated in the same commit because the manifest freezes files, not fields.
+      The recorded proposals in this directory are deliberately *not* given the
+      field: they are agent output from a run that predates it, and inventing it
+      for them would falsify the measurement. They are linted with
+      `allow_missing_ruleset=True` instead, and the next recorded run has no
+      waiver.
+  - date: '2026-09-21'
     rule: SA_43
     change: >-
       Root `note` only. The removed -1 BE row was justified by three claims, two

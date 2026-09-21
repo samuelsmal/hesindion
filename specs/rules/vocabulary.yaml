@@ -1,9 +1,12 @@
 description: >-
   Registry of every open-vocabulary token an authored rule may use in
-  actionEconomy.grants, actionEconomy.forbids, legality.action or a gmFlag
-  predicate. ADR-0008 closes the effect types and the condition predicates but
-  deliberately leaves these four open, because they are not finite over 232
-  rules and a premature enum would make every novel ability a schema PR. Open
+  actionEconomy.grants, actionEconomy.forbids, legality.action, a gmFlag
+  predicate, or a non-core `ruleset`. ADR-0008 closes the effect types and the
+  condition predicates but deliberately leaves the first four open, because
+  they are not finite over 232 rules and a premature enum would make every
+  novel ability a schema PR. ADR-0009 adds `ruleset` for the same reason and
+  one more: the set of optional rules a table can switch on is exactly what
+  used to be a hand-maintained Swift enum, and it belongs here instead. Open
   is not the same as unrecorded: schema.json constrains each to a slug, and
   lint.py rejects any slug that is not glossed here, so introducing one is a
   reviewable one-line diff rather than an invisible invention. When the corpus
@@ -65,3 +68,14 @@ gmFlag:
   sleepwalked: >-
     The hero sleepwalked during the preceding night, as tracked by the GM
     between sessions rather than by any in-app state.
+
+ruleset:
+  focus.trefferzonen: >-
+    The hit-zone Fokus-Regel: an attack may be aimed at a body zone for a
+    Zonenaufschlag, and damage taken is checked against the Wundschwelle for a
+    wound effect. Optional, off by default, switched on per hero
+    (Hero.fokusRules, FokusRule.trefferzonen). The rules themselves are still in
+    Swift (HitZoneModifiers, HitZoneTable, WoundEffectCatalog) rather than
+    authored files; the slug is registered here so that migration has a set to
+    land in and so `focus.` is exercised by the corpus rather than only by the
+    schema.

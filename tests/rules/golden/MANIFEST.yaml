@@ -15,22 +15,24 @@ description: >-
   deliberate act, not a side effect.
 
   One carve-out, and only one: the hash covers the whole file, but the
-  calibration gate does not. `test_calibration.py`'s Tier 1 grades effect
-  rows with `note` explicitly excluded, so an edit confined to `note` or
-  `source.checked` cannot move a single verdict -- there is nothing for a
-  re-run to re-measure. Such an edit updates the hash here and records its
-  reasoning under `golden_edits` in the recorded run's `RUN.yaml`. An edit
-  that touches any Tier 1 field of any effect row is the other case, and
-  that one does mean a live re-run.
+  calibration gate does not. `test_calibration.py`'s Tier 1 grades *effect
+  rows* on `TIER1_FIELDS`, with `note` explicitly excluded -- so an edit
+  that touches neither cannot move a single verdict, and there is nothing
+  for a re-run to re-measure. Three shapes qualify so far: `note`,
+  `source.checked`, and a rule-root key that is not an effect row at all
+  (`ruleset`, added by ADR-0009). Such an edit updates the hash here and
+  records its reasoning under `golden_edits` in the recorded run's
+  `RUN.yaml`. An edit that touches any Tier 1 field of any effect row is
+  the other case, and that one does mean a live re-run.
 
 rules:
-  SA_40: sha256:6cd20df659537366d2ce07500a48e3cbbc4497702ef0fd68ef99c857d97b47b0
-  SA_41: sha256:f15b6f5b0fad1887d485acfb4a9472291d40ff1317e407c9e90f8a79f2df2772
-  SA_43: sha256:b769038b37ca0ea8628a8ea0f58cdf7b6371e2b2d92f3d97eb7e3e97face9adb
-  SA_48: sha256:97ddfc3fba852d343214759aa1333784f8d80325cd91cfdd6d5870c7e04fe9e4
-  SA_59: sha256:d76ed4b39286ad73d34779cdf501bf69f70a2396fbf83576376b809929a66382
-  SA_62: sha256:cc27ce7d6d9f19ecf1151d5c9c33ab347048ccdb8cc9224726d776f4cd66614b
-  SA_65: sha256:3387c91564d9abaa985ee152189a3c1d480f991e0e12d9e208c03bbdeaf56b03
-  SA_66: sha256:4c3cf7604d75149ccfc37a2fb64ff6f04d53aee1a593d8f87942495dee613d16
-  SA_67: sha256:4de4b8819e7475bffa71dd953df84929a0700a3e872f978c3ca6119b5cc0afca
-  SA_661: sha256:6d094ea9f91098bc83f9fb0179f8a30d493132d75af1d8a4c1912debce3bc821
+  SA_40: sha256:07ee42bbcf6d9bd1865fb313e46b5a8d3433e6c719f132dcd11934e4604f845b
+  SA_41: sha256:06c4bfd611d00028416d5cf8674755008ea08096cd1b58c089a84b67b6d9c3c8
+  SA_43: sha256:d566abf98f22e18a04bd857f693d4198b27f316ee09bba1242e66147daf6ba2c
+  SA_48: sha256:8d4c3e167f0dd7ec3b1d7522e7417f19f790eae53e3ce06d264348beabe986de
+  SA_59: sha256:0432a6c1059f36e3cb04294074c7f709e7b661224ca7c34c52c31fde9f9542da
+  SA_62: sha256:d30745f1275b8efb8a797b458c5da5bd5c7690fcea69eaaa7a81a14dc262dd50
+  SA_65: sha256:cec3eb2e4c486328acd3080e8cae5a486d1ccdd292463f931b0f7bdf05055a9c
+  SA_66: sha256:281810e624f674112dfe5f80fe4747aa15bccd67ce60c1fcc0ac6199c9d75208
+  SA_67: sha256:e8bed78f5a143631feb03c6d4dee8ace50696456e047e4961b57482f06607e42
+  SA_661: sha256:e606f00afa7ffa68c0bdf1f4f1b1b70434d07d34e4883df6f17bee352c1e47d6

@@ -4,6 +4,7 @@ from scripts.rules_lint.lint import lint_file
 VALID = textwrap.dedent("""
     id: SA_62
     subgroup: spezialmanoever
+    ruleset: core
     source:
       url: https://dsa.ulisses-regelwiki.de/SA_62.html
       book: US25001
@@ -49,6 +50,7 @@ def test_filename_must_match_id(tmp_path):
 MODIFIER_BASE = textwrap.dedent("""
     id: SA_65
     subgroup: passiv
+    ruleset: core
     source:
       url: https://dsa.ulisses-regelwiki.de/SA_65.html
       checked: 2026-09-20
@@ -128,6 +130,7 @@ def test_action_economy_forbids_is_accepted(tmp_path):
     body = textwrap.dedent("""
         id: COND_1
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/COND_1.html
           checked: 2026-09-20
@@ -149,6 +152,7 @@ def test_recovery_effect_requires_its_fields(tmp_path):
     body = textwrap.dedent("""
         id: SA_1
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_1.html
           checked: 2026-09-20
@@ -168,6 +172,7 @@ def test_recovery_effect_complete_passes(tmp_path):
     body = textwrap.dedent("""
         id: SA_1
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_1.html
           checked: 2026-09-20
@@ -251,6 +256,7 @@ def test_nested_text_key_in_when_is_rejected(tmp_path):
     body = textwrap.dedent("""
         id: SA_62
         subgroup: spezialmanoever
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_62.html
           checked: 2026-09-20
@@ -367,6 +373,7 @@ def _recovery_doc(extra: str) -> str:
     return textwrap.dedent("""
         id: ADV_75
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/ADV_75.html
           checked: 2026-09-20
@@ -410,6 +417,7 @@ def _action_economy_doc(field: str, token: str) -> str:
     return textwrap.dedent("""
         id: SA_66
         subgroup: spezialmanoever
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_66.html
           checked: 2026-09-20
@@ -455,6 +463,7 @@ def test_unregistered_gm_flag_is_rejected(tmp_path):
     body = textwrap.dedent("""
         id: SA_22
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_22.html
           checked: 2026-09-20
@@ -476,6 +485,7 @@ def test_unregistered_legality_action_is_rejected(tmp_path):
     body = textwrap.dedent("""
         id: SA_43
         subgroup: passiv
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/SA_43.html
           checked: 2026-09-20
@@ -542,6 +552,7 @@ def test_every_token_the_corpus_uses_is_registered():
 CHAPTER = textwrap.dedent("""
     id: CHAP_Reiterkampf
     subgroup: none
+    ruleset: core
     source:
       url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
       book: US25001
@@ -583,6 +594,7 @@ def test_chapter_id_needs_a_real_page(tmp_path):
     body = textwrap.dedent("""
         id: CHAP_UNVERIFIED
         subgroup: none
+        ruleset: core
         source:
           url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
           checked: 1970-01-01
@@ -621,3 +633,86 @@ def test_chapter_slug_transliterates_a_percent_encoded_umlaut():
     from scripts.rules_lint.lint import chapter_slug
     assert chapter_slug("https://dsa.ulisses-regelwiki.de/Vorsto%C3%9F.html") == "Vorstoss"
     assert chapter_slug("https://dsa.ulisses-regelwiki.de/Beengte-Umgebung.html") == "BeengteUmgebung"
+
+
+# --- ruleset: which set of rules this one belongs to (ADR-0009) ---
+#
+# The engine applies only the sets a hero plays with, so this field decides
+# whether a rule fires for everybody or for nobody. It is required and has no
+# default on purpose: an unmarked Fokus-Regel defaulting to `core` would apply
+# to every hero and still look correct in the file.
+
+def test_missing_ruleset_is_rejected(tmp_path):
+    body = VALID.replace("ruleset: core\n", "")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("ruleset" in e for e in errs)
+
+
+def test_focus_ruleset_that_is_registered_is_accepted(tmp_path):
+    body = VALID.replace("ruleset: core", "ruleset: focus.trefferzonen")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p) == []
+
+
+def test_unregistered_focus_ruleset_is_rejected(tmp_path):
+    """The failure an open vocabulary dies of, in its ruleset form: a
+    well-formed slug nobody agreed on is one optional rule appearing as two."""
+    body = VALID.replace("ruleset: core", "ruleset: focus.trefferZonen")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("focus.trefferZonen" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_house_ruleset_must_also_be_registered(tmp_path):
+    body = VALID.replace("ruleset: core", "ruleset: house.someTable")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("house.someTable" in e and "vocabulary.yaml" in e for e in errs)
+
+
+def test_ruleset_prose_is_rejected_by_the_pattern(tmp_path):
+    """Same Data Policy reasoning as the gmFlag slug: a free-form string here
+    would be another route for a German clause to reach git."""
+    body = VALID.replace("ruleset: core", "ruleset: 'eine optionale Fokus-Regel'")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    errs = lint_file(p)
+    assert any("does not match" in e for e in errs)
+
+
+def test_unknown_ruleset_family_is_rejected(tmp_path):
+    body = VALID.replace("ruleset: core", "ruleset: optional.trefferzonen")
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(body)
+    assert lint_file(p)  # rejected: only core / focus. / house.
+
+
+def test_every_authored_rule_declares_a_ruleset():
+    """Over the real corpus: 28 files, no exceptions, no default."""
+    import yaml as _yaml
+    from scripts.rules_lint.lint import NON_RULE_FILES, REPO_ROOT
+    rules_dir = REPO_ROOT / "specs" / "rules"
+    missing = [p.name for p in sorted(rules_dir.glob("*.yaml"))
+               if p.name not in NON_RULE_FILES
+               and not (_yaml.safe_load(p.read_text()) or {}).get("ruleset")]
+    assert missing == []
+
+
+def test_the_missing_ruleset_waiver_is_narrow(tmp_path):
+    """`allow_missing_ruleset` exists for the recorded calibration proposals
+    (see lint_file's docstring). It must waive exactly one requirement and
+    nothing else -- in particular it must not let a *malformed* ruleset through."""
+    p = tmp_path / "SA_62.yaml"
+    p.write_text(VALID.replace("ruleset: core\n", ""))
+    assert lint_file(p, allow_missing_ruleset=True) == []
+
+    p.write_text(VALID.replace("ruleset: core", "ruleset: focus.trefferZonen"))
+    assert lint_file(p, allow_missing_ruleset=True)  # still rejected
+
+    p.write_text(VALID.replace("type: dice", "type: teleport"))
+    assert lint_file(p, allow_missing_ruleset=True)  # still rejected

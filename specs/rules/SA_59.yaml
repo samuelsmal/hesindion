@@ -1,5 +1,6 @@
 id: SA_59
 subgroup: spezialmanoever
+ruleset: core
 note: Clause 6 gates every mechanical effect here; it is GM-adjudicated because the opponent is not modelled (ADR-0005). See gmFlag opponentUsesShield in vocabulary.yaml
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Schildspalter.html

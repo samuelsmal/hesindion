@@ -68,6 +68,7 @@ RULE_B = RuleInput("SA_902", "spezialmanoever", TEXT_B, "Platzhalter B")
 ENCODING_A = """
 id: SA_901
 subgroup: passiv
+ruleset: core
 effects:
 - type: modifier
   target: at
@@ -81,6 +82,7 @@ effects:
 ENCODING_B = """
 id: SA_902
 subgroup: spezialmanoever
+ruleset: core
 effects:
 - type: modifier
   target: pa
@@ -96,6 +98,7 @@ effects:
 ENCODING_B_DISAGREEING = """
 id: SA_902
 subgroup: spezialmanoever
+ruleset: core
 effects:
 - type: modifier
   target: pa
@@ -142,7 +145,7 @@ def test_two_agreeing_rules_write_lint_clean_yaml_a_review_each_and_a_summary(tm
         assert written.exists()
         doc = yaml.safe_load(written.read_text())
         assert doc["id"] == rule_id
-        assert list(doc) == ["id", "subgroup", "source", "effects"]
+        assert list(doc) == ["id", "subgroup", "ruleset", "source", "effects"]
         assert (tmp_path / ".proposals" / f"{rule_id}.review.md").exists()
 
     summary = render_summary(proposals)
@@ -395,6 +398,7 @@ def write_provenanced_rule(rules_dir, rule_id="SA_901", url="https://example.inv
     (rules_dir / f"{rule_id}.yaml").write_text(yaml.safe_dump({
         "id": rule_id,
         "subgroup": "passiv",
+        "ruleset": "core",
         "source": {"url": url, "book": "US25001", "page": 246,
                    "checked": "2026-01-01", "hash": "sha256:" + "b" * 64},
         "effects": [],
@@ -998,6 +1002,7 @@ def test_a_scratch_rules_dir_is_not_guarded(monkeypatch, tmp_path):
 EMPTY_ENCODING = """
 id: SA_901
 subgroup: passiv
+ruleset: core
 effects: []
 """
 
@@ -1027,7 +1032,7 @@ def test_the_schema_itself_rejects_an_empty_effects_list(tmp_path):
 
     path = tmp_path / "SA_901.yaml"
     path.write_text(yaml.safe_dump({
-        "id": "SA_901", "subgroup": "passiv",
+        "id": "SA_901", "subgroup": "passiv", "ruleset": "core",
         "source": {"url": "https://x.invalid/a", "checked": "2026-01-01",
                    "hash": "sha256:" + "0" * 64},
         "effects": [],
@@ -1249,3 +1254,35 @@ def test_an_explicit_dice_recipient_default_is_not_a_disagreement():
     assert diff_effects(author, verifier) == []
     verifier["effects"][0]["recipient"] = "defenderShield"
     assert diff_effects(author, verifier) != []
+
+
+# ── ADR-0009: `ruleset` is the agent's, and the driver will not invent it ────
+
+def test_a_missing_ruleset_fails_lint_rather_than_defaulting_to_core(tmp_path):
+    """The driver defaults `subgroup` from the database because `subgroup_id`
+    is a column. `ruleset` has no column and no safe default: silently writing
+    `core` would turn "the agent did not say" into "this rule always applies".
+    So a proposal without one is a lint failure and nothing is written."""
+    encoding = ENCODING_A.replace("ruleset: core\n", "")
+    runner = FakeRunner({
+        ("rule-author", "batch-1"): envelope("SA_901", encoding),
+        ("rule-verifier", "SA_901"): envelope("SA_901", encoding),
+    })
+    (proposal,) = run(tmp_path, runner, rules=(RULE_A,))
+    assert any("ruleset" in e for e in proposal.lint_errors), proposal.lint_errors
+    assert proposal.status == "lint-failed"
+    assert not (tmp_path / "specs" / "rules" / "SA_901.yaml").exists()
+
+
+def test_two_readings_differing_about_the_ruleset_is_a_disagreement(tmp_path):
+    """One agent reading a page as optional and the other as standard is a
+    disagreement about the rule, not about wording: it decides whether the rule
+    fires for everybody or for nobody."""
+    other = ENCODING_A.replace("ruleset: core", "ruleset: focus.trefferzonen")
+    runner = FakeRunner({
+        ("rule-author", "batch-1"): envelope("SA_901", ENCODING_A),
+        ("rule-verifier", "SA_901"): envelope("SA_901", other),
+    })
+    (proposal,) = run(tmp_path, runner, rules=(RULE_A,))
+    assert any("ruleset" in d for d in proposal.scalar_diffs), proposal.scalar_diffs
+    assert not proposal.agreed

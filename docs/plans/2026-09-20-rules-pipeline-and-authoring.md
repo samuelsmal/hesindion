@@ -824,7 +824,7 @@ attribute a fix, cannot distinguish 6 from 8, and cannot certify what it is bein
 
 ---
 
-### Task 12: Author the remaining chapter rules the app hardcodes
+### Task 12: Author the rules the app hardcodes, under our own id namespace
 
 **Goal:** Every DSA 5 chapter rule whose constants currently live as Swift literals has an authored
 `CHAP_` file, so the engine rewrite has data to read instead of a number to keep.
@@ -854,10 +854,47 @@ The table is a starting point, not a closed list: the first step is to enumerate
 the combat engine reads from, and a mechanic that turns out to belong to an ability after all is
 authored there instead — which is the mistake `SA_43` made in the other direction.
 
+**Two more categories, added by ADR-0009.** Optolith names abilities and nothing else, so `CHAP_` is
+not a side namespace beside Optolith's — it is the first instance of **our own** rule namespace, and
+these belong in it too. Neither is authored yet and neither has an id shape decided; deciding that is
+part of this task.
+
+*Named combat constants.* ADR-0008 turns these into parameters; each is also a rule that can be
+cited, and today each is a literal that can be cited as nothing.
+
+| Constant | Swift today |
+|---|---|
+| `defense.multiplePenaltyPerStep` | `Hesindion/Engine/DefenseModifiers.swift:16` |
+| `reach.matrix` | `Hesindion/Models/CombatManeuver.swift:100-105` |
+| `zone.*` | `Hesindion/Engine/HitZoneModifiers.swift` |
+| `dualWield.penalty`, `passierschlag.penalty` | `Hesindion/Models/Hero.swift`, per ADR-0008's parameter list |
+
+*Derived-value rules.* A hero's GS and their species base LP/SK/ZK are rules the book states, keyed
+on species. ADR-0006 exists because one derived-value formula was wrong, and the 2026-09-21 rounding
+round corrected more — the failure class runtime provenance is meant to make visible, invisible today
+because a derived value has no rule to point at.
+
+| Rule | Swift today |
+|---|---|
+| Species base LP | `Hesindion/Services/OptolithImportService.swift:796` (`speciesBaseLP`) |
+| Species base SK / ZK | `Hesindion/Services/OptolithImportService.swift:803`, `:810` |
+| GS | `Hesindion/Services/OptolithImportService.swift:888` — a flat `base: 8` for every hero, though GS is a species rule; worth checking against the page before authoring |
+| Wundschwelle, Ausweichen, Initiative | `Hesindion/Engine/DerivedValueFormulas.swift:15`, `:28`, `:33` |
+
+**`source.title` on chapter files (ADR-0009).** A chapter rule has no `rules_i18n` row, so a
+breakdown line citing one has no name to display. Each `CHAP_` file authored by this task carries its
+page title in `source.title`, and `build_db.py` writes it into the chapter rule's `rules` row. The
+schema addition lands with the first file that needs it, not before.
+
 **Acceptance Criteria:**
 - [ ] Each page is one authored file, id `CHAP_<PageSlug>` derived from `source.url`, with a real
       `source.hash` verified by `make rules-sync-check` — never a placeholder, which `lint.py`
       rejects for a chapter id by construction.
+- [ ] Every file declares its `ruleset` (ADR-0009). A chapter page of the Regelwerk's standard rules
+      is `core`; a page the book prints as a Fokus-Regel is `focus.<slug>`, glossed in
+      `vocabulary.yaml`. The Trefferzonen rules currently in Swift are the first `focus.` candidate.
+- [ ] Every `CHAP_` file carries `source.title`, and `build_db.py` writes it into the chapter rule's
+      `rules` row, so a breakdown line citing a chapter rule has a name to display (ADR-0009).
 - [ ] Constants that ADR-0008 names as parameters are authored as `parameterOverride` against paths
       that already exist in the corpus or in `schema.json` — `parameter` is the field nothing
       validates, so an invented path lints clean and encodes to nothing (RUN.yaml, `SA_41`).

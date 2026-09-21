@@ -1,5 +1,6 @@
 id: SA_48
 subgroup: basismanoever
+ruleset: core
 note: Tier ladder (Stufe I-III). Clause 1 penalises the opponent's defence, which is PA or AW, so each Stufe carries two opponent rows rather than one
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Finte.html

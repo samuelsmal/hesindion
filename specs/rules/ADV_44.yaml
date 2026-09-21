@@ -1,5 +1,6 @@
 id: ADV_44
 subgroup: none
+ruleset: core
 note: Tier ladder (Stufe I-III), value is the running total so an exact-tier match gives the right amount
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED

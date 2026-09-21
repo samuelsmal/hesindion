@@ -1,5 +1,6 @@
 id: ADV_5
 subgroup: none
+ruleset: core
 source:
   url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
   checked: '1970-01-01'

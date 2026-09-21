@@ -69,6 +69,22 @@ Your rationale is the only place that can raise it.
    someone compares it against the page. Where the text looks thinner than the rule you remember,
    say so in your rationale and encode the text anyway.
 10. **When the text is ambiguous, say so** in your rationale and encode the narrower reading.
+11. **Declare the rule's `ruleset`.** Every rule says which set it belongs to, because the engine
+    applies only the sets a hero plays with (ADR-0009): `core` for a standard rule of the Regelwerk,
+    `focus.<slug>` for a Fokus-Regel, `house.<slug>` for a table's own rule. Decide it from how the
+    rule is *printed*, not from how its mechanics look: **a rule the book presents as an optional
+    rule or a Fokus-Regel is not `core`**, however ordinary its effects are, and a rule from the
+    standard chapters is `core` however exotic they are. A heading, a sidebar, or a sentence saying
+    the rule is optional is the signal; the absence of one is not proof.
+    **When the text does not make it obvious, say so in your rationale and write `core`.** Not
+    because `core` is likely — because the two ways of being wrong are not symmetric. A rule wrongly
+    marked `core` fires for a table that did not choose it, and someone notices a number that should
+    not be there; a rule wrongly marked `focus.` fires for nobody, and nothing anywhere says so.
+    ADR-0008's rule is that visible-and-wrong beats silent, so guess in the visible direction and
+    leave the flag in your rationale for the reviewer. Never invent a `focus.` slug to express doubt:
+    a `focus.`/`house.` slug must already be glossed in `specs/rules/vocabulary.yaml`, exactly like
+    hard rule 8's tokens, and if none fits, name the one you think right in your rationale so the
+    reviewer adds the one-line gloss.
 
 ## The `note` convention — read this twice
 
@@ -96,7 +112,7 @@ Emit exactly this envelope and nothing else:
     <one line per effect row, naming the clause of the rule text it came from, plus any ambiguity>
     === END <id> ===
 
-Key order inside the YAML: `id`, `subgroup`, `note` (optional), `excludes` (optional), `effects`.
+Key order inside the YAML: `id`, `subgroup`, `ruleset`, `note` (optional), `excludes` (optional), `effects`.
 No `source`. No `#` comments. One envelope, for the id you were given.
 
 ## Four shapes that are easy to get wrong

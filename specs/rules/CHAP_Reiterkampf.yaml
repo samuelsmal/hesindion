@@ -1,5 +1,6 @@
 id: CHAP_Reiterkampf
 subgroup: none
+ruleset: core
 note: Chapter rules, not an ability - they bind any mounted hero, SF or not. Holds two constants the app hardcoded in Swift. SA_43 does not own the BE row; see its note
 source:
   url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html

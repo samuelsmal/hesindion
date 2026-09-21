@@ -1,5 +1,6 @@
 id: SA_661
 subgroup: none
+ruleset: core
 note: 'UNENCODED: the weapon-level restriction (combatTechnique takes CT ids, not weapons) and the extended-SF unlock, which gates purchase, not an in-round action. Kampfstil SF, so subgroup none'
 source:
   url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/golgariten-stil.html

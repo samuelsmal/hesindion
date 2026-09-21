@@ -35,7 +35,16 @@ NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
 # nobody has agreed on from entering the corpus silently. The mapping is
 # {schema location -> registry section}.
 VOCABULARY = yaml.safe_load((REPO_ROOT / "specs/rules/vocabulary.yaml").read_text())
-_VOCABULARY_SECTIONS = ("grants", "forbids", "legalityAction", "gmFlag")
+_VOCABULARY_SECTIONS = ("grants", "forbids", "legalityAction", "gmFlag", "ruleset")
+
+# ADR-0009. Every authored rule declares its `ruleset`; the schema constrains the
+# shape and this constrains the vocabulary. `core` is the Regelwerk's standard
+# rules and needs no registration -- it is the closed half of the field. Anything
+# else names an optional rule a table switches on, and an optional rule nobody has
+# written down is the thing this field exists to stop: it would sit in the corpus
+# under a slug no hero can match, so the engine applies it to nobody and reports
+# full coverage, or (worse, if the slug is mistyped in only one place) to everybody.
+CORE_RULESET = "core"
 
 # Format checking is opt-in in `jsonschema` — a bare Draft202012Validator ignores
 # "format" keywords entirely. We enable the library's default FormatChecker so
@@ -183,6 +192,24 @@ def _unregistered_tokens(doc) -> list[str]:
     return errors
 
 
+def _unregistered_ruleset(doc) -> list[str]:
+    """A non-`core` ruleset slug that `vocabulary.yaml` does not gloss.
+
+    The schema already rejects the *shape*; what is left is a well-formed slug
+    nobody agreed on -- `focus.trefferZonen` beside `focus.trefferzonen`, which
+    is one optional rule appearing as two and a hero switching on neither.
+    """
+    value = doc.get("ruleset")
+    if not isinstance(value, str) or value == CORE_RULESET:
+        return []
+    if value in _registered("ruleset"):
+        return []
+    return [
+        f"ruleset: '{value}' is not registered in specs/rules/vocabulary.yaml — "
+        "add a one-line English gloss there. Only 'core' needs no entry"
+    ]
+
+
 def lint_vocabulary(path: pathlib.Path | None = None) -> list[str]:
     """Check `vocabulary.yaml` itself: known sections only, and every gloss a
     non-empty ASCII string. A registry that may hold German prose would just
@@ -214,7 +241,12 @@ def lint_vocabulary(path: pathlib.Path | None = None) -> list[str]:
     return errors
 
 
-def lint_file(path: pathlib.Path, *, allow_disagreement: bool = False) -> list[str]:
+def lint_file(
+    path: pathlib.Path,
+    *,
+    allow_disagreement: bool = False,
+    allow_missing_ruleset: bool = False,
+) -> list[str]:
     """Validate one authored rule file.
 
     `allow_disagreement` exists for `scripts/rules_sync/propose.py` alone: it
@@ -222,6 +254,15 @@ def lint_file(path: pathlib.Path, *, allow_disagreement: bool = False) -> list[s
     for a human to resolve. Everywhere else -- `make rules-lint`, CI -- an
     unresolved disagreement is an error, so a proposal cannot be committed
     without someone deciding which of the two readings is right.
+
+    `allow_missing_ruleset` exists for `tests/rules/test_calibration.py` alone,
+    and for one reason: the proposals recorded under `tests/rules/calibration/`
+    are agent output captured verbatim by a run that predates `ruleset`
+    (ADR-0009). Adding the field to them would be writing agent output the
+    agents never produced, which falsifies the measurement the gate grades; the
+    alternative -- leaving them unlinted -- is the hole Task 4 closed once
+    already. So they are linted with this one field waived, and the *next*
+    recorded run has no waiver, because the briefs now ask for the field.
     """
     errors: list[str] = []
     raw = path.read_text()
@@ -245,10 +286,14 @@ def lint_file(path: pathlib.Path, *, allow_disagreement: bool = False) -> list[s
             "rule prose stays out of git (Data Policy)"
         )
 
+    waived_ruleset = allow_missing_ruleset and "ruleset" not in doc
     for err in VALIDATOR.iter_errors(doc):
+        if waived_ruleset and err.validator == "required" and "'ruleset'" in err.message:
+            continue
         errors.append(f"{path.name}: {'.'.join(str(p) for p in err.absolute_path) or '<root>'}: {err.message}")
 
     errors.extend(f"{path.name}: {e}" for e in _unregistered_tokens(doc))
+    errors.extend(f"{path.name}: {e}" for e in _unregistered_ruleset(doc))
     errors.extend(f"{path.name}: {e}" for e in _lint_chapter_rule(doc))
 
     if not allow_disagreement and str(doc.get("note") or "").startswith(DISAGREEMENT_PREFIX):

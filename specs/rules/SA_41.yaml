@@ -1,5 +1,6 @@
 id: SA_41
 subgroup: passiv
+ruleset: core
 note: 'UNENCODED: the armour table''s extra GS/INI penalty column. Tier ladder (Stufe I-II); the engine matches effect tier to owned Stufe exactly, as in SA_48 and SA_67'
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html

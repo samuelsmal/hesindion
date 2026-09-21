@@ -109,7 +109,7 @@ SUBGROUP_BY_ID = {1: "passiv", 2: "basismanoever", 3: "spezialmanoever"}
 MAX_BATCH = 12
 
 # Key order in a written rule file, matching the ten hand-authored ones.
-KEY_ORDER = ("id", "subgroup", "note", "source", "excludes", "effects")
+KEY_ORDER = ("id", "subgroup", "ruleset", "note", "source", "excludes", "effects")
 
 DISAGREEMENT_PREFIX = "DISAGREEMENT:"
 
@@ -933,12 +933,20 @@ def diff_effects(author: dict | None, verifier: dict | None) -> list[str]:
 
 
 def diff_scalars(author: dict | None, verifier: dict | None) -> list[str]:
-    """Disagreements outside `effects`: `subgroup` and `excludes`. `note` is
-    prose and `source` never comes from an agent, so neither is compared."""
+    """Disagreements outside `effects`: `subgroup`, `ruleset` and `excludes`.
+    `note` is prose and `source` never comes from an agent, so neither is
+    compared.
+
+    `ruleset` is here rather than defaulted (ADR-0009). The driver cannot supply
+    it the way it supplies `subgroup` -- `rules.subgroup_id` is a column,
+    "is this an optional rule" is a judgement about the page -- and defaulting it
+    to `core` would turn "neither agent could tell" into a silent claim that
+    the rule always applies. Two readings differing about it is exactly the kind
+    of disagreement this pass exists to surface."""
     out = []
     a = author or {}
     v = verifier or {}
-    for key in ("subgroup", "excludes"):
+    for key in ("subgroup", "ruleset", "excludes"):
         if key in a or key in v:
             av, vv = a.get(key), v.get(key)
             if av != vv:

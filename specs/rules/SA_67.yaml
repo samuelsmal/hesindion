@@ -1,5 +1,6 @@
 id: SA_67
 subgroup: basismanoever
+ruleset: core
 note: Tier ladder (Stufe I-III), engine matches effect tier to owned Stufe exactly
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Wuchtschlag.html

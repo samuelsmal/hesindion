@@ -229,12 +229,23 @@ def test_every_recorded_proposal_lints():
     files have to stay, because grading recorded output is what makes the gate
     free to re-run; so they get linted instead of trusted. `allow_disagreement`
     matches the driver: a proposal carrying an unresolved DISAGREEMENT: marker is
-    the expected state of an ungraded proposal, not an error."""
+    the expected state of an ungraded proposal, not an error.
+
+    `allow_missing_ruleset` is the one waiver, and it is about this recording
+    rather than about the field. `ruleset` (ADR-0009) was added to the schema
+    after this run was captured, and these bytes are agent output: writing the
+    field into them would be inventing output the agents never produced and
+    falsifying the measurement the gate grades. The alternative -- dropping the
+    lint call -- is the unlinted-rule-file hole Task 4 closed once already, so
+    the waiver is exactly one required key wide and everything else still has to
+    pass. The next recorded run gets no waiver: both briefs now ask for the
+    field, so a proposal without one is a real authoring failure.
+    """
     for rule_id in GOLDEN_IDS:
         path = _run_path(rule_id)
         if not path.exists():
             continue
-        errors = lint_file(path, allow_disagreement=True)
+        errors = lint_file(path, allow_disagreement=True, allow_missing_ruleset=True)
         assert errors == [], f"{path.name}: {errors}"
 
 
@@ -266,3 +277,20 @@ def test_tier_2_divergences_are_reported_and_never_graded(capsys):
         print("\n".join(f"  {line}" for line in lines) or "  none")
     # The only assertion Tier 2 earns: the report was produced.
     assert isinstance(lines, list)
+
+
+def test_ruleset_is_outside_what_tier_1_grades():
+    """ADR-0009 added a root-level `ruleset` to every authored rule, including
+    the ten golden ones. That edit updated `MANIFEST.yaml`'s hashes without a
+    live re-run, and this is the claim that justified it: Tier 1 grades *effect
+    rows* on `TIER1_FIELDS`, `ruleset` is neither an effect-row field nor listed
+    there, and nothing else here reads the rule root except the Tier 2 report's
+    `excludes`. So no byte the backfill changed is an input to any of the ten
+    `expected` verdicts. Pinned rather than argued once in RUN.yaml: adding
+    `ruleset` to TIER1_FIELDS later would silently invalidate that argument.
+    """
+    assert "ruleset" not in TIER1_FIELDS
+    for rule_id in GOLDEN_IDS:
+        doc = _load(GOLDEN_DIR / f"{rule_id}.yaml")
+        assert doc["ruleset"] == "core", f"{rule_id} is not a core rule any more -- re-read RUN.yaml"
+        assert not any("ruleset" in row for row in doc["effects"])
