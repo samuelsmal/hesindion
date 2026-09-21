@@ -1,0 +1,81 @@
+description: >-
+  The calibration gate's recorded run (Task 7). Everything in this directory is
+  agent output, captured verbatim from one live pass of
+  `scripts/rules_sync/propose.py` over the ten golden ids, so that
+  `tests/rules/test_calibration.py` can grade the gate without spending twenty
+  model calls on every `pytest` invocation. Re-recording it means re-running the
+  pipeline and updating `expected` below in the same commit -- deliberately, the
+  way `tests/rules/golden/MANIFEST.yaml` works.
+
+  The `.yaml` files here are proposals, not authored rules. They are NOT a second
+  copy of the corpus: they are what the pipeline produced, and they differ from
+  `specs/rules/` on purpose -- that difference is the measurement.
+  `test_calibration.py` lints every one of them, because `make rules-lint` globs
+  `specs/rules/` only and an unlinted rule file under `tests/` is the hole Task 4
+  closed once already.
+
+command: >-
+  python3 -m scripts.rules_sync.propose
+  --ids SA_40,SA_41,SA_43,SA_48,SA_59,SA_62,SA_65,SA_66,SA_67,SA_661
+  --model sonnet --rules-dir <scratch>/rules --proposals-dir <scratch>/proposals
+
+run:
+  date: '2026-09-21'
+  model: sonnet
+  rule_text_source: >-
+    Hesindion/Resources/rules.db, i.e. the Optolith seed -- the production
+    configuration. This is not the source the golden ten were authored from; see
+    the task report for why that is the gate's headline finding.
+  cli: 2.1.278 (Claude Code)
+  agreement: 6 of 10
+  summary_table: |
+    rule    verdict       lint     status
+    -------------------------------------
+    SA_40   agree         ok       written
+    SA_41   DISAGREE      ok       disagreement
+    SA_43   agree         ok       written
+    SA_48   agree         ok       written
+    SA_59   DISAGREE      ok       disagreement
+    SA_62   DISAGREE      1 err    lint-failed
+    SA_65   agree         ok       written
+    SA_66   agree         ok       written
+    SA_67   agree         ok       written
+    SA_661  DISAGREE      ok       disagreement
+
+    9 written, 4 disagreement(s), 1 not written, 10 rule(s) proposed
+
+# The Tier 1 verdict this run earned, per rule. A rule listed here as `false`
+# carries the reason it failed; the gate is these ten booleans, and moving one
+# of them is a claim that must be re-measured, not a test that may be edited to
+# go green.
+expected:
+  SA_40: true
+  SA_41: false
+  SA_43: true
+  SA_48: true
+  SA_59: true
+  SA_62: false
+  SA_65: true
+  SA_66: true
+  SA_67: true
+  SA_661: false
+
+failures:
+  SA_41: >-
+    Modelling divergence, not an error. The pipeline encodes the clause as
+    parameterOverride + shiftSteps on the armour table, which is the shape
+    schema.json documents for exactly this case; the golden encodes the table
+    shift's net effect as two modifier rows. The golden's own note calls that
+    reading derived, and the table it is derived from is not in the rule text
+    the driver supplies.
+  SA_62: >-
+    Not written: the author reached for an actionEconomy grants token that is
+    not registered in vocabulary.yaml, which the linter rejects by design. The
+    underlying Tier 1 gap is different and worse -- the seed text is missing the
+    Erschwernis clause the golden encodes as a modifier row, so the row cannot
+    be reached from the input at all.
+  SA_661: >-
+    The seed text states a damage bonus where the Regelwiki states a defence
+    bonus. The pipeline encodes what it was given and is wrong about the rule.
+    Fed the wiki page instead, the same pipeline and the same model reproduce
+    the golden encoding exactly.

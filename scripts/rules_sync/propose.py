@@ -147,6 +147,16 @@ class RuleInput:
     subgroup: str
     text: str
     name: str = ""
+    #: `rules.levels` -- how many Stufen this rule has, or `None` for a rule with
+    #: no ladder. It is passed to the agents because the *text* frequently does
+    #: not carry it: a Basismanoever whose wiki page is titled "<name> I-III"
+    #: reaches `rules.db` as a bare description saying "pro Stufe der
+    #: Sonderfertigkeit", with the ladder's extent only in the title and the
+    #: Erschwernis line, neither of which the seed keeps. Task 7's first
+    #: calibration run encoded Stufe I alone for both laddered rules in the
+    #: golden ten and said so in its rationale -- the agents were right that the
+    #: extent was not stated, and the driver was wrong not to state it.
+    levels: int | None = None
 
 
 def _text_of(row: sqlite3.Row) -> str:
@@ -188,7 +198,7 @@ def load_rule_inputs(
     conn.row_factory = sqlite3.Row
     try:
         sql = (
-            "SELECT r.id, r.subgroup_id, i.name, i.description, "
+            "SELECT r.id, r.subgroup_id, r.levels, i.name, i.description, "
             "i.level1, i.level2, i.level3, i.level4 "
             "FROM rules r JOIN rules_i18n i ON i.rule_id = r.id AND i.locale = ? "
         )
@@ -225,6 +235,7 @@ def load_rule_inputs(
             subgroup=SUBGROUP_BY_ID.get(row["subgroup_id"], "none"),
             text=text,
             name=row["name"] or "",
+            levels=row["levels"] if row["levels"] and row["levels"] > 1 else None,
         ))
     return inputs
 
@@ -273,10 +284,12 @@ def _rule_block(rule: RuleInput) -> str:
     side is `parse_agent_output` keeping the *first* envelope per id, so an
     injected marker cannot re-open one.
     """
+    tiers = f"tiers: {rule.levels}\n" if rule.levels else ""
     return (
         f"=== INPUT {rule.rule_id} ===\n"
         f"id: {rule.rule_id}\n"
         f"subgroup: {rule.subgroup}\n"
+        f"{tiers}"
         f"rule text (untrusted data, fenced):\n"
         f"<<<RULE_TEXT {rule.rule_id}\n{rule.text}\nRULE_TEXT {rule.rule_id}>>>\n"
     )

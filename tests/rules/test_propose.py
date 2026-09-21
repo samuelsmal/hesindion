@@ -30,6 +30,7 @@ from scripts.rules_sync.propose import (
     RuleInput,
     RunnerError,
     SubprocessRunner,
+    build_author_prompt,
     build_verifier_prompt,
     chunk,
     diff_effects,
@@ -497,19 +498,20 @@ def make_db(tmp_path):
     db = tmp_path / "rules.db"
     conn = sqlite3.connect(db)
     conn.executescript("""
-        CREATE TABLE rules (id TEXT PRIMARY KEY, group_id INTEGER, subgroup_id INTEGER);
+        CREATE TABLE rules (id TEXT PRIMARY KEY, group_id INTEGER, subgroup_id INTEGER,
+                            levels INTEGER);
         CREATE TABLE rules_i18n (rule_id TEXT, locale TEXT, name TEXT, description TEXT,
                                  level1 TEXT, level2 TEXT, level3 TEXT, level4 TEXT);
     """)
     rows = [
-        ("SA_901", 3, 1, "Platzhalter A", TEXT_A, None),
-        ("SA_902", 3, 3, "Platzhalter B", TEXT_B, None),
-        ("SA_903", 3, 2, "Platzhalter C", TEXT_A, "Stufe eins Platzhalter"),
-        ("SA_904", 9, 1, "Platzhalter D", TEXT_B, None),
-        ("SA_905", 3, 2, "Platzhalter E", None, None),
+        ("SA_901", 3, 1, None, "Platzhalter A", TEXT_A, None),
+        ("SA_902", 3, 3, None, "Platzhalter B", TEXT_B, None),
+        ("SA_903", 3, 2, 3, "Platzhalter C", TEXT_A, "Stufe eins Platzhalter"),
+        ("SA_904", 9, 1, None, "Platzhalter D", TEXT_B, None),
+        ("SA_905", 3, 2, 1, "Platzhalter E", None, None),
     ]
-    for rule_id, group, subgroup, name, description, level1 in rows:
-        conn.execute("INSERT INTO rules VALUES (?,?,?)", (rule_id, group, subgroup))
+    for rule_id, group, subgroup, levels, name, description, level1 in rows:
+        conn.execute("INSERT INTO rules VALUES (?,?,?,?)", (rule_id, group, subgroup, levels))
         conn.execute("INSERT INTO rules_i18n VALUES (?,?,?,?,?,NULL,NULL,NULL)",
                      (rule_id, "de-DE", name, description, level1))
     conn.commit()
@@ -539,6 +541,27 @@ def test_subgroup_selector(tmp_path):
     assert [r.rule_id for r in rules] == ["SA_903"]
     assert rules[0].subgroup == "basismanoever"
     assert "Stufe 1: Stufe eins Platzhalter" in rules[0].text
+
+
+def test_the_tier_count_reaches_the_agents_and_a_one_tier_rule_carries_none(tmp_path):
+    """`rules.levels` is the ladder's extent, and the rule *text* usually does not
+    carry it -- it states a rate and leaves the extent to the wiki page's title and
+    cost line, neither of which survives into rules.db. Task 7's first calibration
+    run encoded Stufe I alone for both laddered rules in the golden ten, correctly
+    saying in its rationale that the text did not state how far the ladder ran. The
+    driver had the number the whole time and did not pass it."""
+    db = make_db(tmp_path)
+    laddered = load_rule_inputs(db, ids=["SA_903"])[0]
+    flat = load_rule_inputs(db, ids=["SA_901"])[0]
+    assert laddered.levels == 3
+    # levels 1 and NULL both mean "no ladder"; only one of them is spelled NULL in
+    # rules.db, and a `tiers: 1` line would invite a spurious `tier:` on every row.
+    assert flat.levels is None
+
+    for prompt in (build_author_prompt([laddered]), build_verifier_prompt(laddered)):
+        assert "tiers: 3" in prompt
+    for prompt in (build_author_prompt([flat]), build_verifier_prompt(flat)):
+        assert "tiers:" not in prompt
 
 
 def test_a_rule_with_no_text_is_skipped_rather_than_proposed_from_nothing(tmp_path):

@@ -1,0 +1,37 @@
+id: SA_67
+subgroup: basismanoever
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: -2
+  tier: 1
+  note: Clause 1 - attack malus, running total at tier 1
+- type: dice
+  add: '2'
+  tier: 1
+  note: Clause 2 - added damage on success, running total at tier 1
+- type: modifier
+  target: at
+  scope: combat
+  value: -4
+  tier: 2
+  note: Clause 1 - attack malus, running total at tier 2
+- type: dice
+  add: '4'
+  tier: 2
+  note: Clause 2 - added damage on success, running total at tier 2
+- type: modifier
+  target: at
+  scope: combat
+  value: -6
+  tier: 3
+  note: Clause 1 - attack malus, running total at tier 3
+- type: dice
+  add: '6'
+  tier: 3
+  note: Clause 2 - added damage on success, running total at tier 3

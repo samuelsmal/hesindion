@@ -1,0 +1,19 @@
+id: SA_66
+subgroup: spezialmanoever
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: 2
+  note: Clause 1 - attack-value increase for the current round
+- type: actionEconomy
+  forbids: defense
+  note: Clause 2 - no Reaktion remains this round, Aktionen untouched
+- type: reminder
+  note: Clause 3 - must be announced at the start of the round, a timing requirement no predicate covers
+- type: reminder
+  note: 'UNENCODED: clause 4''s precondition (not usable while prone); no predicate models the hero''s own state'

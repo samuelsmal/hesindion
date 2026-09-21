@@ -1,0 +1,23 @@
+id: SA_661
+subgroup: none
+note: 'DISAGREEMENT: see .proposals/SA_661.review.md'
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: at
+  scope: combat
+  value: 2
+  when:
+  - mounted: true
+  - gmFlag: opponentOnFoot
+  note: Clause 1 - additional AT ease when mounted against a foot opponent
+- type: dice
+  add: '1'
+  when:
+  - mounted: true
+  note: Clause 2 - flat damage bonus for attacks while mounted
+- type: reminder
+  note: 'UNENCODED: clause 2 restricts the damage bonus to melee attacks; no combatTechnique id list available to gate it'

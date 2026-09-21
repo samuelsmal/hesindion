@@ -1,0 +1,12 @@
+id: SA_43
+subgroup: passiv
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: legality
+  action: mountedCombatCommands
+  when:
+  - mounted: true
+  note: Clause 1 - unlocks the mounted-combat command set while mounted

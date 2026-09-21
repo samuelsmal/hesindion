@@ -54,8 +54,12 @@ Your rationale is the only place that can raise it.
    `actionEconomy.forbids`, `legality.action` and `gmFlag` slugs are checked against
    `specs/rules/vocabulary.yaml` by the linter. Prefer an existing token over a synonym. If no token
    fits, use the one you think right and say in your rationale that it needs a new gloss.
-9. **The Regelwiki wins over the Optolith seed** where they disagree (ADR-0007). The text you are
-   given is the wiki's. Encode that, and never "correct" it from memory of another source.
+9. **Encode the text you were given, and never "correct" it from memory of another source.**
+   ADR-0007 makes the Regelwiki normative over the Optolith seed, which is known to be stale, and
+   **you cannot tell which of the two you are holding.** A remembered value silently overwriting the
+   given one is undetectable downstream; a faithful encoding of a stale text is caught the moment
+   someone compares it against the page. Where the text looks thinner than the rule you remember,
+   say so in your rationale and encode the text anyway.
 10. **When the text is ambiguous, say so** in your rationale and encode the narrower reading.
 
 ## The `note` convention — read this twice
@@ -87,14 +91,37 @@ Emit exactly this envelope and nothing else:
 Key order inside the YAML: `id`, `subgroup`, `note` (optional), `excludes` (optional), `effects`.
 No `source`. No `#` comments. One envelope, for the id you were given.
 
-## Two shapes that are easy to get wrong
+## Four shapes that are easy to get wrong
 
-Both are stated here rather than pointed at a file, because the authored files that demonstrate
+All four are stated here rather than pointed at a file, because the authored files that demonstrate
 them are often withheld from your workspace — one of them may be the very rule you are encoding.
 
-- **A tier ladder** (Stufe I–III) is one *set of rows per tier*, each carrying `tier: N`, not one
-  row with a formula in it. A rule whose penalty runs −2/−4/−6 and whose bonus runs 2/4/6 is six
-  rows, not two. The engine matches an effect's `tier` to the hero's owned Stufe exactly.
+- **A tier ladder** is one *set of rows per tier*, each carrying `tier: N`, not one row with a
+  formula in it. The engine matches an effect's `tier` to the hero's owned Stufe exactly, so a
+  formula it cannot evaluate is a rule that silently does nothing.
+  - **The `tiers: N` line in the input block is authoritative for the ladder's extent.** When it is
+    present the rule has exactly N Stufen and your encoding must cover every one of them, 1..N.
+    The rule *text* usually will not say how far the ladder runs — it states a rate ("per Stufe,
+    by 3") and leaves the extent to the page's title and cost line, neither of which reaches you.
+    Encoding Stufe I alone because the text stops there is the failure this line exists to prevent;
+    it is not an `UNENCODED:` case, because the number you need is in front of you.
+  - **Each tier's rows carry that tier's running total, not its increment.** A rate of 3 per Stufe
+    over three Stufen is `value: -3` at `tier: 1`, `-6` at `tier: 2`, `-9` at `tier: 3`. Writing
+    `-3` on all three, or on tier 3 alone, is wrong in a way nothing downstream can detect.
+  - A ladder multiplies rows: a rule with two clauses and three Stufen is six rows, and one whose
+    per-tier set is three rows is nine.
+- **A clause that suppresses or replaces a named DSA constant is a `parameterOverride`,** not a
+  `reminder` — including when the constant belongs to the opponent or to the opponent's equipment.
+  Hard rule 5 is about *outcomes and states* the app cannot adjudicate; a named constant being
+  switched off is a number, and `parameterOverride` is the row type for stating it. Reach for
+  `parameter` + `set`/`scale`/`shiftSteps` whenever the text says a specific named bonus, malus or
+  table value does not apply, is replaced, or moves, and gate it with the same `when:` as the rest
+  of the manoeuvre.
+- **A `dice` row that only redirects damage carries no `add`.** `recipient` says *who the attack's
+  own damage lands on*; `add` says *how much extra damage there is*. A clause that redirects
+  existing damage and adds none is a `dice` row with `recipient` and no `add` at all — not
+  `add: 0`, which reads as an added quantity that happens to be zero and is a different statement
+  about the rule.
 - **A clause that changes "the defence value"** is *two rows*, `target: pa` and `target: aw`,
   because the target enum has no combined defence value. The same applies to an opponent-side
   defence penalty, which is two rows with `side: opponent`.

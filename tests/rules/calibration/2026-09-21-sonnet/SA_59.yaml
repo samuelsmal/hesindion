@@ -1,0 +1,23 @@
+id: SA_59
+subgroup: spezialmanoever
+note: 'DISAGREEMENT: see .proposals/SA_59.review.md'
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: dice
+  recipient: defenderShield
+  when:
+  - gmFlag: opponentUsesShield
+  note: Clause 1/4 - attack's damage redirected onto the shield instead of the wielder, no added damage
+- type: parameterOverride
+  parameter: shield.paBonus
+  set: 0
+  when:
+  - gmFlag: opponentUsesShield
+  note: Clause 3 - opponent's shield parry bonus suppressed for this specific parry
+- type: reminder
+  note: Clause 2 - restricts which defence the opponent may use against this attack, opponent-side (ADR-0005)
+- type: reminder
+  note: Clause 5 - shield destroyed once its structure points reach 0, opponent-equipment outcome (ADR-0005)

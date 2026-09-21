@@ -1,0 +1,22 @@
+id: SA_65
+subgroup: passiv
+source:
+  url: https://dsa.ulisses-regelwiki.de/UNVERIFIED
+  checked: '1970-01-01'
+  hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+effects:
+- type: modifier
+  target: pa
+  scope: combat
+  value: 4
+  note: Clause 1 - defence-value increase for the current round, PA half
+- type: modifier
+  target: aw
+  scope: combat
+  value: 4
+  note: Clause 1 - defence-value increase for the current round, AW half
+- type: actionEconomy
+  forbids: furtherActions
+  note: Clause 2 - no Aktion remains this round, Reaktionen (defence) untouched
+- type: reminder
+  note: Clause 3 - must be announced at the start of the round, a timing requirement no predicate covers
