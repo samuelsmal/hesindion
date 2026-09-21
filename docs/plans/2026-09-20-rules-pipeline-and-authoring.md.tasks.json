@@ -76,8 +76,26 @@
       "status": "pending",
       "description": "**Goal:** Complete coverage of what the engine can express, in reviewable increments.\n\n**Files:** `specs/rules/*.yaml` (one PR per wave)\n\n**Acceptance Criteria:**\n- [ ] Wave 1: all 5 Basismanöver and 35 Spezialmanöver of group 3 (40 rules)\n- [ ] Wave 2: the 49 passive abilities of group 3\n- [ ] Wave 3: groups 9, 10, 11, 12 (143 rules)\n- [ ] Every wave lints, sync-checks, ratchets coverage down, and is one PR\n- [ ] No wave merges with an unresolved author/verifier disagreement\n\n**Verify:** `make rules-lint && make rules-sync-check && python3 -m pytest tests/rules/ -v && make rules-db-verify`\n\n```json:metadata\n{\"files\": [\"specs/rules/\", \"specs/rules/COVERAGE.md\", \"CHANGELOG.md\"], \"verifyCommand\": \"make rules-lint && make rules-sync-check && python3 -m pytest tests/rules/ -v && make rules-db-verify\", \"acceptanceCriteria\": [\"wave 1 covers all 40 maneuvers\", \"wave 2 covers 49 passives\", \"wave 3 covers the extended groups\", \"no unresolved disagreements merged\"], \"modelTier\": \"frontier\"}\n```",
       "blockedBy": [
-        7
+        10
       ]
+    },
+    {
+      "id": 9,
+      "subject": "Task 10: Resolve rules to the rule website by name",
+      "status": "pending",
+      "blockedBy": [
+        6
+      ],
+      "description": "**Goal:** Every rule gains a verified source.url on the rule website, resolved from its name through the site's own category indexes, never guessed from its id.\n\n**Files:**\n- Create: `scripts/rules_sync/resolve.py`, `tests/rules/test_resolve.py`, index fixtures\n- Modify: `scripts/build_rules_db/build_db.py`, `Makefile`\n\n**Acceptance Criteria:**\n- [ ] Name -> URL map from anchor text and href across combat groups 3, 9, 10, 11, 12\n- [ ] Index pages handled on their own path (their #main is empty by design)\n- [ ] No match or an ambiguous match is reported, never guessed\n- [ ] Identity confirmed by title, rule text and Publikation(en) line\n- [ ] Map generated into the untracked db; no ability names in git\n- [ ] The ten golden rules resolve to the URLs already recorded\n\n**Verify:** `python3 -m pytest tests/rules/test_resolve.py -v && make rules-resolve && make rules-db`\n\n```json:metadata\n{\"files\": [\"scripts/rules_sync/resolve.py\", \"tests/rules/test_resolve.py\", \"scripts/build_rules_db/build_db.py\", \"Makefile\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_resolve.py -v && make rules-resolve\", \"acceptanceCriteria\": [\"name->URL map built from the site's own indexes\", \"failures reported not guessed\", \"no ability names in git\", \"golden ten resolve to their recorded URLs\"], \"modelTier\": \"frontier\"}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 11: Measure per-rule stability before any wave",
+      "status": "pending",
+      "blockedBy": [
+        9
+      ],
+      "description": "**Goal:** Replace a single-sample gate score with per-rule hit rates.\n\n**Files:**\n- Create: `tests/rules/calibration/<date>-stability/`, `docs/rules-pipeline-stability.md`\n- Modify: `tests/rules/test_calibration.py`\n\n**Acceptance Criteria:**\n- [ ] Five passes over the ten golden rules on rule-website text, one variable repeated\n- [ ] Per-rule hit rate and per-rule agreement rate, not a single fraction\n- [ ] Every rule that ever loses a `when` predicate is named\n- [ ] SA_41's shape checked specifically (the shiftSteps brief fix is unexercised)\n- [ ] A pass bar stated before the runs, and the honest answer if the data misses it\n\n**Verify:** `python3 -m pytest tests/rules/test_calibration.py -v`\n\n```json:metadata\n{\"files\": [\"tests/rules/test_calibration.py\", \"docs/rules-pipeline-stability.md\"], \"verifyCommand\": \"python3 -m pytest tests/rules/test_calibration.py -v\", \"acceptanceCriteria\": [\"five passes, one variable\", \"per-rule rates reported\", \"predicate-loss named\", \"pass bar fixed in advance\"], \"modelTier\": \"frontier\"}\n```"
     }
   ],
   "lastUpdated": "2026-09-21"
