@@ -45,7 +45,7 @@ Claude Code subagents (`.claude/agents/`).
 | 7 — calibration gate (user-ordered) | **FAILED, closed honestly — Tier 1 7/10** | `ae67901..505c721`, fix round `22ee6d2` |
 | 8 — coverage ratchet | **not started** | — |
 | 9 — authoring waves | **BLOCKED on Task 7's five blockers** | — |
-| 10 — resolve rules to their page by name | **done** — 201/232 resolved, 10/10 golden; backfill left to a separate act | `fe7e944..1ec14ef` |
+| 10 — resolve rules to their page by name | **done** — 201/232 resolved, 10/10 golden; backfill left to a separate act | `fe7e944..14e23af` |
 | 11 — measure per-rule stability | **not started** | plan text `e564c86` |
 | 12 — author the rules the app hardcodes | **started**: `CHAP_Reiterkampf` authored, backlog open | `c93105a..2e468fd`, `9aef3d2`, `a3508e2`, `1ceb48d` |
 | 13 — GS is a species rule | **Swift done**, corpus half open (belongs to Task 12) | `f276b14` |
