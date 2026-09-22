@@ -674,7 +674,7 @@ cannot produce a wrong encoding in the app.
 
 **The text above is left as written and its ruling is unchanged.** The generalisation is correct and
 load-bearing, the mechanism it required is built (`scripts/rules_sync/rule_graph.py`, commits
-`0d55ce3..7a387a1` — the range the plan's status board carries; this line cited the pre-fix-round
+`0d55ce3..f3ba6ef` — the range the plan's status board carries; this line cited the pre-fix-round
 range until 2026-09-22), and building it found a *second* adjacency of the same class that this section
 did not know about — see the note at the end of this correction. What fails is one sentence of
 evidence, and it is corrected here rather than edited above so that a later reader sees both.
