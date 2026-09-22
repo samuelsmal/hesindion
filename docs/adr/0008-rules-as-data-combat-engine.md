@@ -344,13 +344,14 @@ at the table for an existing hero.
 ## Amendment (2026-09-21): the CheckDomain seam has two rows to reconcile, and wiring the data path in is not an append
 
 The whole-branch review (finding 4) named a live instance of the pattern ADR-0007 exists to
-remove, one file apart from where this ADR's own census was taken. `Hesindion/Engine/SharedModifiers.swift`'s
-`mountedReliefDomains`, and the case `Hesindion/Engine/RuleEffectModifiers.swift`'s
-`domainsForScope` selects for `specs/rules/CHAP_Reiterkampf.yaml`'s mounted-relief row, are two
-independent Swift readings of that row's authored `scope` token, and the two readings disagree. It
+remove, one file apart from where this ADR's own census was taken. Two Swift sites read the `scope`
+token of one authored row in `specs/rules/CHAP_Reiterkampf.yaml` independently, and they disagree:
+the domain set at `Hesindion/Engine/SharedModifiers.swift:18-20`, and the case
+`Hesindion/Engine/RuleEffectModifiers.swift`'s `domainsForScope` selects for that token. It
 is invisible today only because `RuleEffectModifiers` still has no callers; both sites now carry a
 comment naming the other and saying which one the authored row is implemented by
-(`SharedModifiers.swift:18-20`, `RuleEffectModifiers.swift:49-67`).
+(`SharedModifiers.swift:6-20`, `RuleEffectModifiers.swift:49-67`). Which row, and which token, are
+in the cited YAML; the Swift comments name them for anyone already in the code.
 
 **The engine plan inherits a double-count hazard, not only a disagreement.** `ModifierEngine.shared`
 (`ModifierEngine.swift:124-134`) registers the hand-written `SharedModifiers`/`MeleeModifiers`/
@@ -362,17 +363,31 @@ appending to the list.**
 
 **The CheckDomain consequence above names one seam; the branch has since made a second one
 concrete** (whole-branch review §3, "Ruling on item 3") — see that consequence, not restated here,
-for why no `scope` value can settle it. The mounted relief's own row has since diverged the same
-way, in a second place: what `SharedModifiers.encumbrance`'s own `domains` list
-(`SharedModifiers.swift:29`) declares and what the case `RuleEffectModifiers.domainsForScope`
-(`RuleEffectModifiers.swift:49-67`) selects for the same authored token disagree, exactly as
-`mountedReliefDomains` and that case disagree above. **The engine plan therefore has two rows to
-reconcile against `CheckDomain`, not one:** the unmounted penalty's row (`specs/rules/SA_41.yaml`,
-read through `domainsForScope`) and the mounted relief's row (`specs/rules/CHAP_Reiterkampf.yaml`,
-implemented directly in `SharedModifiers.encumbrance`). Neither row's authored scope value, target
-or domain count is stated anywhere in this amendment — see the cited files for both. This is not
+for why no `scope` value can settle it. That same chapter row has since diverged the same way in a
+second place: what the `domains` list at `SharedModifiers.swift:29` declares and what the case
+`RuleEffectModifiers.domainsForScope` (`RuleEffectModifiers.swift:49-67`) selects for the same
+authored token disagree, exactly as the two readings above disagree. **The engine plan therefore has
+two rows to reconcile against `CheckDomain`, not one:** `SA_41`'s row (`specs/rules/SA_41.yaml`,
+read through `domainsForScope`) and the chapter file's row (`specs/rules/CHAP_Reiterkampf.yaml`,
+implemented directly at `SharedModifiers.swift:27-35`). **Neither row's authored `scope` value,
+`target` or domain count is stated anywhere in this amendment** — see the cited files for both; the
+Swift is cited by location rather than by symbol for the same reason. This is not
 settled by picking a string for either row; `docs/rules-pipeline-status.md` §8 records why for the
 first, and the same reasoning holds for the second.
+
+*(Symbol names removed 2026-09-22, Task 11a fix round 4. The closing sentence above was **false of
+`target`** as written: two Swift symbols were cited by name and both rows were referred to by an
+English nickname, and each of the four named a field of one of the two rows — once in plain words,
+once in an identifier that translates straight to it — inside the paragraph asserting that none of
+them did. That is this branch's most repeated defect, a note stating a reason that is not true, and
+it is fixed here by removing the naming rather than by narrowing the claim to accommodate it: an
+honest disclosure would have been second best. Nothing is lost for the engine plan — every Swift
+site is still cited by file and line, and the comments at those lines name the constants and the row
+in full, in files the sanitised authoring workspace never copies. (This note said more on its first
+draft, quoting the four removed strings in order to explain them, which would have re-leaked both
+fields inside the commit removing them. That is the third pass in a row on which applying the
+reconstruction test to the *replacement* text, not only to the text being replaced, is what caught
+it.))*
 
 Do not change `RuleEffectModifiers.domainsForScope` to make the two Swift readings agree — that is a
 behaviour change to a dead code path, and it is the engine plan's decision to make once it settles
