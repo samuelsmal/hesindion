@@ -5,10 +5,13 @@ Why this exists
 ---------------
 ADR-0007 makes <https://dsa.ulisses-regelwiki.de/> normative and the Optolith
 export a seed. The authoring driver nevertheless feeds agents the seed text,
-because almost nothing in this module's scope carries a reviewed `source.url`:
-the scope is the 232 rules in combat groups 3, 9, 10, 11 and 12 (`COMBAT_GROUPS`),
-of which 28 have an authored file at all and 17 of those still hold the
-`UNVERIFIED` placeholder `check.py` reports. This module is
+because almost nothing in this module's scope has an authored file to carry a
+`source.url` at all: the scope is the 232 rules in combat groups 3, 9, 10, 11
+and 12 (`COMBAT_GROUPS`), and **10** of them are authored today (nine in group 3
+and one in group 9). The other 222 have no file, so the driver has only the seed.
+None of the 10 holds the `UNVERIFIED` placeholder `check.py` reports -- the 17
+files that still do are elsewhere in the corpus, outside these groups. This
+module is
 the deterministic half of ADR-0007's reconciliation: it finds each rule's page.
 No model is involved, and none is needed.
 
