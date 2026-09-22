@@ -181,7 +181,7 @@ def test_a_row_differing_on_any_one_axis_is_not_a_collision(differing):
 
     **`target: all` was measured and deliberately not widened**, which is why it
     is now a case here rather than the `scope` one: wildcarding it links every
-    modifier row to every other, taking nine of the ten golden rules to 20
+    modifier row to every other, taking nine of the ten golden rules to 21
     withheld files and the ten-rule batch to 22 of 28 -- the swallow-everything
     failure `test_rows_with_no_axis_do_not_collide_on_their_effect_type_alone`
     rejects for axis-less rows, arrived at from the other side.
@@ -509,6 +509,74 @@ def test_the_per_rule_closures_are_the_documented_sizes():
     assert {rid for rid, n in sizes.items() if n == 1} == {"SA_40", "SA_59"}, COST_REMEDY
     assert {rid for rid, n in sizes.items() if n == 16} == {
         "SA_41", "SA_43", "SA_48", "SA_62", "SA_65", "SA_66", "SA_67", "SA_661"}, COST_REMEDY
+
+
+def _non_reminder_shapes(doc):
+    """One rule's non-reminder rows reduced to the shapes an agent would look for
+    a worked example of: the modifier axes, or the bare effect type."""
+    shapes = set()
+    for row in doc.get("effects") or []:
+        if not isinstance(row, dict) or row.get("type") == "reminder":
+            continue
+        if row.get("type") == "modifier":
+            shapes.add(f"modifier {row.get('target')}/{row.get('scope')}/{row.get('side', 'hero')}")
+        else:
+            shapes.add(str(row.get("type")))
+    return shapes
+
+
+def _rules_with_no_surviving_precedent(withheld):
+    """Which golden rules have no surviving example of *any* shape they encode,
+    given a set of withheld file stems."""
+    corpus = load_corpus()
+    surviving = set()
+    for stem in set(corpus) - withheld:
+        surviving |= _non_reminder_shapes(corpus[stem])
+    return {rid for rid in GOLDEN_IDS
+            if not (_non_reminder_shapes(corpus[rid]) & surviving)}
+
+
+def test_the_two_configurations_leave_the_documented_precedent():
+    """Fix round 2's Important finding. `docs/rules-pipeline-status.md` section 2
+    said nine of the ten lose all worked precedent "in both configurations", and
+    that was false for the per-rule one: `SA_59`, `SA_62` and `SA_67` all encode
+    a `dice` row, so run one at a time each leaves the other two standing and
+    keeps that shape. Per-rule it is seven, not nine.
+
+    The difference is the *only* precedent difference between batching the ten
+    and running them singly, and the plan asks Task 11 to choose between the two,
+    so it is exactly the figure a decision rests on -- pinned here for the same
+    reason the closure sizes are.
+    """
+    batch = _rules_with_no_surviving_precedent(withholding(GOLDEN_IDS).files)
+    assert batch == set(GOLDEN_IDS) - {"SA_59"}, COST_REMEDY
+    assert len(batch) == 9, COST_REMEDY
+
+    per_rule = {rid for rid in GOLDEN_IDS
+                if rid in _rules_with_no_surviving_precedent(withholding([rid]).files)}
+    assert per_rule == {"SA_40", "SA_41", "SA_43", "SA_48", "SA_65", "SA_66", "SA_661"}, COST_REMEDY
+    assert len(per_rule) == 7, COST_REMEDY
+    assert batch - per_rule == {"SA_62", "SA_67"}, COST_REMEDY
+
+
+def test_six_of_the_batch_nine_were_already_there_under_the_old_rule():
+    """The other half of the same paragraph, and the reason it now names its
+    baseline: measured against the batch withholding only the ten, six of the
+    nine were already partly or wholly without precedent; measured per-rule the
+    same count is four. A figure quoted without its baseline is not a figure."""
+    corpus = load_corpus()
+    nine = set(GOLDEN_IDS) - {"SA_59"}
+
+    def partly_missing(withheld):
+        surviving = set()
+        for stem in set(corpus) - withheld:
+            surviving |= _non_reminder_shapes(corpus[stem])
+        return {rid for rid in nine if _non_reminder_shapes(corpus[rid]) - surviving}
+
+    assert partly_missing(set(GOLDEN_IDS)) == {
+        "SA_40", "SA_41", "SA_43", "SA_48", "SA_62", "SA_67"}, COST_REMEDY
+    assert {rid for rid in nine if partly_missing({rid}) & {rid}} == {
+        "SA_40", "SA_41", "SA_43", "SA_48"}, COST_REMEDY
 
 
 def test_no_surviving_file_carries_a_combat_scoped_modifier_row():

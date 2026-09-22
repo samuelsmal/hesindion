@@ -187,12 +187,28 @@ with ten authored files carrying eight distinct non-reminder row shapes, none of
 `modifier` on `le/derived`, `painLevel/all`, `talent/socialTalents`, `Gassenwissen/all`,
 `Orientierung/all`, plus `parameterOverride`, `recovery` and `stateGain`.
 
-**Which rule loses all worked precedent? After fix round 1, nine of the ten.** In both
-configurations every row shape `SA_40`, `SA_41`, `SA_43`, `SA_48`, `SA_62`, `SA_65`, `SA_66`,
-`SA_67` and `SA_661` must produce has zero surviving example in the workspace. `SA_59` is the only
-exception: run alone it keeps precedent for both its shapes, and in the batch it keeps
-`parameterOverride` and loses `dice`. Four of the nine (`SA_40`, `SA_41`, `SA_43`, `SA_48`) were
-already partly or wholly in that position under the old rule; five were not.
+**Which rules lose all worked precedent? Nine of the ten in the batch, seven of the ten run
+rule-by-rule — and the difference between those two numbers is the main thing the choice of
+configuration turns on.** Counting non-reminder row shapes, and naming the baseline each figure is
+measured against:
+
+| | rules with **no** surviving example of **any** shape they must produce |
+|---|---|
+| **batch**, closure applied | **9** — all but `SA_59`, which keeps `parameterOverride` and loses `dice` |
+| **rule-by-rule**, closure applied | **7** — `SA_40`, `SA_41`, `SA_43`, `SA_48`, `SA_65`, `SA_66`, `SA_661` |
+
+The three rules the per-rule configuration spares are `SA_59`, `SA_62` and `SA_67`, and they spare
+each other: run alone, each of the three leaves the other two in the workspace, and `dice` is the
+shape all three share. Batch them and all three are graded at once, so the shape goes with them. That
+is the *only* precedent difference between the two configurations — every other surviving shape is
+identical — and it is worth stating plainly because the plan asks Task 11 to choose between them.
+
+Of the nine in the batch row, **six** (`SA_40`, `SA_41`, `SA_43`, `SA_48`, `SA_62`, `SA_67`) were
+already partly or wholly in that position under the old rule measured the same way — i.e. the batch
+withholding only the ten. Three were not: `SA_65`, `SA_66` and `SA_661`. (On the per-rule-old
+baseline the same count is four, `SA_40`/`SA_41`/`SA_43`/`SA_48`; the two baselines differ and a
+figure quoted without one is not a figure.) Pinned by
+`tests/rules/test_rule_graph.py::test_the_two_configurations_leave_the_documented_precedent`.
 
 Two consequences the stability write-up must carry rather than discover:
 
@@ -502,11 +518,19 @@ which is why blocker 1 is blocker 1.
 
 ```bash
 make rules-lint                       # 28 rule file(s), 0 error(s)
+make rules-resolve                    # network; arms two guards the suite otherwise skips (see below)
 python3 -m pytest tests/ -q           # 271 passed (includes 2 live tests, network)
 python3 -m pytest tests/ -q -m "not live"   # 269 passed, 2 deselected (offline)
 make rules-db && make rules-db-verify
 make rules-sync-check                 # network; 11 ok, 17 unverified
 ```
+
+**`make rules-resolve` must run before `pytest` for the resolver's two guards to mean anything.**
+Task 10's closed-loop test and `verify_db.py`'s `check_resolution_reached_the_db` both **skip** when
+`.cache/rules_resolve/resolved_urls.json` is absent — which is every fresh clone and every CI run,
+since nothing chains the two. The Data Policy forbids committing the map (it carries ability names),
+so the skip is correct behaviour; what was missing is anybody being told to arm them. A green suite
+on a cold clone is therefore two guards short, and says so nowhere else.
 
 `tests/rules/test_normalise_live.py` is marked `live` (whole-branch review, finding 11):
 it fetches the rule website three times and is the only thing that makes the full-suite

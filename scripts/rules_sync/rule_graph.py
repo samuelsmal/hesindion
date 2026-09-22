@@ -222,8 +222,8 @@ def _scopes_collide(a: str, b: str) -> bool:
 
     **`target` is deliberately not widened the same way.** `target: all` reads as
     a wildcard too, and wildcarding it links every modifier row to every other:
-    measured, that takes nine of the ten golden rules to 20 withheld files and
-    the ten-rule batch to 22 of 28. That is the swallow-everything failure the
+    measured against the graph as it ships, that takes nine of the ten golden
+    rules to 21 withheld files and the ten-rule batch to 22 of 28. That is the swallow-everything failure the
     axis-less boundary above exists to avoid, and it buys no channel that this
     one does not already close.
     """
