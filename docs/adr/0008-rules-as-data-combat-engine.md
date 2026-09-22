@@ -177,14 +177,17 @@ overrides — and its decision is written in terms of them. The constants it wan
 are not all owned by abilities, and the difference was invisible until a ruling went wrong.
 
 <https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes
-**three** of its mechanics: `Hesindion/Engine/SharedModifiers.swift`'s mounted BE relief,
-`Hesindion/Engine/DefenseModifiers.swift`'s `mountedDodgePenalty`, and
-`Hesindion/Engine/MeleeModifiers.swift:11-17`'s `vorteilhaftePosition` (the rider's AT ease against
-an opponent on foot, rendered by `CombatAttackViews.swift:404-443`). All three bind any mounted hero, with
-or without `SA_43`. They are exactly the kind of literal this ADR says should be data, and nothing
-in the corpus could hold them, because an authored file needed an Optolith id and a chapter page has
-none. The near-miss: `SA_43`'s file recorded the BE clause as non-existent — the clause is on that
-page, and the Swift had implemented it all along.
+**three** of its mechanics, in three different engine files:
+`Hesindion/Engine/SharedModifiers.swift`'s `encumbrance`,
+`Hesindion/Engine/DefenseModifiers.swift:47`'s `mountedDodgePenalty`, and
+`Hesindion/Engine/MeleeModifiers.swift:14-20`'s `vorteilhaftePosition` (rendered by
+`CombatAttackViews.swift:440-482`). What each of the three computes is in the Swift at those
+locations and in `specs/rules/CHAP_Reiterkampf.yaml`, which now carries all three as authored rows —
+neither restated here. **All three bind anyone in the situation that page describes, ability or
+not**, and that is the point: they are exactly the kind of literal this ADR says should be data, and
+nothing in the corpus could hold them, because an authored file needed an Optolith id and a chapter
+page has none. The near-miss: `SA_43`'s file recorded one of the three as non-existent — the clause
+is on that page, and the Swift had implemented it all along.
 
 **The corpus therefore covers chapter rules as well as abilities**, under the `CHAP_` id namespace
 ADR-0007's amendment defines. Nothing about the effect union, the predicate set or the parameter
@@ -211,6 +214,16 @@ and the class of its gate in English. Since Task 11a the workspace withholds the
 both files are withheld together whenever either is graded — and a passage restating one of them
 defeats withholding the other exactly as ADR-0008's earlier two repairs did. The convention those
 settled: name a clause by its position and mechanism, cite `specs/rules/<id>.yaml` for its contents.)*
+
+*(Amendment opening reworded 2026-09-22, Task 11a fix round 2 — fourth round, and the reason the
+third bought less than it looked. The Swift census three paragraphs above glossed each of the three
+hardcoded mechanics in English, naming a target for each and a gate class for one. It was deferred
+twice as the weaker instance; the arithmetic then changed under it. With the `scope`-subsumption and
+`when`-predicate edges, `SA_41`, `SA_43`, `SA_661` and `CHAP_Reiterkampf` are one closure, so a
+passage in a copied file that describes those rows is now adjacent to four graded rules rather than
+one. The census keeps its case — one page's mechanics hardcoded in three engine files, binding
+anyone in the situation, with nowhere in the corpus to put them — by citing the Swift locations and
+the authored file instead of saying what each computes.)*
 
 This matters for the scope of the engine rewrite. Authoring all 232 abilities would still have left
 the mounted-combat, Beengte-Umgebung and multiple-defence constants in Swift — a rule that fires for

@@ -29,9 +29,16 @@ make clean        # Clean build artifacts
 (Data Policy below) and the app won't build/run correctly without it:
 
 ```bash
+make rules-resolve     # network; resolve every rule to its page, writing the git-ignored URL map
 make rules-db          # rebuild rules.db from the pinned Optolith source (RULES_SOURCE)
 make rules-db-verify   # confirm the shipped rules.db matches what a rebuild produces
 ```
+
+**Run `make rules-resolve` before `pytest` on a fresh clone**, or two of the resolver's guards pass
+by skipping: Task 10's closed-loop test and `verify_db.py`'s `check_resolution_reached_the_db` both
+skip when `.cache/rules_resolve/resolved_urls.json` is absent, and nothing chains the two targets.
+The map carries ability names, so the Data Policy below forbids committing it and the skip is
+correct — but a green suite on a cold clone is two guards short unless you arm them.
 
 `make rules-db` reads from `RULES_SOURCE` (defaults to the local, non-version-controlled
 `dsa_companion_data/Data` checkout — override with `RULES_SOURCE=` if yours lives elsewhere),
