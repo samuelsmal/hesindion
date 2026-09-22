@@ -40,6 +40,14 @@ imagined:
    glossing a registered token beside its meaning is their job, and Task 6 fix
    round 2 ruled that those glosses stay ("lose the pointer, keep the mechanics").
    An ADR has no such job, and ADR-0008 is where `defenderShield` came back.
+5. **A Swift symbol whose name *is* a row's `target` in English**, quoted in a
+   copied file. The Swift itself is never copied, so a `file:line` citation says
+   nothing; the symbol name says the field. This was the 2026-09-22 shape: one
+   identifier naming a row's target, and one naming its gate, its target and the
+   sign of its value in a single camelCase word, both inside a paragraph
+   asserting that no field was stated. `CheckDomain`'s cases and the authored
+   `scope` tokens are exempt by name -- a domain is *where* a modifier applies,
+   not what it modifies, and they contain the same English words.
 
 Probe 3's "points at a rule" test is the load-bearing idea, and it is worth
 stating plainly: the reference material is *supposed* to describe mechanics -- that
@@ -63,6 +71,13 @@ Three further known gaps, stated so nobody infers coverage from a green run:
 
 - A number written as a word ("two"), a value stated without its target, or a
   target stated without its value, are all invisible.
+- **Probe 5 knows three targets, not eight.** `TARGET_SYMBOL_WORDS` covers only
+  the targets whose English word is not also this app's own navigation and view
+  vocabulary. `at`, `ini`, `gs` and `le` are left out on purpose: a probe that
+  fired on `attackChoice`, `initiativeRoll` or `CombatAttackViews` would be
+  turned off within a week, and a probe that is turned off catches nothing at
+  all. A symbol named after one of those four targets is not caught here, and a
+  symbol named in German (`belastungPenalty`) is not caught by any probe.
 - The two residual leaks `docs/rules-pipeline-status.md` §2 records as judged and
   accepted stay accepted: neither states a number, so neither probe fires. That
   is deliberate, not luck -- see that section before widening anything here.
@@ -102,6 +117,29 @@ TARGET_SPELLINGS = {
 }
 
 ROMAN = {1: "i", 2: "ii", 3: "iii", 4: "iv", 5: "v"}
+
+#: Probe 5. An authored `target`, and the English word a Swift symbol that
+#: implements such a row is named after. Deliberately partial -- the module
+#: docstring says which targets are left out and why.
+TARGET_SYMBOL_WORDS = {
+    "be": ("encumbrance", "encumbered"),
+    "aw": ("dodge", "evasion"),
+    "pa": ("parry",),
+}
+
+#: `CheckDomain`'s cases and the authored `scope` tokens, flattened and
+#: lowercased. These carry a target's English word without naming a row: a
+#: domain is where a modifier applies, not what it modifies.
+DOMAIN_SYMBOLS = {
+    "meleeattack", "meleeparry", "meleedodge", "rangedattack",
+    "spellcasting", "liturgycasting", "talentcheck", "meleedefense",
+}
+
+#: A markdown code span, and an identifier inside one. Probe 5 reads only what
+#: is quoted as code: prose naming a mechanic in English is probe 3's business,
+#: and this probe is about a *symbol* standing in for a field.
+_CODE_SPAN = re.compile(r"`([^`\n]+)`")
+_IDENTIFIER = re.compile(r"[a-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*")
 
 REMEDY = (
     "A file the agents read states a withheld rule's graded encoding. Cite the "
@@ -342,6 +380,40 @@ def _rule_unique_tokens(p: Passage, owners: dict[str, str]) -> list[tuple[str, s
     return found
 
 
+def _symbols_named_after_a_target(text: str, rows_by_rule: dict[str, list[dict]]
+                                  ) -> list[tuple[str, str, str]]:
+    """Probe 5: a Swift symbol whose name is a withheld row's `target` in English.
+
+    Matched on the *word set* of the identifier, so `encumbrance`,
+    `mountedDodgePenalty` and `Hero.dodgeRelief` all hit while `meleeDodge`
+    (a `CheckDomain` case) does not.
+    """
+    wanted: dict[str, set[str]] = {}
+    for rule_id, rows in rows_by_rule.items():
+        for row in rows:
+            for word in TARGET_SYMBOL_WORDS.get(row.get("target"), ()):
+                wanted.setdefault(word, set()).add(rule_id)
+    if not wanted:
+        return []
+
+    found, seen = [], set()
+    for span in _CODE_SPAN.finditer(text):
+        for m in _IDENTIFIER.finditer(span.group(1)):
+            ident = m.group(0)
+            if ident.replace(".", "").lower() in DOMAIN_SYMBOLS:
+                continue
+            words = {w.lower() for w in re.findall(r"[A-Za-z][a-z0-9]*", ident)}
+            for word in sorted(words & set(wanted)):
+                if (ident, word) in seen:
+                    continue
+                seen.add((ident, word))
+                quote = " ".join(text[max(0, span.start() - 110):span.end() + 110].split())
+                for rule_id in sorted(wanted[word]):
+                    found.append((rule_id, f"`{ident}` names a withheld row's target in "
+                                           f"English (`{word}`)", quote))
+    return found
+
+
 def unique_tokens(rows_by_rule: dict[str, list[dict]]) -> dict[str, str]:
     """Multi-part tokens (camelCase or dotted) used by exactly one rule's rows.
     Single-word values (`combat`, `opponent`, `ambush`) are the shared vocabulary
@@ -368,6 +440,7 @@ def leaks_in(text: str, rows_by_rule: dict[str, list[dict]], *,
         found += _numbers_beside_their_target(p, rule_id, rows, titles)
     if narrative:
         found += _rule_unique_tokens(p, unique_tokens(rows_by_rule))
+        found += _symbols_named_after_a_target(text, rows_by_rule)
     return found
 
 
@@ -449,3 +522,35 @@ def test_the_guard_reports_each_shape_it_was_written_for(shape, text):
 ])
 def test_the_guard_leaves_precedent_alone(text):
     assert leaks_in(text, FIXTURE, titles=()) == [], text
+
+
+# Probe 5's own fixture: `at` is outside TARGET_SYMBOL_WORDS by design, so FIXTURE
+# above cannot exercise this probe.
+SYMBOL_FIXTURE = {"SA_000": [
+    {"type": "modifier", "target": "be", "scope": "all", "value": -1},
+    {"type": "modifier", "target": "aw", "scope": "combat", "value": -2},
+]}
+
+
+@pytest.mark.parametrize("shape, text", [
+    ("a symbol that is the target itself",
+     "the hand-written `encumbrance` definition is the one this replaces."),
+    ("a symbol carrying gate, target and sign at once",
+     "`DefenseModifiers.swift:47`'s `mountedDodgePenalty` is the same constant."),
+    ("a dotted symbol",
+     "computed by `Hero.dodgeRelief` before the roll."),
+])
+def test_the_guard_reports_a_swift_symbol_named_after_a_withheld_rows_target(shape, text):
+    assert leaks_in(text, SYMBOL_FIXTURE, titles=()), shape
+
+
+@pytest.mark.parametrize("text", [
+    # a domain is where a modifier applies, not what it modifies
+    "registered for `meleeDodge` and `meleeParry` only, never `talentCheck`.",
+    # a file:line citation is the sanctioned form and must stay usable
+    "what it computes is at `Hesindion/Engine/SharedModifiers.swift:27-35`.",
+    # prose outside a code span is probe 3's business, not probe 5's
+    "The engine has one encumbrance definition and several parry paths.",
+])
+def test_probe_5_leaves_the_sanctioned_forms_alone(text):
+    assert leaks_in(text, SYMBOL_FIXTURE, titles=()) == [], text
