@@ -8,11 +8,14 @@ sync comments had already drifted before anyone added a fifth call site.
 it is "kept in sync by hand" with the others -- but nothing ever checked that, and the
 comments themselves had already gone stale, naming only some of the other sites.
 
-`UNVERIFIED_URL` joined them (Task 10): `scripts/rules_sync/check.py` reports a rule
-still carrying the placeholder as `unverified`, and `scripts/build_rules_db/build_db.py`
-needs the same string to know not to write it into `rules.source_url` as though it were
-a page. It arrived in new code *without* the convention, which is this finding's defect
-class recurring; it is closed here the same way.
+`UNVERIFIED_URL` joined them (Task 10), in *three* modules: `scripts/rules_sync/check.py`
+reports a rule still carrying the placeholder as `unverified`,
+`scripts/build_rules_db/build_db.py` needs the same string to know not to write it into
+`rules.source_url` as though it were a page, and `scripts/build_rules_db/verify_db.py`
+needs it to recognise the placeholder on both sides of its own check. It arrived in new
+code *without* the convention, which is this finding's defect class recurring; it is
+closed here the same way. The `verify_db.py` copy was missed until 2026-09-22 — its
+comment asserted the test that would have caught it, which is why the sweep read as done.
 
 The small-local-constants arrangement (rather than a shared module) is a
 deliberate preference stated in each site's comment. This test does not change that;
@@ -27,6 +30,7 @@ from scripts.build_rules_db.build_db import NON_RULE_FILES as BUILD_DB_NON_RULE_
 from scripts.build_rules_db.verify_db import CHAPTER_PREFIX as VERIFY_DB_CHAPTER_PREFIX
 from scripts.build_rules_db.verify_db import NON_RULE_FILES as VERIFY_DB_NON_RULE_FILES
 from scripts.build_rules_db.verify_db import RESOLVED_MAP as VERIFY_DB_RESOLVED_MAP
+from scripts.build_rules_db.verify_db import UNVERIFIED_URL as VERIFY_DB_UNVERIFIED_URL
 from scripts.rules_lint.lint import CHAPTER_PREFIX as LINT_CHAPTER_PREFIX
 from scripts.rules_lint.lint import NON_RULE_FILES as LINT_NON_RULE_FILES
 from scripts.build_rules_db.build_db import DEFAULT_RESOLVED_MAP as BUILD_DB_RESOLVED_MAP
@@ -61,12 +65,22 @@ def test_chapter_prefix_spellings_agree():
 def test_unverified_url_spellings_agree():
     """`check.py` reports a rule still carrying the placeholder as `unverified`;
     `build_db.py` needs the same string to know not to write it into
-    `rules.source_url` as though it were a page. Two spellings drifting apart
-    would put `.../UNVERIFIED` in the database as a real URL for the driver to
-    fetch — the exact silent-write this constant exists to prevent. Third
-    instance of finding 5's defect class, closed the same way the other two
-    were."""
-    assert BUILD_DB_UNVERIFIED_URL == CHECK_UNVERIFIED_URL
+    `rules.source_url` as though it were a page; `verify_db.py` needs it twice,
+    in `check_authored_fields` and in `authored_urls`. Two spellings drifting
+    apart would put `.../UNVERIFIED` in the database as a real URL for the
+    driver to fetch — the exact silent-write this constant exists to prevent.
+    Third instance of finding 5's defect class, closed the same way the other
+    two were.
+
+    **`verify_db.py`'s copy was asserted only by its own comment until
+    2026-09-22**, which claimed "the same test asserts the spellings agree"
+    while no test imported it. Both ways it can drift are silent: a
+    `verify_db` spelling that stops matching makes `check_authored_fields`
+    report every file still holding the placeholder as having dropped its
+    `source_url`, and makes `authored_urls` treat the placeholder as a
+    reviewed URL, which excludes those rules from
+    `check_resolution_reached_the_db` without saying so."""
+    assert BUILD_DB_UNVERIFIED_URL == CHECK_UNVERIFIED_URL == VERIFY_DB_UNVERIFIED_URL
 
 
 def test_the_three_resolved_map_paths_are_the_same_file():

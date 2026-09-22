@@ -30,8 +30,11 @@ NON_RULE_FILES = {"SOURCES.yaml", "vocabulary.yaml"}
 # asserts the three spellings agree.
 CHAPTER_PREFIX = "CHAP_"
 # Kept in sync by hand with scripts/rules_sync/check.py's and
-# scripts/build_rules_db/build_db.py's UNVERIFIED_URL; the same test asserts
-# the spellings agree. A file still carrying it has no page to check against.
+# scripts/build_rules_db/build_db.py's UNVERIFIED_URL;
+# tests/rules/test_shared_constants.test_unverified_url_spellings_agree asserts
+# all three spellings agree (this copy was outside that assertion, and outside
+# every import, until 2026-09-22 -- the comment claimed the cover it lacked).
+# A file still carrying it has no page to check against.
 UNVERIFIED_URL = "https://dsa.ulisses-regelwiki.de/UNVERIFIED"
 
 # `make rules-resolve`'s output, which `build_db.py` reads. Same default path as
@@ -159,6 +162,8 @@ def check_resolution_reached_the_db(
     finally:
         conn.close()
     if errors:
+        # Trailing summary line, counting the findings above it. `main` prints it and
+        # excludes it from its own count -- it is not itself a finding.
         checked = len(resolved) - len(set(resolved) & set(overridden))
         errors.append(f"{len(errors)} of {checked} resolved URL(s) did not reach rules.db")
     return errors
@@ -187,12 +192,18 @@ def main(shipped: str, source: str, rules: str) -> int:
             print("rules.db is stale — run `make rules-db`", file=sys.stderr)
             return 1
 
-    errors = check_authored_fields(pathlib.Path(shipped), pathlib.Path(rules))
-    errors += check_resolution_reached_the_db(pathlib.Path(shipped), pathlib.Path(rules))
+    authored_errors = check_authored_fields(pathlib.Path(shipped), pathlib.Path(rules))
+    resolution_errors = check_resolution_reached_the_db(pathlib.Path(shipped), pathlib.Path(rules))
+    errors = authored_errors + resolution_errors
     if errors:
         for e in errors:
             print(e, file=sys.stderr)
-        print(f"rules.db is a faithful rebuild, but {len(errors)} check(s) failed on what it "
+        # `check_resolution_reached_the_db` ends a non-empty list with a summary line
+        # counting the lines above it. That line is a count, not a finding, so it is
+        # printed but not counted here -- it used to count itself, which reported one
+        # real failure as "2 check(s) failed".
+        found = len(authored_errors) + max(0, len(resolution_errors) - 1)
+        print(f"rules.db is a faithful rebuild, but {found} problem(s) were found in what it "
               "carries -- see above", file=sys.stderr)
         return 1
     print("rules.db is current")
