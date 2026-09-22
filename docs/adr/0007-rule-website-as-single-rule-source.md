@@ -144,11 +144,13 @@ Beengte Umgebung, multiple defences — and no ability owns them, so Optolith ha
 the corpus had nowhere to put them.
 
 That gap had a cost already being paid: the app hardcoded those constants in Swift, and the corpus
-looked complete without them. It also produced a wrong ruling. `SA_43`'s authored file recorded that
-its encumbrance effect had been dropped because no clause existed; the clause exists, on
-<https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, and the app had implemented it for months. The
-removal was right, the reason was not — the effect is the chapter page's, not the ability's — and
-"there is no clause" is what a reviewer concludes when the corpus has no shape that could hold one.
+looked complete without them. It also produced a wrong ruling, and the wrongness was about
+*existence* rather than about a value: one clause of
+<https://dsa.ulisses-regelwiki.de/Reiterkampf.html> was ruled non-existent while the page published
+it and the app had implemented it for months. **"There is no clause" is what a reviewer concludes
+when the corpus has no shape that could hold one** — the ruling followed from the missing namespace,
+not from the page. `specs/rules/SA_43.yaml` and `specs/rules/CHAP_Reiterkampf.yaml` are where the
+corpus stands on it today; what either file records is in the file and is not restated here.
 
 **Chapter pages are authored files like any other, under a second id namespace.** A chapter id is
 `CHAP_` plus the page's own URL stem, ASCII-folded (`CHAP_Reiterkampf`). Everything else is

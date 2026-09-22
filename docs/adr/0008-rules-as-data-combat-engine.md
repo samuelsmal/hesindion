@@ -127,9 +127,9 @@ consequence for the GM.
 
 - **Wire up `RuleEffectModifiers` as written and stop there.** Rejected. It covers the 73 flat
   modifiers and mis-encodes the rest: it drops `effect.attribute` entirely and ignores
-  `effect.condition`, so an encumbrance row an authored file gates on `mounted` would apply to a
-  hero on foot, permanently, at its full value. Fixing it is part of this decision, not an
-  alternative to it.
+  `effect.condition`, so a conditional row an authored file gates on a predicate this reading
+  ignores would apply unconditionally, permanently, at its full value. Fixing it is part of this
+  decision, not an alternative to it.
 - **Modifiers and maneuvers as data, everything else in Swift.** Rejected: it leaves the 27
   constant-overriding and 33 dice-adding abilities as per-ability Swift work, which schedules the
   next refactor rather than avoiding it.
@@ -170,6 +170,18 @@ consequence for the GM.
   cannot be settled by choosing a scope string. Found while migrating `SA_41`, whose two duplicate
   legacy sources disagreed on exactly this.
 
+  *(Residual re-recorded 2026-09-22, with the whole-session review. This bullet states the reach of
+  a rule the calibration gate grades, in a file `prepare_workspace` copies. It was accepted before
+  the workspace withheld graph closures, so the acceptance is re-taken on today's facts rather than
+  inherited: `SA_41` is now withheld in one closure with three other golden rules
+  (`scripts/rules_sync/rule_graph.py`), and the statements elsewhere in this ADR, in ADR-0007,
+  ADR-0009 and `AGENTS.md` that this passage used to compose with were removed the same day.
+  It stands because the reach **is** the argument — it is why no `scope` token settles the seam,
+  and dropping it would leave a consequence that asserts a problem without stating it — and
+  because what it names is the DSA rule the two German terms already name, not an authored row's
+  fields. **Re-examine it if any of those neighbouring statements comes back**, and see
+  `tests/rules/test_workspace_leaks.py` for why a green run is not evidence either way.)*
+
 ## Amendment (2026-09-21): "rules are data" includes the rules no ability owns
 
 This ADR's census counts abilities — 232 combat special abilities, 73 flat modifiers, 27 constant
@@ -178,16 +190,17 @@ are not all owned by abilities, and the difference was invisible until a ruling 
 
 <https://dsa.ulisses-regelwiki.de/Reiterkampf.html> is one chapter page, and the app hardcodes
 **three** of its mechanics, in three different engine files:
-`Hesindion/Engine/SharedModifiers.swift`'s `encumbrance`,
-`Hesindion/Engine/DefenseModifiers.swift:47`'s `mountedDodgePenalty`, and
-`Hesindion/Engine/MeleeModifiers.swift:14-20`'s `vorteilhaftePosition` (rendered by
+`Hesindion/Engine/SharedModifiers.swift:27-35`, `Hesindion/Engine/DefenseModifiers.swift:47`, and
+`Hesindion/Engine/MeleeModifiers.swift:14-20` (the last rendered by
 `CombatAttackViews.swift:440-482`). What each of the three computes is in the Swift at those
 locations and in `specs/rules/CHAP_Reiterkampf.yaml`, which now carries all three as authored rows —
-neither restated here. **All three bind anyone in the situation that page describes, ability or
-not**, and that is the point: they are exactly the kind of literal this ADR says should be data, and
-nothing in the corpus could hold them, because an authored file needed an Optolith id and a chapter
-page has none. The near-miss: `SA_43`'s file recorded one of the three as non-existent — the clause
-is on that page, and the Swift had implemented it all along.
+neither restated here, and the Swift cited by location rather than by symbol for the same reason.
+**All three bind anyone in the situation that page describes, ability or not**, and that is the
+point: they are exactly the kind of literal this ADR says should be data, and nothing in the corpus
+could hold them, because an authored file needed an Optolith id and a chapter page has none. The
+near-miss: one of the three was ruled non-existent in a review of an ability's authored file
+(ADR-0007's 2026-09-21 amendment records the ruling), while the page published it and the Swift had
+implemented it all along.
 
 **The corpus therefore covers chapter rules as well as abilities**, under the `CHAP_` id namespace
 ADR-0007's amendment defines. Nothing about the effect union, the predicate set or the parameter
@@ -294,9 +307,12 @@ silent and indistinguishable from success, which is the failure mode this whole 
 
 The Decision and both amendments above were edited on 2026-09-21 to remove the *graded values* of
 individual rules: a row spelled out in schema field names, an opponent-side value quoted as a German
-display string, a `dice` row's recipient named in English, an encumbrance row's value and gate, the
-AT ease a chapter clause grants, and three registered `gmFlag` slugs quoted as the conditions they
-stand for. **No decision changed and no argument was dropped** — a qualifier that exists because an
+display string, three further rows each described in English closely enough to reconstruct a field
+of it, and three registered `gmFlag` slugs quoted as the conditions they stand for. *(Re-written
+2026-09-22: this list used to name the removed items by what each of them said, which restated two
+of them inside the note that removed them — the defect this note is about, committed by the note
+itself. What went is counted here, not described.)* **No decision changed and no argument was
+dropped** — a qualifier that exists because an
 opponent-side number is display-only loses nothing by not naming the rule whose number it was. What
 went is only the part from which one rule's encoding could be reconstructed.
 
@@ -363,13 +379,18 @@ appending to the list.**
 
 **The CheckDomain consequence above names one seam; the branch has since made a second one
 concrete** (whole-branch review §3, "Ruling on item 3") — see that consequence, not restated here,
-for why no `scope` value can settle it. That same chapter row has since diverged the same way in a
-second place: what the `domains` list at `SharedModifiers.swift:29` declares and what the case
-`RuleEffectModifiers.domainsForScope` (`RuleEffectModifiers.swift:49-67`) selects for the same
-authored token disagree, exactly as the two readings above disagree. **The engine plan therefore has
-two rows to reconcile against `CheckDomain`, not one:** `SA_41`'s row (`specs/rules/SA_41.yaml`,
-read through `domainsForScope`) and the chapter file's row (`specs/rules/CHAP_Reiterkampf.yaml`,
-implemented directly at `SharedModifiers.swift:27-35`). **Neither row's authored `scope` value,
+for why no `scope` value can settle it. The second divergence is a *second token, read at a second
+site*: what the `domains` list at `SharedModifiers.swift:29` declares, and what
+`RuleEffectModifiers.domainsForScope` (`RuleEffectModifiers.swift:49-67`) returns for the token that
+row carries, disagree — the same shape of disagreement as the two readings above, over a different
+authored token. **The engine plan therefore has two rows to reconcile against `CheckDomain`, not
+one:** `SA_41`'s row (`specs/rules/SA_41.yaml`) and the chapter file's row
+(`specs/rules/CHAP_Reiterkampf.yaml`). One hand-written definition implements both
+(`SharedModifiers.swift:27-35`), and the two sites named above are where each row's token is read
+inside it: `:18-20` for the chapter row, as the paragraph above says, and `:29` for the other.
+**Neither row is read through `domainsForScope` today** — its only caller is
+`RuleEffectModifiers.load` (`RuleEffectModifiers.swift:24`), and nothing calls that, so the second
+reading of *both* tokens is inert, not just the first. **Neither row's authored `scope` value,
 `target` or domain count is stated anywhere in this amendment** — see the cited files for both; the
 Swift is cited by location rather than by symbol for the same reason. This is not
 settled by picking a string for either row; `docs/rules-pipeline-status.md` §8 records why for the
@@ -388,6 +409,16 @@ draft, quoting the four removed strings in order to explain them, which would ha
 fields inside the commit removing them. That is the third pass in a row on which applying the
 reconstruction test to the *replacement* text, not only to the text being replaced, is what caught
 it.))*
+
+*(Corrected 2026-09-22, whole-session review. Two statements above were wrong against the code and
+have been rewritten. The second divergence was said to be over "the same authored token" as the
+first; it is not — it is a second token at a second site, and the phrase was false on either
+reading. And the two-row list read one row "through `domainsForScope`" while assigning the other row
+to the site that in fact implements both; `domainsForScope` is reached only from
+`RuleEffectModifiers.load`, which nothing calls, so no row is read through it at all. As written the
+paragraph sent the next engineer to the wrong line, which is the one thing a brief for deferred work
+must not do. Checked against the Swift, not against this file's own earlier text; no row's fields
+are named in the correction or in what it replaced.)*
 
 Do not change `RuleEffectModifiers.domainsForScope` to make the two Swift readings agree — that is a
 behaviour change to a dead code path, and it is the engine plan's decision to make once it settles

@@ -12,8 +12,9 @@ each was found because somebody happened to look.
 - **A wrong formula.** `Hero.effectiveBE` scaled the relief per Stufe by a factor the page does not
   state. `specs/rules/SA_41.yaml` had the correct tier ladder the whole time. The two never met, and
   every hero with the ability got twice the relief the rule grants, for months.
-- **A number with no attribution.** `DefenseModifiers`' mounted penalty on Ausweichen is a real
-  clause on <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, but nothing in the code, the
+- **A number with no attribution.** One of the constants in
+  `Hesindion/Engine/DefenseModifiers.swift` is a real clause of
+  <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, but nothing in the code, the
   breakdown or the corpus said so. It read as a magic constant, and a magic constant is
   indistinguishable from a mistake.
 - **Two sources disagreeing.** `SA_41` existed twice in the legacy stores with different `scope`
@@ -21,11 +22,12 @@ each was found because somebody happened to look.
 
 What these share is not a category of rule. It is that **a number the app displays cannot say where
 it came from.** `ModifierLine` is `(value: Int, source: String, isZustand: Bool)`, and `source` is a
-localised *label* — `L("source.belastung")` — not a citation. A BE line in a combat breakdown
-cannot name the Reiterkampf chapter, cannot link its page, and cannot be asked whether the app is
-even applying the right rule. The same `encumbrance` definition serves six `CheckDomain`s and stands
-in for two different rules (the armour's Belastung and the mounted relief), and its one label
-covers both. So does every other line the engine emits.
+localised *label* — an `L(...)` key chosen for display — not a citation. A line in a combat
+breakdown cannot name the chapter or the ability it came from, cannot link its page, and cannot be
+asked whether the app is even applying the right rule. One hand-written definition
+(`Hesindion/Engine/SharedModifiers.swift:27-35`) stands in for two different authored rules across
+the domain set declared at that site, and emits one label for both. So does every other line the
+engine emits.
 
 The user's framing, which is the requirement: *"in the UI we should be able to explain where a
 limitation, a bonus, a modifier, etc comes from."*
@@ -180,8 +182,9 @@ Swift file and line each currently occupies, the way it already does for the cha
 ## Considered Alternatives
 
 - **Let the localised `source` string be the provenance.** Rejected. It is a label chosen for
-  display, not an identifier: one `encumbrance` definition emits `L("source.belastung")` across six
-  domains for two different rules, and no string comparison can undo that. It is also the wrong
+  display, not an identifier: one hand-written definition
+  (`Hesindion/Engine/SharedModifiers.swift:27-35`) emits one `L(...)` key for two different authored
+  rules, and no string comparison can undo that. It is also the wrong
   direction of dependency — the UI would become the authority on which rule a number came from.
 - **Author an English display name and summary for every rule so the UI has something to show.**
   Rejected. It is a second copy of every rule, hand-written, able to drift from the encoding and from
