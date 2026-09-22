@@ -519,8 +519,8 @@ which is why blocker 1 is blocker 1.
 ```bash
 make rules-lint                       # 28 rule file(s), 0 error(s)
 make rules-resolve                    # network; arms two guards the suite otherwise skips (see below)
-python3 -m pytest tests/ -q           # 271 passed (includes 2 live tests, network)
-python3 -m pytest tests/ -q -m "not live"   # 269 passed, 2 deselected (offline)
+python3 -m pytest tests/ -q           # 410 passed (includes 2 live tests, network)
+python3 -m pytest tests/ -q -m "not live"   # 408 passed, 2 deselected (offline)
 make rules-db && make rules-db-verify
 make rules-sync-check                 # network; 11 ok, 17 unverified
 ```

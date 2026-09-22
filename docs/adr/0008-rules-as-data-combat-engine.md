@@ -237,17 +237,28 @@ Consequences:
 - A chapter rule cannot degrade to rule text: there is no `rules_i18n` row for it, because there is
   no Optolith entry. "Never to silence" is held by its own authored `reminder` rows instead, which
   makes those rows load-bearing rather than optional.
-- `CHAP_Reiterkampf`'s BE row's authored scope and what `SharedModifiers.encumbrance` actually
-  applied relief to diverged — see `specs/rules/CHAP_Reiterkampf.yaml` for the row, not restated
-  here. That divergence was recorded in the authored file's note and in `CHANGELOG.md` as an open
-  question; it was not settled here, and no Swift was changed at the time. **Settled 2026-09-21 in
-  the data's favour:** Kampf and Zaubern are neither the same nor related, so the mounted relief
-  reaches no non-combat action, and `SharedModifiers.encumbrance` was brought into line with the
-  chapter row's scope — see `specs/rules/CHAP_Reiterkampf.yaml` for the row and
-  `Hesindion/Engine/SharedModifiers.swift` for what the code now does, neither restated here. See
-  `CHANGELOG.md` under *Fixed* for the change. The *other* half of the seam stands: this ADR's last consequence
-  about `CheckDomain` having no domain for INI or GS is still open, and the unmounted Belastung
-  penalty still reaches values no `scope` value can name.
+- One authored row in `specs/rules/CHAP_Reiterkampf.yaml` and the Swift that implemented the same
+  mechanic (`Hesindion/Engine/SharedModifiers.swift`) diverged. The divergence was recorded in the
+  authored file's note and in `CHANGELOG.md` as an open question; this amendment did not settle it,
+  and no Swift was changed at the time. **Settled 2026-09-21 in the data's favour:** the authored
+  row stands as written and the Swift was brought into line with it. Those two files hold what each
+  now contains and `CHANGELOG.md` under *Fixed* holds the change; **which field diverged, and which
+  way, is not stated here.** The *other* half of the seam stands: this ADR's last consequence about
+  `CheckDomain` having no domain for INI or GS is still open, and so is the second, separate row
+  that `docs/rules-pipeline-status.md` §8 carries under its own standing ruling.
+
+  *(Mechanical content **removed** 2026-09-22, Task 11a fix round 3 — fourth repair pass on this one
+  bullet, after `030230e`, `95b710b` and `fe7e944`, the last of whose subject line is "ADR-0008's
+  settled bullet stops restating the row it says it doesn't". Each of those three removed a literal
+  and left a paraphrase, and a paraphrase of a row is still the row: until this pass the bullet named
+  one of the row's graded fields outright and restated a second in English, in the same sentence as
+  its second "not restated here". The bullet's argument — a divergence existed, it was an open
+  question, it was settled in the data's favour, the Swift changed — needs neither. The test this
+  passage failed three
+  times is not "did I remove the value" but **"could a reader reconstruct any part of the row from
+  what is left"**, and a fourth paraphrase would have failed it a fourth time. Since Task 11a the
+  workspace withholds the graph closure, and `SA_41`, `SA_43`, `SA_661` and `CHAP_Reiterkampf` are
+  one closure, so this bullet sat adjacent to four graded rules rather than one.)*
 
 ## Amendment (2026-09-21): the fields this decision leaves open are registered, not free
 
