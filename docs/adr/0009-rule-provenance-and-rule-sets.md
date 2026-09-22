@@ -9,9 +9,11 @@ Accepted — 2026-09-21
 Three defects surfaced in one session's work on the rules corpus. None of them announced itself;
 each was found because somebody happened to look.
 
-- **A wrong formula.** `Hero.effectiveBE` scaled the relief per Stufe by a factor the page does not
-  state. `specs/rules/SA_41.yaml` had the correct tier ladder the whole time. The two never met, and
-  every hero with the ability got twice the relief the rule grants, for months.
+- **A wrong formula.** `Hero.effectiveBE` computed one clause by a rule the page does not state,
+  while `specs/rules/SA_41.yaml` carried the page's reading the whole time. The two never met and
+  nothing compared them, so every hero with the ability was wrong for months. What each of them
+  said is in the authored file and in `CHANGELOG.md`; the argument here is that the disagreement
+  went unnoticed, not how large it was.
 - **A number with no attribution.** One of the constants in
   `Hesindion/Engine/DefenseModifiers.swift` is a real clause of
   <https://dsa.ulisses-regelwiki.de/Reiterkampf.html>, but nothing in the code, the
@@ -257,13 +259,21 @@ Swift file and line each currently occupies, the way it already does for the cha
 
 ## Note (2026-09-21): the Context's three defects are named, not quantified
 
-The three findings in the Context were edited on 2026-09-21 to drop the numbers they carried: a tier
-ladder given as a parenthetical pair of values, a chapter clause's dodge penalty, and an example
-breakdown line's value. Each still names the defect, the file it lived in and why it was invisible,
-which is the whole of what the argument needs; none of them now states what the authored file
-encodes.
+The three findings in the Context were edited on 2026-09-21 to drop the numbers they carried — one
+value in each, two of them a withheld rule's. Each still names the defect, the file it lived in and
+why it was invisible, which is the whole of what the argument needs; none of them now states a
+value, a target or a tier of what any authored file encodes.
 
-Same reason as ADR-0008's note of the same date, and the sharper case of the two. The tier ladder
+*(Re-written 2026-09-22, whole-session review. The 2026-09-21 version of this paragraph named the
+removed items by what each said, and one of the three descriptions restated a withheld row's target
+and the sign of its value — in prose, so no probe in `tests/rules/test_workspace_leaks.py` reaches
+it. ADR-0008's note of the same date was given this treatment in the first pass of the review and
+this one, its twin, was not. Two residues in the findings themselves went with it: the first
+finding stated the shape of a graded rule's rows and the ratio between two readings of them, which
+made the closing sentence above false as written. It is now true, and narrowed to what is
+checkable.)*
+
+Same reason as ADR-0008's note of the same date, and the sharper case of the two. Two of the three
 belonged to the one golden rule that has never passed the calibration gate in five runs, and this
 ADR is copied into the workspace those runs are graded in. See that note for the convention and
 `tests/rules/test_workspace_leaks.py` for the check.

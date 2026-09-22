@@ -173,8 +173,9 @@ consequence for the GM.
   *(Residual re-recorded 2026-09-22, with the whole-session review. This bullet states the reach of
   a rule the calibration gate grades, in a file `prepare_workspace` copies. It was accepted before
   the workspace withheld graph closures, so the acceptance is re-taken on today's facts rather than
-  inherited: `SA_41` is now withheld in one closure with three other golden rules
-  (`scripts/rules_sync/rule_graph.py`), and the statements elsewhere in this ADR, in ADR-0007,
+  inherited: `rule_graph.withholding(['SA_41'])` withholds 16 files at HEAD, carrying **seven**
+  other golden rules with it (`scripts/rules_sync/rule_graph.py` — computed, not carried over from
+  the older counts below), and the statements elsewhere in this ADR, in ADR-0007,
   ADR-0009 and `AGENTS.md` that this passage used to compose with were removed the same day.
   It stands because the reach **is** the argument — it is why no `scope` token settles the seam,
   and dropping it would leave a consequence that asserts a problem without stating it — and
@@ -232,9 +233,13 @@ settled: name a clause by its position and mechanism, cite `specs/rules/<id>.yam
 third bought less than it looked. The Swift census three paragraphs above glossed each of the three
 hardcoded mechanics in English, naming a target for each and a gate class for one. It was deferred
 twice as the weaker instance; the arithmetic then changed under it. With the `scope`-subsumption and
-`when`-predicate edges, `SA_41`, `SA_43`, `SA_661` and `CHAP_Reiterkampf` are one closure, so a
-passage in a copied file that describes those rows is now adjacent to four graded rules rather than
-one. The census keeps its case — one page's mechanics hardcoded in three engine files, binding
+`when`-predicate edges, those rules are one closure, so a passage in a copied file that describes
+those rows is adjacent to several graded rules rather than one. *(This sentence named four files
+and counted "four graded rules" when it was written on 2026-09-21; one of the four is not a golden
+rule, and the closure is larger than it was read to be. Recomputed 2026-09-22: withholding `SA_41`
+withholds 16 files carrying eight golden rules in all. The count is not restated per-rule here
+because it moves with the corpus — run `rule_graph.withholding` for today's.)* The census keeps its
+case — one page's mechanics hardcoded in three engine files, binding
 anyone in the situation, with nowhere in the corpus to put them — by citing the Swift locations and
 the authored file instead of saying what each computes.)*
 
@@ -270,8 +275,9 @@ Consequences:
   passage failed three
   times is not "did I remove the value" but **"could a reader reconstruct any part of the row from
   what is left"**, and a fourth paraphrase would have failed it a fourth time. Since Task 11a the
-  workspace withholds the graph closure, and `SA_41`, `SA_43`, `SA_661` and `CHAP_Reiterkampf` are
-  one closure, so this bullet sat adjacent to four graded rules rather than one.)*
+  workspace withholds the graph closure, and this bullet's rules fall in one closure, so it sat
+  adjacent to several graded rules rather than one. *(Counted as "four" until 2026-09-22, from the
+  same stale reading as the note in the amendment above; the closure is larger. See that note.)*)*
 
 ## Amendment (2026-09-21): the fields this decision leaves open are registered, not free
 
@@ -386,8 +392,9 @@ row carries, disagree — the same shape of disagreement as the two readings abo
 authored token. **The engine plan therefore has two rows to reconcile against `CheckDomain`, not
 one:** `SA_41`'s row (`specs/rules/SA_41.yaml`) and the chapter file's row
 (`specs/rules/CHAP_Reiterkampf.yaml`). One hand-written definition implements both
-(`SharedModifiers.swift:27-35`), and the two sites named above are where each row's token is read
-inside it: `:18-20` for the chapter row, as the paragraph above says, and `:29` for the other.
+(`SharedModifiers.swift:27-35`), and each row's token is read at its own site: `:29`, a line of
+that definition, for one row, and `:18-20`, a separate static the definition's closure reads at
+`:31`, for the chapter row — as the paragraph above says.
 **Neither row is read through `domainsForScope` today** — its only caller is
 `RuleEffectModifiers.load` (`RuleEffectModifiers.swift:24`), and nothing calls that, so the second
 reading of *both* tokens is inert, not just the first. **Neither row's authored `scope` value,
