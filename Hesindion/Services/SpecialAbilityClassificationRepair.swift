@@ -97,10 +97,17 @@ enum SpecialAbilityClassificationRepair {
     /// unknown" and demote every one of them to `generalSpecialAbilities`, for every hero, in
     /// one save — silently, in the players' disfavour, and announced only by a hero count
     /// (`Hero.hasPlaenklerFormation`, `belastungsgewoehnungLevel` and the rest going dead at
-    /// once). Probing a fixed id the database must know before touching any hero turns that
-    /// failure into "do nothing" instead of "do the wrong thing at scale" — the pass is
-    /// idempotent and self-healing, so skipping a run costs nothing but a delay until
+    /// once). Probing a fixed id the database must know before touching any hero turns a
+    /// *total* lookup failure into "do nothing" instead of "do the wrong thing at scale" — the
+    /// pass is idempotent and self-healing, so skipping a run costs nothing but a delay until
     /// `lookupGroupId` works again.
+    ///
+    /// **The probe does not cover a partial failure, and nothing here does.** It reads one id
+    /// in group 3. A database truncated after that row but before the group 9/10/11/12 rows
+    /// answers the probe and then answers `nil` for every Kampfstil ability, which is exactly
+    /// the demotion above — every hero, one save, no warning. If that state is ever observed
+    /// the remedy is a wider probe (one id per combat group, or a row count), not a change to
+    /// this guard, which is correct for the failure it does cover.
     static func repairAll(in context: ModelContext, lookupGroupId: (String) -> Int?) {
         guard lookupGroupId(sanityProbeRuleId) != nil else {
             print("""
