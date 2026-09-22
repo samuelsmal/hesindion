@@ -805,9 +805,20 @@ def test_the_workspace_withholds_the_neighbour_that_encodes_a_graded_rules_claus
     graded file and redacting its two tokens left it standing: an agent grading
     `SA_661` could read the answer out of a file it was entitled to see.
 
-    That file was authored *after* the recorded 7/10, so `SA_661`'s Tier 1 pass
-    is to be treated as unmeasured until a run withholds the two together
-    (`docs/rules-pipeline-status.md` section 1).
+    That file landed six commits *after* the calibration run was recorded, so
+    the recorded run was never exposed to it -- and `SA_661`'s recorded Tier 1
+    verdict is `false` (`expected:` in
+    `tests/rules/calibration/2026-09-21-sonnet/RUN.yaml`, `DISAGREE` on
+    author/verifier), not a pass. The recorded 7/10 is therefore not overstated
+    by this channel and it still stands. What the channel would have done is
+    flip that recorded `false` on the *next* run, for a reason that is not the
+    pipeline's judgment -- an improvement nobody could attribute. That is what
+    withholding the closure removes, and it is why this test asserts on the
+    present workspace rather than on anything the recorded run did
+    (`docs/rules-pipeline-status.md` section 1, and section 6's dated
+    correction in `docs/rules-pipeline-review-findings.md`, which retract the
+    earlier "treat the pass as unmeasured" reading this docstring used to
+    carry).
 
     Asserted on the file's absence and on the absence of the colliding row --
     not on a hash of either, which would go green the moment anyone re-authored

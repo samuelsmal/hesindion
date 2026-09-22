@@ -103,14 +103,18 @@ def test_golden_rule_matches_its_recorded_graded_hash(rule_id):
     )
 
 
-#: A rule shape shared by this test module's synthetic fixtures -- not a real
-#: rule, so it can never be mistaken for one of the golden ten.
+#: A rule shape shared by this test module's synthetic fixtures. `SA_000` is not
+#: an Optolith id and no authored file carries this row, so the fixture cannot be
+#: mistaken for one of the golden ten -- which is what this comment already
+#: claimed while the fixture carried `SA_65`'s id and that file's first graded row
+#: verbatim (corrected 2026-09-22). Nothing here reads the corpus; the digests
+#: under test are computed from this dict alone.
 _SYNTHETIC_RULE = {
-    "id": "SA_65", "subgroup": "passiv", "ruleset": "core",
+    "id": "SA_000", "subgroup": "passiv", "ruleset": "core",
     "source": {"title": "Placeholder Page Title", "checked": "2026-01-01"},
     "effects": [
-        {"type": "modifier", "target": "pa", "scope": "combat", "value": 4,
-         "note": "Clause 1 - the defensive stance's PA bonus"},
+        {"type": "modifier", "target": "at", "scope": "combat", "value": -7, "tier": 1,
+         "note": "Clause 1 - the synthetic penalty these fixtures mutate"},
         {"type": "reminder", "note": "UNENCODED: clause 2"},
     ],
 }
