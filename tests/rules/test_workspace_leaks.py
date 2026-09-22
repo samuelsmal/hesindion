@@ -71,6 +71,14 @@ Three further known gaps, stated so nobody infers coverage from a green run:
 
 - A number written as a word ("two"), a value stated without its target, or a
   target stated without its value, are all invisible.
+- **The strongest leak of the 2026-09-22 review was invisible to all five
+  probes.** ADR-0007 carried a *negative* row statement -- it told a grader that
+  a graded rule has no row of a given kind and where the mechanic lives instead
+  -- in plain prose, with no number and no code span. Probe 3 needs a value,
+  probe 5 reads code spans only, and the pre-fix file returned zero hits from
+  every probe here. A negative statement grades as surely as a positive one,
+  because Tier 1 grades a rule's *row set*. Nothing below closes this; it is
+  named because it happened, and because a green run on that file meant nothing.
 - **Probe 5 knows three targets, not eight.** `TARGET_SYMBOL_WORDS` covers only
   the targets whose English word is not also this app's own navigation and view
   vocabulary. `at`, `ini`, `gs` and `le` are left out on purpose: a probe that
@@ -138,8 +146,12 @@ DOMAIN_SYMBOLS = {
 #: A markdown code span, and an identifier inside one. Probe 5 reads only what
 #: is quoted as code: prose naming a mechanic in English is probe 3's business,
 #: and this probe is about a *symbol* standing in for a field.
+#: Either case to start: Swift type names are PascalCase, and a lowercase-only
+#: pattern would have missed a symbol whose *first* word is the target word
+#: (`EncumbranceModifier` -> the match starts at `ncumbrance`, which hits
+#: nothing). That was a silent miss inside the targets this probe claims.
 _CODE_SPAN = re.compile(r"`([^`\n]+)`")
-_IDENTIFIER = re.compile(r"[a-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*")
+_IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*")
 
 REMEDY = (
     "A file the agents read states a withheld rule's graded encoding. Cite the "
@@ -539,6 +551,10 @@ SYMBOL_FIXTURE = {"SA_000": [
      "`DefenseModifiers.swift:47`'s `mountedDodgePenalty` is the same constant."),
     ("a dotted symbol",
      "computed by `Hero.dodgeRelief` before the roll."),
+    # PascalCase: a Swift *type* name, and the case the first version of this
+    # probe missed silently -- its identifier pattern started at `ncumbrance`.
+    ("a symbol whose first word is the target",
+     "registered by `EncumbranceModifier` at launch."),
 ])
 def test_the_guard_reports_a_swift_symbol_named_after_a_withheld_rows_target(shape, text):
     assert leaks_in(text, SYMBOL_FIXTURE, titles=()), shape
