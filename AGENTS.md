@@ -29,13 +29,20 @@ make clean        # Clean build artifacts
 (Data Policy below) and the app won't build/run correctly without it:
 
 ```bash
-make rules-resolve     # network; resolve every rule to its page, writing the git-ignored URL map
 make rules-db          # rebuild rules.db from the pinned Optolith source (RULES_SOURCE)
+make rules-resolve     # network; resolve every rule to its page, writing the git-ignored URL map
+make rules-db          # again, so the resolution reaches rules.source_url
 make rules-db-verify   # confirm the shipped rules.db matches what a rebuild produces
 ```
 
-**Run `make rules-resolve` before `pytest` on a fresh clone**, or two of the resolver's guards pass
-by skipping: Task 10's closed-loop test and `verify_db.py`'s `check_resolution_reached_the_db` both
+**That order is the cold-start order and it is circular by one step.** `make rules-resolve` reads
+rule names and seed text out of `rules.db` and hard-fails with a named message when it is absent
+(`scripts/rules_sync/resolve.load_targets`), while `make rules-db` wants the map `rules-resolve`
+writes. A build with no resolution behind it is a legitimate intermediate state and says so — see
+the comment above the `rules-resolve` target in the `Makefile`.
+
+**Run `make rules-db && make rules-resolve && make rules-db` before `pytest` on a fresh clone**, or
+two of the resolver's guards pass by skipping: Task 10's closed-loop test and `verify_db.py`'s `check_resolution_reached_the_db` both
 skip when `.cache/rules_resolve/resolved_urls.json` is absent, and nothing chains the two targets.
 The map carries ability names, so the Data Policy below forbids committing it and the skip is
 correct — but a green suite on a cold clone is two guards short unless you arm them.
@@ -81,7 +88,7 @@ Two known pre-existing flakes — not regressions: `SkillCheckModalSnapshotTests
 - **Attack flow**: attackChoice → weaponSelection → announcement (maneuvers, reach, modifiers) → execution (AT roll) → opponentDefense (Pariert/Ausgewichen/Treffer) → damage
 - **Defense flow**: PA/AW roll → outcome → fumbleChoice on Patzer, Passierschlag on critical PA
 - **Fernkampf flow**: fernkampfSetup (8 modifier categories) → fernkampfExecution (FK roll) → opponentDefense
-- **Armor & Belastung**: `Armor.isEquipped` persists across combat sessions. `Hero` computes `totalRS`, `effectiveBE`, and `belastungPenalty` from equipped armor and Belastungsgewöhnung (SA_41). Penalties apply to AT, PA, AW, INI, GS.
+- **Armor & Belastung**: `Armor.isEquipped` persists across combat sessions. `Hero` computes `totalRS`, `effectiveBE`, and `belastungPenalty` from equipped armour and any Sonderfertigkeit that modifies it.
 - **Damage flow** ("Schaden nehmen"): user enters TP → app shows `max(0, TP - RS)` → confirm applies LP reduction
 - **Initiative**: rolled at combat start with Belastung-adjusted base; re-rollable mid-combat via sheet
 - **Combat session persistence**: state saved to Hero model; exit/re-enter resumes at root; "Kampf beenden" clears state

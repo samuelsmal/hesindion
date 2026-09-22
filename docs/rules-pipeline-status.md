@@ -518,12 +518,20 @@ which is why blocker 1 is blocker 1.
 
 ```bash
 make rules-lint                       # 28 rule file(s), 0 error(s)
+make rules-db                         # first: rules-resolve reads names and seed text out of it
 make rules-resolve                    # network; arms two guards the suite otherwise skips (see below)
-python3 -m pytest tests/ -q           # 410 passed (includes 2 live tests, network)
-python3 -m pytest tests/ -q -m "not live"   # 408 passed, 2 deselected (offline)
-make rules-db && make rules-db-verify
+make rules-db                         # again, so the resolution reaches rules.source_url
+python3 -m pytest tests/ -q           # 416 passed (includes 2 live tests, network)
+python3 -m pytest tests/ -q -m "not live"   # 414 passed, 2 deselected (offline)
+make rules-db-verify
 make rules-sync-check                 # network; 11 ok, 17 unverified
 ```
+
+**The `rules-db → rules-resolve → rules-db` order is not a preference.** `resolve.load_targets`
+raises `FileNotFoundError` when `rules.db` is absent, so a cold clone that runs `make rules-resolve`
+first aborts at step 2 and the two guards below stay unarmed — the silent skip this section exists
+to close. The dependency is circular by one step and the `Makefile` says so above the
+`rules-resolve` target; `AGENTS.md` carries the same order.
 
 **`make rules-resolve` must run before `pytest` for the resolver's two guards to mean anything.**
 Task 10's closed-loop test and `verify_db.py`'s `check_resolution_reached_the_db` both **skip** when
