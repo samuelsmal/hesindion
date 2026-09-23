@@ -479,7 +479,7 @@
   group: "Kampf"
   status: byHand
   pointer: { file: Hesindion/Models/Hero.swift, symbol: effectiveBE }
-  note: "Reduces effective BE by 2 per tier (Hero.effectiveBE) before the Belastung line (SharedModifiers.encumbrance) and every value derived from BE."
+  note: "Reduces effective BE by 1 per tier (Hero.effectiveBE) before the Belastung line (SharedModifiers.encumbrance) and every value derived from BE."
 
 - id: SA_42
   name: "Beidhändiger Kampf"
