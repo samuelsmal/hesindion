@@ -577,7 +577,7 @@
   group: "Zustand (leveled)"
   status: byHand
   pointer: { file: Hesindion/Engine/SharedModifiers.swift, symbol: encumbrance }
-  note: "Derived from equipped armour via Hero.effectiveBE; SharedModifiers.encumbrance applies −BE, −1 of it forgiven while mounted, counts toward the −5 Zustand cap, not suppressed by the Zustand-ignorieren Schicksalspunkt. StateCatalog.belastung is display-only."
+  note: "Derived from equipped armour via Hero.effectiveBE; SharedModifiers.encumbrance applies −BE, −1 of it forgiven while mounted on a combat check (not on Zauber-, Liturgie- or Talentproben), counts toward the −5 Zustand cap, not suppressed by the Zustand-ignorieren Schicksalspunkt. StateCatalog.belastung is display-only."
 
 - id: COND_2
   name: "Betäubung"
