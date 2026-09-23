@@ -8,23 +8,15 @@ struct AvatarFullscreenView: View {
 
     var body: some View {
         ZStack {
-            // Blurred background using the same hero image
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .scaleEffect(1.2)
-                .blur(radius: 30)
+            // A flat scrim, not a blurred copy of the image: blur is the one thing
+            // the design language rules out (ADR-0002, audit S10).
+            Color.dsaOverlay
                 .ignoresSafeArea()
-                .overlay(Color.black.opacity(0.3))
 
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.dsaBorder, lineWidth: 3)
-                )
+                .dsaBox(.flush)
                 .padding(32)
         }
         .onTapGesture { dismiss() }
@@ -53,9 +45,9 @@ struct AttributesBar: View {
     private func attrBox(_ label: String, _ value: Int) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Text("\(value)")
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity)
@@ -86,9 +78,9 @@ struct AttributesColumn: View {
     private func attrCell(_ label: String, _ value: Int) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Text("\(value)")
-                .font(.system(.title3, weight: .black))
+                .font(.dsaHeading(.title3))
         }
         .foregroundStyle(Color.attributeForeground(for: label))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -137,11 +129,11 @@ struct CollapsibleSection<Content: View>: View {
             } label: {
                 HStack {
                     Text(title)
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(groupTextColor)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(groupTextColor)
                 }
                 .padding(.horizontal, 12)
@@ -149,11 +141,11 @@ struct CollapsibleSection<Content: View>: View {
                 .frame(maxWidth: .infinity)
                 .background(groupColor)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             if isExpanded { content }
         }
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.raised)
     }
 }
 
@@ -189,11 +181,11 @@ struct CollapsibleGroup<Content: View>: View {
                         .frame(height: 2)
                         .foregroundStyle(headerColor)
                     Text(title)
-                        .font(.system(.subheadline, weight: .black))
+                        .font(.dsaHeading(.subheadline))
                         .foregroundStyle(headerColor)
                         .fixedSize()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(headerColor)
                     Rectangle()
                         .frame(height: 2)
@@ -202,7 +194,7 @@ struct CollapsibleGroup<Content: View>: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsaMotion)
 
             if isExpanded {
                 content
@@ -228,7 +220,7 @@ struct FieldRow: View {
                 Spacer(minLength: 8)
                 if !value.isEmpty {
                     Text(value)
-                        .font(.system(.body, design: .monospaced))
+                        .font(.dsaMono(.body, emphasis: true))
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -246,12 +238,15 @@ struct FieldRow: View {
 struct SubfieldBlock: View {
     let label: String
     let subfields: [(String, String)]
+    /// An ⓘ at the end of the heading — the weapon rows' way to the rules text.
+    var info: WeaponInfoButton? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(label).font(.system(.body, weight: .semibold))
+                Text(label).font(.dsaBody(.body))
                 Spacer()
+                if let info { info.padding(.vertical, -10) }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -261,7 +256,7 @@ struct SubfieldBlock: View {
                     HStack {
                         Text(L(key)).font(.body).foregroundStyle(.secondary)
                         Spacer()
-                        Text(val).font(.system(.body, design: .monospaced))
+                        Text(val).font(.dsaMono(.body, emphasis: true))
                     }
                     .padding(.leading, 24)
                     .padding(.trailing, 12)
@@ -284,15 +279,20 @@ struct LPBarView: View {
     let onIncrement: () -> Void
 
     var body: some View {
+        // One control, built like `DSAStepper`: the bar owns the border and the
+        // shadow, the three segments are divided by rules of the same weight.
+        // It used to draw no border at all, so on the combat root it was the one
+        // full-width control on the screen sitting flat between two that cast.
         HStack(spacing: 0) {
             Button(action: onDecrement) {
                 Text("▼")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.dsaBody(.body))
                     .frame(width: 44, height: 48)
-                    .background(accent)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
+
+            rule
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -303,22 +303,31 @@ struct LPBarView: View {
                         .fill(barColor)
                         .frame(width: geo.size.width * fraction)
                     Text("\(L(label))   \(current) / \(max)")
-                        .font(.system(.body, weight: .black))
+                        .font(.dsaHeading(.body))
                         .foregroundStyle(textColor)
                         .frame(maxWidth: .infinity)
                 }
             }
             .frame(height: 48)
 
+            rule
+
             Button(action: onIncrement) {
                 Text("▲")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.dsaBody(.body))
                     .frame(width: 44, height: 48)
-                    .background(accent)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
         }
+        .fixedSize(horizontal: false, vertical: true)
+        .dsaBox(.raised)
+    }
+
+    private var rule: some View {
+        Rectangle()
+            .fill(Color.dsaBorder)
+            .frame(width: DSALayout.border)
     }
 
     private var barColor: Color {
@@ -327,7 +336,7 @@ struct LPBarView: View {
         if max > 0 && current < max / 4 { return Color(red: 0xCC/255.0, green: 0x22/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max / 2 { return Color(red: 0xE0/255.0, green: 0x70/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max * 3 / 4 { return Color(red: 0xD4/255.0, green: 0xC0/255.0, blue: 0x00/255.0) }
-        return Color(red: 0x2E/255.0, green: 0x7D/255.0, blue: 0x32/255.0)
+        return Color.dsaPositive
     }
 
     private var textColor: Color {

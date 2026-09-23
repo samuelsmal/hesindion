@@ -29,8 +29,9 @@ hero's Wundschwelle, a Selbstbeherrschung check can avert the effect, and on fai
 applied for real through `Hero.setStateLevel(_:level:)`.
 
 The one rule that reads opponent state — the Zonenaufschlag is eased by 2 against a *surprised*
-target — is a GM-driven flag on `ModifierContext`, deliberately **not** wired to the `ueberrascht`
-entry in `StateCatalog`. That entry describes the hero; the rule is about the opponent.
+target — is a GM-stated status on `OpponentProfile.isSurprised`, deliberately **not** read from the
+hero's `ueberrascht` entry. The hero's `StateCatalog` entries describe the hero; the rule is about
+the opponent, so the status is held on the opponent even though it carries the same catalog id.
 
 ## Considered Alternatives
 

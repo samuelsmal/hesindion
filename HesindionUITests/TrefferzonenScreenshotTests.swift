@@ -27,7 +27,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         XCTAssertTrue(section.waitForExistence(timeout: UITest.timeout), "Hero settings did not open")
         XCTAssertTrue(app.scrollUntilHittable(section), "Could not scroll the Fokus-Regeln section into view")
 
-        captureScreenshot(app, named: "01-fokus-settings")
+        captureScreenshot(app, named: "04-hero-settings-fokus")
     }
 
     // MARK: - 02 Trefferzone picker on the melee announcement
@@ -43,10 +43,38 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(torso), "Could not scroll the zone picker into view")
         torso.tap()
 
-        captureScreenshot(app, named: "02-zone-picker")
+        captureScreenshot(app, named: "09-attack-zone-picker")
     }
 
-    // MARK: - 03 GM wound-effect reminder after a landed targeted attack
+    // MARK: - 02b The attack execution screen
+
+    /// The AT roll screen, before rolling: the `Mod` stepper and the calculation
+    /// breakdown that ends in the effective value. Both were reported as
+    /// out-of-style — the caption sat under the stepper's shadow, and the total
+    /// was the one unbordered surface in the app.
+    @MainActor
+    func test02bExecution() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat")
+        goToMeleeAnnouncement(app)
+
+        let torso = app.buttons["combat.zone.torso"]
+        XCTAssertTrue(torso.waitForExistence(timeout: UITest.timeout), "Zone picker not shown")
+        XCTAssertTrue(app.scrollUntilHittable(torso), "Could not reach the zone picker")
+        torso.tap()
+
+        app.button(containing: "Weiter").tap()
+
+        // A modifier the player might actually dial in, so the breakdown shows
+        // its "Zusätzlich" line rather than only the rule-derived ones.
+        let plus = app.buttons["combat.execution.increaseModifier"]
+        XCTAssertTrue(plus.waitForExistence(timeout: UITest.timeout), "Attack execution screen not shown")
+        for _ in 0..<3 { plus.tap() }
+
+        captureScreenshot(app, named: "10-attack-execution")
+    }
+
+    // MARK: - 03 wound-effect reminder after a landed targeted attack
 
     @MainActor
     func test03ReminderCard() {
@@ -87,8 +115,80 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         }
 
         XCTAssertTrue(reminder.exists, "Wound-effect reminder card not shown")
-        app.scrollUntilHittable(reminder, maxSwipes: 4)
-        captureScreenshot(app, named: "03-reminder-card")
+
+        // Roll the weapon's damage first — the calculation only exists once the
+        // dice have settled.
+        let damageBox = app.staticTexts["Antippen zum Würfeln"].firstMatch
+        if damageBox.waitForExistence(timeout: UITest.probeTimeout) {
+            damageBox.tap()
+        }
+
+        // The Wundeffekt is not automatic: the opponent rolls Selbstbeherrschung
+        // at the table and the player enters how it went. Nothing is offered
+        // until they do.
+        let passed = app.buttons["combat.opponentProbe.passed"]
+        XCTAssertTrue(passed.waitForExistence(timeout: UITest.timeout), "Opponent probe not asked")
+        XCTAssertFalse(
+            app.buttons["combat.takeDamage.rollExtraDamage"].exists,
+            "The Wundeffekt damage must not be offered before the check is answered"
+        )
+        // Nor the way out. Offering "Bestanden / Misslungen" and "Neue Aktion"
+        // side by side reads as though the question were optional, and leaving
+        // without answering drops an announced Wundeffekt out of the total
+        // without saying so.
+        XCTAssertFalse(
+            app.buttons["combat.dealDamage.newAction"].exists,
+            "The screen must not offer to leave while it is still asking"
+        )
+        app.scrollUntilHittable(passed, maxSwipes: 4)
+        captureScreenshot(app, named: "11-attack-wound-effect-reminder")
+
+        // Passed: the effect is averted and nothing is added.
+        passed.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["combat.opponentProbe.outcome"]
+                .waitForExistence(timeout: UITest.timeout),
+            "The outcome of the opponent's check is not stated"
+        )
+        XCTAssertFalse(
+            app.buttons["combat.takeDamage.rollExtraDamage"].exists,
+            "A passed check must not offer Wundeffekt damage"
+        )
+        XCTAssertTrue(
+            app.buttons["combat.dealDamage.newAction"].waitForExistence(timeout: UITest.timeout),
+            "Answered, the screen lets go"
+        )
+        captureScreenshot(app, named: "32-attack-opponent-probe-passed")
+
+        // Failed: the effect applies and its damage can be settled — rolled here,
+        // or entered after being told.
+        app.buttons["combat.opponentProbe.change"].tap()
+        let failed = app.buttons["combat.opponentProbe.failed"]
+        XCTAssertTrue(failed.waitForExistence(timeout: UITest.timeout), "Cannot re-answer the check")
+        failed.tap()
+
+        let rollExtra = app.buttons["combat.takeDamage.rollExtraDamage"]
+        XCTAssertTrue(
+            rollExtra.waitForExistence(timeout: UITest.timeout),
+            "A failed check must offer the Wundeffekt damage"
+        )
+        // A failed check with the damage still unsettled is the same open
+        // question one step further on.
+        XCTAssertFalse(
+            app.buttons["combat.dealDamage.newAction"].exists,
+            "The Wundeffekt's own damage is part of the answer"
+        )
+        XCTAssertTrue(app.scrollUntilHittable(rollExtra), "Could not reach the Wundeffekt roll")
+        rollExtra.tap()
+
+        // One calculation, with the Wundeffekt inside it.
+        let breakdown = app.descendants(matching: .any)["combat.dealDamage.breakdown"]
+        XCTAssertTrue(
+            breakdown.waitForExistence(timeout: UITest.timeout),
+            "The damage calculation is missing"
+        )
+        app.scrollUntilHittable(breakdown, maxSwipes: 4)
+        captureScreenshot(app, named: "33-attack-opponent-probe-failed")
     }
 
     // MARK: - 04 Wundeffekt panel on the take-damage screen
@@ -114,7 +214,7 @@ final class TrefferzonenScreenshotTests: XCTestCase {
         let panel = app.otherElements["combat.woundEffectPanel"]
         XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "Wundeffekt panel not shown")
 
-        captureScreenshot(app, named: "04-wound-effect-panel")
+        captureScreenshot(app, named: "14-take-damage-effect-threatened")
     }
 
     // MARK: - Navigation helpers

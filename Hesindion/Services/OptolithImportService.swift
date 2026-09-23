@@ -458,12 +458,10 @@ struct OptolithImportService {
         )
     }
 
-    /// Check if a special ability is combat-related using the rules database.
-    /// Falls back to `false` (general SA) if the rule is not found.
+    /// Whether an ability belongs in `combatSpecialAbilities`: Optolith's group
+    /// says so. The effects table used to decide this and covered nine abilities.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        guard let rule = rules.lookup(id: id) else { return false }
-        // The rules.db effects with scope "combat" indicate combat special abilities
-        return rule.effects.contains { $0.scope == "combat" }
+        CombatSpecialAbilityGroup.contains(groupId: rules.lookup(id: id)?.groupId)
     }
 
     // MARK: - Talents
@@ -617,6 +615,7 @@ struct OptolithImportService {
                         structurePoints: stp,
                         weight: weight
                     ))
+                    shields.last?.templateId = template.isEmpty ? nil : template
                 } else {
                     let ctVal = ctValues[ctId] ?? 6
                     let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
@@ -644,6 +643,7 @@ struct OptolithImportService {
                         reach: reach,
                         weight: weight
                     ))
+                    weapons.last?.templateId = item["template"] as? String
                 }
 
             case 2:
@@ -675,6 +675,7 @@ struct OptolithImportService {
                     range: range,
                     weight: weight
                 ))
+                rangedWeapons.last?.templateId = item["template"] as? String
 
             case 4:
                 // Armor
@@ -884,8 +885,12 @@ struct OptolithImportService {
         let awValue = DerivedValueFormulas.ausweichen(ge: ge)
         let ausweichen = ComputedValue(value: awValue, bonus: 0, max: awValue)
 
-        // GS = 8 (Mensch base)
-        let geschwindigkeit = ResourceValue(base: 8, bonus: 0, max: 8)
+        // GS by species (Menschen/Elfen/Halbelfen 8, Zwerge 6). Falls back to the human
+        // value for a species outside the pinned source, which is the documented status
+        // quo for the species tables above (ADR-0006) rather than a new guess.
+        let gs = DerivedValueFormulas.geschwindigkeit(speciesId: raceId)
+            ?? DerivedValueFormulas.geschwindigkeitFallback
+        let geschwindigkeit = ResourceValue(base: gs, bonus: 0, max: gs)
 
         // WS = ceil(KO / 2), ± Eisern / Gläsern
         let ws = DerivedValueFormulas.wundschwelle(ko: ko, advantages: advantages, disadvantages: disadvantages)

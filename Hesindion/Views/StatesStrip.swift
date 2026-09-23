@@ -76,17 +76,17 @@ struct StatesStrip: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "plus")
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text(L("states.add"))
-                    .font(.system(.caption, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .fixedSize()
             }
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }

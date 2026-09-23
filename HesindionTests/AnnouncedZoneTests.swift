@@ -14,7 +14,6 @@ final class AnnouncedZoneTests: XCTestCase {
     @MainActor
     private var representativeSteps: [CombatStep] {
         [
-            .armorSelection,
             .combatSetup,
             .initiativeRoll,
             .loadoutEquipment,
@@ -27,12 +26,13 @@ final class AnnouncedZoneTests: XCTestCase {
             .dualAttackSecond(name: "Dolch", attributeValue: 10, damageFormula: "1W6+2"),
             .mountPreCheck(onSuccess: .root),
             .mountDamage,
-            .takeDamage,
+            .takeDamage(),
             .flucht,
             .opponentDefense(weaponName: "Säbel", damageFormula: "1W6+4", isCriticalHit: false,
-                             isDoubleDamage: false, modifierLines: nil),
+                             criticalDamage: .unchanged, modifierLines: nil),
             .fumbleChoice(action: .angriff, weaponName: "Säbel", isShieldParry: false),
-            .passierschlag,
+            .passierschlag(),
+            .passierschlag(weaponName: "Dolch", isOffHand: true),
             .fernkampfSetup,
             .fernkampfExecution(weaponName: "Bogen", attributeValue: 11, damageFormula: "1W6+4",
                                 distanzTP: 0, modifierLines: []),
@@ -76,7 +76,7 @@ final class AnnouncedZoneTests: XCTestCase {
         XCTAssertTrue(CombatStep.execution(.angriff, name: "Säbel", attributeValue: 12,
                                            damageFormula: "1W6+4", note: nil).preservesAnnouncedZone)
         XCTAssertTrue(CombatStep.opponentDefense(weaponName: "Säbel", damageFormula: "1W6+4",
-                                                 isCriticalHit: false, isDoubleDamage: false,
+                                                 isCriticalHit: false, criticalDamage: .unchanged,
                                                  modifierLines: nil).preservesAnnouncedZone)
         XCTAssertTrue(CombatStep.fernkampfExecution(weaponName: "Bogen", attributeValue: 11,
                                                     damageFormula: "1W6+4", distanzTP: 0,

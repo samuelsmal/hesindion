@@ -58,15 +58,15 @@ struct StatePickerSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Image(systemName: def.iconSystemName)
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(level > 0 ? Color.groupCombat : .secondary)
                     .frame(width: 24)
                 Text(L(def.nameKey))
-                    .font(.system(.body, weight: .semibold))
+                    .font(.dsaBody(.body))
                 Spacer()
                 if level > 0 {
                     Text(StateCatalog.roman(level))
-                        .font(.system(.body, design: .monospaced, weight: .black))
+                        .font(.dsaMono(.body, emphasis: true))
                         .foregroundStyle(Color.groupCombat)
                 }
             }
@@ -77,14 +77,14 @@ struct StatePickerSheet: View {
                         hero.setStateLevel(def.id, level: level == lvl ? 0 : lvl)
                     } label: {
                         Text(StateCatalog.roman(lvl))
-                            .font(.system(.caption, design: .monospaced, weight: .black))
+                            .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(level == lvl ? .white : .primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(level == lvl ? Color.groupCombat : Color(UIColor.secondarySystemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.tertiaryBorder))
+                            .dsaBox(.flush)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
             }
         }
@@ -98,19 +98,19 @@ struct StatePickerSheet: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: def.iconSystemName)
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(isOn ? Color.groupCombat : .secondary)
                     .frame(width: 24)
                 Text(L(def.nameKey))
-                    .font(.system(.body, weight: .semibold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(.primary)
                 Spacer()
                 Image(systemName: isOn ? "checkmark.square.fill" : "square")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                     .foregroundStyle(isOn ? Color.groupCombat : .secondary)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .padding(.vertical, 4)
     }
 }

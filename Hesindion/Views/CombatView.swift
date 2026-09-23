@@ -8,23 +8,51 @@ enum CombatAction {
 }
 
 enum CombatStep {
-    case armorSelection
     case combatSetup
     case initiativeRoll
     case loadoutEquipment           // merged from loadoutWeapon + loadoutShield
     case root
     case attackChoice               // pre-attack: one/both weapons, one/two-handed
+    /// Parieren/Ausweichen from the root: who is attacking, and the VW that
+    /// makes, before the roll (`CombatDefenseSetupView`).
+    case defenseSetup(CombatAction)
     case weaponSelection(CombatAction)
     case announcement(CombatAction, name: String, baseAT: Int, damageFormula: String?, isOffHand: Bool, secondAttack: (name: String, at: Int, damage: String?)?, isMountCharge: Bool)
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil)
+    /// `damageFormula` is the weapon's **own** damage and `damageLines` the TP
+    /// bonuses on top of it, carried apart all the way to the roll so the damage
+    /// screen can print every part. Folding them into the string here is what
+    /// made the manoeuvre bonus unaccountable — and, twice, double-counted.
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
-    case takeDamage
+    /// "Schaden nehmen". `prefilledTP` lets a screen that has already worked out
+    /// what the hero takes — a Patzer's "Selbst verletzt" — hand the figure over
+    /// instead of applying LP itself, so the armour, the Wundschwelle and the one
+    /// LP write all stay on the screen that does them. `source` names where it
+    /// came from in the calculation's first row; `nil` is the plain "TP" the
+    /// player types in themselves.
+    ///
+    /// `thenIncomingHit` is the defence Patzer's second half: a Parade that
+    /// fumbled *and* cost the hero their own weapon's damage owes two entries,
+    /// because the opponent's blow still landed. The screen's last action then
+    /// leads to a fresh, empty `takeDamage` for that blow instead of back to the
+    /// root, which is where the incoming hit used to be dropped silently.
+    case takeDamage(prefilledTP: Int? = nil, source: String? = nil, thenIncomingHit: Bool = false)
     case flucht
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, isDoubleDamage: Bool, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0)
+    /// "Nach dem Kampf": the step between the end-combat button and leaving, on
+    /// which the states a fight set can be switched off again. Skipped entirely
+    /// when there is nothing to switch off (`CombatAftermath.isEmpty`).
+    case aftermath
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
-    case passierschlag
+    /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
+    /// screen has to ask which defence this was — the app knows the hero parried,
+    /// not whether the incoming attack was melee or ranged.
+    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
+    /// `weaponName`/`isOffHand` are what the announcement named; the
+    /// critical-parry routes leave them out and strike with the main weapon.
+    case passierschlag(weaponName: String? = nil, isOffHand: Bool = false)
     case fernkampfSetup
     case fernkampfExecution(weaponName: String, attributeValue: Int, damageFormula: String, distanzTP: Int, modifierLines: [ModifierLine])
     case spellSelection
@@ -37,22 +65,24 @@ extension CombatStep {
     /// Stable key for onChange observation (associated values stripped).
     var persistenceKey: String {
         switch self {
-        case .armorSelection: "armorSelection"
         case .combatSetup: "combatSetup"
         case .initiativeRoll: "initiativeRoll"
         case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
         case .attackChoice: "attackChoice"
+        case .defenseSetup: "defenseSetup"
         case .weaponSelection: "weaponSelection"
         case .announcement: "announcement"
         case .execution: "execution"
         case .dualAttackSecond: "dualAttackSecond"
         case .mountPreCheck: "mountPreCheck"
         case .flucht: "flucht"
+        case .aftermath: "aftermath"
         case .mountDamage: "mountDamage"
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .criticalSuccess: "criticalSuccess"
         case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
@@ -74,7 +104,7 @@ extension CombatStep {
     /// *in* to carrying a zone rather than remember to clear it.
     var preservesAnnouncedZone: Bool {
         switch self {
-        case .execution, .fernkampfExecution, .opponentDefense: true
+        case .execution, .fernkampfExecution, .criticalSuccess, .opponentDefense: true
         default: false
         }
     }
@@ -88,7 +118,7 @@ func combatSectionLabel(_ title: String) -> some View {
             .frame(height: 2)
             .foregroundStyle(combatAccent)
         Text(title)
-            .font(.system(.caption, weight: .black))
+            .font(.dsaHeading(.caption))
             .foregroundStyle(combatAccent)
             .fixedSize()
         Rectangle()
@@ -96,6 +126,58 @@ func combatSectionLabel(_ title: String) -> some View {
             .foregroundStyle(combatAccent)
     }
     .padding(.vertical, 8)
+}
+
+/// The bar every combat screen wears: back on the left, the screen's name in
+/// the middle, and the way out of the whole flow on the right.
+///
+/// Written out once per screen before this, which is how three of them ended up
+/// with no back button at all.
+func combatScreenHeader(
+    title: String,
+    subtitle: String? = nil,
+    onBack: (() -> Void)? = nil,
+    onDismiss: @escaping () -> Void
+) -> some View {
+    HStack {
+        if let onBack {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.dsaBody(.body))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier("combat.back")
+        }
+
+        Spacer()
+
+        VStack(spacing: 1) {
+            Text(title)
+                .font(.dsaHeading(.headline))
+                .foregroundStyle(.white)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+        }
+
+        Spacer()
+
+        Button(action: onDismiss) {
+            Image(systemName: "xmark")
+                .font(.dsaBody(.body))
+                .foregroundStyle(.white)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.close")
+    }
+    .padding(.horizontal, DSALayout.horizontalPadding)
+    .padding(.vertical, DSALayout.headerVerticalPadding)
+    .frame(maxWidth: .infinity)
+    .background(combatAccent)
+    .dsaBox(.raised)
 }
 
 // MARK: - CombatView (full-screen orchestrator)
@@ -107,7 +189,7 @@ struct CombatView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.modelContext) private var modelContext
     @State private var activePanel: SidePanel?
-    @State private var step: CombatStep = .armorSelection
+    @State private var step: CombatStep = .combatSetup
     @State private var combatId = UUID()
     @State private var rolledInitiative: Int? = nil
     @State private var dualAttackPenaltyActive: Bool = false
@@ -116,6 +198,18 @@ struct CombatView: View {
     @State private var plaenklerActive: Bool = false
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
+    /// Kampf im Wasser (Regelwerk 239): how deep the hero is standing, a round
+    /// situation like `mountedActive`.
+    @State private var waterDepth: WaterDepth = .none
+    /// The other side of the fight. Held here, not on the announcement screen,
+    /// because every screen that resolves the announced swing — the AT roll, the
+    /// opponent's defence, the damage — has to read the same answers.
+    ///
+    /// It does **not** outlive one interaction. Two seams clear it: arriving at
+    /// `.root` (below, in `onChange(of: step.persistenceKey)`) ends the last
+    /// interaction, and `CombatAnnouncementView` clears it again as each
+    /// announcement opens, because the next attack may be at somebody else.
+    @State private var opponent = OpponentProfile()
     @State private var vorstossActiveThisRound: Bool = false
     /// Beengte Umgebung is now backed by the `eingeengt` player status (single source of
     /// truth), so it shows as a chip in the states strip and persists via SwiftData like
@@ -129,7 +223,11 @@ struct CombatView: View {
         )
     }
     @State private var activeManeuver: CombatManeuver = .normal
-    @State private var defenseCountThisRound: Int = 0
+    /// Parries and dodges are counted apart: Mehrfache Verteidigung applies per
+    /// defence type, so a round's first dodge is unmodified however often the
+    /// hero has already parried.
+    @State private var parriesThisRound: Int = 0
+    @State private var dodgesThisRound: Int = 0
     @State private var schipDefenseBoostActive: Bool = false
     @State private var schipIgnoreZustandThisRound: Bool = false
     /// Trefferzone announced for the attack currently in flight. The app has no opponent
@@ -137,14 +235,31 @@ struct CombatView: View {
     /// announcement/setup step to the post-hit damage screen for the read-only reminder card.
     @State private var announcedZone: HitZone? = nil
 
+    /// The round's flags as one value, for the screens that roll a defence.
+    private var situation: CombatSituation {
+        CombatSituation(
+            mounted: mountedActive,
+            schipIgnoreZustand: schipIgnoreZustandThisRound,
+            dualAttackActive: dualAttackPenaltyActive,
+            beengteUmgebung: beengteUmgebungActive,
+            twoHandedGrip: twoHandedGripActive,
+            parriesThisRound: parriesThisRound,
+            dodgesThisRound: dodgesThisRound,
+            schipDefenseBoost: schipDefenseBoostActive,
+            plaenklerActive: plaenklerActive,
+            plaenklerBonus: plaenklerBonus,
+            water: waterDepth
+        )
+    }
+
     private var stepID: String {
         switch step {
-        case .armorSelection: "armorSelection"
         case .combatSetup: "combatSetup"
         case .initiativeRoll: "initiativeRoll"
         case .loadoutEquipment: "loadoutEquipment"
         case .root: "root"
         case .attackChoice: "attackChoice"
+        case .defenseSetup: "defenseSetup"
         case .weaponSelection: "weaponSelection"
         case .announcement: "announcement"
         case .execution: "execution"
@@ -154,10 +269,12 @@ struct CombatView: View {
         case .takeDamage: "takeDamage"
         case .opponentDefense: "opponentDefense"
         case .fumbleChoice: "fumbleChoice"
+        case .criticalSuccess: "criticalSuccess"
         case .passierschlag: "passierschlag"
         case .fernkampfSetup: "fernkampfSetup"
         case .fernkampfExecution: "fernkampfExecution"
         case .flucht: "flucht"
+        case .aftermath: "aftermath"
         case .spellSelection: "spellSelection"
         case .spellSetup: "spellSetup"
         case .spellCasting: "spellCasting"
@@ -169,9 +286,6 @@ struct CombatView: View {
         SplitContentLayout(hero: hero, activePanel: $activePanel) {
         VStack(spacing: 0) {
             switch step {
-            case .armorSelection:
-                CombatArmorSelectionView(hero: hero, step: $step, onDismiss: onDismiss)
-                    .transition(.move(edge: .leading))
             case .combatSetup:
                 CombatSetupView(
                     hero: hero,
@@ -205,12 +319,15 @@ struct CombatView: View {
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     beengteUmgebungActive: beengteUmgebungBinding,
-                    defenseCountThisRound: $defenseCountThisRound,
+                    parriesThisRound: $parriesThisRound,
+                    dodgesThisRound: $dodgesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
-                    mountedActive: mountedActive,
+                    mountedActive: $mountedActive,
+                    waterDepth: $waterDepth,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .leading))
@@ -224,6 +341,17 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
+            case .defenseSetup(let action):
+                CombatDefenseSetupView(
+                    hero: hero,
+                    action: action,
+                    situation: situation,
+                    mountedActive: mountedActive,
+                    opponent: $opponent,
+                    step: $step,
+                    onDismiss: onDismiss
+                )
+                .transition(.move(edge: .trailing))
             case .weaponSelection(let action):
                 CombatWeaponSelectionView(
                     action: action,
@@ -231,6 +359,8 @@ struct CombatView: View {
                     step: $step,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
+                    situation: situation,
+                    opponent: opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -243,6 +373,7 @@ struct CombatView: View {
                     damageFormula: dmgFormula,
                     isOffHand: isOffHand,
                     mountedActive: mountedActive,
+                    waterDepth: waterDepth,
                     isMountCharge: isMountCharge,
                     beengteUmgebungActive: beengteUmgebungActive,
                     schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
@@ -255,10 +386,11 @@ struct CombatView: View {
                     twoHandedGripActive: twoHandedGripActive,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: $opponent,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
                 CombatExecutionView(
                     hero: hero,
                     action: action,
@@ -267,11 +399,17 @@ struct CombatView: View {
                     damageFormula: dmgFormula,
                     note: note,
                     modifierLines: modifierLines,
+                    damageLines: damageLines,
+                    damageMultiplier: damageMultiplier,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
                     combatId: combatId,
                     roundNumber: roundNumber,
                     beengteUmgebungActive: beengteUmgebungActive,
                     step: $step,
+                    onDefenseAttempted: {
+                        if action == .ausweichen { dodgesThisRound += 1 } else { parriesThisRound += 1 }
+                    },
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -301,7 +439,7 @@ struct CombatView: View {
                 )
                 .transition(.move(edge: .trailing))
             case .mountDamage:
-                if let mount = hero.pets.first {
+                if let mount = hero.mount {
                     CombatMountDamageView(
                         hero: hero,
                         mount: mount,
@@ -312,17 +450,35 @@ struct CombatView: View {
                     )
                     .transition(.move(edge: .trailing))
                 }
-            case .takeDamage:
-                CombatTakeDamageView(hero: hero, step: $step, onDismiss: onDismiss, combatId: combatId, roundNumber: roundNumber)
-                    .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let isDouble, let mods, let isRanged, let rangedPenalty):
+            case .takeDamage(let prefilledTP, let source, let thenIncomingHit):
+                CombatTakeDamageView(
+                    hero: hero,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber,
+                    prefilledTP: prefilledTP,
+                    damageSource: source,
+                    thenIncomingHit: thenIncomingHit
+                )
+                // Two take-damage entries in a row are the *same* branch of this
+                // switch, so SwiftUI would keep the first one's `@State` — its
+                // confirmed flag, its TP, its zone — and the second entry would
+                // open already settled. The identity has to change with the step.
+                .id("takeDamage-\(prefilledTP ?? -1)-\(source ?? "")-\(thenIncomingHit)")
+                .transition(.move(edge: .trailing))
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
                     damageFormula: dmg,
                     isCriticalHit: isCrit,
-                    isDoubleDamage: isDouble,
+                    criticalDamage: criticalDamage,
                     modifierLines: mods,
+                    damageLines: damageLines,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
+                    damageMultiplier: damageMultiplier,
+                    criticalDamageSource: criticalDamageSource,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     announcedZone: announcedZone,
@@ -344,9 +500,32 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .passierschlag:
+            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
+                CombatCriticalSuccessView(
+                    hero: hero,
+                    requestedTable: table,
+                    action: action,
+                    weaponName: name,
+                    damageFormula: dmg,
+                    modifierLines: mods,
+                    damageLines: damageLines,
+                    damageMultiplier: damageMultiplier,
+                    opponentDefenseModifiers: opponentDefenseModifiers,
+                    isRangedAttack: isRanged,
+                    rangedDefensePenalty: rangedPenalty,
+                    step: $step,
+                    onDismiss: onDismiss,
+                    combatId: combatId,
+                    roundNumber: roundNumber
+                )
+                .transition(.move(edge: .trailing))
+            case .passierschlag(let passName, let passOffHand):
                 CombatPassierschlagView(
                     hero: hero,
+                    situation: situation,
+                    opponent: opponent,
+                    announcedWeaponName: passName,
+                    isOffHand: passOffHand,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,
@@ -362,6 +541,9 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
+            case .aftermath:
+                CombatAftermathView(hero: hero, step: $step, onDismiss: onDismiss)
+                    .transition(.move(edge: .trailing))
             case .fernkampfSetup:
                 CombatFernkampfSetupView(
                     hero: hero,
@@ -403,12 +585,15 @@ struct CombatView: View {
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     beengteUmgebungActive: beengteUmgebungBinding,
-                    defenseCountThisRound: $defenseCountThisRound,
+                    parriesThisRound: $parriesThisRound,
+                    dodgesThisRound: $dodgesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
-                    mountedActive: mountedActive,
+                    mountedActive: $mountedActive,
+                    waterDepth: $waterDepth,
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
+                    opponent: opponent,
                     onDismiss: onDismiss,
                     castingSpell: (spell: spell, startRound: startRound, totalRounds: totalRounds, modifierLines: modifierLines)
                 )
@@ -423,17 +608,17 @@ struct CombatView: View {
         .gesture(DragGesture().onEnded { v in
             if v.translation.height > 80 {
                 switch step {
-                case .armorSelection:
-                    onDismiss()
                 case .combatSetup:
-                    step = .armorSelection
+                    onDismiss()
                 case .initiativeRoll:
-                    step = hero.needsCombatSetup ? .combatSetup : .armorSelection
+                    step = .combatSetup
                 case .loadoutEquipment:
-                    step = .initiativeRoll
+                    step = .root
                 case .root:
                     onDismiss()
                 case .attackChoice:
+                    step = .root
+                case .defenseSetup:
                     step = .root
                 case .announcement(let action, _, _, _, _, _, _):
                     step = .weaponSelection(action)
@@ -446,6 +631,8 @@ struct CombatView: View {
                 case .opponentDefense:
                     step = .root
                 case .fumbleChoice:
+                    step = .root
+                case .criticalSuccess:
                     step = .root
                 case .passierschlag:
                     step = .root
@@ -464,15 +651,44 @@ struct CombatView: View {
                 }
             }
         })
-        .onChange(of: roundNumber) { _, _ in
+        // Both toggles also live on the preparation screen, before initiative is
+        // rolled — a `mountedActive`/`waterDepth` @Binding change there must not
+        // start writing `hero.activeCombatId`. Doing so would leave a session
+        // behind once the sheet closes: the next time the hero enters combat,
+        // `onAppear` finds `activeCombatId` set, skips preparation, and jumps
+        // straight to `.root` with `temporarySchmerzActive`/`isRangedWeaponJammed`
+        // switched on (they gate on `activeCombatId != nil`).
+        .onChange(of: mountedActive) { _, _ in
+            if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
+        }
+        .onChange(of: waterDepth) { _, _ in
+            if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
+        }
+        // A hero on the ground is not in the saddle: the Patzer's Sturz and every
+        // other way to Liegend unseat a rider.
+        .onChange(of: hero.isLiegend) { _, isDown in
+            if isDown && mountedActive { mountedActive = false }
+        }
+        .onChange(of: roundNumber) { old, new in
+            // Blutend: 1 SP at the end of each Kampfrunde, logged. Only the
+            // next-round button counts — "Neu" sets the count back to 1.
+            if let entry = Self.roundBleedingEntry(hero: hero, from: old, to: new, combatId: combatId) {
+                modelContext.insert(entry)
+            }
             dualAttackPenaltyActive = false
             twoHandedGripActive = false
             vorstossActiveThisRound = false
             activeManeuver = .normal
-            defenseCountThisRound = 0
+            parriesThisRound = 0
+            dodgesThisRound = 0
             schipDefenseBoostActive = false
             schipIgnoreZustandThisRound = false
             announcedZone = nil
+            // "Zu konzentriert" ends at the hero's next action — and a hero who
+            // takes none still gets a next round. Without this an archer who
+            // spends two rounds reloading never opens an action screen and so
+            // never parries again for the rest of the fight.
+            hero.beginCombatRound()
             persistCombatState()
         }
         .onChange(of: step.persistenceKey) { _, newKey in
@@ -480,6 +696,19 @@ struct CombatView: View {
                 announcedZone = nil
             }
             if newKey == "root" {
+                // An interaction is over, and the next one may well be with
+                // somebody else — the announcement's own reset only covers the
+                // attack path, and a Parade or Ausweichen rolled straight from
+                // the root read whatever the *last* announcement had stated
+                // ("Gegner kämpft zu Fuß" feeding GRW_vorteilhaftePosition for a
+                // mounted hero, and every other fact the defence lines take off
+                // the roster). Clearing it here is the one seam every way back
+                // to the root goes through — the roll screens' "Neue Aktion",
+                // the header's back button, the swipe-down gesture, and the
+                // restore of a saved session, which arrives at the root too.
+                // Nothing that belongs to a swing is lost: that travels in the
+                // `CombatStep` payload, never on this profile.
+                opponent.reset()
                 persistCombatState()
             }
         }
@@ -493,11 +722,48 @@ struct CombatView: View {
                     plaenklerBonus = bonus == "at" ? .at : .aw
                 }
                 mountedActive = hero.activeCombatMounted
+                waterDepth = WaterDepth(rawValue: hero.activeCombatWater) ?? .none
                 // Beengte Umgebung restores automatically via the `eingeengt` status (SwiftData).
                 step = .root
             }
         }
         } // SplitContentLayout
+    }
+
+    /// The end of Kampfrunde `old` for a bleeding hero: takes the SP
+    /// (`endOfRoundBleeding`) and returns the log entry to insert, or `nil`
+    /// when nothing bled. Only a forward step bleeds: new initiative resets
+    /// the count to 1, and restoring a saved session sets the count to the
+    /// round already persisted on the hero (`activeCombatRound == new`) —
+    /// neither is the end of a round.
+    static func roundBleedingEntry(hero: Hero, from old: Int, to new: Int, combatId: UUID) -> LogEntry? {
+        guard new > old, new != hero.activeCombatRound else { return nil }
+        let lpBefore = hero.derivedValues?.lebensenergie.current ?? 0
+        guard hero.endOfRoundBleeding() > 0 else { return nil }
+        let lpAfter = hero.derivedValues?.lebensenergie.current ?? 0
+        return LogEntry.create(
+            kind: "combatAction",
+            payload: CombatActionPayload(
+                combatId: combatId, round: old,
+                action: .bleeding, weaponName: nil,
+                rollValue: nil, damageDealt: nil, damageTaken: 1,
+                effectiveValue: nil, outcome: nil,
+                schipAction: nil, fumbleTableResult: nil,
+                // The LP actually lost — at 0 LP there is nothing left to
+                // take, and deleting the entry must not give back one.
+                lpChange: lpAfter - lpBefore
+            ),
+            hero: hero
+        )
+    }
+
+    /// Whether a situational toggle (Beritten, Kampf im Wasser) reaching the
+    /// preparation screen should write `hero.activeCombatId`. Only a session
+    /// that already exists — initiative rolled, `.root` reached at least once —
+    /// may be touched; a `nil` id means the hero has not entered combat yet, and
+    /// persisting here would start a phantom running fight from the prep screen.
+    static func shouldPersistSituationChange(activeCombatId: UUID?) -> Bool {
+        activeCombatId != nil
     }
 
     private func persistCombatState() {
@@ -507,6 +773,7 @@ struct CombatView: View {
         hero.activeCombatPlaenkler = plaenklerActive
         hero.activeCombatPlaenklerBonus = plaenklerBonus == .at ? "at" : "aw"
         hero.activeCombatMounted = mountedActive
+        hero.activeCombatWater = waterDepth.rawValue
         // Beengte Umgebung is the `eingeengt` status now and persists itself; no field to write.
     }
 }

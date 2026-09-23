@@ -27,6 +27,7 @@ struct HeroDetailView: View {
     @State private var activeSpellProbe: HeroSpell? = nil
     @State private var activeSpellIsLiturgy: Bool = false
     @State private var showRecordedStats = false
+    @State private var weaponInfo: WeaponInfoTarget?
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -87,7 +88,7 @@ struct HeroDetailView: View {
             }
 
             if showCommandSearch {
-                Color.black.opacity(0.3)
+                Color.dsaOverlay
                     .ignoresSafeArea()
                     .onTapGesture { dismissSearch() }
 
@@ -144,7 +145,7 @@ struct HeroDetailView: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showMountDamageSheet) {
-            if let mount = hero.pets.first {
+            if let mount = hero.mount {
                 MountDamageSheet(hero: hero, mount: mount)
                     .presentationCornerRadius(0)
                     .presentationDetents([.large])
@@ -161,7 +162,7 @@ struct HeroDetailView: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showMountHealingSheet) {
-            if let mount = hero.pets.first {
+            if let mount = hero.mount {
                 MountHealingSheet(hero: hero, mount: mount)
                     .presentationCornerRadius(0)
                     .presentationDetents([.medium])
@@ -179,6 +180,10 @@ struct HeroDetailView: View {
                 )
                 .presentationCornerRadius(0)
             }
+        }
+        .sheet(item: $weaponInfo) { target in
+            WeaponInfoSheet(hero: hero, name: target.name)
+                .presentationCornerRadius(0)
         }
         .fullScreenCover(isPresented: $showHeroSettings) {
             HeroSettingsView(hero: hero) { showHeroSettings = false }
@@ -282,12 +287,12 @@ struct HeroDetailView: View {
     @ViewBuilder private var nameHeading: some View {
         VStack(spacing: 12) {
             Text(hero.name)
-                .font(.system(.largeTitle, design: .default, weight: .black))
+                .font(.dsaHeading(.largeTitle))
                 .foregroundStyle(colorScheme.textColor)
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(colorScheme.groupColor(at: 0))
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
 
             if let data = hero.avatar, let uiImage = UIImage(data: data) {
                 Button {
@@ -297,13 +302,10 @@ struct HeroDetailView: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: 120, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.dsaBorder, lineWidth: 3)
-                        )
+                        .clipShape(Rectangle())
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -567,7 +569,7 @@ struct HeroDetailView: View {
                 HStack {
                     Text(key).font(.body).foregroundStyle(.secondary)
                     Spacer()
-                    Text(val).font(.system(.body, design: .monospaced))
+                    Text(val).font(.dsaMono(.body, emphasis: true))
                 }
                 .padding(.leading, 24)
                 .padding(.trailing, 12)
@@ -654,7 +656,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var languagesSection: some View {
         if !hero.languages.isEmpty {
             CollapsibleSection(L("languages")) {
-                ForEach(hero.languages, id: \.persistentModelID) { lang in
+                ForEach(hero.languagesInOrder, id: \.persistentModelID) { lang in
                     FieldRow(label: lang.name, value: lang.level)
                 }
             }
@@ -690,7 +692,7 @@ struct HeroDetailView: View {
     }
 
     @ViewBuilder private var talentsSections: some View {
-        let grouped = Dictionary(grouping: hero.talents, by: \.category)
+        let grouped = Dictionary(grouping: hero.talentsInOrder, by: \.category)
         let checks = talentChecks
         recordedStatsToggle
         ForEach(talentCategoryOrder, id: \.self) { category in
@@ -723,22 +725,22 @@ struct HeroDetailView: View {
             HStack(spacing: 8) {
                 Image(systemName: showRecordedStats ? "chart.bar.fill" : "chart.bar")
                 Text("Aufgezeichnete Werte")
-                    .font(.system(.subheadline, weight: .bold))
+                    .font(.dsaBody(.subheadline))
                 Spacer(minLength: 8)
                 Text(showRecordedStats ? "AN" : "AUS")
-                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(showRecordedStats ? Color.groupTalents : Color(UIColor.secondarySystemBackground))
                     .foregroundStyle(showRecordedStats ? Color.black : Color.secondary)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
         .accessibilityLabel("Aufgezeichnete Werte anzeigen")
         .accessibilityValue(showRecordedStats ? "an" : "aus")
     }
@@ -768,7 +770,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var spellsSection: some View {
         if !hero.spells.isEmpty {
             CollapsibleSection(L("spells.section")) {
-                ForEach(hero.spells, id: \.persistentModelID) { spell in
+                ForEach(hero.spellsInOrder, id: \.persistentModelID) { spell in
                     SwipeActionRow(
                         label: spell.name,
                         value: "\(spell.value)",
@@ -783,7 +785,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var liturgiesSection: some View {
         if !hero.liturgies.isEmpty {
             CollapsibleSection(L("liturgies.section")) {
-                ForEach(hero.liturgies, id: \.persistentModelID) { spell in
+                ForEach(hero.liturgiesInOrder, id: \.persistentModelID) { spell in
                     SwipeActionRow(
                         label: spell.name,
                         value: "\(spell.value)",
@@ -836,7 +838,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var combatTechniquesSection: some View {
         if !hero.combatTechniques.isEmpty {
             CollapsibleSection(L("combatTechniques")) {
-                ForEach(hero.combatTechniques, id: \.persistentModelID) { ct in
+                ForEach(hero.combatTechniquesInOrder, id: \.persistentModelID) { ct in
                     VStack(spacing: 0) {
                         SwipeActionRow(
                             label: ct.name,
@@ -845,17 +847,17 @@ struct HeroDetailView: View {
                         )
 
                         HStack(spacing: 12) {
-                            Text("AT").font(.system(.caption, weight: .bold))
+                            Text("AT").font(.dsaBody(.caption))
                             if hero.belastungPenalty != 0 {
-                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
                             } else {
-                                Text("\(ct.at)").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.at)").font(.dsaMono(.caption, emphasis: true))
                             }
-                            Text("PA").font(.system(.caption, weight: .bold))
+                            Text("PA").font(.dsaBody(.caption))
                             if ct.pa > 0 && hero.belastungPenalty != 0 {
-                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
                             } else {
-                                Text("\(ct.pa)").font(.system(.caption, design: .monospaced))
+                                Text("\(ct.pa)").font(.dsaMono(.caption, emphasis: true))
                             }
                             Spacer()
                         }
@@ -886,7 +888,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var equipmentSection: some View {
         CollapsibleSection(L("equipment")) {
-            ForEach(hero.equipment, id: \.persistentModelID) { item in
+            ForEach(hero.equipmentInOrder, id: \.persistentModelID) { item in
                 SwipeActionRow(
                     label: item.name,
                     value: String(format: "%.2f st", item.weight),
@@ -894,16 +896,16 @@ struct HeroDetailView: View {
                 )
                 Divider()
             }
-            ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+            ForEach(hero.meleeWeaponsInOrder, id: \.persistentModelID) { w in
                 weightRow(name: w.name, weight: w.weight)
             }
-            ForEach(hero.shields, id: \.persistentModelID) { s in
+            ForEach(hero.shieldsInOrder, id: \.persistentModelID) { s in
                 weightRow(name: s.name, weight: s.weight)
             }
-            ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+            ForEach(hero.rangedWeaponsInOrder, id: \.persistentModelID) { w in
                 weightRow(name: w.name, weight: w.weight)
             }
-            ForEach(hero.armors, id: \.persistentModelID) { a in
+            ForEach(hero.armorsInOrder, id: \.persistentModelID) { a in
                 weightRow(name: a.name, weight: a.weight)
             }
             capacityRow
@@ -916,7 +918,7 @@ struct HeroDetailView: View {
                 Text(name).font(.body)
                 Spacer()
                 Text(String(format: "%.2f st", weight))
-                    .font(.system(.body, design: .monospaced))
+                    .font(.dsaMono(.body, emphasis: true))
             }
             .padding(.leading, 24)
             .padding(.trailing, 12)
@@ -935,7 +937,7 @@ struct HeroDetailView: View {
             HStack {
                 let label = String(format: "%.2f / %d st", total, totalCap)
                 if hero.isOverloaded {
-                    Text("⚠ " + label).foregroundStyle(.red)
+                    Text("⚠ " + label).foregroundStyle(Color.groupCombat)
                 } else {
                     Text(label)
                 }
@@ -944,10 +946,10 @@ struct HeroDetailView: View {
             if petsCap > 0 {
                 Text("\(heroCap) + \(petsCap) = \(totalCap) st")
                     .foregroundStyle(.secondary)
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.dsaMono(.caption, emphasis: true))
             }
         }
-        .font(.system(.body, design: .monospaced))
+        .font(.dsaMono(.body, emphasis: true))
         .padding(.leading, 24)
         .padding(.trailing, 12)
         .padding(.vertical, 8)
@@ -958,7 +960,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var meleeWeaponsSection: some View {
         if !hero.meleeWeapons.isEmpty {
             CollapsibleSection(L("meleeWeapons")) {
-                ForEach(hero.meleeWeapons, id: \.persistentModelID) { w in
+                ForEach(hero.meleeWeaponsInOrder, id: \.persistentModelID) { w in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
@@ -969,7 +971,7 @@ struct HeroDetailView: View {
                             ("PA", "\(w.pa)"),
                             ("reach", w.reach),
                             ("weight", String(format: "%.2f st", w.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) })
                     }
                 }
             }
@@ -981,7 +983,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var rangedWeaponsSection: some View {
         if !hero.rangedWeapons.isEmpty {
             CollapsibleSection(L("rangedWeapons")) {
-                ForEach(hero.rangedWeapons, id: \.persistentModelID) { w in
+                ForEach(hero.rangedWeaponsInOrder, id: \.persistentModelID) { w in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
@@ -991,7 +993,7 @@ struct HeroDetailView: View {
                             ("FK", "\(w.at)"),
                             ("range", w.range),
                             ("weight", String(format: "%.2f st", w.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) })
                     }
                 }
             }
@@ -1003,7 +1005,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var shieldSection: some View {
         if !hero.shields.isEmpty {
             CollapsibleSection(L("shields")) {
-                ForEach(hero.shields, id: \.persistentModelID) { s in
+                ForEach(hero.shieldsInOrder, id: \.persistentModelID) { s in
                     SwipeActionRow(
                         actions: [SwipeAction(icon: "bolt.fill", color: .groupCombat) { showCombatMode = true }]
                     ) {
@@ -1014,7 +1016,7 @@ struct HeroDetailView: View {
                             ("reach", s.reach),
                             ("SP", "\(s.structurePoints)"),
                             ("weight", String(format: "%.2f st", s.weight))
-                        ])
+                        ], info: WeaponInfoButton(name: s.name) { weaponInfo = WeaponInfoTarget(name: s.name) })
                     }
                 }
             }
@@ -1045,7 +1047,7 @@ struct HeroDetailView: View {
                             ])
                             if a.isEquipped {
                                 Text(L("equipped"))
-                                    .font(.system(.caption2, weight: .bold))
+                                    .font(.dsaBody(.caption2))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -1093,12 +1095,12 @@ struct HeroDetailView: View {
     @ViewBuilder private var petsSection: some View {
         if !hero.pets.isEmpty {
             CollapsibleSection(L("pets")) {
-                ForEach(hero.pets, id: \.persistentModelID) { pet in
+                ForEach(hero.petsInOrder, id: \.persistentModelID) { pet in
                     VStack(spacing: 0) {
                         HStack {
-                            Text(pet.name).font(.system(.body, weight: .semibold))
+                            Text(pet.name).font(.dsaBody(.body))
                             Spacer()
-                            Text(pet.type).font(.system(.caption, design: .monospaced))
+                            Text(pet.type).font(.dsaMono(.caption, emphasis: true))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 12)
@@ -1191,7 +1193,7 @@ struct TalentSwipeContent: View {
                 if let keys = probeKeys {
                     ForEach(keys, id: \.self) { key in
                         Text(key)
-                            .font(.system(.caption, weight: .bold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(Color.attributeForeground(for: key))
                             .frame(width: 32, height: 24)
                             .background(Color.attributeBackground(for: key).opacity(0.7))
@@ -1201,7 +1203,7 @@ struct TalentSwipeContent: View {
                     .frame(width: 60, alignment: .trailing)
                     .padding(.leading, 8)
                 Text("\(value)")
-                    .font(.system(.body, design: .monospaced))
+                    .font(.dsaMono(.body, emphasis: true))
                     .frame(width: 36, alignment: .trailing)
             }
             if isExpanded {
@@ -1221,7 +1223,7 @@ struct TalentSwipeContent: View {
                 .fill(Color.successRateColor(successRate))
                 .frame(width: 9, height: 9)
             Text("\(percent(successRate))%")
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.secondary)
         }
     }
@@ -1240,11 +1242,11 @@ struct TalentSwipeContent: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            .font(.system(.caption2))
+            .font(.dsaBody(.caption2))
             .foregroundStyle(.secondary)
         } else {
             Text("Noch keine Proben aufgezeichnet")
-                .font(.system(.caption2))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.tertiary)
         }
     }

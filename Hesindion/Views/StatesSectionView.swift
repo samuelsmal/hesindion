@@ -76,7 +76,7 @@ struct StatesSectionView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                 Text(L("states.add"))
                     .font(.body)
                 Spacer()
@@ -88,7 +88,7 @@ struct StatesSectionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -103,12 +103,12 @@ private struct StateRowContent: View {
         let value = StateCatalog.levelValueText(for: def, level: level)
         HStack(spacing: 8) {
             Image(systemName: def.iconSystemName)
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .frame(width: 22)
             Text(L(def.nameKey)).font(.body)
             Spacer()
             if !value.isEmpty {
-                Text(value).font(.system(.body, design: .monospaced))
+                Text(value).font(.dsaMono(.body, emphasis: true))
             }
         }
         .foregroundStyle(muted ? Color.secondary : Color.primary)

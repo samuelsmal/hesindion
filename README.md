@@ -11,23 +11,23 @@ Import your heroes from [Optolith](https://optolith.app), roll dice, run full co
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/hero-detail-light.png" width="360" alt="Hero detail view — light mode">
+  <img src="docs/screenshots/02-hero-detail-light.png" width="360" alt="Hero detail view — light mode">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/hero-detail-dark.png" width="360" alt="Hero detail view — dark mode">
+  <img src="docs/screenshots/03-hero-detail-dark.png" width="360" alt="Hero detail view — dark mode">
 </p>
 <p align="center"><em>Character sheet with attributes, personal data, advantages, and equipment — light and dark mode</em></p>
 
 <p align="center">
-  <img src="docs/screenshots/combat-root.png" width="360" alt="Combat root view — light mode">
+  <img src="docs/screenshots/07-combat-root-light.png" width="360" alt="Combat root view — light mode">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/combat-root-dark.png" width="360" alt="Combat root view — dark mode">
+  <img src="docs/screenshots/08-combat-root-dark.png" width="360" alt="Combat root view — dark mode">
 </p>
 <p align="center"><em>Combat dashboard with initiative, LP tracking, actions, and Schicksalspunkte</em></p>
 
 <p align="center">
-  <img src="docs/screenshots/hero-list.png" width="360" alt="Hero list sidebar">
+  <img src="docs/screenshots/01-hero-list.png" width="360" alt="Hero list sidebar">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/adventure-weather.png" width="360" alt="Adventure with weather">
+  <img src="docs/screenshots/05-adventure-weather.png" width="360" alt="Adventure with weather">
 </p>
 <p align="center"><em>Hero list with Regelbuch and adventures — Adventure view with Aventurian calendar and weather generation</em></p>
 

@@ -21,10 +21,148 @@ enum UITestSeed {
         ProcessInfo.processInfo.arguments.contains(launchArgument)
     }
 
+    /// `-uitest-fokus kritischeErfolgeAngriff,kritischeErfolgeDetail` switches
+    /// further Fokus-Regeln on beyond Trefferzonen.
+    ///
+    /// The alternative was to drive the hero settings screen in every test that
+    /// needs a rule — twenty taps of scrolling before the flow under test starts,
+    /// repeated per test. Unknown names are ignored rather than trapping: a typo
+    /// in a test argument should fail that test's own assertions, not the launch.
+    static let fokusArgument = "-uitest-fokus"
+
+    /// `-uitest-fokus-off trefferzonen` switches a rule back off, applied after the
+    /// on-switches above.
+    ///
+    /// The seed turns Trefferzonen on for everybody, because most of the combat
+    /// surfaces only exist with it. A screen that has to behave *without* the rule —
+    /// the Wundschwelle on taking damage (issue #23) — needs the other direction.
+    static let fokusOffArgument = "-uitest-fokus-off"
+
+    /// `-uitest-wuchtschlag 2` raises the seeded hero's Wuchtschlag to that tier.
+    ///
+    /// The sample hero has tier 1, and a screenshot of a heavily modified attack
+    /// needs a second tier to show the trade at its full size.
+    static let wuchtschlagArgument = "-uitest-wuchtschlag"
+
+    private static var requestedWuchtschlagTier: Int? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: wuchtschlagArgument), index + 1 < args.count else { return nil }
+        return Int(args[index + 1])
+    }
+
+    private static var requestedFokusRules: [FokusRule] {
+        rules(for: fokusArgument)
+    }
+
+    private static var disabledFokusRules: [FokusRule] {
+        rules(for: fokusOffArgument)
+    }
+
+    private static func rules(for argument: String) -> [FokusRule] {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: argument), index + 1 < args.count else { return [] }
+        return args[index + 1]
+            .split(separator: ",")
+            .compactMap { FokusRule(rawValue: String($0)) }
+    }
+
+    /// `-uitest-weapon Rabenschnabel` swaps which of the hero's weapons is in
+    /// hand. The Karmale-Objekte flow is about a *particular* weapon, so it has
+    /// to be able to pick one.
+    static let weaponArgument = "-uitest-weapon"
+
+    private static var requestedWeaponName: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: weaponArgument), index + 1 < args.count else { return nil }
+        return args[index + 1]
+    }
+
+    /// `-uitest-consecrate Rabenschnabel` marks a weapon geweiht — the setting
+    /// the player would make on the hero settings screen.
+    static let consecrateArgument = "-uitest-consecrate"
+
+    private static var consecratedWeaponNames: [String] {
+        names(after: consecrateArgument)
+    }
+
+    /// `-uitest-unconsecrate Rabenschnabel` switches a weapon's inventory
+    /// default off: the seed hero's Rabenschnabel is Optolith's "geweiht
+    /// (Boron)" one, so a flow about an *ordinary* weapon has to say so.
+    static let unconsecrateArgument = "-uitest-unconsecrate"
+
+    private static var unconsecratedWeaponNames: [String] {
+        names(after: unconsecrateArgument)
+    }
+
+    private static func names(after argument: String) -> [String] {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: argument), index + 1 < args.count else { return [] }
+        return args[index + 1].split(separator: ",").map(String.init)
+    }
+
+    /// `-uitest-state furcht:4,schmerz:1` puts the hero into the fight already
+    /// carrying those Zustände, at those levels. Reaching a level IV through the
+    /// state picker takes four taps per step and says nothing about the screen
+    /// under test — the flows this serves are about what the *combat root* does
+    /// once a status is on (Handlungsunfähig).
+    static let stateArgument = "-uitest-state"
+
+    private static var requestedStates: [(id: String, level: Int)] {
+        names(after: stateArgument).compactMap { pair in
+            let parts = pair.split(separator: ":")
+            guard parts.count == 2, let level = Int(parts[1]) else { return nil }
+            return (String(parts[0]), level)
+        }
+    }
+
+    /// `-uitest-mounted` resumes the fight with the hero in the saddle — the
+    /// state the combat setup screen would otherwise have to be walked to reach.
+    static let mountedArgument = "-uitest-mounted"
+
+    private static var wantsMounted: Bool {
+        ProcessInfo.processInfo.arguments.contains(mountedArgument)
+    }
+
+    /// `-uitest-plaenkler at` / `-uitest-plaenkler aw` resumes the fight with
+    /// Plänkler-Formation switched on and one of its two halves taken.
+    static let plaenklerArgument = "-uitest-plaenkler"
+
+    private static var requestedPlaenklerBonus: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: plaenklerArgument), index + 1 < args.count else { return nil }
+        return ["at", "aw"].contains(args[index + 1]) ? args[index + 1] : nil
+    }
+
+    /// `-uitest-fresh-combat` leaves the hero *out* of a running fight, so
+    /// entering combat starts at the armour screen and walks the preparation
+    /// flow rather than resuming at the root.
+    static let freshCombatArgument = "-uitest-fresh-combat"
+
+    private static var wantsFreshCombat: Bool {
+        ProcessInfo.processInfo.arguments.contains(freshCombatArgument)
+    }
+
     /// The weapon the seeded hero goes into combat with. Named here because the
     /// UI tests navigate the attack flow that depends on it (a single one-handed
     /// melee weapon, no shield, no off-hand).
     static let weaponName = "Langschwert"
+
+    /// `-uitest-shield` equips the hero's shield as well.
+    ///
+    /// It exists for the defence tests: with a shield in the loadout, Parieren
+    /// goes through the weapon list rather than straight to the roll, and that is
+    /// the path whose modifiers were being dropped.
+    static let shieldArgument = "-uitest-shield"
+
+    static let shieldName = "Großschild"
+
+    private static var wantsShield: Bool {
+        ProcessInfo.processInfo.arguments.contains(shieldArgument)
+    }
+
+    /// The seeded adventure. Named here because the screenshot tests navigate to
+    /// it by name to reach the weather table.
+    static let adventureName = "Die Sieben Gezeichneten"
 
     /// A store of its own, wiped on every launch — the real store is never touched
     /// and a repeated run always starts from the same state.
@@ -38,7 +176,7 @@ enum UITestSeed {
         do {
             try resetStore()
             let container = try ModelContainer(
-                for: Hero.self, HeroStateEntry.self,
+                for: Hero.self, HeroStateEntry.self, Adventure.self, WeatherDay.self,
                 configurations: ModelConfiguration(url: storeURL)
             )
             try populate(container)
@@ -84,18 +222,87 @@ enum UITestSeed {
 
         // The Trefferzonen surfaces only exist when the Fokus-Regel is on.
         hero.setFokusRule(.trefferzonen, active: true)
+        for rule in requestedFokusRules {
+            hero.setFokusRule(rule, active: true)
+        }
+        for rule in disabledFokusRules {
+            hero.setFokusRule(rule, active: false)
+        }
+
+        // `HeroTrait` is a value type inside the hero's array, so the entry is
+        // replaced rather than mutated in place.
+        if let tier = requestedWuchtschlagTier,
+           let index = hero.combatSpecialAbilities.firstIndex(where: { $0.ruleId == "SA_67" }) {
+            hero.combatSpecialAbilities[index].tier = tier
+        }
 
         // Drop the hero straight into a running fight: re-entering combat resumes at
         // the combat root (see `CombatView.onAppear`), which skips the armour /
         // setup / initiative / loadout screens the screenshots are not about.
-        hero.selectedWeaponName = weaponName
+        hero.selectedWeaponName = requestedWeaponName ?? weaponName
         hero.selectedOffHandName = nil
-        hero.selectedShieldName = nil
-        hero.activeCombatId = UUID()
-        hero.activeCombatRound = 1
-        hero.activeCombatInitiative = 12
+        hero.selectedShieldName = wantsShield ? shieldName : nil
+        for name in consecratedWeaponNames { hero.setConsecrated(name, true) }
+        for name in unconsecratedWeaponNames { hero.setConsecrated(name, false) }
+        for state in requestedStates { hero.setStateLevel(state.id, level: state.level) }
+        if !wantsFreshCombat {
+            hero.activeCombatId = UUID()
+            hero.activeCombatRound = 1
+            hero.activeCombatInitiative = 12
+            hero.activeCombatMounted = wantsMounted
+            if let bonus = requestedPlaenklerBonus {
+                hero.activeCombatPlaenkler = true
+                hero.activeCombatPlaenklerBonus = bonus
+            }
+        }
+
+        seedAdventure(into: context, hero: hero)
 
         try context.save()
+    }
+
+    /// A fixed adventure with a fixed week of weather.
+    ///
+    /// The values are written out rather than produced by `WeatherGenerator`,
+    /// which rolls dice: a generated table would differ on every run and the
+    /// weather screenshot could never be compared against its predecessor.
+    private static func seedAdventure(into context: ModelContext, hero: Hero) {
+        let adventure = Adventure(
+            name: adventureName,
+            region: .mittelreich,
+            startDate: AventurianDate(day: 12, month: .rondra, year: 1040)
+        )
+        context.insert(adventure)
+
+        // A week that exercises the row's whole vocabulary: clear through storm,
+        // a warm day and a near-freezing night, and one hand-edited day so the
+        // "bearbeitet" marker is on screen.
+        let week: [(Int, CloudCover, WindStrength, Int, Int, RainLevel, WeatherField)] = [
+            (12, .none,  .light,  24,  11, .none,   []),
+            (13, .few,   .soft,   22,  10, .none,   []),
+            (14, .lots,  .fresh,  18,   7, .little, []),
+            (15, .all,   .strong, 14,   5, .lots,   [.rain]),
+            (16, .lots,  .cool,   16,   6, .little, []),
+            (17, .few,   .light,  21,   9, .none,   []),
+            (18, .none,  .none,   26,  13, .none,   []),
+        ]
+
+        for (day, clouds, wind, dayTemp, nightTemp, rain, overrides) in week {
+            let result = WeatherResult(
+                date: AventurianDate(day: day, month: .rondra, year: 1040),
+                clouds: clouds,
+                wind: wind,
+                dayTemperature: dayTemp,
+                nightTemperature: nightTemp,
+                rain: rain
+            )
+            let weatherDay = WeatherDay(from: result, region: .mittelreich)
+            weatherDay.adventure = adventure
+            weatherDay.overridesRaw = overrides.rawValue
+            context.insert(weatherDay)
+        }
+
+        hero.activeAdventure = adventure
     }
 }
 #endif

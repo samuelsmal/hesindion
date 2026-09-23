@@ -51,6 +51,55 @@ final class Hero {
     /// rule does not change the schema.
     var fokusRules: [String] = []
 
+    /// The hero's Trefferzonen size category, once the player has set it. `nil`
+    /// means "not answered": `sizeCategory` then falls back to the species list.
+    var hitZoneSize: String?
+
+    /// Names of the weapons the player has marked as consecrated (geweiht or
+    /// heilig) although the inventory does not say so — the player's override
+    /// in one direction.
+    ///
+    /// The default comes from Optolith's own inventory: a weapon whose template
+    /// note starts "geweiht (…)" — the Rabenschnabel of Boron — is consecrated
+    /// (owner decision 2026-09-18). `unconsecratedWeapons` is the override in
+    /// the other direction. The default is read by the weapon's *name* across
+    /// every template (`consecratedDeity(ofLoadoutNamed:)`): the Regelwiki,
+    /// which is the authority, has one Rabenschnabel and it is geweiht, even
+    /// though Optolith's duplicate ITEMTPL_796 drops the note. Both lists are set
+    /// on the hero settings screen through `setConsecrated`, which keeps a name
+    /// in at most one of them and in neither when it matches the default. Names
+    /// rather than ids, like the loadout, so a re-import that rebuilds the
+    /// weapon rows does not lose the answer.
+    var consecratedWeapons: [String] = []
+
+    /// Names of the weapons the inventory marks "geweiht (…)" that the player
+    /// has said are not — the other half of the override (see
+    /// `consecratedWeapons`).
+    var unconsecratedWeapons: [String] = []
+
+    /// Names of the weapons and shields a Patzer has damaged — "Alle Proben auf
+    /// AT und PA um –2 erschwert, bis sie repariert wird".
+    ///
+    /// Deliberately **not** part of the combat-session block: the damage lasts
+    /// until somebody repairs the thing, which is a scene at a smithy and not
+    /// the end of the fight, so `clearCombatSession()` leaves it alone and the
+    /// hero settings screen is where it is cleared. Names rather than ids, like
+    /// `consecratedWeapons` and the loadout, so a re-import keeps the answer.
+    var damagedItems: [String] = []
+
+    /// Names of the weapons and shields the player has said cannot be destroyed
+    /// — a magier's staff, a dwarven runic axe, anything the GM rules unbreakable.
+    ///
+    /// The Patzertabellen print the rule ("Bei unzerstörbaren Waffen: Waffe
+    /// verloren") but nothing in an Optolith export says which weapons it is
+    /// about, so the app asks the player the first time it matters and remembers
+    /// the answer for this hero. Like `damagedItems` and `consecratedWeapons`:
+    /// names rather than ids, **not** part of the combat-session block — a staff
+    /// is no more breakable after the fight than during it — and cleared only on
+    /// the hero settings screen. A *no* is not remembered: the next Langschwert
+    /// may be an ordinary one bought at the next market.
+    var indestructibleItems: [String] = []
+
     // MARK: - Loadout persistence
 
     var selectedWeaponName: String?
@@ -68,6 +117,52 @@ final class Hero {
     var activeCombatMounted: Bool = false
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
+    /// `WaterDepth.rawValue`; "" means `.none` (no water). Kampf im Wasser
+    /// (Regelwerk 239) is a round situation like Beengte Umgebung.
+    var activeCombatWater: String = ""
+
+    // MARK: - Temporary combat effects (Patzertabelle)
+    //
+    // Plain stored properties with defaults, so SwiftData's lightweight
+    // migration adds them the way `activeCombatBeengt` and `consecratedWeapons`
+    // were added. All of them belong to the running fight and are cleared by
+    // `clearCombatSession()`; `damagedItems` above deliberately is not.
+
+    /// Schmerz levels a Patzer added on top of the LP-derived ones ("1 Stufe
+    /// Schmerz für 3 Kampfrunden"). Zero when nothing is running.
+    var temporarySchmerzLevels: Int = 0
+
+    /// The last round those levels still count.
+    ///
+    /// **Convention:** rolled in round *n* → counts through round *n+2*, i.e.
+    /// the rest of round *n* and the two rounds after it. Three Kampfrunden are
+    /// named on the card and three round numbers see the penalty; "the rest of
+    /// this round does not count as one of them" would be a fourth.
+    ///
+    /// A second such Patzer while one is still running **adds a level and
+    /// restarts the clock** — the simplest reading, and the one that does not
+    /// need a list of expiry dates on the hero.
+    var temporarySchmerzLastRound: Int = 0
+
+    /// Stolpern: the hero's next combat roll of any kind is 2 harder. Consumed
+    /// by the roll that pays for it (`FumbleModifiers.stolpern`).
+    var activeCombatStumble: Bool = false
+
+    /// Ladehemmung: the last round in which the ranged weapon is still being
+    /// cleared. Same convention as the Schmerz clock — rolled in round *n*, the
+    /// two complete Kampfrunden it costs are *n+1* and *n+2*, so the weapon is
+    /// unusable through round *n+2* and ready again in *n+3*.
+    var activeCombatJamUntilRound: Int = 0
+
+    /// Zu konzentriert: no defences until the hero's next own action.
+    var activeCombatNoDefense: Bool = false
+
+    /// Status Blutend: rounds still left on the clock, or `nil` when the status
+    /// was never rolled with a known duration ("Blutend" applied without a
+    /// probe — `setStateLevel` directly — still costs the SP each round, it
+    /// just never counts down). A *relative* count, unlike the round-number
+    /// clocks above, so `rebaseCombatClocks` leaves it alone.
+    var bleedingRoundsLeft: Int? = nil
 
     init(
         name: String,
@@ -145,19 +240,25 @@ final class Hero {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.protectionValue }
     }
 
+    /// What the hero is wearing, for the preparation screen to restate.
+    var wornArmorNames: [String] {
+        armors.filter(\.isEquipped).map(\.name)
+    }
+
     /// Sum of BE from all equipped armor pieces.
     var totalEquippedBE: Int {
         armors.filter(\.isEquipped).reduce(0) { $0 + $1.encumbrance }
     }
 
-    /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 2.
+    /// Level of Belastungsgewöhnung combat SA (SA_41). Each level reduces effective BE by 1
+    /// (Regelwerk 246: Stufe I −1, Stufe II −2).
     var belastungsgewoehnungLevel: Int {
-        combatSpecialAbilities.first(where: { $0.ruleId == "SA_41" })?.tier ?? 0
+        specialAbility(CombatAbility.belastungsgewoehnung.rawValue)?.tier ?? 0
     }
 
     /// Effective BE after Belastungsgewöhnung reduction.
     var effectiveBE: Int {
-        max(0, totalEquippedBE - 2 * belastungsgewoehnungLevel)
+        max(0, totalEquippedBE - belastungsgewoehnungLevel)
     }
 
     /// Belastung penalty applied to AT, PA, AW, INI, GS. Equals negative effectiveBE.
@@ -185,6 +286,78 @@ final class Hero {
         belastungPenalty + armorGsModifier
     }
 
+    // MARK: - Listing order
+
+    // A SwiftData to-many relationship has no order: the same hero's weapons
+    // come back in whatever order the store hands them over, and that order
+    // changes between launches. Every screen that *lists* them sorts first, so
+    // the loadout picker does not swap its two rows between runs
+    // (`CombatViewSnapshotTests.testPreparation` failed on exactly that) and a
+    // player's eye finds the same weapon in the same place twice running.
+    //
+    // By name, because that is what the rows are read by. The template id
+    // breaks a tie, since Optolith's names are not unique (two Rabenschnabel
+    // templates), and a weapon with none sorts before one that has it.
+
+    var meleeWeaponsInOrder: [MeleeWeapon] {
+        meleeWeapons.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var rangedWeaponsInOrder: [RangedWeapon] {
+        rangedWeapons.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var shieldsInOrder: [Shield] {
+        shields.sorted { ($0.name, $0.templateId ?? "") < ($1.name, $1.templateId ?? "") }
+    }
+
+    var armorsInOrder: [Armor] {
+        armors.sorted { ($0.name, $0.protectionValue) < ($1.name, $1.protectionValue) }
+    }
+
+    var talentsInOrder: [Talent] {
+        talents.sorted { ($0.name, $0.ruleId) < ($1.name, $1.ruleId) }
+    }
+
+    var combatTechniquesInOrder: [CombatTechnique] {
+        combatTechniques.sorted { ($0.name, $0.ruleId) < ($1.name, $1.ruleId) }
+    }
+
+    var equipmentInOrder: [EquipmentItem] {
+        equipment.sorted { ($0.name, $0.weight) < ($1.name, $1.weight) }
+    }
+
+    var languagesInOrder: [Language] {
+        languages.sorted { ($0.name, $0.level) < ($1.name, $1.level) }
+    }
+
+    var spellsInOrder: [HeroSpell] {
+        spells.sorted { ($0.name, $0.value) < ($1.name, $1.value) }
+    }
+
+    var liturgiesInOrder: [HeroSpell] {
+        liturgies.sorted { ($0.name, $0.value) < ($1.name, $1.value) }
+    }
+
+    /// The pets in a fixed order. Which one is *the mount* is read off this, so
+    /// the order is not only about how the list looks — see `mount`.
+    var petsInOrder: [Pet] {
+        pets.sorted { ($0.name, $0.petId) < ($1.name, $1.petId) }
+    }
+
+    /// The animal the hero rides: the first pet that has an initiative, in the
+    /// fixed order above.
+    ///
+    /// This used to be `pets.first`, which is whatever the store handed over —
+    /// so a hero with two animals could go into one fight on the horse and the
+    /// next on the mule, with the mount's LP bar, its GS in the Sturmangriff
+    /// damage and its attacks all following the coin toss. A pet with no
+    /// initiative is not a mount (`hasMount` always said so); now it is also
+    /// skipped rather than hiding a mount standing behind it.
+    var mount: Pet? {
+        petsInOrder.first { !$0.initiative.isEmpty }
+    }
+
     // MARK: - Loadout computed helpers
 
     var selectedRangedWeapon: RangedWeapon? {
@@ -205,6 +378,262 @@ final class Hero {
         return shields.first { $0.name == name }
     }
 
+    /// The reach of one named piece of the loadout.
+    ///
+    /// Reach is a property of the thing in the hand, and the hand is not always
+    /// holding `selectedWeapon`: an off-hand attack swings the off-hand weapon, a
+    /// Schildattacke swings a shield, and Raufen swings a fist. Reading the main
+    /// weapon's reach for all of them gave a bare-handed hero the reach of the
+    /// sword they are not holding — and with the default `Mittel`, no penalty at
+    /// all against a spear.
+    ///
+    /// Unarmed is `kurz` (GRW, waffenlose Kampftechniken); shields carry their own
+    /// reach in the import. A name that matches nothing keeps the old `mittel`
+    /// rather than guessing a penalty onto it.
+    func reach(ofLoadoutNamed name: String) -> WeaponReach {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: weapon.reach) ?? .mittel
+        }
+        if let shield = shields.first(where: { $0.name == name }) {
+            return WeaponReach(rawValue: shield.reach) ?? .kurz
+        }
+        if name == "Raufen" { return .kurz }
+        return .mittel
+    }
+
+    // MARK: - Karmale Objekte
+
+    /// The inventory template of the hero's weapon or shield called `name`: by
+    /// the template id Optolith exported, else — heroes imported before it was
+    /// kept, or a name the hero does not carry — by the name.
+    func equipmentEntry(forLoadoutNamed name: String) -> EquipmentEntry? {
+        let templateId = meleeWeapons.first { $0.name == name }?.templateId
+            ?? shields.first { $0.name == name }?.templateId
+            ?? rangedWeapons.first { $0.name == name }?.templateId
+        if let templateId, let entry = RulesDatabase.shared.equipment(id: templateId) { return entry }
+        return RulesDatabase.shared.equipment(named: name)
+    }
+
+    /// The deity the rules consecrate this weapon to by default: by its name
+    /// across every inventory template (`RulesDatabase.consecratedDeity(forWeaponNamed:)`
+    /// — the Regelwiki has one Rabenschnabel, and it is Boron's), else by the
+    /// name of the template it was bought from, for a weapon the player renamed.
+    func consecratedDeity(ofLoadoutNamed name: String) -> String? {
+        let rules = RulesDatabase.shared
+        if let deity = rules.consecratedDeity(forWeaponNamed: name) { return deity }
+        guard let templateName = equipmentEntry(forLoadoutNamed: name)?.name, templateName != name else { return nil }
+        return rules.consecratedDeity(forWeaponNamed: templateName)
+    }
+
+    private func isConsecratedByDefault(_ weaponName: String) -> Bool {
+        consecratedDeity(ofLoadoutNamed: weaponName) != nil
+    }
+
+    func isConsecrated(_ weaponName: String?) -> Bool {
+        guard let weaponName else { return false }
+        if consecratedWeapons.contains(weaponName) { return true }
+        if unconsecratedWeapons.contains(weaponName) { return false }
+        return isConsecratedByDefault(weaponName)
+    }
+
+    /// Records the player's answer as an override of the inventory's default,
+    /// or as no override at all when it matches it.
+    func setConsecrated(_ weaponName: String, _ consecrated: Bool) {
+        consecratedWeapons.removeAll { $0 == weaponName }
+        unconsecratedWeapons.removeAll { $0 == weaponName }
+        guard consecrated != isConsecratedByDefault(weaponName) else { return }
+        if consecrated { consecratedWeapons.append(weaponName) } else { unconsecratedWeapons.append(weaponName) }
+    }
+
+    // MARK: - Beschädigte Ausrüstung
+
+    func isItemDamaged(_ name: String?) -> Bool {
+        guard let name else { return false }
+        return damagedItems.contains(name)
+    }
+
+    func setItemDamaged(_ name: String, _ damaged: Bool) {
+        if damaged {
+            guard !damagedItems.contains(name) else { return }
+            damagedItems.append(name)
+        } else {
+            damagedItems.removeAll { $0 == name }
+        }
+    }
+
+    // MARK: - Unzerstörbare Ausrüstung
+
+    func isItemIndestructible(_ name: String?) -> Bool {
+        guard let name else { return false }
+        return indestructibleItems.contains(name)
+    }
+
+    func setItemIndestructible(_ name: String, _ indestructible: Bool) {
+        if indestructible {
+            guard !indestructibleItems.contains(name) else { return }
+            indestructibleItems.append(name)
+        } else {
+            indestructibleItems.removeAll { $0 == name }
+        }
+    }
+
+    // MARK: - Temporary combat effects
+
+    /// Whether the Patzer's extra Schmerz is still running. It belongs to a
+    /// fight, so a hero with no session has none however the counters stand.
+    var temporarySchmerzActive: Bool {
+        activeCombatId != nil
+            && temporarySchmerzLevels > 0
+            && activeCombatRound <= temporarySchmerzLastRound
+    }
+
+    /// The levels it currently contributes — zero once the round has passed.
+    var temporarySchmerzLevel: Int { temporarySchmerzActive ? temporarySchmerzLevels : 0 }
+
+    /// Adds one level and (re)starts the clock from the round that rolled it.
+    func addTemporarySchmerz(rolledInRound round: Int) {
+        temporarySchmerzLevels = temporarySchmerzActive ? temporarySchmerzLevels + 1 : 1
+        temporarySchmerzLastRound = round + 2
+    }
+
+    /// Ladehemmung: whether the ranged weapon is still out of action.
+    var isRangedWeaponJammed: Bool {
+        activeCombatId != nil && activeCombatRound <= activeCombatJamUntilRound
+    }
+
+    func applyRangedJam(rolledInRound round: Int) {
+        activeCombatJamUntilRound = round + 2
+    }
+
+    /// Stolpern is paid for by the roll that pays for it: called the moment the
+    /// W20 is first settled, not when the screen appears. Opening a roll screen
+    /// and backing out again rolls nothing, so it must cost nothing — and the
+    /// lines the roll was announced with were built by the screen before, so a
+    /// Schicksalspunkt reroll of that same roll still carries the −2.
+    ///
+    /// Guarded on the current value: a reroll calls this again, and writing a
+    /// stored property that already holds that value still dirties the model and
+    /// redraws the screen mid-roll.
+    func consumeStumble() {
+        guard activeCombatStumble else { return }
+        activeCombatStumble = false
+    }
+
+    /// The hero's own next action lifts "Zu konzentriert" — the action, again,
+    /// being the roll, not the screen that offers it.
+    func beginOwnAction() {
+        guard activeCombatNoDefense else { return }
+        activeCombatNoDefense = false
+    }
+
+    /// A new Kampfrunde lifts it too.
+    ///
+    /// "Bis zur nächsten Aktion" ends at the hero's next action, and a hero who
+    /// takes none still has a next round. Without this an archer who spends two
+    /// rounds reloading — or anyone who simply does not act — would be barred
+    /// from parrying and dodging for the rest of the fight, which is not a thing
+    /// the card says.
+    func beginCombatRound() {
+        guard activeCombatNoDefense else { return }
+        activeCombatNoDefense = false
+    }
+
+    /// Re-rolling initiative starts the round count over at 1, and the Patzer
+    /// clocks are *absolute* round numbers. A Zerrung rolled in round 6 runs
+    /// until round 8; without rebasing it would still say 8 after the reset and
+    /// so last eight more rounds instead of the two it had left.
+    ///
+    /// The shift is what the counter lost, so the remaining rounds are preserved;
+    /// a clock that had already run out is cleared rather than dragged into the
+    /// new count as a negative.
+    func rebaseCombatClocks(fromRound oldRound: Int, toRound newRound: Int) {
+        let shift = oldRound - newRound
+        if temporarySchmerzLevels > 0 {
+            if temporarySchmerzLastRound < oldRound {
+                temporarySchmerzLevels = 0
+                temporarySchmerzLastRound = 0
+            } else {
+                temporarySchmerzLastRound -= shift
+            }
+        }
+        if activeCombatJamUntilRound > 0 {
+            if activeCombatJamUntilRound < oldRound {
+                activeCombatJamUntilRound = 0
+            } else {
+                activeCombatJamUntilRound -= shift
+            }
+        }
+    }
+
+    /// Whether the named piece of the loadout is the shield in the hero's hand.
+    ///
+    /// A parry made with the sword while a shield hangs on the other arm is a
+    /// *weapon* parry: it reads the Verteidigung-Waffe table, and letting the
+    /// shield's presence alone decide sent it to the Schild table, whose item
+    /// results then took the shield out of the loadout for a fumble it had no
+    /// part in. The weapon list names the piece it rolled with, so that name is
+    /// the answer.
+    func isShieldInHand(_ name: String?) -> Bool {
+        guard let name, let shield = selectedShield else { return false }
+        return shield.name == name
+    }
+
+    /// The glyph for one named piece of the loadout — the weapon's own combat
+    /// technique where it has one, a shield where it is one, a fist otherwise.
+    func loadoutIcon(for name: String) -> WeaponIcon {
+        if let weapon = meleeWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(weapon.combatTechniqueId)
+        }
+        if let ranged = rangedWeapons.first(where: { $0.name == name }) {
+            return WeaponIcon.forTechniqueId(ranged.combatTechniqueId)
+        }
+        if shields.contains(where: { $0.name == name }) { return .system("shield.fill") }
+        return WeaponIcon.forTechnique(.raufen)   // Raufen, and anything unlisted
+    }
+
+    /// Which hand (or which slot) is holding the named thing.
+    ///
+    /// The loadout is four optional names, and a screen that has to take
+    /// something *out* of it — a Patzer that destroys, drops or jams the weapon —
+    /// only knows the name it was swinging. Guessing `selectedWeaponName` would
+    /// disarm the main hand for an off-hand fumble and leave a dropped shield in
+    /// the loadout.
+    enum LoadoutSlot: String, Equatable {
+        case mainHand, offHand, shield, ranged
+    }
+
+    func loadoutSlot(ofNamed name: String) -> LoadoutSlot? {
+        if selectedWeaponName == name { return .mainHand }
+        if selectedOffHandName == name { return .offHand }
+        if selectedShieldName == name { return .shield }
+        if selectedRangedWeaponName == name { return .ranged }
+        return nil
+    }
+
+    /// Takes the named thing out of the loadout and returns the slot it left, so
+    /// a caller that may have to put it back knows where it belongs. `nil` when
+    /// the name is not in the loadout at all — Raufen, or a weapon already gone.
+    @discardableResult
+    func unequipFromLoadout(named name: String) -> LoadoutSlot? {
+        guard let slot = loadoutSlot(ofNamed: name) else { return nil }
+        switch slot {
+        case .mainHand: selectedWeaponName = nil
+        case .offHand:  selectedOffHandName = nil
+        case .shield:   selectedShieldName = nil
+        case .ranged:   selectedRangedWeaponName = nil
+        }
+        return slot
+    }
+
+    func equipInLoadout(named name: String, slot: LoadoutSlot) {
+        switch slot {
+        case .mainHand: selectedWeaponName = name
+        case .offHand:  selectedOffHandName = name
+        case .shield:   selectedShieldName = name
+        case .ranged:   selectedRangedWeaponName = name
+        }
+    }
+
     /// Passive shield PA bonus applied to main weapon parade.
     var passiveShieldPABonus: Int {
         selectedShield?.paModifier ?? 0
@@ -221,11 +650,9 @@ final class Hero {
         advantages.contains { $0.ruleId == "ADV_5" }
     }
 
-    /// Level of Beidhändiger Kampf SA. Each level reduces the -2 dual-attack penalty by 1.
-    /// TODO: Confirm correct SA ruleId for "Beidhändiger Kampf" once identified in Optolith data.
+    /// Level of Beidhändiger Kampf (SA_42). Each level reduces the −2 dual-attack penalty by 1.
     var beidhaendigerKampfLevel: Int {
-        let sa = combatSpecialAbilities.first { $0.name.contains("Beidhändiger Kampf") }
-        return sa?.tier ?? 0
+        tier(of: .beidhaendigerKampf)
     }
 
     /// Dual-attack penalty: base -2, reduced by Beidhändiger Kampf level.
@@ -245,8 +672,25 @@ final class Hero {
 
     // MARK: - Schmerz (Pain)
 
-    /// Raw Schmerz level from LP thresholds (0–4+).
-    var schmerzLevel: Int {
+    /// Raw Schmerz level from LP thresholds (0–4+), **plus** any levels a Patzer
+    /// added for a few rounds (`temporarySchmerzLevel`).
+    ///
+    /// Schmerz is otherwise derived from LP alone, which is why `setStateLevel`
+    /// refuses it: there is nothing to store. "1 Stufe Schmerz für 3
+    /// Kampfrunden" is not an LP loss, so it is held beside the LP total and
+    /// added here — one place, so the modifier lines, the states strip, the
+    /// state detail sheet and the take-damage screen's before/after all follow
+    /// without a second reader of the same fact. `effectiveSchmerzLevel` still
+    /// caps the total and still applies Zäher Hund.
+    var schmerzLevel: Int { lebenspunkteSchmerzLevel + temporarySchmerzLevel }
+
+    /// The half of it the life points alone are worth: the four thresholds
+    /// (¾, ½, ¼ of the maximum, and "5 LP or fewer"), and nothing else.
+    ///
+    /// Split out from `schmerzLevel` so the aftermath screen can say where a
+    /// level came from — this one goes when the hero is healed, and there is
+    /// nothing to switch off — without a second copy of the thresholds.
+    var lebenspunkteSchmerzLevel: Int {
         guard let dv = derivedValues else { return 0 }
         let current = dv.lebensenergie.current
         let maxLP = dv.lebensenergie.max
@@ -269,6 +713,26 @@ final class Hero {
         let raw = schmerzLevel
         if raw >= 4 { return 4 }
         return hasZaeherHund ? max(0, raw - 1) : raw
+    }
+
+    /// Where the hero's Schmerz comes from, and what ends each part of it.
+    ///
+    /// Read by the screen after the fight, which used to print one inert row
+    /// ("Schmerz II") and leave the player to work out whether it was something
+    /// they were supposed to do anything about (owner report: "Why is this
+    /// listed as read-only? This usually goes away — depending on the origin").
+    /// It does go away, but by two different routes, and the app knows which:
+    /// the LP part ends with healing and the Patzer part ends with this very
+    /// fight. Pure, and derived from the same properties every other reader
+    /// uses, so the rows cannot drift from the chip.
+    var schmerzBreakdown: SchmerzBreakdown {
+        SchmerzBreakdown(
+            lebenspunkteLevel: lebenspunkteSchmerzLevel,
+            patzerLevel: temporarySchmerzLevel,
+            currentLP: derivedValues?.lebensenergie.current,
+            maxLP: derivedValues?.lebensenergie.max,
+            hasZaeherHund: hasZaeherHund
+        )
     }
 
     /// Penalty from Schmerz, applied to all checks.
@@ -294,6 +758,7 @@ final class Hero {
             return def?.kind == .status ? 1 : min(rawLevel, 4)
         }()
         let existing = states.first { $0.stateID == stateID }
+        if stateID == BleedingRules.stateId && clamped == 0 { bleedingRoundsLeft = nil }
         if clamped == 0 {
             if let e = existing {
                 states.removeAll { $0 === e }
@@ -315,11 +780,17 @@ final class Hero {
         if let b = StateCatalog.definition(for: "belastung"), effectiveBE > 0 {
             result.append((b, min(effectiveBE, 4)))
         }
-        for entry in states {
-            if let def = StateCatalog.definition(for: entry.stateID) {
-                result.append((def, entry.level))
+        // In the catalog's own order, not the store's: `states` is a SwiftData
+        // to-many, so the strip otherwise reshuffled its chips between launches
+        // and the same Zustand was never twice in the same place.
+        let catalogRank = StateCatalog.all.enumerated().reduce(into: [String: Int]()) { $0[$1.element.id] = $1.offset }
+        let stored = states
+            .compactMap { entry -> (StateDefinition, Int)? in
+                guard let def = StateCatalog.definition(for: entry.stateID) else { return nil }
+                return (def, entry.level)
             }
-        }
+            .sorted { catalogRank[$0.0.id, default: .max] < catalogRank[$1.0.id, default: .max] }
+        result.append(contentsOf: stored)
         return result
     }
 
@@ -344,11 +815,40 @@ final class Hero {
 
     var isHandlungsunfaehig: Bool {
         if hasState("handlungsunfaehig") || impliedStateIDs.contains("handlungsunfaehig") { return true }
+        return isHandlungsunfaehigFromZustaende
+    }
+
+    /// Whether the status is carried by *Zustände* — a Stufe IV, or eight levels
+    /// in sum — rather than stated outright or implied by a Status.
+    ///
+    /// The Schicksalspunkt "Zustand ignorieren" buys the round back from the
+    /// first kind (owner ruling, 2026-09-20) and nothing from the second: a
+    /// Schip does not wake a bewusstlos hero, and it does not un-petrify a
+    /// versteinert one.
+    var isHandlungsunfaehigFromZustaende: Bool {
         if totalZustandLevels >= 8 { return true }
         // Any Zustand at its handlungsunfaehig level (most level IV).
         return activeStates.contains { entry in
             entry.def.handlungsunfaehigAtLevel.map { entry.level >= $0 } ?? false
         }
+    }
+
+    /// Whether the hero is on the ground — stated outright, or implied by a state
+    /// that carries it (Bewusstlos implies Liegend).
+    var isLiegend: Bool {
+        hasState("liegend") || impliedStateIDs.contains("liegend")
+    }
+
+    /// The Geschwindigkeit a move actually happens at.
+    ///
+    /// A prone hero moves at GS 1 (Status Liegend), which is the third thing that
+    /// status does and the only one nothing in the app read: the AT −4 and the
+    /// PA/AW −2 are the catalog's `STATE_10`, but the flight screen took
+    /// `geschwindigkeit.max` straight off the derived values and offered a hero
+    /// lying in the mud their full eight paces.
+    var effectiveGeschwindigkeit: Int {
+        guard !isLiegend else { return 1 }
+        return derivedValues?.geschwindigkeit.max ?? 8
     }
 
     var isBewegungsunfaehig: Bool {
@@ -358,54 +858,82 @@ final class Hero {
 
     // MARK: - Combat Ability Detection
 
-    var hasAufmerksamkeit: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_40" }
+    /// A Sonderfertigkeit by rule id, wherever the importer filed it.
+    ///
+    /// The importer sorts an SA into `combatSpecialAbilities` or
+    /// `generalSpecialAbilities` by its Optolith group (`CombatSpecialAbilityGroup`).
+    /// It used to ask the effects table instead, which had rows for nine combat
+    /// abilities, so Plänkler-Formation (SA_884), Gezielter Angriff (SA_160) and
+    /// Gezielter Schuss (SA_161) all sat in the general list while every lookup
+    /// searched the combat one. Heroes imported before that fix still carry the
+    /// old split, so the lookup searches both lists and does not care.
+    func specialAbility(_ ruleId: String) -> HeroTrait? {
+        combatSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? generalSpecialAbilities.first { $0.ruleId == ruleId }
     }
 
-    var hasGolgaritenStil: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_661" }
+    func hasSpecialAbility(_ ruleId: String) -> Bool {
+        specialAbility(ruleId) != nil
     }
 
-    var hasBerittenerKampf: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_43" }
+    /// The tier of a Sonderfertigkeit, or 0 when the hero does not have it. An
+    /// owned ability with no tier in the export counts as I.
+    func specialAbilityTier(_ ruleId: String) -> Int {
+        guard let trait = specialAbility(ruleId) else { return 0 }
+        return trait.tier ?? 1
     }
 
-    /// Finte tier (0 if not owned). SA_48.
-    var finteTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_48" }?.tier ?? 0
+    /// The tier of any trait the hero carries — Sonderfertigkeit, Vorteil or
+    /// Nachteil — or `nil` when the id is not on the sheet. A trait without a
+    /// tier in the export counts as I. This is design decision 6: a rule
+    /// applies exactly when its id is among the hero's traits.
+    func ownedRuleTier(_ ruleId: String) -> Int? {
+        let trait = combatSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? generalSpecialAbilities.first { $0.ruleId == ruleId }
+            ?? advantages.first { $0.ruleId == ruleId }
+            ?? disadvantages.first { $0.ruleId == ruleId }
+        guard let trait else { return nil }
+        return trait.tier ?? 1
     }
 
-    /// Wuchtschlag tier (0 if not owned). SA_67.
-    var wuchtschlagTier: Int {
-        combatSpecialAbilities.first { $0.ruleId == "SA_67" }?.tier ?? 0
+    /// The same answer for every id at once, in one pass over the four lists.
+    /// The evaluator walks the whole catalog on every roll and would otherwise
+    /// search the sheet once per rule. First occurrence wins, as in
+    /// `ownedRuleTier` — an old import can file one ability in both SA lists.
+    var ownedRuleTiers: [String: Int] {
+        Dictionary((combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages)
+                       .map { ($0.ruleId, $0.tier ?? 1) },
+                   uniquingKeysWith: { first, _ in first })
     }
 
-    /// True if hero has Vorstoß (SA_66).
-    var hasVorstoss: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_66" }
+    /// Every trait id on the sheet, for the not-applied list. Deduplicated,
+    /// order preserved: an ability filed in both SA lists is one line.
+    var ownedRuleIds: [String] {
+        var seen: Set<String> = []
+        return (combatSpecialAbilities + generalSpecialAbilities + advantages + disadvantages)
+            .map(\.ruleId)
+            .filter { seen.insert($0).inserted }
     }
 
-    /// True if hero has Schildspalter (SA_59).
-    var hasSchildspalter: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_59" }
-    }
+    func has(_ ability: CombatAbility) -> Bool { hasSpecialAbility(ability.rawValue) }
 
-    /// True if hero has Plänkler-Formation (SA_884).
-    var hasPlaenklerFormation: Bool {
-        combatSpecialAbilities.contains { $0.ruleId == "SA_884" }
-    }
+    func tier(of ability: CombatAbility) -> Int { specialAbilityTier(ability.rawValue) }
 
-    /// Whether Golgariten-Stil conditions are met (mounted + Rabenschnabel + Großschild).
-    func golgaritenActive(mounted: Bool) -> Bool {
-        guard mounted, hasGolgaritenStil else { return false }
-        let hasRabenschnabel = selectedWeapon?.name == "Rabenschnabel"
-        let hasGrossschild = selectedShield?.name == "Großschild"
-        return hasRabenschnabel && hasGrossschild
-    }
+    var hasAufmerksamkeit: Bool { has(.aufmerksamkeit) }
+    var hasBerittenerKampf: Bool { has(.berittenerKampf) }
+    var finteTier: Int { tier(of: .finte) }
+    var wuchtschlagTier: Int { tier(of: .wuchtschlag) }
+    var hasVorstoss: Bool { has(.vorstoss) }
+    var hasSchildspalter: Bool { has(.schildspalter) }
+    var hasPlaenklerFormation: Bool { has(.plaenklerFormation) }
+    /// Gezielter Angriff and Gezielter Schuss — each halves the Zonenaufschlag
+    /// for its own kind of attack.
+    var hasGezielterAngriff: Bool { has(.gezielterAngriff) }
+    var hasGezielterSchuss: Bool { has(.gezielterSchuss) }
 
     /// Horse GS for Sturmangriff damage.
     var mountGS: Int {
-        pets.first?.speed ?? 0
+        mount?.speed ?? 0
     }
 
     /// Sturmangriff bonus damage: +2 + (horse GS / 2).
@@ -415,10 +943,15 @@ final class Hero {
 
     /// True if hero has a mount (pet with initiative).
     var hasMount: Bool {
-        pets.first.map { !$0.initiative.isEmpty } ?? false
+        mount != nil
     }
 
     /// Whether combat setup screen is needed.
+    /// Whether the preparation screen has anything *situational* to ask about.
+    ///
+    /// No longer a routing gate — the screen is where the loadout is chosen, so
+    /// every hero sees it — but the formation and mount sections still appear
+    /// only for a hero who has either.
     var needsCombatSetup: Bool {
         hasPlaenklerFormation || hasMount
     }
@@ -431,6 +964,17 @@ final class Hero {
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
         activeCombatMounted = false
+        activeCombatWater = ""
+        // The Patzertabelle's temporary effects last a few rounds of *this*
+        // fight, so they go with it. `damagedItems` does not: it lasts until
+        // the thing is repaired. Nor does `indestructibleItems`: what a staff
+        // is made of does not change when the fight ends.
+        temporarySchmerzLevels = 0
+        temporarySchmerzLastRound = 0
+        activeCombatStumble = false
+        activeCombatJamUntilRound = 0
+        activeCombatNoDefense = false
+        bleedingRoundsLeft = nil
     }
 
     func isFokusRuleActive(_ rule: FokusRule) -> Bool {

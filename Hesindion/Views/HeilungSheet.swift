@@ -17,21 +17,21 @@ struct HeilungSheet: View {
         VStack(spacing: 0) {
             // Header
             Text(L("healing"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 16) {
                 // Source text field
                 TextField(L("healingSourcePlaceholder"), text: $source)
-                    .font(.system(.body, weight: .medium))
+                    .font(.dsaBody(.body))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.flush)
                     .autocorrectionDisabled()
 
                 // +/- stepper for LP amount
@@ -39,48 +39,48 @@ struct HeilungSheet: View {
                     HStack(spacing: 0) {
                         Button { if amount > 1 { amount -= 1 } } label: {
                             Text("−")
-                                .font(.system(.title, weight: .bold))
+                                .font(.dsaHeading(.title))
                                 .foregroundStyle(Color.black)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.groupPersonalData.opacity(0.3))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                                .dsaBox(.raised)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
 
                         Text("\(amount)")
-                            .font(.system(.largeTitle, weight: .black))
+                            .font(.dsaHeading(.largeTitle))
                             .fontDesign(.monospaced)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.raised)
 
                         Button { amount += 1 } label: {
                             Text("+")
-                                .font(.system(.title, weight: .bold))
+                                .font(.dsaHeading(.title))
                                 .foregroundStyle(Color.black)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(Color.groupPersonalData.opacity(0.3))
-                                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                                .dsaBox(.raised)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
 
                     Text("LP")
-                        .font(.system(.caption, weight: .bold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.secondary)
                 }
 
                 // Preview
                 Text("\(currentLE) + \(amount) → \(newLE) / \(maxLE) LP")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                    .dsaBox(.raised)
 
                 // Confirm
                 Button {
@@ -100,14 +100,14 @@ struct HeilungSheet: View {
                     dismiss()
                 } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(.title2, weight: .bold))
+                        .font(.dsaHeading(.title2))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupPersonalData)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(16)
 

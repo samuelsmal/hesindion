@@ -9,10 +9,16 @@ enum CombatManeuver: Equatable, Hashable {
     case vorstoss
     case schildspalter
     case sturmangriff
+    /// A free attack, no action, no defence against it (GRW). Its AT −4 is
+    /// the catalog's (`GRW_passierschlag`), not this enum's.
+    case passierschlag
 }
 
 extension CombatManeuver {
     /// AT modifier from this maneuver.
+    ///
+    /// For Wuchtschlag these are the picker's mirror of the catalog's SA_67;
+    /// `RuleFixtureTests` holds them to it.
     var atModifier: Int {
         switch self {
         case .normal: return 0
@@ -21,10 +27,12 @@ extension CombatManeuver {
         case .vorstoss: return 2
         case .schildspalter: return 0
         case .sturmangriff: return 0
+        case .passierschlag: return 0
         }
     }
 
-    /// Extra damage from this maneuver.
+    /// Extra damage from this maneuver. The picker's mirror of SA_67 too; the
+    /// TP the dice get are the catalog's.
     var damageBonus: Int {
         switch self {
         case .wuchtschlag(let tier): return tier * 2
@@ -45,11 +53,18 @@ extension CombatManeuver {
         switch self {
         case .normal: return L("maneuver.normal")
         case .finte: return L("maneuver.finte")
-        case .wuchtschlag: return L("maneuver.wuchtschlag")
+        case .wuchtschlag(let tier): return "\(L("maneuver.wuchtschlag")) \(Self.roman(tier))"
         case .vorstoss: return L("maneuver.vorstoss")
         case .schildspalter: return L("maneuver.schildspalter")
         case .sturmangriff: return L("maneuver.sturmangriff")
+        case .passierschlag: return L("passierschlag")
         }
+    }
+
+    /// I, II, III — how the rulebook writes an ability's tier, and how the two
+    /// Wuchtschlag rows are told apart once both are offered.
+    static func roman(_ tier: Int) -> String {
+        ["", "I", "II", "III", "IV"][min(max(tier, 0), 4)]
     }
 
     /// Localized source label for modifier breakdown.
@@ -57,10 +72,13 @@ extension CombatManeuver {
         switch self {
         case .normal: return ""
         case .finte: return L("source.finte")
-        case .wuchtschlag: return L("source.wuchtschlag")
+        // Unreachable for output: MeleeModifiers.maneuverAT returns nil for
+        // Wuchtschlag, whose AT line the catalog labels instead (SA_67).
+        case .wuchtschlag: return ""
         case .vorstoss: return L("source.vorstoss")
         case .schildspalter: return ""
         case .sturmangriff: return L("source.sturmangriff")
+        case .passierschlag: return L("source.passierschlag")
         }
     }
 
@@ -69,12 +87,14 @@ extension CombatManeuver {
         switch self {
         case .finte(let t):
             return "\(L("opponentPA")) -\(t * 2)"
-        case .wuchtschlag(let t):
-            return "\(L("damageBonus")) +\(t * 2)"
+        case .wuchtschlag:
+            return "\(L("damageBonus")) +\(damageBonus)"
         case .vorstoss:
             return "⚠ \(L("noDefenseWarning"))"
         case .schildspalter:
             return L("targetShield")
+        case .passierschlag:
+            return L("passierschlag.info")
         default:
             return nil
         }
@@ -104,15 +124,6 @@ enum WeaponReach: String, CaseIterable {
         default:               return 0
         }
     }
-
-    /// AT/PA penalty for beengte Umgebung.
-    var beengteUmgebungPenalty: Int {
-        switch self {
-        case .kurz:  return 0
-        case .mittel: return -4
-        case .lang:  return -8
-        }
-    }
 }
 
 // MARK: - Modifier Line
@@ -122,4 +133,7 @@ struct ModifierLine: Identifiable {
     let value: Int
     let source: String
     var isZustand: Bool = false
+    /// The catalog rule that produced it; `nil` for a line a Swift definition
+    /// still makes. Tests look lines up by this, not by the label.
+    var ruleId: String? = nil
 }

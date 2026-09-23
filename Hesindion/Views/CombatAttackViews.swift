@@ -19,8 +19,7 @@ struct CombatAttackChoiceView: View {
     private var canUseTwoHanded: Bool {
         guard !isDualWield, !hasShield else { return false }
         guard let w = hero.selectedWeapon else { return false }
-        let excluded = ["CT_1", "CT_3"] // Dolche, Fechtwaffen
-        return !excluded.contains(w.combatTechniqueId)
+        return CombatTechniqueID(rawValue: w.combatTechniqueId)?.allowsTwoHandedGrip ?? true
     }
 
     var body: some View {
@@ -29,27 +28,27 @@ struct CombatAttackChoiceView: View {
             HStack {
                 Button { step = .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
                 Spacer()
                 Text(L("attack"))
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -64,7 +63,7 @@ struct CombatAttackChoiceView: View {
                         Color.clear.onAppear { proceedSingleAttack() }
                     }
 
-                    if mountedActive, let mount = hero.pets.first {
+                    if mountedActive, let mount = hero.mount {
                         mountAttackSection(mount: mount)
                     }
                 }
@@ -135,23 +134,14 @@ struct CombatAttackChoiceView: View {
 
     private func proceedSingleAttack() {
         if let w = hero.selectedWeapon {
-            let damage = twoHandedGripActive ? adjustDamage(w.damage, bonus: 1) : w.damage
-            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
+            // The weapon's own damage, unadjusted: the announcement screen owns
+            // every bonus, the grip's +1 included. Adding it here too gave a
+            // two-handed attack +2 TP for a button that promises +1.
+            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
         } else if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
             step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
         }
-    }
-
-    /// Adjusts a damage formula like "1W6+2" by adding a bonus.
-    private func adjustDamage(_ formula: String, bonus: Int) -> String {
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = formula.firstMatch(of: pattern) else { return formula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + bonus
-        if total == 0 { return base }
-        return total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
     }
 
     // MARK: - Hero single attack (mounted, no dual-wield / two-hand)
@@ -225,7 +215,7 @@ struct CombatAttackChoiceView: View {
             // Mount special skills note
             if !mount.specialSkills.isEmpty {
                 Text("\u{24D8} \(mount.specialSkills)")
-                    .font(.system(.caption2, weight: .medium))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(combatAccent)
                     .padding(.top, 2)
             }
@@ -296,15 +286,15 @@ struct CombatAttackChoiceView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(.title3, weight: .bold))
+                    .font(.dsaHeading(.title3))
                     .foregroundStyle(combatAccent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(.caption, weight: .semibold))
+                            .font(.dsaBody(.caption))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -316,9 +306,9 @@ struct CombatAttackChoiceView: View {
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.raised)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -332,6 +322,7 @@ struct CombatAnnouncementView: View {
     let damageFormula: String?
     let isOffHand: Bool
     let mountedActive: Bool
+    let waterDepth: WaterDepth
     let isMountCharge: Bool
     let beengteUmgebungActive: Bool
     let schipIgnoreZustandThisRound: Bool
@@ -344,25 +335,60 @@ struct CombatAnnouncementView: View {
     let twoHandedGripActive: Bool
     let plaenklerActive: Bool
     let plaenklerBonus: PlaenklerBonus
+    /// The other side of the fight, as far as the app has been told. Owned by
+    /// `CombatView` so that the screens resolving *this* swing — the roll, the
+    /// opponent's defence, the damage — all read the same answers. Cleared here
+    /// as the announcement opens: a new announcement may be at a new opponent.
+    /// `CombatView` clears it again on the way back to the root, so a defence
+    /// rolled from there does not inherit this announcement's answers either.
+    @Binding var opponent: OpponentProfile
     var onDismiss: () -> Void
 
-    @State private var vorteilhaftePosition: Bool = false
-    @State private var selectedOpponentReach: WeaponReach = .mittel
+    /// The reach of the weapon being announced — the one named in the header, not
+    /// whatever the hero has in the main hand. It is handed to the modifier
+    /// engine as the announced `loadoutName`, so the chips cannot promise a
+    /// penalty the roll does not apply.
+    private var heroWeaponReach: WeaponReach {
+        hero.reach(ofLoadoutNamed: weaponName)
+    }
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
-    @State private var targetIsSurprised = false
+    @State private var showingZoneRoll = false
+    /// The weapon's own offers the player took (catalog `ITEMTPL_` ids, e.g.
+    /// the Rabenschnabel's Dornenspitze). Announced into every `situation(_:)`.
+    @State private var weaponOffers: Set<String> = []
 
-    private var golgaritenForced: Bool {
-        hero.golgaritenActive(mounted: mountedActive)
+    /// Whether this weapon has anything to say about demons at all.
+    private var weaponIsConsecrated: Bool {
+        hero.isFokusRuleActive(.karmaleObjekte) && hero.isConsecrated(weaponName)
     }
+
+    /// The multiplier the Fokusregel adds, if any.
+    private var karmalDamage: CriticalDamage {
+        DamageModifiers.multiplier(situation: situation(.damage))
+    }
+
+    private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
 
     private var availableManeuvers: [CombatManeuver] {
         var maneuvers: [CombatManeuver] = [.normal]
         if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
-        if hero.wuchtschlagTier > 0 { maneuvers.append(.wuchtschlag(tier: hero.wuchtschlagTier)) }
+        // One entry per tier the hero has, not only the highest: Wuchtschlag II
+        // may be swung as a I, and the trade (-2 AT per +2 TP) is the whole
+        // decision. Offering the top tier alone made that choice for the player.
+        if hero.wuchtschlagTier > 0 {
+            for tier in 1...hero.wuchtschlagTier {
+                maneuvers.append(.wuchtschlag(tier: tier))
+            }
+        }
         if hero.hasVorstoss { maneuvers.append(.vorstoss) }
         if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
         if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
+        // Everyone may strike a Passierschlag (GRW); it goes to its own screen.
+        // Not from a dual-attack announcement: the Passierschlag is one blow
+        // with one weapon, and choosing it here would leave the round flagged
+        // as a dual attack that never happened. Pick one weapon instead.
+        if secondAttack == nil { maneuvers.append(.passierschlag) }
         return maneuvers
     }
 
@@ -372,147 +398,112 @@ struct CombatAnnouncementView: View {
             HStack {
                 Button { step = .weaponSelection(action) } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
                 Spacer()
                 VStack(spacing: 1) {
                     Text(L("announcement"))
-                        .font(.system(.headline, weight: .black))
+                        .font(.dsaHeading(.headline))
                         .foregroundStyle(.white)
                     Text(weaponName)
-                        .font(.system(.caption, weight: .semibold))
+                        .font(.dsaBody(.caption))
                         .foregroundStyle(.white.opacity(0.85))
                 }
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 8) {
-                    // Vorteilhafte Position
-                    if golgaritenForced {
-                        HStack(spacing: 8) {
-                            Image(systemName: "checkmark.square.fill")
-                                .font(.system(.body, weight: .semibold))
-                                .foregroundStyle(combatAccent)
-                            Text("\(L("advantageousPosition")) (\(L("mounted")))")
-                                .font(.system(.caption, weight: .bold))
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text("+2")
-                                .font(.system(.caption, design: .monospaced, weight: .black))
-                                .foregroundStyle(combatAccent)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(combatAccent.opacity(0.1))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 3))
-                    } else {
-                        Button {
-                            vorteilhaftePosition.toggle()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: vorteilhaftePosition ? "checkmark.square.fill" : "square")
-                                    .font(.system(.body, weight: .semibold))
-                                    .foregroundStyle(vorteilhaftePosition ? combatAccent : .secondary)
-                                Text(L("advantageousPosition"))
-                                    .font(.system(.caption, weight: .bold))
-                                    .foregroundStyle(vorteilhaftePosition ? .primary : .secondary)
-                                Spacer()
-                                if vorteilhaftePosition {
-                                    Text("+2")
-                                        .font(.system(.caption, design: .monospaced, weight: .black))
-                                        .foregroundStyle(combatAccent)
-                                }
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(vorteilhaftePosition ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(vorteilhaftePosition ? combatAccent : Color.dsaBorder, lineWidth: vorteilhaftePosition ? 3 : 2))
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    // Opponent weapon reach
-                    combatSectionLabel(L("opponentReach.label"))
-
-                    HStack(spacing: 8) {
-                        ForEach(WeaponReach.allCases, id: \.self) { reach in
-                            let isSelected = selectedOpponentReach == reach
-                            Button { selectedOpponentReach = reach } label: {
-                                Text(reach.rawValue)
-                                    .font(.system(.caption, weight: .bold))
-                                    .foregroundStyle(isSelected ? .white : .primary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                    opponentSection
 
                     // Maneuver selection (hidden for mount charge — auto-selected)
                     if !isMountCharge {
                     combatSectionLabel(L("announcement.label"))
 
+                    VStack(spacing: 8) {
                     ForEach(availableManeuvers, id: \.self) { maneuver in
                         let isSelected = selectedManeuver == maneuver
-                        Button { selectedManeuver = maneuver } label: {
+                        Button {
+                            selectedManeuver = maneuver
+                            // A Passierschlag takes no manoeuvre, so no zone either.
+                            if maneuver == .passierschlag { targetZone = nil }
+                        } label: {
+                            // Selection is the accent fill, the same signal the zone
+                            // and reach chips use. The radio circle that used to sit
+                            // here was a second, different way of saying the same
+                            // thing on the same screen.
                             HStack(spacing: 12) {
-                                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                                    .font(.system(.body, weight: .semibold))
-                                    .foregroundStyle(isSelected ? combatAccent : .secondary)
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack {
                                         Text(maneuver.displayName)
-                                            .font(.system(.body, weight: isSelected ? .bold : .regular))
-                                            .foregroundStyle(.primary)
+                                            .font(isSelected ? .dsaHeading(.body) : .dsaBody(.body))
+                                            .foregroundStyle(isSelected ? .white : .primary)
                                         Spacer()
                                         if maneuver.atModifier != 0 {
                                             Text("AT \(maneuver.atModifier > 0 ? "+" : "")\(maneuver.atModifier)")
-                                                .font(.system(.caption, design: .monospaced, weight: .black))
-                                                .foregroundStyle(maneuver.atModifier > 0 ? Color(red: 0x2E/255, green: 0x7D/255, blue: 0x32/255) : Color.groupCombat)
+                                                .font(.dsaMono(.caption, emphasis: true))
+                                                .foregroundStyle(
+                                                    isSelected
+                                                        ? .white
+                                                        : (maneuver.atModifier > 0 ? Color.dsaPositive : Color.groupCombat)
+                                                )
                                         }
                                     }
                                     if let info = maneuver.infoText() {
                                         Text(info)
-                                            .font(.system(.caption2, weight: .medium))
-                                            .foregroundStyle(maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
+                                            .font(.dsaBody(.caption2))
+                                            .foregroundStyle(
+                                                isSelected
+                                                    ? Color.white.opacity(0.85)
+                                                    : (maneuver.preventsDefense ? Color.groupCombat : Color.secondary)
+                                            )
                                     }
                                 }
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(isSelected ? combatAccent.opacity(0.1) : Color(UIColor.systemBackground))
-                            .overlay(Rectangle().stroke(isSelected ? combatAccent : Color.dsaBorder, lineWidth: isSelected ? 3 : 2))
+                            .background(isSelected ? combatAccent : Color(UIColor.systemBackground))
+                            .dsaBox(.flush)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                     }
+                    }
+                    .dsaOptionGroup()
                     } // end if !isMountCharge
 
-                    // Trefferzone (Fokus-Regel)
-                    if hero.isFokusRuleActive(.trefferzonen) {
+                    // The weapon's own offers (catalog ITEMTPL_ entries): the
+                    // Rabenschnabel's Dornenspitze. Not a manoeuvre — it goes
+                    // with whichever one is chosen, a mounted charge included.
+                    weaponOfferToggles
+
+                    // Trefferzone (Fokus-Regel). The zones on offer are the
+                    // opponent's, not the hero's: a four-legged opponent has no
+                    // Arme, and a 1W20 against them lands on their own table.
+                    if zonesActive, opponent.bodyPlanKind != .keineZonen, selectedManeuver != .passierschlag {
                         CombatZonePicker(
                             selection: $targetZone,
-                            targetIsSurprised: $targetIsSurprised,
+                            targetIsSurprised: $opponent.isSurprised,
+                            zones: HitZoneTable.zones(for: opponent.bodyPlan),
                             showsPenalty: true,
                             showsSurprisedToggle: true,
-                            hasSonderfertigkeit: hero.combatSpecialAbilities.contains { $0.ruleId == "SA_160" },
-                            sfHalvesKey: "trefferzone.sfHalves.melee"
+                            hasSonderfertigkeit: hero.hasGezielterAngriff,
+                            sfHalvesKey: "trefferzone.sfHalves.melee",
+                            accessory: AnyView(rollZoneButton)
                         )
                     }
 
@@ -522,40 +513,92 @@ struct CombatAnnouncementView: View {
                             Image(systemName: "info.circle.fill")
                                 .foregroundStyle(combatAccent)
                             Text(L("sturmangriffPferd.info"))
-                                .font(.system(.caption, weight: .medium))
+                                .font(.dsaBody(.caption))
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(combatAccent.opacity(0.1))
-                        .overlay(Rectangle().stroke(combatAccent, lineWidth: 2))
+                        .dsaBox(.flush, stroke: combatAccent)
                     }
+
+                    // The announcement, added up: what the attack is rolled
+                    // against, what it does to the opponent's defence, and what
+                    // it will hit for. Every part of it was on this screen
+                    // already, one modifier per row, but the numbers they add up
+                    // to only appeared on the next screen — so the decision this
+                    // screen exists for was made without its result in view.
+                    attackBreakdown
+                    opponentDefenseBreakdown
+
+                    // What the manoeuvre just did to the damage, if anything.
+                    damageBreakdown
+                    // And what the GM takes off the opponent's armour.
+                    opponentRSNotes
+
+                    CombatActionButton(
+                        title: L("continue"),
+                        identifier: "combat.announcement.continue"
+                    ) { proceed() }
                 }
                 .adaptiveContentWidth()
                 .padding(.top, 8)
                 .padding(.bottom, 16)
             }
-
-            // Continue
-            Button { proceed() } label: {
-                Text(L("continue"))
-                    .font(.system(.title3, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(combatAccent)
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
-            }
-            .buttonStyle(.plain)
         }
         .onAppear {
             if isMountCharge {
                 selectedManeuver = .sturmangriff
             }
+            // A new announcement is a new opponent. Not only the posture: the
+            // reach, the body plan, the size and the Dämon go as well, because
+            // the hero may well be swinging at somebody else this time and the
+            // app has no way of knowing that they are not.
+            //
+            // Coming *back* here from the execution screen re-fires this and so
+            // asks again. That is the same rule read the same way — the player
+            // is standing in front of the announcement, about to announce — and
+            // the alternative (remembering which announcement this used to be)
+            // would keep a stale opponent alive for exactly the case the reset
+            // exists for. The section is shut by default, so an attack that
+            // answers nothing notices nothing.
+            opponent.reset()
+            // A weapon offer is aimed at an opponent's armour: it goes with them.
+            weaponOffers = []
+        }
+        .overlay {
+            if showingZoneRoll {
+                DSADiceRevealModal(
+                    title: L("trefferzone.section"),
+                    sides: 20,
+                    accent: combatAccent,
+                    result: { rolls in
+                        AnyView(
+                            HitZoneTableView(
+                                plan: opponent.bodyPlan,
+                                roll: rolls.first,
+                                accent: combatAccent
+                            )
+                        )
+                    },
+                    onConfirm: { rolls in
+                        if let roll = rolls.first {
+                            targetZone = HitZoneTable.lookup(roll, plan: opponent.bodyPlan).zone
+                        }
+                        showingZoneRoll = false
+                    },
+                    onCancel: { showingZoneRoll = false }
+                )
+            }
         }
     }
 
     private func proceed() {
+        // Its own screen rolls it; the opponent's answers stay on CombatView.
+        if selectedManeuver == .passierschlag {
+            step = .passierschlag(weaponName: weaponName, isOffHand: isOffHand)
+            return
+        }
         activeManeuver = selectedManeuver
         if selectedManeuver.preventsDefense {
             vorstossActiveThisRound = true
@@ -564,58 +607,478 @@ struct CombatAnnouncementView: View {
 
         let modifiers = buildModifierLines()
         let effectiveAT = baseAT + modifiers.reduce(0) { $0 + $1.value }
-        let effectiveDamage = adjustedDamage()
-        let note = selectedManeuver.infoText()
+        // The opponent-RS lines are the GM's to subtract (ADR-0005); the
+        // execution screen carries them in its note.
+        let noteParts = [selectedManeuver.infoText()].compactMap { $0 } + opponentRSLines.map(rsText)
+        let note: String? = noteParts.isEmpty ? nil : noteParts.joined(separator: "\n")
 
+        // The weapon's own damage and the bonuses travel apart: the damage
+        // screen prints every part, and nothing can fold the same bonus in twice.
         step = .execution(
             action,
             name: weaponName,
             attributeValue: effectiveAT,
-            damageFormula: effectiveDamage,
+            damageFormula: damageFormula,
             note: note,
             modifierLines: modifiers,
-            secondAttack: secondAttack
+            secondAttack: secondAttack,
+            damageLines: damageBonusLines,
+            damageMultiplier: karmalDamage,
+            opponentDefenseModifiers: opponentDefenseLines
         )
     }
 
-    private func buildModifierLines() -> [ModifierLine] {
-        var context = ModifierContext(hero: hero, domain: .meleeAttack)
-        context.targetHitZone = targetZone
-        context.targetIsSurprised = targetIsSurprised
-        context.mounted = mountedActive
-        context.schipIgnoreZustand = schipIgnoreZustandThisRound
-        context.dualAttackActive = dualAttackPenaltyActive
-        context.beengteUmgebung = beengteUmgebungActive
-        context.opponentReach = selectedOpponentReach
-        context.maneuver = selectedManeuver
-        context.isOffHand = isOffHand
-        context.plaenklerActive = plaenklerActive
-        context.plaenklerBonus = plaenklerBonus
+    // MARK: - The other side of the fight
 
-        var lines = ModifierEngine.shared.evaluate(context: context)
-
-        // Manual vorteilhafte Position toggle (not golgariten-forced)
-        if !golgaritenForced && vorteilhaftePosition {
-            lines.insert(ModifierLine(value: 2, source: L("source.vorteilhaft")), at: 0)
-        }
-
-        return lines
+    /// What is set, read off the lid while the section is shut.
+    private var opponentSummary: String {
+        var parts: [String] = [opponent.reach.rawValue]
+        // Only in the saddle, because only there is the toggle on the screen: a
+        // chip on the lid for a row the player cannot open and clear is a fact
+        // they cannot take back.
+        if mountedActive, opponent.isOnFoot == true { parts.append(L("opponent.onFoot.short")) }
+        if opponent.size != .mittel { parts.append(L(opponent.size.nameKey)) }
+        if opponent.advantageousPosition { parts.append("AT/VW +2") }
+        if opponent.fromBehind { parts.append(L("fromBehind")) }
+        if opponent.isProne { parts.append(L("opponent.prone")) }
+        if opponent.isSurprised { parts.append(L("trefferzone.targetSurprised")) }
+        if opponent.isDaemon { parts.append(L("daemon.target.short")) }
+        return parts.joined(separator: " · ")
     }
 
-    private func adjustedDamage() -> String? {
-        guard var formula = damageFormula else { return nil }
-        var bonus = selectedManeuver.damageBonus
-        if twoHandedGripActive { bonus += 1 }
-        if selectedManeuver == .sturmangriff { bonus += hero.sturmangriffDamageBonus }
-        if bonus == 0 { return formula }
-        let pattern = /^(\d+W\d+)([+-]\d+)?$/
-        guard let match = formula.firstMatch(of: pattern) else { return formula }
-        let base = String(match.1)
-        let existing = match.2.flatMap { Int($0) } ?? 0
-        let total = existing + bonus
-        if total == 0 { return base }
-        formula = total > 0 ? "\(base)+\(total)" : "\(base)\(total)"
-        return formula
+    /// Everything the GM can tell the app about the other side, in one fold.
+    ///
+    /// These were four separate things in three places: the reach had its own
+    /// section at the top, Vorteilhafte Position a loose row above it, "Ziel ist
+    /// überrascht" was buried in the Trefferzone picker, and the demon question
+    /// sat between the zone and the calculations. They are all the same kind of
+    /// fact — something true of the opponent that a rule turns on — and most
+    /// attacks answer none of them, which is why the section folds.
+    private var opponentSection: some View {
+        CombatDisclosureSection(
+            title: L("opponent.label"),
+            summary: opponentSummary,
+            identifier: "combat.attack.opponent"
+        ) {
+            // Reach. Each option carries what it costs the hero's own weapon —
+            // reaching past a longer weapon is -2 per step — the same way the
+            // zone chips print their Zonenaufschlag.
+            captioned(L("opponentReach.label")) {
+                HStack(spacing: 8) {
+                    ForEach(WeaponReach.allCases, id: \.self) { reach in
+                        let isSelected = opponent.reach == reach
+                        let penalty = heroWeaponReach.atPenaltyAgainst(reach)
+                        Button { opponent.reach = reach } label: {
+                            VStack(spacing: 2) {
+                                Text(reach.rawValue)
+                                    .font(.dsaBody(.caption))
+                                Text(penalty == 0 ? "AT ±0" : "AT \(penalty)")
+                                    .font(.dsaMono(.caption2, emphasis: true))
+                                    .opacity(isSelected ? 0.85 : 0.6)
+                            }
+                            .foregroundStyle(isSelected ? .white : .primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                            .dsaBox(.flush)
+                        }
+                        .buttonStyle(.dsaMotion)
+                        .accessibilityIdentifier("combat.reach.\(reach.rawValue)")
+                    }
+                }
+                .dsaOptionGroup()
+            }
+
+            // Which Trefferzonentabelle they are built on. Only under the rule
+            // that uses it — and it is the one thing on this screen the app
+            // cannot fall back on a sensible default for, because the hero's own
+            // table is the wrong answer for anything that is not another person.
+            if zonesActive {
+                captioned(L("opponent.bodyPlan")) {
+                    chipRow(BodyPlanKind.allCases, id: \.id, isSelected: { $0 == opponent.bodyPlanKind }) { kind in
+                        opponent.bodyPlanKind = kind
+                        opponent.size = kind.size(keeping: opponent.size)
+                    } label: { L($0.nameKey) } identifier: { "combat.opponent.plan.\($0.rawValue)" }
+                }
+            }
+
+            // Größenkategorie. Asked with or without the Trefferzonen rule: a
+            // winzig target costs the attack −4 (GRW_groessenkategorie). A size
+            // the body plan has no table for rolls on the nearest one.
+            captioned(L("opponent.size")) {
+                CreatureSizeChipRow(
+                    size: $opponent.size,
+                    detail: { $0 == .winzig ? "AT −4" : nil },
+                    identifierPrefix: "combat.opponent.size"
+                )
+            }
+
+            // Only a rider can be better placed for being mounted, so the
+            // question is only asked in the saddle. Off is "not stated", not
+            // "mounted opponent": the evaluator then asks for the fact and the
+            // calculation says the rule is waiting on an answer.
+            if mountedActive {
+                DSAToggleRow(
+                    title: L("opponent.onFoot"),
+                    isOn: Binding(
+                        get: { opponent.isOnFoot == true },
+                        set: { opponent.isOnFoot = $0 ? true : nil }
+                    ),
+                    accent: combatAccent,
+                    detail: "AT/VW +2",
+                    subtitle: L("advantageousPosition"),
+                    identifier: "combat.opponent.onFoot"
+                )
+            }
+
+            // Vorteilhafte Position. A mounted hero against a foot fighter has
+            // it without the toggle (GRW_vorteilhaftePosition asks the roster
+            // for onFoot).
+            DSAToggleRow(
+                title: L("advantageousPosition"),
+                isOn: $opponent.advantageousPosition,
+                accent: combatAccent,
+                detail: "AT/VW +2",
+                identifier: "combat.attack.advantageousPosition"
+            )
+
+            // Angriff von hinten: an opponent line on the announcement (their
+            // defence, subtracted by the GM); the same fact costs the hero's
+            // own VW when it is the hero being attacked (Task 5, defence screen).
+            DSAToggleRow(
+                title: L("fromBehind"),
+                isOn: $opponent.fromBehind,
+                accent: combatAccent,
+                detail: L("fromBehind.attackDetail"),
+                identifier: "combat.attack.fromBehind"
+            )
+
+            // Status Liegend: the penalty is theirs, on their defence — the
+            // rules give the attacker nothing for it.
+            DSAToggleRow(
+                title: L("opponent.prone"),
+                isOn: $opponent.isProne,
+                accent: combatAccent,
+                detail: "\(L("parry")) −2",
+                subtitle: L("opponent.prone.effect"),
+                identifier: "combat.attack.prone"
+            )
+
+            // Karmale Objekte. Only for a weapon the player has marked as
+            // consecrated, because for every other weapon the rule says nothing.
+            if weaponIsConsecrated {
+                DSAToggleRow(
+                    title: L("daemon.target"),
+                    isOn: $opponent.isDaemon,
+                    accent: combatAccent,
+                    subtitle: L("daemon.target.subtitle"),
+                    identifier: "combat.attack.daemon"
+                )
+
+                if opponent.isDaemon {
+                    DSAToggleRow(
+                        title: L("daemon.opposingDeity"),
+                        isOn: $opponent.isOfOpposingDeity,
+                        accent: combatAccent,
+                        detail: L("daemon.opposingDeity.detail"),
+                        identifier: "combat.attack.opposingDeity"
+                    )
+                }
+            }
+        }
+    }
+
+    /// A control under the name of what it sets. The section holds several
+    /// pickers and a bare row of chips says nothing about which question it
+    /// answers.
+    private func captioned<Content: View>(
+        _ caption: String, @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(caption)
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(.secondary)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func chipRow<T, ID: Hashable>(
+        _ options: [T],
+        id: KeyPath<T, ID>,
+        isSelected: @escaping (T) -> Bool,
+        select: @escaping (T) -> Void,
+        label: @escaping (T) -> String,
+        identifier: @escaping (T) -> String
+    ) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { chips(options, id: id, isSelected: isSelected, select: select, label: label, identifier: identifier) }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
+                chips(options, id: id, isSelected: isSelected, select: select, label: label, identifier: identifier)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .dsaOptionGroup()
+    }
+
+    @ViewBuilder
+    private func chips<T, ID: Hashable>(
+        _ options: [T],
+        id: KeyPath<T, ID>,
+        isSelected: @escaping (T) -> Bool,
+        select: @escaping (T) -> Void,
+        label: @escaping (T) -> String,
+        identifier: @escaping (T) -> String
+    ) -> some View {
+        ForEach(options, id: id) { option in
+            let selected = isSelected(option)
+            Button { select(option) } label: {
+                Text(label(option))
+                    .font(.dsaHeading(.caption))
+                    .foregroundStyle(selected ? .white : .primary)
+                    .frame(maxWidth: .infinity, minHeight: 22)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(selected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                    .dsaBox(.flush)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityIdentifier(identifier(option))
+        }
+    }
+
+    /// The other way of answering "where did it land": 1W20 on the opponent's
+    /// own table. The receiving side has had this since the rule went in; the
+    /// attacking side could only ever declare a zone and pay its Zonenaufschlag.
+    private var rollZoneButton: some View {
+        Button { showingZoneRoll = true } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "dice.fill")
+                Text(L("trefferzone.roll"))
+            }
+            .font(.dsaHeading(.caption))
+            .foregroundStyle(targetZone == nil ? Color.white : Color.dsaDisabledLabel)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(targetZone == nil ? combatAccent : Color(UIColor.secondarySystemBackground))
+            .dsaBox(.flush)
+        }
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.zone.roll")
+    }
+
+    /// Everything this attack is evaluated against, for whichever domain asks.
+    private func situation(_ domain: RuleDomain) -> Situation {
+        var s = Situation(hero: hero, domain: domain)
+        s.round.mounted = mountedActive
+        s.round.water = waterDepth
+        s.round.schipIgnoreZustand = schipIgnoreZustandThisRound
+        s.round.dualAttackActive = dualAttackPenaltyActive
+        s.round.beengteUmgebung = beengteUmgebungActive
+        s.round.twoHandedGrip = twoHandedGripActive
+        s.round.plaenklerActive = plaenklerActive
+        s.round.plaenklerBonus = plaenklerBonus
+        s.opponents = OpponentRoster([opponent])
+        s.loadoutName = weaponName
+        s.maneuver = selectedManeuver
+        s.isOffHand = isOffHand
+        s.targetHitZone = targetZone
+        for id in weaponOffers { s.announced[id] = 1 }
+        return s
+    }
+
+    // MARK: - The weapon's own offers
+
+    /// The weapon's offers on this attack, taken or not: evaluated with the
+    /// taken ones withdrawn, since a taken offer is no longer in `offers`.
+    /// None for a Passierschlag, which is rolled on its own screen.
+    private var availableWeaponOffers: [RuleOffer] {
+        guard selectedManeuver != .passierschlag else { return [] }
+        var s = situation(.meleeAttack)
+        for id in weaponOffers { s.announced[id] = nil }
+        return ModifierEngine.shared.evaluation(s).offers.filter { $0.ruleId.hasPrefix("ITEMTPL_") }
+    }
+
+    @ViewBuilder
+    private var weaponOfferToggles: some View {
+        let offers = availableWeaponOffers
+        if !offers.isEmpty {
+            VStack(spacing: 8) {
+                ForEach(offers, id: \.ruleId) { offer in
+                    DSAToggleRow(
+                        title: L("weaponOffer.\(offer.ruleId)"),
+                        isOn: Binding(
+                            get: { weaponOffers.contains(offer.ruleId) },
+                            set: { on in
+                                if on { weaponOffers.insert(offer.ruleId) } else { weaponOffers.remove(offer.ruleId) }
+                            }
+                        ),
+                        accent: combatAccent,
+                        detail: weaponOfferDetail(offer.ruleId),
+                        subtitle: offer.name,
+                        identifier: "combat.attack.weaponOffer.\(offer.ruleId)"
+                    )
+                }
+            }
+        }
+    }
+
+    /// What taking the offer costs the opponent's armour, e.g. "RS −2", read
+    /// off the evaluation with the offer announced.
+    private func weaponOfferDetail(_ id: String) -> String? {
+        var s = situation(.meleeAttack)
+        s.announced[id] = 1
+        let rs = ModifierEngine.shared.evaluation(s).opponentLines.filter { $0.ruleId == id && $0.target == .rs }
+        return rs.isEmpty ? nil : "RS \(rsValue(rs.reduce(0) { $0 + $1.value }))"
+    }
+
+    /// The opponent-RS lines of the offers taken. Not part of the VW total:
+    /// armour is not a defence, and the app has no opponent RS to apply it to.
+    private var opponentRSLines: [RuleLine] {
+        guard selectedManeuver != .passierschlag else { return [] }
+        return ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines.filter { $0.target == .rs }
+    }
+
+    /// "Gegner-RS −2 · Rabenschnabel (nur gegen RS 6 oder mehr)". The
+    /// parenthesis is the rule's own `<id>.rsNote`, when it has one.
+    private func rsText(_ line: RuleLine) -> String {
+        "\(L("opponentRS")) \(rsValue(line.value)) · \(rsSource(line))"
+    }
+
+    private func rsValue(_ value: Int) -> String {
+        value < 0 ? "\u{2212}\(-value)" : "+\(value)"
+    }
+
+    private func rsSource(_ line: RuleLine) -> String {
+        let key = "\(line.ruleId).rsNote"
+        let note = L(key)
+        return note == key ? line.name : "\(line.name) (\(note))"
+    }
+
+    @ViewBuilder
+    private var opponentRSNotes: some View {
+        let lines = opponentRSLines
+        if !lines.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(lines, id: \.self) { line in
+                    CombatBreakdownBox.row(
+                        value: rsValue(line.value),
+                        source: "\(L("opponentRS")) · \(rsSource(line))",
+                        tint: line.value < 0 ? Color.groupCombat : Color.dsaPositive
+                    )
+                }
+            }
+            .dsaBox(.raised, fill: Color(UIColor.systemBackground))
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.announcement.opponentRS")
+        }
+    }
+
+    private func buildModifierLines() -> [ModifierLine] {
+        ModifierEngine.shared.evaluate(context: situation(.meleeAttack))
+    }
+
+    /// Where the extra TP come from. The box the player reads and the formula the
+    /// dice get are the same call, so they cannot disagree.
+    private var damageBonusLines: [ModifierLine] {
+        DamageModifiers.lines(situation: situation(.damage))
+    }
+
+    /// The AT as it will be rolled. Same box, same rows and the same "Basis /
+    /// Effektiv" wording as the execution screen, because it is the same
+    /// calculation — this is where it is decided and there it is thrown.
+    private var attackBreakdown: some View {
+        let lines = buildModifierLines()
+        return CombatBreakdownBox(
+            baseValue: "\(baseAT)",
+            baseSource: L("source.basis"),
+            lines: lines,
+            totalValue: "AT \(baseAT + lines.reduce(0) { $0 + $1.value })",
+            totalSource: L("source.effective"),
+            sectionLabel: L("attack.label")
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("combat.announcement.atBreakdown")
+    }
+
+    /// What the announcement costs the *other* side. Finte comes from
+    /// `OpponentProfile.defenseModifiers`, and it used to say so as grey
+    /// subtitle text under the manoeuvre row — the one modifier on the screen
+    /// that was not a number in a column. Every other opponent line is the
+    /// catalog's (`Evaluation.opponentLines`) — Liegend, so far.
+    ///
+    /// Nothing is applied: the opponent is not modelled (ADR-0005), so this is
+    /// the figure the GM subtracts.
+    @ViewBuilder
+    private var opponentDefenseBreakdown: some View {
+        let lines = opponentDefenseLines
+        if !lines.isEmpty {
+            CombatBreakdownBox(
+                rows: lines.map(BreakdownRow.line),
+                totalValue: "VW \(signed(lines.reduce(0) { $0 + $1.value }))",
+                totalSource: L("source.opponentDefense"),
+                sectionLabel: L("opponentDefense.label")
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("combat.announcement.opponentDefense")
+        }
+    }
+
+    private func signed(_ value: Int) -> String {
+        value > 0 ? "+\(value)" : (value < 0 ? "\(value)" : "±0")
+    }
+
+    private var opponentDefenseLines: [ModifierLine] {
+        opponent.defenseModifiers(maneuver: selectedManeuver)
+            + ModifierEngine.shared.evaluation(situation(.meleeAttack)).opponentLines
+                .filter { $0.target != .rs }   // armour, not defence: opponentRSNotes
+                .map(\.modifierLine)
+    }
+
+    /// The TP calculation, for the same reason the AT one exists: a manoeuvre
+    /// bonus that is only ever folded into a formula string cannot be checked
+    /// against the rulebook. Hidden when the weapon's damage is all there is.
+    @ViewBuilder
+    private var damageBreakdown: some View {
+        // Always, not only when something modifies it. What the attack will hit
+        // for is half of what this screen is announcing, and hiding the box on
+        // an unmodified swing left the screen ending on the AT with the "Weiter"
+        // apparently welded to it.
+        if let formula = damageFormula {
+            // Once per render: the rows and the total are the same lines, and
+            // working them out asks the evaluator. `karmalDamage` is a second
+            // catalog evaluation, so it is taken once here too.
+            let bonus = damageBonusLines
+            let karmal = karmalDamage
+            CombatBreakdownBox(
+                rows: damageRows(formula, bonus, karmal),
+                totalValue: effectiveDamageLabel(formula, bonus, karmal),
+                totalSource: L("source.effective"),
+                sectionLabel: L("damage.label")
+            )
+        }
+    }
+
+    /// Rows rather than the base/lines shorthand, because a multiplier is not a
+    /// signed term and the shorthand can only add.
+    private func damageRows(_ formula: String, _ bonus: [ModifierLine], _ karmal: CriticalDamage) -> [BreakdownRow] {
+        var rows: [BreakdownRow] = [BreakdownRow(value: formula, source: L("source.weapon"))]
+        rows.append(contentsOf: bonus.map(BreakdownRow.line))
+        if let label = karmal.label {
+            rows.append(BreakdownRow(
+                value: label, source: L("source.karmal.opposing"), tint: Color.groupCombat
+            ))
+        }
+        return rows
+    }
+
+    /// "1W6+8", or "(1W6+8) ×2" where the Fokusregel doubles it — the dice are
+    /// not rolled yet, so the multiplier stays in the label rather than being
+    /// worked into the formula.
+    private func effectiveDamageLabel(_ formula: String, _ bonus: [ModifierLine], _ karmal: CriticalDamage) -> String {
+        let added = DamageModifiers.applied(to: damageFormula, lines: bonus) ?? formula
+        guard let label = karmal.label else { return added }
+        return "(\(added)) \(label)"
     }
 }
 
@@ -627,7 +1090,21 @@ struct CombatWeaponSelectionView: View {
     @Binding var step: CombatStep
     let dualAttackPenaltyActive: Bool
     let twoHandedGripActive: Bool
+    /// Everything the round is in. A defence picked here is rolled straight from
+    /// this screen, so this screen is where its modifiers have to come from.
+    let situation: CombatSituation
+    /// And who the defence is against: a parry is modified by the other side as
+    /// well as by the round (GRW_vorteilhaftePosition reads `onFoot`).
+    let opponent: OpponentProfile
     var onDismiss: () -> Void
+
+    /// What the attacker's size leaves a parry (`SizeCategoryRules`). Only a
+    /// parry is restricted; the attack path lists everything.
+    private var allowedDefenses: Set<SizeCategoryRules.Defense> {
+        SizeCategoryRules.allowedDefenses(against: opponent.size)
+    }
+    private var weaponParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.weaponParry) }
+    private var shieldParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.shieldParry) }
 
     private var headerLabel: String {
         switch action {
@@ -644,55 +1121,57 @@ struct CombatWeaponSelectionView: View {
             HStack {
                 Button { step = dualAttackPenaltyActive && action == .angriff ? .attackChoice : .root } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
                 Spacer()
                 Text(headerLabel)
-                    .font(.system(.headline, weight: .black))
+                    .font(.dsaHeading(.headline))
                     .foregroundStyle(.white)
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(.body, weight: .bold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(combatAccent)
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+            .dsaBox(.raised)
 
             ScrollView {
                 VStack(spacing: 0) {
                     let statLabel = action == .angriff ? "AT" : "PA"
-                    let dualPenalty = dualAttackPenaltyActive ? hero.dualAttackPenalty : 0
 
-                    // Main weapon option
-                    if let w = hero.selectedWeapon {
+                    // The rows carry the weapon's own value. The dual-attack,
+                    // off-hand and grip penalties used to be added here *and*
+                    // again by the modifier engine on the next screen, so a
+                    // dual-wield attack was penalised twice.
+
+                    // Main weapon option. Against a groß or riesig attacker a
+                    // weapon cannot parry (SizeCategoryRules): only the shield.
+                    if !weaponParryBlocked, let w = hero.selectedWeapon {
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus)
-                        let val = baseVal + dualPenalty + (action == .parieren && twoHandedGripActive ? -1 : 0)
                         weaponRow(
                             name: w.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus),
                             damageFormula: action == .angriff ? w.damage : nil,
                             note: nil,
                             isOffHand: false
                         )
-                    } else if hero.selectedWeaponName == "Raufen" {
+                    } else if !weaponParryBlocked, hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                         combatSectionLabel("\(L("mainWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus)
-                        let val = baseVal + dualPenalty
                         weaponRow(
                             name: "Raufen",
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus),
                             damageFormula: action == .angriff ? "1W6" : nil,
                             note: nil,
                             isOffHand: false
@@ -700,14 +1179,12 @@ struct CombatWeaponSelectionView: View {
                     }
 
                     // Off-hand weapon (dual-wield)
-                    if let offW = hero.selectedOffHandWeapon {
+                    if !weaponParryBlocked, let offW = hero.selectedOffHandWeapon {
                         combatSectionLabel("\(L("offHandWeapon")) (\(statLabel))")
-                        let baseVal = action == .angriff ? offW.at : offW.pa
-                        let val = baseVal + dualPenalty + hero.offHandPenalty
                         weaponRow(
                             name: offW.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? offW.at : offW.pa,
                             damageFormula: action == .angriff ? offW.damage : nil,
                             note: hero.offHandPenalty != 0 ? "\(L("offHandPenalty")): \(hero.offHandPenalty)" : nil,
                             isOffHand: true
@@ -715,13 +1192,12 @@ struct CombatWeaponSelectionView: View {
                     }
 
                     // Shield option
-                    if let s = hero.selectedShield {
+                    if !shieldParryBlocked, let s = hero.selectedShield {
                         combatSectionLabel("\(L("shieldOption")) (\(statLabel))")
-                        let val = action == .angriff ? s.at : s.pa
                         weaponRow(
                             name: s.name,
                             statLabel: statLabel,
-                            statValue: val,
+                            baseValue: action == .angriff ? s.at : s.pa,
                             damageFormula: action == .angriff ? s.damage : nil,
                             note: action == .parieren && !s.note.isEmpty ? s.note : nil,
                             isOffHand: false
@@ -734,10 +1210,31 @@ struct CombatWeaponSelectionView: View {
         }
     }
 
-    private func weaponRow(name: String, statLabel: String, statValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
-        Button {
+    /// Modifier lines for a defence rolled from this row, or `nil` on the attack
+    /// path where the announcement screen builds them instead.
+    ///
+    /// `itemInHand` is the piece this row parries with, handed to the engine as
+    /// `Situation.itemInHand` so a rule that keys on the *thing* — a Patzer that
+    /// damaged the shield — reads the shield rather than the main weapon.
+    private func defenseLines(isOffHand: Bool, itemInHand: String?) -> [ModifierLine]? {
+        guard action != .angriff else { return nil }
+        return situation.defenseModifiers(
+            hero: hero,
+            isAusweichen: action == .ausweichen,
+            isOffHand: isOffHand,
+            opponents: OpponentRoster([opponent]),
+            itemInHand: itemInHand
+        )
+    }
+
+    private func weaponRow(name: String, statLabel: String, baseValue: Int, damageFormula: String?, note: String?, isOffHand: Bool) -> some View {
+        let lines = defenseLines(isOffHand: isOffHand, itemInHand: action == .parieren ? name : nil)
+        let shownValue = baseValue + (lines?.reduce(0) { $0 + $1.value } ?? 0)
+        return Button {
             if dualAttackPenaltyActive && action == .angriff {
-                // Determine the other weapon for the second attack
+                // Determine the other weapon for the second attack. It never
+                // passes an announcement screen, so its penalties stay explicit
+                // here — the engine is not asked twice for them.
                 let otherWeapon: MeleeWeapon? = isOffHand ? hero.selectedWeapon : hero.selectedOffHandWeapon
                 let otherName = otherWeapon?.name ?? "?"
                 let otherBaseAT = otherWeapon?.at ?? 0
@@ -748,40 +1245,47 @@ struct CombatWeaponSelectionView: View {
                 step = .announcement(
                     .angriff,
                     name: name,
-                    baseAT: statValue,
+                    baseAT: baseValue,
                     damageFormula: damageFormula,
                     isOffHand: isOffHand,
                     secondAttack: (name: otherName, at: otherAT, damage: otherDmg),
                     isMountCharge: false
                 )
             } else if action == .angriff {
-                step = .announcement(.angriff, name: name, baseAT: statValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil, isMountCharge: false)
+                step = .announcement(.angriff, name: name, baseAT: baseValue, damageFormula: damageFormula, isOffHand: isOffHand, secondAttack: nil, isMountCharge: false)
             } else {
-                step = .execution(action, name: name, attributeValue: statValue, damageFormula: nil, note: action == .parieren ? note : nil)
+                step = .execution(
+                    action,
+                    name: name,
+                    attributeValue: shownValue,
+                    damageFormula: nil,
+                    note: action == .parieren ? note : nil,
+                    modifierLines: lines
+                )
             }
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(name)
-                        .font(.system(.body, weight: .semibold))
+                        .font(.dsaBody(.body))
                         .foregroundStyle(.primary)
                     if let note, !note.isEmpty {
                         Text(note)
-                            .font(.system(.caption2, weight: .medium))
+                            .font(.dsaBody(.caption2))
                             .foregroundStyle(combatAccent)
                     }
                 }
                 Spacer()
                 HStack(spacing: 4) {
-                    Text("\(statLabel) \(statValue)")
-                        .font(.system(.caption, design: .monospaced, weight: .black))
+                    Text("\(statLabel) \(shownValue)")
+                        .font(.dsaMono(.caption, emphasis: true))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.dsaDark)
                     if hero.belastungPenalty != 0 {
                         Text("(\(hero.belastungPenalty))")
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                            .font(.dsaMono(.caption, emphasis: true))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -790,9 +1294,10 @@ struct CombatWeaponSelectionView: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.raised)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
+        .accessibilityIdentifier("combat.weaponRow.\(name)")
         .padding(.bottom, 4)
     }
 }
