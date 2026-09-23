@@ -1,0 +1,49 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_41
+name: Belastungsgewöhnung
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 2
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html
+  book: Regelwerk
+  page: 246
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: G1
+    text: >
+      Diese SF sorgt dafür, dass für den Kämpfer die negativen Auswirkungen seiner Rüstung um
+      zwei Schritte pro Stufe der Belastungsgewöhnung in der BE-Spalte und der zusätzlichen
+      Abzüge der Rüstungen nach oben wandern. Eine Plattenrüstung würde also bei
+      Belastungsgewöhnung I nur noch behindern wie eine Kettenrüstung (was BE, GS und INI
+      angeht).
+    effects:
+      - lower: { condition: COND_1, source: armour, by: 1, per: tier, min: 0 }
+        ruling: table-shift
+        # FORMAT: modifies another rule's input (the level armour gives Belastung), not a check.
+        # The armour's extra GS/INI (ruestung-und-belastung.A1) is deliberately untouched.
+
+  - id: G2
+    text: Der RS bleibt selbstverständlich erhalten.
+    effects: none
+    why: states that nothing else changes
+
+rulings:
+  - id: table-shift
+    status: decided
+    question: >
+      Read literally, two rows up the armour table per Stufe moves both the Belastung and the
+      extra GS/INI penalty — so plate at Stufe II would land on leather and pick up leather's
+      −1 GS/−1 INI, which plate does not have. What does the shift mean?
+    answer: >
+      Each Stufe lowers the armour's Belastung by 1. An armour's extra GS/INI penalty is not
+      reduced and stays at −1 GS, −1 INI.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    applies_to: [G1]
+    notes: >
+      This is what the app does today (Hero.effectiveBE). It also answers what the table cannot:
+      armours the table does not list (Gestech-, Turnierrüstung, anything from an import) and
+      shifting past the top row.

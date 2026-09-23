@@ -1,0 +1,70 @@
+# DRAFT FORMAT — see ../../README.md.
+# Not the mounted "Sturmangriff zu Pferd", which is reiterkampf.RK14 (ruling two-sturmangriffe).
+id: SA_62
+name: Sturmangriff
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }   # so reiterkampf.RK3 forbids it mounted
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Sturmangriff.html
+  book: Regelwerk
+  page: 250
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+# Optolith says page 249 and lacks the cap clauses. The page wins.
+
+clauses:
+  - id: ST1
+    text: >
+      Das Manöver Sturmangriff kann nur durchgeführt werden, wenn der Angreifer eine
+      Anlaufstrecke von mindestens 4 Schritt hat und über eine GS von mindestens 4 verfügt. Die
+      Bewegung ist Teil der Aktion, mit der man angreift.
+    effects:
+      - offer:
+          manoeuvre: sturmangriff
+          requires: { runUp: { min: 4 }, hero.gs: { min: 4 } }
+          # runUp is asked (a toggle, "4 Schritt Anlauf?"); GS is the hero's current GS.
+
+  - id: ST2
+    text: >
+      Ist der Sturmangriff erfolgreich, steigen die TP um +2 und die halbe GS des Angreifers,
+      maximal jedoch insgesamt um +10 TP. […] Maximal kann ein TP-Bonus in Höhe der natürlichen
+      GS entstehen.
+    effects:
+      - when: { manoeuvre: sturmangriff, attack: hit }
+        add: { to: tp, value: "min(2 + hero.gs / 2, 10, hero.gs.natural)" }
+        ruling: [round-up, sturmangriff-gs]
+        # FORMAT: a formula with two caps, and a ruling on which value it reads.
+
+  - id: ST3
+    text: >
+      Dieser Angriff kann regulär abgewehrt werden. Sollte der Sturmangriff misslingen, erhält
+      der Verteidiger die Gelegenheit für einen Passierschlag.
+    effects:
+      - when: { manoeuvre: sturmangriff, attack: miss }
+        tell: { opponent: passierschlag }
+        # Opponent side, display only (ADR-0005).
+
+  - id: ST4
+    text: >
+      Dieses Spezialmanöver kann nicht mit dem Basismanöver Finte kombiniert werden.
+      Erschwernis: -2
+    effects:
+      - when: { manoeuvre: sturmangriff }
+        add: { to: at, value: -2 }
+      - excludes: { manoeuvre: finte }
+
+rulings:
+  - id: sturmangriff-gs
+    status: decided
+    question: >
+      "Die halbe GS des Angreifers" — the hero's current GS (after Belastung and armour) or the
+      natural GS?
+    answer: The current GS.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    applies_to: [ST2]
+    notes: >
+      A hero with GS 8 in plate (current GS 5) gets +2 + ⌈5/2⌉ = +5; the cap stays the natural
+      GS, as the page says. Assumed to hold for ST1's "GS von mindestens 4" too — the same
+      words; a hero at current GS 3 cannot charge.

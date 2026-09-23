@@ -1,0 +1,57 @@
+# DRAFT FORMAT — see ../../README.md.
+id: ruestung-und-belastung
+name: Rüstung und Belastung
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/ruestung-und-belastung.html
+  book: Regelwerk
+  page: 237
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: A1
+    text: >
+      Mittels einer Rüstung erhält ein Abenteurer einen Rüstungsschutz- und Belastungswert.
+      Abzüge auf GS und INI können ebenfalls noch zusätzlich entstehen.
+    effects:
+      # The armour's own values come from the equipment data (Optolith item templates, or what
+      # the hero sheet says), not from this file: the table on the page is an excerpt.
+      - sets: { condition: COND_1, level: armour.belastung }
+        # FORMAT: an effect that feeds a condition's level rather than a check.
+      - add: { to: [gs, ini], value: armour.extraPenalty }
+        # A line of its own, named after this clause — not part of Belastung, so it is not
+        # lowered by Belastungsgewöhnung or by the mounted relief, and is not a Zustand.
+
+  - id: A2
+    text: "(the table of armour types: RS, Belastung (Stufe), zusätzliche Abzüge)"
+    effects: none
+    why: data, held by the equipment table; the rows are listed in ../../belastung.md
+
+  - id: A3
+    text: >
+      Beispiel: Wer eine Stoffrüstung trägt, verfügt über einen RS von 2 und eine Belastung von
+      1. […] Wer eine Lederrüstung trägt erhält die gleichen Erschwernisse und Abzüge durch die
+      BE von -1, aber er bekommt zusätzliche Abzüge auf GS und INI, sodass er insgesamt Abzüge
+      von -2 auf beide Werte hat.
+    effects: none
+    why: a worked example; it is situations/belastung.yaml 1.1 and 1.2
+
+rulings:
+  - id: several-armour-pieces
+    status: decided
+    question: >
+      A hero may have more than one armour piece equipped. Do their Belastung values add up, and
+      do their extra GS/INI penalties? The app adds both today.
+    answer: >
+      Not under the core rules: a hero wears one armour, and it includes the helmet (a
+      Plattenrüstung has one). Armour by piece and zone exists only in the Fokusregel
+      Trefferzonen-RS (https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html), with its own,
+      more involved calculation.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    applies_to: [A1]
+    notes: >
+      Consequence for the app: without that Fokusregel, one armour is equipped at a time
+      (HeroDetailView lets any number be equipped and Hero.totalEquippedBE sums them). The
+      Fokusregel joins example 6, Trefferzonen.

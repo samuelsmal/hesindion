@@ -1,0 +1,99 @@
+# DRAFT FORMAT — see ../../README.md.
+id: COND_1
+name: Belastung
+kind: condition            # a Zustand with Stufen
+levels: 4
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Belastung.html
+  book: Regelwerk
+  page: 32
+  checked: 2026-09-23
+  hash: null               # filled in by the drift check
+reviewed: null             # { by, date } once a person has read every clause against the page
+
+# Where a Stufe comes from. Not a clause of this page: armour is `core/ruestung-und-belastung`,
+# carried weight is the Traglast rule (not written yet).
+# FORMAT: a condition whose level is *computed* (armour, load) rather than set by the GM or an
+# event, and which other rules then lower (SA_41) or lower for some checks only (Reiterkampf RK7).
+level:
+  from:
+    - rule: ruestung-und-belastung
+    - rule: traglast        # not written yet
+  lowered_by: [SA_41.G1]    # listed here for the reader; the effect lives in SA_41
+
+clauses:
+  - id: B1
+    text: >
+      Schweres Gepäck und Rüstungen können den Träger sehr belasten und seine
+      Bewegungsfreiheit einschränken. So lange diese Lasten getragen werden, erleidet die Person
+      entsprechende Stufen an Belastung. Werden die Lasten abgelegt, verschwinden auch die
+      Belastungsstufen.
+    effects: none
+    why: describes where the level comes from; see `level`
+
+  - id: B2
+    text: >
+      Das Gewicht von Rüstungen wird bei der Berechnung von Belastung durch Traglast ignoriert.
+    effects: none
+    why: belongs to the Traglast rule, which is not written yet
+
+  - id: B3
+    text: |
+      Stufe I: leicht belastet, Proben auf Talente, die durch Belastung erschwert sind –1, AT –1, Verteidigung –1, INI –1, GS –1
+      Stufe II: belastet, Proben auf Talente, die durch Belastung erschwert sind –2, AT –2, Verteidigung –2, INI –2, GS –2
+      Stufe III: schwer belastet, Proben auf Talente, die durch Belastung erschwert sind –3, AT –3, Verteidigung –3, INI –3, GS –3
+    effects:
+      - when: { level: [1, 3] }
+        add: { to: [at, pa, aw, fk, ini, gs], value: -1, per: level }
+        # FORMAT: the page says "AT"; FK counted as an attack — confirm with a ruling if it matters.
+      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: true }
+        add: { to: check, value: -1, per: level }
+        ruling: belastung-reach
+      - when: { level: [1, 3], check: [spell, liturgy] }
+        add: { to: check, value: -1, per: level }
+        ruling: belastung-reach
+
+  - id: B4
+    text: "Stufe IV: Handlungsunfähig, bis auf Last fallen lassen."
+    effects:
+      - when: { level: 4 }
+        gain: { state: handlungsunfaehig, until: level-below-4 }
+    # A hero in Gestechrüstung (Belastung 4) on foot is Handlungsunfähig. That is intended:
+    # it is what Belastungsgewöhnung is for (ruling 2026-09-23).
+
+rulings:
+  - id: belastung-reach
+    status: decided
+    question: >
+      The page lists talents "die durch Belastung erschwert sind", AT, Verteidigung, INI and GS.
+      Which talents are they, and does Belastung also hinder spell and liturgy casting?
+    answer: >
+      Talents that involve movement are hindered (riding is); knowledge and speaking talents
+      (e.g. Überzeugen) are not. The talent groups are indicative. Casting is hindered.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    applies_to: [B3]
+    notes: >
+      Each talent's own entry in the book carries a Belastung flag (yes / no / maybe), which
+      Optolith exports and rules.db holds as skill_details.encumbrance: 29 yes, 23 no, 7 maybe.
+      It agrees with the answer — Körper talents and most Handwerk talents yes, Gesellschaft
+      and Wissen no (Verkleiden is the one Gesellschaft yes). So `talent.hinderedByBelastung`
+      reads that flag; the groups are the check that it is sane.
+
+  - id: belastung-talents-maybe
+    status: open
+    question: >
+      Seven talents are flagged "maybe" for Belastung: Singen, Sinnesschärfe, Betören,
+      Gassenwissen, Fesseln, Fischen & Angeln, Pflanzenkunde. How does the app treat them?
+    context: >
+      The book marks them "evtl." — whether armour hinders depends on what the hero is doing
+      (singing on a march vs. on a stage, searching a room vs. listening). The app applies no
+      Belastung to any talent today.
+    situations: [belastung 4.5]
+    options:
+      a: { says: "Ask at the check: a toggle 'Belastung zählt', off by default.", app: "one toggle on seven talents' check screens" }
+      b: { says: "Settle each talent here once, yes or no.", app: "no question at the table" }
+      c: { says: "Always apply.", app: "none" }
+      d: { says: "Never apply.", app: "none" }
+    recommended: a
+    why_recommended: the book leaves it to the situation on purpose, and the player at the table knows the situation
+    answer: null

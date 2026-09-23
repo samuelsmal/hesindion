@@ -1,0 +1,37 @@
+# Rulings that apply to more than one rule. A ruling about a single rule lives in that
+# rule's file instead. Effects that rest on a ruling name it: `ruling: <id>`.
+# DRAFT FORMAT — see ../README.md.
+
+- id: round-up
+  status: decided
+  question: >
+    Several pages halve a value ("die halbe GS") without saying how to round. Up or down?
+  answer: >
+    Round up, as ADR-0006 already decides for every DSA 5 fraction the rules do not settle
+    otherwise. Applies to both Sturmangriffe (SA_62 on foot, the mounted order in Reiterkampf).
+  decided: { by: "@samuelsmal", date: 2026-09-23 }
+  see: [docs/adr/0006-derived-value-rounding-and-repair.md]
+  applies_to: [SA_62.ST2, reiterkampf.RK14]
+
+- id: kampfstil-techniques
+  status: open
+  question: >
+    A Kampfstil lists combat techniques, sometimes narrowed to weapons. Does the style's effect
+    apply only while fighting with one of them?
+  context: >
+    Golgariten-Stil lists Hiebwaffen (only Rabenschnabel) and Schilde (only Großschild, only
+    mounted). The style's own page does not say "only while fighting with", and the wiki's
+    Kampfstil overview has no general rule text. The catalog today turns the style on only
+    with a Rabenschnabel or a Großschild in hand, so a Golgarite with a Schwert gets AT +2,
+    PA +2 instead of AT +4, PA +3. The same question comes up for every Kampfstil.
+  situations: [reiterkampf 5.7]
+  options:
+    a: { says: "Only while the hero fights with a listed technique (and weapon, where narrowed).", app: "as the catalog does today" }
+    b: { says: "Whenever the style's own conditions hold; the list only says which techniques can learn it.", app: "the style applies with any weapon" }
+    c: { says: "Decided per style, in each style's file.", app: "a field per Kampfstil" }
+  recommended: a
+  why_recommended: >
+    A style is a way of fighting with particular weapons; applying it with any weapon makes the
+    narrowed lists (only Rabenschnabel, only Großschild) meaningless.
+  answer: null
+  applies_to: [SA_661]

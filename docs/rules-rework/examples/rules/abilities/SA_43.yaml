@@ -1,0 +1,25 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_43
+name: Berittener Kampf
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_BerittenerKampf.html
+  book: Regelwerk
+  page: 247
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: BK1
+    text: >
+      Der Reiter hat die Möglichkeit im Reiterkampf spezielle Befehle zu erteilen,
+      beispielsweise Niederreiten oder Sturmangriff zu Pferd.
+    effects: none
+    why: >
+      The orders are defined in reiterkampf (RK13, RK14) and require this SF there. This clause
+      is what they point to, so a player sees why the orders appear.
+    enables: [reiterkampf.RK13, reiterkampf.RK14]
+    # FORMAT: the dependency runs both ways; which side holds it? Here: the order requires the
+    # SF (`requires: { hero.has: SA_43 }`), and this back-reference is for the reader only.

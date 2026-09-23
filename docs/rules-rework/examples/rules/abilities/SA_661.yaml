@@ -1,0 +1,46 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_661
+name: Golgariten-Stil
+kind: specialAbility
+group: Kampfstilsonderfertigkeiten (bewaffnet)
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/golgariten-stil.html
+  book: Aventurisches Götterwirken I
+  page: 229
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+# Optolith's text for this ability says TP where the page says PA. The page wins.
+
+clauses:
+  - id: GS1
+    text: >
+      Kämpft der Held beritten gegen Fußkämpfer, erhöht sich die aus der vorteilhaften Position
+      resultierende Erleichterung auf AT um +2.
+    effects:
+      - when: { hero.mounted: true, opponent.onFoot: true }
+        raise: { line: vorteilhafte-position.VP1.at, by: 2 }
+        ruling: kampfstil-techniques
+        # FORMAT: raises another rule's line. The breakdown shows "Vorteilhafte Position +2" and
+        # "Golgariten-Stil +2" as two lines, the second marked as raising the first.
+
+  - id: GS2
+    text: >
+      Außerdem bekommt der Abenteurer noch einen Bonus von +1 PA, wenn er sich auf dem Rücken
+      eines Reittiers befindet.
+    effects:
+      - when: { hero.mounted: true }
+        add: { to: pa, value: 1 }
+        ruling: kampfstil-techniques
+
+  - id: GS3
+    text: >
+      Kampftechniken: Hiebwaffen (nur Rabenschnabel), Schilde (nur Großschild und nur von einem
+      Reittier aus)
+    effects: none
+    why: what it means for GS1 and GS2 is the open ruling kampfstil-techniques (rulings.yaml)
+
+  - id: GS4
+    text: "Erweiterte Kampfsonderfertigkeiten: Frontalangriff, Mächtiger Rundumschlag, Schildstoß"
+    effects: none
+    why: unlocks purchases, not a roll

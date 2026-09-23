@@ -1,0 +1,232 @@
+# Example 1 — Belastung. Hero + situation → the values that change, and the rule and clause
+# behind every line. Ids follow ../belastung.md. DRAFT FORMAT — see ../README.md.
+#
+# A line is { value, from: <rule>.<clause> }, plus
+#   via:    rules that changed the line without being its source (SA_41 lowers Belastung;
+#           Belastung is still what costs the AT)
+#   ruling: the ruling the line rests on, shown as "Auslegung" in game
+# `total` is what the check or value changes by. Values not listed do not change.
+# `open: <ruling>` means the expectation waits on an open ruling.
+
+base_hero: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 }
+
+armour:
+  Stoffrüstung:   { belastung: 1, extra: 0 }
+  Lederrüstung:   { belastung: 1, extra: -1 }
+  Kettenrüstung:  { belastung: 2, extra: 0 }
+  Schuppenrüstung: { belastung: 2, extra: -1 }
+  Plattenrüstung: { belastung: 3, extra: 0 }
+  Gestechrüstung: { belastung: 4, extra: 0 }
+  Turnierrüstung: { belastung: 5, extra: 0 }
+
+situations:
+
+  # --- Armour alone ------------------------------------------------------------------------
+
+  - id: "1.1"
+    name: Stoffrüstung
+    hero: { armour: [Stoffrüstung] }
+    expect:
+      conditions: { COND_1: 1 }
+      at:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+      pa:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+      aw:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+      ini: { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+      gs:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+
+  - id: "1.2"
+    name: Lederrüstung — the page's own example
+    hero: { armour: [Lederrüstung] }
+    expect:
+      conditions: { COND_1: 1 }
+      at:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
+      ini:
+        total: -2
+        lines:
+          - { value: -1, from: COND_1.B3 }
+          - { value: -1, from: ruestung-und-belastung.A1 }   # the extra penalty, its own line
+      gs:
+        total: -2
+        lines:
+          - { value: -1, from: COND_1.B3 }
+          - { value: -1, from: ruestung-und-belastung.A1 }
+
+  - id: "1.3"
+    name: Plattenrüstung
+    hero: { armour: [Plattenrüstung] }
+    expect:
+      conditions: { COND_1: 3 }
+      at:  { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
+      ini: { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
+    app_today: same
+
+  - id: "1.4"
+    name: Gestechrüstung on foot — Belastung IV
+    hero: { armour: [Gestechrüstung] }
+    expect:
+      conditions: { COND_1: 4 }
+      states: { handlungsunfaehig: { from: COND_1.B4 } }
+      actions: none
+    app_today: acts at −4 — wrong
+
+  - id: "1.5"
+    name: Turnierrüstung on foot — Belastung 5, and there is no Stufe V
+    hero: { armour: [Turnierrüstung] }
+    expect:
+      conditions: { COND_1: 4 }          # capped at the highest Stufe
+      states: { handlungsunfaehig: { from: COND_1.B4 } }
+    app_today: acts at −5 — wrong
+
+  # --- Belastungsgewöhnung (ruling SA_41.table-shift: −1 Belastung per Stufe, extras stay) ---
+
+  - id: "2.1"
+    name: Platte, Belastungsgewöhnung I
+    hero: { armour: [Plattenrüstung], abilities: { SA_41: 1 } }
+    expect:
+      conditions: { COND_1: 2 }
+      at:  { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+      ini: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+
+  - id: "2.2"
+    name: Platte, Belastungsgewöhnung II
+    hero: { armour: [Plattenrüstung], abilities: { SA_41: 2 } }
+    expect:
+      conditions: { COND_1: 1 }
+      at:  { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: SA_41.table-shift }] }
+      ini: { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: SA_41.table-shift }] }
+    app_today: same
+
+  - id: "2.4"
+    name: Schuppe, Belastungsgewöhnung II — Belastung gone, the extra stays
+    hero: { armour: [Schuppenrüstung], abilities: { SA_41: 2 } }
+    expect:
+      conditions: { COND_1: 0 }
+      at:  { total: 0 }
+      ini: { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
+      gs:  { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
+
+  - id: "2.8"
+    name: Leder, Belastungsgewöhnung II
+    hero: { armour: [Lederrüstung], abilities: { SA_41: 2 } }
+    expect:
+      conditions: { COND_1: 0 }
+      at:  { total: 0 }
+      ini: { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
+    app_today: same
+
+  - id: "2.10"
+    name: Gestech, Belastungsgewöhnung I — able to act again
+    hero: { armour: [Gestechrüstung], abilities: { SA_41: 1 } }
+    expect:
+      conditions: { COND_1: 3 }
+      states: {}
+      at: { total: -3, lines: [{ value: -3, from: COND_1.B3, via: [SA_41.G1] }] }
+
+  - id: "2.11"
+    name: Gestech, Belastungsgewöhnung II
+    hero: { armour: [Gestechrüstung], abilities: { SA_41: 2 } }
+    expect:
+      conditions: { COND_1: 2 }
+      at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+
+  # --- Mounted (reiterkampf.RK7: Belastung −1 for Kampfproben only) -------------------------
+
+  - id: "3.1"
+    name: Platte, mounted, against another rider (so no vorteilhafte Position)
+    hero: { armour: [Plattenrüstung], mounted: true }
+    opponent: { onFoot: false }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7] }] }
+      pa: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7] }] }
+      aw:
+        total: -4
+        lines:
+          - { value: -2, from: COND_1.B3, via: [reiterkampf.RK7] }
+          - { value: -2, from: reiterkampf.RK6 }
+      gs:    { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }        # not a Kampfprobe
+      spell: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+      ini:   { open: reiterkampf.rider-ini }
+    app_today: same, except the RK6 line cites no rule
+
+  - id: "3.2"
+    name: Platte, Belastungsgewöhnung II, mounted
+    hero: { armour: [Plattenrüstung], abilities: { SA_41: 2 }, mounted: true }
+    opponent: { onFoot: false }
+    expect:
+      at:    { total: 0 }        # Belastung I, lowered to 0 for the Kampfprobe
+      gs:    { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      spell: { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: COND_1.belastung-reach }] }
+
+  - id: "3.3"
+    name: Gestechrüstung, mounted — the jouster, without Belastungsgewöhnung
+    hero: { armour: [Gestechrüstung], mounted: true }
+    expect:
+      conditions: { COND_1: 4 }
+      states: { handlungsunfaehig: { from: COND_1.B4, ruling: reiterkampf.mounted-jouster } }
+      # RK7 lowers the penalty on a Kampfprobe; it does not lift Stufe IV.
+
+  - id: "3.4"
+    name: Gestechrüstung, mounted, Belastungsgewöhnung I — the jouster can act
+    hero: { armour: [Gestechrüstung], abilities: { SA_41: 1 }, mounted: true }
+    opponent: { onFoot: false }
+    expect:
+      conditions: { COND_1: 3 }
+      states: {}
+      at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1, reiterkampf.RK7], ruling: reiterkampf.mounted-jouster }] }
+
+  # --- Which checks Belastung reaches (ruling COND_1.belastung-reach) -----------------------
+
+  - id: "4.1"
+    name: Klettern in Platte — a movement talent
+    hero: { armour: [Plattenrüstung] }
+    check: { talent: Klettern }
+    expect:
+      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+    app_today: 0 — wrong
+
+  - id: "4.2"
+    name: Überreden in Platte — a speaking talent
+    hero: { armour: [Plattenrüstung] }
+    check: { talent: Überreden }
+    expect:
+      check: { total: 0 }
+    app_today: same
+
+  - id: "4.3"
+    name: Casting a spell in Platte
+    hero: { armour: [Plattenrüstung] }
+    check: { spell: any }
+    expect:
+      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+    app_today: same
+
+  - id: "4.4"
+    name: Reiten (Kampfmanöver) in Platte, mounted — relieved like a Kampfprobe
+    hero: { armour: [Plattenrüstung], mounted: true }
+    check: { talent: Reiten, application: Kampfmanöver }
+    expect:
+      check: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7], ruling: [COND_1.belastung-reach, reiterkampf.rk7-reiten] }] }
+    app_today: 0 — wrong
+
+  - id: "4.6"
+    name: Reiten in Platte, on foot (leading the horse through a river, say)
+    hero: { armour: [Plattenrüstung] }
+    check: { talent: Reiten }
+    expect:
+      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+    app_today: 0 — wrong
+
+  - id: "4.5"
+    name: Sinnesschärfe in Platte — a talent flagged "maybe"
+    hero: { armour: [Plattenrüstung] }
+    check: { talent: Sinnesschärfe }
+    expect: { open: COND_1.belastung-talents-maybe }
+
+  # --- One armour (ruling ruestung-und-belastung.several-armour-pieces) --------------------
+
+  - id: "6.1"
+    name: Two armours equipped, no Trefferzonen-RS
+    hero: { armour: [Kettenrüstung, Lederrüstung] }
+    expect:
+      not_selectable: [{ second_armour: true, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
+    app_today: both equipped, Belastung 3 and INI −4 — wrong
