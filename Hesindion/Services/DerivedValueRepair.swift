@@ -10,9 +10,16 @@ import SwiftData
 /// It deliberately does **not** touch Lebensenergie, Seelenkraft or Zähigkeit: none of
 /// them is wrong, all three need the species base that existing heroes cannot supply,
 /// and `lebensenergie.current` is live session state.
+///
+/// Geschwindigkeit is the one species-keyed value it *does* repair, because that one was
+/// wrong: the import wrote a flat `8` for every hero, and GS is a species rule (Zwerge 6).
+/// The species base it needs is `PersonalData.speciesId`, which ADR-0006 began persisting
+/// for exactly this case. A hero without it — the normal state for anyone imported before
+/// that change — is skipped rather than reset to the human value: the pass corrects what
+/// it can derive and writes nothing it cannot.
 enum DerivedValueRepair {
 
-    /// Recomputes Wundschwelle, Ausweichen and Initiative in place.
+    /// Recomputes Wundschwelle, Ausweichen, Initiative and Geschwindigkeit in place.
     /// - Returns: `true` if any value changed. Idempotent — a second call returns `false`.
     @discardableResult
     static func repair(_ hero: Hero) -> Bool {
@@ -43,6 +50,20 @@ enum DerivedValueRepair {
         if dv.initiative.value != ini || dv.initiative.max != ini {
             dv.initiative = ComputedValue(value: ini, bonus: dv.initiative.bonus, max: ini)
             changed = true
+        }
+
+        // Only where the species is known. `nil` means the hero predates
+        // `PersonalData.speciesId`, and an unrecognised id means a species outside the
+        // pinned Optolith source; in both cases the right answer is "leave it alone",
+        // not "assume human" — assuming would write the very value this repair exists
+        // to correct, and do it over a number somebody may have fixed by hand.
+        // `max` is base + bonus, as for Wundschwelle, so a bonus is not dropped from the ceiling.
+        if let gs = DerivedValueFormulas.geschwindigkeit(speciesId: hero.personalData?.speciesId) {
+            let bonus = dv.geschwindigkeit.bonus
+            if dv.geschwindigkeit.base != gs || dv.geschwindigkeit.max != gs + bonus {
+                dv.geschwindigkeit = ResourceValue(base: gs, bonus: bonus, max: gs + bonus)
+                changed = true
+            }
         }
 
         return changed
