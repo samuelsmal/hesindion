@@ -194,6 +194,12 @@ class CliTests(unittest.TestCase):
             self.assertEqual(self.run_cli(path, "--check").returncode, 0)
             self.assertEqual(open(path, encoding="utf-8").read(), before)
 
+    def test_boronmir_sample_is_consistent(self):
+        sample = os.path.join(HERE, "..", "..", "specs", "heroes",
+                              "Boronmir Siebenfeld von Greifenfurt (2026-09-24).json")
+        result = self.run_cli(sample, "--check")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

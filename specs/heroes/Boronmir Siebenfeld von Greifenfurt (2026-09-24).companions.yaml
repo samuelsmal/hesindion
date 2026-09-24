@@ -1,0 +1,64 @@
+# Kupperus, Boronmir's Svellttaler Kaltblut — the build worked out on 2026-09-24.
+# Check and inject: make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+# Ruhiges Temperament and Reittier come with the breed (Aventurische Tiergefährten
+# p. 45; Kodex des Schwertes p. 155) and cost nothing.
+schemaVersion: 1
+pets:
+  Kupperus:
+    breed: svellttaler-kaltblut
+    base:
+      attributes: { mu: 12, kl: 10, in: 12, ch: 12, ff: 8, ge: 15, ko: 24, kk: 25 }
+      lep: 75
+      ini: 14+1W6
+      gs: 12
+      vw: 7
+      attacks:
+        - { name: Tritt, at: 15, tp: 1W6+7, rw: mittel }
+        - { name: Biss, at: 12, tp: 1W6+2, rw: kurz }
+        - { name: Niederreiten, at: 15, tp: 2W6+6, rw: mittel }
+      talents: { Einschüchtern: 2, Körperbeherrschung: 4, Kraftakt: 8, Schwimmen: 4,
+                 Selbstbeherrschung: 4, Sinnesschärfe: 4, Verbergen: 2, Willenskraft: 3 }
+      advantages: [Ruhiges Temperament]
+      abilities: [Mächtiger Schlag]
+      training: [Reittier]
+    ap:
+      total: 336
+    purchases:
+      - { advantage: Geduldig, ap: 5 }
+      - { advantage: Ausdauernd, ap: 15 }       # KO +2
+      - { advantage: Heldenwuchs, ap: 15 }      # LeP + KO
+      - { advantage: Zähes Tier, ap: 12 }
+      - { advantage: Schnell, ap: 8 }           # GS +25 %
+      - { advantage: Stark, ap: 15 }            # KK +2
+      - { advantage: Tapfer, ap: 15 }           # MU +2
+      - { advantage: Sprungsicher, ap: 5 }
+      - { advantage: Loyal, ap: 10 }
+      - { training: Kampftier, ap: 17 }         # +1 MU +1 KK +2 AT +1 TP +20 % LeP, Einschüchtern +4
+      - { trick: Komm, ap: 3 }
+      - { raise: vw, from: 7, to: 14 }
+      - { raise: at, from: 17, to: 19 }
+      - { buy: lep, count: 16 }
+      - { raise: "talent:Willenskraft", from: 3, to: 8 }
+      - { raise: "talent:Selbstbeherrschung", from: 4, to: 8 }
+      - { raise: "talent:Körperbeherrschung", from: 4, to: 8 }
+      - { raise: "talent:Sinnesschärfe", from: 4, to: 8 }
+      - { raise: "talent:Einschüchtern", from: 6, to: 10 }
+    values:
+      attributes: { mu: 15, kl: 10, in: 12, ch: 12, ff: 8, ge: 15, ko: 26, kk: 28 }
+      lep: 137        # (75 + 26 Heldenwuchs) × 1.2 Kampftier = 121, + 16 bought
+      ini: 15+1W6     # (MU 15 + GE 15) / 2 — GM ruling
+      gs: 15
+      vw: 14
+      rs: 0
+      be: 0
+      attacks:
+        - { name: Tritt, at: 19, tp: 1W6+8, rw: mittel }
+        - { name: Biss, at: 16, tp: 1W6+3, rw: kurz }
+        - { name: Niederreiten, at: 19, tp: 2W6+7, rw: mittel }
+      talents: { Einschüchtern: 10, Körperbeherrschung: 8, Kraftakt: 8, Schwimmen: 4,
+                 Selbstbeherrschung: 8, Sinnesschärfe: 8, Verbergen: 2, Willenskraft: 8 }
+      advantages: [Ruhiges Temperament, Geduldig, Ausdauernd, Heldenwuchs, Zähes Tier,
+                   Schnell, Stark, Tapfer, Sprungsicher, Loyal]
+      abilities: [Mächtiger Schlag]
+      training: [Reittier, Kampftier]
+      tricks: [Aus, Fass I, Fass II, Komm]

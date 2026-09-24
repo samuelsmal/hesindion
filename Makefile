@@ -139,7 +139,7 @@ test-rules-db:
 # <export>.companions.yaml against its Optolith export and inject the `hesindion`
 # block. FIX=1 first sets the export's own pet fields from the build; CHECK=1
 # validates without writing.
-#   make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+#   make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 companions:
 	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,)
 
