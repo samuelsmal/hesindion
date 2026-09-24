@@ -21,6 +21,10 @@ make deploy       # Build and deploy to physical device (Karl)
 make clean        # Clean build artifacts
 make rules-db     # Rebuild Hesindion/Resources/rules.db from the Optolith YAML (DSA_DATA) and the rules catalog
 make test-rules-db  # The build script's own tests (Python unittest); rules-db runs them first
+make rules-review  # TUI to review the draft rule files in docs/rules-rework/examples (BY=@handle to sign as someone else)
+make rules-queue   # What waits for an agent pass: flagged rules, answered rulings
+make rules-agent   # Start Claude Code on that queue (interactive, does not commit)
+make test-rules-review  # The review tool's tests and RULINGS.md --check
 ```
 
 - **Deployment target:** iOS 26.0+

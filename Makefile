@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-queue rules-agent test-rules-review
 
 build:
 	xcodebuild \
@@ -140,6 +140,31 @@ rules-db: test-rules-db
 		--vocabulary specs/data/rule-vocabulary.json \
 		$(if $(UPDATE_SNAPSHOT),--update-snapshot,) \
 		--output '$(RULES_DB)'
+
+# The rules rework's draft rule files (docs/rules-rework/examples/). uv installs
+# the scripts' own dependencies (Textual, PyYAML) from their inline metadata.
+RULES_EXAMPLES = docs/rules-rework/examples
+
+# Review TUI: answer rulings, mark rules reviewed, send them back to the agent.
+# Signs with your gh login; BY=@handle signs as someone else.
+rules-review:
+	uv run $(RULES_EXAMPLES)/review.py $(if $(BY),--by $(BY),)
+
+# What waits for an agent: flagged rules and answered rulings to process.
+rules-queue:
+	uv run $(RULES_EXAMPLES)/review.py --queue
+
+# Start Claude Code on that queue. Interactive, so you can watch and steer; it
+# does not commit.
+rules-agent:
+	claude "Do the agent pass on the draft rule files: run \`make rules-queue\` and work \
+	through every item as $(RULES_EXAMPLES)/README.md, section 'What waits for an agent', \
+	says. Finish with \`make test-rules-review\`. Do not commit."
+
+# The review tool's file edits, and RULINGS.md current with the rule files.
+test-rules-review:
+	uv run --with pyyaml python -m unittest discover -s $(RULES_EXAMPLES) -p 'test_*.py' -v
+	uv run --with pyyaml python $(RULES_EXAMPLES)/rulings.py --check
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

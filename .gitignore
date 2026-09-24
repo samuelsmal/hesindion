@@ -19,3 +19,6 @@ DerivedData/
 # Snapshot test failure artifacts
 **/failures/
 .superpowers/
+
+# Python bytecode (scripts/, docs/rules-rework/examples/)
+__pycache__/
