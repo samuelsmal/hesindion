@@ -1140,6 +1140,10 @@ struct HeroDetailView: View {
                             ("AK", "\(pet.actions)")
                         ])
 
+                        if pet.hasCompanionData {
+                            companionBlock(pet)
+                        }
+
                         if !pet.talents.isEmpty {
                             FieldRow(label: "talents", value: pet.talents)
                         }
@@ -1154,6 +1158,43 @@ struct HeroDetailView: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder private func companionBlock(_ pet: Pet) -> some View {
+        HStack(spacing: 16) {
+            companionValue("VW", pet.defense, id: "pet.defense.\(pet.name)")
+            companionValue("RS", pet.armor, id: "pet.armor.\(pet.name)")
+            companionValue("BE", pet.encumbrance, id: "pet.encumbrance.\(pet.name)")
+            Spacer()
+            Text("\(pet.apSpent ?? 0) / \(pet.apTotal ?? 0) AP")
+                .font(.dsaMono(.caption, emphasis: true))
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("pet.ap.\(pet.name)")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+
+        if !pet.advantages.isEmpty {
+            FieldRow(label: "petAdvantages", value: pet.advantages.joined(separator: ", "))
+        }
+        if !pet.abilities.isEmpty {
+            FieldRow(label: "petAbilities", value: pet.abilities.joined(separator: ", "))
+        }
+        if !pet.training.isEmpty {
+            FieldRow(label: "petTraining", value: pet.training.joined(separator: ", "))
+        }
+        if !pet.tricks.isEmpty {
+            FieldRow(label: "petTricks", value: pet.tricks.joined(separator: ", "))
+        }
+    }
+
+    private func companionValue(_ label: String, _ value: Int?, id: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label).font(.dsaBody(.caption)).foregroundStyle(.secondary)
+            Text(value.map(String.init) ?? "–")
+                .font(.dsaMono(.body, emphasis: true))
+                .accessibilityIdentifier(id)
         }
     }
 }
