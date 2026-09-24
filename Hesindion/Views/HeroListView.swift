@@ -123,9 +123,11 @@ struct HeroListView: View {
             if DebugLaunch.loadDefault, selection == nil, let first = heroes.first {
                 selection = .hero(first.persistentModelID)
             }
+            #if DEBUG
             if let url = UITestSeed.reimportFixtureURL {
                 handleURL(url)
             }
+            #endif
         }
     }
 
