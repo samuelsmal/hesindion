@@ -157,6 +157,11 @@ enum DSAStrings {
         "importHero":           "Import Hero",
         "importHint":           "Import a JSON or YAML file to add your first hero.",
         "selectHint":           "Select a hero or the rulebook from the list.",
+        "companion.reimport.title":    "%@: companion data missing",
+        "companion.reimport.message":  "This export has no Hesindion companion data (VW, attacks, advantages, training, tricks). The last import had it. Keep the previous values?",
+        "companion.reimport.keep":     "Keep previous",
+        "companion.reimport.discard":  "Use export only",
+        "companion.reimport.cancel":   "Cancel import",
         // HeroSettings
         "heroSettings":         "Hero Settings",
         "colorScheme":          "Color Scheme",
@@ -934,6 +939,11 @@ enum DSAStrings {
         "importHero":           "Held importieren",
         "importHint":           "Importiere eine JSON- oder YAML-Datei, um deinen ersten Helden hinzuzufügen.",
         "selectHint":           "Wähle einen Helden oder das Regelbuch aus der Liste.",
+        "companion.reimport.title":    "%@: Begleiterdaten fehlen",
+        "companion.reimport.message":  "Dieser Export enthält keine Hesindion-Begleiterdaten (VW, Angriffe, Vorteile, Ausbildung, Tricks). Der letzte Import hatte sie. Bisherige Werte behalten?",
+        "companion.reimport.keep":     "Bisherige behalten",
+        "companion.reimport.discard":  "Nur Export verwenden",
+        "companion.reimport.cancel":   "Import abbrechen",
         // HeroSettings
         "heroSettings":         "Heldeneinstellungen",
         "colorScheme":          "Farbschema",

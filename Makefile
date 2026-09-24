@@ -280,6 +280,19 @@ test-ui: rules-db boot
 		$(NO_CLONE) \
 		test -only-testing:HesindionTests
 
+# Run one test class or method (no re-recording):
+#   make test-only ONLY=HesindionUITests/CompanionReimportFlowTests
+test-only: boot
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-sdk $(SDK) \
+		-configuration $(CONFIG) \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
+		$(NO_CLONE) \
+		test -only-testing:$(ONLY)
+
 # Re-record snapshot baselines. swift-snapshot-testing reads
 # SNAPSHOT_TESTING_RECORD from the test *runner* process, so the value must be
 # injected with the TEST_RUNNER_ prefix (xcodebuild strips it before launch);

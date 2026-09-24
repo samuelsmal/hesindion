@@ -25,6 +25,15 @@ struct HeroListView: View {
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
 
+    /// A re-import waiting on the companion question: the file, the pets still to
+    /// ask about (in `petsInOrder` order) and the ones already kept.
+    private struct PendingReimport {
+        let data: Data
+        var remaining: [String]
+        var keep: Set<String> = []
+    }
+    @State private var pendingReimport: PendingReimport?
+
     private var appVersion: String { AppVersion.display }
 
     var body: some View {
@@ -84,9 +93,37 @@ struct HeroListView: View {
                 AdventureCreationSheet()
             }
         }
+        .overlay {
+            if let name = pendingReimport?.remaining.first {
+                DSAModal(title: String(format: L("companion.reimport.title"), name),
+                         accent: .groupEquipment) {
+                    Text(L("companion.reimport.message"))
+                        .font(.dsaBody(.subheadline))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    DSAModalButton(title: L("companion.reimport.keep"), accent: .groupEquipment,
+                                   identifier: "companion.reimport.keep") {
+                        answerReimport(keep: true)
+                    }
+                    DSAOrDivider()
+                    DSAModalButton(title: L("companion.reimport.discard"), accent: .groupEquipment,
+                                   identifier: "companion.reimport.discard") {
+                        answerReimport(keep: false)
+                    }
+                    DSAModalButton(title: L("companion.reimport.cancel"), accent: .groupEquipment,
+                                   filled: false, identifier: "companion.reimport.cancel") {
+                        pendingReimport = nil
+                    }
+                }
+                .accessibilityIdentifier("companion.reimport.modal")
+            }
+        }
         .onAppear {
             if DebugLaunch.loadDefault, selection == nil, let first = heroes.first {
                 selection = .hero(first.persistentModelID)
+            }
+            if let url = UITestSeed.reimportFixtureURL {
+                handleURL(url)
             }
         }
     }
@@ -312,7 +349,31 @@ struct HeroListView: View {
 
     private func handleURL(_ url: URL) {
         do {
-            importResult = try OptolithImportService().importHero(from: url, context: modelContext)
+            let service = OptolithImportService()
+            let data = try service.readData(from: url)
+            let conflicts = try service.companionConflicts(in: data, context: modelContext)
+            if conflicts.isEmpty {
+                importResult = try service.importHero(from: data, context: modelContext)
+            } else {
+                pendingReimport = PendingReimport(data: data, remaining: conflicts)
+            }
+        } catch {
+            showError(error.localizedDescription)
+        }
+    }
+
+    private func answerReimport(keep: Bool) {
+        guard var pending = pendingReimport, let name = pending.remaining.first else { return }
+        if keep { pending.keep.insert(name) }
+        pending.remaining.removeFirst()
+        guard pending.remaining.isEmpty else {
+            pendingReimport = pending
+            return
+        }
+        pendingReimport = nil
+        do {
+            importResult = try OptolithImportService().importHero(from: pending.data, context: modelContext,
+                                                                  keepingCompanionDataFor: pending.keep)
         } catch {
             showError(error.localizedDescription)
         }
