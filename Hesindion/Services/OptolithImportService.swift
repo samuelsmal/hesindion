@@ -140,7 +140,7 @@ struct OptolithImportService {
 
         // Parse pets
         let petsJSON = root["pets"] as? [String: Any] ?? [:]
-        let pets = parsePets(petsJSON)
+        let pets = parsePets(petsJSON, companions: CompanionData.parse(root: root))
 
         // Compute derived values
         let purchasedLP = intFromAny(attrJSON["lp"]) ?? 0
@@ -752,7 +752,7 @@ struct OptolithImportService {
 
     // MARK: - Pets
 
-    private func parsePets(_ json: [String: Any]) -> [Pet] {
+    private func parsePets(_ json: [String: Any], companions: [String: CompanionData]) -> [Pet] {
         json.compactMap { key, value -> Pet? in
             guard let pet = value as? [String: Any] else { return nil }
             let name = pet["name"] as? String ?? "?"
@@ -771,7 +771,7 @@ struct OptolithImportService {
                 kk: intFromAny(pet["str"]) ?? 0
             )
 
-            return Pet(
+            let result = Pet(
                 petId: key,
                 name: name,
                 avatar: avatar,
@@ -793,6 +793,8 @@ struct OptolithImportService {
                 attacks: parsePetAttacks(notes: pet["notes"] as? String ?? ""),
                 specialSkills: pet["skills"] as? String ?? ""
             )
+            companions[key]?.apply(to: result)
+            return result
         }
     }
 
