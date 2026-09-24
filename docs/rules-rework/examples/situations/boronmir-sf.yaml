@@ -91,8 +91,9 @@ situations:
   - id: "14.7"
     name: Vorstoß and Wuchtschlag I on the same attack
     choose: { vorstoss: true, manoeuvre: wuchtschlag, tier: 1 }
-    expect: { open: manoeuvre-combination }
-    # under a (one Basis + one Spezial): AT +2 −2 −2 = −2 (result 12), TP 1W6+4 +2
+    expect:
+      combinable: [{ manoeuvres: [vorstoss, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
+      # AT +2 −2 −2 = −2 (result 12), TP 1W6+4 +2
     app_today: one manoeuvre per attack — Vorstoß or Wuchtschlag
 
   # --- Schildspalter (SA_59) -----------------------------------------------------------------
@@ -143,8 +144,9 @@ situations:
     name: Schildspalter with Wuchtschlag I (its prerequisite)
     opponent: { hasShield: true }
     choose: { manoeuvre: [schildspalter, wuchtschlag], tier: 1 }
-    expect: { open: manoeuvre-combination }
-    # under a: AT −2 (SA_67.W1) −2 (Belastung) = −4, result 10; 1W6+4 +2 TP to the shield's StP
+    expect:
+      combinable: [{ manoeuvres: [schildspalter, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
+      # AT −2 (SA_67.W1) −2 (Belastung) = −4, result 10; 1W6+4 +2 TP to the shield's StP
     app_today: one manoeuvre per attack
 
   - id: "14.13"

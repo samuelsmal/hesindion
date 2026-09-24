@@ -57,25 +57,23 @@
   applies_to: [SA_48.F1, SA_67.W1]
 
 - id: manoeuvre-combination
-  status: open
+  status: decided
   question: >
     Which manoeuvres can be combined on one attack: a Basismanöver with a Spezialmanöver
     (Wuchtschlag + Sturmangriff)? Two Basismanöver (Finte + Wuchtschlag)?
-  context: >
-    Sturmangriff's page excludes Finte by name (SA_62.ST4), which suggests Basis and Spezial
-    normally combine; Unterlaufen forbids any Spezialmanöver unless the hero has Verbessertes
-    Unterlaufen (SA_172.U3), which only makes sense if Basis + Spezial is the normal limit. No
-    general combination rule was found on the wiki. The app allows exactly one manoeuvre per
-    attack.
-  situations: [finte 8.8, wuchtschlag 9.8, sturmangriff 10.7, reichweite RW.14, reichweite RW.15]
-  options:
-    a: { says: "At most one Basismanöver and one Spezialmanöver per attack, minus named exclusions.", app: "a second picker for the Spezialmanöver" }
-    b: { says: "One manoeuvre per attack.", app: "as today; SA_62.ST4 becomes redundant" }
-    c: { says: "Any number, minus named exclusions.", app: "a multi-select" }
-  recommended: a
-  why_recommended: ST4's explicit Finte exclusion only makes sense if Basis + Spezial combine at all
-  answer: null
-  applies_to: [SA_62.ST4, SA_48.F1, SA_67.W1]
+  answer: >
+    At most one Basismanöver and one Spezialmanöver per action, minus the exclusions a page
+    names (option a). The rule page says so (kampfsonderfertigkeiten.KS3–KS5). The UI must show
+    each manoeuvre's kind (Basismanöver, Spezialmanöver; passive SF as "wirkt immer"), and tell
+    the player when a combination is excluded, and why, instead of hiding it.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  see: [https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html]
+  applies_to: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_48.F1, SA_67.W1]
+  notes: >
+    The app allows exactly one manoeuvre per attack today (CombatAttackViews.selectedManeuver, a
+    single CombatManeuver). Finte + Wuchtschlag and Unterlaufen + Finte stay excluded (two
+    Basismanöver, KS3); Wuchtschlag + Sturmangriff, Wuchtschlag + Schildspalter and Wuchtschlag
+    + Vorstoß combine.
 
 - id: sf-technique-lists
   status: open

@@ -68,5 +68,6 @@ situations:
   - id: "9.8"
     name: Wuchtschlag together with Sturmangriff
     hero: { abilities: { SA_67: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
-    expect: { open: manoeuvre-combination }   # see sturmangriff 10.6 for the numbers
+    expect: { combinable: [{ manoeuvres: [wuchtschlag, sturmangriff], from: kampfsonderfertigkeiten.KS5 }] }
+    # the numbers are sturmangriff 10.7
     app_today: one manoeuvre per attack; SA_62 not offered on foot

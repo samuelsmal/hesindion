@@ -148,7 +148,9 @@ situations:
     hero: { loadout: { weapon: Dolch }, abilities: { SA_172: 1, SA_48: 1 } }
     opponent: { reach: mittel }
     choose: { manoeuvres: [unterlaufen, finte] }
-    expect: { open: manoeuvre-combination }
+    expect:
+      not_combinable: [{ manoeuvres: [unterlaufen, finte], because: kampfsonderfertigkeiten.KS3 }]
+      told: "Unterlaufen lässt sich nicht mit Finte kombinieren — nur ein Basismanöver pro Handlung"
 
   - id: "RW.16"
     name: Mounted, Unterlaufen — a Basismanöver stays available on horseback

@@ -68,8 +68,10 @@ situations:
     hero: { abilities: { SA_62: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
     choose: { manoeuvres: [sturmangriff, wuchtschlag], tier: { wuchtschlag: 1 }, runUp: 4 }
     expect:
-      open: manoeuvre-combination
-      # If allowed: AT −2 (ST4) −2 (W1) = −4; TP +6 (ST2) +2 (W1) = +8. Near the cap, at GS 16,
+      combinable: [{ manoeuvres: [sturmangriff, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
+      at: { total: -4, lines: [{ value: -2, from: SA_62.ST4 }, { value: -2, from: SA_67.W1 }] }
+      tp: { total: 8, lines: [{ value: 6, from: SA_62.ST2 }, { value: 2, from: SA_67.W1 }] }
+      # Near the cap, at GS 16,
       # Sturmangriff alone is +10 and Wuchtschlag III's +6 adds on top: +16 (ruling
       # SA_62.sturmangriff-cap-scope — the cap is on ST2's line only).
     app_today: one manoeuvre per attack; SA_62 not offered on foot

@@ -52,7 +52,6 @@ rulings:
       manoeuvre. So it is unavailable, and the hero aims at the full penalty, (1) on horseback
       (reiterkampf.RK3, ruling reiterkampf.mounted-manoeuvres), (2) with Unterlaufen unless the
       hero has Verbessertes Unterlaufen (SA_172.U3), and (3) next to another Spezialmanöver such as
-      Sturmangriff, as far as the open ruling manoeuvre-combination limits them (its option c,
-      any number of manoeuvres, would lift this). A hero with the SF may also aim without
+      Sturmangriff — one Spezialmanöver per action (kampfsonderfertigkeiten.KS4). A hero with the SF may also aim without
       announcing it, to keep the slot free (trefferzonen TZ.27). The app today halves every aimed
       attack of a hero with the SF (CombatZonePicker, HitZoneModifiers.penalty).

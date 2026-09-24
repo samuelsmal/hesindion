@@ -66,13 +66,16 @@ situations:
     hero: { abilities: { SA_48: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
     expect:
       not_combinable: [{ manoeuvres: [finte, sturmangriff], because: SA_62.ST4 }]
+      told: "Sturmangriff lässt sich nicht mit Finte kombinieren (Sturmangriff)"
     app_today: moot — one manoeuvre per attack, and SA_62 is not offered on foot
 
   - id: "8.8"
     name: Finte together with Wuchtschlag
     hero: { abilities: { SA_48: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
-    expect: { open: manoeuvre-combination }   # two Basismanöver on one attack?
-    app_today: one manoeuvre per attack (CombatManeuver is a single choice)
+    expect:
+      not_combinable: [{ manoeuvres: [finte, wuchtschlag], because: kampfsonderfertigkeiten.KS3 }]
+      told: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung"
+    app_today: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
 
   - id: "8.9"
     name: Finte on horseback

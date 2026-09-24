@@ -58,8 +58,8 @@ clauses:
         add: { to: at, value: -2 }
       - excludes: { manoeuvre: finte }
         ruling: manoeuvre-combination
-        # Naming Finte as the one exclusion suggests other Basismanöver (Wuchtschlag) combine
-        # with Sturmangriff; whether that holds is the cross-cutting ruling.
+        # One Basismanöver and one Spezialmanöver combine (kampfsonderfertigkeiten.KS5); this is
+        # the named exception, and the UI says so when Finte is picked.
 
   - id: ST5
     text: >
@@ -99,5 +99,5 @@ rulings:
     applies_to: [ST2]
     notes: >
       The natural-GS cap in the same clause is read the same way: both caps bind ST2's one line.
-      At GS 16 Sturmangriff alone is +10, and Wuchtschlag III's +6 adds to it (+16) — if the open
-      manoeuvre-combination allows the two together (sturmangriff 10.7).
+      At GS 16 Sturmangriff alone is +10, and Wuchtschlag III's +6 adds to it (+16) — they combine
+      (manoeuvre-combination, sturmangriff 10.7).

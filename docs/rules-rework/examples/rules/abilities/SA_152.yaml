@@ -1,6 +1,6 @@
 # DRAFT FORMAT — see ../../README.md.
-# Written for SA_172.U4 (ruling SA_172.auf-distanz-halten): only the side that reaches the hero,
-# an opponent with this SF, is encoded. The hero's own use is text.
+# Written first for SA_172.U4 (ruling SA_172.auf-distanz-halten), where an opponent has it. The
+# hero's own use is encoded too: announced for the round (AD2), it forbids Basismanöver.
 id: SA_152
 name: Auf Distanz halten
 kind: specialAbility
@@ -35,10 +35,17 @@ clauses:
     text: >
       Dafür kann der Held in dieser KR keine Basismanöver einsetzen. Auf Distanz halten muss am
       Anfang der Runde angesagt werden.
-    effects: none
-    why: >
-      the hero's own use, announced at the start of the round; the app has no round-start
-      announcement for it yet, so it is shown as text.
+    effects:
+      - when: { hero.has: SA_152 }
+        offer: { announce: aufDistanzHalten, at: round_start, lasts: round }
+        # FORMAT: "Anfang der Runde" — the same round-start announcement as SA_65.VH1 and
+        # SA_66. The app has none yet; it would be a toggle on the combat round.
+      - when: { announced: aufDistanzHalten }
+        forbid: { manoeuvre: { kind: basismanoever } }
+        # Only Basismanöver (Finte, Wuchtschlag, …). A plain attack, a Spezialmanöver and the
+        # defences stay allowed: the page forbids nothing else. The picker hides them and says why.
+      - when: { announced: aufDistanzHalten, loadout.reach: { not_longer_than: opponent.reach } }
+        tell: { hero: "Auf Distanz halten wirkt nur mit der längeren Waffe (AD1)" }
 
   - id: AD3
     text: >

@@ -180,6 +180,7 @@ open ruling are listed in the write-ups, not here.
 | 7 | A Handlungsunfähig hero moves at GS 1 rather than 0 | `Hero.effectiveGeschwindigkeit` | page |
 | 7 | Handlungsunfähig from Zustand levels does not imply Liegend | `Hero.impliedStateIDs` | page |
 | 7 | Standing up is no action; its cost and the opponent's Passierschlag are never mentioned | — | page |
+| 8, 9, 10, 14 | Only one manoeuvre per attack; one Basismanöver and one Spezialmanöver combine (Wuchtschlag + Sturmangriff, Schildspalter or Vorstoß), an excluded combination is not explained, and no manoeuvre shows whether it is a Basis- or Spezialmanöver | `CombatAttackViews.selectedManeuver` (one `CombatManeuver`) | page (kampfsonderfertigkeiten.KS3–KS5), ruling manoeuvre-combination |
 | 8 | Finte's hint says "Gegner PA −2"; the page says Verteidigung, so it is wrong when the opponent dodges | `CombatManeuver.infoText` | page |
 | 11 | The off hand is picked alphabetically: with Schwert and Dolch, the Schwert takes the −4 | `CombatLoadoutPicker.apply` | page |
 | 11 | Spezialmanöver are offered on a double attack; only Basismanöver are allowed | `availableManeuvers` | page |
