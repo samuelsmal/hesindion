@@ -22,6 +22,7 @@ final class CompanionReimportFlowTests: XCTestCase {
         let keep = app.buttons["companion.reimport.keep"]
         XCTAssertTrue(keep.waitForExistence(timeout: UITest.timeout))
         XCTAssertTrue(app.staticTexts["Kupperus: Begleiterdaten fehlen"].exists)
+        XCTAssertTrue(app.otherElements["companion.reimport.modal"].exists)
         keep.tap()
 
         XCTAssertFalse(keep.waitForExistence(timeout: UITest.probeTimeout))

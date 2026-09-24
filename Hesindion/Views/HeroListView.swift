@@ -115,6 +115,8 @@ struct HeroListView: View {
                         pendingReimport = nil
                     }
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("companion.reimport.modal")
             }
         }
         .onAppear {
