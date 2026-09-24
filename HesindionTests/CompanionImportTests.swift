@@ -32,6 +32,19 @@ struct CompanionImportTests {
         return try #require(hero.petsInOrder.first { $0.name == "Kupperus" })
     }
 
+    /// The with-block sample as a plain Optolith re-export: same hero, no `hesindion` block.
+    /// `edit` changes the pet before serialising, to prove Optolith fields come from the new file.
+    private func plainReexport(_ edit: (inout [String: Any]) -> Void = { _ in }) throws -> Data {
+        var root = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: withBlock)) as? [String: Any])
+        root.removeValue(forKey: "hesindion")
+        var pets = try #require(root["pets"] as? [String: Any])
+        var pet = try #require(pets["PET_1"] as? [String: Any])
+        edit(&pet)
+        pets["PET_1"] = pet
+        root["pets"] = pets
+        return try JSONSerialization.data(withJSONObject: root)
+    }
+
     @Test func importReadsCompanionBlock() throws {
         let context = ModelContext(try makeContainer())
         try OptolithImportService().importHero(from: withBlock, context: context)
@@ -78,5 +91,65 @@ struct CompanionImportTests {
         let pet = try kupperus(context)
         #expect(!pet.hasCompanionData)
         #expect(pet.attacks.count == 3)  // regex over the fixed notes
+    }
+
+    @Test func conflictWhenReimportLosesTheBlock() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        try service.importHero(from: withBlock, context: context)
+
+        #expect(try service.companionConflicts(in: plainReexport(), context: context) == ["Kupperus"])
+        #expect(try service.companionConflicts(in: Data(contentsOf: withBlock), context: context).isEmpty)
+    }
+
+    @Test func noConflictForNewHeroOrPlainPet() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        #expect(try service.companionConflicts(in: Data(contentsOf: withoutBlock), context: context).isEmpty)
+
+        try service.importHero(from: withoutBlock, context: context)
+        #expect(try service.companionConflicts(in: Data(contentsOf: withoutBlock), context: context).isEmpty)
+    }
+
+    @Test func noConflictWhenPetIsGoneFromNewFile() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        try service.importHero(from: withBlock, context: context)
+        var root = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: withBlock)) as? [String: Any])
+        root.removeValue(forKey: "hesindion")
+        root["pets"] = [String: Any]()
+        let data = try JSONSerialization.data(withJSONObject: root)
+
+        #expect(try service.companionConflicts(in: data, context: context).isEmpty)
+    }
+
+    @Test func keepRestoresOnlyTheAddedFields() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        try service.importHero(from: withBlock, context: context)
+
+        try service.importHero(from: try plainReexport { $0["lp"] = "140"; $0["str"] = "27" }, context: context,
+                               keepingCompanionDataFor: ["Kupperus"])
+
+        let pet = try kupperus(context)
+        #expect(pet.defense == 14)
+        #expect(pet.apTotal == 336)
+        #expect(pet.training == ["Reittier", "Kampftier"])
+        #expect(pet.attacks[1] == PetAttack(name: "Biss", at: 16, damage: "1W6+3", reach: "kurz"))
+        #expect(pet.lifeEnergy == 140)          // Optolith field: from the new file
+        #expect(pet.attributes.kk == 27)
+    }
+
+    @Test func discardDropsTheAddedFields() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        try service.importHero(from: withBlock, context: context)
+
+        try service.importHero(from: try plainReexport(), context: context)
+
+        let pet = try kupperus(context)
+        #expect(!pet.hasCompanionData)
+        #expect(pet.defense == nil)
+        #expect(pet.attacks.first?.at == 19)
     }
 }

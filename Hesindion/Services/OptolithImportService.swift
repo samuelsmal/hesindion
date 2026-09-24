@@ -41,23 +41,41 @@ struct OptolithImportService {
 
     // MARK: - Public API
 
-    @discardableResult
-    func importHero(from url: URL, context: ModelContext) throws -> HeroImportResult {
+    func readData(from url: URL) throws -> Data {
         let didStart = url.startAccessingSecurityScopedResource()
         defer { if didStart { url.stopAccessingSecurityScopedResource() } }
-
-        let data: Data
         do {
-            data = try Data(contentsOf: url)
+            return try Data(contentsOf: url)
         } catch {
             throw OptolithImportError.fileReadFailed
         }
-
-        return try importHero(from: data, context: context)
     }
 
     @discardableResult
-    func importHero(from data: Data, context: ModelContext) throws -> HeroImportResult {
+    func importHero(from url: URL, context: ModelContext, keepingCompanionDataFor keep: Set<String> = []) throws -> HeroImportResult {
+        try importHero(from: try readData(from: url), context: context, keepingCompanionDataFor: keep)
+    }
+
+    /// Stored companions that have Hesindion companion data while their namesake in
+    /// `data` has none — a re-import of a plain Optolith export that would drop it.
+    /// Names in `petsInOrder` order; empty for a hero that is not stored yet.
+    func companionConflicts(in data: Data, context: ModelContext) throws -> [String] {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let heroName = root["name"] as? String else { return [] }
+        let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
+        guard let hero = try context.fetch(descriptor).first else { return [] }
+        let newPets = root["pets"] as? [String: Any] ?? [:]
+        let companions = CompanionData.parse(root: root)
+        return hero.petsInOrder.filter(\.hasCompanionData).map(\.name).filter { name in
+            let keys = newPets.compactMap { key, value in
+                (value as? [String: Any])?["name"] as? String == name ? key : nil
+            }
+            return !keys.isEmpty && keys.allSatisfy { companions[$0] == nil }
+        }
+    }
+
+    @discardableResult
+    func importHero(from data: Data, context: ModelContext, keepingCompanionDataFor keep: Set<String> = []) throws -> HeroImportResult {
         let root: [String: Any]
         do {
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -179,6 +197,7 @@ struct OptolithImportService {
                 pets: pets,
                 spells: spells,
                 liturgies: liturgies,
+                keepingCompanionDataFor: keep,
                 context: context
             )
             hero.lastImportedAt = .now
@@ -243,6 +262,7 @@ struct OptolithImportService {
         pets: [Pet],
         spells: [HeroSpell],
         liturgies: [HeroSpell],
+        keepingCompanionDataFor keep: Set<String>,
         context: ModelContext
     ) {
         hero.avatar = avatar
@@ -290,6 +310,11 @@ struct OptolithImportService {
         if let old = hero.money { context.delete(old) }
         hero.money = money
 
+        for pet in pets where keep.contains(pet.name) && !pet.hasCompanionData {
+            if let old = hero.pets.first(where: { $0.name == pet.name && $0.hasCompanionData }) {
+                pet.adoptCompanionData(from: old)
+            }
+        }
         hero.pets.forEach { context.delete($0) }
         hero.pets = pets
 
