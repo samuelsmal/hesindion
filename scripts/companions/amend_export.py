@@ -81,7 +81,9 @@ def check_values(name, values, ap_total):
     errors = []
     for key in VALUE_INTS:
         value = values.get(key)
-        if value is None or isinstance(value, bool) or not isinstance(value, int):
+        if value is None:
+            continue  # vw/rs/be are optional: schema, app (Int?) and expected_fields() agree
+        if isinstance(value, bool) or not isinstance(value, int):
             errors.append(f"{name}: values.{key} {value!r} must be an integer")
     for key in VALUE_STRING_LISTS:
         items = values.get(key, [])

@@ -149,11 +149,13 @@ class AmendTests(unittest.TestCase):
         errors = amend(export(), b)
         self.assertTrue(any("values.vw" in m for m in errors), errors)
 
-    def test_missing_rs(self):
+    def test_rs_and_be_are_optional(self):
+        # vw/rs/be are optional per the schema and CompanionData.Values (Int?);
+        # expected_fields() already skips a None one. Omitting them is not an error.
         b = build()
         del b["pets"]["Kupperus"]["values"]["rs"]
-        errors = amend(export(), b)
-        self.assertTrue(any("values.rs" in m for m in errors), errors)
+        del b["pets"]["Kupperus"]["values"]["be"]
+        self.assertEqual(amend(export(), b), [])
 
     def test_non_int_ap_total(self):
         b = build()
