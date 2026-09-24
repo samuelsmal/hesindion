@@ -34,10 +34,21 @@ clauses:
       insgesamt mehr als 5 Stufen und damit auch eine höhere Erschwernis als 5 angesammelt hat,
       hat solange eine Erschwernis von 5, bis die addierten Zustandsstufen unter 5 sinken.
     effects:
-      - cap: { lines: { kind: condition }, min: -5, on: check }
+      - cap: { lines: { kind: condition }, min: -5, on: [check, gs, ini] }
         ruling: cap-scope
+        # Each value is capped on its own: AT −6 → −5 and GS −6 → −5 are two correction lines.
+        # A value a Zustand *sets* (GS 0 at Schmerz IV) is not a penalty and is not capped.
         # FORMAT: an effect over other effects' sum, applied last and shown as its own
         # correction line ("Zustände: höchstens −5, +1").
+
+  - id: Z3a
+    text: >
+      Wie lange ein Zustand anhält, ist je nach Art des Zustandekommens unterschiedlich und bei
+      den diversen Möglichkeiten angegeben.
+    effects: none
+    why: >
+      the duration is given per cause on each Zustand's page (COND_6.SZ4 4 h per Stufe, Betäubung
+      3 h Ruhephase, …) and by whatever set it; nothing to encode here
 
   - id: Z4
     text: >
@@ -56,6 +67,7 @@ clauses:
         gain: { state: handlungsunfaehig }
 
   - id: Z6
+    # The page's "Anmerkung/Info-Box:" — an info box under the rule, not a paragraph of it.
     text: >
       Wenn sich Spielwerte durch Zustände, einen Status oder andere Einflüsse kurzfristig ändern,
       ist keine Neuberechnung von abgeleiteten Werten notwendig, es sei denn, es steht explizit
@@ -67,19 +79,17 @@ clauses:
 
 rulings:
   - id: cap-scope
-    status: open
+    status: decided
     question: >
       The cap is on "Erschwernis" — penalties on checks. Does it also cap the GS and INI
       penalties Zustände give (Belastung on INI and GS, Schmerz on GS)?
-    context: >
-      A hero in Plattenrüstung (Belastung III) with Schmerz III has AT −6 before the cap, −5
-      after. The same hero's GS is −3 −3 = −6. The page speaks of Erschwernis, a check term;
-      GS and INI penalties are "Abzüge". The app caps only check lines
-      (ModifierEngine.applyingZustandCap) and, separately, applies no Schmerz to GS at all.
-    situations: [schmerz S6]
-    options:
-      a: { says: "Checks only; GS and INI penalties add up without a cap.", app: "GS −6 in the situation above" }
-      b: { says: "Every Zustand penalty, GS and INI included, stops at −5.", app: "GS −5 in the situation above" }
-    recommended: a
-    why_recommended: the clause is worded in terms of Erschwernis, and GS/INI penalties are not Erschwernisse
-    answer: null
+    answer: >
+      Every Zustand penalty, GS and INI included, stops at −5.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [Z3]
+    notes: >
+      Answered against the recommendation (checks only, since the page speaks of Erschwernis).
+      A hero in Plattenrüstung (Belastung III) with Schmerz III has AT −5 and GS −5, each with its
+      own correction line (schmerz S6). The armour's own extra GS/INI penalty
+      (ruestung-und-belastung.A1) is not a Zustand and stays outside the cap. The app caps only
+      check lines (ModifierEngine.applyingZustandCap) and applies no Schmerz to GS at all.

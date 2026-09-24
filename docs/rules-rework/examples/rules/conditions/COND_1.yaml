@@ -9,7 +9,7 @@ source:
   page: 32
   checked: 2026-09-23
   hash: null               # filled in by the drift check
-reviewed: null             # { by, date } once a person has read every clause against the page
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }             # { by, date } once a person has read every clause against the page
 
 # Where a Stufe comes from. Not a clause of this page: armour is `core/ruestung-und-belastung`,
 # carried weight is the Traglast rule (not written yet).
@@ -44,8 +44,11 @@ clauses:
       Stufe III: schwer belastet, Proben auf Talente, die durch Belastung erschwert sind –3, AT –3, Verteidigung –3, INI –3, GS –3
     effects:
       - when: { level: [1, 3] }
-        add: { to: [at, pa, aw, fk, ini, gs], value: -1, per: level }
-        # FORMAT: the page says "AT"; FK counted as an attack — confirm with a ruling if it matters.
+        add: { to: [at, pa, aw, ini, gs], value: -1, per: level }
+      - when: { level: [1, 3] }
+        add: { to: fk, value: -1, per: level }
+        ruling: belastung-fk
+        # The page says "AT"; read as every attack roll, FK included (ruling belastung-fk).
       - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: true }
         add: { to: check, value: -1, per: level }
         ruling: belastung-reach
@@ -64,12 +67,29 @@ clauses:
   - id: B4
     text: "Stufe IV: Handlungsunfähig, bis auf Last fallen lassen."
     effects:
-      - when: { level: 4 }
+      - when: { level: { min: 4 } }
         gain: { state: handlungsunfaehig, until: level-below-4 }
     # A hero in Gestechrüstung (Belastung 4) on foot is Handlungsunfähig. That is intended:
     # it is what Belastungsgewöhnung is for (ruling 2026-09-23).
+    # `min: 4`, not `4`: the Rüstung-und-Belastung table gives Turnierrüstung Belastung 5, and
+    # the page has no Stufe V. Anything at or above 4 is this clause (`levels: 4` above is the
+    # highest Stufe the page names; situations/belastung.yaml 1.5 shows the level capped at 4).
 
 rulings:
+  - id: belastung-fk
+    status: decided
+    question: >
+      The Stufe rows say "AT –1" (–2, –3). Is a Fernkampf attack (FK) hindered by Belastung as
+      well, or only the melee AT?
+    answer: >
+      Every attack roll: AT and FK.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [B3]
+    notes: >
+      Answered against the recommendation (melee AT only, as printed: neither this page nor the
+      Fernkampf page names FK). The app already applies Belastung to ranged attacks
+      (SharedModifiers.encumbrance lists .rangedAttack among its domains), so nothing changes.
+
   - id: belastung-reach
     status: decided
     question: >

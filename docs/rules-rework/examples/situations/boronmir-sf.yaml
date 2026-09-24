@@ -61,8 +61,9 @@ situations:
   - id: "14.4"
     name: Vorstoß for an attack with the Großschild (Schilde — not on the list)
     loadout: { weapon: Großschild }
-    expect: { open: sf-technique-lists }    # under a: not offered, SA_66.V6
-    app_today: offered — no manoeuvre checks the technique
+    expect:
+      not_offered: [{ manoeuvre: vorstoss, because: SA_66.V6, ruling: sf-technique-lists }]
+    app_today: offered — no manoeuvre checks the technique — wrong
 
   - id: "14.5"
     name: Vorstoß on horseback
@@ -84,7 +85,7 @@ situations:
           - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
         not_applied:
           - { rule: SA_66, reason: "a Passierschlag combines with no Kampfsonderfertigkeit (passierschlag.PS3)" }
-      # Vorstoß is a manoeuvre, so both options of passierschlag.passierschlag-sf exclude it.
+      # Vorstoß is a manoeuvre, excluded from a Passierschlag (ruling passierschlag.passierschlag-sf).
       # The defences stay gone for the round (SA_66.V2).
     app_today: same (PassierschlagRoll sets maneuver .passierschlag)
 
@@ -128,8 +129,9 @@ situations:
     name: Schildspalter with the Langschwert (Schwerter — not on the list)
     loadout: { weapon: Langschwert }
     opponent: { hasShield: true }
-    expect: { open: sf-technique-lists }    # under a: not offered, SA_59.SS7
-    app_today: offered
+    expect:
+      not_offered: [{ manoeuvre: schildspalter, because: SA_59.SS7, ruling: sf-technique-lists }]
+    app_today: offered — wrong
 
   - id: "14.11"
     name: Schildspalter on horseback
@@ -155,14 +157,16 @@ situations:
     expect:
       not_allowed: [{ defence: weaponParry, because: SA_59.SS1 }]
       shield_parry:
-        open: [SA_59.schildspalter-shield-bonus, SA_59.schildspalter-against-hero]
-        # under schildspalter-shield-bonus a: 13 − 6 (SA_59.SS2) − 2 (Belastung) = 5;
-        #   under its b: 13 − 3 − 2 = 8. Either way only once schildspalter-against-hero says
-        #   how the app learns of the opponent's manoeuvre (b or c).
+        total: -8
+        result: 5
+        lines:
+          - { value: -6, from: SA_59.SS2, removes: schilde.SCH3, ruling: [SA_59.schildspalter-shield-bonus, SA_59.schildspalter-against-hero] }
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
       aw: { total: -2, result: 5, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
       on_failed_defence:
-        open: SA_59.schildspalter-against-hero
-        # under b: the TP come off the Großschild's 30 StP, not Boronmir's LeP; at 0 it is gone
+        damage: { to: loadout.shield.structurePoints, from: SA_59.SS3, ruling: SA_59.schildspalter-against-hero }
+        # the TP come off the Großschild's current StP (30 when whole), not Boronmir's LeP; at 0
+        # the shield is destroyed and leaves the loadout
     app_today: >
       the app cannot be told: weapon parry 10 − 2 and the full shield parry 13 − 2 are offered,
       and the damage goes to Boronmir's LeP. The shield's StP are never reduced.
@@ -173,10 +177,12 @@ situations:
     name: Sinnesschärfe (Hinterhalt entdecken) when the party is ambushed
     check: { talent: TAL_10, application: Hinterhalt entdecken, situation: ambush }
     expect:
+      offered: [{ toggle: hinterhaltUeberraschung, from: SA_40.A1, ruling: SA_40.aufmerksamkeit-when }]
       check:
-        open: SA_40.aufmerksamkeit-when
-        # under a, the toggle on: +2 (SA_40.A1). Belastung: off unless the player turns on the
-        # "Belastung zählt" toggle (COND_1.belastung-talents-maybe); with it, −2 more.
+        total: 2
+        lines: [{ value: 2, from: SA_40.A1, ruling: SA_40.aufmerksamkeit-when }]
+        # the toggle on. Belastung: off unless the player turns on the "Belastung zählt" toggle
+        # (COND_1.belastung-talents-maybe); with it, −2 more.
     app_today: >
       the hint "Aufmerksamkeit: +2 auf Überraschung vermeiden"; the value is unchanged
       (TalentProbeModal.hints, catalog SA_40 byHand)
@@ -185,7 +191,8 @@ situations:
     name: Sinnesschärfe to find a hidden clue — no ambush
     check: { talent: TAL_10, application: Suchen }
     expect:
-      check: { total: 0, not_applied: [{ rule: SA_40, reason: "no ambush and no surprise (SA_40.A1)" }] }
+      check: { total: 0, not_applied: [{ rule: SA_40, reason: "no ambush and no surprise (SA_40.A1)", ruling: SA_40.aufmerksamkeit-when }] }
+      # the Hinterhalt / Überraschung toggle is offered and stays off
     app_today: the same hint is shown on every Sinnesschärfe check
 
   # --- Plänkler-Formation (SA_884) -----------------------------------------------------------
@@ -231,12 +238,13 @@ situations:
     opponent: { onFoot: true }
     choose: { plaenklerFormation: true, bonus: at }
     expect:
+      not_offered: [{ choice: plaenklerFormation, because: SA_884.P1, ruling: SA_884.plaenkler-mounted }]
       at:
-        open: SA_884.plaenkler-mounted
-        # under a: total 3, result 17 — +2 VP1 via RK2, +2 SA_661.GS1, −1 Belastung via RK7;
-        #   the toggle is off with the reason
-        # under b: total 4, result 18 — the same plus +1 SA_884.P2
-    app_today: +1 AT on top (the bonus ignores whether the hero is mounted)
+        total: 3
+        result: 17
+        # +2 VP1 via RK2, +2 SA_661.GS1, −1 Belastung via RK7; the toggle is off with the reason
+        not_applied: [{ rule: SA_884, reason: "not while mounted (SA_884.P1, ruling plaenkler-mounted)" }]
+    app_today: +1 AT on top, 18 (the bonus ignores whether the hero is mounted) — wrong
 
   - id: "14.20"
     name: The line breaks up mid-fight

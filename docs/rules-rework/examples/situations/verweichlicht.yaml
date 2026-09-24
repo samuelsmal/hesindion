@@ -18,7 +18,7 @@ situations:
       check:
         total: -3
         lines:
-          - { value: -1, from: trefferzonen.wundeffekt }        # 7 SP = 1 × Wundschwelle 6
+          - { value: -1, from: trefferzonen.TZ8 }        # 7 SP = 1 × Wundschwelle 6
           - { value: -2, from: DISADV_57.VW1, ruling: DISADV_57.verweichlicht-scope }
     app_today: same (catalog DISADV_57, Situation.woundEffectProbe)
 
@@ -31,7 +31,7 @@ situations:
       check:
         total: -4
         lines:
-          - { value: -2, from: trefferzonen.wundeffekt }        # 13 SP = 2 × Wundschwelle
+          - { value: -2, from: trefferzonen.TZ8 }        # 13 SP = 2 × Wundschwelle
           - { value: -2, from: DISADV_57.VW1, ruling: DISADV_57.verweichlicht-scope }
       not_applied:
         - { rule: COND_1, clause: B3, reason: Selbstbeherrschung is not hindered by Belastung, ruling: COND_1.belastung-reach }
@@ -63,5 +63,8 @@ situations:
     name: The check Status Blutend asks for
     hero: { disadvantages: [DISADV_57], states: { blutend: 1 } }
     check: { talent: Selbstbeherrschung, cause: blutend }
-    expect: { open: DISADV_57.verweichlicht-scope }    # a: 0, b: −2
-    app_today: 0
+    expect:
+      check: { total: 0 }
+      not_applied:
+        - { rule: DISADV_57, clause: VW1, reason: Blutend is not a Wundeffekt, ruling: DISADV_57.verweichlicht-scope }
+    app_today: 0; the not-applied line is not listed

@@ -8,7 +8,7 @@ source:
   page: 238
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 # Active when the GM says so for this attack, or when another rule grants it
 # (reiterkampf.RK2: mounted against a fighter on foot).
@@ -21,7 +21,12 @@ clauses:
   - id: VP1
     text: >
       Wer sich als Kämpfer in einer vorteilhaften Position befindet, bekommt Erleichterungen von
-      jeweils 2 auf Attacke und Verteidigungen.
+      jeweils 2 auf Attacke und Verteidigungen. Als vorteilhafte Position kann ein Felsen oder
+      Tisch dienen, aber auch die Steigung eines Hügels, den seine Gegner hinaufstürmen. Die
+      vorteilhafte Position kann auch beim Schwimmen, beim Klettern in der Takelage eines
+      Schiffes, beim Fliegen usw. entstehen.
+    # The second and third sentences are examples of what the GM may call a vorteilhafte
+    # Position — the gm.fact in applies_when; they add nothing to the numbers.
     effects:
       - add: { to: at, value: 2 }
         id: VP1.at          # named so that SA_661.GS1 can raise exactly this line
@@ -36,3 +41,10 @@ clauses:
       Passierschlag zugestehen.
     status: unencoded
     why: getting into position is the GM's call and happens outside a roll; shown as text on the toggle
+
+  - id: VP3
+    text: >
+      Bei bestimmten Situationen kann der Meister statt der Probe auf Körperbeherrschung
+      (Kampfmanöver) auch andere Talente bestimmen.
+    status: unencoded
+    why: which talent VP2's check uses is the GM's call, outside any roll of ours; shown as text on the toggle with VP2

@@ -13,7 +13,7 @@ source:
   page: 56
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: LE1
@@ -55,5 +55,14 @@ clauses:
     effects: none
     why: >
       one of the page's worked examples, kept because it fixes Hohe Lebenskraft at +1 per Stufe
-      and shows it on the Basiswert line; the page's other examples are for heroes without
-      advantages
+      and shows it on the Basiswert line; the page's other LE examples (LE5) are for heroes
+      without advantages
+
+  - id: LE5
+    text: |
+      Louisa: Lebensenergie Basiswert: Lebensenergie-Grundwert 5 + KO 10 + KO 10 = 25
+      Sarah: Lebensenergie Basiswert: Lebensenergie-Grundwert 2 + KO 13 + KO 13 = 28
+    effects: none
+    why: >
+      the page's two other LE examples (Louisa, Sarah), written like LE4 with the "Lebensenergie"
+      heading folded in; they only restate LE3, and Sarah's fixes the Elf Grundwert at 2

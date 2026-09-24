@@ -4,6 +4,10 @@
 # the Grundbegriffe, each named on its clause (`page:`, as in kampfwerte).
 # Not here: Schmerz from low LE (COND_6, the schmerz example), the Wundschwelle and hit zones
 # (trefferzonen), the LE maximum (lebensenergie), what dying means (the Sterben rule, not written).
+# The page's "Zu den Zuständen." after S8 is a link to the Zustände chapter, not rule text. The
+# Grundbegriffe page's "Lebensenergie (LE): … Hat ein Held ein Viertel der Lebenspunkte verloren
+# … Ab 0 Lebenspunkten liegt ein Held im Sterben." says the same as S7/S8 and belongs to
+# lebensenergie or COND_6; no file quotes it yet.
 id: schaden
 name: Schaden (TP, Schadensbonus, RS, SP)
 kind: core
@@ -13,7 +17,7 @@ source:
   page: 229
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: S1
@@ -35,6 +39,38 @@ clauses:
         add: { to: le.current, value: "-sp" }
     # "der vom Ziel getragenen Rüstung": the whole RS, or the RS of the zone hit under
     # trefferzonen-ruestungsschutz.
+
+  - id: S9
+    text: >
+      Beispiel: Durch das geringere Licht der Abenddämmerung erleiden Arbosch und Geron einen
+      Sichtmodifikator von Stufe 1. Arboschs Kettenhemd schützt ihn mit einem Rüstungsschutz von
+      4, schränkt ihn aber in seinen Bewegungen auch ein. Daher erleidet er hierdurch zwei Stufen
+      des Zustandes Belastung. Nachdem die Kampfreihenfolge festgelegt wurde und die erste
+      Kampfrunde begonnen hat, geht es nun in den Nahkampf. Arbosch nutzt seine Aktion, um seine
+      Axt zu ziehen, was eine Aktion dauert. In der anderen Hand hält er seinen Schild. Als
+      Nächstes handelt der erste Ork, der direkt einen Angriff ausführt. Er hat einen Attackewert
+      von 13. Da er als Ork über Dunkelsicht I verfügt, kann er den Sichtmodifikator durch das
+      Dämmerlicht ignorieren. Der Spielleiter würfelt eine 9, womit seine Attacke erfolgreich ist.
+      Arbosch wiederum versucht eine Verteidigung auszuführen, und zwar eine Parade mit einem
+      Schild. Seine Parade liegt bei 12. Da er unter zwei Stufen des Zustandes Belastung leidet,
+      wird die Probe um 2 erschwert. Sein Spieler würfelt eine 14, womit seine Verteidigung
+      misslingt. Der Orkräuber trifft Arbosch also. Der Spielleiter würfelt die Trefferpunkte der
+      orkischen Axt aus. Die Axt macht 1W6+5 Trefferpunkte. Da der Spielleiter hier eine 5
+      würfelt, erzielt er so 10 (5 + 5) Trefferpunkte. Hiervon wird nun der Rüstungsschutz von 4
+      abgezogen, den Arboschs Kettenrüstung bereitstellt. Arbosch erleidet also 6 Schadenspunkte
+      (10 - 4) und muss damit 6 Lebenspunkte von seiner Lebensenergie abziehen.
+    effects: none
+    why: >
+      the page's worked example: S1's arithmetic (1W6+5 → 10 TP, − RS 4 = 6 SP, LE −6) after a
+      shield parry (schilde.SCH3) under Belastung II (COND_1, −2) and a Sichtmodifikator (sicht,
+      not written); a situation to write
+
+  - id: S10
+    text: |
+      4. Schaden
+      Jeder Kämpfer will natürlich vermeiden, vom Gegner verwundet zu werden. Aber manchmal halten die Götter einfach nicht die schützende Hand über ihn, oder die Würfel meinen es nicht gut. Dann erleidet der Kämpfer durch die Waffen seines Gegners Schaden.
+    effects: none
+    why: the heading and its narration before S2; nothing to compute
 
   - id: S2
     text: >

@@ -9,7 +9,7 @@ source:
   page: 169
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: VR1
@@ -22,7 +22,7 @@ clauses:
         ruling: [vr-scope, vr-halving]
         # "wenn er regeneriert": when regeneration fails outright (a storm, tied to a horse's back,
         # Vergiftet or Krank — regeneration.R6, R7) he does not regenerate, and gets nothing.
-        # FORMAT: `before:` — the order against the halving in R6 is itself a ruling.
+        # FORMAT: `before:` — the bonus is added before R6 halves the result (ruling vr-halving).
         # FORMAT: one effect resting on two rulings (when it applies, and in which order) — the
         # other files only ever name one.
 
@@ -31,45 +31,40 @@ clauses:
     effects: none
     why: purchase prerequisite, not a rule at the table
 
+  - id: VR3
+    text: "AP-Wert: 10 Abenteuerpunkte (pro Stufe)"
+    effects: none
+    why: cost, not a rule at the table
+
 rulings:
   - id: vr-scope
-    status: open
+    status: decided
     question: >
       "Wenn er regeneriert" — only in a Regenerationsphase (a rest of 6 hours or more,
       regeneration.R2), or whenever the hero regains LeP (a healing potion, a spell, Heilkunde
       Wunden)?
-    context: >
-      The word "regenerieren" is the Regeneration chapter's term for the 1W6 per Regenerationsphase;
-      potions and spells "heilen". The app adds the bonus only on the Regenerieren sheet
-      (RegenerierenSheet, Hero.verbessertRegenerationLEBonus), not on the healing sheet
-      (HeilungSheet) — which is option a.
-    situations: [lebensenergie 15.9]
-    options:
-      a: { says: "Only in a Regenerationsphase, once per phase (so up to twice a day).", app: "as today" }
-      b: { says: "Whenever LeP are regained by any means.", app: "the healing sheet adds it too" }
-    recommended: a
-    why_recommended: the advantage names the Regeneration mechanic; healing effects state their own amounts
-    answer: null
+    answer: >
+      Only in a Regenerationsphase, once per phase (so up to twice a day).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VR1]
+    notes: >
+      "Regenerieren" is the Regeneration chapter's term for the 1W6 per Regenerationsphase;
+      potions and spells "heilen" and state their own amounts. The app already does this: the
+      bonus is added on the Regenerieren sheet (RegenerierenSheet,
+      Hero.verbessertRegenerationLEBonus), not on the healing sheet (HeilungSheet).
 
   - id: vr-halving
-    status: open
+    status: decided
     question: >
       In a poor camp ("unruhig, nass oder kalt") regeneration is halved (regeneration.R6). Is the
       advantage's bonus halved with it, or added after the halving?
-    context: >
-      The Regeneration page has the hero roll 1W6, "verrechnet das Ergebnis mit den Mali und Boni
-      seiner augenblicklichen Situation", and then "halbiert sich die Regeneration" in a poor camp;
-      it does not say whether an advantage's bonus is part of what is halved. Boronmir (Stufe II)
-      rolls 3 in a wet camp: (3 + 2) / 2 = 3 (rounded up, ruling round-up) under a, 2 + 2 = 4 under
-      b. The app does not halve at all: the sheet adds the bonus and any modifier the player types
-      in (RegenerierenSheet), so the player has to work the halving out by hand.
-    situations: [lebensenergie 15.10]
-    options:
-      a: { says: "Halve the whole result: (1W6 + modifiers + Verbesserte Regeneration) / 2, rounded up.", app: "an environment picker on the sheet; the halving is its own line after the bonus" }
-      b: { says: "Halve the roll with its situational modifiers; add Verbesserte Regeneration after.", app: "the same picker; the bonus line comes after the halving" }
-    recommended: a
-    why_recommended: >
-      the page halves "die Regeneration", which is the result after every modifier; the advantage
-      is one more Bonus in that sum, and treating it as immune to the environment is a reading the
-      page does not offer
-    answer: null
+    answer: >
+      Halve the whole result: (1W6 + modifiers + Verbesserte Regeneration) / 2, rounded up.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VR1, regeneration.R6]
+    notes: >
+      The page halves "die Regeneration", the result after every modifier; the advantage is one
+      more Bonus in that sum. Boronmir (Stufe II) rolling 3 in a wet camp regains
+      (3 + 2) / 2 = 3 (rounded up, ruling round-up). The app does not halve at all
+      (RegenerierenSheet has no environment): it needs an environment picker, with the halving
+      as its own line after the bonus.

@@ -61,7 +61,8 @@ Where the app is wrong, independent of the open rulings:
   kind: a dodge after a parry is −3, not 0 (V4, V5, V7). The catalog note on
   `GRW_mehrfacheVerteidigung` states the per-kind counting as intended.
 - **A defence at 0 or below is never blocked** (`CombatRootView.defenseBlocked`); MV3 takes that
-  kind away (V9).
+  kind away (V9). The value is the one the defence would be rolled against, after every modifier
+  (decided ruling `zero-value`), so the Schip +4 keeps it alive (V10).
 - **Verteidigungshaltung does not exist in the app** (catalog status `todo`) (V11–V13).
 - **The Schip +4 on defences cites no rule** (`DefenseModifiers.schipDefenseBoost`, `rules: []`)
   (V10).
@@ -69,5 +70,6 @@ Where the app is wrong, independent of the open rulings:
 ## Rulings
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for
-`mehrfache-verteidigung`, `SA_65`, and the shared `kampfstil-techniques`, which Vinsalt-Stil's
-technique list raises again (and more sharply: a defensive style that lists Armbrüste).
+`mehrfache-verteidigung`, `SA_65`, and the shared `kampfstil-techniques`: Vinsalt-Stil applies
+only with a weapon of its list (Armbrüste, Fechtwaffen, Zweihandschwerter), so with a Schwert the
+steps stay −3 (V8), as the app already does.

@@ -35,6 +35,9 @@ YAML: [`DISADV_57`](./rules/disadvantages/DISADV_57.yaml).
 The app is right on the check itself (13.1–13.3: catalog `DISADV_57`, `Situation.woundEffectProbe`).
 What it lacks is saying *why* the rule did not apply: with Trefferzonen off the disadvantage is
 silently inert (13.4), and the not-applied Belastung on a check in armour is not listed (13.2).
+Per the decided ruling `verweichlicht-scope`, "Wundeffekte" is the Fokusregel's term: Status
+Blutend's Selbstbeherrschung check is not hindered (13.5), and without Trefferzonen the hero sheet
+says the disadvantage needs it.
 
 ## Rulings
 

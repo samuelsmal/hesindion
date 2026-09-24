@@ -6,11 +6,12 @@ name: Passive, Basis- und Spezialmanöver
 kind: core
 source:
   url: https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html
-  book: Regelwerk
+  book: Regelwerk     # inferred: the page lists no Publikation(en); the text is the Regelwerk's
+                      # "Kampfsonderfertigkeiten" chapter (~p. 246)
   page: null          # the wiki page gives none
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: KS1
@@ -27,9 +28,12 @@ clauses:
       Werte oder bieten andere, passive Erleichterungen. Hat ein Held mehrere passive
       Kampfsonderfertigkeiten, kann er sie alle gleichzeitig nutzen.
     effects:
-      - when: { ability: { kind: passiv } }
+      - when: { ability: { passive: true } }
         apply: always
-        # Every passive SF's own lines apply together; none takes a manoeuvre slot.
+        # Every passive SF's own lines apply together; none takes a manoeuvre slot. The marker is
+        # the SF file's top-level `passive: true` (SA_40, SA_41, SA_43, SA_65, SA_152, SA_173,
+        # SA_661, SA_884, maechtiger-schlag); a passive SF is not a manoeuvre and has no
+        # `manoeuvre.kind`.
       - show: { list: passive_sf, label: "passiv — wirkt immer" }
         # The combat screen lists the hero's passive SF as such, so the player sees they are
         # already counted and need no choice.
@@ -82,8 +86,9 @@ clauses:
       Kampftechnik.
     effects: none
     why: >
-      evidence for the open shared ruling sf-technique-lists ("für die die Sonderfertigkeit
-      eingesetzt werden kann" reads as a use restriction); it decides nothing on its own.
+      read as a use restriction ("für die die Sonderfertigkeit eingesetzt werden kann"), as the
+      decided shared ruling sf-technique-lists has it: each SF's own list is gated in its file
+      (`requires: loadout…technique`); one marked „alle“ is not.
     ruling: sf-technique-lists
 
   - id: KS7

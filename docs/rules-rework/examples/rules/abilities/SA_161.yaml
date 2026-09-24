@@ -30,3 +30,18 @@ clauses:
         multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
         ruling: [SA_160.halving-by-manoeuvre, trefferzonen.surprised-then-halved]
     # The same question as SA_160's; the ruling lives there and covers both.
+
+  - id: GS2
+    text: "Voraussetzungen: FF 13"
+    effects: none
+    why: purchase prerequisite
+
+  - id: GS3
+    text: "Kampftechniken: alle Fernkampftechniken"
+    effects: none
+    why: the technique list, the header field `techniques`; the offer on `fk` reaches every ranged technique
+
+  - id: GS4
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: cost

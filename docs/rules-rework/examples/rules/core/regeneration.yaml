@@ -10,7 +10,7 @@ source:
   page: 339
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: R1

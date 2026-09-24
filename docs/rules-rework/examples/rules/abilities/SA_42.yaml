@@ -6,8 +6,8 @@ group: Kampfsonderfertigkeiten
 tiers: 2
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Beih%C3%A4ndigerKampf.html   # the wiki's own spelling
-  book: Regelwerk
-  page: 246
+  book: Regelwerk (4. Auflage)
+  page: 246–247
   checked: 2026-09-23
   hash: null
 reviewed: null
@@ -27,8 +27,33 @@ clauses:
 
   - id: BH2
     text: "Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter"
+    effects:
+      - requires: { loadout.mainHand.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12], loadout.offHand.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12] }
+        ruling: sf-technique-lists
+        # Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter. BH1 lowers the
+        # penalty only when both pieces of the double attack are on the list: a Morgenstern
+        # (Kettenwaffen) with a shield pays the full −2. A fist as one hand is ruling
+        # beidhaendiger-kampf.raufen-double-attack.
+
+  - id: BH3
+    text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Beidhändiger Kampf I"
     effects: none
-    why: what the list means for BH1 is the shared open ruling sf-technique-lists
+    why: purchase prerequisites, not a roll
+
+  - id: BH4
+    text: "AP-Wert: Stufe I/II: 20/35 Abenteuerpunkte"
+    effects: none
+    why: purchase cost
+
+  - id: BH5
+    text: >
+      Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
+      hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
+      Kampftechnik heranzuziehen.
+    effects: none
+    why: >
+      how the wiki keeps BH2's list; evidence for sf-technique-lists' option (a) — a list kept up
+      to date with new techniques is a use list, not a learning list
 
 rulings:
   - id: sa42-dodge

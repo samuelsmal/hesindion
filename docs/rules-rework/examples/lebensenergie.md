@@ -93,20 +93,21 @@ The rules as draft YAML: [`ADV_25`](./rules/advantages/ADV_25.yaml),
   poisoned or sick hero, though the app has both statuses (15.12). Basis: the page (R7).
 - **Regeneration knows no environment**: no halving in a wet camp, no "fällt aus" in a storm or
   tied to a horse, and the bonus is added even then (`RegenerierenSheet`) (15.10, 15.11). Basis:
-  the page (R6, and VR1's "wenn er regeneriert"). How the bonus meets the halving is open
-  (`ADV_44.vr-halving`).
+  the page (R6, and VR1's "wenn er regeneriert"); in a wet camp the whole result, bonus included,
+  is halved and rounded up (ruling `ADV_44.vr-halving`: Boronmir rolling 3 regains 3, the app 5).
 - **Schnell wieder auf den Beinen is ignored**: Betäubung and Berauscht chips give the full 3 h
   and 2 h (15.17, 15.18). Basis: the page (SW1); catalog `ADV_75` is `todo`. Text only — the app
-  keeps no time.
-
-Depending on an open ruling:
-
+  keeps no time. Only a Zustand caused by alcohol wears off faster; Betäubung from a blow keeps its
+  3 h (15.19, ruling `ADV_75.alcohol-scope`).
 - **Zäher Hund lowers the Stufe the hero has, not only its effects.** `Hero.effectiveSchmerzLevel`
   feeds `level(of:)`, the chip, and `totalZustandLevels`, so Boronmir with Belastung II, Schmerz
-  III and Betäubung III counts 7 Stufen and keeps acting where the page's 8 would make him
-  Handlungsunfähig (15.8). Ruling `ADV_49.zaeher-hund-counts`.
-- **Zäher Hund at Stufe IV** after a passed Selbstbeherrschung check: −3 or −4 (15.7). Ruling
-  `ADV_49.zaeher-hund-iv`; the app has no such check at all (example 4).
+  III and Betäubung III counts 7 Stufen and keeps acting where the page's 8 make him
+  Handlungsunfähig (15.8), and at Schmerz I shows no chip (15.4). Basis: ruling
+  `ADV_49.zaeher-hund-counts` — the chip shows the Stufe he has (at most IV) and "wirkt wie" the
+  lower one.
+- **Zäher Hund does nothing at Stufe IV**: after a passed Selbstbeherrschung check he should act
+  at −3 and GS −3, as Stufe III (15.7). Basis: ruling `ADV_49.zaeher-hund-iv`; the app has no such
+  check at all (example 4) and `Hero.effectiveSchmerzLevel` returns 4 before subtracting.
 
 Not rules but the requirement: the LE total names no rule (15.1 — "33" with no breakdown in
 `HeroDetailView`), the Schmerz line lowered by Zäher Hund cites only COND_6 and shows the lowered
@@ -117,11 +118,13 @@ Confirmed correct: LE 33 for Boronmir, Hohe Lebenskraft +1 per Stufe (15.1); the
 thresholds for LE 33 (`Hero.lebenspunkteSchmerzLevel`, which equals the exact comparison of
 `COND_6.schmerz-thresholds` a); Zäher Hund's effects at Stufen I–III (15.4–15.6); the
 regeneration floor at 0 and cap at the maximum (15.13, 15.14); Verbesserte Regeneration +2 for
-Stufe II, and only on the regeneration sheet, not on healing (`ADV_44.vr-scope` a).
+Stufe II, and only on the regeneration sheet, not on healing (ruling `ADV_44.vr-scope`).
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `ADV_49`
-(`zaeher-hund-counts`, `zaeher-hund-iv`), `ADV_44` (`vr-scope`, `vr-halving`) and `ADV_75`
-(`alcohol-scope`). The halving of regeneration is rounded up under the decided shared ruling
+All rulings are in [`RULINGS.md`](./RULINGS.md). Decided 2026-09-24: `ADV_49.zaeher-hund-counts`
+(effects only; the hero keeps his Stufe, at most IV), `ADV_49.zaeher-hund-iv` (Stufe III's effects
+after a passed check), `ADV_44.vr-scope` (only in a Regenerationsphase), `ADV_44.vr-halving` (the
+bonus is halved with the roll) and `ADV_75.alcohol-scope` (both Zustände only from alcohol). The
+halving of regeneration is rounded up under the decided shared ruling
 `round-up`.

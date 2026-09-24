@@ -1,7 +1,7 @@
 # Example 8 — Finte. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # Weapons: Schwert (Schwerter, CT_12), Morgenstern (Kettenwaffen, CT_6).
 # `opponent_lines` are printed as the opponent's own calculation; the hero's values do not move.
-# Open rulings named here without a prefix live in ../rules/rulings.yaml once added
+# Rulings named here without a prefix live in ../rules/rulings.yaml
 # (sf-technique-lists, manoeuvre-combination, tiered-manoeuvre-stufe).
 
 base_hero: { at: 14, pa: 8, aw: 7 }
@@ -34,8 +34,13 @@ situations:
     name: Finte III, the player wants Finte I
     hero: { abilities: { SA_48: 3 }, loadout: { weapon: Schwert } }
     choose: { manoeuvre: finte, tier: 1 }
-    expect: { open: tiered-manoeuvre-stufe }   # under a: AT −1, opponent −2
-    app_today: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe
+    expect:
+      offered: [{ manoeuvre: finte, tiers: [1, 2, 3], ruling: tiered-manoeuvre-stufe }]
+      at: { total: -1, lines: [{ value: -1, from: SA_48.F1, tier: 1, ruling: tiered-manoeuvre-stufe }] }
+      on_hit:
+        opponent_lines:
+          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, ruling: tiered-manoeuvre-stufe }] }
+    app_today: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe — wrong
 
   - id: "8.4"
     name: The opponent dodges instead of parrying
@@ -51,8 +56,9 @@ situations:
   - id: "8.5"
     name: Finte with a Morgenstern (Kettenwaffen — not on Finte's list)
     hero: { abilities: { SA_48: 1 }, loadout: { weapon: Morgenstern } }
-    expect: { open: sf-technique-lists }    # under a: not offered, SA_48.F3
-    app_today: offered (availableManeuvers checks no technique)
+    expect:
+      not_offered: [{ manoeuvre: finte, because: SA_48.F3, ruling: sf-technique-lists }]
+    app_today: offered (availableManeuvers checks no technique) — wrong
 
   - id: "8.6"
     name: Finte unarmed (Raufen — on the list)

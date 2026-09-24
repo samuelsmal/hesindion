@@ -11,7 +11,7 @@ source:
   page: 250
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # Optolith says page 249 and lacks the cap clauses. The page wins.
 
 clauses:
@@ -28,6 +28,8 @@ clauses:
           # runUp is asked (a toggle, "4 Schritt Anlauf?"); GS is the hero's current GS.
 
   - id: ST2
+    # A splice: the +10 sentence is the third of the Regel, the natural-GS sentence its last
+    # (after ST4's Finte sentence). The "[…]" is ST3 and ST4; nothing is dropped, the order is.
     text: >
       Ist der Sturmangriff erfolgreich, steigen die TP um +2 und die halbe GS des Angreifers,
       maximal jedoch insgesamt um +10 TP. […] Maximal kann ein TP-Bonus in Höhe der natürlichen
@@ -48,11 +50,15 @@ clauses:
       - when: { manoeuvre: sturmangriff, attack: miss }
         tell: { opponent: passierschlag }
         # Opponent side, display only (ADR-0005).
+        # "Regulär abgewehrt" has no line: every defence stays allowed, the default. The
+        # contrast is the mounted Sturmangriff (reiterkampf.RK14), which leaves the opponent
+        # only the shield parry or a dodge.
 
   - id: ST4
     text: >
-      Dieses Spezialmanöver kann nicht mit dem Basismanöver Finte kombiniert werden.
+      Dieses Spezialmanöver kann nicht mit dem Basismanöver Finte kombiniert werden. […]
       Erschwernis: -2
+    # "[…]" is the natural-GS cap sentence, quoted in ST2.
     effects:
       - when: { manoeuvre: sturmangriff }
         add: { to: at, value: -2 }
@@ -73,6 +79,11 @@ clauses:
     text: "Voraussetzungen: MU 13, Vorstoß, Wuchtschlag I"
     effects: none
     why: purchase prerequisites, not a roll
+
+  - id: ST7
+    text: "AP-Wert: 25 Abenteuerpunkte"
+    effects: none
+    why: purchase cost, not a roll
 
 rulings:
   - id: sturmangriff-gs

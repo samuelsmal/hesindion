@@ -41,5 +41,5 @@ real — a speed spell or elixir reaches them (10.5, 10.6).
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_62`. Decided:
 `sturmangriff-cap-scope` — "+10 insgesamt" caps Sturmangriff's own bonus only; other TP bonuses on
-the same attack add on top. The cross-cutting open ones on techniques and manoeuvre combination
-decide 10.2 and 10.7.
+the same attack add on top. The cross-cutting ones decide 10.2 (`sf-technique-lists`: not with a
+Dolch) and 10.7 (`manoeuvre-combination`: with Wuchtschlag).

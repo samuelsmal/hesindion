@@ -81,8 +81,13 @@ situations:
     name: Golgarite with a Schwert, mounted against a fighter on foot
     hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Schwert } }
     opponent: { onFoot: true }
-    expect: { open: kampfstil-techniques }
-    app_today: AT +2, PA +2 — the style is off without Rabenschnabel or Großschild
+    expect:
+      at: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
+      pa: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
+      not_applied:
+        - { rule: SA_661, clause: GS1, reason: a Schwert is neither Rabenschnabel nor Großschild (GS3), ruling: kampfstil-techniques }
+        - { rule: SA_661, clause: GS2, reason: a Schwert is neither Rabenschnabel nor Großschild (GS3), ruling: kampfstil-techniques }
+    app_today: same totals — the style is off without Rabenschnabel or Großschild; the not-applied lines are not listed
 
   - id: "5.8"
     name: Golgarite on foot
@@ -181,5 +186,5 @@ situations:
     hero: { mounted: true, armour: [Plattenrüstung] }
     expect:
       ini_base: { value: 12, from: reiterkampf.RK1 }     # the mount's
-      ini_belastung: { open: reiterkampf.rider-ini }
-    app_today: the mount's base, no Belastung
+      ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
+    app_today: same

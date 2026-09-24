@@ -14,7 +14,7 @@ source:
   page: 152
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 clauses:
   - id: GA1
     text: >
@@ -36,6 +36,21 @@ clauses:
         # The halving is stated on the Fokusregel page (trefferzonen.TZ5), not here; this page
         # says only that the attack carries the zone penalty.
 
+  - id: GA2
+    text: "Voraussetzungen: GE 13"
+    effects: none
+    why: purchase prerequisite
+
+  - id: GA3
+    text: "Kampftechniken: alle Nahkampftechniken"
+    effects: none
+    why: the technique list, the header field `techniques`; the offer on `at` reaches every melee technique
+
+  - id: GA4
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: cost
+
 rulings:
   - id: halving-by-manoeuvre
     status: decided
@@ -55,3 +70,9 @@ rulings:
       Sturmangriff — one Spezialmanöver per action (kampfsonderfertigkeiten.KS4). A hero with the SF may also aim without
       announcing it, to keep the slot free (trefferzonen TZ.27). The app today halves every aimed
       attack of a hero with the SF (CombatZonePicker, HitZoneModifiers.penalty).
+      The sentence decided against, on the Fokusregel page (trefferzonen.TZ5): "Besitzt ein Held
+      die Sonderfertigkeit Gezielter Angriff bzw. Gezielter Schuss, sind die Erschwernisse
+      halbiert." — read alone, owning the SF halves. The wording this rests on, from this page
+      (GA1): "(Spezialmanöver) … Mit diesem Manöver kann man gezielt eine Trefferzone angreifen."
+      — a Spezialmanöver is announced for one attack, so "Besitzt" is read as the SF being what
+      lets the hero announce it.

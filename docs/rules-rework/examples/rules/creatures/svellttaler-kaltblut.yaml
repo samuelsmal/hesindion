@@ -76,8 +76,10 @@ clauses:
         # Attackewert in Niederreiten", "Der Schaden ist der Beschreibung des jeweiligen
         # Reittiers zu entnehmen").
       - when: { hero.mounted: true }
-        offer: { mount_attack: [Tritt, Biss] }
+        offer: { order: mount_attack, attacks: [Tritt, Biss], via: reiterkampf.RK12 }
         ruling: mount-own-attack
+        # An order (RK12): instead of the rider's own attack, 1 action and a Reiten
+        # (Kampfmanöver) check; no gallop or run-up, unlike RK13.
         # FORMAT: an attack made by someone other than the hero, on the hero's screen.
 
   - id: SK4
@@ -88,7 +90,8 @@ clauses:
       - provides: { mount.rs: 0, mount.actions: 1 }
         ruling: [mount-profile-data, mount-own-attack]
         # RS matters for reiterkampf.RK10 (SP = TP − RS; the player enters the SP today,
-        # CombatMountDamageView). Aktionen 1 is the question mount-own-attack asks.
+        # CombatMountDamageView). Aktionen 1: the horse acts only on the rider's order (RK12,
+        # ruling mount-own-attack).
 
   - id: SK5
     text: >
@@ -144,8 +147,8 @@ clauses:
       - when: { mount.lep: { at_most: [49, 33, 16, 5] } }
         add: { to: mount.conditions.COND_6, value: 1, per: threshold_crossed }
         ruling: svellttaler-schmerz-thresholds
-    status: unencoded
-    why: the app keeps the mount's LeP (Pet.currentLifeEnergy) but no Zustände for it
+        # The app keeps the mount's LeP (Pet.currentLifeEnergy) but has no Zustände for it, so
+        # nothing applies this today.
 
   - id: SK11
     text: |
@@ -167,95 +170,68 @@ clauses:
 
 rulings:
   - id: mount-profile-data
-    status: open
+    status: decided
     question: >
       Reiterkampf and the mount's own rules need values the Optolith export does not carry for
       Kupperus: VW 7, RS 0, Größenkategorie groß, the Vorteil Ruhiges Temperament (+1 on Reiten).
       Where should the app get a mount's profile from?
-    context: >
-      The export's pet has structured fields for one attack (`attack`, `dp`, `at`, `reach`) and
-      optional `pa` and `pro`, which the owner left empty for Kupperus. Everything else is free
-      text: the other attacks sit in `notes` and are read by a regex
-      (OptolithImportService.parsePetAttacks), the Sonderfertigkeiten in `skills`, and the
-      Vorteile nowhere. The app reads neither `pa` nor `pro`. The page has the full profile and
-      the pet's `type` names it ("Svellttaler Kaltblut"). What reads the values: RK1 (INI base),
-      RK13 (Niederreiten AT and TP), RK14/RK15 (GS), RK10 (LeP; RS for the SP), Ruhiges
-      Temperament (the rider's Reiten checks), Mächtiger Schlag (KK), Größenkategorie (the
-      opponent's defence against the mount's attacks).
-    situations: [kupperus-und-waffen 18.1, kupperus-und-waffen 18.3]
-    options:
-      a: { says: "The export only; what it lacks, the player enters on the pet (VW, RS, size, Vorteile).", app: "new editable fields on Pet; nothing applied until filled in" }
-      b: { says: "A table of Bestiarium profiles keyed by the pet's type; the export's own numbers override it.", app: "profile files like this one, looked up by Pet.type; the notes regex becomes a fallback" }
-      c: { says: "b, and a pet whose type is not in the table falls back to a.", app: "both" }
-    recommended: c
-    why_recommended: >
-      Most mounts are a Bestiarium breed with a page, so the table fills Kupperus's gaps without
-      asking; a player's custom animal still needs a way in, and the export's numbers are the
-      player's, so they win where present.
-    answer: null
+    answer: >
+      A table of Bestiarium profiles keyed by the pet's type, the export's own numbers overriding
+      it; a pet whose type is not in the table falls back to the export, and what the export lacks
+      the player enters on the pet (VW, RS, size, Vorteile).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SK2, SK3, SK4, SK5, SK7, ruhiges-temperament.RT1]
+    notes: >
+      Profile files like this one, looked up by Pet.type ("Svellttaler Kaltblut"); the export's
+      numbers are the player's and win where present (Kupperus's LeP 75, INI, GS, attacks). The
+      notes regex (OptolithImportService.parsePetAttacks) becomes the fallback for a pet with no
+      profile, and such a pet gets editable fields for VW, RS, size and Vorteile; nothing is applied
+      until they are filled in. What reads the values: RK1 (INI base), RK13 (Niederreiten AT and
+      TP), RK14/RK15 (GS), RK10 (LeP; RS for the SP), Ruhiges Temperament (the rider's Reiten
+      checks), Mächtiger Schlag (KK), Größenkategorie (the opponent's defence against the mount's
+      attacks). The app today reads neither the export's `pa` nor `pro` and knows no animal Vorteile.
 
   - id: mount-own-attack
-    status: open
+    status: decided
     question: >
       While Boronmir rides, may Kupperus attack with Tritt or Biss, and what does it cost?
-    context: >
-      Reiterkampf's only way for the mount to act in a fight is an order (RK12: instead of the
-      rider's own attack, an action and a Reiten (Kampfmanöver) check), and it names two orders,
-      Niederreiten (RK13) and Sturmangriff zu Pferd (RK14). The profile gives the horse
-      "Aktionen: 1" and a Tritt and a Biss. The Ausbildungsaufsatz Kampftier trains an animal "auf
-      Befehl anzugreifen" (https://dsa.ulisses-regelwiki.de/Aus_Kampftier.html); whether
-      Kupperus has it is not in the export. The app lists Tritt and Biss on the attack screen
-      beside the hero's own attack and goes straight to the roll, with no Reiten check
+    answer: >
+      An order like any other (RK12): it takes the rider's action and a Reiten (Kampfmanöver) check.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SK3, SK4, reiterkampf.RK12]
+    notes: >
+      Tritt and Biss go through the Reiten check (CombatMountPreCheckView) like Niederreiten,
+      without the gallop question, and replace Boronmir's own attack; on a failed check the order is
+      not carried out and nothing worse happens (RK12). No Kampftier training is asked. The app
+      today lists them beside the hero's own attack and goes straight to the roll
       (CombatAttackViews.mountAttackSection).
-    situations: [kupperus-und-waffen 18.3]
-    options:
-      a: { says: "An order like any other (RK12): it takes the rider's action and a Reiten (Kampfmanöver) check.", app: "Tritt and Biss go through the Reiten check (CombatMountPreCheckView) like Niederreiten, without the gallop question" }
-      b: { says: "As a, and only for a mount trained as Kampftier.", app: "as a, plus a training flag on Pet" }
-      c: { says: "The mount has its own action; it attacks without an order or a check, and the rider still attacks.", app: "Tritt and Biss become a second attack in the round, not an alternative to the hero's" }
-    recommended: a
-    why_recommended: >
-      RK12 is the page's only mechanism for a ridden animal to act, and Kupperus's own
-      Kampfverhalten is to avoid fights; b is right in spirit but asks for data nobody has.
-    answer: null
 
   - id: niederreiten-without-profile
-    status: open
+    status: decided
     question: >
       RK13 lets the mount attack "mit seinem entsprechenden Attackewert in Niederreiten". Can a
       rider order Niederreiten from a mount whose profile has no Niederreiten line?
-    context: >
-      The horses on the wiki all list one (Svellttaler Kaltblut, Elenviner Vollblut, Tralloper
-      Riese, Shadif, Warunker, …); a pony, a mule or a player's custom animal may not. The app
-      always offers the order; with no Niederreiten line it takes the first parsed attack's AT
-      and the export's `dp` (CombatAttackViews.niederreitenButton, `mount.attacks.first?.at`).
-      That also picks the wrong AT when a Niederreiten line exists but is not first — for the
-      Elenviner Vollblut, Tritt AT 16 instead of Niederreiten AT 15 — which is a plain error, not
-      part of this question (18.2).
-    situations: []
-    options:
-      a: { says: "No Niederreiten line, no Niederreiten order.", app: "the button is hidden without the line" }
-      b: { says: "The GM may allow it with the mount's best attack.", app: "offered, with a note that the values are the GM's call" }
-    recommended: a
-    why_recommended: RK13 takes both the AT and the damage from the mount's own Niederreiten values; without them the order has no numbers
-    answer: null
+    answer: No Niederreiten line, no Niederreiten order.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SK3, reiterkampf.RK13]
+    notes: >
+      RK13 takes both the AT and the damage from the mount's own Niederreiten values; without them
+      the order has no numbers, so the button is hidden. The horses on the wiki all list one; a
+      pony, a mule or a custom animal may not. The app today always offers the order and, with no
+      line, takes the first parsed attack's AT and the export's `dp`
+      (CombatAttackViews.niederreitenButton). That it takes the first attack even when a
+      Niederreiten line exists is a separate error (kupperus-und-waffen 18.2).
 
   - id: svellttaler-schmerz-thresholds
-    status: open
+    status: decided
     question: >
       The profile gives LeP 75 but Schmerz thresholds of 49, 33, 16 and 5 LeP. Which count?
-    context: >
-      The core rule (Geringe Lebensenergie, Nahkampf page) puts a Stufe Schmerz at ¾, ½ and ¼ of
-      the LeP left and at 5 or fewer. For LeP 75 that is about 56, 37 and 18 (rounding per
-      COND_6.schmerz-thresholds). The printed 49/33/16 are exactly those fractions of 65 LeP, so
-      either the thresholds or the LeP are a misprint. The app keeps the mount's LeP
-      (Pet.currentLifeEnergy, MountHealingSheet) but gives it no Schmerz at all.
-    situations: []
-    options:
-      a: { says: "The printed thresholds, 49/33/16/5.", app: "per-profile thresholds in the profile file" }
-      b: { says: "Computed from LeP 75 by the core rule.", app: "the hero's Schmerz computation, applied to the mount" }
-      c: { says: "The LeP is the misprint: 65 LeP, thresholds as printed.", app: "profile LeP 65; Kupperus's export (75) would override it under mount-profile-data b/c" }
-    recommended: b
-    why_recommended: >
-      The core rule is the rule and the stat block's thresholds are a convenience derived from
-      it; the LeP is the number the export, the hero sheet and the app already use.
-    answer: null
+    answer: The printed thresholds, 49/33/16/5.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SK10]
+    notes: >
+      Answered against the recommendation (b, computed from LeP 75 by the core rule: about 56, 37,
+      18 and 5). The printed 49/33/16 are ¾, ½ and ¼ of 65 LeP, so either they or the LeP are a
+      misprint; the profile's own thresholds win, and a profile carries its thresholds as data. So
+      Kupperus at 55 LeP has no Schmerz yet, where the core rule would give one Stufe. The app keeps
+      the mount's LeP (Pet.currentLifeEnergy, MountHealingSheet) but gives it no Schmerz at all.

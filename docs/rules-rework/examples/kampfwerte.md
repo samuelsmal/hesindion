@@ -135,7 +135,7 @@ PA 7; the import gives AT 5 / PA 13 and PA 8.
 
 ## Rulings
 
-- **`schilde.shield-bonus-raufen`** (open) — does the passive shield bonus reach a Raufen parry?
-  The page says "Hauptwaffe"; the app adds it (16.16).
+- **`schilde.shield-bonus-raufen`** (decided, a) — the passive shield bonus reaches a Raufen parry:
+  bare hands count as the Hauptwaffe. The app already adds it (16.16: PA 10).
 
 The rounding of AW and INI rests on the decided `round-up` (and the page's own examples).

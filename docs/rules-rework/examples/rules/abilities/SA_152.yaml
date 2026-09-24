@@ -6,6 +6,7 @@ name: Auf Distanz halten
 kind: specialAbility
 group: Kampfsonderfertigkeiten
 tiers: 2
+passive: true                  # "(passiv)" on the page; kampfsonderfertigkeiten.KS2 lists it as "wirkt immer"
 techniques: [alle Nahkampftechniken]
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_AufDistanzhalten.html
@@ -13,12 +14,12 @@ source:
   page: 151
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: AD1
     text: >
-      (passiv) Wer einen Gegner auf Distanz halten will, muss über eine Waffe verfügen, deren
+      Wer einen Gegner auf Distanz halten will, muss über eine Waffe verfügen, deren
       Reichweite größer ist als die Reichweite des Widersachers. Ist diese Voraussetzung erfüllt,
       erhöhen sich die AT-Erschwernisse für den Gegner zusätzlich um -1 pro Stufe der SF.
     effects:
@@ -27,9 +28,11 @@ clauses:
         ruling: SA_172.auf-distanz-halten
         # The opponent's Stufe is a GM question, asked like the opponent's reach
         # (OpponentProfile). FORMAT: `per: opponent.tier` — a tier the hero does not own.
-      - when: { hero.has: SA_152, loadout.reach: { longer_than: opponent.reach } }
-        tell: { opponent: "AT −1 pro Stufe (Auf Distanz halten)" }
-        # Opponents are not modelled (ADR-0005); the hero's use is a reminder.
+      - when: { announced: aufDistanzHalten, loadout.reach: { longer_than: opponent.reach } }
+        tell: { opponent: "AT −<tier> (Auf Distanz halten <I/II>)" }
+        # Opponents are not modelled (ADR-0005); the hero's use is a reminder. Only in a round
+        # where AD2's announcement was made: owning the SF and the longer weapon is not enough.
+        # `<tier>` is the Stufe owned; the page offers no lower one.
 
   - id: AD2
     text: >
@@ -64,3 +67,16 @@ clauses:
     text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Auf Distanz halten I"
     effects: none
     why: purchase prerequisites, not a roll
+
+  - id: AD5
+    text: "Kampftechniken: alle Nahkampftechniken"
+    effects:
+      - requires: { loadout.weapon: melee }
+        # „alle“: kampfsonderfertigkeiten.KS6 says such an SF is used independently of a
+        # Kampftechnik, so sf-technique-lists does not reach it. Any melee weapon — and AD1
+        # already needs one with a reach.
+
+  - id: AD6
+    text: "AP-Wert: Stufe I/II: 15/20 Abenteuerpunkte"
+    effects: none
+    why: purchase cost, not a roll

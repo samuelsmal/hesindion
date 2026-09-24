@@ -34,15 +34,17 @@ situations:
     hero: { lp: 5 }
     expect:
       conditions: { COND_6: 4 }
-      requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
+      requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
       on_failure: { states: { handlungsunfaehig: { from: COND_6.SZ5 } } }
-    app_today: Handlungsunfähig outright, no check offered — wrong
+      gs: { set: 0, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }
+    app_today: Handlungsunfähig outright, no check offered; GS 8 — wrong
 
   - id: S4
     name: LP 23 of 30 — just above three quarters
     hero: { lp: 23 }
-    expect: { open: COND_6.schmerz-thresholds }      # 0 if exact, Schmerz I if the threshold rounds up to 23
-    app_today: no Schmerz
+    expect:
+      conditions: { COND_6: { level: 0, from: COND_6.SZ3, ruling: COND_6.schmerz-thresholds } }   # 23 > 22.5, compared exactly
+    app_today: same
 
   # --- Schmerz with Belastung, and the cap (zustaende.Z3) ------------------------------------
 
@@ -68,9 +70,14 @@ situations:
           - { value: -3, from: COND_6.SZ5 }
           - { value: -3, from: COND_1.B3 }
           - { value: 1, from: zustaende.Z3 }          # the correction line
-      ini: { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
-      gs:  { open: zustaende.cap-scope }               # −6 uncapped, −5 capped
-    app_today: AT −5 with the correction line; GS −3 (Belastung only)
+      ini: { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }   # under the cap
+      gs:
+        total: -5
+        lines:
+          - { value: -3, from: COND_6.SZ5 }
+          - { value: -3, from: COND_1.B3 }
+          - { value: 1, from: zustaende.Z3, ruling: zustaende.cap-scope }
+    app_today: AT −5 with the correction line; GS −3 (Belastung only) — wrong
 
   - id: S7
     name: Eight Zustandsstufen — Schmerz III, Belastung III, Betäubung II
@@ -85,11 +92,16 @@ situations:
     round: { choices: [schipZustandIgnorieren] }
     expect:
       at:
-        total: { open: schicksalspunkte.schip-ignore-belastung }    # 0 if Belastung is ignored too, −3 if not
+        total: 0
         suppressed:
           - { value: -2, from: COND_6.SZ5, by: schicksalspunkte.SP-zustand }
-      gs: { open: schicksalspunkte.schip-ignore-belastung }
-    app_today: AT −3 (Belastung is never ignored)
+          - { value: -3, from: COND_1.B3, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
+      gs:
+        total: 0
+        suppressed:
+          - { value: -2, from: COND_6.SZ5, by: schicksalspunkte.SP-zustand }
+          - { value: -3, from: COND_1.B3, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
+    app_today: AT −3 (Belastung is never ignored) — wrong
 
   - id: S9
     name: Schip "Zustand ignorieren" at Schmerz IV
@@ -120,7 +132,7 @@ situations:
   - id: S12
     name: Schmerz IV, the Selbstbeherrschung check passed, in Platte
     hero: { lp: 5, armour: [Plattenrüstung] }
-    passed: [COND_6.SZ2]
+    passed: [COND_6.SZ2]                              # for this one action (COND_6.schmerz-iv-check)
     expect:
       at:
         total: -5
@@ -128,5 +140,5 @@ situations:
           - { value: -4, from: COND_6.SZ5 }
           - { value: -3, from: COND_1.B3 }
           - { value: 2, from: zustaende.Z3 }
-      gs: { open: [COND_6.schmerz-iv-gs, zustaende.cap-scope] }
+      gs: { set: 0, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }   # a set value, not capped
     app_today: Handlungsunfähig — the check does not exist

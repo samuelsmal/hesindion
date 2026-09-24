@@ -56,16 +56,18 @@ shield, and an opponent splitting his Großschild.
 
 ## Rulings
 
-New, all open:
+New, all decided (@samuelsmal, 2026-09-24):
 
-- `SA_59.schildspalter-shield-bonus`: against Schildspalter, does a shield parry lose its whole
-  doubled bonus (Boronmir 13 → 7) or only the passive half (→ 10)?
-- `SA_59.schildspalter-against-hero`: when an opponent splits Boronmir's shield, does the defence
-  screen get a toggle, and does the app track the shield's current StP? This one may belong with
-  `schilde`.
-- `SA_40.aufmerksamkeit-when`: how does the check screen know a Sinnesschärfe check is the ambush
-  one? The recommendation is a toggle, like the Belastung toggle on the same screen.
-- `SA_884.plaenkler-mounted`: can riders form the line at all?
+- `SA_59.schildspalter-shield-bonus` (a): against Schildspalter, a shield parry loses its whole
+  doubled bonus: Boronmir 13 → 7.
+- `SA_59.schildspalter-against-hero` (b): a toggle "Schildspalter" on the defence screen turns off
+  the weapon parry, takes the bonus off the shield parry, and on a failed defence takes the TP off
+  the shield's current StP; at 0 the shield is destroyed and leaves the loadout. The app needs a
+  current-StP field on Shield.
+- `SA_40.aufmerksamkeit-when` (a): a toggle "Hinterhalt / Überraschung" on the Sinnesschärfe
+  check, off by default, like the Belastung toggle on the same screen; on, the +2 is a line.
+- `SA_884.plaenkler-mounted` (a): not while mounted; the toggle is off and disabled on horseback,
+  with the reason.
 
 Reused: `mounted-manoeuvres` and `sf-technique-lists`, and `manoeuvre-combination` for Vorstoß
 or Schildspalter with Wuchtschlag.
@@ -90,18 +92,12 @@ in the file's header. Rule files: [`SA_66`](./rules/abilities/SA_66.yaml),
 | Aufmerksamkeit's +2 is never applied. The hint appears on every Sinnesschärfe check and names "Überraschung vermeiden" rather than Hinterhalt entdecken | `TalentProbeModal.hints`, catalog SA_40 `byHand` | page (A1) | 14.14, 14.15 |
 | Only the owner of Plänkler-Formation can be in one. The page lets a companion's SF carry everyone in the line | `CombatSetupView` (`hero.hasPlaenklerFormation`), catalog SA_884 note | page (P4) | 14.18 |
 | The formation is set once at combat setup and cannot be left mid-fight | `CombatSetupView`, `CombatRootView.plaenklerActive` (read-only) | page (P1) | 14.20 |
+| An opponent's Schildspalter cannot be stated: the weapon parry and the full shield parry are offered, the damage goes to Boronmir's LeP, and a shield's StP are never reduced | `CombatDefenseSetupView`, `Shield.structurePoints` (maximum only) | ruling schildspalter-shield-bonus, schildspalter-against-hero | 14.13 |
+| Plänkler-Formation's +1 applies on horseback too | `CombatSituation.chosenOptions`, catalog SA_884 | ruling plaenkler-mounted | 14.19 |
+| Vorstoß is offered for a Großschild attack and Schildspalter with the Langschwert; neither technique is on the SF's list | `CombatAttackViews.availableManeuvers` (checks no technique) | ruling sf-technique-lists | 14.4, 14.10 |
 
 Already in README's table (example 2): Vorstoß and Schildspalter are offered on horseback (14.5,
 14.11) and on a double attack (example 11).
-
-Waiting on an open ruling:
-
-- **Any technique:** Vorstoß with the Großschild and Schildspalter with the Langschwert are both
-  offered (14.4, 14.10, `sf-technique-lists`).
-- **Opponent's Schildspalter:** nothing changes on Boronmir's defence screen. The weapon parry
-  and the full shield parry are offered, and the damage goes to his LeP (14.13,
-  `schildspalter-against-hero`).
-- **Plänkler-Formation mounted:** the +1 applies on horseback too (14.19, `plaenkler-mounted`).
 
 Confirmed correct:
 - Plänkler-Formation's +1 AT, or +1 on weapon parry, shield parry and dodge alike (catalog

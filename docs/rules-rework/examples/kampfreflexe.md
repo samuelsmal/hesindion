@@ -35,4 +35,5 @@ armour's extra INI penalty already combine correctly with the base; they only ne
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_51`.
 `SA_51.kampfreflexe-mounted` is decided: mounted, Kampfreflexe adds to the mount's INI base (12.5).
-`reiterkampf.rider-ini`, still open, asks the same of the rider's Belastung.
+`reiterkampf.rider-ini` is decided the other way for the rider's Belastung: it does not come off
+the mount's base (12.5 has no Belastung line).

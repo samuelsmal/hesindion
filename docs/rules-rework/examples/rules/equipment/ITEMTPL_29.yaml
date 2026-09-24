@@ -11,7 +11,7 @@ source:
   page: 367
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # The page also lists Archiv der Ausrüstung pp. 98, 279, Aventurische Rüstkammer p. 67 (Optolith's
 # source for the Waffenvorteil and -nachteil), Kodex der Helden p. 464, Kodex des Schwertes p. 378
 # and Straßenstaub & Halsabschneider p. 30. Optolith's numbers match the page; it has no length.

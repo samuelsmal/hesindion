@@ -28,6 +28,10 @@ clauses:
           # point in the fight, not only at setup. The spacing (½ Schritt, left and right, three
           # fighters) is the player's to judge; shown as text beside the toggle.
           # FORMAT: a span that ends when the table says so, not at the end of a round or fight.
+      - forbid: { choice: plaenklerFormation, when: { hero.mounted: true } }
+        because: "nur zu Fuß: die Formation steht Schulter an Schulter"
+        ruling: plaenkler-mounted
+        # Mounting mid-fight ends the formation, and with it P2's bonus.
 
   - id: P2
     text: >
@@ -36,7 +40,9 @@ clauses:
     effects:
       - when: { choice: plaenklerFormation, bonus: at }
         add: { to: at, value: 1 }
-        # AT: melee attacks, whatever the weapon (Kampftechniken: alle); not FK.
+        # AT read as the melee attack value, whatever the weapon (Kampftechniken: alle), so not
+        # FK — a reading, not the page: it says only "+1 AT", and "alle" includes the ranged
+        # techniques.
       - when: { choice: plaenklerFormation, bonus: vw }
         add: { to: [pa, aw], value: 1 }
         # VW: every defence, parry (weapon or shield) and dodge — read as the decided
@@ -71,25 +77,25 @@ clauses:
     effects: none
     why: no weapon restriction on P2
 
+  - id: P7
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: purchase cost
+
 rulings:
   - id: plaenkler-mounted
-    status: open
+    status: decided
     question: >
       Can riders form a Plänkler-Formation — may Boronmir take its +1 while fighting from
       Kupperus?
-    context: >
-      The page says "Kämpfer" standing at most half a Schritt to the left and right and says
-      nothing about mounts. Two horses cannot stand half a Schritt apart. The riders' own line is
-      a different SF: Berittene Lanzenformation (AKO II p. 125) puts riders up to 3 Schritt apart,
-      with lances, at a gallop. The app applies the Plänkler bonus whether or not the hero is
-      mounted (CombatSituation.chosenOptions; the catalog's SA_884 clause has no mounted
+    answer: >
+      Not while mounted: the formation is for fighters on foot.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [P1]
+    notes: >
+      Half a Schritt to the left and right is shoulder to shoulder, which horses cannot do; riders
+      have a formation of their own, Berittene Lanzenformation (AKO II p. 125, up to 3 Schritt
+      apart, with lances, at a gallop). The toggle is off and disabled while the hero is mounted,
+      with the reason; mounting mid-fight ends the formation. The app today applies the bonus
+      mounted too (CombatSituation.chosenOptions; the catalog's SA_884 clause has no mounted
       condition), on top of Vorteilhafte Position and Golgariten-Stil.
-    situations: [boronmir-sf 14.19]
-    options:
-      a: { says: "Not while mounted: the formation is for fighters on foot.", app: "the toggle is off and disabled while mounted, with the reason" }
-      b: { says: "Mounted too, if the GM accepts the spacing.", app: "no change" }
-    recommended: a
-    why_recommended: >
-      Half a Schritt is shoulder to shoulder, which horses cannot do, and the rules give riders a
-      formation of their own with its own spacing.
-    answer: null

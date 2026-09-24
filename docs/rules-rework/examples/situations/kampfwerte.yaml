@@ -241,8 +241,9 @@ situations:
     name: Boronmir parries unarmed, the Großschild on his arm
     hero: { loadout: { weapon: null, shield: Großschild } }
     choose: { defence: weaponParry, with: Raufen }
-    expect: { open: schilde.shield-bonus-raufen }   # under a: PA 10 (Raufen 7 + SCH1 3); under b: 7
-    app_today: 10 (the Raufen row adds hero.passiveShieldPABonus)
+    expect:
+      pa: { result: 10, lines: [{ value: 3, from: schilde.SCH1, item: Großschild, ruling: schilde.shield-bonus-raufen }] }   # Raufen 7 + 3
+    app_today: same (the Raufen row adds hero.passiveShieldPABonus)
 
   # --- Taking damage -------------------------------------------------------------------------
 

@@ -88,8 +88,11 @@ situations:
     name: A parry earlier in the round, before the double attack
     hero: { loadout: { main: Schwert, off: Dolch } }
     round: { order: [parry, doubleAttack] }
-    expect: { open: beidhaendiger-kampf.zw3-earlier-defences }    # a: the parry is 0
-    app_today: the parry is 0
+    expect:
+      parry_main: { total: 0 }
+      not_applied:
+        - { rule: beidhaendiger-kampf, clause: ZW3, reason: the parry came before the double attack, ruling: beidhaendiger-kampf.zw3-earlier-defences }
+    app_today: same
 
   - id: "11.6"
     name: Parrying with the off-hand weapon, no double attack this round
@@ -124,8 +127,21 @@ situations:
   - id: "11.9"
     name: Fist and fist, or weapon and fist
     hero: { loadout: { main: Schwert, off: Raufen }, abilities: { SA_42: 1 } }
-    expect: { open: beidhaendiger-kampf.raufen-double-attack }
-    app_today: not selectable — Raufen takes both hands
+    choose: { action: doubleAttack }
+    expect:
+      offered: [{ action: doubleAttack, from: beidhaendiger-kampf.ZW2, ruling: beidhaendiger-kampf.raufen-double-attack }]
+      attack_main:
+        total: -1
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: 1, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3 }
+      attack_off:              # the fist
+        total: -5
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: 1, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3 }
+          - { value: -4, from: beidhaendiger-kampf.ZW4 }
+    app_today: not selectable — Raufen takes both hands (CombatLoadoutPicker.canSelect) — wrong
 
   - id: "11.10"
     name: A Kettenwaffe with a second weapon, and with a shield

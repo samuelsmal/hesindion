@@ -10,7 +10,7 @@ source:
   page: 248
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: KR1
@@ -30,6 +30,16 @@ clauses:
     effects: none
     why: purchase prerequisites, not a roll
 
+  - id: KR3
+    text: "Kampftechniken: alle"
+    effects: none
+    why: a passive ability on a derived value; no weapon is involved
+
+  - id: KR4
+    text: "AP-Wert: Stufe I/II/III: 10/15/20 Abenteuerpunkte"
+    effects: none
+    why: purchase cost
+
 rulings:
   - id: kampfreflexe-mounted
     status: decided
@@ -43,5 +53,5 @@ rulings:
     notes: >
       Mounted INI = the mount's base + Stufe (kampfreflexe 12.5). Answered against the
       recommendation, which had asked for reiterkampf.rider-ini (does the rider's Belastung still
-      reach the mount's base) to be answered the same way; that ruling is still open, and its
-      context now says so. The app ignores Kampfreflexe everywhere today.
+      reach the mount's base) to be answered the same way; that one was decided a (no), so the
+      mount's base takes the rider's Kampfreflexe but not their Belastung. The app ignores Kampfreflexe everywhere today.

@@ -15,7 +15,7 @@ source:
   page: 249
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # Optolith's text ends "Mehr zu Strukturpunkten siehe Seite 349"; the page does not have it.
 
 clauses:
@@ -44,8 +44,8 @@ clauses:
       - when: { opponent.manoeuvre: schildspalter, defence: shieldParry }
         remove: { line: schilde.SCH3 }
         ruling: [schildspalter-shield-bonus, schildspalter-against-hero]
-        # FORMAT: takes away another rule's line (the shield's doubled bonus, schilde.SCH3; under
-        # schildspalter-shield-bonus b, only the half beyond the passive schilde.SCH1), rather
+        # All of the doubled bonus (schildspalter-shield-bonus): Boronmir's Großschild 13 → 7.
+        # FORMAT: takes away another rule's line (the shield's doubled bonus, schilde.SCH3), rather
         # than adding one.
 
   - id: SS3
@@ -61,8 +61,9 @@ clauses:
         damage: { to: loadout.shield.structurePoints, not: le }
         then: { when: { loadout.shield.structurePoints: { max: 0 } }, destroy: loadout.shield }
         ruling: schildspalter-against-hero
+        # The player states the opponent's manoeuvre with a toggle on the defence screen.
         # FORMAT: damage to an item, not to the hero. Needs the shield's current StP, which the
-        # app does not keep (Shield.structurePoints is the maximum, shown on HeroDetailView).
+        # app does not keep yet (Shield.structurePoints is the maximum, shown on HeroDetailView).
 
   - id: SS4
     text: Dieses Spezialmanöver kann nur gegen Schildkämpfer eingesetzt werden.
@@ -89,50 +90,43 @@ clauses:
         # Boronmir: Rabenschnabel (Hiebwaffen) yes; Langschwert (Schwerter) and the Großschild
         # (Schilde) no, under sf-technique-lists a. Optolith's list is the same.
 
+  - id: SS8
+    text: "AP-Wert: 15 Abenteuerpunkte"
+    effects: none
+    why: purchase cost, not a roll
+
 rulings:
   - id: schildspalter-shield-bonus
-    status: open
+    status: decided
     question: >
       Against Schildspalter, a shield parry is made without "der Parade-Bonus des Schildes".
       A shield parry normally gets that bonus twice. Is all of it lost, or once?
-    context: >
-      Parierwaffen und Schilde (Regelwerk p. 231): a shield carried beside a weapon adds its
-      Parade-Bonus once to the weapon's parry (passive); parrying with the shield itself
-      (Kampftechnik Schilde) adds it twice. SS2 says the bonus "cannot be used" and does not say
-      how many times. Boronmir's Großschild has Parade-Bonus +3: shield parry 13 = Schilde 7 + 6.
-      The app computes the shield parry as base PA + 2 × paModifier at import
-      (OptolithImportService, Shield.pa) and does not know an opponent's manoeuvre.
-    situations: [boronmir-sf 14.13]
-    options:
-      a: { says: "All of it: the parry is the bare Schilde value (Boronmir 7).", app: "a −6 line for the Großschild" }
-      b: { says: "Once: the doubled half is kept, only the passive bonus is lost (Boronmir 10).", app: "a −3 line" }
-    recommended: a
-    why_recommended: >
-      The bonus is one number on the shield; the doubling is how it is used when parrying with
-      the shield. Not being able to use it leaves nothing of it.
-    answer: null
-
+    answer: >
+      All of it: the parry is the bare Schilde value (Boronmir 7).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SS2]
+    notes: >
+      A shield parry adds the Parade-Bonus twice (Parierwaffen und Schilde, Regelwerk p. 231;
+      schilde.SCH3); SS2 removes that line whole. Boronmir's Großschild (Parade-Bonus +3): shield
+      parry 13 − 6 = 7, before Belastung. The app computes the shield parry as base PA +
+      2 × paModifier at import (OptolithImportService, Shield.pa), so the −6 needs the bonus as
+      its own line to take away.
   - id: schildspalter-against-hero
-    status: open
+    status: decided
     question: >
       When an opponent uses Schildspalter on the hero's shield, what should the defence screen
       do — the weapon parry is not allowed, the shield parry loses its bonus, and on a failed
       defence the TP go to the shield's Strukturpunkte, not the hero?
-    context: >
-      Opponents are not modelled (ADR-0005), but here the consequences land on our side, as for
-      the Passierschlag on the mount (reiterkampf.passierschlag-on-mount). Today the defence
-      screen offers the weapon parry (Boronmir with the Rabenschnabel: 10) and the full shield
-      parry (13), and damage taken goes to the hero's LeP. The app stores a shield's
-      Strukturpunkte as its maximum only (Shield.structurePoints, from Optolith's stp) and never
-      reduces them. The shield itself is `schilde`'s; this ruling may belong there.
-    situations: [boronmir-sf 14.13]
-    options:
-      a: { says: "Text only: a reminder on the defence screen.", app: "a line of text" }
-      b: { says: "A toggle 'Schildspalter' on the defence screen: weapon parry off, shield parry without its bonus, and on a failed defence the TP are taken off the shield's current StP; at 0 the shield is destroyed and leaves the loadout.", app: "the toggle, a current-StP field on Shield, a repair for it" }
-      c: { says: "As b, but without keeping StP: the player notes the shield's damage.", app: "the toggle only" }
-    recommended: b
-    why_recommended: >
-      The app already keeps the shield and its StP, and a Golgarite fights with his Großschild
-      all the time; a destroyed shield changes every later parry, which is exactly what the app
-      should not leave to memory.
-    answer: null
+    answer: >
+      A toggle 'Schildspalter' on the defence screen: weapon parry off, shield parry without its
+      bonus, and on a failed defence the TP are taken off the shield's current StP; at 0 the
+      shield is destroyed and leaves the loadout.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SS1, SS2, SS3]
+    notes: >
+      The consequences land on our side, as for the Passierschlag on the mount
+      (reiterkampf.passierschlag-on-mount), so the player states the opponent's manoeuvre (ADR-0005)
+      and the app does the rest. The app needs a current-StP field on Shield beside the maximum it
+      keeps today (Shield.structurePoints, from Optolith's stp), and a way to repair it. Today the
+      defence screen offers the weapon parry (Boronmir with the Rabenschnabel: 10) and the full
+      shield parry (13), and damage taken goes to the hero's LeP.

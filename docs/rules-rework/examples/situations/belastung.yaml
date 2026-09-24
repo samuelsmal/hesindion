@@ -145,7 +145,7 @@ situations:
           - { value: -2, from: reiterkampf.RK6 }
       gs:    { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }        # not a Kampfprobe
       spell: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
-      ini:   { open: reiterkampf.rider-ini }
+      ini:   { total: 0, ruling: reiterkampf.rider-ini }                   # the mount's base, no Belastung
     app_today: same, except the RK6 line cites no rule
 
   - id: "3.2"

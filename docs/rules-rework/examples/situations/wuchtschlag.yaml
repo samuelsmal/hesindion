@@ -30,8 +30,11 @@ situations:
     name: Wuchtschlag III, the player chooses II
     hero: { abilities: { SA_67: 3 }, loadout: { weapon: Schwert } }
     choose: { manoeuvre: wuchtschlag, tier: 2 }
-    expect: { open: tiered-manoeuvre-stufe }   # under a: AT −4, TP +4
-    app_today: offered — AT −4, TP +4 (every Stufe up to the owned one is on the list)
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
+      on_hit:
+        tp: { total: 4, lines: [{ value: 4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
+    app_today: same (every Stufe up to the owned one is on the list)
 
   - id: "9.4"
     name: Wuchtschlag misses
@@ -45,8 +48,9 @@ situations:
   - id: "9.5"
     name: Wuchtschlag with a Dolch (Dolche — not on Wuchtschlag's list)
     hero: { abilities: { SA_67: 1 }, loadout: { weapon: Dolch } }
-    expect: { open: sf-technique-lists }    # under a: not offered, SA_67.W3
-    app_today: offered (the catalog note on SA_67 says so on purpose, pending issue #14)
+    expect:
+      not_offered: [{ manoeuvre: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
+    app_today: offered (the catalog note on SA_67 says so on purpose, pending issue #14) — wrong
 
   - id: "9.6"
     name: Wuchtschlag unarmed (Raufen — on the list)

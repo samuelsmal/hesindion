@@ -8,12 +8,12 @@ source:
   page: 169
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 # Works on Schmerz from every source — the LP thresholds (COND_6.SZ3), a Patzer, a spell: the
 # page says "des Zustands Schmerz", not "durch Lebenspunkte".
 # FORMAT: a rule that changes which Stufe of *another rule's* table applies, without (per ruling
-# zaeher-hund-counts, option a) changing the Stufe the hero has. The format needs to tell "the
+# zaeher-hund-counts) changing the Stufe the hero has. The format needs to tell "the
 # Stufe you have" from "the Stufe whose effects you suffer".
 
 clauses:
@@ -59,56 +59,50 @@ clauses:
     effects: none
     why: purchase prerequisite, not a rule at the table
 
+  - id: ZH6
+    text: "AP-Wert: 20 Abenteuerpunkte"
+    effects: none
+    why: cost, not a rule at the table
+
 rulings:
   - id: zaeher-hund-counts
-    status: open
+    status: decided
     question: >
       Does Zäher Hund lower the Stufe of Schmerz the hero *has* — the one counted for the −5 cap
       (zustaende.Z3), for "eight Stufen make you Handlungsunfähig" (zustaende.Z5) and shown on the
       chip — or only the Stufe whose *effects* apply?
-    context: >
-      The page speaks of effects: the hero may "die Auswirkungen der höchsten Stufe … ignorieren",
-      and a hero who "drei Stufen Schmerz erlitten hat" gets "nur die Auswirkungen von Stufe II" —
-      he still has three Stufen. ZH4 cuts the other way for Stufe I only: it is treated "als hätte
-      der Held keine Stufe Schmerz". The app lowers the Stufe itself: Hero.effectiveSchmerzLevel
-      is raw − 1, and Hero.level(of: "schmerz"), activeStates and therefore totalZustandLevels
-      (the eight-Stufen rule) and the chip all read the lowered value; the modifier line
-      (StateModifiers.penaltyDefinitions) is labelled with the lowered Stufe and cites only COND_6.
-      It matters when Zustände add up to 8: Boronmir in Plattenrüstung (Belastung II) with Schmerz
-      III and Betäubung III has 8 Stufen as suffered, 7 as the app counts.
-    situations: [lebensenergie 15.4, lebensenergie 15.6, lebensenergie 15.8]
-    options:
-      a: { says: "Effects only. The hero keeps every Stufe for Z3/Z5 and the chip ('Schmerz III, wirkt wie II'); ZH4 means Stufe I gives no lines.", app: "totalZustandLevels counts the raw Stufe; the chip and line show both Stufen; 15.8 becomes Handlungsunfähig" }
-      b: { says: "The Stufe itself is one lower for everything: display, cap, eight-Stufen count.", app: "as today; the line should still name Zäher Hund" }
-    recommended: a
-    why_recommended: >
-      the page's words are about Auswirkungen and about Stufen "erlitten"; the eight-Stufen rule
-      counts accumulated Stufen, and an advantage worded as ignoring effects should not also hide
-      a Stufe from it. ZH4 reads as the Stufe-I case of the same rule (no effects left), not as a
-      separate counting rule
-    answer: null
+    answer: >
+      Effects only. The hero keeps every Stufe for Z3/Z5 and the chip ('Schmerz III, wirkt wie
+      II'); ZH4 means Stufe I gives no lines. Schmerz has only four Stufen (COND_6 levels: 4), so
+      the Stufe the hero has never goes past IV.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [ZH1, ZH4, COND_6.SZ5, zustaende.Z5]
+    notes: >
+      The owner answered "Effects only, but there are only four levels of pain / Schmerz": option
+      a, with the reminder that the Stufe kept is at most IV — the LP thresholds (COND_6.SZ3) and
+      whatever sets Schmerz directly (a Patzer, a spell) add up to IV and no further, so Zäher Hund
+      never has a "Stufe V" to lower, and the most Schmerz contributes to the eight-Stufen count
+      is 4. The page speaks of effects ("die Auswirkungen der höchsten Stufe … ignorieren"; three
+      Stufen "erlitten" give "nur die Auswirkungen von Stufe II"). The app lowers the Stufe itself
+      (Hero.effectiveSchmerzLevel = raw − 1 feeds level(of:), activeStates, totalZustandLevels and
+      the chip; StateModifiers.penaltyDefinitions labels the line with the lowered Stufe and cites
+      only COND_6). So Boronmir in Plattenrüstung (Belastung II) with Schmerz III and Betäubung III
+      has 8 Stufen and is Handlungsunfähig; the app counts 7 (lebensenergie 15.8).
 
   - id: zaeher-hund-iv
-    status: open
+    status: decided
     question: >
       At Schmerz IV the hero is "dennoch handlungsunfähig". If he passes the Selbstbeherrschung
       check that keeps him able to act (COND_6.SZ2), what does Zäher Hund leave him with: Stufe
       III's effects (all checks −3, GS −3) or Stufe IV's (all checks −4)?
-    context: >
-      ZH1 says the effects of the highest Stufe are ignored; ZH3 carves out Handlungsunfähigkeit at
-      IV and says nothing about the "ansonsten alle Proben −4" that COND_6.SZ5 gives a hero who
-      stays on his feet. The app has no SZ2 check at all (schmerz.md: Stufe IV is Handlungsunfähig
-      outright, StateCatalog schmerz handlungsunfaehigAtLevel 4) and skips Zäher Hund at IV
-      (Hero.effectiveSchmerzLevel returns 4 before subtracting). The GS at IV is open in
-      COND_6.schmerz-iv-gs.
-    situations: [lebensenergie 15.7]
-    options:
-      a: { says: "Stufe III's effects: checks −3, GS −3.", app: "after a passed SZ2 check, a −3 line 'Schmerz IV, wirkt wie III (Zäher Hund)'" }
-      b: { says: "Stufe IV's: checks −4; Zäher Hund does nothing at IV.", app: "after a passed SZ2 check, −4 as for anyone" }
-      c: { says: "No SZ2 check for him either way — ZH3 means he is simply Handlungsunfähig.", app: "as today" }
-    recommended: a
-    why_recommended: >
-      ZH3's "dennoch" names only the Handlungsunfähigkeit as surviving the advantage; the −4 is an
-      effect of the highest Stufe like any other, and ZH1 says those are ignored. Option c reads a
-      rule into ZH3 that would make the advantage a handicap next to COND_6.SZ2
-    answer: null
+    answer: >
+      Stufe III's effects: checks −3, GS −3.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [ZH3, COND_6.SZ5]
+    notes: >
+      ZH3's "dennoch" names only the Handlungsunfähigkeit as surviving the advantage; the −4, and
+      whatever COND_6.schmerz-iv-gs gives Stufe IV for movement, are effects of the highest Stufe,
+      which ZH1 ignores. After a passed SZ2 check the line reads "Schmerz IV, wirkt wie III (Zäher
+      Hund)": checks −3, GS −3. The app has no SZ2 check (StateCatalog schmerz
+      handlungsunfaehigAtLevel 4) and skips Zäher Hund at IV (Hero.effectiveSchmerzLevel returns 4
+      before subtracting).

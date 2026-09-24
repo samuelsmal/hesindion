@@ -8,7 +8,7 @@ source:
   page: 133
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: VW1
@@ -25,26 +25,31 @@ clauses:
         # a Selbstbeherrschung check for any other reason is untouched. The cause has to travel
         # with the check.
 
+  - id: VW2
+    text: "Voraussetzung: Keine"
+    effects: none
+    why: no prerequisite
+
+  - id: VW3
+    text: "AP-Wert: -3 Abenteuerpunkte"
+    effects: none
+    why: cost, not a rule at the table (the ruling verweichlicht-scope leans on it)
+
 rulings:
   - id: verweichlicht-scope
-    status: open
+    status: decided
     question: >
       Which checks are "Probe auf Selbstbeherrschung … bei Wundeffekten"? Only the checks the
       Trefferzonen Fokusregel's Wundeffekte call for, or every Selbstbeherrschung check a wound
       causes?
-    context: >
-      Wundeffekte are part of the Trefferzonen Fokusregel; the app rolls their Selbstbeherrschung
-      check only with that rule on (CombatDamageViews → TalentProbeModal, isWoundEffectProbe),
-      and the catalog applies the −2 there alone (situation.woundEffect). With Trefferzonen off,
-      Verweichlicht does nothing at all. Other Selbstbeherrschung checks follow a hit too: the
-      one Status Blutend asks for (BleedingRules), and those the critical-hit tables demand of
-      whoever is hit (CriticalSuccessRefinements, today only against opponents).
-    situations: [verweichlicht 13.1, verweichlicht 13.4, verweichlicht 13.5]
-    options:
-      a: { says: "Only the Wundeffekt checks of the Trefferzonen Fokusregel. Without it the disadvantage has no effect.", app: "no change; the hero sheet says the disadvantage needs Trefferzonen" }
-      b: { says: "Every Selbstbeherrschung check caused by being wounded (Wundeffekt, Blutend, a critical hit's aftermath).", app: "the −2 also on Blutend's check" }
-    recommended: a
-    why_recommended: >
-      "Wundeffekte" is a defined term of that Fokusregel. Reading it wider makes the disadvantage
-      stronger than its −3 AP suggests, and nothing on the page asks for it.
-    answer: null
+    answer: >
+      Only the Wundeffekt checks of the Trefferzonen Fokusregel. Without it the disadvantage has
+      no effect.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VW1]
+    notes: >
+      "Wundeffekte" is a defined term of that Fokusregel; a wider reading would make the
+      disadvantage stronger than its −3 AP. So Blutend's check (BleedingRules) and a critical
+      hit's aftermath are untouched. The app already applies the −2 only there
+      (situation.woundEffect); what it lacks is saying so: with Trefferzonen off the hero sheet
+      must show that the disadvantage needs the Fokusregel.

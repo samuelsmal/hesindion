@@ -23,8 +23,9 @@ situations:
     name: With a Dolch (Dolche — not on Sturmangriff's list)
     hero: { abilities: { SA_62: 1 }, loadout: { weapon: Dolch } }
     choose: { runUp: 4 }
-    expect: { open: sf-technique-lists }    # under a: not offered, SA_62.ST5
-    app_today: not offered at all on foot
+    expect:
+      not_offered: [{ manoeuvre: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
+    app_today: same, but only because it is never offered on foot
 
   - id: "10.3"
     name: With Finte

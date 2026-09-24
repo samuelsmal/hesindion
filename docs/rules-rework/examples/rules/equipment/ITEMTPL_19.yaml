@@ -62,12 +62,13 @@ clauses:
       - when: { ruleset: fokus.waffeneigenschaften }
         offer: { choice: dornenspitze, on: at }
         ruling: rabenschnabel-waffeneigenschaft
-      - when: { ruleset: fokus.waffeneigenschaften, choice: dornenspitze, attack: hit, opponent.rs: { min: 6 } }
+      - when: { ruleset: fokus.waffeneigenschaften, choice: dornenspitze, attack: hit, opponent.armour: worn, opponent.rs: { min: 6 } }
         opponent_add: { to: rs, value: -2 }
         ruling: [rabenschnabel-waffeneigenschaft, dornenspitze-rs]
         # Opponent side: the app has no opponent RS (ADR-0005) and shows the line as a note,
         # "Gegner-RS −2 · Rabenschnabel (nur gegen RS 6 oder mehr)" (CombatAttackViews.rsText).
-        # The TP stay the weapon's.
+        # Worn armour only, not natural RS; with Trefferzonen-RS, the armour on the zone hit
+        # (ruling dornenspitze-rs). The TP stay the weapon's.
 
   - id: RS3
     text: >
@@ -87,55 +88,39 @@ clauses:
       zusätzlich 1 Stufe Betäubung.
     effects:
       - when: { ruleset: fokus.waffeneigenschaften, attack: confirmedFumble }
-        gain: { condition: COND_2, levels: 1 }
+        raise: { condition: COND_2, by: 1 }
         ruling: rabenschnabel-waffeneigenschaft
         # In addition to the Patzer table's result. The app does this in Swift, always
         # (WeaponFumbleExtras, keyed by the weapon's name).
 
 rulings:
   - id: rabenschnabel-waffeneigenschaft
-    status: open
+    status: decided
     question: >
       Do the Rabenschnabel's Dornenspitze, its +1 TP on horseback and its Betäubung on a Patzer
       apply only when the group plays the Fokusregel Waffeneigenschaften?
-    context: >
-      The Rabenschnabel page prints them as "Waffenvorteil" and "Waffennachteil" without naming
-      a Fokusregel. The Waffeneigenschaften page (Aventurische Rüstkammer p. 56) says weapons'
-      Vor- und Nachteile "nur zum Tragen kommen, wenn du mit der Fokusregel spielst", and
-      Optolith sources this weapon's advantage and disadvantage to the Rüstkammer (p. 83), not
-      to the Regelwerk. The page also lists Aventurisches Götterwirken p. 233, which could print
-      the Dornenspitze as part of the weapon itself — not checked (no access to the book). The
-      app has no such Fokusregel and applies all three always (catalog ITEMTPL_19,
-      WeaponFumbleExtras). The same holds for the Großschild's Waffenvorteil and -nachteil
-      (ITEMTPL_29.GR2–GR4) and every other weapon's; this ruling may belong in
-      rules/rulings.yaml.
-    situations: [kupperus-und-waffen 18.7, kupperus-und-waffen 18.5, kupperus-und-waffen 18.9, kupperus-und-waffen 18.10, kupperus-und-waffen 18.12, kupperus-und-waffen 18.13]
-    options:
-      a: { says: "Only with the Fokusregel, like every weapon's Waffenvorteil and -nachteil.", app: "a Fokusregel toggle (Ausrüstung, Stufe I); Dornenspitze, +1 TP and Betäubung only when it is on" }
-      b: { says: "The Rabenschnabel's are part of the weapon and always apply; other weapons' need the Fokusregel.", app: "as today for the Rabenschnabel; the toggle gates the rest" }
-      c: { says: "Always, for every weapon — the group plays with Waffeneigenschaften.", app: "no toggle; as today, and the missing Großschild lines are added" }
-    recommended: a
-    why_recommended: >
-      The Fokusregel page is explicit and the text comes from the Rüstkammer, the Fokusregel's
-      book; a group that wants the lines turns it on, and the owner's house rule can make it the
-      default.
-    answer: null
+    answer: Only with the Fokusregel, like every weapon's Waffenvorteil and -nachteil.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [RS2, RS3, RS4, ITEMTPL_29.GR2, ITEMTPL_29.GR3, ITEMTPL_29.GR4, waffeneigenschaften]
+    notes: >
+      The Waffeneigenschaften page (Aventurische Rüstkammer p. 56) says weapons' Vor- und
+      Nachteile "nur zum Tragen kommen, wenn du mit der Fokusregel spielst", and Optolith sources
+      this weapon's to the Rüstkammer (p. 83). The app needs a Fokusregel toggle (Ausrüstung,
+      Stufe I); the Dornenspitze, the +1 TP mounted and the Betäubung apply only while it is on,
+      and so do the Großschild's lines. The app today has no such Fokusregel and applies all three
+      always (catalog ITEMTPL_19, WeaponFumbleExtras). The answer covers every weapon, so the
+      ruling could move to rules/rulings.yaml; it stays here, where the other files cite it.
 
   - id: dornenspitze-rs
-    status: open
+    status: decided
     question: >
       "Rüstungen mit RS 6 oder mehr erleiden einen Malus von -2 auf RS" — worn armour only, or
       any RS 6+, a creature's natural armour included?
-    context: >
-      The page says "Rüstungen". Many creatures have natural RS (a Krokodil, a Drache) and no
-      worn armour. Under the Fokusregel Trefferzonen-Rüstungsschutz the RS differs by zone
-      (trefferzonen-ruestungsschutz), so "RS 6 oder mehr" would be the RS of the zone hit. The app
-      shows the −2 as a note for the GM with "(nur gegen RS 6 oder mehr)" and never applies it
-      itself (catalog ITEMTPL_19, `rsNote`).
-    situations: [kupperus-und-waffen 18.6]
-    options:
-      a: { says: "Worn armour only; with Trefferzonen-RS, the armour on the zone hit.", app: "the note reads 'Rüstung mit RS 6 oder mehr'" }
-      b: { says: "Any RS of 6 or more, natural armour included.", app: "the note reads 'RS 6 oder mehr' as today" }
-    recommended: a
-    why_recommended: the page names Rüstungen, and a spike that finds the gaps in plate has nothing to find in a hide
-    answer: null
+    answer: Worn armour only; with Trefferzonen-RS, the armour on the zone hit.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [RS2]
+    notes: >
+      The page names Rüstungen; a creature's natural RS (a Krokodil, a Drache) is untouched. Under
+      the Fokusregel Trefferzonen-Rüstungsschutz, "RS 6 oder mehr" is the RS of the worn armour on
+      the zone hit. The app shows the −2 as a note for the GM and never applies it (catalog
+      ITEMTPL_19, `rsNote`); the note should read "Rüstung mit RS 6 oder mehr".

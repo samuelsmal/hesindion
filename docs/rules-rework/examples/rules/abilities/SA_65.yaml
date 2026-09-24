@@ -3,6 +3,9 @@ id: SA_65
 name: Verteidigungshaltung
 kind: specialAbility
 group: Kampfsonderfertigkeiten
+passive: true
+# "(passiv)" on the page header means the SF takes no Aktion of its own, not that it is always
+# on: VH1's own text makes it an announced choice, so the encoding stays an offer with span round.
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html
   book: Regelwerk
@@ -38,10 +41,11 @@ clauses:
     text: >
       Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter,
       Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
-    effects: none
-    why: >
-      no ranged techniques. Whether the +4 needs one of these in hand is the shared
-      sf-technique-lists ruling.
+    effects:
+      - requires: { loadout.any.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12, CT_13, CT_15, CT_16] }
+        ruling: sf-technique-lists
+        # The offer in VH1 needs one of these in hand: no ranged techniques, so a hero holding
+        # only a bow cannot take the stance. Raufen (CT_9) is the empty hand.
 
   - id: VH3
     text: >
@@ -49,6 +53,24 @@ clauses:
       andere Kampfteilnehmer ersichtlich.
     effects: none
     why: a note for the GM about opponents' knowledge
+
+  - id: VH4
+    text: "Voraussetzungen: IN 13"
+    effects: none
+    why: purchase prerequisite, not a roll
+
+  - id: VH5
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: cost
+
+  - id: VH6
+    text: >
+      Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
+      hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
+      Kampftechnik heranzuziehen.
+    effects: none
+    why: an editor's note on VH2's list (the same note as SA_66.V7)
 
 rulings:
   - id: vh-scope

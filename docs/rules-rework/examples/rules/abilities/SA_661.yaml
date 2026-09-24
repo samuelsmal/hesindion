@@ -3,14 +3,17 @@ id: SA_661
 name: Golgariten-Stil
 kind: specialAbility
 group: Kampfstilsonderfertigkeiten (bewaffnet)
+passive: true
 source:
   url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/golgariten-stil.html
   book: Aventurisches Götterwirken I
   page: 229
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
-# Optolith's text for this ability says TP where the page says PA. The page wins.
+reviewed: null
+# Optolith's text for this ability says TP where the page says PA: "einen Bonus von +1 TP bei
+# Nahkampfangriffen, wenn er sich auf dem Rücken eines Reittiers befindet". The page (and its
+# other print, Kodex des Schwertes p. 318) wins.
 
 clauses:
   - id: GS1
@@ -18,7 +21,7 @@ clauses:
       Kämpft der Held beritten gegen Fußkämpfer, erhöht sich die aus der vorteilhaften Position
       resultierende Erleichterung auf AT um +2.
     effects:
-      - when: { hero.mounted: true, opponent.onFoot: true }
+      - when: { hero.mounted: true, opponent.onFoot: true, loadout: { style: SA_661 } }   # GS3
         raise: { line: vorteilhafte-position.VP1.at, by: 2 }
         ruling: kampfstil-techniques
         # FORMAT: raises another rule's line. The breakdown shows "Vorteilhafte Position +2" and
@@ -29,7 +32,7 @@ clauses:
       Außerdem bekommt der Abenteurer noch einen Bonus von +1 PA, wenn er sich auf dem Rücken
       eines Reittiers befindet.
     effects:
-      - when: { hero.mounted: true }
+      - when: { hero.mounted: true, loadout: { style: SA_661 } }   # GS3
         add: { to: pa, value: 1 }
         ruling: kampfstil-techniques
 
@@ -37,10 +40,24 @@ clauses:
     text: >
       Kampftechniken: Hiebwaffen (nur Rabenschnabel), Schilde (nur Großschild und nur von einem
       Reittier aus)
-    effects: none
-    why: what it means for GS1 and GS2 is the open ruling kampfstil-techniques (rulings.yaml)
+    effects:
+      - define: { loadout.style: SA_661, any: [{ weapon: ITEMTPL_19 }, { weapon: ITEMTPL_29, hero.mounted: true }] }
+        ruling: kampfstil-techniques
+        # The condition GS1 and GS2 read: a Rabenschnabel (ITEMTPL_19), or a Großschild
+        # (ITEMTPL_29) from a mount. FORMAT: a list narrowed to named weapons, one of them only
+        # mounted — a condition on the loadout, defined once and read by the style's clauses.
 
   - id: GS4
     text: "Erweiterte Kampfsonderfertigkeiten: Frontalangriff, Mächtiger Rundumschlag, Schildstoß"
     effects: none
     why: unlocks purchases, not a roll
+
+  - id: GS5
+    text: "Voraussetzungen: MU 13"
+    effects: none
+    why: purchase prerequisite, not a roll
+
+  - id: GS6
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: cost

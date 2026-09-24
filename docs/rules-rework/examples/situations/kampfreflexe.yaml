@@ -60,5 +60,5 @@ situations:
         lines:
           - { value: 12, from: reiterkampf.RK1 }             # the mount's
           - { value: 2, from: SA_51.KR1, ruling: SA_51.kampfreflexe-mounted }
-      ini_belastung: { open: reiterkampf.rider-ini }
+      ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
     app_today: 12 — the mount's base; Kampfreflexe ignored — wrong

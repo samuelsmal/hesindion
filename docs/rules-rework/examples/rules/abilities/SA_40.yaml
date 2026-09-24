@@ -10,7 +10,7 @@ source:
   page: 246
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: A1
@@ -36,26 +36,25 @@ clauses:
     effects: none
     why: a passive ability; no weapon is involved in the check
 
+  - id: A4
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: purchase cost
+
 rulings:
   - id: aufmerksamkeit-when
-    status: open
+    status: decided
     question: >
       The +2 applies only to a Sinnesschärfe (Hinterhalt entdecken) check in an ambush or when
       surprise is at stake. How does the app know that a Sinnesschärfe check is one?
-    context: >
-      The app does not model a talent's Anwendungsgebiete. Today every Sinnesschärfe check of a
-      hero with Aufmerksamkeit shows the hint "Aufmerksamkeit: +2 auf Überraschung vermeiden"
-      (TalentProbeModal.hints, Talent.sinnesschaerfeRuleId); the +2 is never applied (catalog:
-      byHand) and the hint names "Überraschung vermeiden" where the page names Hinterhalt
-      entdecken. Sinnesschärfe is also one of the seven "maybe" talents for Belastung, answered
-      by a toggle on the check (COND_1.belastung-talents-maybe) — the same kind of question.
-    situations: [boronmir-sf 14.14, boronmir-sf 14.15]
-    options:
-      a: { says: "A toggle 'Hinterhalt / Überraschung' on the Sinnesschärfe check, off by default; on, the +2 is a line from SA_40.", app: "one toggle on TAL_10's check screen, for heroes with SA_40" }
-      b: { says: "Hint only, as today, with the page's wording.", app: "the hint text changes" }
-    recommended: a
-    why_recommended: >
-      The player knows when the GM calls for the ambush check; a toggle makes the +2 a named
-      line instead of a sum in the player's head, and mirrors the Belastung toggle on the same
-      screen.
-    answer: null
+    answer: >
+      A toggle 'Hinterhalt / Überraschung' on the Sinnesschärfe check, off by default; on, the +2
+      is a line from SA_40.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [A1]
+    notes: >
+      The toggle is shown on TAL_10's check screen for heroes with SA_40 only, beside the
+      "Belastung zählt" toggle (COND_1.belastung-talents-maybe), and names the page's wording,
+      Hinterhalt entdecken. The app today never applies the +2 (catalog: byHand) and shows the hint
+      "Aufmerksamkeit: +2 auf Überraschung vermeiden" on every Sinnesschärfe check
+      (TalentProbeModal.hints, Talent.sinnesschaerfeRuleId).

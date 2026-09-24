@@ -59,7 +59,8 @@
 - **GS1** Mounted against fighters on foot, the AT ease from the vorteilhafte Position rises by +2.
 - **GS2** +1 PA while on a mount.
 - **GS3** Combat techniques: Hiebwaffen (Rabenschnabel only), Schilde (Großschild only, and only
-  from a mount).
+  from a mount). Per the decided ruling `kampfstil-techniques`, GS1 and GS2 apply only while
+  fighting with one of these; a Golgarite with a Schwert gets the vorteilhafte Position alone (5.7).
 
 **Sturmangriff (SA_62)**, a Spezialmanöver
 
@@ -79,7 +80,8 @@ In [`situations/reiterkampf.yaml`](./situations/reiterkampf.yaml), 5.1–5.17. T
 Where the app is wrong, per the rulings below: Vorstoß and Schildspalter are offered on horseback
 (5.9); SA_62 is never offered on foot (5.12); the mount's GS/2 is rounded down (5.11); the mounted
 dodge −2 cites no rule (5.3). To check in code: whether the mounted Sturmangriff asks for the Reiten
-check and limits the defence (5.10).
+check and limits the defence (5.10). Confirmed correct: mounted, INI comes from the mount's base
+with none of the rider's Belastung (ruling `rider-ini`, 5.17).
 
 ## Rulings
 

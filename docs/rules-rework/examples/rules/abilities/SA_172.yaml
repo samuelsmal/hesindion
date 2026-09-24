@@ -12,7 +12,7 @@ source:
   page: 155
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: U1
@@ -40,8 +40,9 @@ clauses:
           manoeuvre: unterlaufen
           announce: before-at
           span: attack
-          requires: { opponent.reach: { longer_than: loadout.reach }, loadout.technique: { in: techniques } }
+          requires: { opponent.reach: { longer_than: loadout.reach } }
           ruling: sf-technique-lists
+          # The technique gate is U6's.
           # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
           # or shorter one it gains nothing and still risks a Passierschlag.
       - when: { manoeuvre: unterlaufen, attack: miss }
@@ -62,6 +63,25 @@ clauses:
       the penalty is SA_152.AD1's own line, asked as an opponent fact on the announcement (ruling
       auf-distanz-halten); U1 lowers only reichweite.RW3.at, so it never reaches that line.
     ruling: auf-distanz-halten
+
+  - id: U5
+    text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Unterlaufen I"
+    effects: none
+    why: purchase prerequisites, not a roll
+
+  - id: U6
+    text: >
+      Kampftechniken: Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter,
+      Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - requires: { loadout.weapon.technique: [CT_3, CT_4, CT_5, CT_6, CT_9, CT_10, CT_12, CT_15, CT_16] }
+        ruling: sf-technique-lists
+        # Not Stangenwaffen (CT_13): a lang weapon has no reach gap to close.
+
+  - id: U7
+    text: "AP-Wert: Stufe I/II: 10/15 Abenteuerpunkte pro Stufe"
+    effects: none
+    why: purchase cost, not a roll
 
 rulings:
   - id: auf-distanz-halten

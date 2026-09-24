@@ -9,14 +9,14 @@ id: maechtiger-schlag
 name: Mächtiger Schlag
 kind: creatureAbility
 group: Tierische Kampfsonderfertigkeiten
-passive: true
+passive: true      # the page's header "(passiv)", kept in MS1's text as SA_160.GA1 keeps "(Spezialmanöver)"
 source:
   url: https://dsa.ulisses-regelwiki.de/SF_MaechtigerSchlag.html
   book: Aventurische Tiergefährten
   page: 126
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # The page lists thirteen books; Aventurisches Bestiarium p. 7 is the first, Aventurische
 # Tiergefährten p. 126 the one Kupperus's profile comes from.
 #
@@ -29,8 +29,8 @@ reviewed: null
 clauses:
   - id: MS1
     text: >
-      Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner eine
-      Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
+      (passiv) Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner
+      eine Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
     effects:
       - when: { creature.attack: success, opponent.size: [winzig, klein, mittel] }
         tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 } } }
@@ -46,11 +46,11 @@ clauses:
       Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
     effects:
       - when: { creature.kk: { above: 20 } }
-        opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }
-        ruling: round-up
-        # The page's own example rounds up (KK 23: 1.5 → −2), as the shared round-up ruling
-        # does. Kupperus, KK 25: −⌈2.5⌉ = −3. The app floors it, (kk − 20) / 2 in Int: −2
-        # (CombatAttackViews.mountAttackSection and niederreitenButton, `mightyBlow`).
+        opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2", round: up }
+        # Rounded up: the page's own example settles it — "bei einer KK von 23 um -2, bei einer
+        # von 26 um -3" (23: 1.5 → 2) — so no ruling is needed; it agrees with rulings.yaml
+        # round-up / ADR-0006. Kupperus, KK 25: −⌈2.5⌉ = −3. The app floors it, (kk − 20) / 2 in
+        # Int: −2 (CombatAttackViews.mountAttackSection and niederreitenButton, `mightyBlow`).
 
   - id: MS3
     text: >

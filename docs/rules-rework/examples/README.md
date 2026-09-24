@@ -167,25 +167,35 @@ open ruling are listed in the write-ups, not here.
 | 2 | The mounted Sturmangriff rounds the mount's GS/2 down | `Hero.sturmangriffDamageBonus` | ruling round-up, ADR-0006 |
 | 2 | The mounted dodge −2 names no rule | `DefenseModifiers.mountedDodgePenalty` (`rules: []`) | page |
 | 3 | Parries and dodges are counted separately for the multiple-defence penalty; the page counts every earlier defence | `CombatSituation.defensesSoFar`, `CombatView` | page |
-| 3 | A defence whose value has dropped to 0 or below is never blocked | `CombatRootView.defenseBlocked` | page |
+| 3 | A defence whose value has dropped to 0 or below is never blocked (the value after every modifier, the Schip +4 included) | `CombatRootView.defenseBlocked` | page; ruling zero-value |
 | 3 | Verteidigungshaltung (SA_65) does not exist | catalog `todo` | page |
 | 3 | The Schip +4 on a defence names no rule | `DefenseModifiers.schipDefenseBoost` (`rules: []`) | page |
-| 4 | Schmerz never lowers GS | `Hero.effectiveGeschwindigkeit`, `Hero.totalGsPenalty` | page |
-| 4 | Schmerz IV has no Selbstbeherrschung check; the hero is simply Handlungsunfähig | `StateCatalog` (schmerz) | page |
+| 4 | Schmerz never lowers GS (−1/−2/−3; GS 0 at Stufe IV even after the check) | `Hero.effectiveGeschwindigkeit`, `Hero.totalGsPenalty` | page; ruling schmerz-iv-gs |
+| 4 | Schmerz IV has no Selbstbeherrschung check before each action; the hero is simply Handlungsunfähig | `StateCatalog` (schmerz) | page; ruling schmerz-iv-check |
+| 4 | The Zustand cap reaches checks only; GS and INI penalties from Zustände are never capped at −5 | `ModifierEngine.applyingZustandCap` | ruling cap-scope |
+| 4 | A Schip "Zustand ignorieren" never ignores Belastung | `SharedModifiers.encumbrance`, `Hero.hasIgnorableZustand` | ruling schip-ignore-belastung |
 | 5 | Unterlaufen and Verbessertes Unterlaufen do not exist; the full reach penalty is always paid | `availableManeuvers`, catalog `todo` | page |
 | 6 | An aimed attack at a winzig opponent pays both the size modifier and the zone penalty | catalog `GRW_groessenkategorie` | page |
-| 6 | The hit zone on the hero is rolled on the hero's own size table, ignoring the attacker's size | `CombatDamageViews`, `HitZoneTable.lookup` | page |
+| 6 | The hit zone on the hero is rolled on the hero's own size table, ignoring the attacker's size | `CombatDamageViews`, `HitZoneTable.lookup` | page; ruling relative-size-table |
 | 6 | Trefferzonen-Rüstungsschutz (armour by zone) is not modelled | `Hero.totalEquippedBE` | page |
 | 6 | Having Gezielter Angriff/Schuss halves every aimed attack; the halving is the announced Spezialmanöver, lost on horseback and with Unterlaufen | `CombatZonePicker`, `HitZoneModifiers.penalty` | ruling halving-by-manoeuvre |
+| 6 | Against an überrascht opponent Gezielter Angriff/Schuss halves before easing by 2, so the penalty is 1 too small (Torso 0 instead of −1, Kopf −3 instead of −4) | `HitZoneModifiers.penalty` | ruling surprised-then-halved |
+| 6 | An aimed shot keeps the ranged target-size modifier (Kopf of a groß target with Gezielter Schuss −1 instead of −5) | `RangedModifiers` (size) | ruling zone-replaces-size |
+| 6 | A failed arm Wundeffekt only reminds; the one-handed weapon stays in the loadout | `WoundEffectCatalog` | ruling wundeffekt-arm-drop |
+| 6 | A surprised hero can still parry and dodge, and combat setup never asks whether the hero is surprised | `StateCatalog` (ueberrascht), `CombatSetupView` | ruling hero-no-defence |
 | 7 | A Handlungsunfähig hero moves at GS 1 rather than 0 | `Hero.effectiveGeschwindigkeit` | page |
-| 7 | Handlungsunfähig from Zustand levels does not imply Liegend | `Hero.impliedStateIDs` | page |
+| 7 | Handlungsunfähig never asks whether the hero lies: set by hand or through Bewusstlos it always implies Liegend; reached through Zustände it implies nothing | `Hero.impliedStateIDs`, `StateCatalog` (implies liegend) | page; ruling handlungsunfaehig-liegend |
+| 7 | A prone hero shoots at no penalty; Liegend's −4 reaches only melee | catalog STATE_10 (domain meleeAttack) | ruling liegend-attacks |
 | 7 | Standing up is no action; its cost and the opponent's Passierschlag are never mentioned | — | page |
 | 8, 9, 10, 14 | Only one manoeuvre per attack; one Basismanöver and one Spezialmanöver combine (Wuchtschlag + Sturmangriff, Schildspalter or Vorstoß), an excluded combination is not explained, and no manoeuvre shows whether it is a Basis- or Spezialmanöver | `CombatAttackViews.selectedManeuver` (one `CombatManeuver`) | page (kampfsonderfertigkeiten.KS3–KS5), ruling manoeuvre-combination |
+| 8, 9, 14 | Manoeuvres are offered with any weapon: Finte with a Morgenstern, Wuchtschlag with a Dolch, Vorstoß with the Großschild, Schildspalter with the Langschwert | `CombatAttackViews.availableManeuvers` | ruling sf-technique-lists |
+| 8 | Only the highest Finte Stufe is offered; any Stufe up to the owned one may be announced (Wuchtschlag already offers them) | `CombatAttackViews.availableManeuvers` (`hero.finteTier`) | ruling tiered-manoeuvre-stufe |
 | 8 | Finte's hint says "Gegner PA −2"; the page says Verteidigung, so it is wrong when the opponent dodges | `CombatManeuver.infoText` | page |
 | 11 | The off hand is picked alphabetically: with Schwert and Dolch, the Schwert takes the −4 | `CombatLoadoutPicker.apply` | page |
 | 11 | Spezialmanöver are offered on a double attack; only Basismanöver are allowed | `availableManeuvers` | page |
 | 11 | A Kettenwaffe can be paired with a second weapon; only a shield is allowed | `CombatLoadoutPicker.canSelect` | page |
 | 11 | No weapon-and-shield double attack, and no shield attack at all | `Hero.isDualWielding` | page |
+| 11 | Raufen cannot be one hand of a double attack; each fist counts as a weapon (fist and fist, or weapon and fist, the off hand at −4) | `CombatLoadoutPicker.canSelect` | ruling raufen-double-attack |
 | 11 | The dual-wield lines cite SA_42 and ADV_5 for the core rule's −2/−4 | `MeleeModifiers.dualAttackPenalty`, `offHandPenalty`, `DefenseModifiers` | page |
 | 12 | Kampfreflexe is ignored: INI is 1–3 too low for every hero with it, mounted too | `OptolithImportService`, `DerivedValueFormulas.initiative`, catalog `todo` | page; mounted per ruling kampfreflexe-mounted |
 | 13 | Verweichlicht silently does nothing without Trefferzonen | catalog `DISADV_57` | page |
@@ -193,14 +203,18 @@ open ruling are listed in the write-ups, not here.
 | 14 | Vorstoß is offered while Liegend | `CombatAttackViews.availableManeuvers` | page |
 | 14 | Schildspalter is offered against any opponent; the app never asks whether the opponent has a shield | `availableManeuvers`, `OpponentProfile` | page |
 | 14 | Schildspalter's note says only "Schaden gegen Schild-SP", not that the opponent may only parry with the shield (without its bonus) or dodge | `CombatManeuver.infoText` | page |
-| 14 | Aufmerksamkeit's +2 is never applied; the hint shows on every Sinnesschärfe check and says "Überraschung vermeiden", not Hinterhalt entdecken | `TalentProbeModal.hints`, catalog SA_40 `byHand` | page |
+| 14 | Aufmerksamkeit's +2 is never applied; the hint shows on every Sinnesschärfe check and says "Überraschung vermeiden", not Hinterhalt entdecken | `TalentProbeModal.hints`, catalog SA_40 `byHand` | page; ruling aufmerksamkeit-when |
 | 14 | Only an owner of Plänkler-Formation can be in one; the page lets a companion's SF carry the whole line | `CombatSetupView` (`hero.hasPlaenklerFormation`) | page |
 | 14 | Plänkler-Formation is set once at combat setup and cannot be left mid-fight | `CombatSetupView`, `CombatRootView.plaenklerActive` | page |
+| 14 | Plänkler-Formation's +1 applies on horseback too | `CombatSituation.chosenOptions`, catalog SA_884 | ruling plaenkler-mounted |
+| 14 | An opponent's Schildspalter cannot be stated: the weapon parry and the full shield parry are offered, the damage goes to the hero's LeP, and a shield's StP are never reduced | `CombatDefenseSetupView`, `Shield.structurePoints` (maximum only) | ruling schildspalter-shield-bonus, schildspalter-against-hero |
 | 15 | Niedrige Lebenskraft is ignored: 2 LE too many at Stufe II | `OptolithImportService.computeDerivedValues`, catalog `DISADV_28` todo | page |
+| 15 | Zäher Hund lowers the Stufe the hero has, not only its effects: Boronmir with Belastung II, Schmerz III and Betäubung III counts 7 Stufen and keeps acting; at Schmerz I no chip | `Hero.effectiveSchmerzLevel`, `Hero.totalZustandLevels` | ruling zaeher-hund-counts |
+| 15 | Zäher Hund does nothing at Schmerz IV: after a passed Selbstbeherrschung check he should act at −3, GS −3 | `Hero.effectiveSchmerzLevel` | ruling zaeher-hund-iv |
 | 15 | Verbesserte Regeneration III gives +2, not +3 | `Hero.verbessertRegenerationLEBonus` | page |
 | 15 | A Vergiftet or Krank hero regenerates normally | `RegenerierenSheet` | page |
-| 15 | Regeneration is never halved in a wet or cold camp, never stopped in a storm or tied to a horse, and the advantage's bonus is added even then | `RegenerierenSheet` | page |
-| 15 | Schnell wieder auf den Beinen is ignored: Betäubung and Berauscht show the full 3 h and 2 h | catalog `ADV_75` todo, `state.betaeubung.removal` / `state.berauscht.removal` | page |
+| 15 | Regeneration is never halved in a wet or cold camp, never stopped in a storm or tied to a horse, and the advantage's bonus is added even then | `RegenerierenSheet` | page; ruling vr-halving |
+| 15 | Schnell wieder auf den Beinen is ignored: Betäubung and Berauscht show the full 3 h and 2 h | catalog `ADV_75` todo, `state.betaeubung.removal` / `state.berauscht.removal` | page; ruling alcohol-scope |
 | 16, 18 | No Schadensbonus: TP never include the Leiteigenschaft above the Schadensschwelle (Boronmir's Rabenschnabel 1W6+4, should be 1W6+5), though the export carries `primaryThreshold` on every weapon | `OptolithImportService.formatDamage`, `parseItems`, `DamageModifiers.lines` | page |
 | 16 | The weapon parry (with the passive shield bonus) is offered against ranged attacks; the defence never asks whether the attack is ranged | `CombatDefenseSetupView`, `OpponentProfile` | page |
 | 16 | A Parierwaffe gives no passive PA bonus, and a Linkhand turns the loadout into a dual-wield | `Hero.passiveShieldPABonus`, `OptolithImportService` (drops `isParryingWeapon`), `Hero.isDualWielding` | page |
@@ -211,8 +225,15 @@ open ruling are listed in the write-ups, not here.
 | 16 | AT and PA are single numbers written at import with no breakdown; the passive shield bonus and the Belastung on INI are folded into the base with no line | `OptolithImportService`, `CombatAttackViews`, `DefenseRoute`, `CombatInitiativeRollView.heroBaseINI` | requirement; page |
 | 17 | Beengte Umgebung has no shield rows: the Großschild never takes its −6 AT / −4 PA (every shield imports with reach kurz; no shield sizes exist) | catalog `GRW_beengteUmgebung`, `OptolithImportService.parseItems` | page |
 | 17 | The Beengte Umgebung penalty on a parry follows the main weapon, not the parrying piece: bare hands + Großschild parries at 0 instead of −4 | `Situation.loadoutReach` | page |
-| 17 | Mounted and attacked from behind, the shield parry is still offered | `CombatDefenseSetupView`, `DefenseRoute.parryPossible` | page (reiterkampf.RK5) |
+| 17 | Mounted and attacked from behind, the shield parry is still offered and the shield's passive bonus stays on the weapon parry (Boronmir: 12 and 9; should be no shield parry, weapon parry 6); the weapon-arm side is never asked | `CombatDefenseSetupView`, `DefenseRoute.parryPossible`, `Hero.passiveShieldPABonus` | page (reiterkampf.RK5); ruling mounted-from-behind-shield |
+| 17 | Mounted, a Passierschlag from a fighter on foot damages the hero; RK11 makes the mount the target, then RK10's Reiten check | `CombatDamageViews` | page (reiterkampf.RK11); ruling passierschlag-on-mount |
+| 17 | The Angriff-von-hinten −4 is applied to a dodge against a ranged attack; it is for melee only | `CombatDefenseSetupView` | ruling from-behind-ranged |
+| 17 | A Passierschlag cannot be aimed at a zone (Trefferzonen on); it may, at the full penalty without halving | `CombatAttackViews` (zone picker hidden) | ruling passierschlag-zone |
+| 17 | A Passierschlag is a plain roll ≤ AT: at AT 0 a 1 misses, at AT 20+ a 20 hits | `CombatPassierschlagView` | ruling passierschlag-dice |
 | 18 | Niederreiten uses the AT of the first attack parsed from the notes, not the Niederreiten line (right for Kupperus only because his Tritt is also 15) | `CombatAttackViews.niederreitenButton` | page |
+| 18 | Niederreiten is offered for a mount with no Niederreiten line, with the first attack's AT and the export's dp | `CombatAttackViews.niederreitenButton` | ruling niederreiten-without-profile |
+| 18 | A ridden horse's Tritt and Biss are offered beside the rider's own attack and rolled at once; they are orders that take the rider's action and a Reiten (Kampfmanöver) check | `CombatAttackViews.mountAttackSection` | page (reiterkampf.RK12); ruling mount-own-attack |
+| 18 | The Dornenspitze's "nur gegen RS 6 oder mehr" note also invites the −2 against a creature's natural RS | `rsNote`, `CombatAttackViews.rsText` | ruling dornenspitze-rs |
 | 18 | The Mächtiger Schlag Kraftakt penalty is rounded down: Kupperus (KK 25) −2, the page −3 | `CombatAttackViews` (`(kk - 20) / 2`) | page |
 | 18 | The Großschild's "−1 AT auf die Hauptwaffe" is not applied | `OptolithImportService.shieldNote`, `MeleeModifiers` | page |
 | 18 | Waffenvorteile and -nachteile always apply; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page; ruling rabenschnabel-waffeneigenschaft |

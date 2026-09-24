@@ -44,14 +44,24 @@ In [`situations/schmerz.yaml`](./situations/schmerz.yaml), S1–S12. The rules a
 [`COND_6`](./rules/conditions/COND_6.yaml), [`zustaende`](./rules/core/zustaende.yaml),
 [`schicksalspunkte`](./rules/core/schicksalspunkte.yaml).
 
-Where the app is wrong, independent of the open rulings:
+Where the app is wrong:
 
 - **Schmerz never lowers GS** (`Hero.effectiveGeschwindigkeit`, `Hero.totalGsPenalty`); the page
-  gives GS −1/−2/−3 (S1, S2).
+  gives GS −1/−2/−3 (S1, S2), and at Stufe IV the hero cannot move at all, GS 0, whether or not
+  the check below passed (ruling `COND_6.schmerz-iv-gs`) (S3, S12).
 - **Stufe IV has no Selbstbeherrschung check** — the hero is Handlungsunfähig outright
-  (`StateCatalog` `schmerz`, `handlungsunfaehigAtLevel: 4`) (S3, S12).
+  (`StateCatalog` `schmerz`, `handlungsunfaehigAtLevel: 4`). Per ruling
+  `COND_6.schmerz-iv-check` it is rolled before each action the hero wants to take; a success
+  lets that action through at −4 (S3, S12).
+- **The Zustand cap reaches checks only**: per ruling `zustaende.cap-scope` (answered against
+  the recommendation) the −5 caps GS and INI too, so Schmerz III in Platte is GS −5,
+  not −6 (S6).
+- **A Schip "Zustand ignorieren" leaves Belastung** (`SharedModifiers.encumbrance`,
+  `Hero.hasIgnorableZustand`); per ruling `schicksalspunkte.schip-ignore-belastung` it is
+  ignored with every other Zustand (S8).
 
-Confirmed correct: Schmerz reaches every check including talents and spells (S11); the −5 cap
+Confirmed correct: the LP thresholds, compared exactly (ruling `COND_6.schmerz-thresholds`, S1,
+S4); Schmerz reaches every check including talents and spells (S11); the −5 cap on checks
 with its correction line (`ModifierEngine.applyingZustandCap`) (S6); eight Stufen make the hero
 Handlungsunfähig, Belastung counted (`Hero.isHandlungsunfaehigFromZustaende`) (S7); the Schip
 gives back a round at Stufe IV but not from Bewusstlos (S9, S10).

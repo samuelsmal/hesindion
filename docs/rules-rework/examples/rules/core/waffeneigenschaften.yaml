@@ -12,7 +12,7 @@ source:
   page: 56
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # FORMAT: the gated clauses live in other files (every weapon's Waffenvorteil/-nachteil). Each
 # names the ruleset in its own `when`; this file only defines it. The alternative, a file-level
 # `ruleset:`, does not work for a weapon, whose table row is core and whose Waffenvorteil is not.

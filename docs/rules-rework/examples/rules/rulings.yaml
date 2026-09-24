@@ -11,50 +11,41 @@
     otherwise. Applies to both Sturmangriffe (SA_62 on foot, the mounted order in Reiterkampf).
   decided: { by: "@samuelsmal", date: 2026-09-23 }
   see: [docs/adr/0006-derived-value-rounding-and-repair.md]
-  applies_to: [SA_62.ST2, reiterkampf.RK14]
+  applies_to: [SA_62.ST2, reiterkampf.RK14, regeneration.R6]
 
 - id: kampfstil-techniques
-  status: open
+  status: decided
   question: >
     A Kampfstil lists combat techniques, sometimes narrowed to weapons. Does the style's effect
     apply only while fighting with one of them?
-  context: >
-    Golgariten-Stil lists Hiebwaffen (only Rabenschnabel) and Schilde (only Großschild, only
-    mounted). The style's own page does not say "only while fighting with", and the wiki's
-    Kampfstil overview has no general rule text. The catalog today turns the style on only
-    with a Rabenschnabel or a Großschild in hand, so a Golgarite with a Schwert gets AT +2,
-    PA +2 instead of AT +4, PA +3. The same question comes up for every Kampfstil. Vinsalt-Stil
-    (a defensive style) lists Armbrüste, which suggests at least that list says who can learn
-    the style rather than when it applies.
-  situations: [reiterkampf 5.7, mehrfache-verteidigung V-cases on Vinsalt-Stil]
-  options:
-    a: { says: "Only while the hero fights with a listed technique (and weapon, where narrowed).", app: "as the catalog does today" }
-    b: { says: "Whenever the style's own conditions hold; the list only says which techniques can learn it.", app: "the style applies with any weapon" }
-    c: { says: "Decided per style, in each style's file.", app: "a field per Kampfstil" }
-  recommended: a
-  why_recommended: >
-    A style is a way of fighting with particular weapons; applying it with any weapon makes the
-    narrowed lists (only Rabenschnabel, only Großschild) meaningless.
-  answer: null
-  applies_to: [SA_661]
+  answer: >
+    Only while the hero fights with a listed technique (and weapon, where narrowed).
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  applies_to: [SA_661.GS1, SA_661.GS2, SA_661.GS3, SA_923.VS1, SA_923.VS2]
+  notes: >
+    A style is a way of fighting with particular weapons; applying it with any weapon would make
+    the narrowed lists meaningless. Golgariten-Stil applies with a Rabenschnabel, or a Großschild
+    from a mount: a Golgarite with a Schwert gets AT +2, PA +2 (the vorteilhafte Position alone),
+    not AT +4, PA +3 (reiterkampf 5.7). Vinsalt-Stil applies with an Armbrust, Fechtwaffe or
+    Zweihandschwert: with a Schwert the steps stay −3 (mehrfache-verteidigung V8). The catalog
+    already gates both styles this way. Every other Kampfstil is gated by its own list when it
+    gets a rule file.
 
 - id: tiered-manoeuvre-stufe
-  status: open
+  status: decided
   question: >
     A hero with a manoeuvre at Stufe III (Finte, Wuchtschlag): may they announce it at a lower
     Stufe for a single attack?
-  context: >
-    Both pages say "pro Stufe der Sonderfertigkeit" without saying whether that is the owned
-    Stufe or a chosen one. The app offers every Wuchtschlag Stufe up to the owned one, but only
-    the highest Finte Stufe (CombatAttackViews.availableManeuvers).
-  situations: [finte 8.3, wuchtschlag 9.3]
-  options:
-    a: { says: "Any Stufe up to the owned one, chosen per attack.", app: "Finte gains Stufe I/II rows like Wuchtschlag" }
-    b: { says: "Always the owned Stufe.", app: "Wuchtschlag loses its lower rows" }
-  recommended: a
-  why_recommended: the trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe makes a higher Stufe a handicap against strong defenders
-  answer: null
+  answer: >
+    Any Stufe up to the owned one, chosen per attack.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
   applies_to: [SA_48.F1, SA_67.W1]
+  notes: >
+    The trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe would
+    make a higher Stufe a handicap against strong defenders. Encoded as `tiers: up_to_owned`, and
+    the effects count `per: chosen_tier`. The app offers every Wuchtschlag Stufe already, but only
+    the highest Finte Stufe (CombatAttackViews.availableManeuvers offers hero.finteTier): Finte
+    gains Stufe I/II rows (finte 8.3).
 
 - id: manoeuvre-combination
   status: decided
@@ -68,7 +59,7 @@
     the player when a combination is excluded, and why, instead of hiding it.
   decided: { by: "@samuelsmal", date: 2026-09-24 }
   see: [https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html]
-  applies_to: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_48.F1, SA_67.W1]
+  applies_to: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_59.SS1, SA_172.U3]
   notes: >
     The app allows exactly one manoeuvre per attack today (CombatAttackViews.selectedManeuver, a
     single CombatManeuver). Finte + Wuchtschlag and Unterlaufen + Finte stay excluded (two
@@ -76,25 +67,24 @@
     + Vorstoß combine.
 
 - id: sf-technique-lists
-  status: open
+  status: decided
   question: >
     Every combat SF and manoeuvre lists "Kampftechniken" (Finte, Wuchtschlag, Sturmangriff,
     Unterlaufen, Beidhändiger Kampf, Verteidigungshaltung, …). May its effect be used only while
     the hero fights with a weapon of a listed technique, or does the list only say who may
     learn it?
-  context: >
-    The general Kampfsonderfertigkeiten page on the wiki does not say. The app checks no
-    technique for any SF or manoeuvre today; the catalog note on SA_67 says so on purpose until
-    the loadout can name Raufen (issue #14). The lists are specific (Unterlaufen leaves out
-    Stangenwaffen, whose reach it would never need; Finte's page adds techniques from later
-    books, which is pointless if the list did not restrict use). Kampfstile ask the same
-    question separately (kampfstil-techniques).
-  situations: [finte 8.5, wuchtschlag 9.5, sturmangriff 10.2, reichweite RW.7, beidhaendiger-kampf 11.4]
-  options:
-    a: { says: "Only with a listed technique; Raufen means unarmed. Not offered otherwise.", app: "each SF file carries `techniques:`, the offer checks the weapon in hand" }
-    b: { says: "The list only says who can learn it; usable with any weapon.", app: "no change" }
-    c: { says: "The same answer as kampfstil-techniques.", app: "follows that ruling" }
-  recommended: a
-  why_recommended: the lists are specific enough that reading them as learning lists only makes them meaningless
-  answer: null
-  applies_to: [SA_48.F3, SA_67.W3, SA_62.ST5, SA_172.U2, SA_173, SA_42.BH1, SA_65]
+  answer: >
+    Only with a listed technique; Raufen means unarmed. Not offered otherwise.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  applies_to: [kampfsonderfertigkeiten.KS6, SA_48.F1, SA_48.F3, SA_67.W1, SA_67.W3, SA_62.ST1, SA_62.ST5, SA_66.V1, SA_66.V6, SA_59.SS1, SA_59.SS7, SA_172.U2, SA_172.U6, SA_42.BH1, SA_42.BH2, SA_65.VH2]
+  notes: >
+    kampfsonderfertigkeiten.KS6 contrasts „alle" (Einsatz independent of a technique) with a
+    list, and the Anmerkung on Finte, Beidhändiger Kampf and Verteidigungshaltung that later
+    books' techniques are added to the lists only matters if they restrict use. Each SF file
+    carries its list as `requires: loadout…technique`, and the offer checks the weapon in hand:
+    no Finte with a Morgenstern (finte 8.5), no Wuchtschlag or Sturmangriff with a Dolch
+    (wuchtschlag 9.5, sturmangriff 10.2), no Vorstoß with the Großschild, no Schildspalter with
+    a Langschwert (boronmir-sf 14.4, 14.10). An SF marked „alle" (SA_152, SA_40) is not gated.
+    The app checks no technique for any SF or manoeuvre today; the catalog note on SA_67 holds
+    that back on purpose until the loadout can name Raufen (issue #14), which this ruling now
+    needs. Kampfstile follow the same answer (kampfstil-techniques).

@@ -34,10 +34,14 @@ an attack line of the profile (SK3) that RK13 reads.
 **Svellttaler Kaltblut** — a stat block, drafted as a new kind `creatureProfile`.
 
 - **SK2** INI 14+1W6, GS 12, LeP 75, VW 7, KK 25 — what RK1, RK14/15, RK10 and Mächtiger Schlag read.
-- **SK3** Tritt AT 15 1W6+7, Biss AT 12 1W6+2, Niederreiten AT 15 2W6+6 (the line RK13 reads).
+- **SK3** Tritt AT 15 1W6+7, Biss AT 12 1W6+2, Niederreiten AT 15 2W6+6 (the line RK13 reads; a
+  mount without one gets no Niederreiten order, ruling `niederreiten-without-profile`). Ridden,
+  Tritt and Biss are orders like any other (RK12): Boronmir's action instead of his own attack, and
+  a Reiten (Kampfmanöver) check (ruling `mount-own-attack`).
 - **SK4** RS 0, 1 action. **SK5** Ruhiges Temperament; Mächtiger Schlag. **SK7** Größenkategorie
   groß (the opponent cannot weapon-parry its attacks).
-- **SK10** Schmerz at 49/33/16/5 LeP — thresholds that fit 65 LeP, not 75.
+- **SK10** Schmerz at 49/33/16/5 LeP — thresholds that fit 65 LeP, not 75; the printed ones count
+  (ruling `svellttaler-schmerz-thresholds`).
 - **SK12** *Packesel*: carries up to 210 Stein.
 - Size, talents, loot, Kampfverhalten, Tierkunde: text.
 
@@ -49,9 +53,11 @@ successful or not, the check is still rolled.
 **Ruhiges Temperament** — **RT1** Reiten checks on this animal +1.
 
 **Rabenschnabel** — **RS0** the row (1W6+4, KK 14, 0/−1, mittel); **RS1** geweiht (Boron);
-**RS2** *Dornenspitze*: same TP, armour with RS 6+ counts −2; **RS3** +1 TP when used from a mount;
+**RS2** *Dornenspitze*: same TP, worn armour with RS 6+ counts −2 (not natural RS; ruling
+`dornenspitze-rs`); **RS3** +1 TP when used from a mount;
 **RS4** a confirmed Patzer on an attack adds 1 Stufe Betäubung. RS2–RS4 are the Waffenvorteil and
--nachteil.
+-nachteil, and apply only with the Fokusregel Waffeneigenschaften (ruling
+`rabenschnabel-waffeneigenschaft`).
 
 **Langschwert** — **LS0** the row (1W6+4, GE/KK 15, 0/0, mittel); **LS1** no Waffenvorteil or
 -nachteil.
@@ -76,8 +82,9 @@ with Boronmir's real values (derivation in the file's header). The rules as draf
 [`waffeneigenschaften`](./rules/core/waffeneigenschaften.yaml).
 
 The three asked for: Kupperus's Niederreiten with Boronmir riding (18.1: Reiten check 0 = −1
-Belastung +1 Ruhiges Temperament; AT 15, 2W6+6, dodge only, Kraftakt −3), a Tritt (18.3, waiting
-on `mount-own-attack`), and the Dornenspitze against plate (18.5: AT 11, 1W6+5, RS 6 → 4).
+Belastung +1 Ruhiges Temperament; AT 15, 2W6+6, dodge only, Kraftakt −3), a Tritt (18.3: an
+order, so Boronmir's action and the same Reiten check, then AT 15, 1W6+7, shield parry or dodge),
+and the Dornenspitze against plate (18.5: AT 11, 1W6+5, RS 6 → 4).
 
 ## How the app models the mount today
 
@@ -100,10 +107,13 @@ Größenkategorie, the animal's Vorteile, its Schmerz.
 | Mächtiger Schlag's Kraftakt penalty is floored: Kupperus −2, the page −3 (its own example rounds KK 23 to −2) | `CombatAttackViews` (`(kk - 20) / 2`), string `mightyBlow` | page |
 | The Schadensbonus (L+S) is never added: Boronmir's Rabenschnabel does 1W6+4, not 1W6+5. The code says no export carries the threshold, but his file has `primaryThreshold` on every weapon | `OptolithImportService.parseItems`, `FumbleEffectResolver` comment | page (Kampftechniken) |
 | The Großschild's "−1 AT on the main weapon" is not applied: Boronmir's Rabenschnabel and Langschwert AT are 1 too high whenever the shield is carried | `OptolithImportService.shieldNote`, `MeleeModifiers` | page (Regelwerk table note) |
-| Waffenvorteile and -nachteile are applied always; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page (Waffeneigenschaften); for the Rabenschnabel, ruling `rabenschnabel-waffeneigenschaft` |
+| Waffenvorteile and -nachteile are applied always; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page (Waffeneigenschaften); ruling `rabenschnabel-waffeneigenschaft` |
 | With that Fokusregel on, the Großschild's GS −1 and INI-tie rule are missing, and its +1 PA is a note that says "Fernkampf" where the page says Pfeile and Bolzen | `Hero.totalGsPenalty`, `shieldNote` | page |
 | Kupperus can carry 210 Stein (Packesel); the app gives every pet KK × 2 = 50 | `Pet.carryingCapacity`, `Hero.totalCarryingCapacity` | page |
-| Ruhiges Temperament (+1 on Reiten) is unknown to the app; the export does not carry an animal's Vorteile | `CombatMountPreCheckView`, `parsePets` | page; source per ruling `mount-profile-data` |
+| Ruhiges Temperament (+1 on Reiten) is unknown to the app; the export does not carry an animal's Vorteile, and there is no Bestiarium profile to fill the gap | `CombatMountPreCheckView`, `parsePets` | page; source per ruling `mount-profile-data` |
+| Tritt and Biss are offered beside the rider's own attack and rolled straight away; they are orders, taking his action and a Reiten (Kampfmanöver) check | `CombatAttackViews.mountAttackSection` | page (RK12); ruling `mount-own-attack` |
+| Niederreiten is offered for a mount with no Niederreiten line, with the first attack's AT and the export's `dp` | `CombatAttackViews.niederreitenButton` | ruling `niederreiten-without-profile` |
+| The Dornenspitze's RS note ("nur gegen RS 6 oder mehr") also invites the −2 against a creature's natural RS | `rsNote`, `CombatAttackViews.rsText` | ruling `dornenspitze-rs` |
 
 Also noted, smaller: Niederreiten is offered without checking Berittener Kampf (RK13's `requires`
 in reiterkampf.yaml) and without asking the run-up; the Mächtiger Schlag note says "(mittel/klein)"
@@ -114,15 +124,22 @@ in Optolith, the hero file and the app match the pages for all three items; the 
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). New here:
+All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). New here, all decided
+(@samuelsmal, 2026-09-24):
 
-- `svellttaler-kaltblut.mount-profile-data` — where a mount's VW, RS, size and Vorteile come from.
-- `svellttaler-kaltblut.mount-own-attack` — may a ridden horse kick or bite, and at what cost.
-- `svellttaler-kaltblut.niederreiten-without-profile` — the order for a mount with no Niederreiten line.
-- `svellttaler-kaltblut.svellttaler-schmerz-thresholds` — the profile's thresholds fit 65 LeP, not 75.
-- `ITEMTPL_19.rabenschnabel-waffeneigenschaft` — do the Rabenschnabel's Waffenvorteil and -nachteil
-  need the Fokusregel (cuts across every weapon; may belong in `rules/rulings.yaml`).
-- `ITEMTPL_19.dornenspitze-rs` — worn armour only, or natural RS 6+ too.
+- `svellttaler-kaltblut.mount-profile-data` (c) — a table of Bestiarium profiles keyed by the pet's
+  type, the export's numbers overriding it; a pet with no profile gets editable VW, RS, size and
+  Vorteile.
+- `svellttaler-kaltblut.mount-own-attack` (a) — a ridden horse's Tritt or Biss is an order (RK12):
+  the rider's action and a Reiten (Kampfmanöver) check.
+- `svellttaler-kaltblut.niederreiten-without-profile` (a) — no Niederreiten line, no Niederreiten
+  order.
+- `svellttaler-kaltblut.svellttaler-schmerz-thresholds` (a, against the recommendation) — the
+  printed thresholds, 49/33/16/5, count.
+- `ITEMTPL_19.rabenschnabel-waffeneigenschaft` (a) — every weapon's Waffenvorteil and -nachteil
+  needs the Fokusregel.
+- `ITEMTPL_19.dornenspitze-rs` (a) — worn armour only; with Trefferzonen-RS, the armour on the zone
+  hit.
 
 Reused: `round-up`, `reiterkampf.rk7-reiten`, `reiterkampf.rider-ini`, `COND_1.belastung-reach`,
-`kampfstil-techniques` (the Golgarite with a Langschwert, reiterkampf 5.7).
+`kampfstil-techniques` (the Golgarite with a Schwert, reiterkampf 5.7).

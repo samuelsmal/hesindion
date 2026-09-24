@@ -65,6 +65,12 @@ Where the app is wrong, per the rulings below: talents are never hindered (4.1),
 talents the book marks "evtl." have no "Belastung zählt" toggle (4.5); Belastung IV and beyond
 does not make a hero Handlungsunfähig (1.4, 1.5).
 
+Confirmed correct, per ruling: Belastung takes its AT penalty off ranged attacks too
+(`COND_1.belastung-fk`, answered against the recommendation); mounted, the rider rolls INI from the
+mount's base with no Belastung taken off (`reiterkampf.rider-ini`, 3.1). A Schip "Zustand
+ignorieren" suppresses Belastung with every other Zustand (`schicksalspunkte.schip-ignore-belastung`,
+[Example 4](./schmerz.md) S8), which the app does not do.
+
 ## Rulings
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule

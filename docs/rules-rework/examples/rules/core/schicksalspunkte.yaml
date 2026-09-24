@@ -1,5 +1,8 @@
 # DRAFT FORMAT — see ../../README.md.
 # Only the uses of Schicksalspunkte examples 3 and 4 need; the rest of the page is not written.
+# Deliberately partial: Menge, Erster, Neuer Wurf, Qualität verbessern, Schadenswurf wiederholen,
+# "Neben diesen Möglichkeiten …", Rückgewinnung and its table are not clauses yet — the file does
+# not cover the page until they are added.
 id: schicksalspunkte
 name: Schicksalspunkte
 kind: core
@@ -9,7 +12,7 @@ source:
   page: 29
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: SP1
@@ -51,21 +54,19 @@ clauses:
 
 rulings:
   - id: schip-ignore-belastung
-    status: open
+    status: decided
     question: >
       "Alle Zustände … ignorieren" — does that include Belastung?
-    context: >
-      Belastung is a Zustand (it is listed among them, and counts toward the −5 cap and the
-      8-Stufen rule in the app). The app deliberately exempts it: "a Schip cannot will away
-      gear-derived Belastung" (SharedModifiers.encumbrance; Hero.hasIgnorableZustand). The page
-      makes no exception.
-    situations: [schmerz S8]
-    options:
-      a: { says: "Yes — every Zustand, Belastung included, for one Kampfrunde.", app: "the Belastung line is suppressed with the rest" }
-      b: { says: "No — Belastung stays; it is the gear, not the hero's state.", app: "as today, now written down as a ruling" }
-    recommended: a
-    why_recommended: the page says "alle Zustände" and Belastung is one; the exemption exists only in the code
-    answer: null
+    answer: >
+      Yes — every Zustand, Belastung included, for one Kampfrunde.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SP-zustand]
+    notes: >
+      The page makes no exception, and Belastung is a Zustand. The Belastung lines (checks, INI,
+      GS) are suppressed with the rest for the round; the armour's own extra penalties
+      (ruestung-und-belastung.A1) are not a Zustand and stay. The app exempts Belastung today
+      ("a Schip cannot will away gear-derived Belastung", SharedModifiers.encumbrance,
+      Hero.hasIgnorableZustand).
 
   - id: schip-lifts-incapacity
     status: decided

@@ -69,8 +69,11 @@ situations:
     hero: { abilities: { SA_923: 1 }, loadout: { weapon: Schwert } }
     round: { defences: [pa, pa] }
     check: pa
-    expect: { open: kampfstil-techniques }       # −4 if the style applies, −6 if not
-    app_today: −6 (the catalog requires an Armbrust, Fechtwaffe or Zweihandschwert)
+    expect:
+      pa: { total: -6, lines: [{ value: -6, from: mehrfache-verteidigung.MV1 }] }
+      not_applied:
+        - { rule: SA_923, clause: VS1, reason: a Schwert is not in VS2's list, ruling: kampfstil-techniques }
+    app_today: same (the catalog requires an Armbrust, Fechtwaffe or Zweihandschwert)
 
   - id: V9
     name: The value reaches 0 — parry gone, dodge still there

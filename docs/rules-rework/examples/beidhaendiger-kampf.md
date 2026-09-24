@@ -53,8 +53,11 @@ the player — Schwert and Dolch make the Dolch the main hand (11.12, `CombatLoa
 Vorstoß and Schildspalter are offered on a double attack (11.7,
 `CombatAttackViews.availableManeuvers`); a Kettenwaffe can be paired with a second weapon (11.10,
 `CombatLoadoutPicker.canSelect`); weapon and shield never make a double attack, and there is no
-shield attack at all (11.11). Right: the −2/−4 arithmetic, the round-long defence penalty, the
-off-hand parry, and the Patzer rule (11.2–11.4b, 11.6, 11.8).
+shield attack at all (11.11); Raufen cannot be one hand of a double attack, though each fist
+counts as a weapon (11.9, `CombatLoadoutPicker.canSelect`, decided ruling `raufen-double-attack`).
+Right: the −2/−4 arithmetic, the round-long defence penalty, the off-hand parry, and the Patzer
+rule (11.2–11.4b, 11.6, 11.8); a parry rolled before the double attack in the same round pays no −2
+(11.5, decided ruling `zw3-earlier-defences`).
 
 Provenance, today: the −2 line cites SA_42 (`MeleeModifiers.dualAttackPenalty`, `rules: [SA_42]`)
 though the penalty is the core rule's and SA_42 only lowers it; the −4 cites ADV_5
@@ -64,4 +67,5 @@ hero without the SF is told the wrong thing.
 ## Rulings
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for
-`beidhaendiger-kampf`, `SA_42` and the shared `sf-technique-lists`.
+`beidhaendiger-kampf`, `SA_42` and the shared `sf-technique-lists` (SA_42 lowers the penalty only
+when both pieces are of a technique on its list).

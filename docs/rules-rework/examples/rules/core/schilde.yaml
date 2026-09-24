@@ -15,7 +15,7 @@ source:
   page: 231
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
   - id: SCH1
@@ -28,7 +28,8 @@ clauses:
       - when: { defence: weaponParry, with: mainHand, loadout.other: [parryingWeapon, shield] }
         add: { to: pa, value: "max(loadout.other.paMod)" }
         ruling: shield-bonus-raufen
-        # A line of its own: "Großschild (passiv) +3". The bonus is the piece's PA-Mod from its
+        # A line of its own: "Großschild (passiv) +3". Bare hands count as the Hauptwaffe: a Raufen
+        # parry gets it too (ruling shield-bonus-raufen). The bonus is the piece's PA-Mod from its
         # table row. A Parierwaffe is marked as one in its table row (Optolith:
         # isParryingWeapon); an ordinary second weapon gives nothing here.
         # FORMAT: "only the highest" — several candidate lines, one applied; the others shown
@@ -39,10 +40,10 @@ clauses:
       Ansonsten sind Parierwaffen und Schilde über ihre entsprechende Kampftechnik auch als Waffe
       für den beidhändigen Nahkampf oder als einzelne Nahkampfwaffe einsetzbar.
     effects:
-      - offer: { attack: { with: [shield, parryingWeapon] }, value: "technique.at + item.atMod" }
-        # Its own technique (kampfwerte.KW1) and its own AT-Mod (at-pa-modifikatoren.M1): the
-        # Großschild −6. Its TP and Schadensschwelle from its row (schaden.S3). In a double
-        # attack: beidhaendiger-kampf.
+      - offer: { attack: { with: [shield, parryingWeapon] }, value: technique.at }
+        # Its own technique (kampfwerte.KW1); its AT-Mod is at-pa-modifikatoren.M1's line, keyed
+        # on the piece attacked with (the Großschild −6, situation 16.8), not added here. Its TP
+        # and Schadensschwelle from its row (schaden.S3). In a double attack: beidhaendiger-kampf.
 
   - id: SCH3
     text: >
@@ -61,7 +62,9 @@ clauses:
         # Two lines: "Schilde PA 7" and "Großschild aktiv +6 (2 × 3)". The choice between
         # SCH1 (passive, on the weapon parry) and SCH3 (active) is made per defence: both rows
         # are offered, each with its value.
-        # Parierwaffen have no active parry: "Ein Schild hat zusätzlich …".
+        # Parierwaffen have no doubled active parry: "Ein Schild hat zusätzlich …". A Parierwaffe
+        # is a weapon of its technique (SCH2) and parries as one under beidhaendiger-kampf.ZW7,
+        # with the off-hand −4 (ZW4) and its own PA-Mod (at-pa-modifikatoren.M1).
 
   - id: SCH4
     text: >
@@ -157,24 +160,33 @@ clauses:
     effects: none
     why: beidhaendiger-kampf's penalties and the shield's AT-Mod (SCH2) together; nothing new
 
+  - id: SCH12
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nahkampf.html
+      book: Regelwerk (4. überarb. Auflage)
+      page: 229
+    text: >
+      Wer einen Schild führt, kann eine gelungene Attacke des Gegners auch mit einem Schild
+      parieren. Dies ist eine ganz normale Probe auf Parade, jedoch erhöht ein mitgeführter
+      Schild die Parade. Üblicherweise ist der Paradewert mit einem Schild höher als der
+      Paradewert mit einer Waffe.
+    effects: none
+    why: >
+      the Nahkampf page's own shield sentences, from its Parade paragraph (the rest of which is
+      kampfwerte.KW17): SCH1 (the raised parade) and SCH3 (the parry with the shield) carry it
+
 rulings:
   - id: shield-bonus-raufen
-    status: open
+    status: decided
     question: >
       The passive shield bonus goes onto "der Parade der Hauptwaffe" (SCH1). Does a hero who
       fights unarmed (Raufen) with a shield on the other arm get it on a Raufen parry?
-    context: >
-      The page speaks of a Hauptwaffe and does not say whether bare hands count as one. The app
-      adds the bonus to a Raufen parry on the weapon list (CombatAttackViews weapon list, the
-      Raufen row: raufen.pa + hero.passiveShieldPABonus). For Boronmir (Raufen PA 7, Großschild
-      +3) that is 10 instead of 7; his active shield parry is 13 either way, so it matters only
-      when he chooses the Raufen parry, e.g. after losing his weapon.
-    situations: [kampfwerte 16.16]
-    options:
-      a: { says: "Yes: unarmed is the hand the hero fights with; the shield covers him either way.", app: "no change" }
-      b: { says: "No: the bonus needs a weapon in the main hand.", app: "the Raufen row loses the +3" }
-    recommended: a
-    why_recommended: >
-      The passive bonus stands for the shield's cover, which does not depend on what the other
-      hand holds; and the active shield parry is better anyway, so (a) changes little.
-    answer: null
+    answer: >
+      Yes: unarmed is the hand the hero fights with; the shield covers him either way.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SCH1]
+    notes: >
+      The Grundbegriffe page treats the fist as a weapon ("Waffen, zur Not aber auch die bloße
+      Faust können einen Gegner verletzen", schaden.S6). No change in the app: the Raufen row adds
+      hero.passiveShieldPABonus (CombatAttackViews weapon list). Boronmir, Raufen PA 7 with the
+      Großschild: 10; his active shield parry is 13 either way (kampfwerte 16.16).

@@ -10,7 +10,7 @@ source:
   hash: null
 reviewed: null
 
-# Who can be liegend: the hero (stated, or implied by Handlungsunfähig — ruling
+# Who can be liegend: the hero (stated, or answered "ja" when Handlungsunfähig starts — ruling
 # handlungsunfaehig-liegend) and the opponent (stated per attack on the opponent profile).
 # FORMAT: one rule whose effects land on whichever side carries the status. The same clause
 # gives the hero's own lines when the hero lies, and opponent lines when the opponent does.
@@ -40,7 +40,7 @@ clauses:
       - when: { side: hero }
         add: { to: [pa, aw], value: -2 }
       - when: { side: hero }
-        add: { to: at, value: -4 }
+        add: { to: [at, fk], value: -4 }
         ruling: liegend-attacks
       - when: { side: opponent }
         opponent_add: { to: [pa, aw], value: -2 }
@@ -70,40 +70,33 @@ clauses:
 
 rulings:
   - id: liegend-attacks
-    status: open
+    status: decided
     question: >
       "Ihre Angriffe um 4" — which attacks? Melee AT only, or ranged (FK) as well?
-    context: >
-      The page says "Angriffe", not "AT". The catalog applies −4 to melee attacks only
-      (STATE_10, domain meleeAttack); a prone archer shoots at no penalty in the app today. A
-      prone hero's spells are not attacks in this sense either way.
-    situations: [liegend 7.2]
-    options:
-      a: { says: "Every attack roll: melee AT and FK.", app: "FK −4 while liegend" }
-      b: { says: "Melee AT only.", app: "no change" }
-    recommended: a
-    why_recommended: the page says "Angriffe" where it could have said AT, and shooting from the ground is plainly harder too
-    answer: null
+    answer: >
+      Every attack roll: melee AT and FK.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [L3]
+    notes: >
+      The page says "Angriffe", not "AT". A prone hero shoots at FK −4; spells are not attacks in
+      this sense. The app applies −4 to melee attacks only (catalog STATE_10, domain meleeAttack),
+      so a prone archer shoots at no penalty today.
 
   - id: handlungsunfaehig-liegend
-    status: open
+    status: decided
     question: >
       Handlungsunfähig says the person "in den meisten Situationen … gilt … zudem als liegend".
       When does a Handlungsunfähig hero count as Liegend?
-    context: >
-      The app makes Handlungsunfähig and Bewusstlos always imply Liegend
-      (StateCatalog: implies ["liegend"]). The Bewusstlos page only implies Handlungsunfähig; the
-      Liegend comes through Handlungsunfähig's "most situations". On top of Handlungsunfähig
-      (no actions, no defences, GS 0) Liegend adds little for the hero's own rolls; it matters
-      for what the hero sheet shows and for the hero standing up once able to act again (L4 —
-      an action, and a possible Passierschlag).
-    situations: [liegend 7.4, liegend 7.5]
-    options:
-      a: { says: "Always: Handlungsunfähig implies Liegend.", app: "as today" }
-      b: { says: "A GM question when Handlungsunfähig starts: 'liegt die Person?', default yes.", app: "one question; the status can be lifted (tied to a mast, held upright)" }
-      c: { says: "Never automatically; the player sets Liegend by hand.", app: "the implied status goes" }
-    recommended: b
-    why_recommended: >
-      the page says "most", not "always"; a default-yes question keeps the common case free and
-      leaves room for the hero tied upright or held on a horse
-    answer: null
+    answer: >
+      When the hero becomes Handlungsunfähig, a modal also asks whether the hero is now Liegend.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [L1, L2, L3, L4]
+    notes: >
+      Option b in the owner's words. The question comes whenever Handlungsunfähig starts, from
+      whatever cause: set by hand, implied by Bewusstlos, or reached by a Zustand at Stufe IV
+      (Hero.isHandlungsunfaehigFromZustaende). "Nein" leaves room for the hero tied to a mast or
+      held on a horse. Today the app makes Handlungsunfähig and Bewusstlos always imply Liegend
+      (StateCatalog: implies ["liegend"]), and a Handlungsunfähig reached through Zustände
+      implies nothing, because Hero.impliedStateIDs reads only states that are set. On top of
+      Handlungsunfähig (no actions, no defences, GS 0) Liegend matters for what the sheet shows and
+      for standing up once able to act again (L4).

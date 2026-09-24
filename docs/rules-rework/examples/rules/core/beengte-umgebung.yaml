@@ -9,7 +9,7 @@ source:
   page: 238
   checked: 2026-09-24
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # Also Kodex des Schwertes p. 74. The same table is on the status Eingeengt (STATE_6, Regelwerk
 # p. 35f), which the app uses as the switch. Optolith's STATE_6 text adds "Talentanwendungen
 # können … um bis zu 2 erschwert werden" — not on this page; STATE_6 is not drafted here.
@@ -68,24 +68,18 @@ clauses:
 
 rulings:
   - id: beengt-shield-carried
-    status: open
+    status: decided
     question: >
       A fighter with weapon and shield in a corridor: does the shield's row (BU3) apply only to
       rolls made with the shield, or also to the weapon's AT and PA while the shield is carried?
-    context: >
-      The page lists weapons and shields as rows of one table, each with its own AT and PA,
-      and does not say whose rolls a row applies to. Read per item, the Großschild's −6 AT only
-      matters for a shield attack and its −4 PA for a shield parry. Read as "carrying it", a
-      Langschwert with a Großschild would be −10 AT / −8 PA. The app reads neither: it knows
-      no shield sizes, takes the reach of the main weapon for every AT and PA
-      (Situation.loadoutReach; the catalog note says the parrying piece is not named "until step
-      3"), and the Großschild's own reach is kurz (OptolithImportService.parseItems, reach 1).
-    situations: [kampfsituationen 17.14]
-    options:
-      a: { says: "Per item: the shield's row applies to rolls with the shield, the weapon's row to rolls with the weapon.", app: "the parrying piece decides the row; shields read their size" }
-      b: { says: "Carried: the weapon's rolls also take the shield's row (Langschwert + Großschild: AT −10, PA −8).", app: "a second line on every weapon roll while a shield is in the loadout" }
-    recommended: a
-    why_recommended: >
-      the weapon rows are plainly per item (a Dolch in the other hand does not hamper the
-      Langschwert), and the shield rows sit in the same table with the same columns
-    answer: null
+    answer: >
+      Per item: the shield's row applies to rolls with the shield, the weapon's row to rolls with
+      the weapon.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [BU2, BU3]
+    notes: >
+      Langschwert and Großschild in a corridor: the Langschwert attacks and parries at −4, the
+      Großschild parries at −4 and bashes at −6 (kampfsituationen 17.14–17.17). The parrying
+      piece decides the row, so the app needs the parrying piece's reach (not the main weapon's,
+      Situation.loadoutReach) and shield sizes, which it does not have (the Großschild imports
+      with reach kurz, OptolithImportService.parseItems).

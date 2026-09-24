@@ -71,7 +71,7 @@ situations:
     opponent: { reach: lang }
     choose: { manoeuvre: unterlaufen }
     expect:
-      offered: [{ manoeuvre: unterlaufen, from: SA_172.U2 }]
+      offered: [{ manoeuvre: unterlaufen, from: SA_172.U2, ruling: sf-technique-lists }]   # Dolche is on U6's list
       at: { total: -2, lines: [{ value: -2, was: -4, from: reichweite.RW3, via: [SA_172.U1] }] }
       on_miss: { tell: [{ opponent: passierschlag, from: SA_172.U2 }] }
     app_today: Unterlaufen is not implemented; AT −4

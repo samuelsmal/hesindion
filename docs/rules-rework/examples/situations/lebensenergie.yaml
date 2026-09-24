@@ -66,18 +66,21 @@ situations:
     name: LP 24 — Schmerz I, which Zäher Hund treats as none
     hero: { lp: 24 }
     expect:
-      conditions: { COND_6: { level: 1, open: ADV_49.zaeher-hund-counts } }   # 1 under a, 0 under b
+      conditions: { COND_6: { level: 1, ruling: ADV_49.zaeher-hund-counts } }   # the chip shows Schmerz I
       acts_as: { COND_6: 0, from: ADV_49.ZH4 }
       at: { total: 0 }
       gs: { total: 0 }
       not_applied: [{ rule: COND_6.SZ5, because: ADV_49.ZH4 }]
-    app_today: no Schmerz at all — no chip, no line, no mention of Zäher Hund outside the after-fight screen (Hero.effectiveSchmerzLevel 0)
+    app_today: >
+      no Schmerz at all — no chip, no line, no mention of Zäher Hund outside the after-fight screen
+      (Hero.effectiveSchmerzLevel 0). No line is right; the missing Schmerz I chip is wrong (ruling
+      ADV_49.zaeher-hund-counts)
 
   - id: "15.5"
     name: LP 16 — Schmerz II, acts as I
     hero: { lp: 16 }
     expect:
-      conditions: { COND_6: { level: 2, open: ADV_49.zaeher-hund-counts } }
+      conditions: { COND_6: { level: 2, ruling: ADV_49.zaeher-hund-counts } }
       acts_as: { COND_6: 1, from: ADV_49.ZH1 }
       at:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [COND_6.SZ3, ADV_49.ZH1] }] }
       talent: { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
@@ -90,7 +93,7 @@ situations:
     name: LP 8 — Schmerz III, acts as II (the page's own example)
     hero: { lp: 8 }
     expect:
-      conditions: { COND_6: { level: 3, open: ADV_49.zaeher-hund-counts } }
+      conditions: { COND_6: { level: 3, ruling: ADV_49.zaeher-hund-counts } }
       acts_as: { COND_6: 2, from: ADV_49.ZH1 }
       at: { total: -2, lines: [{ value: -2, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
       gs: { total: -2, lines: [{ value: -2, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
@@ -104,10 +107,11 @@ situations:
       states: { handlungsunfaehig: { from: COND_6.SZ5, via: [ADV_49.ZH3] } }
       offered:
         - { check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, fw: 9, attributes: [MU 14, MU 14, KO 13] },
-            from: COND_6.SZ2, open: COND_6.schmerz-iv-check }
+            before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
       after_check_passed:
-        acts_as: { COND_6: 3, open: ADV_49.zaeher-hund-iv }    # III under a; IV under b
-        at: { open: ADV_49.zaeher-hund-iv }                    # −3 under a, −4 under b
+        acts_as: { COND_6: 3, ruling: ADV_49.zaeher-hund-iv }
+        at: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
+        gs: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
     app_today: Handlungsunfähig outright, no Selbstbeherrschung check (StateCatalog schmerz handlungsunfaehigAtLevel 4; Hero.effectiveSchmerzLevel skips Zäher Hund at IV) — wrong for the check (example 4)
 
   - id: "15.8"
@@ -115,8 +119,9 @@ situations:
     hero: { lp: 8, armour: [Plattenrüstung], abilities: { SA_41: 1 }, states: [{ COND_2: 3 }] }
     expect:
       conditions: { COND_1: 2, COND_6: 3, COND_2: 3 }
-      states: { handlungsunfaehig: { from: zustaende.Z5, open: ADV_49.zaeher-hund-counts } }
-      # Under a: 2 + 3 + 3 = 8 Stufen → Handlungsunfähig. Under b: 2 + 2 + 3 = 7 → not.
+      states: { handlungsunfaehig: { from: zustaende.Z5, ruling: ADV_49.zaeher-hund-counts } }
+      # 2 + 3 + 3 = 8 Stufen as the hero has them → Handlungsunfähig (Zäher Hund lowers only the
+      # effects of Schmerz, not the Stufe counted).
       at_if_able_to_act:
         total: -5
         lines:
@@ -125,8 +130,8 @@ situations:
           - { value: -3, from: COND_2 }
           - { value: 2, from: zustaende.Z3 }               # −7 capped at −5
     app_today: >
-      able to act at AT −5: Hero.totalZustandLevels counts the lowered Schmerz (7 Stufen), which
-      is option b of the ruling
+      able to act at AT −5: Hero.totalZustandLevels counts the lowered Schmerz (7 Stufen) — wrong
+      (ruling ADV_49.zaeher-hund-counts)
 
   # --- Regeneration (regeneration.R4–R7, T1; ADV_44.VR1) -------------------------------------------
 
@@ -152,13 +157,12 @@ situations:
     choose: { environment: "unruhig, nass oder kalt", roll: 3 }
     expect:
       regeneration:
-        open: ADV_44.vr-halving
-        # a: (3 + 2) / 2 = 2.5 → 3 (round-up) → LP 23
-        # b: 3 / 2 = 1.5 → 2, + 2 → 4 → LP 24
+        total: 3                                           # (3 + 2) / 2 = 2.5 → 3 → LP 23
         lines:
           - { value: 3, from: regeneration.R4 }
           - { value: 2, from: ADV_44.VR1 }
-          - { halve: true, from: regeneration.R6, ruling: round-up }
+          - { halve: true, from: regeneration.R6, ruling: [round-up, ADV_44.vr-halving] }
+      after: { lp: 23 }
     app_today: 5 → LP 25 unless the player works out the halving and enters it as a modifier; the sheet has no environment — wrong
 
   - id: "15.11"
@@ -244,5 +248,6 @@ situations:
     name: Betäubung II from a blow to the head
     hero: { states: [{ COND_2: 2, cause: blow }] }
     expect:
-      told: { open: ADV_75.alcohol-scope }      # 3 h per Stufe under a, 1½ h under b
-    app_today: 3 hours
+      told: [{ player: "Jede Stufe Betäubung baut sich nach 3 Stunden Ruhe ab.", from: COND_2 }]
+      not_applied: [{ rule: ADV_75.SW1, because: "nur durch Alkohol verursacht", ruling: ADV_75.alcohol-scope }]
+    app_today: 3 hours — right

@@ -27,8 +27,9 @@ In [`situations/finte.yaml`](./situations/finte.yaml), 8.1–8.10. The rule as d
 
 Where the app is wrong: only the highest Stufe is offered (`CombatAttackViews.availableManeuvers`
 offers `hero.finteTier`), while Wuchtschlag offers every Stufe — the two tiered Basismanöver are
-treated differently (8.3); Finte is offered with any weapon, including techniques not on its list
-(8.5); the manoeuvre's info text says "Gegner PA −2" although the page says Verteidigung, so a dodge
+treated differently (8.3; per the decided ruling `tiered-manoeuvre-stufe` any Stufe up to the
+owned one may be announced); Finte is offered with any weapon, including techniques not on its list
+(8.5; per the decided ruling `sf-technique-lists` it needs one of F3's); the manoeuvre's info text says "Gegner PA −2" although the page says Verteidigung, so a dodge
 is mislabelled (`CombatManeuver.infoText`, 8.4). Finte is still `byHand` in the catalog
 (`Hero.finteTier`, `OpponentProfile.defenseModifiers`).
 
@@ -39,5 +40,6 @@ only on a hit.
 ## Rulings
 
 All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). This example rests on three
-cross-cutting ones — which Stufe of a tiered manoeuvre may be announced, whether a manoeuvre needs a
-listed technique, and which manoeuvres combine on one attack.
+cross-cutting ones, all decided: any Stufe up to the owned one may be announced
+(`tiered-manoeuvre-stufe`), a manoeuvre needs a listed technique (`sf-technique-lists`), and one
+Basismanöver and one Spezialmanöver combine on one attack (`manoeuvre-combination`).

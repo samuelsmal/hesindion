@@ -17,7 +17,8 @@ level:
   from:
     - clause: SZ3
     - set_by: [event, gm]
-  lowered_by: [ADV_49]      # ruling ADV_49.zaeher-hund-counts: which Stufe counts
+  effects_lowered_by: [ADV_49]   # the Stufe stays; ADV_49 lowers the Stufe whose *effects* apply
+                                 # (ruling ADV_49.zaeher-hund-counts)
 
 clauses:
   - id: SZ1
@@ -32,12 +33,14 @@ clauses:
       Um trotz immenser Schmerzen (Stufe IV) handlungsfähig zu bleiben, ist eine Probe auf
       Selbstbeherrschung (Handlungsfähigkeit bewahren) nötig.
     effects:
-      - when: { level: 4 }
+      - when: { level: 4, before: action }
         requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren }
         on_failure: { gain: { state: handlungsunfaehig } }
         on_success: { see: SZ5 }
         ruling: schmerz-iv-check
-        # FORMAT: a check that decides whether a state applies, with an open timing.
+        # Rolled before each action the hero wants to take; a success lets that one action
+        # through at −4 (SZ5), a failure leaves the hero Handlungsunfähig for it.
+        # FORMAT: a check that decides whether a state applies, repeated per action.
 
   - id: SZ3
     text: >
@@ -54,10 +57,9 @@ clauses:
 
   - id: SZ4
     text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.
-    effects:
-      - lower: { condition: COND_6, by: 1, every: 4h, not_for: SZ3 }
-        # The LP part (SZ3) goes with healing, not with time. Out-of-combat time is not
-        # tracked; the app shows this as text on the Schmerz chip.
+    # Would encode as: lower: { condition: COND_6, by: 1, every: 4h, not_for: SZ3 } — the LP
+    # part (SZ3) goes with healing, not with time. Out-of-combat time is not tracked; the app
+    # shows this as text on the Schmerz chip.
     status: unencoded
     why: the app does not keep time outside combat rounds
 
@@ -77,60 +79,61 @@ clauses:
         unless: { check_passed: SZ2 }
       - when: { level: 4, check_passed: SZ2 }
         add: { to: check, value: -4 }
+      - when: { level: 4 }
+        set: { value: gs, to: 0 }
         ruling: schmerz-iv-gs
+        # Passed check or not, the hero cannot move at Stufe IV; speaking stays possible.
+        # FORMAT: a value set, not a modifier (like STATE_10's GS 1).
 
 rulings:
   - id: schmerz-thresholds
-    status: open
+    status: decided
     question: >
       "Auf Dreiviertel, die Hälfte oder ein Viertel der Gesamt-Lebensenergie gesunken" — is the
       hero's LP compared with the exact fraction, or is the fraction rounded first (ADR-0006
       rounds up)?
-    context: >
-      LE 30: three quarters is 22.5. Compared exactly, Schmerz I starts at 22 LP; with the
-      threshold rounded up to 23, it starts at 23. The app compares with integer division
-      (Hero.lebenspunkteSchmerzLevel: `current <= maxLP * 3 / 4`), which for whole LP equals the
-      exact comparison. ADR-0006 is about computing values, and this is a comparison.
-    situations: [schmerz S1, schmerz S4]
-    options:
-      a: { says: "Exact: Schmerz when LP is at or below the fraction itself.", app: "as today" }
-      b: { says: "Round the threshold up first (ADR-0006).", app: "Schmerz one LP earlier for odd thresholds" }
-    recommended: a
-    why_recommended: nothing is being computed that needs rounding — LP is compared with a number, and the exact comparison is what "gesunken auf" says
-    answer: null
+    answer: >
+      Exact: Schmerz when LP is at or below the fraction itself.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SZ3]
+    notes: >
+      LE 30: Schmerz I starts at 22 LP (22.5), not 23. Nothing is computed that needs rounding,
+      so ADR-0006 does not reach it. The app already compares this way
+      (Hero.lebenspunkteSchmerzLevel, `current <= maxLP * 3 / 4`, equal to the exact comparison
+      for whole LP).
 
   - id: schmerz-iv-check
-    status: open
+    status: decided
     question: >
       Stufe IV needs a Selbstbeherrschung (Handlungsfähigkeit bewahren) check to stay able to
       act. When is it rolled, and how long does a success hold?
-    context: >
-      The page says it is needed, not when. The app has no such check: at Stufe IV the hero is
-      Handlungsunfähig outright (StateCatalog schmerz, handlungsunfaehigAtLevel: 4), and only
-      the Schip "Zustand ignorieren" gives a round back.
-    situations: [schmerz S3, schmerz S12]
-    options:
-      a: { says: "Once, when Stufe IV is reached; a success holds until the Stufe changes.", app: "a check prompt when Schmerz reaches IV" }
-      b: { says: "At the start of every Kampfrunde while at Stufe IV.", app: "a check prompt each round" }
-      c: { says: "Before each action the hero wants to take.", app: "a check prompt before each action" }
-    recommended: a
-    why_recommended: the page ties the check to the Stufe, not to rounds or actions, and it asks least of the table
-    answer: null
+    answer: >
+      Before each action the hero wants to take.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SZ2, SZ5]
+    notes: >
+      Answered against the recommendation (once, when Stufe IV is reached). A success holds for
+      that one action, taken at −4; a failure means the hero cannot take it (Handlungsunfähig).
+      The app needs a check prompt before each action of a hero at Schmerz IV. Today it has no
+      such check: the hero is Handlungsunfähig outright (StateCatalog schmerz,
+      handlungsunfaehigAtLevel: 4), and only the Schip "Zustand ignorieren" gives a round back.
+      Moving is not an action this check can buy (ruling schmerz-iv-gs).
 
   - id: schmerz-iv-gs
-    status: open
+    status: decided
     question: >
       A hero who passes the Stufe IV check has "alle Proben –4". The page gives GS −1/−2/−3 for
       Stufen I–III and no GS for Stufe IV. What is their GS penalty?
-    context: >
-      Read literally, a hero at Stufe IV who stays on their feet moves at full GS, while one at
-      Stufe III moves at −3. The app applies no Schmerz to GS at any Stufe
-      (Hero.effectiveGeschwindigkeit, Hero.totalGsPenalty).
-    situations: [schmerz S12]
-    options:
-      a: { says: "GS −4, continuing the ladder.", app: "GS −4 line" }
-      b: { says: "No GS penalty, as printed.", app: "no GS line at IV" }
-      c: { says: "GS −3, the last printed value.", app: "GS −3 line" }
-    recommended: a
-    why_recommended: the ladder is regular in every other respect, and a penalty that vanishes at the worst Stufe reads as an omission
-    answer: null
+    answer: >
+      The hero cannot move (GS 0), but can still speak.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [SZ5]
+    notes: >
+      The owner's own answer, none of the offered options (GS −4, none, GS −3). At Stufe IV the
+      hero's GS is 0 whether or not the Selbstbeherrschung check passed; a passed check buys an
+      action at −4 (schmerz-iv-check), never movement. Speaking is always possible. GS 0 is a
+      value set, not a line to cap, so the Zustand cap (zustaende.cap-scope) does not change it.
+      With Zäher Hund, a passed check makes the hero act as Stufe III, GS 0 included: GS −3
+      (ADV_49.zaeher-hund-iv).
+      The app applies no Schmerz to GS at any Stufe (Hero.effectiveGeschwindigkeit,
+      Hero.totalGsPenalty).

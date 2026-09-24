@@ -13,6 +13,14 @@ source:
 reviewed: null
 
 clauses:
+  - id: ZW10
+    text: |
+      Als besondere Herausforderung an Koordination und Geschick gilt vielen Kriegern der Kampf mit zwei Waffen. Zahlreiche Kämpfer Aventuriens schwören hierbei auf zwei gleichartige Waffen wie zwei Dolche oder zwei Äxte, während andere Kämpfer eher Kombinationen beispielsweise aus einer Fechtwaffe und einem Parierdolch bevorzugen.
+      Zwei Waffen im Nahkampf
+      Einige Helden versprechen sich durch den Kampf mit zwei Nahkampfwaffen Vorteile. Der beidhändige Nahkampf ist allerdings nicht einfach, und nur ein geübter Kämpfer kann daraus größeren Nutzen ziehen.
+    effects: none
+    why: flavour; the page's introduction before ZW1
+
   - id: ZW1
     text: >
       Es dürfen keine Waffen verwendet werden, die man mit zwei Händen führen muss. Auch
@@ -21,6 +29,11 @@ clauses:
     effects:
       - forbid: { loadout: { dualWield: true, any: { twoHandedOnly: true } } }
       - forbid: { loadout: { dualWield: true, any: { technique: Kettenwaffen }, not: { other: shield } } }
+      - allow: { loadout: { dualWield: true, any: { technique: Raufen } } }
+        ruling: raufen-double-attack
+        # Each fist counts as one of the two weapons: fist and fist, or weapon and fist. The fist
+        # in the off hand takes ZW4 like any other item. FORMAT: `allow` overrides the default
+        # that Raufen fills both hands.
 
   - id: ZW2
     text: >
@@ -51,6 +64,7 @@ clauses:
         add: { to: [at, pa, aw], value: -2 }
         lasts: round
         ruling: zw3-earlier-defences
+        # From the double attack on: a defence rolled earlier in the round is not charged.
         # FORMAT: a penalty switched on by an action and lasting to the end of the round —
         # a round-scoped fact written by the double attack, read by every later check.
 
@@ -97,48 +111,46 @@ clauses:
 
   - id: ZW9
     text: >
-      Beispiel: […] Der Attackewert des ersten Schlags mit seiner Rechten ist um -2 erschwert,
-      da es nicht leicht ist, zwei Äxte gleichzeitig zu führen. Der Attackewert des zweiten
-      Schlages, den er mit seiner Linken ausführt, ist sogar um -6 erschwert, da Arbosch
+      Beispiel: Arbosch hat sich eine zweite Axt zugelegt. Sein Freund Geron hält wenig davon,
+      was ein Grund mehr für Arbosch ist, ihm zu beweisen, was für ein mächtiger Kämpfer er ist.
+      In einem Übungskampf greift Arbosch seinen Freund an. Er kann mit den beiden Äxten
+      gleichzeitig innerhalb einer Aktion zuschlagen, muss jedoch jeden Schlag einzeln als
+      Attacke auswürfeln. Der Attackewert des ersten Schlags mit seiner Rechten ist um -2
+      erschwert, da es nicht leicht ist, zwei Äxte gleichzeitig zu führen. Der Attackewert des
+      zweiten Schlages, den er mit seiner Linken ausführt, ist sogar um -6 erschwert, da Arbosch
       Rechtshänder ist.
     effects: none
     why: a worked example; it is situations/beidhaendiger-kampf.yaml 11.2
 
 rulings:
   - id: zw3-earlier-defences
-    status: open
+    status: decided
     question: >
       ZW3's −2 reaches "alle Verteidigungen des Angreifers in der laufenden Kampfrunde". Does it
       reach a defence the hero made earlier in the same round, before deciding on the double
       attack?
-    context: >
-      The app sets the penalty when the double attack is chosen and clears it at the next round
-      (CombatView, dualAttackPenaltyActive), so only defences after the attack pay it. A parry
-      already rolled cannot be re-rolled; the only way to charge it is to make the player declare
-      the double attack at the start of the round.
-    situations: [beidhaendiger-kampf 11.5]
-    options:
-      a: { says: "Only defences after the double attack in the same round.", app: "no change" }
-      b: { says: "The double attack is declared at the start of the round; every defence that round pays.", app: "a round-start declaration" }
-    recommended: a
-    why_recommended: >
-      "solange der Held mit beiden Waffen angreift" ties the penalty to the attacking, and a
-      defence rolled before it cannot have been hindered by it.
-    answer: null
+    answer: >
+      Only defences after the double attack in the same round.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [ZW3]
+    notes: >
+      "solange der Held mit beiden Waffen angreift" ties the penalty to the attacking; a defence
+      rolled before it was not hindered by it, and a parry already rolled cannot be re-rolled.
+      No round-start declaration. The app already does this (CombatView sets
+      dualAttackPenaltyActive when the double attack is chosen and clears it at the next round).
 
   - id: raufen-double-attack
-    status: open
+    status: decided
     question: >
       Can Raufen (unarmed) be one or both of the two "Waffen" of a double attack — fist and fist,
       or weapon and fist?
-    context: >
-      SA_42's own technique list includes Raufen, which would be empty of meaning if an unarmed
-      double attack were impossible. The app treats Raufen as both hands (CombatLoadoutPicker
-      .canSelect: Raufen only when nothing else is selected), so no double attack involves it.
-    situations: [beidhaendiger-kampf 11.9]
-    options:
-      a: { says: "No: Raufen is one attack with both hands.", app: "no change" }
-      b: { says: "Yes: each fist counts as a weapon — fist and fist, or weapon and fist, with the off-hand −4 on the other hand.", app: "Raufen selectable as the off-hand item; a double attack with it" }
-    recommended: b
-    why_recommended: SA_42 lists Raufen among the techniques it works with
-    answer: null
+    answer: >
+      Yes: each fist counts as a weapon — fist and fist, or weapon and fist, with the off-hand −4
+      on the other hand.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [ZW1, ZW2, ZW4, SA_42.BH1]
+    notes: >
+      SA_42's own technique list names Raufen, which would mean nothing if an unarmed double
+      attack were impossible. The app treats Raufen as both hands (CombatLoadoutPicker.canSelect:
+      Raufen only when nothing else is selected), so it must become selectable as the off-hand
+      item, and as both.

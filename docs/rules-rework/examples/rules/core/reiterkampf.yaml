@@ -6,8 +6,8 @@ name: Reiterkampf
 kind: core
 source:
   url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
-  book: Regelwerk
-  page: 239
+  book: Regelwerk (3. überarb. Aufl.)
+  page: 239f.
   checked: 2026-09-23
   hash: null
 reviewed: null
@@ -16,12 +16,29 @@ reviewed: null
 applies_when: { hero.mounted: true }
 
 clauses:
+  - id: RK0
+    text: >
+      In denmeisten Hinsichten unterscheidet sich der Kampf vom Pferd aus wenig vom Nah- und
+      Fernkampf zu Fuß. Jedoch ist das Reittier unter dem Reiter ein lebendes Wesen mit eigenem
+      Willen, das im dichten Gedränge der Schlacht beherrscht werden will.
+
+      Grundsätzlich gelten beim Reiterkampf die gleichen Regeln wie bei einem Kampf Mann gegen
+      Mann. Folgende Ausnahmen gibt es jedoch:
+    # sic: "denmeisten" is the page's. The second paragraph opens the page's "Ablauf des
+    # Reiterkampfs" section; the list it introduces is RK1–RK15.
+    effects: none
+    why: >
+      framing — every rule not listed below applies unchanged on horseback. This is also the
+      justification for the file's `applies_when` header: it switches the exceptions on, never
+      the ordinary rules off
+
   - id: RK1
     text: Der Reiter verwendet zur Initiativ-Bestimmung den INI-Basiswert des Pferdes.
     effects:
       - replace: { value: ini.base, with: mount.ini.base }
-        # FORMAT: a value *source* swap, not a modifier.
-    open_ruling: rider-ini
+        ruling: rider-ini
+        # FORMAT: a value *source* swap, not a modifier. The rider's Belastung does not reach
+        # the mount's base (ruling rider-ini); Kampfreflexe does (SA_51.kampfreflexe-mounted).
 
   - id: RK2
     text: Ein Reiter gilt gegen Fußkämpfer als in vorteilhafter Position.
@@ -51,9 +68,11 @@ clauses:
     effects:
       - when: { attack.from: weaponArmSide }
         forbid: { defence: shieldParry }
+        open_ruling: mounted-attack-side
         # FORMAT: needs the side an attack comes from — a question to the player, not modelled today.
-    status: unencoded
-    why: the app does not know which side an attack comes from; shown as text on the shield parry
+        # App gap: the app does not know which side an attack comes from; until it asks, shown as
+        # text on the shield parry. From behind is encoded through the app's one side question,
+        # angriff-von-hinten.AH1 (ruling angriff-von-hinten.mounted-from-behind-shield).
 
   - id: RK6
     text: >
@@ -105,16 +124,22 @@ clauses:
 
   - id: RK11
     text: Im Fall von Passierschlägen, können Fußkämpfer nur das Reittier angreifen, nicht aber den Reiter.
-    status: unencoded
-    open_ruling: passierschlag-on-mount
-    why: the opponent's actions are not modelled (ADR-0005); shown as text where a Passierschlag against the hero is taken
+    effects:
+      - when: { event: passierschlagSuffered }
+        offer: { choice: mountHit, on: takeDamage, label: "Reittier getroffen", then: { damage.to: mount } }
+        ruling: passierschlag-on-mount
+        # The player ticks it when the attacker is on foot (the app does not know; ADR-0005). The
+        # SP go to the mount's LE (Pet.currentLifeEnergy), and RK10's Reiten check follows from
+        # mountTakesSP.
+        # FORMAT: an offer that changes whose LE the damage screen writes to.
 
   - id: RK12
     text: >
       Statt eines eigenen Angriffs kann der Reiter auch dem Pferd mit einer Aktion einen Befehl
-      geben. Dazu ist eine Probe auf Reiten (Kampfmanöver) notwendig. Ist die Probe misslungen
+      geben. Dazu ist eine Probe auf Reiten (Kampfmanöver) notwendig. Ist die Probe misslungenen
       wird der Befehl nicht ausgeführt, der Reiter erleidet aber keine weiterführenden
       Konsequenzen.
+    # sic: "misslungenen" is the page's typo for "misslungen".
     effects:
       - defines: { action: order, costs: action, requires_check: { talent: Reiten, application: Kampfmanöver } }
 
@@ -131,9 +156,18 @@ clauses:
     effects:
       - offer:
           order: niederreiten
-          requires: { hero.has: SA_43, runUp: { min: 4 }, gait: galopp }
+          requires: { hero.has: SA_43, from: SA_43.BK1, runUp: { min: 4 }, gait: galopp, mount.attack: Niederreiten }
+          ruling: svellttaler-kaltblut.niederreiten-without-profile
+          # `from`: this text never names the SF; the hero.has rests on SA_43.BK1's
+          # "beispielsweise Niederreiten" (only RK14's text names Berittener Kampf itself). The
+          # Reiten (Kampfmanöver) check every Befehl needs is RK12's `defines`, not repeated here.
           attack: { by: mount, value: "mount.attack(Niederreiten).at", damage: "mount.attack(Niederreiten).tp" }
           opponent_may_only: [aw]
+          after: { mount.moves: mount.gs, until: roundEnd, costs: { action: 1, for: turnMount } }
+          # The mount does not stop: it runs on at full GS to the end of the KR, and turning it
+          # back on the foot fighter costs the rider 1 Aktion — in practice the next round's.
+          # FORMAT: an action cost that falls after the order, on a later round; the app keeps
+          # no such carry-over.
 
   - id: RK14
     name: Sturmangriff zu Pferd
@@ -151,11 +185,15 @@ clauses:
       - offer:
           order: sturmangriffZuPferd
           requires: { hero.has: SA_43, gait: galopp }
+          # The Reiten (Kampfmanöver) check the text names is RK12's `defines`, not repeated
+          # here; the attack is part of the order and costs no further Aktion.
           attack: { by: hero }
           opponent_may_only: [shieldParry, aw]
           on_hit:
             add: { to: tp, value: "2 + mount.gs / 2" }
             ruling: round-up
+          # not encoded: movement state — "Pferd und Reiter verringern ihre Geschwindigkeit
+          # nach erfolgtem Angriff nicht automatisch."; the app keeps no gait after the attack.
 
   - id: RK15
     name: Flucht
@@ -182,7 +220,10 @@ rulings:
       Spezialmanöver is unavailable while mounted.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
     applies_to: [RK3]
-    notes: needs a `mountedCombat` marker on each manoeuvre's rule file; none marked so far
+    notes: >
+      needs a `mountedCombat` marker on each manoeuvre's rule file. SA_59, SA_62, SA_66, SA_160
+      and SA_161 carry `manoeuvre: { kind: spezialmanoever, mountedCombat: false }`; none is
+      marked true yet.
 
   - id: two-sturmangriffe
     status: decided
@@ -194,27 +235,20 @@ rulings:
     applies_to: [RK14]
 
   - id: rider-ini
-    status: open
+    status: decided
     question: >
       The rider rolls initiative from the mount's INI base (RK1). Does the rider's own
       Belastung still come off it?
-    context: >
-      RK1 swaps the base value and says nothing else. Belastung's page takes INI off per Stufe
-      (COND_1.B3), and RK7's relief covers Kampfproben only; INI is not a check. The app uses the
-      mount's base and takes nothing off (CombatSetupViews.mountBaseINI). A hero in plate on foot
-      has INI −3; on the horse, today, 0. Decided since (SA_51.kampfreflexe-mounted, b): the
-      rider's Kampfreflexe does add to the mount's base, so RK1 is no longer a plain swap for
-      everything of the rider's; the recommendation below was written before that.
-    situations: [belastung 3.1, reiterkampf 5.17]
-    options:
-      a: { says: "The mount's INI base as it is — the horse moves, not the rider.", app: "no change" }
-      b: { says: "The mount's INI base minus the rider's full Belastung.", app: "−3 in plate" }
-      c: { says: "The mount's INI base minus the rider's Belastung, relieved by RK7 as on a Kampfprobe.", app: "−2 in plate" }
-    recommended: a
-    why_recommended: >
-      RK1 replaces the value the INI roll starts from, and the replacement is the horse's; the
-      page gives no hint that the rider's gear reaches it.
-    answer: null
+    answer: >
+      The mount's INI base as it is — the horse moves, not the rider.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [RK1]
+    notes: >
+      A hero in plate has INI −3 on foot and 0 on the horse (belastung 3.1, reiterkampf 5.17). The
+      app already does this (CombatSetupViews.mountBaseINI). It leaves RK1 a swap with one
+      exception: the rider's Kampfreflexe still adds to the mount's base
+      (SA_51.kampfreflexe-mounted, b), a skill of the rider's, where Belastung is the rider's gear
+      weighing on a value the horse now supplies.
 
   - id: mounted-jouster
     status: decided
@@ -233,21 +267,47 @@ rulings:
       its own line — an input for the design (ADR-0014's rule sets).
 
   - id: passierschlag-on-mount
-    status: open
+    status: decided
     question: >
       RK11: a foot fighter's Passierschlag hits the mount, never the rider. What should the app
       do when a mounted hero takes a Passierschlag (fleeing, RK15; a failed Sturmangriff)?
+    answer: >
+      The take-damage screen offers 'Reittier getroffen': SP go to the mount's LE, then RK10's
+      Reiten check.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [RK11, RK10]
+    notes: >
+      The app already tracks the mount's LE (Pet.currentLifeEnergy, MountHealingSheet), but the
+      take-damage screen only ever damages the hero, so today the Passierschlag's SP go to
+      Boronmir (kampfsituationen 17.9). Whether the attacker is on foot is the player's to say
+      (ADR-0005): the toggle is that answer. RK10 then asks for the Reiten (Kampfmanöver) check,
+      −1 per 5 full SP; on a failure the rider falls (Sturzschaden).
+
+  - id: mounted-attack-side
+    status: open
+    question: >
+      RK5: mounted, a shield blocks only attacks from the front and the shield-arm side; an attack
+      from the weapon-arm side can only be parried with the weapon or dodged. How does the app
+      learn which side an attack on a mounted hero comes from?
     context: >
-      The app tracks the mount's LE (Pet.currentLifeEnergy, MountHealingSheet) but the
-      take-damage screen only ever damages the hero. RK10 then asks for a Reiten check when the
-      mount takes SP. Opponents themselves are not modelled (ADR-0005), but the damage lands on
-      our side of the table.
-    situations: []
+      Raised by the owner when answering angriff-von-hinten.mounted-from-behind-shield: "when
+      mounted the player is not guided to determine from which side the attack is occurring".
+      The app asks one side question, "von hinten" (the gm.fact fromBehind on the defence screen,
+      CombatDefenseSetupView), on foot and mounted alike; from behind, mounted, the shield parry
+      and its passive bonus are now gone (decided). The weapon-arm side is never asked, so the
+      shield parry is offered against it (RK5 is shown as text only). On foot no side but behind
+      matters. The side is the GM's call, per attack, like "von hinten". Which arm is the shield
+      arm is the hero's: the loadout knows the shield hand.
+    situations: [kampfsituationen 17.10]
     options:
-      a: { says: "Text only: the take-damage screen reminds that the mount is the target.", app: "a reminder line" }
-      b: { says: "The take-damage screen offers 'Reittier getroffen': SP go to the mount's LE, then RK10's Reiten check.", app: "a toggle, a second target, the RK10 check" }
-    recommended: b
-    why_recommended: the app already keeps the mount's LE, so the damage has somewhere to go and RK10 follows from it
+      a: { says: "Mounted, the defence screen replaces the 'von hinten' toggle with one side question: vorne / Schildarm / Waffenarm / hinten, default vorne.", app: "one picker on the mounted defence screen; Waffenarm drops the shield parry (RK5), hinten also its passive bonus and adds −4 (AH1)" }
+      b: { says: "Keep 'von hinten' and add a second toggle 'von der Waffenarmseite' on the mounted defence screen.", app: "one more toggle; the two exclude each other" }
+      c: { says: "Text only: the shield parry reminds that it is not allowed from the weapon-arm side.", app: "a reminder line on the mounted shield parry" }
+    recommended: a
+    why_recommended: >
+      the four sides are one fact with four values, and a picker asks it once and cannot be set
+      contradictorily; defaulting to vorne keeps the common case one tap, and the rule's effect
+      becomes a named line instead of a reminder the player must apply in their head
     answer: null
 
   - id: rk7-reiten

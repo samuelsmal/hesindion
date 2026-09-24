@@ -8,9 +8,19 @@ source:
   page: 237
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:
+  - id: A0
+    text: >
+      Wer fürchten muss, in einen Kampf zu geraten, sollte darauf achten, sich zu schützen. Die
+      Völker Deres haben daher eine Vielzahl verschiedener Rüstungen und Helme aus verschiedenen
+      Materialien entwickelt. Diese unterscheiden sich sowohl in der Schutzwirkung, die durch den
+      Rüstungsschutz (RS) dargestellt wird, als auch in ihrem Gewicht und ihrer Sperrigkeit.
+      Träger schwerer Rüstung erleiden den Zustand Belastung in unterschiedlich hohen Stufen.
+    effects: none
+    why: introduction; that armour gives the Zustand Belastung is A1
+
   - id: A1
     text: >
       Mittels einer Rüstung erhält ein Abenteurer einen Rüstungsschutz- und Belastungswert.
@@ -25,16 +35,31 @@ clauses:
         # lowered by Belastungsgewöhnung or by the mounted relief, and is not a Zustand.
 
   - id: A2
-    text: "(the table of armour types: RS, Belastung (Stufe), zusätzliche Abzüge)"
+    text: |
+      Art | Rüstungsschutz | Belastung (Stufe) | zusätzliche Abzüge
+      Normale Kleidung, Felle oder nackt | 0 | 0 | –
+      Schwere Kleidung, Winterkleidung | 1 | 0 | -1 GS, -1 INI
+      Stoffrüstung, Gambeson | 2 | 1 | –
+      Lederrüstung | 3 | 1 | -1 GS, -1 INI
+      Kettenrüstung | 4 | 2 | –
+      Schuppenrüstung | 5 | 2 | -1 GS, -1 INI
+      Plattenrüstung | 6 | 3 | –
+      Gestechrüstung | 7 | 4 | –
+      Turnierrüstung | 8 | 5 | –
     effects: none
-    why: data, held by the equipment table; the rows are listed in ../../belastung.md
+    why: >
+      data, held by the equipment table; A1 reads a row's Belastung and zusätzliche Abzüge from
+      the armour the hero wears. The rows are also listed in ../../belastung.md. Turnierrüstung's
+      Belastung 5 is above the page's Stufe IV (COND_1.B4)
 
   - id: A3
     text: >
       Beispiel: Wer eine Stoffrüstung trägt, verfügt über einen RS von 2 und eine Belastung von
-      1. […] Wer eine Lederrüstung trägt erhält die gleichen Erschwernisse und Abzüge durch die
-      BE von -1, aber er bekommt zusätzliche Abzüge auf GS und INI, sodass er insgesamt Abzüge
-      von -2 auf beide Werte hat.
+      1. Die Belastung von 1 sorgt laut der Beschreibung des Zustands dafür, dass alle Proben auf
+      Talente, die durch Belastung erschwert sind eine Erschwernis von -1 erhalten. Außerdem gibt
+      es Abzüge von -1 auf AT, Verteidigung, INI, GS. Wer eine Lederrüstung trägt erhält die
+      gleichen Erschwernisse und Abzüge durch die BE von -1, aber er bekommt zusätzliche Abzüge
+      auf GS und INI, sodass er insgesamt Abzüge von -2 auf beide Werte hat.
     effects: none
     why: a worked example; it is situations/belastung.yaml 1.1 and 1.2
 

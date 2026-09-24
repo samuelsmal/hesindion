@@ -3,6 +3,7 @@ id: SA_173
 name: Verbessertes Unterlaufen
 kind: specialAbility
 group: Kampfsonderfertigkeiten
+passive: true                  # "(passiv)" on the page; kampfsonderfertigkeiten.KS2 lists it as "wirkt immer"
 techniques: [Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter, Zweihandhiebwaffen, Zweihandschwerter]
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_VerbessertesUnterlaufen.html
@@ -22,3 +23,22 @@ clauses:
     lifts: [SA_172.U3]
     # FORMAT: same two-sided dependency as SA_43 ↔ reiterkampf orders. Here the rule being
     # lifted holds the condition; this back-reference is for the reader.
+
+  - id: VU2
+    text: "Voraussetzungen: Unterlaufen I"
+    effects: none
+    why: purchase prerequisite, not a roll
+
+  - id: VU3
+    text: >
+      Kampftechniken: Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter,
+      Zweihandhiebwaffen, Zweihandschwerter
+    effects: none
+    why: >
+      the same list as SA_172.U6; the lift in U3 applies whenever Unterlaufen itself is usable,
+      so this list needs no gate of its own (sf-technique-lists decides U6, not this).
+
+  - id: VU4
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: purchase cost, not a roll

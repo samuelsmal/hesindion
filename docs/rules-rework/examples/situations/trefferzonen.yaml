@@ -1,7 +1,6 @@
 # Example 6 — Trefferzonen (Fokusregel) and Trefferzonen-Rüstungsschutz (Fokusregel Stufe II).
 # Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # `rulesets:` lists the optional rule sets the group plays; core is always on.
-# Where an expectation waits on an open ruling, `if:` gives the result per option.
 
 base_hero: { at: 14, pa: 8, aw: 7, fk: 12, ko: 11, wundschwelle: 6, size: mittel }
 
@@ -39,17 +38,16 @@ situations:
     app_today: same
 
   - id: "TZ.4"
-    name: Torso, Gezielter Angriff, the opponent überrascht — the order question
+    name: Torso, Gezielter Angriff, the opponent überrascht — ease, then halve
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_160: 1 } }
     opponent: { states: [STATE_13] }
     choose: { targetZone: torso, manoeuvre: gezielterAngriff }
     expect:
-      open: trefferzonen.surprised-then-halved
-      if:
-        a: { at: { total: 0 } }      # −4 / 2 = −2, +2 = 0
-        b: { at: { total: -1 } }     # −4 + 2 = −2, / 2 = −1
-    app_today: 0
+      at:
+        total: -1      # −4 + 2 = −2, / 2 = −1
+        lines: [{ value: -1, was: -4, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
+    app_today: 0 (halves first, then eases) — wrong
 
   - id: "TZ.5"
     name: Head, Gezielter Angriff, the opponent überrascht
@@ -58,12 +56,11 @@ situations:
     opponent: { states: [STATE_13] }
     choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
     expect:
-      open: trefferzonen.surprised-then-halved
-      if:
-        a: { at: { total: -3 } }
-        b: { at: { total: -4 } }
-      also: { tell: [{ opponent: noDefence, from: STATE_13.UE1 }] }
-    app_today: −3; no "no defence" note
+      at:
+        total: -4      # −10 + 2 = −8, / 2 = −4
+        lines: [{ value: -4, was: -10, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
+      tell: [{ opponent: noDefence, from: STATE_13.UE1 }]
+    app_today: −3 (halves first, then eases) — wrong; no "no defence" note
 
   - id: "TZ.6"
     name: Arms, no SF, the opponent überrascht — no halving, no order question
@@ -83,7 +80,7 @@ situations:
     choose: { targetZone: torso }
     expect:
       at: { total: -4, lines: [{ value: -4, from: trefferzonen.TZ5 }] }
-      not_applied: [{ rule: groessenkategorie, reason: trefferzonen.TZ5 }]
+      not_applied: [{ rule: groessenkategorie, reason: trefferzonen.TZ5, ruling: trefferzonen.zone-replaces-size }]
     app_today: −8 (the catalog's GRW_groessenkategorie −4 applies as well) — wrong
 
   - id: "TZ.8"
@@ -94,11 +91,9 @@ situations:
     check: fk
     choose: { targetZone: kopf, manoeuvre: gezielterSchuss }
     expect:
-      open: trefferzonen.zone-replaces-size
-      if:
-        a: { fk: { total: -1, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }, { value: 4, from: fernkampf.zielgroesse }] } }
-        b: { fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }] } }
-    app_today: −1 (RangedModifiers.groesse +4 applies alongside)
+      fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }] }
+      not_applied: [{ rule: fernkampf.zielgroesse, reason: trefferzonen.TZ5, ruling: trefferzonen.zone-replaces-size }]
+    app_today: −1 (RangedModifiers.groesse +4 applies alongside) — wrong
 
   # --- Where a blow lands (TZ2–TZ4) ---------------------------------------------------------
 
@@ -118,7 +113,7 @@ situations:
     attacker: { size: klein }
     rolls: { zone: [8] }
     expect:
-      table: { use: humanoid.gross, from: trefferzonen.TZ3 }
+      table: { use: humanoid.gross, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }
       zone: [{ roll: 8, zone: arme, side: right }]
     app_today: rolls on the hero's own table (humanoid.mittel) → Torso — wrong
 
@@ -129,11 +124,9 @@ situations:
     attacker: { size: klein }
     rolls: { zone: [4] }
     expect:
-      open: trefferzonen.relative-size-table
-      if:
-        a: { table: humanoid.mittel, zone: [{ roll: 4, zone: torso }] }
-        b: { table: humanoid.klein, zone: [{ roll: 4, zone: kopf }] }
-    app_today: klein table → Kopf
+      table: { use: humanoid.mittel, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }   # equal sizes
+      zone: [{ roll: 4, zone: torso }]
+    app_today: klein table (the hero's own size) → Kopf — wrong
 
   # --- Wundeffekte (TZ8–TZ11) ---------------------------------------------------------------
 
@@ -168,22 +161,19 @@ situations:
     hit: { zone: arme, side: right, sp: 7 }
     fail: [Selbstbeherrschung]
     expect:
-      open: trefferzonen.wundeffekt-arm-drop
-      if:
-        a: { tell: [{ hero: "lässt los, was die Hand hält", from: trefferzonen.TZ11 }] }
-        b: { loadout: { right: null, left: Schild }, log: "Schwert fallen gelassen", from: trefferzonen.TZ11 }
-    app_today: a reminder
+      loadout: { right: null, left: Schild }
+      log: { text: "Schwert fallen gelassen", from: trefferzonen.TZ11, ruling: trefferzonen.wundeffekt-arm-drop }
+      asked: []      # the loadout says which hand holds the Schwert
+    app_today: a reminder; the Schwert stays in hand
 
   - id: "TZ.15"
     name: The hero is Überrascht — defending against the surprise action
     rulesets: []
-    hero: { states: [STATE_13] }
+    hero: { states: [STATE_13] }     # set by the toggle on the combat-setup screen
     expect:
-      open: STATE_13.hero-no-defence
-      if:
-        a: { tell: [{ hero: "keine Verteidigung gegen die Überraschungsaktion", from: STATE_13.UE1 }] }
-        b: { not_offered: [{ defence: [pa, aw], because: STATE_13.UE1 }] }
-    app_today: a reminder
+      not_offered: [{ defence: [pa, aw], because: STATE_13.UE1, ruling: STATE_13.hero-no-defence }]
+      after: { initiativeRoll: { states: { STATE_13: removed } } }
+    app_today: a reminder; nothing in combat setup asks for it
 
   # --- Aiming meets other rules -------------------------------------------------------------
 
@@ -214,7 +204,7 @@ situations:
     rulesets: [fokus.trefferzonen]
     opponent: { bodyPlan: keineZonen }
     expect:
-      not_offered: [{ choice: targetZone, because: trefferzonen.TZ4 }]
+      not_offered: [{ choice: targetZone, because: trefferzonen.TZ4j }]
     app_today: same
 
   - id: "TZ.27"
@@ -258,7 +248,7 @@ situations:
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
     hero: { armour: { kopf: Kettenrüstung, torso: Lederrüstung, arme: Lederrüstung, beine: Lederrüstung } }
     expect:
-      rs_by_zone: { kopf: 4, torso: 3 }
+      rs_by_zone: { kopf: 4, torso: 3 }     # the helmet from another armour: ruling pieces-from-other-armours
       score: { value: 43, ruling: trefferzonen-ruestungsschutz.be-sentence }    # 39 + 4
       conditions: { COND_1: 2 }
       at: { total: -2, lines: [{ value: -2, from: COND_1.B3 }] }
@@ -289,14 +279,17 @@ situations:
   - id: "TZ.25"
     name: Trefferzonen-RS without Trefferzonen
     rulesets: [fokus.trefferzonen-rs]
-    expect: { open: trefferzonen-ruestungsschutz.requires-trefferzonen }
+    expect:
+      not_offered: [{ ruleset: fokus.trefferzonen-rs, because: trefferzonen-ruestungsschutz.requires_ruleset, ruling: trefferzonen-ruestungsschutz.requires-trefferzonen }]
+    # The switch is shown only while Trefferzonen is on; this set of rulesets cannot arise.
+    app_today: there is no Trefferzonen-RS switch
 
   - id: "TZ.26"
     name: Kettenrüstung on the torso, Lederrüstung pieces on arms and legs
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
     hero: { armour: { torso: Kettenrüstung, arme: Lederrüstung, beine: Lederrüstung } }
     expect:
-      open: trefferzonen-ruestungsschutz.pieces-from-other-armours
-      if:
-        a: { score: { value: 44 }, conditions: { COND_1: 2 } }     # 4·5 + 3·8
-        b: { not_selectable: [{ zone: [arme, beine], armour: Lederrüstung, because: trefferzonen-ruestungsschutz.RS3 }] }
+      rs_by_zone: { kopf: 0, torso: 4, armLinks: 3, armRechts: 3, beinLinks: 3, beinRechts: 3 }
+      score: { value: 44, from: trefferzonen-ruestungsschutz.RS4, ruling: trefferzonen-ruestungsschutz.pieces-from-other-armours }     # 4·5 + 3·8
+      conditions: { COND_1: 2 }
+    app_today: no zone armour

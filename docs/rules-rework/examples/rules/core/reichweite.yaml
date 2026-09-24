@@ -6,10 +6,10 @@ catalog_id: GRW_reichweite     # the id the current catalog uses
 source:
   url: https://dsa.ulisses-regelwiki.de/Nahkampf/nahkampfreichweite.html
   book: Regelwerk
-  page: 230
+  page: "230 f."       # as the page cites it: "Regelwerk (4. Auflage), Seite 230 f."
   checked: 2026-09-23
   hash: null
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 # Reach steps, shortest first. A "Stufe" of reach disadvantage (SA_172) is one step.
 # FORMAT: an ordered enum the rules count steps along — Unterlaufen needs the order, not just
@@ -29,6 +29,8 @@ clauses:
       is stated by the player.
 
   - id: RW2
+    # The two "[…]" are the reach sentences RW3 carries ("Außerdem erleiden kurze Waffen …"
+    # and "Im Kampf gegen Waffen mit der Reichweite lang …").
     text: |
       Kurze Waffe — Vorteil: Kurze Waffen erleiden in beengter Umgebung keine Abzüge auf Attacke und Parade.
       Mittlere Waffe — Vorteil: Mittlere Waffen erleiden weniger Erschwernisse durch beengter Umgebung als lange Waffen. […] Nachteil: […] Sie erleiden bei beengter Umgebung eine Erschwernis von -4 auf Attacke und Parade.
@@ -39,6 +41,7 @@ clauses:
   - id: RW3
     text: |
       Kurze Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite mittel erleiden sie eine Erschwernis von -2 auf Attacke. Gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -4 auf ihre Attacke.
+      Mittlere Waffe — Vorteil: […] Außerdem erleiden kurze Waffen Erschwernisse gegen mittlere Waffen.
       Mittlere Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -2 auf ihre Attacke.
       Lange Waffe — Vorteil: Kurze und mittlere Waffen erleiden Erschwernisse gegen lange Waffen.
     effects:
@@ -49,6 +52,12 @@ clauses:
         # mittel/lang −2 — the page's matrix, written as a rate. The matrix (RW4) is the check.
 
   - id: RW4
-    text: "(the matrix: Kurz gegen Mittel −2 AT für kurz, Kurz gegen Lang −4 AT für kurz, Mittel gegen Lang −2 AT für mittel; sonst keine Nachteile)"
+    # The page's table: a row is one weapon, a column ("Gegen") the weapon it fights, the cell
+    # says who pays.
+    text: |
+      Gegen | Kurz | Mittel | Lang
+      Kurz | keine Nachteile | -2 AT für kurz | -4 AT für kurz
+      Mittel | -2 AT für kurz | keine Nachteile | -2 AT für mittel
+      Lang | -4 AT für kurz | -2 AT für mittel | keine Nachteile
     effects: none
     why: the same numbers as RW3, as a table; situations RW.1–RW.4 check the rate against it

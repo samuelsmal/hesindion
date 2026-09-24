@@ -22,7 +22,7 @@ clauses:
     effects:
       - offer:
           manoeuvre: finte
-          tiers: owned                 # which Stufen are offered: ruling tiered-manoeuvre-stufe
+          tiers: up_to_owned           # any Stufe up to the owned one, chosen per attack
           ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
       - when: { manoeuvre: finte }
         add: { to: at, value: -1, per: chosen_tier }
@@ -53,4 +53,19 @@ clauses:
     effects: none
     why: purchase prerequisites, not a roll
 
-# Excluded by: SA_62.ST4 (Sturmangriff cannot be combined with Finte). The exclusion lives there.
+  - id: F5
+    text: >
+      Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
+      hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
+      Kampftechnik heranzuziehen.
+    effects: none
+    why: an editor's note on F3's list
+
+  - id: F6
+    text: "AP-Wert: Stufe I/II/III: 15/20/25 Abenteuerpunkte"
+    effects: none
+    why: purchase cost, not a roll
+
+# Excluded by: SA_62.ST4 (Sturmangriff cannot be combined with Finte); SA_152.AD2 (no
+# Basismanöver in a round with Auf Distanz halten announced); kampfsonderfertigkeiten.KS3 (one
+# Basismanöver per action, so not with Wuchtschlag or Unterlaufen). The exclusions live there.
