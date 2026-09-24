@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db companions test-companions
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -134,6 +134,17 @@ clean:
 # The build script's own tests (validate, snapshot, import). Pure Python, seconds.
 test-rules-db:
 	python3 -m unittest discover -s scripts/build_rules_db -p 'test_*.py' -v
+
+# Companion builds (docs/plans/2026-09-24-companion-data-design.md): check
+# <export>.companions.yaml against its Optolith export and inject the `hesindion`
+# block. FIX=1 first sets the export's own pet fields from the build; CHECK=1
+# validates without writing.
+#   make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+companions:
+	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,)
+
+test-companions:
+	python3 -m unittest discover -s scripts/companions -p 'test_*.py' -v
 
 # Rebuild the bundled rules database from the Optolith YAML and the rules
 # catalog. Fails on a catalog problem (including a clause outside
