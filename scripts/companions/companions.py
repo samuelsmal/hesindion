@@ -36,6 +36,8 @@ def _valid_target(target):
 
 def normalise(purchase):
     """One YAML purchase -> the block's {kind, name|target, ap, ...}."""
+    if not isinstance(purchase, dict):
+        raise BuildError(f"purchase {purchase!r} is not a mapping")
     for kind in NAMED_KINDS:
         if kind in purchase:
             ap = purchase.get("ap")

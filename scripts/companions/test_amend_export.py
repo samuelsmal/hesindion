@@ -114,6 +114,53 @@ class AmendTests(unittest.TestCase):
         errors = amend(export(), b)
         self.assertTrue(any("attack Tritt" in m and "rw" in m for m in errors), errors)
 
+    def test_bool_attack_at(self):
+        b = build()
+        b["pets"]["Kupperus"]["values"]["attacks"][0]["at"] = True
+        errors = amend(export(), b)
+        self.assertTrue(any("attack Tritt" in m and "at must be an integer" in m for m in errors), errors)
+
+    def test_bool_in_tricks_yaml_trap(self):
+        # YAML 1.1 reads bare `No` as the boolean False — the exact trap that let a
+        # bad tricks list through before this check existed.
+        import yaml
+        b = build()
+        b["pets"]["Kupperus"]["values"]["tricks"] = yaml.safe_load("tricks: [Aus, No]")["tricks"]
+        errors = amend(export(), b)
+        self.assertTrue(
+            any("values.tricks item False is not a string (quote it in YAML)" in m for m in errors),
+            errors)
+
+    def test_float_be(self):
+        b = build()
+        b["pets"]["Kupperus"]["values"]["be"] = 0.5
+        errors = amend(export(), b)
+        self.assertTrue(any("values.be" in m for m in errors), errors)
+
+    def test_scalar_advantages(self):
+        b = build()
+        b["pets"]["Kupperus"]["values"]["advantages"] = "Geduldig"
+        errors = amend(export(), b)
+        self.assertTrue(any("values.advantages" in m for m in errors), errors)
+
+    def test_bool_vw(self):
+        b = build()
+        b["pets"]["Kupperus"]["values"]["vw"] = True
+        errors = amend(export(), b)
+        self.assertTrue(any("values.vw" in m for m in errors), errors)
+
+    def test_missing_rs(self):
+        b = build()
+        del b["pets"]["Kupperus"]["values"]["rs"]
+        errors = amend(export(), b)
+        self.assertTrue(any("values.rs" in m for m in errors), errors)
+
+    def test_non_int_ap_total(self):
+        b = build()
+        b["pets"]["Kupperus"]["ap"]["total"] = True
+        errors = amend(export(), b)
+        self.assertTrue(any("ap.total" in m and "integer" in m for m in errors), errors)
+
     def test_attribute_mismatch(self):
         e = export()
         e["pets"]["PET_1"]["str"] = "27"

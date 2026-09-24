@@ -52,6 +52,10 @@ class NormaliseTests(unittest.TestCase):
         with self.assertRaises(BuildError):
             normalise({"spell": "Balsam"})
 
+    def test_purchase_not_a_dict(self):
+        with self.assertRaises(BuildError):
+            normalise(["advantage", "Geduldig"])
+
 
 if __name__ == "__main__":
     unittest.main()

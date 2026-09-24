@@ -20,6 +20,8 @@ from companions import BuildError, normalise
 EXPORT_ATTRIBUTES = {"mu": "cou", "kl": "sgc", "in": "int", "ch": "cha",
                      "ff": "dex", "ge": "agi", "ko": "con", "kk": "str"}
 VALUE_LISTS = ("attacks", "advantages", "abilities", "training", "tricks")
+VALUE_STRING_LISTS = ("advantages", "abilities", "training", "tricks")
+VALUE_INTS = ("vw", "rs", "be")
 TP = re.compile(r"\d+W\d+(?:[+-]\d+)?")
 RW = ("kurz", "mittel", "lang")
 # The app's parsePetAttacks regex, verbatim.
@@ -58,12 +60,39 @@ def check_attacks(name, values):
     errors = []
     for attack in values["attacks"]:
         label = f"{name}: attack {attack.get('name')}"
-        if not isinstance(attack.get("at"), int):
+        at = attack.get("at")
+        if not isinstance(at, int) or isinstance(at, bool):
             errors.append(f"{label}: at must be an integer")
         if not TP.fullmatch(str(attack.get("tp", ""))):
             errors.append(f"{label}: tp {attack.get('tp')!r} is not like 1W6+3")
         if attack.get("rw") not in RW:
             errors.append(f"{label}: rw {attack.get('rw')!r} is not one of kurz, mittel, lang")
+    return errors
+
+
+def check_values(name, values, ap_total):
+    """Hand-written type checks for the fields the app's CompanionData decodes
+    (docs/plans/2026-09-24-companion-data-design.md §4). YAML is untyped enough
+    that a bad build can sail through here unless every field is checked by
+    hand: YAML 1.1 reads a bare `No` as the boolean `False`, a single scalar
+    is valid where a list is expected, and `bool` is a subtype of `int` in
+    Python so an `isinstance(x, int)` check alone lets `True`/`False` through.
+    """
+    errors = []
+    for key in VALUE_INTS:
+        value = values.get(key)
+        if value is None or isinstance(value, bool) or not isinstance(value, int):
+            errors.append(f"{name}: values.{key} {value!r} must be an integer")
+    for key in VALUE_STRING_LISTS:
+        items = values.get(key, [])
+        if not isinstance(items, list):
+            errors.append(f"{name}: values.{key} {items!r} is not a list")
+            continue
+        for item in items:
+            if not isinstance(item, str) or isinstance(item, bool):
+                errors.append(f"{name}: values.{key} item {item} is not a string (quote it in YAML)")
+    if ap_total is None or isinstance(ap_total, bool) or not isinstance(ap_total, int):
+        errors.append(f"{name}: ap.total {ap_total!r} must be an integer")
     return errors
 
 
@@ -162,6 +191,7 @@ def amend(export, companions, fix=False):
         if ko is not None and bought > ko:
             errors.append(f"{name}: bought LeP {bought} exceed KO {ko}")
         errors += check_attacks(name, values)
+        errors += check_values(name, values, ap_total)
         if fix:
             fix_export(pet, values, ap_total)
         errors += check_export(name, pet, values, ap_total)
