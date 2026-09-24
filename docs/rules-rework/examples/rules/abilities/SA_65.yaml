@@ -1,0 +1,101 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_65
+name: Verteidigungshaltung
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html
+  book: Regelwerk
+  page: 250
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: VH1
+    text: >
+      Mit dieser Sonderfertigkeit kann man für die aktuelle Kampfrunde seinen Verteidigungswert
+      um +4 erhöhen. Dafür kann man diese Kampfrunde keine Aktionen mehr ausführen.
+      Verteidigungshaltung muss am Anfang der Runde angesagt werden.
+    effects:
+      - offer:
+          choice: verteidigungshaltung
+          when: { round.phase: start }
+          span: round
+          # FORMAT: a choice announced once and held for the Kampfrunde — like the Schip
+          # "Verteidigung", but only offered at the start.
+      - when: { choice: verteidigungshaltung }
+        add: { to: [pa, aw], value: 4 }
+        ruling: [vh-scope, vh-stacking]
+      - when: { choice: verteidigungshaltung }
+        forbid: { action: any }
+        ruling: vh-free-actions
+
+  - id: VH2
+    text: >
+      Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter,
+      Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
+    effects: none
+    why: >
+      no ranged techniques. Whether the +4 needs one of these in hand is the shared
+      sf-technique-lists ruling.
+
+  - id: VH3
+    text: >
+      Meistermaske: Wenn sich ein Kämpfer in die Verteidigungshaltung begibt, ist dies für
+      andere Kampfteilnehmer ersichtlich.
+    effects: none
+    why: a note for the GM about opponents' knowledge
+
+rulings:
+  - id: vh-scope
+    status: open
+    question: >
+      "Seinen Verteidigungswert um +4" — both defence values (PA and AW), or one? And only the
+      Nahkampf defences, or also Ausweichen against a ranged attack?
+    context: >
+      DSA 5 uses "Verteidigung" for both PA and AW (Nahkampf page, "Verteidigungsarten"); the
+      Schip "Verteidigung" clause says "auf alle Verteidigungen" explicitly, this page says
+      "Verteidigungswert" in the singular. The app does not implement the SF at all (catalog:
+      todo).
+    situations: [mehrfache-verteidigung V11]
+    options:
+      a: { says: "+4 on every defence — PA and AW, whatever the attack.", app: "+4 on both defence buttons for the round" }
+      b: { says: "+4 on PA only.", app: "+4 on the parry button only" }
+      c: { says: "+4 on the defence the hero names when announcing it.", app: "a choice at announcement" }
+    recommended: a
+    why_recommended: Verteidigung is the umbrella term for PA and AW throughout the combat chapter
+    answer: null
+
+  - id: vh-free-actions
+    status: open
+    question: >
+      "Keine Aktionen mehr" — are free actions (e.g. a word, dropping an item, changing gait on
+      a mount) still allowed in that Kampfrunde?
+    context: >
+      The combat chapter distinguishes Aktion, freie Aktion and Verteidigung (Grundbegriffe).
+      The page names Aktionen only.
+    situations: [mehrfache-verteidigung V11]
+    options:
+      a: { says: "Free actions and defences stay; only Aktionen are gone.", app: "attack, spell, Fernkampf buttons disabled; free actions untouched" }
+      b: { says: "Everything but defences is gone.", app: "every action button disabled" }
+    recommended: a
+    why_recommended: the page uses the rulebook's own term, and a free action is a different term
+    answer: null
+
+  - id: vh-stacking
+    status: open
+    question: >
+      Does Verteidigungshaltung's +4 stack with the Schicksalspunkt "Verteidigung" +4 in the
+      same round?
+    context: >
+      Both are +4 on defences for the current Kampfrunde from different sources. Neither page
+      forbids combining them. Together they would also push MV3's "value reaches 0" further
+      out, allowing more defences.
+    situations: [mehrfache-verteidigung V12]
+    options:
+      a: { says: "They stack: +8.", app: "two lines, +4 each" }
+      b: { says: "They do not stack: +4 once.", app: "the Schip Verteidigung is not offered while in Verteidigungshaltung" }
+    recommended: a
+    why_recommended: different sources, and nothing on either page says otherwise
+    answer: null

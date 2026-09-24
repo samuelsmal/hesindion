@@ -1,0 +1,32 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_161
+name: Gezielter Schuss
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+techniques: [alle Fernkampftechniken]
+ruleset: fokus.trefferzonen
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_GezielterSchuss.html
+  book: Aventurisches Kompendium
+  page: 153
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: GS1
+    text: >
+      (Spezialmanöver) (Fokusregel Stufe I - Trefferzonen-Regel) Der Schütze kann im Fernkampf
+      gezielt eine Trefferzone beschießen. Dazu ist eine Probe auf Fernkampf nötig, die
+      entsprechend dem Zonenaufschlag erschwert ist. Erschwernis: je nach Zone
+    effects:
+      - offer:
+          manoeuvre: gezielterSchuss
+          on: fk
+          requires: { choice: targetZone }
+          ruling: SA_160.halving-by-manoeuvre
+      - when: { manoeuvre: gezielterSchuss }
+        multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
+        ruling: [SA_160.halving-by-manoeuvre, trefferzonen.surprised-then-halved]
+    # The same question as SA_160's; the ruling lives there and covers both.

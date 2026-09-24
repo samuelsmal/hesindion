@@ -24,6 +24,7 @@ clauses:
       - offer:
           manoeuvre: sturmangriff
           requires: { runUp: { min: 4 }, hero.gs: { min: 4 } }
+          ruling: [sturmangriff-gs, sf-technique-lists]
           # runUp is asked (a toggle, "4 Schritt Anlauf?"); GS is the hero's current GS.
 
   - id: ST2
@@ -34,8 +35,10 @@ clauses:
     effects:
       - when: { manoeuvre: sturmangriff, attack: hit }
         add: { to: tp, value: "min(2 + hero.gs / 2, 10, hero.gs.natural)" }
-        ruling: [round-up, sturmangriff-gs]
-        # FORMAT: a formula with two caps, and a ruling on which value it reads.
+        ruling: [round-up, sturmangriff-gs, sturmangriff-cap-scope]
+        # FORMAT: a formula with two caps, and a ruling on which value it reads. The caps only
+        # bind above the unhindered range: for current GS 4–16, 2 + ⌈GS/2⌉ ≤ 10, and it exceeds
+        # the natural GS only when the current GS is raised above it (a spell, an elixir).
 
   - id: ST3
     text: >
@@ -54,6 +57,22 @@ clauses:
       - when: { manoeuvre: sturmangriff }
         add: { to: at, value: -2 }
       - excludes: { manoeuvre: finte }
+        ruling: manoeuvre-combination
+        # Naming Finte as the one exclusion suggests other Basismanöver (Wuchtschlag) combine
+        # with Sturmangriff; whether that holds is the cross-cutting ruling.
+
+  - id: ST5
+    text: >
+      Kampftechniken: Hiebwaffen, Raufen, Schwerter, Stangenwaffen, Zweihandhiebwaffen,
+      Zweihandschwerter
+    effects:
+      - requires: { loadout.weapon.technique: [CT_5, CT_9, CT_12, CT_13, CT_15, CT_16] }
+        ruling: sf-technique-lists
+
+  - id: ST6
+    text: "Voraussetzungen: MU 13, Vorstoß, Wuchtschlag I"
+    effects: none
+    why: purchase prerequisites, not a roll
 
 rulings:
   - id: sturmangriff-gs
@@ -68,3 +87,24 @@ rulings:
       A hero with GS 8 in plate (current GS 5) gets +2 + ⌈5/2⌉ = +5; the cap stays the natural
       GS, as the page says. Assumed to hold for ST1's "GS von mindestens 4" too — the same
       words; a hero at current GS 3 cannot charge.
+
+  - id: sturmangriff-cap-scope
+    status: open
+    question: >
+      "Maximal jedoch insgesamt um +10 TP" — does the +10 cap Sturmangriff's own bonus only, or
+      every TP bonus on that attack (Wuchtschlag's, a weapon's, a Kampfstil's) together?
+    context: >
+      The cap sits in the sentence about Sturmangriff's +2 + ½ GS, but "insgesamt" can be read as
+      "all together". It only matters when another TP bonus rides on the same attack — most
+      likely Wuchtschlag, which Sturmangriff does not exclude (ST4 excludes only Finte), and only
+      if the cross-cutting ruling manoeuvre-combination allows the two together. The natural-GS
+      cap in the same clause raises the same question.
+    situations: [sturmangriff 10.6]
+    options:
+      a: { says: "Sturmangriff's own bonus only; other TP bonuses are added on top.", app: "the cap applies to one line" }
+      b: { says: "All TP bonuses on the attack together are capped at +10 (and at the natural GS).", app: "a cap across lines from different rules" }
+    recommended: a
+    why_recommended: >
+      the cap is stated inside Sturmangriff's own bonus clause, and capping other rules' bonuses
+      from here would need every other bonus to know about it
+    answer: null

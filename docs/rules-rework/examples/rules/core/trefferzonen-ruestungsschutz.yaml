@@ -1,0 +1,139 @@
+# DRAFT FORMAT — see ../../README.md.
+id: trefferzonen-ruestungsschutz
+name: Trefferzonen-Rüstungsschutz
+kind: core
+ruleset: fokus.trefferzonen-rs
+fokus: { theme: Kampf, level: 2 }
+requires_ruleset: [fokus.trefferzonen]     # see ruling requires-trefferzonen
+# FORMAT: a rule set that depends on another, and that *replaces* a core rule's computation
+# (ruestung-und-belastung.A1) while it is on, rather than adding lines to it.
+replaces: [ruestung-und-belastung.A1]
+source:
+  url: https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html
+  book: null                # the page names no publication
+  page: null
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+# Relation to the core rule: without this Fokusregel a hero wears one armour, helmet included,
+# and it protects every zone fully (ruestung-und-belastung, ruling several-armour-pieces).
+
+clauses:
+  - id: RS1
+    text: >
+      Die vorliegende Regel ist eine Fokusregel der Stufe II für den Themenkomplex Kampf. Bei
+      Komplettrüstungen, wie sie im Regelwerk auf Seite 374 vorgestellt wurden, sind alle
+      Trefferzonen durch den vollen Rüstungsschutz der getragenen Rüstung geschützt. Es spielt
+      dabei keine Rolle, ob der Held einen Helm trägt oder nicht […]
+    effects: none
+    why: restates the core rule this Fokusregel replaces
+
+  - id: RS2
+    text: >
+      Die nun vorgestellte Fokusregel unterscheidet RS in den verschiedenen Trefferzonen,
+      abhängig von Helm, Rüstung und Rüstungsteil, abhängig vom Rüstungsteil, das in der Zone
+      getragen wird. Mit dieser Regel lassen sich zudem verschiedene Rüstungsarten kombinieren.
+      […] Werden die einzelnen Rüstungsteile getragen, so verleihen sie dem Helden in der
+      angegebenen Zone RS. Hierbei muss darauf geachtet werden, dass am linken Arm oder Bein auch
+      eine Rüstung mit anderem RS als am rechten Arm oder Bein getragen werden kann.
+    effects:
+      - when: { event: hitTaken }
+        set: { value: hit.rs, to: "armour.rs(hit.zone)" }
+        # FORMAT: RS becomes a function of the zone hit — six zones for a humanoid, left and
+        # right counted apart. The hero's armour stops being one item and becomes a loadout.
+
+  - id: RS3
+    text: |
+      Ein Held kann eine einzige Rüstung beliebig mit einem einzigen Helm sowie zusätzlichen Rüstungsteilen an Armen und Beinen kombinieren.
+      Ein Held kann keine zwei Helme miteinander kombinieren.
+      Jede Arm- und Bein-Zone kann mit einem Rüstungsteil ausgestattet werden. Kein Held kann aber mehr als ein Rüstungsteil in einer Zone tragen.
+      Rüstungen lassen sich grundsätzlich nicht miteinander kombinieren, es sei denn, in der Beschreibung der Rüstung steht das Gegenteil. […]
+      Rüstungseigenschaften gelten prinzipiell nur für die Zone, die von der jeweiligen Rüstung bedeckt ist. Sollten sich Rüstungsvor- und nachteile auf Handlungen auswirken, die unabhängig von einer Zone sind, gelten diese Effekte sobald eine einzige Zone damit belegt ist […]
+    effects:
+      - forbid: { loadout: { armour: { count: { max: 1 } }, helmet: { count: { max: 1 } }, perZone: { max: 1 } } }
+        # FORMAT: legality over the armour loadout, like reiterkampf.RK4 over weapons.
+
+  - id: RS4
+    text: >
+      Um die BE und die zusätzlichen Abzüge zu ermitteln, müssen die einzelnen RS-Werte der
+      Trefferzonen ermittelt, mit dem Faktor aus der Tabelle RS-Faktoren multipliziert und dann
+      die einzelnen Ergebnisse addiert werden. Anschließend kann man anhand der Tabelle Belastung
+      und zusätzliche Abzüge und dem Ergebnis der Berechnung ablesen, welche BE und welche
+      zusätzlichen Abzüge ein Held erleidet.
+      RS-Faktoren: linkes Bein ×2, rechtes Bein ×2, linker Arm ×2, rechter Arm ×2, Torso ×5, Kopf ×1.
+      Belastung und zusätzliche Abzüge: 0 → BE 0; 1–14 → 0, –1 GS, –1 INI; 15–28 → 1; 29–42 → 1,
+      –1 GS, –1 INI; 43–56 → 2; 57–70 → 2, –1 GS, –1 INI; 71–84 → 3; 85–98 → 4; 99–112 → 5;
+      113–126 → 6; 127–140 → 7; 141–154 → 8; usw.
+    effects:
+      - sets: { condition: COND_1, level: "band(sum(armour.rs[zone] * factor[zone]))" }
+      - add: { to: [gs, ini], value: "band(sum(armour.rs[zone] * factor[zone])).extra" }
+        ruling: be-sentence
+        # FORMAT: a lookup in a banded table. Check: a complete armour of RS r scores 14r, which
+        # lands on the core table's Belastung and extra for every armour in it (Leder 42 → 1
+        # and −1; Platte 84 → 3; Gestech 98 → 4; Turnier 112 → 5) — the two rules agree.
+
+  - id: RS5
+    text: >
+      Möchte ein Spieler den Preis für eine einzelne Arm- oder Beinzone wissen, so muss er statt
+      einem Preismultiplikator von 0,2 einen von 0,1 benutzen. Gleiches gilt auch für BE. […]
+      Zonenmultiplikatoren (Preis/Gewicht): Torso ×0,5, Arme ×0,2, Beine ×0,2, Kopf ×0,1.
+    effects: none
+    why: price and weight; the one sentence on BE is the ruling be-sentence
+
+rulings:
+  - id: requires-trefferzonen
+    status: open
+    question: >
+      Can a group play Trefferzonen-Rüstungsschutz (Fokusregel Stufe II) without the
+      Trefferzonen-Regeln (Stufe I)?
+    context: >
+      RS by zone only matters when a hit has a zone, which only the Trefferzonen-Regeln give.
+      The page does not say it requires them. The app has one Fokusregel switch today
+      (FokusRule.trefferzonen); this would be a second.
+    situations: [trefferzonen TZ.25]
+    options:
+      a: { says: "It requires Trefferzonen: the switch is only offered while Trefferzonen is on.", app: "a dependent toggle" }
+      b: { says: "Independent: without zones, a hit uses the torso's RS.", app: "two independent toggles and a fallback zone" }
+    recommended: a
+    why_recommended: without zones the rule has nothing to act on, and b's torso fallback is our invention
+    answer: null
+
+  - id: be-sentence
+    status: open
+    question: >
+      RS5 says a single arm or leg zone uses a multiplier of 0.1 instead of 0.2 for price, and
+      "Gleiches gilt auch für BE". RS4 computes BE by the RS-factor table. Does the 0.1/0.2
+      sentence change BE at all?
+    context: >
+      The two sit in different sections of the page. Read with RS4, the sentence would halve a
+      single limb's share — which RS4 already does by counting left and right apart (×2 each).
+      Read alone, it suggests a second BE method by multipliers of a complete armour's BE.
+    situations: [trefferzonen TZ.22]
+    options:
+      a: { says: "BE comes only from RS4's RS-factor table; the sentence is about price and weight.", app: "one computation" }
+      b: { says: "BE of a piece is the complete armour's BE times the zone multiplier (0.1 for a single limb), summed.", app: "a second computation, and a rounding rule for fractional BE" }
+    recommended: a
+    why_recommended: RS4 is stated as the method, is consistent with the core table for every complete armour, and needs no rounding
+    answer: null
+
+  - id: pieces-from-other-armours
+    status: open
+    question: >
+      RS3 allows one armour, one helmet and "zusätzliche Rüstungsteile" on arms and legs, but
+      says armours cannot be combined. Is the arm or leg part of a *different* complete armour
+      (bought per zone, as the page describes) a Rüstungsteil — so Kettenrüstung on the torso
+      with Lederrüstung arm pieces is allowed?
+    context: >
+      The page's own example combines a Lederrüstung with Metallarmschienen (a named piece), and
+      says complete armours are split into zones that can be bought one by one ("man kann auch
+      für die übrigen Zonen entsprechende Rüstungsteile … dazukaufen"). It also says "Rüstungen
+      lassen sich grundsätzlich nicht miteinander kombinieren". A zone piece cut from another
+      complete armour falls between the two sentences.
+    situations: [trefferzonen TZ.26]
+    options:
+      a: { says: "Yes: a zone piece of any armour counts as a Rüstungsteil for its zone; only the torso piece is 'the armour'.", app: "per-zone armour choice from every armour type" }
+      b: { says: "No: arms and legs take only pieces sold as pieces (Armschienen, Beinlinge, …) or parts of the same armour as the torso.", app: "zone choices limited by the torso's armour" }
+    recommended: a
+    why_recommended: the page prices every complete armour per zone precisely so its parts can be bought on their own; b leaves those prices without a use
+    answer: null

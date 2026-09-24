@@ -23,8 +23,10 @@
     mounted). The style's own page does not say "only while fighting with", and the wiki's
     Kampfstil overview has no general rule text. The catalog today turns the style on only
     with a Rabenschnabel or a Großschild in hand, so a Golgarite with a Schwert gets AT +2,
-    PA +2 instead of AT +4, PA +3. The same question comes up for every Kampfstil.
-  situations: [reiterkampf 5.7]
+    PA +2 instead of AT +4, PA +3. The same question comes up for every Kampfstil. Vinsalt-Stil
+    (a defensive style) lists Armbrüste, which suggests at least that list says who can learn
+    the style rather than when it applies.
+  situations: [reiterkampf 5.7, mehrfache-verteidigung V-cases on Vinsalt-Stil]
   options:
     a: { says: "Only while the hero fights with a listed technique (and weapon, where narrowed).", app: "as the catalog does today" }
     b: { says: "Whenever the style's own conditions hold; the list only says which techniques can learn it.", app: "the style applies with any weapon" }
@@ -35,3 +37,66 @@
     narrowed lists (only Rabenschnabel, only Großschild) meaningless.
   answer: null
   applies_to: [SA_661]
+
+- id: tiered-manoeuvre-stufe
+  status: open
+  question: >
+    A hero with a manoeuvre at Stufe III (Finte, Wuchtschlag): may they announce it at a lower
+    Stufe for a single attack?
+  context: >
+    Both pages say "pro Stufe der Sonderfertigkeit" without saying whether that is the owned
+    Stufe or a chosen one. The app offers every Wuchtschlag Stufe up to the owned one, but only
+    the highest Finte Stufe (CombatAttackViews.availableManeuvers).
+  situations: [finte 8.3, wuchtschlag 9.3]
+  options:
+    a: { says: "Any Stufe up to the owned one, chosen per attack.", app: "Finte gains Stufe I/II rows like Wuchtschlag" }
+    b: { says: "Always the owned Stufe.", app: "Wuchtschlag loses its lower rows" }
+  recommended: a
+  why_recommended: the trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe makes a higher Stufe a handicap against strong defenders
+  answer: null
+  applies_to: [SA_48.F1, SA_67.W1]
+
+- id: manoeuvre-combination
+  status: open
+  question: >
+    Which manoeuvres can be combined on one attack: a Basismanöver with a Spezialmanöver
+    (Wuchtschlag + Sturmangriff)? Two Basismanöver (Finte + Wuchtschlag)?
+  context: >
+    Sturmangriff's page excludes Finte by name (SA_62.ST4), which suggests Basis and Spezial
+    normally combine; Unterlaufen forbids any Spezialmanöver unless the hero has Verbessertes
+    Unterlaufen (SA_172.U3), which only makes sense if Basis + Spezial is the normal limit. No
+    general combination rule was found on the wiki. The app allows exactly one manoeuvre per
+    attack.
+  situations: [finte 8.8, wuchtschlag 9.8, sturmangriff 10.7, reichweite RW.14, reichweite RW.15]
+  options:
+    a: { says: "At most one Basismanöver and one Spezialmanöver per attack, minus named exclusions.", app: "a second picker for the Spezialmanöver" }
+    b: { says: "One manoeuvre per attack.", app: "as today; SA_62.ST4 becomes redundant" }
+    c: { says: "Any number, minus named exclusions.", app: "a multi-select" }
+  recommended: a
+  why_recommended: ST4's explicit Finte exclusion only makes sense if Basis + Spezial combine at all
+  answer: null
+  applies_to: [SA_62.ST4, SA_48.F1, SA_67.W1]
+
+- id: sf-technique-lists
+  status: open
+  question: >
+    Every combat SF and manoeuvre lists "Kampftechniken" (Finte, Wuchtschlag, Sturmangriff,
+    Unterlaufen, Beidhändiger Kampf, Verteidigungshaltung, …). May its effect be used only while
+    the hero fights with a weapon of a listed technique, or does the list only say who may
+    learn it?
+  context: >
+    The general Kampfsonderfertigkeiten page on the wiki does not say. The app checks no
+    technique for any SF or manoeuvre today; the catalog note on SA_67 says so on purpose until
+    the loadout can name Raufen (issue #14). The lists are specific (Unterlaufen leaves out
+    Stangenwaffen, whose reach it would never need; Finte's page adds techniques from later
+    books, which is pointless if the list did not restrict use). Kampfstile ask the same
+    question separately (kampfstil-techniques).
+  situations: [finte 8.5, wuchtschlag 9.5, sturmangriff 10.2, reichweite RW.7, beidhaendiger-kampf 11.4]
+  options:
+    a: { says: "Only with a listed technique; Raufen means unarmed. Not offered otherwise.", app: "each SF file carries `techniques:`, the offer checks the weapon in hand" }
+    b: { says: "The list only says who can learn it; usable with any weapon.", app: "no change" }
+    c: { says: "The same answer as kampfstil-techniques.", app: "follows that ruling" }
+  recommended: a
+  why_recommended: the lists are specific enough that reading them as learning lists only makes them meaningless
+  answer: null
+  applies_to: [SA_48.F3, SA_67.W3, SA_62.ST5, SA_172.U2, SA_173, SA_42.BH1, SA_65]

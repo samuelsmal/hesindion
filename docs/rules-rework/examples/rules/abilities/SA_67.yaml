@@ -1,0 +1,51 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_67
+name: Wuchtschlag
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 3
+manoeuvre: { kind: basismanoever }
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Wuchtschlag.html
+  book: Regelwerk
+  page: 250
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: W1
+    text: >
+      Die Attacke wird um -2 pro Stufe der Sonderfertigkeit erschwert. Bei Erfolg werden die
+      Trefferpunkte um 2 pro Stufe der Sonderfertigkeit erhöht.
+    effects:
+      - offer:
+          manoeuvre: wuchtschlag
+          tiers: owned
+          ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { manoeuvre: wuchtschlag }
+        add: { to: at, value: -2, per: chosen_tier }
+      - when: { manoeuvre: wuchtschlag, attack: hit }
+        add: { to: tp, value: 2, per: chosen_tier }
+
+  - id: W2
+    text: "Erschwernis: - 2/-4/-6"
+    effects: none
+    why: restates W1's AT cost per Stufe
+
+  - id: W3
+    text: >
+      Kampftechniken: Hiebwaffen, Kettenwaffen, Raufen, Schwerter, Stangenwaffen,
+      Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - requires: { loadout.weapon.technique: [CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] }
+        ruling: sf-technique-lists
+        # Raufen is unarmed: the "weapon" is the hero's fists, which the loadout has no row for
+        # today (catalog note on SA_67, issue #14).
+
+  - id: W4
+    text: >
+      Voraussetzungen: Stufe I: KK 13; Stufe II: KK 15, Wuchtschlag I; Stufe III: KK 17,
+      Wuchtschlag II
+    effects: none
+    why: purchase prerequisites, not a roll

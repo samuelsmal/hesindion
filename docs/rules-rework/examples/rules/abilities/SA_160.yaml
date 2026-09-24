@@ -1,0 +1,69 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_160
+name: Gezielter Angriff
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+techniques: [alle Nahkampftechniken]
+# FORMAT: an SF that only exists inside an optional rule set. Without the Fokusregel the SF
+# can still be bought (Optolith lists it) but does nothing; the breakdown says why.
+ruleset: fokus.trefferzonen
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_GezielterAngriff.html
+  book: Aventurisches Kompendium
+  page: 152
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+clauses:
+  - id: GA1
+    text: >
+      (Spezialmanöver) (Fokusregel Stufe I - Trefferzonen-Regel) Mit diesem Manöver kann man
+      gezielt eine Trefferzone angreifen. Dazu ist eine Attacke nötig, die entsprechend dem
+      Zonenaufschlag erschwert ist. Erschwernis: je nach Zone
+    effects:
+      - offer:
+          manoeuvre: gezielterAngriff
+          on: at
+          requires: { choice: targetZone }
+          ruling: halving-by-manoeuvre
+          # Aiming itself is trefferzonen.TZ5's and open to every hero; this is the Spezialmanöver
+          # announced on top of it. As a Spezialmanöver (the `manoeuvre:` field) it falls under
+          # reiterkampf.RK3, SA_172.U3 and the manoeuvre-combination ruling.
+      - when: { manoeuvre: gezielterAngriff }
+        multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
+        ruling: [halving-by-manoeuvre, trefferzonen.surprised-then-halved]
+        # The halving is stated on the Fokusregel page (trefferzonen.TZ5), not here; this page
+        # says only that the attack carries the zone penalty.
+
+rulings:
+  - id: halving-by-manoeuvre
+    status: open
+    question: >
+      Does the halving of the aiming penalty come with announcing Gezielter Angriff (melee) /
+      Gezielter Schuss (ranged) as the attack's Spezialmanöver, or with merely having the SF?
+    context: >
+      Settled by the pages, per the 2026-09-24 note: while the Fokusregel is on, any hero may aim
+      at a zone at the table's full penalty (trefferzonen.TZ5, "Es ist möglich, gezielt
+      Körperteile anzugreifen"), so that no longer rests on a ruling. Open is where the halving
+      lives. The SF page is headed "(Spezialmanöver)" and reads "Mit diesem Manöver kann man
+      gezielt eine Trefferzone angreifen", an action announced for one attack. The Fokusregel
+      page reads "Besitzt ein Held die Sonderfertigkeit …, sind die Erschwernisse halbiert",
+      which on its own sounds passive. The app treats it as passive: every aimed attack of a hero
+      with the SF is halved (CombatZonePicker, HitZoneModifiers.penalty). As a Spezialmanöver the
+      halving is unavailable (1) on horseback (reiterkampf.RK3, decided ruling
+      mounted-manoeuvres), (2) with Unterlaufen unless the hero has Verbessertes Unterlaufen
+      (SA_172.U3), and (3) alongside another Spezialmanöver such as Sturmangriff (under
+      manoeuvre-combination a or b; its option c, any number of manoeuvres, would conflict with
+      this reading). In each case the hero may still aim, at the full penalty. A Basismanöver
+      such as Finte may still go with it under manoeuvre-combination a.
+    situations: [trefferzonen TZ.3, trefferzonen TZ.16, trefferzonen TZ.17, trefferzonen TZ.27]
+    options:
+      a: { says: "The halving is the Spezialmanöver: announced for one attack, with every Spezialmanöver restriction. Without it the hero aims at the full penalty.", app: "the zone picker stays for everyone; Gezielter Angriff/Schuss becomes a manoeuvre choice that halves, hidden on horseback, with Unterlaufen (without SA_173) and next to another Spezialmanöver" }
+      b: { says: "Having the SF halves every aimed attack. The \"(Spezialmanöver)\" label has no consequence.", app: "no change" }
+    recommended: a
+    why_recommended: >
+      it is the reading in the owner's note, and it keeps both pages true: the Fokusregel lets
+      everyone aim and names who gets the halving, and the SF page's "(Spezialmanöver)" and
+      "Mit diesem Manöver" get their consequences. Under b the label is dead text.
+    answer: null

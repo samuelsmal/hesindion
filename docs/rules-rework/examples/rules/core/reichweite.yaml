@@ -1,0 +1,54 @@
+# DRAFT FORMAT — see ../../README.md.
+id: reichweite
+name: Nahkampfreichweite
+kind: core
+catalog_id: GRW_reichweite     # the id the current catalog uses
+source:
+  url: https://dsa.ulisses-regelwiki.de/Nahkampf/nahkampfreichweite.html
+  book: Regelwerk
+  page: 230
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+# Reach steps, shortest first. A "Stufe" of reach disadvantage (SA_172) is one step.
+# FORMAT: an ordered enum the rules count steps along — Unterlaufen needs the order, not just
+# the matrix.
+scale: { reach: [kurz, mittel, lang] }
+
+clauses:
+  - id: RW1
+    text: >
+      Alle Nahkampfwaffen besitzen eine Reichweite. Diese leitet sich aus der Länge der Waffe ab
+      und bestimmt die damit verbundenen Vor- und Nachteile. Nahkampfwaffen sind in die
+      Kategorien kurz, mittel und lang eingeteilt.
+    effects: none
+    why: >
+      defines the scale; a weapon's reach is equipment data (Optolith's item templates, or the
+      hero sheet). The hero's side is the weapon in the hand (bare hands kurz); the opponent's
+      is stated by the player.
+
+  - id: RW2
+    text: |
+      Kurze Waffe — Vorteil: Kurze Waffen erleiden in beengter Umgebung keine Abzüge auf Attacke und Parade.
+      Mittlere Waffe — Vorteil: Mittlere Waffen erleiden weniger Erschwernisse durch beengter Umgebung als lange Waffen. […] Nachteil: […] Sie erleiden bei beengter Umgebung eine Erschwernis von -4 auf Attacke und Parade.
+      Lange Waffe — Nachteil: Lange Waffen erleiden bei beengter Umgebung eine Erschwernis von -8 auf Attacke und Parade.
+    effects: none
+    why: the Beengte Umgebung rule (GRW_beengteUmgebung) carries these; not part of this example
+
+  - id: RW3
+    text: |
+      Kurze Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite mittel erleiden sie eine Erschwernis von -2 auf Attacke. Gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -4 auf ihre Attacke.
+      Mittlere Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -2 auf ihre Attacke.
+      Lange Waffe — Vorteil: Kurze und mittlere Waffen erleiden Erschwernisse gegen lange Waffen.
+    effects:
+      - when: { check: at, opponent.reach: { longer_than: loadout.reach } }
+        add: { to: at, value: -2, per: { steps: [loadout.reach, opponent.reach] } }
+        id: RW3.at      # named so SA_172 can lower exactly this line
+        # FORMAT: −2 per reach step the opponent is longer: kurz/mittel −2, kurz/lang −4,
+        # mittel/lang −2 — the page's matrix, written as a rate. The matrix (RW4) is the check.
+
+  - id: RW4
+    text: "(the matrix: Kurz gegen Mittel −2 AT für kurz, Kurz gegen Lang −4 AT für kurz, Mittel gegen Lang −2 AT für mittel; sonst keine Nachteile)"
+    effects: none
+    why: the same numbers as RW3, as a table; situations RW.1–RW.4 check the rate against it

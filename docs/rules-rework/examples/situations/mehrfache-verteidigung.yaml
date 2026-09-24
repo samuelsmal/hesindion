@@ -1,0 +1,121 @@
+# Example 3 — Mehrfache Verteidigung. Same conventions as belastung.yaml. No armour, on foot.
+# `round.defencesMade` is the number of defences already rolled this Kampfrunde.
+# DRAFT FORMAT — see ../README.md.
+
+base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
+
+situations:
+
+  - id: V1
+    name: First parry of the round
+    round: { defences: [] }
+    check: pa
+    expect:
+      pa: { total: 0 }
+    app_today: same
+
+  - id: V2
+    name: Second parry
+    round: { defences: [pa] }
+    check: pa
+    expect:
+      pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }
+    app_today: same
+
+  - id: V3
+    name: Third parry
+    round: { defences: [pa, pa] }
+    check: pa
+    expect:
+      pa: { total: -6, lines: [{ value: -6, from: mehrfache-verteidigung.MV1 }] }
+    app_today: same
+
+  - id: V4
+    name: A dodge after a parry — the penalty carries across kinds
+    round: { defences: [pa] }
+    check: aw
+    expect:
+      aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
+    app_today: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
+
+  - id: V5
+    name: A parry after dodging an arrow — ranged defences count too
+    round: { defences: [aw_vs_ranged] }
+    check: pa
+    expect:
+      pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
+    app_today: 0 — wrong (counted per kind)
+
+  - id: V6
+    name: The next Kampfrunde
+    round: { number: 2, defences: [] }
+    previous_round: { defences: [pa, pa, aw] }
+    check: pa
+    expect:
+      pa: { total: 0 }
+    app_today: same
+
+  - id: V7
+    name: Vinsalt-Stil with a Rapier, third defence
+    hero: { abilities: { SA_923: 1 }, loadout: { weapon: Rapier } }   # Fechtwaffe
+    round: { defences: [pa, aw] }
+    check: pa
+    expect:
+      pa: { total: -4, lines: [{ value: -4, from: mehrfache-verteidigung.MV1, changed_by: [SA_923.VS1], ruling: kampfstil-techniques }] }
+    app_today: −2 — wrong (only the one earlier parry is counted, not the dodge)
+
+  - id: V8
+    name: Vinsalt-Stil with a Schwert
+    hero: { abilities: { SA_923: 1 }, loadout: { weapon: Schwert } }
+    round: { defences: [pa, pa] }
+    check: pa
+    expect: { open: kampfstil-techniques }       # −4 if the style applies, −6 if not
+    app_today: −6 (the catalog requires an Armbrust, Fechtwaffe or Zweihandschwert)
+
+  - id: V9
+    name: The value reaches 0 — parry gone, dodge still there
+    hero: { pa: 5, aw: 7 }
+    round: { defences: [pa, pa] }
+    expect:
+      pa: { value: -1, not_selectable: { because: mehrfache-verteidigung.MV3, ruling: mehrfache-verteidigung.zero-value } }
+      aw: { value: 1, selectable: true }
+    app_today: both offered; the parry is rolled against −1 — wrong
+
+  - id: V10
+    name: Schip "Verteidigung" keeps a defence alive
+    hero: { pa: 5 }
+    round: { defences: [pa, pa], choices: [schipVerteidigung] }
+    check: pa
+    expect:
+      pa:
+        total: -2
+        lines:
+          - { value: -6, from: mehrfache-verteidigung.MV1 }
+          - { value: 4, from: schicksalspunkte.SP-verteidigung }
+      pa_value: 3        # 5 − 6 + 4: above 0, so the parry is allowed (MV3)
+    app_today: the +4 line exists but cites no rule (DefenseModifiers.schipDefenseBoost, rules [])
+
+  - id: V11
+    name: Verteidigungshaltung, announced at the start of the round
+    hero: { abilities: { SA_65: 1 } }
+    round: { phase: start, choices: [verteidigungshaltung] }
+    expect:
+      pa: { total: 4, lines: [{ value: 4, from: SA_65.VH1, ruling: SA_65.vh-scope }] }
+      aw: { open: SA_65.vh-scope }
+      actions: { attack: forbidden, spell: forbidden, free_action: { open: SA_65.vh-free-actions } }
+    app_today: not offered — SA_65 is not implemented (catalog status todo)
+
+  - id: V12
+    name: Verteidigungshaltung and the Schip "Verteidigung" together
+    hero: { abilities: { SA_65: 1 } }
+    round: { choices: [verteidigungshaltung, schipVerteidigung] }
+    check: pa
+    expect: { open: SA_65.vh-stacking }        # +8 if they stack
+    app_today: +4 (only the Schip exists)
+
+  - id: V13
+    name: Verteidigungshaltung wanted in the middle of the round
+    hero: { abilities: { SA_65: 1 } }
+    round: { phase: after_first_action }
+    expect:
+      not_offered: [{ choice: verteidigungshaltung, because: SA_65.VH1 }]

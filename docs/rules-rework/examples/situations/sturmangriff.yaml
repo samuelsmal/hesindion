@@ -1,0 +1,84 @@
+# Example 10 — Sturmangriff (SA_62), on foot. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# Already in reiterkampf.yaml and not repeated here:
+#   5.12 the plain case (GS 8: AT −2, TP +6)   5.13 rounding (GS 7: TP +6)
+#   5.14 in Platte (current GS 5: TP +5)       5.15 GS 3: not offered
+#   5.9  not offered on horseback (reiterkampf.RK3)
+# Open rulings named without a prefix live in ../rules/rulings.yaml once added.
+
+base_hero: { at: 14, pa: 8, aw: 7, gs: 8 }
+
+situations:
+
+  - id: "10.1"
+    name: Less than 4 Schritt run-up
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert } }
+    choose: { runUp: 3 }
+    expect:
+      not_offered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
+    app_today: not offered at all on foot
+
+  - id: "10.2"
+    name: With a Dolch (Dolche — not on Sturmangriff's list)
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Dolch } }
+    choose: { runUp: 4 }
+    expect: { open: sf-technique-lists }    # under a: not offered, SA_62.ST5
+    app_today: not offered at all on foot
+
+  - id: "10.3"
+    name: With Finte
+    hero: { abilities: { SA_62: 1, SA_48: 1 }, loadout: { weapon: Schwert } }
+    expect:
+      not_combinable: [{ manoeuvres: [sturmangriff, finte], because: SA_62.ST4 }]
+
+  - id: "10.4"
+    name: The attack misses
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
+      on_miss:
+        told: [{ opponent: passierschlag, from: SA_62.ST3 }]
+    app_today: not offered at all on foot
+
+  - id: "10.5"
+    name: GS raised above the natural GS — the natural-GS cap binds
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert }, gs: { natural: 8, current: 14 } }
+    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    expect:
+      on_hit:
+        tp:
+          total: 8
+          lines: [{ value: 8, from: SA_62.ST2, formula: "min(2 + ⌈14/2⌉, 10, 8)", ruling: [SA_62.sturmangriff-gs, round-up] }]
+    note: 2 + 7 = 9 would be the uncapped bonus; the natural GS 8 caps it
+
+  - id: "10.6"
+    name: GS 20, natural 12 — the +10 cap binds
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert }, gs: { natural: 12, current: 20 } }
+    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    expect:
+      on_hit:
+        tp:
+          total: 10
+          lines: [{ value: 10, from: SA_62.ST2, formula: "min(2 + ⌈20/2⌉, 10, 12)" }]
+
+  - id: "10.7"
+    name: With Wuchtschlag I, GS 8
+    hero: { abilities: { SA_62: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvres: [sturmangriff, wuchtschlag], tier: { wuchtschlag: 1 }, runUp: 4 }
+    expect:
+      open: [manoeuvre-combination, SA_62.sturmangriff-cap-scope]
+      # If allowed: AT −2 (ST4) −2 (W1) = −4; TP +6 (ST2) +2 (W1) = +8. The cap question
+      # matters only near the cap: at GS 16, Sturmangriff alone is +10, and Wuchtschlag III's +6
+      # either adds (a: +16) or is swallowed (b: +10).
+    app_today: one manoeuvre per attack; SA_62 not offered on foot
+
+  - id: "10.8"
+    name: Unarmed (Raufen — on the list)
+    hero: { abilities: { SA_62: 1 }, loadout: { weapon: null } }
+    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
+      on_hit:
+        tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2, formula: "2 + ⌈8/2⌉" }] }

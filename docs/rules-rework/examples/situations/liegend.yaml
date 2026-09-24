@@ -1,0 +1,88 @@
+# Example 7 — Liegend. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
+# `opponent_lines` are printed as the opponent's own calculation; the hero's values do not move.
+
+base_hero: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 }
+
+situations:
+
+  - id: "7.1"
+    name: The hero lies on the ground
+    hero: { states: [STATE_10] }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: STATE_10.L3, ruling: STATE_10.liegend-attacks }] }
+      pa: { total: -2, lines: [{ value: -2, from: STATE_10.L3 }] }
+      aw: { total: -2, lines: [{ value: -2, from: STATE_10.L3 }] }
+      gs: { set: 1, from: STATE_10.L2 }
+    app_today: same (AT/PA/AW from the catalog's STATE_10, GS from Hero.effectiveGeschwindigkeit)
+
+  - id: "7.2"
+    name: The hero shoots from the ground
+    hero: { states: [STATE_10] }
+    check: { fk: true }
+    expect: { open: STATE_10.liegend-attacks }   # −4 under a, 0 under b
+    app_today: 0
+
+  - id: "7.3"
+    name: The hero attacks an opponent who lies on the ground
+    opponent: { states: [STATE_10] }
+    expect:
+      at: { total: 0 }
+      opponent_lines:
+        defence: { total: -2, lines: [{ value: -2, from: STATE_10.L3, side: opponent }] }
+      told: [{ opponent: "AT −4", from: STATE_10.L3 }, { opponent: "GS 1", from: STATE_10.L2 }]
+    app_today: the −2 opponent line, printed on the announcement and the damage screen; nothing told about their AT or GS
+
+  - id: "7.4"
+    name: The hero is Bewusstlos
+    hero: { states: [bewusstlos] }
+    expect:
+      states:
+        handlungsunfaehig: { from: bewusstlos }            # the Bewusstlos page
+        STATE_10: { open: STATE_10.handlungsunfaehig-liegend }
+      actions: none
+      defences: none
+      gs: { set: 0, from: handlungsunfaehig }             # the Handlungsunfähig page: GS 0
+    app_today: Liegend always implied; GS 1 — wrong (Handlungsunfähig sets GS 0, Hero.effectiveGeschwindigkeit only knows Liegend)
+
+  - id: "7.5"
+    name: Handlungsunfähig from Schmerz IV, on the battlefield
+    hero: { states: [{ COND_6: 4 }] }
+    expect:
+      states:
+        handlungsunfaehig: { from: COND_6 }
+        STATE_10: { open: STATE_10.handlungsunfaehig-liegend }
+      gs: { set: 0, from: handlungsunfaehig }
+    app_today: Handlungsunfähig, but only via Hero.isHandlungsunfaehigFromZustaende — which does not add the implied Liegend (impliedStateIDs reads only states that are *set*); GS stays 8
+
+  - id: "7.6"
+    name: Standing up with an opponent in reach
+    hero: { states: [STATE_10] }
+    opponent: { inReach: true }
+    choose: { action: aufstehen, check: { talent: Körperbeherrschung, application: Kampfmanöver, result: failed } }
+    expect:
+      offered: [{ action: aufstehen, from: STATE_10.L4, costs: action }]
+      after: { states: { STATE_10: removed } }
+      told: [{ opponent: passierschlag, from: STATE_10.L4 }]
+    app_today: no stand-up action; the player removes Liegend by hand
+
+  - id: "7.7"
+    name: Standing up, Körperbeherrschung succeeds
+    hero: { states: [STATE_10] }
+    opponent: { inReach: true }
+    choose: { action: aufstehen, check: { talent: Körperbeherrschung, application: Kampfmanöver, result: success } }
+    expect:
+      after: { states: { STATE_10: removed } }
+      told: []
+
+  - id: "7.8"
+    name: Liegend is a Status — it is not capped with the Zustände
+    hero: { states: [STATE_10, { COND_6: 3 }], armour: [Plattenrüstung] }
+    expect:
+      at:
+        total: -9
+        lines:
+          - { value: -4, from: STATE_10.L3 }
+          - { value: -3, from: COND_1.B3 }
+          - { value: -3, from: COND_6 }
+          - { value: 1, from: GRW_zustandsbegrenzung }      # Zustände −6 capped at −5; see example 4
+    app_today: same total (ModifierEngine.applyingZustandCap; Liegend is not tagged isZustand)

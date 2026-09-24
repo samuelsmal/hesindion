@@ -1,0 +1,52 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_42
+name: Beidhändiger Kampf
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 2
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Beih%C3%A4ndigerKampf.html   # the wiki's own spelling
+  book: Regelwerk
+  page: 246
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: BH1
+    text: >
+      Der Abzug auf Attacke und Parade beträgt bei Stufe I der Sonderfertigkeit nur -1 statt wie
+      üblich -2. Bei Stufe II der Sonderfertigkeit sinken die Erschwernisse zusätzlich zu dem
+      Bonus aus Beidhändiger Kampf I um einen weiteren Punkt auf insgesamt 0.
+    effects:
+      - raise: { line: beidhaendiger-kampf.ZW3.penalty, by: 1, per: tier, max_total: 0 }
+        ruling: [sa42-dodge, sf-technique-lists]
+        # FORMAT: lowers another rule's penalty. The breakdown shows "Beidhändiger Kampf −2"
+        # and "Beidhändiger Kampf I +1" as two lines, the second marked as lowering the first —
+        # or one line "−1 (−2, gelindert durch SF I)"; a display choice for the design.
+
+  - id: BH2
+    text: "Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter"
+    effects: none
+    why: what the list means for BH1 is the shared open ruling sf-technique-lists
+
+rulings:
+  - id: sa42-dodge
+    status: open
+    question: >
+      The core penalty (beidhaendiger-kampf.ZW3) is on AT "und alle Verteidigungen" — AW too.
+      SA_42 says it lowers "der Abzug auf Attacke und Parade". Does the SF also lower the AW part?
+    context: >
+      The app lowers AT, PA and AW alike (Hero.dualAttackPenalty feeds both
+      MeleeModifiers.dualAttackPenalty and DefenseModifiers.dualAttackDefense, which covers
+      .meleeDodge). Read literally, a hero with SA_42 II would attack and parry at 0 but dodge
+      at −2 in a round with a double attack.
+    situations: [beidhaendiger-kampf 11.4]
+    options:
+      a: { says: "Yes: 'Abzug' means ZW3's penalty as a whole, wherever it applies.", app: "no change" }
+      b: { says: "No: the SF names AT and PA only; the AW −2 stays.", app: "the dodge keeps −2 at every Stufe" }
+    recommended: a
+    why_recommended: >
+      "statt wie üblich −2" points back at the one core penalty; the page summarises it rather
+      than splitting it.
+    answer: null

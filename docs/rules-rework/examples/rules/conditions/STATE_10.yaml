@@ -1,0 +1,109 @@
+# DRAFT FORMAT — see ../../README.md.
+id: STATE_10
+name: Liegend
+kind: status               # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Liegend.html
+  book: Regelwerk
+  page: 36
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+# Who can be liegend: the hero (stated, or implied by Handlungsunfähig — ruling
+# handlungsunfaehig-liegend) and the opponent (stated per attack on the opponent profile).
+# FORMAT: one rule whose effects land on whichever side carries the status. The same clause
+# gives the hero's own lines when the hero lies, and opponent lines when the opponent does.
+applies_to_side: [hero, opponent]
+
+clauses:
+  - id: L1
+    text: >
+      Ob gerade geweckt oder zu Boden geworfen, die Person befindet sich in liegender Position.
+      Dies führt besonders im Kampf zu einigen Modifikationen.
+    effects: none
+    why: introduces the status
+
+  - id: L2
+    text: So lange die Person liegt, kann sie sich nur sehr langsam fortbewegen (GS 1).
+    effects:
+      - when: { side: hero }
+        set: { value: gs, to: 1 }
+        # FORMAT: a value *set*, not a modifier. Handlungsunfähig sets GS 0; when both hold,
+        # the lower set wins — the format needs an order for competing sets.
+      - when: { side: opponent }
+        tell: { opponent: "GS 1" }
+
+  - id: L3
+    text: Ihre Verteidigung ist um 2 erschwert, ihre Angriffe um 4.
+    effects:
+      - when: { side: hero }
+        add: { to: [pa, aw], value: -2 }
+      - when: { side: hero }
+        add: { to: at, value: -4 }
+        ruling: liegend-attacks
+      - when: { side: opponent }
+        opponent_add: { to: [pa, aw], value: -2 }
+        # Printed as the opponent's own calculation on the announcement and the damage screen;
+        # the hero's AT does not change. The rules give the attacker nothing else for it.
+      - when: { side: opponent }
+        tell: { opponent: "AT −4" }
+        # The opponent's attack roll is not ours (ADR-0005); the hero's defence does not change.
+
+  - id: L4
+    text: >
+      Wer aufstehen möchte, braucht dazu 1 Aktion. Ist ein Gegner in Angriffsdistanz, kann er
+      dabei einen Passierschlag ausführen. Um keinen Passierschlag abzubekommen, kann der Held
+      eine Probe auf Körperbeherrschung (Kampfmanöver) ablegen. Bei Gelingen bekommt er keinen
+      Passierschlag ab.
+    effects:
+      - when: { side: hero }
+        offer:
+          action: aufstehen
+          costs: action
+          then: { remove_state: STATE_10 }
+          if_opponent_in_reach:
+            optional_check: { talent: Körperbeherrschung, application: Kampfmanöver }
+            on_check_failed_or_skipped: { tell: { opponent: passierschlag } }
+        # FORMAT: an action whose outcome is a question about the other side ("is an opponent
+        # in reach?") and an optional check that decides whether they get a free attack.
+
+rulings:
+  - id: liegend-attacks
+    status: open
+    question: >
+      "Ihre Angriffe um 4" — which attacks? Melee AT only, or ranged (FK) as well?
+    context: >
+      The page says "Angriffe", not "AT". The catalog applies −4 to melee attacks only
+      (STATE_10, domain meleeAttack); a prone archer shoots at no penalty in the app today. A
+      prone hero's spells are not attacks in this sense either way.
+    situations: [liegend 7.2]
+    options:
+      a: { says: "Every attack roll: melee AT and FK.", app: "FK −4 while liegend" }
+      b: { says: "Melee AT only.", app: "no change" }
+    recommended: a
+    why_recommended: the page says "Angriffe" where it could have said AT, and shooting from the ground is plainly harder too
+    answer: null
+
+  - id: handlungsunfaehig-liegend
+    status: open
+    question: >
+      Handlungsunfähig says the person "in den meisten Situationen … gilt … zudem als liegend".
+      When does a Handlungsunfähig hero count as Liegend?
+    context: >
+      The app makes Handlungsunfähig and Bewusstlos always imply Liegend
+      (StateCatalog: implies ["liegend"]). The Bewusstlos page only implies Handlungsunfähig; the
+      Liegend comes through Handlungsunfähig's "most situations". On top of Handlungsunfähig
+      (no actions, no defences, GS 0) Liegend adds little for the hero's own rolls; it matters
+      for what the hero sheet shows and for the hero standing up once able to act again (L4 —
+      an action, and a possible Passierschlag).
+    situations: [liegend 7.4, liegend 7.5]
+    options:
+      a: { says: "Always: Handlungsunfähig implies Liegend.", app: "as today" }
+      b: { says: "A GM question when Handlungsunfähig starts: 'liegt die Person?', default yes.", app: "one question; the status can be lifted (tied to a mast, held upright)" }
+      c: { says: "Never automatically; the player sets Liegend by hand.", app: "the implied status goes" }
+    recommended: b
+    why_recommended: >
+      the page says "most", not "always"; a default-yes question keeps the common case free and
+      leaves room for the hero tied upright or held on a horse
+    answer: null

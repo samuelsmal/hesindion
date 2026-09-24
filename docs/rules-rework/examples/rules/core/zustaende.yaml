@@ -1,0 +1,85 @@
+# DRAFT FORMAT — see ../../README.md.
+# The catalog's GRW_zustandsbegrenzung is clause Z3 of this page.
+id: zustaende
+name: Zustände
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Zustand.html
+  book: Regelwerk
+  page: 31
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: Z1
+    text: >
+      Die einzelnen Zustände addieren sich auf. Ist ein Held so angetrunken, dass er kaum noch
+      geradeaus laufen kann, leidet er bereits unter zwei Stufen Betäubung. Erhält er nun durch
+      einen kräftigen Schlag eine Platzwunde am Kopf, erhält er eine dritte Stufe Betäubung usw.
+    effects: none
+    why: a new Stufe of the same Zustand adds to its level; that is how every level is kept
+
+  - id: Z2
+    text: >
+      Die Erschwernisse verschiedener Zustände addieren sich ebenfalls auf. Wer also eine
+      Erschwernis von 1 durch Schmerz und eine Erschwernis von 2 durch Betäubung erhält, leidet
+      unter einer Gesamterschwernis von 3.
+    effects: none
+    why: each Zustand's line is simply added; nothing to encode beyond the lines themselves
+
+  - id: Z3
+    text: >
+      Die maximale Erschwernis durch verschiedene Zustände beträgt 5. Ein Spielercharakter, der
+      insgesamt mehr als 5 Stufen und damit auch eine höhere Erschwernis als 5 angesammelt hat,
+      hat solange eine Erschwernis von 5, bis die addierten Zustandsstufen unter 5 sinken.
+    effects:
+      - cap: { lines: { kind: condition }, min: -5, on: check }
+        ruling: cap-scope
+        # FORMAT: an effect over other effects' sum, applied last and shown as its own
+        # correction line ("Zustände: höchstens −5, +1").
+
+  - id: Z4
+    text: >
+      Sofern ein Zustand durch einen Zauber oder eine Liturgie verursacht wurde und zum Status
+      Handlungs- oder Bewegungsunfähigkeit führte, endet dieser Status sofort, wenn die Wirkung
+      des Zaubers aufhört. Die entsprechenden Stufen des Zustands verschwinden augenblicklich.
+    status: unencoded
+    why: the app does not track a Zustand's cause or a spell's duration; shown as text on the state
+
+  - id: Z5
+    text: >
+      Wenn ein Held insgesamt 8 oder mehr Zustandsstufen angesammelt hat, erleidet er den Status
+      Handlungsunfähig, auch wenn kein einzelner Zustand bei ihm bislang Stufe IV aufweist.
+    effects:
+      - when: { sum: { condition_levels: all }, min: 8 }
+        gain: { state: handlungsunfaehig }
+
+  - id: Z6
+    text: >
+      Wenn sich Spielwerte durch Zustände, einen Status oder andere Einflüsse kurzfristig ändern,
+      ist keine Neuberechnung von abgeleiteten Werten notwendig, es sei denn, es steht explizit
+      bei der Regel dabei.
+    effects: none
+    why: >
+      a Zustand never changes a derived value (LE, AW, INI base …) — its penalty is a line on
+      the check, not a new base
+
+rulings:
+  - id: cap-scope
+    status: open
+    question: >
+      The cap is on "Erschwernis" — penalties on checks. Does it also cap the GS and INI
+      penalties Zustände give (Belastung on INI and GS, Schmerz on GS)?
+    context: >
+      A hero in Plattenrüstung (Belastung III) with Schmerz III has AT −6 before the cap, −5
+      after. The same hero's GS is −3 −3 = −6. The page speaks of Erschwernis, a check term;
+      GS and INI penalties are "Abzüge". The app caps only check lines
+      (ModifierEngine.applyingZustandCap) and, separately, applies no Schmerz to GS at all.
+    situations: [schmerz S6]
+    options:
+      a: { says: "Checks only; GS and INI penalties add up without a cap.", app: "GS −6 in the situation above" }
+      b: { says: "Every Zustand penalty, GS and INI included, stops at −5.", app: "GS −5 in the situation above" }
+    recommended: a
+    why_recommended: the clause is worded in terms of Erschwernis, and GS/INI penalties are not Erschwernisse
+    answer: null

@@ -1,0 +1,136 @@
+# DRAFT FORMAT — see ../../README.md.
+id: COND_6
+name: Schmerz
+kind: condition
+levels: 4
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Schmerz.html
+  book: Regelwerk
+  page: 34
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+# Where a Stufe comes from: the LP thresholds (SZ3) plus whatever sets Schmerz directly
+# (a Patzer, a wound effect, a spell). Zäher Hund (ADV_49) lowers it — not written yet.
+level:
+  from:
+    - clause: SZ3
+    - set_by: [event, gm]
+  lowered_by: [ADV_49]      # not written yet
+
+clauses:
+  - id: SZ1
+    text: >
+      Durch Verletzungen, Gifte, Zauber und andere Unannehmlichkeiten kann ein Held Schmerzen
+      erleiden, die ihn im schlimmsten Falle handlungsunfähig machen.
+    effects: none
+    why: introduction
+
+  - id: SZ2
+    text: >
+      Um trotz immenser Schmerzen (Stufe IV) handlungsfähig zu bleiben, ist eine Probe auf
+      Selbstbeherrschung (Handlungsfähigkeit bewahren) nötig.
+    effects:
+      - when: { level: 4 }
+        requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren }
+        on_failure: { gain: { state: handlungsunfaehig } }
+        on_success: { see: SZ5 }
+        ruling: schmerz-iv-check
+        # FORMAT: a check that decides whether a state applies, with an open timing.
+
+  - id: SZ3
+    text: >
+      Durch den Verlust von Lebenspunkten kommt es öfters vor, dass ein Held Stufen dieses
+      Zustands erhält. Sind die Lebenspunkte auf Dreiviertel, die Hälfte oder ein Viertel der
+      Gesamt-Lebensenergie gesunken, erhält der Held jeweils eine Stufe Schmerz. Steigen die
+      Lebenspunkte wieder über diese Begrenzungen, verschwindet damit auch die entsprechende
+      Stufe Schmerz. Sinkt sie auf 5 oder weniger, erhält er eine weitere Stufe Schmerz.
+    effects:
+      - sets: { condition: COND_6, level: "count(lp <= le*3/4, lp <= le/2, lp <= le/4, lp <= 5)" }
+        ruling: schmerz-thresholds
+        # FORMAT: a level derived from a formula over the hero's current values, recomputed
+        # whenever LP change.
+
+  - id: SZ4
+    text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.
+    effects:
+      - lower: { condition: COND_6, by: 1, every: 4h, not_for: SZ3 }
+        # The LP part (SZ3) goes with healing, not with time. Out-of-combat time is not
+        # tracked; the app shows this as text on the Schmerz chip.
+    status: unencoded
+    why: the app does not keep time outside combat rounds
+
+  - id: SZ5
+    text: |
+      Stufe I: leichte Schmerzen, alle Proben –1, GS –1
+      Stufe II: ablenkende Schmerzen, alle Proben –2, GS –2
+      Stufe III: starke Schmerzen, alle Proben –3, GS –3
+      Stufe IV: Handlungsunfähig, ansonsten alle Proben –4
+    effects:
+      - when: { level: [1, 3] }
+        add: { to: [check, gs], value: -1, per: level }
+        # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies. Not INI — an INI roll is
+        # not a Probe, and unlike Belastung the page does not list INI.
+      - when: { level: 4 }
+        gain: { state: handlungsunfaehig }
+        unless: { check_passed: SZ2 }
+      - when: { level: 4, check_passed: SZ2 }
+        add: { to: check, value: -4 }
+        ruling: schmerz-iv-gs
+
+rulings:
+  - id: schmerz-thresholds
+    status: open
+    question: >
+      "Auf Dreiviertel, die Hälfte oder ein Viertel der Gesamt-Lebensenergie gesunken" — is the
+      hero's LP compared with the exact fraction, or is the fraction rounded first (ADR-0006
+      rounds up)?
+    context: >
+      LE 30: three quarters is 22.5. Compared exactly, Schmerz I starts at 22 LP; with the
+      threshold rounded up to 23, it starts at 23. The app compares with integer division
+      (Hero.lebenspunkteSchmerzLevel: `current <= maxLP * 3 / 4`), which for whole LP equals the
+      exact comparison. ADR-0006 is about computing values, and this is a comparison.
+    situations: [schmerz S1, schmerz S4]
+    options:
+      a: { says: "Exact: Schmerz when LP is at or below the fraction itself.", app: "as today" }
+      b: { says: "Round the threshold up first (ADR-0006).", app: "Schmerz one LP earlier for odd thresholds" }
+    recommended: a
+    why_recommended: nothing is being computed that needs rounding — LP is compared with a number, and the exact comparison is what "gesunken auf" says
+    answer: null
+
+  - id: schmerz-iv-check
+    status: open
+    question: >
+      Stufe IV needs a Selbstbeherrschung (Handlungsfähigkeit bewahren) check to stay able to
+      act. When is it rolled, and how long does a success hold?
+    context: >
+      The page says it is needed, not when. The app has no such check: at Stufe IV the hero is
+      Handlungsunfähig outright (StateCatalog schmerz, handlungsunfaehigAtLevel: 4), and only
+      the Schip "Zustand ignorieren" gives a round back.
+    situations: [schmerz S3, schmerz S12]
+    options:
+      a: { says: "Once, when Stufe IV is reached; a success holds until the Stufe changes.", app: "a check prompt when Schmerz reaches IV" }
+      b: { says: "At the start of every Kampfrunde while at Stufe IV.", app: "a check prompt each round" }
+      c: { says: "Before each action the hero wants to take.", app: "a check prompt before each action" }
+    recommended: a
+    why_recommended: the page ties the check to the Stufe, not to rounds or actions, and it asks least of the table
+    answer: null
+
+  - id: schmerz-iv-gs
+    status: open
+    question: >
+      A hero who passes the Stufe IV check has "alle Proben –4". The page gives GS −1/−2/−3 for
+      Stufen I–III and no GS for Stufe IV. What is their GS penalty?
+    context: >
+      Read literally, a hero at Stufe IV who stays on their feet moves at full GS, while one at
+      Stufe III moves at −3. The app applies no Schmerz to GS at any Stufe
+      (Hero.effectiveGeschwindigkeit, Hero.totalGsPenalty).
+    situations: [schmerz S12]
+    options:
+      a: { says: "GS −4, continuing the ladder.", app: "GS −4 line" }
+      b: { says: "No GS penalty, as printed.", app: "no GS line at IV" }
+      c: { says: "GS −3, the last printed value.", app: "GS −3 line" }
+    recommended: a
+    why_recommended: the ladder is regular in every other respect, and a penalty that vanishes at the worst Stufe reads as an omission
+    answer: null

@@ -1,0 +1,24 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_173
+name: Verbessertes Unterlaufen
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+techniques: [Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter, Zweihandhiebwaffen, Zweihandschwerter]
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_VerbessertesUnterlaufen.html
+  book: Aventurisches Kompendium
+  page: 156
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: VU1
+    text: Ein Abenteurer kann mit dieser SF das Manöver Unterlaufen mit Spezialmanövern kombinieren.
+    effects: none
+    why: >
+      it lifts SA_172.U3's exclusion; the lift is written there (`unless: { hero.has: SA_173 }`),
+      so the exclusion and its exception are read in one place.
+    lifts: [SA_172.U3]
+    # FORMAT: same two-sided dependency as SA_43 ↔ reiterkampf orders. Here the rule being
+    # lifted holds the condition; this back-reference is for the reader.

@@ -1,0 +1,92 @@
+# Example 8 — Finte. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
+# Weapons: Schwert (Schwerter, CT_12), Morgenstern (Kettenwaffen, CT_6).
+# `opponent_lines` are printed as the opponent's own calculation; the hero's values do not move.
+# Open rulings named here without a prefix live in ../rules/rulings.yaml once added
+# (sf-technique-lists, manoeuvre-combination, tiered-manoeuvre-stufe).
+
+base_hero: { at: 14, pa: 8, aw: 7 }
+
+situations:
+
+  - id: "8.1"
+    name: Finte I with a Schwert, hits
+    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: finte, tier: 1 }
+    expect:
+      at: { total: -1, lines: [{ value: -1, from: SA_48.F1, tier: 1 }] }
+      on_hit:
+        opponent_lines:
+          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1 }] }
+    app_today: same
+
+  - id: "8.2"
+    name: Finte III, used at III
+    hero: { abilities: { SA_48: 3 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: finte, tier: 3 }
+    expect:
+      at: { total: -3, lines: [{ value: -3, from: SA_48.F1, tier: 3 }] }
+      on_hit:
+        opponent_lines:
+          defence: { total: -6, lines: [{ value: -6, from: SA_48.F1, tier: 3 }] }
+    app_today: same
+
+  - id: "8.3"
+    name: Finte III, the player wants Finte I
+    hero: { abilities: { SA_48: 3 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: finte, tier: 1 }
+    expect: { open: tiered-manoeuvre-stufe }   # under a: AT −1, opponent −2
+    app_today: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe
+
+  - id: "8.4"
+    name: The opponent dodges instead of parrying
+    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: finte, tier: 1 }
+    opponent: { defends_with: aw }
+    expect:
+      on_hit:
+        opponent_lines:
+          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, applies_to: aw }] }
+    app_today: the −2 line is shown for "the defence", but the manoeuvre's info text says "Gegner PA −2" (CombatManeuver.infoText) — the label is wrong for a dodge
+
+  - id: "8.5"
+    name: Finte with a Morgenstern (Kettenwaffen — not on Finte's list)
+    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Morgenstern } }
+    expect: { open: sf-technique-lists }    # under a: not offered, SA_48.F3
+    app_today: offered (availableManeuvers checks no technique)
+
+  - id: "8.6"
+    name: Finte unarmed (Raufen — on the list)
+    hero: { abilities: { SA_48: 1 }, loadout: { weapon: null } }
+    expect:
+      offered: [{ manoeuvre: finte, from: SA_48.F1 }]
+    app_today: same
+
+  - id: "8.7"
+    name: Finte together with Sturmangriff
+    hero: { abilities: { SA_48: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
+    expect:
+      not_combinable: [{ manoeuvres: [finte, sturmangriff], because: SA_62.ST4 }]
+    app_today: moot — one manoeuvre per attack, and SA_62 is not offered on foot
+
+  - id: "8.8"
+    name: Finte together with Wuchtschlag
+    hero: { abilities: { SA_48: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
+    expect: { open: manoeuvre-combination }   # two Basismanöver on one attack?
+    app_today: one manoeuvre per attack (CombatManeuver is a single choice)
+
+  - id: "8.9"
+    name: Finte on horseback
+    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert }, mounted: true }
+    expect:
+      offered: [{ manoeuvre: finte, from: SA_48.F1 }]    # a Basismanöver: reiterkampf.RK3 allows it
+    app_today: same
+
+  - id: "8.10"
+    name: Finte misses
+    hero: { abilities: { SA_48: 2 }, loadout: { weapon: Schwert } }
+    choose: { manoeuvre: finte, tier: 2 }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 2 }] }
+      on_miss:
+        opponent_lines: {}          # "beim Gelingen" — nothing for the opponent
+    app_today: same — the line only matters for the opponent's defence, which follows a hit

@@ -1,0 +1,314 @@
+# Example 6 — Trefferzonen (Fokusregel) and Trefferzonen-Rüstungsschutz (Fokusregel Stufe II).
+# Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
+# `rulesets:` lists the optional rule sets the group plays; core is always on.
+# Where an expectation waits on an open ruling, `if:` gives the result per option.
+
+base_hero: { at: 14, pa: 8, aw: 7, fk: 12, ko: 11, wundschwelle: 6, size: mittel }
+
+situations:
+
+  # --- The rule set is off ------------------------------------------------------------------
+
+  - id: "TZ.1"
+    name: Trefferzonen not played — no zones at all
+    rulesets: []
+    hero: { abilities: { SA_160: 1 } }
+    expect:
+      not_offered: [{ choice: targetZone, because: trefferzonen.ruleset }]
+      not_applied: [{ rule: SA_160, reason: "rule set fokus.trefferzonen is off" }]
+    app_today: same (the zone picker needs FokusRule.trefferzonen)
+
+  # --- Aiming (trefferzonen.TZ5) ------------------------------------------------------------
+
+  - id: "TZ.2"
+    name: Aiming at the head without Gezielter Angriff
+    rulesets: [fokus.trefferzonen]
+    opponent: { bodyPlan: humanoid, size: mittel }
+    choose: { targetZone: kopf }
+    expect:
+      at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
+    app_today: same
+
+  - id: "TZ.3"
+    name: Aiming at the head with Gezielter Angriff
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_160: 1 } }
+    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    expect:
+      at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] }
+    app_today: same
+
+  - id: "TZ.4"
+    name: Torso, Gezielter Angriff, the opponent überrascht — the order question
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_160: 1 } }
+    opponent: { states: [STATE_13] }
+    choose: { targetZone: torso, manoeuvre: gezielterAngriff }
+    expect:
+      open: trefferzonen.surprised-then-halved
+      if:
+        a: { at: { total: 0 } }      # −4 / 2 = −2, +2 = 0
+        b: { at: { total: -1 } }     # −4 + 2 = −2, / 2 = −1
+    app_today: 0
+
+  - id: "TZ.5"
+    name: Head, Gezielter Angriff, the opponent überrascht
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_160: 1 } }
+    opponent: { states: [STATE_13] }
+    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    expect:
+      open: trefferzonen.surprised-then-halved
+      if:
+        a: { at: { total: -3 } }
+        b: { at: { total: -4 } }
+      also: { tell: [{ opponent: noDefence, from: STATE_13.UE1 }] }
+    app_today: −3; no "no defence" note
+
+  - id: "TZ.6"
+    name: Arms, no SF, the opponent überrascht — no halving, no order question
+    rulesets: [fokus.trefferzonen]
+    opponent: { states: [STATE_13] }
+    choose: { targetZone: arme }
+    expect:
+      at:
+        total: -6
+        lines: [{ value: -6, was: -8, from: trefferzonen.TZ5, via: [STATE_13] }]
+    app_today: same
+
+  - id: "TZ.7"
+    name: Torso of a winzig opponent — the aiming penalty replaces the size modifier
+    rulesets: [fokus.trefferzonen]
+    opponent: { size: winzig }
+    choose: { targetZone: torso }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: trefferzonen.TZ5 }] }
+      not_applied: [{ rule: groessenkategorie, reason: trefferzonen.TZ5 }]
+    app_today: −8 (the catalog's GRW_groessenkategorie −4 applies as well) — wrong
+
+  - id: "TZ.8"
+    name: Gezielter Schuss at the head of a groß target
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_161: 1 } }
+    opponent: { size: gross }
+    check: fk
+    choose: { targetZone: kopf, manoeuvre: gezielterSchuss }
+    expect:
+      open: trefferzonen.zone-replaces-size
+      if:
+        a: { fk: { total: -1, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1] }, { value: 4, from: fernkampf.zielgroesse }] } }
+        b: { fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1] }] } }
+    app_today: −1 (RangedModifiers.groesse +4 applies alongside)
+
+  # --- Where a blow lands (TZ2–TZ4) ---------------------------------------------------------
+
+  - id: "TZ.9"
+    name: The hero hits a human, no zone announced
+    rulesets: [fokus.trefferzonen]
+    opponent: { bodyPlan: humanoid, size: mittel }
+    rolls: { zone: [2, 13] }
+    expect:
+      zone: [{ roll: 2, zone: kopf }, { roll: 13, zone: arme, side: left }]
+      table: humanoid.mittel
+    app_today: same
+
+  - id: "TZ.10"
+    name: A goblin (klein) hits the medium hero — the page's own case
+    rulesets: [fokus.trefferzonen]
+    attacker: { size: klein }
+    rolls: { zone: [8] }
+    expect:
+      table: { use: humanoid.gross, from: trefferzonen.TZ3 }
+      zone: [{ roll: 8, zone: arme, side: right }]
+    app_today: rolls on the hero's own table (humanoid.mittel) → Torso — wrong
+
+  - id: "TZ.11"
+    name: A goblin (klein) hits a Zwerg hero (klein in the app)
+    rulesets: [fokus.trefferzonen]
+    hero: { species: Zwerg }
+    attacker: { size: klein }
+    rolls: { zone: [4] }
+    expect:
+      open: trefferzonen.relative-size-table
+      if:
+        a: { table: humanoid.mittel, zone: [{ roll: 4, zone: torso }] }
+        b: { table: humanoid.klein, zone: [{ roll: 4, zone: kopf }] }
+    app_today: klein table → Kopf
+
+  # --- Wundeffekte (TZ8–TZ11) ---------------------------------------------------------------
+
+  - id: "TZ.12"
+    name: 12 SP on the torso — twice the Wundschwelle
+    rulesets: [fokus.trefferzonen]
+    hit: { zone: torso, sp: 12 }
+    expect:
+      checks_first:
+        - talent: Selbstbeherrschung
+          application: Handlungsfähigkeit bewahren
+          modifier: { total: -2, lines: [{ value: -2, from: trefferzonen.TZ8 }] }
+      on_failure: { damage: { formula: 1W3+1, from: trefferzonen.TZ11 } }
+    app_today: same
+
+  - id: "TZ.13"
+    name: 5 SP on a leg — below the Wundschwelle; then 6 SP
+    rulesets: [fokus.trefferzonen]
+    sequence:
+      - { hit: { zone: beine, sp: 5 }, expect: { checks_first: [] } }
+      - hit: { zone: beine, sp: 6 }
+        expect:
+          checks_first:
+            - { talent: Selbstbeherrschung, application: Störungen ignorieren, modifier: { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8 }] } }
+          on_failure: { gain: { state: STATE_10, from: trefferzonen.TZ11 } }
+    app_today: same
+
+  - id: "TZ.14"
+    name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
+    rulesets: [fokus.trefferzonen]
+    hero: { loadout: { right: Schwert, left: Schild } }
+    hit: { zone: arme, side: right, sp: 7 }
+    fail: [Selbstbeherrschung]
+    expect:
+      open: trefferzonen.wundeffekt-arm-drop
+      if:
+        a: { tell: [{ hero: "lässt los, was die Hand hält", from: trefferzonen.TZ11 }] }
+        b: { loadout: { right: null, left: Schild }, log: "Schwert fallen gelassen", from: trefferzonen.TZ11 }
+    app_today: a reminder
+
+  - id: "TZ.15"
+    name: The hero is Überrascht — defending against the surprise action
+    rulesets: []
+    hero: { states: [STATE_13] }
+    expect:
+      open: STATE_13.hero-no-defence
+      if:
+        a: { tell: [{ hero: "keine Verteidigung gegen die Überraschungsaktion", from: STATE_13.UE1 }] }
+        b: { not_offered: [{ defence: [pa, aw], because: STATE_13.UE1 }] }
+    app_today: a reminder
+
+  # --- Aiming meets other rules -------------------------------------------------------------
+
+  - id: "TZ.16"
+    name: Aiming from horseback
+    rulesets: [fokus.trefferzonen]
+    hero: { mounted: true, abilities: { SA_160: 1 } }
+    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    expect:
+      open: SA_160.halving-by-manoeuvre
+      if:
+        a:
+          not_offered: [{ manoeuvre: gezielterAngriff, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }]
+          at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
+        b: { at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
+      # The aim itself is offered either way; only the halving is at stake.
+    app_today: −5
+
+  - id: "TZ.17"
+    name: Unterlaufen and an aimed attack with Gezielter Angriff, without Verbessertes Unterlaufen
+    rulesets: [fokus.trefferzonen]
+    hero: { loadout: { weapon: Dolch }, abilities: { SA_160: 1, SA_172: 1 } }
+    opponent: { reach: mittel }
+    choose: { manoeuvres: [unterlaufen, gezielterAngriff], targetZone: torso }
+    expect:
+      open: SA_160.halving-by-manoeuvre
+      if:
+        a:
+          excludes: [{ manoeuvres: [unterlaufen, gezielterAngriff], because: SA_172.U3 }]
+          at: { total: -4, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -4, from: trefferzonen.TZ5 }] }
+        b: { at: { total: -2, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -2, was: -4, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
+    app_today: Unterlaufen does not exist
+
+  - id: "TZ.18"
+    name: An opponent without zones
+    rulesets: [fokus.trefferzonen]
+    opponent: { bodyPlan: keineZonen }
+    expect:
+      not_offered: [{ choice: targetZone, because: trefferzonen.TZ4 }]
+    app_today: same
+
+  - id: "TZ.27"
+    name: The hero has Gezielter Angriff but aims without announcing it
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_160: 1 } }
+    choose: { targetZone: kopf }
+    expect:
+      open: SA_160.halving-by-manoeuvre
+      if:
+        a:
+          at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
+          offered: [{ manoeuvre: gezielterAngriff, from: SA_160.GA1 }]
+        b: { at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
+    # Under a, a hero would do this to keep the Spezialmanöver slot for another manoeuvre
+    # (Sturmangriff, SA_62), which manoeuvre-combination a or b allows only one of.
+    app_today: −5 (the SF halves every aimed attack)
+
+  # --- Trefferzonen-Rüstungsschutz (Fokusregel Stufe II) ------------------------------------
+
+  - id: "TZ.20"
+    name: Complete Plattenrüstung — same Belastung as the core rule
+    rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
+    hero: { armour: { kopf: Plattenrüstung, torso: Plattenrüstung, arme: Plattenrüstung, beine: Plattenrüstung } }
+    expect:
+      rs_by_zone: { kopf: 6, torso: 6, armLinks: 6, armRechts: 6, beinLinks: 6, beinRechts: 6 }
+      score: { value: 84, from: trefferzonen-ruestungsschutz.RS4 }     # 6 × (1 + 5 + 2·4)
+      conditions: { COND_1: 3 }
+      ini: { total: -3 }
+    app_today: RS 6 everywhere, Belastung 3 — same, by the core rule
+
+  - id: "TZ.21"
+    name: Lederrüstung without a helmet
+    rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
+    hero: { armour: { torso: Lederrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    expect:
+      rs_by_zone: { kopf: 0, torso: 3, armLinks: 3, armRechts: 3, beinLinks: 3, beinRechts: 3 }
+      score: { value: 39 }
+      conditions: { COND_1: 1 }
+      ini: { total: -2, lines: [{ value: -1, from: COND_1.B3 }, { value: -1, from: trefferzonen-ruestungsschutz.RS4 }] }
+    app_today: no zone armour — RS 3 on the head too
+
+  - id: "TZ.22"
+    name: Lederrüstung with a Kettenhelm — a helmet that costs a Belastung Stufe
+    rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
+    hero: { armour: { kopf: Kettenrüstung, torso: Lederrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    expect:
+      rs_by_zone: { kopf: 4, torso: 3 }
+      score: { value: 43, ruling: trefferzonen-ruestungsschutz.be-sentence }    # 39 + 4
+      conditions: { COND_1: 2 }
+      at: { total: -2, lines: [{ value: -2, from: COND_1.B3 }] }
+      ini: { total: -2, lines: [{ value: -2, from: COND_1.B3 }] }
+    # Surprise: a complete Lederrüstung (42) is Belastung 1 with −1 GS/INI; one point of helmet
+    # RS more (43) is Belastung 2 without the extra — AT and defence get 1 worse.
+    app_today: no zone armour
+
+  - id: "TZ.23"
+    name: Only the torso of a Plattenrüstung
+    rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
+    hero: { armour: { torso: Plattenrüstung } }
+    expect:
+      score: { value: 30 }
+      conditions: { COND_1: 1 }
+      ini: { total: -2, lines: [{ value: -1, from: COND_1.B3 }, { value: -1, from: trefferzonen-ruestungsschutz.RS4 }] }
+    # Plate on the torso alone picks up the −1 GS/INI band that complete plate does not have.
+    app_today: no zone armour
+
+  - id: "TZ.24"
+    name: Two armours equipped without Trefferzonen-RS
+    rulesets: [fokus.trefferzonen]
+    hero: { armour: [Kettenrüstung, Lederrüstung] }
+    expect:
+      not_selectable: [{ second_armour: true, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
+    app_today: both equipped and summed — wrong (as belastung 6.1)
+
+  - id: "TZ.25"
+    name: Trefferzonen-RS without Trefferzonen
+    rulesets: [fokus.trefferzonen-rs]
+    expect: { open: trefferzonen-ruestungsschutz.requires-trefferzonen }
+
+  - id: "TZ.26"
+    name: Kettenrüstung on the torso, Lederrüstung pieces on arms and legs
+    rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
+    hero: { armour: { torso: Kettenrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    expect:
+      open: trefferzonen-ruestungsschutz.pieces-from-other-armours
+      if:
+        a: { score: { value: 44 }, conditions: { COND_1: 2 } }     # 4·5 + 3·8
+        b: { not_selectable: [{ zone: [arme, beine], armour: Lederrüstung, because: trefferzonen-ruestungsschutz.RS3 }] }

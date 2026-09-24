@@ -1,0 +1,156 @@
+# Example 11 — Beidhändiger Kampf. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# `attack: main` / `attack: off` is the first / second roll of a double attack, or a single
+# attack with that hand. `parry: main` / `parry: off` names the hand the parry is made with.
+
+base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
+weapons:
+  Schwert: { technique: Schwerter, at: 14, pa: 8 }
+  Dolch:   { technique: Dolche, at: 13, pa: 6 }
+  Morgenstern: { technique: Kettenwaffen, at: 12, pa: 5 }
+  Holzschild:  { technique: Schilde, at: 10, pa: 9 }
+
+situations:
+
+  - id: "11.1"
+    name: Two weapons, one attack — no penalty
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    choose: { action: singleAttack, with: main }
+    expect:
+      at: { total: 0 }
+      not_applied:
+        - { rule: beidhaendiger-kampf, clause: ZW3, reason: only one weapon attacks this round }
+    app_today: same
+
+  - id: "11.2"
+    name: Double attack, no SF, no Beidhändig — the page's own example
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    choose: { action: doubleAttack }
+    expect:
+      attack_main: { total: -2, lines: [{ value: -2, from: beidhaendiger-kampf.ZW3 }] }
+      attack_off:
+        total: -6
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: -4, from: beidhaendiger-kampf.ZW4 }
+    app_today: same
+
+  - id: "11.3"
+    name: Defending later in the round of a double attack
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    round: { doubleAttack: done }
+    expect:
+      parry_main: { total: -2, lines: [{ value: -2, from: beidhaendiger-kampf.ZW3 }] }
+      parry_off:
+        total: -6
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: -4, from: beidhaendiger-kampf.ZW4 }
+      aw: { total: -2, lines: [{ value: -2, from: beidhaendiger-kampf.ZW3 }] }
+      offered: [{ choice: parryWith, among: [main, off], from: beidhaendiger-kampf.ZW7 }]
+    app_today: same
+
+  - id: "11.4"
+    name: Beidhändiger Kampf II and Beidhändig — a double attack at no cost
+    hero: { loadout: { main: Schwert, off: Dolch }, abilities: { SA_42: 2 }, advantages: [ADV_5] }
+    choose: { action: doubleAttack }
+    expect:
+      attack_main:
+        total: 0
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: 2, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3 }
+      attack_off:
+        total: 0
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: 2, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3 }
+        not_applied:
+          - { rule: beidhaendiger-kampf, clause: ZW4, reason: removed by ADV_5.V2 }
+      aw: { open: SA_42.sa42-dodge }          # a: 0, b: −2
+    app_today: AT 0 / 0, AW 0
+
+  - id: "11.4b"
+    name: Beidhändiger Kampf I, no Beidhändig
+    hero: { loadout: { main: Schwert, off: Dolch }, abilities: { SA_42: 1 } }
+    choose: { action: doubleAttack }
+    expect:
+      attack_main: { total: -1 }
+      attack_off:  { total: -5 }
+    app_today: same
+
+  - id: "11.5"
+    name: A parry earlier in the round, before the double attack
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    round: { order: [parry, doubleAttack] }
+    expect: { open: beidhaendiger-kampf.zw3-earlier-defences }    # a: the parry is 0
+    app_today: the parry is 0
+
+  - id: "11.6"
+    name: Parrying with the off-hand weapon, no double attack this round
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    choose: { parryWith: off }
+    expect:
+      parry_off: { total: -4, lines: [{ value: -4, from: beidhaendiger-kampf.ZW4 }] }
+    app_today: same
+
+  - id: "11.7"
+    name: What a double attack may carry
+    hero: { loadout: { main: Schwert, off: Dolch }, abilities: { SA_48: 1, SA_67: 1, SA_66: 1, SA_59: 1 } }
+    choose: { action: doubleAttack }
+    expect:
+      offered:
+        - { manoeuvre: finte, kind: basismanoever }
+        - { manoeuvre: wuchtschlag, kind: basismanoever }
+      not_offered:
+        - { manoeuvre: vorstoss, because: beidhaendiger-kampf.ZW6 }
+        - { manoeuvre: schildspalter, because: beidhaendiger-kampf.ZW6 }
+    app_today: offers Vorstoß and Schildspalter too — wrong (CombatAttackViews.availableManeuvers)
+
+  - id: "11.8"
+    name: A Patzer on the first attack of a double attack
+    hero: { loadout: { main: Schwert, off: Dolch } }
+    choose: { action: doubleAttack }
+    rolls: { attack_main: patzer }
+    expect:
+      cancelled: [{ attack: off, because: beidhaendiger-kampf.ZW8 }]
+    app_today: same (CombatExecutionView, "fumbleSecondLost")
+
+  - id: "11.9"
+    name: Fist and fist, or weapon and fist
+    hero: { loadout: { main: Schwert, off: Raufen }, abilities: { SA_42: 1 } }
+    expect: { open: beidhaendiger-kampf.raufen-double-attack }
+    app_today: not selectable — Raufen takes both hands
+
+  - id: "11.10"
+    name: A Kettenwaffe with a second weapon, and with a shield
+    hero: { loadout: { main: Morgenstern } }
+    expect:
+      not_selectable: [{ off: Dolch, because: beidhaendiger-kampf.ZW1 }]
+      selectable: [{ off: Holzschild }]
+    app_today: the Dolch is selectable — wrong (CombatLoadoutPicker.canSelect)
+
+  - id: "11.11"
+    name: Weapon and shield — attacking with the shield, parrying with it
+    hero: { loadout: { main: Schwert, off: Holzschild } }
+    choose: { action: doubleAttack }
+    expect:
+      offered: [{ action: doubleAttack, from: beidhaendiger-kampf.ZW2 }]
+      attack_off:              # the shield attack
+        total: -6
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: -4, from: beidhaendiger-kampf.ZW4 }
+      parry_shield: { total: 0 }  # ZW3 and ZW4 both exclude the shield defence
+    app_today: no double attack with a shield, and no shield attack at all — missing
+
+  - id: "11.12"
+    name: Which weapon is in the off hand
+    hero: { loadout: { chosen: [Schwert, Dolch], player_says: { main: Schwert } } }
+    choose: { action: doubleAttack }
+    expect:
+      attack_off: { weapon: Dolch, total: -6 }
+    app_today: >
+      the Dolch is the main hand and the Schwert takes the −4 — CombatLoadoutPicker.apply sorts
+      the chosen names and makes the first non-shield one the main weapon — wrong

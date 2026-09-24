@@ -1,0 +1,48 @@
+# DRAFT FORMAT — see ../../README.md.
+id: STATE_13
+name: Überrascht
+kind: status               # binary, no Stufen
+ruleset: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_%C3%9Cberrascht.html
+  book: Regelwerk
+  page: 36
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: UE1
+    text: >
+      Die üblichen Kampfhandlungen gehen davon aus, dass alle Parteien ihre Gegner sehen oder
+      wahrnehmen. Allerdings gibt es Situationen wie beispielsweise Hinterhalte, in denen man
+      überrascht ist. Gegen überraschte Personen darf eine Aktion ausgeführt werden, gegen die
+      keine Verteidigung genutzt werden darf. Erst danach beginnt die reguläre Kampfrunde.
+    effects:
+      - when: { opponent.state: ueberrascht, check: [at, fk] }
+        tell: { opponent: noDefence }
+        # Opponent side, display only (ADR-0005): "Der Gegner darf sich nicht verteidigen."
+      - when: { hero.state: ueberrascht }
+        forbid: { defence: [pa, aw], until: surpriseActionResolved }
+        ruling: hero-no-defence
+    # The Trefferzonen easing (−2 on the aiming penalty) is trefferzonen.TZ5, not this page's.
+
+rulings:
+  - id: hero-no-defence
+    status: open
+    question: >
+      While the hero is Überrascht, the surprising side's one action cannot be defended against.
+      Should the app block the hero's defences, or remind?
+    context: >
+      Today the hero's Überrascht is a reminder only (StateCatalog.ueberrascht has no modifier;
+      the catalog note on STATE_13). The app already disables Parade and Ausweichen for another
+      reason — the Patzer effect "Zu konzentriert" (activeCombatNoDefense), cleared at the hero's
+      next own action or the next Kampfrunde — so the mechanism exists. Überrascht ends when "die
+      reguläre Kampfrunde" begins, which the app sees as the INI roll / round 1.
+    situations: [trefferzonen TZ.15]
+    options:
+      a: { says: "Reminder only.", app: "no change" }
+      b: { says: "Parade and Ausweichen are disabled, with the reason, while Überrascht is set; the status clears when the regular Kampfrunde starts.", app: "the Zu-konzentriert mechanism, keyed to STATE_13" }
+    recommended: b
+    why_recommended: the rule is unambiguous about the defence, and a button that stays live invites a roll the rules forbid
+    answer: null

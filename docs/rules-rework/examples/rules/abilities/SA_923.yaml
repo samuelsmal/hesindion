@@ -1,0 +1,43 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_923
+name: Vinsalt-Stil
+kind: specialAbility
+group: Kampfstilsonderfertigkeiten (bewaffnet)
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/vinsalt-stil.html
+  book: Aventurisches Kompendium 2
+  page: 138
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: VS1
+    text: >
+      Ein Held mit dieser Sonderfertigkeit erleidet bei mehrfachen Verteidigungen in einer KR
+      nicht Erschwernisse von jeweils -3, sondern nur von jeweils -2.
+    effects:
+      - change: { line: mehrfache-verteidigung.MV1.step, set: { value: -2 } }
+        ruling: kampfstil-techniques
+        # FORMAT: replaces another rule's constant. The breakdown shows one line,
+        # "Mehrfache Verteidigung −4", marked as changed by Vinsalt-Stil — not two lines.
+
+  - id: VS2
+    text: "Kampftechniken: Armbrüste, Fechtwaffen, Zweihänder"
+    effects: none
+    why: >
+      what the list means for VS1 is the shared open ruling kampfstil-techniques. Armbrüste on
+      a defensive style reads oddly — a crossbow is not parried with — which is itself a hint
+      the list says who can learn the style rather than when it applies.
+
+  - id: VS3
+    text: >
+      Anmerkung: Dieser Stil ist mit den Sonderfertigkeiten Meisterparade und Machtvolle
+      Meisterparade kompatibel.
+    effects: none
+    why: a compatibility note; Meisterparade is not in the app yet
+
+  - id: VS4
+    text: "Erweiterte Kampfsonderfertigkeiten: Binden, Hohe Klinge, Machtvoller Kernschuss"
+    effects: none
+    why: unlocks purchases, not a roll

@@ -1,0 +1,61 @@
+# Example 12 — Kampfreflexe. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# `ini_base` is the hero sheet's INI Basiswert with its own breakdown; `ini` is what the
+# initiative roll starts from before 1W6 (Basiswert plus penalties such as Belastung).
+
+base_hero: { mu: 12, ge: 12, ini: 12, gs: 8 }     # INI Basiswert (MU+GE)/2 = 12
+mount: { name: Kriegspferd, ini: 12 }
+
+situations:
+
+  - id: "12.1"
+    name: Kampfreflexe I
+    hero: { abilities: { SA_51: 1 } }
+    expect:
+      ini_base:
+        total: 13
+        lines:
+          - { value: 12, from: derived.ini }        # (MU+GE)/2, ADR-0006
+          - { value: 1, from: SA_51.KR1 }
+    app_today: 12 — Kampfreflexe is ignored (OptolithImportService, DerivedValueFormulas.initiative; catalog status todo) — wrong
+
+  - id: "12.2"
+    name: Kampfreflexe III
+    hero: { abilities: { SA_51: 3 } }
+    expect:
+      ini_base: { total: 15, lines: [{ value: 12, from: derived.ini }, { value: 3, from: SA_51.KR1 }] }
+    app_today: 12 — wrong
+
+  - id: "12.3"
+    name: Kampfreflexe II in Plattenrüstung
+    hero: { abilities: { SA_51: 2 }, armour: [Plattenrüstung] }
+    expect:
+      ini_base: { total: 14 }
+      ini:
+        total: 11
+        lines:
+          - { value: 14, from: [derived.ini, SA_51.KR1] }
+          - { value: -3, from: COND_1.B3 }
+    app_today: 9 — wrong
+
+  - id: "12.4"
+    name: Kampfreflexe I and a Lederrüstung's extra −1 INI
+    hero: { abilities: { SA_51: 1 }, armour: [Lederrüstung] }
+    expect:
+      ini:
+        total: 11
+        lines:
+          - { value: 13, from: [derived.ini, SA_51.KR1] }
+          - { value: -1, from: COND_1.B3 }
+          - { value: -1, from: ruestung-und-belastung.A1 }
+    app_today: 10 — wrong
+
+  - id: "12.5"
+    name: Kampfreflexe II, mounted
+    hero: { abilities: { SA_51: 2 }, mounted: true }
+    expect:
+      ini_base_source: { value: 12, from: reiterkampf.RK1 }   # the mount's
+      ini_kampfreflexe: { open: SA_51.kampfreflexe-mounted }  # a: 12, b: 14
+      ini_belastung: { open: reiterkampf.rider-ini }
+    app_today: 12 — the mount's base; Kampfreflexe ignored either way

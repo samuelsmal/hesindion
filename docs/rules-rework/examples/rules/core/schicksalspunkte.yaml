@@ -1,0 +1,80 @@
+# DRAFT FORMAT — see ../../README.md.
+# Only the uses of Schicksalspunkte examples 3 and 4 need; the rest of the page is not written.
+id: schicksalspunkte
+name: Schicksalspunkte
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Schicksalspunkte.html
+  book: Regelwerk
+  page: 29
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: SP1
+    text: >
+      Für jede Probe kann nur jeweils 1 Schip eingesetzt werden. Es ist aber durchaus möglich,
+      einen Schip für Erster einzusetzen, dann einen Zustand zu ignorieren und anschließend bei
+      einer Fertigkeitsprobe Neuer Wurf einzusetzen. Als Anwendungen auf Proben gelten Neuer
+      Wurf, Qualität verbessern und Schadenswurf wiederholen. Sie können nur einmal für den Wurf
+      oder die Probe eingesetzt werden.
+    effects: none
+    why: limits how Schips combine; the example uses below are not "Anwendungen auf Proben"
+
+  - id: SP-verteidigung
+    name: Verteidigung
+    text: >
+      Wer seine Verteidigung im Kampf stärken will, der gibt 1 Schip aus und erhält bis zum Ende
+      der aktuellen Kampfrunde einen Bonus von 4 auf alle Verteidigungen. Dies kann zu einem
+      beliebigen Zeitpunkt der Kampfrunde erfolgen (aber vor dem Würfeln der Verteidigung). Der
+      Bonus erhöht auch die Anzahl der maximalen Verteidigungen eines Helden, da bei mehreren
+      Verteidigungen sein Verteidigungswert erst später auf 0 sinkt.
+    effects:
+      - offer: { choice: schipVerteidigung, costs: { schip: 1 }, span: round, before: defenceRoll }
+      - when: { choice: schipVerteidigung }
+        add: { to: [pa, aw], value: 4 }
+
+  - id: SP-zustand
+    name: Zustand ignorieren
+    text: >
+      Es kostet ebenfalls 1 Schip, alle Zustände, durch die man betroffen ist, für eine
+      Kampfrunde zu ignorieren.
+    effects:
+      - offer: { choice: schipZustandIgnorieren, costs: { schip: 1 }, span: round }
+      - when: { choice: schipZustandIgnorieren }
+        suppress: { kind: condition }
+        ruling: [schip-ignore-belastung, schip-lifts-incapacity]
+        # FORMAT: switches off every effect of every Zustand for the round — the lines on
+        # checks, the GS/INI penalties, and the Handlungsunfähig a Stufe IV carries. The
+        # suppressed lines should still be listed, struck through, not vanish.
+
+rulings:
+  - id: schip-ignore-belastung
+    status: open
+    question: >
+      "Alle Zustände … ignorieren" — does that include Belastung?
+    context: >
+      Belastung is a Zustand (it is listed among them, and counts toward the −5 cap and the
+      8-Stufen rule in the app). The app deliberately exempts it: "a Schip cannot will away
+      gear-derived Belastung" (SharedModifiers.encumbrance; Hero.hasIgnorableZustand). The page
+      makes no exception.
+    situations: [schmerz S8]
+    options:
+      a: { says: "Yes — every Zustand, Belastung included, for one Kampfrunde.", app: "the Belastung line is suppressed with the rest" }
+      b: { says: "No — Belastung stays; it is the gear, not the hero's state.", app: "as today, now written down as a ruling" }
+    recommended: a
+    why_recommended: the page says "alle Zustände" and Belastung is one; the exemption exists only in the code
+    answer: null
+
+  - id: schip-lifts-incapacity
+    status: decided
+    question: >
+      Does "Zustand ignorieren" also lift the Handlungsunfähig that a Zustand at Stufe IV, or
+      eight Zustandsstufen in sum, carries?
+    answer: >
+      Yes, for that Kampfrunde — it is carried by Zustände. It does not lift a Handlungsunfähig
+      stated outright or implied by a Status (Bewusstlos, Versteinert).
+    decided: { by: "@samuelsmal", date: 2026-09-20 }
+    source: recorded from the doc comment on Hero.isHandlungsunfaehigFromZustaende ("owner ruling, 2026-09-20")
+    applies_to: [SP-zustand]

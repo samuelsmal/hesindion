@@ -1,0 +1,81 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_172
+name: Unterlaufen
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 2
+manoeuvre: { kind: basismanoever }      # so reiterkampf.RK3 leaves it available on horseback
+techniques: [Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter, Zweihandhiebwaffen, Zweihandschwerter]
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Unterlaufen.html
+  book: Aventurisches Kompendium
+  page: 155
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: U1
+    text: >
+      Für jede Stufe dieser SF kann die Heldin eine Stufe Nachteile durch Nahkampfreichweiten
+      gegen Gegner mit längeren Waffen ignorieren. Mit Stufe I lässt sich beispielsweise der
+      Unterschied zwischen kurzer Waffe und mittlerer Waffe überwinden, mit Stufe II sogar der
+      Unterschied zwischen kurz und lang. Kann die Abenteurerin durch Unterlaufen den
+      Reichweitenvorteil nicht komplett ignorieren, sind die Nachteile zumindest um 1 Stufe
+      verringert.
+    effects:
+      - when: { manoeuvre: unterlaufen }
+        lower: { line: reichweite.RW3.at, by_steps: 1, per: tier, min: 0 }
+        # FORMAT: lowers another rule's line by reach *steps*, not by a number. The breakdown
+        # shows "Reichweite −4 → −2 (Unterlaufen I)", so the player sees what was ignored.
+
+  - id: U2
+    text: >
+      Die Heldin muss das Unterlaufen vor ihrer AT ankündigen. Diese AT ist um die
+      Nahkampfreichweite modifiziert, die nicht durch das Manöver ausgeglichen werden kann.
+      Misslingt die AT, steht dem Gegner ein Passierschlag zu. Der Vorteil des Manövers gilt nur
+      für einen Angriff.
+    effects:
+      - offer:
+          manoeuvre: unterlaufen
+          announce: before-at
+          span: attack
+          requires: { opponent.reach: { longer_than: loadout.reach }, loadout.technique: { in: techniques } }
+          ruling: sf-technique-lists
+          # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
+          # or shorter one it gains nothing and still risks a Passierschlag.
+      - when: { manoeuvre: unterlaufen, attack: miss }
+        tell: { opponent: passierschlag }
+
+  - id: U3
+    text: Unterlaufen kann mit keinem Spezialmanöver kombiniert werden.
+    effects:
+      - unless: { hero.has: SA_173 }
+        excludes: { manoeuvre: { kind: spezialmanoever } }
+
+  - id: U4
+    text: >
+      Anmerkung: Einen Bonus des Widersachers durch die SF Auf Distanz halten muss der Held
+      dennoch bei seiner AT als Erschwernis einrechnen.
+    open_ruling: auf-distanz-halten
+    status: unencoded
+    why: the opponent's SF is not modelled (ADR-0005); how the app learns of it is the ruling
+
+rulings:
+  - id: auf-distanz-halten
+    status: open
+    question: >
+      U4: an opponent with the SF Auf Distanz halten (SA_152) keeps its bonus against an
+      Unterlaufen. The app does not know the opponent's special abilities. How does that bonus
+      reach the hero's AT?
+    context: >
+      Opponents are described by what the player tells the app (OpponentProfile: reach, size,
+      on foot, …), not by a stat block. Auf Distanz halten's own page was not found on the wiki
+      under the expected URL, so its number is not in this example yet.
+    situations: [reichweite RW.12]
+    options:
+      a: { says: "Text only: the Unterlaufen offer reminds that Auf Distanz halten still counts.", app: "a reminder line" }
+      b: { says: "A GM question on the announcement, 'Gegner hat Auf Distanz halten', which adds the SF's penalty as its own line.", app: "one more opponent fact; SA_152 needs its own rule file" }
+    recommended: b
+    why_recommended: the opponent's reach is already asked the same way, and a number the app knows is one the breakdown can cite
+    answer: null

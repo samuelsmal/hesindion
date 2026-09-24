@@ -1,0 +1,132 @@
+# Example 4 — Schmerz, the Zustand cap and the Schip "Zustand ignorieren". Same conventions as
+# belastung.yaml. Base hero LE 30; `lp` is the current LP. No armour unless stated.
+# DRAFT FORMAT — see ../README.md.
+
+base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, le: 30 }
+
+situations:
+
+  # --- Schmerz from LP (COND_6.SZ3) ---------------------------------------------------------
+
+  - id: S1
+    name: LP 22 of 30 — below three quarters (22.5)
+    hero: { lp: 22 }
+    expect:
+      conditions: { COND_6: 1 }
+      at:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [COND_6.SZ3] }] }
+      talent: { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      spell:  { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      gs:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      ini:    { total: 0 }          # INI is not a Probe, and the page does not list it
+    app_today: checks −1; GS 0 — wrong (no reader applies Schmerz to GS)
+
+  - id: S2
+    name: LP 15 of 30 — half
+    hero: { lp: 15 }
+    expect:
+      conditions: { COND_6: 2 }
+      at: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
+      gs: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
+    app_today: checks −2; GS 0 — wrong
+
+  - id: S3
+    name: LP 5 of 30 — a quarter and "5 or fewer" — Stufe IV
+    hero: { lp: 5 }
+    expect:
+      conditions: { COND_6: 4 }
+      requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
+      on_failure: { states: { handlungsunfaehig: { from: COND_6.SZ5 } } }
+    app_today: Handlungsunfähig outright, no check offered — wrong
+
+  - id: S4
+    name: LP 23 of 30 — just above three quarters
+    hero: { lp: 23 }
+    expect: { open: COND_6.schmerz-thresholds }      # 0 if exact, Schmerz I if the threshold rounds up to 23
+    app_today: no Schmerz
+
+  # --- Schmerz with Belastung, and the cap (zustaende.Z3) ------------------------------------
+
+  - id: S5
+    name: Schmerz II in Platte — exactly at the cap
+    hero: { lp: 15, armour: [Plattenrüstung] }
+    expect:
+      at:
+        total: -5
+        lines:
+          - { value: -2, from: COND_6.SZ5 }
+          - { value: -3, from: COND_1.B3 }
+    app_today: same
+
+  - id: S6
+    name: Schmerz III in Platte — over the cap
+    hero: { lp: 7, armour: [Plattenrüstung] }
+    expect:
+      conditions: { COND_6: 3, COND_1: 3 }
+      at:
+        total: -5
+        lines:
+          - { value: -3, from: COND_6.SZ5 }
+          - { value: -3, from: COND_1.B3 }
+          - { value: 1, from: zustaende.Z3 }          # the correction line
+      ini: { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
+      gs:  { open: zustaende.cap-scope }               # −6 uncapped, −5 capped
+    app_today: AT −5 with the correction line; GS −3 (Belastung only)
+
+  - id: S7
+    name: Eight Zustandsstufen — Schmerz III, Belastung III, Betäubung II
+    hero: { lp: 7, armour: [Plattenrüstung], conditions: { COND_2: 2 } }
+    expect:
+      states: { handlungsunfaehig: { from: zustaende.Z5 } }
+    app_today: same (Hero.isHandlungsunfaehigFromZustaende counts Belastung)
+
+  - id: S8
+    name: Schip "Zustand ignorieren" — Schmerz II in Platte
+    hero: { lp: 15, armour: [Plattenrüstung] }
+    round: { choices: [schipZustandIgnorieren] }
+    expect:
+      at:
+        total: { open: schicksalspunkte.schip-ignore-belastung }    # 0 if Belastung is ignored too, −3 if not
+        suppressed:
+          - { value: -2, from: COND_6.SZ5, by: schicksalspunkte.SP-zustand }
+      gs: { open: schicksalspunkte.schip-ignore-belastung }
+    app_today: AT −3 (Belastung is never ignored)
+
+  - id: S9
+    name: Schip "Zustand ignorieren" at Schmerz IV
+    hero: { lp: 5 }
+    round: { choices: [schipZustandIgnorieren] }
+    expect:
+      states: {}                                     # able to act this Kampfrunde
+      at: { total: 0, suppressed: [{ from: COND_6.SZ5, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-lifts-incapacity }] }
+    app_today: same
+
+  - id: S10
+    name: Schip "Zustand ignorieren" does not wake a Bewusstlos hero
+    hero: { states: [bewusstlos] }
+    round: { choices: [schipZustandIgnorieren] }
+    expect:
+      states: { handlungsunfaehig: { from: STATE_2, ruling: schicksalspunkte.schip-lifts-incapacity } }
+    app_today: same
+
+  - id: S11
+    name: A talent and a spell with Schmerz II
+    hero: { lp: 15 }
+    checks: [{ talent: Überreden }, { spell: any }]
+    expect:
+      talent: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
+      spell:  { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
+    app_today: same — Schmerz reaches every check, Belastung only some (belastung.yaml 4.x)
+
+  - id: S12
+    name: Schmerz IV, the Selbstbeherrschung check passed, in Platte
+    hero: { lp: 5, armour: [Plattenrüstung] }
+    passed: [COND_6.SZ2]
+    expect:
+      at:
+        total: -5
+        lines:
+          - { value: -4, from: COND_6.SZ5 }
+          - { value: -3, from: COND_1.B3 }
+          - { value: 2, from: zustaende.Z3 }
+      gs: { open: [COND_6.schmerz-iv-gs, zustaende.cap-scope] }
+    app_today: Handlungsunfähig — the check does not exist

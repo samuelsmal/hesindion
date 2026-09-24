@@ -1,0 +1,67 @@
+# Example 13 — Verweichlicht. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# The Wundeffekt and its −1 per Wundschwelle belong to the Trefferzonen Fokusregel, which is
+# not written as a rule file yet (example 6); its lines cite `trefferzonen.*` as placeholders.
+
+base_hero: { ko: 11, wundschwelle: 6, talents: { Selbstbeherrschung: 8 } }
+fokusregeln: [trefferzonen]    # unless a situation says otherwise
+
+situations:
+
+  - id: "13.1"
+    name: Torso hit, 7 SP after RS — the Wundeffekt check
+    hero: { disadvantages: [DISADV_57] }
+    event: { hit: { zone: torso, sp: 7 } }
+    check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, cause: woundEffect }
+    expect:
+      check:
+        total: -3
+        lines:
+          - { value: -1, from: trefferzonen.wundeffekt }        # 7 SP = 1 × Wundschwelle 6
+          - { value: -2, from: DISADV_57.VW1, ruling: DISADV_57.verweichlicht-scope }
+    app_today: same (catalog DISADV_57, Situation.woundEffectProbe)
+
+  - id: "13.2"
+    name: The same check in Plattenrüstung — Belastung does not reach Selbstbeherrschung
+    hero: { disadvantages: [DISADV_57], armour: [Plattenrüstung] }
+    event: { hit: { zone: arme, sp: 13 } }
+    check: { talent: Selbstbeherrschung, application: Störungen ignorieren, cause: woundEffect }
+    expect:
+      check:
+        total: -4
+        lines:
+          - { value: -2, from: trefferzonen.wundeffekt }        # 13 SP = 2 × Wundschwelle
+          - { value: -2, from: DISADV_57.VW1, ruling: DISADV_57.verweichlicht-scope }
+      not_applied:
+        - { rule: COND_1, clause: B3, reason: Selbstbeherrschung is not hindered by Belastung, ruling: COND_1.belastung-reach }
+    app_today: same total; the not-applied Belastung is not listed
+
+  - id: "13.3"
+    name: Selbstbeherrschung for another reason — no Wundeffekt
+    hero: { disadvantages: [DISADV_57] }
+    check: { talent: Selbstbeherrschung, application: Störungen ignorieren, cause: gm }
+    expect:
+      check: { total: 0 }
+      not_applied:
+        - { rule: DISADV_57, clause: VW1, reason: not a Wundeffekt check }
+    app_today: same
+
+  - id: "13.4"
+    name: Trefferzonen off, a hit well over the Wundschwelle
+    hero: { disadvantages: [DISADV_57] }
+    fokusregeln: []
+    event: { hit: { sp: 13 } }
+    expect:
+      checks_asked: []                # no Wundeffekt, so no check
+      hero_sheet:
+        not_applied:
+          - { rule: DISADV_57, reason: needs the Trefferzonen Fokusregel, ruling: DISADV_57.verweichlicht-scope }
+    app_today: nothing, and nothing says why — the disadvantage is silently inert
+
+  - id: "13.5"
+    name: The check Status Blutend asks for
+    hero: { disadvantages: [DISADV_57], states: { blutend: 1 } }
+    check: { talent: Selbstbeherrschung, cause: blutend }
+    expect: { open: DISADV_57.verweichlicht-scope }    # a: 0, b: −2
+    app_today: 0

@@ -1,0 +1,56 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_48
+name: Finte
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 3
+manoeuvre: { kind: basismanoever }
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Finte.html
+  book: Regelwerk
+  page: 247
+  checked: 2026-09-23
+  hash: null
+reviewed: null
+
+clauses:
+  - id: F1
+    text: >
+      Der Angreifer kann mit diesem Manöver seine eigene Attacke pro Stufe der Sonderfertigkeit
+      um -1 erschweren, was beim Gelingen die Verteidigung des Gegners um -2 pro Stufe der
+      Sonderfertigkeit erschwert.
+    effects:
+      - offer:
+          manoeuvre: finte
+          tiers: owned                 # which Stufen are offered: ruling tiered-manoeuvre-stufe
+          ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { manoeuvre: finte }
+        add: { to: at, value: -1, per: chosen_tier }
+      - when: { manoeuvre: finte, attack: hit }
+        opponent_add: { to: [pa, aw], value: -2, per: chosen_tier }
+        # "Verteidigung" — parry or dodge, whichever the opponent uses.
+        # FORMAT: `chosen_tier` (the Stufe the player announced) is not `tier` (the Stufe owned).
+
+  - id: F2
+    text: "Erschwernis: -1/-2/-3"
+    effects: none
+    why: restates F1's AT cost per Stufe
+
+  - id: F3
+    text: >
+      Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Peitschen, Raufen, Schwerter,
+      Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - requires: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_8, CT_9, CT_12, CT_13, CT_15, CT_16] }
+        ruling: sf-technique-lists
+        # Dolche, Fächer, Fechtwaffen, Hiebwaffen, Peitschen, Raufen, Schwerter, Stangenwaffen,
+        # Zweihandhiebwaffen, Zweihandschwerter. The page notes that techniques from later books
+        # were added to the list, so it can grow; Spießwaffen (CT_21) is not on it today.
+
+  - id: F4
+    text: >
+      Voraussetzungen: Stufe I: GE 13, Stufe II: GE 15, Finte I; Stufe III: GE 17, Finte II
+    effects: none
+    why: purchase prerequisites, not a roll
+
+# Excluded by: SA_62.ST4 (Sturmangriff cannot be combined with Finte). The exclusion lives there.
