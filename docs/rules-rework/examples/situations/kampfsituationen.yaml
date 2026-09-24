@@ -1,0 +1,327 @@
+# Example 17 — Passierschlag, Angriff von hinten, Beengte Umgebung, Größenkategorie.
+# Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
+#
+# The hero is Boronmir (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json):
+#   MU 14, GE 14, KK 15. Hiebwaffen 12, Schwerter 12, Schilde 9, Raufen 10.
+#   AT = KtW + (MU−8)/3 = 12 + 2 = 14 with the Rabenschnabel and the Langschwert (AT mod 0).
+#   PA = ⌈KtW/2⌉ + (Leiteigenschaft−8)/3 + PA mod:
+#     Rabenschnabel (Hiebwaffen, KK)    6 + 2 − 1 = 7
+#     Langschwert (Schwerter, GE/KK)    6 + 2 + 0 = 8
+#   Großschild (Schilde 9, AT −6, PA +3):
+#     shield AT     9 + 2 − 6 = 5
+#     shield parry  ⌈9/2⌉ + 2 + 2×3 = 13   (the shield's PA mod counts double on its own parry)
+#     carried, it adds its PA mod +3 to a weapon parry: Rabenschnabel 10, Langschwert 11
+#   AW = GE/2 = 7.
+#   These are what the app computes too (OptolithImportService.parseItems,
+#   Hero.passiveShieldPABonus). Kupperus (Svellttaler Kaltblut, under `pets`): GS 12, groß.
+#
+# No armour unless stated. In his Plattenrüstung, Belastung II (Belastungsgewöhnung I) adds −2
+# AT/PA/AW on foot, −1 mounted (belastung.md, reiterkampf.RK7); those lines are left out below
+# because none of these rules touches them. Also left out: the Großschild's "−1 AT auf die
+# Hauptwaffe" (ITEMTPL_29.GR1, example 18), which none of these rules touches either.
+# `total` is the change; the value after it is in the comment.
+
+base_hero: { at: 14, pa: { Rabenschnabel: 7, Langschwert: 8, Großschild: 13 }, aw: 7 }
+mount: { name: Kupperus, gs: 12, size: gross }
+
+situations:
+
+  # --- Passierschlag ------------------------------------------------------------------------
+
+  - id: "17.1"
+    name: A human flees Boronmir; Passierschlag with the Rabenschnabel (the page's example)
+    hero: { loadout: { weapon: Rabenschnabel } }
+    choose: { attack: passierschlag }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: passierschlag.PS2 }] }      # 14 → 10
+      costs: none
+      tell: [{ opponent: "keine Verteidigung", from: passierschlag.PS2 }]
+      rolls: [{ roll: 1, confirm: false }, { roll: 20, confirm: false }]      # PS4
+    app_today: same (AT 10, no confirmation roll); the 1 and the 20 wait on passierschlag-dice
+
+  - id: "17.2"
+    name: Passierschlag with Wuchtschlag or Finte
+    hero: { abilities: { SA_67: 1, SA_48: 1 }, loadout: { weapon: Langschwert } }
+    choose: { attack: passierschlag }
+    expect:
+      not_offered:
+        - { manoeuvre: wuchtschlag, because: passierschlag.PS3 }
+        - { manoeuvre: finte, because: passierschlag.PS3 }
+    app_today: same (the Passierschlag is itself the one entry of the manoeuvre list)
+
+  - id: "17.3"
+    name: Mounted on Kupperus, Passierschlag at a fleeing fighter on foot
+    hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Rabenschnabel } }
+    opponent: { onFoot: true }
+    choose: { attack: passierschlag }
+    expect:
+      open: passierschlag.passierschlag-sf
+      if:
+        a:
+          at:
+            total: 0                                                          # 14 → 14
+            lines:
+              - { value: -4, from: passierschlag.PS2 }
+              - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+              - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
+        b:
+          at:
+            total: -2                                                         # 14 → 12
+            lines:
+              - { value: -4, from: passierschlag.PS2 }
+              - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+            not_applied: [{ rule: SA_661, reason: passierschlag.PS3 }]
+    app_today: AT 14 (a)
+
+  - id: "17.4"
+    name: Passierschlag aimed at the head (Trefferzonen on)
+    rulesets: [fokus.trefferzonen]
+    hero: { abilities: { SA_160: 1 }, loadout: { weapon: Rabenschnabel } }
+    choose: { attack: passierschlag, targetZone: kopf }
+    expect:
+      open: passierschlag.passierschlag-zone
+      if:
+        a:
+          at:
+            total: -14                                                        # 14 → 0
+            lines:
+              - { value: -4, from: passierschlag.PS2 }
+              - { value: -10, from: trefferzonen.TZ5 }   # no halving: Gezielter Angriff is a manoeuvre (PS3)
+        b:
+          not_offered: [{ choice: targetZone, because: passierschlag.PS3 }]
+    app_today: no zone picker on a Passierschlag (b)
+
+  - id: "17.5"
+    name: Passierschlag in a corridor with the Langschwert
+    hero: { states: [STATE_6], loadout: { weapon: Langschwert } }
+    choose: { attack: passierschlag }
+    expect:
+      at:
+        total: -8                                                             # 14 → 6
+        lines:
+          - { value: -4, from: passierschlag.PS2 }
+          - { value: -4, from: beengte-umgebung.BU2 }
+    app_today: same
+
+  - id: "17.6"
+    name: Passierschlag at a rat (winzig)
+    hero: { loadout: { weapon: Rabenschnabel } }
+    opponent: { size: winzig }
+    choose: { attack: passierschlag }
+    expect:
+      at:
+        total: -8                                                             # 14 → 6
+        lines:
+          - { value: -4, from: passierschlag.PS2 }
+          - { value: -4, from: groessenkategorie.GK3 }
+    app_today: same
+
+  - id: "17.7"
+    name: Two opponents flee in the same round
+    hero: { loadout: { weapon: Rabenschnabel } }
+    choose: { attacks: [passierschlag, passierschlag] }
+    expect:
+      each: { at: { total: -4, lines: [{ value: -4, from: passierschlag.PS2 }] } }
+      actions_used: 0                               # PS2, PS5
+      counts_as_defence: false                      # mehrfache-verteidigung does not move
+    app_today: same (nothing counts Passierschläge)
+
+  - id: "17.8"
+    name: Boronmir on foot fails a Flucht and suffers a Passierschlag
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    event: { hero: fluchtFailed }
+    expect:
+      not_offered: [{ defence: [pa, aw], because: passierschlag.PS2 }]
+      next: takeDamage
+    app_today: same (CombatFluchtView → take-damage screen, "keine Verteidigung")
+
+  - id: "17.9"
+    name: Mounted, Boronmir flees past a fighter on foot and suffers a Passierschlag
+    hero: { mounted: true }
+    opponent: { onFoot: true }
+    event: { hero: passierschlagSuffered }
+    expect:
+      not_offered: [{ defence: [pa, aw], because: passierschlag.PS2 }]
+      target: { open: reiterkampf.passierschlag-on-mount }    # the page: the mount (RK11)
+    app_today: the damage goes to Boronmir
+
+  # --- Angriff von hinten -------------------------------------------------------------------
+
+  - id: "17.10"
+    name: Mounted, a fighter on foot attacks Boronmir from behind
+    hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Rabenschnabel, shield: Großschild } }
+    opponent: { onFoot: true, fromBehind: true }
+    expect:
+      pa_weapon:
+        # base 10 (7 + the Großschild's passive +3)
+        total: -1
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: 1, from: SA_661.GS2 }
+          - { value: -4, from: angriff-von-hinten.AH1 }
+        open: angriff-von-hinten.mounted-from-behind-shield   # a: the passive +3 goes too (→ 6); b, c: 9
+      pa_shield: { open: angriff-von-hinten.mounted-from-behind-shield }   # a, b: not offered (RK5); c: 13 − 1 = 12
+      aw:
+        total: -4                                                             # 7 → 3
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: -2, from: reiterkampf.RK6 }
+          - { value: -4, from: angriff-von-hinten.AH1 }
+    app_today: shield parry offered at 12, weapon parry 9, AW 3 (c)
+
+  - id: "17.11"
+    name: On foot, Langschwert and Großschild, attacked from behind
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    opponent: { fromBehind: true }
+    expect:
+      pa_shield: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 13 → 9
+      pa_weapon: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 11 → 7
+      aw: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }          # 7 → 3
+    app_today: same
+
+  - id: "17.12"
+    name: Boronmir attacks a human from behind
+    hero: { loadout: { weapon: Rabenschnabel } }
+    opponent: { fromBehind: true }
+    expect:
+      at: { total: 0 }
+      opponent_lines: [{ to: [pa, aw], value: -4, from: angriff-von-hinten.AH1 }]
+    app_today: same (an opponent line "Gegner-VW −4")
+
+  - id: "17.13"
+    name: An arrow from behind; Boronmir dodges
+    hero: { loadout: { weapon: Langschwert } }
+    attack: { kind: ranged }
+    opponent: { fromBehind: true }
+    expect:
+      open: angriff-von-hinten.from-behind-ranged
+      if:
+        a: { aw: { total: 0 } }                                               # 7
+        b: { aw: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] } }   # 3
+    app_today: −4 when the toggle is set (the defence screen does not know the attack was ranged)
+
+  # --- Beengte Umgebung ---------------------------------------------------------------------
+
+  - id: "17.14"
+    name: A corridor, Langschwert and Großschild, AT and parry with the Langschwert
+    hero: { states: [STATE_6], loadout: { weapon: Langschwert, shield: Großschild } }
+    expect:
+      open: beengte-umgebung.beengt-shield-carried
+      if:
+        a:
+          at: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }          # 14 → 10
+          pa_weapon: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }   # 11 → 7
+        b:
+          at:
+            total: -10                                                        # 14 → 4
+            lines: [{ value: -4, from: beengte-umgebung.BU2 }, { value: -6, from: beengte-umgebung.BU3 }]
+          pa_weapon:
+            total: -8                                                         # 11 → 3
+            lines: [{ value: -4, from: beengte-umgebung.BU2 }, { value: -4, from: beengte-umgebung.BU3 }]
+    app_today: AT −4, PA −4 (a)
+
+  - id: "17.15"
+    name: The same corridor, parrying with the Großschild
+    hero: { states: [STATE_6], loadout: { weapon: Langschwert, shield: Großschild } }
+    choose: { defence: shieldParry }
+    expect:
+      pa_shield: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
+    app_today: −4, but from the Langschwert's reach (mittel), not the shield's row — right by coincidence
+
+  - id: "17.16"
+    name: The Langschwert dropped; Raufen and the Großschild, parrying with the shield
+    hero: { states: [STATE_6], loadout: { weapon: null, shield: Großschild } }
+    choose: { defence: shieldParry }
+    expect:
+      pa_shield: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
+    app_today: 0 — wrong (the main piece is bare hands, kurz; Situation.loadoutReach)
+
+  - id: "17.17"
+    name: A shield bash with the Großschild in the corridor
+    hero: { states: [STATE_6], loadout: { weapon: Langschwert, shield: Großschild } }
+    choose: { attack: { with: Großschild } }
+    expect:
+      at: { total: -6, lines: [{ value: -6, from: beengte-umgebung.BU3 }] }             # 5 → −1
+    app_today: >
+      no shield attack is offered (beidhaendiger-kampf); where the app does roll AT with the
+      shield (a Passierschlag named for it, PassierschlagRoll) the shield's reach is kurz and
+      Beengte Umgebung gives 0 — wrong
+
+  - id: "17.18"
+    name: The corridor with the Rabenschnabel alone; and dodging
+    hero: { states: [STATE_6], loadout: { weapon: Rabenschnabel } }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }             # 14 → 10
+      pa: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }             # 7 → 3
+      aw: { total: 0 }                                                                  # 7
+    app_today: same
+
+  # --- Größenkategorie ----------------------------------------------------------------------
+
+  - id: "17.19"
+    name: Boronmir attacks a rat (winzig)
+    hero: { loadout: { weapon: Rabenschnabel } }
+    opponent: { size: winzig }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: groessenkategorie.GK3 }] }            # 14 → 10
+    app_today: same
+    # With Trefferzonen and a zone announced, the zone penalty replaces this: trefferzonen TZ.7.
+
+  - id: "17.20"
+    name: An Oger (groß) attacks; Langschwert and Großschild
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    opponent: { size: gross }
+    expect:
+      offered: [{ defence: shieldParry }, { defence: aw }]
+      not_offered: [{ defence: weaponParry, because: groessenkategorie.GK4 }]
+      pa_shield: { total: 0 }                                                           # 13
+    app_today: same (SizeCategoryRules.allowedDefenses; the weapon list shows only the shield)
+
+  - id: "17.21"
+    name: An Oger attacks; the Rabenschnabel alone
+    hero: { loadout: { weapon: Rabenschnabel } }
+    opponent: { size: gross }
+    expect:
+      offered: [{ defence: aw }]
+      not_offered: [{ defence: weaponParry, because: groessenkategorie.GK4 }]
+    app_today: same
+
+  - id: "17.22"
+    name: Mounted on Kupperus, Boronmir attacks a fighter on foot
+    hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Rabenschnabel } }
+    opponent: { onFoot: true, size: mittel }
+    expect:
+      at:
+        total: 4                                                              # 14 → 18
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
+      opponent_defence: { open: groessenkategorie.mounted-size }   # a: any; b: tell "nur Schildparade oder Ausweichen"
+    app_today: AT 18; nothing said about the opponent's defence (a)
+
+  - id: "17.23"
+    name: On foot, a mounted knight attacks Boronmir (Langschwert and Großschild)
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    opponent: { mounted: true, size: mittel }
+    expect:
+      open: groessenkategorie.mounted-size
+      if:
+        a: { offered: [{ defence: weaponParry }, { defence: shieldParry }, { defence: aw }] }
+        b: { not_offered: [{ defence: weaponParry, because: groessenkategorie.GK4 }] }
+    app_today: whatever size the player picks for the rider; mittel by default (a)
+
+  - id: "17.24"
+    name: Mounted, a Riese (riesig, on foot) attacks
+    hero: { mounted: true, loadout: { weapon: Rabenschnabel, shield: Großschild } }
+    opponent: { size: riesig, onFoot: true }
+    expect:
+      offered: [{ defence: aw }]
+      not_offered:
+        - { defence: weaponParry, because: groessenkategorie.GK4 }
+        - { defence: shieldParry, because: groessenkategorie.GK4 }
+      aw:
+        total: 0                                                              # 7
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: -2, from: reiterkampf.RK6 }
+    app_today: same

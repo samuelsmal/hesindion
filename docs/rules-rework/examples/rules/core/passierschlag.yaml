@@ -1,0 +1,167 @@
+# DRAFT FORMAT — see ../../README.md.
+id: passierschlag
+name: Passierschlag
+kind: core
+catalog_id: GRW_passierschlag
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Kampf-Passierschlag.html
+  book: Regelwerk
+  page: 237
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# Also Kodex des Schwertes p. 74. The Passierschlag is struck by whoever is *given* one; the
+# hero strikes one (an attack of ours) or suffers one (damage on our side, no defence).
+
+clauses:
+  - id: PS1
+    text: >
+      Es gibt verschiedene Gründe, warum ein Passierschlag ausgeführt werden kann. So erleidet
+      ein Kämpfer beispielsweise einen Passierschlag, wenn die Probe bei der Flucht misslingt,
+      oder ein Kritischer Erfolg des Gegners bei der Parade gelingt, oder bestimmte Manöver des
+      Kämpfers misslingen, oder er einfach durch die Angriffsdistanz eines neuen Gegners rennt
+      ohne sich ihm zu stellen.
+    effects:
+      - when: { event: movesThroughReach, of: newOpponent, not: { engages: true } }
+        tell: { hero: "Passierschlag des Gegners" }
+      # The other triggers are the other rules' own clauses, which point here:
+      #   Flucht (misslungen) — the Flucht page, not drafted; mounted: reiterkampf.RK15
+      #   a critical parry — the critical-success rules (CriticalSuccessTable, basic rule)
+      #   failed manoeuvres — SA_62.ST3, SA_172.U2; a Patzer getting there — vorteilhafte-position.VP2
+      #   standing up — STATE_10.L4
+      # FORMAT: a rule whose triggers live in other files. `beispielsweise` makes this list
+      # open, so the Passierschlag has to be reachable on its own (the manoeuvre list does that
+      # today), not only from the triggers the rules name.
+
+  - id: PS2
+    text: >
+      Ein Passierschlag ist ein Nahkampfangriff, der keine Handlung erfordert und auf den nicht
+      mit einer Verteidigung reagiert werden kann. Es handelt sich um eine um -4 erschwerte
+      Attacke.
+    effects:
+      - offer: { attack: passierschlag, costs: none, domain: meleeAttack }
+      - when: { attack: passierschlag }
+        add: { to: at, value: -4 }
+        # Every other line of a melee AT still applies (Belastung, Beengte Umgebung, winzig
+        # target, vorteilhafte Position) — only the manoeuvres are out (PS3).
+      - when: { attack: passierschlag, side: hero }
+        opponent_may_only: []
+        tell: { opponent: "keine Verteidigung" }
+      - when: { attack: passierschlag, side: opponent }
+        forbid: { defence: [pa, aw] }
+        then: { go_to: takeDamage }
+        # The hero suffers it: no defence is offered; straight to the damage screen.
+        # Mounted and struck by a fighter on foot: the mount is the target (reiterkampf.RK11,
+        # open ruling reiterkampf.passierschlag-on-mount).
+
+  - id: PS3
+    text: >
+      Der Passierschlag lässt sich nicht mit Kampfsonderfertigkeiten kombinieren (z.B. Finten
+      oder Wuchtschlägen).
+    effects:
+      - when: { attack: passierschlag }
+        forbid: { manoeuvre: any }
+        ruling: passierschlag-sf
+      - when: { attack: passierschlag }
+        forbid: { choice: targetZone }
+        ruling: passierschlag-zone
+        # Only if the ruling says aiming is a Kampfsonderfertigkeit; recommended: it is not.
+
+  - id: PS4
+    text: Es gibt keine Kritischen Erfolge oder Patzer bei Passierschlägen.
+    effects:
+      - when: { attack: passierschlag }
+        forbid: { roll: [kritischerErfolg, patzer] }
+        # no confirmation roll, no table
+      - when: { attack: passierschlag, roll: [1, 20] }
+        open_ruling: passierschlag-dice
+
+  - id: PS5
+    text: >
+      Anmerkung: Für einen Passierschlag braucht man keine Handlungen aufwenden. Man kann
+      beliebig viele Passierschläge pro Runde durchführen.
+    effects:
+      - limit: { attack: passierschlag, per: round, max: none }
+        # FORMAT: an explicit "no limit" — worth stating, because Mehrfache Verteidigung and
+        # the action count would otherwise suggest one. A Passierschlag is not an action and
+        # not a defence, so it touches neither count.
+
+  - id: PS6
+    text: >
+      Beispiel: Arboschs Ork will fliehen, sodass Arbosch einen Passierschlag ausführen kann,
+      wenn dem Spielleiter die Probe auf Körperbeherrschung (Kampfmanöver) für den Ork
+      misslingt. Die Probe misslingt tatsächlich und so hat Arbosch einen Passierschlag frei.
+      Arboschs Attackewert ist 15, der Passierschlag ist aber um -4 erschwert (15 - 4 = 11).
+      Der Spieler würfelt eine 3 und trifft den fliehenden Ork in den Rücken. Dieser erleidet
+      normalen Waffenschaden.
+    effects: none
+    why: the worked example; situation kampfsituationen 17.1 is the same arithmetic with Boronmir
+
+rulings:
+  - id: passierschlag-sf
+    status: open
+    question: >
+      PS3: a Passierschlag "lässt sich nicht mit Kampfsonderfertigkeiten kombinieren (z.B. Finten
+      oder Wuchtschlägen)". Does that mean the manoeuvres only, or also passive combat SF and
+      Kampfstile — e.g. Golgariten-Stil's +2 on the vorteilhafte Position when a mounted
+      Golgarite strikes a Passierschlag at a fighter on foot?
+    context: >
+      Both examples are Basismanöver. The critical-parry table's "Geschickter Passierschlag"
+      lets the hero use Basismanöver "abweichend von der eigentlichen Regel (siehe Regelwerk
+      Seite 237)" — it lifts the rule by allowing manoeuvres, which reads as if manoeuvres are
+      what the rule forbids. Kampfstile are a class of their own ("Kampfstilsonderfertigkeiten").
+      The app: the Passierschlag is itself one entry of the manoeuvre list, so nothing combines
+      with it (CombatAttackViews.availableManeuvers); PassierschlagRoll then evaluates every
+      passive catalog line for a melee AT, so SA_661's +2 applies.
+    situations: [kampfsituationen 17.3]
+    options:
+      a: { says: "Manoeuvres only (Basis- and Spezialmanöver). Passive SF and Kampfstile apply.", app: "no change" }
+      b: { says: "No Kampfsonderfertigkeit of any kind, passive and Kampfstile included; core-rule lines (vorteilhafte Position, Belastung, …) still apply.", app: "PassierschlagRoll drops every SA_ line" }
+    recommended: a
+    why_recommended: >
+      the examples are manoeuvres, and the Geschickter Passierschlag exception is phrased as
+      allowing manoeuvres; a passive SF is not something one "combines" with an attack
+    answer: null
+
+  - id: passierschlag-zone
+    status: open
+    question: >
+      With the Trefferzonen Fokusregel on, may a Passierschlag be aimed at a zone (paying the
+      full TZ5 penalty, no halving)?
+    context: >
+      Aiming is open to every hero (trefferzonen.TZ5); only the halving is the Spezialmanöver
+      Gezielter Angriff (decided, SA_160.halving-by-manoeuvre), which PS3 excludes. The page
+      says nothing about zones. The app hides the zone picker on a Passierschlag
+      (CombatAttackViews: "A Passierschlag takes no manoeuvre, so no zone either"), treating
+      aiming as a manoeuvre.
+    situations: [kampfsituationen 17.4]
+    options:
+      a: { says: "Yes: aim at the full zone penalty; Gezielter Angriff's halving is not available.", app: "the zone picker shows on a Passierschlag, without the halving" }
+      b: { says: "No: a Passierschlag hits a rolled zone only.", app: "no change" }
+    recommended: a
+    why_recommended: >
+      after the halving ruling, aiming is not a Kampfsonderfertigkeit, and PS3 is the only
+      restriction the page gives
+    answer: null
+
+  - id: passierschlag-dice
+    status: open
+    question: >
+      PS4: no Kritische Erfolge or Patzer. Is a rolled 1 still a hit and a 20 still a miss
+      regardless of the AT, just without confirmation and table?
+    context: >
+      On every other check a 1 is a success and a 20 a failure; the confirmation roll decides
+      whether it becomes critical. PS4 removes the critical, not obviously the automatic
+      outcome. The app compares the roll with the AT and nothing else ("No criticals: 1 is just
+      a success, 20 is just a miss" — CombatPassierschlagView.isHit is `roll <= effectiveAT`), so
+      a 20 hits at AT 20+ and a 1 misses at AT 0 or below. Both are rare for a Passierschlag
+      (−4 before anything else).
+    situations: [kampfsituationen 17.1]
+    options:
+      a: { says: "1 always hits, 20 always misses; no confirmation, no table.", app: "isHit special-cases 1 and 20" }
+      b: { says: "Plain comparison with the AT.", app: "no change" }
+    recommended: a
+    why_recommended: >
+      the page takes away the critical results, which is what the confirmation roll decides;
+      the automatic success and failure are part of every check and the page does not name them
+    answer: null

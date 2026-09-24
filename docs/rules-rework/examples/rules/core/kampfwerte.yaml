@@ -1,0 +1,229 @@
+# DRAFT FORMAT — see ../../README.md.
+# AT, PA, AW, FK and INI: how the hero's combat values are computed, and how INI is rolled.
+# The Nahkampf page has the three formulas; the rounding, FK, the Leiteigenschaft table and the
+# INI roll are on four other pages, each named on its clause (`page:`).
+# FORMAT: one rule assembled from several pages. `source` is the page the rule is named after;
+# a clause from another page carries `page: { url, book, page }`. The drift check has to hash
+# every page a file quotes, not just `source.url`. The alternative — one file per page — splits
+# "how is PA computed" over three files (formula, rounding, which Leiteigenschaft).
+# The values here are *base values* (Basiswerte): what the sheet shows before the fight. Every
+# term is a line of the value's breakdown ("PA 8 = KtW 12 halbiert 6 + KK 15 → +2"); the weapon's
+# AT/PA-Mod comes after them (at-pa-modifikatoren.M1), then the shield (schilde), then Zustände.
+id: kampfwerte
+name: Kampfwerte (AT, PA, AW, FK, INI)
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Nahkampf.html
+  book: Regelwerk (4. überarb. Auflage)
+  page: 229
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: KW1
+    text: |
+      Attacke (AT)
+      Berechnung: voller Kampftechnikwert + jeweils 3 volle Punkte Mut über 8
+    effects:
+      - set: { value: technique.at, to: "ktw + floor(max(0, MU - 8) / 3)" }
+        # Two lines: "KtW 12" and "MU 14 → +2". Below 8 there is no malus ("über 8").
+        # Peitschen take FF instead of MU (KW6).
+
+  - id: KW2
+    text: |
+      Parade (PA)
+      Berechnung: halber Kampftechnikwert
+      + jeweils 3 volle Punkte in der Leiteigenschaft der
+      Kampftechnik über 8
+    effects:
+      - set: { value: technique.pa, to: "ceil(ktw / 2) + floor(max(0, leit - 8) / 3)" }
+        # Rounding from KW4; `leit` is the technique's Leiteigenschaft (KW6), the higher of two
+        # where it names two (KW7). A technique without a parry (Peitschen) has no PA.
+
+  - id: KW3
+    text: |
+      Ausweichen (AW)
+      Berechnung: Gewandtheit / 2
+    effects:
+      - set: { value: aw.base, to: "ceil(GE / 2)" }
+        ruling: round-up
+        # The page gives no rounding; KW8's worked examples round up (GE 15 → 8), as does
+        # ADR-0006. Advantages add to it (KW8).
+
+  - id: KW4
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-9-kampftechniken-berechnen.html
+      book: Regelwerk
+      page: 51
+    text: >
+      Der Attackewert entspricht dem Kampftechnikwert der Waffe modifiziert durch den Mut. Pro 3
+      vollen Punkten über 8 auf Mut steigt der Attackewert um 1 (also bei 11 um 1, bei 14 um 2
+      usw.). Um den Paradewert zu bestimmen, nimmt man den Kampftechnikwert, halbiert ihn und
+      rundet auf. Modifiziert wird der Wert noch durch jeweils 3 volle Punkte auf der
+      Leiteigenschaft der Kampftechnik über 8 erhöht (also bei 11 um 1, bei 14 um 2 usw.). Die
+      Leiteigenschaft ist abhängig von der Kampftechnik und üblicherweise Gewandtheit oder
+      Körperkraft.
+    effects: none
+    why: KW1 and KW2 again, with the rounding of the halved KtW (up), which KW2 encodes
+
+  - id: KW5
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-9-kampftechniken-berechnen.html
+      book: Regelwerk
+      page: 51
+    text: >
+      Der Fernkampfwert entspricht dem Kampftechnikwert der Fernkampfwaffe modifiziert durch die
+      Fingerfertigkeit. Pro 3 vollen Punkten über 8 in Fingerfertigkeit steigt der Fernkampfwert
+      um 1 (also bei 11 um 1, bei 14 um 2 usw.).
+    effects:
+      - set: { value: technique.fk, to: "ktw + floor(max(0, FF - 8) / 3)" }
+
+  - id: KW6
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/leiteigenschaften.html
+      book: Kodex der Helden
+      page: 21
+    text: |
+      Kampftechnik und Einsatz | Leiteigenschaft
+      Attacke für alle Kampftechniken (außer Peitschen) | MU
+      Attacke für Peitschen | FF
+      Parade für Raufen, Schwerter, Stangenwaffen | GE oder KK
+      Parade für Dolche, Fächer, Fechtwaffen | GE
+      Parade für Hiebwaffen, Kettenwaffen, Lanzen, Schilde, Spießwaffen, Zweihandschwerter, Zweihandhiebwaffen | KK
+      Fernkampf | FF
+    effects:
+      - when: { technique: Peitschen }
+        replace: { value: "KW1.MU", with: FF }
+        # FORMAT: a table that fills in a variable of another clause's formula, per technique.
+        # The Optolith data carries the PA half (combat_technique_details.primary_attr_1/2);
+        # the AT half (Peitschen: FF) is nowhere in it.
+      - defines: { value: technique.leit, table: { Raufen: [GE, KK], Schwerter: [GE, KK], Stangenwaffen: [GE, KK], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Schilde: [KK], Spießwaffen: [KK], Zweihandschwerter: [KK], Zweihandhiebwaffen: [KK] } }
+
+  - id: KW7
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html
+      book: Regelwerk (4. Auflage)
+      page: 234
+    text: >
+      Leiteigenschaft: Die Leiteigenschaft der jeweiligen Kampftechnik beeinflusst sowohl den
+      Paradewert als auch den Schadensbonus. Bei manchen Kampftechniken kann man aus mehreren
+      möglichen Leiteigenschaften wählen. Sie bieten die Möglichkeit, durch besonders hohe
+      Fingerfertigkeit, Gewandtheit oder Körperkraft zusätzlichen Schaden zu verursachen, und
+      gewähren zudem pro vollen 3 Punkten über 8 in der entsprechenden Eigenschaft je einen Bonus
+      von +1 auf den Parade-Wert. In Einzelfällen kann eine Waffe eine von ihrer Kampftechnik
+      abweichende Leiteigenschaft aufweisen, was sich dann auf ihren Schadensbonus auswirken kann.
+      Der Paradewert der Kampftechnik ist dadurch aber nicht betroffen. Beispiel: Geron führt ein
+      Langschwert mit sich. Die Leiteigenschaft der Kampftechnik Schwerter ist GE oder KK. Geron
+      hat einen höheren GE-Wert (13), sodass er diesen für die Berechnung seines Bonus auf die
+      Parade heranzieht.
+    effects:
+      - when: { technique.leit: { count: 2 } }
+        choose: { value: leit, of: technique.leit, pick: max }
+        # "wählen", and the example takes the higher: no choice for the player to make, the
+        # better one is always taken. The line names the one used ("KK 15 → +2").
+        # A weapon's own Leiteigenschaft (schaden.S4) never reaches the PA.
+    # The Schadensbonus half of this paragraph is schaden.S3/S4.
+
+  - id: KW8
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-12-basiswerte-berechnen.html
+      book: Regelwerk (4. Auflage)
+      page: 56
+    text: |
+      Ausweichen
+      Basiswert:
+      Gewandtheit / 2
+      +/- Punkte aus Vor- und Nachteilen
+      Beispiel: Ausweichen Basiswert: Gewandtheit 12 / 2 = 6; Ausweichen Basiswert: Gewandtheit 15 / 2 = 8
+    effects: none
+    why: >
+      KW3's formula again; its examples fix the rounding (15 / 2 = 8). An advantage or
+      disadvantage that changes AW adds its own line, in its own file
+
+  - id: KW9
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-12-basiswerte-berechnen.html
+      book: Regelwerk (4. Auflage)
+      page: 56
+    text: |
+      Initiative
+      Basiswert:
+      (Mut + Gewandtheit) / 2
+      +/- Punkte aus Vor- und Nachteilen
+      Beispiel: Initiative Basiswert: (Mut 15 + Gewandtheit 12) / 2 = 14
+    effects:
+      - set: { value: ini.base, to: "ceil((MU + GE) / 2)" }
+        ruling: round-up
+        # The example: 27 / 2 = 14. SA_51.KR1 (Kampfreflexe) adds to this base; mounted,
+        # reiterkampf.RK1 replaces it.
+
+  - id: KW10
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nah-_und_Fernkampf/initiative.html
+      book: Regelwerk (4. überarb. Aufl.)
+      page: 226
+    text: >
+      Um festzustellen, in welcher Reihenfolge die Beteiligten handeln, wird die Initiative
+      bestimmt. Diese gilt bis zum Ende des Kampfes und nur besondere Situationen verändern den
+      Wert noch (z.B. der Zauber Axxeleratus). Die Initiative erhält man, indem man einen W6
+      würfelt und den Initiative-Basiswert hinzuaddiert. Kurz gesagt: Initiative =
+      Initiative-Basiswert + 1W6 +/-Modifikator.
+    effects:
+      - defines: { roll: ini, formula: "ini.base + 1W6", once_per: fight }
+        # The modifiers are other rules' lines (COND_1.B3 −1 per Stufe, SA_51 via the base).
+        # The page's example: base 14, W6 4, Belastung II → 16.
+
+  - id: KW11
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nah-_und_Fernkampf/initiative.html
+      book: Regelwerk (4. überarb. Aufl.)
+      page: 226
+    text: >
+      Die Initiative gilt für den gesamten Kampf und wird nicht jede Kampfrunde neu ausgewürfelt.
+      Nur besondere Situationen wie der Zustand Belastung kann die Initiative noch verändern.
+    effects:
+      - when: { event: iniModifierChanged }
+        recompute: { value: ini, keep: rolled.w6 }
+        # The W6 stays; the modifiers are live. Belastung that changes mid-fight (a load dropped,
+        # Traglast) changes the INI at once. FORMAT: a rolled value whose dice are kept and whose
+        # modifiers are re-read — the roll is stored as its parts, not as a total.
+
+  - id: KW12
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nah-_und_Fernkampf/initiative.html
+      book: Regelwerk (4. überarb. Aufl.)
+      page: 226
+    text: >
+      Der Beteiligte mit der höchsten Initiative darf als Erster im Kampf handeln. Haben zwei
+      Beteiligte die gleiche Initiative, handelt der von ihnen zuerst, der den höheren
+      Initiative-Basiswert hat. Sind diese ebenfalls gleich, würfeln beide einen W6. Derjenige mit
+      dem höheren Ergebnis darf vor dem anderen handeln. Bei Gleichstand wiederholt man den Wurf
+      so lange, bis eine Entscheidung gefallen ist.
+    effects: none
+    why: >
+      the order of action needs the opponents' INI, which the app does not model (ADR-0005); the
+      GM runs it. The Großschild's Waffennachteil changes the tie-break (ITEMTPL_29).
+
+  - id: KW13
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nah-_und_Fernkampf/initiative.html
+      book: Regelwerk (4. überarb. Aufl.)
+      page: 226
+    text: >
+      Statt seine Aktion direkt auszuführen, kann man sie auch hinauszögern. Sie darf dann im
+      späteren Verlauf zu einem beliebigen Zeitpunkt nach der eigenen Initiative ausgeführt werden.
+      Aktionen, die bis zum Ende der Kampfrunde nicht ausgeführt worden sind, verfallen.
+    effects: none
+    why: table procedure; nothing the app computes
+
+  - id: KW14
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Nah-_und_Fernkampf/initiative.html
+      book: Regelwerk (4. überarb. Aufl.)
+      page: 226
+    text: >
+      Anmerkung: Um zu Beginn eines Kampfes sofort handeln zu können, kannst du einen
+      Schicksalspunkt einsetzen und als Erster reagieren.
+    effects: none
+    why: a use of a Schip; it belongs in schicksalspunkte, where the uses are listed

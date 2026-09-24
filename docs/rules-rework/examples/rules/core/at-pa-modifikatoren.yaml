@@ -1,0 +1,31 @@
+# DRAFT FORMAT — see ../../README.md.
+# A weapon's AT/PA-Mod: the "AT/PA-Mod" column of every weapon table (Rabenschnabel 0/−1,
+# Langschwert 0/0, Großschild −6/+3). The values are the weapons' (rules/equipment/); the rule
+# that applies them, and when, is this page.
+id: at-pa-modifikatoren
+name: AT- und PA-Modifikatoren
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Kampf-AT-PA_Modifikatoren.html
+  book: Regelwerk
+  page: 366
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: M1
+    text: >
+      Einige Waffen sind so gut oder schlecht ausbalanciert, dass sie Attacke- und Paradewerte
+      modifizieren. Dies wird in den Waffentabellen angegeben, die Modifikatoren werden erst nach
+      der Ermittlung der Basiswerte verrechnet.
+    effects:
+      - when: { loadout.weapon: present }
+        add: { to: at, value: weapon.atMod, after: kampfwerte.KW1 }
+      - when: { defence: weaponParry }
+        add: { to: pa, value: weapon.paMod, after: kampfwerte.KW2 }
+        # Lines of their own ("Rabenschnabel PA −1"), after the technique's base value, so the
+        # sheet can show the technique's AT/PA and each weapon's.
+        # A shield's PA-Mod is not a modifier of its own parry in this sense: it is the bonus of
+        # schilde.SCH1 (passive, on the main weapon) or SCH3 (active, doubled). Its AT-Mod is an
+        # ordinary one (a shield attack, schilde.SCH2).

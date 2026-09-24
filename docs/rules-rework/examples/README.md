@@ -27,8 +27,11 @@ rules/
   abilities/     SA_*, one file per special ability
   advantages/    ADV_*
   disadvantages/ DISADV_*
+  equipment/     ITEMTPL_*: a weapon's table row and its Waffenvorteil/-nachteil
+  creatures/     animal profiles and their abilities: a mount, what it can do in a fight
   rulings.yaml   rulings that cut across several rules
 situations/      one file per example
+sweeps/          the rules that affect one hero, for the review TUI
 ```
 
 A rule file holds: id, name, kind, the page (URL, book, page, date checked), whether a person has
@@ -88,9 +91,6 @@ keys; `?` shows it again.
 | `o` | open the rule's page in the browser |
 | `f` / `/` | filter: needs you, all, agent queue, reviewed / search by id, name, kind |
 | `j` / `k` | move between the cards on the right |
-
-It signs with your GitHub handle, from `gh` unless `make rules-review BY=@handle` or
-`HESINDION_REVIEWER` says otherwise. Every change is a one-key edit to the rule file — nothing else
 | `?` | the help shown at start |
 
 **Sweeps.** `make rules-review SWEEP=boronmir` shows only the rules that affect one hero, as
@@ -99,6 +99,9 @@ advantages, disadvantages and items (less a `skip` list, each with why), plus th
 Zustände that reach the hero. `n`, the counts and the filters then stay within it.
 `make rules-sweep SWEEP=boronmir` prints the same rules with what each still needs, and the ones not
 drafted yet.
+
+It signs with your GitHub handle, from `gh` unless `make rules-review BY=@handle` or
+`HESINDION_REVIEWER` says otherwise. Every change is a one-key edit to the rule file — nothing else
 in the file moves, and an edit that would change more than that is refused — and `RULINGS.md` is
 regenerated after it, so `git diff` is the record of the session. The edits are in `rulefiles.py`, tested by
 `make test-rules-review` (which also runs `rulings.py --check`).
@@ -123,7 +126,9 @@ watch and steer; it does not commit). Two kinds:
 
 Chosen to cover each kind of mechanic ADR-0013's census found (flat modifiers, opponent-side
 effects, per-Stufe scaling, preconditions, dice, overriding a constant, legality, action economy,
-Zustände) and every place where two rules meet.
+Zustände) and every place where two rules meet. Examples 14–18 fill in the rest of what affects
+one hero, Boronmir ([`sweeps/boronmir.yaml`](./sweeps/boronmir.yaml)): his own abilities, the core
+combat values, and his horse and weapons.
 
 | # | Example | Rules | What it exercises | Status |
 |---|---|---|---|---|
@@ -140,6 +145,11 @@ Zustände) and every place where two rules meet.
 | 11 | [Beidhändiger Kampf](./beidhaendiger-kampf.md) | the core two-weapon rule, SA_42, ADV_5 Beidhändig | action economy; off-hand penalties; an advantage and an SF together | **draft, for review** |
 | 12 | [Kampfreflexe](./kampfreflexe.md) | SA_51 | a value outside any check (INI) | **draft, for review** |
 | 13 | [Verweichlicht](./verweichlicht.md) | DISADV_57 | a disadvantage; a talent check, not combat | **draft, for review** |
+| 14 | [Boronmirs Kampfsonderfertigkeiten](./boronmir-sf.md) | SA_66 Vorstoß, SA_59 Schildspalter, SA_40 Aufmerksamkeit, SA_884 Plänkler-Formation | a whole-round manoeuvre announced at round start; a manoeuvre written from both sides of the table (damage to an item's StP); a bonus on one talent application; a bonus an ally's SF grants | **draft, for review** |
+| 15 | [Lebensenergie](./lebensenergie.md) | ADV_25, ADV_49, ADV_44, ADV_75, Lebensenergie (Basiswert), Regeneration | a derived value's breakdown; an advantage choosing which Stufe of another rule's table applies; a rolled resource gain with situational lines, halving, floor and cap; an effect on a Zustand's duration and cause | **draft, for review** |
+| 16 | [Kampfwerte, Schaden und Schilde](./kampfwerte.md) | kampfwerte, schaden, schilde, at-pa-modifikatoren | derived values and their breakdown (AT/PA/AW/INI, rounding, the higher Leiteigenschaft); a weapon value above a threshold (Schadensbonus); a passive vs an active choice per defence (shield bonus single or doubled); a defence forbidden by the kind of attack; a rolled value whose modifiers stay live (INI) | **draft, for review** |
+| 17 | [Kampfsituationen](./kampfsituationen.md) | GRW_passierschlag, GRW_angriffVonHinten, GRW_beengteUmgebung, GRW_groessenkategorie | a free attack with no defence and no crits; a GM fact that also unlocks another rule's clause (RK5); a penalty table keyed on the piece in hand (reach or shield size); a defence restriction by opponent size | **draft, for review** |
+| 18 | [Kupperus und Boronmirs Waffen](./kupperus-und-waffen.md) | svellttaler-kaltblut, maechtiger-schlag, ruhiges-temperament, ITEMTPL_19, ITEMTPL_35, ITEMTPL_29, waffeneigenschaften | creature rules (a profile read by another rule, an animal's advantage landing on the rider's check); weapon data; a Fokusregel that covers only some clauses of a file | **draft, for review** |
 
 ## What the app gets wrong
 
@@ -166,10 +176,10 @@ open ruling are listed in the write-ups, not here.
 | 6 | An aimed attack at a winzig opponent pays both the size modifier and the zone penalty | catalog `GRW_groessenkategorie` | page |
 | 6 | The hit zone on the hero is rolled on the hero's own size table, ignoring the attacker's size | `CombatDamageViews`, `HitZoneTable.lookup` | page |
 | 6 | Trefferzonen-Rüstungsschutz (armour by zone) is not modelled | `Hero.totalEquippedBE` | page |
+| 6 | Having Gezielter Angriff/Schuss halves every aimed attack; the halving is the announced Spezialmanöver, lost on horseback and with Unterlaufen | `CombatZonePicker`, `HitZoneModifiers.penalty` | ruling halving-by-manoeuvre |
 | 7 | A Handlungsunfähig hero moves at GS 1 rather than 0 | `Hero.effectiveGeschwindigkeit` | page |
 | 7 | Handlungsunfähig from Zustand levels does not imply Liegend | `Hero.impliedStateIDs` | page |
 | 7 | Standing up is no action; its cost and the opponent's Passierschlag are never mentioned | — | page |
-| 6 | Having Gezielter Angriff/Schuss halves every aimed attack; the halving is the announced Spezialmanöver, lost on horseback and with Unterlaufen | `CombatZonePicker`, `HitZoneModifiers.penalty` | ruling halving-by-manoeuvre |
 | 8 | Finte's hint says "Gegner PA −2"; the page says Verteidigung, so it is wrong when the opponent dodges | `CombatManeuver.infoText` | page |
 | 11 | The off hand is picked alphabetically: with Schwert and Dolch, the Schwert takes the −4 | `CombatLoadoutPicker.apply` | page |
 | 11 | Spezialmanöver are offered on a double attack; only Basismanöver are allowed | `availableManeuvers` | page |
@@ -178,6 +188,36 @@ open ruling are listed in the write-ups, not here.
 | 11 | The dual-wield lines cite SA_42 and ADV_5 for the core rule's −2/−4 | `MeleeModifiers.dualAttackPenalty`, `offHandPenalty`, `DefenseModifiers` | page |
 | 12 | Kampfreflexe is ignored: INI is 1–3 too low for every hero with it, mounted too | `OptolithImportService`, `DerivedValueFormulas.initiative`, catalog `todo` | page; mounted per ruling kampfreflexe-mounted |
 | 13 | Verweichlicht silently does nothing without Trefferzonen | catalog `DISADV_57` | page |
+| 14 | Vorstoß can be picked at any attack in the round, even after the hero has parried; the page wants it announced at the start of the round | `CombatAttackViews.availableManeuvers`, `proceed()` | page |
+| 14 | Vorstoß is offered while Liegend | `CombatAttackViews.availableManeuvers` | page |
+| 14 | Schildspalter is offered against any opponent; the app never asks whether the opponent has a shield | `availableManeuvers`, `OpponentProfile` | page |
+| 14 | Schildspalter's note says only "Schaden gegen Schild-SP", not that the opponent may only parry with the shield (without its bonus) or dodge | `CombatManeuver.infoText` | page |
+| 14 | Aufmerksamkeit's +2 is never applied; the hint shows on every Sinnesschärfe check and says "Überraschung vermeiden", not Hinterhalt entdecken | `TalentProbeModal.hints`, catalog SA_40 `byHand` | page |
+| 14 | Only an owner of Plänkler-Formation can be in one; the page lets a companion's SF carry the whole line | `CombatSetupView` (`hero.hasPlaenklerFormation`) | page |
+| 14 | Plänkler-Formation is set once at combat setup and cannot be left mid-fight | `CombatSetupView`, `CombatRootView.plaenklerActive` | page |
+| 15 | Niedrige Lebenskraft is ignored: 2 LE too many at Stufe II | `OptolithImportService.computeDerivedValues`, catalog `DISADV_28` todo | page |
+| 15 | Verbesserte Regeneration III gives +2, not +3 | `Hero.verbessertRegenerationLEBonus` | page |
+| 15 | A Vergiftet or Krank hero regenerates normally | `RegenerierenSheet` | page |
+| 15 | Regeneration is never halved in a wet or cold camp, never stopped in a storm or tied to a horse, and the advantage's bonus is added even then | `RegenerierenSheet` | page |
+| 15 | Schnell wieder auf den Beinen is ignored: Betäubung and Berauscht show the full 3 h and 2 h | catalog `ADV_75` todo, `state.betaeubung.removal` / `state.berauscht.removal` | page |
+| 16, 18 | No Schadensbonus: TP never include the Leiteigenschaft above the Schadensschwelle (Boronmir's Rabenschnabel 1W6+4, should be 1W6+5), though the export carries `primaryThreshold` on every weapon | `OptolithImportService.formatDamage`, `parseItems`, `DamageModifiers.lines` | page |
+| 16 | The weapon parry (with the passive shield bonus) is offered against ranged attacks; the defence never asks whether the attack is ranged | `CombatDefenseSetupView`, `OpponentProfile` | page |
+| 16 | A Parierwaffe gives no passive PA bonus, and a Linkhand turns the loadout into a dual-wield | `Hero.passiveShieldPABonus`, `OptolithImportService` (drops `isParryingWeapon`), `Hero.isDualWielding` | page |
+| 16 | Peitschen attack with MU instead of FF | `OptolithImportService.parseCombatTechniques`, `parseItems` | page |
+| 16 | INI is stored as a total, so a change of Belastung mid-fight never reaches it | `Hero.activeCombatInitiative`, `CombatInitiativeRollView` | page |
+| 16 | The take-damage screen has no "ignores RS" option | `CombatDamageViews` | page |
+| 16 | LE is clamped at 0 and there is no "im Sterben" state | `CombatDamageViews`, `StateCatalog` | page |
+| 16 | AT and PA are single numbers written at import with no breakdown; the passive shield bonus and the Belastung on INI are folded into the base with no line | `OptolithImportService`, `CombatAttackViews`, `DefenseRoute`, `CombatInitiativeRollView.heroBaseINI` | requirement; page |
+| 17 | Beengte Umgebung has no shield rows: the Großschild never takes its −6 AT / −4 PA (every shield imports with reach kurz; no shield sizes exist) | catalog `GRW_beengteUmgebung`, `OptolithImportService.parseItems` | page |
+| 17 | The Beengte Umgebung penalty on a parry follows the main weapon, not the parrying piece: bare hands + Großschild parries at 0 instead of −4 | `Situation.loadoutReach` | page |
+| 17 | Mounted and attacked from behind, the shield parry is still offered | `CombatDefenseSetupView`, `DefenseRoute.parryPossible` | page (reiterkampf.RK5) |
+| 18 | Niederreiten uses the AT of the first attack parsed from the notes, not the Niederreiten line (right for Kupperus only because his Tritt is also 15) | `CombatAttackViews.niederreitenButton` | page |
+| 18 | The Mächtiger Schlag Kraftakt penalty is rounded down: Kupperus (KK 25) −2, the page −3 | `CombatAttackViews` (`(kk - 20) / 2`) | page |
+| 18 | The Großschild's "−1 AT auf die Hauptwaffe" is not applied | `OptolithImportService.shieldNote`, `MeleeModifiers` | page |
+| 18 | Waffenvorteile and -nachteile always apply; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page; ruling rabenschnabel-waffeneigenschaft |
+| 18 | With that Fokusregel on, the Großschild's GS −1 and its INI-tie rule are missing, and its +1 PA note says "Fernkampf" where the page says Pfeile and Bolzen | `Hero.totalGsPenalty`, `shieldNote` | page |
+| 18 | Kupperus can carry 210 Stein (Packesel); the app gives every pet KK × 2 = 50 | `Pet.carryingCapacity`, `Hero.totalCarryingCapacity` | page |
+| 18 | Ruhiges Temperament (+1 on Reiten) is unknown to the app; the export carries no animal Vorteile | `CombatMountPreCheckView`, `parsePets` | page |
 
 Confirmed correct: Belastungsgewöhnung (−1 Belastung per Stufe, extras kept); Belastung on spell
 and liturgy casting; Schmerz on every check; the −5 Zustand cap; eight Zustand levels making a hero

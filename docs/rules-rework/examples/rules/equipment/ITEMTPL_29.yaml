@@ -1,0 +1,84 @@
+# DRAFT FORMAT — see ../../README.md.
+# The Großschild's weapon-table properties only. How a shield parries, attacks and breaks is the
+# core shield rule (schilde — another agent's file, rules/core/schilde.yaml). Format: see
+# ITEMTPL_19.yaml.
+id: ITEMTPL_29
+name: Großschild
+kind: weapon
+source:
+  url: https://dsa.ulisses-regelwiki.de/grossschild.html
+  book: Regelwerk
+  page: 367
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page also lists Archiv der Ausrüstung pp. 98, 279, Aventurische Rüstkammer p. 67 (Optolith's
+# source for the Waffenvorteil and -nachteil), Kodex der Helden p. 464, Kodex des Schwertes p. 378
+# and Straßenstaub & Halsabschneider p. 30. Optolith's numbers match the page; it has no length.
+# Golgariten-Stil names this shield, "nur Großschild und nur von einem Reittier aus"
+# (SA_661.GS3, ruling kampfstil-techniques).
+
+stats:
+  technique: CT_10           # Schilde
+  tp: 1W6+1
+  ls: { attribute: [KK], threshold: 16 }
+  at_mod: -6
+  pa_mod: 3
+  reach: kurz
+  weight: 6                  # Stein
+  length: 115                # HF
+  price: 100                 # Silbertaler
+  complexity: einfach
+  structure_points: 30
+  shield_size: gross
+
+clauses:
+  - id: GR0
+    text: "Großschild | TP 1W6+1 | L+S KK 16 | AT/PA-Mod -6/+3 | RW kurz | 6 Stein | 115 HF | 100 S | einf"
+    effects:
+      - provides: { loadout.shield: stats }
+        # What the PA-Mod does (doubled for a shield parry) is schilde's. Boronmir's KK 15 is
+        # below the threshold: no Schadensbonus on a shield attack.
+
+  - id: GR1
+    text: "Anmerkung: großer Schild, 30 Strukturpunkte; zusätzlich -1 AT auf die Hauptwaffe"
+    effects:
+      - provides: { loadout.shield.size: gross, loadout.shield.structurePoints: 30 }
+      - when: { loadout.shield: ITEMTPL_29, check: at, loadout.hand: main }
+        add: { to: at, value: -1 }
+        # Core (the Regelwerk's table note), not a Waffeneigenschaft: on without any Fokusregel.
+        # The app does not apply it: the import turns the Anmerkung into nothing, and no
+        # modifier reads the shield on an attack (OptolithImportService.shieldNote, MeleeModifiers).
+
+  - id: GR2
+    text: >
+      Waffenvorteil: Bei der Abwehr von Pfeilen und Bolzen bekommt der Großschild einen Bonus
+      von +1 PA (nach der Verdopplung des Schild-Paradebonus).
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften, defence: shieldParry, incoming: [pfeil, bolzen] }
+        add: { to: pa, value: 1 }
+        ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
+        # The app shows "+1 PA vs. Fernkampf" as the shield's note (OptolithImportService.
+        # shieldNote) and adds nothing; "Fernkampf" is wider than the page (a thrown spear or a
+        # sling stone is Fernkampf, not a Pfeil or Bolzen).
+
+  - id: GR3
+    text: >
+      Waffennachteil: Verfügen zwei Kämpfer über den gleichen INI-Wert, schlägt der Gegner des
+      Trägers eines Großschildes immer zuerst zu. Führt der Gegner ebenfalls einen Großschild,
+      kommen die normalen Regeln zur Reihenfolge des Handelns zum Tragen.
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften, ini.tie: opponent, opponent.shield: { not: Großschild } }
+        tell: { order: opponent_first }
+        ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
+        # The app does not model the order of acting against a named opponent; a line on the
+        # INI result is what it can show.
+
+  - id: GR4
+    text: "Der Träger eines Großschilds erleidet einen Abzug von 1 auf GS."
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften, loadout.shield: ITEMTPL_29 }
+        add: { to: gs, value: -1 }
+        ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
+        # The carrier's GS. Mounted, reiterkampf reads the mount's GS (RK14, RK15), which this
+        # does not touch. The app's GS penalty is Belastung and armour only (Hero.totalGsPenalty).

@@ -1,0 +1,59 @@
+# DRAFT FORMAT — see ../../README.md.
+# Only the page's introduction and its Lebensenergie block are written here; AE, KE, SK, ZK, AW,
+# INI and GS on the same page belong to their own examples (INI: kampfreflexe).
+# The species Grundwert comes from each species page, e.g. Menschen: "Lebensenergie-Grundwert: 5"
+# (https://dsa.ulisses-regelwiki.de/Spez_Menschen.html, Regelwerk p. 88). The app keeps it in
+# OptolithImportService.speciesBaseLP (Menschen 5, Elfen 2, Halbelfen 5, Zwerge 8).
+id: lebensenergie
+name: Lebensenergie (Basiswert)
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-12-basiswerte-berechnen.html
+  book: Regelwerk (4. Auflage)
+  page: 56
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: LE1
+    text: >
+      Vor Spielbeginn müssen noch einige weitere Spielwerte, die sogenannten Basiswerte, berechnet
+      werden. Die Werte ergeben sich immer aus einem Grundwert, der durch die Spezies vorgegeben
+      ist, und Eigenschaftswerten. Darüber hinaus können Vor- und Nachteile sowie
+      Sonderfertigkeiten die Basiswerte beeinflussen.
+    effects: none
+    why: introduction; LE3 is the formula it describes
+
+  - id: LE2
+    text: >
+      Es ist im späteren Spiel möglich, diese Werte durch Zukauf mit Abenteuerpunkten zu erhöhen.
+      Dieser Zukauf kann erst nach Spielbeginn erfolgen, nicht bereits bei der Heldenerschaffung.
+    effects:
+      - add: { to: le.max, value: hero.purchased.le }
+        # Optolith's attr.lp. A line of its own ("zugekauft +n"), zero for Boronmir.
+
+  - id: LE3
+    text: |
+      Lebensenergie
+      Basiswert:
+      Lebensenergie-Grundwert der Spezies
+      + 2 x Konstitution
+      +/- Punkte aus Vor- und Nachteilen
+    effects:
+      - set: { value: le.base, to: "species.le + 2 * ko" }
+        # FORMAT: a derived value with its own breakdown on the hero sheet — the lines are the
+        # species Grundwert, 2×KO, and every rule that adds to it (ADV_25.HL1, DISADV_28 Niedrige
+        # Lebenskraft, not written yet), then LE2's purchase. The maximum is what COND_6.SZ3
+        # calls "Gesamt-Lebensenergie".
+        # Zustände never change it (zustaende.Z6).
+
+  - id: LE4
+    text: >
+      Chris: Lebensenergie Basiswert: Lebensenergie-Grundwert 5 + KO 12 + KO 12 + Vorteil Hohe
+      Lebenskraft III = 32
+    effects: none
+    why: >
+      one of the page's worked examples, kept because it fixes Hohe Lebenskraft at +1 per Stufe
+      and shows it on the Basiswert line; the page's other examples are for heroes without
+      advantages

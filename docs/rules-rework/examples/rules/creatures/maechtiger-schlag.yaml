@@ -1,0 +1,70 @@
+# DRAFT FORMAT — see ../../README.md.
+# FORMAT: a new kind, `creatureAbility` — a Tierische Kampfsonderfertigkeit. The wiki's overview
+# (https://dsa.ulisses-regelwiki.de/TSF_Kampfsonderfertigkeiten.html) says they work like any
+# Kampfsonderfertigkeit, but one without Kampftechniken cannot be learned by a hero. It has no
+# Optolith id (SA_226 "Befehl Mächtiger Schlag" is a different thing, a Tier-Befehl), so the file
+# is keyed by a slug. Its owner is a creature, not the hero: every effect is either the creature's
+# (Kupperus attacking for Boronmir) or its opponent's (a creature attacking Boronmir).
+id: maechtiger-schlag
+name: Mächtiger Schlag
+kind: creatureAbility
+group: Tierische Kampfsonderfertigkeiten
+passive: true
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_MaechtigerSchlag.html
+  book: Aventurische Tiergefährten
+  page: 126
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page lists thirteen books; Aventurisches Bestiarium p. 7 is the first, Aventurische
+# Tiergefährten p. 126 the one Kupperus's profile comes from.
+#
+# There is no creature ability "Niederreiten" on the wiki: the search finds only the Reiterkampf
+# order (reiterkampf.RK13), Berittener Kampf, Frontalangriff and the profiles that list a
+# Niederreiten attack. On a horse, Niederreiten is an attack line of the profile
+# (svellttaler-kaltblut.SK3), not a Sonderfertigkeit. (Überrennen and Trampeln are the creature
+# manoeuvres nearest to it; Kupperus has neither.)
+
+clauses:
+  - id: MS1
+    text: >
+      Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner eine
+      Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
+    effects:
+      - when: { creature.attack: success, opponent.size: [winzig, klein, mittel] }
+        tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 } } }
+        # Kupperus attacking: the opponent is the GM's, so this is a line on Kupperus's attack
+        # result (ADR-0005). A creature with it attacking Boronmir: his own Kraftakt check, then
+        # Liegend — not modelled on the take-damage side today.
+        # "Gelungene Attacke": the AT roll succeeded, before any defence — MS3 says what a
+        # defence changes.
+
+  - id: MS2
+    text: >
+      Die Probe ist für den Gegner um die Hälfte der Punkte erschwert, die die Körperkraft des
+      Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
+    effects:
+      - when: { creature.kk: { above: 20 } }
+        opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }
+        ruling: round-up
+        # The page's own example rounds up (KK 23: 1.5 → −2), as the shared round-up ruling
+        # does. Kupperus, KK 25: −⌈2.5⌉ = −3. The app floors it, (kk − 20) / 2 in Int: −2
+        # (CombatAttackViews.mountAttackSection and niederreitenButton, `mightyBlow`).
+
+  - id: MS3
+    text: >
+      Dem Mächtigen Schlag kann man nur mittels Ausweichen komplett entgehen. Bei einer Parade,
+      gleich ob gelungen oder nicht, muss die Probe auf Kraftakt gewürfelt werden.
+    effects:
+      - when: { opponent.defence: aw, defence: success }
+        cancels: MS1
+      - when: { opponent.defence: [pa, shieldParry] }
+        tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 }, whatever_the_parry: true } }
+        # A parried blow does no damage but still asks for the Kraftakt check. The app's note
+        # says so ("Parade hilft nicht — nur Ausweichen schützt vollständig").
+
+  - id: MS4
+    text: "Voraussetzungen: Wesen verfügt automatisch über die SF"
+    effects: none
+    why: a creature's innate ability; nothing to buy

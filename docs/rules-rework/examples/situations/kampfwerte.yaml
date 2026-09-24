@@ -1,0 +1,295 @@
+# Example 16 — Kampfwerte, Schaden und Schilde. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+# Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
+#
+# The hero is Boronmir (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json; the UI-test
+# copy Hesindion/Resources/UITestHero.json has the same values). From `attr.values`:
+#   ATTR_1 MU 14, ATTR_2 KL 12, ATTR_3 IN 13, ATTR_4 CH 13, ATTR_5 FF 11, ATTR_6 GE 14,
+#   ATTR_7 KO 13, ATTR_8 KK 15.
+# From `ct`: CT_5 Hiebwaffen 12, CT_12 Schwerter 12, CT_10 Schilde 9, CT_9 Raufen 10,
+#   CT_3 Dolche 8.
+# Attribute bonuses (kampfwerte.KW1/KW2: "jeweils 3 volle Punkte über 8"):
+#   MU 14 → +2, GE 14 → +2, KK 15 → +2, FF 11 → +1.
+# Weapons (rules/equipment/): Rabenschnabel ITEMTPL_19 (Hiebwaffen, 1W6+4, KK 14, 0/−1),
+#   Langschwert ITEMTPL_35 (Schwerter, 1W6+4, GE/KK 15, 0/0), Großschild ITEMTPL_29 (Schilde,
+#   1W6+1, KK 16, −6/+3, and −1 AT on the main weapon, GR1).
+# Plattenrüstung RS 6, Belastung III; Belastungsgewöhnung I (SA_41) → Belastung II (belastung 2.1).
+# LE 33: Menschen 5 + 2 × KO 13 + Hohe Lebenskraft II 2 (lebensenergie.LE3, ADV_25).
+#
+# Unless a situation says otherwise: on foot, no armour, no Zustände, Fokusregel
+# Waffeneigenschaften off (the Großschild's GR2–GR4 are example 18's). `result` is the value
+# the check is rolled against; `total` the sum of the lines below the base.
+
+hero_file: ../../../sample_heros/Boronmir Siebenfeld von Greifenfurt.json
+base_hero:
+  attributes: { MU: 14, KL: 12, IN: 13, CH: 13, FF: 11, GE: 14, KO: 13, KK: 15 }
+  techniques: { Hiebwaffen: 12, Schwerter: 12, Schilde: 9, Raufen: 10, Dolche: 8 }
+  armour: []
+
+situations:
+
+  # --- The sheet -----------------------------------------------------------------------------
+
+  - id: "16.1"
+    name: Boronmir's technique values on the sheet
+    expect:
+      techniques:
+        Hiebwaffen:   # AT 12 + 2 = 14; PA ⌈12/2⌉ 6 + KK 15 → 2 = 8
+          at: { value: 14, lines: [{ value: 12, from: kampfwerte.KW1, term: KtW }, { value: 2, from: kampfwerte.KW1, term: "MU 14" }] }
+          pa: { value: 8, lines: [{ value: 6, from: kampfwerte.KW2, term: "KtW 12 halbiert" }, { value: 2, from: kampfwerte.KW2, term: "KK 15", via: [kampfwerte.KW6] }] }
+        Schwerter:    # AT 14; PA 6 + max(GE 14, KK 15) → 2 = 8 (both give +2; the line names KK)
+          at: { value: 14 }
+          pa: { value: 8, lines: [{ value: 6, from: kampfwerte.KW2 }, { value: 2, from: kampfwerte.KW2, term: "KK 15", via: [kampfwerte.KW6, kampfwerte.KW7] }] }
+        Schilde:      # AT 9 + 2 = 11; PA ⌈9/2⌉ 5 + KK 2 = 7
+          at: { value: 11 }
+          pa: { value: 7, lines: [{ value: 5, from: kampfwerte.KW2, term: "KtW 9 halbiert, aufgerundet", via: [kampfwerte.KW4] }, { value: 2, from: kampfwerte.KW2, term: "KK 15" }] }
+        Raufen:       # AT 10 + 2 = 12; PA 5 + max(GE 14, KK 15) → 2 = 7
+          at: { value: 12 }
+          pa: { value: 7 }
+        Dolche:       # AT 8 + 2 = 10; PA 4 + GE 14 → 2 = 6
+          at: { value: 10 }
+          pa: { value: 6 }
+    app_today: >
+      same numbers (OptolithImportService.parseCombatTechniques), stored once at import as a
+      single number each (CombatTechnique.at/pa): no breakdown, never recomputed
+
+  - id: "16.2"
+    name: Ausweichen and the INI Basiswert
+    expect:
+      aw: { value: 7, lines: [{ value: 7, from: kampfwerte.KW3, formula: "GE 14 / 2" }] }
+      ini_base: { value: 14, lines: [{ value: 14, from: kampfwerte.KW9, formula: "(MU 14 + GE 14) / 2" }] }
+    app_today: same (DerivedValueFormulas.ausweichen, .initiative); one number each, no breakdown
+
+  # --- Weapons alone -------------------------------------------------------------------------
+
+  - id: "16.3"
+    name: Rabenschnabel, no shield
+    hero: { loadout: { weapon: Rabenschnabel } }
+    expect:
+      at: { result: 14, base: { value: 14, from: kampfwerte.KW1 } }
+      pa:
+        result: 7
+        base: { value: 8, from: kampfwerte.KW2 }
+        lines: [{ value: -1, from: at-pa-modifikatoren.M1, via: [ITEMTPL_19.RS0] }]
+      on_hit:
+        tp: { total: 1, formula: "1W6+4 +1", lines: [{ value: 1, from: schaden.S3, formula: "KK 15 − 14" }] }
+    app_today: >
+      AT 14, PA 7 — same, but the −1 is folded into the weapon's stored PA
+      (OptolithImportService.parseItems) with no line; TP 1W6+4 — no Schadensbonus, wrong
+      (formatDamage ignores primaryThreshold; nothing else adds it)
+
+  - id: "16.4"
+    name: Langschwert, no shield
+    hero: { loadout: { weapon: Langschwert } }
+    expect:
+      at: { result: 14 }
+      pa: { result: 8 }
+      on_hit:
+        tp: { total: 0, formula: 1W6+4, not_applied: [{ rule: schaden.S3, reason: "max(GE 14, KK 15) = 15, not above 15" }] }
+    app_today: same (the not-applied Schadensbonus is not shown)
+
+  # --- With the Großschild -------------------------------------------------------------------
+
+  - id: "16.5"
+    name: Langschwert and Großschild — the two parries
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    choose: { action: parry }
+    expect:
+      offered:
+        - defence: weaponParry
+          result: 11
+          base: { value: 8, from: kampfwerte.KW2 }
+          lines: [{ value: 3, from: schilde.SCH1, item: Großschild }]
+        - defence: shieldParry
+          result: 13
+          base: { value: 7, from: schilde.SCH3, via: [kampfwerte.KW2] }     # the Schilde PA
+          lines: [{ value: 6, from: schilde.SCH3, formula: "2 × 3" }]
+    app_today: >
+      11 and 13 — same numbers, but neither shows where it comes from: the passive +3 is added
+      to the base (CombatAttackViews weapon list, w.pa + hero.passiveShieldPABonus) and the
+      doubled +6 is baked into Shield.pa at import (basePA + 2 * paMod)
+
+  - id: "16.6"
+    name: Langschwert and Großschild — attacking with the Langschwert
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    expect:
+      at: { result: 13, lines: [{ value: -1, from: ITEMTPL_29.GR1 }] }
+    app_today: AT 14 — wrong (no Großschild −1; example 18, 18.11)
+
+  - id: "16.7"
+    name: Rabenschnabel and Großschild
+    hero: { loadout: { weapon: Rabenschnabel, shield: Großschild } }
+    expect:
+      at: { result: 13, lines: [{ value: -1, from: ITEMTPL_29.GR1 }] }
+      parries:
+        weaponParry: { result: 10, lines: [{ value: -1, from: at-pa-modifikatoren.M1 }, { value: 3, from: schilde.SCH1 }] }
+        shieldParry: { result: 13, lines: [{ value: 6, from: schilde.SCH3 }] }
+      on_hit:
+        tp: { total: 1, formula: "1W6+4 +1", lines: [{ value: 1, from: schaden.S3 }] }
+    app_today: AT 14 — wrong; PA 10 and 13 — same; TP 1W6+4 — wrong
+
+  - id: "16.8"
+    name: Attacking with the Großschild
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    choose: { attack: { with: Großschild } }
+    expect:
+      offered: [{ attack: shield, from: schilde.SCH2 }]
+      at:
+        result: 5
+        base: { value: 11, from: kampfwerte.KW1, technique: Schilde }
+        lines: [{ value: -6, from: at-pa-modifikatoren.M1, via: [ITEMTPL_29.GR0] }]
+        not_applied: [{ rule: ITEMTPL_29.GR1, reason: "the shield is not the Hauptwaffe" }]
+      on_hit:
+        tp: { total: 0, formula: 1W6+1, not_applied: [{ rule: schaden.S3, reason: "KK 15, not above 16" }] }
+    app_today: AT 5, TP 1W6+1 — same (the shield row of the weapon list); the −6 has no line
+
+  - id: "16.9"
+    name: An arrow comes at him — Langschwert and Großschild
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    incoming: { kind: ranged, missile: pfeil }
+    expect:
+      offered:
+        - { defence: shieldParry, result: 13, from: schilde.SCH6 }   # +1 with the Fokusregel: ITEMTPL_29.GR2, 18.14
+        - { defence: aw, result: 7 }
+      not_offered:
+        - { defence: weaponParry, because: schilde.SCH8 }
+    app_today: >
+      the weapon parry (11, with the passive +3) is offered as well — wrong: the defence screen
+      never asks whether the attack is a ranged one (CombatDefenseSetupView, OpponentProfile has
+      no such fact), so SCH8 cannot apply. Without a shield the hero can parry an arrow with his
+      sword, which SCH9 rules out too
+
+  # --- In armour -----------------------------------------------------------------------------
+
+  - id: "16.10"
+    name: Langschwert and Großschild, in the Plattenrüstung
+    hero: { armour: [Plattenrüstung], abilities: { SA_41: 1 }, loadout: { weapon: Langschwert, shield: Großschild } }
+    expect:
+      conditions: { COND_1: 2 }
+      at:
+        result: 11
+        lines:
+          - { value: -1, from: ITEMTPL_29.GR1 }
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+      parries:
+        weaponParry: { result: 9, lines: [{ value: 3, from: schilde.SCH1 }, { value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+        shieldParry: { result: 11, lines: [{ value: 6, from: schilde.SCH3 }, { value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+      aw: { result: 5, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+    app_today: AT 12 — wrong (no Großschild −1); the parries and AW same
+
+  - id: "16.11"
+    name: Rolling initiative in the Plattenrüstung
+    hero: { armour: [Plattenrüstung], abilities: { SA_41: 1 } }
+    roll: { w6: 4 }
+    expect:
+      ini:
+        result: 16
+        formula: "14 + 1W6 − 2"
+        lines:
+          - { value: 14, from: kampfwerte.KW10, term: Basiswert, via: [kampfwerte.KW9] }
+          - { value: 4, from: kampfwerte.KW10, term: 1W6 }
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+    app_today: >
+      16 — same; the screen shows "12 + 4" (CombatInitiativeRollView.heroBaseINI folds the −2
+      into the base), so the Belastung line is not shown
+
+  - id: "16.12"
+    name: Belastung drops during the fight
+    hero: { conditions: { COND_1: 2 } }
+    roll: { w6: 4 }
+    sequence:
+      - expect: { ini: { result: 16 } }                    # 14 + 4 − 2
+      - event: { COND_1: 1 }                               # a load put down
+        expect: { ini: { result: 17, from: kampfwerte.KW11, kept: { w6: 4 } } }
+    app_today: stays 16 — wrong (Hero.activeCombatInitiative stores the total, not its parts)
+
+  # --- The page's own example (Carolan and Arbosch), not Boronmir ------------------------------
+
+  - id: "16.13"
+    name: Arbosch, Streitaxt and Holzschild, the shield used passively
+    hero: { techniques: { Hiebwaffen: { at: 14, pa: 8 }, Schilde: { pa: 8 } }, loadout: { weapon: Streitaxt, shield: Holzschild } }
+    items: { Streitaxt: { atMod: 0, paMod: -1 }, Holzschild: { paMod: 1 } }
+    expect:
+      at: { result: 14 }
+      parries:
+        weaponParry: { result: 8, lines: [{ value: -1, from: at-pa-modifikatoren.M1 }, { value: 1, from: schilde.SCH1 }] }
+    app_today: same numbers (no lines)
+
+  - id: "16.14"
+    name: Arbosch parries actively with the Holzschild
+    hero: { techniques: { Hiebwaffen: { at: 14, pa: 8 }, Schilde: { pa: 8 } }, loadout: { weapon: Streitaxt, shield: Holzschild } }
+    choose: { defence: shieldParry }
+    expect:
+      pa: { result: 10, base: { value: 8, technique: Schilde }, lines: [{ value: 2, from: schilde.SCH3, formula: "2 × 1" }] }
+    app_today: same (Shield.pa)
+
+  - id: "16.15"
+    name: Carolan, Florett and Linkhand
+    hero: { techniques: { Fechtwaffen: { at: 14, pa: 8 } }, loadout: { weapon: Florett, other: Linkhand } }
+    items: { Florett: { atMod: 1, paMod: 0 }, Linkhand: { parryingWeapon: true, paMod: 1 } }
+    expect:
+      at: { result: 15, lines: [{ value: 1, from: at-pa-modifikatoren.M1 }] }
+      pa: { result: 9, lines: [{ value: 1, from: schilde.SCH1, item: Linkhand }] }
+    app_today: >
+      PA 8 — wrong: a Parierwaffe gives no passive bonus (Hero.passiveShieldPABonus reads the
+      shield only; the import drops isParryingWeapon), and the Linkhand in the off hand makes
+      the loadout a dual-wield (Hero.isDualWielding)
+
+  # --- Rulings -------------------------------------------------------------------------------
+
+  - id: "16.16"
+    name: Boronmir parries unarmed, the Großschild on his arm
+    hero: { loadout: { weapon: null, shield: Großschild } }
+    choose: { defence: weaponParry, with: Raufen }
+    expect: { open: schilde.shield-bonus-raufen }   # under a: PA 10 (Raufen 7 + SCH1 3); under b: 7
+    app_today: 10 (the Raufen row adds hero.passiveShieldPABonus)
+
+  # --- Taking damage -------------------------------------------------------------------------
+
+  - id: "16.17"
+    name: Boronmir in plate takes a hit of 9 TP
+    hero: { armour: [Plattenrüstung], le: 33 }
+    event: { heroHit: { tp: 9 } }
+    expect:
+      sp: { value: 3, from: schaden.S1, formula: "9 − RS 6" }
+      le: { result: 30 }
+    app_today: same (CombatDamageViews, WoundEffectResolver.effectiveDamage)
+
+  - id: "16.18"
+    name: A hit that does not get through the plate
+    hero: { armour: [Plattenrüstung], le: 33 }
+    event: { heroHit: { tp: 5 } }
+    expect:
+      sp: { value: 0, from: schaden.S1 }
+      le: { result: 33 }
+    app_today: same
+
+  - id: "16.19"
+    name: A spell's damage, which ignores armour
+    hero: { armour: [Plattenrüstung], le: 33 }
+    event: { heroHit: { tp: 7 } }
+    choose: { ignoresRS: true }
+    expect:
+      offered: [{ choice: ignoresRS, from: schaden.S5 }]
+      sp: { value: 7 }
+      le: { result: 26 }
+    app_today: not offered — RS always comes off (1 SP); the player has to add the RS to the TP by hand
+
+  - id: "16.20"
+    name: LE falls to 0
+    hero: { le: 4 }
+    event: { heroHit: { tp: 6 } }
+    expect:
+      le: { result: -2 }                  # or 0 — the Sterben rule's question
+      states: [{ gain: imSterben, from: schaden.S8 }]
+    app_today: LE clamped at 0 (CombatDamageViews); no "im Sterben" state
+
+  # --- Not Boronmir: the one technique whose AT is not MU ------------------------------------
+
+  - id: "16.21"
+    name: A Peitsche, MU 14 and FF 11, Peitschen 10
+    hero: { attributes: { MU: 14, FF: 11 }, techniques: { Peitschen: 10 } }
+    expect:
+      techniques:
+        Peitschen: { at: { value: 11, lines: [{ value: 10, from: kampfwerte.KW1 }, { value: 1, from: kampfwerte.KW6, term: "FF 11" }] }, pa: none }
+    app_today: AT 12 — wrong (OptolithImportService takes MU for every technique's AT)

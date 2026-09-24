@@ -1,0 +1,180 @@
+# DRAFT FORMAT — see ../../README.md.
+# Parierwaffen und Schilde: the passive bonus to the main weapon's parry, the active shield parry
+# with the doubled bonus, what a shield can block. The Schilde technique's Besonderheiten repeat
+# the "Zur Erinnerung" paragraph and add one sentence (SCH8); the Grundbegriffe add the general
+# "no parry against ranged attacks" (SCH9).
+# Not here: a particular shield's own rules (the Großschild's −1 AT on the main weapon, its
+# +1 PA against arrows: ITEMTPL_29), shields on horseback (reiterkampf.RK5, SA_661), shields
+# against large opponents (groessenkategorie), a shield in a double attack (beidhaendiger-kampf).
+id: schilde
+name: Parierwaffen und Schilde
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Nahkampf/parierwaffen-und-schilde.html
+  book: Regelwerk (4. Auflage)
+  page: 231
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: SCH1
+    text: >
+      Wer zusätzlich zu seiner Hauptwaffe eine Parierwaffe oder einen Schild führt, kann den
+      passiven Parade-Bonus der Parierwaffe oder des Schilds zur Parade der Hauptwaffe
+      hinzuaddieren. Beim gleichzeitigen Einsatz einer zweiten Parierwaffe und/oder eines
+      Schildes zählt nur der höchste Parade-Bonus.
+    effects:
+      - when: { defence: weaponParry, with: mainHand, loadout.other: [parryingWeapon, shield] }
+        add: { to: pa, value: "max(loadout.other.paMod)" }
+        ruling: shield-bonus-raufen
+        # A line of its own: "Großschild (passiv) +3". The bonus is the piece's PA-Mod from its
+        # table row. A Parierwaffe is marked as one in its table row (Optolith:
+        # isParryingWeapon); an ordinary second weapon gives nothing here.
+        # FORMAT: "only the highest" — several candidate lines, one applied; the others shown
+        # as not applied ("Linkhand +1 — nur der höchste Bonus zählt").
+
+  - id: SCH2
+    text: >
+      Ansonsten sind Parierwaffen und Schilde über ihre entsprechende Kampftechnik auch als Waffe
+      für den beidhändigen Nahkampf oder als einzelne Nahkampfwaffe einsetzbar.
+    effects:
+      - offer: { attack: { with: [shield, parryingWeapon] }, value: "technique.at + item.atMod" }
+        # Its own technique (kampfwerte.KW1) and its own AT-Mod (at-pa-modifikatoren.M1): the
+        # Großschild −6. Its TP and Schadensschwelle from its row (schaden.S3). In a double
+        # attack: beidhaendiger-kampf.
+
+  - id: SCH3
+    text: >
+      Ein Schild hat zusätzlich den Vorteil, dass der Held den Parade-Bonus verdoppeln kann, wenn
+      er statt der Parade der Hauptwaffe den Paradewert der Kampftechnik Schilde benutzt. Bei der
+      Verteidigung mit einem Schild ist es also wichtig zu entscheiden, ob man den Bonus passiv
+      nutzt und den einfachen Bonus auf die Parade der Hauptwaffe bekommt, oder aktiv mit der
+      Kampftechnik Schilde pariert und so den Bonus des Schilds doppelt bekommt.
+    effects:
+      - offer:
+          defence: shieldParry
+          requires: { loadout.shield: present }
+          value: "schilde.pa"          # kampfwerte.KW2 for the Schilde technique
+      - when: { defence: shieldParry }
+        add: { to: pa, value: "2 * shield.paMod" }
+        # Two lines: "Schilde PA 7" and "Großschild aktiv +6 (2 × 3)". The choice between
+        # SCH1 (passive, on the weapon parry) and SCH3 (active) is made per defence: both rows
+        # are offered, each with its value.
+        # Parierwaffen have no active parry: "Ein Schild hat zusätzlich …".
+
+  - id: SCH4
+    text: >
+      Anmerkung: Schilde und Parierwaffen können nicht nur zur Verteidigung eingesetzt werden,
+      sondern auch als Waffen (z.B. im beidhändigen Kampf).
+    effects: none
+    why: SCH2 again
+
+  - id: SCH5
+    text: >
+      Zur Erinnerung: Parade mit dem Schild. Der Paradewert von Schilden wird wie bei allen
+      anderen Kampftechniken auch berechnet. Die Parade mit der Kampftechnik Schilde ist jedoch um
+      den doppelten Parade-Bonus des jeweiligen Schildes modifiziert und erleidet keine Abzüge
+      durch das Führen mit der falschen Hand.
+    effects:
+      - when: { defence: shieldParry }
+        exempt: { from: beidhaendiger-kampf.ZW4 }
+        # The off-hand −4 never reaches a shield parry. The doubling is SCH3.
+
+  - id: SCH6
+    text: >
+      Fernkampfangriffe und Attacken großer Gegner können mit einem Schild geblockt werden. Ein
+      zweiter Schild erhöht diesen Bonus nicht.
+    effects:
+      - when: { attack.kind: ranged }
+        allow: { defence: shieldParry }
+        # Against large attackers the same; groessenkategorie's own clause encodes it.
+      - cap: { lines: shield.paMod, count: 1 }
+        # "Ein zweiter Schild erhöht diesen Bonus nicht": one shield's PA-Mod, however many
+        # are carried.
+
+  - id: SCH7
+    text: Mit einem Schild kann man auch angreifen.
+    effects: none
+    why: SCH2 again
+
+  - id: SCH8
+    page:
+      url: https://dsa.ulisses-regelwiki.de/kampftechnik.html?kampftechnik=Schilde
+      book: Regelwerk
+      page: 236
+    text: >
+      Um Fernkampfangriffe abzuwehren muss aktiv mit dem Schild pariert werden, eine Parade mit
+      der Hauptwaffe reicht nicht aus.
+    effects:
+      - when: { attack.kind: ranged }
+        forbid: { defence: weaponParry }
+        # With it the passive bonus (SCH1), which only exists on a weapon parry. Left: the
+        # active shield parry (SCH3) and AW.
+        # FORMAT: needs to know that the incoming attack is a ranged one — a question on the
+        # defence screen ("Fernkampfangriff?"), like the attacker's size today.
+
+  - id: SCH9
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Kampf_Grundbegriffe-des-Kampfes.html
+      book: Regelwerk (3. überarb. Aufl.)
+      page: 227
+    text: >
+      Ausweichen (AW): In manchen Fällen ist es nötig, zur Seite zu springen, da eine Parade nicht
+      möglich ist (außerm it einem Schild). Dies gilt für Fernkampfangriffe und Nahkampfangriffe
+      von großen und riesigen Gegnern. Dies funktioniert genauso wie bei einer Probe auf Parade.
+    effects: none
+    why: >
+      SCH6 and SCH8 from the other side: against a ranged attack only the shield or AW. The
+      page's typo ("außerm it") kept. The large and giant attackers are groessenkategorie's.
+
+  - id: SCH10
+    text: >
+      Beispiel: Carolan und Arbosch wollen sich bei einer Kampfübung duellieren. Carolan trägt ein
+      Florett und einen Linkhand. Arbosch eine Streitaxt und einen Holzschild. Carolan hat in der
+      Kampftechnik Fechtwaffen AT/PA-Werte von 14/8. Das Florett gibt einen Bonus in Höhe von +1
+      auf Attacke, der passive Parade-Bonus der Parierwaffe beträgt ebenfalls +1. Somit kämpft
+      Carolan effektiv mit AT/PA-Werten von 15/9. Arbosch kann seinen Schild ebenfalls passiv
+      benutzen. Mit der Kampftechnik Hiebwaffen hat er AT/PA-Werte von 14/8, die Streitaxt gibt
+      ihm noch einen Abzug von -1 auf PA, also würde er effektiv nur mit 14/7 kämpfen. Der
+      Holzschild gibt ihm allerdings noch einen passiven Parade-Bonus in Höhe von +1 auf die
+      Parade, was den Verlust durch die Streitaxt ausgleicht. Also sind es doch wieder AT/PA-Werte
+      von 14/8. Arboschs Spieler entscheidet sich jedoch, den Schild aktiv zur Parade zu benutzen.
+      In der Kampftechnik Schilde hat er eine Parade von 8. Der Holzschild gibt ihm dann den
+      zweifachen PA-Bonus, also +2 statt +1. Damit kommt er auf einen Paradewert von 10 für die
+      Kampftechnik Schilde, wenn er einen Holzschild aktiv führt. Deutlich besser als die 7 bei
+      der Streitaxt mit der Kampftechnik Hiebwaffen. Er kämpft also mit AT 14 (mit der
+      Kampftechnik Hiebwaffen) und Parade 10 (mit der Kampftechnik Schilde).
+    effects: none
+    why: the page's worked example; it is situations 16.13–16.15
+
+  - id: SCH11
+    text: >
+      Sowohl Arbosch als auch Carolan könnten auch im beidhändigen Kampf aufeinander losgehen.
+      Dann wären die Parierwaffe und der Schild auch als Waffen einsetzbar (und müssten
+      entsprechende Abzüge auf AT und PA für den beidhändigen Kampf, sowie Waffenmodifikatoren
+      berücksichtigen, was vor allem für den Schild wichtig ist, da diese AT-Mali nach sich zieht).
+    effects: none
+    why: beidhaendiger-kampf's penalties and the shield's AT-Mod (SCH2) together; nothing new
+
+rulings:
+  - id: shield-bonus-raufen
+    status: open
+    question: >
+      The passive shield bonus goes onto "der Parade der Hauptwaffe" (SCH1). Does a hero who
+      fights unarmed (Raufen) with a shield on the other arm get it on a Raufen parry?
+    context: >
+      The page speaks of a Hauptwaffe and does not say whether bare hands count as one. The app
+      adds the bonus to a Raufen parry on the weapon list (CombatAttackViews weapon list, the
+      Raufen row: raufen.pa + hero.passiveShieldPABonus). For Boronmir (Raufen PA 7, Großschild
+      +3) that is 10 instead of 7; his active shield parry is 13 either way, so it matters only
+      when he chooses the Raufen parry, e.g. after losing his weapon.
+    situations: [kampfwerte 16.16]
+    options:
+      a: { says: "Yes: unarmed is the hand the hero fights with; the shield covers him either way.", app: "no change" }
+      b: { says: "No: the bonus needs a weapon in the main hand.", app: "the Raufen row loses the +3" }
+    recommended: a
+    why_recommended: >
+      The passive bonus stands for the shield's cover, which does not depend on what the other
+      hand holds; and the active shield parry is better anyway, so (a) changes little.
+    answer: null

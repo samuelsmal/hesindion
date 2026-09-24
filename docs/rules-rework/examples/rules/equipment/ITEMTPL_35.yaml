@@ -1,0 +1,43 @@
+# DRAFT FORMAT — see ../../README.md.
+# A weapon file with nothing but its table row: see ITEMTPL_19.yaml for the format note.
+id: ITEMTPL_35
+name: Langschwert
+kind: weapon
+source:
+  url: https://dsa.ulisses-regelwiki.de/langschwert.html
+  book: Regelwerk
+  page: 368
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page names no publication; book and page are Optolith's (US25001 p. 368, and Aventurische
+# Rüstkammer p. 75). Optolith's numbers match the page.
+
+stats:
+  technique: CT_12           # Schwerter
+  tp: 1W6+4
+  ls: { attribute: [GE, KK], threshold: 15 }
+  at_mod: 0
+  pa_mod: 0
+  reach: mittel
+  weight: 1                  # Stein
+  length: 100                # HF
+  price: 200                 # Silbertaler
+  complexity: einfach
+
+clauses:
+  - id: LS0
+    text: "Langschwert | TP 1W6+4 | L+S GE/KK 15 | AT/PA-Mod 0/0 | RW mittel | 1 Stein | 100 HF | 200 S | einf"
+    effects:
+      - provides: { loadout.weapon: stats }
+        # L+S GE/KK: the Kampftechniken page lets the hero use either Leiteigenschaft
+        # ("aus mehreren möglichen Leiteigenschaften wählen"), so the higher counts. Boronmir,
+        # GE 14 / KK 15: 15 is not above 15, no Schadensbonus. The app's PA uses the same max
+        # (OptolithImportService.parseItems); its TP never use the threshold (ITEMTPL_19.RS0).
+
+  - id: LS1
+    text: |
+      Waffenvorteil: keine
+      Waffennachteil: keine
+    effects: none
+    why: nothing under the Fokusregel Waffeneigenschaften either

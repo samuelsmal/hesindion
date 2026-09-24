@@ -1,0 +1,29 @@
+# DRAFT FORMAT — see ../../README.md.
+id: ADV_25
+name: Hohe Lebenskraft
+kind: advantage
+tiers: 7
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Hohe%20Lebenskraft%20I-VII
+  book: Regelwerk
+  page: 166
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: HL1
+    text: Der LE-Grundwert steigt durch diesen Vorteil um 1 Punkt pro Stufe des Vorteils.
+    effects:
+      - add: { to: le.base, value: 1, per: tier }
+        # FORMAT: modifies a *derived value* (the LE maximum), not a check — like SA_51 on the
+        # INI Basiswert. Its line belongs in the LE breakdown on the hero sheet:
+        # "LE 33 = Grundwert 5 + 2×KO 26 + Hohe Lebenskraft II 2" (lebensenergie.LE3). The page
+        # says "Grundwert" (the species value); the Basiswerte page's own example adds it on the
+        # Basiswert line (lebensenergie.LE4). Either way it is one more line in the same sum.
+        # Through the LE maximum it also moves the Schmerz thresholds (COND_6.SZ3).
+
+  - id: HL2
+    text: "Voraussetzung: Kein Nachteil Niedrige Lebenskraft"
+    effects: none
+    why: purchase prerequisite, not a rule at the table

@@ -1,0 +1,141 @@
+# DRAFT FORMAT — see ../../README.md.
+# FORMAT: a new kind, `weapon`. The table row is data every other rule reads (the Kampftechnik,
+# TP, the Schadensschwelle, AT/PA-Mod, reach), kept under `stats`; the Anmerkung, Waffenvorteil
+# and Waffennachteil are clauses. The first is core, the other two belong to the Fokusregel
+# Waffeneigenschaften (core/waffeneigenschaften) — so a ruleset per clause, not per file.
+id: ITEMTPL_19
+name: Rabenschnabel
+kind: weapon
+source:
+  url: https://dsa.ulisses-regelwiki.de/rabenschnabel.html
+  book: Regelwerk
+  page: 367
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page also lists Aventurische Rüstkammer p. 83 (Optolith's source for the Waffenvorteil and
+# -nachteil, US25208), Aventurisches Götterwirken p. 233, Straßenstaub & Halsabschneider p. 28 and
+# Archiv der Ausrüstung p. 125. Optolith (de-DE and univ Equipment.yaml) has the same numbers and
+# text as the page. It has a second Rabenschnabel, ITEMTPL_796, without the geweiht note; the
+# app treats both as this one (RulesDatabase, Hero.isConsecrated).
+
+stats:
+  technique: CT_5            # Hiebwaffen
+  tp: 1W6+4
+  ls: { attribute: [KK], threshold: 14 }
+  at_mod: 0
+  pa_mod: -1
+  reach: mittel
+  weight: 1.5                # Stein
+  length: 110                # HF
+  price: 105                 # Silbertaler
+  complexity: einfach
+  consecrated: Boron
+
+clauses:
+  - id: RS0
+    text: "Rabenschnabel | TP 1W6+4 | L+S KK 14 | AT/PA-Mod 0/-1 | RW mittel | 1,5 Stein | 110 HF | 105 S | einf"
+    effects:
+      - provides: { loadout.weapon: stats }
+        # The row. AT/PA-Mod: the AT- und PA-Modifikatoren rule (added after the base values).
+        # L+S: the Schadensbonus on the Kampftechniken page — +1 TP per point of the
+        # Leiteigenschaft above the threshold (schaden.S3): Boronmir's KK 15
+        # gives +1. The app ignores the threshold: FumbleEffectResolver says "no export carries
+        # the threshold (issue #14)", but the hero file has `primaryThreshold: { threshold: 14 }`
+        # on the item, and OptolithImportService.parseItems does not read it.
+
+  - id: RS1
+    text: >
+      Anmerkung: geweiht (Boron); borongeweihte Waffen sind nur für Borongeweihte erwerbbar
+    effects: none
+    why: >
+      who may buy it; that it is geweiht matters only under the Fokusregel Karmale Objekte
+      (FokusRule.karmaleObjekte, Hero.isConsecrated), which is not part of this example
+
+  - id: RS2
+    name: Dornenspitze
+    text: >
+      Waffenvorteil: Statt mit der Hammerseite anzugreifen, kann der Held auch die Dornenspitze
+      verwenden. Die Dornenspitze verursacht ebenfalls 1W6+4 TP. Rüstungen mit RS 6 oder mehr
+      erleiden dadurch einen Malus von -2 auf RS.
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften }
+        offer: { choice: dornenspitze, on: at }
+        ruling: rabenschnabel-waffeneigenschaft
+      - when: { ruleset: fokus.waffeneigenschaften, choice: dornenspitze, attack: hit, opponent.rs: { min: 6 } }
+        opponent_add: { to: rs, value: -2 }
+        ruling: [rabenschnabel-waffeneigenschaft, dornenspitze-rs]
+        # Opponent side: the app has no opponent RS (ADR-0005) and shows the line as a note,
+        # "Gegner-RS −2 · Rabenschnabel (nur gegen RS 6 oder mehr)" (CombatAttackViews.rsText).
+        # The TP stay the weapon's.
+
+  - id: RS3
+    text: >
+      Von einem Reittier aus geführt, bekommt der Träger des Rabenschnabels einen Bonus von +1
+      TP.
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften, hero.mounted: true, attack: hit }
+        add: { to: tp, value: 1 }
+        ruling: rabenschnabel-waffeneigenschaft
+        # Part of the Waffenvorteil paragraph; either end of the weapon. On the Sturmangriff zu
+        # Pferd too (reiterkampf.RK14). Golgariten-Stil adds no TP of its own (SA_661; the
+        # catalog note on SA_661 records that the code once did, from Optolith's stale text).
+
+  - id: RS4
+    text: >
+      Waffennachteil: Nach einem bestätigten Patzer bei einer Attacke erhält der Träger
+      zusätzlich 1 Stufe Betäubung.
+    effects:
+      - when: { ruleset: fokus.waffeneigenschaften, attack: confirmedFumble }
+        gain: { condition: COND_2, levels: 1 }
+        ruling: rabenschnabel-waffeneigenschaft
+        # In addition to the Patzer table's result. The app does this in Swift, always
+        # (WeaponFumbleExtras, keyed by the weapon's name).
+
+rulings:
+  - id: rabenschnabel-waffeneigenschaft
+    status: open
+    question: >
+      Do the Rabenschnabel's Dornenspitze, its +1 TP on horseback and its Betäubung on a Patzer
+      apply only when the group plays the Fokusregel Waffeneigenschaften?
+    context: >
+      The Rabenschnabel page prints them as "Waffenvorteil" and "Waffennachteil" without naming
+      a Fokusregel. The Waffeneigenschaften page (Aventurische Rüstkammer p. 56) says weapons'
+      Vor- und Nachteile "nur zum Tragen kommen, wenn du mit der Fokusregel spielst", and
+      Optolith sources this weapon's advantage and disadvantage to the Rüstkammer (p. 83), not
+      to the Regelwerk. The page also lists Aventurisches Götterwirken p. 233, which could print
+      the Dornenspitze as part of the weapon itself — not checked (no access to the book). The
+      app has no such Fokusregel and applies all three always (catalog ITEMTPL_19,
+      WeaponFumbleExtras). The same holds for the Großschild's Waffenvorteil and -nachteil
+      (ITEMTPL_29.GR2–GR4) and every other weapon's; this ruling may belong in
+      rules/rulings.yaml.
+    situations: [kupperus-und-waffen 18.7, kupperus-und-waffen 18.5, kupperus-und-waffen 18.9, kupperus-und-waffen 18.10, kupperus-und-waffen 18.12, kupperus-und-waffen 18.13]
+    options:
+      a: { says: "Only with the Fokusregel, like every weapon's Waffenvorteil and -nachteil.", app: "a Fokusregel toggle (Ausrüstung, Stufe I); Dornenspitze, +1 TP and Betäubung only when it is on" }
+      b: { says: "The Rabenschnabel's are part of the weapon and always apply; other weapons' need the Fokusregel.", app: "as today for the Rabenschnabel; the toggle gates the rest" }
+      c: { says: "Always, for every weapon — the group plays with Waffeneigenschaften.", app: "no toggle; as today, and the missing Großschild lines are added" }
+    recommended: a
+    why_recommended: >
+      The Fokusregel page is explicit and the text comes from the Rüstkammer, the Fokusregel's
+      book; a group that wants the lines turns it on, and the owner's house rule can make it the
+      default.
+    answer: null
+
+  - id: dornenspitze-rs
+    status: open
+    question: >
+      "Rüstungen mit RS 6 oder mehr erleiden einen Malus von -2 auf RS" — worn armour only, or
+      any RS 6+, a creature's natural armour included?
+    context: >
+      The page says "Rüstungen". Many creatures have natural RS (a Krokodil, a Drache) and no
+      worn armour. Under the Fokusregel Trefferzonen-Rüstungsschutz the RS differs by zone
+      (trefferzonen-ruestungsschutz), so "RS 6 oder mehr" would be the RS of the zone hit. The app
+      shows the −2 as a note for the GM with "(nur gegen RS 6 oder mehr)" and never applies it
+      itself (catalog ITEMTPL_19, `rsNote`).
+    situations: [kupperus-und-waffen 18.6]
+    options:
+      a: { says: "Worn armour only; with Trefferzonen-RS, the armour on the zone hit.", app: "the note reads 'Rüstung mit RS 6 oder mehr'" }
+      b: { says: "Any RS of 6 or more, natural armour included.", app: "the note reads 'RS 6 oder mehr' as today" }
+    recommended: a
+    why_recommended: the page names Rüstungen, and a spike that finds the gaps in plate has nothing to find in a hide
+    answer: null

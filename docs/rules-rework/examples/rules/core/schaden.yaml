@@ -1,0 +1,130 @@
+# DRAFT FORMAT — see ../../README.md.
+# Trefferpunkte, the Schadensbonus, Rüstungsschutz, Schadenspunkte, Lebensenergie. The Nahkampf
+# page has the sequence; the Schadensbonus is on the Kampftechniken page and the RS exception in
+# the Grundbegriffe, each named on its clause (`page:`, as in kampfwerte).
+# Not here: Schmerz from low LE (COND_6, the schmerz example), the Wundschwelle and hit zones
+# (trefferzonen), the LE maximum (lebensenergie), what dying means (the Sterben rule, not written).
+id: schaden
+name: Schaden (TP, Schadensbonus, RS, SP)
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Nahkampf.html
+  book: Regelwerk (4. überarb. Auflage)
+  page: 229
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: S1
+    text: >
+      Misslingt die Verteidigung, würfelt der Angreifer die Trefferpunkte seiner Waffe aus. Von
+      diesen Trefferpunkten wird der Rüstungsschutz der vom Ziel getragenen Rüstung abgezogen. Die
+      restlichen Punkte erleidet das Ziel an Schadenspunkten, die von seinen Lebenspunkten
+      abgezogen werden müssen.
+    effects:
+      - when: { attack: hit }
+        roll: { value: tp, formula: "weapon.tp + tp.lines" }
+        # The hero's side: the weapon's TP formula, then every TP line (S3's Schadensbonus,
+        # Wuchtschlag, the grip, …), shown as one formula ("1W6+4 +1").
+      - when: { event: heroHit }
+        set: { value: sp, to: "max(0, tp - rs)" }
+        # The take-damage side: the TP are entered (the opponent is not modelled, ADR-0005),
+        # the hero's RS comes off, what remains is SP. Fewer TP than RS: 0 SP, not negative.
+      - when: { event: heroHit }
+        add: { to: le.current, value: "-sp" }
+    # "der vom Ziel getragenen Rüstung": the whole RS, or the RS of the zone hit under
+    # trefferzonen-ruestungsschutz.
+
+  - id: S2
+    text: >
+      Alle Waffen verfügen über sogenannte Trefferpunkte, die sie bei einem erfolgreichen Angriff
+      verursachen. Diese werden ausgewürfelt und vom Ergebnis wird der Rüstungsschutz des
+      Getroffenen abgezogen Was übrig bleibt, wird als Schadenspunkte von dessen LE abgezogen.
+    effects: none
+    why: S1 again, under "4. Schaden" (the page's missing full stop kept)
+
+  - id: S3
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html
+      book: Regelwerk (4. Auflage)
+      page: 234
+    text: >
+      Je nach Kampftechnik kann ein Held außerdem durch seine Leiteigenschaft einen Bonus auf
+      seine Trefferpunkte erhalten. Bei allen Nahkampfwaffen ist eine Schadensschwelle angegeben.
+      Besitzt der Träger der Waffe mehr Punkte in seiner Leiteigenschaft als die Schadensschwelle
+      beträgt, so erzielt er bei jedem erfolgreichen Treffer pro Punkt über der Schadensschwelle 1
+      Trefferpunkt Schadensbonus. Die jeweilige Schadensschwelle wird bei den einzelnen Waffen
+      angegeben. Beispiel: Layariel ist ein Rapier in die Hände gefallen. Das Rapier ist eine
+      Fechtwaffe, und Fechtwaffen haben als Leiteigenschaft Gewandtheit. Die Schadensschwelle des
+      Rapiers ist GE 15. Layariel weist eine Gewandtheit von 16 auf, was 1 Punkt über der
+      Schadensschwelle liegt. Sie erhält also 1 Punkt Schadensbonus, sodass sie nicht 1W6+3 TP
+      anrichtet, sondern 1W6+4 TP.
+    effects:
+      - when: { attack: hit, loadout.weapon.kind: melee }
+        add: { to: tp, value: "max(0, leit - weapon.schadensschwelle)" }
+        # A line of its own: "Schadensbonus KK 15 über 14: +1". `leit` is the higher of the
+        # weapon's Leiteigenschaften (S4), as for PA (kampfwerte.KW7: "wählen").
+        # FORMAT: the threshold is a weapon value (the table's "L+S" column, e.g. "KK 14",
+        # "GE/KK 15"), read from the equipment row; Optolith exports it as
+        # primaryThreshold { threshold, primary? } on the item.
+
+  - id: S4
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html
+      book: Regelwerk (4. Auflage)
+      page: 234
+    text: >
+      In Einzelfällen kann eine Waffe eine von ihrer Kampftechnik abweichende Leiteigenschaft
+      aufweisen, was sich dann auf ihren Schadensbonus auswirken kann. Der Paradewert der
+      Kampftechnik ist dadurch aber nicht betroffen.
+    effects:
+      - when: { weapon.leit: present }
+        replace: { value: "S3.leit", with: weapon.leit }
+        # The weapon's "L+S" attribute wins over the technique's for the Schadensbonus only.
+
+  - id: S5
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Kampf_Grundbegriffe-des-Kampfes.html
+      book: Regelwerk (3. überarb. Aufl.)
+      page: 227
+    text: >
+      Rüstungsschutz (RS): Rüstungen aller Art verfügen über einen Rüstungsschutz, der von den
+      durch Waffen erzeugten Trefferpunkten abgezogen wird. Manche Angriffe wie Zauber oder einige
+      Angriffe von Tieren können den Rüstungsschutz umgehen und direkt Schaden verursachen.
+    effects:
+      - offer: { choice: ignoresRS, on: heroHit, then: { set: { value: sp, to: tp } } }
+        # "Ignoriert RS" on the take-damage screen; which attacks do is the attacker's rule
+        # (a spell, a creature), which the app does not know — so the player says.
+
+  - id: S6
+    page:
+      url: https://dsa.ulisses-regelwiki.de/Kampf_Grundbegriffe-des-Kampfes.html
+      book: Regelwerk (3. überarb. Aufl.)
+      page: 227
+    text: >
+      Trefferpunkte (TP) und Schadenspunkte (SP): Waffen, zur Not aber auch die bloße Faust können
+      einen Gegner verletzen. Wie stark diese Verletzungen sind, wie viele Lebenspunkte er
+      verliert, wenn er einen Angriff nicht parieren kann, ist von den Trefferpunkten der Waffe
+      abhängig. Meist werden sie mit einem oder zwei W6 zuzüglich Zuschlägen ausgewürfelt. Von den
+      Trefferpunkten wird der Rüstungsschutz abgezogen, die verbleibenden Schadenspunkte mindern
+      die Lebensenergie. Oder kurz gesagt: TP – RS = SP.
+    effects: none
+    why: S1 as a formula
+
+  - id: S7
+    text: >
+      Hat man ein Viertel der Lebenspunkte verloren, erhält man eine Stufe des Zustandes Schmerz.
+      Das Gleiche geschieht, wenn man die Hälfte und Dreiviertel der Lebenspunkte verloren hat und
+      wenn die Lebenspunkte auf 5 oder weniger sinken. Steigen die Lebenspunkte wieder über diese
+      Begrenzungen, verschwindet damit auch die entsprechende Stufe Schmerz.
+    effects: none
+    why: COND_6 (Schmerz) encodes these thresholds; the schmerz example checks them
+
+  - id: S8
+    text: Ab 0 Lebenspunkten liegt ein Held im Sterben.
+    effects:
+      - when: { le.current: { max: 0 } }
+        gain: { state: imSterben }
+        # The Sterben rule (what dying does, when the hero is dead) is not written yet; whether
+        # LE below 0 matters is that rule's question (the app clamps LE at 0).

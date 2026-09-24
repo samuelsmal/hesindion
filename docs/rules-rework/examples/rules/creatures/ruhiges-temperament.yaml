@@ -1,0 +1,36 @@
+# DRAFT FORMAT — see ../../README.md.
+# FORMAT: a new kind, `creatureAdvantage` — a Tiervorteil. Its owner is the animal, its effect
+# lands on the rider's check: the first rule here whose holder and beneficiary differ.
+id: ruhiges-temperament
+name: Ruhiges Temperament
+kind: creatureAdvantage
+group: Vorteile (Tiere)
+source:
+  url: https://dsa.ulisses-regelwiki.de/vor-und-nachteile/tiervor-und-nachteile/vorteile-tiere/ruhiges-temperament.html
+  book: Aventurische Tiergefährten
+  page: 118
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# Kupperus has it through his profile (svellttaler-kaltblut.SK5); the Optolith export does not
+# carry an animal's Vorteile, so the app has no way to know (svellttaler-kaltblut.mount-profile-data).
+
+clauses:
+  - id: RT1
+    text: "Regel: Proben auf Reiten sind bei einem Tier mit ruhigem Temperament um +1 erleichtert."
+    effects:
+      - when: { check: { talent: Reiten }, mount.has: ruhiges-temperament }
+        add: { to: check, value: 1 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+        # Every Reiten check on this animal, the Kampfmanöver ones of reiterkampf.RK8, RK10,
+        # RK12 and RK15 included.
+
+  - id: RT2
+    text: "Voraussetzungen: Tier lässt sich reiten"
+    effects: none
+    why: purchase prerequisite of the animal
+
+  - id: RT3
+    text: "AP-Wert: 15 Abenteuerpunkte"
+    effects: none
+    why: cost

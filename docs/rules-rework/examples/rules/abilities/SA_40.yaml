@@ -1,0 +1,61 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_40
+name: Aufmerksamkeit
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+passive: true
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Aufmerksamkeit.html
+  book: Regelwerk
+  page: 246
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: A1
+    text: >
+      Bei einem Hinterhalt oder wenn es darum geht, ob er überrascht wird, erhält er eine
+      Erleichterung von +2 auf Sinnesschärfe (Hinterhalt entdecken), um seine Gegner zu
+      entdecken.
+    effects:
+      - when: { check: { talent: TAL_10, application: Hinterhalt entdecken }, situation: ambush }
+        add: { to: check, value: 2 }
+        ruling: aufmerksamkeit-when
+        # Sinnesschärfe is TAL_10. Failing the check leaves the hero Überrascht (STATE_13).
+        # FORMAT: an Anwendungsgebiet of a talent — the app does not model applications, and
+        # "ambush" is a fact about the situation the check screen cannot know on its own.
+
+  - id: A2
+    text: "Voraussetzungen: IN 13"
+    effects: none
+    why: purchase prerequisite, not a roll
+
+  - id: A3
+    text: "Kampftechnik: alle"
+    effects: none
+    why: a passive ability; no weapon is involved in the check
+
+rulings:
+  - id: aufmerksamkeit-when
+    status: open
+    question: >
+      The +2 applies only to a Sinnesschärfe (Hinterhalt entdecken) check in an ambush or when
+      surprise is at stake. How does the app know that a Sinnesschärfe check is one?
+    context: >
+      The app does not model a talent's Anwendungsgebiete. Today every Sinnesschärfe check of a
+      hero with Aufmerksamkeit shows the hint "Aufmerksamkeit: +2 auf Überraschung vermeiden"
+      (TalentProbeModal.hints, Talent.sinnesschaerfeRuleId); the +2 is never applied (catalog:
+      byHand) and the hint names "Überraschung vermeiden" where the page names Hinterhalt
+      entdecken. Sinnesschärfe is also one of the seven "maybe" talents for Belastung, answered
+      by a toggle on the check (COND_1.belastung-talents-maybe) — the same kind of question.
+    situations: [boronmir-sf 14.14, boronmir-sf 14.15]
+    options:
+      a: { says: "A toggle 'Hinterhalt / Überraschung' on the Sinnesschärfe check, off by default; on, the +2 is a line from SA_40.", app: "one toggle on TAL_10's check screen, for heroes with SA_40" }
+      b: { says: "Hint only, as today, with the page's wording.", app: "the hint text changes" }
+    recommended: a
+    why_recommended: >
+      The player knows when the GM calls for the ambush check; a toggle makes the +2 a named
+      line instead of a sum in the player's head, and mirrors the Belastung toggle on the same
+      screen.
+    answer: null

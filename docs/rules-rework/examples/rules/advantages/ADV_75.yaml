@@ -1,0 +1,65 @@
+# DRAFT FORMAT — see ../../README.md.
+id: ADV_75
+name: Schnell wieder auf den Beinen
+kind: advantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Schnell%20wieder%20auf%20den%20Beinen
+  book: Kneipen & Tavernen (Meisterschirmbegleitheft)
+  page: 13
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+# Despite the name, this advantage has nothing to do with standing up from Liegend (STATE_10.L4):
+# it halves the time Betäubung and Berauscht take to wear off. Standing up costs 1 action and
+# risks a Passierschlag for Boronmir exactly as for anyone (situation 15.16).
+
+clauses:
+  - id: SW1
+    text: >
+      Mit diesem Vorteil benötigt man nur noch die Hälfte der Zeit, bis eine Stufe des Zustands
+      Betäubung oder Berauscht, der durch Alkohol verursacht wurde, abgebaut ist.
+    effects:
+      - when: { condition: COND_2, cause: alcohol }
+        scale: { duration: COND_2.decay, by: 0.5 }       # 3 h Ruhephase → 1½ h per Stufe
+        ruling: alcohol-scope
+      - when: { condition: COND_9 }
+        scale: { duration: COND_9.decay, by: 0.5 }       # 2 h → 1 h per Stufe
+    status: unencoded
+    why: >
+      the app keeps no time outside combat rounds and no cause for a Zustand; shown as text on
+      the Betäubung and Berauscht chips ("baut sich in der halben Zeit ab — Schnell wieder auf den
+      Beinen"). COND_2 (Betäubung, https://dsa.ulisses-regelwiki.de/Sta_Bet%C3%A4ubung.html:
+      "nach einer Ruhephase von 3 Stunden") and COND_9 (Berauscht,
+      https://dsa.ulisses-regelwiki.de/Sta_Berauscht.html: "nach 2 Stunden um 1 Stufe") have no
+      rule file yet.
+    # FORMAT: an effect on another rule's *duration*, and a condition on a Zustand's *cause* —
+    # neither exists in the vocabulary, and the app tracks neither.
+
+  - id: SW2
+    text: "Voraussetzung: Keine"
+    effects: none
+    why: no prerequisite
+
+rulings:
+  - id: alcohol-scope
+    status: open
+    question: >
+      "Betäubung oder Berauscht, der durch Alkohol verursacht wurde" — does "durch Alkohol" limit
+      both Zustände, or only Berauscht? Does Betäubung from a blow or from exhaustion also wear off
+      in half the time?
+    context: >
+      The relative clause ("der") agrees with "des Zustands", so it can govern either. Berauscht
+      comes "meistens" from alcohol (its page), which would make the clause nearly redundant if it
+      only limited Berauscht. The advantage is printed in Kneipen & Tavernen, costs 2 AP, and every
+      other rule there is about drinking. The app ignores the advantage (catalog ADV_75 todo) and
+      shows Betäubung's 3 hours (Strings "state.betaeubung.removal") for everyone.
+    situations: [lebensenergie 15.17, lebensenergie 15.19]
+    options:
+      a: { says: "Both only when caused by alcohol; Betäubung from a blow wears off as usual.", app: "the chip text asks the cause, or states the condition" }
+      b: { says: "Betäubung from any cause; Berauscht (from alcohol) as well.", app: "the text on every Betäubung chip" }
+    recommended: a
+    why_recommended: >
+      the book, the name and the 2 AP price all point at the morning after; halving every
+      Betäubung (a combat Zustand) would be worth far more than 2 AP
+    answer: null

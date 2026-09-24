@@ -1,0 +1,95 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_884
+name: Plänkler-Formation
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+passive: true
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Plaenkler_Formation.html
+  book: Aventurisches Kompendium II
+  page: 129
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The wiki also lists Kodex des Schwertes pp. 301–302. Optolith's text matches the page.
+
+clauses:
+  - id: P1
+    text: >
+      Ein Kämpfer mit dieser Sonderfertigkeit kann zusammen mit bis zu zwei weiteren Kämpfern,
+      die sich maximal einen halben Schritt rechts und links von ihm befinden müssen, eine
+      Schlachtreihe aufstellen.
+    effects:
+      - offer:
+          choice: plaenklerFormation
+          span: whileFormed
+          ruling: plaenkler-mounted
+          # A fact the player states, for as long as the line stands — set and cleared at any
+          # point in the fight, not only at setup. The spacing (½ Schritt, left and right, three
+          # fighters) is the player's to judge; shown as text beside the toggle.
+          # FORMAT: a span that ends when the table says so, not at the end of a round or fight.
+
+  - id: P2
+    text: >
+      Alle Kämpfer, die durch diese SF eine Plänkler-Formation bilden, erhalten entweder +1 AT
+      oder +1 VW.
+    effects:
+      - when: { choice: plaenklerFormation, bonus: at }
+        add: { to: at, value: 1 }
+        # AT: melee attacks, whatever the weapon (Kampftechniken: alle); not FK.
+      - when: { choice: plaenklerFormation, bonus: vw }
+        add: { to: [pa, aw], value: 1 }
+        # VW: every defence, parry (weapon or shield) and dodge — read as the decided
+        # SA_65.vh-scope reads "Verteidigungswert".
+
+  - id: P3
+    text: >
+      Alle Beteiligten müssen sich bei der Bildung der Formationen auf einen der beiden Boni
+      einigen.
+    effects:
+      - offer: { choice: plaenklerFormation.bonus, options: [at, vw], when: formed }
+        # One answer for the whole line, chosen when it forms; changing it means re-forming.
+
+  - id: P4
+    text: >
+      Nur einer der Kämpfer benötigt die Sonderfertigkeit, damit alle davon profitieren. Verfügen
+      mehrere Kämpfer darüber, können auch entsprechend mehr Kämpfer die Vorteile nutzen.
+    effects:
+      - requires: { any_of: [{ hero.has: SA_884 }, { ally.has: SA_884 }] }
+        # A hero without the SF can stand in a companion's formation and gets P2 all the same.
+        # FORMAT: `ally.has` — an ally's ability the app cannot see; the player states it
+        # ("in einer Plänkler-Formation"), and the line cites SA_884 without the hero owning it.
+        # Today only an owner is offered the toggle (CombatSetupView, hero.hasPlaenklerFormation).
+
+  - id: P5
+    text: "Voraussetzungen: keine"
+    effects: none
+    why: nothing to check
+
+  - id: P6
+    text: "Kampftechniken: alle"
+    effects: none
+    why: no weapon restriction on P2
+
+rulings:
+  - id: plaenkler-mounted
+    status: open
+    question: >
+      Can riders form a Plänkler-Formation — may Boronmir take its +1 while fighting from
+      Kupperus?
+    context: >
+      The page says "Kämpfer" standing at most half a Schritt to the left and right and says
+      nothing about mounts. Two horses cannot stand half a Schritt apart. The riders' own line is
+      a different SF: Berittene Lanzenformation (AKO II p. 125) puts riders up to 3 Schritt apart,
+      with lances, at a gallop. The app applies the Plänkler bonus whether or not the hero is
+      mounted (CombatSituation.chosenOptions; the catalog's SA_884 clause has no mounted
+      condition), on top of Vorteilhafte Position and Golgariten-Stil.
+    situations: [boronmir-sf 14.19]
+    options:
+      a: { says: "Not while mounted: the formation is for fighters on foot.", app: "the toggle is off and disabled while mounted, with the reason" }
+      b: { says: "Mounted too, if the GM accepts the spacing.", app: "no change" }
+    recommended: a
+    why_recommended: >
+      Half a Schritt is shoulder to shoulder, which horses cannot do, and the rules give riders a
+      formation of their own with its own spacing.
+    answer: null

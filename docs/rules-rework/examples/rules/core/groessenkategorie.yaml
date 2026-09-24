@@ -1,0 +1,88 @@
+# DRAFT FORMAT — see ../../README.md.
+id: groessenkategorie
+name: Größenkategorie
+kind: core
+catalog_id: GRW_groessenkategorie
+source:
+  url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/groessenkategorie.html
+  book: Regelwerk
+  page: 239
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# Also Kodex des Schwertes p. 76. A melee rule. The ranged target-size modifier is a separate
+# rule (fernkampf.zielgroesse, RangedModifiers.groesse); the Trefferzonen aiming penalty
+# replaces this one (trefferzonen.TZ5, ruling trefferzonen.zone-replaces-size).
+
+scale: { size: [winzig, klein, mittel, gross, riesig] }
+
+clauses:
+  - id: GK1
+    text: >
+      Jedes Wesen wird in eine der folgenden Größenkategorien eingeordnet: winzig, klein,
+      mittel, groß, riesig
+    effects: none
+    why: >
+      defines the scale. The opponent's size is asked per interaction (OpponentProfile.size);
+      the hero is mittel unless the species says otherwise; a mount's size is the mount's
+      (Kupperus, a Svellttaler Kaltblut: groß — the pet data has no size field, only "size: 1.9",
+      the height in Schritt)
+
+  - id: GK2
+    text: >
+      Je nach Größe des Gegners gelten für einen Helden Modifikatoren auf Attacke oder
+      Einschränkungen auf die Wahl der Verteidigung.
+    effects: none
+    why: >
+      says whose size counts — the opponent's: the target's when the hero attacks (GK3), the
+      attacker's when the hero defends (GK4)
+    open_ruling: mounted-size
+
+  - id: GK3
+    text: |
+      Winzig (Ratte, Kröte, Spatz): –4 AT
+      Klein (Rehkitz, Schaf, Ziege): +/–0 AT
+      Mittel (Mensch, Zwerg, Esel): +/–0 AT
+    effects:
+      - when: { check: at, opponent.size: winzig }
+        add: { to: at, value: -4 }
+        id: GK3.at
+        # trefferzonen.TZ5 replaces this line: with a zone announced, it is dropped.
+
+  - id: GK4
+    text: |
+      Groß (Oger, Troll, Rind): Nur Parade mit dem Schild oder Ausweichen zulässig
+      Riesig (Drache, Riese, Elefant): Nur Ausweichen zulässig
+    effects:
+      - when: { side: opponent, opponent.size: gross }
+        forbid: { defence: weaponParry }
+      - when: { side: opponent, opponent.size: riesig }
+        forbid: { defence: [weaponParry, shieldParry] }
+        # The forbidden defence is not offered, and the breakdown says why (GK4). Against a
+        # riesig attacker, mounted: the AW still carries reiterkampf.RK6's −2.
+
+rulings:
+  - id: mounted-size
+    status: open
+    question: >
+      Does a rider count as the size of the mount? Boronmir on Kupperus (groß) attacks a
+      fighter on foot: may that fighter only shield-parry or dodge (GK4)? And when a mounted
+      opponent attacks Boronmir on foot, is he limited to his Großschild or AW?
+    context: >
+      The page sorts beings (Wesen), not rider and mount, and says nothing about riders. The
+      Reiterkampf page gives the rider his edge in another way — vorteilhafte Position against
+      fighters on foot (reiterkampf.RK2), +2 AT and +2 on defences — and restricts only the
+      defence against the mount's own Niederreiten (RK13: AW only). The app: the opponent's
+      size is whatever the player picks on the defence screen (CombatDefenseSetupView,
+      SizeCategoryRules.allowedDefenses); it never gives the opponent a defence restriction
+      when the hero attacks, mounted or not.
+    situations: [kampfsituationen 17.22, kampfsituationen 17.23]
+    options:
+      a: { says: "No: the rider is his own size; only the mount's own attacks (Niederreiten, Tritt, Biss) come from a groß being.", app: "no change; the defence screen can say so when the hero is mounted" }
+      b: { says: "Yes: a rider counts as the mount's size, both ways.", app: "a mounted opponent defaults to groß on the defence screen; the hero's mounted attacks tell the opponent 'nur Schildparade oder Ausweichen'" }
+    recommended: a
+    why_recommended: >
+      the rider's weapon is swung by a human, which is what the restriction is about (a blow
+      too heavy to parry with a weapon); Reiterkampf already has its own advantage for the
+      rider, and b would stack a second one the page nowhere mentions
+    answer: null

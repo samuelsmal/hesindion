@@ -12,12 +12,12 @@ source:
 reviewed: null
 
 # Where a Stufe comes from: the LP thresholds (SZ3) plus whatever sets Schmerz directly
-# (a Patzer, a wound effect, a spell). Zäher Hund (ADV_49) lowers it — not written yet.
+# (a Patzer, a wound effect, a spell). Zäher Hund (ADV_49) lowers it (ADV_49.yaml).
 level:
   from:
     - clause: SZ3
     - set_by: [event, gm]
-  lowered_by: [ADV_49]      # not written yet
+  lowered_by: [ADV_49]      # ruling ADV_49.zaeher-hund-counts: which Stufe counts
 
 clauses:
   - id: SZ1

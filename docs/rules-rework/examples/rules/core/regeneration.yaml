@@ -1,0 +1,107 @@
+# DRAFT FORMAT — see ../../README.md.
+# Only the LeP side is encoded in these examples; AsP and KaP follow the same clauses and are
+# left for a hero who has them (Boronmir has neither).
+id: regeneration
+name: Regeneration
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Regeneration.html
+  book: Regelwerk (3. überarb. Aufl.)
+  page: 339
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: R1
+    text: >
+      Wenn ein Held Lebens-, Astral- und/oder Karmapunkte verloren hat, kann er in der nächsten
+      Regenerationsphase versuchen, Punkte zurückzugewinnen.
+    effects: none
+    why: introduction
+
+  - id: R2
+    text: Eine Regenerationsphase ist eine Ruhe- und Schlafphase von mindestens 6 Stunden Dauer.
+    effects:
+      - offer: { action: regenerationsphase, outside: combat }
+        # The app's Regenerieren sheet (RegenerierenSheet) is this action.
+
+  - id: R3
+    text: Pro Tag können bis zu zwei Regenerationsphasen genutzt werden.
+    status: unencoded
+    why: the app keeps no days; shown as text on the Regenerieren sheet
+
+  - id: R4
+    text: >
+      Die Grundregeneration beträgt 1W6. Ein Held würfelt für jede reduzierte Energie einzeln,
+      verrechnet das Ergebnis mit den Mali und Boni seiner augenblicklichen Situation und addiert
+      dann den Wert zu seiner Energie. Negative Ergebnisse werden als 0 gewertet.
+    effects:
+      - roll: { dice: 1W6, per: energy, into: regeneration.le }
+      - add: { to: regeneration.le, lines: [T1, ADV_44.VR1] }
+      - floor: { value: regeneration.le, min: 0, after: R6 }
+        # FORMAT: a rolled value with its own breakdown — the roll, then situational lines, then
+        # a floor. Like a check, but the result is added to a resource, not compared.
+
+  - id: R5
+    text: >
+      Kein Held kann Punkte über den Höchstwert seiner Lebens-, Astral- oder Karmapunkte hinaus
+      ansammeln.
+    effects:
+      - cap: { value: le.current, max: le.max }
+
+  - id: R6
+    text: >
+      In der Regenerationsphase muss das Ausruhen allerdings auch möglich sein. Ist die Umgebung
+      unruhig, nass oder kalt, halbiert sich die Regeneration. Bei besonders schlechten
+      Bedingungen wie in einem Sturm oder auf einen Pferderücken gebunden fällt die Regeneration
+      ganz aus.
+    effects:
+      - ask: { who: player, question: "Wie ist die Umgebung?", options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
+      - when: { answer: "unruhig, nass oder kalt" }
+        halve: { value: regeneration.le, round: up }
+        ruling: [round-up, ADV_44.vr-halving]
+        # round-up (rules/rulings.yaml) is decided for every halving the rules do not settle.
+      - when: { answer: "Sturm, auf ein Pferd gebunden" }
+        set: { value: regeneration.le, to: 0 }
+        # No roll, and no bonus: the hero does not regenerate (ADV_44.VR1 "wenn er regeneriert").
+
+  - id: R7
+    text: >
+      Helden, die unter dem Status Vergiftet oder Krank leiden, können nicht durch die
+      Regenerationsphase regenerieren, so lange die Wirkung des Giftes oder der Krankheit anhält.
+      Heilkräuter, die gegen Gifte und Krankheiten wirken oder Lebenspunkte regenerieren, wirken
+      in den Regenerationsphasen dennoch.
+    effects:
+      - when: { hero.states: { any: [STATE_15, STATE_9] } }
+        set: { value: regeneration.le, to: 0 }
+        # The app knows both statuses (StateCatalog vergiftet, krank) and even says so on their
+        # chips ("keine normale Regeneration"), but the Regenerieren sheet does not read them.
+        # The table (T1) says "keine LeP-Regeneration"; the text says no regeneration at all.
+        # Only LeP matter for these examples, so the difference is left for an AsP/KaP example.
+      - tell: { player: "Heilkräuter wirken dennoch." }
+
+  - id: T1
+    text: |
+      Situation | Regeneration
+      Grundregeneration für 6 Stunden Schlaf | 1W6 LeP/AsP/ KaP
+      Schlechter Lagerplatz, misslungene Probe auf Wildnisleben (Lagersuche) | –1 LeP/AsP/KaP
+      Unterbrechung der Nachtruhe (z.B. Wache halten/Ruhestörung) | –1 LeP/AsP/KaP
+      Längere Unterbrechung der Nachtruhe (z.B. Hundswache, nächtlicher Überfall) | –2 LeP/AsP/KaP
+      Held ist erkrankt/vergiftet | keine LeP-Regeneration
+      Gute Unterkunft (Einzelzimmer Reisegasthof) | +1 LeP/AsP/KaP
+      Schlechte Umgebung (feucht, kalt) | Regeneration von LeP, AsP und KaP halbiert
+      Furchtbare Umgebung (extrem schlechtes Wetter) | Regeneration von LeP, AsP und KaP fällt aus
+      Pro volle 2 Stein Eisen am Körper (siehe Bann des Eisens Seite 256 im Regelwerk) | –1 AsP
+    effects:
+      - ask: { who: player, question: "Lagerplatz und Nacht?", multi: true }
+        lines:
+          - { when: schlechter-lagerplatz, add: { to: regeneration.le, value: -1 } }
+          - { when: unterbrechung, add: { to: regeneration.le, value: -1 } }
+          - { when: laengere-unterbrechung, add: { to: regeneration.le, value: -2 } }
+          - { when: gute-unterkunft, add: { to: regeneration.le, value: 1 } }
+        # The erkrankt/vergiftet, halved and none rows restate R6 and R7. The iron row is AsP only.
+        # FORMAT: a table whose rows are named lines on one rolled value; the text above says
+        # the same things in prose. One clause for the table, the prose clauses carry the logic.
+        # Today the sheet has one free "Modifikator" stepper (RegenerierenSheet.userModifier):
+        # the number is right if the player adds correctly, but no line names its row.

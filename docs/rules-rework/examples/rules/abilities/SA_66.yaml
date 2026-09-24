@@ -1,0 +1,82 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_66
+name: Vorstoß
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+# The page calls it a Spezialmanöver, so reiterkampf.RK3 takes it away on horseback (ruling
+# reiterkampf.mounted-manoeuvres), and beidhaendiger-kampf.ZW6 takes it off a double attack.
+# FORMAT: a "Spezialmanöver" that is announced for the whole round, not for one attack — the
+# same shape as Verteidigungshaltung (SA_65.VH1), which is not called a manoeuvre at all.
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Vorsto%C3%9F.html
+  book: Regelwerk
+  page: 250
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: V1
+    text: >
+      Mit dieser Sonderfertigkeit kann man seinen Attackewert für die aktuelle Kampfrunde um +2
+      erhöhen.
+    effects:
+      - when: { choice: vorstoss }
+        add: { to: at, value: 2 }
+        ruling: sf-technique-lists
+        # The Attackewert for the round. In practice that is the round's one attack: a double
+        # attack cannot carry a Spezialmanöver (beidhaendiger-kampf.ZW6), and a Passierschlag
+        # combines with no Kampfsonderfertigkeit (passierschlag.PS3 — under either option of
+        # passierschlag.passierschlag-sf, since Vorstoß is a manoeuvre). The app gives the +2
+        # to the attack it was picked on (MeleeModifiers.maneuverAT), which comes to the same.
+
+  - id: V2
+    text: Dafür kann man diese Kampfrunde keine Verteidigung mehr ausführen.
+    effects:
+      - when: { choice: vorstoss }
+        forbid: { defence: [pa, aw], span: round }
+        # Verteidigung: parry (weapon or shield) and dodge. The app does this today
+        # (CombatRootView.defenseHardBlocked), from the moment the attack is announced.
+
+  - id: V3
+    text: Ein Vorstoß muss am Anfang der Runde angesagt werden.
+    effects:
+      - offer:
+          choice: vorstoss
+          when: { round.phase: start }
+          span: round
+          # FORMAT: "Anfang der Runde" — as for SA_65.VH1 and SA_152.AD2. The app has no
+          # round-start step; the nearest it can check is "the hero has not yet acted or
+          # defended in this round". Three rules now want the same round-start announcement.
+
+  - id: V4
+    text: Der Vorstoß kann nicht im Status Liegend ausgeführt werden.
+    effects:
+      - requires: { not: { hero.state: STATE_10 } }
+        # Not offered while Liegend. Knocked down after announcing it: the page does not say
+        # whether the defences come back; not asked here, as no case has come up.
+
+  - id: V5
+    text: "Voraussetzungen: GE 13"
+    effects: none
+    why: purchase prerequisite, not a roll
+
+  - id: V6
+    text: >
+      Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schwerter,
+      Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - requires: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] }
+        ruling: sf-technique-lists
+        # Not Schilde: under sf-technique-lists a, no Vorstoß for Boronmir's shield attack.
+        # Fächer (CT_20) is one of the later additions V7 means; Optolith's SA_66 list lacks it.
+
+  - id: V7
+    text: >
+      Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
+      hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
+      Kampftechnik heranzuziehen.
+    effects: none
+    why: an editor's note on V6's list
+

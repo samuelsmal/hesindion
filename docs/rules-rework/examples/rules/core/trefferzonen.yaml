@@ -86,7 +86,7 @@ clauses:
         raise: { line: TZ5.aim, by: 2, max: 0 }
         ruling: surprised-then-halved
       - when: { choice: targetZone }
-        replaces: [groessenkategorie.at, fernkampf.zielgroesse]
+        replaces: [groessenkategorie.GK3.at, fernkampf.zielgroesse]
         ruling: zone-replaces-size
         # FORMAT: "replaces" — another rule's line is dropped while this one applies, and the
         # breakdown lists it under "nicht angewendet" with this clause as the reason.

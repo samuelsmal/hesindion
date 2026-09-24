@@ -1,0 +1,268 @@
+# Example 18 — Kupperus and Boronmir's weapons. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+# Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
+#
+# The hero is Boronmir (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json), in his
+# Plattenrüstung, with the values derived as boronmir-sf.yaml derives them:
+#   MU 14, GE 14, KK 15; Hiebwaffen 12, Schwerter 12, Schilde 9; Reiten (TAL_6) FW 10.
+#   Rabenschnabel AT 14, Langschwert AT 14 (KtW 12 + (MU 14 − 8)/3 = 2), before any line below.
+#   INI base ⌈(MU 14 + GE 14)/2⌉ = 14. GS 8 (Mensch).
+#   Belastung: Plattenrüstung III, Belastungsgewöhnung I → II: −2 on foot (COND_1.B3 via
+#   SA_41.G1); mounted, −1 on Kampfproben and Reiten (reiterkampf.RK7, ruling rk7-reiten).
+# Schadensbonus (L+S): +1 TP per point of the Leiteigenschaft above the weapon's threshold, from
+#   the Kampftechniken page (https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html).
+#   It is schaden.S3 (rules/core/schaden.yaml).
+#   Rabenschnabel KK 14 → KK 15: +1. Langschwert GE/KK 15 → max(14, 15) = 15: +0.
+# Kupperus (pets.PET_1, Svellttaler Kaltblut): INI 14+1W6, GS 12, KK 25, Tritt AT 15 TP 1W6+7,
+#   Biss AT 12 TP 1W6+2, Niederreiten AT 15 TP 2W6+6, Mächtiger Schlag, Ruhiges Temperament.
+# "Fokusregel Waffeneigenschaften on" is written `rulesets: [fokus.waffeneigenschaften]`.
+
+hero_file: ../../../sample_heros/Boronmir Siebenfeld von Greifenfurt.json
+base_hero:
+  abilities: { SA_41: 1, SA_43: 1, SA_661: 1 }
+  armour: [Plattenrüstung]
+  loadout: { weapon: Rabenschnabel, shield: Großschild }
+  values: { Rabenschnabel: { at: 14 }, Langschwert: { at: 14 }, ini: 14, gs: 8, reiten: 10 }
+mount: { name: Kupperus, profile: svellttaler-kaltblut }
+
+situations:
+
+  # --- Kupperus ------------------------------------------------------------------------------
+
+  - id: "18.1"
+    name: Boronmir orders Kupperus to ride down a foot soldier
+    hero: { mounted: true }
+    opponent: { onFoot: true, size: mittel }
+    choose: { order: niederreiten, gait: galopp, runUp: 4 }
+    expect:
+      offered: [{ order: niederreiten, from: reiterkampf.RK13, requires: [SA_43.BK1] }]
+      costs: [{ action: 1, of: hero, from: reiterkampf.RK12 }]
+      checks_first:
+        - talent: Reiten
+          application: Kampfmanöver
+          from: reiterkampf.RK12
+          total: 0
+          lines:
+            - { value: -1, from: COND_1.B3, via: [SA_41.G1, reiterkampf.RK7], ruling: [COND_1.belastung-reach, reiterkampf.rk7-reiten] }
+            - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
+      on_check_failure:
+        tell: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
+      attack:
+        by: mount
+        at: { value: 15, from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13] }
+        opponent_may_only: [{ defence: aw, from: reiterkampf.RK13 }]
+      on_hit:
+        tp: { formula: 2W6+6, from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13] }
+      on_attack_success:
+        tell:
+          - opponent: { check: Kraftakt, on_failure: STATE_10 }
+            from: maechtiger-schlag.MS1
+            lines: [{ value: -3, from: maechtiger-schlag.MS2, formula: "−⌈(25 − 20)/2⌉", ruling: round-up }]
+      after:
+        tell: [{ mount: runs on at GS 12 to the end of the KR; turning it costs Boronmir 1 action, from: reiterkampf.RK13 }]
+    app_today: >
+      AT 15 and TP 2W6+6 — the AT by luck: the app reads the first attack parsed from the notes,
+      Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag note says −2 (Int
+      division floors) — wrong. The Reiten check has no lines: no Belastung (belastung 4.4), no
+      Ruhiges Temperament — total 0 by coincidence. Offered without checking SA_43 (Boronmir has
+      it) and without asking the run-up.
+
+  - id: "18.2"
+    name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
+    hero: { mounted: true }
+    mount: { profile: "Elenviner Vollblut — Tritt AT 16 TP 1W6+6, Biss AT 13, Niederreiten AT 15 TP 2W6+4 (https://dsa.ulisses-regelwiki.de/Best_Elenviner_Vollblut.html)" }
+    choose: { order: niederreiten, gait: galopp, runUp: 4 }
+    expect:
+      attack: { by: mount, at: { value: 15, from: reiterkampf.RK13 } }
+      on_hit: { tp: { formula: 2W6+4, from: reiterkampf.RK13 } }
+    app_today: AT 16 — wrong (CombatAttackViews.niederreitenButton takes `mount.attacks.first?.at`); TP 2W6+4 same
+
+  - id: "18.3"
+    name: Kupperus kicks (Tritt) while Boronmir rides
+    hero: { mounted: true }
+    opponent: { onFoot: true, size: mittel }
+    choose: { mount_attack: Tritt }
+    expect:
+      open: svellttaler-kaltblut.mount-own-attack
+      # under a: an order — Boronmir's action and the Reiten check of 18.1 (total 0), then:
+      attack:
+        by: mount
+        at: { value: 15, from: svellttaler-kaltblut.SK3 }
+        opponent_may_only:
+          - { defence: [shieldParry, aw], from: groessenkategorie.GK4, via: [svellttaler-kaltblut.SK7] }   # a groß attacker
+      on_hit:
+        tp: { formula: 1W6+7, from: svellttaler-kaltblut.SK3 }
+      on_attack_success:
+        tell:
+          - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS1, ruling: round-up }
+    app_today: >
+      offered beside the hero's own attack, straight to the roll: AT 15, TP 1W6+7, no Reiten
+      check, no action named; the Mächtiger Schlag note says −2 — wrong
+
+  - id: "18.4"
+    name: The foot soldier parries Kupperus's Tritt with a shield, successfully
+    hero: { mounted: true }
+    opponent: { onFoot: true, size: mittel, defence: { kind: shieldParry, result: success } }
+    choose: { mount_attack: Tritt }
+    expect:
+      on_hit: { tp: none }
+      tell:
+        - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS3, ruling: round-up }
+    app_today: the note says a parry does not help — same, with −2 — wrong
+
+  # --- Rabenschnabel -------------------------------------------------------------------------
+
+  - id: "18.5"
+    name: Rabenschnabel, Dornenspitze, on foot, against a knight in plate (RS 6)
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    opponent: { rs: 6, armour: worn }
+    choose: { dornenspitze: true }
+    expect:
+      offered: [{ choice: dornenspitze, from: ITEMTPL_19.RS2 }]
+      at:
+        total: -3
+        result: 11
+        lines:
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }
+      on_hit:
+        tp: { total: 1, formula: "1W6+4 +1", lines: [{ value: 1, from: schaden.S3, formula: "KK 15 − 14" }] }
+        opponent:
+          rs: { total: -2, result: 4, lines: [{ value: -2, from: ITEMTPL_19.RS2 }] }
+    app_today: >
+      AT 12 — no Großschild −1, wrong. TP 1W6+4 — no Schadensbonus, wrong. The Dornenspitze toggle
+      and the RS −2 note ("nur gegen RS 6 oder mehr"): same.
+
+  - id: "18.6"
+    name: Dornenspitze against a creature with natural RS 6, and against a Kettenhemd (RS 4)
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    choose: { dornenspitze: true }
+    sequence:
+      - opponent: { rs: 6, armour: natural }
+        expect: { open: ITEMTPL_19.dornenspitze-rs }   # under a: no RS change
+      - opponent: { rs: 4, armour: worn }
+        expect:
+          on_hit:
+            opponent: { rs: { total: 0 } }
+            not_applied: [{ rule: ITEMTPL_19.RS2, reason: RS below 6 }]
+    app_today: the same note in both cases; the GM decides — same as text
+
+  - id: "18.7"
+    name: Rabenschnabel without the Fokusregel Waffeneigenschaften
+    hero: { mounted: true }
+    opponent: { onFoot: true }
+    expect:
+      open: ITEMTPL_19.rabenschnabel-waffeneigenschaft
+      # under a: no Dornenspitze offered, no +1 TP mounted (18.9 without its RS3 line), no
+      # Betäubung on a Patzer (18.10); not_applied: ITEMTPL_19.RS2–RS4, reason "Fokusregel
+      # Waffeneigenschaften off".
+    app_today: all three always on — the app has no such Fokusregel (FokusRule)
+
+  - id: "18.8"
+    name: Rabenschnabel, Dornenspitze, on the Sturmangriff zu Pferd
+    hero: { mounted: true, rulesets: [fokus.waffeneigenschaften] }
+    opponent: { onFoot: true, rs: 6, armour: worn }
+    choose: { order: sturmangriffZuPferd, gait: galopp, dornenspitze: true }
+    expect:
+      on_hit:
+        tp:
+          total: 10
+          formula: "1W6+4 +10"
+          lines:
+            - { value: 1, from: schaden.S3 }
+            - { value: 1, from: ITEMTPL_19.RS3 }
+            - { value: 8, from: reiterkampf.RK14, formula: "2 + 12/2" }
+        opponent: { rs: { total: -2, lines: [{ value: -2, from: ITEMTPL_19.RS2 }] } }
+    app_today: TP +9 (no Schadensbonus) — wrong; the RS note same
+
+  - id: "18.9"
+    name: Rabenschnabel, mounted on Kupperus, against a foot soldier
+    hero: { mounted: true, rulesets: [fokus.waffeneigenschaften] }
+    opponent: { onFoot: true }
+    expect:
+      at:
+        total: 2
+        result: 16
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1, reiterkampf.RK7] }
+          - { value: -1, from: ITEMTPL_29.GR1 }
+      on_hit:
+        tp:
+          total: 2
+          formula: "1W6+4 +2"
+          lines:
+            - { value: 1, from: schaden.S3 }
+            - { value: 1, from: ITEMTPL_19.RS3 }
+    app_today: AT 17 (no Großschild −1) — wrong; TP 1W6+5 (no Schadensbonus) — wrong
+
+  - id: "18.10"
+    name: Rabenschnabel, confirmed Patzer on an attack
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    choose: { attack: confirmedFumble }
+    expect:
+      conditions: { COND_2: 1, lines: [{ value: 1, from: ITEMTPL_19.RS4 }] }   # besides the Patzer table's result
+    app_today: same (WeaponFumbleExtras), but also without the Fokusregel (18.7)
+
+  # --- Langschwert and Großschild ------------------------------------------------------------
+
+  - id: "18.11"
+    name: Langschwert, on foot, with the Großschild on the arm
+    hero: { loadout: { weapon: Langschwert, shield: Großschild } }
+    expect:
+      at:
+        total: -3
+        result: 11
+        lines:
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }
+      on_hit:
+        tp: { total: 0, formula: 1W6+4, not_applied: [{ rule: schaden.S3, reason: "max(GE 14, KK 15) = 15, not above 15" }] }
+    app_today: AT 12 (no Großschild −1) — wrong; TP same
+
+  - id: "18.12"
+    name: GS on foot with the Großschild
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    expect:
+      gs:
+        total: -3
+        result: 5
+        lines:
+          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR4, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+    app_today: no Großschild line (Hero.totalGsPenalty is Belastung and armour only) — wrong with the Fokusregel on
+
+  - id: "18.13"
+    name: Same INI as an opponent without a Großschild
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    opponent: { ini: tie, shield: none }
+    expect:
+      tell: [{ order: opponent acts first, from: ITEMTPL_29.GR3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }]
+    app_today: not modelled
+
+  - id: "18.14"
+    name: Großschild parry against an arrow, and against a thrown spear
+    hero: { rulesets: [fokus.waffeneigenschaften] }
+    sequence:
+      - incoming: pfeil
+        expect: { pa: { lines: [{ value: 1, from: ITEMTPL_29.GR2 }] } }   # after the shield's doubled +3 (schilde)
+      - incoming: wurfspeer
+        expect: { not_applied: [{ rule: ITEMTPL_29.GR2, reason: not a Pfeil or Bolzen }] }
+    app_today: '"+1 PA vs. Fernkampf" as the shield''s note in both cases, never added'
+
+  # --- Kupperus's other values -----------------------------------------------------------------
+
+  - id: "18.15"
+    name: Initiative, mounted on Kupperus
+    hero: { mounted: true }
+    expect:
+      ini_base: { value: 14, from: reiterkampf.RK1, via: [svellttaler-kaltblut.SK2] }   # Kupperus's 14+1W6
+      ini_belastung: { open: reiterkampf.rider-ini }
+    app_today: 14, no Belastung (CombatSetupViews.mountBaseINI parses "14+1W6")
+
+  - id: "18.16"
+    name: What Kupperus can carry
+    expect:
+      mount_carrying_capacity: { value: 210, from: svellttaler-kaltblut.SK12 }
+    app_today: 50 (Pet.carryingCapacity = KK × 2), added to Boronmir's own (Hero.totalCarryingCapacity) — wrong
