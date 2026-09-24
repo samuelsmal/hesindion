@@ -220,7 +220,14 @@ situations:
     name: Sinnesschärfe in Platte — a talent flagged "maybe"
     hero: { armour: [Plattenrüstung] }
     check: { talent: Sinnesschärfe }
-    expect: { open: COND_1.belastung-talents-maybe }
+    sequence:
+      - expect:
+          offered: [{ choice: belastungZaehlt, default: false, from: COND_1.B3, ruling: COND_1.belastung-talents-maybe }]
+          check: { total: 0 }
+      - choose: { belastungZaehlt: true }
+        expect:
+          check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: [COND_1.belastung-reach, COND_1.belastung-talents-maybe] }] }
+    app_today: 0, no toggle — right only while the toggle is off
 
   # --- One armour (ruling ruestung-und-belastung.several-armour-pieces) --------------------
 

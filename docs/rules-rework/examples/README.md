@@ -159,13 +159,14 @@ open ruling are listed in the write-ups, not here.
 | 7 | A Handlungsunfähig hero moves at GS 1 rather than 0 | `Hero.effectiveGeschwindigkeit` | page |
 | 7 | Handlungsunfähig from Zustand levels does not imply Liegend | `Hero.impliedStateIDs` | page |
 | 7 | Standing up is no action; its cost and the opponent's Passierschlag are never mentioned | — | page |
+| 6 | Having Gezielter Angriff/Schuss halves every aimed attack; the halving is the announced Spezialmanöver, lost on horseback and with Unterlaufen | `CombatZonePicker`, `HitZoneModifiers.penalty` | ruling halving-by-manoeuvre |
 | 8 | Finte's hint says "Gegner PA −2"; the page says Verteidigung, so it is wrong when the opponent dodges | `CombatManeuver.infoText` | page |
 | 11 | The off hand is picked alphabetically: with Schwert and Dolch, the Schwert takes the −4 | `CombatLoadoutPicker.apply` | page |
 | 11 | Spezialmanöver are offered on a double attack; only Basismanöver are allowed | `availableManeuvers` | page |
 | 11 | A Kettenwaffe can be paired with a second weapon; only a shield is allowed | `CombatLoadoutPicker.canSelect` | page |
 | 11 | No weapon-and-shield double attack, and no shield attack at all | `Hero.isDualWielding` | page |
 | 11 | The dual-wield lines cite SA_42 and ADV_5 for the core rule's −2/−4 | `MeleeModifiers.dualAttackPenalty`, `offHandPenalty`, `DefenseModifiers` | page |
-| 12 | Kampfreflexe is ignored: INI is 1–3 too low for every hero with it | `OptolithImportService`, `DerivedValueFormulas.initiative`, catalog `todo` | page |
+| 12 | Kampfreflexe is ignored: INI is 1–3 too low for every hero with it, mounted too | `OptolithImportService`, `DerivedValueFormulas.initiative`, catalog `todo` | page; mounted per ruling kampfreflexe-mounted |
 | 13 | Verweichlicht silently does nothing without Trefferzonen | catalog `DISADV_57` | page |
 
 Confirmed correct: Belastungsgewöhnung (−1 Belastung per Stufe, extras kept); Belastung on spell

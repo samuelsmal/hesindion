@@ -61,8 +61,9 @@ behind every line and what the app does today. The rules as draft YAML: [`COND_1
 [`ruestung-und-belastung`](./rules/core/ruestung-und-belastung.yaml), [`SA_41`](./rules/abilities/SA_41.yaml),
 [`reiterkampf` RK7](./rules/core/reiterkampf.yaml).
 
-Where the app is wrong, per the rulings below: talents are never hindered (4.1); Belastung IV and
-beyond does not make a hero Handlungsunfähig (1.4, 1.5).
+Where the app is wrong, per the rulings below: talents are never hindered (4.1), and the seven
+talents the book marks "evtl." have no "Belastung zählt" toggle (4.5); Belastung IV and beyond
+does not make a hero Handlungsunfähig (1.4, 1.5).
 
 ## Rulings
 

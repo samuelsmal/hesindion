@@ -49,6 +49,14 @@ clauses:
       - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: true }
         add: { to: check, value: -1, per: level }
         ruling: belastung-reach
+      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe }
+        offer: { choice: belastungZaehlt, default: false }
+        ruling: belastung-talents-maybe
+        # "Belastung zählt", a toggle on the check screen of the seven talents the book marks
+        # "evtl." (skill_details.encumbrance maybe); off unless the player turns it on.
+      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe, choice: belastungZaehlt }
+        add: { to: check, value: -1, per: level }
+        ruling: [belastung-reach, belastung-talents-maybe]
       - when: { level: [1, 3], check: [spell, liturgy] }
         add: { to: check, value: -1, per: level }
         ruling: belastung-reach
@@ -80,20 +88,15 @@ rulings:
       reads that flag; the groups are the check that it is sane.
 
   - id: belastung-talents-maybe
-    status: open
+    status: decided
     question: >
       Seven talents are flagged "maybe" for Belastung: Singen, Sinnesschärfe, Betören,
       Gassenwissen, Fesseln, Fischen & Angeln, Pflanzenkunde. How does the app treat them?
-    context: >
-      The book marks them "evtl." — whether armour hinders depends on what the hero is doing
-      (singing on a march vs. on a stage, searching a room vs. listening). The app applies no
-      Belastung to any talent today.
-    situations: [belastung 4.5]
-    options:
-      a: { says: "Ask at the check: a toggle 'Belastung zählt', off by default.", app: "one toggle on seven talents' check screens" }
-      b: { says: "Settle each talent here once, yes or no.", app: "no question at the table" }
-      c: { says: "Always apply.", app: "none" }
-      d: { says: "Never apply.", app: "none" }
-    recommended: a
-    why_recommended: the book leaves it to the situation on purpose, and the player at the table knows the situation
-    answer: null
+    answer: >
+      Ask at the check: a toggle 'Belastung zählt', off by default.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [B3]
+    notes: >
+      The book marks them "evtl." on purpose — whether armour hinders depends on what the hero is
+      doing (singing on a march vs. on a stage), and the player at the table knows. One toggle on
+      these seven talents' check screens; with it on, the talent is hindered like a "yes" talent.

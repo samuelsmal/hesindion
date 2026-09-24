@@ -68,7 +68,11 @@ situations:
           - { value: 2, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3 }
         not_applied:
           - { rule: beidhaendiger-kampf, clause: ZW4, reason: removed by ADV_5.V2 }
-      aw: { open: SA_42.sa42-dodge }          # a: 0, b: −2
+      aw:
+        total: 0
+        lines:
+          - { value: -2, from: beidhaendiger-kampf.ZW3 }
+          - { value: 2, from: SA_42.BH1, raises: beidhaendiger-kampf.ZW3, ruling: SA_42.sa42-dodge }
     app_today: AT 0 / 0, AW 0
 
   - id: "11.4b"

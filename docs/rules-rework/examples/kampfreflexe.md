@@ -28,11 +28,11 @@ YAML: [`SA_51`](./rules/abilities/SA_51.yaml).
 Where the app is wrong: Kampfreflexe is ignored everywhere. The import computes INI as (MU+GE)/2
 with a bonus of 0 (`OptolithImportService`, `DerivedValueFormulas.initiative`), the catalog has
 SA_51 as `todo`, and no code reads the SF. Every hero with it rolls initiative 1–3 too low
-(12.1–12.4). Belastung and the armour's extra INI penalty already combine correctly with the
-base; they only need the right base.
+(12.1–12.4), and mounted, per ruling, from the mount's base as well (12.5). Belastung and the
+armour's extra INI penalty already combine correctly with the base; they only need the right base.
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_51`. Answer
-`SA_51.kampfreflexe-mounted` together with `reiterkampf.rider-ini`: both ask whether something of
-the rider's reaches the mount's INI base.
+All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_51`.
+`SA_51.kampfreflexe-mounted` is decided: mounted, Kampfreflexe adds to the mount's INI base (12.5).
+`reiterkampf.rider-ini`, still open, asks the same of the rider's Belastung.

@@ -112,9 +112,15 @@ situations:
   - id: "RW.12"
     name: Unterlaufen against an opponent with Auf Distanz halten
     hero: { loadout: { weapon: Dolch }, abilities: { SA_172: 2 } }
-    opponent: { reach: lang, abilities: [SA_152] }
+    opponent: { reach: lang, abilities: { SA_152: 2 } }
     choose: { manoeuvre: unterlaufen }
-    expect: { open: SA_172.auf-distanz-halten }
+    expect:
+      at:
+        total: -2
+        lines:
+          - { value: 0, was: -4, from: reichweite.RW3, via: [SA_172.U1] }
+          - { value: -2, from: SA_152.AD1, ruling: SA_172.auf-distanz-halten }
+    app_today: Unterlaufen and Auf Distanz halten do not exist; AT −4
 
   # --- Combining (SA_172.U3, SA_173) -------------------------------------------------------
 

@@ -29,6 +29,13 @@
 - **U3** Cannot be combined with a Spezialmanöver.
 - **U4** An opponent's bonus from Auf Distanz halten still counts against the AT.
 
+**Auf Distanz halten (SA_152)**, written for U4
+
+- **AD1** The opponent of a fighter with the longer weapon has AT −1 more per Stufe. Asked as an
+  opponent fact, with its Stufe (ruling `SA_172.auf-distanz-halten`).
+- **AD2** The user cannot use Basismanöver that round; announced at the start of the round.
+- **AD3** Kurz against lang with Auf Distanz halten II: AT −6; it stays against Unterlaufen.
+
 **Verbessertes Unterlaufen (SA_173)**
 
 - **VU1** Lifts U3: Unterlaufen may be combined with Spezialmanöver.
@@ -37,12 +44,13 @@
 
 In [`situations/reichweite.yaml`](./situations/reichweite.yaml), RW.1–RW.16. The rules as draft
 YAML: [`reichweite`](./rules/core/reichweite.yaml), [`SA_172`](./rules/abilities/SA_172.yaml),
-[`SA_173`](./rules/abilities/SA_173.yaml).
+[`SA_173`](./rules/abilities/SA_173.yaml), [`SA_152`](./rules/abilities/SA_152.yaml).
 
 Where the app is wrong: the reach matrix is right (`GRW_reichweite` in the catalog,
 `WeaponReach.atPenaltyAgainst` for the chips), but **Unterlaufen and Verbessertes Unterlaufen do
 not exist in the app** — no manoeuvre, no catalog clause (both `todo`), so a hero who owns them
-pays the full reach penalty (RW.7–RW.9, RW.14).
+pays the full reach penalty (RW.7–RW.9, RW.14). Auf Distanz halten does not exist either
+(catalog `todo`), so an opponent's −1 per Stufe is never applied (RW.12).
 
 The format needed two new things here: a line lowered **by steps of a scale** rather than by a
 number (U1), and a `was:` on a lowered line so the breakdown can show what the ability took away.

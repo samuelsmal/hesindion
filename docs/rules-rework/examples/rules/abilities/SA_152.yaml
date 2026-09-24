@@ -1,0 +1,59 @@
+# DRAFT FORMAT — see ../../README.md.
+# Written for SA_172.U4 (ruling SA_172.auf-distanz-halten): only the side that reaches the hero,
+# an opponent with this SF, is encoded. The hero's own use is text.
+id: SA_152
+name: Auf Distanz halten
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+tiers: 2
+techniques: [alle Nahkampftechniken]
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_AufDistanzhalten.html
+  book: Aventurisches Kompendium
+  page: 151
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: AD1
+    text: >
+      (passiv) Wer einen Gegner auf Distanz halten will, muss über eine Waffe verfügen, deren
+      Reichweite größer ist als die Reichweite des Widersachers. Ist diese Voraussetzung erfüllt,
+      erhöhen sich die AT-Erschwernisse für den Gegner zusätzlich um -1 pro Stufe der SF.
+    effects:
+      - when: { check: at, opponent.has: SA_152, opponent.reach: { longer_than: loadout.reach } }
+        add: { to: at, value: -1, per: opponent.tier }
+        ruling: SA_172.auf-distanz-halten
+        # The opponent's Stufe is a GM question, asked like the opponent's reach
+        # (OpponentProfile). FORMAT: `per: opponent.tier` — a tier the hero does not own.
+      - when: { hero.has: SA_152, loadout.reach: { longer_than: opponent.reach } }
+        tell: { opponent: "AT −1 pro Stufe (Auf Distanz halten)" }
+        # Opponents are not modelled (ADR-0005); the hero's use is a reminder.
+
+  - id: AD2
+    text: >
+      Dafür kann der Held in dieser KR keine Basismanöver einsetzen. Auf Distanz halten muss am
+      Anfang der Runde angesagt werden.
+    effects: none
+    why: >
+      the hero's own use, announced at the start of the round; the app has no round-start
+      announcement for it yet, so it is shown as text.
+
+  - id: AD3
+    text: >
+      Anmerkung: Ein Kämpfer mit kurzer Waffe gegen einen Kämpfer mit langer Waffe und Auf Distanz
+      halten II erleidet beispielswiese eine Erschwernis von -6 auf AT (-4 durch den
+      Reichweitenunterschied und -2 durch die SF). Die Erschwernisse dieser
+      Kampfsonderfertigkeit bleiben auch gegenüber Gegnern mit der SF Unterlaufen bestehen. Die
+      SF ist kein Basismanöver, da man es ansonsten nicht ausführen könnte, wenn man nicht an der
+      Reihe ist.
+    effects: none
+    why: >
+      the page's own example of AD1, and the same statement as SA_172.U4: AD1's line is its own,
+      so Unterlaufen, which lowers only reichweite.RW3.at, never reaches it (reichweite RW.12).
+
+  - id: AD4
+    text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Auf Distanz halten I"
+    effects: none
+    why: purchase prerequisites, not a roll

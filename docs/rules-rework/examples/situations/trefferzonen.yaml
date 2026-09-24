@@ -35,7 +35,7 @@ situations:
     hero: { abilities: { SA_160: 1 } }
     choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
     expect:
-      at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] }
+      at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1], ruling: SA_160.halving-by-manoeuvre }] }
     app_today: same
 
   - id: "TZ.4"
@@ -96,8 +96,8 @@ situations:
     expect:
       open: trefferzonen.zone-replaces-size
       if:
-        a: { fk: { total: -1, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1] }, { value: 4, from: fernkampf.zielgroesse }] } }
-        b: { fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1] }] } }
+        a: { fk: { total: -1, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }, { value: 4, from: fernkampf.zielgroesse }] } }
+        b: { fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }] } }
     app_today: −1 (RangedModifiers.groesse +4 applies alongside)
 
   # --- Where a blow lands (TZ2–TZ4) ---------------------------------------------------------
@@ -193,13 +193,9 @@ situations:
     hero: { mounted: true, abilities: { SA_160: 1 } }
     choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
     expect:
-      open: SA_160.halving-by-manoeuvre
-      if:
-        a:
-          not_offered: [{ manoeuvre: gezielterAngriff, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }]
-          at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
-        b: { at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
-      # The aim itself is offered either way; only the halving is at stake.
+      not_offered: [{ manoeuvre: gezielterAngriff, because: reiterkampf.RK3, ruling: [reiterkampf.mounted-manoeuvres, SA_160.halving-by-manoeuvre] }]
+      at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
+      # The aim itself is still offered; only the halving is lost.
     app_today: −5
 
   - id: "TZ.17"
@@ -209,12 +205,8 @@ situations:
     opponent: { reach: mittel }
     choose: { manoeuvres: [unterlaufen, gezielterAngriff], targetZone: torso }
     expect:
-      open: SA_160.halving-by-manoeuvre
-      if:
-        a:
-          excludes: [{ manoeuvres: [unterlaufen, gezielterAngriff], because: SA_172.U3 }]
-          at: { total: -4, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -4, from: trefferzonen.TZ5 }] }
-        b: { at: { total: -2, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -2, was: -4, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
+      excludes: [{ manoeuvres: [unterlaufen, gezielterAngriff], because: SA_172.U3, ruling: SA_160.halving-by-manoeuvre }]
+      at: { total: -4, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -4, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
     app_today: Unterlaufen does not exist
 
   - id: "TZ.18"
@@ -231,13 +223,9 @@ situations:
     hero: { abilities: { SA_160: 1 } }
     choose: { targetZone: kopf }
     expect:
-      open: SA_160.halving-by-manoeuvre
-      if:
-        a:
-          at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
-          offered: [{ manoeuvre: gezielterAngriff, from: SA_160.GA1 }]
-        b: { at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1] }] } }
-    # Under a, a hero would do this to keep the Spezialmanöver slot for another manoeuvre
+      at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
+      offered: [{ manoeuvre: gezielterAngriff, from: SA_160.GA1 }]
+    # A hero would do this to keep the Spezialmanöver slot for another manoeuvre
     # (Sturmangriff, SA_62), which manoeuvre-combination a or b allows only one of.
     app_today: −5 (the SF halves every aimed attack)
 

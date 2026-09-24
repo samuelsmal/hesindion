@@ -89,22 +89,15 @@ rulings:
       words; a hero at current GS 3 cannot charge.
 
   - id: sturmangriff-cap-scope
-    status: open
+    status: decided
     question: >
       "Maximal jedoch insgesamt um +10 TP" — does the +10 cap Sturmangriff's own bonus only, or
       every TP bonus on that attack (Wuchtschlag's, a weapon's, a Kampfstil's) together?
-    context: >
-      The cap sits in the sentence about Sturmangriff's +2 + ½ GS, but "insgesamt" can be read as
-      "all together". It only matters when another TP bonus rides on the same attack — most
-      likely Wuchtschlag, which Sturmangriff does not exclude (ST4 excludes only Finte), and only
-      if the cross-cutting ruling manoeuvre-combination allows the two together. The natural-GS
-      cap in the same clause raises the same question.
-    situations: [sturmangriff 10.6]
-    options:
-      a: { says: "Sturmangriff's own bonus only; other TP bonuses are added on top.", app: "the cap applies to one line" }
-      b: { says: "All TP bonuses on the attack together are capped at +10 (and at the natural GS).", app: "a cap across lines from different rules" }
-    recommended: a
-    why_recommended: >
-      the cap is stated inside Sturmangriff's own bonus clause, and capping other rules' bonuses
-      from here would need every other bonus to know about it
-    answer: null
+    answer: >
+      Sturmangriff's own bonus only; other TP bonuses are added on top.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [ST2]
+    notes: >
+      The natural-GS cap in the same clause is read the same way: both caps bind ST2's one line.
+      At GS 16 Sturmangriff alone is +10, and Wuchtschlag III's +6 adds to it (+16) — if the open
+      manoeuvre-combination allows the two together (sturmangriff 10.7).

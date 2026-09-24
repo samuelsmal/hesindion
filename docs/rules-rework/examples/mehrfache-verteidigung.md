@@ -35,7 +35,9 @@
 **Verteidigungshaltung (SA_65)**
 
 - **VH1** +4 on the Verteidigungswert for the current Kampfrunde; no actions that round; must be
-  announced at the start of the round.
+  announced at the start of the round. Per the decided rulings: the +4 is on PA and AW against any
+  attack (`vh-scope`), free actions stay (`vh-free-actions`), and it stacks with the Schip
+  "Verteidigung" to +8 (`vh-stacking`; V11, V12).
 - **VH2** Melee techniques only.
 - **VH3** Visible to the other combatants.
 

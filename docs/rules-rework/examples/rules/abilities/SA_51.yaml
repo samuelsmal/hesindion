@@ -16,11 +16,14 @@ clauses:
   - id: KR1
     text: Der INI-Basiswert steigt um 1 pro Stufe der Sonderfertigkeit.
     effects:
-      - add: { to: ini.base, value: 1, per: tier }
+      - add: { to: ini.base, value: 1, per: tier, after: reiterkampf.RK1 }
         ruling: kampfreflexe-mounted
         # FORMAT: modifies a *derived value* (the INI Basiswert on the hero sheet), not a check.
         # It belongs in the value's own breakdown — "INI 12 = (MU+GE)/2 12 + Kampfreflexe II 2"
         # — the way Eisern belongs in the Wundschwelle's (ADR-0006), and so reaches every INI roll.
+        # FORMAT: `after:` — mounted, RK1 swaps the base for the mount's and the SF still adds to
+        # it (ruling kampfreflexe-mounted), so the swap must come first. A modifier that survives a
+        # source swap needs an order between the two effects.
 
   - id: KR2
     text: "Voraussetzungen: Stufe I: IN 13; Stufe II: IN 15, Kampfreflexe I; Stufe III: IN 17, Kampfreflexe II"
@@ -29,21 +32,16 @@ clauses:
 
 rulings:
   - id: kampfreflexe-mounted
-    status: open
+    status: decided
     question: >
       Mounted, the rider rolls initiative from the mount's INI base (reiterkampf.RK1). Does
       Kampfreflexe add to that base?
-    context: >
-      KR1 raises "der INI-Basiswert" — the hero's. RK1 swaps the base for the mount's. Whether
-      the rider's reflexes still count on horseback is the same kind of question as the open
-      reiterkampf.rider-ini (does the rider's Belastung still count). The app ignores
-      Kampfreflexe everywhere today, so it has no answer either way.
-    situations: [kampfreflexe 12.5]
-    options:
-      a: { says: "No: RK1 replaces the hero's base, and the SF raises the hero's base.", app: "mounted INI = the mount's base" }
-      b: { says: "Yes: the SF raises whatever base the hero rolls from.", app: "mounted INI = the mount's base + Stufe" }
-    recommended: a
-    why_recommended: >
-      It keeps RK1 a plain swap, the reading reiterkampf.rider-ini recommends too; the two
-      rulings should be answered the same way.
-    answer: null
+    answer: >
+      Yes: the SF raises whatever base the hero rolls from.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [KR1, reiterkampf.RK1]
+    notes: >
+      Mounted INI = the mount's base + Stufe (kampfreflexe 12.5). Answered against the
+      recommendation, which had asked for reiterkampf.rider-ini (does the rider's Belastung still
+      reach the mount's base) to be answered the same way; that ruling is still open, and its
+      context now says so. The app ignores Kampfreflexe everywhere today.

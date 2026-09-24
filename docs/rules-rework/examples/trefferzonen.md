@@ -79,6 +79,13 @@ Where the app is wrong, on what the pages state outright:
 - Trefferzonen-Rüstungsschutz does not exist: no armour by zone (TZ.20–TZ.26), and without it
   any number of armours can be equipped and summed (TZ.24, as belastung 6.1).
 
+And per decided ruling:
+
+- Having Gezielter Angriff/Schuss halves every aimed attack; the halving belongs to the announced
+  Spezialmanöver, so it is lost on horseback (TZ.16), with Unterlaufen without Verbessertes
+  Unterlaufen (TZ.17), and when the hero aims without announcing it (TZ.27) —
+  `CombatZonePicker`, `HitZoneModifiers.penalty` (ruling `SA_160.halving-by-manoeuvre`).
+
 ## Surprises
 
 - A **Kettenhelm on a Lederrüstung** costs a Belastung Stufe under Trefferzonen-RS: 42 → 43
@@ -86,9 +93,9 @@ Where the app is wrong, on what the pages state outright:
   does not have (TZ.23).
 - Anyone may aim while the Fokusregel is on (TZ.2). But the SF pages call Gezielter
   Angriff/Schuss a **Spezialmanöver**, and the Fokusregel page says that *having* the SF halves
-  the penalty. If the halving comes only from announcing the manoeuvre, it is lost on horseback,
-  with Unterlaufen and next to Sturmangriff, and the hero aims at the full penalty instead
-  (TZ.16, TZ.17, TZ.27; ruling `SA_160.halving-by-manoeuvre`).
+  the penalty. Decided: the halving comes only from announcing the manoeuvre, so it is lost on
+  horseback, with Unterlaufen and next to Sturmangriff, and the hero aims at the full penalty
+  instead (TZ.16, TZ.17, TZ.27; ruling `SA_160.halving-by-manoeuvre`).
 - The order of "halve" and "ease by 2" is a one-point difference nobody wrote down (TZ.4, TZ.5).
 
 ## Rulings

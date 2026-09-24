@@ -202,7 +202,9 @@ rulings:
       RK1 swaps the base value and says nothing else. Belastung's page takes INI off per Stufe
       (COND_1.B3), and RK7's relief covers Kampfproben only; INI is not a check. The app uses the
       mount's base and takes nothing off (CombatSetupViews.mountBaseINI). A hero in plate on foot
-      has INI −3; on the horse, today, 0.
+      has INI −3; on the horse, today, 0. Decided since (SA_51.kampfreflexe-mounted, b): the
+      rider's Kampfreflexe does add to the mount's base, so RK1 is no longer a plain swap for
+      everything of the rider's; the recommendation below was written before that.
     situations: [belastung 3.1, reiterkampf 5.17]
     options:
       a: { says: "The mount's INI base as it is — the horse moves, not the rider.", app: "no change" }

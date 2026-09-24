@@ -55,7 +55,10 @@ situations:
     name: Kampfreflexe II, mounted
     hero: { abilities: { SA_51: 2 }, mounted: true }
     expect:
-      ini_base_source: { value: 12, from: reiterkampf.RK1 }   # the mount's
-      ini_kampfreflexe: { open: SA_51.kampfreflexe-mounted }  # a: 12, b: 14
+      ini_base:
+        total: 14
+        lines:
+          - { value: 12, from: reiterkampf.RK1 }             # the mount's
+          - { value: 2, from: SA_51.KR1, ruling: SA_51.kampfreflexe-mounted }
       ini_belastung: { open: reiterkampf.rider-ini }
-    app_today: 12 — the mount's base; Kampfreflexe ignored either way
+    app_today: 12 — the mount's base; Kampfreflexe ignored — wrong

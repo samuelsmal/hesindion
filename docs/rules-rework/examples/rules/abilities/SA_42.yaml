@@ -32,21 +32,15 @@ clauses:
 
 rulings:
   - id: sa42-dodge
-    status: open
+    status: decided
     question: >
       The core penalty (beidhaendiger-kampf.ZW3) is on AT "und alle Verteidigungen" — AW too.
       SA_42 says it lowers "der Abzug auf Attacke und Parade". Does the SF also lower the AW part?
-    context: >
-      The app lowers AT, PA and AW alike (Hero.dualAttackPenalty feeds both
-      MeleeModifiers.dualAttackPenalty and DefenseModifiers.dualAttackDefense, which covers
-      .meleeDodge). Read literally, a hero with SA_42 II would attack and parry at 0 but dodge
-      at −2 in a round with a double attack.
-    situations: [beidhaendiger-kampf 11.4]
-    options:
-      a: { says: "Yes: 'Abzug' means ZW3's penalty as a whole, wherever it applies.", app: "no change" }
-      b: { says: "No: the SF names AT and PA only; the AW −2 stays.", app: "the dodge keeps −2 at every Stufe" }
-    recommended: a
-    why_recommended: >
-      "statt wie üblich −2" points back at the one core penalty; the page summarises it rather
-      than splitting it.
-    answer: null
+    answer: >
+      Yes: 'Abzug' means ZW3's penalty as a whole, wherever it applies.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [BH1]
+    notes: >
+      A hero with SA_42 II attacks, parries and dodges at 0 in a round with a double attack. The
+      app already lowers AT, PA and AW alike (Hero.dualAttackPenalty feeds
+      MeleeModifiers.dualAttackPenalty and DefenseModifiers.dualAttackDefense).

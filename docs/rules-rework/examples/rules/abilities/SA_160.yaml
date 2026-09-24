@@ -38,32 +38,21 @@ clauses:
 
 rulings:
   - id: halving-by-manoeuvre
-    status: open
+    status: decided
     question: >
       Does the halving of the aiming penalty come with announcing Gezielter Angriff (melee) /
       Gezielter Schuss (ranged) as the attack's Spezialmanöver, or with merely having the SF?
-    context: >
-      Settled by the pages, per the 2026-09-24 note: while the Fokusregel is on, any hero may aim
-      at a zone at the table's full penalty (trefferzonen.TZ5, "Es ist möglich, gezielt
-      Körperteile anzugreifen"), so that no longer rests on a ruling. Open is where the halving
-      lives. The SF page is headed "(Spezialmanöver)" and reads "Mit diesem Manöver kann man
-      gezielt eine Trefferzone angreifen", an action announced for one attack. The Fokusregel
-      page reads "Besitzt ein Held die Sonderfertigkeit …, sind die Erschwernisse halbiert",
-      which on its own sounds passive. The app treats it as passive: every aimed attack of a hero
-      with the SF is halved (CombatZonePicker, HitZoneModifiers.penalty). As a Spezialmanöver the
-      halving is unavailable (1) on horseback (reiterkampf.RK3, decided ruling
-      mounted-manoeuvres), (2) with Unterlaufen unless the hero has Verbessertes Unterlaufen
-      (SA_172.U3), and (3) alongside another Spezialmanöver such as Sturmangriff (under
-      manoeuvre-combination a or b; its option c, any number of manoeuvres, would conflict with
-      this reading). In each case the hero may still aim, at the full penalty. A Basismanöver
-      such as Finte may still go with it under manoeuvre-combination a.
-    situations: [trefferzonen TZ.3, trefferzonen TZ.16, trefferzonen TZ.17, trefferzonen TZ.27]
-    options:
-      a: { says: "The halving is the Spezialmanöver: announced for one attack, with every Spezialmanöver restriction. Without it the hero aims at the full penalty.", app: "the zone picker stays for everyone; Gezielter Angriff/Schuss becomes a manoeuvre choice that halves, hidden on horseback, with Unterlaufen (without SA_173) and next to another Spezialmanöver" }
-      b: { says: "Having the SF halves every aimed attack. The \"(Spezialmanöver)\" label has no consequence.", app: "no change" }
-    recommended: a
-    why_recommended: >
-      it is the reading in the owner's note, and it keeps both pages true: the Fokusregel lets
-      everyone aim and names who gets the halving, and the SF page's "(Spezialmanöver)" and
-      "Mit diesem Manöver" get their consequences. Under b the label is dead text.
-    answer: null
+    answer: >
+      The halving is the Spezialmanöver: announced for one attack, with every Spezialmanöver
+      restriction. Without it the hero aims at the full penalty.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [GA1, SA_161.GS1, trefferzonen.TZ5]
+    notes: >
+      Any hero may aim while the Fokusregel is on (trefferzonen.TZ5); only the halving is the
+      manoeuvre. So it is unavailable, and the hero aims at the full penalty, (1) on horseback
+      (reiterkampf.RK3, ruling reiterkampf.mounted-manoeuvres), (2) with Unterlaufen unless the
+      hero has Verbessertes Unterlaufen (SA_172.U3), and (3) next to another Spezialmanöver such as
+      Sturmangriff, as far as the open ruling manoeuvre-combination limits them (its option c,
+      any number of manoeuvres, would lift this). A hero with the SF may also aim without
+      announcing it, to keep the slot free (trefferzonen TZ.27). The app today halves every aimed
+      attack of a hero with the SF (CombatZonePicker, HitZoneModifiers.penalty).

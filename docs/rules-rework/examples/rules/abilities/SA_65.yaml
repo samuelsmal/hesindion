@@ -27,9 +27,12 @@ clauses:
       - when: { choice: verteidigungshaltung }
         add: { to: [pa, aw], value: 4 }
         ruling: [vh-scope, vh-stacking]
+        # Every defence, against melee and ranged attacks alike; a line of its own beside the
+        # Schip "Verteidigung" +4, which it stacks with.
       - when: { choice: verteidigungshaltung }
-        forbid: { action: any }
+        forbid: { action: aktion }
         ruling: vh-free-actions
+        # Aktionen only (attack, spell, Fernkampf); freie Aktionen and defences stay.
 
   - id: VH2
     text: >
@@ -49,53 +52,37 @@ clauses:
 
 rulings:
   - id: vh-scope
-    status: open
+    status: decided
     question: >
       "Seinen Verteidigungswert um +4" — both defence values (PA and AW), or one? And only the
       Nahkampf defences, or also Ausweichen against a ranged attack?
-    context: >
-      DSA 5 uses "Verteidigung" for both PA and AW (Nahkampf page, "Verteidigungsarten"); the
-      Schip "Verteidigung" clause says "auf alle Verteidigungen" explicitly, this page says
-      "Verteidigungswert" in the singular. The app does not implement the SF at all (catalog:
-      todo).
-    situations: [mehrfache-verteidigung V11]
-    options:
-      a: { says: "+4 on every defence — PA and AW, whatever the attack.", app: "+4 on both defence buttons for the round" }
-      b: { says: "+4 on PA only.", app: "+4 on the parry button only" }
-      c: { says: "+4 on the defence the hero names when announcing it.", app: "a choice at announcement" }
-    recommended: a
-    why_recommended: Verteidigung is the umbrella term for PA and AW throughout the combat chapter
-    answer: null
+    answer: >
+      +4 on every defence — PA and AW, whatever the attack.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VH1]
+    notes: >
+      Verteidigung is the umbrella term for PA and AW throughout the combat chapter. The app does
+      not implement the SF (catalog: todo).
 
   - id: vh-free-actions
-    status: open
+    status: decided
     question: >
       "Keine Aktionen mehr" — are free actions (e.g. a word, dropping an item, changing gait on
       a mount) still allowed in that Kampfrunde?
-    context: >
-      The combat chapter distinguishes Aktion, freie Aktion and Verteidigung (Grundbegriffe).
-      The page names Aktionen only.
-    situations: [mehrfache-verteidigung V11]
-    options:
-      a: { says: "Free actions and defences stay; only Aktionen are gone.", app: "attack, spell, Fernkampf buttons disabled; free actions untouched" }
-      b: { says: "Everything but defences is gone.", app: "every action button disabled" }
-    recommended: a
-    why_recommended: the page uses the rulebook's own term, and a free action is a different term
-    answer: null
+    answer: >
+      Free actions and defences stay; only Aktionen are gone.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VH1]
+    notes: attack, spell and Fernkampf are disabled for the round; free actions are untouched.
 
   - id: vh-stacking
-    status: open
+    status: decided
     question: >
       Does Verteidigungshaltung's +4 stack with the Schicksalspunkt "Verteidigung" +4 in the
       same round?
-    context: >
-      Both are +4 on defences for the current Kampfrunde from different sources. Neither page
-      forbids combining them. Together they would also push MV3's "value reaches 0" further
-      out, allowing more defences.
-    situations: [mehrfache-verteidigung V12]
-    options:
-      a: { says: "They stack: +8.", app: "two lines, +4 each" }
-      b: { says: "They do not stack: +4 once.", app: "the Schip Verteidigung is not offered while in Verteidigungshaltung" }
-    recommended: a
-    why_recommended: different sources, and nothing on either page says otherwise
-    answer: null
+    answer: "They stack: +8."
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    applies_to: [VH1, schicksalspunkte.SP-verteidigung]
+    notes: >
+      Two lines, +4 each. Together they push MV3's "value reaches 0" further out, allowing more
+      defences in the round.

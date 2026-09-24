@@ -101,8 +101,8 @@ situations:
     round: { phase: start, choices: [verteidigungshaltung] }
     expect:
       pa: { total: 4, lines: [{ value: 4, from: SA_65.VH1, ruling: SA_65.vh-scope }] }
-      aw: { open: SA_65.vh-scope }
-      actions: { attack: forbidden, spell: forbidden, free_action: { open: SA_65.vh-free-actions } }
+      aw: { total: 4, lines: [{ value: 4, from: SA_65.VH1, ruling: SA_65.vh-scope }] }
+      actions: { attack: forbidden, spell: forbidden, free_action: { allowed: true, ruling: SA_65.vh-free-actions } }
     app_today: not offered — SA_65 is not implemented (catalog status todo)
 
   - id: V12
@@ -110,7 +110,12 @@ situations:
     hero: { abilities: { SA_65: 1 } }
     round: { choices: [verteidigungshaltung, schipVerteidigung] }
     check: pa
-    expect: { open: SA_65.vh-stacking }        # +8 if they stack
+    expect:
+      pa:
+        total: 8
+        lines:
+          - { value: 4, from: SA_65.VH1, ruling: [SA_65.vh-scope, SA_65.vh-stacking] }
+          - { value: 4, from: schicksalspunkte.SP-verteidigung, ruling: SA_65.vh-stacking }
     app_today: +4 (only the Schip exists)
 
   - id: V13
