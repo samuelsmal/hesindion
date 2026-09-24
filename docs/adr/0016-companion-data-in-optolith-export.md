@@ -70,9 +70,9 @@ fields from the old pet onto the new one before the old one is deleted. `HeroLis
 ## Consequences
 
 - A companion's build is reviewable as a diff (`<export>.companions.yaml`), checked by `make
-  companions` and `make test-companions` before it ever reaches the app, and the checks are
-  exercised the same way the rest of the repo's Python tools are (`make test-only
-  ONLY=<Target/Class>` isolates one).
+  companions` and `make test-companions` before it ever reaches the app — `make test-companions`
+  is the repo's Python test target, the way the rest of `scripts/` is exercised (`make test-only
+  ONLY=<Target/Class>` is the xcodebuild one, for a single Swift test class or method).
 - A pet's attacks no longer depend on `notes` prose once the block is present: the typo class of
   bug in the design's §1 (`AT 156TP`) cannot silently drop an attack, because the tool would have
   rejected the export before it was written.

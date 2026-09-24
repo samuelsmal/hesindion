@@ -163,7 +163,8 @@ key order, and a golden run on the Boronmir sample. `make test-companions` runs 
 **`parsePets`.** When `hesindion.pets[<key>]` exists:
 - `attacks` come from `values.attacks` instead of the regex.
 - The new properties come from the block.
-- `specialSkills` becomes `abilities` joined.
+- `specialSkills` is left as the export parsed it; `Pet.hasMightyBlow` checks `abilities`
+  first and falls back to `specialSkills` (see "Mächtiger Schlag" below).
 
 Without the block, behaviour is unchanged. A block that fails to decode is ignored for that pet
 and logged, as it would be if the block were missing. It is not an import error.

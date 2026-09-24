@@ -42,6 +42,10 @@ final class CompanionReimportFlowTests: XCTestCase {
 
         XCTAssertFalse(discard.waitForExistence(timeout: UITest.probeTimeout))
         for _ in 0..<12 { app.swipeUp() }
+        // Positive assertion first: the pets section rendered and shows Kupperus.
+        // Without this, the test below would also pass if the section never
+        // rendered at all.
+        XCTAssertTrue(app.staticTexts["Kupperus"].exists)
         XCTAssertFalse(app.staticTexts["pet.defense.Kupperus"].exists)
     }
 }
