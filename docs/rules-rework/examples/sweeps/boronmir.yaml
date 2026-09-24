@@ -1,0 +1,55 @@
+# The rules that affect Boronmir: `make rules-review SWEEP=boronmir` shows only these, and
+# `make rules-sweep SWEEP=boronmir` lists them with what each still needs.
+#
+# His own special abilities, advantages, disadvantages and items come from the hero file; `skip`
+# takes out those with nothing for the app to apply. `rules` adds the core rules, conditions and
+# the like that reach him without being on his sheet, each with why. The shared rulings
+# (rules/rulings.yaml) are always in.
+name: Boronmir
+hero: ../../../sample_heros/Boronmir Siebenfeld von Greifenfurt.json
+
+skip:
+  SA_27: Schrift — no roll or value the app computes
+  SA_29: Sprache — no roll or value the app computes
+  ADV_36: Reich — money, not a rule the app applies
+  DISADV_33: Persönlichkeitsschwächen — roleplay
+  DISADV_34: Prinzipientreue — roleplay
+  DISADV_35: Schlafwandler — roleplay
+  DISADV_50: Verpflichtungen — roleplay
+  ITEMTPL_91: Schwertscheide — no rules
+  ITEMTPL_92: Unterkleidung für Metallrüstungen — no rules
+  ITEMTPL_93: Waffenpflegeset — no rules
+  ITEMTPL_87: Plattenrüstung — its RS and BE are ruestung-und-belastung's and trefferzonen-ruestungsschutz's
+
+rules:
+  # every fight
+  kampfwerte: his AT, PA, AW and INI come from it
+  schaden: every hit he lands or takes
+  schilde: he fights with a Großschild
+  at-pa-modifikatoren: the AT/PA modifiers of his weapons and shield
+  mehrfache-verteidigung: every second defence in a round
+  reichweite: Rabenschnabel and Langschwert are mittel, against every reach
+  passierschlag: leaving reach, standing up, fleeing on horseback
+  angriff-von-hinten: flanked, or attacked while mounted from behind
+  beengte-umgebung: a Langschwert and a Großschild in a corridor
+  groessenkategorie: mounted on a large horse, against large opponents
+  vorteilhafte-position: mounted against foot fighters (Reiterkampf RK2, Golgariten-Stil)
+  beidhaendiger-kampf: he has Beidhändig and fights with weapon and shield
+  schicksalspunkte: his Schips, on attacks, defences and Zustände
+  lebensenergie: his LE, with Hohe Lebenskraft
+  regeneration: his rest, with Verbesserte Regeneration
+  # armour and Zustände
+  ruestung-und-belastung: Plattenrüstung
+  COND_1: Belastung from the Plattenrüstung
+  COND_6: Schmerz, with Zäher Hund
+  STATE_10: Liegend, knocked down or thrown from the horse
+  STATE_13: Überrascht
+  zustaende: the Zustand cap and Handlungsunfähig
+  trefferzonen: the Fokusregel, when his group plays it
+  trefferzonen-ruestungsschutz: armour by zone, with the Plattenrüstung
+  waffeneigenschaften: the Fokusregel behind his weapons' Vorteile and Nachteile
+  # on horseback
+  reiterkampf: he fights from Kupperus
+  svellttaler-kaltblut: Kupperus's profile — INI, GS, Niederreiten, Tritt, Biss
+  maechtiger-schlag: Kupperus has it
+  ruhiges-temperament: Kupperus's +1 on his Reiten checks

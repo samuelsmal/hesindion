@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-queue rules-agent test-rules-review
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review
 
 build:
 	xcodebuild \
@@ -146,9 +146,14 @@ rules-db: test-rules-db
 RULES_EXAMPLES = docs/rules-rework/examples
 
 # Review TUI: answer rulings, mark rules reviewed, send them back to the agent.
-# Signs with your gh login; BY=@handle signs as someone else.
+# Signs with your gh login; BY=@handle signs as someone else. SWEEP=boronmir shows only the
+# rules that affect one hero ($(RULES_EXAMPLES)/sweeps/).
 rules-review:
-	uv run $(RULES_EXAMPLES)/review.py $(if $(BY),--by $(BY),)
+	uv run $(RULES_EXAMPLES)/review.py $(if $(BY),--by $(BY),) $(if $(SWEEP),--sweep $(SWEEP),)
+
+# A sweep's rules and what each still needs, as text: make rules-sweep SWEEP=boronmir
+rules-sweep:
+	uv run $(RULES_EXAMPLES)/review.py --sweep $(SWEEP) --list
 
 # What waits for an agent: flagged rules and answered rulings to process.
 rules-queue:

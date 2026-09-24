@@ -74,12 +74,14 @@ It lists every rule file with what it needs: `? n` open rulings, `· review` not
 page, `⟳ agent` waiting for an agent, `✓` reviewed. The right side shows the selected rule: its
 source, the rulings (open first, with options and the recommendation), each clause's page text next
 to its effects (comments and `# FORMAT:` notes included), and the situations that name the rule,
-with what the app does today where it differs.
+with what the app does today where it differs. It opens on a short help with the flow and these
+keys; `?` shows it again.
 
 | Key | Does |
 |---|---|
-| `n` | the next thing that needs you: each open ruling in turn, then rules to review |
-| `enter` | on a ruling: answer it (a letter or your own words; empty reopens it). On a clause or situation: open it in the editor |
+| `n` | the next thing that needs you: each open ruling in turn, then rules to review. Leaving a rule with rulings still open asks first: `y` moves on, `n` stays |
+| `p` | back to where `n` came from, one jump at a time, including rulings you have answered since |
+| `enter` | on a ruling: choose its answer from the options (or press the option's letter). The last choices write your own answer instead, send the ruling back to the agent, or clear your answer. On a clause or situation: open it in the editor |
 | `r` | mark the rule reviewed (`reviewed: { by, date }`); again to withdraw |
 | `a` | send it back to the agent: a note on what is wrong, about the focused ruling or clause (or the whole rule). For a ruling whose question or options are wrong. It stays open but leaves the `n` list until the agent has redone it. An empty note removes the flag |
 | `e` | open `$VISUAL`/`$EDITOR` at the focused clause, ruling or situation; the tool reloads after |
@@ -89,6 +91,14 @@ with what the app does today where it differs.
 
 It signs with your GitHub handle, from `gh` unless `make rules-review BY=@handle` or
 `HESINDION_REVIEWER` says otherwise. Every change is a one-key edit to the rule file — nothing else
+| `?` | the help shown at start |
+
+**Sweeps.** `make rules-review SWEEP=boronmir` shows only the rules that affect one hero, as
+[`sweeps/boronmir.yaml`](./sweeps/boronmir.yaml) lists them: the hero file's own special abilities,
+advantages, disadvantages and items (less a `skip` list, each with why), plus the core rules and
+Zustände that reach the hero. `n`, the counts and the filters then stay within it.
+`make rules-sweep SWEEP=boronmir` prints the same rules with what each still needs, and the ones not
+drafted yet.
 in the file moves, and an edit that would change more than that is refused — and `RULINGS.md` is
 regenerated after it, so `git diff` is the record of the session. The edits are in `rulefiles.py`, tested by
 `make test-rules-review` (which also runs `rulings.py --check`).

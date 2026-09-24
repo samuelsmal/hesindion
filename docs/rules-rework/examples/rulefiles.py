@@ -6,6 +6,7 @@ edit re-parses the result and refuses to write unless exactly the intended value
 """
 
 import datetime
+import json
 import re
 import textwrap
 from dataclasses import dataclass, field
@@ -17,6 +18,7 @@ HERE = Path(__file__).resolve().parent
 RULES = HERE / "rules"
 SITUATIONS = HERE / "situations"
 SHARED = RULES / "rulings.yaml"
+SWEEPS = HERE / "sweeps"
 
 
 # --- model ------------------------------------------------------------------------------------
@@ -130,6 +132,53 @@ def load():
             if rule.id in s.refs or (rule.kind == "shared" and s.refs & {x.id for x in rule.rulings}):
                 rule.situations.append(s)
     return rules
+
+
+@dataclass
+class Sweep:
+    """The rules that affect one hero: the hero's own abilities, advantages, disadvantages and
+    items, less those skipped, plus the core rules the sweep file lists."""
+    name: str
+    wanted: dict                   # rule id → why it is in the sweep
+    skipped: dict                  # rule id → why it is not
+
+    def of(self, rules):
+        """The loaded rules in the sweep; the shared rulings always are."""
+        return [r for r in rules if r.id in self.wanted or r.kind == "shared"]
+
+    def missing(self, rules):
+        """(id, why) for every rule in the sweep without a file yet."""
+        have = {r.id for r in rules}
+        return [(i, why) for i, why in self.wanted.items() if i not in have]
+
+
+def load_sweep(name):
+    path = SWEEPS / f"{name}.yaml"
+    if not path.exists():
+        known = ", ".join(sorted(p.stem for p in SWEEPS.glob("*.yaml"))) or "none"
+        raise FileNotFoundError(f"no sweep {name!r} in {SWEEPS.relative_to(HERE)} (known: {known})")
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    skipped = {str(k): str(v) for k, v in (data.get("skip") or {}).items()}
+    wanted = {}
+    if hero := data.get("hero"):
+        for rule_id in _hero_rule_ids(json.loads((path.parent / hero).read_text(encoding="utf-8"))):
+            if rule_id not in skipped:
+                wanted[rule_id] = OWN.get(rule_id.split("_")[0], "on the sheet")
+    for k, v in (data.get("rules") or {}).items():
+        wanted[str(k)] = str(v)
+    return Sweep(name=data.get("name", name), wanted=wanted, skipped=skipped)
+
+
+OWN = {"SA": "own special ability", "ADV": "own advantage", "DISADV": "own disadvantage",
+       "ITEMTPL": "own equipment"}
+
+
+def _hero_rule_ids(hero):
+    """The Optolith ids an exported hero carries rules for: activatables and item templates."""
+    ids = [k for k, v in (hero.get("activatable") or {}).items() if v]
+    ids += [it["template"] for it in (hero.get("belongings", {}).get("items") or {}).values()
+            if it.get("template")]
+    return list(dict.fromkeys(ids))
 
 
 def _load_rule(path):

@@ -121,5 +121,22 @@ class ModelTests(unittest.TestCase):
                 self.assertIn(f"id: {item.id}", lines[item.line - 1], f"{rule.path}:{item.line}")
 
 
+class SweepTests(unittest.TestCase):
+    def test_every_sweep_loads_and_skips_what_it_says(self):
+        for path in rf.SWEEPS.glob("*.yaml"):
+            sweep = rf.load_sweep(path.stem)
+            self.assertTrue(sweep.wanted, path)
+            self.assertFalse(set(sweep.wanted) & set(sweep.skipped), path)
+
+    def test_boronmir_has_his_abilities_and_the_core_rules(self):
+        sweep = rf.load_sweep("boronmir")
+        self.assertEqual(sweep.wanted["SA_661"], "own special ability")
+        self.assertIn("reiterkampf", sweep.wanted)
+        self.assertNotIn("SA_27", sweep.wanted)
+        ids = {r.id for r in sweep.of(rf.load())}
+        self.assertIn("shared", ids)
+        self.assertNotIn("SA_923", ids)
+
+
 if __name__ == "__main__":
     unittest.main()
