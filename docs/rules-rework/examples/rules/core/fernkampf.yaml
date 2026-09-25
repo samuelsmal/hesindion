@@ -1,0 +1,376 @@
+# DRAFT FORMAT — see ../../README.md.
+# Probe (example 21): does ranged combat need engine concepts the melee drafts lack?
+id: fernkampf
+name: Fernkampf (Ablauf eines Fernkampfangriffs)
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Fernkampf.html
+  book: Regelwerk
+  page: "241 ff."      # as the page cites it: "Regelwerk (3. überarb. Aufl.), Seite 241ff"
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# FORMAT: one rule assembled from several pages (as trefferzonen): the Deckung sentences (FK8)
+# are on the subpage "Größenkategorie im Fernkampf" (Kodex des Schwertes p. 80), not on this
+# page. The subpages Bewegung, Schüsse ins Kampfgetümmel, Schadensbonus durch Reichweite and the
+# Übersicht returned an empty article on 2026-09-24; this page carries their text.
+#
+# The app holds the modifier tables in RangedModifiers (all `rules: []`, so no line names a
+# rule) and the distance TP in CombatFernkampfViews (`distanzTP`), outside the evaluator.
+
+clauses:
+  - id: FK1
+    text: >
+      Ein solcher Angriff läuft ähnlich ab wie beim Nahkampf. Auch hier ist ein Angriffswurf
+      notwendig, und zwar auf den sogenannten Fernkampfwert. Ist die Probe erfolgreich, trifft
+      das Geschoss sein Ziel.
+    effects: none
+    why: the FK check itself; its value is kampfwerte's (FK Basiswert)
+
+  - id: FK2
+    text: >
+      Ein Ziel muss sich nicht in Angriffsdistanz befinden, sehr wohl aber innerhalb der
+      Reichweite der Waffe. Noch mehr als beim Nahkampf sind Schützen von den äußeren Umständen
+      abhängig. Wie gut das Ziel zu sehen ist, ob es sich bewegt oder sogar teilweise hinter einer
+      Deckung steht, beeinflusst die Wahrscheinlichkeit, das Ziel zu treffen.
+    effects:
+      - forbid: { attack: ranged, when: { target.distance: { above: "weapon.farRange * 1.5" } } }
+        because: "außer Reichweite der Waffe"
+        # Up to farRange a normal shot; farRange–1.5× only the untargeted shot of FK4.
+
+  - id: FK3
+    text: >
+      Wer sich im Nahkampf befindet, kann keine Fernkampfangriffe ausführen. Als im Nahkampf
+      befindlich gelten alle Wesen, die in Angriffsdistanz zueinander stehen und Angriffs- oder
+      Verteidigungsaktionen gegeneinander ausführen.
+    effects:
+      - forbid: { attack: ranged, when: { hero.inMelee: true } }
+        because: "im Nahkampf keine Fernkampfangriffe"
+        # hero.inMelee is a fact the player states (in reach of someone and exchanging attacks or
+        # defences with them), as `fromBehind`. The app never asks it: the Fernkampf button is
+        # shut only by a Ladehemmung, under water or when actions are blocked (CombatRootView).
+
+  - id: FK4
+    text: >
+      Abhängig von der Waffe gelten unterschiedliche Modifikatoren für die Reichweite. Es gibt die
+      Kategorien nah, mittel und weit für die Distanz zum Ziel. Jede Waffe hat eine andere
+      Reichweite, die der Beschreibung der Waffe zu entnehmen ist. Es ist möglich, in weitem Bogen
+      über das Maximum der Distanz weit hinaus zuschießen, und zwar bis zum Anderthalbfachen der
+      Maximalreichweite der Waffe. Solche Schüsse sind immer ungezielt und reichen höchstens dazu
+      aus, um auf eine größere Fläche, über eine Stadtmauer oder ins Schlachtgetümmel zu schießen.
+    effects:
+      - provides:
+          range_band:
+            nah:    { upto: weapon.closeRange }
+            mittel: { upto: weapon.mediumRange }
+            weit:   { upto: weapon.farRange }
+            bogen:  { upto: "weapon.farRange * 1.5" }
+        ruling: range-input
+        # Optolith gives every ranged weapon closeRange / mediumRange / farRange in Schritt
+        # (Kurzbogen 10/50/80). A stated distance in Schritt picks the band; the band is what
+        # FK5 reads. A variation of reichweite's `scale` (an ordered enum), keyed on weapon data
+        # like ITEMTPL_19's L+S threshold.
+      - when: { range_band: bogen }
+        forbid: { choice: [zielen, aimedAttack] }
+        because: "Schüsse über die Maximalreichweite sind immer ungezielt"
+        # What an untargeted shot hits is the GM's: no target, no defence; shown as text.
+
+  - id: FK5
+    text: |
+      Je weiter ein Ziel entfernt ist, desto schwerer ist es zu treffen. Die Reichweiten der jeweiligen Waffen werden daher in drei Schritten unterschieden. Befinden sich Ziele in der Reichweite nah, sind Fernkampfattacken um 2 erleichtert und der Angriff verursacht 1 Trefferpunkt zusätzlich.
+      Ist das Ziel in der Reichweite mittel, ist die Probe hierdurch weder erleichtert noch erschwert. Ist das Ziel zu guter Letzt in Reichweite weit, dann sind Fernkampfattacken um 2 erschwert und der Angriff erzeugt 1 Trefferpunkt weniger.
+      Nah | +2 auf FK (+1 TP)
+      Mittel | +/–0 auf FK
+      Weit | –2 auf FK (–1 TP)
+    effects:
+      - table: { key: range_band, rows: { nah: { fk: 2, tp: 1 }, mittel: { fk: 0, tp: 0 }, weit: { fk: -2, tp: -1 } } }
+      - add: { to: fk, value: "table(FK5, range_band).fk" }
+      - add: { to: tp, value: "table(FK5, range_band).tp" }
+        # One fact, two lines on two values (FK now, TP on the hit), both citing FK5. The app
+        # computes the TP half in the view (CombatFernkampfViews.distanzTP), not in the evaluator.
+
+  - id: FK6
+    text: |
+      Wichtig ist auch die Größe des Ziels. Ein menschengroßes Ziel gilt hierbei als Standard, also als mittleres Ziel.
+      Winzig | –8 auf FK | Ratte, Kröte, Spatz
+      Klein | –4 auf FK | Rehkitz, Schaf, Ziege
+      Mittel | +/–0 auf FK | Mensch, Zwerg, Esel
+      Groß | +4 auf FK | Oger, Troll, Rind
+      Riesig | +8 auf FK | Drache, Riese, Elefant
+    effects:
+      - add: { to: fk, value: { table: { winzig: -8, klein: -4, mittel: 0, gross: 4, riesig: 8 }, key: target.size_for_fk } }
+        # target.size_for_fk is the target's size unless FK8's cover says otherwise.
+        # Not groessenkategorie (the melee rule on defences by size): two rules keyed on the same
+        # size scale, as reiterkampf's "two rules with one name".
+
+  - id: FK7
+    text: |
+      Ebenfalls von Bedeutung ist die Bewegung von Schütze und Ziel. Während ein völlig stillstehendes Ziel leicht zu treffen ist, wird der Schuss bereits durch leichte Bewegungen wie langsames Gehen, sich Umschauen und Ähnliches erschwert. Rennt oder fliegt das Ziel oder schlägt Haken (wobei sich hier die GS halbiert), kann dies schon eine große Herausforderung für einen Schützen darstellen. Auch für den Schützen gilt: Hat dieser die letzte Aktion genutzt, um zu laufen, ist ein Schuss deutlich schwieriger.
+      Ziel steht still | +2 auf FK
+      Ziel bewegt sich leicht (4 Schritt und weniger in letzter Handlung) | +/–0 auf FK
+      Ziel bewegt sich schnell (5 Schritt oder mehr in letzter Handlung) | –2 auf FK
+      Ziel schlägt Haken zusätzlich | -4 auf FK, GS des Ziels halbiert
+      Schütze geht (4 Schritt und weniger in letzter Handlung) | –2 auf FK
+      Schütze rennt (5 Schritt oder mehr in letzter Handlung) | –4 auf FK
+    effects:
+      - add: { to: fk, value: { table: { still: 2, leicht: 0, schnell: -2 }, key: target.movement } }
+      - when: { target.haken: true }
+        add: { to: fk, value: -4 }
+        # "zusätzlich": on top of schnell (−2), so −6 in all. A reading — the table row says only
+        # "zusätzlich", which reads as added to the running row.
+      - when: { target.haken: true, side: opponent }
+        set: { opponent.gs: "opponent.gs / 2" }
+        ruling: round-up
+        # The target pays for its Haken with half its GS — an opponent-side effect, not shown on
+        # the hero's FK line; when the *hero* is the target, it is a line on his GS.
+      - add: { to: fk, value: { table: { steht: 0, geht: -2, rennt: -4 }, key: hero.movement.lastAction } }
+        # The hero's own movement in his last action: a fact the player states (the app asks it).
+
+  - id: FK8
+    # From the subpage "Größenkategorie im Fernkampf" (Kodex des Schwertes p. 80).
+    text: >
+      Diese Modifikationen können ebenfalls angewendet werden, wenn es gilt, Ziele in Deckung oder
+      teilweiser Deckung zu beschießen. Ein Mensch, der bis zur Brust von einer Mauer geschützt
+      wird, gilt als kleines Ziel. Ist nur ein Viertel, beispielsweise die Unterschenkel,
+      außerhalb der Deckung, gilt er als winziges Ziel.
+    effects:
+      - offer: { fact: target.cover, options: [keine, teilweise, weitgehend] }
+        ruling: cover-as-size
+      - when: { target.cover: [teilweise, weitgehend] }
+        set: { target.size_for_fk: "cover_size(target.size, target.cover)" }
+        ruling: cover-as-size
+        # A variation of ADV_49's apply_level: one fact makes another rule's table (FK6) read a
+        # different row. The line reads "Deckung: gilt als klein (−4)", citing FK6 via FK8. The
+        # app has no cover input; the player picks a smaller size by hand.
+
+  - id: FK9
+    text: |
+      Zu guter Letzt sei noch die Sicht genannt. Ein Ziel bei bestem Licht und ohne weitere Störungen zu treffen, ist vergleichsweise simpel. In fahlem Mondlicht kann man zwar noch klar die Silhouette erkennen, aber es macht das Zielen nicht gerade einfacher. Im Nebel oder hinter Buschwerk hingegen kann ein schemenhaftes Ziel eine große Herausforderung sein. Der Schuss auf ein unsichtbares Ziel ist ein reiner Glücksschuss und gelingt nur bei einer 1 auf W20.
+      Sicht klar und ungestört | +/–0 auf FK
+      Stufe 1 | Leichte Störung der Sicht | leichtes Blattwerk, Morgendunst | –2 auf FK
+      Stufe 2 | Ziel als Silhouette erkennbar | Nebel, Mondlicht | –4 auf FK
+      Stufe 3 | Ziel schemenhaft erkennbar | starker Nebel, Sternenlicht | –6 auf FK
+      Stufe 4 | Ziel unsichtbar | dichter Rauch, völlige Dunkelheit | Glückstreffer bei einer gewürfelten 1 auf 1W20
+    effects:
+      - add: { to: fk, value: { table: { 0: 0, 1: -2, 2: -4, 3: -6 }, key: sicht } }
+      - when: { sicht: 4 }
+        result: { hit: "roll == 1", else: miss }
+        # A variation of passierschlag.PS4's `roll: 1 → result: hit`: here every other roll
+        # misses, whatever the FK. The modifier lines do not apply (the FK value is not read);
+        # the screen says "Glückstreffer: nur bei einer 1". The app's picker stops at Stufe 3.
+        # Whether the 1 is a Kritischer Erfolg that needs confirming: FK12 applies unchanged —
+        # a reading; the page does not say.
+
+  - id: FK10
+    text: |
+      Fernkampf vom Pferderücken aus ist nicht einfach. Zwar sind berittene Schützen in manchen Regionen Aventuriens gefürchtete Gegner, aber es ist eine Kunst für sich, vom Pferderücken aus sein Ziel zu treffen. Wenn das Pferd steht, wird die Attacke normal ausgeführt. Im Trab ist Schießen fast nicht möglich und im Schritt um 4, im Galopp um 8 erschwert.
+      Ein solcher Angriff kann nicht mit einem Langbogen ausgeführt werden.
+      Tier steht | +/–0 auf FK
+      Tier im Schritt | –4 auf FK
+      Tier im Trab | fast unmöglich (Glückstreffer bei einer gewürfelten 1 auf W20)
+      Tier im Galopp | –8 auf FK
+    effects:
+      - when: { hero.mounted: true }
+        add: { to: fk, value: { table: { steht: 0, schritt: -4, galopp: -8 }, key: mount.gait } }
+      - when: { hero.mounted: true, mount.gait: trab }
+        result: { hit: "roll == 1", else: miss }
+        # As FK9's Stufe 4. The app offers steht / Schritt / Galopp only (vomPferd 0/−4/−8).
+      - forbid: { attack: ranged, when: { hero.mounted: true, weapon: ITEMTPL_65 } }
+        because: "vom Pferd kein Langbogen"
+        # Legality over the loadout while mounted, like reiterkampf.RK4. The app offers it.
+
+  - id: FK11
+    text: >
+      Jede zum Zielen genutzte Aktion erleichtert den folgenden Schuss um 2. Dieser Bonus kann bis
+      zu einem Maximum von 4 erhöht werden. Zielen ist eine länger dauernde Handlung bis zum
+      eigentlichen Angriff.
+    effects:
+      - process:
+          id: zielen
+          step: { costs: { action: 1 } }
+          accumulates: { to: fk, value: 2, per: step, cap: 4 }
+          ends: [shot, interrupted]
+          span: untilShot
+          ruling: zielen-interrupted
+        # FORMAT: a länger dauernde Handlung — a process spread over several actions, possibly
+        # over several rounds, whose progress is state the app must keep, and which a later
+        # action consumes (the shot) or something breaks (ruling zielen-interrupted). Not the
+        # round counter of mehrfache-verteidigung (reset each round) nor a `span: round`
+        # choice: it outlives the round and is paid for in actions. The same shape as
+        # ladezeiten.LZ2 (loading) and, likely, a spell's Zauberdauer. The page defining
+        # "länger dauernde Handlung" (linked from ladezeiten) was not found on 2026-09-24.
+        # The app offers Zielen as a picker (0/+2/+4) on the shot screen: the bonus is taken
+        # without the actions ever being spent.
+
+  - id: FK12
+    text: |
+      Schüsse ins Kampfgetümmel stellen immer eine besondere Herausforderung dar. Wenn ein Fernkämpfer auf Gegner in direkten Kampfhandlungen schießt (sprich: das Ziel und andere Kämpfer sich zueinander in Angriffsdistanz befinden), dann erleidet der Schütze eine Erschwernis von 2 auf seine Probe auf Fernkampf. Misslingt die Probe, wird niemand getroffen.
+    effects:
+      - when: { target.inMelee: true }
+        add: { to: fk, value: -2 }
+        # A fact the player states (the app's kampfgetuemmel toggle). "niemand getroffen": a
+        # failed shot hits no ally — the Fernkampf-Patzertabelle's "Kamerad getroffen" is a
+        # Patzer, not a miss; shown as text on the failure.
+
+  - id: FK13
+    text: |
+      Eine gewürfelte 1 bei einem Fernkampfangriff muss mit einem Bestätigungswurf überprüft werden.
+      Wenn der Bestätigungswurf gelingt, treten die folgenden Effekte ein: Der Verteidigungswert des Gegners wird für diesen Angriff halbiert. Die Trefferpunkte werden samt aller Modifikatoren verdoppelt.
+      Wenn der Bestätigungswurf misslingt, tritt folgender Effekt ein: Der Verteidigungswert des Gegners wird für diesen Angriff halbiert.
+    effects:
+      - when: { roll: 1 }
+        requires_check: { check: confirm, value: fk }
+        on_success:
+          - { side: opponent, halve: { value: vw, span: attack }, ruling: round-up }
+          - { multiply: { value: tp, by: 2, after: all } }
+        on_failure:
+          - { side: opponent, halve: { value: vw, span: attack }, ruling: round-up }
+        # A variation of trefferzonen.TZ8's requires_check / on_failure, triggered by a die face
+        # (passierschlag.PS4's `roll: 1`). "samt aller Modifikatoren" is kampfwerte's "an effect
+        # over other effects' sum, applied last" (`after: all`). The confirmation roll itself is
+        # drafted nowhere else yet (passierschlag only forbids it).
+
+  - id: FK14
+    text: |
+      Auf der anderen Seite gibt es im Fernkampf auch Patzer. Hier muss ebenfalls ein Bestätigungswurf erfolgen.
+      Wenn der Bestätigungswurf gelingt, geschieht Folgendes: gewöhnliches Misslingen
+      Wenn der Bestätigungswurf misslingt, geschieht Folgendes: Der Held erleidet 1W6+2 SP.
+    effects:
+      - when: { roll: 20 }
+        requires_check: { check: confirm, value: fk }
+        on_failure: [{ damage: { formula: 1W6+2, to: hero, sp: true } }]
+        # The optional Fernkampf-Patzertabelle replaces the 1W6+2 (the app has it, FumbleTable).
+        # Note the page's inversion: the *failed* confirmation is the Patzer.
+
+  - id: FK15
+    text: |
+      Wenn Pfeile, Bolzen oder Speere auf einen niedergehen, bleibt einem nicht viel mehr anderes übrig, als zur Seite zu springen oder einen stabilen Schild zwischen sich und die Geschosse zu bringen, wenn man nicht verletzt werden will.
+      Das Ziel kann Fernkampfangriffe nicht mit einer Waffe parieren, dafür aber den Schuss oder Wurf mit einem Schild parieren oder ausweichen. Auszuweichen oder mit dem Schild parieren, ist bei Angriffen mit Schusswaffen um 4 erschwert, bei Wurfwaffen um 2.
+      Schusswaffenangriff | -4
+      Wurfwaffenangriff | -2
+    effects:
+      - when: { incoming: ranged }
+        forbid: { defence: weaponParry }
+        because: "Fernkampfangriffe nur mit Schild parieren oder ausweichen"
+        # The same fact kampfwerte example 16 found missing (the app never asks whether the
+        # attack is ranged).
+      - when: { incoming: { ranged: schuss } }
+        add: { to: [shieldParry, aw], value: -4 }
+      - when: { incoming: { ranged: wurf } }
+        add: { to: [shieldParry, aw], value: -2 }
+
+  - id: FK16
+    text: |
+      Sollte es nicht gelingen, dem Fernkampfangriff zu entgehen, werden wie beim Nahkampf die Trefferpunkte ausgewürfelt, der Rüstungsschutz vom Ergebnis abgezogen und die verbliebenen Schadenspunkte von den Lebenspunkten abgezogen.
+      Man kann in einer Kampfrunde genauso wie auf Nahkampfangriffe mehrmals auf Fernkampfangriffe reagieren, aber auch dies wird zunehmend schwerer: Die erste Parade mit dem Schild ist nicht zusätzlich erschwert. Jede weitere Parade in der laufenden Kampfrunde erhält jedoch eine Erschwernis von 3. Dies ist kumulativ, rechnet sich also auf. Das bedeutet, dass die erste Parade mit dem Schild nicht erschwert ist, der zweite um 3, der dritte um 6, der vierte um 9 usw.
+      Ausweichen ist ebenfalls möglich und wird wie die Parade mit dem Schild zunehmend schwerer. Die Erschwernisse für die verschiedenen Verteidigungsarten sind kumulativ und werden bei einem Wechsel der Verteidigungsart übertragen. Hierbei ist es egal, ob die Erschwernisse durch Nah- oder Fernkampf entstanden sind.
+      Zu Beginn einer neuen Kampfrunde sind diese Modifikatoren hinfällig.
+    effects: none
+    why: >
+      mehrfache-verteidigung's counter, restated for ranged attacks: one counter per round over
+      every defence, melee or ranged ("egal, ob … durch Nah- oder Fernkampf"). Damage is schaden's.
+
+  - id: FK17
+    text: |
+      Eine gewürfelte 1 bei einer Verteidigung muss mit einem Bestätigungswurf überprüft werden.
+      Wenn der Bestätigungswurf gelingt, tritt der folgende Effekt ein: Die Verteidigung sinkt nicht um 3 wie üblich bei der nächsten Verteidigung in dieser Kampfrunde.
+      Wenn der Bestätigungswurf misslingt, tritt der folgende Effekt ein: Die nächste Verteidigung in dieser Kampfrunde ist nur um 2 statt um 3 (zusätzlich) erschwert.
+    effects:
+      - when: { defence.roll: 1 }
+        requires_check: { check: confirm, value: defence }
+        on_success: [{ replace: { line: mehrfache-verteidigung.next, value: 0, span: nextDefence } }]
+        on_failure: [{ replace: { line: mehrfache-verteidigung.next, value: -2, span: nextDefence } }]
+        # A variation of "replaces" (another rule's line dropped or changed while this applies,
+        # schilde/SA_65), with a span of one defence.
+
+  - id: FK18
+    text: |
+      Auf der anderen Seite gibt es bei der Verteidigung im Fernkampf auch Patzer. Hier muss ebenfalls ein Bestätigungswurf erfolgen.
+      Wenn der Bestätigungswurf gelingt, geschieht Folgendes: gewöhnliches Misslingen
+      Wenn der Bestätigungswurf misslingt, geschieht Folgendes: Der Held erleidet 1W6+2 SP.
+    effects:
+      - when: { defence.roll: 20 }
+        requires_check: { check: confirm, value: defence }
+        on_failure: [{ damage: { formula: 1W6+2, to: hero, sp: true } }]
+
+  - id: FK19
+    text: |
+      Auch Schuss- und Wurfwaffen verursachen bei einem erfolgreichen Angriff Trefferpunkte. Wie immer werden diese ausgewürfelt und vom Ergebnis der Rüstungsschutz abgezogen. Was übrig bleibt, wird als Schadenspunkte von der Lebensenergie des Getroffenen abgezogen.
+      Je näher ein Ziel ist, desto stärker wirkt die Wucht eines Geschosses auf es ein. Daher gilt: Fernkampfwaffen in der Reichweite nah verursachen +1 TP. Fernkampfwaffen in der Reichweite weit verursachen –1 TP.
+    effects: none
+    why: the TP half of FK5, restated; damage is schaden's
+
+  - id: FK20
+    text: >
+      Hat man ein Viertel der Lebenspunkte verloren, erhält man eine Stufe des Zustandes Schmerz.
+      Das Gleiche geschieht, wenn man die Hälfte und Dreiviertel der Lebenspunkte verloren hat und
+      wenn die Lebenspunkte auf 5 oder weniger sinken. Ab 0 Lebenspunkten liegt ein Held im
+      Sterben. Details über Zustände.
+    effects: none
+    why: COND_6.SZ3 and schaden, restated
+
+rulings:
+  - id: range-input
+    status: open
+    question: >
+      How does the app learn the range band (nah / mittel / weit / beyond)? By the player naming
+      the band, or by the distance in Schritt, which the app turns into the band from the weapon?
+    context: >
+      FK4 ties the bands to each weapon's ranges; Optolith exports them (Kurzbogen 10 / 50 / 80
+      Schritt, Langbogen 20 / 100 / 160). The app asks the band directly (CombatFernkampfViews,
+      distanz nah/mittel/weit, default mittel) and has no "beyond" option, so the untargeted shot
+      up to 1.5× (FK4) cannot be chosen, and nothing shows which band a distance falls into.
+    situations: [probe-fernkampf 21.1, probe-fernkampf 21.2]
+    options:
+      a: { says: "Ask the distance in Schritt; the app shows the band it falls into for the weapon in hand, the player can override.", app: "a Schritt stepper; the band and its lines follow from the weapon's ranges; 'beyond' (FK4) appears past farRange" }
+      b: { says: "Ask the band, as today, and show each band's Schritt for the weapon beside it.", app: "the picker gains the Schritt per band and a fourth option 'über Maximalreichweite'" }
+    recommended: b
+    why_recommended: >
+      the GM usually says "about 40 Schritt" and the player knows their bow; showing the Schritt
+      beside each band answers the question without a stepper, and keeps the one-tap default.
+      Either way the band — not the distance — is the fact the rule reads
+    answer: null
+
+  - id: cover-as-size
+    status: open
+    question: >
+      FK8: a target in cover "gilt als" a smaller size. Does cover replace the target's size (the
+      part that is visible decides: chest-high wall → klein, whoever stands behind it), or step
+      the target's own size down (an Oger, groß, behind the same wall → mittel)?
+    context: >
+      The page's examples are all for a human (mittel → klein, → winzig). For a larger or smaller
+      target the page does not say. The app has no cover input; the player can only pick a
+      smaller size in the size picker, and the line then says "Größe", not Deckung.
+    situations: [probe-fernkampf 21.3]
+    options:
+      a: { says: "Step down: teilweise Deckung one size smaller, weitgehend two; the line says 'Deckung: gilt als …'.", app: "a cover picker (keine / teilweise / weitgehend); the size row shifts by one or two steps" }
+      b: { says: "Replace: the player picks the size of the visible part directly.", app: "the cover picker becomes 'sichtbarer Teil' with the five sizes" }
+    recommended: a
+    why_recommended: >
+      it reproduces both of the page's examples for a human (bis zur Brust → klein, nur die
+      Unterschenkel → winzig) and gives a sensible answer for an Oger or a goblin; the player
+      answers one question about the cover, not a judgement about the size of a part
+    answer: null
+
+  - id: zielen-interrupted
+    status: open
+    question: >
+      FK11: aiming is "eine länger dauernde Handlung bis zum eigentlichen Angriff". What ends it
+      without a shot — a defence, taking damage, the target moving out of sight — and does it
+      carry over into the next Kampfrunde?
+    context: >
+      The page that defines "länger dauernde Handlung" (linked from the Ladezeiten page) was not
+      found on 2026-09-24, so this is asked without it and must be re-read against it. The app
+      offers Zielen as a 0 / +2 / +4 picker on the shot screen: no actions are spent, nothing
+      carries over or breaks.
+    situations: [probe-fernkampf 21.6]
+    options:
+      a: { says: "Aiming lasts until the shot or until the hero does anything else with an action or a defence; it carries over rounds.", app: "an 'Zielen' action on the root screen that counts up (+2, +4) and is shown on the next shot; any other action or a defence clears it" }
+      b: { says: "Only another action ends it; a defence does not.", app: "as a, but the defence screens leave it" }
+      c: { says: "It is the player's to track; the picker stays.", app: "as today, with the rule cited on the line" }
+    recommended: a
+    why_recommended: >
+      it makes the cost visible (the actions are spent) without guessing further than "bis zum
+      eigentlichen Angriff" allows; b and c wait on the missing page. To be re-checked when the
+      page is read
+    answer: null

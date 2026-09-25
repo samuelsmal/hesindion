@@ -12,7 +12,8 @@ reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 # Despite the name, this advantage has nothing to do with standing up from Liegend (STATE_10.L4):
 # it halves the time Betäubung and Berauscht take to wear off. Standing up costs 1 action and
-# risks a Passierschlag for Boronmir exactly as for anyone (situation 15.16).
+# risks a Passierschlag exactly as for anyone (situation 15.16). Boronmir dropped this advantage
+# on 2026-09-24; the example-15 situations about it give it to him.
 
 clauses:
   - id: SW1

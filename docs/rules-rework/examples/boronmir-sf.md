@@ -2,9 +2,14 @@
 
 **Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
 
-Four of Boronmir's combat abilities that no earlier example covered: two Spezialmanöver he
+Four combat abilities of Boronmir's that no earlier example covered: two Spezialmanöver he
 announces himself, a passive bonus on a talent check, and a formation that also helps the
 fighters beside him.
+
+The numbers are his values as of 2026-09-24. He dropped Vorstoß, Schildspalter and
+Plänkler-Formation that day (and Finte, which [example 8](./finte.md) covers). He took
+Formation instead, which [example 19](./boronmir-neu.md) covers. This example adds the three back
+to his new sheet. He still meets their prerequisites (GE 14, KK 14, Wuchtschlag I).
 
 ## Rules covered
 
@@ -46,7 +51,8 @@ shield, and an opponent splitting his Großschild.
   entdecken).
 - **A2, A3** Prerequisite IN 13; all combat techniques. Nothing to apply.
 
-**Plänkler-Formation (SA_884)**
+**Plänkler-Formation (SA_884)**: Formation (SA_862, example 19) is the same rule with larger
+numbers.
 
 - **P1** Up to three fighters, at most half a Schritt to the left and right, form a line.
 - **P2** Everyone in it gets either +1 AT or +1 VW (every defence).
@@ -75,9 +81,9 @@ or Schildspalter with Wuchtschlag.
 ## Situations
 
 [`situations/boronmir-sf.yaml`](./situations/boronmir-sf.yaml), 14.1–14.21, all with Boronmir's
-own values: Rabenschnabel 14/10, Langschwert 14/11 and Großschild 5/13 (StP 30), all with the
-shield's passive bonus; AW 7; Belastung II in plate with Belastungsgewöhnung I. The derivation is
-in the file's header. Rule files: [`SA_66`](./rules/abilities/SA_66.yaml),
+values as of 2026-09-24, plus the three SFs: Rabenschnabel 16/11, Langschwert 14/11 and
+Großschild 6/13 (StP 30), all with the shield's passive bonus; AW 7; Belastung I in plate with
+Belastungsgewöhnung II. The derivation is in the file's header. Rule files: [`SA_66`](./rules/abilities/SA_66.yaml),
 [`SA_59`](./rules/abilities/SA_59.yaml), [`SA_40`](./rules/abilities/SA_40.yaml),
 [`SA_884`](./rules/abilities/SA_884.yaml).
 

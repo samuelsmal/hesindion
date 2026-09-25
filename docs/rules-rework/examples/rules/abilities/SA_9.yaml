@@ -1,0 +1,85 @@
+# DRAFT FORMAT — see ../../README.md.
+id: SA_9
+name: Fertigkeitsspezialisierung (Talente)
+kind: specialAbility
+group: Allgemeine Sonderfertigkeiten
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_FertigkeitsspezialisierungTalente.html
+  book: Regelwerk
+  page: 216
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# Probe example 22. Optolith: selectOptionCategories SKILLS; an instance has `sid` (the talent,
+# e.g. "TAL_10") and `sid2` (the Anwendungsgebiet: an id from the talent's `applications` in
+# de-DE/Skills.yaml — Sinnesschärfe 1 Hinterhalt entdecken, 2 Suchen, 3 Wahrnehmen — or the
+# player's own words as a string). Up to three instances per talent.
+
+clauses:
+  - id: FS1
+    text: >
+      Ein Held erhält einen Bonus von 2 auf seinen Fertigkeitswert, wenn das entsprechende
+      Anwendungsgebiet eine Rolle bei der Probe spielt.
+    effects:
+      - when: { check: { talent: option.sid, application: option.sid2 } }
+        add: { to: fw, value: 2 }
+        ruling: spezialisierung-when
+        # FORMAT: a new target, the check's FW (the pool spent on the Teilproben), distinct from
+        # `to: check`, which fertigkeitsproben.FM1 spreads over the three attributes. The two
+        # are not interchangeable: +2 FW and a +2 Erleichterung give different results on the
+        # same dice (situation 22.3). Every existing `to: check` (SA_40, DISADV_57,
+        # ruhiges-temperament, COND_1 on talents) means the attribute modifier.
+
+  - id: FS2
+    text: >
+      Ein Held kann sich im Laufe seines Lebens bei einem Talent in maximal drei
+      unterschiedlichen Anwendungsgebieten spezialisieren.
+    effects: none
+    why: purchase legality (Optolith's)
+
+  - id: FS3
+    text: >
+      Der Bonus der Spezialisierung kann das Maximum des FW nach Erfahrungsgrad des Helden bei
+      der Heldenerschaffung übersteigen.
+    effects: none
+    why: >
+      a creation cap the app does not enforce; at the table it only means the +2 is never capped
+
+  - id: FS4
+    text: >
+      Voraussetzungen: Fertigkeitswert 6 (erste Spezialisierung), Fertigkeitswert 12 (zweite
+      Spezialisierung), Fertigkeitswert 18 (dritte Spezialisierung)
+    effects: none
+    why: purchase prerequisite
+
+  - id: FS5
+    text: >
+      AP-Wert: A-/B-/C-/D-Fertigkeit: 1/2/3/4 Abenteuerpunkt/e für die erste Spezialisierung;
+      2/4/6/8 Abenteuerpunkte für die zweite Spezialisierung, 3/6/9/12 Abenteuerpunkte für die
+      dritte Spezialisierung
+    effects: none
+    why: cost
+
+rulings:
+  - id: spezialisierung-when
+    status: open
+    question: >
+      "Wenn das entsprechende Anwendungsgebiet eine Rolle bei der Probe spielt": how does the
+      check know its Anwendungsgebiet, so that the +2 is applied or not?
+    context: >
+      fertigkeitsproben.FP8 says every talent check names its Anwendungsgebiet ("Sinnesschärfe
+      (Wahrnehmen)"). The app's checks carry none: TalentProbeModal opens a talent, and
+      Situation has a talentId but no application. SA_40 (Hinterhalt entdecken), DISADV_57
+      (Handlungsfähigkeit bewahren / Störungen ignorieren) and COND_6 already name applications in
+      their effects and cannot be gated either. Optolith lists each talent's applications
+      (de-DE/Skills.yaml `applications`), and SA_9's `sid2` points into that list or is free text.
+    situations: [probe-fertigkeiten 22.1, probe-fertigkeiten 22.2]
+    options:
+      a: { says: "Every talent check carries an Anwendungsgebiet, picked when it is opened from the talent's list (and set by the rule when a rule opens it, e.g. a Wundeffekt); the +2 applies when it matches.", app: "an application picker on the check screen, defaulting to the one a calling rule names; a specialisation shows as its own line on the FW" }
+      b: { says: "No picker: a toggle 'Spezialisierung passt' per specialisation on the check screen.", app: "one toggle per SA_9 instance of that talent" }
+      c: { says: "Text only: the sheet lists the specialisation; the player adds 2 by hand.", app: "as today (the FW is not editable on the check, so the player would have to use the modifier, which is wrong: 22.3)" }
+    recommended: a
+    why_recommended: >
+      the page makes the application part of every talent check, and three other rules already
+      need it; a free-text sid2 cannot be matched to a list and falls back to b's toggle
+    answer: null

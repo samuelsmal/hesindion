@@ -12,8 +12,10 @@ source:
   checked: 2026-09-24
   hash: null
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
-# Kupperus has it through his profile (svellttaler-kaltblut.SK5); the Optolith export does not
-# carry an animal's Vorteile, so the app has no way to know (svellttaler-kaltblut.mount-profile-data).
+# Kupperus has it through his profile (svellttaler-kaltblut.SK5). The Optolith export has no
+# field for an animal's Vorteile. Only the free-text `skills` has it, and only when the player
+# types it in: Kupperus's says "Mächtiger Schlag, Ruhiges Temperament" since the 2026-09-24
+# export. The app shows that text and applies nothing from it (svellttaler-kaltblut.mount-profile-data).
 
 clauses:
   - id: RT1

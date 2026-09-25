@@ -1,0 +1,111 @@
+# DRAFT FORMAT — see ../../README.md.
+# Probe (example 20): a magic SF that changes how a cast is paid for.
+id: SA_74
+name: Verbotene Pforten
+kind: specialAbility
+group: Allgemeine magische Sonderfertigkeiten
+source:
+  url: https://dsa.ulisses-regelwiki.de/allgemeine_magische_sonderfertigkeit.html?sonderfertigkeit=Verbotene+Pforten
+  book: Regelwerk
+  page: 285
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page also cites Kodex der Magie p. 322. Machtvolle Verbotene Pforten (SA_302, Magisch
+# erweitert) builds on it and is not drafted.
+#
+# FORMAT: a cost split between two resource pools at the player's choice, with a minimum in one
+# pool (at least 1 AsP), and — on failure — a fixed order in which the pools pay (AsP first,
+# then LE). The set has one pool per price (a Schip for Schicksalspunkte, `costs: { schip: 1 }`)
+# and one rule that redirects *damage* to another creature's LE (reiterkampf.RK11 "Reittier
+# getroffen": whose LE the damage screen writes to). Neither splits one price across pools or
+# falls through from one pool to the next.
+# Paying LeP is not damage: no RS, no Wundschwelle, no Wundeffekt (a reading; the page says
+# "aufwenden", never "Schaden"). It lowers LE all the same, so Schmerz follows from the LE
+# thresholds (COND_6.SZ3) like any other loss.
+
+clauses:
+  - id: VP1
+    text: >
+      Ein Zauberer kann Anstelle von AsP auch LeP für die Zauberkosten aufwenden. Es muss jedoch
+      pro Zauber mindestens 1 AsP aufgewendet werden.
+    effects:
+      - offer:
+          choice: payWithLeP
+          amount: { pool: le, min: 0, max: "spell.cost.effective - 1" }
+          when: { cast: spell }
+          ruling: vp-sequence
+          # One LeP for one AsP (the page gives no rate). The rest of the cost, at least 1, is
+          # AsP (zaubermodifikationen.ZM12). With 0 AsP left, the SF cannot be used.
+      - forbid: { choice: payWithLeP, when: { hero.asp.current: 0 } }
+        because: "mindestens 1 AsP pro Zauber"
+      - split: { charge: spell.cost.effective, pools: { le: choice.payWithLeP, asp: rest }, min: { asp: 1 } }
+        # FORMAT: the `split` above — see the header.
+
+  - id: VP2
+    text: >
+      Dies ist ausgesprochen schmerzhaft und erfordert daher eine Probe auf das Talent
+      Selbstbeherrschung. Misslingt diese, misslingt auch der Zauber.
+    effects:
+      - when: { choice: payWithLeP, amount: { min: 1 } }
+        requires_check: { talent: Selbstbeherrschung, application: null }
+        on_failure: { set: { cast.outcome: failed } }
+        ruling: vp-sequence
+        # FORMAT: one check deciding the outcome of *another* check (the spell's). The set has
+        # checks that gate an offer (reiterkampf's orders: Reiten before the order happens) but
+        # none that overturns a roll already made — which it is, if the Selbstbeherrschung
+        # comes after the spell check (ruling vp-sequence, option a).
+        # `application: null`: the page names none; Handlungsfähigkeit bewahren and Störungen
+        # ignorieren are both plausible, and only a Fertigkeitsspezialisierung depends on it.
+        # Belastung does not reach Selbstbeherrschung (COND_1.belastung-reach); Schmerz does.
+
+  - id: VP3
+    text: >
+      Der Zauberkundige muss dann wie sonst die Hälfte der Kosten aufbringen, wobei diese zuerst
+      von den AsP und, sollten diese nicht ausreichen, dann von seinen LE abgezogen werden.
+    effects:
+      - when: { check_failed: VP2 }
+        charge:
+          amount: "half(spell.cost.effective)"
+          round: up
+          pools: [asp, le]          # in this order: AsP until empty, the rest from LE
+          ruling: round-up
+        # "wie sonst" points at zaubermodifikationen.ZM12's half cost. The LeP the player chose
+        # in VP1 do not matter any more: the half is paid AsP first.
+        # FORMAT: an ordered fallback between pools (AsP, then LE), part of the `split` concept.
+
+  - id: VP4
+    text: "Voraussetzung: MU 12"
+    effects: none
+    why: purchase prerequisite, not a rule at the table
+
+  - id: VP5
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    effects: none
+    why: purchase cost
+
+rulings:
+  - id: vp-sequence
+    status: open
+    question: >
+      When is the Selbstbeherrschung check rolled — before the spell check, or after it, when
+      the LeP are paid? And does a caster whose spell check failed need it to pay part of the
+      half cost with LeP?
+    context: >
+      The page puts the pain at paying ("Dies ist ausgesprochen schmerzhaft"), and paying is
+      step 5 of the Spruchzauberei page, after the check (step 4). But "Misslingt diese,
+      misslingt auch der Zauber" reads as if the spell's outcome were still open. VP3 then says
+      the half cost is paid AsP first, then LE — with no word on a check. The app has no
+      Verbotene Pforten (catalog SA_74 todo) and charges no AsP at all
+      (zaubermodifikationen.ZM12).
+    situations: [probe-magie 20.7, probe-magie 20.8]
+    options:
+      a: { says: "After: roll the spell; if it succeeds and LeP are to be paid, roll Selbstbeherrschung. Failing it turns the success into a failure (half cost, AsP first). A failed spell check pays its half cost as VP3 says, AsP first then LE, with no Selbstbeherrschung.", app: "the LeP choice is made before the roll; the Selbstbeherrschung check opens after a successful spell check; the result screen can still turn to 'misslungen'" }
+      b: { says: "Before: announce the LeP, roll Selbstbeherrschung first; on a failure the spell fails without its own check (half cost, AsP first). On a success roll the spell as usual.", app: "Selbstbeherrschung is rolled first, as a gate; the spell check only opens after it" }
+    recommended: b
+    why_recommended: >
+      the caster commits to the LeP before casting, and "misslingt auch der Zauber" is simplest
+      as a gate before the spell check, the way reiterkampf's orders put the Reiten check before
+      the order; it avoids a result that changes after it is shown, and needs no new concept of
+      one check overturning another
+    answer: null

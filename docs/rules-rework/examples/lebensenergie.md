@@ -18,8 +18,9 @@ They meet [Example 4](./schmerz.md)'s Schmerz (COND_6.SZ2, SZ3, SZ5) and Zustand
 
 **ADV_75 does not do what its name suggests.** The page says nothing about standing up from
 Liegend. It halves the time a Stufe of Betäubung or Berauscht takes to wear off, when alcohol
-caused it. Standing up costs Boronmir 1 action and may draw a Passierschlag, exactly as for anyone
-else (15.16).
+caused it. Standing up costs 1 action and may draw a Passierschlag, exactly as for anyone else
+(15.16). Boronmir dropped this advantage on 2026-09-24; the situations about it give it back to
+him.
 
 ## Clauses
 
@@ -73,9 +74,10 @@ else (15.16).
 ## Situations
 
 In [`situations/lebensenergie.yaml`](./situations/lebensenergie.yaml), 15.1–15.19, all Boronmir
-unless stated: his LE (15.1: 5 + 2 × 13 + 2 = 33), a disadvantage the import drops (15.2), his
-Schmerz thresholds with Zäher Hund (15.3–15.8: LP 24/16/8/5 start Stufen I/II/III/IV), a night's
-regeneration in six settings (15.9–15.15), and standing up, alcohol and Betäubung (15.16–15.19).
+as of the 2026-09-24 export unless stated: his LE (15.1: 5 + 2 × 15 + 2 = 37), a disadvantage the
+import drops (15.2), his Schmerz thresholds with Zäher Hund (15.3–15.8: LP 27/18/9/5 start Stufen
+I/II/III/IV), a night's regeneration in six settings (15.9–15.15), and standing up, alcohol and
+Betäubung with Schnell wieder auf den Beinen given back to him (15.16–15.19).
 The rules as draft YAML: [`ADV_25`](./rules/advantages/ADV_25.yaml),
 [`ADV_49`](./rules/advantages/ADV_49.yaml), [`ADV_44`](./rules/advantages/ADV_44.yaml),
 [`ADV_75`](./rules/advantages/ADV_75.yaml), [`lebensenergie`](./rules/core/lebensenergie.yaml),
@@ -100,8 +102,8 @@ The rules as draft YAML: [`ADV_25`](./rules/advantages/ADV_25.yaml),
   keeps no time. Only a Zustand caused by alcohol wears off faster; Betäubung from a blow keeps its
   3 h (15.19, ruling `ADV_75.alcohol-scope`).
 - **Zäher Hund lowers the Stufe the hero has, not only its effects.** `Hero.effectiveSchmerzLevel`
-  feeds `level(of:)`, the chip, and `totalZustandLevels`, so Boronmir with Belastung II, Schmerz
-  III and Betäubung III counts 7 Stufen and keeps acting where the page's 8 make him
+  feeds `level(of:)`, the chip, and `totalZustandLevels`, so Boronmir with Belastung I, Schmerz
+  III, Betäubung III and Furcht I counts 7 Stufen and keeps acting where the page's 8 make him
   Handlungsunfähig (15.8), and at Schmerz I shows no chip (15.4). Basis: ruling
   `ADV_49.zaeher-hund-counts` — the chip shows the Stufe he has (at most IV) and "wirkt wie" the
   lower one.
@@ -109,13 +111,13 @@ The rules as draft YAML: [`ADV_25`](./rules/advantages/ADV_25.yaml),
   at −3 and GS −3, as Stufe III (15.7). Basis: ruling `ADV_49.zaeher-hund-iv`; the app has no such
   check at all (example 4) and `Hero.effectiveSchmerzLevel` returns 4 before subtracting.
 
-Not rules but the requirement: the LE total names no rule (15.1 — "33" with no breakdown in
+Not rules but the requirement: the LE total names no rule (15.1 — "37" with no breakdown in
 `HeroDetailView`), the Schmerz line lowered by Zäher Hund cites only COND_6 and shows the lowered
 Stufe (`StateModifiers.penaltyDefinitions`) (15.5), and the regeneration table's rows are one
 unnamed stepper (`RegenerierenSheet.userModifier`) (15.9).
 
-Confirmed correct: LE 33 for Boronmir, Hohe Lebenskraft +1 per Stufe (15.1); the Schmerz
-thresholds for LE 33 (`Hero.lebenspunkteSchmerzLevel`, which equals the exact comparison of
+Confirmed correct: LE 37 for Boronmir, Hohe Lebenskraft +1 per Stufe (15.1); the Schmerz
+thresholds for LE 37 (`Hero.lebenspunkteSchmerzLevel`, which equals the exact comparison of
 `COND_6.schmerz-thresholds` a); Zäher Hund's effects at Stufen I–III (15.4–15.6); the
 regeneration floor at 0 and cap at the maximum (15.13, 15.14); Verbesserte Regeneration +2 for
 Stufe II, and only on the regeneration sheet, not on healing (ruling `ADV_44.vr-scope`).

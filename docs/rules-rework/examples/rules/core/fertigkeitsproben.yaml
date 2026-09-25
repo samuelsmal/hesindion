@@ -1,0 +1,236 @@
+# DRAFT FORMAT — see ../../README.md.
+# Probe example 22. The Fertigkeitsprobe (3W20 against three attributes, the FW as a pool), its
+# Qualitätsstufen, modifiers, Kritische Erfolge and Patzer. Assembled from five pages (as
+# kampfwerte.yaml is); a clause from another page carries `page:`. Not here: the optional rules
+# (Schnellerer Fertigkeitsprobenwurf, Farbige Würfel, Alternative Eigenschaften), Startwerte,
+# Sammel- and Vergleichsproben.
+# FORMAT: the check itself is a *procedure*, not a value. Every other rule file adds lines to a
+# number (AT, PA, a check's modifier) that one W20 is rolled against; this one defines how three
+# dice, three effective attributes and a pool combine into a result with a quality (QS). Rules
+# then hook into different stages of it: the attributes (FM1: every Erschwernis), the pool
+# (SA_9.FS1), the dice (ADV_4.B1, Schips), the result (FP-QS table, Kritisch/Patzer, the
+# talents' own "FP = doppelter FW" on a Doppel-1). Nothing in rules/ has stages; the design has
+# to give the check named stages that effects attach to.
+id: fertigkeitsproben
+name: Fertigkeitsproben
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/grundregeln/fertigkeitsproben.html
+  book: Kodex des Schwertes    # as the wiki page names it; the rules are the Regelwerk's too
+  page: 15
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+clauses:
+  - id: FP1
+    text: >
+      Im Unterschied zu der Eigenschaftsprobe kommt bei einer Fertigkeitsprobe nicht nur 1W20 zum
+      Einsatz, sondern es sind gleich 3W20. Die Ergebnisse der Würfe werden aber nicht addiert,
+      sondern jeder einzelne Wurf mit einem Eigenschaftswert verglichen. Es gelten hier
+      grundlegend die Regeln zu Probenwürfen, mit folgenden Ausnahmen: Bei jedem Talent, jedem
+      Zauber und jeder Liturgie sind drei Eigenschaftswerte angegeben. Ein Held muss nacheinander
+      auf diese drei Eigenschaften würfeln. Die Reihenfolge, in der du auf die bei der Probe
+      beteiligten Eigenschaften würfelst, ist dir überlassen. Wichtig ist nur, dass vor dem Wurf
+      der Würfel einer Eigenschaft zugeordnet ist.
+    effects:
+      - defines:
+          check: skill
+          dice: 3W20
+          against: skill.attributes          # the three from the talent / spell / liturgy
+          stages: [attributes, pool, roll, reroll, result, quality]
+        # The order of Teilproben is free but fixed before rolling; an app rolling all three at
+        # once and pairing them in the listed order satisfies it.
+
+  - id: FP2
+    text: >
+      Die einzelnen Teilproben funktionieren im Grunde genauso wie eine einzelne
+      Eigenschaftsprobe: Die gewürfelte Augenzahl darf den Wert der Eigenschaft nicht
+      übersteigen. Sollte der EEW einer Teilprobe auf 0 oder darunter sinken, kann der Held keine
+      Probe auf die Fertigkeit ablegen.
+    effects:
+      - forbid: { check: skill, when: { any: "stage.attributes[i] <= 0" } }
+        because: "effektiver Eigenschaftswert 0 oder weniger: keine Probe möglich"
+        # FORMAT: a legality rule over a stage's intermediate values (each EEW), not over the
+        # final result — a variation of mehrfache-verteidigung's "value after all modifiers
+        # ≤ 0 blocks the defence", but per Teilprobe.
+
+  - id: FP3
+    text: >
+      Dem Spieler steht für das Gelingen der Probe jedoch zusätzlich der Fertigkeitswert zur
+      Verfügung. Diesen Wert kann der Spieler benutzen, um zu hohe Würfelergebnisse
+      auszugleichen. Hat ein Held beispielsweise einen Eigenschaftswert von 12 und würfelt eine
+      14 bei einer Teilprobe, so müssen 2 Punkte des Fertigkeitswerts eingesetzt werden, um den
+      Wurf auszugleichen.
+    effects:
+      - defines: { stage: pool, start: skill.fw, spend_per_die: "max(0, roll[i] - stage.attributes[i])" }
+
+  - id: FP4
+    text: >
+      Die eingesetzten Punkte stehen für die übrigen Teilproben nicht mehr zur Verfügung. Wenn
+      ein Held bei einem Fertigkeitswert von 10 bei der ersten Teilprobe schon 6 Punkte
+      verbraucht, hat er zum Ausgleich der anderen beiden Teilproben nur noch insgesamt 4 Punkte
+      übrig. Die Punkte des Fertigkeitswerts sind aber nicht für immer verloren. Wenn der
+      Abenteurer später wieder eine Fertigkeitsprobe auf die gleiche Fertigkeit ablegen muss,
+      steht der Fertigkeitswert wieder voll zur Verfügung.
+    effects: none
+    why: carried by FP3 (one pool per check, fresh every check)
+
+  - id: FP5
+    text: >
+      Es ist egal, wie weit bei einer Teilprobe unter den Eigenschaftswert gewürfelt wird, der
+      Held erhält dadurch keine zusätzlichen Punkte oder andere Vorteile. Ausnahme ist hier der
+      Kritische Erfolg (siehe Seite 18). Solltest du alle Punkte verbraucht haben und ein
+      Ergebnis bei einem Wurf nicht mehr korrigieren können, so ist die Probe misslungen. Hast du
+      Punkte übrig oder es zumindest mit dem letzten Punkt des Fertigkeitswerts geschafft, das
+      Ergebnis noch zu deinen Gunsten zu beeinflussen, so ist die Probe gelungen. Je mehr Punkte
+      du behalten hast, umso besser ist die Probe ausgegangen. Auch eine Probe, bei der du keine
+      Punkte mehr übrighast, gilt als gelungen.
+    effects:
+      - defines: { stage: result, success: "stage.pool >= 0", fp: "stage.pool" }
+
+  - id: FP8
+    name: Anwendungsgebiete
+    text: >
+      Jedes Talent betrifft eine Reihe von Anwendungsgebieten. Anwendungsgebiete sind Teilgebiete
+      eines Talents. Bei Fertigkeitsproben auf Talente wird immer das Anwendungsgebiet angegeben.
+      Die Schreibweise ist Talent (Anwendungsgebiet), also z. B. Sinnesschärfe (Wahrnehmen).
+    effects:
+      - defines: { check.application: { of: talent, list: optolith.skills.applications, required: true } }
+        ruling: SA_9.spezialisierung-when
+        # Talents only; a spell or liturgy check has none. The field is already used by SA_40,
+        # DISADV_57, COND_6, reiterkampf and trefferzonen; this is where it is defined.
+
+  - id: FP9
+    text: >
+      Beispiel: Geron versucht im heißen Sand der Khômwüste die Spur einer Karawane zu verfolgen.
+      […] Muss er später noch einmal eine Probe auf Fährtensuchen ablegen, steht ihm wieder sein
+      voller FW von 7 zur Verfügung.
+    effects: none
+    why: the page's worked example (abridged here; FW 7, 10/18/…, 6 points on Intuition, 1 left)
+
+  - id: QS1
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitspunkte.html", book: Kodex des Schwertes, page: 17 }
+    text: |
+      Die übrig behaltenen FP geben Aufschluss über die Qualitätsstufe (QS) eines Erfolgs. […]
+      Fertigkeitspunkte | Qualitätsstufe
+      0-3 | 1
+      4-6 | 2
+      7-9 | 3
+      10-12 | 4
+      13-15 | 5
+      16+ | 6
+    effects:
+      - table: { stage: quality, from: stage.result.fp, rows: { "0-3": 1, "4-6": 2, "7-9": 3, "10-12": 4, "13-15": 5, "16+": 6 } }
+
+  - id: QS2
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitspunkte.html", book: Kodex des Schwertes, page: 17 }
+    text: >
+      Es kann passieren, dass ein Held eine Probe besteht, allerdings keine FP übrig bleiben, da
+      er sie alle zum Ausgleich von Würfen benutzen musste oder nur einen FW von 0 besitzt. In
+      diesem Fall zählt die Probe immer als mit 1 FP bestanden (und damit als eine QS von 1).
+    effects:
+      - set: { stage: result.fp, value: 1, when: { success: true, fp: 0 } }
+
+  - id: FM1
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitsmodifikatoren.html", book: Kodex des Schwertes, page: 17 }
+    text: >
+      Erschwernisse oder Erleichterungen werden bei Fertigkeitsproben mit den drei an der Probe
+      beteiligten Eigenschaften verrechnet. Bei biner Erleichterung steigt der effektive Wert
+      jeder an der Probe beteiligten Eigenschaft um den Betrag der Erleichterung, bei einer
+      Erschwernis sinken alle um die entsprechende Zahl. Fällt eine Eigenschaft durch
+      Erschwernisse auf 0 oder weniger, kann man keine Probe ablegen. Die Anwendung von
+      Fertigkeitsmodifikatoren kann alle Arten von Fertigkeiten betreffen.
+    effects:
+      - defines: { target: check, applies_to: stage.attributes, spread: all_three }
+        # What every `add: { to: check }` in rules/ means for a 3W20 check: the same value on
+        # each of the three attributes. ("biner" is the page's typo for "einer", kept verbatim.)
+
+  - id: FM2
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitsmodifikatoren.html", book: Kodex des Schwertes, page: 18 }
+    text: |
+      +5 | extrem leichte Probe
+      +3 | sehr leichte Probe
+      +1 | leichte Probe
+      +/-0 | anspruchsvolle Probe
+      -1 | schwierige Probe
+      -3 | sehr schwierige Probe
+      -5 | extrem schwierige Probe
+    effects:
+      - offer: { gm.modifier: { on: check, presets: FM2 } }
+        # The GM's modifier as a line of its own, with these names as presets.
+
+  - id: KR1
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
+    text: >
+      Wenn zwei der drei Würfe eine 1 zeigen, dann ist die Probe automatisch gelungen, ungeachtet
+      der übrig behaltenen Punkte oder ob die Probe im Grunde gescheitert ist. Man nennt diesen
+      Wurf Doppel-1. […] Die Probe ist zudem besser gelungen als üblich, und je nach Probenart
+      kann es zu unterschiedlichen Effekten kommen. Was genau geschieht, entscheidet der Meister.
+    effects:
+      - when: { stage.roll: { count_of: 1, min: 2 } }
+        set: { stage: result, success: true, kind: kritischerErfolg }
+      - when: { stage.result.kind: kritischerErfolg }
+        provides: { text: "skill.critical" }
+        ruling: crit-qs
+        # The talent's own entry says what "besser gelungen" means (Optolith de-DE/Skills.yaml
+        # `critical`): for 11 of 59 talents "Für Qualitätsstufen, Vergleichs- und Sammelproben
+        # gilt: FP = doppelter FW"; for others an extra action (Reiten, Körperbeherrschung,
+        # Fliegen) or a narrative effect.
+        # FORMAT: an effect that lives in a *talent's* entry, not in a rule file — talents would
+        # need files (or a data source) of their own, as equipment has ITEMTPL_*.
+
+  - id: KR2
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
+    text: >
+      Eine gewürfelte Dreifach-1 bedeutet ebenfalls einen automatischen Erfolg, aber die
+      Auswirkungen sollten noch deutlich spektakulärer sein.
+    effects:
+      - when: { stage.roll: { count_of: 1, min: 3 } }
+        set: { stage: result, kind: dreifach1 }
+        # Shown as its own result ("Dreifach-1"), GM's to narrate.
+
+  - id: KR3
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
+    text: >
+      Anders als bei Eigenschaftsproben gibt es bei Fertigkeitsproben keine Bestätigungswürfe bei
+      Kritischen Erfolgen oder Patzern.
+    effects: none
+    why: nothing to roll; the app asks for none
+
+  - id: PZ1
+    page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/patzer-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
+    text: >
+      Eine Doppel-20 bedeutet ein automatisches Misslingen einer Probe, selbst wenn genug Punkte
+      zum Ausgleich übrig sind. […] Eine Dreifach-20 ist ein schreckliches Missgeschick, das den
+      Helden in eine schwierige Situation oder eine gefährliche Lage bringen sollte.
+    effects:
+      - when: { stage.roll: { count_of: 20, min: 2 } }
+        set: { stage: result, success: false, kind: patzer }
+      - when: { stage.roll: { count_of: 20, min: 3 } }
+        set: { stage: result, kind: dreifach20 }
+      - when: { stage.result.kind: [patzer, dreifach20] }
+        provides: { text: "skill.botch" }
+
+rulings:
+  - id: crit-qs
+    status: open
+    question: >
+      A Doppel-1 is "automatisch gelungen" and "besser gelungen als üblich". What QS does it
+      have?
+    context: >
+      The page leaves the effect to the GM. Many talents' own entries (Optolith de-DE/Skills.yaml
+      `critical`, from the Regelwerk's talent descriptions) say "Für Qualitätsstufen, Vergleichs-
+      und Sammelproben gilt: FP = doppelter FW"; others give an extra action or a narrative
+      effect and say nothing about FP. The app gives every Kritischer Erfolg QS 6
+      (SkillCheckEngine.SkillCheckOutcome.qualityLevel) and shows no talent text.
+    situations: [probe-fertigkeiten 22.8]
+    options:
+      a: { says: "FP = doppelter FW where the talent's entry says so; otherwise the FP as rolled, at least 1 (QS2). The talent's critical text is shown.", app: "QS from the table on 2 × FW (Schwimmen FW 4 → FP 8 → QS 3); the text beneath" }
+      b: { says: "Always the FP as rolled (at least 1); the rest is the GM's.", app: "QS from the dice; the text beneath" }
+      c: { says: "Always QS 6.", app: "as today, plus the text" }
+    recommended: a
+    why_recommended: >
+      it follows the talents' own text where there is one and the core page where there is not;
+      QS 6 for everyone (c) makes a Doppel-1 at FW 0 as good as a master's best work
+    answer: null

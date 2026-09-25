@@ -32,7 +32,7 @@ clauses:
       - provides: { loadout.weapon: stats }
         # L+S GE/KK: the Kampftechniken page lets the hero use either Leiteigenschaft
         # ("aus mehreren möglichen Leiteigenschaften wählen"), so the higher counts. Boronmir,
-        # GE 14 / KK 15: 15 is not above 15, no Schadensbonus. The app's PA uses the same max
+        # GE 14 / KK 14: 14 is not above 15, no Schadensbonus. The app's PA uses the same max
         # (OptolithImportService.parseItems); its TP never use the threshold (ITEMTPL_19.RS0).
 
   - id: LS1

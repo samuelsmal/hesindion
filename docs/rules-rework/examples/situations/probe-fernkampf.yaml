@@ -1,0 +1,132 @@
+# Example 21 (probe) — Fernkampf, Ladezeiten, Schnellladen. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md. Rulings named without a prefix live in the rule's own file.
+#
+# A generic archer, not Boronmir: FK 14 with the Kurzbogen (Bögen), FK 12 with the Armbrüste;
+# AW 7, GS 8, no armour. Schnellladen for Bögen (SA_60 sid 2) and for Armbrüste (sid 1) where a
+# situation says so. Weapons (Optolith univ/Equipment.yaml):
+#   Kurzbogen          ITEMTPL_64  1W6+4  RW 10 / 50 / 80   Ladezeit 1
+#   Langbogen          ITEMTPL_65  1W6+8  RW 20 / 100 / 160 Ladezeit 2
+#   Leichte Armbrust   ITEMTPL_60  1W6+6  RW 10 / 50 / 80   Ladezeit 8
+#   Schwere Armbrust   ITEMTPL_61  2W6+6  RW 20 / 100 / 160 Ladezeit 15
+# A human target (mittel) unless stated.
+
+base_hero: { fk: { Kurzbogen: 14, Langbogen: 14, "Leichte Armbrust": 12, "Schwere Armbrust": 12 }, aw: 7, gs: 8 }
+
+situations:
+
+  - id: "21.1"
+    name: Kurzbogen, a still target 8 Schritt away, clear sight
+    hero: { loadout: { weapon: Kurzbogen, loaded: true } }
+    target: { distance: 8, movement: still }
+    expect:
+      range_band: { value: nah, from: fernkampf.FK4, ruling: fernkampf.range-input }
+      fk:
+        total: 4
+        result: 18
+        lines:
+          - { value: 2, from: fernkampf.FK5 }
+          - { value: 2, from: fernkampf.FK7 }
+      on_hit: { tp: { total: 1, formula: "1W6+4 +1", lines: [{ value: 1, from: fernkampf.FK5 }] } }
+    app_today: >
+      FK +4 and TP +1 — same numbers, if the player picks "nah" (the app asks the band, not the
+      Schritt). No line names a rule (RangedModifiers `rules: []`; the TP line is built in
+      CombatFernkampfViews)
+
+  - id: "21.2"
+    name: A running target 60 Schritt away in fog, the archer walked in his last action
+    hero: { loadout: { weapon: Kurzbogen, loaded: true }, movement: geht }
+    target: { distance: 60, movement: schnell }
+    sicht: 2
+    expect:
+      range_band: { value: weit, from: fernkampf.FK4 }
+      fk:
+        total: -10
+        result: 4
+        lines:
+          - { value: -2, from: fernkampf.FK5 }
+          - { value: -2, from: fernkampf.FK7 }       # target schnell
+          - { value: -2, from: fernkampf.FK7 }       # archer geht
+          - { value: -4, from: fernkampf.FK9 }
+      on_hit: { tp: { total: -1, lines: [{ value: -1, from: fernkampf.FK5 }] } }
+    app_today: same numbers, no rule cited
+
+  - id: "21.3"
+    name: A human behind a chest-high wall, 30 Schritt, standing still
+    hero: { loadout: { weapon: Kurzbogen, loaded: true } }
+    target: { distance: 30, movement: still, cover: teilweise }
+    expect:
+      fk:
+        total: -2
+        lines:
+          - { value: 2, from: fernkampf.FK7 }
+          - { value: -4, from: fernkampf.FK6, via: [fernkampf.FK8], label: "Deckung: gilt als klein", ruling: fernkampf.cover-as-size }
+    app_today: no cover input; the player may pick "klein" in the size picker, labelled "Größe" — the cover is not named
+
+  - id: "21.4"
+    name: The target is invisible (dichter Rauch, Sicht Stufe 4)
+    hero: { loadout: { weapon: Kurzbogen, loaded: true } }
+    sicht: 4
+    rolls: [{ w20: 3 }, { w20: 1 }]
+    expect:
+      fk: { replaced_by: { result: "hit only on a 1", from: fernkampf.FK9 } }
+      outcomes: [miss, hit]                 # a 3 misses whatever the FK; a 1 hits
+    app_today: the Sicht picker stops at Stufe 3 (−6); a shot at an invisible target is rolled against FK 8 — wrong
+
+  - id: "21.5"
+    name: On horseback — at a trot, and with a Langbogen
+    hero: { mounted: true, loadout: { weapon: Langbogen, loaded: true } }
+    mount: { gait: trab }
+    expect:
+      not_offered: [{ attack: ranged, because: fernkampf.FK10, reason: "vom Pferd kein Langbogen" }]
+      with_Kurzbogen:
+        fk: { replaced_by: { result: "hit only on a 1", from: fernkampf.FK10 } }
+    app_today: >
+      the Langbogen shot is offered mounted; the gait picker has steht / Schritt / Galopp only, so
+      a trot cannot be stated — both wrong
+
+  - id: "21.6"
+    name: Aiming — two actions, then three, then the shot
+    hero: { loadout: { weapon: Kurzbogen, loaded: true } }
+    target: { distance: 30, movement: leicht }
+    sequence:
+      - { action: zielen, expect: { process: { zielen: 2 } } }
+      - { action: zielen, expect: { process: { zielen: 4 } } }
+      - { action: zielen, expect: { process: { zielen: 4, capped: true } } }   # the third action buys nothing
+      - action: shoot
+        expect:
+          fk: { total: 4, lines: [{ value: 4, from: fernkampf.FK11 }] }
+          process: { zielen: ended }
+    open: fernkampf.zielen-interrupted
+    app_today: >
+      a 0 / +2 / +4 picker on the shot screen: the bonus is taken without spending the actions,
+      and nothing says a third action is wasted
+
+  - id: "21.7"
+    name: The archer is in melee with a goblin and wants to shoot
+    hero: { loadout: { weapon: Kurzbogen, loaded: true }, inMelee: true }
+    expect:
+      not_offered: [{ attack: ranged, because: fernkampf.FK3, reason: "im Nahkampf keine Fernkampfangriffe" }]
+    app_today: the Fernkampf button is enabled (CombatRootView shuts it only for a Ladehemmung, under water, or blocked actions) — wrong
+
+  - id: "21.8"
+    name: Reloading — Kurzbogen and both crossbows, with and without Schnellladen
+    cases:
+      - hero: { loadout: { weapon: Kurzbogen, loaded: false } }
+        expect: { ladezeit: { value: 1, from: ladezeiten.LZ1 }, reload: { costs: { action: 1 } } }
+      - hero: { loadout: { weapon: Kurzbogen, loaded: false }, abilities: { SA_60: [{ sid: 2 }] } }
+        expect:
+          ladezeit: { value: 0, lines: [{ value: 1, from: ladezeiten.LZ1 }, { value: -1, from: SA_60.SL1 }] }
+          reload: { costs: { freeAction: 1 }, from: ladezeiten.LZ2 }
+      - hero: { loadout: { weapon: Kurzbogen, loaded: false }, abilities: { SA_60: [{ sid: 1 }] } }   # Armbrüste only
+        expect:
+          ladezeit: { value: 1, not_applied: [{ rule: SA_60, reason: "Schnellladen (Armbrüste), not Bögen" }] }
+      - hero: { loadout: { weapon: "Leichte Armbrust", loaded: false }, abilities: { SA_60: [{ sid: 1 }] } }
+        expect: { ladezeit: { value: 4, lines: [{ value: 8, from: ladezeiten.LZ1 }, { halve: true, from: SA_60.SL2 }] } }
+      - hero: { loadout: { weapon: "Schwere Armbrust", loaded: false }, abilities: { SA_60: [{ sid: 1 }] } }
+        expect: { ladezeit: { value: 8, lines: [{ value: 15, from: ladezeiten.LZ1 }, { halve: true, from: SA_60.SL2, ruling: round-up }] } }
+      - hero: { loadout: { weapon: "Leichte Armbrust", loaded: true } }
+        expect: { before_shot: { costs: { freeAction: 1 }, from: ladezeiten.LZ3 } }
+    app_today: >
+      no Ladezeit at all: the weapon is always ready, the shot can be taken every action, and
+      Schnellladen (catalog SA_60 todo) changes nothing. Only a Ladehemmung (Fernkampf-Patzer)
+      shuts the button

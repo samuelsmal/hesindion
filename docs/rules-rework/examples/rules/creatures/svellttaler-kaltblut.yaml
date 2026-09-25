@@ -17,8 +17,9 @@ source:
 reviewed: null
 
 # Boronmir's Kupperus (hero file `pets.PET_1`, type "Svellttaler Kaltblut"). The export's numbers
-# match the page. It has no VW (`pa` absent), no RS (`pro` absent), no Größenkategorie, no
-# Vorteile/Nachteile and no Sonderregel; the app reads neither `pa` nor `pro` in any case
+# match the page. It has no VW (`pa` absent), no RS (`pro` absent), no Größenkategorie and no
+# Sonderregel. Its Vorteile and SF are only in `skills`, free text the player types into
+# Optolith ("Mächtiger Schlag, Ruhiges Temperament" since the 2026-09-24 export); the app reads neither `pa` nor `pro` in any case
 # (OptolithImportService.parsePets, Pet). Its attacks come only from the free-text `notes`,
 # parsed by a regex (OptolithImportService.parsePetAttacks); the structured `attack`/`dp`/`at`/
 # `reach` fields hold one attack (Niederreiten) and `at` is not read.
@@ -101,8 +102,11 @@ clauses:
       - grants: { rules: [ruhiges-temperament, maechtiger-schlag] }
         ruling: mount-profile-data
         # "empfohlen" ones are suggestions for a player's own animal, not part of the profile.
-        # The export carries Mächtiger Schlag (`skills`, read into Pet.specialSkills) but not
-        # Ruhiges Temperament — the app knows nothing of the animal's Vorteile.
+        # The export's `skills` is free text, read into Pet.specialSkills. Since the 2026-09-24
+        # export it says "Mächtiger Schlag, Ruhiges Temperament" because the player typed both.
+        # The app finds Mächtiger Schlag by substring (CombatAttackViews, mightyBlowNote) and
+        # shows the whole string as an ⓘ line on the attack screen. It does not recognise Ruhiges
+        # Temperament, and an export only has it when a player types it in.
 
   - id: SK6
     text: >
@@ -190,6 +194,9 @@ rulings:
       TP), RK14/RK15 (GS), RK10 (LeP; RS for the SP), Ruhiges Temperament (the rider's Reiten
       checks), Mächtiger Schlag (KK), Größenkategorie (the opponent's defence against the mount's
       attacks). The app today reads neither the export's `pa` nor `pro` and knows no animal Vorteile.
+      Since the 2026-09-24 export, Kupperus's free-text `skills` names Ruhiges Temperament
+      (typed by the player); the app shows that text but applies nothing from it, and a profile
+      stays the source that does not depend on what a player happened to type.
 
   - id: mount-own-attack
     status: decided

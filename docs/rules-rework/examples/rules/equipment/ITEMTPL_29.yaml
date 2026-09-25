@@ -37,7 +37,7 @@ clauses:
     text: "Großschild | TP 1W6+1 | L+S KK 16 | AT/PA-Mod -6/+3 | RW kurz | 6 Stein | 115 HF | 100 S | einf"
     effects:
       - provides: { loadout.shield: stats }
-        # What the PA-Mod does (doubled for a shield parry) is schilde's. Boronmir's KK 15 is
+        # What the PA-Mod does (doubled for a shield parry) is schilde's. Boronmir's KK 14 is
         # below the threshold: no Schadensbonus on a shield attack.
 
   - id: GR1

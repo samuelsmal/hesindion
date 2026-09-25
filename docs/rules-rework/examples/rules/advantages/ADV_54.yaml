@@ -1,0 +1,65 @@
+# DRAFT FORMAT — see ../../README.md.
+id: ADV_54
+name: Eisern
+kind: advantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Eisern
+  book: Aventurisches Kompendium
+  page: 132
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+
+# The Wundschwelle is defined in the Trefferzonen Fokusregel (trefferzonen.TZ8: "Die
+# Wundschwelle entspricht dem halben KO-Wert", rounded up per ADR-0006 and the page's own
+# example TZ9, KO 11 → 6). Eisern is a line in its breakdown, the way Kampfreflexe is a line in
+# INI's (SA_51). Gläsern (DISADV_56, −1) is its mirror; the two cannot meet on one hero in
+# practice, but nothing on this page forbids it.
+
+clauses:
+  - id: E1
+    text: Die Wundschwelle des Helden steigt durch den Vorteil um 1.
+    effects:
+      - add: { to: wundschwelle, value: 1 }
+        ruling: eisern-scope
+        # The breakdown: "8 (halbe KO 15, trefferzonen.TZ8) + 1 (Eisern)". Every comparison
+        # against the Wundschwelle (TZ8's multiples, the take-damage screen) reads the total.
+
+  - id: E2
+    text: "Voraussetzung: Keine"
+    effects: none
+    why: no prerequisite
+
+  - id: E3
+    text: "AP-Wert: 5 Abenteuerpunkte"
+    effects: none
+    why: cost, not a rule at the table
+
+rulings:
+  - id: eisern-scope
+    status: open
+    question: >
+      The Wundschwelle is part of the Trefferzonen Fokusregel. With that Fokusregel off, does
+      Eisern do anything — and what does the hero sheet say about it?
+    context: >
+      The page says only "Die Wundschwelle … steigt um 1". The Wundschwelle and what it causes
+      (a Wundeffekt, and the −1 per multiple on its Selbstbeherrschung check) are defined in
+      trefferzonen.TZ8–TZ11, a Fokusregel Stufe I. The app treats the Wundschwelle as core
+      (AGENTS.md "The Wundschwelle is core, the Wundeffekt is not"): the sheet always shows
+      "Wundschwelle 9" for Boronmir (HeroDetailView, `wundschwelle.max`, no breakdown), and the
+      take-damage screen always prints the comparison (CombatWundschwelleRow), adding "Wundeffekte
+      gibt es nur mit der Fokusregel Trefferzonen" when it is off. Without the Fokusregel the
+      comparison changes nothing. The decided DISADV_57.verweichlicht-scope took the same
+      question for Verweichlicht: only with the Fokusregel, and the sheet says so.
+    situations: [boronmir-neu 19.6, boronmir-neu 19.9]
+    options:
+      a: { says: "As Verweichlicht: Eisern acts only through the Fokusregel. With it off, the Wundschwelle and Eisern's line stay on the sheet, marked 'wirkt nur mit Fokusregel Trefferzonen'.", app: "a note on the Wundschwelle breakdown and on Eisern when Trefferzonen is off; the damage screen's comparison row stays as it is" }
+      b: { says: "The Wundschwelle is core; Eisern always counts and needs no note.", app: "as today, plus the breakdown line naming Eisern" }
+      c: { says: "Without the Fokusregel there is no Wundschwelle: the sheet hides it, and the damage screen drops the comparison row.", app: "hide Wundschwelle and the row when Trefferzonen is off; Eisern listed with the note of option a" }
+    recommended: a
+    why_recommended: >
+      it reads the page the way verweichlicht-scope already read Verweichlicht's, so the two
+      Wundschwelle traits behave alike; a player who paid 5 AP is told why nothing happens rather
+      than left to wonder; and it keeps the comparison row the app already has, which does no
+      harm with the Fokusregel off
+    answer: null

@@ -1,0 +1,140 @@
+# DRAFT FORMAT — see ../../README.md.
+id: DISADV_37
+name: Schlechte Eigenschaft
+kind: disadvantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/nachteil.html?nachteil=Schlechte%20Eigenschaft
+  book: Regelwerk
+  page: 176
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The page also cites Aventurisches Bestiarium II p. 118 (Sikaryan-Durst, SE9).
+#
+# The hero file names the Eigenschaft by `sid`, Optolith's select option (Data/de-DE/
+# Disadvantages.yaml, rules.db select_options): 1 Aberglaube, 2 Autoritätsglaube, 3 Geiz,
+# 4 Goldgier, 5 Jähzorn, 6 Kleptomanie, 7 Naiv, 8 Neugier, 9 Rachsucht, 10 Spielsucht,
+# 11 Verschwendungssucht, 12–14 from other books, 15 Sikaryan-Durst. Boronmir has sid 2,
+# Autoritätsglaube. The app resolves the name at import (OptolithImportService,
+# lookupSelectOption) and lists "Schlechte Eigenschaft (Autoritätsglaube)" on the sheet.
+#
+# What the app can do: nothing it computes changes. The trigger is the GM's to see, the
+# consequence is roleplay. What it can offer is the Willenskraft check SE1 calls for, with SE4's
+# GM modifier, so the player does not have to go looking for it.
+
+clauses:
+  - id: SE1
+    text: >
+      In jeder Situation, in der der Held mit einem potenziellen Auslöser seiner Schlechten
+      Eigenschaft konfrontiert wird, muss er eine Probe auf Willenskraft bestehen, um sich zu
+      beherrschen.
+    effects:
+      - offer:
+          check: { talent: Willenskraft, application: null }
+          cause: { rule: DISADV_37, option: sid }
+          when: gm.fact.trigger
+          ruling: schlechte-eigenschaft-check
+          # FORMAT: a check the rule *offers*, not a modifier on one; its trigger is a GM fact
+          # the app cannot see. `application: null`: none of Willenskraft's Anwendungsgebiete
+          # (Bedrohungen, Bekehren & Überzeugen, Betören, Einschüchtern, Überreden standhalten)
+          # is "sich beherrschen", so no Fertigkeitsspezialisierung counts.
+          # Belastung does not reach it (COND_1.belastung-reach: not a movement talent); Schmerz
+          # and the other Zustände on every check do.
+
+  - id: SE2
+    text: >
+      Gelingt ihm diese Probe, ist alles in Ordnung, ansonsten muss er entsprechend der
+      Schlechten Eigenschaft agieren.
+    effects:
+      - on_failure: { log: "gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }
+        # Roleplay: nothing the app computes changes. The result is logged with the Eigenschaft's
+        # name so the table can see it later.
+
+  - id: SE3
+    text: Seine Schlechte Eigenschaft hat ihn so lange im Griff, wie er dem Auslöser ausgesetzt ist.
+    effects: none
+    why: >
+      roleplay; the duration is the trigger's, which the GM ends. No state is set, so there is
+      nothing to clear.
+
+  - id: SE4
+    text: >
+      Der Meister kann für die Probe auf Willenskraft entsprechend der Stärke des Auslösers
+      Erschwernisse oder Erleichterungen aussprechen.
+    effects:
+      - offer: { gm.modifier: { on: SE1, default: 0 } }
+        # A GM input, not a ruling (README "How rulings are kept"): shown as its own line,
+        # "Meister (Stärke des Auslösers)".
+
+  - id: SE5
+    text: >
+      Es dürfen bis zu zwei Schlechte Eigenschaften pro Held gewählt werden. Kombinationen, die
+      sich ausschließen (z. B. Geiz und Verschwendungssucht), dürfen nicht gewählt werden. Das
+      letzte Wort darüber hat der Spielleiter.
+    effects: none
+    why: purchase legality, Optolith's to check; the app imports what the hero has
+
+  - id: SE6
+    text: |
+      Aberglaube: Der Held weicht vor schwarzen Katzen, Unglückszahlen und anderen schlechten Omen zurück. AP-Wert: –5 Abenteuerpunkte
+      Autoritätsglaube: Der Held zweifelt nicht an den Worten höhergestellter Personen, selbst wenn sie unlogische Befehle erteilen oder unglaubwürdig sind. AP-Wert: –5 Abenteuerpunkte
+      Geiz: Wenn der Held erst einmal Gold oder andere Wertgegenstände besitzt, gibt er sie nur ungerne wieder her. Lieber schränkt er sich selbst und andere finanziell ein, und er geht sogar unnötige Risiken ein, um Geld zu sparen. AP-Wert: –5 Abenteuerpunkte
+      Goldgier: Goldgierige Helden lassen alle Vorsicht fallen, wenn es darum geht, eine Schatztruhe oder andere wertvolle Gegenstände zu untersuchen und an sich zu nehmen. AP-Wert: –5 Abenteuerpunkte
+      Jähzorn: Der Held ist sehr reizbar und neigt zu Wutausbrüchen, die meist nur kurz anhalten, aber zu gewalttätigem Verhalten führen können. AP-Wert: –10 Abenteuerpunkte
+      Kleptomanie: Manche Abenteurer stehlen um des Stehlens willen, egal ob das Diebesgut einen nennenswerten Wert hat oder nicht, ohne über die Konsequenzen nachzudenken. AP-Wert: –10 Abenteuerpunkte
+      Naiv: Der Held ist gutherzig und naiv, vertraut den falschen Leuten und kann sich kaum vorstellen, dass man manche Leute es nicht gut mit ihm meinen. Er wird auch durch Enttäuschungen nicht vorsichtiger. AP-Wert: –10 Abenteuerpunkte
+      Neugier: Jeder Abenteurer ist neugierig, aber einige Abenteurer werden so von ihrer Neugierde getrieben, dass sie unnötige Risiken eingehen, um sie zu befriedigen. AP-Wert: –5 Abenteuerpunkte
+      Rachsucht: Während jähzornige Helden sofort ihrer Wut freien Lauf lassen, sind rachsüchtige besonnener und planen langfristig, wie sie sich für Kränkungen, egal wie gering, rächen können. AP-Wert: –5 Abenteuerpunkte
+      Spielsucht: Spielsüchtige lassen sich leicht zu riskanten Glücksspielen und Wetten verleiten. Oft führt die Spielsucht zu hohen Spielschulden. AP-Wert: –5 Abenteuerpunkte
+      Verschwendungssucht: Geld bleibt nicht lange im Besitz des Helden. Er gibt es mit vollen Händen (für sinnlose Dinge) aus. AP-Wert: –5 Abenteuerpunkte
+      Sikaryan-Durst (nur für Sikaryan-Räuber; automatisch vergeben bei Zustand Sikaryan-Verlust): Diese Schlechte Eigenschaft sorgt dafür, dass ein Sikaryan-Räuber seinen Hunger stillen will. Je höher sein Sikaryan-Verlust ist, desto eindringlicher will er dem Verlangen nachgehen und ist bereit, seine Tarnung aufzugeben und sich auf den nächsten Kulturschaffenden zu stürzen.
+    effects:
+      - provides: { text_by_option: sid }
+        # The line for the hero's own Eigenschaft is what the sheet and the SE1 check show as
+        # the trigger ("zweifelt nicht an den Worten höhergestellter Personen …"), so the player
+        # sees what they are resisting. Exhibitionismus, Lüsternheit and Voyeurismus (sid 12–14)
+        # are not on this page; their text would come from their own book.
+
+  - id: SE7
+    text: "Voraussetzung: Keine"
+    effects: none
+    why: no prerequisite
+
+  - id: SE8
+    text: "AP-Wert: je nach Schlechter Eigenschaft"
+    effects: none
+    why: cost, not a rule at the table (per Eigenschaft in SE6)
+
+  - id: SE9
+    text: >
+      Anmerkung: "Sikaryan-Durst" als weitere Ausgestaltung der "Schlechte Eigenschaft"
+      eingeführt in: Aventurisches Bestiarium II, Seite 118 / Aventurisches Götterwirken II,
+      Seite 182
+    effects: none
+    why: an editor's note on where SE6's last entry comes from
+
+rulings:
+  - id: schlechte-eigenschaft-check
+    status: open
+    question: >
+      The GM says a trigger is present (for Boronmir: a superior's order that makes no sense).
+      What does the app offer for the Willenskraft check SE1 calls for?
+    context: >
+      The trigger is the GM's to see and the consequence is roleplay; the check is the only
+      mechanical part. Today the sheet lists "Schlechte Eigenschaft (Autoritätsglaube)" with the
+      rule text behind a swipe (HeroDetailView.disadvantagesSection, lookupActions); nothing
+      offers the check, and a Willenskraft check opened from the talent list does not mention
+      the Eigenschaft (TalentProbeModal.hints). The GM's modifier (SE4) is an input either way.
+    situations: [boronmir-neu 19.10, boronmir-neu 19.11, boronmir-neu 19.12]
+    options:
+      a: { says: "A 'Beherrschen' action on the disadvantage opens the Willenskraft check, titled with the Eigenschaft and its trigger text (SE6), with the GM's modifier as its own line; a failure is logged.", app: "an action on the sheet's disadvantage row → TalentProbeModal for Willenskraft with a cause and a GM stepper; log line on failure" }
+      b: { says: "A hint on every Willenskraft check: 'Schlechte Eigenschaft (Autoritätsglaube): Probe zum Beherrschen'.", app: "a SkillCheckHint in TalentProbeModal for TAL_23, like Aufmerksamkeit's" }
+      c: { says: "Text only: the sheet shows the rule; the player rolls Willenskraft from the talent list.", app: "as today" }
+    recommended: a
+    why_recommended: >
+      the check has a cause, and a check that carries its cause is what DISADV_57 and SA_40 already
+      need (a check knows why it is rolled); starting from the disadvantage puts it where the
+      player looks when the GM says "Autoritätsglaube!", and the log keeps the result. A hint on
+      every Willenskraft check (b) would show on the checks it has nothing to do with, the
+      mistake the app made with Aufmerksamkeit (boronmir-sf 14.15)
+    answer: null

@@ -2,7 +2,7 @@
 
 **Status: draft.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
 
-How Boronmir's AT, PA, AW and INI come about, what his weapons hit for, and how his Großschild
+How Boronmir's AT, PA, AW and INI come about (from his 2026-09-24 sheet), what his weapons hit for, and how his Großschild
 parries. These rules sit under every other example: each one's `base_hero` numbers come from here.
 
 ## Rules covered
@@ -68,22 +68,26 @@ pages; each clause from another page names it (`page:`). That is a format questi
 
 ## Boronmir's numbers
 
-MU 14, GE 14, KK 15 (each +2); Hiebwaffen 12, Schwerter 12, Schilde 9.
+From the 2026-09-24 export: MU 14, GE 14, KK 14 (each +2); Hiebwaffen 14, Schwerter 12,
+Schilde 10.
 
 | | AT | PA (weapon) | PA (shield, active) | TP |
 |---|---|---|---|---|
-| Rabenschnabel | 14 | 8 − 1 = **7** | — | 1W6+4 **+1** (KK 15 > 14) |
-| Langschwert | 14 | **8** (max(GE, KK) → +2) | — | 1W6+4 (15 is not above 15) |
-| Rabenschnabel + Großschild | 14 − 1 = **13** | 7 + 3 = **10** | 7 + 2 × 3 = **13** | 1W6+5 |
+| Rabenschnabel | 16 | 9 − 1 = **8** | — | 1W6+4 (KK 14 is not above 14) |
+| Langschwert | 14 | **8** (max(GE, KK) → +2) | — | 1W6+4 (14 is not above 15) |
+| Rabenschnabel + Großschild | 16 − 1 = **15** | 8 + 3 = **11** | 7 + 2 × 3 = **13** | 1W6+4 |
 | Langschwert + Großschild | **13** | 8 + 3 = **11** | **13** | 1W6+4 |
-| Großschild as a weapon | 11 − 6 = **5** | — | — | 1W6+1 (KK 15 < 16) |
+| Großschild as a weapon | 12 − 6 = **6** | — | — | 1W6+1 (KK 14 < 16) |
 
-AW 14 / 2 = **7**; INI-Basiswert (14 + 14) / 2 = **14**. In his Plattenrüstung (Belastung II after
-Belastungsgewöhnung I) every AT, PA and AW is 2 lower, and INI is 12 + 1W6.
+AW 14 / 2 = **7**; INI-Basiswert (14 + 14) / 2 = **14**. In his Plattenrüstung (Belastung I after
+Belastungsgewöhnung II) every AT, PA and AW is 1 lower, and INI is 13 + 1W6.
+
+None of his weapons gets a Schadensbonus any more: at KK 14 he is not above any of their
+thresholds. The rule is kept with a hero who is (16.22).
 
 ## Situations
 
-In [`situations/kampfwerte.yaml`](./situations/kampfwerte.yaml), 16.1–16.21. The rules as draft YAML:
+In [`situations/kampfwerte.yaml`](./situations/kampfwerte.yaml), 16.1–16.22. The rules as draft YAML:
 [`kampfwerte`](./rules/core/kampfwerte.yaml), [`schaden`](./rules/core/schaden.yaml),
 [`schilde`](./rules/core/schilde.yaml), [`at-pa-modifikatoren`](./rules/core/at-pa-modifikatoren.yaml).
 
@@ -93,11 +97,12 @@ Checked against `OptolithImportService` (parseCombatTechniques, parseItems, comp
 `DerivedValueFormulas`, `Hero`, `CombatAttackViews`, `DefenseRoute`, `CombatInitiativeRollView`,
 `CombatDamageViews`.
 
-- **No Schadensbonus, ever** (16.3, 16.7). The import reads the TP dice and flat bonus
+- **No Schadensbonus, ever** (16.22). The import reads the TP dice and flat bonus
   (`formatDamage`) and drops `primaryThreshold`; nothing adds it later (`DamageModifiers.lines`).
-  Boronmir's Rabenschnabel hits for 1W6+4 instead of 1W6+5. The Patzer table's "Eigener
-  Waffenschaden (mit Schadensbonus)" (`FumbleTable`) names a bonus the app never computes. Basis:
-  page (S3). Example 18 shows it too.
+  A Rabenschnabel in KK 16 hands hits for 1W6+4 instead of 1W6+6. Boronmir's own TP are right
+  only because his KK 14 is not above any threshold (16.3, 16.7), and the app never says that
+  no bonus applies. The Patzer table's "Eigener Waffenschaden (mit Schadensbonus)"
+  (`FumbleTable`) names a bonus the app never computes. Basis: page (S3).
 - **The weapon parry is offered against arrows** (16.9). The defence screen never asks whether the
   attack is ranged (`CombatDefenseSetupView`, `OpponentProfile`), so Boronmir can "parry" an arrow
   with his Langschwert at 11 instead of only with the shield at 13 or AW 7 — and without a shield,
@@ -131,7 +136,8 @@ Aside, from the cross-check: the tests never assert Boronmir's derived combat va
 (`HeroImportTests` checks attributes, item counts, the shield's StP and the armour's RS/BE). The
 hand-built fixtures that stand in for his gear (`CombatDefenseSetupTests`, `DamageModifiersTests`,
 `RuleEvaluatorTests`, `WeaponInventoryTests`) use a Großschild of AT 6 / PA 11 and a Langschwert of
-PA 7; the import gives AT 5 / PA 13 and PA 8.
+PA 7; the import gives AT 6 / PA 13 and PA 8. `Hesindion/Resources/UITestHero.json` is still his
+earlier sheet (KO 13, KK 15, Hiebwaffen 12, Schilde 9).
 
 ## Rulings
 

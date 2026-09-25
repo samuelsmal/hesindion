@@ -99,7 +99,7 @@ clauses:
     effects:
       - when: { attack: hit, loadout.weapon.kind: melee }
         add: { to: tp, value: "max(0, leit - weapon.schadensschwelle)" }
-        # A line of its own: "Schadensbonus KK 15 über 14: +1". `leit` is the higher of the
+        # A line of its own: "Schadensbonus KK 16 über 14: +2". `leit` is the higher of the
         # weapon's Leiteigenschaften (S4), as for PA (kampfwerte.KW7: "wählen").
         # FORMAT: the threshold is a weapon value (the table's "L+S" column, e.g. "KK 14",
         # "GE/KK 15"), read from the equipment row; Optolith exports it as

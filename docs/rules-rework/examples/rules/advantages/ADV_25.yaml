@@ -18,7 +18,7 @@ clauses:
       - add: { to: le.base, value: 1, per: tier }
         # FORMAT: modifies a *derived value* (the LE maximum), not a check — like SA_51 on the
         # INI Basiswert. Its line belongs in the LE breakdown on the hero sheet:
-        # "LE 33 = Grundwert 5 + 2×KO 26 + Hohe Lebenskraft II 2" (lebensenergie.LE3). The page
+        # "LE 37 = Grundwert 5 + 2×KO 30 + Hohe Lebenskraft II 2" (lebensenergie.LE3). The page
         # says "Grundwert" (the species value); the Basiswerte page's own example adds it on the
         # Basiswert line (lebensenergie.LE4). Either way it is one more line in the same sum.
         # Through the LE maximum it also moves the Schmerz thresholds (COND_6.SZ3).

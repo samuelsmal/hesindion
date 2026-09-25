@@ -128,7 +128,9 @@ Chosen to cover each kind of mechanic ADR-0013's census found (flat modifiers, o
 effects, per-Stufe scaling, preconditions, dice, overriding a constant, legality, action economy,
 Zustände) and every place where two rules meet. Examples 14–18 fill in the rest of what affects
 one hero, Boronmir ([`sweeps/boronmir.yaml`](./sweeps/boronmir.yaml)): his own abilities, the core
-combat values, and his horse and weapons.
+combat values, and his horse and weapons. Example 19 adds what he took in his 2026-09-24 export.
+Examples 20–22 are a probe beyond melee (magic, ranged combat, talent checks), to find engine
+concepts the rest of the set does not need; each write-up ends with what it found.
 
 | # | Example | Rules | What it exercises | Status |
 |---|---|---|---|---|
@@ -150,6 +152,10 @@ combat values, and his horse and weapons.
 | 16 | [Kampfwerte, Schaden und Schilde](./kampfwerte.md) | kampfwerte, schaden, schilde, at-pa-modifikatoren | derived values and their breakdown (AT/PA/AW/INI, rounding, the higher Leiteigenschaft); a weapon value above a threshold (Schadensbonus); a passive vs an active choice per defence (shield bonus single or doubled); a defence forbidden by the kind of attack; a rolled value whose modifiers stay live (INI) | **draft, for review** |
 | 17 | [Kampfsituationen](./kampfsituationen.md) | GRW_passierschlag, GRW_angriffVonHinten, GRW_beengteUmgebung, GRW_groessenkategorie | a free attack with no defence and no crits; a GM fact that also unlocks another rule's clause (RK5); a penalty table keyed on the piece in hand (reach or shield size); a defence restriction by opponent size | **draft, for review** |
 | 18 | [Kupperus und Boronmirs Waffen](./kupperus-und-waffen.md) | svellttaler-kaltblut, maechtiger-schlag, ruhiges-temperament, ITEMTPL_19, ITEMTPL_35, ITEMTPL_29, waffeneigenschaften | creature rules (a profile read by another rule, an animal's advantage landing on the rider's check); weapon data; a Fokusregel that covers only some clauses of a file | **draft, for review** |
+| 19 | [Boronmirs neue Fähigkeiten](./boronmir-neu.md) | SA_862 Formation, ADV_54 Eisern, DISADV_37 Schlechte Eigenschaft | one SF written as a larger copy of another, and the two meeting; an advantage on a value defined by a Fokusregel; a disadvantage whose only effect is a check it offers, with a GM modifier and a select option (`sid`) naming which one | **draft, for review** |
+| 20 | [Probe: Zaubermodifikationen](./probe-magie.md) | zaubermodifikationen, SA_74 Verbotene Pforten | a rule moving the parameters of the action being taken (cost, casting time, range) along ordered scales; costs paid into named pools, split and falling through (AsP, then LeP); a cost that recurs over game time | **probe, draft** |
+| 21 | [Probe: Fernkampf](./probe-fernkampf.md) | fernkampf, ladezeiten, SA_60 Schnellladen | a process that runs over several actions (Zielen, Laden); item state that changes in a fight and gates actions (loaded, strung); a weapon value changed by another rule | **probe, draft** |
+| 22 | [Probe: Fertigkeitsproben](./probe-fertigkeiten.md) | fertigkeitsproben, ADV_4 Begabung, SA_9 Fertigkeitsspezialisierung | a check as a staged procedure (attributes, pool, dice, result, QS) with rules hooking into each stage; an effect replacing a die after the roll | **probe, draft** |
 
 ## What the app gets wrong
 
@@ -215,7 +221,7 @@ open ruling are listed in the write-ups, not here.
 | 15 | A Vergiftet or Krank hero regenerates normally | `RegenerierenSheet` | page |
 | 15 | Regeneration is never halved in a wet or cold camp, never stopped in a storm or tied to a horse, and the advantage's bonus is added even then | `RegenerierenSheet` | page; ruling vr-halving |
 | 15 | Schnell wieder auf den Beinen is ignored: Betäubung and Berauscht show the full 3 h and 2 h | catalog `ADV_75` todo, `state.betaeubung.removal` / `state.berauscht.removal` | page; ruling alcohol-scope |
-| 16, 18 | No Schadensbonus: TP never include the Leiteigenschaft above the Schadensschwelle (Boronmir's Rabenschnabel 1W6+4, should be 1W6+5), though the export carries `primaryThreshold` on every weapon | `OptolithImportService.formatDamage`, `parseItems`, `DamageModifiers.lines` | page |
+| 16, 18 | No Schadensbonus: TP never include the Leiteigenschaft above the Schadensschwelle (a Rabenschnabel with KK 15 does 1W6+4, should be 1W6+5; with KK 16, 1W6+6: 16.22, 18.17), though the export carries `primaryThreshold` on every weapon. Boronmir's own 1W6+4 is right only because his KK 14 is at the threshold | `OptolithImportService.formatDamage`, `parseItems`, `DamageModifiers.lines` | page |
 | 16 | The weapon parry (with the passive shield bonus) is offered against ranged attacks; the defence never asks whether the attack is ranged | `CombatDefenseSetupView`, `OpponentProfile` | page |
 | 16 | A Parierwaffe gives no passive PA bonus, and a Linkhand turns the loadout into a dual-wield | `Hero.passiveShieldPABonus`, `OptolithImportService` (drops `isParryingWeapon`), `Hero.isDualWielding` | page |
 | 16 | Peitschen attack with MU instead of FF | `OptolithImportService.parseCombatTechniques`, `parseItems` | page |
@@ -239,7 +245,19 @@ open ruling are listed in the write-ups, not here.
 | 18 | Waffenvorteile and -nachteile always apply; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page; ruling rabenschnabel-waffeneigenschaft |
 | 18 | With that Fokusregel on, the Großschild's GS −1 and its INI-tie rule are missing, and its +1 PA note says "Fernkampf" where the page says Pfeile and Bolzen | `Hero.totalGsPenalty`, `shieldNote` | page |
 | 18 | Kupperus can carry 210 Stein (Packesel); the app gives every pet KK × 2 = 50 | `Pet.carryingCapacity`, `Hero.totalCarryingCapacity` | page |
-| 18 | Ruhiges Temperament (+1 on Reiten) is unknown to the app; the export carries no animal Vorteile | `CombatMountPreCheckView`, `parsePets` | page |
+| 18 | Ruhiges Temperament (+1 on Reiten) is never applied: Boronmir's Reiten checks on Kupperus get 0, not +1. The export has no field for an animal's Vorteile; Kupperus's free-text `skills` names it (typed by the player), and the app shows that text only | `CombatMountPreCheckView`, `parsePets` (`Pet.specialSkills`) | page |
+| 19 | Formation (SA_862) does not exist: no toggle, no +2 AT or VW | catalog SA_862 `todo`, `CombatAbility`, `CombatSetupView` | page |
+| 19 | Eisern's +1 on the Wundschwelle is applied but named nowhere: the sheet shows only the total | `HeroDetailView` (`wundschwelle.max`), `CombatWundschwelleRow` | page |
+| 19 | Schlechte Eigenschaft offers no Willenskraft check, and the GM's modifier for it has no line of its own | `HeroDetailView.disadvantagesSection`, `TalentProbeModal`, catalog DISADV_37 `todo` | page |
+| 20 | No spell ever costs AsP: the cost is parsed with `Int(aeCostShort)`, and every one of the 781 costs in `rules.db` carries text ("16 AsP", "4 AsP + 2 AsP pro 5 Min") | `SpellProbeModal.baseCost`, `CombatSpellViews` | data |
+| 20 | No Zaubermodifikation can be chosen (only "max N" as text); Geste/Formel weglassen never count toward the limit; a maintained spell's upkeep is never charged; Verbotene Pforten does not exist | `SpellProbeModal`, `Situation.spellModifications` (never set) | page |
+| 20 | The Ablenkung table changes the spell check; the page puts it on the Selbstbeherrschung (Störungen ignorieren) check | `SpellProbeModal` | page |
+| 21 | No ranged modifier names a rule (`rules: []` on all eight), and the distance TP is computed in the view | `RangedModifiers` | page |
+| 21 | A ranged attack can be taken in melee; mounted there is no Trab and the Langbogen is offered; an invisible target is −6 instead of hit on a 1 only | `CombatRootView`, `RangedModifiers` | page |
+| 21 | No Ladezeit, so Schnellladen does nothing; Zielen gives +2/+4 without spending the actions; cover can only be entered as a smaller "Größe" | `CombatFernkampfExecutionView`, `RangedModifiers` | page |
+| 22 | No Fertigkeitsspezialisierung is applied (checks carry no Anwendungsgebiet); a hand-entered +2 lowers the attributes' Erschwernis instead of raising the FW, a different QS (22.3) | `TalentProbeModal`, `SkillCheckModal` | page |
+| 22 | Begabung does not exist; the only reroll is a Schip, offered only on a failure | `SkillCheckModal` | page |
+| 22 | A check can be rolled with an effective attribute of 0 or less; the modifier can be set per attribute, the page has one for all three | `SkillCheckModal` | page |
 
 Confirmed correct: Belastungsgewöhnung (−1 Belastung per Stufe, extras kept); Belastung on spell
 and liturgy casting; Schmerz on every check; the −5 Zustand cap; eight Zustand levels making a hero

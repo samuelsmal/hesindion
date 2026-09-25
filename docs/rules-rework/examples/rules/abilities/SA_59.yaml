@@ -128,5 +128,5 @@ rulings:
       (reiterkampf.passierschlag-on-mount), so the player states the opponent's manoeuvre (ADR-0005)
       and the app does the rest. The app needs a current-StP field on Shield beside the maximum it
       keeps today (Shield.structurePoints, from Optolith's stp), and a way to repair it. Today the
-      defence screen offers the weapon parry (Boronmir with the Rabenschnabel: 10) and the full
+      defence screen offers the weapon parry (Boronmir with the Rabenschnabel: 11) and the full
       shield parry (13), and damage taken goes to the hero's LeP.

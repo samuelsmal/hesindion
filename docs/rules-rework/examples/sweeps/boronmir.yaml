@@ -6,7 +6,7 @@
 # the like that reach him without being on his sheet, each with why. The shared rulings
 # (rules/rulings.yaml) are always in.
 name: Boronmir
-hero: ../../../sample_heros/Boronmir Siebenfeld von Greifenfurt.json
+hero: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 
 skip:
   SA_27: Schrift — no roll or value the app computes
@@ -34,7 +34,7 @@ rules:
   beengte-umgebung: a Langschwert and a Großschild in a corridor
   groessenkategorie: mounted on a large horse, against large opponents
   vorteilhafte-position: mounted against foot fighters (Reiterkampf RK2, Golgariten-Stil)
-  beidhaendiger-kampf: he has Beidhändig and fights with weapon and shield
+  beidhaendiger-kampf: he fights with weapon and shield (a double attack with the Großschild)
   kampfsonderfertigkeiten: one Basismanöver and one Spezialmanöver per action
   schicksalspunkte: his Schips, on attacks, defences and Zustände
   lebensenergie: his LE, with Hohe Lebenskraft
@@ -46,7 +46,7 @@ rules:
   STATE_10: Liegend, knocked down or thrown from the horse
   STATE_13: Überrascht
   zustaende: the Zustand cap and Handlungsunfähig
-  trefferzonen: the Fokusregel, when his group plays it
+  trefferzonen: the Fokusregel, when his group plays it; his Wundschwelle, with Eisern
   trefferzonen-ruestungsschutz: armour by zone, with the Plattenrüstung
   waffeneigenschaften: the Fokusregel behind his weapons' Vorteile and Nachteile
   # on horseback

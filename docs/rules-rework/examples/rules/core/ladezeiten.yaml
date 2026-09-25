@@ -1,0 +1,109 @@
+# DRAFT FORMAT — see ../../README.md.
+# Probe (example 21).
+id: ladezeiten
+name: Ladezeiten
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Spezielle_Fernkampfregeln.html
+  book: Regelwerk
+  page: "245 f."
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# The subpage Spezielle_Fernkampfregeln/ladezeiten.html returned an empty article; the parent
+# page carries the text. The Ladezeit is weapon data: Optolith's `reloadTime` (Kurzbogen 1,
+# Langbogen 2, leichte Armbrust 8, schwere Armbrust 15, Wurfdolch 1).
+#
+# FORMAT: state that belongs to an *item* and changes during the fight — loaded or not, and how
+# many of the Ladezeit's actions are done. SA_59's shield StP raised item state first (a
+# FORMAT note, unencoded); this is the first rule that needs it to *progress* over actions.
+# The app keeps none: the Fernkampf button is available every action unless a Ladehemmung
+# (Fernkampf-Patzer) shuts it (Hero.activeCombatJamUntilRound).
+
+clauses:
+  - id: LZ1
+    text: >
+      Alle Fernkampfwaffen müssen erst für den Einsatz vorbereitet werden. Die normale Zeit, die
+      man für diesen Vorgang braucht, bis man einen Fernkampfangriff ausführen kann, wird
+      Ladezeit genannt.
+    effects:
+      - provides: { item.value: ladezeit, from: weapon.reloadTime }
+        # A value of the item that other rules modify (SA_60), like a derived value (SA_51 on
+        # INI) — but on the weapon, not the hero.
+
+  - id: LZ2
+    text: >
+      Nach der letzten Aktion der Ladezeit ist die Fernkampfwaffe bereit. Danach kann eine Aktion
+      für einen Fernkampfangriff aufgewandt werden. Fällt eine Ladezeit auf 0 Aktionen, so
+      benötigt der Fernkämpfer 1 freie Aktion statt einer regulären Aktion zum Nachladen. Der
+      Auflistung der Waffen kann man die Ladezeiten der einzelnen Waffen entnehmen.
+    effects:
+      - process:
+          id: laden
+          of: item
+          steps: item.ladezeit
+          step: { costs: { action: 1 } }
+          completes: { set: { item.loaded: true } }
+        # FORMAT: the same process shape as fernkampf.FK11 (Zielen), bound to the weapon and
+        # counted in the weapon's own (modifiable) number of actions.
+      - when: { item.ladezeit: 0 }
+        process: { id: laden, step: { costs: { freeAction: 1 } }, steps: 1 }
+        # 0 changes the *kind* of action, not only the count: a floor with a transformation.
+      - forbid: { attack: ranged, when: { item.loaded: false } }
+        because: "die Waffe ist nicht geladen"
+      - after: { attack: ranged, set: { item.loaded: false } }
+        # The shot empties the weapon (not an Armbrust: LZ3).
+
+  - id: LZ3
+    text: >
+      Das Laden bis zum Einsatz der Fernkampfwaffe zählt als länger dauernde Handlung (eventuell
+      inklusive Zielens). Ausgenommen hiervon sind Armbrüste, die, wenn sie einmal geladen sind,
+      nur noch eine freie Aktion zum Bereitmachen benötigen.
+    effects:
+      - when: { weapon.technique: CT_1, item.loaded: true }
+        requires: { costs: { freeAction: 1 }, before: { attack: ranged } }
+        # A loaded crossbow stays loaded (it can be carried loaded); readying it is a free
+        # action. Loading and Zielen may run as one länger dauernde Handlung ("eventuell
+        # inklusive Zielens"): the two processes may chain.
+
+  - id: LZ4
+    text: >
+      Ist die Ladezeit größer als 1, gilt das Nachladen als länger dauernde Handlung (siehe Länger
+      dauernde Handlungen).
+    effects: none
+    why: >
+      carried by LZ2's process; what interrupts a länger dauernde Handlung is on a page not found
+      on 2026-09-24 (fernkampf.zielen-interrupted asks the same for aiming)
+
+  - id: LZ5
+    text: >
+      Wenn ein Bogen nicht gespannt ist und man die Bogensehen noch einhängen muss, dauert es 4
+      Aktionen, ihn schussbereit zu machen. Dabei kann man keine anderen Aktionen als das Spannen
+      ausführen.
+    effects:
+      - when: { weapon.technique: CT_2, item.strung: false }
+        process: { id: spannen, of: item, steps: 4, step: { costs: { action: 1 } }, exclusive: true, completes: { set: { item.strung: true } } }
+        # Another item state (gespannt); "keine anderen Aktionen" — exclusive for its duration.
+
+  - id: LZ6
+    text: >
+      Armbrüste neu zu bespannen ist eine Angelegenheit von mehreren Minuten und im Kampf daher
+      meist sinnlos. Dies gilt als länger dauernde Handlung.
+    effects: none
+    why: minutes, outside combat time; shown as text
+
+  - id: LZ7
+    text: >
+      Bolzen, Pfeile und Kugeln können nach dem Abschießen zwar wieder eingesammelt werden, gelten
+      aber als unbrauchbar für eine weitere Benutzung. Wurfgeschosse können hingegen eingesammelt
+      und wiederverwendet werden.
+    effects:
+      - after: { attack: ranged, costs: { item: weapon.ammunition, count: 1 } }
+        # A variation of schicksalspunkte's `costs: { schip: 1 }`, spending an inventory item
+        # instead of a pool. A thrown weapon leaves the hand (the loadout), and can be picked up
+        # again. The app tracks no ammunition.
+
+  - id: LZ8
+    text: "Mögliche Wiederverwendung von Geschossen (Optionale Regel)"
+    effects: none
+    why: a link to an optional rule, not read

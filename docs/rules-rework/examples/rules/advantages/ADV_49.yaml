@@ -86,8 +86,9 @@ rulings:
       Stufen "erlitten" give "nur die Auswirkungen von Stufe II"). The app lowers the Stufe itself
       (Hero.effectiveSchmerzLevel = raw − 1 feeds level(of:), activeStates, totalZustandLevels and
       the chip; StateModifiers.penaltyDefinitions labels the line with the lowered Stufe and cites
-      only COND_6). So Boronmir in Plattenrüstung (Belastung II) with Schmerz III and Betäubung III
-      has 8 Stufen and is Handlungsunfähig; the app counts 7 (lebensenergie 15.8).
+      only COND_6). So Boronmir in Plattenrüstung (Belastung I, with Belastungsgewöhnung II) with
+      Schmerz III, Betäubung III and Furcht I has 8 Stufen and is Handlungsunfähig; the app counts
+      7 (lebensenergie 15.8).
 
   - id: zaeher-hund-iv
     status: decided

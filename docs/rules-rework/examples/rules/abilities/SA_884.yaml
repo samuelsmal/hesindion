@@ -12,6 +12,8 @@ source:
   hash: null
 reviewed: null
 # The wiki also lists Kodex des Schwertes pp. 301–302. Optolith's text matches the page.
+# Boronmir gave it up on 2026-09-24 for Formation (SA_862, example 19), its larger sibling:
+# five fighters, +2. Example 14 adds it back to him.
 
 clauses:
   - id: P1

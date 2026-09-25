@@ -1,0 +1,108 @@
+# DRAFT FORMAT — see ../../README.md.
+id: ADV_4
+name: Begabung
+kind: advantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Begabung
+  book: Regelwerk
+  page: 163
+  checked: 2026-09-24
+  hash: null
+reviewed: null
+# Probe example 22. Optolith: `max: 3`, selectOptionCategories SKILLS, SPELLS, LITURGICAL_CHANTS;
+# the hero file names the Fertigkeit by `sid` (e.g. "TAL_10"), one instance per Fertigkeit.
+# FORMAT: the rule is instanced per select option, and every effect is gated on "the check is on
+# the chosen Fertigkeit" (`option.sid`). DISADV_37 (example 19) needs the same per-option
+# instancing for its text; here the option gates the effect itself.
+# The Fertigkeitsprobe this acts on is rules/core/fertigkeitsproben.yaml.
+
+clauses:
+  - id: B1
+    text: >
+      Ein begabter Abenteurer kann bei jeder Probe auf eine bestimmte Fertigkeit einen W20 neu
+      würfeln.
+    effects:
+      - offer:
+          reroll: { dice: 1, of: check.rolls }
+          when: { check: { skill: option.sid } }
+          once_per: check
+          after: rolled          # B2: the player sees all three dice first
+          before: result
+        # FORMAT: an effect on the *dice* of a check, not on a value: it acts after the roll and
+        # before the result is computed, and the result is then recomputed from the new dice.
+        # Nothing in rules/ does this; the closest are passierschlag.PS4 (conditions on a die's
+        # face: `roll: 1`, `forbid: { roll: [kritischerErfolg, patzer] }`) and kampfwerte's INI
+        # roll (`keep: rolled.w6`), which read dice but never replace one.
+
+  - id: B2
+    text: >
+      Der Spieler kann zunächst die 3W20 würfeln und sich eines der drei Ergebnisse aussuchen,
+      dass er neu würfeln kann. Es gilt das bessere Ergebnis beider Würfe.
+    effects:
+      - choose: { die: player, from: check.rolls }
+        keep: better
+        # "Better" per die: on a Teilprobe a lower number is never worse (fertigkeitsproben.FP2),
+        # so `better` = min(old, new). A rerolled 20 therefore never counts, and a reroll can
+        # never create a Doppel-20 (situation 22.5). Both dice are logged.
+        # FORMAT: a value chosen from two rolls (`keep: better`) — the log and the breakdown must
+        # show both and which one counted.
+
+  - id: B3
+    text: >
+      Eine Begabung muss für jede Fertigkeit einzeln gewählt werden, also zum Beispiel auf ein
+      bestimmtes Talent, einen Zauber oder eine Liturgie.
+    effects: none
+    why: >
+      purchase; carried by the per-option gate on B1. "Fertigkeit" covers talents, spells and
+      liturgies, so the offer belongs on every 3W20 check the app rolls (TalentProbeModal,
+      SpellProbeModal, the liturgy checks), keyed by the option's id.
+
+  - id: B4
+    text: >
+      Man kann nicht mehrfach in einer Fertigkeit begabt sein und somit zwei oder gar drei
+      W20-Würfe in einer Probe wiederholen.
+    effects: none
+    why: purchase legality (Optolith's); B1's once-per-check limit is what the table sees
+
+  - id: B5
+    text: Fällt eine Doppel-20 oder Dreifach-20 kann man diesen Vorteil nicht nutzen.
+    effects:
+      - forbid: { offer: B1, when: { check.result: [patzer] } }
+        because: "Doppel-20: Begabung nicht erlaubt"
+        # Read on the first roll: a Patzer cannot be undone by this advantage (22.6).
+
+  - id: B6
+    text: >
+      Eine Begabung kann nur für eine Fertigkeit, nicht aber für eine Kampftechnik gewählt
+      werden (dafür gibt es jedoch den Vorteil Waffenbegabung).
+    effects: none
+    why: purchase; Optolith offers no combat technique as an option, so no attack is ever gated in
+
+  - id: B7
+    text: >
+      Ein Einsatz von Schicksalspunkten ist vor oder nach dem Einsatz einer Begabung erlaubt
+      (siehe Seite 29). Dadurch ist es möglich, mehrfach neu zu würfeln oder eine andere Wirkung
+      der Schicksalspunkte mit der Begabung zu kombinieren.
+    effects:
+      - allow: { together: [B1, schicksalspunkte.neuer-wurf], order: any }
+        # FORMAT: two effects on the same dice, in an order the player chooses — the second sees
+        # the dice the first left. Variation of the `before:` ordering in ADV_44 / regeneration
+        # (a fixed order between two effects), but here the order is the player's, per check.
+        # schicksalspunkte.neuer-wurf is not written yet (the file says so in its header).
+
+  - id: B8
+    text: >
+      Voraussetzung: Kein Nachteil Unfähig für diese Fertigkeit, nicht mehr als drei Begabungen
+      pro Person
+    effects: none
+    why: purchase prerequisite
+
+  - id: B9
+    text: "AP-Wert: 6/12/18/24 Abenteuerpunkte (A-/B-/C-/D-Fertigkeit)"
+    effects: none
+    why: cost
+
+  - id: B10
+    text: "Anmerkung: siehe auch: Begabungen durch Liturgien"
+    effects: none
+    why: a pointer to other pages

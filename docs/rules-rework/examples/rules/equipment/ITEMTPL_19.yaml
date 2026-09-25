@@ -39,8 +39,8 @@ clauses:
       - provides: { loadout.weapon: stats }
         # The row. AT/PA-Mod: the AT- und PA-Modifikatoren rule (added after the base values).
         # L+S: the Schadensbonus on the Kampftechniken page — +1 TP per point of the
-        # Leiteigenschaft above the threshold (schaden.S3): Boronmir's KK 15
-        # gives +1. The app ignores the threshold: FumbleEffectResolver says "no export carries
+        # Leiteigenschaft above the threshold (schaden.S3): Boronmir's KK 14 is the threshold
+        # itself, so +0 (before 2026-09-24 his KK 15 gave +1). The app ignores the threshold: FumbleEffectResolver says "no export carries
         # the threshold (issue #14)", but the hero file has `primaryThreshold: { threshold: 14 }`
         # on the item, and OptolithImportService.parseItems does not read it.
 

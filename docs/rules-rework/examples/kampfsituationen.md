@@ -3,8 +3,9 @@
 **Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
 
 Four short core rules the app's catalog marks `implemented`. The point of drafting them is what
-the app leaves out or gets wrong. The hero is Boronmir: Rabenschnabel and Langschwert (both
-mittel), Großschild, on foot and on Kupperus (a Svellttaler Kaltblut, groß).
+the app leaves out or gets wrong. The hero is Boronmir as of the 2026-09-24 export: Rabenschnabel
+(AT 16) and Langschwert (AT 14), both mittel, Großschild, on foot and on Kupperus (a Svellttaler
+Kaltblut, groß).
 
 ## Rules covered
 
@@ -73,7 +74,7 @@ Per the page:
   weapon parry.** Reiterkampf RK5 (a shield blocks only from the front and the shield-arm side) is
   unencoded "because the app does not know the side". But the app already asks `fromBehind`.
   `CombatDefenseSetupView`, `DefenseRoute.parryPossible`, `Hero.passiveShieldPABonus`. Boronmir on
-  Kupperus: shield parry 12 and weapon parry 9 today; no shield parry and weapon parry 6 by the
+  Kupperus: shield parry 12 and weapon parry 10 today; no shield parry and weapon parry 7 by the
   page and ruling `mounted-from-behind-shield` (17.10). From the weapon-arm side the app never asks
   at all (open ruling `reiterkampf.mounted-attack-side`).
 - **Mounted, a Passierschlag from a fighter on foot damages the hero.** RK11 makes the mount the

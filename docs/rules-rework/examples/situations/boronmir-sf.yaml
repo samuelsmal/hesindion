@@ -2,26 +2,32 @@
 # Plänkler-Formation. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
 #
-# The hero is Boronmir (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json), always in
-# his Plattenrüstung. His values, derived as the app derives them (OptolithImportService:
+# The hero is Boronmir with his values as of 2026-09-24 (docs/sample_heros/Boronmir Siebenfeld von
+# Greifenfurt (2026-09-24).json), always in his Plattenrüstung. He dropped Finte, Schildspalter,
+# Vorstoß and Plänkler-Formation that day (he took Formation instead, example 19), so this example
+# adds SA_48, SA_59, SA_66 and SA_884 back; their prerequisites (GE 13, KK 13, Wuchtschlag I) he
+# still meets. His values, derived as the app derives them (OptolithImportService:
 # AT = KtW + (MU−8)/3, PA = ⌈KtW/2⌉ + (Leiteigenschaft−8)/3, both rounded down):
-#   MU 14 → +2 AT; KK 15 → +2 PA (Hiebwaffen and Schilde: KK; Schwerter: GE 14 / KK 15 → KK)
-#   Rabenschnabel (Hiebwaffen 12, AT 0 / PA −1):  AT 14, PA 7, with the Großschild's passive +3: 10
+#   MU 14 → +2 AT; KK 14 → +2 PA (Hiebwaffen and Schilde: KK; Schwerter: GE 14 / KK 14)
+#   Rabenschnabel (Hiebwaffen 14, AT 0 / PA −1):  AT 16, PA 8, with the Großschild's passive +3: 11
 #   Langschwert   (Schwerter 12, AT 0 / PA 0):    AT 14, PA 8, with the passive +3: 11
-#   Großschild    (Schilde 9, AT −6 / PA +3, StP 30): AT 5, PA 7 + 2 × 3 = 13  (schilde)
+#   Großschild    (Schilde 10, AT −6 / PA +3, StP 30): AT 6, PA 7 + 2 × 3 = 13  (schilde)
 #   AW: GE 14 / 2 = 7. Sinnesschärfe (TAL_10) FW 9.
-# Belastung: Plattenrüstung III, Belastungsgewöhnung I → II: −2 on AT, PA, AW on foot
-# (COND_1.B3 via SA_41.G1, belastung 2.1); mounted, −1 for Kampfproben (reiterkampf.RK7).
+#   Rabenschnabel TP 1W6+4: KK 14 is not above its Schadensschwelle KK 14, no Schadensbonus.
+# Belastung: Plattenrüstung III, Belastungsgewöhnung II → I: −1 on AT, PA, AW on foot
+# (COND_1.B3 via SA_41.G1, belastung 2.2); mounted, RK7 lowers it to none for
+# Kampfproben (reiterkampf.RK7).
 # Mounted on Kupperus against foot fighters: Vorteilhafte Position +2 AT/PA/AW, Golgariten-Stil
 # +2 AT (Rabenschnabel) and +1 PA, dodge −2 (reiterkampf 5.6).
 # `total` is the sum of the lines; `result` is the value on the check, from the base above.
 
-hero_file: ../../../sample_heros/Boronmir Siebenfeld von Greifenfurt.json
+hero_file: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 base_hero:
-  abilities: { SA_40: 1, SA_41: 1, SA_43: 1, SA_48: 1, SA_59: 1, SA_66: 1, SA_67: 1, SA_661: 1, SA_884: 1 }
+  abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1 }
+  added_for_this_example: { SA_48: 1, SA_59: 1, SA_66: 1, SA_884: 1 }   # dropped on 2026-09-24
   armour: [Plattenrüstung]
   loadout: { weapon: Rabenschnabel, shield: Großschild }
-  values: { Rabenschnabel: { at: 14, pa: 10 }, Langschwert: { at: 14, pa: 11 }, Großschild: { at: 5, pa: 13, stp: 30 }, aw: 7 }
+  values: { Rabenschnabel: { at: 16, pa: 11 }, Langschwert: { at: 14, pa: 11 }, Großschild: { at: 6, pa: 13, stp: 30 }, aw: 7 }
 
 situations:
 
@@ -33,11 +39,11 @@ situations:
     expect:
       offered: [{ choice: vorstoss, from: SA_66.V3 }]
       at:
-        total: 0
-        result: 14
+        total: 1
+        result: 17
         lines:
           - { value: 2, from: SA_66.V1 }
-          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
       not_allowed:
         - { defence: [pa, aw], until: round_end, because: SA_66.V2 }
     app_today: same, when the attack is the hero's first act of the round
@@ -78,11 +84,11 @@ situations:
     choose: { vorstoss: true, at: round_start, then: passierschlag }
     expect:
       passierschlag_at:
-        total: -6
-        result: 8
+        total: -5
+        result: 11
         lines:
           - { value: -4, from: passierschlag.PS2 }
-          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
         not_applied:
           - { rule: SA_66, reason: "a Passierschlag combines with no Kampfsonderfertigkeit (passierschlag.PS3)" }
       # Vorstoß is a manoeuvre, excluded from a Passierschlag (ruling passierschlag.passierschlag-sf).
@@ -94,7 +100,7 @@ situations:
     choose: { vorstoss: true, manoeuvre: wuchtschlag, tier: 1 }
     expect:
       combinable: [{ manoeuvres: [vorstoss, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
-      # AT +2 −2 −2 = −2 (result 12), TP 1W6+4 +2
+      # AT +2 −2 −1 = −1 (result 15), TP 1W6+4 +2
     app_today: one manoeuvre per attack — Vorstoß or Wuchtschlag
 
   # --- Schildspalter (SA_59) -----------------------------------------------------------------
@@ -106,9 +112,9 @@ situations:
     expect:
       offered: [{ manoeuvre: schildspalter, from: SA_59.SS1 }]
       at:
-        total: -2
-        result: 12
-        lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }]    # SA_59.SS5: no line of its own
+        total: -1
+        result: 15
+        lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }]    # SA_59.SS5: no line of its own
       tell:
         - { opponent: "Nur Schildparade oder Ausweichen", from: SA_59.SS1 }
         - { opponent: "Schildparade ohne Parade-Bonus des Schildes", from: SA_59.SS2 }
@@ -148,7 +154,7 @@ situations:
     choose: { manoeuvre: [schildspalter, wuchtschlag], tier: 1 }
     expect:
       combinable: [{ manoeuvres: [schildspalter, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
-      # AT −2 (SA_67.W1) −2 (Belastung) = −4, result 10; 1W6+4 +2 TP to the shield's StP
+      # AT −2 (SA_67.W1) −1 (Belastung) = −3, result 13; 1W6+4 +2 TP to the shield's StP
     app_today: one manoeuvre per attack
 
   - id: "14.13"
@@ -157,18 +163,18 @@ situations:
     expect:
       not_allowed: [{ defence: weaponParry, because: SA_59.SS1 }]
       shield_parry:
-        total: -8
-        result: 5
+        total: -7
+        result: 6
         lines:
           - { value: -6, from: SA_59.SS2, removes: schilde.SCH3, ruling: [SA_59.schildspalter-shield-bonus, SA_59.schildspalter-against-hero] }
-          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
-      aw: { total: -2, result: 5, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+      aw: { total: -1, result: 6, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       on_failed_defence:
         damage: { to: loadout.shield.structurePoints, from: SA_59.SS3, ruling: SA_59.schildspalter-against-hero }
         # the TP come off the Großschild's current StP (30 when whole), not Boronmir's LeP; at 0
         # the shield is destroyed and leaves the loadout
     app_today: >
-      the app cannot be told: weapon parry 10 − 2 and the full shield parry 13 − 2 are offered,
+      the app cannot be told: weapon parry 11 − 1 and the full shield parry 13 − 1 are offered,
       and the damage goes to Boronmir's LeP. The shield's StP are never reduced.
 
   # --- Aufmerksamkeit (SA_40) ----------------------------------------------------------------
@@ -182,7 +188,7 @@ situations:
         total: 2
         lines: [{ value: 2, from: SA_40.A1, ruling: SA_40.aufmerksamkeit-when }]
         # the toggle on. Belastung: off unless the player turns on the "Belastung zählt" toggle
-        # (COND_1.belastung-talents-maybe); with it, −2 more.
+        # (COND_1.belastung-talents-maybe); with it, −1 more.
     app_today: >
       the hint "Aufmerksamkeit: +2 auf Überraschung vermeiden"; the value is unchanged
       (TalentProbeModal.hints, catalog SA_40 byHand)
@@ -202,26 +208,26 @@ situations:
     choose: { plaenklerFormation: true, bonus: at }
     expect:
       at:
-        total: -1
-        result: 13
+        total: 0
+        result: 16
         lines:
           - { value: 1, from: SA_884.P2 }
-          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
-      pa: { total: -2, result: 8 }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+      pa: { total: -1, result: 10 }
     app_today: same
 
   - id: "14.17"
     name: In a Plänkler-Formation on foot, the line takes +1 VW — weapon parry, shield parry, dodge
     choose: { plaenklerFormation: true, bonus: vw }
     expect:
-      pa:            { total: -1, result: 9,  lines: [{ value: 1, from: SA_884.P2 }, { value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
-      shield_parry:  { total: -1, result: 12, lines: [{ value: 1, from: SA_884.P2 }, { value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
-      aw:            { total: -1, result: 6,  lines: [{ value: 1, from: SA_884.P2 }, { value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
-      at:            { total: -2, result: 12 }
+      pa:            { total: 0, result: 11, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      shield_parry:  { total: 0, result: 13, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      aw:            { total: 0, result: 7,  lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      at:            { total: -1, result: 15 }
     app_today: same
 
   - id: "14.18"
-    name: A companion without the SF, standing in Boronmir's line
+    name: A companion without the SF, standing in Boronmir's line (Formation, its larger sibling, in 19.3)
     hero: { abilities: {} }          # any hero without SA_884
     ally: { has: SA_884 }
     choose: { plaenklerFormation: true, bonus: at }
@@ -240,17 +246,18 @@ situations:
     expect:
       not_offered: [{ choice: plaenklerFormation, because: SA_884.P1, ruling: SA_884.plaenkler-mounted }]
       at:
-        total: 3
-        result: 17
-        # +2 VP1 via RK2, +2 SA_661.GS1, −1 Belastung via RK7; the toggle is off with the reason
+        total: 4
+        result: 20
+        # +2 VP1 via RK2, +2 SA_661.GS1; Belastung I is none for Kampfproben mounted (RK7); the
+        # toggle is off with the reason. Formation mounted: 19.4
         not_applied: [{ rule: SA_884, reason: "not while mounted (SA_884.P1, ruling plaenkler-mounted)" }]
-    app_today: +1 AT on top, 18 (the bonus ignores whether the hero is mounted) — wrong
+    app_today: +1 AT on top, 21 (the bonus ignores whether the hero is mounted) — wrong
 
   - id: "14.20"
     name: The line breaks up mid-fight
     choose: { plaenklerFormation: true, bonus: vw, then: { plaenklerFormation: false } }
     expect:
-      pa: { total: -2, result: 8, not_applied: [{ rule: SA_884, reason: "no longer in formation (SA_884.P1)" }] }
+      pa: { total: -1, result: 10, not_applied: [{ rule: SA_884, reason: "no longer in formation (SA_884.P1)" }] }
     app_today: >
       cannot be turned off: the formation is chosen once, at combat setup (CombatSetupView), and
       the combat screens receive it read-only (CombatRootView.plaenklerActive)
@@ -260,10 +267,10 @@ situations:
     choose: { plaenklerFormation: true, bonus: at, vorstoss: true, at: round_start }
     expect:
       at:
-        total: 1
-        result: 15
+        total: 2
+        result: 18
         lines:
           - { value: 2, from: SA_66.V1 }
           - { value: 1, from: SA_884.P2 }
-          - { value: -2, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
     app_today: same, when the attack is the hero's first act of the round

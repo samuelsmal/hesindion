@@ -7,7 +7,7 @@
 # every page a file quotes, not just `source.url`. The alternative — one file per page — splits
 # "how is PA computed" over three files (formula, rounding, which Leiteigenschaft).
 # The values here are *base values* (Basiswerte): what the sheet shows before the fight. Every
-# term is a line of the value's breakdown ("PA 8 = KtW 12 halbiert 6 + KK 15 → +2"); the weapon's
+# term is a line of the value's breakdown ("PA 9 = KtW 14 halbiert 7 + KK 14 → +2"); the weapon's
 # AT/PA-Mod comes after them (at-pa-modifikatoren.M1), then the shield (schilde), then Zustände.
 # Not here, of the Nahkampf page: the multiple-defence paragraphs of "3. Verteidigung" and the
 # empty heading "Mehr Verteidigungen für Meisterpersonen (Optionale Regel)" (mehrfache-
@@ -279,7 +279,7 @@ clauses:
       - when: { technique.leit: { count: 2 } }
         choose: { value: leit, of: technique.leit, pick: max }
         # "wählen", and the example (KW23) takes the higher: no choice for the player to make,
-        # the better one is always taken. The line names the one used ("KK 15 → +2").
+        # the better one is always taken. The line names the one used ("KK 16 → +2").
         # A weapon's own Leiteigenschaft (schaden.S4) never reaches the PA.
     # The Schadensbonus half of this paragraph is schaden.S3/S4.
 

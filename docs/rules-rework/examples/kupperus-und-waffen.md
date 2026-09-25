@@ -72,8 +72,11 @@ Waffenvorteil and -nachteil applies only when the group plays it.
 
 ## Situations
 
-In [`situations/kupperus-und-waffen.yaml`](./situations/kupperus-und-waffen.yaml), 18.1–18.16,
-with Boronmir's real values (derivation in the file's header). The rules as draft YAML:
+In [`situations/kupperus-und-waffen.yaml`](./situations/kupperus-und-waffen.yaml), 18.1–18.17,
+with Boronmir's values from the 2026-09-24 export: Rabenschnabel AT 16, Langschwert AT 14, KK 14,
+Reiten 12, Belastung I in plate. On horseback, RK7 takes that Belastung to 0. The derivation is
+in the file's header. At KK 14 neither weapon gets a Schadensbonus, so 18.17 gives the hero KK
+15 to keep the case where the app is wrong. The rules as draft YAML:
 [`svellttaler-kaltblut`](./rules/creatures/svellttaler-kaltblut.yaml),
 [`maechtiger-schlag`](./rules/creatures/maechtiger-schlag.yaml),
 [`ruhiges-temperament`](./rules/creatures/ruhiges-temperament.yaml),
@@ -81,10 +84,13 @@ with Boronmir's real values (derivation in the file's header). The rules as draf
 [`ITEMTPL_29`](./rules/equipment/ITEMTPL_29.yaml),
 [`waffeneigenschaften`](./rules/core/waffeneigenschaften.yaml).
 
-The three asked for: Kupperus's Niederreiten with Boronmir riding (18.1: Reiten check 0 = −1
-Belastung +1 Ruhiges Temperament; AT 15, 2W6+6, dodge only, Kraftakt −3), a Tritt (18.3: an
-order, so Boronmir's action and the same Reiten check, then AT 15, 1W6+7, shield parry or dodge),
-and the Dornenspitze against plate (18.5: AT 11, 1W6+5, RS 6 → 4).
+The three asked for:
+
+- **Kupperus's Niederreiten with Boronmir riding** (18.1): the Reiten check is +1 from Ruhiges
+  Temperament, with no Belastung mounted. AT 15, 2W6+6, dodge only, Kraftakt −3.
+- **A Tritt** (18.3): an order, so it takes Boronmir's action and the same Reiten check. Then AT
+  15, 1W6+7, shield parry or dodge.
+- **The Dornenspitze against plate** (18.5): AT 14, 1W6+4, RS 6 → 4.
 
 ## How the app models the mount today
 
@@ -97,7 +103,9 @@ and the mount's other attacks are buttons on the attack screen (`CombatAttackVie
 Niederreiten and Sturmangriff zu Pferd go through the gallop question and a Reiten check
 (`CombatMountPreCheckView`), the other attacks straight to the roll. The mount's LeP is tracked
 (`CombatMountDamageView`, RK10 with −1 per 5 SP). Not read or not held: VW (`pa`), RS (`pro`),
-Größenkategorie, the animal's Vorteile, its Schmerz.
+Größenkategorie, its Schmerz. The animal's Vorteile and SF exist only as the free-text `skills`
+(`Pet.specialSkills`): the app finds "Mächtiger Schlag" in it by substring and shows the whole
+string as an ⓘ line on the attack screen.
 
 ## What the app gets wrong
 
@@ -105,12 +113,12 @@ Größenkategorie, the animal's Vorteile, its Schmerz.
 |---|---|---|
 | Niederreiten takes the AT of the **first** parsed attack, not the Niederreiten line: an Elenviner Vollblut attacks at 16 instead of 15 (Kupperus is right by luck, Tritt is also 15) | `CombatAttackViews.niederreitenButton` (`mount.attacks.first?.at`) | page (RK13) |
 | Mächtiger Schlag's Kraftakt penalty is floored: Kupperus −2, the page −3 (its own example rounds KK 23 to −2) | `CombatAttackViews` (`(kk - 20) / 2`), string `mightyBlow` | page |
-| The Schadensbonus (L+S) is never added: Boronmir's Rabenschnabel does 1W6+4, not 1W6+5. The code says no export carries the threshold, but his file has `primaryThreshold` on every weapon | `OptolithImportService.parseItems`, `FumbleEffectResolver` comment | page (Kampftechniken) |
+| The Schadensbonus (L+S) is never added: a Rabenschnabel with KK 15 does 1W6+4, not 1W6+5 (18.17). The code says no export carries the threshold, but the hero file has `primaryThreshold` on every weapon. At KK 14 Boronmir is at the threshold himself, so the app's 1W6+4 is right for him | `OptolithImportService.parseItems`, `FumbleEffectResolver` comment | page (Kampftechniken) |
 | The Großschild's "−1 AT on the main weapon" is not applied: Boronmir's Rabenschnabel and Langschwert AT are 1 too high whenever the shield is carried | `OptolithImportService.shieldNote`, `MeleeModifiers` | page (Regelwerk table note) |
 | Waffenvorteile and -nachteile are applied always; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page (Waffeneigenschaften); ruling `rabenschnabel-waffeneigenschaft` |
 | With that Fokusregel on, the Großschild's GS −1 and INI-tie rule are missing, and its +1 PA is a note that says "Fernkampf" where the page says Pfeile and Bolzen | `Hero.totalGsPenalty`, `shieldNote` | page |
 | Kupperus can carry 210 Stein (Packesel); the app gives every pet KK × 2 = 50 | `Pet.carryingCapacity`, `Hero.totalCarryingCapacity` | page |
-| Ruhiges Temperament (+1 on Reiten) is unknown to the app; the export does not carry an animal's Vorteile, and there is no Bestiarium profile to fill the gap | `CombatMountPreCheckView`, `parsePets` | page; source per ruling `mount-profile-data` |
+| Ruhiges Temperament (+1 on Reiten) is never applied: Boronmir's Reiten checks on Kupperus are 0 instead of +1. The export has no field for an animal's Vorteile. Since the 2026-09-24 export, Kupperus's free-text `skills` says "Mächtiger Schlag, Ruhiges Temperament" because the player typed it in; the app shows that as text and applies nothing from it, and there is no Bestiarium profile | `CombatMountPreCheckView`, `parsePets` (`Pet.specialSkills`) | page; source per ruling `mount-profile-data` |
 | Tritt and Biss are offered beside the rider's own attack and rolled straight away; they are orders, taking his action and a Reiten (Kampfmanöver) check | `CombatAttackViews.mountAttackSection` | page (RK12); ruling `mount-own-attack` |
 | Niederreiten is offered for a mount with no Niederreiten line, with the first attack's AT and the export's `dp` | `CombatAttackViews.niederreitenButton` | ruling `niederreiten-without-profile` |
 | The Dornenspitze's RS note ("nur gegen RS 6 oder mehr") also invites the −2 against a creature's natural RS | `rsNote`, `CombatAttackViews.rsText` | ruling `dornenspitze-rs` |

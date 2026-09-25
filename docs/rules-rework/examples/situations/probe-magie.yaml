@@ -1,0 +1,154 @@
+# Example 20 — Probe: Zaubermodifikationen and Verbotene Pforten. Same conventions as
+# belastung.yaml. DRAFT FORMAT — see ../README.md.
+# Open rulings named without a prefix live in the rule's own file.
+#
+# A generic caster, not from a hero file: a Gildenmagierin with
+#   MU 13, KL 14, IN 13, CH 12, KO 12 → LE 5 + 2 × 12 = 29, AsP 30 (max and current unless stated)
+#   Schmerz thresholds for LE 29 (COND_6.SZ3): ¾ = 21.75 → LE 21 or less is Schmerz I
+#   Selbstbeherrschung FW 6; Verbotene Pforten (SA_74)
+#   Ignifaxius (SPELL_21) FW 9 → 2 modifications:  8 AsP, 2 Aktionen, 16 Schritt, sofort
+#   Flim Flam  (SPELL_13) FW 8 → 2 modifications:  2 AsP + 1 AsP pro Stunde, 1 Aktion, 8 Schritt, (A)
+#   Armatrutz  (SPELL_3)  FW 8 → 2 modifications:  4/8/16 AsP for RS 1/2/3, 1 Aktion, selbst
+# The spell values are rules.db spell_details; "16 m" there is 16 Schritt.
+# No armour, no Zustände, no maintained spells unless stated.
+#
+# `spell:` gives the spell's parameters after the modifications, each with the lines that moved
+# it. `charge:` is what leaves which pool after the cast.
+
+base_hero:
+  species: R_1
+  le: 29
+  asp: 30
+  talents: { Selbstbeherrschung: 6 }
+  abilities: { SA_74: 1 }
+  spells: { SPELL_21: 9, SPELL_13: 8, SPELL_3: 8 }
+
+situations:
+
+  # --- Modifications (zaubermodifikationen) ----------------------------------------------------
+
+  - id: "20.1"
+    name: Ignifaxius, no modification, the check succeeds
+    cast: { spell: SPELL_21 }
+    expect:
+      offered: [{ choice: spellModification, max: 2, from: zaubermodifikationen.ZM1 }]
+      check: { modifier: { total: 0, lines: [] } }
+      spell: { cost: 8, castingTime: 2, range: 16 }
+      charge: { asp: 8, from: zaubermodifikationen.ZM12 }
+    app_today: >
+      check 0, right; the cast is 2 Aktionen, right (CombatSpellViews.castingActions). No AsP are
+      charged: baseCost is Int("8 AsP"), nil for every spell — wrong. The modal shows "max 2
+      Modifikationen" as text only
+
+  - id: "20.2"
+    name: Ignifaxius with Erzwingen and Zauberdauer erhöhen, the check succeeds
+    cast: { spell: SPELL_21, modifications: [erzwingen, zauberdauerErhoehen] }
+    expect:
+      check:
+        modifier:
+          total: 2
+          lines:
+            - { value: 1, from: zaubermodifikationen.ZM11, term: Erzwingen }
+            - { value: 1, from: zaubermodifikationen.ZM11, term: Zauberdauer erhöhen }
+      spell:
+        cost: { value: 16, lines: [{ from: 8, to: 16, from_rule: zaubermodifikationen.ZM11, via: [zaubermodifikationen.ZM8] }] }
+        castingTime: { value: 4, lines: [{ from: 2, to: 4, from_rule: zaubermodifikationen.ZM11, via: [zaubermodifikationen.ZM8] }] }
+      charge: { asp: 16 }
+      # A critical success would charge 8 (section 4: half the cost); not drafted here.
+    app_today: >
+      neither modification can be chosen (no picker; Situation.spellModifications is never set,
+      so MagicModifiers.spellMods never fires); check 0, 2 Aktionen, nothing charged — wrong
+
+  - id: "20.3"
+    name: Ignifaxius with Kosten senken and Reichweite erhöhen, the check fails
+    cast: { spell: SPELL_21, modifications: [kostenSenken, reichweiteErhoehen] }
+    fail: [check]
+    expect:
+      check:
+        modifier:
+          total: -2
+          lines:
+            - { value: -1, from: zaubermodifikationen.ZM11, term: Kosten senken }
+            - { value: -1, from: zaubermodifikationen.ZM11, term: Reichweite erhöhen }
+      spell: { cost: 4, range: 32 }
+      charge: { asp: 2, from: zaubermodifikationen.ZM12, ruling: round-up }   # half of the modified 4
+    app_today: not offered; nothing charged (the app would charge half of 8, rounded up, if baseCost parsed)
+
+  - id: "20.4"
+    name: Ignifaxius at FW 9 — a third modification, a repeat, and the cost both ways
+    cast: { spell: SPELL_21, modifications: [erzwingen, zauberdauerSenken], formel_weglassen: true }
+    expect:
+      not_offered:
+        - { choice: formelWeglassen, because: zaubermodifikationen.ZM1, ruling: zaubermodifikationen.omit-counts }   # the third, with option a
+        - { choice: kostenSenken, because: zaubermodifikationen.ZM2 }    # Kosten already moved by Erzwingen
+        - { choice: zauberdauerErhoehen, because: zaubermodifikationen.ZM2 }
+        - { choice: erzwingen, because: zaubermodifikationen.ZM6 }       # no repeat
+      check: { modifier: { total: 0, lines: [{ value: 1, from: zaubermodifikationen.ZM11, term: Erzwingen }, { value: -1, from: zaubermodifikationen.ZM11, term: Zauberdauer senken }] } }
+      spell: { cost: 16, castingTime: 1 }
+    app_today: >
+      "Formel weglassen" is a toggle at any FW and adds −2 on top; nothing else is offered, and
+      nothing counts toward the limit — waits on omit-counts for the Formel, wrong for the rest
+
+  - id: "20.5"
+    name: Flim Flam with Kosten senken, kept up for three hours
+    cast: { spell: SPELL_13, modifications: [kostenSenken] }
+    maintain: { hours: 3 }
+    expect:
+      check: { modifier: { total: -1, lines: [{ value: -1, from: zaubermodifikationen.ZM11, term: Kosten senken }] } }
+      spell:
+        cost: { base: 1, perInterval: 1, interval: 1h }
+        # 2 → 1; the upkeep, one step below, would be ½ — not under 1 AsP (ZM5)
+      charge:
+        - { asp: 1, at: cast, from: zaubermodifikationen.ZM12 }
+        - { asp: 3, over: 3h, from: zaubermodifikationen.ZM5 }
+      # Failed instead: half of (1 + 1) = 1 AsP (ZM12, "Grundkosten + die Kosten für die erste Zeiteinheit").
+    app_today: >
+      no modification; nothing charged at the cast or for upkeep. Keeping it up only adds the
+      −1 to other casts if the player sets the "aufrechterhaltene Zauber" stepper by hand
+      (MagicModifiers.maintainedSpells)
+
+  - id: "20.6"
+    name: Armatrutz for RS 2 (8 AsP) with Kosten senken
+    cast: { spell: SPELL_3, choose: { rs: 2 }, modifications: [kostenSenken] }
+    expect:
+      open: zaubermodifikationen.cost-off-table
+      check: { modifier: { total: -1 } }
+      spell: { cost: 4 }            # with option a: the step applies to the chosen amount
+      charge: { asp: 4 }
+    app_today: not offered; nothing charged
+
+  # --- Verbotene Pforten (SA_74) ---------------------------------------------------------------
+
+  - id: "20.7"
+    name: Ignifaxius with 3 AsP left — 3 AsP and 5 LeP, Selbstbeherrschung passes
+    hero: { asp: 3 }
+    cast: { spell: SPELL_21 }
+    choose: { payWithLeP: 5 }
+    expect:
+      offered: [{ choice: payWithLeP, max: 7, from: SA_74.VP1 }]    # at least 1 AsP stays AsP
+      checks_first:
+        - { talent: Selbstbeherrschung, application: null, from: SA_74.VP2, ruling: SA_74.vp-sequence }
+      charge:
+        - { asp: 3, from: [zaubermodifikationen.ZM12, SA_74.VP1] }
+        - { le: 5, from: SA_74.VP1 }
+      after: { asp: 0, le: 24, conditions: {} }      # 24 > 21.75: no Schmerz yet
+      not_applied: [{ rule: trefferzonen.TZ8, reason: "LeP aufgewendet, kein Schaden" }]
+    app_today: >
+      Verbotene Pforten does not exist (catalog SA_74 todo). The cast is offered at 3 AsP
+      although it costs 8, and nothing is charged at all — wrong
+
+  - id: "20.8"
+    name: The same, Selbstbeherrschung fails
+    hero: { asp: 3 }
+    cast: { spell: SPELL_21 }
+    choose: { payWithLeP: 5 }
+    fail: [Selbstbeherrschung]
+    expect:
+      cast: { outcome: failed, from: SA_74.VP2, ruling: SA_74.vp-sequence }
+      charge:
+        amount: 4                  # half of 8
+        from: [SA_74.VP3, zaubermodifikationen.ZM12]
+        ruling: round-up
+        pools: [{ asp: 3 }, { le: 1 }]    # AsP first, the rest from LE
+      after: { asp: 0, le: 28 }
+    app_today: not offered; nothing charged
