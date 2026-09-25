@@ -32,7 +32,7 @@ class Clause:
 
     @property
     def encoded(self):
-        return self.data.get("effects") not in (None, "none")
+        return "effects" in self.data
 
 
 @dataclass
@@ -58,12 +58,12 @@ class Situation:
     id: str
     name: str
     line: int
-    app_today: str | None
+    appToday: str | None
     refs: set
 
     @property
     def diverges(self):
-        return self.app_today is not None and not str(self.app_today).startswith("same")
+        return self.appToday is not None and not str(self.appToday).startswith("same")
 
 
 @dataclass
@@ -85,7 +85,7 @@ class Rule:
 
     @property
     def agent_pass(self):
-        return self.data.get("agent_pass")
+        return self.data.get("agentPass")
 
     def flagged(self, item_id):
         """The flag's note if the agent pass names this clause or ruling, else None."""
@@ -222,7 +222,7 @@ def _load_situations():
         for s in data.get("situations") or []:
             n = item_line(lines, str(s["id"]), (0, len(lines)))
             out.append(Situation(file=path.stem, id=str(s["id"]), name=s.get("name", ""),
-                                 line=n + 1, app_today=s.get("app_today"), refs=_refs(s)))
+                                 line=n + 1, appToday=s.get("appToday"), refs=_refs(s)))
     return out
 
 
@@ -231,7 +231,7 @@ def _refs(node):
     out = set()
     if isinstance(node, dict):
         for k, v in node.items():
-            if k not in ("name", "app_today"):          # prose, not references
+            if k not in ("name", "appToday"):          # prose, not references
                 out |= _refs(k) | _refs(v)
     elif isinstance(node, list):
         for v in node:
@@ -421,15 +421,15 @@ def set_agent_pass(path, by, note, about=(), date=None):
     """Flag a rule for another agent pass, with what the agent should look at: `about` narrows it
     to clause and ruling ids."""
     date = date or datetime.date.today()
-    lines = ["agent_pass:", f"  requested: {_flow_signature(by, date)}"]
+    lines = ["agentPass:", f"  requested: {_flow_signature(by, date)}"]
     value = {"requested": {"by": by, "date": date}}
     if about:
         lines.append(f"  about: [{', '.join(about)}]")
         value["about"] = list(about)
     lines += _scalar("note", note, 2)
     value["note"] = note
-    _set_top_level(path, "agent_pass", lines, value)
+    _set_top_level(path, "agentPass", lines, value)
 
 
 def clear_agent_pass(path):
-    _set_top_level(path, "agent_pass", [], None)
+    _set_top_level(path, "agentPass", [], None)

@@ -156,8 +156,8 @@ def clause_card(rule, c):
     head = Text()
     head.append(f"{c.id} · ", style="bold")
     head.append("encoded" if c.encoded else "not encoded", style="green" if c.encoded else "yellow")
-    if c.data.get("why"):
-        head.append(f" — {one_line(c.data['why'])}", style="dim")
+    if reason := c.data.get("none") or c.data.get("unencoded"):
+        head.append(f" — {one_line(reason)}", style="dim")
     if "# FORMAT:" in c.raw:
         head.append("  FORMAT note", style="magenta")
     body = Text(one_line(c.data.get("text", "")), style="italic")
@@ -199,8 +199,8 @@ def ruling_card(rule, r):
         t.append(f"{one_line(opt.get('says', ''))}", style="bold" if rec else "")
         t.append(f"  → app: {one_line(opt.get('app', ''))}", style="dim")
         t.append("  ★ recommended\n" if rec else "\n", style="yellow")
-    if d.get("why_recommended"):
-        t.append(f"Why {d.get('recommended')}: {one_line(d['why_recommended'])}\n", style="dim")
+    if d.get("whyRecommended"):
+        t.append(f"Why {d.get('recommended')}: {one_line(d['whyRecommended'])}\n", style="dim")
     if r.state == "answered":
         t.append(f"Your answer: {one_line(d['answer'])} ", style="cyan")
         t.append("(enter to change)", style="dim")
@@ -214,7 +214,7 @@ def situation_card(s):
     t.append(f"{s.file} {s.id} · ", style="bold")
     t.append(s.name)
     if s.diverges:
-        t.append(f"\n  app today: {s.app_today}", style="red" if "wrong" in str(s.app_today) else "yellow")
+        t.append(f"\n  app today: {s.appToday}", style="red" if "wrong" in str(s.appToday) else "yellow")
     return Card(t, kind="situation", target=s, path=Path("situations") / f"{s.file}.yaml",
                 line=s.line)
 
@@ -296,8 +296,8 @@ class Choose(ModalScreen):
                 t.append(one_line(opt.get("says", "")))
                 if key == d.get("recommended"):
                     t.append("  ★ recommended", style="yellow")
-                    if d.get("why_recommended"):
-                        t.append(f"\n   why: {one_line(d['why_recommended'])}", style="dim yellow")
+                    if d.get("whyRecommended"):
+                        t.append(f"\n   why: {one_line(d['whyRecommended'])}", style="dim yellow")
                 t.append(f"\n   app: {one_line(opt.get('app', ''))}", style="dim")
                 choices.append(Option(t, id=f"opt:{key}"))
             own = "None of these fits: write my own answer"

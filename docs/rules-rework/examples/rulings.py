@@ -92,8 +92,8 @@ def render(items):
             for key, opt in (r.get("options") or {}).items():
                 mark = " — *recommended*" if key == r.get("recommended") else ""
                 md.append(f"- **{key}** {opt['says']} *App:* {opt['app']}{mark}")
-            if r.get("why_recommended"):
-                md += ["", f"Why {r['recommended']}: {one_line(r['why_recommended'])}"]
+            if r.get("whyRecommended"):
+                md += ["", f"Why {r['recommended']}: {one_line(r['whyRecommended'])}"]
             md.append("")
     if answered:
         md += ["## Answered, to process", ""]

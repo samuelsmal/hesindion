@@ -4,7 +4,9 @@
 """
 
 import datetime
+import difflib
 import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,12 +15,22 @@ import yaml
 
 import rulefiles as rf
 
+# `rulec` lives in scripts/rulec (docs/rules-rework/examples/../../../scripts): put it on the
+# path so the compile-check test below can `import rulec`.
+SCRIPTS = rf.HERE.parents[2] / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from rulec import rules as rulec_rules   # noqa: E402
+from rulec import vocab                 # noqa: E402
+
 DAY = datetime.date(2026, 9, 23)
 
 RULE = """\
 # a comment at the top
 id: SA_1
 name: Beispiel
+kind: specialAbility
 source: { url: https://example.org, checked: 2026-09-23 }
 reviewed: null             # { by, date } once a person has read every clause
 # Optolith says page 249. The page wins.
@@ -95,8 +107,8 @@ class EditTests(unittest.TestCase):
     def test_a_flag_goes_after_reviewed_and_comes_off_cleanly(self):
         rf.set_agent_pass(self.path, "@someone", "the options miss a case", ["C1", "first"], DAY)
         data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
-        self.assertEqual(data["agent_pass"]["about"], ["C1", "first"])
-        self.assertEqual(data["agent_pass"]["requested"], {"by": "@someone", "date": DAY})
+        self.assertEqual(data["agentPass"]["about"], ["C1", "first"])
+        self.assertEqual(data["agentPass"]["requested"], {"by": "@someone", "date": DAY})
         rf.clear_agent_pass(self.path)
         self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
 
@@ -110,6 +122,51 @@ class EditTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             rf.set_answer(self.path, "third", "a")
         self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+
+class RulecCheckTests(unittest.TestCase):
+    """The edits the tool makes are one-hunk diffs, and the file still compiles under rulec's own
+    checker (scripts/rulec) after each of them."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "SA_1.yaml"
+        self.path.write_text(RULE, encoding="utf-8")
+        (self.dir / "rulings.yaml").write_text("[]\n", encoding="utf-8")
+        self.vocab = vocab.load()
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def assert_compiles(self):
+        _, errors = rulec_rules.check(self.dir, self.vocab)
+        self.assertEqual([str(e) for e in errors], [])
+
+    def assert_one_hunk(self, before, after):
+        diff = list(difflib.unified_diff(before, after, lineterm="", n=0))
+        hunks = [l for l in diff if l.startswith("@@")]
+        self.assertEqual(len(hunks), 1, "\n".join(diff))
+
+    def test_review_answer_and_flag_are_one_hunk_and_still_compile(self):
+        self.assert_compiles()
+
+        before = self.path.read_text(encoding="utf-8").splitlines()
+        rf.set_reviewed(self.path, "@someone", DAY)
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
+
+        before = after
+        rf.set_answer(self.path, "first", "b")
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
+
+        before = after
+        rf.set_agent_pass(self.path, "@someone", "the options miss a case", ["C1"], DAY)
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
 
 
 class ModelTests(unittest.TestCase):
