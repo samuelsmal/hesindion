@@ -12,9 +12,12 @@ The reach index maps a target name to the top-level effects that can change it, 
   `aw`: an id `aw` or naming a dodge (`ausweichen`/`dodge`) under `aw`, an id `pa` or a parry
   (`…parry`/`…parade`) under `pa`, any other defence id under both. An `attack` selector goes under
   both `at` and `fk`.
-- `useLevel` goes under every key the named rule's direct effects reach (a second pass, not
-  recursion); `replace`/`suppress` under every key the clause their `line` selector names reaches
-  (a third pass, after `useLevel`). When that is nothing, the effect goes under `"*"`.
+- `useLevel` goes under every key the named rule reaches; `replace`/`suppress` under every key
+  the clause (or rule) their `line` selector names reaches. These are resolved after the direct
+  verbs by a bounded fixed-point loop, not recursion: their keys are merged back into their own
+  rule and clause, and the round repeats until no set grows, so chains are followed (X uses R's
+  level, R uses S's level: X reaches R's and S's targets). When that is nothing, the effect goes
+  under `"*"`.
 - Every other effect — `offer`, `ask`, `tell`, `provide`, a `require` with no `for` (or another
   selector kind), and all action-layer verbs — goes under `"*"`, which every query evaluates.
 
@@ -118,23 +121,32 @@ def _reach(rules_sorted):
                 by_rule.setdefault(o["rule"], set()).update(k)
                 by_clause.setdefault(f"{o['rule']}.{o['clause']}", set()).update(k)
 
-    # pass 2: useLevel, from the named rule's direct reach
-    for ref, e in late:
-        if e["verb"] == "useLevel":
-            k = set(by_rule.get(e["payload"]["rule"], ())) or {STAR}
-            keys[ref] = k
-            by_clause.setdefault(f"{ref[0]}.{ref[1]}", set()).update(k)
-    # pass 3: replace/suppress, from the named clause's (or rule's) reach after pass 2
-    for ref, e in late:
-        if e["verb"] in ("replace", "suppress"):
-            sel = e["payload"]["line"]
-            k = set()
-            for i in sel["ids"]:
-                if sel["kind"] == "line":
-                    k |= by_clause.get(str(i), set())
-                elif sel["kind"] == "rule":
-                    k |= by_rule.get(str(i), set())
-            keys[ref] = k or {STAR}
+    # useLevel, replace and suppress: a fixed-point loop, not recursion. Each round recomputes
+    # their keys from the current rule and clause reach and merges them back, so chains
+    # (useLevel of a rule that itself uses another's level, suppress of such a rule) are followed.
+    # Sets only grow and are bounded by the finite key set, so the loop terminates.
+    for ref, _ in late:
+        keys[ref] = set()
+    changed = True
+    while changed:
+        changed = False
+        for ref, e in late:
+            if e["verb"] == "useLevel":
+                k = set(by_rule.get(e["payload"]["rule"], ()))
+            else:                                       # replace / suppress
+                sel, k = e["payload"]["line"], set()
+                for i in sel["ids"]:
+                    if sel["kind"] == "line":
+                        k |= by_clause.get(str(i), set())
+                    elif sel["kind"] == "rule":
+                        k |= by_rule.get(str(i), set())
+            if not k <= keys[ref]:
+                keys[ref] |= k
+                by_rule.setdefault(ref[0], set()).update(k)
+                by_clause.setdefault(f"{ref[0]}.{ref[1]}", set()).update(k)
+                changed = True
+    for ref, _ in late:                                 # reaches nothing: evaluated by every query
+        keys[ref] = keys[ref] or {STAR}
 
     reach = {}
     for ref, ks in keys.items():

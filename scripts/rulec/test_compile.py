@@ -245,6 +245,71 @@ rulings: []
 """})
         self.assertEqual(out["reach"], {"*": [ref("X", "X1")]})
 
+    CHAIN = {
+        "R": HEAD.format(id="R") + """\
+levels: 3
+clauses:
+  - id: R1
+    text: "r"
+    effects:
+      - add: { to: at, value: 1 }
+  - id: R2
+    text: "r2"
+    effects:
+      - useLevel: { rule: S, as: level }
+rulings: []
+""",
+        "S": HEAD.format(id="S") + """\
+levels: 3
+clauses:
+  - id: S1
+    text: "s"
+    effects:
+      - add: { to: pa, value: 1 }
+rulings: []
+""",
+    }
+
+    def test_chained_use_level_reaches_through_the_chain(self):
+        out = one_rule("""\
+  - id: X1
+    text: "t"
+    effects:
+      - useLevel: { rule: R, lowerBy: 1 }
+""", extra=self.CHAIN)
+        self.assertIn(ref("X", "X1"), out["reach"]["at"])
+        self.assertIn(ref("X", "X1"), out["reach"]["pa"])
+        self.assertNotIn("*", out["reach"])
+
+    def test_suppress_by_rule_reaches_through_its_use_level(self):
+        out = one_rule("""\
+  - id: X1
+    text: "t"
+    effects:
+      - suppress: { line: { rule: R } }
+""", extra=self.CHAIN)
+        self.assertIn(ref("X", "X1"), out["reach"]["at"])
+        self.assertIn(ref("X", "X1"), out["reach"]["pa"])
+        self.assertNotIn("*", out["reach"])
+
+    def test_use_level_of_a_rule_that_only_suppresses(self):
+        out = one_rule("""\
+  - id: X1
+    text: "t"
+    effects:
+      - useLevel: { rule: Y, lowerBy: 1 }
+""", extra={"Y": HEAD.format(id="Y") + """\
+levels: 2
+clauses:
+  - id: Y1
+    text: "y"
+    effects:
+      - suppress: { line: { line: A.A1 } }
+rulings: []
+""", "A": A})
+        self.assertIn(ref("X", "X1"), out["reach"]["pa"])
+        self.assertIn(ref("X", "X1"), out["reach"]["aw"])
+
     def test_main_build_writes_rules_json(self):
         d = write_tree({"A": A, "B": B})
         out = Path(tempfile.mkdtemp()) / "build" / "rules"
