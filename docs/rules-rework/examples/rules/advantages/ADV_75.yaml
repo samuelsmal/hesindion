@@ -23,6 +23,7 @@ clauses:
     effects:
       - when: { hero.has: COND_2, gmFact.cause: alcohol }
         tell: { to: player, text: "Jede Stufe Betäubung baut sich nach 1½ Stunden Ruhe ab (statt 3)." }
+        because: nur durch Alkohol verursacht
         ruling: alcohol-scope
         # 3 h Ruhephase (COND_2.BT2) → 1½ h per Stufe.
       - when: { hero.has: COND_2, gmFact.cause: alcohol }
@@ -31,6 +32,7 @@ clauses:
         ruling: alcohol-scope
       - when: { hero.has: COND_9, gmFact.cause: alcohol }
         tell: { to: player, text: "Berauscht baut sich jede Stunde um 1 Stufe ab (statt alle 2), wenn er nichts mehr trinkt." }
+        because: nur durch Alkohol verursacht
         ruling: alcohol-scope
         # 2 h (COND_9.BR4) → 1 h per Stufe.
       - when: { hero.has: COND_9, gmFact.cause: alcohol }

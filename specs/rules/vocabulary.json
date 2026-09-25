@@ -133,8 +133,7 @@
     "string",
     "list",
     "ruleId",
-    "any",
-    "number"
+    "any"
   ],
   "facts": {
     "action.attack": {
@@ -212,10 +211,6 @@
     "hero.leCurrent": {
       "owner": "derived",
       "type": "int"
-    },
-    "hero.leShare": {
-      "owner": "derived",
-      "type": "number"
     },
     "hero.mounted": {
       "owner": "loadout",

@@ -65,9 +65,7 @@ situations:
     name: LP 23 of 30 — just above three quarters
     hero: { values: { leCurrent: 23 } }
     expect:
-      "level(rule: COND_6)":   # 23 > 22.5, compared exactly: SZ3 gives no Stufe
-        result: 0
-        notApplied: [{ rule: COND_6, clause: SZ3, ruling: COND_6.schmerz-thresholds }]
+      "level(rule: COND_6)": { result: 0, lines: [{ kind: base, value: 0, from: COND_6.SZ3, ruling: COND_6.schmerz-thresholds }] }   # 23 > 22.5, compared exactly
     appToday: same
 
   # --- Schmerz with Belastung, and the cap (zustaende.Z3) ------------------------------------

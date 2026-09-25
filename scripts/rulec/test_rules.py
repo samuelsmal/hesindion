@@ -363,20 +363,20 @@ class RuleValidationTests(unittest.TestCase):
 
     def test_group_5_vocabulary(self):
         v = vocab.load()
-        expected = {"hero.leShare": "derived", "hero.conditionLevels": "derived",
-                    "hero.levelOf.COND_6": "derived"}
+        expected = {"hero.conditionLevels": "derived", "hero.levelOf.COND_6": "derived"}
         self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
-        self.assertEqual(v.raw["facts"]["hero.leShare"]["type"], "number")   # LeP / LE, exact
-        self.assertIn("number", v.raw["factTypes"])
         self.assertIsNone(v.fact_owner("hero.levelOf."))                      # a family needs a rule id
 
     def test_the_group_5_encodings(self):
-        # COND_6.SZ3 (a Stufe derived per LE threshold), SZ2 (a check lifting a status for one
-        # action), ADV_49.ZH1 (useLevel conditioned on the Stufe the hero has), zustaende.Z3 (the
+        # COND_6.SZ3 (the Stufe from the LE thresholds as one derive), SZ2 (a check lifting a status for one
+        # action), ADV_49.ZH1/ZH3 (useLevel on the Stufe the hero has; a keep), zustaende.Z3 (the
         # cap over the lines of every rule of kind condition) and Z5 (eight Stufen in sum).
         body = textwrap.dedent("""\
-            - when: { hero.leShare: { atMost: 0.75 } }
-              derive: { to: "level(rule: SA_1)", sum: [1] }
+            - derive:
+                to: "level(rule: SA_1)"
+                sum:
+                  - { of: leMax, above: leCurrent, times: 4, per: leMax, round: down, max: 3 }
+                  - { of: 6, above: leCurrent, max: 1 }
             - when: { level: { atLeast: 3 } }
               check:
                 of: { talent: TAL_8, with: Handlungsfähigkeit bewahren }
@@ -384,6 +384,8 @@ class RuleValidationTests(unittest.TestCase):
                   - gain: { rule: SA_2, levels: -1, span: action }
             - when: { hero.levelOf.SA_1: [2, 3] }
               useLevel: { rule: SA_1, as: "level - 1" }
+            - when: { hero.levelOf.SA_1: 3 }
+              useLevel: { rule: SA_1, as: level }
             - cap: { to: [at, check.modifier, gs, ini], over: { ruleKind: condition }, min: -5 }
             - when: { hero.conditionLevels: { atLeast: 8 } }
               gain: { rule: SA_2 }
@@ -392,11 +394,16 @@ class RuleValidationTests(unittest.TestCase):
                                            textwrap.indent(body, "      ")), extra={"abilities/SA_2.yaml": SA_2})
         self.assertEqual(errors, [])
         effects = book["SA_1"]["clauses"][0]["effects"]
-        self.assertEqual(effects[0]["when"], {"fact": "hero.leShare", "atMost": 0.75})
         self.assertEqual(effects[0]["payload"]["to"], {"name": "level", "rule": "SA_1"})
+        quarters = effects[0]["payload"]["sum"][0]["proportion"]
+        self.assertEqual((quarters["of"], quarters["above"], quarters["per"], quarters["max"]),
+                         ({"target": {"name": "leMax"}}, {"target": {"name": "leCurrent"}},
+                          {"target": {"name": "leMax"}}, 3))
+        self.assertEqual(effects[0]["payload"]["sum"][1]["proportion"]["of"], {"number": 6})
         self.assertEqual(effects[2]["when"], {"fact": "hero.levelOf.SA_1", "in": [2, 3]})
-        self.assertEqual(effects[3]["payload"]["over"], {"kind": "ruleKind", "ids": ["condition"]})
-        self.assertEqual(effects[3]["phase"], "cap")
+        self.assertEqual(effects[3]["payload"]["as"], {"level": {"times": 1, "plus": 0}})   # a keep
+        self.assertEqual(effects[4]["payload"]["over"], {"kind": "ruleKind", "ids": ["condition"]})
+        self.assertEqual(effects[4]["phase"], "cap")
 
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):

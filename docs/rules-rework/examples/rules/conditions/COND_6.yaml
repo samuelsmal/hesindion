@@ -48,25 +48,20 @@ clauses:
       Lebenspunkte wieder über diese Begrenzungen, verschwindet damit auch die entsprechende
       Stufe Schmerz. Sinkt sie auf 5 oder weniger, erhält er eine weitere Stufe Schmerz.
     effects:
-      - when: { hero.leShare: { atMost: 0.75 } }
-        derive: { to: "level(rule: COND_6)", sum: [1] }
-        ruling: schmerz-thresholds
-      - when: { hero.leShare: { atMost: 0.5 } }
-        derive: { to: "level(rule: COND_6)", sum: [1] }
-        ruling: schmerz-thresholds
-      - when: { hero.leShare: { atMost: 0.25 } }
-        derive: { to: "level(rule: COND_6)", sum: [1] }
-        ruling: schmerz-thresholds
-      - when: { hero.leCurrent: { atMost: 5 } }
-        derive: { to: "level(rule: COND_6)", sum: [1] }
+      - derive:
+          to: "level(rule: COND_6)"
+          sum:
+            - { of: leMax, above: leCurrent, times: 4, per: leMax, round: down, max: 3 }
+            - { of: 6, above: leCurrent, max: 1 }
         ruling: schmerz-thresholds
         # One Stufe per threshold reached (the old `sets: … count(lp <= le*3/4, lp <= le/2,
-        # lp <= le/4, lp <= 5)`). `hero.leShare` is the current LeP over the LE maximum, compared
-        # exactly (ruling schmerz-thresholds: LE 30 gives Schmerz I at 22 LP, not 23). A `derive`
-        # (phase base), so the Stufe the hero has is known before Zäher Hund's `useLevel`
-        # (phase level) acts on it. "Steigen die Lebenspunkte wieder über diese Begrenzungen"
-        # needs nothing more: the derive follows the current LeP. Same shape as
-        # svellttaler-kaltblut.SK10's thresholds for a mount.
+        # lp <= le/4, lp <= 5)`), as one base line. The first term is ⌊4 × (LE − LeP) / LE⌋,
+        # at most 3: it counts the quarters of LE lost, and LeP ≤ ¾ LE, ≤ ½ LE, ≤ ¼ LE are exactly
+        # LE − LeP ≥ ¼, ½, ¾ LE (compared exactly, ruling schmerz-thresholds: LE 30 gives
+        # Schmerz I at 22 LP, not 23). The second is max(0, 6 − LeP), at most 1: LeP ≤ 5.
+        # A `derive` (phase base), so the Stufe the hero has is known before Zäher Hund's
+        # `useLevel` (phase level) acts on it. "Steigen die Lebenspunkte wieder über diese
+        # Begrenzungen" needs nothing more: the derive follows the current LeP.
 
   - id: SZ4
     text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.

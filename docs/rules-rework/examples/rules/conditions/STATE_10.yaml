@@ -63,10 +63,11 @@ clauses:
       - when: { hero.has: STATE_10, choice.aufstehen: true }
         gain: { rule: STATE_10, levels: -1 }
         # Standing up clears the status (the old `then: { remove_state: STATE_10 }`).
-      - when: { hero.has: STATE_10, choice.aufstehen: true, opponent.inReach: true }
+      - when: { hero.has: STATE_10, opponent.inReach: true }
         offer: { choice: passierschlagVermeiden, default: false }
         # "kann der Held eine Probe … ablegen": the check is the player's to take (the old
-        # `optional_check`), asked only with an opponent in reach (`if_opponent_in_reach`).
+        # `optional_check`), offered beside the stand-up whenever an opponent is in reach
+        # (`if_opponent_in_reach`); it runs when the hero stands up (below).
       - when: { hero.has: STATE_10, choice.aufstehen: true, opponent.inReach: true, choice.passierschlagVermeiden: true }
         check:
           of: { talent: TAL_4, with: Kampfmanöver }

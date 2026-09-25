@@ -26,8 +26,15 @@ clauses:
         useLevel: { rule: COND_6, as: "level - 1" }
         ruling: zaeher-hund-counts
         # The breakdown shows the line as "Schmerz III, wirkt wie II (Zäher Hund): −2", citing
-        # COND_6.SZ5 via ADV_49.ZH1. Stufe I is ZH4, Stufe IV is ZH3. The old `keeps:
-        # { condition_level: level }` is what `useLevel` means: the Stufe the hero has is kept.
+        # COND_6.SZ5 via ADV_49.ZH1. Stufe I is ZH4. The old `keeps: { condition_level: level }`
+        # is what `useLevel` means: the Stufe the hero has is kept.
+      - when: { hero.levelOf.COND_6: 4, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
+        useLevel: { rule: COND_6, as: "level - 1" }
+        ruling: zaeher-hund-iv
+        # Stufe IV with COND_6.SZ2's check passed (the old ZH3 `check_passed: COND_6.SZ2`,
+        # `as: 3`): the −4 and the GS 0 are effects of the highest Stufe, which ZH1 ignores
+        # (ruling zaeher-hund-iv), so the hero acts as Stufe III: checks −3, GS −3. Before the
+        # check, ZH3's keep holds Stufe IV.
 
   - id: ZH2
     text: >
@@ -38,13 +45,14 @@ clauses:
   - id: ZH3
     text: Bei Schmerz Stufe IV wird der Held dennoch handlungsunfähig.
     effects:
-      - when: { hero.levelOf.COND_6: 4, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
-        useLevel: { rule: COND_6, as: 3 }
-        ruling: zaeher-hund-iv
-        # "dennoch handlungsunfähig": ZH1 does not reach Stufe IV, so COND_6.SZ5's Handlungsunfähig
-        # holds (the old `keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }`, a no-op
-        # beside ZH1's Stufen II–III). The Selbstbeherrschung check of COND_6.SZ2 is offered as
-        # for anyone; once passed (the old `check_passed: COND_6.SZ2`), the hero acts as Stufe III.
+      - when: { hero.levelOf.COND_6: 4 }
+        useLevel: { rule: COND_6, as: level }
+        # The old `keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }` (A.2: `keep` →
+        # `useLevel`): at Stufe IV Zäher Hund keeps the Stufe acted at, so COND_6.SZ5's
+        # Handlungsunfähig holds "dennoch", via ADV_49.ZH3 (lebensenergie 15.7). `as: level` is
+        # evaluated at COND_6's level as ZH1 leaves it (useLevels chain in clause order): IV
+        # before the check, III after a pass (ZH1's second effect), so the keep never undoes
+        # ZH1. The Selbstbeherrschung check of COND_6.SZ2 is offered as for anyone.
 
   - id: ZH4
     text: Schmerz Stufe I wird so behandelt, als hätte der Held keine Stufe Schmerz.

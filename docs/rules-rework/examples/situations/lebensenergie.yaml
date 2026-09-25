@@ -253,7 +253,7 @@ situations:
     opponent: { inReach: true }
     expect:
       offered:
-        - { action: aufstehen, from: STATE_10.L4, costs: action }
+        - { choice: aufstehen, from: STATE_10.L4, costs: action }   # the old `action: aufstehen`
         - { check: { talent: Körperbeherrschung, application: Kampfmanöver, fw: 8, attributes: [GE 14, GE 14, KO 15] },
             from: STATE_10.L4, optional: true }
       notApplied: [{ rule: ADV_75, because: "betrifft nur Betäubung und Berauscht (ADV_75.SW1)" }]

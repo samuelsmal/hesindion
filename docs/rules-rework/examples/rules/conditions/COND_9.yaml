@@ -4,12 +4,13 @@
 id: COND_9
 name: Berauscht
 kind: condition
-levels: 4                  # Stufe IV converts at once (BR3), so the Stufe rests below IV
 source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Berauscht.html
   book: DSA5-Meisterschirm
   page: 13
   checked: 2026-09-25
+  also:
+    - { book: Aventurisches Götterwirken II, page: 211 }
   hash: null
 reviewed: null
 
@@ -36,6 +37,7 @@ clauses:
       - when: { level: { atLeast: 4 } }
         gain: { rule: COND_9, levels: -4 }
         # Four Stufen struck; any above IV stay ("die restlichen Stufen … bleiben bestehen").
+        # So the rule has no `levels:` limit: a Stufe above IV exists until this converts it.
 
   - id: BR4
     text: >
