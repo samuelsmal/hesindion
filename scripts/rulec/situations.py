@@ -16,8 +16,10 @@ A situations file is `{heroFile?, hero?, rulesets?, situations: [...]}`. Each si
 
 A situation is *pending* (§10.2) on every open ruling that lies on its path: cited by an expected
 line or `notApplied` entry, resting on an effect of a clause an expected line comes `from`, or
-resting on an effect the reach index lists for a queried target or `"*"` whose rule the
-situation owns (or whose kind is `core`).
+resting on an effect the reach index lists for a queried target whose rule the situation owns (or
+whose kind is `core`). The `"*"` entries are on the path only of a situation that expects
+situation-level results (`_results`) or has `sequence` or `rolls` (ruling R30): a
+situation with query expectations only counts its queried targets' entries.
 
 `sequence` is passed through unvalidated; the action layer (Tasks 25–28) defines its steps.
 """
@@ -47,6 +49,14 @@ SECTIONS = {
     "rolls": ("roll", ""),
 }
 STAR = "*"
+
+
+def _results(v):
+    """The situation-level expect keys that are results: every `expectKeys` entry but
+    `notApplied`, whose cited rulings count on their own. They put `"*"` on a situation's path
+    (ruling R30: offered, notOffered, questions, texts, events, fp, qs, spent, success, result,
+    legal)."""
+    return set(v.raw["expectKeys"]) - {"notApplied"}
 
 
 def _is_int(x):
@@ -274,7 +284,12 @@ class _File:
         for ref in from_clauses:
             for e in ctx.clauses[ref].get("effects", []):
                 pending |= ctx.open(_effect_rulings(e, set()))
-        for target in queried | {STAR}:
+        # Ruling R30: `"*"` is on the path of the situation-level results and of the action layer
+        # (a `sequence`, `rolls`); query expectations reach only their queried targets.
+        on_path = set(queried)
+        if set(expect_situation) & _results(self.v) or s.get("sequence") or s.get("rolls"):
+            on_path.add(STAR)
+        for target in on_path:
             for ref in ctx.reach.get(target, []):
                 rule = ctx.book.get(ref["rule"])
                 if rule is None or not (ref["rule"] in owned or rule.get("kind") == "core"):

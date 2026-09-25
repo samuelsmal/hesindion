@@ -118,6 +118,29 @@ class RuleValidationTests(unittest.TestCase):
         _, errors = check(VALID.replace("    none: purchase cost", "    none: x\n    unencoded: y"))
         self.one_error(errors, "clause needs exactly one of effects, unencoded, none", 16)
 
+    def test_a_provide_names_who_reads_it_outside_the_rules(self):
+        book, errors = check(VALID.replace(EFFECT, "      - provide: { name: t.x, value: { a: 1 }, readBy: display }"))
+        self.assertEqual(errors, [])
+        self.assertEqual(book["SA_1"]["clauses"][0]["effects"][0]["payload"],
+                         {"name": "t.x", "value": {"a": 1}, "readBy": "display"})
+
+    def test_unknown_reader(self):
+        _, errors = check(VALID.replace(EFFECT, "      - provide: { name: t.x, value: 1, readBy: nobody }"))
+        self.one_error(errors, "unknown reader nobody", 11)
+
+    def test_the_unused_belastung_target_is_gone(self):
+        # Ruling R18: Belastung is `level(rule: COND_1)`; the bare target was never used.
+        _, errors = check(VALID.replace(EFFECT, "      - add: { to: belastung, value: 1 }"))
+        self.one_error(errors, "unknown target belastung", 11)
+
+    def test_an_unhashable_rule_id_is_an_error(self):
+        _, errors = check(VALID.replace("id: SA_1\n", "id: [SA_1]\n", 1))
+        self.one_error(errors, "wrong type for field id", 1)
+
+    def test_an_unhashable_clause_id_is_an_error(self):
+        _, errors = check(VALID.replace("  - id: T1\n", "  - id: [T1]\n"))
+        self.one_error(errors, "wrong type for field id", 8)
+
     def test_unknown_ruling(self):
         _, errors = check(VALID.replace("        when: { hero.mounted: true }\n",
                                         "        when: { hero.mounted: true }\n        ruling: nope\n"))

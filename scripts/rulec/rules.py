@@ -14,7 +14,7 @@ CLAUSE_BODIES_MSG = "clause needs exactly one of effects, unencoded, none"
 
 # field type -> name of the vocabulary list the value must be a member of
 _MEMBER_LISTS = {"span": "spans", "pool": "pools", "audience": "audiences",
-                 "owner": "owners", "rounding": "rounding"}
+                 "owner": "owners", "rounding": "rounding", "reader": "readers"}
 
 
 def _is_int(x):
@@ -127,6 +127,9 @@ def check(rules_dir: Path, v):
             errors.append(RulecError("a rule file is a mapping", str(path), 1))
             continue
         rid = doc.get("id", path.stem)
+        if not isinstance(rid, str):
+            errors.append(RulecError("wrong type for field id", str(path), _key_line(doc, "id", 1)))
+            continue
         if rid in raw:
             errors.append(RulecError(f"duplicate rule id {rid}", str(path), _key_line(doc, "id", 1)))
             continue
@@ -229,6 +232,9 @@ class _Rule:
             if nc is None:
                 continue
             cid = nc.get("id")
+            if cid is not None and not isinstance(cid, str):
+                self.err("wrong type for field id", _key_line(c, "id"))
+                continue
             if cid is not None:                     # an id-less clause is already `missing key id`
                 if cid in seen:
                     self.err(f"duplicate clause id {cid}", _key_line(c, "id"))

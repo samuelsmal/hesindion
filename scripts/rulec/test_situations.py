@@ -186,8 +186,33 @@ class PendingTests(unittest.TestCase):
         s = one("    expect: { pa: { total: -1 } }\n")
         self.assertEqual(s["pending"], ["CORE.k1"])
 
-    def test_star_is_on_every_path_of_an_owned_rule(self):
+    # Ruling R30: an open ruling on a `"*"` entry counts only for a situation that expects
+    # situation-level results or has `sequence` / `rolls`; query expectations count their
+    # queried targets' entries only.
+    def test_star_counts_for_situation_level_results(self):
+        for key in ("offered", "notOffered", "questions", "texts", "events", "fp", "qs", "spent",
+                    "success", "result", "legal"):
+            s = one(f"    hero: {{ abilities: {{ SA_3: 1 }} }}\n    expect: {{ {key}: [] }}\n")
+            self.assertEqual(s["pending"], ["SA_3.s3"], key)
+
+    def test_star_counts_for_a_sequence_or_rolls(self):
+        s = one("    hero: { abilities: { SA_3: 1 } }\n    sequence: [{ step: x }]\n")
+        self.assertEqual(s["pending"], ["SA_3.s3"])
+        s = one("    hero: { abilities: { SA_3: 1 } }\n    rolls: [12]\n    expect: { aw: { total: 0 } }\n")
+        self.assertEqual(s["pending"], ["SA_3.s3"])
+
+    def test_star_does_not_count_for_query_expectations_only(self):
         s = one("    hero: { abilities: { SA_3: 1 } }\n    expect: { aw: { total: 0 } }\n")
+        self.assertEqual(s["pending"], [])
+
+    def test_star_does_not_count_for_a_situation_level_not_applied_only(self):
+        s = one("    hero: { abilities: { SA_3: 1 } }\n"
+                "    expect: { notApplied: [{ rule: SA_2, reason: notOwned }] }\n")
+        self.assertEqual(s["pending"], [])
+
+    def test_a_cited_star_ruling_still_counts_for_a_query(self):
+        s = one("    hero: { abilities: { SA_3: 1 } }\n"
+                "    expect: { aw: { lines: [{ value: 0, ruling: SA_3.s3 }] } }\n")
         self.assertEqual(s["pending"], ["SA_3.s3"])
 
     def test_owned_through_the_query_context(self):
@@ -211,7 +236,8 @@ class PendingTests(unittest.TestCase):
         s = one("    hero: { abilities: { SA_1: 1, SA_3: 1 } }\n"
                 "    expect:\n"
                 "      at: { lines: [{ value: 1, from: SA_1.T1, ruling: r1 }, { value: 2, from: SA_2.X1 }] }\n"
-                "      pa: { total: 0 }\n")
+                "      pa: { total: 0 }\n"
+                "      texts: [{ text: hallo }]\n")
         self.assertEqual(s["pending"], ["CORE.k1", "SA_1.r1", "SA_2.r2", "SA_3.s3"])
 
 

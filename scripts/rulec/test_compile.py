@@ -173,7 +173,7 @@ class CompileTests(unittest.TestCase):
   - id: X2
     text: "Probe"
     effects:
-      - check: { of: { talent: Willenskraft }, onFailure: [ { add: { to: belastung, value: "table(t.x, a)" } } ] }
+      - check: { of: { talent: Willenskraft }, onFailure: [ { add: { to: gs, value: "table(t.x, a)" } } ] }
 """)
         self.assertIn(ref("X", "X1"), out["reach"]["*"])
 
@@ -195,7 +195,7 @@ class CompileTests(unittest.TestCase):
   - id: X1
     text: "Probe"
     effects:
-      - check: { of: { talent: Willenskraft }, onFailure: [ { add: { to: belastung, value: 1 } } ] }
+      - check: { of: { talent: Willenskraft }, onFailure: [ { add: { to: gs, value: 1 } } ] }
 """)
         self.assertEqual(out["reach"], {"*": [ref("X", "X1")]})
 
@@ -324,6 +324,109 @@ rulings: []
 """, "A": A})
         self.assertIn(ref("X", "X1"), out["reach"]["pa"])
         self.assertIn(ref("X", "X1"), out["reach"]["aw"])
+
+    # --- a provide read as a fact, or read by the app (Task 16) ------------------------------
+    def test_a_provide_read_as_a_fact_in_a_when_is_reachable(self):
+        # ITEMTPL_29.GR0 (`loadout.shield`), read by GR1's `when: { loadout.shield: … }`.
+        out = one_rule("""\
+  - id: X1
+    text: "Zeile"
+    effects:
+      - provide: { name: loadout.shield, value: { paMod: 3 } }
+  - id: X2
+    text: "liest"
+    effects:
+      - when: { loadout.shield: ITEMTPL_29 }
+        add: { to: at, value: -1 }
+""")
+        self.assertIn(ref("X", "X1"), out["reach"]["*"])
+
+    def test_a_provide_read_below_its_name_is_reachable(self):
+        # ITEMTPL_19.RS0 (`loadout.weapon`, the whole row), read as `loadout.weapon.technique`.
+        out = one_rule("""\
+  - id: X1
+    text: "Zeile"
+    effects:
+      - provide: { name: loadout.weapon, value: { technique: CT_5 } }
+  - id: X2
+    text: "liest"
+    effects:
+      - when: { loadout.weapon.technique: Peitschen }
+        add: { to: at, value: 1 }
+""")
+        self.assertIn(ref("X", "X1"), out["reach"]["*"])
+
+    def test_a_provide_read_as_a_value_operand_is_reachable(self):
+        # svellttaler-kaltblut.SK2 (`mount.gs`), read by reiterkampf.RK15's proportion.
+        out = one_rule("""\
+  - id: X1
+    text: "Profil"
+    effects:
+      - provide: { name: mount.gs, value: 12 }
+  - id: X2
+    text: "liest"
+    effects:
+      - add: { to: tp, value: { of: [mount.gs, 4], per: 2 } }
+""")
+        self.assertIn(ref("X", "X1"), out["reach"]["*"])
+
+    def test_a_fact_that_only_shares_a_prefix_does_not_read_the_provide(self):
+        with self.assertRaisesRegex(RulecError, "clause can never fire: X.X1"):
+            one_rule("""\
+  - id: X1
+    text: "Profil"
+    effects:
+      - provide: { name: mount.g, value: 12 }
+  - id: X2
+    text: "liest mount.gs"
+    effects:
+      - add: { to: tp, value: { of: mount.gs } }
+""")
+
+    def test_asking_for_a_fact_does_not_read_the_provide(self):
+        with self.assertRaisesRegex(RulecError, "clause can never fire: X.X1"):
+            one_rule("""\
+  - id: X1
+    text: "Tabelle"
+    effects:
+      - provide: { name: hit.zone, value: { "1-6": kopf } }
+  - id: X2
+    text: "fragt"
+    effects:
+      - ask: { fact: hit.zone, who: roll }
+""")
+
+    def test_a_provide_the_app_reads_is_reachable(self):
+        # Reference data no rule computes with: a table the app shows or rolls on
+        # (DISADV_37.SE6, trefferzonen.TZ4), declared with `readBy`.
+        for reader in ("display", "loadout", "roll"):
+            out = one_rule(f"""\
+  - id: X1
+    text: "Tabelle"
+    effects:
+      - provide: {{ name: t.x, value: {{ a: 1 }}, readBy: {reader} }}
+""")
+            self.assertEqual(out["reach"], {"*": [ref("X", "X1")]}, reader)
+
+    # --- defence selectors on the opponent's side (Task 16) --------------------------------
+    def test_an_opponent_defence_selector_is_indexed_under_the_opponents_target(self):
+        out = one_rule("""\
+  - id: X1
+    text: "t"
+    effects:
+      - forbid: { what: { defence: [opponent.weaponParry] } }
+      - forbid: { what: { defence: [opponent.pa, opponent.aw] } }
+      - forbid: { what: { defence: opponent.shieldParry } }
+      - forbid: { what: { defence: [opponent.ausweichen] } }
+      - forbid: { what: { defence: [opponent.other] } }
+      - forbid: { what: { attack: [opponent.passierschlag] } }
+""")
+        self.assertEqual(out["reach"], {
+            "opponent.pa": [ref("X", "X1", 0), ref("X", "X1", 1), ref("X", "X1", 2), ref("X", "X1", 4)],
+            "opponent.aw": [ref("X", "X1", 1), ref("X", "X1", 3), ref("X", "X1", 4)],
+            "opponent.at": [ref("X", "X1", 5)],
+            "opponent.fk": [ref("X", "X1", 5)],
+        })
 
     def test_main_build_writes_rules_json(self):
         d = write_tree({"A": A, "B": B})
