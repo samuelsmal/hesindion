@@ -14,7 +14,7 @@ source:
   page: 152
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 clauses:
   - id: GA1
     text: >
@@ -22,17 +22,23 @@ clauses:
       gezielt eine Trefferzone angreifen. Dazu ist eine Attacke nötig, die entsprechend dem
       Zonenaufschlag erschwert ist. Erschwernis: je nach Zone
     effects:
-      - offer:
-          manoeuvre: gezielterAngriff
-          on: at
-          requires: { choice: targetZone }
-          ruling: halving-by-manoeuvre
-          # Aiming itself is trefferzonen.TZ5's and open to every hero; this is the Spezialmanöver
-          # announced on top of it. As a Spezialmanöver (the `manoeuvre:` field) it falls under
-          # reiterkampf.RK3, SA_172.U3 and the manoeuvre-combination ruling.
-      - when: { action.manoeuvre: gezielterAngriff }
-        multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
+      - when: { query.target: at }
+        offer: { choice: gezielterAngriff }
+        ruling: halving-by-manoeuvre
+        # Aiming itself is trefferzonen.TZ5's and open to every hero; this is the Spezialmanöver
+        # announced on top of it (the old `offer: { manoeuvre: gezielterAngriff, on: at }`). As a
+        # Spezialmanöver (the header's `manoeuvre:` field) it falls under reiterkampf.RK3,
+        # SA_172.U3 and the manoeuvre-combination ruling.
+      - require: { that: { not: { choice.targetZone: none } }, for: { choice: gezielterAngriff } }
+        because: nur mit einer angesagten Trefferzone
+        ruling: halving-by-manoeuvre
+        # The old offer's `requires: { choice: targetZone }`: a zone must be announced
+        # (trefferzonen.TZ5's offer, whose default `none` is no zone).
+      - when: { choice.gezielterAngriff: true }
+        multiply: { to: at, by: 0.5, line: { line: trefferzonen.TZ5 } }
         ruling: [halving-by-manoeuvre, trefferzonen.surprised-then-halved]
+        # Halves TZ5's aiming line only (the old effect id `TZ5.aim` is gone; the clause is
+        # named). The old `action.manoeuvre: gezielterAngriff` is `choice.gezielterAngriff`.
         # The halving is stated on the Fokusregel page (trefferzonen.TZ5), not here; this page
         # says only that the attack carries the zone penalty.
 

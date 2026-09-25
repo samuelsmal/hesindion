@@ -3,18 +3,17 @@ id: trefferzonen-ruestungsschutz
 name: Trefferzonen-Rüstungsschutz
 kind: core
 ruleset: fokus.trefferzonen-rs
-fokus: { theme: Kampf, level: 2 }
-requires_ruleset: [fokus.trefferzonen]     # see ruling requires-trefferzonen
-# FORMAT: a rule set that depends on another, and that *replaces* a core rule's computation
-# (ruestung-und-belastung.A1) while it is on, rather than adding lines to it.
-replaces: [ruestung-und-belastung.A1]
+# The old header keys: `fokus: { theme: Kampf, level: 2 }` is RS1's text (a Fokusregel Stufe II,
+# Kampf) and `ruleset:`; `requires_ruleset: [fokus.trefferzonen]` is RS1's `require` (ruling
+# requires-trefferzonen); `replaces: [ruestung-und-belastung.A1]` is RS4's `suppress` of A1,
+# whose Belastung and extra penalties RS4 computes anew while this rule set is on.
 source:
   url: https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html
   book: Aventurische Rüstkammer
   page: 127                 # "Seite 127ff"
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 # Relation to the core rule: without this Fokusregel a hero wears one armour, helmet included,
 # and it protects every zone fully (ruestung-und-belastung, ruling several-armour-pieces).
@@ -29,7 +28,13 @@ clauses:
       nur einen kleinen Teil einer Zone schützen. Allerdings kann es geschehen, dass ein Held
       keinen Helm trägt, dafür aber seine Lederrüstung mit Metallarmschienen kombiniert.
       Hierdurch weisen die verschiedenen Trefferzonen einen unterschiedlichen Rüstungsschutz auf.
-    none: restates the core rule this Fokusregel replaces, and the case it is for
+    effects:
+      - require: { that: { rulesets: fokus.trefferzonen } }
+        because: Trefferzonen-Rüstungsschutz setzt die Trefferzonen-Regeln voraus
+        ruling: requires-trefferzonen
+        # The old header `requires_ruleset: [fokus.trefferzonen]` (A.8: a rule-level `require`
+        # in the first clause): the Stufe II Fokusregel needs the Stufe I one.
+    # Otherwise the clause restates the core rule this Fokusregel replaces, and the case it is for.
 
   # sic: "angegeben Preismultiplikator". One line per paragraph or bullet of the page.
   - id: RS2
@@ -40,8 +45,14 @@ clauses:
       Der Preis der einzelnen Teile hängt jeweils von den Kosten der Komplettrüstung im Verhältnis zum Schutzbereich ab. Möchte ein Spieler beispielsweise seinen Kopf mit einem Helm aus Leder schützen, schaut er sich die Kosten der Lederrüstung an und multipliziert sie mit dem in der Tabelle angegeben Preismultiplikator für die Zone Kopf.
       Werden die einzelnen Rüstungsteile getragen, so verleihen sie dem Helden in der angegebenen Zone RS. Hierbei muss darauf geachtet werden, dass am linken Arm oder Bein auch eine Rüstung mit anderem RS als am rechten Arm oder Bein getragen werden kann.
     effects:
-      - when: { event: hitTaken }
-        set: { value: hit.rs, to: "armour.rs(hit.zone)" }
+      - set: { to: rs, value: { of: hit.zoneRs } }
+        # The RS a hit meets is that of the zone hit: `hit.zoneRs` is the `rs(zone: …)` of
+        # `hit.zone` and, for an arm or leg, `hit.side` (trefferzonen.TZ4c). The old
+        # `when: { event: hitTaken }` is carried by `hit.zone`, which exists only for a hit, and
+        # the old `set: { value: hit.rs, to: "armour.rs(hit.zone)" }` sets the `rs` that
+        # schaden.S1 subtracts. Each zone's `rs(zone: kopf | torso | armLinks | armRechts |
+        # beinLinks | beinRechts)` is the RS of the piece worn there (the loadout's
+        # `loadout.armourPiece.<zone>`), 0 without one.
         # "Sie schützen nur die Zone, für die sie erworben wurden": a piece counts in its own zone
         # and nowhere else, so a zone no piece covers has RS 0 (ruling pieces-from-other-armours
         # is about which pieces may fill the other zones).
@@ -56,9 +67,13 @@ clauses:
       Rüstungen lassen sich grundsätzlich nicht miteinander kombinieren, es sei denn, in der Beschreibung der Rüstung steht das Gegenteil. Dann sind dort auch die genaueren Regeln dazu erklärt.
       Es ist auch möglich, unterschiedliche Arten von Rüstungsteilen in Arm- und Beinzonen zu tragen. So kann ein Held am linken Arm Kettenhandschuhe tragen, am rechten Arm eine Metallarmschiene und an den Beinen Lederbeinschienen.
     effects:
-      - forbid: { loadout: { armour: { count: { max: 1 } }, helmet: { count: { max: 1 } }, perZone: { max: 1 } } }
+      - forbid: { what: { loadout: [secondArmour, secondHelmet, secondPieceInZone] } }
+        because: eine Rüstung, ein Helm und je Zone höchstens ein Rüstungsteil
         ruling: pieces-from-other-armours
-        # FORMAT: legality over the armour loadout, like reiterkampf.RK4 over weapons.
+        # The old `forbid: { loadout: { armour: { count: { max: 1 } }, helmet: { count: { max:
+        # 1 } }, perZone: { max: 1 } } }`: legality over the armour loadout, like
+        # reiterkampf.RK4 over weapons — a second armour (torso piece), a second helmet, a second
+        # piece in one arm or leg zone.
         # "unterschiedliche Arten von Rüstungsteilen": a limb slot takes any piece, not one
         # armour's set (ruling pieces-from-other-armours).
 
@@ -92,14 +107,39 @@ clauses:
       –1 GS, –1 INI; 43–56 → 2; 57–70 → 2, –1 GS, –1 INI; 71–84 → 3; 85–98 → 4; 99–112 → 5;
       113–126 → 6; 127–140 → 7; 141–154 → 8; usw.
     effects:
-      - sets: { condition: COND_1, level: "band(sum(armour.rs[zone] * factor[zone]))" }
+      - suppress: { line: { line: ruestung-und-belastung.A1 } }
+        because: mit Trefferzonen-Rüstungsschutz werden BE und zusätzliche Abzüge aus den Zonen neu berechnet
+        # The old header `replaces: [ruestung-und-belastung.A1]`: the complete armour's
+        # Belastung and extra GS/INI penalty give way to this computation.
+      - derive:
+          to: armourScore
+          sum:
+            - { of: "rs(zone: kopf)" }
+            - { of: "rs(zone: torso)", times: 5 }
+            - { of: "rs(zone: armLinks)", times: 2 }
+            - { of: "rs(zone: armRechts)", times: 2 }
+            - { of: "rs(zone: beinLinks)", times: 2 }
+            - { of: "rs(zone: beinRechts)", times: 2 }
+        # The RS of each zone times its RS-Faktor, summed (the old `sum(armour.rs[zone] *
+        # factor[zone])`).
+      - derive: { to: "level(rule: COND_1)", sum: ["table(trefferzonen-ruestungsschutz.RS4.belastung, armourScore)"] }
         ruling: be-sentence
         # BE has this one computation; RS5's "Gleiches gilt auch für BE" adds no second (ruling
         # be-sentence).
-      - add: { to: [gs, ini], value: "band(sum(armour.rs[zone] * factor[zone])).extra" }
-        # FORMAT: a lookup in a banded table. Check: a complete armour of RS r scores 14r, which
-        # lands on the core table's Belastung and extra for every armour in it (Leder 42 → 1
-        # and −1; Platte 84 → 3; Gestech 98 → 4; Turnier 112 → 5) — the two rules agree.
+      - add: { to: [gs, ini], value: "table(trefferzonen-ruestungsschutz.RS4.extra, armourScore)" }
+        # The band's zusätzliche Abzüge (the old `band(…).extra`). Check: a complete armour of
+        # RS r scores 14r, which lands on the core table's Belastung and extra for every armour
+        # in it (Leder 42 → 1 and −1; Platte 84 → 3; Gestech 98 → 4; Turnier 112 → 5) — the two
+        # rules agree.
+      - provide:
+          name: trefferzonen-ruestungsschutz.RS4.belastung
+          value: { "0": 0, "1-14": 0, "15-28": 1, "29-42": 1, "43-56": 2, "57-70": 2, "71-84": 3, "85-98": 4, "99-112": 5, "113-126": 6, "127-140": 7, "141-154": 8 }
+      - provide:
+          name: trefferzonen-ruestungsschutz.RS4.extra
+          value: { "0": 0, "1-14": -1, "15-28": 0, "29-42": -1, "43-56": 0, "57-70": -1, "71-84": 0, "85-98": 0, "99-112": 0, "113-126": 0, "127-140": 0, "141-154": 0 }
+        # The table "Belastung und zusätzliche Abzüge" as the page prints it, one band per 14
+        # points, up to 141–154. The page's "usw." (a score above 154) has no row: the lookup
+        # gives the engine's "Regel konnte nicht angewandt werden" text there.
 
   # sic: "Kombinationenzu"
   - id: RS5
@@ -143,7 +183,7 @@ rulings:
     answer: >
       It requires Trefferzonen: the switch is only offered while Trefferzonen is on.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    appliesTo: [requires_ruleset]
+    appliesTo: [RS1]
     notes: >
       RS by zone only matters when a hit has a zone, which only the Trefferzonen-Regeln give; the
       page does not say so itself. The app has one Fokusregel switch today

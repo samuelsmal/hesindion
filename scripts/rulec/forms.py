@@ -4,7 +4,7 @@ import re
 from .errors import RulecError
 
 _LEVEL = re.compile(r"^\s*(?:(-?\d+)\s*\*\s*)?(-)?level\s*(?:([+-])\s*(\d+))?\s*$")
-_TABLE = re.compile(r"^\s*table\(\s*([\w.]+)\s*,\s*([\w.]+)\s*\)\s*$")
+_TABLE = re.compile(r"^\s*table\(\s*([\w.-]+)\s*,\s*([\w.]+)\s*\)\s*$")
 _TARGET = re.compile(r"^([a-zA-Z][\w.]*)(?:\((\w+):\s*([\w\-äöüÄÖÜß ]+)\))?$")
 PROPORTION_KEYS = {"of", "per", "times", "above", "round", "min", "max"}
 
@@ -34,13 +34,23 @@ class Forms:
             self.err("value outside the four forms", line)
         if isinstance(raw, dict) and "of" in raw and set(raw) <= PROPORTION_KEYS:
             p = {"of": self.operand(raw["of"], line), "per": self.operand(raw.get("per", 1), line),
-                 "times": raw.get("times", 1), "above": raw.get("above", 0),
+                 "times": raw.get("times", 1), "above": self.above(raw.get("above", 0), line),
                  "round": raw.get("round", "up"),
                  "min": self.bound(raw.get("min"), line), "max": self.bound(raw.get("max"), line)}
             if p["round"] not in self.v.raw["rounding"]:
                 self.err(f"unknown rounding {p['round']}", line)
             return {"proportion": p}
         self.err("value outside the four forms", line)
+
+    def above(self, raw, line):
+        """A proportion's `above`: a number (kept as is) or a fact or target (an operand):
+        `{ of: technique.leit, above: loadout.weapon.schadensschwelle }` is the points of the
+        Leiteigenschaft over the weapon's Schadensschwelle (schaden.S3)."""
+        if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+            return raw
+        if isinstance(raw, str):
+            return self.operand(raw, line)
+        self.err(f"unknown above {raw!r}", line)
 
     def bound(self, raw, line):
         """A proportion's `min` or `max`: absent (None), a number (kept as is), a fact or target

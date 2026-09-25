@@ -17,7 +17,7 @@ source:
   page: 229
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: S1
@@ -27,18 +27,21 @@ clauses:
       restlichen Punkte erleidet das Ziel an Schadenspunkten, die von seinen Lebenspunkten
       abgezogen werden müssen.
     effects:
-      - when: { action.attack: hit }
-        roll: { value: tp, formula: "weapon.tp + tp.lines" }
-        # The hero's side: the weapon's TP formula, then every TP line (S3's Schadensbonus,
-        # Wuchtschlag, the grip, …), shown as one formula ("1W6+4 +1").
-      - when: { event: heroHit }
-        set: { value: sp, to: "max(0, tp - rs)" }
-        # The take-damage side: the TP are entered (the opponent is not modelled, ADR-0005),
-        # the hero's RS comes off, what remains is SP. Fewer TP than RS: 0 SP, not negative.
-      - when: { event: heroHit }
-        add: { to: le.current, value: "-sp" }
+      # The hero's own TP roll (the old `roll: { value: tp, formula: "weapon.tp + tp.lines" }`)
+      # is the combat procedure's consequence stage (spec §6: dice come in, the engine never
+      # rolls): the weapon's dice from the loadout plus every line of the `tp` query (S3's
+      # Schadensbonus, Wuchtschlag, the grip, …), shown as one formula ("1W6+4 +1").
+      - derive: { to: sp, sum: [{ of: hit.tp }, { of: rs, times: -1 }] }
+        # The take-damage side (A.5): the TP are entered as `hit.tp` (the opponent is not
+        # modelled, ADR-0005), the hero's RS comes off, what remains is SP. The old
+        # `event: heroHit` is carried by `hit.tp`, which exists only for a hit on the hero.
+      - floor: { to: sp, min: 0 }
+        # Fewer TP than RS: 0 SP, not negative.
+      # The LeP loss ("die von seinen Lebenspunkten abgezogen werden müssen") is S2's effect, so
+      # that a rule sending the SP elsewhere (reiterkampf.RK11, SA_59.SS3) suppresses the LeP
+      # loss alone and keeps the SP this derivation gives (read as `hit.sp`).
     # "der vom Ziel getragenen Rüstung": the whole RS, or the RS of the zone hit under
-    # trefferzonen-ruestungsschutz.
+    # trefferzonen-ruestungsschutz (its RS2 sets `rs` to the zone's).
 
   - id: S9
     text: >
@@ -75,7 +78,13 @@ clauses:
       Alle Waffen verfügen über sogenannte Trefferpunkte, die sie bei einem erfolgreichen Angriff
       verursachen. Diese werden ausgewürfelt und vom Ergebnis wird der Rüstungsschutz des
       Getroffenen abgezogen Was übrig bleibt, wird als Schadenspunkte von dessen LE abgezogen.
-    none: S1 again, under "4. Schaden" (the page's missing full stop kept)
+    effects:
+      - add: { to: leCurrent, value: { of: sp, times: -1 } }
+        # "Was übrig bleibt, wird als Schadenspunkte von dessen LE abgezogen": the SP of S1 come
+        # off the current LE (the old third effect of S1, `add: { to: le.current, value: "-sp" }`).
+        # Its own clause so that reiterkampf.RK11 and SA_59.SS3 can suppress the LeP loss without
+        # the SP. No floor: whether LE below 0 matters is the Sterben rule's (S8).
+    # S1 again, under "4. Schaden" (the page's missing full stop kept).
 
   - id: S3
     page:
@@ -95,9 +104,11 @@ clauses:
       anrichtet, sondern 1W6+4 TP.
     effects:
       - when: { action.attack: hit, loadout.weapon.kind: melee }
-        add: { to: tp, value: "max(0, leit - weapon.schadensschwelle)" }
-        # A line of its own: "Schadensbonus KK 16 über 14: +2". `leit` is the higher of the
-        # weapon's Leiteigenschaften (S4), as for PA (kampfwerte.KW7: "wählen").
+        add: { to: tp, value: { of: technique.leit, above: loadout.weapon.schadensschwelle } }
+        # A line of its own: "Schadensbonus KK 16 über 14: +2" (max(0, Leiteigenschaft −
+        # Schadensschwelle), the proportion's `above`). `technique.leit` is the higher of the
+        # technique's Leiteigenschaften, as for PA (kampfwerte.KW7: "wählen"); S4 swaps in the
+        # weapon's own.
         # FORMAT: the threshold is a weapon value (the table's "L+S" column, e.g. "KK 14",
         # "GE/KK 15"), read from the equipment row; Optolith exports it as
         # primaryThreshold { threshold, primary? } on the item.
@@ -112,9 +123,13 @@ clauses:
       aufweisen, was sich dann auf ihren Schadensbonus auswirken kann. Der Paradewert der
       Kampftechnik ist dadurch aber nicht betroffen.
     effects:
-      - when: { weapon.leit: present }
-        replace: { value: "S3.leit", with: weapon.leit }
-        # The weapon's "L+S" attribute wins over the technique's for the Schadensbonus only.
+      - when: { loadout.weapon.ownLeit: true }
+        replace: { line: { line: schaden.S3 }, with: { of: loadout.weapon.leit, above: loadout.weapon.schadensschwelle } }
+        # The weapon's "L+S" attribute wins over the technique's for the Schadensbonus only:
+        # S3's line is computed with the hero's value in the weapon's own Leiteigenschaft
+        # (`loadout.weapon.leit`) instead of `technique.leit` (the old `replace: { value:
+        # "S3.leit", with: weapon.leit }`). `loadout.weapon.ownLeit`: the weapon's row names an
+        # attribute other than its technique's.
 
   - id: S5
     page:
@@ -126,9 +141,13 @@ clauses:
       durch Waffen erzeugten Trefferpunkten abgezogen wird. Manche Angriffe wie Zauber oder einige
       Angriffe von Tieren können den Rüstungsschutz umgehen und direkt Schaden verursachen.
     effects:
-      - offer: { choice: ignoresRS, on: heroHit, then: { set: { value: sp, to: tp } } }
-        # "Ignoriert RS" on the take-damage screen; which attacks do is the attacker's rule
-        # (a spell, a creature), which the app does not know — so the player says.
+      - offer: { choice: ignoresRS, default: false }
+        # "Ignoriert RS" on the take-damage screen (the old `on: heroHit`); which attacks do is
+        # the attacker's rule (a spell, a creature), which the app does not know — so the player
+        # says.
+      - when: { choice.ignoresRS: true }
+        set: { to: sp, value: { of: hit.tp } }
+        # The old offer's `then: { set: { value: sp, to: tp } }`: the SP are the TP, no RS off.
 
   - id: S6
     page:
@@ -155,7 +174,10 @@ clauses:
   - id: S8
     text: Ab 0 Lebenspunkten liegt ein Held im Sterben.
     effects:
-      - when: { le.current: { max: 0 } }
-        gain: { rule: imSterben }
-        # The Sterben rule (what dying does, when the hero is dead) is not written yet; whether
-        # LE below 0 matters is that rule's question (the app clamps LE at 0).
+      - when: { hero.leCurrent: { atMost: 0 } }
+        tell: { to: player, text: "Ab 0 Lebenspunkten liegt ein Held im Sterben." }
+        # The old `gain: { rule: imSterben }`: the Sterben rule (what dying does, when the hero is
+        # dead) has no rule file, and the Regel-Wiki has no page for it to be drafted from (the
+        # Grundregeln "abgeleitete Werte" page says only this sentence), so the hero is told
+        # instead. Whether LE below 0 matters is that rule's question (the app clamps LE at 0).
+        # `hero.leCurrent` is the current LE (the `leCurrent` query's result).

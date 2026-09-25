@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import yamlload
 from .errors import RulecError
-from .forms import Forms
+from .forms import _TABLE, Forms
 
 EFFECT_META = {"when", "ruling", "because", "phase"}
 SHARED = "shared"
@@ -154,8 +154,25 @@ def _cross_checks(book, pending, errors):
             return None
         return next((c for c in rule["clauses"] if c.get("id") == clause_id), None)
 
+    provided = {}                                    # provide name -> [its data values]
+    for rule in book.values():
+        for c in rule["clauses"]:
+            for e in c.get("effects", []):
+                if e["verb"] == "provide":
+                    provided.setdefault(e["payload"]["name"], []).append(e["payload"]["value"])
+
     for kind, value, file, line in pending:
-        if kind == "rule":
+        if kind == "ruleTable":
+            # A `rule` field's `table(name, key)`: the table must be provided, and every rule it
+            # maps a key to must exist (trefferzonen.TZ8's Wundeffekt by zone, TZ11).
+            if value not in provided:
+                errors.append(RulecError(f"unknown table {value}", file, line))
+            for data in provided.get(value, []):
+                rows = data.values() if isinstance(data, dict) else [data]
+                for rid in rows:
+                    if not isinstance(rid, str) or rid not in book:
+                        errors.append(RulecError(f"unknown rule in table {value}: {rid}", file, line))
+        elif kind == "rule":
             if value not in book:
                 errors.append(RulecError(f"unknown rule {value}", file, line))
         elif kind == "useLevel":
@@ -344,7 +361,8 @@ class _Rule:
                 continue
             out[k] = val
             if ftype == "rule" and verb != "useLevel":        # useLevel's rule is checked below
-                self.pending.append(("rule", val, self.file, _key_line(raw, k, vline)))
+                kind, ref = ("ruleTable", val["table"]["name"]) if isinstance(val, dict) else ("rule", val)
+                self.pending.append((kind, ref, self.file, _key_line(raw, k, vline)))
         if verb == "useLevel" and ok and ("as" in raw) == ("lowerBy" in raw):
             self.err("useLevel needs exactly one of as, lowerBy", vline)
             ok = False
@@ -398,6 +416,8 @@ class _Rule:
         if ftype == "rule":
             if not isinstance(val, str):
                 return wrong()
+            if m := _TABLE.match(val):                 # the rule a provided table names for a key
+                return {"table": {"name": m.group(1), "key": m.group(2)}}
             return val
         if ftype in _MEMBER_LISTS:
             if not isinstance(val, str):

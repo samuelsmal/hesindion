@@ -1,7 +1,7 @@
 # DRAFT FORMAT — see ../../README.md.
 id: STATE_13
 name: Überrascht
-kind: status               # binary, no Stufen
+kind: state                # a Status: binary, no Stufen (the old `kind: status`)
 ruleset: core
 source:
   url: https://dsa.ulisses-regelwiki.de/Sta_%C3%9Cberrascht.html
@@ -9,7 +9,7 @@ source:
   page: 36
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: UE1
@@ -19,13 +19,22 @@ clauses:
       überrascht ist. Gegen überraschte Personen darf eine Aktion ausgeführt werden, gegen die
       keine Verteidigung genutzt werden darf. Erst danach beginnt die reguläre Kampfrunde.
     effects:
-      - when: { opponent.state: ueberrascht, check: [at, fk] }
+      - when: { opponent.has: STATE_13, query.target: [at, fk] }
         tell: { to: opponent, text: noDefence }
         # Opponent side, display only (ADR-0005): "Der Gegner darf sich nicht verteidigen."
-      - when: { hero.state: ueberrascht }
-        forbid: { defence: [pa, aw], until: surpriseActionResolved }
+        # The old `opponent.state: ueberrascht` / `check: [at, fk]`.
+      - when: { hero.has: STATE_13 }
+        forbid: { what: { defence: [pa, aw] } }
+        because: überrascht — gegen die Überraschungsaktion ist keine Verteidigung erlaubt
         ruling: hero-no-defence
-        # Set on the combat-setup screen; cleared when the INI roll starts the regular round.
+        # Set on the combat-setup screen (the old `hero.state: ueberrascht`). The old `until:
+        # surpriseActionResolved` is the status itself: the forbid holds while the hero has it,
+        # and the effect below clears it.
+      - when: { hero.has: STATE_13, round.phase: start }
+        gain: { rule: STATE_13, levels: -1 }
+        ruling: hero-no-defence
+        # "Erst danach beginnt die reguläre Kampfrunde": the status clears when the INI roll
+        # starts the regular round (ruling hero-no-defence).
     # The Trefferzonen easing (−2 on the aiming penalty) is trefferzonen.TZ5, not this page's.
 
 rulings:

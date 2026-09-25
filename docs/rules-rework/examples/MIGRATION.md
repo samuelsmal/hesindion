@@ -22,10 +22,10 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_160.yaml
 
-- [ ] L26 clauses[GA1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L27 clauses[GA1].effects[0].offer.on: on — not a field of `offer`
-- [ ] L28 clauses[GA1].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L29 clauses[GA1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L26 clauses[GA1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L27 clauses[GA1].effects[0].offer.on: on — not a field of `offer`
+- [x] L28 clauses[GA1].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L29 clauses[GA1].effects[0].offer.ruling: ruling — not a field of `offer`
 
 ## rules/abilities/SA_161.yaml
 
@@ -268,10 +268,10 @@ No residue.
 
 ## rules/conditions/STATE_13.yaml
 
-- [ ] L22 clauses[UE1].effects[0].when.check: check — not a fact in the vocabulary
-- [ ] L25 clauses[UE1].effects[1].when.hero.state: hero.state — not a fact in the vocabulary
-- [ ] L26 clauses[UE1].effects[1].forbid.defence: defence — not a field of `forbid`
-- [ ] L26 clauses[UE1].effects[1].forbid.until: until — not a field of `forbid`
+- [x] L22 clauses[UE1].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L25 clauses[UE1].effects[1].when.hero.state: hero.state — not a fact in the vocabulary
+- [x] L26 clauses[UE1].effects[1].forbid.defence: defence — not a field of `forbid`
+- [x] L26 clauses[UE1].effects[1].forbid.until: until — not a field of `forbid`
 
 ## rules/core/angriff-von-hinten.yaml
 
@@ -554,14 +554,14 @@ No residue.
 
 ## rules/core/schaden.yaml
 
-- [ ] L31 clauses[S1].effects[0].roll: roll — no one-to-one verb
-- [ ] L34 clauses[S1].effects[1].when.event: event — not a fact in the vocabulary
-- [ ] L38 clauses[S1].effects[2].when.event: event — not a fact in the vocabulary
-- [ ] L115 clauses[S4].effects[0].when.weapon.leit: weapon.leit — not a fact in the vocabulary
-- [ ] L116 clauses[S4].effects[0].replace.value: value — not a field of `replace`
-- [ ] L129 clauses[S5].effects[0].offer.on: on — not a field of `offer`
-- [ ] L129 clauses[S5].effects[0].offer.then: then — not a field of `offer`
-- [ ] L158 clauses[S8].effects[0].when.le.current: le.current — not a fact in the vocabulary
+- [x] L31 clauses[S1].effects[0].roll: roll — no one-to-one verb
+- [x] L34 clauses[S1].effects[1].when.event: event — not a fact in the vocabulary
+- [x] L38 clauses[S1].effects[2].when.event: event — not a fact in the vocabulary
+- [x] L115 clauses[S4].effects[0].when.weapon.leit: weapon.leit — not a fact in the vocabulary
+- [x] L116 clauses[S4].effects[0].replace.value: value — not a field of `replace`
+- [x] L129 clauses[S5].effects[0].offer.on: on — not a field of `offer`
+- [x] L129 clauses[S5].effects[0].offer.then: then — not a field of `offer`
+- [x] L158 clauses[S8].effects[0].when.le.current: le.current — not a fact in the vocabulary
 
 ## rules/core/schicksalspunkte.yaml
 
@@ -588,37 +588,37 @@ No residue.
 
 ## rules/core/trefferzonen-ruestungsschutz.yaml
 
-- [ ] L6 fokus: fokus — not a rule key in the vocabulary
-- [ ] L7 requires_ruleset: requires_ruleset — not a rule key in the vocabulary
-- [ ] L10 replaces: replaces — not a rule key in the vocabulary
-- [ ] L43 clauses[RS2].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L59 clauses[RS3].effects[0].forbid.loadout: loadout — not a field of `forbid`
-- [ ] L95 clauses[RS4].effects[0].sets: sets — no one-to-one verb
+- [x] L6 fokus: fokus — not a rule key in the vocabulary
+- [x] L7 requires_ruleset: requires_ruleset — not a rule key in the vocabulary
+- [x] L10 replaces: replaces — not a rule key in the vocabulary
+- [x] L43 clauses[RS2].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L59 clauses[RS3].effects[0].forbid.loadout: loadout — not a field of `forbid`
+- [x] L95 clauses[RS4].effects[0].sets: sets — no one-to-one verb
 
 ## rules/core/trefferzonen.yaml
 
-- [ ] L13 fokus: fokus — not a rule key in the vocabulary
-- [ ] L42 clauses[TZ2].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L42 clauses[TZ2].effects[0].when.zone: zone — not a fact in the vocabulary
-- [ ] L43 clauses[TZ2].effects[0].roll: roll — no one-to-one verb
-- [ ] L43 clauses[TZ2].effects[0].roll.on.chosen_by: chosen_by — snake_case key, no mapping
-- [ ] L57 clauses[TZ3].effects[0].table_for: table_for — no one-to-one verb
-- [ ] L59 clauses[TZ3].effects[0].table_for.clamp_to: clamp_to — snake_case key, no mapping
-- [ ] L114 clauses[TZ4c].effects[0].sets: sets — no one-to-one verb
-- [ ] L186 clauses[TZ4i].effects[0].provide.value.7-20.split_evenly: split_evenly — snake_case key, no mapping
-- [ ] L211 clauses[TZ5].effects[0].offer.on: on — not a field of `offer`
-- [ ] L211 clauses[TZ5].effects[0].offer.zones: zones — not a field of `offer`
-- [ ] L216 clauses[TZ5].effects[TZ5.aim].id: id — no one-to-one verb
-- [ ] L218 clauses[TZ5].effects[2].raise: raise — no one-to-one verb
-- [ ] L223 clauses[TZ5].effects[3].replaces: replaces — no one-to-one verb
-- [ ] L240 clauses[TZ6].effects[0].table: table — no one-to-one verb
-- [ ] L254 clauses[TZ7].status: status — not a clause key in the vocabulary
-- [ ] L255 clauses[TZ7].why: why — `why` without `effects: none`: the clause has no body to carry it
-- [ ] L269 clauses[TZ8].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L270 clauses[TZ8].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L274 clauses[TZ8].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L300 clauses[TZ11].effects[0].table: table — no one-to-one verb
-- [ ] L303 clauses[TZ11].effects[0].table.arme.drop.ask_if: ask_if — snake_case key, no mapping
+- [x] L13 fokus: fokus — not a rule key in the vocabulary
+- [x] L42 clauses[TZ2].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L42 clauses[TZ2].effects[0].when.zone: zone — not a fact in the vocabulary
+- [x] L43 clauses[TZ2].effects[0].roll: roll — no one-to-one verb
+- [x] L43 clauses[TZ2].effects[0].roll.on.chosen_by: chosen_by — snake_case key, no mapping
+- [x] L57 clauses[TZ3].effects[0].table_for: table_for — no one-to-one verb
+- [x] L59 clauses[TZ3].effects[0].table_for.clamp_to: clamp_to — snake_case key, no mapping
+- [x] L114 clauses[TZ4c].effects[0].sets: sets — no one-to-one verb
+- [x] L186 clauses[TZ4i].effects[0].provide.value.7-20.split_evenly: split_evenly — snake_case key, no mapping
+- [x] L211 clauses[TZ5].effects[0].offer.on: on — not a field of `offer`
+- [x] L211 clauses[TZ5].effects[0].offer.zones: zones — not a field of `offer`
+- [x] L216 clauses[TZ5].effects[TZ5.aim].id: id — no one-to-one verb
+- [x] L218 clauses[TZ5].effects[2].raise: raise — no one-to-one verb
+- [x] L223 clauses[TZ5].effects[3].replaces: replaces — no one-to-one verb
+- [x] L240 clauses[TZ6].effects[0].table: table — no one-to-one verb
+- [x] L254 clauses[TZ7].status: status — not a clause key in the vocabulary
+- [x] L255 clauses[TZ7].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L269 clauses[TZ8].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L270 clauses[TZ8].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L274 clauses[TZ8].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L300 clauses[TZ11].effects[0].table: table — no one-to-one verb
+- [x] L303 clauses[TZ11].effects[0].table.arme.drop.ask_if: ask_if — snake_case key, no mapping
 
 ## rules/core/vorteilhafte-position.yaml
 
@@ -1285,61 +1285,61 @@ No residue.
 
 ## situations/trefferzonen.yaml
 
-- [ ] L26 situations[TZ.2].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L35 situations[TZ.3].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L35 situations[TZ.3].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L45 situations[TZ.4].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L45 situations[TZ.4].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L57 situations[TZ.5].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L57 situations[TZ.5].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L62 situations[TZ.5].expect.tell: tell — neither an expect key nor a query
-- [ ] L69 situations[TZ.6].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L80 situations[TZ.7].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L91 situations[TZ.8].check: check — not a situation key in the vocabulary
-- [ ] L92 situations[TZ.8].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L92 situations[TZ.8].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L106 situations[TZ.9].expect.zone: zone — neither an expect key nor a query
-- [ ] L107 situations[TZ.9].expect.table: table — neither an expect key nor a query
-- [ ] L113 situations[TZ.10].attacker: attacker — not a situation key in the vocabulary
-- [ ] L116 situations[TZ.10].expect.table: table — neither an expect key nor a query
-- [ ] L117 situations[TZ.10].expect.zone: zone — neither an expect key nor a query
-- [ ] L124 situations[TZ.11].attacker: attacker — not a situation key in the vocabulary
-- [ ] L127 situations[TZ.11].expect.table: table — neither an expect key nor a query
-- [ ] L128 situations[TZ.11].expect.zone: zone — neither an expect key nor a query
-- [ ] L136 situations[TZ.12].hit: hit — not a situation key in the vocabulary
-- [ ] L138 situations[TZ.12].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L142 situations[TZ.12].expect.on_failure: on_failure — neither an expect key nor a query
-- [ ] L149 situations[TZ.13].sequence[0].expect.checks_first: checks_first — snake_case key, no mapping
-- [ ] L152 situations[TZ.13].sequence[1].expect.checks_first: checks_first — snake_case key, no mapping
-- [ ] L154 situations[TZ.13].sequence[1].expect.on_failure: on_failure — snake_case key, no mapping
-- [ ] L161 situations[TZ.14].hit: hit — not a situation key in the vocabulary
-- [ ] L162 situations[TZ.14].fail: fail — not a situation key in the vocabulary
-- [ ] L164 situations[TZ.14].expect.loadout: loadout — neither an expect key nor a query
-- [ ] L165 situations[TZ.14].expect.log: log — neither an expect key nor a query
-- [ ] L166 situations[TZ.14].expect.asked: asked — neither an expect key nor a query
-- [ ] L175 situations[TZ.15].expect.after: after — neither an expect key nor a query
-- [ ] L184 situations[TZ.16].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L184 situations[TZ.16].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L196 situations[TZ.17].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
-- [ ] L196 situations[TZ.17].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L198 situations[TZ.17].expect.excludes: excludes — neither an expect key nor a query
-- [ ] L214 situations[TZ.27].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L229 situations[TZ.20].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
-- [ ] L230 situations[TZ.20].expect.score: score — neither an expect key nor a query
-- [ ] L231 situations[TZ.20].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L240 situations[TZ.21].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
-- [ ] L241 situations[TZ.21].expect.score: score — neither an expect key nor a query
-- [ ] L242 situations[TZ.21].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L251 situations[TZ.22].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
-- [ ] L252 situations[TZ.22].expect.score: score — neither an expect key nor a query
-- [ ] L253 situations[TZ.22].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L265 situations[TZ.23].expect.score: score — neither an expect key nor a query
-- [ ] L266 situations[TZ.23].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L276 situations[TZ.24].expect.not_selectable: not_selectable — neither an expect key nor a query
-- [ ] L276 situations[TZ.24].expect.not_selectable[0].second_armour: second_armour — snake_case key, no mapping
-- [ ] L292 situations[TZ.26].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
-- [ ] L293 situations[TZ.26].expect.score: score — neither an expect key nor a query
-- [ ] L294 situations[TZ.26].expect.conditions: conditions — neither an expect key nor a query
+- [x] L26 situations[TZ.2].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L35 situations[TZ.3].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L35 situations[TZ.3].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L45 situations[TZ.4].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L45 situations[TZ.4].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L57 situations[TZ.5].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L57 situations[TZ.5].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L62 situations[TZ.5].expect.tell: tell — neither an expect key nor a query
+- [x] L69 situations[TZ.6].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L80 situations[TZ.7].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L91 situations[TZ.8].check: check — not a situation key in the vocabulary
+- [x] L92 situations[TZ.8].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L92 situations[TZ.8].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L106 situations[TZ.9].expect.zone: zone — neither an expect key nor a query
+- [x] L107 situations[TZ.9].expect.table: table — neither an expect key nor a query
+- [x] L113 situations[TZ.10].attacker: attacker — not a situation key in the vocabulary
+- [x] L116 situations[TZ.10].expect.table: table — neither an expect key nor a query
+- [x] L117 situations[TZ.10].expect.zone: zone — neither an expect key nor a query
+- [x] L124 situations[TZ.11].attacker: attacker — not a situation key in the vocabulary
+- [x] L127 situations[TZ.11].expect.table: table — neither an expect key nor a query
+- [x] L128 situations[TZ.11].expect.zone: zone — neither an expect key nor a query
+- [x] L136 situations[TZ.12].hit: hit — not a situation key in the vocabulary
+- [x] L138 situations[TZ.12].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L142 situations[TZ.12].expect.on_failure: on_failure — neither an expect key nor a query
+- [x] L149 situations[TZ.13].sequence[0].expect.checks_first: checks_first — snake_case key, no mapping
+- [x] L152 situations[TZ.13].sequence[1].expect.checks_first: checks_first — snake_case key, no mapping
+- [x] L154 situations[TZ.13].sequence[1].expect.on_failure: on_failure — snake_case key, no mapping
+- [x] L161 situations[TZ.14].hit: hit — not a situation key in the vocabulary
+- [x] L162 situations[TZ.14].fail: fail — not a situation key in the vocabulary
+- [x] L164 situations[TZ.14].expect.loadout: loadout — neither an expect key nor a query
+- [x] L165 situations[TZ.14].expect.log: log — neither an expect key nor a query
+- [x] L166 situations[TZ.14].expect.asked: asked — neither an expect key nor a query
+- [x] L175 situations[TZ.15].expect.after: after — neither an expect key nor a query
+- [x] L184 situations[TZ.16].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L184 situations[TZ.16].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L196 situations[TZ.17].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
+- [x] L196 situations[TZ.17].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L198 situations[TZ.17].expect.excludes: excludes — neither an expect key nor a query
+- [x] L214 situations[TZ.27].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L229 situations[TZ.20].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
+- [x] L230 situations[TZ.20].expect.score: score — neither an expect key nor a query
+- [x] L231 situations[TZ.20].expect.conditions: conditions — neither an expect key nor a query
+- [x] L240 situations[TZ.21].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
+- [x] L241 situations[TZ.21].expect.score: score — neither an expect key nor a query
+- [x] L242 situations[TZ.21].expect.conditions: conditions — neither an expect key nor a query
+- [x] L251 situations[TZ.22].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
+- [x] L252 situations[TZ.22].expect.score: score — neither an expect key nor a query
+- [x] L253 situations[TZ.22].expect.conditions: conditions — neither an expect key nor a query
+- [x] L265 situations[TZ.23].expect.score: score — neither an expect key nor a query
+- [x] L266 situations[TZ.23].expect.conditions: conditions — neither an expect key nor a query
+- [x] L276 situations[TZ.24].expect.not_selectable: not_selectable — neither an expect key nor a query
+- [x] L276 situations[TZ.24].expect.not_selectable[0].second_armour: second_armour — snake_case key, no mapping
+- [x] L292 situations[TZ.26].expect.rs_by_zone: rs_by_zone — neither an expect key nor a query
+- [x] L293 situations[TZ.26].expect.score: score — neither an expect key nor a query
+- [x] L294 situations[TZ.26].expect.conditions: conditions — neither an expect key nor a query
 
 ## situations/verweichlicht.yaml
 
@@ -1396,6 +1396,12 @@ No residue.
 - situations/reiterkampf.yaml 5.6, kampfsituationen.yaml 17.3, 17.22, kupperus-und-waffen.yaml 18.9: the line key `raises: vorteilhafte-position.VP1` on SA_661.GS1's line is a comment; GS1 is a line of its own, and no line key names the line another raises.
 - situations/reiterkampf.yaml 5.10, 5.11, 5.12, 5.13, 5.14, kupperus-und-waffen.yaml 18.1, 18.5, 18.8, 18.11, 18.17: every `formula:` (a TP formula or a computation, e.g. "2 + 12/2", "1W6+4 +9", "−⌈(25 − 20)/2⌉") is a comment: no line or query key holds a formula.
 - situations/kampfsituationen.yaml 17.9: `target: mount` (the SP go to Kupperus's LE) is now a `texts` expectation (reiterkampf.RK11's tell); the mount's LE is not an engine pool, so no event or query can say where the SP went.
+- situations/trefferzonen.yaml TZ.9, TZ.10, TZ.11: expect the zone a die gives (`zone: [{ roll, zone, side }]`) and the table rolled on (`table: humanoid.mittel`, `table: { use: humanoid.gross, from: trefferzonen.TZ3, ruling: relative-size-table }`). No expect key holds a fact's value; trefferzonen.TZ2 asks the roll layer for `hit.zone` (dice come in, the engine never rolls), and TZ3/TZ4–TZ4j are provided data. The expectations are comments; the dice are `rolls: [..]`.
+- situations/trefferzonen.yaml TZ.4, TZ.5, TZ.6: expect the eased aiming line `via: [STATE_13, …]`. The easing is trefferzonen.TZ5's own `replace` (the clause whose text says it), conditioned on `opponent.has: STATE_13`; a replaced line's `via` is the replacer, trefferzonen.TZ5, so STATE_13 appears as the fact the replace read, not as a rule in `via`.
+- situations/trefferzonen.yaml TZ.12, TZ.13, TZ.14, boronmir-neu.yaml 19.8: expect the Wundeffekt `from: trefferzonen.TZ11` (a `gained` STATE_10, an item let go, the 1W3+1 SP). Under A.4 the gain, the item change and the torso `tell` run in trefferzonen.TZ8's `check.onFailure`, reading TZ11's provided tables; their origin is TZ8. The 1W3+1 SP (TZ.12, 19.8: `damage: { formula: 1W3+1 }`) has no dice value form and is a `tell` to the player, not a damage event (see "Open questions").
+- situations/trefferzonen.yaml TZ.24: expects the second armour not selectable `because: ruestung-und-belastung.A1`. A1 (Group 1) encodes no such `forbid` (its ruling several-armour-pieces is decided, but the one-armour limit has no effect); the expectation is re-keyed to `legal.loadout` and stays unmet until A1 gets one.
+- situations/boronmir-neu.yaml 19.9: expects `wundschwelle` total 9 with `rulesets: []`. The Wundschwelle's derive (⌈KO/2⌉) is trefferzonen.TZ8's, and the whole file is `ruleset: fokus.trefferzonen`, so with the Fokusregel off only ADV_54's +1 remains. Pending on ADV_54's open ruling eisern-scope, which asks exactly this.
+- situations/kampfwerte.yaml 16.20: expects `events: [{ gained: imSterben, from: schaden.S8 }]`. There is no rule `imSterben` and the Regel-Wiki has no page to draft one from; schaden.S8 now `tell`s the hero "Ab 0 Lebenspunkten liegt ein Held im Sterben."
 
 ## Reviews reset by hand edits
 
@@ -1472,3 +1478,28 @@ No residue.
 - svellttaler-kaltblut.SK10: `add … per: threshold_crossed` over `mount.lep: { at_most: [49, 33, 16, 5] }` is four `add`s of 1 to `mount.level(rule: COND_6)`, one per threshold of `mount.leCurrent`
 
 - groessenkategorie.GK4: new effect: the opponent may not parry the mount's own attacks (`choice.order: [mountAttack, niederreiten]`) with a weapon when `mount.size: gross` (ruling mounted-size: the mount's attacks come from a groß being); the old encoding had only the hero's defence
+
+- schaden.S1: the TP roll effect is dropped (the combat procedure's consequence stage, spec §6); the SP are `derive: { to: sp, sum: [hit.tp, −rs] }` plus `floor: { to: sp, min: 0 }` (A.5) without the `event: heroHit` condition; the LeP loss moved to S2
+- schaden.S2: was `none`; now holds the LeP loss `add: { to: leCurrent, value: −sp }` (the old third effect of S1), so reiterkampf.RK11 and SA_59.SS3 can suppress it without the SP
+- schaden.S3: `max(0, leit − weapon.schadensschwelle)` is a proportion `{ of: technique.leit, above: loadout.weapon.schadensschwelle }` (a fact as `above`)
+- schaden.S4: `replace: { value: "S3.leit", with: weapon.leit }` is a `replace` of S3's line computed with `loadout.weapon.leit`, when `loadout.weapon.ownLeit`
+- schaden.S5: the offer's `on: heroHit` is dropped; its `then` is a `set: { to: sp, value: hit.tp }` when `choice.ignoresRS`
+- schaden.S8: `gain: { rule: imSterben }` is a `tell` to the player (no Sterben rule exists or can be drafted from the wiki); `le.current ≤ 0` is `hero.leCurrent: { atMost: 0 }`
+- reiterkampf.RK11: the `suppress` names schaden.S2 (the rider's LeP loss) instead of schaden.S1, so the SP of the hit stay for RK10's `hit.sp`
+- trefferzonen.TZ2: the 1W20 `roll` on TZ3's table is `ask: { fact: hit.zone, who: roll }` when no zone is announced (`choice.targetZone: none`); the lookup is the app's roll layer; `event: hitLanded` is dropped
+- trefferzonen.TZ3: `table_for` is a `provide` of the table size by the size gap (target − attacker); the clamping to the body plan's tables is a comment
+- trefferzonen.TZ4c: `sets: { hit.side }` is a `provide` of the parity table; `hit.side` is a roll fact the app states
+- trefferzonen.TZ4j: new `forbid` of `choice.targetZone` against a body plan without zones (was a comment; TZ.18 expects it `because: trefferzonen.TZ4j`)
+- trefferzonen.TZ5: the offer is `offer: { choice: targetZone, default: none }` on `query.target: [at, fk]` (its `zones: target.zones` a comment); the aim reads `table(trefferzonen.TZ6, choice.targetZone)` when a zone is announced (the effect id `TZ5.aim` is gone); the surprise easing `raise … by: 2, max: 0, before:` is a `replace` of TZ5's line by the provided eased table (`trefferzonen.TZ5.eased`, TZ6 + 2), on `opponent.has: STATE_13` (was `opponent.state: ueberrascht`), ordered before the halving by phase; `replaces` is a `suppress` of groessenkategorie.GK3 and fernkampf.FK6 (was the undrafted `fernkampf.zielgroesse`), with `because`
+- trefferzonen.TZ8: new `derive` of the Wundschwelle (⌈KO/2⌉, A.1); `requires_check`/`on_failure` is a `check` of TAL_8 (A.4), fired by `hit.overWundschwelle ≥ 1` (a derived count, was `hit.sp ≥ hero.wundschwelle`; `event: hitTaken` dropped); on failure a `gain` of `table(trefferzonen.TZ11.effect, hit.zone)` (Kopf, Beine), an `item` change `held: false` of the weapon or other piece in the hit hand (Arme, via `hit.heldInHand`, not two-handed, not a shield), and a `tell` of Torso's 1W3+1 SP
+- trefferzonen.TZ11: the `table` is two `provide`s, `trefferzonen.TZ11.application` and `trefferzonen.TZ11.effect` (Kopf COND_2, Beine STATE_10); the Arme drop and the Torso damage are TZ8's; ruling wundeffekt-arm-drop moved onto TZ8's item effects
+- trefferzonen-ruestungsschutz.RS1: was `none`; now the header `requires_ruleset` as `require: { that: { rulesets: fokus.trefferzonen } }` (ruling requires-trefferzonen, whose `appliesTo` is now RS1)
+- trefferzonen-ruestungsschutz.RS2: `set: { value: hit.rs, to: armour.rs(hit.zone) }` on `event: hitTaken` is `set: { to: rs, value: hit.zoneRs }` (the RS of the zone and side hit), no event condition
+- trefferzonen-ruestungsschutz.RS3: the loadout counts are `forbid: { what: { loadout: [secondArmour, secondHelmet, secondPieceInZone] } }` with a `because`
+- trefferzonen-ruestungsschutz.RS4: the header `replaces: [ruestung-und-belastung.A1]` is a `suppress` of A1 here; the score is a `derive` of the new target `armourScore`; BE is a `derive` of `level(rule: COND_1)` and the extra an `add` to GS/INI, each a `table(…, armourScore)` lookup in the provided band tables (up to 141–154; the page's "usw." has no rows)
+- SA_160.GA1: the offer is `offer: { choice: gezielterAngriff }` on `query.target: at`; its `requires: { choice: targetZone }` is a `require … for: { choice: gezielterAngriff }` that a zone is announced; the halving reads `choice.gezielterAngriff` (was `action.manoeuvre`) and is `multiply: { to: at, by: 0.5, line: { line: trefferzonen.TZ5 } }` (was the effect id `TZ5.aim`)
+- STATE_13.UE1: `opponent.state`/`hero.state: ueberrascht` are `opponent.has`/`hero.has: STATE_13`, `check: [at, fk]` is `query.target`; the forbid's `until: surpriseActionResolved` is a new `gain: { rule: STATE_13, levels: -1 }` when `round.phase: start` (the regular round begins), with a `because` on the forbid
+
+## Open questions
+
+- trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden.

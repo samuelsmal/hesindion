@@ -303,6 +303,60 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(effects[4]["payload"]["costs"][0]["payload"]["pool"], "actions")
         self.assertEqual(effects[5]["payload"]["to"], [{"name": "mount.carryingCapacity"}])
 
+    def test_group_4_vocabulary(self):
+        v = vocab.load()
+        expected = {"hit.overWundschwelle": "derived", "hit.side": "roll", "hit.heldInHand": "derived",
+                    "hit.zoneRs": "derived", "hero.leCurrent": "derived", "loadout.weaponHand": "loadout",
+                    "loadout.weapon.schadensschwelle": "loadout", "loadout.weapon.leit": "loadout",
+                    "loadout.weapon.ownLeit": "loadout", "loadout.armourPiece.kopf": "loadout"}
+        self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
+        self.assertTrue(v.is_target("armourScore"))
+        self.assertIn("held", v.raw["itemFields"])
+
+    GAIN_BY_TABLE = textwrap.dedent("""\
+        - provide: { name: SA_1.effect, value: { kopf: SA_2, beine: SA_2 } }
+        - when: { hit.overWundschwelle: { atLeast: 1 } }
+          check:
+            of: { talent: TAL_8 }
+            modifier: { of: hit.sp, per: wundschwelle, times: -1, round: down }
+            onFailure:
+              - gain: { rule: "table(SA_1.effect, hit.zone)" }
+              - when: { hit.zone: arme, hit.heldInHand: weapon }
+                item: { instance: { loadout: weapon }, change: { held: false } }
+        """)
+
+    def test_the_group_4_encodings(self):
+        # trefferzonen TZ8/TZ11 (a `rule` field read from a provided table), schaden S1/S3,
+        # trefferzonen-ruestungsschutz RS2/RS4.
+        body = self.GAIN_BY_TABLE + textwrap.dedent("""\
+            - derive: { to: sp, sum: [{ of: hit.tp }, { of: rs, times: -1 }] }
+            - floor: { to: sp, min: 0 }
+            - add: { to: tp, value: { of: technique.leit, above: loadout.weapon.schadensschwelle } }
+            - set: { to: rs, value: { of: hit.zoneRs } }
+            - derive: { to: armourScore, sum: [{ of: "rs(zone: kopf)" }, { of: "rs(zone: torso)", times: 5 }] }
+            - when: { hero.leCurrent: { atMost: 0 } }
+              tell: { to: player, text: "im Sterben" }
+            """)
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                           textwrap.indent(body, "      ")), extra={"abilities/SA_2.yaml": SA_2})
+        self.assertEqual(errors, [])
+        effects = book["SA_1"]["clauses"][0]["effects"]
+        fail = effects[1]["payload"]["onFailure"]
+        self.assertEqual(fail[0]["payload"]["rule"], {"table": {"name": "SA_1.effect", "key": "hit.zone"}})
+        self.assertEqual(fail[1]["payload"]["change"], {"held": False})
+        self.assertEqual(effects[4]["payload"]["value"]["proportion"]["above"],
+                         {"fact": "loadout.weapon.schadensschwelle"})
+
+    def test_a_rule_table_must_be_provided_and_name_rules(self):
+        body = self.GAIN_BY_TABLE.replace("name: SA_1.effect", "name: SA_1.other")
+        _, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                        textwrap.indent(body, "      ")), extra={"abilities/SA_2.yaml": SA_2})
+        self.assertEqual([e.message for e in errors], ["unknown table SA_1.effect"])
+        body = self.GAIN_BY_TABLE.replace("beine: SA_2", "beine: NOPE")
+        _, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                        textwrap.indent(body, "      ")), extra={"abilities/SA_2.yaml": SA_2})
+        self.assertEqual([e.message for e in errors], ["unknown rule in table SA_1.effect: NOPE"])
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

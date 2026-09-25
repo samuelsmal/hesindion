@@ -200,8 +200,10 @@ clauses:
         # "Reittier getroffen" (the old `label`), on the take-damage screen (the old `on`), when
         # the hero suffers a Passierschlag (the old `event: passierschlagSuffered`).
       - when: { hero.mounted: true, choice.mountHit: true }
-        suppress: { line: { line: schaden.S1 } }
+        suppress: { line: { line: schaden.S2 } }
         because: der Passierschlag trifft das Reittier, nicht den Reiter
+        # The rider's LeP loss (schaden.S2) only: the SP of the hit (schaden.S1) are kept, and
+        # RK10 reads them as `hit.sp`.
         ruling: passierschlag-on-mount
       - when: { hero.mounted: true, choice.mountHit: true }
         tell: { to: player, text: "Die SP gehen auf die LeP des Reittiers." }

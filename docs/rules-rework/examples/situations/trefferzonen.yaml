@@ -1,8 +1,21 @@
 # Example 6 — Trefferzonen (Fokusregel) and Trefferzonen-Rüstungsschutz (Fokusregel Stufe II).
 # Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # `rulesets:` lists the optional rule sets the group plays; core is always on.
+#
+# The hero is a mittel-sized humanoid (the old `size: mittel`). The announced zone is
+# `choice.targetZone` (the old `targetZone`; `none` is no zone), a Gezielter Angriff / Schuss
+# `choice.gezielterAngriff` / `choice.gezielterSchuss` (the old `manoeuvre`). The opponent's
+# Überrascht is `opponent.has: STATE_13` (the old `opponent.states`). A hit on the hero is its SP
+# after RS as `values: { sp: n }` and its zone `rolls: { hit.zone }` (the old `hit:`), as in
+# verweichlicht.yaml; the Wundeffekt check is Selbstbeherrschung (TAL_8), stated as the check
+# being made (`choose: { check.* }`), and its failure a `sequence` step (the old `on_failure`,
+# `fail`). The armour worn per zone (the old `hero.armour`) is `loadout.armourPiece.<zone>`,
+# the zones kopf, torso, armLinks, armRechts, beinLinks, beinRechts (the old `arme`/`beine`
+# name both sides); the RS per zone (the old `rs_by_zone`) is the query `rs(zone: …)`, the
+# RS-factor score (the old `score`) the query `armourScore`, a condition's Stufe (the old
+# `conditions`) the query `level(rule: …)`.
 
-hero: { at: 14, pa: 8, aw: 7, fk: 12, ko: 11, wundschwelle: 6, size: mittel }
+hero: { attributes: { KO: 11 }, values: { at: 14, pa: 8, aw: 7, fk: 12, wundschwelle: 6 } }
 
 situations:
 
@@ -23,7 +36,7 @@ situations:
     name: Aiming at the head without Gezielter Angriff
     rulesets: [fokus.trefferzonen]
     opponent: { bodyPlan: humanoid, size: mittel }
-    choose: { targetZone: kopf }
+    choose: { choice.targetZone: kopf }
     expect:
       at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5 }] }
     appToday: same
@@ -32,7 +45,7 @@ situations:
     name: Aiming at the head with Gezielter Angriff
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_160: 1 } }
-    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    choose: { choice.targetZone: kopf, choice.gezielterAngriff: true }
     expect:
       at: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1], ruling: SA_160.halving-by-manoeuvre }] }
     appToday: same
@@ -41,8 +54,8 @@ situations:
     name: Torso, Gezielter Angriff, the opponent überrascht — ease, then halve
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_160: 1 } }
-    opponent: { states: [STATE_13] }
-    choose: { targetZone: torso, manoeuvre: gezielterAngriff }
+    opponent: { has: STATE_13 }
+    choose: { choice.targetZone: torso, choice.gezielterAngriff: true }
     expect:
       at:
         total: -1      # −4 + 2 = −2, / 2 = −1
@@ -53,20 +66,20 @@ situations:
     name: Head, Gezielter Angriff, the opponent überrascht
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_160: 1 } }
-    opponent: { states: [STATE_13] }
-    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    opponent: { has: STATE_13 }
+    choose: { choice.targetZone: kopf, choice.gezielterAngriff: true }
     expect:
       at:
         total: -4      # −10 + 2 = −8, / 2 = −4
         lines: [{ value: -4, was: -10, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
-      tell: [{ opponent: noDefence, from: STATE_13.UE1 }]
+      texts: [{ opponent: noDefence, from: STATE_13.UE1 }]
     appToday: −3 (halves first, then eases) — wrong; no "no defence" note
 
   - id: "TZ.6"
     name: Arms, no SF, the opponent überrascht — no halving, no order question
     rulesets: [fokus.trefferzonen]
-    opponent: { states: [STATE_13] }
-    choose: { targetZone: arme }
+    opponent: { has: STATE_13 }
+    choose: { choice.targetZone: arme }
     expect:
       at:
         total: -6
@@ -77,7 +90,7 @@ situations:
     name: Torso of a winzig opponent — the aiming penalty replaces the size modifier
     rulesets: [fokus.trefferzonen]
     opponent: { size: winzig }
-    choose: { targetZone: torso }
+    choose: { choice.targetZone: torso }
     expect:
       at: { total: -4, lines: [{ value: -4, from: trefferzonen.TZ5 }] }
       notApplied: [{ rule: groessenkategorie, reason: trefferzonen.TZ5, ruling: trefferzonen.zone-replaces-size }]
@@ -88,11 +101,10 @@ situations:
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_161: 1 } }
     opponent: { size: gross }
-    check: fk
-    choose: { targetZone: kopf, manoeuvre: gezielterSchuss }
+    choose: { choice.targetZone: kopf, choice.gezielterSchuss: true }   # the query is `fk` (the old `check: fk`)
     expect:
       fk: { total: -5, lines: [{ value: -5, was: -10, from: trefferzonen.TZ5, via: [SA_161.GS1], ruling: SA_160.halving-by-manoeuvre }] }
-      notApplied: [{ rule: fernkampf.zielgroesse, reason: trefferzonen.TZ5, ruling: trefferzonen.zone-replaces-size }]
+      notApplied: [{ rule: fernkampf, clause: FK6, reason: trefferzonen.TZ5, ruling: trefferzonen.zone-replaces-size }]
     appToday: −1 (RangedModifiers.groesse +4 applies alongside) — wrong
 
   # --- Where a blow lands (TZ2–TZ4) ---------------------------------------------------------
@@ -101,31 +113,33 @@ situations:
     name: The hero hits a human, no zone announced
     rulesets: [fokus.trefferzonen]
     opponent: { bodyPlan: humanoid, size: mittel }
-    rolls: { zone: [2, 13] }
-    expect:
-      zone: [{ roll: 2, zone: kopf }, { roll: 13, zone: arme, side: left }]
-      table: humanoid.mittel
+    rolls: [2, 13]                    # the zone dice (the old `rolls: { zone: [2, 13] }`)
+    # The old expectations, no expect key holds them (trefferzonen.TZ2 asks for `hit.zone`; the
+    # app rolls and looks it up):
+    #   zone: [{ roll: 2, zone: kopf }, { roll: 13, zone: arme, side: left }]
+    #   table: humanoid.mittel
     appToday: same
 
   - id: "TZ.10"
     name: A goblin (klein) hits the medium hero — the page's own case
     rulesets: [fokus.trefferzonen]
-    attacker: { size: klein }
-    rolls: { zone: [8] }
-    expect:
-      table: { use: humanoid.gross, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }
-      zone: [{ roll: 8, zone: arme, side: right }]
+    opponent: { size: klein }         # the attacker (the old `attacker`)
+    rolls: [8]                        # the zone die (the old `rolls: { zone: [8] }`)
+    # The old expectations, no expect key holds them (trefferzonen.TZ2 asks for `hit.zone`; TZ3
+    # provides the table size by the size gap):
+    #   table: { use: humanoid.gross, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }
+    #   zone: [{ roll: 8, zone: arme, side: right }]
     appToday: rolls on the hero's own table (humanoid.mittel) → Torso — wrong
 
   - id: "TZ.11"
     name: A goblin (klein) hits a Zwerg hero (klein in the app)
     rulesets: [fokus.trefferzonen]
-    hero: { species: Zwerg }
-    attacker: { size: klein }
-    rolls: { zone: [4] }
-    expect:
-      table: { use: humanoid.mittel, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }   # equal sizes
-      zone: [{ roll: 4, zone: torso }]
+    # The hero is a Zwerg (the old `hero: { species: Zwerg }`), klein in the app.
+    opponent: { size: klein }         # the attacker (the old `attacker`)
+    rolls: [4]                        # the zone die (the old `rolls: { zone: [4] }`)
+    # The old expectations, no expect key holds them (as TZ.10):
+    #   table: { use: humanoid.mittel, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }   # equal sizes
+    #   zone: [{ roll: 4, zone: torso }]
     appToday: klein table (the hero's own size) → Kopf — wrong
 
   # --- Wundeffekte (TZ8–TZ11) ---------------------------------------------------------------
@@ -133,46 +147,61 @@ situations:
   - id: "TZ.12"
     name: 12 SP on the torso — twice the Wundschwelle
     rulesets: [fokus.trefferzonen]
-    hit: { zone: torso, sp: 12 }
+    hero: { values: { sp: 12 } }
+    rolls: { hit.zone: torso }
+    choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }
     expect:
-      checks_first:
-        - talent: Selbstbeherrschung
-          application: Handlungsfähigkeit bewahren
-          modifier: { total: -2, lines: [{ value: -2, from: trefferzonen.TZ8 }] }
-      on_failure: { damage: { formula: 1W3+1, from: trefferzonen.TZ11 } }
+      # the Wundeffekt check asked first (the old `checks_first`)
+      events: [{ check: { talent: TAL_8, application: Handlungsfähigkeit bewahren }, from: trefferzonen.TZ8 }]
+      "check.modifier(talent: TAL_8)": { total: -2, lines: [{ value: -2, from: trefferzonen.TZ8 }] }
+    sequence:
+      - rolls: { check.result: failure }   # the old `on_failure`
+        expect:
+          events: [{ damage: { formula: 1W3+1 }, from: trefferzonen.TZ11 }]
     appToday: same
 
   - id: "TZ.13"
     name: 5 SP on a leg — below the Wundschwelle; then 6 SP
     rulesets: [fokus.trefferzonen]
+    rolls: { hit.zone: beine }
     sequence:
-      - { hit: { zone: beine, sp: 5 }, expect: { checks_first: [] } }
-      - hit: { zone: beine, sp: 6 }
+      - { hero: { values: { sp: 5 } }, expect: { events: [] } }     # no Wundeffekt check (the old `checks_first: []`)
+      - hero: { values: { sp: 6 } }
+        choose: { check.kind: talent, check.talent: TAL_8, check.application: Störungen ignorieren }
         expect:
-          checks_first:
-            - { talent: Selbstbeherrschung, application: Störungen ignorieren, modifier: { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8 }] } }
-          on_failure: { gain: { state: STATE_10, from: trefferzonen.TZ11 } }
+          events: [{ check: { talent: TAL_8, application: Störungen ignorieren }, from: trefferzonen.TZ8 }]
+          "check.modifier(talent: TAL_8)": { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8 }] }
+      - rolls: { check.result: failure }   # the old `on_failure`
+        expect:
+          events: [{ gained: STATE_10, from: trefferzonen.TZ11 }]
     appToday: same
 
   - id: "TZ.14"
     name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
     rulesets: [fokus.trefferzonen]
-    hero: { loadout: { right: Schwert, left: Schild } }
-    hit: { zone: arme, side: right, sp: 7 }
-    fail: [Selbstbeherrschung]
+    hero: { values: { sp: 7 } }
+    loadout: { weapon: Schwert, shield: Schild, other: shield, weaponHand: rechts }   # the old `loadout: { right: Schwert, left: Schild }`
+    rolls: { hit.zone: arme, hit.side: rechts }
+    choose: { check.kind: talent, check.talent: TAL_8, check.application: Störungen ignorieren }
     expect:
-      loadout: { right: null, left: Schild }
-      log: { text: "Schwert fallen gelassen", from: trefferzonen.TZ11, ruling: trefferzonen.wundeffekt-arm-drop }
-      asked: []      # the loadout says which hand holds the Schwert
+      questions: []  # the loadout says which hand holds the Schwert (the old `asked: []`)
+    sequence:
+      - rolls: { check.result: failure }   # the old `fail: [Selbstbeherrschung]`
+        expect:
+          # the old `loadout: { right: null, left: Schild }` and `log: "Schwert fallen gelassen"`
+          events: [{ itemChanged: { weapon: Schwert, held: false }, from: trefferzonen.TZ11, ruling: trefferzonen.wundeffekt-arm-drop }]
     appToday: a reminder; the Schwert stays in hand
 
   - id: "TZ.15"
     name: The hero is Überrascht — defending against the surprise action
     rulesets: []
-    hero: { states: [STATE_13] }     # set by the toggle on the combat-setup screen
+    hero: { states: { STATE_13: true } }     # set by the toggle on the combat-setup screen
     expect:
       notOffered: [{ defence: [pa, aw], because: STATE_13.UE1, ruling: STATE_13.hero-no-defence }]
-      after: { initiativeRoll: { states: { STATE_13: removed } } }
+    sequence:
+      - round: { phase: start }        # the INI roll starts the regular round (the old `after: { initiativeRoll }`)
+        expect:
+          events: [{ cleared: STATE_13, from: STATE_13.UE1 }]   # the old `states: { STATE_13: removed }`
     appToday: a reminder; nothing in combat setup asks for it
 
   # --- Aiming meets other rules -------------------------------------------------------------
@@ -180,10 +209,11 @@ situations:
   - id: "TZ.16"
     name: Aiming from horseback
     rulesets: [fokus.trefferzonen]
-    hero: { mounted: true, abilities: { SA_160: 1 } }
-    choose: { targetZone: kopf, manoeuvre: gezielterAngriff }
+    hero: { abilities: { SA_160: 1 } }
+    loadout: { hero.mounted: true }
+    choose: { choice.targetZone: kopf, choice.gezielterAngriff: true }
     expect:
-      notOffered: [{ manoeuvre: gezielterAngriff, because: reiterkampf.RK3, ruling: [reiterkampf.mounted-manoeuvres, SA_160.halving-by-manoeuvre] }]
+      notOffered: [{ choice: gezielterAngriff, because: reiterkampf.RK3, ruling: [reiterkampf.mounted-manoeuvres, SA_160.halving-by-manoeuvre] }]
       at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
       # The aim itself is still offered; only the halving is lost.
     appToday: −5
@@ -191,11 +221,12 @@ situations:
   - id: "TZ.17"
     name: Unterlaufen and an aimed attack with Gezielter Angriff, without Verbessertes Unterlaufen
     rulesets: [fokus.trefferzonen]
-    hero: { loadout: { weapon: Dolch }, abilities: { SA_160: 1, SA_172: 1 } }
+    hero: { abilities: { SA_160: 1, SA_172: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
     opponent: { reach: mittel }
-    choose: { manoeuvres: [unterlaufen, gezielterAngriff], targetZone: torso }
+    choose: { choice.unterlaufen: true, choice.gezielterAngriff: true, choice.targetZone: torso }
     expect:
-      excludes: [{ manoeuvres: [unterlaufen, gezielterAngriff], because: SA_172.U3, ruling: SA_160.halving-by-manoeuvre }]
+      legal: { combinations: [{ choices: [unterlaufen, gezielterAngriff], allowed: false, because: SA_172.U3, ruling: SA_160.halving-by-manoeuvre }] }   # the old `excludes`
       at: { total: -4, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }, { value: -4, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
     appToday: Unterlaufen does not exist
 
@@ -211,10 +242,10 @@ situations:
     name: The hero has Gezielter Angriff but aims without announcing it
     rulesets: [fokus.trefferzonen]
     hero: { abilities: { SA_160: 1 } }
-    choose: { targetZone: kopf }
+    choose: { choice.targetZone: kopf, choice.gezielterAngriff: false }
     expect:
       at: { total: -10, lines: [{ value: -10, from: trefferzonen.TZ5, ruling: SA_160.halving-by-manoeuvre }] }
-      offered: [{ manoeuvre: gezielterAngriff, from: SA_160.GA1 }]
+      offered: [{ choice: gezielterAngriff, from: SA_160.GA1 }]
     # A hero would do this to keep the Spezialmanöver slot for another manoeuvre
     # (Sturmangriff, SA_62), which manoeuvre-combination a or b allows only one of.
     appToday: −5 (the SF halves every aimed attack)
@@ -224,33 +255,44 @@ situations:
   - id: "TZ.20"
     name: Complete Plattenrüstung — same Belastung as the core rule
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    hero: { armour: { kopf: Plattenrüstung, torso: Plattenrüstung, arme: Plattenrüstung, beine: Plattenrüstung } }
+    loadout: { armourPiece.kopf: Plattenrüstung, armourPiece.torso: Plattenrüstung, armourPiece.armLinks: Plattenrüstung, armourPiece.armRechts: Plattenrüstung, armourPiece.beinLinks: Plattenrüstung, armourPiece.beinRechts: Plattenrüstung }
     expect:
-      rs_by_zone: { kopf: 6, torso: 6, armLinks: 6, armRechts: 6, beinLinks: 6, beinRechts: 6 }
-      score: { value: 84, from: trefferzonen-ruestungsschutz.RS4 }     # 6 × (1 + 5 + 2·4)
-      conditions: { COND_1: 3 }
+      "rs(zone: kopf)": { result: 6 }
+      "rs(zone: torso)": { result: 6 }
+      "rs(zone: armLinks)": { result: 6 }
+      "rs(zone: armRechts)": { result: 6 }
+      "rs(zone: beinLinks)": { result: 6 }
+      "rs(zone: beinRechts)": { result: 6 }
+      armourScore: { result: 84, base: { from: trefferzonen-ruestungsschutz.RS4 } }     # 6 × (1 + 5 + 2·4)
+      "level(rule: COND_1)": { result: 3 }
       ini: { total: -3 }
     appToday: RS 6 everywhere, Belastung 3 — same, by the core rule
 
   - id: "TZ.21"
     name: Lederrüstung without a helmet
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    hero: { armour: { torso: Lederrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    loadout: { armourPiece.torso: Lederrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
     expect:
-      rs_by_zone: { kopf: 0, torso: 3, armLinks: 3, armRechts: 3, beinLinks: 3, beinRechts: 3 }
-      score: { value: 39 }
-      conditions: { COND_1: 1 }
+      "rs(zone: kopf)": { result: 0 }
+      "rs(zone: torso)": { result: 3 }
+      "rs(zone: armLinks)": { result: 3 }
+      "rs(zone: armRechts)": { result: 3 }
+      "rs(zone: beinLinks)": { result: 3 }
+      "rs(zone: beinRechts)": { result: 3 }
+      armourScore: { result: 39 }
+      "level(rule: COND_1)": { result: 1 }
       ini: { total: -2, lines: [{ value: -1, from: COND_1.B3 }, { value: -1, from: trefferzonen-ruestungsschutz.RS4 }] }
     appToday: no zone armour — RS 3 on the head too
 
   - id: "TZ.22"
     name: Lederrüstung with a Kettenhelm — a helmet that costs a Belastung Stufe
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    hero: { armour: { kopf: Kettenrüstung, torso: Lederrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    loadout: { armourPiece.kopf: Kettenrüstung, armourPiece.torso: Lederrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
     expect:
-      rs_by_zone: { kopf: 4, torso: 3 }     # the helmet from another armour: ruling pieces-from-other-armours
-      score: { value: 43, ruling: trefferzonen-ruestungsschutz.be-sentence }    # 39 + 4
-      conditions: { COND_1: 2 }
+      "rs(zone: kopf)": { result: 4 }     # the helmet from another armour: ruling pieces-from-other-armours
+      "rs(zone: torso)": { result: 3 }
+      armourScore: { result: 43, base: { ruling: trefferzonen-ruestungsschutz.be-sentence } }    # 39 + 4
+      "level(rule: COND_1)": { result: 2 }
       at: { total: -2, lines: [{ value: -2, from: COND_1.B3 }] }
       ini: { total: -2, lines: [{ value: -2, from: COND_1.B3 }] }
     # Surprise: a complete Lederrüstung (42) is Belastung 1 with −1 GS/INI; one point of helmet
@@ -260,10 +302,10 @@ situations:
   - id: "TZ.23"
     name: Only the torso of a Plattenrüstung
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    hero: { armour: { torso: Plattenrüstung } }
+    loadout: { armourPiece.torso: Plattenrüstung }
     expect:
-      score: { value: 30 }
-      conditions: { COND_1: 1 }
+      armourScore: { result: 30 }
+      "level(rule: COND_1)": { result: 1 }
       ini: { total: -2, lines: [{ value: -1, from: COND_1.B3 }, { value: -1, from: trefferzonen-ruestungsschutz.RS4 }] }
     # Plate on the torso alone picks up the −1 GS/INI band that complete plate does not have.
     appToday: no zone armour
@@ -271,25 +313,30 @@ situations:
   - id: "TZ.24"
     name: Two armours equipped without Trefferzonen-RS
     rulesets: [fokus.trefferzonen]
-    hero: { armour: [Kettenrüstung, Lederrüstung] }
+    loadout: { armour: Kettenrüstung }     # the old `hero: { armour: [Kettenrüstung, Lederrüstung] }`: Lederrüstung is the second
     expect:
-      not_selectable: [{ second_armour: true, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
+      legal: { loadout: [{ armour: Lederrüstung, secondArmour: true, allowed: false, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }] }   # the old `not_selectable`
     appToday: both equipped and summed — wrong (as belastung 6.1)
 
   - id: "TZ.25"
     name: Trefferzonen-RS without Trefferzonen
     rulesets: [fokus.trefferzonen-rs]
     expect:
-      notOffered: [{ ruleset: fokus.trefferzonen-rs, because: trefferzonen-ruestungsschutz.requires_ruleset, ruling: trefferzonen-ruestungsschutz.requires-trefferzonen }]
+      notOffered: [{ ruleset: fokus.trefferzonen-rs, because: trefferzonen-ruestungsschutz.RS1, ruling: trefferzonen-ruestungsschutz.requires-trefferzonen }]
     # The switch is shown only while Trefferzonen is on; this set of rulesets cannot arise.
     appToday: there is no Trefferzonen-RS switch
 
   - id: "TZ.26"
     name: Kettenrüstung on the torso, Lederrüstung pieces on arms and legs
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    hero: { armour: { torso: Kettenrüstung, arme: Lederrüstung, beine: Lederrüstung } }
+    loadout: { armourPiece.torso: Kettenrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
     expect:
-      rs_by_zone: { kopf: 0, torso: 4, armLinks: 3, armRechts: 3, beinLinks: 3, beinRechts: 3 }
-      score: { value: 44, from: trefferzonen-ruestungsschutz.RS4, ruling: trefferzonen-ruestungsschutz.pieces-from-other-armours }     # 4·5 + 3·8
-      conditions: { COND_1: 2 }
+      "rs(zone: kopf)": { result: 0 }
+      "rs(zone: torso)": { result: 4 }
+      "rs(zone: armLinks)": { result: 3 }
+      "rs(zone: armRechts)": { result: 3 }
+      "rs(zone: beinLinks)": { result: 3 }
+      "rs(zone: beinRechts)": { result: 3 }
+      armourScore: { result: 44, base: { from: trefferzonen-ruestungsschutz.RS4, ruling: trefferzonen-ruestungsschutz.pieces-from-other-armours } }     # 4·5 + 3·8
+      "level(rule: COND_1)": { result: 2 }
     appToday: no zone armour

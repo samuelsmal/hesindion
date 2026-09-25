@@ -39,7 +39,7 @@ from .errors import RulecError
 STAR = "*"
 _TO_VERBS = {"add", "set", "multiply", "cap", "floor", "derive"}
 _LEGALITY_SELECTOR = {"forbid": "what", "limit": "what", "require": "for"}
-_TABLE_IN_TEXT = re.compile(r"table\(\s*([\w.]+)\s*,")
+_TABLE_IN_TEXT = re.compile(r"table\(\s*([\w.-]+)\s*,")
 
 
 def _names(to):

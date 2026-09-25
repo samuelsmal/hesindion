@@ -393,6 +393,16 @@ class ErrorTests(unittest.TestCase):
         s = one("    hero: { creatures: { svellttaler-kaltblut: true } }\n")
         self.assertEqual(s["owned"]["svellttaler-kaltblut"], {"level": 1})
 
+    def test_group_4_additions(self):
+        # The armour worn per zone, the RS of a zone and the RS-factor score as queries, the hit's
+        # side and the hand the weapon is in (trefferzonen, trefferzonen-ruestungsschutz).
+        self.assertEqual(errors_of(
+            "    loadout: { armourPiece.torso: Kettenrüstung, armourPiece.armLinks: Lederrüstung, weaponHand: rechts }\n"
+            "    rolls: { hit.zone: arme, hit.side: rechts }\n"
+            "    expect:\n"
+            '      "rs(zone: armLinks)": { result: 3 }\n'
+            "      armourScore: { result: 26 }\n"), [])
+
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

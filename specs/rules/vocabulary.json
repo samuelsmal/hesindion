@@ -94,6 +94,10 @@
       "owner": "sheet",
       "type": "int"
     },
+    "loadout.armourPiece.": {
+      "owner": "loadout",
+      "type": "string"
+    },
     "mount.": {
       "owner": "sheet",
       "type": "any"
@@ -196,6 +200,10 @@
       "owner": "sheet",
       "type": "ruleId"
     },
+    "hero.leCurrent": {
+      "owner": "derived",
+      "type": "int"
+    },
     "hero.mounted": {
       "owner": "loadout",
       "type": "bool"
@@ -203,6 +211,18 @@
     "hero.purchased.le": {
       "owner": "sheet",
       "type": "int"
+    },
+    "hit.heldInHand": {
+      "owner": "derived",
+      "type": "string"
+    },
+    "hit.overWundschwelle": {
+      "owner": "derived",
+      "type": "int"
+    },
+    "hit.side": {
+      "owner": "roll",
+      "type": "string"
     },
     "hit.sp": {
       "owner": "derived",
@@ -215,6 +235,10 @@
     "hit.zone": {
       "owner": "roll",
       "type": "string"
+    },
+    "hit.zoneRs": {
+      "owner": "derived",
+      "type": "int"
     },
     "ktw.current": {
       "owner": "loadout",
@@ -276,7 +300,23 @@
       "owner": "loadout",
       "type": "string"
     },
+    "loadout.weapon.leit": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.weapon.ownLeit": {
+      "owner": "loadout",
+      "type": "bool"
+    },
+    "loadout.weapon.schadensschwelle": {
+      "owner": "loadout",
+      "type": "int"
+    },
     "loadout.weapon.technique": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.weaponHand": {
       "owner": "loadout",
       "type": "string"
     },
@@ -374,7 +414,8 @@
     "structurePoints",
     "damaged",
     "destroyed",
-    "ridden"
+    "ridden",
+    "held"
   ],
   "kinds": [
     "specialAbility",
@@ -542,6 +583,9 @@
     "ally."
   ],
   "targets": {
+    "armourScore": {
+      "contexts": []
+    },
     "aspMax": {
       "contexts": []
     },

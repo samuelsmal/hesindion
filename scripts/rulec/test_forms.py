@@ -78,6 +78,21 @@ class ValueFormTests(unittest.TestCase):
             with self.assertRaises(RulecError):
                 self.f.value({"of": "gs", "max": bound})
 
+    def test_a_proportion_above_may_be_an_operand(self):
+        # schaden.S3: max(0, Leiteigenschaft − Schadensschwelle), the threshold a weapon value.
+        p = self.f.value({"of": "technique.leit", "above": "loadout.weapon.schadensschwelle"})["proportion"]
+        self.assertEqual(p["above"], {"fact": "loadout.weapon.schadensschwelle"})
+        self.assertEqual(self.f.value({"of": "gs", "above": 20})["proportion"]["above"], 20)   # a number stays
+        for above in ("nope", [1, 2], True):
+            with self.assertRaises(RulecError):
+                self.f.value({"of": "gs", "above": above})
+
+    def test_a_table_name_may_carry_a_rule_id_with_a_hyphen(self):
+        self.assertEqual(
+            self.f.value("table(trefferzonen-ruestungsschutz.RS4.extra, armourScore)"),
+            {"table": {"name": "trefferzonen-ruestungsschutz.RS4.extra", "key": "armourScore"}},
+        )
+
     def test_the_level_target_takes_a_rule(self):
         self.assertEqual(self.f.target("level(rule: COND_1)"), {"name": "level", "rule": "COND_1"})
 
