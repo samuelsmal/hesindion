@@ -92,6 +92,9 @@ struct LegalView {
     var freeActionForbids: [NotApplied] = []
     /// The combinations' breakdowns: the open rulings their forbids met (R32).
     var recorded: [Breakdown] = []
+    /// Task 32: choice → the rulings of its offers (`Engine.offers(in:)`), which a refused
+    /// combination of it rests on as a `notOffered` choice does.
+    var offerRulings: [String: [String]] = [:]
 
     /// The queries an `actions` kind stands for.
     static let actionQueries: [String: [String]] = ["attack": ["at", "fk"], "spell": ["check.modifier(spell: any)"], "freeAction": []]
@@ -150,7 +153,11 @@ struct LegalView {
                 } ?? false
             }
         }
-        for raw in (o["combinations"]?.arrayValue ?? []) + (o["exclusive"]?.arrayValue ?? []) {
+        let combos = (o["combinations"]?.arrayValue ?? []) + (o["exclusive"]?.arrayValue ?? [])
+        if !combos.isEmpty {
+            for offer in engine.offers(in: situation) { v.offerRulings[offer.choice, default: []] += offer.rulings }
+        }
+        for raw in combos {
             guard let choices = raw.objectValue?["choices"]?.arrayValue?.compactMap(\.string) else { continue }
             let b = engine.evaluation(situation).combinationBreakdown(choices)
             v.combinations[choices] = b.legal
@@ -874,7 +881,10 @@ enum Matcher {
                     wrong.append("\(key) \(b)")
                 }
             }
-            if let r = e["ruling"].map(strings), !r.allSatisfy({ x in legality.reasons.contains { rulingMatches(x, $0.rulings) } }) {
+            // Task 32: a refused combination rests on its refusing entries' rulings and, as a
+            // `notOffered` choice does, on those of its choices' offers (TZ.17).
+            let rulings = legality.reasons.flatMap(\.rulings) + (legality.allowed ? [] : choices.flatMap { view.offerRulings[$0] ?? [] })
+            if let r = e["ruling"].map(strings), !r.allSatisfy({ rulingMatches($0, rulings) }) {
                 wrong.append("ruling \(r)")
             }
             if !wrong.isEmpty {

@@ -1,0 +1,407 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "dm-aim"
+   },
+   {
+    "clause": "U1",
+    "index": 0,
+    "rule": "dm-under"
+   },
+   {
+    "clause": "U3",
+    "index": 0,
+    "rule": "dm-under"
+   },
+   {
+    "clause": "Z1",
+    "index": 0,
+    "rule": "dm-zones"
+   }
+  ],
+  "at": [
+   {
+    "clause": "G1",
+    "index": 1,
+    "rule": "dm-aim"
+   },
+   {
+    "clause": "U1",
+    "index": 1,
+    "rule": "dm-under"
+   }
+  ],
+  "ini": [
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "dm-zones"
+   }
+  ],
+  "rs": [
+   {
+    "clause": "Z2",
+    "index": 0,
+    "rule": "dm-zones"
+   },
+   {
+    "clause": "Z2",
+    "index": 1,
+    "rule": "dm-zones"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "dm-aim"
+       },
+       "payload": {
+        "choice": "aim"
+       },
+       "phase": "player",
+       "ruling": [
+        "dm-aim.halving"
+       ],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 1,
+        "rule": "dm-aim"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.aim",
+        "is": true
+       }
+      }
+     ],
+     "id": "G1",
+     "text": "Gezielter Angriff."
+    }
+   ],
+   "id": "dm-aim",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "spezialmanoever"
+   },
+   "name": "Gezielter Angriff",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "Announced.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-26"
+     },
+     "id": "dm-aim.halving",
+     "question": "Announced or owned?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "U1",
+        "index": 0,
+        "rule": "dm-under"
+       },
+       "payload": {
+        "choice": "under"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "U1",
+        "index": 1,
+        "rule": "dm-under"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.under",
+        "is": true
+       }
+      }
+     ],
+     "id": "U1",
+     "text": "Unterlaufen."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "U3",
+        "index": 0,
+        "rule": "dm-under"
+       },
+       "payload": {
+        "together": true,
+        "what": {
+         "ids": [
+          {
+           "kind": "spezialmanoever"
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": null
+      }
+     ],
+     "id": "U3",
+     "text": "Mit keinem Spezialmanöver."
+    }
+   ],
+   "id": "dm-under",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "basismanoever"
+   },
+   "name": "Unterlaufen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z1",
+        "index": 0,
+        "rule": "dm-zones"
+       },
+       "payload": {
+        "name": "dm-zones.armours",
+        "readBy": "loadout",
+        "value": {
+         "Leder": {
+          "belastung": 1,
+          "extraPenalty": -1,
+          "rs": 3
+         },
+         "Platte": {
+          "belastung": 3,
+          "extraPenalty": 0,
+          "rs": 6
+         }
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "Z1",
+     "text": "Rüstungen."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z2",
+        "index": 0,
+        "rule": "dm-zones"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "loadout.armourPiece.kopf.rs"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "rs",
+         "zone": "kopf"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "not": {
+         "fact": "loadout.armourPiece.kopf",
+         "is": null
+        }
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z2",
+        "index": 1,
+        "rule": "dm-zones"
+       },
+       "payload": {
+        "sum": [
+         {
+          "number": 0
+         }
+        ],
+        "to": {
+         "name": "rs",
+         "zone": "kopf"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "loadout.armourPiece.kopf",
+        "is": null
+       }
+      }
+     ],
+     "id": "Z2",
+     "text": "RS je Zone."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z3",
+        "index": 0,
+        "rule": "dm-zones"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "loadout.armour.belastung"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "ini"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "Z3",
+     "text": "Belastung nach Rüstung."
+    }
+   ],
+   "id": "dm-zones",
+   "kind": "core",
+   "name": "Zonen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "Announced.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-26"
+   },
+   "id": "dm-aim.halving",
+   "question": "Announced or owned?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "de8998ec4ad55d76fea842a1b6092e47fcba5f07df928989c4dd6a340ea838a4",
+ "vocabularyVersion": 1
+}

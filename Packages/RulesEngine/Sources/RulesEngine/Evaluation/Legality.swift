@@ -144,34 +144,52 @@ extension Evaluation {
     /// The combination as a breakdown of no target: its `legal`, and the entries of the forbids
     /// it read that did not refuse it (one resting on an open ruling: `openRuling`, and its text).
     func combinationBreakdown(_ ids: [String]) -> Breakdown {
+        var state = combinationState()
+        let choices = ids.uniqued()
+        for r in togetherRefusals(choices, &state) { forbid(r.entry, &state) }
+        for r in choiceRules() {
+            guard case .limit(let s, let max) = r.kind, named(s, among: choices).count > max else { continue }
+            forbid(r.entry(.forbidden), &state)
+        }
+        return state.breakdown
+    }
+
+    /// A breakdown of no target with phase 4's control decided on the legality effects: where a
+    /// combination of choices is judged.
+    private func combinationState() -> PipelineState {
         let effects = book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }
         var state = PipelineState(query: Query("combination"), depth: 0, candidates: effects.filter { $0.phase == .lines })
         state.local = [:]
         control(effects.filter { $0.phase == .legality }, &state)
-        let choices = ids.uniqued()
-        let all = self.offers
-        func offers(of choice: String) -> [(offer: Offer, effect: Effect, rule: String)] {
-            all.filter { $0.offer.choice == choice }
-        }
-        func named(_ selector: RuleSelector) -> [String] {
-            choices.filter { c in offers(of: c).contains { names(selector, offer: $0.offer, of: $0.rule, option: nil) } }
-        }
-        for e in effects {
+        return state
+    }
+
+    /// The choices among `choices` whose offers `selector` names.
+    private func named(_ selector: RuleSelector, among choices: [String]) -> [String] {
+        choices.filter { c in offers.contains { $0.offer.choice == c && names(selector, offer: $0.offer, of: $0.rule, option: nil) } }
+    }
+
+    /// Every top-level `forbid { together: true }` of a rule that applies, not suppressed, whose
+    /// `when` is yes, that refuses `choices` taken together: they hold a choice its selector names
+    /// and another (one of the holder's own offers, or a second named one). Each with the choices
+    /// it refuses (Task 32): the named ones that are not the holder's own offers (SA_172.U3 refuses
+    /// the Spezialmanöver beside Unterlaufen, not Unterlaufen); with none of the holder's own among
+    /// them, every named one after the first.
+    private func togetherRefusals(_ choices: [String], _ state: inout PipelineState) -> [(entry: NotApplied, refused: [String])] {
+        var out: [(entry: NotApplied, refused: [String])] = []
+        for e in book.rules.keys.sorted(by: Self.idOrder).flatMap({ book.rules[$0]!.clauses.flatMap(\.effects) }) {
             guard case .forbid(let f) = e.payload, f.together == true, applies(e, &state), !isSuppressed(e, &state) else { continue }
             let rule = e.origin.rule
             let via = ruleVia(rule, state)
             guard let used = gate(e, level: ruleLevel(rule, levels: [:], depth: 0), via: via, &state, asking: false) else { continue }
-            let them = named(f.what)
-            let own = choices.filter { c in offers(of: c).contains { $0.rule == rule } }
+            let them = named(f.what, among: choices)
+            let own = choices.filter { c in offers.contains { $0.offer.choice == c && $0.rule == rule } }
             guard !them.isEmpty, Set(them + own).count >= 2 else { continue }
-            forbid(NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because, rulings: e.ruling,
-                              facts: used, via: via), &state)
+            let refused = own.isEmpty ? Array(them.dropFirst()) : them.filter { !own.contains($0) }
+            out.append((NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because, rulings: e.ruling,
+                                   facts: used, via: via), refused))
         }
-        for r in choiceRules() {
-            guard case .limit(let s, let max) = r.kind, named(s).count > max else { continue }
-            forbid(r.entry(.forbidden), &state)
-        }
-        return state.breakdown
+        return out
     }
 
     private func forbid(_ entry: NotApplied, _ state: inout PipelineState) {
@@ -588,6 +606,13 @@ extension Evaluation {
             case .limit(let s, let max):
                 refused += chosen(s).dropFirst(Swift.max(max, 0))
             }
+        }
+        // Task 32: a choice a `together` forbid refuses beside the others taken (SA_172.U3: the
+        // Gezielter Angriff beside Unterlaufen is not taken, so its halving does not apply).
+        let taken = offers.map(\.offer.choice).uniqued().filter(isChosen)
+        if taken.count >= 2 {
+            var state = combinationState()
+            refused += togetherRefusals(taken, &state).flatMap(\.refused)
         }
         guard !refused.isEmpty else { return nil }
         var s = situation

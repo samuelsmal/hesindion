@@ -229,6 +229,12 @@ clauses:
         # TZ4–TZ4j table). `none` (the default) is no zone announced (TZ2 rolls it).
       - when: { not: { choice.targetZone: none } }
         add: { to: [at, fk], value: "table(trefferzonen.TZ6, choice.targetZone)" }
+        ruling: SA_160.halving-by-manoeuvre
+        # Task 32: the aiming line rests on SA_160's ruling halving-by-manoeuvre, whose appliesTo
+        # names this clause: this page's "Besitzt ein Held die Sonderfertigkeit … sind die
+        # Erschwernisse halbiert" is read as the announced manoeuvre, so without it (not announced,
+        # refused on horseback or beside Unterlaufen) the penalty stands in full (TZ.16, TZ.17,
+        # TZ.27).
         # The aiming line. The old effect id `TZ5.aim` is gone: SA_160.GA1 and SA_161.GS1 name
         # the clause (`line: trefferzonen.TZ5`), as does the easing below.
       - when: { not: { choice.targetZone: none }, opponent.has: STATE_13 }

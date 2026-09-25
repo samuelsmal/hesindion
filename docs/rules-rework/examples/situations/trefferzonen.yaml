@@ -271,7 +271,7 @@ situations:
   - id: "TZ.21"
     name: Lederrüstung without a helmet
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    loadout: { armourPiece.torso: Lederrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
+    loadout: { armourPiece.kopf: null, armourPiece.torso: Lederrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
     expect:
       "rs(zone: kopf)": { result: 0 }
       "rs(zone: torso)": { result: 3 }
@@ -302,7 +302,7 @@ situations:
   - id: "TZ.23"
     name: Only the torso of a Plattenrüstung
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    loadout: { armourPiece.torso: Plattenrüstung }
+    loadout: { armourPiece.kopf: null, armourPiece.torso: Plattenrüstung, armourPiece.armLinks: null, armourPiece.armRechts: null, armourPiece.beinLinks: null, armourPiece.beinRechts: null }
     expect:
       armourScore: { result: 30 }
       "level(rule: COND_1)": { result: 1 }
@@ -329,7 +329,7 @@ situations:
   - id: "TZ.26"
     name: Kettenrüstung on the torso, Lederrüstung pieces on arms and legs
     rulesets: [fokus.trefferzonen, fokus.trefferzonen-rs]
-    loadout: { armourPiece.torso: Kettenrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
+    loadout: { armourPiece.kopf: null, armourPiece.torso: Kettenrüstung, armourPiece.armLinks: Lederrüstung, armourPiece.armRechts: Lederrüstung, armourPiece.beinLinks: Lederrüstung, armourPiece.beinRechts: Lederrüstung }
     expect:
       "rs(zone: kopf)": { result: 0 }
       "rs(zone: torso)": { result: 4 }

@@ -1,0 +1,24 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32: ruestung-und-belastung.A2 (the armour rows the loadout reads by the item's name) and
+# trefferzonen-ruestungsschutz.RS2 (the RS of the piece worn in a zone, 0 without one).
+id: dm-zones
+name: Zonen
+kind: core
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: Z1
+    text: Rüstungen.
+    effects:
+      - provide: { name: dm-zones.armours, value: { Leder: { rs: 3, belastung: 1, extraPenalty: -1 }, Platte: { rs: 6, belastung: 3, extraPenalty: 0 } }, readBy: loadout }
+  - id: Z2
+    text: RS je Zone.
+    effects:
+      - when: { not: { loadout.armourPiece.kopf: null } }
+        derive: { to: "rs(zone: kopf)", sum: [{ of: loadout.armourPiece.kopf.rs }] }
+      - when: { loadout.armourPiece.kopf: null }
+        derive: { to: "rs(zone: kopf)", sum: [0] }
+  - id: Z3
+    text: Belastung nach Rüstung.
+    effects:
+      - derive: { to: ini, sum: [{ of: loadout.armour.belastung }] }

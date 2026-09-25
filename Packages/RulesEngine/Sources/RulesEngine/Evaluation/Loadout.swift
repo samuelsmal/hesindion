@@ -48,8 +48,12 @@ extension Evaluation {
         if ["ktw.current", "technique.leit"].contains(name) { return true }
         let parts = name.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
         if parts.count == 2, parts[0] == "item" { return true }
-        return parts.count == 3 && parts[0] == "loadout" && parts[2] != "instance"
-            && Vocabulary.facts["loadout.\(parts[1])"] == .loadout
+        if parts.count == 3 { return parts[0] == "loadout" && parts[2] != "instance" && Vocabulary.facts["loadout.\(parts[1])"] == .loadout }
+        // Task 32: a field of a slot in a loadout family (`loadout.armourPiece.kopf.rs`: the RS of
+        // the piece worn on the head, trefferzonen-ruestungsschutz.RS2).
+        return parts.count == 4 && parts[0] == "loadout" && parts[3] != "instance" && !parts.contains("")
+            && Vocabulary.facts["loadout.\(parts[1]).\(parts[2])"] == nil
+            && Vocabulary.owner(ofFact: "loadout.\(parts[1]).\(parts[2])") == .loadout
     }
 
     /// The tables the loadout reads a fact from (`readBy: loadout`): `technique.leit` is the value
@@ -116,7 +120,7 @@ extension Evaluation {
             break
         }
         let parts = name.split(separator: ".").map(String.init)
-        let p = parts.count == 2 ? piece(in: s) : slotPiece(parts[1], in: s)
+        let p = parts.count == 2 ? piece(in: s) : slotPiece(parts.dropFirst().dropLast().joined(separator: "."), in: s)
         var d = field(parts.last!, of: p, in: s)
         d.used = (p.used + d.used).uniqued()
         if d.value == nil {
@@ -185,7 +189,7 @@ extension Evaluation {
         guard let item = p.item else { return .lacking(p.empty ? [] : p.unknown) }
         if let f = s.fact("item.\(item).\(name)") { return Derived(value: f.value, used: [f]) }
         guard let template = book.template(ofItem: item, in: s), let rule = book.rules[template] else {
-            return slotDatum(name, of: p) ?? .lacking([UnknownFact("item.\(item).\(name)")])
+            return slotDatum(name, of: p) ?? itemRow(name, of: item) ?? .lacking([UnknownFact("item.\(item).\(name)")])
         }
         if let v = rule.provides[name] {
             let row = rule.clauses.flatMap(\.effects).first { e in
@@ -199,6 +203,20 @@ extension Evaluation {
             return Derived(value: pr.value, via: [e.origin.clauseRef])
         }
         return slotDatum(name, of: p) ?? .lacking([UnknownFact("item.\(item).\(name)")])
+    }
+
+    /// Task 32 (R61: a default the rules state): an item no equipment rule describes, read from a
+    /// table of items the loadout reads (`readBy: loadout`), keyed by the item's name, whose row
+    /// holds the field (ruestung-und-belastung.A2: the page's armours, `Plattenrüstung` RS 6). One
+    /// such table only; its clause joins `via`.
+    func itemRow(_ name: String, of item: String) -> Derived? {
+        let rows = book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }
+            .compactMap { e -> Derived? in
+                guard case .provide(let pr) = e.payload, pr.readBy == .loadout, case .object(let table) = pr.value,
+                      case .object(let row)? = table[item], let v = row[name] else { return nil }
+                return Derived(value: v, via: [e.origin.clauseRef])
+            }
+        return rows.count == 1 ? rows[0] : nil
     }
 
     /// What the rules give every piece in a slot (schilde.SCH3: an active shield parry is made

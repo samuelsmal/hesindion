@@ -59,10 +59,31 @@ clauses:
       Plattenrüstung | 6 | 3 | –
       Gestechrüstung | 7 | 4 | –
       Turnierrüstung | 8 | 5 | –
-    none: >
-      data, held by the equipment table; A1 reads a row's Belastung and zusätzliche Abzüge from
-      the armour the hero wears. The rows are also listed in ../../belastung.md. Turnierrüstung's
-      Belastung 5 is above the page's Stufe IV (COND_1.B4)
+    effects:
+      - provide:
+          name: ruestung-und-belastung.ruestungen
+          value:
+            Normale Kleidung: { rs: 0, belastung: 0, extraPenalty: 0 }
+            Felle: { rs: 0, belastung: 0, extraPenalty: 0 }
+            Schwere Kleidung: { rs: 1, belastung: 0, extraPenalty: -1 }
+            Winterkleidung: { rs: 1, belastung: 0, extraPenalty: -1 }
+            Stoffrüstung: { rs: 2, belastung: 1, extraPenalty: 0 }
+            Gambeson: { rs: 2, belastung: 1, extraPenalty: 0 }
+            Lederrüstung: { rs: 3, belastung: 1, extraPenalty: -1 }
+            Kettenrüstung: { rs: 4, belastung: 2, extraPenalty: 0 }
+            Schuppenrüstung: { rs: 5, belastung: 2, extraPenalty: -1 }
+            Plattenrüstung: { rs: 6, belastung: 3, extraPenalty: 0 }
+            Gestechrüstung: { rs: 7, belastung: 4, extraPenalty: 0 }
+            Turnierrüstung: { rs: 8, belastung: 5, extraPenalty: 0 }
+          readBy: loadout
+        # The page's rows, keyed by the armour's name (a row naming two, "Stoffrüstung, Gambeson",
+        # is one key each): the RS, the Belastung Stufe and the zusätzliche Abzüge (stated
+        # negative, as A1's `per` reads them). The loadout reads an armour's field from here when
+        # no equipment rule describes the item and the situation states none (Task 32, R61: a
+        # default the rules state): A1's `loadout.armour.belastung`, trefferzonen-ruestungsschutz.RS2's
+        # `loadout.armourPiece.<zone>.rs`. An equipment row or a stated value wins. The rows are
+        # also listed in ../../belastung.md. Turnierrüstung's Belastung 5 is above the page's
+        # Stufe IV (COND_1.B4).
 
   - id: A3
     text: >

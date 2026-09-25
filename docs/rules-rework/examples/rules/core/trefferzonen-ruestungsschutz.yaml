@@ -58,6 +58,41 @@ clauses:
         # is about which pieces may fill the other zones).
         # FORMAT: RS becomes a function of the zone hit — six zones for a humanoid, left and
         # right counted apart. The hero's armour stops being one item and becomes a loadout.
+      - when: { not: { loadout.armourPiece.kopf: null } }
+        derive: { to: "rs(zone: kopf)", sum: [{ of: loadout.armourPiece.kopf.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.kopf: null }
+        derive: { to: "rs(zone: kopf)", sum: [0] }
+      - when: { not: { loadout.armourPiece.torso: null } }
+        derive: { to: "rs(zone: torso)", sum: [{ of: loadout.armourPiece.torso.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.torso: null }
+        derive: { to: "rs(zone: torso)", sum: [0] }
+      - when: { not: { loadout.armourPiece.armLinks: null } }
+        derive: { to: "rs(zone: armLinks)", sum: [{ of: loadout.armourPiece.armLinks.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.armLinks: null }
+        derive: { to: "rs(zone: armLinks)", sum: [0] }
+      - when: { not: { loadout.armourPiece.armRechts: null } }
+        derive: { to: "rs(zone: armRechts)", sum: [{ of: loadout.armourPiece.armRechts.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.armRechts: null }
+        derive: { to: "rs(zone: armRechts)", sum: [0] }
+      - when: { not: { loadout.armourPiece.beinLinks: null } }
+        derive: { to: "rs(zone: beinLinks)", sum: [{ of: loadout.armourPiece.beinLinks.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.beinLinks: null }
+        derive: { to: "rs(zone: beinLinks)", sum: [0] }
+      - when: { not: { loadout.armourPiece.beinRechts: null } }
+        derive: { to: "rs(zone: beinRechts)", sum: [{ of: loadout.armourPiece.beinRechts.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.beinRechts: null }
+        derive: { to: "rs(zone: beinRechts)", sum: [0] }
+        # Task 32: each zone's RS, "Werden die einzelnen Rüstungsteile getragen, so verleihen sie
+        # dem Helden in der angegebenen Zone RS": the RS of the piece worn there (its armour's row,
+        # ruestung-und-belastung.A2, unless an equipment row or the situation says otherwise), a
+        # piece of any armour (ruling pieces-from-other-armours); 0 with the zone stated empty
+        # (`loadout.armourPiece.<zone>: null`). An unstated zone is asked.
 
   - id: RS3
     text: |
@@ -120,8 +155,11 @@ clauses:
             - { of: "rs(zone: armRechts)", times: 2 }
             - { of: "rs(zone: beinLinks)", times: 2 }
             - { of: "rs(zone: beinRechts)", times: 2 }
+        ruling: [be-sentence, pieces-from-other-armours]
         # The RS of each zone times its RS-Faktor, summed (the old `sum(armour.rs[zone] *
-        # factor[zone])`).
+        # factor[zone])`). It rests on be-sentence (this sum is BE's one computation: RS5's 0.1
+        # for a single limb does not enter it) and on pieces-from-other-armours (the zones' pieces
+        # may come from different armours; Task 32, situations TZ.22, TZ.26).
       - derive: { to: "level(rule: COND_1)", sum: ["table(trefferzonen-ruestungsschutz.RS4.belastung, armourScore)"] }
         ruling: be-sentence
         # BE has this one computation; RS5's "Gleiches gilt auch für BE" adds no second (ruling
