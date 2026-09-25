@@ -73,8 +73,7 @@ clauses:
       übrig. Die Punkte des Fertigkeitswerts sind aber nicht für immer verloren. Wenn der
       Abenteurer später wieder eine Fertigkeitsprobe auf die gleiche Fertigkeit ablegen muss,
       steht der Fertigkeitswert wieder voll zur Verfügung.
-    effects: none
-    why: carried by FP3 (one pool per check, fresh every check)
+    none: carried by FP3 (one pool per check, fresh every check)
 
   - id: FP5
     text: >
@@ -106,8 +105,7 @@ clauses:
       Beispiel: Geron versucht im heißen Sand der Khômwüste die Spur einer Karawane zu verfolgen.
       […] Muss er später noch einmal eine Probe auf Fährtensuchen ablegen, steht ihm wieder sein
       voller FW von 7 zur Verfügung.
-    effects: none
-    why: the page's worked example (abridged here; FW 7, 10/18/…, 6 points on Intuition, 1 left)
+    none: the page's worked example (abridged here; FW 7, 10/18/…, 6 points on Intuition, 1 left)
 
   - id: QS1
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitspunkte.html", book: Kodex des Schwertes, page: 17 }
@@ -171,7 +169,7 @@ clauses:
       - when: { stage.roll: { count_of: 1, min: 2 } }
         set: { stage: result, success: true, kind: kritischerErfolg }
       - when: { stage.result.kind: kritischerErfolg }
-        provides: { text: "skill.critical" }
+        provide: { name: text, value: "skill.critical" }
         ruling: crit-qs
         # The talent's own entry says what "besser gelungen" means (Optolith de-DE/Skills.yaml
         # `critical`): for 11 of 59 talents "Für Qualitätsstufen, Vergleichs- und Sammelproben
@@ -195,8 +193,7 @@ clauses:
     text: >
       Anders als bei Eigenschaftsproben gibt es bei Fertigkeitsproben keine Bestätigungswürfe bei
       Kritischen Erfolgen oder Patzern.
-    effects: none
-    why: nothing to roll; the app asks for none
+    none: nothing to roll; the app asks for none
 
   - id: PZ1
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/patzer-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
@@ -210,7 +207,7 @@ clauses:
       - when: { stage.roll: { count_of: 20, min: 3 } }
         set: { stage: result, kind: dreifach20 }
       - when: { stage.result.kind: [patzer, dreifach20] }
-        provides: { text: "skill.botch" }
+        provide: { name: text, value: "skill.botch" }
 
 rulings:
   - id: crit-qs
@@ -230,7 +227,7 @@ rulings:
       b: { says: "Always the FP as rolled (at least 1); the rest is the GM's.", app: "QS from the dice; the text beneath" }
       c: { says: "Always QS 6.", app: "as today, plus the text" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       it follows the talents' own text where there is one and the core page where there is not;
       QS 6 for everyone (c) makes a Doppel-1 at FW 0 as good as a master's best work
     answer: null

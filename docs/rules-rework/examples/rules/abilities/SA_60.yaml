@@ -25,7 +25,7 @@ clauses:
     text: >
       Das Nachladen von Bögen und das Bereitmachen von Wurfwaffen verkürzen sich um 1 Aktion.
     effects:
-      - when: { weapon.technique: [CT_2, CT_14], hero.has: { SA_60: { option_for: weapon.technique } } }
+      - when: { loadout.weapon.technique: [CT_2, CT_14], hero.has: { SA_60: { option_for: weapon.technique } } }
         add: { to: item.ladezeit, value: -1, floor: 0 }
         # Kurzbogen 1 → 0, which ladezeiten.LZ2 turns into one free action. The instance gate is
         # a variation of DISADV_37's `sid` (which option the hero holds) and of the shared
@@ -34,8 +34,8 @@ clauses:
   - id: SL2
     text: Das Nachladen von Armbrüsten dauert nur die Hälfte der angegebenen Aktionen.
     effects:
-      - when: { weapon.technique: CT_1, hero.has: { SA_60: { option_for: weapon.technique } } }
-        halve: { value: item.ladezeit, round: up }
+      - when: { loadout.weapon.technique: CT_1, hero.has: { SA_60: { option_for: weapon.technique } } }
+        multiply: { to: item.ladezeit, by: 0.5, round: up }
         ruling: round-up
         # Leichte Armbrust 8 → 4, schwere 15 → 7.5 → 8 (the shared round-up; the page does not
         # round). Halving a *weapon* value, as regeneration.R6 halves a rolled one.
@@ -44,18 +44,15 @@ clauses:
     text: >
       Diese Sonderfertigkeit muss für die drei Fernkampftechniken Armbrüste, Bögen und
       Wurfwaffen einzeln erworben werden.
-    effects: none
-    why: carried by the `option_for` gate on SL1 and SL2
+    none: carried by the `option_for` gate on SL1 and SL2
 
   - id: SL4
     text: "Voraussetzungen: FF 13"
-    effects: none
-    why: purchase prerequisite
+    none: purchase prerequisite
 
   - id: SL5
     text: "Kampftechniken: Armbrüste, Blasrohre, Bögen, Diskusse, Schleudern oder Wurfwaffen"
-    effects: none
-    why: >
+    none: >
       the techniques the options may name. The Regel (SL1, SL2) speaks only of Bögen,
       Wurfwaffen and Armbrüste; what it does for Blasrohre, Diskusse and Schleudern is in the
       other books, not read for this probe (shown as text)
@@ -65,8 +62,7 @@ clauses:
       AP-Wert: Armbrüste: 5 Abenteuerpunkte; Blasrohre: 5 Abenteuerpunkte; Bögen: 20
       Abenteuerpunkte; Diskusse: 5 Abenteuerpunkte; Feuerspeien: 5 Abenteuerpunkte; Schleudern:
       5 Abenteuerpunkte; Wurfwaffen: 10 Abenteuerpunkte
-    effects: none
-    why: purchase cost
+    none: purchase cost
 
   - id: SL7
     text: >
@@ -76,6 +72,6 @@ clauses:
       zwar einen AP-Wert, fehlt aber bei den Kampftechniken
     effects:
       - requires: { any_of: [{ hero.has_item: Köcher }, { fact: pfeileGriffbereit }] }
-        when: { weapon.technique: CT_2 }
+        when: { loadout.weapon.technique: CT_2 }
         # Equipment as a precondition (the Köcher), with a GM fact as the way around it. Shown as
         # a note; the app knows the inventory but not what is worn where.

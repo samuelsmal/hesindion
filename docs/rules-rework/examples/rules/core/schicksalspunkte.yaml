@@ -22,8 +22,7 @@ clauses:
       einer Fertigkeitsprobe Neuer Wurf einzusetzen. Als Anwendungen auf Proben gelten Neuer
       Wurf, Qualität verbessern und Schadenswurf wiederholen. Sie können nur einmal für den Wurf
       oder die Probe eingesetzt werden.
-    effects: none
-    why: limits how Schips combine; the example uses below are not "Anwendungen auf Proben"
+    none: limits how Schips combine; the example uses below are not "Anwendungen auf Proben"
 
   - id: SP-verteidigung
     name: Verteidigung
@@ -35,7 +34,7 @@ clauses:
       Verteidigungen sein Verteidigungswert erst später auf 0 sinkt.
     effects:
       - offer: { choice: schipVerteidigung, costs: { schip: 1 }, span: round, before: defenceRoll }
-      - when: { choice: schipVerteidigung }
+      - when: { choice.schipVerteidigung: true }
         add: { to: [pa, aw], value: 4 }
 
   - id: SP-zustand
@@ -45,7 +44,7 @@ clauses:
       Kampfrunde zu ignorieren.
     effects:
       - offer: { choice: schipZustandIgnorieren, costs: { schip: 1 }, span: round }
-      - when: { choice: schipZustandIgnorieren }
+      - when: { choice.schipZustandIgnorieren: true }
         suppress: { kind: condition }
         ruling: [schip-ignore-belastung, schip-lifts-incapacity]
         # FORMAT: switches off every effect of every Zustand for the round — the lines on
@@ -60,7 +59,7 @@ rulings:
     answer: >
       Yes — every Zustand, Belastung included, for one Kampfrunde.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SP-zustand]
+    appliesTo: [SP-zustand]
     notes: >
       The page makes no exception, and Belastung is a Zustand. The Belastung lines (checks, INI,
       GS) are suppressed with the rest for the round; the armour's own extra penalties
@@ -78,4 +77,4 @@ rulings:
       stated outright or implied by a Status (Bewusstlos, Versteinert).
     decided: { by: "@samuelsmal", date: 2026-09-20 }
     source: recorded from the doc comment on Hero.isHandlungsunfaehigFromZustaende ("owner ruling, 2026-09-20")
-    applies_to: [SP-zustand]
+    appliesTo: [SP-zustand]

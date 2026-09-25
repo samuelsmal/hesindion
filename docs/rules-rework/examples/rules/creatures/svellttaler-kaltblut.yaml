@@ -47,15 +47,22 @@ clauses:
     text: |
       Größe: 2,40 bis 3,00 Schritt lang; 1,80 bis 2,00 Schritt Schulterhöhe
       Gewicht: 750 bis 900 Stein
-    effects: none
-    why: description; the export's `size` (1.9) is the Schulterhöhe and nothing reads it
+    none: description; the export's `size` (1.9) is the Schulterhöhe and nothing reads it
 
   - id: SK2
     text: |
       MU 12 KL 10 (t) IN 12 CH 12 FF 8 GE 15 KO 24 KK 25
       LeP 75 AsP – KaP – INI 14+1W6 VW 7 SK 0 ZK 0 GS 12
     effects:
-      - provides: { mount.ini.base: 14, mount.gs: 12, mount.lep: 75, mount.vw: 7, mount.kk: 25 }
+      - provide: { name: mount.ini.base, value: 14 }
+        ruling: mount-profile-data
+      - provide: { name: mount.gs, value: 12 }
+        ruling: mount-profile-data
+      - provide: { name: mount.lep, value: 75 }
+        ruling: mount-profile-data
+      - provide: { name: mount.vw, value: 7 }
+        ruling: mount-profile-data
+      - provide: { name: mount.kk, value: 25 }
         ruling: mount-profile-data
         # Read by reiterkampf.RK1 (INI base), RK14 and RK15 (GS), RK10 (LeP), maechtiger-schlag.MS2
         # (KK). The app has all but VW: Pet.initiative "14+1W6" (the base parsed off the front,
@@ -67,8 +74,9 @@ clauses:
       Biss: AT 12 TP 1W6+2 RW kurz
       Niederreiten: AT 15 TP 2W6+6 RW mittel
     effects:
-      - provides:
-          mount.attacks:
+      - provide:
+          name: mount.attacks
+          value:
             - { name: Tritt, at: 15, tp: 1W6+7, reach: mittel }
             - { name: Biss, at: 12, tp: 1W6+2, reach: kurz }
             - { name: Niederreiten, at: 15, tp: 2W6+6, reach: mittel }
@@ -88,7 +96,9 @@ clauses:
       RS/BE: 0/0
       Aktionen: 1
     effects:
-      - provides: { mount.rs: 0, mount.actions: 1 }
+      - provide: { name: mount.rs, value: 0 }
+        ruling: [mount-profile-data, mount-own-attack]
+      - provide: { name: mount.actions, value: 1 }
         ruling: [mount-profile-data, mount-own-attack]
         # RS matters for reiterkampf.RK10 (SP = TP − RS; the player enters the SP today,
         # CombatMountDamageView). Aktionen 1: the horse acts only on the rider's order (RK12,
@@ -113,8 +123,7 @@ clauses:
       Talente: Einschüchtern 2, Klettern (keine Probe erlaubt; Pferde können nicht klettern),
       Körperbeherrschung 4, Kraftakt 8, Schwimmen 4, Selbstbeherrschung 4, Sinnesschärfe 4,
       Verbergen 2, Willenskraft 3
-    effects: none
-    why: the animal's own checks; the app shows them as text (Pet.talents) and rolls none
+    none: the animal's own checks; the app shows them as text (Pet.talents) and rolls none
 
   - id: SK7
     text: |
@@ -122,7 +131,8 @@ clauses:
       Größenkategorie: groß
       Typus: Tier, nicht humanoid
     effects:
-      - provides: { mount.size: gross, mount.type: [tier, nichtHumanoid] }
+      - provide: { name: mount.size, value: gross }
+      - provide: { name: mount.type, value: [tier, nichtHumanoid] }
         # groß: an opponent defending against Kupperus's own attacks cannot parry with a weapon,
         # only with a shield or by dodging (groessenkategorie.GK4; catalog GRW_groessenkategorie,
         # SizeCategoryRules.allowedDefenses; whether Boronmir riding it counts as groß too is
@@ -132,8 +142,7 @@ clauses:
 
   - id: SK8
     text: "Beute: 400 Rationen Fleisch, Fell (25 Silbertaler)"
-    effects: none
-    why: loot
+    none: loot
 
   - id: SK9
     text: >
@@ -142,8 +151,7 @@ clauses:
       das Weite. In der Zwischenzeit machen sie sich ihre Körpermasse zunutze, indem sie mit
       Niederreiten-Angriffen eine Schneise bahnen.
       Flucht: siehe Kampfverhalten
-    effects: none
-    why: how the GM plays an unridden animal; shown as text (the export copies it into `notes`)
+    none: how the GM plays an unridden animal; shown as text (the export copies it into `notes`)
 
   - id: SK10
     text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
@@ -161,8 +169,7 @@ clauses:
       QS 2: Viele Militärstrategien wurden in direktem Bezug auf das Svellttaler Kaltblut entwickelt, da seine körperliche Ruhe selbst langwierige Manöver zulässt, ohne dass solche Vorhaben je am Tier scheitern würden.
       QS 3+: Einige Exemplare ziehen überwiegende Einsamkeit dem Stress des Gruppenlebens vor. Was bei anderen Pferden Anlass zur Sorge wäre, ist hier demnach nicht ungewöhnlich.
       Jagd: –2
-    effects: none
-    why: lore for a Tierkunde check and a hunting modifier; neither is a check the hero makes on this animal in combat
+    none: lore for a Tierkunde check and a hunting modifier; neither is a check the hero makes on this animal in combat
 
   - id: SK12
     name: Packesel
@@ -184,7 +191,7 @@ rulings:
       it; a pet whose type is not in the table falls back to the export, and what the export lacks
       the player enters on the pet (VW, RS, size, Vorteile).
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SK2, SK3, SK4, SK5, SK7, ruhiges-temperament.RT1]
+    appliesTo: [SK2, SK3, SK4, SK5, SK7, ruhiges-temperament.RT1]
     notes: >
       Profile files like this one, looked up by Pet.type ("Svellttaler Kaltblut"); the export's
       numbers are the player's and win where present (Kupperus's LeP 75, INI, GS, attacks). The
@@ -205,7 +212,7 @@ rulings:
     answer: >
       An order like any other (RK12): it takes the rider's action and a Reiten (Kampfmanöver) check.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SK3, SK4, reiterkampf.RK12]
+    appliesTo: [SK3, SK4, reiterkampf.RK12]
     notes: >
       Tritt and Biss go through the Reiten check (CombatMountPreCheckView) like Niederreiten,
       without the gallop question, and replace Boronmir's own attack; on a failed check the order is
@@ -220,7 +227,7 @@ rulings:
       rider order Niederreiten from a mount whose profile has no Niederreiten line?
     answer: No Niederreiten line, no Niederreiten order.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SK3, reiterkampf.RK13]
+    appliesTo: [SK3, reiterkampf.RK13]
     notes: >
       RK13 takes both the AT and the damage from the mount's own Niederreiten values; without them
       the order has no numbers, so the button is hidden. The horses on the wiki all list one; a
@@ -235,7 +242,7 @@ rulings:
       The profile gives LeP 75 but Schmerz thresholds of 49, 33, 16 and 5 LeP. Which count?
     answer: The printed thresholds, 49/33/16/5.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SK10]
+    appliesTo: [SK10]
     notes: >
       Answered against the recommendation (b, computed from LeP 75 by the core rule: about 56, 37,
       18 and 5). The printed 49/33/16 are ¾, ½ and ¼ of 65 LeP, so either they or the LeP are a

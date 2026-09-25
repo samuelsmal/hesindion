@@ -17,16 +17,14 @@ clauses:
       Die einzelnen Zustände addieren sich auf. Ist ein Held so angetrunken, dass er kaum noch
       geradeaus laufen kann, leidet er bereits unter zwei Stufen Betäubung. Erhält er nun durch
       einen kräftigen Schlag eine Platzwunde am Kopf, erhält er eine dritte Stufe Betäubung usw.
-    effects: none
-    why: a new Stufe of the same Zustand adds to its level; that is how every level is kept
+    none: a new Stufe of the same Zustand adds to its level; that is how every level is kept
 
   - id: Z2
     text: >
       Die Erschwernisse verschiedener Zustände addieren sich ebenfalls auf. Wer also eine
       Erschwernis von 1 durch Schmerz und eine Erschwernis von 2 durch Betäubung erhält, leidet
       unter einer Gesamterschwernis von 3.
-    effects: none
-    why: each Zustand's line is simply added; nothing to encode beyond the lines themselves
+    none: each Zustand's line is simply added; nothing to encode beyond the lines themselves
 
   - id: Z3
     text: >
@@ -45,8 +43,7 @@ clauses:
     text: >
       Wie lange ein Zustand anhält, ist je nach Art des Zustandekommens unterschiedlich und bei
       den diversen Möglichkeiten angegeben.
-    effects: none
-    why: >
+    none: >
       the duration is given per cause on each Zustand's page (COND_6.SZ4 4 h per Stufe, Betäubung
       3 h Ruhephase, …) and by whatever set it; nothing to encode here
 
@@ -64,7 +61,7 @@ clauses:
       Handlungsunfähig, auch wenn kein einzelner Zustand bei ihm bislang Stufe IV aufweist.
     effects:
       - when: { sum: { condition_levels: all }, min: 8 }
-        gain: { state: handlungsunfaehig }
+        gain: { rule: handlungsunfaehig }
 
   - id: Z6
     # The page's "Anmerkung/Info-Box:" — an info box under the rule, not a paragraph of it.
@@ -72,8 +69,7 @@ clauses:
       Wenn sich Spielwerte durch Zustände, einen Status oder andere Einflüsse kurzfristig ändern,
       ist keine Neuberechnung von abgeleiteten Werten notwendig, es sei denn, es steht explizit
       bei der Regel dabei.
-    effects: none
-    why: >
+    none: >
       a Zustand never changes a derived value (LE, AW, INI base …) — its penalty is a line on
       the check, not a new base
 
@@ -86,7 +82,7 @@ rulings:
     answer: >
       Every Zustand penalty, GS and INI included, stops at −5.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [Z3]
+    appliesTo: [Z3]
     notes: >
       Answered against the recommendation (checks only, since the page speaks of Erschwernis).
       A hero in Plattenrüstung (Belastung III) with Schmerz III has AT −5 and GS −5, each with its

@@ -3,7 +3,7 @@ id: SA_42
 name: Beidhändiger Kampf
 kind: specialAbility
 group: Kampfsonderfertigkeiten
-tiers: 2
+levels: 2
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Beih%C3%A4ndigerKampf.html   # the wiki's own spelling
   book: Regelwerk (4. Auflage)
@@ -37,21 +37,18 @@ clauses:
 
   - id: BH3
     text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Beidhändiger Kampf I"
-    effects: none
-    why: purchase prerequisites, not a roll
+    none: purchase prerequisites, not a roll
 
   - id: BH4
     text: "AP-Wert: Stufe I/II: 20/35 Abenteuerpunkte"
-    effects: none
-    why: purchase cost
+    none: purchase cost
 
   - id: BH5
     text: >
       Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
       hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
       Kampftechnik heranzuziehen.
-    effects: none
-    why: >
+    none: >
       how the wiki keeps BH2's list; evidence for sf-technique-lists' option (a) — a list kept up
       to date with new techniques is a use list, not a learning list
 
@@ -64,7 +61,7 @@ rulings:
     answer: >
       Yes: 'Abzug' means ZW3's penalty as a whole, wherever it applies.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [BH1]
+    appliesTo: [BH1]
     notes: >
       A hero with SA_42 II attacks, parries and dodges at 0 in a round with a double attack. The
       app already lowers AT, PA and AW alike (Hero.dualAttackPenalty feeds

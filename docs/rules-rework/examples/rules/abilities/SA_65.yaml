@@ -27,12 +27,12 @@ clauses:
           span: round
           # FORMAT: a choice announced once and held for the Kampfrunde — like the Schip
           # "Verteidigung", but only offered at the start.
-      - when: { choice: verteidigungshaltung }
+      - when: { choice.verteidigungshaltung: true }
         add: { to: [pa, aw], value: 4 }
         ruling: [vh-scope, vh-stacking]
         # Every defence, against melee and ranged attacks alike; a line of its own beside the
         # Schip "Verteidigung" +4, which it stacks with.
-      - when: { choice: verteidigungshaltung }
+      - when: { choice.verteidigungshaltung: true }
         forbid: { action: aktion }
         ruling: vh-free-actions
         # Aktionen only (attack, spell, Fernkampf); freie Aktionen and defences stay.
@@ -51,26 +51,22 @@ clauses:
     text: >
       Meistermaske: Wenn sich ein Kämpfer in die Verteidigungshaltung begibt, ist dies für
       andere Kampfteilnehmer ersichtlich.
-    effects: none
-    why: a note for the GM about opponents' knowledge
+    none: a note for the GM about opponents' knowledge
 
   - id: VH4
     text: "Voraussetzungen: IN 13"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: VH5
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost
 
   - id: VH6
     text: >
       Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
       hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
       Kampftechnik heranzuziehen.
-    effects: none
-    why: an editor's note on VH2's list (the same note as SA_66.V7)
+    none: an editor's note on VH2's list (the same note as SA_66.V7)
 
 rulings:
   - id: vh-scope
@@ -81,7 +77,7 @@ rulings:
     answer: >
       +4 on every defence — PA and AW, whatever the attack.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [VH1]
+    appliesTo: [VH1]
     notes: >
       Verteidigung is the umbrella term for PA and AW throughout the combat chapter. The app does
       not implement the SF (catalog: todo).
@@ -94,7 +90,7 @@ rulings:
     answer: >
       Free actions and defences stay; only Aktionen are gone.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [VH1]
+    appliesTo: [VH1]
     notes: attack, spell and Fernkampf are disabled for the round; free actions are untouched.
 
   - id: vh-stacking
@@ -104,7 +100,7 @@ rulings:
       same round?
     answer: "They stack: +8."
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [VH1, schicksalspunkte.SP-verteidigung]
+    appliesTo: [VH1, schicksalspunkte.SP-verteidigung]
     notes: >
       Two lines, +4 each. Together they push MV3's "value reaches 0" further out, allowing more
       defences in the round.

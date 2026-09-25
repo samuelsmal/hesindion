@@ -2,7 +2,7 @@
 id: passierschlag
 name: Passierschlag
 kind: core
-catalog_id: GRW_passierschlag
+catalogId: GRW_passierschlag
 source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-Passierschlag.html
   book: Regelwerk
@@ -23,7 +23,7 @@ clauses:
       ohne sich ihm zu stellen.
     effects:
       - when: { event: movesThroughReach, of: newOpponent, not: { engages: true } }
-        tell: { hero: "Passierschlag des Gegners" }
+        tell: { to: player, text: "Passierschlag des Gegners" }
       # The other triggers are the other rules' own clauses, which point here:
       #   Flucht (misslungen) — the Flucht page, not drafted; mounted: reiterkampf.RK15
       #   a critical parry — the critical-success rules (CriticalSuccessTable, basic rule)
@@ -40,14 +40,14 @@ clauses:
       Attacke.
     effects:
       - offer: { attack: passierschlag, costs: none, domain: meleeAttack }
-      - when: { attack: passierschlag }
+      - when: { action.attack: passierschlag }
         add: { to: at, value: -4 }
         # Every other line of a melee AT still applies (Belastung, Beengte Umgebung, winzig
         # target, vorteilhafte Position) — only the manoeuvres are out (PS3).
-      - when: { attack: passierschlag, side: hero }
+      - when: { action.attack: passierschlag, side: hero }
         opponent_may_only: []
-        tell: { opponent: "keine Verteidigung" }
-      - when: { attack: passierschlag, side: opponent }
+        tell: { to: opponent, text: "keine Verteidigung" }
+      - when: { action.attack: passierschlag, side: opponent }
         forbid: { defence: [pa, aw] }
         then: { go_to: takeDamage }
         # The hero suffers it: no defence is offered; straight to the damage screen.
@@ -59,12 +59,12 @@ clauses:
       Der Passierschlag lässt sich nicht mit Kampfsonderfertigkeiten kombinieren (z.B. Finten
       oder Wuchtschlägen).
     effects:
-      - when: { attack: passierschlag }
+      - when: { action.attack: passierschlag }
         forbid: { manoeuvre: any }
         ruling: passierschlag-sf
         # Basis- and Spezialmanöver only. Passive SF and Kampfstile still apply (Golgariten-Stil's
         # +2 on the vorteilhafte Position, kampfsituationen 17.3).
-      - when: { attack: passierschlag, rulesets: fokus.trefferzonen }
+      - when: { action.attack: passierschlag, rulesets: fokus.trefferzonen }
         offer: { choice: targetZone }
         ruling: passierschlag-zone
         # Aiming is not a Kampfsonderfertigkeit (trefferzonen.TZ5): the full zone penalty, never
@@ -74,13 +74,13 @@ clauses:
   - id: PS4
     text: Es gibt keine Kritischen Erfolge oder Patzer bei Passierschlägen.
     effects:
-      - when: { attack: passierschlag }
+      - when: { action.attack: passierschlag }
         forbid: { roll: [kritischerErfolg, patzer] }
         # no confirmation roll, no table
-      - when: { attack: passierschlag, roll: 1 }
+      - when: { action.attack: passierschlag, roll: 1 }
         result: hit
         ruling: passierschlag-dice
-      - when: { attack: passierschlag, roll: 20 }
+      - when: { action.attack: passierschlag, roll: 20 }
         result: miss
         ruling: passierschlag-dice
         # A 1 hits and a 20 misses whatever the AT, as on every check; only the confirmation roll
@@ -104,8 +104,7 @@ clauses:
       Arboschs Attackewert ist 15, der Passierschlag ist aber um -4 erschwert (15 - 4 = 11).
       Der Spieler würfelt eine 3 und trifft den fliehenden Ork in den Rücken. Dieser erleidet
       normalen Waffenschaden.
-    effects: none
-    why: the worked example; situation kampfsituationen 17.1 is the same arithmetic with Boronmir
+    none: the worked example; situation kampfsituationen 17.1 is the same arithmetic with Boronmir
 
 rulings:
   - id: passierschlag-sf
@@ -118,7 +117,7 @@ rulings:
     answer: >
       Manoeuvres only (Basis- and Spezialmanöver). Passive SF and Kampfstile apply.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [PS3]
+    appliesTo: [PS3]
     notes: >
       Both of the page's examples are Basismanöver, and the Fokusregel "Geschickter
       Passierschlag" entry (Aventurisches Kompendium 2 p. 100ff, the app's CriticalSuccessTable)
@@ -134,7 +133,7 @@ rulings:
     answer: >
       Yes: aim at the full zone penalty; Gezielter Angriff's halving is not available.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [PS3]
+    appliesTo: [PS3]
     notes: >
       Aiming is open to every hero (trefferzonen.TZ5); only the halving is the Spezialmanöver
       (SA_160.halving-by-manoeuvre), which PS3 excludes. The app hides the zone picker on a
@@ -149,7 +148,7 @@ rulings:
     answer: >
       1 always hits, 20 always misses; no confirmation, no table.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [PS4]
+    appliesTo: [PS4]
     notes: >
       The page takes away the critical results, which is what the confirmation roll decides; the
       automatic success and failure are part of every check. The app compares the roll with the

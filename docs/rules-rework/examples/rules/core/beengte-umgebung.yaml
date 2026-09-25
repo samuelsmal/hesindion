@@ -2,7 +2,7 @@
 id: beengte-umgebung
 name: Beengte Umgebung
 kind: core
-catalog_id: GRW_beengteUmgebung
+catalogId: GRW_beengteUmgebung
 source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-BeengteUmgebung.html
   book: Regelwerk
@@ -26,8 +26,7 @@ clauses:
       In kleinen Räumen, Gängen und ähnlichem Umfeld kann der Spielleiter entscheiden, dass es
       sich um eine beengte Umgebung handelt. Waffen mit der Reichweite kurz erleiden hier keine
       Abzüge. Größere Waffen erleiden Abzüge.
-    effects: none
-    why: the switch (`applies_when`) and a summary of BU2's rows
+    none: the switch (`applies_when`) and a summary of BU2's rows
 
   - id: BU2
     text: |
@@ -35,9 +34,9 @@ clauses:
       Mittlere Waffen: -4 auf AT; -4 auf PA
       Lange Waffen: -8 auf AT; -8 auf PA
     effects:
-      - when: { roll.with: weapon, roll.with.reach: mittel }
+      - when: { action.with: weapon, loadout.reach: mittel }
         add: { to: [at, pa], value: -4 }
-      - when: { roll.with: weapon, roll.with.reach: lang }
+      - when: { action.with: weapon, loadout.reach: lang }
         add: { to: [at, pa], value: -8 }
       # `roll.with` is the piece the AT or PA is rolled with — on a parry the parrying piece,
       # not the main weapon. Bare hands are kurz (reichweite.RW1). AW is not on the table.
@@ -48,17 +47,17 @@ clauses:
       Mittlere Schilde: -4 auf AT; -3 auf PA
       Große Schilde: -6 auf AT; -4 auf PA
     effects:
-      - when: { roll.with: shield, roll.with.shieldSize: klein }
+      - when: { action.with: shield, loadout.shield.size: klein }
         add: { to: at, value: -2 }
-      - when: { roll.with: shield, roll.with.shieldSize: klein }
+      - when: { action.with: shield, loadout.shield.size: klein }
         add: { to: pa, value: -2 }
-      - when: { roll.with: shield, roll.with.shieldSize: mittel }
+      - when: { action.with: shield, loadout.shield.size: mittel }
         add: { to: at, value: -4 }
-      - when: { roll.with: shield, roll.with.shieldSize: mittel }
+      - when: { action.with: shield, loadout.shield.size: mittel }
         add: { to: pa, value: -3 }
-      - when: { roll.with: shield, roll.with.shieldSize: gross }
+      - when: { action.with: shield, loadout.shield.size: gross }
         add: { to: at, value: -6 }
-      - when: { roll.with: shield, roll.with.shieldSize: gross }
+      - when: { action.with: shield, loadout.shield.size: gross }
         add: { to: pa, value: -4 }
     ruling: beengt-shield-carried
     # FORMAT: a shield's size is equipment data the app does not have. Optolith states it only
@@ -76,7 +75,7 @@ rulings:
       Per item: the shield's row applies to rolls with the shield, the weapon's row to rolls with
       the weapon.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [BU2, BU3]
+    appliesTo: [BU2, BU3]
     notes: >
       Langschwert and Großschild in a corridor: the Langschwert attacks and parries at −4, the
       Großschild parries at −4 and bashes at −6 (kampfsituationen 17.14–17.17). The parrying

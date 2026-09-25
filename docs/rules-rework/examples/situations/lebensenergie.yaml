@@ -16,13 +16,13 @@
 # carries Belastung I (belastung, SA_41: 2). He dropped ADV_75 Schnell wieder auf den Beinen on
 # 2026-09-24; the situations about it (15.16–15.19) give it back to him, and say so.
 # No armour unless stated, so the Schmerz lines stand alone.
-hero_file: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 #
 # `lp` is the current LP. `conditions` gives the Stufe the hero *has*; `acts_as` the Stufe whose
 # effects apply (Zäher Hund). `regeneration` is the rolled LeP gain of one Regenerationsphase,
 # with `roll` the 1W6 as rolled.
 
-base_hero: { name: Boronmir, species: R_1, ko: 15, le: 37, at: 16, gs: 8,     # AT: Rabenschnabel, no armour
+hero: { name: Boronmir, species: R_1, ko: 15, le: 37, at: 16, gs: 8,     # AT: Rabenschnabel, no armour
              advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1 } }
 
 situations:
@@ -32,14 +32,14 @@ situations:
   - id: "15.1"
     name: Boronmir's LE
     expect:
-      le_max:
+      leMax:
         total: 37
         lines:
           - { value: 5, from: lebensenergie.LE3 }          # Grundwert, Mensch
           - { value: 30, from: lebensenergie.LE3 }         # 2 × KO 15
           - { value: 2, from: ADV_25.HL1 }                 # Stufe II
           - { value: 0, from: lebensenergie.LE2 }          # none bought
-    app_today: >
+    appToday: >
       37, right (OptolithImportService.computeDerivedValues, hoheLebenskraftBonus). Shown as
       "current / 37" with no breakdown (HeroDetailView.derivedValuesSection): Hohe Lebenskraft is
       stored as LifeEnergyValue.bonus but named nowhere
@@ -48,12 +48,12 @@ situations:
     name: A human with KO 15 and Niedrige Lebenskraft II, no Hohe Lebenskraft
     hero: { advantages: {}, disadvantages: { DISADV_28: 2 } }
     expect:
-      le_max:
+      leMax:
         total: 33
         lines:
           - { value: 35, from: lebensenergie.LE3 }         # 5 + 2 × 15
           - { value: -2, from: [lebensenergie.LE3, DISADV_28] }   # "−1 pro Stufe" (Optolith text; no rule file yet)
-    app_today: 35 — Niedrige Lebenskraft is ignored (computeDerivedValues reads only ADV_25; catalog DISADV_28 todo) — wrong
+    appToday: 35 — Niedrige Lebenskraft is ignored (computeDerivedValues reads only ADV_25; catalog DISADV_28 todo) — wrong
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
 
@@ -63,7 +63,7 @@ situations:
     expect:
       conditions: {}
       at: { total: 0 }
-    app_today: same
+    appToday: same
 
   - id: "15.4"
     name: LP 27 — Schmerz I, which Zäher Hund treats as none
@@ -73,8 +73,8 @@ situations:
       acts_as: { COND_6: 0, from: ADV_49.ZH4 }
       at: { total: 0 }
       gs: { total: 0 }
-      not_applied: [{ rule: COND_6.SZ5, because: ADV_49.ZH4 }]
-    app_today: >
+      notApplied: [{ rule: COND_6.SZ5, because: ADV_49.ZH4 }]
+    appToday: >
       no Schmerz at all — no chip, no line, no mention of Zäher Hund outside the after-fight screen
       (Hero.effectiveSchmerzLevel 0). No line is right; the missing Schmerz I chip is wrong (ruling
       ADV_49.zaeher-hund-counts)
@@ -88,7 +88,7 @@ situations:
       at:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [COND_6.SZ3, ADV_49.ZH1] }] }
       talent: { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
       gs:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
-    app_today: >
+    appToday: >
       checks −1, labelled "Schmerz I" citing COND_6 only (StateModifiers.penaltyDefinitions reads
       the lowered level); GS 0 — wrong (Schmerz never reaches GS, example 4)
 
@@ -100,7 +100,7 @@ situations:
       acts_as: { COND_6: 2, from: ADV_49.ZH1 }
       at: { total: -2, lines: [{ value: -2, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
       gs: { total: -2, lines: [{ value: -2, from: COND_6.SZ5, via: [ADV_49.ZH1] }] }
-    app_today: checks −2 ("Schmerz II"); GS 0 — wrong
+    appToday: checks −2 ("Schmerz II"); GS 0 — wrong
 
   - id: "15.7"
     name: LP 5 — Schmerz IV, Handlungsunfähig nevertheless
@@ -115,7 +115,7 @@ situations:
         acts_as: { COND_6: 3, ruling: ADV_49.zaeher-hund-iv }
         at: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
         gs: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
-    app_today: Handlungsunfähig outright, no Selbstbeherrschung check (StateCatalog schmerz handlungsunfaehigAtLevel 4; Hero.effectiveSchmerzLevel skips Zäher Hund at IV) — wrong for the check (example 4)
+    appToday: Handlungsunfähig outright, no Selbstbeherrschung check (StateCatalog schmerz handlungsunfaehigAtLevel 4; Hero.effectiveSchmerzLevel skips Zäher Hund at IV) — wrong for the check (example 4)
 
   - id: "15.8"
     name: In Plattenrüstung, LP 9, Betäubung III from a blow and Furcht I — eight Stufen?
@@ -134,7 +134,7 @@ situations:
           - { value: -3, from: COND_2 }
           - { value: -1, from: COND_4 }
           - { value: 2, from: zustaende.Z3 }               # −7 capped at −5
-    app_today: >
+    appToday: >
       able to act at AT −5: Hero.totalZustandLevels counts the lowered Schmerz (7 Stufen) — wrong
       (ruling ADV_49.zaeher-hund-counts)
 
@@ -152,7 +152,7 @@ situations:
           - { value: 1, from: regeneration.T1 }            # Gute Unterkunft
           - { value: 2, from: ADV_44.VR1, ruling: ADV_44.vr-scope }
       after: { lp: 15, conditions: { COND_6: 2 }, acts_as: { COND_6: 1 } }   # healed above ¼: Schmerz III → II
-    app_today: >
+    appToday: >
       same number if the player steps the modifier to +1 by hand (RegenerierenSheet.userModifier);
       the +2 is shown as "Verbesserte Regeneration +2", the inn line has no name
 
@@ -168,7 +168,7 @@ situations:
           - { value: 2, from: ADV_44.VR1 }
           - { halve: true, from: regeneration.R6, ruling: [round-up, ADV_44.vr-halving] }
       after: { lp: 23 }
-    app_today: 5 → LP 25 unless the player works out the halving and enters it as a modifier; the sheet has no environment — wrong
+    appToday: 5 → LP 25 unless the player works out the halving and enters it as a modifier; the sheet has no environment — wrong
 
   - id: "15.11"
     name: Tied to his horse's back overnight
@@ -176,17 +176,17 @@ situations:
     choose: { environment: "Sturm, auf ein Pferd gebunden" }
     expect:
       regeneration: { total: 0, lines: [{ set: 0, from: regeneration.R6 }] }
-      not_applied: [{ rule: ADV_44.VR1, because: regeneration.R6 }]   # he does not regenerate
-    app_today: the sheet rolls 1W6 + 2 regardless — wrong
+      notApplied: [{ rule: ADV_44.VR1, because: regeneration.R6 }]   # he does not regenerate
+    appToday: the sheet rolls 1W6 + 2 regardless — wrong
 
   - id: "15.12"
     name: Vergiftet
     hero: { lp: 20, states: [STATE_15] }
     expect:
       regeneration: { total: 0, lines: [{ set: 0, from: regeneration.R7 }] }
-      not_applied: [{ rule: ADV_44.VR1, because: regeneration.R7 }]
+      notApplied: [{ rule: ADV_44.VR1, because: regeneration.R7 }]
       told: [{ player: "Heilkräuter wirken dennoch.", from: regeneration.R7 }]
-    app_today: >
+    appToday: >
       the sheet rolls 1W6 + 2 regardless; only the Vergiftet chip's text says "keine normale
       Regeneration" (Strings state.vergiftet.effect) — wrong
 
@@ -202,7 +202,7 @@ situations:
           - { value: -1, from: regeneration.T1 }
           - { value: -2, from: regeneration.T1 }
           - { value: 2, from: ADV_44.VR1 }
-    app_today: same if the player enters −3 (the sheet floors at 0 like R4)
+    appToday: same if the player enters −3 (the sheet floors at 0 like R4)
 
   - id: "15.14"
     name: Near the maximum
@@ -211,7 +211,7 @@ situations:
     expect:
       regeneration: { total: 7 }
       after: { lp: 37, from: regeneration.R5 }
-    app_today: same (RegenerierenSheet.newLE caps at the maximum)
+    appToday: same (RegenerierenSheet.newLE caps at the maximum)
 
   - id: "15.15"
     name: Another hero with Verbesserte Regeneration III
@@ -219,7 +219,7 @@ situations:
     choose: { environment: ruhig, roll: 4 }
     expect:
       regeneration: { total: 7, lines: [{ value: 4, from: regeneration.R4 }, { value: 3, from: ADV_44.VR1 }] }
-    app_today: 6 — Hero.verbessertRegenerationLEBonus stops at +2 ("+2 at tier II") — wrong
+    appToday: 6 — Hero.verbessertRegenerationLEBonus stops at +2 ("+2 at tier II") — wrong
 
   # --- Standing up, and what Schnell wieder auf den Beinen really does ----------------------------
 
@@ -232,27 +232,27 @@ situations:
         - { action: aufstehen, from: STATE_10.L4, costs: action }
         - { check: { talent: Körperbeherrschung, application: Kampfmanöver, fw: 8, attributes: [GE 14, GE 14, KO 15] },
             from: STATE_10.L4, optional: true }
-      not_applied: [{ rule: ADV_75, because: "betrifft nur Betäubung und Berauscht (ADV_75.SW1)" }]
-    app_today: no stand-up action; the player removes Liegend by hand (liegend 7.6). Not wrong about ADV_75, which the app ignores (catalog todo)
+      notApplied: [{ rule: ADV_75, because: "betrifft nur Betäubung und Berauscht (ADV_75.SW1)" }]
+    appToday: no stand-up action; the player removes Liegend by hand (liegend 7.6). Not wrong about ADV_75, which the app ignores (catalog todo)
 
   - id: "15.17"
     name: Betäubung II after a night of Premer Feuer, with Schnell wieder auf den Beinen
     hero: { states: [{ COND_2: 2, cause: alcohol }], advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1, ADV_75: 1 } }   # + ADV_75
     expect:
       told: [{ player: "Jede Stufe Betäubung baut sich nach 1½ Stunden Ruhe ab (statt 3).", from: ADV_75.SW1 }]
-    app_today: the chip says 3 hours (Strings state.betaeubung.removal); ADV_75 ignored — wrong
+    appToday: the chip says 3 hours (Strings state.betaeubung.removal); ADV_75 ignored — wrong
 
   - id: "15.18"
     name: Berauscht III, with Schnell wieder auf den Beinen
     hero: { states: [{ COND_9: 3 }], advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1, ADV_75: 1 } }   # + ADV_75
     expect:
       told: [{ player: "Berauscht baut sich jede Stunde um 1 Stufe ab (statt alle 2), wenn er nichts mehr trinkt.", from: ADV_75.SW1 }]
-    app_today: the chip says 2 hours (Strings state.berauscht.removal) — wrong
+    appToday: the chip says 2 hours (Strings state.berauscht.removal) — wrong
 
   - id: "15.19"
     name: Betäubung II from a blow to the head, with Schnell wieder auf den Beinen
     hero: { states: [{ COND_2: 2, cause: blow }], advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1, ADV_75: 1 } }   # + ADV_75
     expect:
       told: [{ player: "Jede Stufe Betäubung baut sich nach 3 Stunden Ruhe ab.", from: COND_2 }]
-      not_applied: [{ rule: ADV_75.SW1, because: "nur durch Alkohol verursacht", ruling: ADV_75.alcohol-scope }]
-    app_today: 3 hours — right
+      notApplied: [{ rule: ADV_75.SW1, because: "nur durch Alkohol verursacht", ruling: ADV_75.alcohol-scope }]
+    appToday: 3 hours — right

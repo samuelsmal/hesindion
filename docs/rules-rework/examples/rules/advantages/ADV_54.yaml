@@ -27,13 +27,11 @@ clauses:
 
   - id: E2
     text: "Voraussetzung: Keine"
-    effects: none
-    why: no prerequisite
+    none: no prerequisite
 
   - id: E3
     text: "AP-Wert: 5 Abenteuerpunkte"
-    effects: none
-    why: cost, not a rule at the table
+    none: cost, not a rule at the table
 
 rulings:
   - id: eisern-scope
@@ -57,7 +55,7 @@ rulings:
       b: { says: "The Wundschwelle is core; Eisern always counts and needs no note.", app: "as today, plus the breakdown line naming Eisern" }
       c: { says: "Without the Fokusregel there is no Wundschwelle: the sheet hides it, and the damage screen drops the comparison row.", app: "hide Wundschwelle and the row when Trefferzonen is off; Eisern listed with the note of option a" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       it reads the page the way verweichlicht-scope already read Verweichlicht's, so the two
       Wundschwelle traits behave alike; a player who paid 5 AP is told why nothing happens rather
       than left to wonder; and it keeps the comparison row the app already has, which does no

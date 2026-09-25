@@ -7,7 +7,7 @@
 #   5.9  not offered on horseback (reiterkampf.RK3)
 # Open rulings named without a prefix live in ../rules/rulings.yaml once added.
 
-base_hero: { at: 14, pa: 8, aw: 7, gs: 8 }
+hero: { at: 14, pa: 8, aw: 7, gs: 8 }
 
 situations:
 
@@ -16,16 +16,16 @@ situations:
     hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert } }
     choose: { runUp: 3 }
     expect:
-      not_offered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
-    app_today: not offered at all on foot
+      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
+    appToday: not offered at all on foot
 
   - id: "10.2"
     name: With a Dolch (Dolche — not on Sturmangriff's list)
     hero: { abilities: { SA_62: 1 }, loadout: { weapon: Dolch } }
     choose: { runUp: 4 }
     expect:
-      not_offered: [{ manoeuvre: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
-    app_today: same, but only because it is never offered on foot
+      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
+    appToday: same, but only because it is never offered on foot
 
   - id: "10.3"
     name: With Finte
@@ -41,7 +41,7 @@ situations:
       at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
       on_miss:
         told: [{ opponent: passierschlag, from: SA_62.ST3 }]
-    app_today: not offered at all on foot
+    appToday: not offered at all on foot
 
   - id: "10.5"
     name: GS raised above the natural GS — the natural-GS cap binds
@@ -75,7 +75,7 @@ situations:
       # Near the cap, at GS 16,
       # Sturmangriff alone is +10 and Wuchtschlag III's +6 adds on top: +16 (ruling
       # SA_62.sturmangriff-cap-scope — the cap is on ST2's line only).
-    app_today: one manoeuvre per attack; SA_62 not offered on foot
+    appToday: one manoeuvre per attack; SA_62 not offered on foot
 
   - id: "10.8"
     name: Unarmed (Raufen — on the list)

@@ -18,8 +18,7 @@ clauses:
       Materialien entwickelt. Diese unterscheiden sich sowohl in der Schutzwirkung, die durch den
       Rüstungsschutz (RS) dargestellt wird, als auch in ihrem Gewicht und ihrer Sperrigkeit.
       Träger schwerer Rüstung erleiden den Zustand Belastung in unterschiedlich hohen Stufen.
-    effects: none
-    why: introduction; that armour gives the Zustand Belastung is A1
+    none: introduction; that armour gives the Zustand Belastung is A1
 
   - id: A1
     text: >
@@ -46,8 +45,7 @@ clauses:
       Plattenrüstung | 6 | 3 | –
       Gestechrüstung | 7 | 4 | –
       Turnierrüstung | 8 | 5 | –
-    effects: none
-    why: >
+    none: >
       data, held by the equipment table; A1 reads a row's Belastung and zusätzliche Abzüge from
       the armour the hero wears. The rows are also listed in ../../belastung.md. Turnierrüstung's
       Belastung 5 is above the page's Stufe IV (COND_1.B4)
@@ -60,8 +58,7 @@ clauses:
       es Abzüge von -1 auf AT, Verteidigung, INI, GS. Wer eine Lederrüstung trägt erhält die
       gleichen Erschwernisse und Abzüge durch die BE von -1, aber er bekommt zusätzliche Abzüge
       auf GS und INI, sodass er insgesamt Abzüge von -2 auf beide Werte hat.
-    effects: none
-    why: a worked example; it is situations/belastung.yaml 1.1 and 1.2
+    none: a worked example; it is situations/belastung.yaml 1.1 and 1.2
 
 rulings:
   - id: several-armour-pieces
@@ -75,7 +72,7 @@ rulings:
       Trefferzonen-RS (https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html), with its own,
       more involved calculation.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [A1]
+    appliesTo: [A1]
     notes: >
       Consequence for the app: without that Fokusregel, one armour is equipped at a time
       (HeroDetailView lets any number be equipped and Hero.totalEquippedBE sums them). The

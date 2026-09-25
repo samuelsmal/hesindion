@@ -23,7 +23,7 @@ clauses:
       Schmerz ignorieren darf. Er erleidet lediglich die Auswirkungen der nächstniedrigeren Stufe.
     effects:
       - when: { condition: COND_6, level: [2, 3] }
-        apply_level: { rule: COND_6.SZ5, level: "level - 1" }
+        useLevel: { rule: COND_6.SZ5, as: "level - 1" }
         keeps: { condition_level: level }
         ruling: zaeher-hund-counts
         # The breakdown shows the line as "Schmerz III, wirkt wie II (Zäher Hund): −2", citing
@@ -33,8 +33,7 @@ clauses:
     text: >
       Wenn ein Held also beispielsweise drei Stufen Schmerz erlitten hat, gelten für ihn nur die
       Auswirkungen von Stufe II.
-    effects: none
-    why: the page's own example of ZH1 (situation 15.6 is this case)
+    none: the page's own example of ZH1 (situation 15.6 is this case)
 
   - id: ZH3
     text: Bei Schmerz Stufe IV wird der Held dennoch handlungsunfähig.
@@ -43,26 +42,24 @@ clauses:
         keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }
         # The Selbstbeherrschung check of COND_6.SZ2 is offered as for anyone.
       - when: { condition: COND_6, level: 4, check_passed: COND_6.SZ2 }
-        apply_level: { rule: COND_6.SZ5, level: 3 }
+        useLevel: { rule: COND_6.SZ5, as: 3 }
         ruling: zaeher-hund-iv
 
   - id: ZH4
     text: Schmerz Stufe I wird so behandelt, als hätte der Held keine Stufe Schmerz.
     effects:
       - when: { condition: COND_6, level: 1 }
-        apply_level: { rule: COND_6.SZ5, level: 0 }
+        useLevel: { rule: COND_6.SZ5, as: 0 }
         ruling: zaeher-hund-counts
         # No line at all; "nicht angewandt: Schmerz I — Zäher Hund" in the not-applied list.
 
   - id: ZH5
     text: "Voraussetzung: Kein Nachteil Zerbrechlich"
-    effects: none
-    why: purchase prerequisite, not a rule at the table
+    none: purchase prerequisite, not a rule at the table
 
   - id: ZH6
     text: "AP-Wert: 20 Abenteuerpunkte"
-    effects: none
-    why: cost, not a rule at the table
+    none: cost, not a rule at the table
 
 rulings:
   - id: zaeher-hund-counts
@@ -76,7 +73,7 @@ rulings:
       II'); ZH4 means Stufe I gives no lines. Schmerz has only four Stufen (COND_6 levels: 4), so
       the Stufe the hero has never goes past IV.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [ZH1, ZH4, COND_6.SZ5, zustaende.Z5]
+    appliesTo: [ZH1, ZH4, COND_6.SZ5, zustaende.Z5]
     notes: >
       The owner answered "Effects only, but there are only four levels of pain / Schmerz": option
       a, with the reminder that the Stufe kept is at most IV — the LP thresholds (COND_6.SZ3) and
@@ -99,7 +96,7 @@ rulings:
     answer: >
       Stufe III's effects: checks −3, GS −3.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [ZH3, COND_6.SZ5]
+    appliesTo: [ZH3, COND_6.SZ5]
     notes: >
       ZH3's "dennoch" names only the Handlungsunfähigkeit as surviving the advantage; the −4, and
       whatever COND_6.schmerz-iv-gs gives Stufe IV for movement, are effects of the highest Stufe,

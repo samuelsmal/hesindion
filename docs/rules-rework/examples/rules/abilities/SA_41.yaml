@@ -3,7 +3,7 @@ id: SA_41
 name: Belastungsgewöhnung
 kind: specialAbility
 group: Kampfsonderfertigkeiten
-tiers: 2
+levels: 2
 passive: true                  # "(passiv)" on the page; kampfsonderfertigkeiten.KS2 lists it as "wirkt immer"
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html
@@ -29,23 +29,19 @@ clauses:
 
   - id: G2
     text: Der RS bleibt selbstverständlich erhalten.
-    effects: none
-    why: states that nothing else changes
+    none: states that nothing else changes
 
   - id: G3
     text: "Voraussetzungen: Stufe I: KO 13; Stufe II, KO 15, Belastungsgewöhnung I"   # sic (comma after "Stufe II")
-    effects: none
-    why: purchase prerequisite, not a rule at the table
+    none: purchase prerequisite, not a rule at the table
 
   - id: G4
     text: "Kampftechniken: alle"
-    effects: none
-    why: the SF is not tied to a Kampftechnik; nothing to gate on
+    none: the SF is not tied to a Kampftechnik; nothing to gate on
 
   - id: G5
     text: "AP-Wert: Stufe I/II: 20/35 Abenteuerpunkte"
-    effects: none
-    why: cost, not a rule at the table
+    none: cost, not a rule at the table
 
   - id: G6
     text: |
@@ -57,8 +53,7 @@ clauses:
       Kettenrüstung | 4 | 2 | keine | 12 Stn | 250 S | einf
       Schuppenrüstung | 5 | 2 | –1 GS, –1 INI | 18 Stn | 400 S | einf
       Plattenrüstung | 6 | 3 | keine | 25 Stn | 750 S | einf
-    effects: none
-    why: >
+    none: >
       the armour table repeated under the rule, with Gewicht, Preis and Komplexität; the rule
       rows are ruestung-und-belastung.A2 (which also has Gestech- and Turnierrüstung, missing
       here — ruling table-shift)
@@ -74,7 +69,7 @@ rulings:
       Each Stufe lowers the armour's Belastung by 1. An armour's extra GS/INI penalty is not
       reduced and stays at the given reduction (e.g. −1 GS, −1 INI).
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [G1]
+    appliesTo: [G1]
     notes: >
       This is what the app does today (Hero.effectiveBE). It also answers what the table cannot:
       armours the SF page's table does not list (the Rüstung-und-Belastung table has Gestech-

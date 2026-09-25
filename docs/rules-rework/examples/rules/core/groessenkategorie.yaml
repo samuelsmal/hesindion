@@ -2,7 +2,7 @@
 id: groessenkategorie
 name: Größenkategorie
 kind: core
-catalog_id: GRW_groessenkategorie
+catalogId: GRW_groessenkategorie
 source:
   url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/groessenkategorie.html
   book: Regelwerk
@@ -22,8 +22,7 @@ clauses:
     text: >
       Jedes Wesen wird in eine der folgenden Größenkategorien eingeordnet: winzig, klein,
       mittel, groß, riesig
-    effects: none
-    why: >
+    none: >
       defines the scale. The opponent's size is asked per interaction (OpponentProfile.size);
       the hero is mittel unless the species says otherwise; a mount's size is the mount's
       (Kupperus, a Svellttaler Kaltblut: groß — the pet data has no size field, only "size: 1.9",
@@ -33,8 +32,7 @@ clauses:
     text: >
       Je nach Größe des Gegners gelten für einen Helden Modifikatoren auf Attacke oder
       Einschränkungen auf die Wahl der Verteidigung.
-    effects: none
-    why: >
+    none: >
       says whose size counts — the opponent's: the target's when the hero attacks (GK3), the
       attacker's when the hero defends (GK4). A rider is his own size, not the mount's; only the
       mount's own attacks (Niederreiten, Tritt, Biss) come from a groß being
@@ -74,7 +72,7 @@ rulings:
       No: the rider is his own size; only the mount's own attacks (Niederreiten, Tritt, Biss) come
       from a groß being.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [GK2, GK4]
+    appliesTo: [GK2, GK4]
     notes: >
       Reiterkampf gives the rider his edge another way — vorteilhafte Position against fighters on
       foot (reiterkampf.RK2) — and restricts only the defence against the mount's Niederreiten

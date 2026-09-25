@@ -23,8 +23,8 @@
 #   The export's free-text `skills` names both ("Mächtiger Schlag, Ruhiges Temperament").
 # "Fokusregel Waffeneigenschaften on" is written `rulesets: [fokus.waffeneigenschaften]`.
 
-hero_file: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
-base_hero:
+heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+hero:
   abilities: { SA_41: 2, SA_43: 1, SA_661: 1 }
   armour: [Plattenrüstung]
   loadout: { weapon: Rabenschnabel, shield: Großschild }
@@ -50,7 +50,7 @@ situations:
           total: 1
           lines:
             - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
-          not_applied: [{ rule: COND_1.B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
+          notApplied: [{ rule: COND_1.B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
       on_check_failure:
         tell: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
       attack:
@@ -66,7 +66,7 @@ situations:
             lines: [{ value: -3, from: maechtiger-schlag.MS2, formula: "−⌈(25 − 20)/2⌉", ruling: round-up }]
       after:
         tell: [{ mount: runs on at GS 12 to the end of the KR; turning it costs Boronmir 1 action, from: reiterkampf.RK13 }]
-    app_today: >
+    appToday: >
       AT 15 and TP 2W6+6 — the AT by luck: the app reads the first attack parsed from the notes,
       Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag note says −2 (Int
       division floors) — wrong. The Reiten check has no lines. Mounted, Belastung I leaves no line
@@ -82,7 +82,7 @@ situations:
     expect:
       attack: { by: mount, at: { value: 15, from: reiterkampf.RK13 } }
       on_hit: { tp: { formula: 2W6+4, from: reiterkampf.RK13 } }
-    app_today: AT 16 — wrong (CombatAttackViews.niederreitenButton takes `mount.attacks.first?.at`); TP 2W6+4 same
+    appToday: AT 16 — wrong (CombatAttackViews.niederreitenButton takes `mount.attacks.first?.at`); TP 2W6+4 same
 
   - id: "18.3"
     name: Kupperus kicks (Tritt) while Boronmir rides
@@ -100,7 +100,7 @@ situations:
           total: 1
           lines:
             - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
-          not_applied: [{ rule: COND_1.B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
+          notApplied: [{ rule: COND_1.B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
       not_asked: [{ gait: galopp, runUp: 4, reason: "only Niederreiten needs them (reiterkampf.RK13)" }]
       on_check_failure:
         tell: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
@@ -114,7 +114,7 @@ situations:
       on_attack_success:
         tell:
           - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS1, ruling: round-up }
-    app_today: >
+    appToday: >
       offered beside the hero's own attack, straight to the roll: no Reiten check (so no +1 from
       Ruhiges Temperament either), no action named, and Boronmir may still attack — wrong. AT 15, TP 1W6+7 same; the Mächtiger Schlag
       note says −2 — wrong
@@ -128,7 +128,7 @@ situations:
       on_hit: { tp: none }
       tell:
         - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS3, ruling: round-up }
-    app_today: the note says a parry does not help — same, with −2 — wrong
+    appToday: the note says a parry does not help — same, with −2 — wrong
 
   # --- Rabenschnabel -------------------------------------------------------------------------
 
@@ -146,10 +146,10 @@ situations:
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
           - { value: -1, from: ITEMTPL_29.GR1 }
       on_hit:
-        tp: { total: 0, formula: 1W6+4, not_applied: [{ rule: schaden.S3, reason: "KK 14, not above the threshold 14" }] }
+        tp: { total: 0, formula: 1W6+4, notApplied: [{ rule: schaden.S3, reason: "KK 14, not above the threshold 14" }] }
         opponent:
           rs: { total: -2, result: 4, lines: [{ value: -2, from: ITEMTPL_19.RS2, ruling: [ITEMTPL_19.rabenschnabel-waffeneigenschaft, ITEMTPL_19.dornenspitze-rs] }] }
-    app_today: >
+    appToday: >
       AT 15 — no Großschild −1, wrong. TP 1W6+4: same (the app never adds a Schadensbonus, and
       at KK 14 there is none; 18.17). The Dornenspitze toggle and the RS −2 note ("nur gegen RS
       6 oder mehr"): same.
@@ -163,13 +163,13 @@ situations:
         expect:
           on_hit:
             opponent: { rs: { total: 0 } }
-            not_applied: [{ rule: ITEMTPL_19.RS2, reason: "natural armour, not a Rüstung", ruling: ITEMTPL_19.dornenspitze-rs }]
+            notApplied: [{ rule: ITEMTPL_19.RS2, reason: "natural armour, not a Rüstung", ruling: ITEMTPL_19.dornenspitze-rs }]
       - opponent: { rs: 4, armour: worn }
         expect:
           on_hit:
             opponent: { rs: { total: 0 } }
-            not_applied: [{ rule: ITEMTPL_19.RS2, reason: RS below 6 }]
-    app_today: >
+            notApplied: [{ rule: ITEMTPL_19.RS2, reason: RS below 6 }]
+    appToday: >
       the same note, "nur gegen RS 6 oder mehr", in both cases; the GM decides — same as text
       against the Kettenhemd; against natural RS 6 the note invites the −2 — wrong (it should
       read "Rüstung mit RS 6 oder mehr")
@@ -182,11 +182,11 @@ situations:
       offered: []   # no Dornenspitze
       on_hit:
         tp: { total: 0, formula: 1W6+4 }   # 18.9 without its RS3 line; no Schadensbonus at KK 14
-      not_applied:
+      notApplied:
         - { rule: ITEMTPL_19.RS2, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
         - { rule: ITEMTPL_19.RS3, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
         - { rule: ITEMTPL_19.RS4, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
-    app_today: >
+    appToday: >
       all three always on — the app has no such Fokusregel (FokusRule): Dornenspitze offered,
       Betäubung on a Patzer — wrong. TP 1W6+5 (the RS3 +1 applied without the Fokusregel) — wrong
 
@@ -204,7 +204,7 @@ situations:
             - { value: 1, from: ITEMTPL_19.RS3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
             - { value: 8, from: reiterkampf.RK14, formula: "2 + 12/2" }
         opponent: { rs: { total: -2, lines: [{ value: -2, from: ITEMTPL_19.RS2, ruling: [ITEMTPL_19.rabenschnabel-waffeneigenschaft, ITEMTPL_19.dornenspitze-rs] }] } }
-    app_today: TP +9 — same (RK14's 2 + 12/2 = 8 has nothing to round); the RS note same
+    appToday: TP +9 — same (RK14's 2 + 12/2 = 8 has nothing to round); the RS note same
 
   - id: "18.9"
     name: Rabenschnabel, mounted on Kupperus, against a foot soldier
@@ -218,14 +218,14 @@ situations:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
           - { value: -1, from: ITEMTPL_29.GR1 }
-        not_applied: [{ rule: COND_1.B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }]
+        notApplied: [{ rule: COND_1.B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }]
       on_hit:
         tp:
           total: 1
           formula: "1W6+4 +1"
           lines:
             - { value: 1, from: ITEMTPL_19.RS3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
-    app_today: AT 20 (no Großschild −1) — wrong; TP 1W6+5 — same
+    appToday: AT 20 (no Großschild −1) — wrong; TP 1W6+5 — same
 
   - id: "18.10"
     name: Rabenschnabel, confirmed Patzer on an attack
@@ -233,7 +233,7 @@ situations:
     choose: { attack: confirmedFumble }
     expect:
       conditions: { COND_2: 1, lines: [{ value: 1, from: ITEMTPL_19.RS4, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }] }   # besides the Patzer table's result
-    app_today: same (WeaponFumbleExtras), but also without the Fokusregel (18.7)
+    appToday: same (WeaponFumbleExtras), but also without the Fokusregel (18.7)
 
   # --- Langschwert and Großschild ------------------------------------------------------------
 
@@ -248,8 +248,8 @@ situations:
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
           - { value: -1, from: ITEMTPL_29.GR1 }
       on_hit:
-        tp: { total: 0, formula: 1W6+4, not_applied: [{ rule: schaden.S3, reason: "max(GE 14, KK 14) = 14, not above 15" }] }
-    app_today: AT 13 (no Großschild −1) — wrong; TP same
+        tp: { total: 0, formula: 1W6+4, notApplied: [{ rule: schaden.S3, reason: "max(GE 14, KK 14) = 14, not above 15" }] }
+    appToday: AT 13 (no Großschild −1) — wrong; TP same
 
   - id: "18.12"
     name: GS on foot with the Großschild
@@ -261,7 +261,7 @@ situations:
         lines:
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
           - { value: -1, from: ITEMTPL_29.GR4, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
-    app_today: GS 7, no Großschild line (Hero.totalGsPenalty is Belastung and armour only) — wrong with the Fokusregel on
+    appToday: GS 7, no Großschild line (Hero.totalGsPenalty is Belastung and armour only) — wrong with the Fokusregel on
 
   - id: "18.13"
     name: Same INI as an opponent without a Großschild
@@ -269,7 +269,7 @@ situations:
     opponent: { ini: tie, shield: none }
     expect:
       tell: [{ order: opponent acts first, from: ITEMTPL_29.GR3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }]
-    app_today: not modelled
+    appToday: not modelled
 
   - id: "18.14"
     name: Großschild parry against an arrow, and against a thrown spear
@@ -278,8 +278,8 @@ situations:
       - incoming: pfeil
         expect: { pa: { lines: [{ value: 1, from: ITEMTPL_29.GR2 }] } }   # after the shield's doubled +3 (schilde)
       - incoming: wurfspeer
-        expect: { not_applied: [{ rule: ITEMTPL_29.GR2, reason: not a Pfeil or Bolzen }] }
-    app_today: '"+1 PA vs. Fernkampf" as the shield''s note in both cases, never added'
+        expect: { notApplied: [{ rule: ITEMTPL_29.GR2, reason: not a Pfeil or Bolzen }] }
+    appToday: '"+1 PA vs. Fernkampf" as the shield''s note in both cases, never added'
 
   # --- Kupperus's other values -----------------------------------------------------------------
 
@@ -287,15 +287,15 @@ situations:
     name: Initiative, mounted on Kupperus
     hero: { mounted: true }
     expect:
-      ini_base: { value: 14, from: reiterkampf.RK1, via: [svellttaler-kaltblut.SK2] }   # Kupperus's 14+1W6
+      iniBase: { value: 14, from: reiterkampf.RK1, via: [svellttaler-kaltblut.SK2] }   # Kupperus's 14+1W6
       ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
-    app_today: same — 14, no Belastung (CombatSetupViews.mountBaseINI parses "14+1W6")
+    appToday: same — 14, no Belastung (CombatSetupViews.mountBaseINI parses "14+1W6")
 
   - id: "18.16"
     name: What Kupperus can carry
     expect:
       mount_carrying_capacity: { value: 210, from: svellttaler-kaltblut.SK12 }
-    app_today: 50 (Pet.carryingCapacity = KK × 2), added to Boronmir's own (Hero.totalCarryingCapacity) — wrong
+    appToday: 50 (Pet.carryingCapacity = KK × 2), added to Boronmir's own (Hero.totalCarryingCapacity) — wrong
 
   # --- The Schadensbonus, above the threshold ----------------------------------------------------
 
@@ -308,7 +308,7 @@ situations:
     expect:
       on_hit:
         tp: { total: 1, formula: "1W6+4 +1", lines: [{ value: 1, from: schaden.S3, formula: "KK 15 − 14" }] }
-    app_today: >
+    appToday: >
       TP 1W6+4 — no Schadensbonus, wrong. OptolithImportService.parseItems does not read the
       item's `primaryThreshold` (`{ threshold: 14 }` in the hero file), and FumbleEffectResolver
       says no export carries it

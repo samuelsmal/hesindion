@@ -3,7 +3,7 @@
 id: trefferzonen
 name: Trefferzonen-Regeln
 kind: core
-catalog_id: GRW_zonenaufschlag    # the current catalog holds only the aiming penalty
+catalogId: GRW_zonenaufschlag    # the current catalog holds only the aiming penalty
 # FORMAT: the rule set a rule belongs to. `core` is always on; `fokus.<slug>` only when the
 # group plays that Fokusregel (the app's Hero.fokusRules / FokusRule enum today); a house rule
 # would be `house.<slug>`. Every clause of this file is off unless the set is on, so the flag
@@ -25,8 +25,7 @@ clauses:
       Die vorliegende Regel ist eine Fokusregel der Stufe I für den Themenkomplex Kampf. Die
       Regeln zu Trefferzonen sind dazu gedacht, Treffer an verschiedenen Körperteilen mit
       unterschiedlichen Konsequenzen zu belegen.
-    effects: none
-    why: declares the rule set; see `ruleset`
+    none: declares the rule set; see `ruleset`
 
   - id: TZ2
     text: >
@@ -82,7 +81,7 @@ clauses:
       11-18 | Arme
       19-20 | Beine
     effects:
-      - provides: { tables.humanoid.klein: { "1-6": kopf, "7-10": torso, "11-18": arme, "19-20": beine } }
+      - provide: { name: tables.humanoid.klein, value: { "1-6": kopf, "7-10": torso, "11-18": arme, "19-20": beine } }
 
   - id: TZ4a
     text: |
@@ -93,7 +92,7 @@ clauses:
       13-16 | Arme
       17-20 | Beine
     effects:
-      - provides: { tables.humanoid.mittel: { "1-2": kopf, "3-12": torso, "13-16": arme, "17-20": beine } }
+      - provide: { name: tables.humanoid.mittel, value: { "1-2": kopf, "3-12": torso, "13-16": arme, "17-20": beine } }
 
   - id: TZ4b
     text: |
@@ -104,7 +103,7 @@ clauses:
       7-16 | Arme
       17-20 | Beine
     effects:
-      - provides: { tables.humanoid.gross: { "1-2": kopf, "3-6": torso, "7-16": arme, "17-20": beine } }
+      - provide: { name: tables.humanoid.gross, value: { "1-2": kopf, "3-6": torso, "7-16": arme, "17-20": beine } }
 
   - id: TZ4c
     text: >
@@ -125,7 +124,7 @@ clauses:
       13-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provides: { tables.vierbeinig.klein: { "1-4": kopf, "5-12": torso, "13-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.klein, value: { "1-4": kopf, "5-12": torso, "13-16": vordereBeine, "17-20": hintereBeine } }
 
   - id: TZ4e
     text: |
@@ -136,7 +135,7 @@ clauses:
       11-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provides: { tables.vierbeinig.mittel: { "1-4": kopf, "5-10": torso, "11-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.mittel, value: { "1-4": kopf, "5-10": torso, "11-16": vordereBeine, "17-20": hintereBeine } }
 
   - id: TZ4f
     text: |
@@ -147,7 +146,7 @@ clauses:
       12-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provides: { tables.vierbeinig.gross: { "1-5": kopf, "6-11": torso, "12-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.gross, value: { "1-5": kopf, "6-11": torso, "12-16": vordereBeine, "17-20": hintereBeine } }
         # Kupperus's table (svellttaler-kaltblut.SK7: groß, Tier, nicht humanoid).
 
   - id: TZ4g
@@ -161,7 +160,7 @@ clauses:
       17-18 | hintere Gliedmaßen
       19-20 | Schwanz
     effects:
-      - provides: { tables.sechsGliedmassen.gross: { "1-4": kopf, "5-12": torso, "13-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
+      - provide: { name: tables.sechsGliedmassen.gross, value: { "1-4": kopf, "5-12": torso, "13-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
 
   - id: TZ4h
     text: |
@@ -174,7 +173,7 @@ clauses:
       17-18 | hintere Gliedmaßen
       19-20 | Schwanz
     effects:
-      - provides: { tables.sechsGliedmassen.riesig: { "1-2": kopf, "3-10": torso, "11-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
+      - provide: { name: tables.sechsGliedmassen.riesig, value: { "1-2": kopf, "3-10": torso, "11-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
 
   - id: TZ4i
     text: |
@@ -184,7 +183,7 @@ clauses:
       3-6 | Kopf
       | Der Rest der Zahlen verteilt sich gleichmäßig auf die Fangarme, Überschüsse werden auf den Torso aufgeschlagen.
     effects:
-      - provides: { tables.fangarme.mittelBisRiesig: { "1-2": torso, "3-6": kopf, "7-20": { split_evenly: fangarme, overflow: torso } } }
+      - provide: { name: tables.fangarme.mittelBisRiesig, value: { "1-2": torso, "3-6": kopf, "7-20": { split_evenly: fangarme, overflow: torso } } }
         # How many Fangarme there are is the creature's profile's; the fourteen numbers 7–20 are
         # dealt out evenly, one range per arm, and the remainder goes back on the torso.
 
@@ -195,7 +194,7 @@ clauses:
       Ergebnis | Zone
       1-20 | Körper
     effects:
-      - provides: { tables.keineZonen: { "1-20": koerper } }
+      - provide: { name: tables.keineZonen, value: { "1-20": koerper } }
         # One zone: nothing to aim at (TZ5's offer has no zones to list; situation TZ.18) and no
         # Wundeffekt row for it (TZ11).
 
@@ -212,15 +211,15 @@ clauses:
       - offer: { choice: targetZone, on: [at, fk], zones: target.zones }
         # Every hero, with or without the SF; the halving is SA_160.GA1 / SA_161.GS1's
         # (ruling SA_160.halving-by-manoeuvre).
-      - when: { choice: targetZone }
+      - when: { choice.targetZone: true }
         add: { to: [at, fk], value: "table(TZ6, targetZone)" }
         id: TZ5.aim     # SA_160, SA_161 and STATE_13 act on exactly this line
-      - when: { choice: targetZone, opponent.state: ueberrascht }
+      - when: { choice.targetZone: true, opponent.state: ueberrascht }
         raise: { line: TZ5.aim, by: 2, max: 0, before: [SA_160.GA1, SA_161.GS1] }
         ruling: surprised-then-halved
         # Ease first, then halve: Kopf −10 + 2 = −8 → −4, Torso −4 + 2 = −2 → −1.
         # FORMAT: `before:` — two effects on one line whose order changes the result.
-      - when: { choice: targetZone }
+      - when: { choice.targetZone: true }
         replaces: [groessenkategorie.GK3.at, fernkampf.zielgroesse]
         ruling: zone-replaces-size
         # fernkampf.zielgroesse is not drafted: there is no rules/core/fernkampf.yaml yet. It
@@ -281,8 +280,7 @@ clauses:
       Bei einer KO von 11 und damit einer Wundschwelle von 6 würde ein Abenteurer also bei 6
       Schadenspunkten eine um 1 erschwerte Probe ablegen müssen, bei 12 eine um 2 erschwerte
       Probe, bei 18 eine um 3 erschwerte Probe.
-    effects: none
-    why: the worked example; situations TZ.12–TZ.13
+    none: the worked example; situations TZ.12–TZ.13
 
   - id: TZ10
     text: >
@@ -290,8 +288,7 @@ clauses:
       (Handlungsfähigkeit bewahren oder Störungen ignorieren) zur Wehr setzen, je nachdem, wo man
       getroffen wurde. Gelingt die Probe, geschieht nichts. Es muss nur eine Probe abgelegt
       werden, egal wie viele Wundeffekte erzielt wurden.
-    effects: none
-    why: carried by TZ8's `requires_check` (one check, whatever the multiple)
+    none: carried by TZ8's `requires_check` (one check, whatever the multiple)
 
   - id: TZ11
     text: |
@@ -314,8 +311,7 @@ clauses:
     text: >
       Anmerkung: Die Erschwernisse beim Anvisieren der Trefferzonen "Kopf" werden im Trefferzonen
       Set fälschlicher Weise mit -8 statt -10 angegeben.
-    effects: none
-    why: errata; TZ6 already carries −10
+    none: errata; TZ6 already carries −10
 
 rulings:
   - id: relative-size-table
@@ -328,7 +324,7 @@ rulings:
       Relative: the table follows the size difference, attacker against target, with mittel for
       equal sizes.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [TZ3]
+    appliesTo: [TZ3]
     notes: >
       The damage screen asks for the attacker's size (OpponentProfile.size exists); the hero's own
       size matters only through the difference. A Zwerg hit by a goblin rolls on the mittel table
@@ -347,7 +343,7 @@ rulings:
     answer: >
       Ease by 2, then halve — the order the page states them in.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [TZ5, SA_160.GA1, SA_161.GS1]
+    appliesTo: [TZ5, SA_160.GA1, SA_161.GS1]
     notes: >
       Kopf −4, Torso −1, Arme/Beine −3; no rounding arises. The app halves first, then eases
       (HitZoneModifiers.penalty; the catalog note on GRW_zonenaufschlag says so on purpose), so
@@ -361,7 +357,7 @@ rulings:
     answer: >
       Both the melee and the ranged size modifier are replaced.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [TZ5]
+    appliesTo: [TZ5]
     notes: >
       While a zone is aimed at, GRW_groessenkategorie (melee, winzig −4 AT) and
       RangedModifiers.groesse (−8 winzig to +8 riesig) are both listed as "nicht angewendet". The
@@ -377,7 +373,7 @@ rulings:
       Ask which hand was hit if unclear, then take the one-handed weapon or item in it out of the
       loadout, as the Patzer effects do.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [TZ11, TZ4c]
+    appliesTo: [TZ11, TZ4c]
     notes: >
       The roll's parity says which arm (TZ4c: odd left, even right); what the app does not know
       is which hand holds what, so it asks when the loadout does not say. The Patzer effects

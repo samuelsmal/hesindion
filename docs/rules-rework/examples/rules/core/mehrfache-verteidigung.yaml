@@ -34,8 +34,7 @@ clauses:
       Das bedeutet, dass die erste Verteidigung nicht erschwert ist, die zweite um -3, die dritte
       um -6, die vierte um -9 usw. Zu Beginn einer neuen Kampfrunde sind diese Modifikatoren
       hinfällig, und die nächste Verteidigung ist nicht mehr erschwert.
-    effects: none
-    why: restates MV1 and says the count resets each Kampfrunde — `round.defencesMade` is per round
+    none: restates MV1 and says the count resets each Kampfrunde — `round.defencesMade` is per round
 
   - id: MV3
     text: >
@@ -55,8 +54,7 @@ clauses:
       Die Erschwernisse von vorherigen Verteidigungen in einer Kampfrunde übertragen sich auf
       alle Verteidigungsarten. Hierbei ist es egal, ob die Erschwernisse durch Nah- oder
       Fernkampf entstanden sind.
-    effects: none
-    why: >
+    none: >
       says what `round.defencesMade` counts: every defence this round — parries and dodges
       together, against melee and ranged attacks alike
 
@@ -66,8 +64,7 @@ clauses:
       und Personen mit Schicksalspunkten zur Verfügung. Sie müssen hierfür keine
       Schicksalspunkte ausgeben, oder aktuell besitzen. Andere Wesen haben nur eine Verteidigung
       pro Kampfrunde und eventuell weitere durch Sonderfertigkeiten, Zauber oder Liturgien.
-    effects: none
-    why: the app's hero is always a Held; other creatures are not modelled (ADR-0005)
+    none: the app's hero is always a Held; other creatures are not modelled (ADR-0005)
 
   - id: MV6
     text: >
@@ -75,8 +72,7 @@ clauses:
       Verteidigungswert verteidigen. Auch wenn sie mehrfach in einer KR verteidigen müssen,
       sinkt ihr Verteidigungswert nicht. Sie benötigen auch keine Schicksalspunkte für
       zusätzliche Verteidigungen.
-    effects: none
-    why: about opponents, which are not modelled (ADR-0005)
+    none: about opponents, which are not modelled (ADR-0005)
 
 rulings:
   - id: zero-value
@@ -88,7 +84,7 @@ rulings:
     answer: >
       The value after all modifiers — the number the defence would be rolled against.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [MV3, schicksalspunkte.SP-verteidigung]
+    appliesTo: [MV3, schicksalspunkte.SP-verteidigung]
     notes: >
       One number for the roll and the block, so the button and the roll never disagree. The
       Schicksalspunkt "Verteidigung" page agrees: its +4 raises the number of defences "since the

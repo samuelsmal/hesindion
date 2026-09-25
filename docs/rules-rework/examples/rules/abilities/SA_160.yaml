@@ -30,7 +30,7 @@ clauses:
           # Aiming itself is trefferzonen.TZ5's and open to every hero; this is the Spezialmanöver
           # announced on top of it. As a Spezialmanöver (the `manoeuvre:` field) it falls under
           # reiterkampf.RK3, SA_172.U3 and the manoeuvre-combination ruling.
-      - when: { manoeuvre: gezielterAngriff }
+      - when: { action.manoeuvre: gezielterAngriff }
         multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
         ruling: [halving-by-manoeuvre, trefferzonen.surprised-then-halved]
         # The halving is stated on the Fokusregel page (trefferzonen.TZ5), not here; this page
@@ -38,18 +38,15 @@ clauses:
 
   - id: GA2
     text: "Voraussetzungen: GE 13"
-    effects: none
-    why: purchase prerequisite
+    none: purchase prerequisite
 
   - id: GA3
     text: "Kampftechniken: alle Nahkampftechniken"
-    effects: none
-    why: the technique list, the header field `techniques`; the offer on `at` reaches every melee technique
+    none: the technique list, the header field `techniques`; the offer on `at` reaches every melee technique
 
   - id: GA4
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost
 
 rulings:
   - id: halving-by-manoeuvre
@@ -61,7 +58,7 @@ rulings:
       The halving is the Spezialmanöver: announced for one attack, with every Spezialmanöver
       restriction. Without it the hero aims at the full penalty.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [GA1, SA_161.GS1, trefferzonen.TZ5]
+    appliesTo: [GA1, SA_161.GS1, trefferzonen.TZ5]
     notes: >
       Any hero may aim while the Fokusregel is on (trefferzonen.TZ5); only the halving is the
       manoeuvre. So it is unavailable, and the hero aims at the full penalty, (1) on horseback

@@ -39,13 +39,11 @@ clauses:
 
   - id: SW2
     text: "Voraussetzung: Keine"
-    effects: none
-    why: no prerequisite
+    none: no prerequisite
 
   - id: SW3
     text: "AP-Wert: 2 Abenteuerpunkte"
-    effects: none
-    why: cost, not a rule at the table (the ruling alcohol-scope leans on it)
+    none: cost, not a rule at the table (the ruling alcohol-scope leans on it)
 
 rulings:
   - id: alcohol-scope
@@ -57,7 +55,7 @@ rulings:
     answer: >
       Both only when caused by alcohol; Betäubung from a blow wears off as usual.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SW1]
+    appliesTo: [SW1]
     notes: >
       The book (Kneipen & Tavernen), the name and the 2 AP price all point at the morning after;
       halving every Betäubung, a combat Zustand, would be worth far more. Until the app keeps a

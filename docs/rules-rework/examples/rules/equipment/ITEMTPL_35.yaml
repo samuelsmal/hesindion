@@ -29,7 +29,7 @@ clauses:
   - id: LS0
     text: "Langschwert | TP 1W6+4 | L+S GE/KK 15 | AT/PA-Mod 0/0 | RW mittel | 1 Stein | 100 HF | 200 S | einf"
     effects:
-      - provides: { loadout.weapon: stats }
+      - provide: { name: loadout.weapon, value: stats }
         # L+S GE/KK: the Kampftechniken page lets the hero use either Leiteigenschaft
         # ("aus mehreren möglichen Leiteigenschaften wählen"), so the higher counts. Boronmir,
         # GE 14 / KK 14: 14 is not above 15, no Schadensbonus. The app's PA uses the same max
@@ -39,5 +39,4 @@ clauses:
     text: |
       Waffenvorteil: keine
       Waffennachteil: keine
-    effects: none
-    why: nothing under the Fokusregel Waffeneigenschaften either
+    none: nothing under the Fokusregel Waffeneigenschaften either

@@ -18,7 +18,7 @@ clauses:
       Ein Held mit dieser Sonderfertigkeit erleidet bei mehrfachen Verteidigungen in einer KR
       nicht Erschwernisse von jeweils -3, sondern nur von jeweils -2.
     effects:
-      - when: { loadout.technique: [CT_1, CT_4, CT_16] }   # VS2's list
+      - when: { loadout.weapon.technique: [CT_1, CT_4, CT_16] }   # VS2's list
         change: { line: mehrfache-verteidigung.MV1.step, set: { value: -2 } }
         ruling: kampfstil-techniques
         # FORMAT: replaces another rule's constant. The breakdown shows one line,
@@ -26,8 +26,7 @@ clauses:
 
   - id: VS2
     text: "Kampftechniken: Armbrüste, Fechtwaffen, Zweihänder"
-    effects: none
-    why: >
+    none: >
       the condition of VS1 (ruling kampfstil-techniques): the style applies only while the hero
       fights with one of these. "Zweihänder" is not a Kampftechnik name — it means CT_16
       Zweihandschwerter; Armbrüste is CT_1, Fechtwaffen CT_4. With an Armbrust in hand the
@@ -38,20 +37,16 @@ clauses:
     text: >
       Anmerkung: Dieser Stil ist mit den Sonderfertigkeiten Meisterparade und Machtvolle
       Meisterparade kompatibel.
-    effects: none
-    why: a compatibility note; Meisterparade is not in the app yet
+    none: a compatibility note; Meisterparade is not in the app yet
 
   - id: VS4
     text: "Erweiterte Kampfsonderfertigkeiten: Binden, Hohe Klinge, Machtvoller Kernschuss"
-    effects: none
-    why: unlocks purchases, not a roll
+    none: unlocks purchases, not a roll
 
   - id: VS5
     text: "Voraussetzungen: GE 13"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: VS6
     text: "AP-Wert: 20 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost

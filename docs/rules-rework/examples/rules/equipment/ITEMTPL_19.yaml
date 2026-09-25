@@ -36,7 +36,7 @@ clauses:
   - id: RS0
     text: "Rabenschnabel | TP 1W6+4 | L+S KK 14 | AT/PA-Mod 0/-1 | RW mittel | 1,5 Stein | 110 HF | 105 S | einf"
     effects:
-      - provides: { loadout.weapon: stats }
+      - provide: { name: loadout.weapon, value: stats }
         # The row. AT/PA-Mod: the AT- und PA-Modifikatoren rule (added after the base values).
         # L+S: the Schadensbonus on the Kampftechniken page — +1 TP per point of the
         # Leiteigenschaft above the threshold (schaden.S3): Boronmir's KK 14 is the threshold
@@ -47,8 +47,7 @@ clauses:
   - id: RS1
     text: >
       Anmerkung: geweiht (Boron); borongeweihte Waffen sind nur für Borongeweihte erwerbbar
-    effects: none
-    why: >
+    none: >
       who may buy it; that it is geweiht matters only under the Fokusregel Karmale Objekte
       (FokusRule.karmaleObjekte, Hero.isConsecrated), which is not part of this example
 
@@ -59,11 +58,11 @@ clauses:
       verwenden. Die Dornenspitze verursacht ebenfalls 1W6+4 TP. Rüstungen mit RS 6 oder mehr
       erleiden dadurch einen Malus von -2 auf RS.
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften }
+      - when: { rulesets: fokus.waffeneigenschaften }
         offer: { choice: dornenspitze, on: at }
         ruling: rabenschnabel-waffeneigenschaft
-      - when: { ruleset: fokus.waffeneigenschaften, choice: dornenspitze, attack: hit, opponent.armour: worn, opponent.rs: { min: 6 } }
-        opponent_add: { to: rs, value: -2 }
+      - when: { rulesets: fokus.waffeneigenschaften, choice.dornenspitze: true, action.attack: hit, opponent.armour: worn, opponent.rs: { min: 6 } }
+        add: { to: opponent.rs, value: -2 }
         ruling: [rabenschnabel-waffeneigenschaft, dornenspitze-rs]
         # Opponent side: the app has no opponent RS (ADR-0005) and shows the line as a note,
         # "Gegner-RS −2 · Rabenschnabel (nur gegen RS 6 oder mehr)" (CombatAttackViews.rsText).
@@ -75,7 +74,7 @@ clauses:
       Von einem Reittier aus geführt, bekommt der Träger des Rabenschnabels einen Bonus von +1
       TP.
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften, hero.mounted: true, attack: hit }
+      - when: { rulesets: fokus.waffeneigenschaften, hero.mounted: true, action.attack: hit }
         add: { to: tp, value: 1 }
         ruling: rabenschnabel-waffeneigenschaft
         # Part of the Waffenvorteil paragraph; either end of the weapon. On the Sturmangriff zu
@@ -87,7 +86,7 @@ clauses:
       Waffennachteil: Nach einem bestätigten Patzer bei einer Attacke erhält der Träger
       zusätzlich 1 Stufe Betäubung.
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften, attack: confirmedFumble }
+      - when: { rulesets: fokus.waffeneigenschaften, action.attack: confirmedFumble }
         raise: { condition: COND_2, by: 1 }
         ruling: rabenschnabel-waffeneigenschaft
         # In addition to the Patzer table's result. The app does this in Swift, always
@@ -101,7 +100,7 @@ rulings:
       apply only when the group plays the Fokusregel Waffeneigenschaften?
     answer: Only with the Fokusregel, like every weapon's Waffenvorteil and -nachteil.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RS2, RS3, RS4, ITEMTPL_29.GR2, ITEMTPL_29.GR3, ITEMTPL_29.GR4, waffeneigenschaften]
+    appliesTo: [RS2, RS3, RS4, ITEMTPL_29.GR2, ITEMTPL_29.GR3, ITEMTPL_29.GR4, waffeneigenschaften]
     notes: >
       The Waffeneigenschaften page (Aventurische Rüstkammer p. 56) says weapons' Vor- und
       Nachteile "nur zum Tragen kommen, wenn du mit der Fokusregel spielst", and Optolith sources
@@ -118,7 +117,7 @@ rulings:
       any RS 6+, a creature's natural armour included?
     answer: Worn armour only; with Trefferzonen-RS, the armour on the zone hit.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RS2]
+    appliesTo: [RS2]
     notes: >
       The page names Rüstungen; a creature's natural RS (a Krokodil, a Drache) is untouched. Under
       the Fokusregel Trefferzonen-Rüstungsschutz, "RS 6 oder mehr" is the RS of the worn armour on

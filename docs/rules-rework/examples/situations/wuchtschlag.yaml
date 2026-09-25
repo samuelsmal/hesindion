@@ -2,7 +2,7 @@
 # Weapons: Schwert (Schwerter, CT_12, 1W6+4), Dolch (Dolche, CT_3, 1W6+1).
 # Open rulings named without a prefix live in ../rules/rulings.yaml once added.
 
-base_hero: { at: 14, pa: 8, aw: 7 }
+hero: { at: 14, pa: 8, aw: 7 }
 
 situations:
 
@@ -14,7 +14,7 @@ situations:
       at: { total: -2, lines: [{ value: -2, from: SA_67.W1, tier: 1 }] }
       on_hit:
         tp: { total: 2, lines: [{ value: 2, from: SA_67.W1, tier: 1 }], formula: "1W6+4 +2" }
-    app_today: same
+    appToday: same
 
   - id: "9.2"
     name: Wuchtschlag III, used at III
@@ -24,7 +24,7 @@ situations:
       at: { total: -6, lines: [{ value: -6, from: SA_67.W1, tier: 3 }] }
       on_hit:
         tp: { total: 6, lines: [{ value: 6, from: SA_67.W1, tier: 3 }] }
-    app_today: same
+    appToday: same
 
   - id: "9.3"
     name: Wuchtschlag III, the player chooses II
@@ -34,7 +34,7 @@ situations:
       at: { total: -4, lines: [{ value: -4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
       on_hit:
         tp: { total: 4, lines: [{ value: 4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
-    app_today: same (every Stufe up to the owned one is on the list)
+    appToday: same (every Stufe up to the owned one is on the list)
 
   - id: "9.4"
     name: Wuchtschlag misses
@@ -43,14 +43,14 @@ situations:
     expect:
       at: { total: -2 }
       on_miss: { tp: none }
-    app_today: same
+    appToday: same
 
   - id: "9.5"
     name: Wuchtschlag with a Dolch (Dolche — not on Wuchtschlag's list)
     hero: { abilities: { SA_67: 1 }, loadout: { weapon: Dolch } }
     expect:
-      not_offered: [{ manoeuvre: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
-    app_today: offered (the catalog note on SA_67 says so on purpose, pending issue #14) — wrong
+      notOffered: [{ manoeuvre: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
+    appToday: offered (the catalog note on SA_67 says so on purpose, pending issue #14) — wrong
 
   - id: "9.6"
     name: Wuchtschlag unarmed (Raufen — on the list)
@@ -60,18 +60,18 @@ situations:
       at: { total: -2, lines: [{ value: -2, from: SA_67.W1, tier: 1 }] }
       on_hit:
         tp: { total: 2, lines: [{ value: 2, from: SA_67.W1, tier: 1 }], formula: "1W6 +2" }
-    app_today: same
+    appToday: same
 
   - id: "9.7"
     name: Wuchtschlag on horseback
     hero: { abilities: { SA_67: 1 }, loadout: { weapon: Schwert }, mounted: true }
     expect:
       offered: [{ manoeuvre: wuchtschlag, from: SA_67.W1 }]   # a Basismanöver: reiterkampf.RK3 allows it
-    app_today: same
+    appToday: same
 
   - id: "9.8"
     name: Wuchtschlag together with Sturmangriff
     hero: { abilities: { SA_67: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
     expect: { combinable: [{ manoeuvres: [wuchtschlag, sturmangriff], from: kampfsonderfertigkeiten.KS5 }] }
     # the numbers are sturmangriff 10.7
-    app_today: one manoeuvre per attack; SA_62 not offered on foot
+    appToday: one manoeuvre per attack; SA_62 not offered on foot

@@ -13,7 +13,7 @@
 #   spent: points spent per die (FP3); fp: what is left; qs: from the table (QS1)
 #   dice: when a die was rerolled, both rolls and which one counts (ADV_4.B2)
 
-base_hero:
+hero:
   attributes: { KL: 12, IN: 14, GE: 12, KO: 13, KK: 12 }
   talents: { Sinnesschärfe: 8, Schwimmen: 4 }
   advantages: { ADV_4: { sid: TAL_10 } }
@@ -32,7 +32,7 @@ situations:
       fp: 5
       qs: { value: 2, from: fertigkeitsproben.QS1 }
       offered: [{ reroll: ADV_4.B1 }]
-    app_today: >
+    appToday: >
       FW 8, FP 3, QS 1 — wrong. The check has no application (TalentProbeModal, Situation), no
       rule adds to the FW, and the sheet shows the SF as "Fertigkeitsspezialisierung: 2" (the raw
       sid2, OptolithImportService: displaySid = sid2) — read from the code; no sample hero has it
@@ -45,8 +45,8 @@ situations:
       fw: { total: 8 }
       fp: 3
       qs: 1
-      not_applied: [{ rule: SA_9, reason: "Spezialisierung Suchen, Probe auf Wahrnehmen (SA_9.FS1)" }]
-    app_today: FP 3, QS 1 — right, but without saying why the specialisation is not there
+      notApplied: [{ rule: SA_9, reason: "Spezialisierung Suchen, Probe auf Wahrnehmen (SA_9.FS1)" }]
+    appToday: FP 3, QS 1 — right, but without saying why the specialisation is not there
 
   - id: "22.3"
     name: Suchen, the GM makes it 1 harder — +2 on the FW is not a +2 Erleichterung
@@ -61,7 +61,7 @@ situations:
       qs: 1
       # Taken as an Erleichterung instead (+2 −1 = +1 on each attribute, FW 8): eew 13/15/15,
       # spent 0/3/0, FP 5, QS 2 — a different result on the same dice.
-    app_today: >
+    appToday: >
       FW 8, FP 1, QS 1 without the SF. A player who adds the +2 by hand can only do it through the
       modifier steppers (SkillCheckModal.modifiers), which gives QS 2 — wrong
 
@@ -76,7 +76,7 @@ situations:
       spent: [0, 0, 0]
       fp: 8
       qs: 3
-    app_today: >
+    appToday: >
       no Begabung at all (catalog ADV_4 todo); QS 1. The only reroll is the Schip, offered on a
       failure only (SkillCheckModal.isRerollEligible), so nothing is offered on this success
 
@@ -90,7 +90,7 @@ situations:
       fp: 3
       qs: 1
       result: { kind: regular }       # the rerolled 20 does not count, so no second 20
-    app_today: not offered
+    appToday: not offered
 
   - id: "22.6"
     name: Doppel-20 — no Begabung
@@ -98,8 +98,8 @@ situations:
     rolls: [20, 20, 7]
     expect:
       result: { success: false, kind: patzer, from: fertigkeitsproben.PZ1 }
-      not_offered: [{ reroll: ADV_4.B1, because: ADV_4.B5 }]
-    app_today: Patzer — right; nothing offered, right (for want of the advantage)
+      notOffered: [{ reroll: ADV_4.B1, because: ADV_4.B5 }]
+    appToday: Patzer — right; nothing offered, right (for want of the advantage)
 
   - id: "22.7"
     name: A failure turned into a success with 0 FP by the Begabung
@@ -113,7 +113,7 @@ situations:
       fp: { value: 1, lines: [{ value: 0, from: fertigkeitsproben.FP5 }, { set: 1, from: fertigkeitsproben.QS2 }] }
       qs: 1
       offered: [{ reroll: schicksalspunkte.neuer-wurf, together_with: ADV_4.B1, from: ADV_4.B7, open: "schicksalspunkte Neuer Wurf is not written yet" }]
-    app_today: >
+    appToday: >
       a failure; the Schip reroll is offered (it would be, before or after a Begabung, B7), the
       Begabung is not
 
@@ -128,7 +128,7 @@ situations:
       fp: { value: 8, from: "TAL_7.critical (FP = doppelter FW)", ruling: fertigkeitsproben.crit-qs }
       qs: 3
       text: "Der Held schwimmt die Strecke in Bestzeit."
-    app_today: QS 6 for every Kritischer Erfolg (SkillCheckEngine), and no talent text — wrong under the recommended reading
+    appToday: QS 6 for every Kritischer Erfolg (SkillCheckEngine), and no talent text — wrong under the recommended reading
 
   - id: "22.9"
     name: An Erschwernis that takes an attribute to 0
@@ -137,6 +137,6 @@ situations:
     expect:
       eew: [0, 2, 2]
       forbidden: { check: true, because: fertigkeitsproben.FP2 }
-    app_today: >
+    appToday: >
       the check can be rolled (SkillCheckModal/SkillCheckEngine have no guard for an effective
       attribute of 0 or less) — wrong

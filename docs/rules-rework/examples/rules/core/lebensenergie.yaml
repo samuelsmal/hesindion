@@ -22,8 +22,7 @@ clauses:
       werden. Die Werte ergeben sich immer aus einem Grundwert, der durch die Spezies vorgegeben
       ist, und Eigenschaftswerten. Darüber hinaus können Vor- und Nachteile sowie
       Sonderfertigkeiten die Basiswerte beeinflussen.
-    effects: none
-    why: introduction; LE3 is the formula it describes
+    none: introduction; LE3 is the formula it describes
 
   - id: LE2
     text: >
@@ -52,8 +51,7 @@ clauses:
     text: >
       Chris: Lebensenergie Basiswert: Lebensenergie-Grundwert 5 + KO 12 + KO 12 + Vorteil Hohe
       Lebenskraft III = 32
-    effects: none
-    why: >
+    none: >
       one of the page's worked examples, kept because it fixes Hohe Lebenskraft at +1 per Stufe
       and shows it on the Basiswert line; the page's other LE examples (LE5) are for heroes
       without advantages
@@ -62,7 +60,6 @@ clauses:
     text: |
       Louisa: Lebensenergie Basiswert: Lebensenergie-Grundwert 5 + KO 10 + KO 10 = 25
       Sarah: Lebensenergie Basiswert: Lebensenergie-Grundwert 2 + KO 13 + KO 13 = 28
-    effects: none
-    why: >
+    none: >
       the page's two other LE examples (Louisa, Sarah), written like LE4 with the "Lebensenergie"
       heading folded in; they only restate LE3, and Sarah's fixes the Elf Grundwert at 2

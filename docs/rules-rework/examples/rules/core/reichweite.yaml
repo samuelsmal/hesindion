@@ -2,7 +2,7 @@
 id: reichweite
 name: Nahkampfreichweite
 kind: core
-catalog_id: GRW_reichweite     # the id the current catalog uses
+catalogId: GRW_reichweite     # the id the current catalog uses
 source:
   url: https://dsa.ulisses-regelwiki.de/Nahkampf/nahkampfreichweite.html
   book: Regelwerk
@@ -22,8 +22,7 @@ clauses:
       Alle Nahkampfwaffen besitzen eine Reichweite. Diese leitet sich aus der Länge der Waffe ab
       und bestimmt die damit verbundenen Vor- und Nachteile. Nahkampfwaffen sind in die
       Kategorien kurz, mittel und lang eingeteilt.
-    effects: none
-    why: >
+    none: >
       defines the scale; a weapon's reach is equipment data (Optolith's item templates, or the
       hero sheet). The hero's side is the weapon in the hand (bare hands kurz); the opponent's
       is stated by the player.
@@ -35,8 +34,7 @@ clauses:
       Kurze Waffe — Vorteil: Kurze Waffen erleiden in beengter Umgebung keine Abzüge auf Attacke und Parade.
       Mittlere Waffe — Vorteil: Mittlere Waffen erleiden weniger Erschwernisse durch beengter Umgebung als lange Waffen. […] Nachteil: […] Sie erleiden bei beengter Umgebung eine Erschwernis von -4 auf Attacke und Parade.
       Lange Waffe — Nachteil: Lange Waffen erleiden bei beengter Umgebung eine Erschwernis von -8 auf Attacke und Parade.
-    effects: none
-    why: the Beengte Umgebung rule (GRW_beengteUmgebung) carries these; not part of this example
+    none: the Beengte Umgebung rule (GRW_beengteUmgebung) carries these; not part of this example
 
   - id: RW3
     text: |
@@ -59,5 +57,4 @@ clauses:
       Kurz | keine Nachteile | -2 AT für kurz | -4 AT für kurz
       Mittel | -2 AT für kurz | keine Nachteile | -2 AT für mittel
       Lang | -4 AT für kurz | -2 AT für mittel | keine Nachteile
-    effects: none
-    why: the same numbers as RW3, as a table; situations RW.1–RW.4 check the rate against it
+    none: the same numbers as RW3, as a table; situations RW.1–RW.4 check the rate against it

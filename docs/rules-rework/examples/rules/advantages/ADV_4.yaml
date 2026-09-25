@@ -51,8 +51,7 @@ clauses:
     text: >
       Eine Begabung muss für jede Fertigkeit einzeln gewählt werden, also zum Beispiel auf ein
       bestimmtes Talent, einen Zauber oder eine Liturgie.
-    effects: none
-    why: >
+    none: >
       purchase; carried by the per-option gate on B1. "Fertigkeit" covers talents, spells and
       liturgies, so the offer belongs on every 3W20 check the app rolls (TalentProbeModal,
       SpellProbeModal, the liturgy checks), keyed by the option's id.
@@ -61,8 +60,7 @@ clauses:
     text: >
       Man kann nicht mehrfach in einer Fertigkeit begabt sein und somit zwei oder gar drei
       W20-Würfe in einer Probe wiederholen.
-    effects: none
-    why: purchase legality (Optolith's); B1's once-per-check limit is what the table sees
+    none: purchase legality (Optolith's); B1's once-per-check limit is what the table sees
 
   - id: B5
     text: Fällt eine Doppel-20 oder Dreifach-20 kann man diesen Vorteil nicht nutzen.
@@ -75,8 +73,7 @@ clauses:
     text: >
       Eine Begabung kann nur für eine Fertigkeit, nicht aber für eine Kampftechnik gewählt
       werden (dafür gibt es jedoch den Vorteil Waffenbegabung).
-    effects: none
-    why: purchase; Optolith offers no combat technique as an option, so no attack is ever gated in
+    none: purchase; Optolith offers no combat technique as an option, so no attack is ever gated in
 
   - id: B7
     text: >
@@ -94,15 +91,12 @@ clauses:
     text: >
       Voraussetzung: Kein Nachteil Unfähig für diese Fertigkeit, nicht mehr als drei Begabungen
       pro Person
-    effects: none
-    why: purchase prerequisite
+    none: purchase prerequisite
 
   - id: B9
     text: "AP-Wert: 6/12/18/24 Abenteuerpunkte (A-/B-/C-/D-Fertigkeit)"
-    effects: none
-    why: cost
+    none: cost
 
   - id: B10
     text: "Anmerkung: siehe auch: Begabungen durch Liturgien"
-    effects: none
-    why: a pointer to other pages
+    none: a pointer to other pages

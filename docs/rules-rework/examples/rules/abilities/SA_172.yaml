@@ -3,7 +3,7 @@ id: SA_172
 name: Unterlaufen
 kind: specialAbility
 group: Kampfsonderfertigkeiten
-tiers: 2
+levels: 2
 manoeuvre: { kind: basismanoever }      # so reiterkampf.RK3 leaves it available on horseback
 techniques: [Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter, Zweihandhiebwaffen, Zweihandschwerter]
 source:
@@ -24,7 +24,7 @@ clauses:
       Reichweitenvorteil nicht komplett ignorieren, sind die Nachteile zumindest um 1 Stufe
       verringert.
     effects:
-      - when: { manoeuvre: unterlaufen }
+      - when: { action.manoeuvre: unterlaufen }
         lower: { line: reichweite.RW3.at, by_steps: 1, per: tier, min: 0 }
         # FORMAT: lowers another rule's line by reach *steps*, not by a number. The breakdown
         # shows "Reichweite −4 → −2 (Unterlaufen I)", so the player sees what was ignored.
@@ -45,43 +45,40 @@ clauses:
           # The technique gate is U6's.
           # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
           # or shorter one it gains nothing and still risks a Passierschlag.
-      - when: { manoeuvre: unterlaufen, attack: miss }
-        tell: { opponent: passierschlag }
+      - when: { action.manoeuvre: unterlaufen, action.attack: miss }
+        tell: { to: opponent, text: passierschlag }
 
   - id: U3
     text: Unterlaufen kann mit keinem Spezialmanöver kombiniert werden.
     effects:
-      - unless: { hero.has: SA_173 }
-        excludes: { manoeuvre: { kind: spezialmanoever } }
+      - when: { not: { hero.has: SA_173 } }
+        forbid: { what: { manoeuvre: { kind: spezialmanoever } }, together: true }
 
   - id: U4
     text: >
       Anmerkung: Einen Bonus des Widersachers durch die SF Auf Distanz halten muss der Held
       dennoch bei seiner AT als Erschwernis einrechnen.
-    effects: none
-    why: >
+    none: >
       the penalty is SA_152.AD1's own line, asked as an opponent fact on the announcement (ruling
       auf-distanz-halten); U1 lowers only reichweite.RW3.at, so it never reaches that line.
     ruling: auf-distanz-halten
 
   - id: U5
     text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Unterlaufen I"
-    effects: none
-    why: purchase prerequisites, not a roll
+    none: purchase prerequisites, not a roll
 
   - id: U6
     text: >
       Kampftechniken: Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter,
       Zweihandhiebwaffen, Zweihandschwerter
     effects:
-      - requires: { loadout.weapon.technique: [CT_3, CT_4, CT_5, CT_6, CT_9, CT_10, CT_12, CT_15, CT_16] }
+      - require: { that: { loadout.weapon.technique: [CT_3, CT_4, CT_5, CT_6, CT_9, CT_10, CT_12, CT_15, CT_16] } }
         ruling: sf-technique-lists
         # Not Stangenwaffen (CT_13): a lang weapon has no reach gap to close.
 
   - id: U7
     text: "AP-Wert: Stufe I/II: 10/15 Abenteuerpunkte pro Stufe"
-    effects: none
-    why: purchase cost, not a roll
+    none: purchase cost, not a roll
 
 rulings:
   - id: auf-distanz-halten
@@ -94,7 +91,7 @@ rulings:
       A GM question on the announcement, 'Gegner hat Auf Distanz halten', which adds the SF's
       penalty as its own line.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [U4, SA_152.AD1]
+    appliesTo: [U4, SA_152.AD1]
     notes: >
       The SF's page (KSF_AufDistanzhalten, AK 151) was found on processing: −1 AT per Stufe for
       the opponent of a fighter with the longer weapon, kept against Unterlaufen. So the question

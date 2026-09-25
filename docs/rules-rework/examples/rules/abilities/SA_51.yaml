@@ -3,7 +3,7 @@ id: SA_51
 name: Kampfreflexe
 kind: specialAbility
 group: Kampfsonderfertigkeiten
-tiers: 3
+levels: 3
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Kampfreflexe.html
   book: Regelwerk
@@ -27,18 +27,15 @@ clauses:
 
   - id: KR2
     text: "Voraussetzungen: Stufe I: IN 13; Stufe II: IN 15, Kampfreflexe I; Stufe III: IN 17, Kampfreflexe II"
-    effects: none
-    why: purchase prerequisites, not a roll
+    none: purchase prerequisites, not a roll
 
   - id: KR3
     text: "Kampftechniken: alle"
-    effects: none
-    why: a passive ability on a derived value; no weapon is involved
+    none: a passive ability on a derived value; no weapon is involved
 
   - id: KR4
     text: "AP-Wert: Stufe I/II/III: 10/15/20 Abenteuerpunkte"
-    effects: none
-    why: purchase cost
+    none: purchase cost
 
 rulings:
   - id: kampfreflexe-mounted
@@ -49,7 +46,7 @@ rulings:
     answer: >
       Yes: the SF raises whatever base the hero rolls from.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [KR1, reiterkampf.RK1]
+    appliesTo: [KR1, reiterkampf.RK1]
     notes: >
       Mounted INI = the mount's base + Stufe (kampfreflexe 12.5). Answered against the
       recommendation, which had asked for reiterkampf.rider-ini (does the rider's Belastung still

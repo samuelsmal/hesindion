@@ -26,8 +26,7 @@ clauses:
       Mann. Folgende Ausnahmen gibt es jedoch:
     # sic: "denmeisten" is the page's. The second paragraph opens the page's "Ablauf des
     # Reiterkampfs" section; the list it introduces is RK1–RK15.
-    effects: none
-    why: >
+    none: >
       framing — every rule not listed below applies unchanged on horseback. This is also the
       justification for the file's `applies_when` header: it switches the exceptions on, never
       the ordinary rules off
@@ -80,7 +79,7 @@ clauses:
       Reittieren ist immer um 2 erschwert, es sei denn, man springt vom Reittier herunter. In
       diesem Fall kann die Erschwernis ignoriert werden.
     effects:
-      - when: { check: aw, not: { choice: jumpOff } }
+      - when: { check: aw, not: { choice.jumpOff: true } }
         add: { to: aw, value: -2 }
       - offer: { choice: jumpOff, on: aw, then: { hero.mounted: false } }
         # FORMAT: an offer whose consequence changes the situation (the hero is on foot after).
@@ -219,7 +218,7 @@ rulings:
       Only the ones the rules mark as such. Basismanöver stay available; every other
       Spezialmanöver is unavailable while mounted.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [RK3]
+    appliesTo: [RK3]
     notes: >
       needs a `mountedCombat` marker on each manoeuvre's rule file. SA_59, SA_62, SA_66, SA_160
       and SA_161 carry `manoeuvre: { kind: spezialmanoever, mountedCombat: false }`; none is
@@ -232,7 +231,7 @@ rulings:
       No. "Sturmangriff zu Pferd" is an order that exists only on this page (RK14) and needs
       Berittener Kampf. SA_62 is a separate Spezialmanöver, on foot only (RK3).
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [RK14]
+    appliesTo: [RK14]
 
   - id: rider-ini
     status: decided
@@ -242,7 +241,7 @@ rulings:
     answer: >
       The mount's INI base as it is — the horse moves, not the rider.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RK1]
+    appliesTo: [RK1]
     notes: >
       A hero in plate has INI −3 on foot and 0 on the horse (belastung 3.1, reiterkampf 5.17). The
       app already does this (CombatSetupViews.mountBaseINI). It leaves RK1 a swap with one
@@ -259,7 +258,7 @@ rulings:
       With Belastungsgewöhnung at the right Stufe they can act. Other rules, GM decisions or
       house rules may lower it further.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [RK7, COND_1.B4]
+    appliesTo: [RK7, COND_1.B4]
     notes: >
       Read as: RK7 lowers the penalty on a Kampfprobe, it does not lift the Stufe IV state; SA_41
       does, because it lowers the Stufe itself. "GM decisions or house rules" means a Belastung
@@ -275,7 +274,7 @@ rulings:
       The take-damage screen offers 'Reittier getroffen': SP go to the mount's LE, then RK10's
       Reiten check.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RK11, RK10]
+    appliesTo: [RK11, RK10]
     notes: >
       The app already tracks the mount's LE (Pet.currentLifeEnergy, MountHealingSheet), but the
       take-damage screen only ever damages the hero, so today the Passierschlag's SP go to
@@ -304,7 +303,7 @@ rulings:
       b: { says: "Keep 'von hinten' and add a second toggle 'von der Waffenarmseite' on the mounted defence screen.", app: "one more toggle; the two exclude each other" }
       c: { says: "Text only: the shield parry reminds that it is not allowed from the weapon-arm side.", app: "a reminder line on the mounted shield parry" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the four sides are one fact with four values, and a picker asks it once and cannot be set
       contradictorily; defaulting to vorne keeps the common case one tap, and the rule's effect
       becomes a named line instead of a reminder the player must apply in their head
@@ -317,4 +316,4 @@ rulings:
       mounted a Kampfprobe, so that RK7 lowers the rider's Belastung by 1 for it?
     answer: Yes. Mounted, the hero gets the reduction for the talent check.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [RK7, RK8]
+    appliesTo: [RK7, RK8]

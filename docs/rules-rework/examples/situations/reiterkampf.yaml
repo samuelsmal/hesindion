@@ -1,7 +1,7 @@
 # Example 2 — Reiterkampf. Same conventions as belastung.yaml. No armour unless stated.
 # DRAFT FORMAT — see ../README.md.
 
-base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
+hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
 mount: { name: Kriegspferd, gs: 12, ini: 12 }
 
 situations:
@@ -12,7 +12,7 @@ situations:
     opponent: { onFoot: true }
     expect:
       at: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
-    app_today: same
+    appToday: same
 
   - id: "5.2"
     name: Mounted, parrying a fighter on foot
@@ -20,7 +20,7 @@ situations:
     opponent: { onFoot: true }
     expect:
       pa: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
-    app_today: same
+    appToday: same
 
   - id: "5.3"
     name: Mounted, dodging a fighter on foot — the two lines cancel, both shown
@@ -32,7 +32,7 @@ situations:
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: -2, from: reiterkampf.RK6 }
-    app_today: total 0, but the −2 cites no rule
+    appToday: total 0, but the −2 cites no rule
 
   - id: "5.4"
     name: Mounted, against another rider
@@ -42,7 +42,7 @@ situations:
       at: { total: 0 }
       pa: { total: 0 }
       aw: { total: -2, lines: [{ value: -2, from: reiterkampf.RK6 }] }
-    app_today: same
+    appToday: same
 
   - id: "5.5"
     name: Mounted, dodging by jumping off
@@ -53,7 +53,7 @@ situations:
       offered: [{ choice: jumpOff, from: reiterkampf.RK6 }]
       aw: { total: 0 }
       after: { hero.mounted: false }
-    app_today: not offered
+    appToday: not offered
 
   - id: "5.6"
     name: Golgarite with a Rabenschnabel, mounted against a fighter on foot
@@ -75,7 +75,7 @@ situations:
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: -2, from: reiterkampf.RK6 }
-    app_today: same totals
+    appToday: same totals
 
   - id: "5.7"
     name: Golgarite with a Schwert, mounted against a fighter on foot
@@ -84,10 +84,10 @@ situations:
     expect:
       at: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
       pa: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
-      not_applied:
+      notApplied:
         - { rule: SA_661, clause: GS1, reason: a Schwert is neither Rabenschnabel nor Großschild (GS3), ruling: kampfstil-techniques }
         - { rule: SA_661, clause: GS2, reason: a Schwert is neither Rabenschnabel nor Großschild (GS3), ruling: kampfstil-techniques }
-    app_today: same totals — the style is off without Rabenschnabel or Großschild; the not-applied lines are not listed
+    appToday: same totals — the style is off without Rabenschnabel or Großschild; the not-applied lines are not listed
 
   - id: "5.8"
     name: Golgarite on foot
@@ -95,9 +95,9 @@ situations:
     expect:
       at: { total: 0 }
       pa: { total: 0 }
-      not_applied:
+      notApplied:
         - { rule: SA_661, reason: not mounted }
-    app_today: same
+    appToday: same
 
   - id: "5.9"
     name: What a rider may do
@@ -111,11 +111,11 @@ situations:
         - { order: sturmangriffZuPferd, from: reiterkampf.RK14 }
         - { order: niederreiten, from: reiterkampf.RK13 }
         - { order: flucht, from: reiterkampf.RK15 }
-      not_offered:
+      notOffered:
         - { manoeuvre: vorstoss, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
         - { manoeuvre: schildspalter, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
         - { manoeuvre: sturmangriff, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
-    app_today: offers Vorstoß and Schildspalter too — wrong
+    appToday: offers Vorstoß and Schildspalter too — wrong
 
   - id: "5.10"
     name: Sturmangriff zu Pferd, mount GS 12
@@ -126,7 +126,7 @@ situations:
       on_hit:
         tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14, formula: "2 + 12/2" }] }
       opponent_may_only: [shieldParry, aw]
-    app_today: TP +8; Reiten check and the defence restriction to check
+    appToday: TP +8; Reiten check and the defence restriction to check
 
   - id: "5.11"
     name: Sturmangriff zu Pferd, mount GS 11 — rounding
@@ -136,7 +136,7 @@ situations:
     expect:
       on_hit:
         tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14, formula: "2 + ⌈11/2⌉", ruling: round-up }] }
-    app_today: +7 — wrong
+    appToday: +7 — wrong
 
   - id: "5.12"
     name: Sturmangriff on foot (SA_62), GS 8, 4 Schritt run-up
@@ -149,7 +149,7 @@ situations:
       on_miss:
         tell: [{ opponent: passierschlag, from: SA_62.ST3 }]
       excludes: [finte]
-    app_today: not offered on foot — wrong
+    appToday: not offered on foot — wrong
 
   - id: "5.13"
     name: Sturmangriff on foot, GS 7 — rounding
@@ -172,19 +172,19 @@ situations:
     name: Sturmangriff on foot, GS 3
     hero: { abilities: { SA_62: 1 }, gs: 3 }
     expect:
-      not_offered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
+      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
 
   - id: "5.16"
     name: A two-handed weapon while mounted
     hero: { mounted: true, loadout: { weapon: Zweihänder } }
     expect:
       not_selectable: [{ weapon: Zweihänder, because: reiterkampf.RK4 }]
-    app_today: same
+    appToday: same
 
   - id: "5.17"
     name: Initiative while mounted
     hero: { mounted: true, armour: [Plattenrüstung] }
     expect:
-      ini_base: { value: 12, from: reiterkampf.RK1 }     # the mount's
+      iniBase: { value: 12, from: reiterkampf.RK1 }     # the mount's
       ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
-    app_today: same
+    appToday: same

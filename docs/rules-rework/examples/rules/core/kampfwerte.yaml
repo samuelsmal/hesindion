@@ -40,8 +40,7 @@ clauses:
       Angriff ohne Wirkung. Auch hier gilt, dass höchstens der Wert der Verteidigung gewürfelt
       werden darf. Misslingt die Verteidigung, würfelt der Angreifer die Trefferpunkte seiner
       Waffe aus.
-    effects: none
-    why: >
+    none: >
       the attack and defence procedure (a W20 at or under the value); the damage sentence is
       schaden.S1. The values themselves are KW1–KW3
 
@@ -85,16 +84,14 @@ clauses:
       Um einen Gegner im Nahkampf anzugreifen, muss eine Probe auf Attacke ausgeführt werden. Hierzu würfelst du mit einem W20. Ist das Ergebnis niedriger oder gleich dem Attackewert, trifft der Angreifer seinen Gegner.
       Interpretation einer misslungenen Attacke
       Eine misslungene Attacke ist nicht immer gleichbedeutend mit Danebenschlagen. Es kann bedeuten, dass man in diesem Augenblick keine günstige Position für einen Angriff hatte oder der Gegner sich weggedreht hat.
-    effects: none
-    why: table procedure and narration; the app rolls the W20 against KW1's value and nothing more
+    none: table procedure and narration; the app rolls the W20 against KW1's value and nothing more
 
   - id: KW17
     text: |
       3. Verteidigung
       Angreifern, besonders solchen, die mit scharfen Gegenständen nach einem schlagen, möchte man natürlich nicht schutzlos ausgeliefert sein. Hierzu gibt es die Verteidigung. Ein Kämpfer hat hierbei die Wahl zwischen einer Parade und Ausweichen. Diese beiden Verteidigungsarten haben jeweils gewisse Vor- und Nachteile.
       Parade (PA): Wird der Held im Nahkampf getroffen, kann er Schaden verhindern, indem er den Angriff pariert. Hierzu wird mit einem W20 gegen den Paradewert gewürfelt. Ist das Ergebnis niedriger oder gleich dem Paradewert, konnte der Angriff abgewehrt werden. Er richtet keinen weiteren Schaden an.
-    effects: none
-    why: >
+    none: >
       the defence procedure: a W20 against KW2's value, the choice between parry and dodge per
       defence. The rest of the Parade paragraph (the shield) is schilde.SCH12; the Ausweichen
       paragraph that follows it is KW29, the paragraphs after that are mehrfache-verteidigung
@@ -105,8 +102,7 @@ clauses:
       zu parieren. Auch hier würfelt der Kämpfer mit einem W20. Als Spielwert nutzt er den
       Ausweichenwert. Ist das Ergebnis niedriger oder gleich dem Ausweichenwert, konnte der
       Kämpfer ausweichen und erleidet keinen Schaden.
-    effects: none
-    why: the dodge procedure, a W20 against KW3's value; KW17's other half
+    none: the dodge procedure, a W20 against KW3's value; KW17's other half
 
   - id: KW18
     page:
@@ -119,8 +115,7 @@ clauses:
       Bögen. Alle Helden starten mit einem Wert von 6 in jeder Kampftechnik. Dieser Wert ist
       steigerbar. Die Steigerung funktioniert wie bei den Fertigkeiten und es wird die gleiche
       Tabelle verwendet.
-    effects: none
-    why: >
+    none: >
       the KtW's start value and how it is raised — hero building, which the app imports from
       Optolith rather than computes
 
@@ -137,8 +132,7 @@ clauses:
       Leiteigenschaft der Kampftechnik über 8 erhöht (also bei 11 um 1, bei 14 um 2 usw.). Die
       Leiteigenschaft ist abhängig von der Kampftechnik und üblicherweise Gewandtheit oder
       Körperkraft.
-    effects: none
-    why: KW1 and KW2 again, with the rounding of the halved KtW (up), which KW2 encodes
+    none: KW1 and KW2 again, with the rounding of the halved KtW (up), which KW2 encodes
 
   - id: KW5
     page:
@@ -167,8 +161,7 @@ clauses:
       Fernkampf
       voller Kampftechnikwert
       + jeweils 3 volle Punkte in Fingerfertigkeit über 8
-    effects: none
-    why: KW1, KW2 and KW5 as the page's summary box
+    none: KW1, KW2 and KW5 as the page's summary box
 
   - id: KW20
     page:
@@ -193,8 +186,7 @@ clauses:
       Fernkampfwert mit einem Bogen liegt bei 14 (12 durch den Kampftechnikwert + 1 je 3 volle
       Punkte auf Fingerfertigkeit über 8, Sarahs Elfe hat eine FF von 14, somit also einen Bonus
       von 2).
-    effects: none
-    why: >
+    none: >
       the page's worked numbers for KW1 (KtW 6, MU 14 → 8), KW2 (KtW 6, GE 14 → 5; KtW 12,
       GE/KK 12 → 7) and KW5 (KtW 12, FF 14 → 14). The walkthrough's AP tally that follows
       ("Aktueller Stand: …") is not this rule
@@ -289,8 +281,7 @@ clauses:
       book: Regelwerk (4. Auflage)
       page: 234
     text: "Steigerungsfaktor: Steigerungskosten der Kampftechnik"
-    effects: none
-    why: raising cost, not a combat value; the page's line between KW7 and its example
+    none: raising cost, not a combat value; the page's line between KW7 and its example
 
   - id: KW23
     page:
@@ -305,8 +296,7 @@ clauses:
       volle Punkte – und 2 Punkte über, die nicht berücksichtigt werden).Besäße er einen GE-Wert
       von 14, so wären es sogar 2 Bonuspunkte (von 8 zu 14 sind es 2 x 3 volle Punkte).
     # sic: the page runs "werden).Besäße" together
-    effects: none
-    why: >
+    none: >
       KW7's pick-the-higher and KW2's arithmetic for "3 volle Punkte über 8" (13 → +1, 14 → +2;
       the 2 points over are dropped)
 
@@ -322,8 +312,7 @@ clauses:
       Sonderfertigkeiten die Basiswerte beeinflussen. Es ist im späteren Spiel möglich, diese
       Werte durch Zukauf mit Abenteuerpunkten zu erhöhen. Dieser Zukauf kann erst nach
       Spielbeginn erfolgen, nicht bereits bei der Heldenerschaffung.
-    effects: none
-    why: >
+    none: >
       the page's authority for advantages, disadvantages and SFs adding to a Basiswert (SA_51.KR1
       on KW9's INI base; ADV_* on AW, KW8); each adds its own line in its own file. The Zukauf is
       hero building, imported
@@ -338,8 +327,7 @@ clauses:
       Basiswert:
       Gewandtheit / 2
       +/- Punkte aus Vor- und Nachteilen
-    effects: none
-    why: >
+    none: >
       KW3's formula again; the page's examples (KW25) fix the rounding (15 / 2 = 8). An
       advantage or disadvantage that changes AW adds its own line, in its own file
 
@@ -374,8 +362,7 @@ clauses:
       […]
     # sic: the page's "= 8 Initiative" on Sarah's Ausweichen line. The elided lines are the
     # heroes' LE, SK, ZK, AE/KE and GS (lebensenergie and the rules not written).
-    effects: none
-    why: >
+    none: >
       the page's worked numbers for KW3 (14 → 7, 12 → 6, 15 → 8: rounded up) and KW9 (28 → 14;
       27 → 14, rounded up)
 
@@ -422,8 +409,7 @@ clauses:
       durch seine Rüstung zwei Stufen des Zustands Belastung erleidet, werden 2 Punkte von dem
       Ergebnis abgezogen. Der Spieler würfelt eine 4. Die Initiative von Arbosch liegt in diesem
       Kampf also bei 16 (4 + 14 - 2).
-    effects: none
-    why: KW10's arithmetic with COND_1's line (Belastung II −2); a worked example
+    none: KW10's arithmetic with COND_1's line (Belastung II −2); a worked example
 
   - id: KW11
     page:
@@ -451,8 +437,7 @@ clauses:
       Initiative-Basiswert hat. Sind diese ebenfalls gleich, würfeln beide einen W6. Derjenige mit
       dem höheren Ergebnis darf vor dem anderen handeln. Bei Gleichstand wiederholt man den Wurf
       so lange, bis eine Entscheidung gefallen ist.
-    effects: none
-    why: >
+    none: >
       the order of action needs the opponents' INI, which the app does not model (ADR-0005); the
       GM runs it. The Großschild's Waffennachteil changes the tie-break (ITEMTPL_29).
 
@@ -467,8 +452,7 @@ clauses:
       auszuführen, kann man sie auch hinauszögern. Sie darf dann im späteren Verlauf zu einem
       beliebigen Zeitpunkt nach der eigenen Initiative ausgeführt werden. Aktionen, die bis zum
       Ende der Kampfrunde nicht ausgeführt worden sind, verfallen.
-    effects: none
-    why: table procedure; nothing the app computes
+    none: table procedure; nothing the app computes
 
   - id: KW27
     page:
@@ -480,8 +464,7 @@ clauses:
       höchster INI-Wert
       bei Gleichstand: höchste INI-Basis
       bei Gleichstand: höheres Ergebnis eines W6-Wurfes
-    effects: none
-    why: KW12 as the page's summary box; the footnote is KW14
+    none: KW12 as the page's summary box; the footnote is KW14
 
   - id: KW14
     page:
@@ -491,8 +474,7 @@ clauses:
     text: >
       Anmerkung: *) Um zu Beginn eines Kampfes sofort handeln zu können, kannst du einen
       Schicksalspunkt einsetzen und als Erster reagieren.
-    effects: none
-    why: a use of a Schip; it belongs in schicksalspunkte, where the uses are listed
+    none: a use of a Schip; it belongs in schicksalspunkte, where the uses are listed
 
   - id: KW28
     page:
@@ -510,7 +492,6 @@ clauses:
       besseren Basiswert aufweist, ist er vor dem Ork dran. Der dritte Ork kommt gerade mal auf
       eine Initiative von 11 und ist damit als Letzter dran. Die Reihenfolge lautet also: Arbosch
       (16), Ork 1 (15), Geron (14), Ork 2 (14), Ork 3 (11).
-    effects: none
-    why: >
+    none: >
       KW10 and KW12's tie-break (Geron before Ork 2 on the higher base) worked through; the
       order needs the opponents' INI, which the app does not model

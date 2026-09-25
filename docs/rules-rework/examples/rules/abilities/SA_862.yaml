@@ -43,10 +43,10 @@ clauses:
     text: >
       Alle Kämpfer, die durch diese SF eine Formation bilden, erhalten entweder +2 AT oder +2 VW.
     effects:
-      - when: { choice: formation, bonus: at }
+      - when: { choice.formation: true, choice.formation.bonus: at }
         add: { to: at, value: 2 }
         # AT as SA_884.P2 reads it: the melee attack value, whatever the weapon, not FK.
-      - when: { choice: formation, bonus: vw }
+      - when: { choice.formation: true, choice.formation.bonus: vw }
         add: { to: [pa, aw], value: 2 }
         # VW: every defence — weapon parry, shield parry, dodge (as SA_65.vh-scope).
 
@@ -63,24 +63,21 @@ clauses:
       Nur einer der Kämpfer benötigt die Sonderfertigkeit, damit alle davon profitieren. Verfügen
       mehrere Kämpfer darüber, können auch entsprechend mehr Kämpfer die Vorteile nutzen.
     effects:
-      - requires: { any_of: [{ hero.has: SA_862 }, { ally.has: SA_862 }] }
+      - require: { that: { any: [{ hero.has: SA_862 }, { ally.has: SA_862 }] } }
         # As SA_884.P4: a companion without the SF standing in Boronmir's formation gets F2.
         # FORMAT: `ally.has`, as in SA_884.
 
   - id: F5
     text: "Voraussetzungen: Kriegskunst 6"
-    effects: none
-    why: purchase prerequisite (Boronmir has Kriegskunst 7), not a rule at the table
+    none: purchase prerequisite (Boronmir has Kriegskunst 7), not a rule at the table
 
   - id: F6
     text: "Kampftechniken: alle"
-    effects: none
-    why: no weapon restriction on F2
+    none: no weapon restriction on F2
 
   - id: F7
     text: "AP-Wert: 20 Abenteuerpunkte"
-    effects: none
-    why: purchase cost
+    none: purchase cost
 
 rulings:
   - id: formation-mounted
@@ -100,7 +97,7 @@ rulings:
       b: { says: "Mounted too, if every fighter in it is mounted.", app: "a second fact on the toggle, 'alle beritten', that the player states" }
       c: { says: "Mounted too, without condition.", app: "the toggle ignores whether the hero is mounted" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the spacing is the same as Plänkler-Formation's, and deciding the two the same way keeps one
       rule for "formations stand on foot"; the riders' formation is a separate SF
     answer: null
@@ -121,7 +118,7 @@ rulings:
       a: { says: "One formation at a time: the fighter stands in one of them, the player picks which.", app: "the two toggles exclude each other; turning one on turns the other off, with the reason" }
       b: { says: "Both, if the fighter is placed for both: +2 and +1 add up.", app: "two independent toggles" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       both SFs describe one line or block of fighters around one holder; a fighter standing in
       two at once is not something either page pictures, and stacking would make Plänkler-Formation
       a free +1 on top of the larger one

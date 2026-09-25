@@ -15,7 +15,7 @@
 # `spell:` gives the spell's parameters after the modifications, each with the lines that moved
 # it. `charge:` is what leaves which pool after the cast.
 
-base_hero:
+hero:
   species: R_1
   le: 29
   asp: 30
@@ -35,7 +35,7 @@ situations:
       check: { modifier: { total: 0, lines: [] } }
       spell: { cost: 8, castingTime: 2, range: 16 }
       charge: { asp: 8, from: zaubermodifikationen.ZM12 }
-    app_today: >
+    appToday: >
       check 0, right; the cast is 2 Aktionen, right (CombatSpellViews.castingActions). No AsP are
       charged: baseCost is Int("8 AsP"), nil for every spell — wrong. The modal shows "max 2
       Modifikationen" as text only
@@ -55,7 +55,7 @@ situations:
         castingTime: { value: 4, lines: [{ from: 2, to: 4, from_rule: zaubermodifikationen.ZM11, via: [zaubermodifikationen.ZM8] }] }
       charge: { asp: 16 }
       # A critical success would charge 8 (section 4: half the cost); not drafted here.
-    app_today: >
+    appToday: >
       neither modification can be chosen (no picker; Situation.spellModifications is never set,
       so MagicModifiers.spellMods never fires); check 0, 2 Aktionen, nothing charged — wrong
 
@@ -72,20 +72,20 @@ situations:
             - { value: -1, from: zaubermodifikationen.ZM11, term: Reichweite erhöhen }
       spell: { cost: 4, range: 32 }
       charge: { asp: 2, from: zaubermodifikationen.ZM12, ruling: round-up }   # half of the modified 4
-    app_today: not offered; nothing charged (the app would charge half of 8, rounded up, if baseCost parsed)
+    appToday: not offered; nothing charged (the app would charge half of 8, rounded up, if baseCost parsed)
 
   - id: "20.4"
     name: Ignifaxius at FW 9 — a third modification, a repeat, and the cost both ways
     cast: { spell: SPELL_21, modifications: [erzwingen, zauberdauerSenken], formel_weglassen: true }
     expect:
-      not_offered:
+      notOffered:
         - { choice: formelWeglassen, because: zaubermodifikationen.ZM1, ruling: zaubermodifikationen.omit-counts }   # the third, with option a
         - { choice: kostenSenken, because: zaubermodifikationen.ZM2 }    # Kosten already moved by Erzwingen
         - { choice: zauberdauerErhoehen, because: zaubermodifikationen.ZM2 }
         - { choice: erzwingen, because: zaubermodifikationen.ZM6 }       # no repeat
       check: { modifier: { total: 0, lines: [{ value: 1, from: zaubermodifikationen.ZM11, term: Erzwingen }, { value: -1, from: zaubermodifikationen.ZM11, term: Zauberdauer senken }] } }
       spell: { cost: 16, castingTime: 1 }
-    app_today: >
+    appToday: >
       "Formel weglassen" is a toggle at any FW and adds −2 on top; nothing else is offered, and
       nothing counts toward the limit — waits on omit-counts for the Formel, wrong for the rest
 
@@ -102,7 +102,7 @@ situations:
         - { asp: 1, at: cast, from: zaubermodifikationen.ZM12 }
         - { asp: 3, over: 3h, from: zaubermodifikationen.ZM5 }
       # Failed instead: half of (1 + 1) = 1 AsP (ZM12, "Grundkosten + die Kosten für die erste Zeiteinheit").
-    app_today: >
+    appToday: >
       no modification; nothing charged at the cast or for upkeep. Keeping it up only adds the
       −1 to other casts if the player sets the "aufrechterhaltene Zauber" stepper by hand
       (MagicModifiers.maintainedSpells)
@@ -115,7 +115,7 @@ situations:
       check: { modifier: { total: -1 } }
       spell: { cost: 4 }            # with option a: the step applies to the chosen amount
       charge: { asp: 4 }
-    app_today: not offered; nothing charged
+    appToday: not offered; nothing charged
 
   # --- Verbotene Pforten (SA_74) ---------------------------------------------------------------
 
@@ -132,8 +132,8 @@ situations:
         - { asp: 3, from: [zaubermodifikationen.ZM12, SA_74.VP1] }
         - { le: 5, from: SA_74.VP1 }
       after: { asp: 0, le: 24, conditions: {} }      # 24 > 21.75: no Schmerz yet
-      not_applied: [{ rule: trefferzonen.TZ8, reason: "LeP aufgewendet, kein Schaden" }]
-    app_today: >
+      notApplied: [{ rule: trefferzonen.TZ8, reason: "LeP aufgewendet, kein Schaden" }]
+    appToday: >
       Verbotene Pforten does not exist (catalog SA_74 todo). The cast is offered at 3 AsP
       although it costs 8, and nothing is charged at all — wrong
 
@@ -151,4 +151,4 @@ situations:
         ruling: round-up
         pools: [{ asp: 3 }, { le: 1 }]    # AsP first, the rest from LE
       after: { asp: 0, le: 28 }
-    app_today: not offered; nothing charged
+    appToday: not offered; nothing charged

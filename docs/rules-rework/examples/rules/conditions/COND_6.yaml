@@ -25,8 +25,7 @@ clauses:
     text: >
       Durch Verletzungen, Gifte, Zauber und andere Unannehmlichkeiten kann ein Held Schmerzen
       erleiden, die ihn im schlimmsten Falle handlungsunfähig machen.
-    effects: none
-    why: introduction
+    none: introduction
 
   - id: SZ2
     text: >
@@ -75,7 +74,7 @@ clauses:
         # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies. Not INI — an INI roll is
         # not a Probe, and unlike Belastung the page does not list INI.
       - when: { level: 4 }
-        gain: { state: handlungsunfaehig }
+        gain: { rule: handlungsunfaehig }
         unless: { check_passed: SZ2 }
       - when: { level: 4, check_passed: SZ2 }
         add: { to: check, value: -4 }
@@ -95,7 +94,7 @@ rulings:
     answer: >
       Exact: Schmerz when LP is at or below the fraction itself.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SZ3]
+    appliesTo: [SZ3]
     notes: >
       LE 30: Schmerz I starts at 22 LP (22.5), not 23. Nothing is computed that needs rounding,
       so ADR-0006 does not reach it. The app already compares this way
@@ -110,7 +109,7 @@ rulings:
     answer: >
       Before each action the hero wants to take.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SZ2, SZ5]
+    appliesTo: [SZ2, SZ5]
     notes: >
       Answered against the recommendation (once, when Stufe IV is reached). A success holds for
       that one action, taken at −4; a failure means the hero cannot take it (Handlungsunfähig).
@@ -127,7 +126,7 @@ rulings:
     answer: >
       The hero cannot move (GS 0), but can still speak.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SZ5]
+    appliesTo: [SZ5]
     notes: >
       The owner's own answer, none of the offered options (GS −4, none, GS −3). At Stufe IV the
       hero's GS is 0 whether or not the Selbstbeherrschung check passed; a passed check buys an

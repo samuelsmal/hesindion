@@ -2,7 +2,7 @@
 id: angriff-von-hinten
 name: Angriff von hinten
 kind: core
-catalog_id: GRW_angriffVonHinten
+catalogId: GRW_angriffVonHinten
 source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-AngriffVonHinten.html
   book: Regelwerk
@@ -21,22 +21,22 @@ clauses:
       Wenn dies geschieht, so ist die Verteidigung des Gegners um -4 erschwert, da er den
       Angriff nur schlecht sieht oder spät wahrnimmt.
     effects:
-      - when: { side: opponent, attack.kind: melee, gm.fact: fromBehind, span: attack }
+      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, span: attack }
         add: { to: [pa, aw], value: -4 }
         ruling: from-behind-ranged
         # The hero defends against a melee attack: every defence, shield parry included. Against
         # a shot from behind the question is not asked (FORMAT: the defence screen must know the
         # attack is ranged — schilde.SCH8 needs the same fact).
-      - when: { side: hero, attack.kind: melee, gm.fact: fromBehind, span: attack }
-        opponent_add: { to: [pa, aw], value: -4 }
+      - when: { side: hero, attack.kind: melee, gmFact.fromBehind: true, span: attack }
+        add: { to: [opponent.pa, opponent.aw], value: -4 }
         ruling: from-behind-ranged
         # The hero attacks in melee: an opponent line, the GM subtracts it (ADR-0005). The
         # ranged announcement does not ask it.
-      - when: { side: opponent, attack.kind: melee, gm.fact: fromBehind, hero.mounted: true }
+      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, hero.mounted: true }
         forbid: { defence: shieldParry }
         from: reiterkampf.RK5
         ruling: mounted-from-behind-shield
-      - when: { side: opponent, attack.kind: melee, gm.fact: fromBehind, hero.mounted: true }
+      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, hero.mounted: true }
         exempt: { from: schilde.SCH1 }
         from: reiterkampf.RK5
         ruling: mounted-from-behind-shield
@@ -58,7 +58,7 @@ rulings:
     answer: >
       Melee only: the defence against a melee attack from behind.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [AH1]
+    appliesTo: [AH1]
     notes: >
       The page is filed with the special melee rules in both books. The app asks the question on
       the defence screen for any Parieren or Ausweichen (CombatDefenseSetupView), whatever the
@@ -76,7 +76,7 @@ rulings:
       No shield parry, and no passive shield bonus on the weapon parry: the shield is not between
       the attacker and the rider.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [AH1, reiterkampf.RK5]
+    appliesTo: [AH1, reiterkampf.RK5]
     notes: >
       RK5 names front and shield-arm side for the shield and the weapon-arm side for the weapon,
       and says nothing of behind, so the weapon parry stays under the ordinary rules, without the

@@ -21,8 +21,8 @@
 # +2 AT (Rabenschnabel).
 # `total` is the sum of the lines; `result` is the value on the check, from the base above.
 
-hero_file: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
-base_hero:
+heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+hero:
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1 }
   advantages: { ADV_25: 2, ADV_44: 2, ADV_49: 1, ADV_54: 1 }
   disadvantages: { DISADV_37: { sid: 2 } }      # Autoritätsglaube
@@ -37,7 +37,7 @@ situations:
 
   - id: "19.1"
     name: In Formation on foot, the formation takes +2 AT
-    choose: { formation: true, bonus: at }
+    choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
       offered: [{ choice: formation, from: SA_862.F1 }]
       at:
@@ -47,53 +47,53 @@ situations:
           - { value: 2, from: SA_862.F2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
       pa: { total: -1, result: 10 }
-    app_today: >
+    appToday: >
       no formation toggle at all: Formation is unknown to the app (catalog SA_862 todo; no case in
       CombatAbility), and the setup offers Plänkler-Formation only to its holder
       (CombatSetupView, hero.hasPlaenklerFormation), which Boronmir no longer is. AT 15 — wrong
 
   - id: "19.2"
     name: In Formation on foot, the formation takes +2 VW — weapon parry, shield parry, dodge
-    choose: { formation: true, bonus: vw }
+    choose: { choice.formation: true, choice.formation.bonus: vw }
     expect:
       pa:            { total: 1, result: 12, lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
-      shield_parry:  { total: 1, result: 14, lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      "pa(with: shield)":  { total: 1, result: 14, lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       aw:            { total: 1, result: 8,  lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       at:            { total: -1, result: 15 }
-    app_today: not offered (19.1); PA 10, shield parry 12, AW 6 — wrong
+    appToday: not offered (19.1); PA 10, shield parry 12, AW 6 — wrong
 
   - id: "19.3"
     name: A companion without the SF, standing in Boronmir's formation
     hero: { abilities: {} }          # any hero without SA_862
     ally: { has: SA_862 }
-    choose: { formation: true, bonus: at }
+    choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
       offered: [{ choice: formation, from: SA_862.F4 }]
       at: { lines: [{ value: 2, from: SA_862.F2, via: [SA_862.F4] }] }
-    app_today: not offered — Formation does not exist in the app, and a formation is only ever offered to its holder (14.18)
+    appToday: not offered — Formation does not exist in the app, and a formation is only ever offered to its holder (14.18)
 
   - id: "19.4"
     name: Formation on Kupperus, against foot fighters, Rabenschnabel
     hero: { mounted: true }
     opponent: { onFoot: true }
-    choose: { formation: true, bonus: at }
+    choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
-      not_offered: [{ choice: formation, because: SA_862.F1, ruling: SA_862.formation-mounted }]
+      notOffered: [{ choice: formation, because: SA_862.F1, ruling: SA_862.formation-mounted }]
       at:
         total: 4
         result: 20
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
-        not_applied:
+        notApplied:
           - { rule: COND_1.B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }
           - { rule: SA_862, reason: "not while mounted (SA_862.F1, ruling formation-mounted)" }
-    app_today: AT 20 — right, but only because the app has no Formation to offer; nothing says why
+    appToday: AT 20 — right, but only because the app has no Formation to offer; nothing says why
 
   - id: "19.5"
     name: A companion holds Plänkler-Formation, Boronmir holds Formation — one line, not two
     ally: { has: SA_884 }
-    choose: { plaenklerFormation: true, bonus: at, then: { formation: true, bonus: at } }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at, then: { formation: true, bonus: at } }
     expect:
       offered:
         - { choice: plaenklerFormation, from: SA_884.P4 }
@@ -105,8 +105,8 @@ situations:
         lines:
           - { value: 2, from: SA_862.F2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
-        not_applied: [{ rule: SA_884, reason: "in Formation instead (ruling formation-and-plaenkler)" }]
-    app_today: neither is offered — Boronmir no longer holds SA_884 and the app has no SA_862; AT 15 — wrong
+        notApplied: [{ rule: SA_884, reason: "in Formation instead (ruling formation-and-plaenkler)" }]
+    appToday: neither is offered — Boronmir no longer holds SA_884 and the app has no SA_862; AT 15 — wrong
 
   # --- Eisern (ADV_54) and the Wundschwelle ----------------------------------------------------
 
@@ -119,7 +119,7 @@ situations:
         lines:
           - { value: 8, from: trefferzonen.TZ8 }          # ⌈KO 15 / 2⌉
           - { value: 1, from: ADV_54.E1 }
-    app_today: >
+    appToday: >
       9 — right (DerivedValueFormulas.wundschwelle, ADV_54 +1). The sheet shows the total alone
       (HeroDetailView, `wundschwelle.max`): the +1 is stored as ComputedValue.bonus and Eisern is
       named nowhere
@@ -130,8 +130,8 @@ situations:
     hit: { zone: torso, sp: 8 }
     expect:
       checks_first: []
-      not_applied: [{ rule: trefferzonen.TZ8, reason: "8 SP < Wundschwelle 9 (Eisern +1, ADV_54.E1)" }]
-    app_today: >
+      notApplied: [{ rule: trefferzonen.TZ8, reason: "8 SP < Wundschwelle 9 (Eisern +1, ADV_54.E1)" }]
+    appToday: >
       same outcome; the row says "Schaden 8 < Wundschwelle 9" (CombatWundschwelleRow) without
       naming Eisern as the reason it is 9
 
@@ -145,7 +145,7 @@ situations:
           application: Handlungsfähigkeit bewahren
           modifier: { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8, via: [ADV_54.E1] }] }
       on_failure: { damage: { formula: 1W3+1, from: trefferzonen.TZ11 } }
-    app_today: same (−1, from `wundschwelle.max`); the line does not say Eisern made it −1 rather than −2
+    appToday: same (−1, from `wundschwelle.max`); the line does not say Eisern made it −1 rather than −2
 
   - id: "19.9"
     name: Trefferzonen not played — 12 SP
@@ -155,7 +155,7 @@ situations:
       checks_first: []
       sheet:
         wundschwelle: { total: 9, note: "wirkt nur mit Fokusregel Trefferzonen", ruling: ADV_54.eisern-scope }
-    app_today: >
+    appToday: >
       the take-damage screen says "Wundschwelle erreicht" and "Wundeffekte gibt es nur mit der
       Fokusregel Trefferzonen" (CombatWundschwelleRow); no check, which is right. The sheet shows
       Wundschwelle 9 with no note. What else is right waits on ruling eisern-scope
@@ -172,8 +172,8 @@ situations:
           text: "zweifelt nicht an den Worten höhergestellter Personen, selbst wenn sie unlogische Befehle erteilen oder unglaubwürdig sind"   # SE6
           ruling: DISADV_37.schlechte-eigenschaft-check
       check: { talent: Willenskraft, fw: 9, modifier: { total: 0, lines: [] } }
-      not_applied: [{ rule: COND_1.B3, reason: "Willenskraft is not hindered by Belastung (ruling COND_1.belastung-reach)" }]
-    app_today: >
+      notApplied: [{ rule: COND_1.B3, reason: "Willenskraft is not hindered by Belastung (ruling COND_1.belastung-reach)" }]
+    appToday: >
       nothing offers the check. The sheet lists "Schlechte Eigenschaft (Autoritätsglaube)" with the
       page behind a swipe (HeroDetailView.disadvantagesSection); a Willenskraft check opened from
       the talent list does not mention it (TalentProbeModal.hints). The not-applied Belastung is
@@ -191,7 +191,7 @@ situations:
           lines:
             - { value: -2, from: DISADV_37.SE4, source: gm }
             - { value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }
-    app_today: >
+    appToday: >
       only if the player opens Willenskraft from the talent list and enters the −2 as a free
       modifier: then −3, with the GM's −2 named by nothing
 
@@ -202,4 +202,4 @@ situations:
     expect:
       log: { text: "Autoritätsglaube: gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }
       states: []                       # SE3: for as long as the trigger lasts, which is the GM's to end
-    app_today: a plain Willenskraft failure in the log, if it was rolled at all
+    appToday: a plain Willenskraft failure in the log, if it was rolled at all

@@ -22,7 +22,7 @@ clauses:
     effects:
       - when: { attack.with: item }
         add: { to: at, value: item.atMod, after: kampfwerte.KW1 }
-      - when: { defence: weaponParry, with: item }
+      - when: { action.defence: weaponParry, with: item }
         add: { to: pa, value: item.paMod, after: kampfwerte.KW2 }
         # Keyed on the piece the roll is made with, not on the loadout: in a double attack each
         # hand's attack carries its own weapon's AT-Mod, a shield attack (schilde.SCH2) the

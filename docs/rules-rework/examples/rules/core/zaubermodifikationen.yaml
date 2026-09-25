@@ -121,10 +121,17 @@ clauses:
       16 Aktionen | 32 Schritt | 16 AsP
       32 Aktionen | 64 Schritt | 32 AsP
     effects:
-      - provides:
-          tables.zauberdauer: [1, 2, 4, 8, 16, 32]           # Aktionen
-          tables.reichweite: [beruehren, 4, 8, 16, 32, 64]   # Schritt
-          tables.kosten: [1, 2, 4, 8, 16, 32]                # AsP
+      - provide:
+          name: tables.zauberdauer
+          value: [1, 2, 4, 8, 16, 32]                        # Aktionen
+        ruling: cost-off-table
+      - provide:
+          name: tables.reichweite
+          value: [beruehren, 4, 8, 16, 32, 64]               # Schritt
+        ruling: cost-off-table
+      - provide:
+          name: tables.kosten
+          value: [1, 2, 4, 8, 16, 32]                        # AsP
         ruling: cost-off-table
         # Ordered scales the modifications step along — reichweite.yaml's ordered enum of reach.
         # What a step means for a value off the table (3 AsP, "4/8/16 AsP", "1 AsP pro LeP")
@@ -136,8 +143,7 @@ clauses:
       anzufassen, so beim jeweiligen Zauberspruch nichts anderes angegeben ist. Als Berührung gilt
       auch eine Berührung mit dem Traditionsartefakt des Zauberers, sofern er permanente AsP für
       das Artefakt ausgegeben hat.
-    effects: none
-    why: what counts as touching is the table's to judge; shown as text beside Reichweite Berühren
+    none: what counts as touching is the table's to judge; shown as text beside Reichweite Berühren
 
   - id: ZM10
     text: >
@@ -145,8 +151,7 @@ clauses:
       (und schon gar nicht ihr Vertrautentier). Es muss sich einerseits um ein Traditionsartefakt
       handeln, andererseits muss ein Bindungsritual stattgefunden haben, bei dem permanente AsP in
       das Traditionsartefakt geflossen sind.
-    effects: none
-    why: the footnote to ZM9
+    none: the footnote to ZM9
 
   - id: ZM11
     text: |
@@ -158,19 +163,19 @@ clauses:
       Zauberdauer senken: Zauberdauer um eine Stufe gesenkt, Zauberprobe um -1 erschwert
       Geste oder Formel weglassen: Zauberprobe um jeweils -2 erschwert
     effects:
-      - when: { choice: spellModification.erzwingen }
+      - when: { choice.spellModification.erzwingen: true }
         shift: { param: spell.cost.base, steps: 1, table: ZM8.kosten }
         add: { to: check, value: 1 }
-      - when: { choice: spellModification.kostenSenken }
+      - when: { choice.spellModification.kostenSenken: true }
         shift: { param: spell.cost.base, steps: -1, table: ZM8.kosten }
         add: { to: check, value: -1 }
-      - when: { choice: spellModification.reichweiteErhoehen }
+      - when: { choice.spellModification.reichweiteErhoehen: true }
         shift: { param: spell.range, steps: 1, table: ZM8.reichweite }
         add: { to: check, value: -1 }
-      - when: { choice: spellModification.zauberdauerErhoehen }
+      - when: { choice.spellModification.zauberdauerErhoehen: true }
         shift: { param: spell.castingTime, steps: 1, table: ZM8.zauberdauer }
         add: { to: check, value: 1 }
-      - when: { choice: spellModification.zauberdauerSenken }
+      - when: { choice.spellModification.zauberdauerSenken: true }
         shift: { param: spell.castingTime, steps: -1, table: ZM8.zauberdauer }
         add: { to: check, value: -1 }
         # The casting time is how many Aktionen the cast takes (section 3: over 1 Aktion it is
@@ -230,7 +235,7 @@ rulings:
       b: { says: "Only when chosen: left out on purpose it counts; forced (gefesselt, versteckt) it is a circumstance, −2 without using up a modification.", app: "the toggle asks 'freiwillig?'; only then does it count" }
       c: { says: "Never: the −2 is a circumstance of the cast, not a modification.", app: "as today: two toggles outside the limit" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the page lists it among the Modifikationen in the same breath as the other five and
       ZM1's count names no exception; "will oder kann" gives the reasons one might leave them
       out, not a second kind of omission. It also keeps the picker one list with one limit
@@ -253,7 +258,7 @@ rulings:
       b: { says: "Only costs on the table can be modified; for the others the two modifications are not offered.", app: "the picker disables Erzwingen and Kosten senken with 'Kosten nicht in der Tabelle'" }
       c: { says: "A step is to the neighbouring table value: 3 AsP → 4 or 2; a choice or a rate is the GM's call.", app: "table lookup with rounding to the nearest step; a GM field for the rest" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the table is powers of two, so "one Stufe" and "×2 / ÷2" agree wherever the table
       reaches; extending it by the same factor gives every spell one answer the player can
       check, and rounding up with a floor of 1 AsP follows round-up and ZM5's "nie unter 1 AsP"

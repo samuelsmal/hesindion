@@ -25,7 +25,7 @@ clauses:
       hinzuaddieren. Beim gleichzeitigen Einsatz einer zweiten Parierwaffe und/oder eines
       Schildes zählt nur der höchste Parade-Bonus.
     effects:
-      - when: { defence: weaponParry, with: mainHand, loadout.other: [parryingWeapon, shield] }
+      - when: { action.defence: weaponParry, with: mainHand, loadout.other: [parryingWeapon, shield] }
         add: { to: pa, value: "max(loadout.other.paMod)" }
         ruling: shield-bonus-raufen
         # A line of its own: "Großschild (passiv) +3". Bare hands count as the Hauptwaffe: a Raufen
@@ -57,7 +57,7 @@ clauses:
           defence: shieldParry
           requires: { loadout.shield: present }
           value: "schilde.pa"          # kampfwerte.KW2 for the Schilde technique
-      - when: { defence: shieldParry }
+      - when: { action.defence: shieldParry }
         add: { to: pa, value: "2 * shield.paMod" }
         # Two lines: "Schilde PA 7" and "Großschild aktiv +6 (2 × 3)". The choice between
         # SCH1 (passive, on the weapon parry) and SCH3 (active) is made per defence: both rows
@@ -70,8 +70,7 @@ clauses:
     text: >
       Anmerkung: Schilde und Parierwaffen können nicht nur zur Verteidigung eingesetzt werden,
       sondern auch als Waffen (z.B. im beidhändigen Kampf).
-    effects: none
-    why: SCH2 again
+    none: SCH2 again
 
   - id: SCH5
     text: >
@@ -80,7 +79,7 @@ clauses:
       den doppelten Parade-Bonus des jeweiligen Schildes modifiziert und erleidet keine Abzüge
       durch das Führen mit der falschen Hand.
     effects:
-      - when: { defence: shieldParry }
+      - when: { action.defence: shieldParry }
         exempt: { from: beidhaendiger-kampf.ZW4 }
         # The off-hand −4 never reaches a shield parry. The doubling is SCH3.
 
@@ -98,8 +97,7 @@ clauses:
 
   - id: SCH7
     text: Mit einem Schild kann man auch angreifen.
-    effects: none
-    why: SCH2 again
+    none: SCH2 again
 
   - id: SCH8
     page:
@@ -126,8 +124,7 @@ clauses:
       Ausweichen (AW): In manchen Fällen ist es nötig, zur Seite zu springen, da eine Parade nicht
       möglich ist (außerm it einem Schild). Dies gilt für Fernkampfangriffe und Nahkampfangriffe
       von großen und riesigen Gegnern. Dies funktioniert genauso wie bei einer Probe auf Parade.
-    effects: none
-    why: >
+    none: >
       SCH6 and SCH8 from the other side: against a ranged attack only the shield or AW. The
       page's typo ("außerm it") kept. The large and giant attackers are groessenkategorie's.
 
@@ -148,8 +145,7 @@ clauses:
       Kampftechnik Schilde, wenn er einen Holzschild aktiv führt. Deutlich besser als die 7 bei
       der Streitaxt mit der Kampftechnik Hiebwaffen. Er kämpft also mit AT 14 (mit der
       Kampftechnik Hiebwaffen) und Parade 10 (mit der Kampftechnik Schilde).
-    effects: none
-    why: the page's worked example; it is situations 16.13–16.15
+    none: the page's worked example; it is situations 16.13–16.15
 
   - id: SCH11
     text: >
@@ -157,8 +153,7 @@ clauses:
       Dann wären die Parierwaffe und der Schild auch als Waffen einsetzbar (und müssten
       entsprechende Abzüge auf AT und PA für den beidhändigen Kampf, sowie Waffenmodifikatoren
       berücksichtigen, was vor allem für den Schild wichtig ist, da diese AT-Mali nach sich zieht).
-    effects: none
-    why: beidhaendiger-kampf's penalties and the shield's AT-Mod (SCH2) together; nothing new
+    none: beidhaendiger-kampf's penalties and the shield's AT-Mod (SCH2) together; nothing new
 
   - id: SCH12
     page:
@@ -170,8 +165,7 @@ clauses:
       parieren. Dies ist eine ganz normale Probe auf Parade, jedoch erhöht ein mitgeführter
       Schild die Parade. Üblicherweise ist der Paradewert mit einem Schild höher als der
       Paradewert mit einer Waffe.
-    effects: none
-    why: >
+    none: >
       the Nahkampf page's own shield sentences, from its Parade paragraph (the rest of which is
       kampfwerte.KW17): SCH1 (the raised parade) and SCH3 (the parry with the shield) carry it
 
@@ -184,7 +178,7 @@ rulings:
     answer: >
       Yes: unarmed is the hand the hero fights with; the shield covers him either way.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [SCH1]
+    appliesTo: [SCH1]
     notes: >
       The Grundbegriffe page treats the fist as a weapon ("Waffen, zur Not aber auch die bloße
       Faust können einen Gegner verletzen", schaden.S6). No change in the app: the Raufen row adds

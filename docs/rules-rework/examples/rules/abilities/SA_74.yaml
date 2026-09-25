@@ -47,7 +47,7 @@ clauses:
       Dies ist ausgesprochen schmerzhaft und erfordert daher eine Probe auf das Talent
       Selbstbeherrschung. Misslingt diese, misslingt auch der Zauber.
     effects:
-      - when: { choice: payWithLeP, amount: { min: 1 } }
+      - when: { choice.payWithLeP: true, amount: { min: 1 } }
         requires_check: { talent: Selbstbeherrschung, application: null }
         on_failure: { set: { cast.outcome: failed } }
         ruling: vp-sequence
@@ -76,13 +76,11 @@ clauses:
 
   - id: VP4
     text: "Voraussetzung: MU 12"
-    effects: none
-    why: purchase prerequisite, not a rule at the table
+    none: purchase prerequisite, not a rule at the table
 
   - id: VP5
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: purchase cost
+    none: purchase cost
 
 rulings:
   - id: vp-sequence
@@ -103,7 +101,7 @@ rulings:
       a: { says: "After: roll the spell; if it succeeds and LeP are to be paid, roll Selbstbeherrschung. Failing it turns the success into a failure (half cost, AsP first). A failed spell check pays its half cost as VP3 says, AsP first then LE, with no Selbstbeherrschung.", app: "the LeP choice is made before the roll; the Selbstbeherrschung check opens after a successful spell check; the result screen can still turn to 'misslungen'" }
       b: { says: "Before: announce the LeP, roll Selbstbeherrschung first; on a failure the spell fails without its own check (half cost, AsP first). On a success roll the spell as usual.", app: "Selbstbeherrschung is rolled first, as a gate; the spell check only opens after it" }
     recommended: b
-    why_recommended: >
+    whyRecommended: >
       the caster commits to the LeP before casting, and "misslingt auch der Zauber" is simplest
       as a gate before the spell check, the way reiterkampf's orders put the Reiten check before
       the order; it avoids a result that changes after it is shown, and needs no new concept of

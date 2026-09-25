@@ -25,17 +25,15 @@ clauses:
       Im Kampf hebt der Vorteil alle Abzüge auf, die durch das Führen einer Waffe mit der
       falschen Hand anfallen.
     effects:
-      - remove: { line: beidhaendiger-kampf.ZW4.offHand }
+      - suppress: { line: { line: beidhaendiger-kampf.ZW4.offHand } }
         # FORMAT: cancels another rule's line. The breakdown shows nothing for the off hand,
         # and "not applied: Falsche Hand — aufgehoben durch Beidhändig" in the not-applied list.
         # Not ZW3's −2: that is coordination, not the wrong hand.
 
   - id: V3
     text: "Voraussetzung: Keine"
-    effects: none
-    why: nothing to check
+    none: nothing to check
 
   - id: V4
     text: "AP-Wert: 15 Abenteuerpunkte"
-    effects: none
-    why: purchase cost
+    none: purchase cost

@@ -34,31 +34,27 @@ clauses:
     text: >
       Ein Held kann sich im Laufe seines Lebens bei einem Talent in maximal drei
       unterschiedlichen Anwendungsgebieten spezialisieren.
-    effects: none
-    why: purchase legality (Optolith's)
+    none: purchase legality (Optolith's)
 
   - id: FS3
     text: >
       Der Bonus der Spezialisierung kann das Maximum des FW nach Erfahrungsgrad des Helden bei
       der Heldenerschaffung übersteigen.
-    effects: none
-    why: >
+    none: >
       a creation cap the app does not enforce; at the table it only means the +2 is never capped
 
   - id: FS4
     text: >
       Voraussetzungen: Fertigkeitswert 6 (erste Spezialisierung), Fertigkeitswert 12 (zweite
       Spezialisierung), Fertigkeitswert 18 (dritte Spezialisierung)
-    effects: none
-    why: purchase prerequisite
+    none: purchase prerequisite
 
   - id: FS5
     text: >
       AP-Wert: A-/B-/C-/D-Fertigkeit: 1/2/3/4 Abenteuerpunkt/e für die erste Spezialisierung;
       2/4/6/8 Abenteuerpunkte für die zweite Spezialisierung, 3/6/9/12 Abenteuerpunkte für die
       dritte Spezialisierung
-    effects: none
-    why: cost
+    none: cost
 
 rulings:
   - id: spezialisierung-when
@@ -79,7 +75,7 @@ rulings:
       b: { says: "No picker: a toggle 'Spezialisierung passt' per specialisation on the check screen.", app: "one toggle per SA_9 instance of that talent" }
       c: { says: "Text only: the sheet lists the specialisation; the player adds 2 by hand.", app: "as today (the FW is not editable on the check, so the player would have to use the modifier, which is wrong: 22.3)" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the page makes the application part of every talent check, and three other rules already
       need it; a free-text sid2 cannot be matched to a list and falls back to b's toggle
     answer: null

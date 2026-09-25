@@ -57,7 +57,7 @@ clauses:
       Dem Mächtigen Schlag kann man nur mittels Ausweichen komplett entgehen. Bei einer Parade,
       gleich ob gelungen oder nicht, muss die Probe auf Kraftakt gewürfelt werden.
     effects:
-      - when: { opponent.defence: aw, defence: success }
+      - when: { opponent.defence: aw, action.defence: success }
         cancels: MS1
       - when: { opponent.defence: [pa, shieldParry] }
         tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 }, whatever_the_parry: true } }
@@ -66,5 +66,4 @@ clauses:
 
   - id: MS4
     text: "Voraussetzungen: Wesen verfügt automatisch über die SF"
-    effects: none
-    why: a creature's innate ability; nothing to buy
+    none: a creature's innate ability; nothing to buy

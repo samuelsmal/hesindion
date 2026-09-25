@@ -4,7 +4,7 @@
 # Rulings named here without a prefix live in ../rules/rulings.yaml
 # (sf-technique-lists, manoeuvre-combination, tiered-manoeuvre-stufe).
 
-base_hero: { at: 14, pa: 8, aw: 7 }
+hero: { at: 14, pa: 8, aw: 7 }
 
 situations:
 
@@ -17,7 +17,7 @@ situations:
       on_hit:
         opponent_lines:
           defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1 }] }
-    app_today: same
+    appToday: same
 
   - id: "8.2"
     name: Finte III, used at III
@@ -28,7 +28,7 @@ situations:
       on_hit:
         opponent_lines:
           defence: { total: -6, lines: [{ value: -6, from: SA_48.F1, tier: 3 }] }
-    app_today: same
+    appToday: same
 
   - id: "8.3"
     name: Finte III, the player wants Finte I
@@ -40,7 +40,7 @@ situations:
       on_hit:
         opponent_lines:
           defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, ruling: tiered-manoeuvre-stufe }] }
-    app_today: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe — wrong
+    appToday: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe — wrong
 
   - id: "8.4"
     name: The opponent dodges instead of parrying
@@ -51,21 +51,21 @@ situations:
       on_hit:
         opponent_lines:
           defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, applies_to: aw }] }
-    app_today: the −2 line is shown for "the defence", but the manoeuvre's info text says "Gegner PA −2" (CombatManeuver.infoText) — the label is wrong for a dodge
+    appToday: the −2 line is shown for "the defence", but the manoeuvre's info text says "Gegner PA −2" (CombatManeuver.infoText) — the label is wrong for a dodge
 
   - id: "8.5"
     name: Finte with a Morgenstern (Kettenwaffen — not on Finte's list)
     hero: { abilities: { SA_48: 1 }, loadout: { weapon: Morgenstern } }
     expect:
-      not_offered: [{ manoeuvre: finte, because: SA_48.F3, ruling: sf-technique-lists }]
-    app_today: offered (availableManeuvers checks no technique) — wrong
+      notOffered: [{ manoeuvre: finte, because: SA_48.F3, ruling: sf-technique-lists }]
+    appToday: offered (availableManeuvers checks no technique) — wrong
 
   - id: "8.6"
     name: Finte unarmed (Raufen — on the list)
     hero: { abilities: { SA_48: 1 }, loadout: { weapon: null } }
     expect:
       offered: [{ manoeuvre: finte, from: SA_48.F1 }]
-    app_today: same
+    appToday: same
 
   - id: "8.7"
     name: Finte together with Sturmangriff
@@ -73,7 +73,7 @@ situations:
     expect:
       not_combinable: [{ manoeuvres: [finte, sturmangriff], because: SA_62.ST4 }]
       told: "Sturmangriff lässt sich nicht mit Finte kombinieren (Sturmangriff)"
-    app_today: moot — one manoeuvre per attack, and SA_62 is not offered on foot
+    appToday: moot — one manoeuvre per attack, and SA_62 is not offered on foot
 
   - id: "8.8"
     name: Finte together with Wuchtschlag
@@ -81,14 +81,14 @@ situations:
     expect:
       not_combinable: [{ manoeuvres: [finte, wuchtschlag], because: kampfsonderfertigkeiten.KS3 }]
       told: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung"
-    app_today: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
+    appToday: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
 
   - id: "8.9"
     name: Finte on horseback
     hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert }, mounted: true }
     expect:
       offered: [{ manoeuvre: finte, from: SA_48.F1 }]    # a Basismanöver: reiterkampf.RK3 allows it
-    app_today: same
+    appToday: same
 
   - id: "8.10"
     name: Finte misses
@@ -98,4 +98,4 @@ situations:
       at: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 2 }] }
       on_miss:
         opponent_lines: {}          # "beim Gelingen" — nothing for the opponent
-    app_today: same — the line only matters for the opponent's defence, which follows a hit
+    appToday: same — the line only matters for the opponent's defence, which follows a hit

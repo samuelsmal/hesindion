@@ -2,7 +2,7 @@
 # `round.defencesMade` is the number of defences already rolled this Kampfrunde.
 # DRAFT FORMAT — see ../README.md.
 
-base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
+hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
 
 situations:
 
@@ -12,7 +12,7 @@ situations:
     check: pa
     expect:
       pa: { total: 0 }
-    app_today: same
+    appToday: same
 
   - id: V2
     name: Second parry
@@ -20,7 +20,7 @@ situations:
     check: pa
     expect:
       pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }
-    app_today: same
+    appToday: same
 
   - id: V3
     name: Third parry
@@ -28,7 +28,7 @@ situations:
     check: pa
     expect:
       pa: { total: -6, lines: [{ value: -6, from: mehrfache-verteidigung.MV1 }] }
-    app_today: same
+    appToday: same
 
   - id: V4
     name: A dodge after a parry — the penalty carries across kinds
@@ -36,7 +36,7 @@ situations:
     check: aw
     expect:
       aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
-    app_today: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
+    appToday: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
 
   - id: V5
     name: A parry after dodging an arrow — ranged defences count too
@@ -44,7 +44,7 @@ situations:
     check: pa
     expect:
       pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
-    app_today: 0 — wrong (counted per kind)
+    appToday: 0 — wrong (counted per kind)
 
   - id: V6
     name: The next Kampfrunde
@@ -53,7 +53,7 @@ situations:
     check: pa
     expect:
       pa: { total: 0 }
-    app_today: same
+    appToday: same
 
   - id: V7
     name: Vinsalt-Stil with a Rapier, third defence
@@ -62,7 +62,7 @@ situations:
     check: pa
     expect:
       pa: { total: -4, lines: [{ value: -4, from: mehrfache-verteidigung.MV1, changed_by: [SA_923.VS1], ruling: kampfstil-techniques }] }
-    app_today: −2 — wrong (only the one earlier parry is counted, not the dodge)
+    appToday: −2 — wrong (only the one earlier parry is counted, not the dodge)
 
   - id: V8
     name: Vinsalt-Stil with a Schwert
@@ -71,9 +71,9 @@ situations:
     check: pa
     expect:
       pa: { total: -6, lines: [{ value: -6, from: mehrfache-verteidigung.MV1 }] }
-      not_applied:
+      notApplied:
         - { rule: SA_923, clause: VS1, reason: a Schwert is not in VS2's list, ruling: kampfstil-techniques }
-    app_today: same (the catalog requires an Armbrust, Fechtwaffe or Zweihandschwert)
+    appToday: same (the catalog requires an Armbrust, Fechtwaffe or Zweihandschwert)
 
   - id: V9
     name: The value reaches 0 — parry gone, dodge still there
@@ -82,7 +82,7 @@ situations:
     expect:
       pa: { value: -1, not_selectable: { because: mehrfache-verteidigung.MV3, ruling: mehrfache-verteidigung.zero-value } }
       aw: { value: 1, selectable: true }
-    app_today: both offered; the parry is rolled against −1 — wrong
+    appToday: both offered; the parry is rolled against −1 — wrong
 
   - id: V10
     name: Schip "Verteidigung" keeps a defence alive
@@ -96,7 +96,7 @@ situations:
           - { value: -6, from: mehrfache-verteidigung.MV1 }
           - { value: 4, from: schicksalspunkte.SP-verteidigung }
       pa_value: 3        # 5 − 6 + 4: above 0, so the parry is allowed (MV3)
-    app_today: the +4 line exists but cites no rule (DefenseModifiers.schipDefenseBoost, rules [])
+    appToday: the +4 line exists but cites no rule (DefenseModifiers.schipDefenseBoost, rules [])
 
   - id: V11
     name: Verteidigungshaltung, announced at the start of the round
@@ -106,7 +106,7 @@ situations:
       pa: { total: 4, lines: [{ value: 4, from: SA_65.VH1, ruling: SA_65.vh-scope }] }
       aw: { total: 4, lines: [{ value: 4, from: SA_65.VH1, ruling: SA_65.vh-scope }] }
       actions: { attack: forbidden, spell: forbidden, free_action: { allowed: true, ruling: SA_65.vh-free-actions } }
-    app_today: not offered — SA_65 is not implemented (catalog status todo)
+    appToday: not offered — SA_65 is not implemented (catalog status todo)
 
   - id: V12
     name: Verteidigungshaltung and the Schip "Verteidigung" together
@@ -119,11 +119,11 @@ situations:
         lines:
           - { value: 4, from: SA_65.VH1, ruling: [SA_65.vh-scope, SA_65.vh-stacking] }
           - { value: 4, from: schicksalspunkte.SP-verteidigung, ruling: SA_65.vh-stacking }
-    app_today: +4 (only the Schip exists)
+    appToday: +4 (only the Schip exists)
 
   - id: V13
     name: Verteidigungshaltung wanted in the middle of the round
     hero: { abilities: { SA_65: 1 } }
     round: { phase: after_first_action }
     expect:
-      not_offered: [{ choice: verteidigungshaltung, because: SA_65.VH1 }]
+      notOffered: [{ choice: verteidigungshaltung, because: SA_65.VH1 }]

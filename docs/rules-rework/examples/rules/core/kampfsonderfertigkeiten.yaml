@@ -19,8 +19,7 @@ clauses:
       Um den Kampf mit mehr Alternativen und Details zu versehen, werden sogenannte
       Kampfsonderfertigkeiten verwendet. Sie sind einzeln erlernbar, solange man die
       Voraussetzungen erfüllt und die notwendigen AP aufbringt.
-    effects: none
-    why: introduction; buying SF is the hero editor's, not a roll
+    none: introduction; buying SF is the hero editor's, not a roll
 
   - id: KS2
     text: >
@@ -69,7 +68,7 @@ clauses:
         # each SF's `manoeuvre.kind`; one without it is a gap in its file.
       - when: { manoeuvres: { excluded_by: any } }
         forbid: { combination: this }
-        tell: { hero: "<Manöver A> lässt sich nicht mit <Manöver B> kombinieren (<Quelle>)" }
+        tell: { to: player, text: "<Manöver A> lässt sich nicht mit <Manöver B> kombinieren (<Quelle>)" }
         # The rule is "one of each, unless a page says otherwise": SA_62.ST4 (Sturmangriff not
         # with Finte), SA_172.U3 (Unterlaufen with no Spezialmanöver without Verbessertes
         # Unterlaufen), passierschlag.PS3, reiterkampf.RK3, beidhaendiger-kampf's Basismanöver-only
@@ -84,8 +83,7 @@ clauses:
       Kampftechniken, für die die Sonderfertigkeit eingesetzt werden kann. Ist eine
       Sonderfertigkeit mit „alle“ versehen, so ist ihr Einsatz unabhängig von einer bestimmten
       Kampftechnik.
-    effects: none
-    why: >
+    none: >
       read as a use restriction ("für die die Sonderfertigkeit eingesetzt werden kann"), as the
       decided shared ruling sf-technique-lists has it: each SF's own list is gated in its file
       (`requires: loadout…technique`); one marked „alle“ is not.
@@ -96,5 +94,4 @@ clauses:
       Kampfsonderfertigkeiten, die nur eingesetzt werden können, wenn du mit einer passenden
       Fokusregel spielst, sind extra durch ein Fokusregel-Symbol hervorgehoben. Ein BK steht für
       Bewaffneten Kampfstil, ein WK für Waffenlosen Kampfstil.
-    effects: none
-    why: how the wiki marks SF; the Fokusregel switch is trefferzonen's and waffeneigenschaften's
+    none: how the wiki marks SF; the Fokusregel switch is trefferzonen's and waffeneigenschaften's

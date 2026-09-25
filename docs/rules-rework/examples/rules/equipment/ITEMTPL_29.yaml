@@ -36,14 +36,15 @@ clauses:
   - id: GR0
     text: "Großschild | TP 1W6+1 | L+S KK 16 | AT/PA-Mod -6/+3 | RW kurz | 6 Stein | 115 HF | 100 S | einf"
     effects:
-      - provides: { loadout.shield: stats }
+      - provide: { name: loadout.shield, value: stats }
         # What the PA-Mod does (doubled for a shield parry) is schilde's. Boronmir's KK 14 is
         # below the threshold: no Schadensbonus on a shield attack.
 
   - id: GR1
     text: "Anmerkung: großer Schild, 30 Strukturpunkte; zusätzlich -1 AT auf die Hauptwaffe"
     effects:
-      - provides: { loadout.shield.size: gross, loadout.shield.structurePoints: 30 }
+      - provide: { name: loadout.shield.size, value: gross }
+      - provide: { name: loadout.shield.structurePoints, value: 30 }
       - when: { loadout.shield: ITEMTPL_29, check: at, loadout.hand: main }
         add: { to: at, value: -1 }
         # Core (the Regelwerk's table note), not a Waffeneigenschaft: on without any Fokusregel.
@@ -55,7 +56,7 @@ clauses:
       Waffenvorteil: Bei der Abwehr von Pfeilen und Bolzen bekommt der Großschild einen Bonus
       von +1 PA (nach der Verdopplung des Schild-Paradebonus).
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften, defence: shieldParry, incoming: [pfeil, bolzen] }
+      - when: { rulesets: fokus.waffeneigenschaften, action.defence: shieldParry, incoming: [pfeil, bolzen] }
         add: { to: pa, value: 1 }
         ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
         # The app shows "+1 PA vs. Fernkampf" as the shield's note (OptolithImportService.
@@ -68,7 +69,7 @@ clauses:
       Trägers eines Großschildes immer zuerst zu. Führt der Gegner ebenfalls einen Großschild,
       kommen die normalen Regeln zur Reihenfolge des Handelns zum Tragen.
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften, ini.tie: opponent, opponent.shield: { not: Großschild } }
+      - when: { rulesets: fokus.waffeneigenschaften, ini.tie: opponent, opponent.shield: { not: Großschild } }
         tell: { order: opponent_first }
         ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
         # The app does not model the order of acting against a named opponent; a line on the
@@ -77,7 +78,7 @@ clauses:
   - id: GR4
     text: "Der Träger eines Großschilds erleidet einen Abzug von 1 auf GS."
     effects:
-      - when: { ruleset: fokus.waffeneigenschaften, loadout.shield: ITEMTPL_29 }
+      - when: { rulesets: fokus.waffeneigenschaften, loadout.shield: ITEMTPL_29 }
         add: { to: gs, value: -1 }
         ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
         # The carrier's GS. Mounted, reiterkampf reads the mount's GS (RK14, RK15), which this

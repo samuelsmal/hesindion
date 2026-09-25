@@ -11,7 +11,7 @@
     otherwise. Applies to both Sturmangriffe (SA_62 on foot, the mounted order in Reiterkampf).
   decided: { by: "@samuelsmal", date: 2026-09-23 }
   see: [docs/adr/0006-derived-value-rounding-and-repair.md]
-  applies_to: [SA_62.ST2, reiterkampf.RK14, regeneration.R6]
+  appliesTo: [SA_62.ST2, reiterkampf.RK14, regeneration.R6]
 
 - id: kampfstil-techniques
   status: decided
@@ -21,7 +21,7 @@
   answer: >
     Only while the hero fights with a listed technique (and weapon, where narrowed).
   decided: { by: "@samuelsmal", date: 2026-09-24 }
-  applies_to: [SA_661.GS1, SA_661.GS2, SA_661.GS3, SA_923.VS1, SA_923.VS2]
+  appliesTo: [SA_661.GS1, SA_661.GS2, SA_661.GS3, SA_923.VS1, SA_923.VS2]
   notes: >
     A style is a way of fighting with particular weapons; applying it with any weapon would make
     the narrowed lists meaningless. Golgariten-Stil applies with a Rabenschnabel, or a Großschild
@@ -39,7 +39,7 @@
   answer: >
     Any Stufe up to the owned one, chosen per attack.
   decided: { by: "@samuelsmal", date: 2026-09-24 }
-  applies_to: [SA_48.F1, SA_67.W1]
+  appliesTo: [SA_48.F1, SA_67.W1]
   notes: >
     The trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe would
     make a higher Stufe a handicap against strong defenders. Encoded as `tiers: up_to_owned`, and
@@ -59,7 +59,7 @@
     the player when a combination is excluded, and why, instead of hiding it.
   decided: { by: "@samuelsmal", date: 2026-09-24 }
   see: [https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html]
-  applies_to: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_59.SS1, SA_172.U3]
+  appliesTo: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_59.SS1, SA_172.U3]
   notes: >
     The app allows exactly one manoeuvre per attack today (CombatAttackViews.selectedManeuver, a
     single CombatManeuver). Finte + Wuchtschlag and Unterlaufen + Finte stay excluded (two
@@ -76,7 +76,7 @@
   answer: >
     Only with a listed technique; Raufen means unarmed. Not offered otherwise.
   decided: { by: "@samuelsmal", date: 2026-09-24 }
-  applies_to: [kampfsonderfertigkeiten.KS6, SA_48.F1, SA_48.F3, SA_67.W1, SA_67.W3, SA_62.ST1, SA_62.ST5, SA_66.V1, SA_66.V6, SA_59.SS1, SA_59.SS7, SA_172.U2, SA_172.U6, SA_42.BH1, SA_42.BH2, SA_65.VH2]
+  appliesTo: [kampfsonderfertigkeiten.KS6, SA_48.F1, SA_48.F3, SA_67.W1, SA_67.W3, SA_62.ST1, SA_62.ST5, SA_66.V1, SA_66.V6, SA_59.SS1, SA_59.SS7, SA_172.U2, SA_172.U6, SA_42.BH1, SA_42.BH2, SA_65.VH2]
   notes: >
     kampfsonderfertigkeiten.KS6 contrasts „alle" (Einsatz independent of a technique) with a
     list, and the Anmerkung on Finte, Beidhändiger Kampf and Verteidigungshaltung that later

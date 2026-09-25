@@ -20,7 +20,7 @@ clauses:
       keine Verteidigung genutzt werden darf. Erst danach beginnt die reguläre Kampfrunde.
     effects:
       - when: { opponent.state: ueberrascht, check: [at, fk] }
-        tell: { opponent: noDefence }
+        tell: { to: opponent, text: noDefence }
         # Opponent side, display only (ADR-0005): "Der Gegner darf sich nicht verteidigen."
       - when: { hero.state: ueberrascht }
         forbid: { defence: [pa, aw], until: surpriseActionResolved }
@@ -38,7 +38,7 @@ rulings:
       Parade and Ausweichen are disabled, with the reason, while Überrascht is set; the status
       clears when the regular Kampfrunde starts.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [UE1]
+    appliesTo: [UE1]
     notes: >
       The owner chose b and asked how the status gets set: yes, at the combat-setup screen. It
       already holds the fight's other opening facts as toggles (Plänkler-Formation, mounted,

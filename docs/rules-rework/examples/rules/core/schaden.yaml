@@ -27,7 +27,7 @@ clauses:
       restlichen Punkte erleidet das Ziel an Schadenspunkten, die von seinen Lebenspunkten
       abgezogen werden müssen.
     effects:
-      - when: { attack: hit }
+      - when: { action.attack: hit }
         roll: { value: tp, formula: "weapon.tp + tp.lines" }
         # The hero's side: the weapon's TP formula, then every TP line (S3's Schadensbonus,
         # Wuchtschlag, the grip, …), shown as one formula ("1W6+4 +1").
@@ -59,8 +59,7 @@ clauses:
       würfelt, erzielt er so 10 (5 + 5) Trefferpunkte. Hiervon wird nun der Rüstungsschutz von 4
       abgezogen, den Arboschs Kettenrüstung bereitstellt. Arbosch erleidet also 6 Schadenspunkte
       (10 - 4) und muss damit 6 Lebenspunkte von seiner Lebensenergie abziehen.
-    effects: none
-    why: >
+    none: >
       the page's worked example: S1's arithmetic (1W6+5 → 10 TP, − RS 4 = 6 SP, LE −6) after a
       shield parry (schilde.SCH3) under Belastung II (COND_1, −2) and a Sichtmodifikator (sicht,
       not written); a situation to write
@@ -69,16 +68,14 @@ clauses:
     text: |
       4. Schaden
       Jeder Kämpfer will natürlich vermeiden, vom Gegner verwundet zu werden. Aber manchmal halten die Götter einfach nicht die schützende Hand über ihn, oder die Würfel meinen es nicht gut. Dann erleidet der Kämpfer durch die Waffen seines Gegners Schaden.
-    effects: none
-    why: the heading and its narration before S2; nothing to compute
+    none: the heading and its narration before S2; nothing to compute
 
   - id: S2
     text: >
       Alle Waffen verfügen über sogenannte Trefferpunkte, die sie bei einem erfolgreichen Angriff
       verursachen. Diese werden ausgewürfelt und vom Ergebnis wird der Rüstungsschutz des
       Getroffenen abgezogen Was übrig bleibt, wird als Schadenspunkte von dessen LE abgezogen.
-    effects: none
-    why: S1 again, under "4. Schaden" (the page's missing full stop kept)
+    none: S1 again, under "4. Schaden" (the page's missing full stop kept)
 
   - id: S3
     page:
@@ -97,7 +94,7 @@ clauses:
       Schadensschwelle liegt. Sie erhält also 1 Punkt Schadensbonus, sodass sie nicht 1W6+3 TP
       anrichtet, sondern 1W6+4 TP.
     effects:
-      - when: { attack: hit, loadout.weapon.kind: melee }
+      - when: { action.attack: hit, loadout.weapon.kind: melee }
         add: { to: tp, value: "max(0, leit - weapon.schadensschwelle)" }
         # A line of its own: "Schadensbonus KK 16 über 14: +2". `leit` is the higher of the
         # weapon's Leiteigenschaften (S4), as for PA (kampfwerte.KW7: "wählen").
@@ -145,8 +142,7 @@ clauses:
       abhängig. Meist werden sie mit einem oder zwei W6 zuzüglich Zuschlägen ausgewürfelt. Von den
       Trefferpunkten wird der Rüstungsschutz abgezogen, die verbleibenden Schadenspunkte mindern
       die Lebensenergie. Oder kurz gesagt: TP – RS = SP.
-    effects: none
-    why: S1 as a formula
+    none: S1 as a formula
 
   - id: S7
     text: >
@@ -154,13 +150,12 @@ clauses:
       Das Gleiche geschieht, wenn man die Hälfte und Dreiviertel der Lebenspunkte verloren hat und
       wenn die Lebenspunkte auf 5 oder weniger sinken. Steigen die Lebenspunkte wieder über diese
       Begrenzungen, verschwindet damit auch die entsprechende Stufe Schmerz.
-    effects: none
-    why: COND_6 (Schmerz) encodes these thresholds; the schmerz example checks them
+    none: COND_6 (Schmerz) encodes these thresholds; the schmerz example checks them
 
   - id: S8
     text: Ab 0 Lebenspunkten liegt ein Held im Sterben.
     effects:
       - when: { le.current: { max: 0 } }
-        gain: { state: imSterben }
+        gain: { rule: imSterben }
         # The Sterben rule (what dying does, when the hero is dead) is not written yet; whether
         # LE below 0 matters is that rule's question (the app clamps LE at 0).

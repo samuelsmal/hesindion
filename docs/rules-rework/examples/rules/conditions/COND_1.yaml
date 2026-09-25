@@ -28,14 +28,12 @@ clauses:
       Bewegungsfreiheit einschränken. So lange diese Lasten getragen werden, erleidet die Person
       entsprechende Stufen an Belastung. Werden die Lasten abgelegt, verschwinden auch die
       Belastungsstufen.
-    effects: none
-    why: describes where the level comes from; see `level`
+    none: describes where the level comes from; see `level`
 
   - id: B2
     text: >
       Das Gewicht von Rüstungen wird bei der Berechnung von Belastung durch Traglast ignoriert.
-    effects: none
-    why: belongs to the Traglast rule, which is not written yet
+    none: belongs to the Traglast rule, which is not written yet
 
   - id: B3
     text: |
@@ -57,7 +55,7 @@ clauses:
         ruling: belastung-talents-maybe
         # "Belastung zählt", a toggle on the check screen of the seven talents the book marks
         # "evtl." (skill_details.encumbrance maybe); off unless the player turns it on.
-      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe, choice: belastungZaehlt }
+      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe, choice.belastungZaehlt: true }
         add: { to: check, value: -1, per: level }
         ruling: [belastung-reach, belastung-talents-maybe]
       - when: { level: [1, 3], check: [spell, liturgy] }
@@ -84,7 +82,7 @@ rulings:
     answer: >
       Every attack roll: AT and FK.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [B3]
+    appliesTo: [B3]
     notes: >
       Answered against the recommendation (melee AT only, as printed: neither this page nor the
       Fernkampf page names FK). The app already applies Belastung to ranged attacks
@@ -99,7 +97,7 @@ rulings:
       Talents that involve movement are hindered (riding is); knowledge and speaking talents
       (e.g. Überzeugen) are not. The talent groups are indicative. Casting is hindered.
     decided: { by: "@samuelsmal", date: 2026-09-23 }
-    applies_to: [B3]
+    appliesTo: [B3]
     notes: >
       Each talent's own entry in the book carries a Belastung flag (yes / no / maybe), which
       Optolith exports and rules.db holds as skill_details.encumbrance: 29 yes, 23 no, 7 maybe.
@@ -115,7 +113,7 @@ rulings:
     answer: >
       Ask at the check: a toggle 'Belastung zählt', off by default.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [B3]
+    appliesTo: [B3]
     notes: >
       The book marks them "evtl." on purpose — whether armour hinders depends on what the hero is
       doing (singing on a march vs. on a stage), and the player at the table knows. One toggle on

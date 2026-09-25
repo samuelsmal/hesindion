@@ -17,8 +17,7 @@ clauses:
     text: >
       Der Reiter hat die Möglichkeit im Reiterkampf spezielle Befehle zu erteilen,
       beispielsweise Niederreiten oder Sturmangriff zu Pferd.
-    effects: none
-    why: >
+    none: >
       The orders are defined in reiterkampf (RK13, RK14) and require this SF there. This clause
       is what they point to, so a player sees why the orders appear.
     enables: [reiterkampf.RK13, reiterkampf.RK14]
@@ -27,15 +26,12 @@ clauses:
 
   - id: BK2
     text: "Voraussetzungen: Reiten 10"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: BK3
     text: "Kampftechniken: alle"
-    effects: none
-    why: no weapon restriction on the orders
+    none: no weapon restriction on the orders
 
   - id: BK4
     text: "AP-Wert: 20 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost

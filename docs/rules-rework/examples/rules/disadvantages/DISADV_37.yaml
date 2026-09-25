@@ -52,8 +52,7 @@ clauses:
 
   - id: SE3
     text: Seine Schlechte Eigenschaft hat ihn so lange im Griff, wie er dem Auslöser ausgesetzt ist.
-    effects: none
-    why: >
+    none: >
       roleplay; the duration is the trigger's, which the GM ends. No state is set, so there is
       nothing to clear.
 
@@ -71,8 +70,7 @@ clauses:
       Es dürfen bis zu zwei Schlechte Eigenschaften pro Held gewählt werden. Kombinationen, die
       sich ausschließen (z. B. Geiz und Verschwendungssucht), dürfen nicht gewählt werden. Das
       letzte Wort darüber hat der Spielleiter.
-    effects: none
-    why: purchase legality, Optolith's to check; the app imports what the hero has
+    none: purchase legality, Optolith's to check; the app imports what the hero has
 
   - id: SE6
     text: |
@@ -97,21 +95,18 @@ clauses:
 
   - id: SE7
     text: "Voraussetzung: Keine"
-    effects: none
-    why: no prerequisite
+    none: no prerequisite
 
   - id: SE8
     text: "AP-Wert: je nach Schlechter Eigenschaft"
-    effects: none
-    why: cost, not a rule at the table (per Eigenschaft in SE6)
+    none: cost, not a rule at the table (per Eigenschaft in SE6)
 
   - id: SE9
     text: >
       Anmerkung: "Sikaryan-Durst" als weitere Ausgestaltung der "Schlechte Eigenschaft"
       eingeführt in: Aventurisches Bestiarium II, Seite 118 / Aventurisches Götterwirken II,
       Seite 182
-    effects: none
-    why: an editor's note on where SE6's last entry comes from
+    none: an editor's note on where SE6's last entry comes from
 
 rulings:
   - id: schlechte-eigenschaft-check
@@ -131,7 +126,7 @@ rulings:
       b: { says: "A hint on every Willenskraft check: 'Schlechte Eigenschaft (Autoritätsglaube): Probe zum Beherrschen'.", app: "a SkillCheckHint in TalentProbeModal for TAL_23, like Aufmerksamkeit's" }
       c: { says: "Text only: the sheet shows the rule; the player rolls Willenskraft from the talent list.", app: "as today" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       the check has a cause, and a check that carries its cause is what DISADV_57 and SA_40 already
       need (a check knows why it is rolled); starting from the disadvantage puts it where the
       player looks when the GM says "Autoritätsglaube!", and the log keeps the result. A hint on

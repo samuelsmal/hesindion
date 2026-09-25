@@ -21,8 +21,7 @@ clauses:
     text: >
       Ob gerade geweckt oder zu Boden geworfen, die Person befindet sich in liegender Position.
       Dies führt besonders im Kampf zu einigen Modifikationen.
-    effects: none
-    why: introduces the status
+    none: introduces the status
 
   - id: L2
     text: So lange die Person liegt, kann sie sich nur sehr langsam fortbewegen (GS 1).
@@ -32,7 +31,7 @@ clauses:
         # FORMAT: a value *set*, not a modifier. Handlungsunfähig sets GS 0; when both hold,
         # the lower set wins — the format needs an order for competing sets.
       - when: { side: opponent }
-        tell: { opponent: "GS 1" }
+        tell: { to: opponent, text: "GS 1" }
 
   - id: L3
     text: Ihre Verteidigung ist um 2 erschwert, ihre Angriffe um 4.
@@ -43,11 +42,11 @@ clauses:
         add: { to: [at, fk], value: -4 }
         ruling: liegend-attacks
       - when: { side: opponent }
-        opponent_add: { to: [pa, aw], value: -2 }
+        add: { to: [opponent.pa, opponent.aw], value: -2 }
         # Printed as the opponent's own calculation on the announcement and the damage screen;
         # the hero's AT does not change. The rules give the attacker nothing else for it.
       - when: { side: opponent }
-        tell: { opponent: "AT −4" }
+        tell: { to: opponent, text: "AT −4" }
         # The opponent's attack roll is not ours (ADR-0005); the hero's defence does not change.
 
   - id: L4
@@ -76,7 +75,7 @@ rulings:
     answer: >
       Every attack roll: melee AT and FK.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [L3]
+    appliesTo: [L3]
     notes: >
       The page says "Angriffe", not "AT". A prone hero shoots at FK −4; spells are not attacks in
       this sense. The app applies −4 to melee attacks only (catalog STATE_10, domain meleeAttack),
@@ -90,7 +89,7 @@ rulings:
     answer: >
       When the hero becomes Handlungsunfähig, a modal also asks whether the hero is now Liegend.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [L1, L2, L3, L4]
+    appliesTo: [L1, L2, L3, L4]
     notes: >
       Option b in the owner's words. The question comes whenever Handlungsunfähig starts, from
       whatever cause: set by hand, implied by Bewusstlos, or reached by a Zustand at Stufe IV

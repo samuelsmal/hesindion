@@ -60,7 +60,7 @@ clauses:
       inklusive Zielens). Ausgenommen hiervon sind Armbrüste, die, wenn sie einmal geladen sind,
       nur noch eine freie Aktion zum Bereitmachen benötigen.
     effects:
-      - when: { weapon.technique: CT_1, item.loaded: true }
+      - when: { loadout.weapon.technique: CT_1, item.loaded: true }
         requires: { costs: { freeAction: 1 }, before: { attack: ranged } }
         # A loaded crossbow stays loaded (it can be carried loaded); readying it is a free
         # action. Loading and Zielen may run as one länger dauernde Handlung ("eventuell
@@ -70,8 +70,7 @@ clauses:
     text: >
       Ist die Ladezeit größer als 1, gilt das Nachladen als länger dauernde Handlung (siehe Länger
       dauernde Handlungen).
-    effects: none
-    why: >
+    none: >
       carried by LZ2's process; what interrupts a länger dauernde Handlung is on a page not found
       on 2026-09-24 (fernkampf.zielen-interrupted asks the same for aiming)
 
@@ -81,7 +80,7 @@ clauses:
       Aktionen, ihn schussbereit zu machen. Dabei kann man keine anderen Aktionen als das Spannen
       ausführen.
     effects:
-      - when: { weapon.technique: CT_2, item.strung: false }
+      - when: { loadout.weapon.technique: CT_2, item.strung: false }
         process: { id: spannen, of: item, steps: 4, step: { costs: { action: 1 } }, exclusive: true, completes: { set: { item.strung: true } } }
         # Another item state (gespannt); "keine anderen Aktionen" — exclusive for its duration.
 
@@ -89,8 +88,7 @@ clauses:
     text: >
       Armbrüste neu zu bespannen ist eine Angelegenheit von mehreren Minuten und im Kampf daher
       meist sinnlos. Dies gilt als länger dauernde Handlung.
-    effects: none
-    why: minutes, outside combat time; shown as text
+    none: minutes, outside combat time; shown as text
 
   - id: LZ7
     text: >
@@ -105,5 +103,4 @@ clauses:
 
   - id: LZ8
     text: "Mögliche Wiederverwendung von Geschossen (Optionale Regel)"
-    effects: none
-    why: a link to an optional rule, not read
+    none: a link to an optional rule, not read

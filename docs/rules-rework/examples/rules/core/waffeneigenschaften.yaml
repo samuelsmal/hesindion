@@ -43,8 +43,7 @@ clauses:
       Diese Vor- und Nachteile wiegen sich auf, sodass die Waffe nicht besser oder schlechter
       wird. Aber durch die Waffeneigenschaften kommen die individuelleren Merkmale einer Waffe
       besser zur Geltung und dadurch wird das Spiel deutlich komplexer.
-    effects: none
-    why: design intent
+    none: design intent
 
 # Related, not a clause of this page: the Kampfregeln page's note that a Zweihandhiebwaffe or
 # Zweihandschwert used one-handed loses its Waffenvorteile under this Fokusregel

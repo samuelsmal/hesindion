@@ -16,8 +16,7 @@ reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 clauses:
   - id: VU1
     text: Ein Abenteurer kann mit dieser SF das Manöver Unterlaufen mit Spezialmanövern kombinieren.
-    effects: none
-    why: >
+    none: >
       it lifts SA_172.U3's exclusion; the lift is written there (`unless: { hero.has: SA_173 }`),
       so the exclusion and its exception are read in one place.
     lifts: [SA_172.U3]
@@ -26,19 +25,16 @@ clauses:
 
   - id: VU2
     text: "Voraussetzungen: Unterlaufen I"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: VU3
     text: >
       Kampftechniken: Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter,
       Zweihandhiebwaffen, Zweihandschwerter
-    effects: none
-    why: >
+    none: >
       the same list as SA_172.U6; the lift in U3 applies whenever Unterlaufen itself is usable,
       so this list needs no gate of its own (sf-technique-lists decides U6, not this).
 
   - id: VU4
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: purchase cost, not a roll
+    none: purchase cost, not a roll

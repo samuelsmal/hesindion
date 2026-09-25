@@ -29,10 +29,8 @@ clauses:
 
   - id: RT2
     text: "Voraussetzungen: Tier lässt sich reiten"
-    effects: none
-    why: purchase prerequisite of the animal
+    none: purchase prerequisite of the animal
 
   - id: RT3
     text: "AP-Wert: 15 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost

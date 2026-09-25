@@ -29,8 +29,7 @@ clauses:
       nur einen kleinen Teil einer Zone schützen. Allerdings kann es geschehen, dass ein Held
       keinen Helm trägt, dafür aber seine Lederrüstung mit Metallarmschienen kombiniert.
       Hierdurch weisen die verschiedenen Trefferzonen einen unterschiedlichen Rüstungsschutz auf.
-    effects: none
-    why: restates the core rule this Fokusregel replaces, and the case it is for
+    none: restates the core rule this Fokusregel replaces, and the case it is for
 
   # sic: "angegeben Preismultiplikator". One line per paragraph or bullet of the page.
   - id: RS2
@@ -71,8 +70,7 @@ clauses:
       unabhängig von einer Zone sind, gelten diese Effekte sobald eine einzige Zone damit belegt
       ist (beispielweise die Proben bei Kettenhemden treten auf, sobald auch nur eine Armzone mit
       einem Kettenhemd-Teil ausgestattet ist).
-    effects: none
-    why: >
+    none: >
       Rüstungseigenschaften (Rüstungsvor- und -nachteile, Aventurische Rüstkammer) are their own
       Fokusregel, not drafted, and the app has none. When they are drafted, a zone-bound property
       keys on `hit.zone` and a zone-independent one applies as soon as any one zone carries the
@@ -114,8 +112,7 @@ clauses:
       Arme | x 0,2
       Beine | x 0,2
       Kopf | x 0,1
-    effects: none
-    why: price and weight; its one sentence on BE changes nothing (ruling be-sentence)
+    none: price and weight; its one sentence on BE changes nothing (ruling be-sentence)
 
   # sic: the page's spacing ("125 S /2,5 Stn", "12, 5 Stn") is kept.
   - id: RS6
@@ -135,8 +132,7 @@ clauses:
       Spiegelpanzer | 175 S / 6,5 Stn | 70 S / 2,6 Stn | 70 S / 2,6 Stn | 35 S / 1,3 Stn
       Stoffrüstung | 37,5 S / 1,5 Stn | 15 S / 0,6 Stn | 15 S / 0,6 Stn | 7,5 S / 0,3 Stn
       Tuchrüstung | 37,5 S / 1,5 Stn | 15 S / 0,6 Stn | 15 S / 0,6 Stn | 7,5 S / 0,3 Stn
-    effects: none
-    why: price and weight — RS5's multipliers applied to each complete armour; nothing the app computes
+    none: price and weight — RS5's multipliers applied to each complete armour; nothing the app computes
 
 rulings:
   - id: requires-trefferzonen
@@ -147,7 +143,7 @@ rulings:
     answer: >
       It requires Trefferzonen: the switch is only offered while Trefferzonen is on.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [requires_ruleset]
+    appliesTo: [requires_ruleset]
     notes: >
       RS by zone only matters when a hit has a zone, which only the Trefferzonen-Regeln give; the
       page does not say so itself. The app has one Fokusregel switch today
@@ -163,7 +159,7 @@ rulings:
     answer: >
       BE comes only from RS4's RS-factor table; the sentence is about price and weight.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RS4, RS5]
+    appliesTo: [RS4, RS5]
     notes: >
       One computation, no rounding. RS4 already halves a single limb's share by counting left and
       right apart (×2 each), and agrees with the core table for every complete armour.
@@ -179,7 +175,7 @@ rulings:
       Yes: a zone piece of any armour counts as a Rüstungsteil for its zone; only the torso piece
       is 'the armour'.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [RS2, RS3]
+    appliesTo: [RS2, RS3]
     notes: >
       Each zone offers every armour type (RS6 prices every complete armour per zone so its parts
       can be bought on their own); "Rüstungen lassen sich … nicht kombinieren" limits the torso

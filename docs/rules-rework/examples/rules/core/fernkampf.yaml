@@ -24,8 +24,7 @@ clauses:
       Ein solcher Angriff läuft ähnlich ab wie beim Nahkampf. Auch hier ist ein Angriffswurf
       notwendig, und zwar auf den sogenannten Fernkampfwert. Ist die Probe erfolgreich, trifft
       das Geschoss sein Ziel.
-    effects: none
-    why: the FK check itself; its value is kampfwerte's (FK Basiswert)
+    none: the FK check itself; its value is kampfwerte's (FK Basiswert)
 
   - id: FK2
     text: >
@@ -265,8 +264,7 @@ clauses:
       Man kann in einer Kampfrunde genauso wie auf Nahkampfangriffe mehrmals auf Fernkampfangriffe reagieren, aber auch dies wird zunehmend schwerer: Die erste Parade mit dem Schild ist nicht zusätzlich erschwert. Jede weitere Parade in der laufenden Kampfrunde erhält jedoch eine Erschwernis von 3. Dies ist kumulativ, rechnet sich also auf. Das bedeutet, dass die erste Parade mit dem Schild nicht erschwert ist, der zweite um 3, der dritte um 6, der vierte um 9 usw.
       Ausweichen ist ebenfalls möglich und wird wie die Parade mit dem Schild zunehmend schwerer. Die Erschwernisse für die verschiedenen Verteidigungsarten sind kumulativ und werden bei einem Wechsel der Verteidigungsart übertragen. Hierbei ist es egal, ob die Erschwernisse durch Nah- oder Fernkampf entstanden sind.
       Zu Beginn einer neuen Kampfrunde sind diese Modifikatoren hinfällig.
-    effects: none
-    why: >
+    none: >
       mehrfache-verteidigung's counter, restated for ranged attacks: one counter per round over
       every defence, melee or ranged ("egal, ob … durch Nah- oder Fernkampf"). Damage is schaden's.
 
@@ -297,8 +295,7 @@ clauses:
     text: |
       Auch Schuss- und Wurfwaffen verursachen bei einem erfolgreichen Angriff Trefferpunkte. Wie immer werden diese ausgewürfelt und vom Ergebnis der Rüstungsschutz abgezogen. Was übrig bleibt, wird als Schadenspunkte von der Lebensenergie des Getroffenen abgezogen.
       Je näher ein Ziel ist, desto stärker wirkt die Wucht eines Geschosses auf es ein. Daher gilt: Fernkampfwaffen in der Reichweite nah verursachen +1 TP. Fernkampfwaffen in der Reichweite weit verursachen –1 TP.
-    effects: none
-    why: the TP half of FK5, restated; damage is schaden's
+    none: the TP half of FK5, restated; damage is schaden's
 
   - id: FK20
     text: >
@@ -306,8 +303,7 @@ clauses:
       Das Gleiche geschieht, wenn man die Hälfte und Dreiviertel der Lebenspunkte verloren hat und
       wenn die Lebenspunkte auf 5 oder weniger sinken. Ab 0 Lebenspunkten liegt ein Held im
       Sterben. Details über Zustände.
-    effects: none
-    why: COND_6.SZ3 and schaden, restated
+    none: COND_6.SZ3 and schaden, restated
 
 rulings:
   - id: range-input
@@ -325,7 +321,7 @@ rulings:
       a: { says: "Ask the distance in Schritt; the app shows the band it falls into for the weapon in hand, the player can override.", app: "a Schritt stepper; the band and its lines follow from the weapon's ranges; 'beyond' (FK4) appears past farRange" }
       b: { says: "Ask the band, as today, and show each band's Schritt for the weapon beside it.", app: "the picker gains the Schritt per band and a fourth option 'über Maximalreichweite'" }
     recommended: b
-    why_recommended: >
+    whyRecommended: >
       the GM usually says "about 40 Schritt" and the player knows their bow; showing the Schritt
       beside each band answers the question without a stepper, and keeps the one-tap default.
       Either way the band — not the distance — is the fact the rule reads
@@ -346,7 +342,7 @@ rulings:
       a: { says: "Step down: teilweise Deckung one size smaller, weitgehend two; the line says 'Deckung: gilt als …'.", app: "a cover picker (keine / teilweise / weitgehend); the size row shifts by one or two steps" }
       b: { says: "Replace: the player picks the size of the visible part directly.", app: "the cover picker becomes 'sichtbarer Teil' with the five sizes" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       it reproduces both of the page's examples for a human (bis zur Brust → klein, nur die
       Unterschenkel → winzig) and gives a sensible answer for an Oger or a goblin; the player
       answers one question about the cover, not a judgement about the size of a part
@@ -369,7 +365,7 @@ rulings:
       b: { says: "Only another action ends it; a defence does not.", app: "as a, but the defence screens leave it" }
       c: { says: "It is the player's to track; the picker stays.", app: "as today, with the rule cited on the line" }
     recommended: a
-    why_recommended: >
+    whyRecommended: >
       it makes the cost visible (the actions are spent) without guessing further than "bis zum
       eigentlichen Angriff" allows; b and c wait on the missing page. To be re-checked when the
       page is read

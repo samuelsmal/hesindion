@@ -22,7 +22,7 @@ clauses:
       Mit dieser Sonderfertigkeit kann man seinen Attackewert für die aktuelle Kampfrunde um +2
       erhöhen.
     effects:
-      - when: { choice: vorstoss }
+      - when: { choice.vorstoss: true }
         add: { to: at, value: 2 }
         ruling: sf-technique-lists
         # The Attackewert for the round. In practice that is the round's one attack: a double
@@ -34,7 +34,7 @@ clauses:
   - id: V2
     text: Dafür kann man diese Kampfrunde keine Verteidigung mehr ausführen.
     effects:
-      - when: { choice: vorstoss }
+      - when: { choice.vorstoss: true }
         forbid: { defence: [pa, aw], span: round }
         # Verteidigung: parry (weapon or shield) and dodge. The app does this today
         # (CombatRootView.defenseHardBlocked), from the moment the attack is announced.
@@ -59,15 +59,14 @@ clauses:
 
   - id: V5
     text: "Voraussetzungen: GE 13"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: V6
     text: >
       Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schwerter,
       Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
     effects:
-      - requires: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] }
+      - require: { that: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] } }
         ruling: sf-technique-lists
         # Not Schilde: under sf-technique-lists a, no Vorstoß for Boronmir's shield attack.
         # Fächer (CT_20) is one of the later additions V7 means; Optolith's SA_66 list lacks it.
@@ -77,11 +76,9 @@ clauses:
       Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
       hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
       Kampftechnik heranzuziehen.
-    effects: none
-    why: an editor's note on V6's list
+    none: an editor's note on V6's list
 
   - id: V8
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: purchase cost, not a roll
+    none: purchase cost, not a roll
 

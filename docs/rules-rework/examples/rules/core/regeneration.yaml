@@ -17,8 +17,7 @@ clauses:
     text: >
       Wenn ein Held Lebens-, Astral- und/oder Karmapunkte verloren hat, kann er in der nächsten
       Regenerationsphase versuchen, Punkte zurückzugewinnen.
-    effects: none
-    why: introduction
+    none: introduction
 
   - id: R2
     text: Eine Regenerationsphase ist eine Ruhe- und Schlafphase von mindestens 6 Stunden Dauer.
@@ -59,7 +58,7 @@ clauses:
     effects:
       - ask: { who: player, question: "Wie ist die Umgebung?", options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
       - when: { answer: "unruhig, nass oder kalt" }
-        halve: { value: regeneration.le, round: up }
+        multiply: { to: regeneration.le, by: 0.5, round: up }
         ruling: [round-up, ADV_44.vr-halving]
         # round-up (rules/rulings.yaml) is decided for every halving the rules do not settle.
       - when: { answer: "Sturm, auf ein Pferd gebunden" }
@@ -79,7 +78,7 @@ clauses:
         # chips ("keine normale Regeneration"), but the Regenerieren sheet does not read them.
         # The table (T1) says "keine LeP-Regeneration"; the text says no regeneration at all.
         # Only LeP matter for these examples, so the difference is left for an AsP/KaP example.
-      - tell: { player: "Heilkräuter wirken dennoch." }
+      - tell: { to: player, text: "Heilkräuter wirken dennoch." }
 
   - id: T1
     text: |

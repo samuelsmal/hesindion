@@ -2,7 +2,7 @@
 # A line that another rule lowered carries `was:` — the value before — so the breakdown can
 # show "Reichweite −4 → −2 (Unterlaufen I)".
 
-base_hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
+hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
 
 weapons:
   Dolch:   { technique: Dolche, reach: kurz }
@@ -20,7 +20,7 @@ situations:
     opponent: { reach: mittel }
     expect:
       at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
-    app_today: same
+    appToday: same
 
   - id: "RW.2"
     name: Dolch against a Speer
@@ -28,7 +28,7 @@ situations:
     opponent: { reach: lang }
     expect:
       at: { total: -4, lines: [{ value: -4, from: reichweite.RW3 }] }
-    app_today: same
+    appToday: same
 
   - id: "RW.3"
     name: Schwert against a Speer
@@ -36,7 +36,7 @@ situations:
     opponent: { reach: lang }
     expect:
       at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
-    app_today: same
+    appToday: same
 
   - id: "RW.4"
     name: Speer against a Dolch — the longer weapon gets nothing
@@ -44,7 +44,7 @@ situations:
     opponent: { reach: kurz }
     expect:
       at: { total: 0 }
-    app_today: same
+    appToday: same
 
   - id: "RW.5"
     name: Bare hands against a Schwert
@@ -52,7 +52,7 @@ situations:
     opponent: { reach: mittel }
     expect:
       at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
-    app_today: same
+    appToday: same
 
   - id: "RW.6"
     name: Parrying with a Dolch against a Speer — reach costs AT only
@@ -61,7 +61,7 @@ situations:
     check: pa
     expect:
       pa: { total: 0 }
-    app_today: same
+    appToday: same
 
   # --- Unterlaufen (SA_172) ----------------------------------------------------------------
 
@@ -74,7 +74,7 @@ situations:
       offered: [{ manoeuvre: unterlaufen, from: SA_172.U2, ruling: sf-technique-lists }]   # Dolche is on U6's list
       at: { total: -2, lines: [{ value: -2, was: -4, from: reichweite.RW3, via: [SA_172.U1] }] }
       on_miss: { tell: [{ opponent: passierschlag, from: SA_172.U2 }] }
-    app_today: Unterlaufen is not implemented; AT −4
+    appToday: Unterlaufen is not implemented; AT −4
 
   - id: "RW.8"
     name: Dolch against a Speer, Unterlaufen II — both steps ignored
@@ -83,7 +83,7 @@ situations:
     choose: { manoeuvre: unterlaufen }
     expect:
       at: { total: 0, lines: [{ value: 0, was: -4, from: reichweite.RW3, via: [SA_172.U1] }] }
-    app_today: AT −4
+    appToday: AT −4
 
   - id: "RW.9"
     name: Schwert against a Speer, Unterlaufen I
@@ -92,14 +92,14 @@ situations:
     choose: { manoeuvre: unterlaufen }
     expect:
       at: { total: 0, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }] }
-    app_today: AT −2
+    appToday: AT −2
 
   - id: "RW.10"
     name: Dolch against a Dolch — nothing to unterlaufen
     hero: { loadout: { weapon: Dolch }, abilities: { SA_172: 1 } }
     opponent: { reach: kurz }
     expect:
-      not_offered: [{ manoeuvre: unterlaufen, because: SA_172.U2 }]
+      notOffered: [{ manoeuvre: unterlaufen, because: SA_172.U2 }]
 
   - id: "RW.11"
     name: Unterlaufen only for the announced attack
@@ -120,7 +120,7 @@ situations:
         lines:
           - { value: 0, was: -4, from: reichweite.RW3, via: [SA_172.U1] }
           - { value: -2, from: SA_152.AD1, ruling: SA_172.auf-distanz-halten }
-    app_today: Unterlaufen and Auf Distanz halten do not exist; AT −4
+    appToday: Unterlaufen and Auf Distanz halten do not exist; AT −4
 
   # --- Combining (SA_172.U3, SA_173) -------------------------------------------------------
 

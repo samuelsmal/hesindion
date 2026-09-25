@@ -49,15 +49,12 @@ clauses:
 
   - id: GS4
     text: "Erweiterte Kampfsonderfertigkeiten: Frontalangriff, Mächtiger Rundumschlag, Schildstoß"
-    effects: none
-    why: unlocks purchases, not a roll
+    none: unlocks purchases, not a roll
 
   - id: GS5
     text: "Voraussetzungen: MU 13"
-    effects: none
-    why: purchase prerequisite, not a roll
+    none: purchase prerequisite, not a roll
 
   - id: GS6
     text: "AP-Wert: 10 Abenteuerpunkte"
-    effects: none
-    why: cost
+    none: cost

@@ -21,8 +21,8 @@
 # +2 AT (Rabenschnabel) and +1 PA, dodge −2 (reiterkampf 5.6).
 # `total` is the sum of the lines; `result` is the value on the check, from the base above.
 
-hero_file: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
-base_hero:
+heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+hero:
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1 }
   added_for_this_example: { SA_48: 1, SA_59: 1, SA_66: 1, SA_884: 1 }   # dropped on 2026-09-24
   armour: [Plattenrüstung]
@@ -46,14 +46,14 @@ situations:
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
       not_allowed:
         - { defence: [pa, aw], until: round_end, because: SA_66.V2 }
-    app_today: same, when the attack is the hero's first act of the round
+    appToday: same, when the attack is the hero's first act of the round
 
   - id: "14.2"
     name: Vorstoß after Boronmir has already parried this round
     round: { parries_so_far: 1 }
     expect:
-      not_offered: [{ choice: vorstoss, because: SA_66.V3 }]
-    app_today: >
+      notOffered: [{ choice: vorstoss, because: SA_66.V3 }]
+    appToday: >
       offered on the attack's announcement, at any point in the round; AT +2 and the defences
       are blocked only from then on (CombatAttackViews.availableManeuvers, proceed())
 
@@ -61,23 +61,23 @@ situations:
     name: Vorstoß while Liegend
     hero: { states: [STATE_10] }
     expect:
-      not_offered: [{ choice: vorstoss, because: SA_66.V4 }]
-    app_today: offered (availableManeuvers does not look at hero.isLiegend)
+      notOffered: [{ choice: vorstoss, because: SA_66.V4 }]
+    appToday: offered (availableManeuvers does not look at hero.isLiegend)
 
   - id: "14.4"
     name: Vorstoß for an attack with the Großschild (Schilde — not on the list)
     loadout: { weapon: Großschild }
     expect:
-      not_offered: [{ manoeuvre: vorstoss, because: SA_66.V6, ruling: sf-technique-lists }]
-    app_today: offered — no manoeuvre checks the technique — wrong
+      notOffered: [{ manoeuvre: vorstoss, because: SA_66.V6, ruling: sf-technique-lists }]
+    appToday: offered — no manoeuvre checks the technique — wrong
 
   - id: "14.5"
     name: Vorstoß on horseback
     hero: { mounted: true }
     expect:
-      not_offered:
+      notOffered:
         - { choice: vorstoss, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
-    app_today: offered — wrong (reiterkampf 5.9)
+    appToday: offered — wrong (reiterkampf 5.9)
 
   - id: "14.6"
     name: Vorstoß round, then a Passierschlag at a foe leaving reach
@@ -89,11 +89,11 @@ situations:
         lines:
           - { value: -4, from: passierschlag.PS2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
-        not_applied:
+        notApplied:
           - { rule: SA_66, reason: "a Passierschlag combines with no Kampfsonderfertigkeit (passierschlag.PS3)" }
       # Vorstoß is a manoeuvre, excluded from a Passierschlag (ruling passierschlag.passierschlag-sf).
       # The defences stay gone for the round (SA_66.V2).
-    app_today: same (PassierschlagRoll sets maneuver .passierschlag)
+    appToday: same (PassierschlagRoll sets maneuver .passierschlag)
 
   - id: "14.7"
     name: Vorstoß and Wuchtschlag I on the same attack
@@ -101,7 +101,7 @@ situations:
     expect:
       combinable: [{ manoeuvres: [vorstoss, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
       # AT +2 −2 −1 = −1 (result 15), TP 1W6+4 +2
-    app_today: one manoeuvre per attack — Vorstoß or Wuchtschlag
+    appToday: one manoeuvre per attack — Vorstoß or Wuchtschlag
 
   # --- Schildspalter (SA_59) -----------------------------------------------------------------
 
@@ -120,7 +120,7 @@ situations:
         - { opponent: "Schildparade ohne Parade-Bonus des Schildes", from: SA_59.SS2 }
       on_hit:
         tp: { formula: "1W6+4", to: opponent.shield.structurePoints, from: SA_59.SS3 }
-    app_today: >
+    appToday: >
       offered, AT unchanged; the note says only "Schaden gegen Schild-SP" — the limits on the
       opponent's defence are not told (CombatManeuver.infoText)
 
@@ -128,25 +128,25 @@ situations:
     name: Schildspalter against a fighter without a shield
     opponent: { hasShield: false }
     expect:
-      not_offered: [{ manoeuvre: schildspalter, because: SA_59.SS4 }]
-    app_today: offered — the app never asks whether the opponent carries a shield (OpponentProfile)
+      notOffered: [{ manoeuvre: schildspalter, because: SA_59.SS4 }]
+    appToday: offered — the app never asks whether the opponent carries a shield (OpponentProfile)
 
   - id: "14.10"
     name: Schildspalter with the Langschwert (Schwerter — not on the list)
     loadout: { weapon: Langschwert }
     opponent: { hasShield: true }
     expect:
-      not_offered: [{ manoeuvre: schildspalter, because: SA_59.SS7, ruling: sf-technique-lists }]
-    app_today: offered — wrong
+      notOffered: [{ manoeuvre: schildspalter, because: SA_59.SS7, ruling: sf-technique-lists }]
+    appToday: offered — wrong
 
   - id: "14.11"
     name: Schildspalter on horseback
     hero: { mounted: true }
     opponent: { hasShield: true, onFoot: true }
     expect:
-      not_offered:
+      notOffered:
         - { manoeuvre: schildspalter, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
-    app_today: offered — wrong (reiterkampf 5.9)
+    appToday: offered — wrong (reiterkampf 5.9)
 
   - id: "14.12"
     name: Schildspalter with Wuchtschlag I (its prerequisite)
@@ -155,14 +155,14 @@ situations:
     expect:
       combinable: [{ manoeuvres: [schildspalter, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
       # AT −2 (SA_67.W1) −1 (Belastung) = −3, result 13; 1W6+4 +2 TP to the shield's StP
-    app_today: one manoeuvre per attack
+    appToday: one manoeuvre per attack
 
   - id: "14.13"
     name: An opponent's Schildspalter at Boronmir's Großschild, on foot
     opponent: { manoeuvre: schildspalter }
     expect:
       not_allowed: [{ defence: weaponParry, because: SA_59.SS1 }]
-      shield_parry:
+      "pa(with: shield)":
         total: -7
         result: 6
         lines:
@@ -173,7 +173,7 @@ situations:
         damage: { to: loadout.shield.structurePoints, from: SA_59.SS3, ruling: SA_59.schildspalter-against-hero }
         # the TP come off the Großschild's current StP (30 when whole), not Boronmir's LeP; at 0
         # the shield is destroyed and leaves the loadout
-    app_today: >
+    appToday: >
       the app cannot be told: weapon parry 11 − 1 and the full shield parry 13 − 1 are offered,
       and the damage goes to Boronmir's LeP. The shield's StP are never reduced.
 
@@ -189,7 +189,7 @@ situations:
         lines: [{ value: 2, from: SA_40.A1, ruling: SA_40.aufmerksamkeit-when }]
         # the toggle on. Belastung: off unless the player turns on the "Belastung zählt" toggle
         # (COND_1.belastung-talents-maybe); with it, −1 more.
-    app_today: >
+    appToday: >
       the hint "Aufmerksamkeit: +2 auf Überraschung vermeiden"; the value is unchanged
       (TalentProbeModal.hints, catalog SA_40 byHand)
 
@@ -197,15 +197,15 @@ situations:
     name: Sinnesschärfe to find a hidden clue — no ambush
     check: { talent: TAL_10, application: Suchen }
     expect:
-      check: { total: 0, not_applied: [{ rule: SA_40, reason: "no ambush and no surprise (SA_40.A1)", ruling: SA_40.aufmerksamkeit-when }] }
+      check: { total: 0, notApplied: [{ rule: SA_40, reason: "no ambush and no surprise (SA_40.A1)", ruling: SA_40.aufmerksamkeit-when }] }
       # the Hinterhalt / Überraschung toggle is offered and stays off
-    app_today: the same hint is shown on every Sinnesschärfe check
+    appToday: the same hint is shown on every Sinnesschärfe check
 
   # --- Plänkler-Formation (SA_884) -----------------------------------------------------------
 
   - id: "14.16"
     name: In a Plänkler-Formation on foot, the line takes +1 AT
-    choose: { plaenklerFormation: true, bonus: at }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at }
     expect:
       at:
         total: 0
@@ -214,27 +214,27 @@ situations:
           - { value: 1, from: SA_884.P2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
       pa: { total: -1, result: 10 }
-    app_today: same
+    appToday: same
 
   - id: "14.17"
     name: In a Plänkler-Formation on foot, the line takes +1 VW — weapon parry, shield parry, dodge
-    choose: { plaenklerFormation: true, bonus: vw }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: vw }
     expect:
       pa:            { total: 0, result: 11, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
-      shield_parry:  { total: 0, result: 13, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      "pa(with: shield)":  { total: 0, result: 13, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       aw:            { total: 0, result: 7,  lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       at:            { total: -1, result: 15 }
-    app_today: same
+    appToday: same
 
   - id: "14.18"
     name: A companion without the SF, standing in Boronmir's line (Formation, its larger sibling, in 19.3)
     hero: { abilities: {} }          # any hero without SA_884
     ally: { has: SA_884 }
-    choose: { plaenklerFormation: true, bonus: at }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at }
     expect:
       offered: [{ choice: plaenklerFormation, from: SA_884.P4 }]
       at: { lines: [{ value: 1, from: SA_884.P2, via: [SA_884.P4] }] }
-    app_today: >
+    appToday: >
       not offered — the setup toggle is shown only to a hero with the SF
       (CombatSetupView, hero.hasPlaenklerFormation; the catalog note on SA_884 says so)
 
@@ -242,23 +242,23 @@ situations:
     name: Plänkler-Formation on Kupperus, against foot fighters, Rabenschnabel
     hero: { mounted: true }
     opponent: { onFoot: true }
-    choose: { plaenklerFormation: true, bonus: at }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at }
     expect:
-      not_offered: [{ choice: plaenklerFormation, because: SA_884.P1, ruling: SA_884.plaenkler-mounted }]
+      notOffered: [{ choice: plaenklerFormation, because: SA_884.P1, ruling: SA_884.plaenkler-mounted }]
       at:
         total: 4
         result: 20
         # +2 VP1 via RK2, +2 SA_661.GS1; Belastung I is none for Kampfproben mounted (RK7); the
         # toggle is off with the reason. Formation mounted: 19.4
-        not_applied: [{ rule: SA_884, reason: "not while mounted (SA_884.P1, ruling plaenkler-mounted)" }]
-    app_today: +1 AT on top, 21 (the bonus ignores whether the hero is mounted) — wrong
+        notApplied: [{ rule: SA_884, reason: "not while mounted (SA_884.P1, ruling plaenkler-mounted)" }]
+    appToday: +1 AT on top, 21 (the bonus ignores whether the hero is mounted) — wrong
 
   - id: "14.20"
     name: The line breaks up mid-fight
-    choose: { plaenklerFormation: true, bonus: vw, then: { plaenklerFormation: false } }
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: vw, then: { plaenklerFormation: false } }
     expect:
-      pa: { total: -1, result: 10, not_applied: [{ rule: SA_884, reason: "no longer in formation (SA_884.P1)" }] }
-    app_today: >
+      pa: { total: -1, result: 10, notApplied: [{ rule: SA_884, reason: "no longer in formation (SA_884.P1)" }] }
+    appToday: >
       cannot be turned off: the formation is chosen once, at combat setup (CombatSetupView), and
       the combat screens receive it read-only (CombatRootView.plaenklerActive)
 
@@ -273,4 +273,4 @@ situations:
           - { value: 2, from: SA_66.V1 }
           - { value: 1, from: SA_884.P2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
-    app_today: same, when the attack is the hero's first act of the round
+    appToday: same, when the attack is the hero's first act of the round

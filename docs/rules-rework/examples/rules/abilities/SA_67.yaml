@@ -3,7 +3,7 @@ id: SA_67
 name: Wuchtschlag
 kind: specialAbility
 group: Kampfsonderfertigkeiten
-tiers: 3
+levels: 3
 manoeuvre: { kind: basismanoever }
 source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Wuchtschlag.html
@@ -23,22 +23,21 @@ clauses:
           manoeuvre: wuchtschlag
           tiers: up_to_owned           # any Stufe up to the owned one, chosen per attack
           ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
-      - when: { manoeuvre: wuchtschlag }
+      - when: { action.manoeuvre: wuchtschlag }
         add: { to: at, value: -2, per: chosen_tier }
-      - when: { manoeuvre: wuchtschlag, attack: hit }
+      - when: { action.manoeuvre: wuchtschlag, action.attack: hit }
         add: { to: tp, value: 2, per: chosen_tier }
 
   - id: W2
     text: "Erschwernis: -2/-4/-6"
-    effects: none
-    why: restates W1's AT cost per Stufe
+    none: restates W1's AT cost per Stufe
 
   - id: W3
     text: >
       Kampftechniken: Hiebwaffen, Kettenwaffen, Raufen, Schwerter, Stangenwaffen,
       Zweihandhiebwaffen, Zweihandschwerter
     effects:
-      - requires: { loadout.weapon.technique: [CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] }
+      - require: { that: { loadout.weapon.technique: [CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] } }
         ruling: sf-technique-lists
         # Raufen is unarmed: the "weapon" is the hero's fists, which the loadout has no row for
         # today (catalog note on SA_67, issue #14).
@@ -47,10 +46,8 @@ clauses:
     text: >
       Voraussetzungen: Stufe I: KK 13; Stufe II: KK 15, Wuchtschlag I; Stufe III: KK 17,
       Wuchtschlag II
-    effects: none
-    why: purchase prerequisites, not a roll
+    none: purchase prerequisites, not a roll
 
   - id: W5
     text: "AP-Wert: Stufe I/II/III: 15/20/25 Abenteuerpunkte"
-    effects: none
-    why: purchase cost, not a roll
+    none: purchase cost, not a roll

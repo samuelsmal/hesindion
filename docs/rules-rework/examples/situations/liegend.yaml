@@ -1,7 +1,7 @@
 # Example 7 — Liegend. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # `opponent_lines` are printed as the opponent's own calculation; the hero's values do not move.
 
-base_hero: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 }
+hero: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 }
 
 situations:
 
@@ -13,7 +13,7 @@ situations:
       pa: { total: -2, lines: [{ value: -2, from: STATE_10.L3 }] }
       aw: { total: -2, lines: [{ value: -2, from: STATE_10.L3 }] }
       gs: { set: 1, from: STATE_10.L2 }
-    app_today: same (AT/PA/AW from the catalog's STATE_10, GS from Hero.effectiveGeschwindigkeit)
+    appToday: same (AT/PA/AW from the catalog's STATE_10, GS from Hero.effectiveGeschwindigkeit)
 
   - id: "7.2"
     name: The hero shoots from the ground
@@ -21,7 +21,7 @@ situations:
     check: { fk: true }
     expect:
       fk: { total: -4, lines: [{ value: -4, from: STATE_10.L3, ruling: STATE_10.liegend-attacks }] }
-    app_today: 0 — the catalog's STATE_10 reaches melee attacks only (domain meleeAttack)
+    appToday: 0 — the catalog's STATE_10 reaches melee attacks only (domain meleeAttack)
 
   - id: "7.3"
     name: The hero attacks an opponent who lies on the ground
@@ -31,7 +31,7 @@ situations:
       opponent_lines:
         defence: { total: -2, lines: [{ value: -2, from: STATE_10.L3, side: opponent }] }
       told: [{ opponent: "AT −4", from: STATE_10.L3 }, { opponent: "GS 1", from: STATE_10.L2 }]
-    app_today: the −2 opponent line, printed on the announcement and the damage screen; nothing told about their AT or GS
+    appToday: the −2 opponent line, printed on the announcement and the damage screen; nothing told about their AT or GS
 
   - id: "7.4"
     name: The hero is Bewusstlos
@@ -43,7 +43,7 @@ situations:
       actions: none
       defences: none
       gs: { set: 0, from: handlungsunfaehig }             # the Handlungsunfähig page: GS 0
-    app_today: >
+    appToday: >
       Liegend always implied, never asked (StateCatalog: implies ["liegend"]); GS 1 — wrong
       (Handlungsunfähig sets GS 0, Hero.effectiveGeschwindigkeit only knows Liegend)
 
@@ -55,7 +55,7 @@ situations:
         handlungsunfaehig: { from: COND_6 }
         STATE_10: { asked: "Liegt der Held?", from: handlungsunfaehig, ruling: STATE_10.handlungsunfaehig-liegend }
       gs: { set: 0, from: handlungsunfaehig }
-    app_today: >
+    appToday: >
       Handlungsunfähig, but only via Hero.isHandlungsunfaehigFromZustaende — nothing asks about
       Liegend and nothing implies it (impliedStateIDs reads only states that are *set*); GS stays 8
 
@@ -68,7 +68,7 @@ situations:
       offered: [{ action: aufstehen, from: STATE_10.L4, costs: action }]
       after: { states: { STATE_10: removed } }
       told: [{ opponent: passierschlag, from: STATE_10.L4 }]
-    app_today: no stand-up action; the player removes Liegend by hand
+    appToday: no stand-up action; the player removes Liegend by hand
 
   - id: "7.7"
     name: Standing up, Körperbeherrschung succeeds
@@ -90,4 +90,4 @@ situations:
           - { value: -3, from: COND_1.B3 }
           - { value: -3, from: COND_6 }
           - { value: 1, from: GRW_zustandsbegrenzung }      # Zustände −6 capped at −5; see example 4
-    app_today: same total (ModifierEngine.applyingZustandCap; Liegend is not tagged isZustand)
+    appToday: same total (ModifierEngine.applyingZustandCap; Liegend is not tagged isZustand)

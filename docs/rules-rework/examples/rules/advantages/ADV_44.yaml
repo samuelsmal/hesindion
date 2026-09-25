@@ -2,7 +2,7 @@
 id: ADV_44
 name: Verbesserte Regeneration (Lebensenergie)
 kind: advantage
-tiers: 3
+levels: 3
 source:
   url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Verbesserte%20Regeneration%20(Lebensenergie)%20I-III
   book: Regelwerk
@@ -28,13 +28,11 @@ clauses:
 
   - id: VR2
     text: "Voraussetzung: Kein Nachteil Schlechte Regeneration (Lebensenergie)"
-    effects: none
-    why: purchase prerequisite, not a rule at the table
+    none: purchase prerequisite, not a rule at the table
 
   - id: VR3
     text: "AP-Wert: 10 Abenteuerpunkte (pro Stufe)"
-    effects: none
-    why: cost, not a rule at the table
+    none: cost, not a rule at the table
 
 rulings:
   - id: vr-scope
@@ -46,7 +44,7 @@ rulings:
     answer: >
       Only in a Regenerationsphase, once per phase (so up to twice a day).
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [VR1]
+    appliesTo: [VR1]
     notes: >
       "Regenerieren" is the Regeneration chapter's term for the 1W6 per Regenerationsphase;
       potions and spells "heilen" and state their own amounts. The app already does this: the
@@ -61,7 +59,7 @@ rulings:
     answer: >
       Halve the whole result: (1W6 + modifiers + Verbesserte Regeneration) / 2, rounded up.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    applies_to: [VR1, regeneration.R6]
+    appliesTo: [VR1, regeneration.R6]
     notes: >
       The page halves "die Regeneration", the result after every modifier; the advantage is one
       more Bonus in that sum. Boronmir (Stufe II) rolling 3 in a wet camp regains
