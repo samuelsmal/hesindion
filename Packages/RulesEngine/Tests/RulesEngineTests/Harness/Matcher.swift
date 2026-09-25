@@ -490,7 +490,7 @@ enum Matcher {
         let entries = breakdowns.flatMap(\.notApplied)
         for (key, wanted) in [("offered", true), ("notOffered", false)] {
             for entry in list(key) ?? [] {
-                if let m = offer(entry, wanted: wanted, in: pool, notApplied: entries, offering: offering) { c.mismatches.append(m) }
+                c.mismatches += offer(entry, wanted: wanted, in: pool, notApplied: entries, offering: offering)
             }
         }
         if es["notApplied"] != nil, !needsQuery("notApplied") {
@@ -532,14 +532,86 @@ enum Matcher {
     /// whose refusals hold the `because` (by origin or text) and rest on the `ruling`; or, for an
     /// offer that is not there, a `suppressed` entry on its offering clause whose suppressor is
     /// the `because`. When neither can be found the case cannot be decided: an unsupported shape.
+    /// The `offered` fields `OfferedChoice` models (R47); every other field is an unsupported shape.
+    static let offeredFields: Set<String> = ["choice", "from", "ruling", "options", "max", "costs", "via"]
+    static let notOfferedFields: Set<String> = ["choice", "from", "because", "ruling"]
+
     static func offer(_ entry: JSONValue, wanted: Bool, in pool: [OfferedChoice], notApplied: [NotApplied],
-                      offering: [String: [ClauseRef]]) -> Mismatch? {
+                      offering: [String: [ClauseRef]]) -> [Mismatch] {
         let key = wanted ? "offered" : "notOffered"
         guard case .object(let o) = entry, let choice = o["choice"]?.string else {
-            return .shape("offer without a choice", "\(key) entry without a choice \(entry.objectValue.map { $0.keys.sorted() } ?? []) is the action layer's")
+            return [.shape("offer without a choice", "\(key) entry without a choice \(entry.objectValue.map { $0.keys.sorted() } ?? []) is the action layer's")]
         }
-        if let f = o["from"], f.string == nil { return .shape("malformed offer", "\(key) \(choice): from \(f) is not a string") }
-        if let b = o["because"], b.string == nil { return .shape("malformed offer", "\(key) \(choice): because \(b) is not a string") }
+        if let f = o["from"], f.string == nil { return [.shape("malformed offer", "\(key) \(choice): from \(f) is not a string")] }
+        if let b = o["because"], b.string == nil { return [.shape("malformed offer", "\(key) \(choice): because \(b) is not a string")] }
+        // R47: never ignore a field.
+        let shapes = o.keys.sorted().filter { !(wanted ? offeredFields : notOfferedFields).contains($0) }
+            .map { Mismatch.shape("\(key) field \($0)", "\(key) \(choice): field \($0) \(o[$0]!) is not modelled") }
+        return shapes + (offerFindings(o, choice: choice, wanted: wanted, in: pool, notApplied: notApplied, offering: offering)
+            .map { [$0] } ?? [])
+    }
+
+    /// The expected `costs` as (pool, amount): `action`, `{action: 1}`, `{freeAction: 1}`, or a
+    /// pool name (`{asp: 2}`). nil when malformed.
+    static func costs(_ json: JSONValue) -> [(Pool, Int)]? {
+        func pool(_ k: String) -> Pool? {
+            switch k {
+            case "action": .actions
+            case "freeAction": .freeActions
+            default: Pool(rawValue: k)
+            }
+        }
+        switch json {
+        case .string(let k): return pool(k).map { [($0, 1)] }
+        case .object(let o):
+            let out = o.keys.sorted().compactMap { k -> (Pool, Int)? in
+                guard let p = pool(k), let n = o[k]?.int else { return nil }
+                return (p, n)
+            }
+            return out.count == o.count ? out : nil
+        default: return nil
+        }
+    }
+
+    /// The modelled `offered` fields an offer does not meet (R47): `ruling` (in its rulings),
+    /// `options` (each listed and not refused), `max`, `via` (each in its via) and `costs`
+    /// (each a `cost` of that pool and constant amount). nil entries are malformed fields.
+    static func offerFailures(_ o: [String: JSONValue], _ c: OfferedChoice) -> [String] {
+        var out: [String] = []
+        if let r = o["ruling"].map(strings), !r.allSatisfy({ rulingMatches($0, c.rulings) }) {
+            out.append("ruling \(r) (offer rulings \(c.rulings))")
+        }
+        if let raw = o["options"] {
+            let want = (raw.arrayValue ?? [raw]).compactMap(text)
+            let have = (c.options ?? []).compactMap(text), refused = c.refused.compactMap { text($0.option) }
+            if !want.allSatisfy({ have.contains($0) && !refused.contains($0) }) {
+                out.append("options \(want) (offer options \(have), refused \(refused))")
+            }
+        }
+        if let m = o["max"], m.int != c.max { out.append("max \(m) (offer max \(c.max.map(String.init) ?? "none"))") }
+        if let via = o["via"].map(strings), !Set(via).isSubset(of: c.via.map(\.description)) {
+            out.append("via \(via) (offer via \(c.via.map(\.description)))")
+        }
+        if let raw = o["costs"] {
+            let have: [(Pool, Int?)] = c.costs.compactMap {
+                guard case .cost(let k) = $0.payload else { return nil }
+                if case .number(let n) = k.amount { return (k.pool, Int(exactly: n)) }
+                return (k.pool, nil)
+            }
+            let want = costs(raw) ?? []
+            if !want.allSatisfy({ w in have.contains { $0.0 == w.0 && $0.1 == w.1 } }) {
+                out.append("costs \(raw) (offer costs \(have.map { "\($0.0.rawValue) \($0.1.map(String.init) ?? "?")" }))")
+            }
+        }
+        return out
+    }
+
+    static func offerFindings(_ o: [String: JSONValue], choice: String, wanted: Bool, in pool: [OfferedChoice],
+                              notApplied: [NotApplied], offering: [String: [ClauseRef]]) -> Mismatch? {
+        if let raw = o["costs"], costs(raw) == nil {
+            return .shape("malformed offer", "offered \(choice): costs \(raw) is no pool and amount")
+        }
+        if let m = o["max"], m.int == nil { return .shape("malformed offer", "offered \(choice): max \(m) is not a number") }
         let from = o["from"]?.string, because = o["because"]?.string, ruling = o["ruling"].map(strings)
         let names = [from, because].compactMap { $0 } + (ruling ?? [])
         func origin(_ c: OfferedChoice) -> Bool { from == nil || c.origin.description == from }
@@ -563,7 +635,17 @@ enum Matcher {
                             detail: "expected \(choice)\(from.map { " from \($0)" } ?? "") \(wanted ? "offered" : "not offered"), got \(got)",
                             names: names)
         }
-        guard !wanted, because != nil || ruling != nil else { return nil }
+        if wanted {
+            // R47: some legal offer (for `C.O`, one allowing O) meets every modelled field.
+            let legal = seen.filter { c in
+                c.legal && (option.map { opt in (c.options ?? []).contains { text($0) == opt } && !c.refused.contains { text($0.option) == opt } } ?? true)
+            }
+            let failures = legal.map { offerFailures(o, $0) }
+            if failures.contains(where: \.isEmpty) { return nil }
+            let best = failures.min { $0.count < $1.count } ?? []
+            return Mismatch(kind: .wrongOffer, detail: "expected \(choice) offered with \(best.joined(separator: "; "))", names: names)
+        }
+        guard because != nil || ruling != nil else { return nil }
 
         func wrong(_ d: String) -> Mismatch { Mismatch(kind: .wrongOffer, detail: "expected \(choice) not offered \(d)", names: names) }
         let expectation = [because.map { "because \($0)" }, ruling.map { "on \($0)" }].compactMap { $0 }.joined(separator: " ")

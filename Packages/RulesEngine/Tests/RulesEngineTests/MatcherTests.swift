@@ -345,6 +345,26 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(kinds(compare(wrong, breakdowns: [], offers: [illegal, mods])), [.missingOffer, .missingOffer])
     }
 
+    /// R47: every `offered` field `OfferedChoice` models is compared (`ruling`, `options`, `max`,
+    /// `via`, `costs`); every other field is an unsupported shape, never ignored.
+    func testOfferedFieldsAreComparedOrReported() throws {
+        let laden = Effect(payload: .cost(Cost(pool: .freeActions, amount: .number(1))),
+                           origin: EffectOrigin(rule: "l", clause: "LZ2", index: .nested("0.costs.0")))
+        let offer = OfferedChoice(choice: "laden", origin: ref("l.LZ2"), options: [.string("a"), .string("b")],
+                                  costs: [laden], rulings: ["l.r"], via: [ref("v.V1")], max: 2,
+                                  refused: [RefusedOption(option: .string("b"), reasons: [])])
+        let good = try situation(#"{"expectSituation": {"offered": [{"choice": "laden", "ruling": "r", "options": ["a"], "max": 2, "via": ["v.V1"], "costs": {"freeAction": 1}}]}}"#)
+        XCTAssertEqual(compare(good, breakdowns: [], offers: [offer]), [])
+        for field in [#""ruling": "x.other""#, #""options": ["b"]"#, #""max": 3"#, #""via": ["w.W1"]"#, #""costs": "action""#] {
+            let s = try situation(#"{"expectSituation": {"offered": [{"choice": "laden", "# + field + "}]}}")
+            XCTAssertEqual(kinds(compare(s, breakdowns: [], offers: [offer])), [.wrongOffer], field)
+        }
+        let kind = try situation(#"{"expectSituation": {"offered": [{"choice": "laden", "kind": "basismanoever", "on": "x"}]}}"#)
+        XCTAssertEqual(compare(kind, breakdowns: [], offers: [offer]).map(\.shape), ["offered field kind", "offered field on"])
+        let extra = try situation(#"{"expectSituation": {"notOffered": [{"choice": "other", "reason": "x"}]}}"#)
+        XCTAssertEqual(compare(extra, breakdowns: [], offers: [offer]).map(\.shape), ["notOffered field reason"])
+    }
+
     /// An offer entry without a `choice` (a defence, an attack, a reroll, a check) is the action
     /// layer's (Task 27): an unsupported shape.
     func testAnOfferEntryWithoutAChoiceIsAnUnsupportedShape() throws {
