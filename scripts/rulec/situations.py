@@ -250,6 +250,8 @@ class _File:
                 continue
             for k, val in raw.items():
                 name, kline = prefix + str(k), _line(raw, k, sline)
+                if section == "loadout" and self.v.fact_owner(str(k)) == owner:
+                    name = str(k)                        # already a full loadout fact: hero.mounted
                 actual = self.v.fact_owner(name)
                 if actual is None:
                     self.err(f"unknown fact {name}", kline)
@@ -260,6 +262,10 @@ class _File:
 
         cited, from_clauses, queried = set(), set(), set()
         expect, expect_situation = self.expect(s, cited, from_clauses, queried)
+
+        # `sequence` steps are validated by the action layer (Task 28); here only the rulings
+        # their expected lines and notApplied entries cite count toward `pending`.
+        self.sequence_citations(s.get("sequence"), cited, from_clauses)
 
         ctx = self.ctx
         pending = ctx.open(cited)
@@ -288,6 +294,45 @@ class _File:
         }
 
     # --- expect -------------------------------------------------------------------------------
+    def sequence_citations(self, steps, cited, from_clauses):
+        """The rulings cited in the `expect` of each `sequence` step, and the clauses its lines
+        come `from`, without reporting errors: the steps are not validated until Task 28."""
+        if not isinstance(steps, list):
+            return
+        for step in steps:
+            exp = step.get("expect") if isinstance(step, dict) else None
+            if not isinstance(exp, dict):
+                continue
+            for k, val in exp.items():
+                entries = []
+                if k == "notApplied":
+                    entries = [("na", e) for e in val] if isinstance(val, list) else []
+                elif isinstance(val, dict):
+                    lines, na = val.get("lines"), val.get("notApplied")
+                    entries = ([("line", e) for e in lines] if isinstance(lines, list) else []) + \
+                              ([("na", e) for e in na] if isinstance(na, list) else [])
+                for kind, e in entries:
+                    if not isinstance(e, dict):
+                        continue
+                    rule = None
+                    if kind == "line" and str(e.get("from")) in self.ctx.clauses:
+                        from_clauses.add(str(e["from"]))
+                        rule = str(e["from"]).rpartition(".")[0]
+                    elif kind == "na" and e.get("rule") in self.ctx.book:
+                        rule = e["rule"]
+                    if "ruling" in e:
+                        cited |= self.qualify(e["ruling"], rule)
+
+    def qualify(self, raw, rule):
+        """The qualified ids of the resolvable rulings in `raw` (a name or a list)."""
+        out = set()
+        for name in raw if isinstance(raw, list) else [raw]:
+            candidates = ([f"{rule}.{name}"] if rule else []) + [f"{SHARED}.{name}", str(name)]
+            q = next((c for c in candidates if c in self.ctx.rulings), None)
+            if q is not None:
+                out.add(q)
+        return out
+
     def expect(self, s, cited, from_clauses, queried):
         expect, situation = [], {}
         raw = s.get("expect")

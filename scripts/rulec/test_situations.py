@@ -200,6 +200,13 @@ class PendingTests(unittest.TestCase):
                 "    expect: { at: { lines: [{ value: 1, from: SA_4.D1, ruling: d1 }] } }\n")
         self.assertEqual(s["pending"], [])
 
+    def test_rulings_cited_inside_a_sequence_are_pending(self):
+        s = one("    sequence:\n"
+                "      - expect: { aw: { lines: [{ value: 1, from: SA_1.T2, ruling: r1 }] } }\n"
+                "      - expect: { notApplied: [{ rule: SA_2, reason: x, ruling: r2 }] }\n"
+                "      - expect: { at: { lines: [{ value: 9, from: CORE.K1 }] } }\n")
+        self.assertEqual(s["pending"], ["CORE.k1", "SA_1.r1", "SA_2.r2"])
+
     def test_pending_is_sorted_and_unique(self):
         s = one("    hero: { abilities: { SA_1: 1, SA_3: 1 } }\n"
                 "    expect:\n"
@@ -287,6 +294,15 @@ class SectionTests(unittest.TestCase):
             {"name": "rulesets", "value": ["focus"], "owner": "gm"},
         ])
         self.assertEqual(s["rolls"], [])
+
+    def test_loadout_takes_a_full_loadout_fact_as_is(self):
+        s = one("    loadout: { hero.mounted: true, loadout.shield: Großschild, weapon: Rabenschnabel }\n")
+        self.assertEqual(s["facts"], [
+            {"name": "hero.mounted", "value": True, "owner": "loadout"},
+            {"name": "loadout.shield", "value": "Großschild", "owner": "loadout"},
+            {"name": "loadout.weapon", "value": "Rabenschnabel", "owner": "loadout"},
+        ])
+        self.assertEqual(errors_of("    loadout: { round.parries: 1 }\n"), ["unknown fact loadout.round.parries"])
 
     def test_file_rulesets_are_overridden_by_the_situation(self):
         s = ok({"a.yaml": "rulesets: [a]\nsituations:\n  - id: '1'\n  - id: '2'\n    rulesets: [b]\n"})
