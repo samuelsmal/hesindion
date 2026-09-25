@@ -216,6 +216,10 @@
       "owner": "derived",
       "type": "string"
     },
+    "hit.mountSp": {
+      "owner": "roll",
+      "type": "int"
+    },
     "hit.overWundschwelle": {
       "owner": "derived",
       "type": "int"

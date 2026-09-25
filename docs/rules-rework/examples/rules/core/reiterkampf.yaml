@@ -179,14 +179,14 @@ clauses:
       - when: { hero.mounted: true, any: [{ gmFact.mountTakesSP: true }, { choice.mountHit: true }] }
         check:
           of: { talent: TAL_6, with: Kampfmanöver }
-          modifier: { of: hit.sp, per: 5, times: -1, round: down }
+          modifier: { of: hit.mountSp, per: 5, times: -1, round: down }
           onFailure:
             - tell: { to: player, text: "Der Reiter stürzt vom Pferd (Sturzschaden: wie ein Sturz aus 2 Schritt Höhe, im Galopp aus 3)." }
         ruling: passierschlag-on-mount
         # The old `event: mountTakesSP` is the GM's `gmFact.mountTakesSP`, or RK11's
         # "Reittier getroffen" (ruling passierschlag-on-mount: the SP go to the mount, then
-        # this check). −1 per 5 full SP: `hit.sp` is the mount's SP from this hit (the old
-        # `mount.spTaken`); "full" rounds the count down before the sign, as trefferzonen.TZ8's
+        # this check). −1 per 5 full SP: `hit.mountSp` is the mount's SP from this hit, stated
+        # on the take-damage screen (the old `mount.spTaken`; not `hit.sp`, which is the rider's); "full" rounds the count down before the sign, as trefferzonen.TZ8's
         # "per full Wundschwelle" (7 SP → −1). A failure is the fall (the old `on_failure: { rule: sturzschaden }`):
         # its damage is core/sturzschaden.yaml (drafted from the wiki page the text links),
         # whose dice the engine does not roll, so the rider is told.
@@ -200,10 +200,11 @@ clauses:
         # "Reittier getroffen" (the old `label`), on the take-damage screen (the old `on`), when
         # the hero suffers a Passierschlag (the old `event: passierschlagSuffered`).
       - when: { hero.mounted: true, choice.mountHit: true }
-        suppress: { line: { line: schaden.S2 } }
+        suppress: { line: { line: [schaden.S1, schaden.S2] } }
         because: der Passierschlag trifft das Reittier, nicht den Reiter
-        # The rider's LeP loss (schaden.S2) only: the SP of the hit (schaden.S1) are kept, and
-        # RK10 reads them as `hit.sp`.
+        # Neither the rider's SP (schaden.S1, computed from his RS; trefferzonen.TZ8 reads them)
+        # nor his LeP loss (schaden.S2): the hit is the mount's. The mount's SP are stated as
+        # `hit.mountSp`, which RK10 reads.
         ruling: passierschlag-on-mount
       - when: { hero.mounted: true, choice.mountHit: true }
         tell: { to: player, text: "Die SP gehen auf die LeP des Reittiers." }

@@ -308,7 +308,8 @@ class RuleValidationTests(unittest.TestCase):
         expected = {"hit.overWundschwelle": "derived", "hit.side": "roll", "hit.heldInHand": "derived",
                     "hit.zoneRs": "derived", "hero.leCurrent": "derived", "loadout.weaponHand": "loadout",
                     "loadout.weapon.schadensschwelle": "loadout", "loadout.weapon.leit": "loadout",
-                    "loadout.weapon.ownLeit": "loadout", "loadout.armourPiece.kopf": "loadout"}
+                    "loadout.weapon.ownLeit": "loadout", "loadout.armourPiece.kopf": "loadout",
+                    "hit.mountSp": "roll"}
         self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
         self.assertTrue(v.is_target("armourScore"))
         self.assertIn("held", v.raw["itemFields"])
@@ -336,6 +337,9 @@ class RuleValidationTests(unittest.TestCase):
             - derive: { to: armourScore, sum: [{ of: "rs(zone: kopf)" }, { of: "rs(zone: torso)", times: 5 }] }
             - when: { hero.leCurrent: { atMost: 0 } }
               tell: { to: player, text: "im Sterben" }
+            - check: { of: { talent: TAL_6 }, modifier: { of: hit.mountSp, per: 5, times: -1, round: down } }
+            - forbid: { what: { loadout: secondArmour } }
+              because: eine Rüstung
             """)
         book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
                                            textwrap.indent(body, "      ")), extra={"abilities/SA_2.yaml": SA_2})

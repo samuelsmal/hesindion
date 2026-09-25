@@ -243,7 +243,7 @@ situations:
 
   - id: "6.1"
     name: Two armours equipped, no Trefferzonen-RS
-    loadout: { armour: [Kettenrüstung, Lederrüstung] }
+    loadout: { armour: Kettenrüstung }     # the old `armour: [Kettenrüstung, Lederrüstung]`: Lederrüstung is the second
     expect:
-      notOffered: [{ secondArmour: true, from: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
+      legal: { loadout: [{ armour: Lederrüstung, secondArmour: true, allowed: false, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }] }   # the old `not_selectable`
     appToday: both equipped, Belastung 3 and INI −4 — wrong
