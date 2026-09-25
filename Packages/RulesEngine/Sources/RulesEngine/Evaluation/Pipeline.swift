@@ -40,6 +40,21 @@ final class Evaluation {
             return nil
         }
 
+    /// Choice id → the `default` its offers state, for the choices whose offers state one and
+    /// agree on it (Task 30).
+    private(set) lazy var choiceDefaults: [String: JSONValue] = {
+        var seen: [String: [JSONValue?]] = [:]
+        for rule in book.rules.values {
+            for e in rule.clauses.flatMap(\.effects) {
+                if case .offer(let o) = e.payload { seen[o.choice, default: []].append(o.default) }
+            }
+        }
+        return seen.compactMapValues { defaults in
+            guard let first = defaults.first, let d = first, defaults.allSatisfy({ $0 == d }) else { return nil }
+            return d
+        }
+    }()
+
     /// Rule id → the derives to `level(rule: id)`, in the compiler's order.
     private(set) lazy var levelDerivesByRule: [String: [Effect]] = (book.reach["level"] ?? [])
         .sorted(by: EffectOrigin.compilerOrder)
@@ -84,6 +99,9 @@ final class Evaluation {
             return Breakdown(query: query, depthExceeded: true)
         }
         var state = PipelineState(query: query, depth: depth, candidates: candidates(for: query))
+        for (name, value) in query.checkFacts where situation.facts[name] == nil {
+            state.local[name] = Fact(name: name, value: value, owner: .derived)
+        }
         for phase in Phase.allCases where phase <= last {
             switch phase {
             case .base: basePhase(&state)
@@ -98,7 +116,24 @@ final class Evaluation {
             }
         }
         if depth == 0 && last == .legality { playerParts(&state) }
+        carryLevelRulings(&state)
         return state.breakdown
+    }
+
+    /// Task 30: a line of a rule whose level a useLevel changed rests on that useLevel's decided
+    /// rulings as it rests on its clause (`levelVia`): SA_41.table-shift on Belastung's line,
+    /// ADV_49.zaeher-hund-iv on Schmerz's.
+    private func carryLevelRulings(_ state: inout PipelineState) {
+        guard !state.levelRulings.isEmpty else { return }
+        func carry(_ line: inout Line) {
+            guard let rule = line.origin?.rule, line.kind != .levelAs, let more = state.levelRulings[rule] else { return }
+            line.rulings = (line.rulings + more).uniqued()
+        }
+        for i in state.lines.indices { carry(&state.lines[i]) }
+        if var base = state.base {
+            for i in base.parts.indices { carry(&base.parts[i]) }
+            state.base = base
+        }
     }
 
     /// The effects that reach `query`: `book.effects(reaching:)`, less those whose own targets do
@@ -161,6 +196,8 @@ struct PipelineState {
     /// Rule id → the useLevels that acted on it, in order (R28); every later line of the rule
     /// carries them in `via`.
     var levelVia: [String: [ClauseRef]] = [:]
+    /// Rule id → the decided rulings of those useLevels (Task 30), which the rule's lines carry.
+    var levelRulings: [String: [String]] = [:]
     /// Phase 4: the firing suppresses by the clause, rule or rule kind they name, and the firing
     /// replaces by clause.
     var suppressedClauses: [ClauseRef: Control] = [:]
@@ -217,6 +254,21 @@ struct PipelineState {
 extension Query {
     /// X for `level(rule: X)`.
     var levelRule: String? { name == "level" ? target.context["rule"] : nil }
+
+    /// Task 30: the check a check stage query names by its context, as facts every `when` of it
+    /// reads where the situation states none: `check.modifier(spell: X)` is a spell check
+    /// (`check.kind: spell`, `check.spell: X`), `(talent: X)` a talent check. `any` names no
+    /// spell or talent.
+    var checkFacts: [String: JSONValue] {
+        guard name.hasPrefix("check.") else { return [:] }
+        for kind in ["spell", "talent"] {
+            guard let subject = target.context[kind] else { continue }
+            var out: [String: JSONValue] = ["check.kind": .string(kind)]
+            if subject != "any" { out["check.\(kind)"] = .string(subject) }
+            return out
+        }
+        return [:]
+    }
 }
 
 // MARK: - The phases
@@ -236,6 +288,9 @@ extension Evaluation {
     /// derive goes to `notApplied(suppressed)`; a replaced one (its `when` kept) gives one
     /// `.replaced` part of the replacer's value, with `was` its own sum, and goes to
     /// `notApplied(replaced)` with that sum. Every other suppress and replace is phase 4's.
+    ///
+    /// Task 30: a derived `level(rule: X)` above X's `levels` is X's highest Stufe, with a
+    /// `.capped` part (Turnierrüstung's Belastung 5 is Belastung IV).
     private func basePhase(_ state: inout PipelineState) {
         let q = state.query
         let derives = state.candidates.filter { $0.phase == .base }
@@ -292,6 +347,12 @@ extension Evaluation {
             }
         }
         guard let first = parts.first else { return }
+        // Task 30: a derived Stufe above the rule's highest is that Stufe (COND_1: Turnierrüstung's
+        // Belastung 5 is Stufe IV), as a `.capped` part of the base.
+        let sum = parts.reduce(0) { $0 + $1.value }
+        if let id = q.levelRule, let most = book.rules[id]?.levels, sum > most {
+            parts.append(Line(value: most - sum, kind: .capped, note: "höchstens Stufe \(most)", was: sum, now: most))
+        }
         state.base = Line(value: parts.reduce(0) { $0 + $1.value }, kind: .base, origin: first.origin,
                           via: parts.flatMap(\.via).uniqued(), rulings: parts.flatMap(\.rulings).uniqued(),
                           facts: parts.flatMap(\.facts).uniqued(), parts: parts)
@@ -342,7 +403,8 @@ extension Evaluation {
     /// 0, except in the query `level(rule: target)`, where it is Y − X so that the result is the
     /// level the rule acts at. A useLevel acts only where its target rule has a value line to
     /// change: the target applies and has a value effect reaching the query, or the query is its
-    /// level.
+    /// level. The useLevel's decided rulings go with its clause: every line of the target rule
+    /// carries them (Task 30, `carryLevelRulings`).
     private func levelPhase(_ state: inout PipelineState) {
         let levelRule = state.query.levelRule
         var chains: [String: [Effect]] = [:]
@@ -399,6 +461,7 @@ extension Evaluation {
                 if !state.levelVia[target, default: []].contains(e.origin.clauseRef) {
                     state.levelVia[target, default: []].append(e.origin.clauseRef)
                 }
+                state.levelRulings[target] = (state.levelRulings[target, default: []] + decided(e)).uniqued()
             }
         }
     }

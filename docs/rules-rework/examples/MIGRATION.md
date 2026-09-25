@@ -1608,6 +1608,8 @@ No residue.
 - beidhaendiger-kampf.ZW2 (Task 16): the double attack's Aktion is `costs: [{ cost: { pool: actions, amount: 1 } }]` on the `doubleAttack` offer (ruling R23; was a comment)
 - schilde.SCH2 (Task 16): the offer `choice: action.with` is `choice: attackWith` (options shield, parryingWeapon), the player fact `choice.attackWith`; the piece picked is the attack's `with:`, read as `action.with`, as beidhaendiger-kampf.ZW7's `parryWith`
 - schilde.SCH3 (Task 16): the offer `choice: action.defence, options: [shieldParry]` is `choice: shieldParry` (`choice.shieldParry: true`); taking it is the defence `action.defence: shieldParry`, which SCH3's add, SCH5 and the shield rules read unchanged
+- ruestung-und-belastung.A1 (Task 30): the extra GS/INI penalty is `value: 1, per: loadout.armour.extraPenalty` (was `value: { of: loadout.armour.extraPenalty }`, which the proportion's `max(0, …)` clamp turned into 0 for the stated −1); it is two effects, the second for a hero with Belastungsgewöhnung (`hero.has: SA_41`) citing SA_41.table-shift, which decides that the extra penalty stays (belastung 2.4, 2.8)
+- COND_1.B4 (Task 30): the Stufe IV `gain` of STATE_8 cites reiterkampf.mounted-jouster, whose `appliesTo` names B4: the mounted relief (RK7) does not lift Stufe IV (belastung 3.3)
 
 ## Open questions
 

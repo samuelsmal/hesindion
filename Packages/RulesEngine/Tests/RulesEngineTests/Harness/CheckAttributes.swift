@@ -1,5 +1,6 @@
 import Foundation
 import SQLite3
+@testable import RulesEngine
 
 /// The three attributes of every talent's and spell's Probe, as the app reads them: rules.db
 /// `skill_details` / `spell_details`, `check_attr_1–3` (fertigkeitsproben.FP1, TAL_7.probe). The
@@ -13,6 +14,36 @@ enum CheckAttributes {
 
     /// Talent or spell id → its three attributes. Empty when rules.db is missing.
     static let all: [String: [String]] = load(Repo.url("Hesindion/Resources/rules.db"))
+
+    /// Talent id → its Belastung flag (`skill_details.encumbrance`: `true`, `false` or `"maybe"`),
+    /// the fact `check.hinderedByBelastung` of a check on it (COND_1.belastung-reach). The app
+    /// hands it in as it hands in the attributes (Task 30). Empty when rules.db is missing.
+    static let hinderedByBelastung: [String: JSONValue] = loadBelastung(Repo.url("Hesindion/Resources/rules.db"))
+
+    static func loadBelastung(_ url: URL) -> [String: JSONValue] {
+        var db: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            sqlite3_close(db)
+            return [:]
+        }
+        defer { sqlite3_close(db) }
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "SELECT rule_id, encumbrance FROM skill_details", -1, &statement, nil) == SQLITE_OK else {
+            return [:]
+        }
+        defer { sqlite3_finalize(statement) }
+        var out: [String: JSONValue] = [:]
+        while sqlite3_step(statement) == SQLITE_ROW {
+            guard let id = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
+                  let flag = sqlite3_column_text(statement, 1).map({ String(cString: $0) }) else { continue }
+            switch flag {
+            case "true": out[id] = .bool(true)
+            case "false": out[id] = .bool(false)
+            default: out[id] = .string(flag)
+            }
+        }
+        return out
+    }
 
     static func load(_ url: URL) -> [String: [String]] {
         var db: OpaquePointer?

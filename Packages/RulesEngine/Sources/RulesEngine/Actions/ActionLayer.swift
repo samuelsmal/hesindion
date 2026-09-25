@@ -395,13 +395,29 @@ extension Evaluation {
 
     /// Whether `e` acts, read as the pipeline reads it: its rule applies, it is not suppressed,
     /// and its `when` is yes. Its level, the facts its `when` read and its `via` when it does.
+    ///
+    /// Task 30: the level is the one the rule acts at, the result of `level(rule: X)` after its
+    /// useLevels (Belastungsgewöhnung lowers Belastung IV to III, so no Handlungsunfähig), and
+    /// those useLevels join `via` (ADV_49.ZH3 keeping Schmerz IV).
     private func admitted(_ e: Effect, _ run: inout ActionRun) -> (level: Int?, used: [FactUse], via: [ClauseRef])? {
         guard applies(e, &run.pipeline), !isSuppressed(e, &run.pipeline) else { return nil }
         let rule = e.origin.rule
-        let level = ruleLevel(rule, levels: [:], depth: 0)
-        let via = ruleVia(rule, run.pipeline)
+        let acting = actingLevel(of: rule)
+        let level = acting?.value ?? ruleLevel(rule, levels: [:], depth: 0)
+        let via = (ruleVia(rule, run.pipeline) + (acting?.via ?? [])).uniqued()
         guard let used = gate(e, level: level, via: via, &run.pipeline) else { return nil }
         return (level, used, via)
+    }
+
+    /// The level a levelled rule acts at outside a query (an action's effects): the result of
+    /// `level(rule: id)` through its useLevels, and the useLevels that changed or kept it. nil for
+    /// a rule without a level, or one whose level is not known.
+    func actingLevel(of id: String) -> (value: Int, via: [ClauseRef])? {
+        let stated = situation.base[Self.levelQuery(id).description] != nil
+        guard situation.owned[id] != nil || stated || !levelDerives(of: id).isEmpty else { return nil }
+        let b = breakdown(Self.levelQuery(id), depth: 1, through: .level)
+        guard let value = b.result else { return nil }
+        return (value, b.lines.filter { $0.kind == .levelAs }.compactMap(\.origin).uniqued())
     }
 
     // MARK: - The clock's costs

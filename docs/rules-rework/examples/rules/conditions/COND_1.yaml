@@ -66,6 +66,9 @@ clauses:
     effects:
       - when: { level: { atLeast: 4 } }
         gain: { rule: STATE_8 }
+        ruling: reiterkampf.mounted-jouster
+        # The ruling (its `appliesTo` names B4): the mounted relief (reiterkampf.RK7) lowers the
+        # penalty on a Kampfprobe, not this Stufe IV (situations/belastung.yaml 3.3).
         # Handlungsunfähig (STATE_8) while the Stufe is IV or more; "bis auf Last fallen lassen":
         # dropping the load lowers the Stufe, and this `when` stops holding.
     # A hero in Gestechrüstung (Belastung 4) on foot is Handlungsunfähig. That is intended:

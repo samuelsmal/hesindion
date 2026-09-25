@@ -1,0 +1,20 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: Belastungsgewöhnung (SA_41.G1): lowers the armour's Belastung, a decided ruling.
+id: sh-habit
+name: Gewöhnung
+kind: specialAbility
+levels: 2
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: shift
+    question: How far?
+    answer: One Stufe per Stufe.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: G1
+    text: Belastung um die Stufe niedriger.
+    effects:
+      - useLevel: { rule: sh-load, lowerBy: level, min: 0 }
+        when: { belastung.source: armour }
+        ruling: shift

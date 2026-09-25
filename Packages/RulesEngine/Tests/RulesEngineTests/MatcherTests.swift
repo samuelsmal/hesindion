@@ -532,6 +532,24 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(Matcher.openRulings(in: [o]), [hit("r.open", "r.R2"), hit("r.other", "r.R3")])
     }
 
+    /// Task 30: a talent check's `check.hinderedByBelastung` is the talent's own Belastung flag,
+    /// which the harness, as the app, hands in from rules.db (`skill_details.encumbrance`), as it
+    /// hands in the Probe's attributes; a stated one is kept.
+    func testATalentChecksBelastungFlagIsHandedIn() throws {
+        try XCTSkipIf(CheckAttributes.all.isEmpty, "rules.db missing")
+        let climb = try situation(#"{"facts": [{"name": "check.talent", "value": "TAL_3", "owner": "player"}]}"#)
+        XCTAssertEqual(climb.engineSituation.facts["check.hinderedByBelastung"],
+                       Fact(name: "check.hinderedByBelastung", value: true, owner: .derived))
+        let senses = try situation(#"{"facts": [{"name": "check.talent", "value": "TAL_10", "owner": "player"}]}"#)
+        XCTAssertEqual(senses.engineSituation.facts["check.hinderedByBelastung"]?.value, "maybe")
+        let talk = try situation(#"{"facts": [{"name": "check.talent", "value": "TAL_21", "owner": "player"}]}"#)
+        XCTAssertEqual(talk.engineSituation.facts["check.hinderedByBelastung"]?.value, false)
+        let stated = try situation(#"{"facts": [{"name": "check.talent", "value": "TAL_3", "owner": "player"},"#
+                                   + #"{"name": "check.hinderedByBelastung", "value": false, "owner": "derived"}]}"#)
+        XCTAssertEqual(stated.engineSituation.facts["check.hinderedByBelastung"]?.value, false)
+        XCTAssertNil(try situation("{}").engineSituation.facts["check.hinderedByBelastung"])
+    }
+
     /// Situations state the current LE/AsP as `base` values; the engine runs with pools filled
     /// from them (max from `leMax` / `aspMax`, else the current value), so `leCurrent` reads the
     /// pool (R39).

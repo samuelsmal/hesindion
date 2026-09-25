@@ -1,0 +1,457 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L4",
+    "index": 0,
+    "rule": "sh-load"
+   },
+   {
+    "clause": "R6",
+    "index": 1,
+    "rule": "sh-mount"
+   }
+  ],
+  "at": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "sh-load"
+   }
+  ],
+  "aw": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "sh-load"
+   },
+   {
+    "clause": "R6",
+    "index": 0,
+    "rule": "sh-mount"
+   }
+  ],
+  "check.modifier": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L1",
+    "index": 1,
+    "rule": "sh-load"
+   }
+  ],
+  "level": [
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "sh-armour"
+   },
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "sh-armour"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "loadout.armour.belastung"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "sh-load"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "A1",
+     "text": "Belastung nach Rüstung."
+    }
+   ],
+   "id": "sh-armour",
+   "kind": "core",
+   "name": "Rüstung",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "sh-habit"
+       },
+       "payload": {
+        "lowerBy": {
+         "level": {
+          "plus": 0,
+          "times": 1
+         }
+        },
+        "min": 0,
+        "rule": "sh-load"
+       },
+       "phase": "level",
+       "ruling": [
+        "sh-habit.shift"
+       ],
+       "verb": "useLevel",
+       "when": {
+        "fact": "belastung.source",
+        "is": "armour"
+       }
+      }
+     ],
+     "id": "G1",
+     "text": "Belastung um die Stufe niedriger."
+    }
+   ],
+   "id": "sh-habit",
+   "kind": "specialAbility",
+   "levels": 2,
+   "name": "Gewöhnung",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "One Stufe per Stufe.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "sh-habit.shift",
+     "question": "How far?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "id": "H1",
+     "none": "a state",
+     "text": "Keine Handlungen."
+    }
+   ],
+   "id": "sh-helpless",
+   "kind": "state",
+   "name": "Handlungsunfähig",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "level",
+        "in": [
+         1,
+         2,
+         3
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 1,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "level",
+          "in": [
+           1,
+           2,
+           3
+          ]
+         },
+         {
+          "fact": "check.kind",
+          "in": [
+           "spell",
+           "liturgy"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "id": "L1",
+     "text": "AT, AW −Stufe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 0,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "rule": "sh-helpless"
+       },
+       "phase": "action",
+       "ruling": [
+        "sh-load.jouster"
+       ],
+       "verb": "gain",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "L4",
+     "text": "Stufe IV, handlungsunfähig."
+    }
+   ],
+   "id": "sh-load",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Last",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "No.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "sh-load.jouster",
+     "question": "Does the rider's relief lift Stufe IV?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 0,
+        "rule": "sh-mount"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "not": {
+           "fact": "choice.jumpOff",
+           "is": true
+          }
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 1,
+        "rule": "sh-mount"
+       },
+       "payload": {
+        "choice": "jumpOff",
+        "default": false
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "query.target",
+          "is": "aw"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "R6",
+     "text": "Ausweichen zu Pferd −2, es sei denn, man springt ab."
+    }
+   ],
+   "id": "sh-mount",
+   "kind": "core",
+   "name": "Reiter",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "One Stufe per Stufe.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "sh-habit.shift",
+   "question": "How far?",
+   "status": "decided"
+  },
+  {
+   "answer": "No.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "sh-load.jouster",
+   "question": "Does the rider's relief lift Stufe IV?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "0b009d61aae5fe3f1fb1c231cfc5a65f144d004336056319611b97d4157d9ae5",
+ "vocabularyVersion": 1
+}

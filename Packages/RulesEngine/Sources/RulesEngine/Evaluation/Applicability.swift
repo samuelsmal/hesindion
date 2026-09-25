@@ -201,6 +201,11 @@ extension Evaluation {
     /// - `fw.current`: the FW of the check's spell (`check.spell`), else of its talent
     ///   (`check.talent`): MIGRATION probe-magie 20.1.
     /// - `ladezeit.current` (`targetFacts`): the result of the query `item.ladezeit`.
+    /// - `choice.<id>` (Task 30, R61): unstated, the `default` the choice's offers state, when
+    ///   they state one and agree (reiterkampf.RK6's `jumpOff: false`); the player's.
+    /// - `belastung.source` (Task 30): `armour` while the hero wears an armour (`loadout.armour`
+    ///   names one), the one source of Belastung the rules encode; unknown without a stated armour
+    ///   (asking for `loadout.armour`), and with none worn.
     /// - `check.onOption` / `check.applicationOnOption` (MIGRATION ADV_4.B1, SA_9.FS1; plan Task
     ///   26): read by `rule`, from the instance the hero owns: its `option` against the check's
     ///   `check.spell` / `check.talent`, its `option2` against `check.application`. An unknown
@@ -246,6 +251,27 @@ extension Evaluation {
             } else {
                 s.unstated.insert("fw.current")
                 behind["fw.current"] = [UnknownFact(subject.map { "fw.\($0)" } ?? "check.spell")]
+            }
+        }
+        for name in names.sorted() where name.hasPrefix("choice.") && s.facts[name] == nil {
+            // Task 30 (R61): a choice nobody made reads the default its offer states.
+            if let d = choiceDefaults[String(name.dropFirst("choice.".count))] {
+                s.facts[name] = Fact(name: name, value: d, owner: .player)
+            }
+        }
+        if names.contains("belastung.source"), s.facts["belastung.source"] == nil {
+            // Task 30: armour is the one source of Belastung the rules encode
+            // (ruestung-und-belastung.A1; the Traglast, COND_1.B2, is not written).
+            switch s.facts["loadout.armour"]?.value {
+            case .string?:
+                s.facts["belastung.source"] = Fact(name: "belastung.source", value: .string("armour"), owner: .derived)
+            case nil:
+                s.unstated.insert("belastung.source")
+                behind["belastung.source"] = [UnknownFact("loadout.armour")]
+            default:
+                // No armour worn: nothing says where a Belastung would come from.
+                s.unstated.insert("belastung.source")
+                behind["belastung.source"] = []
             }
         }
         for (name, target) in Self.targetFacts.sorted(by: { $0.key < $1.key }) where names.contains(name) && s.facts[name] == nil {

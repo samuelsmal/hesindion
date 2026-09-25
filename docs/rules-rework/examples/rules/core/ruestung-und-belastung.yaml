@@ -30,9 +30,17 @@ clauses:
       - derive: { to: "level(rule: COND_1)", sum: [{ of: loadout.armour.belastung }] }
         # The Stufe of Belastung the armour gives, with `belastung.source: armour` (what SA_41.G1
         # lowers). FORMAT: an effect that feeds a condition's level rather than a check.
-      - add: { to: [gs, ini], value: { of: loadout.armour.extraPenalty } }
+      - add: { to: [gs, ini], value: 1, per: loadout.armour.extraPenalty }
+        when: { not: { hero.has: SA_41 } }
         # A line of its own, named after this clause — not part of Belastung, so it is not
         # lowered by Belastungsgewöhnung or by the mounted relief, and is not a Zustand.
+        # `value: 1, per: …`: the extra penalty is stated negative (−1), and a proportion
+        # `{ of: … }` counts only what is above 0.
+      - add: { to: [gs, ini], value: 1, per: loadout.armour.extraPenalty }
+        when: { hero.has: SA_41 }
+        ruling: SA_41.table-shift
+        # The same line for a hero with Belastungsgewöhnung: it stays, which SA_41's ruling
+        # table-shift decides (situations/belastung.yaml 2.4, 2.8).
       - forbid: { what: { loadout: secondArmour } }
         because: ein Held trägt eine Rüstung (Helm eingeschlossen); Rüstungen summieren sich nicht
         ruling: several-armour-pieces

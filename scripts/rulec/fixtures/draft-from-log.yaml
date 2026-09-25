@@ -91,15 +91,25 @@ situations:
       choice.formation.bonus: at
     expect:
       at:
-        total: -1
+        total: 1
         lines:
+          - from: SA_41.G1
+            value: 1
+            ruling: [SA_41.table-shift]
           - from: COND_1.B3
-            value: -3
+            value: -1
+            via: [SA_41.G1]
+            ruling: [SA_41.table-shift]
           - from: SA_862.F2
             value: 2
       pa:
-        total: -3
+        total: -1
         lines:
+          - from: SA_41.G1
+            value: 1
+            ruling: [SA_41.table-shift]
           - from: COND_1.B3
-            value: -3
+            value: -1
+            via: [SA_41.G1]
+            ruling: [SA_41.table-shift]
     appToday: "das war falsch: Belastung (COND_1.B3) zieht 3 statt 1 ab, Rüstungsgewöhnung (SA_41.G1) wird nicht angerechnet, und AT und PA haben keinen Basiswert (Rabenschnabel 16/11)"

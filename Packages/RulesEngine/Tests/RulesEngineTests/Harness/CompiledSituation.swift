@@ -37,8 +37,16 @@ struct CompiledSituation: Decodable {
     /// values (`leCurrent`, `aspCurrent`), not as `pools`; the pools are filled from them, the
     /// max from `leMax` / `aspMax` when stated (else the current value), so that
     /// `hero.leCurrent` and payments read them (R39). A pool the situation states is kept.
+    ///
+    /// A talent check (`check.talent` stated) gets its talent's Belastung flag,
+    /// `check.hinderedByBelastung`, from rules.db as the app hands it in (`CheckAttributes`), unless
+    /// the situation states it (Task 30).
     var engineSituation: Situation {
         var out = situation
+        if let talent = situation.facts["check.talent"]?.value.string, situation.facts["check.hinderedByBelastung"] == nil,
+           let flag = CheckAttributes.hinderedByBelastung[talent] {
+            out.facts["check.hinderedByBelastung"] = Fact(name: "check.hinderedByBelastung", value: flag, owner: .derived)
+        }
         for pool in Pool.allCases where out.pools[pool] == nil {
             guard let target = pool.currentTarget, let current = situation.base[target] else { continue }
             let max = situation.base[target.replacingOccurrences(of: "Current", with: "Max")] ?? current
