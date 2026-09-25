@@ -35,13 +35,30 @@ final class SituationsHarnessTests: XCTestCase {
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
             guard ActionRunner.canRun(s) else {
-                report.add(s, .unsupported(ActionRunner.needs(s).map { "action: \($0.rawValue)" }), [], conflicts: conflicts)
+                // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
+                let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }
+                if !s.expect.isEmpty {
+                    report.queriesCompared.append(s.id)
+                    let run = Matcher.run(s, engine: engine, onlyQueries: true)
+                    if run.mismatches.contains(where: { $0.kind != .unsupportedShape }) {
+                        let verdict = Verdict.of(s, mismatches: run.mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
+                        report.add(s, verdict, run.mismatches, notes: run.notes, conflicts: conflicts)
+                        if verdict == .failed { failures.append((s, run.mismatches)) }
+                        continue
+                    }
+                    let shapes = run.mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()
+                    report.add(s, .unsupported(needs + shapes), run.mismatches, notes: run.notes, conflicts: conflicts)
+                    continue
+                }
+                report.add(s, .unsupported(needs), [], conflicts: conflicts)
                 continue
             }
-            let run = Matcher.run(s, engine: engine)
-            let mismatches = run.mismatches + ActionRunner.mismatches(s, engine: engine)
+            let check = ActionRunner.run(s, engine: engine)
+            var run = Matcher.run(s, engine: engine, view: check?.view)
+            run.hits = (run.hits + Matcher.openRulings(in: check?.breakdowns ?? [])).distinct()
+            let mismatches = run.mismatches + (check?.mismatches ?? [])
             let verdict = Verdict.of(s, mismatches: mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
-            report.add(s, verdict, mismatches, notes: run.notes, conflicts: conflicts)
+            report.add(s, verdict, mismatches, notes: run.notes + (check?.notes ?? []), conflicts: conflicts)
             if verdict == .failed { failures.append((s, mismatches)) }
         }
 

@@ -200,12 +200,37 @@ extension Evaluation {
     /// - `hero.levelOf.X`: the base phase of `level(rule: X)` (R34).
     /// - `fw.current`: the FW of the check's spell (`check.spell`), else of its talent
     ///   (`check.talent`): MIGRATION probe-magie 20.1.
-    func prepared(_ names: Set<String>, depth: Int,
-                  local: [String: Fact] = [:]) -> (situation: Situation, behind: [String: [UnknownFact]]) {
+    /// - `check.onOption` / `check.applicationOnOption` (MIGRATION ADV_4.B1, SA_9.FS1; plan Task
+    ///   26): read by `rule`, from the instance the hero owns: its `option` against the check's
+    ///   `check.spell` / `check.talent`, its `option2` against `check.application`. An unknown
+    ///   check subject asks for `check.talent`; an unknown Anwendungsgebiet, or one that cannot be
+    ///   compared (an application id against a name), asks the player for `check.application`. A
+    ///   rule with no owned option cannot say: unknown, nobody asked.
+    func prepared(_ names: Set<String>, depth: Int, local: [String: Fact] = [:],
+                  rule: String? = nil) -> (situation: Situation, behind: [String: [UnknownFact]]) {
         let prefix = "hero.levelOf."
         var s = situation
         var behind: [String: [UnknownFact]] = [:]
         for (name, f) in local where names.contains(name) { s.facts[name] = f }
+        let owned = rule.flatMap { situation.owned[$0] }
+        func option(_ name: String, _ mine: JSONValue?, against checkFact: JSONValue?, asking: String) {
+            guard names.contains(name), s.facts[name] == nil else { return }
+            guard let mine else {
+                s.unstated.insert(name)
+                behind[name] = []
+                return
+            }
+            if let checkFact, let same = Self.sameOption(mine, checkFact) {
+                s.facts[name] = Fact(name: name, value: .bool(same), owner: .derived)
+            } else {
+                s.unstated.insert(name)
+                behind[name] = [UnknownFact(asking)]
+            }
+        }
+        option("check.onOption", owned?.option, against: (s.facts["check.spell"] ?? s.facts["check.talent"])?.value,
+               asking: "check.talent")
+        option("check.applicationOnOption", owned?.option2, against: s.facts["check.application"]?.value,
+               asking: "check.application")
         if names.contains("fw.current"), s.facts["fw.current"] == nil {
             let subject = (s.facts["check.spell"] ?? s.facts["check.talent"])?.value.string
             if let subject, let fw = s.facts["fw.\(subject)"] {
@@ -227,6 +252,14 @@ extension Evaluation {
         return (s, behind)
     }
 
+    /// Whether a rule's option names the check's: two strings or two numbers compare; a number
+    /// against a string (an Anwendungsgebiet's id against its name) cannot be told: nil.
+    static func sameOption(_ a: JSONValue, _ b: JSONValue) -> Bool? {
+        if let x = a.string, let y = b.string { return x == y }
+        if let x = a.double, let y = b.double { return x == y }
+        return nil
+    }
+
     /// The questions carried by the derived levels among `names` that are not stated
     /// (`hero.levelOf.X`, R38).
     func carried(_ names: Set<String>, depth: Int) -> [UnknownFact] {
@@ -237,7 +270,7 @@ extension Evaluation {
 
     /// Evaluates `when` with the derived facts it reads and the query's own (`local`).
     func condition(_ c: Condition, level: Int?, rule: String, depth: Int, local: [String: Fact] = [:]) -> ConditionResult {
-        let (s, behind) = prepared(c.factNames, depth: depth, local: local)
+        let (s, behind) = prepared(c.factNames, depth: depth, local: local, rule: rule)
         var r = Conditions.evaluate(c, in: s, level: level, rule: rule)
         r.unknown = r.unknown.flatMap { behind[$0.name] ?? [$0] }.uniqued()
         return r
@@ -246,7 +279,7 @@ extension Evaluation {
     /// Evaluates a value with the derived facts it reads; a target operand runs its own query one
     /// level deeper, at the depth `Values` passes on.
     func value(_ v: ValueExpr, level: Int?, rule: String, depth: Int) -> ValueResult {
-        let (s, behind) = prepared(v.factNames, depth: depth)
+        let (s, behind) = prepared(v.factNames, depth: depth, rule: rule)
         var r = Values.evaluate(v, level: level, in: s, book: book, rule: rule, depth: depth) { [unowned self] target, d in
             self.resolve(target, depth: d)
         }
@@ -256,7 +289,7 @@ extension Evaluation {
 
     /// A fact read directly (`add.per`), with the derived facts it may be.
     func fact(_ name: String, level: Int?, rule: String, depth: Int) -> (use: FactUse?, unknown: [UnknownFact]) {
-        let (s, behind) = prepared([name], depth: depth)
+        let (s, behind) = prepared([name], depth: depth, rule: rule)
         if let use = s.fact(name, level: level, rule: rule) { return (use, []) }
         return (nil, behind[name] ?? [UnknownFact(name)])
     }

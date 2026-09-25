@@ -1,0 +1,1161 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "B1",
+    "index": 0,
+    "rule": "chk-begabung"
+   },
+   {
+    "clause": "B5",
+    "index": 0,
+    "rule": "chk-begabung"
+   },
+   {
+    "clause": "M1",
+    "index": 0,
+    "rule": "chk-magie"
+   },
+   {
+    "clause": "M1",
+    "index": 1,
+    "rule": "chk-magie"
+   },
+   {
+    "clause": "VP2",
+    "index": 0,
+    "rule": "chk-pforte"
+   },
+   {
+    "clause": "FP2",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "KR1",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "KR2",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "PZ1",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "QS1",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "NW1",
+    "index": 0,
+    "rule": "chk-schip"
+   },
+   {
+    "clause": "critical",
+    "index": 0,
+    "rule": "chk-schwimmen"
+   },
+   {
+    "clause": "SE1",
+    "index": 0,
+    "rule": "chk-wille"
+   },
+   {
+    "clause": "SE2",
+    "index": 0,
+    "rule": "chk-wille"
+   }
+  ],
+  "check.fp": [
+   {
+    "clause": "FP5",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "QS2",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "critical",
+    "index": 1,
+    "rule": "chk-schwimmen"
+   }
+  ],
+  "check.fw": [
+   {
+    "clause": "FP3",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "FS1",
+    "index": 0,
+    "rule": "chk-spez"
+   }
+  ],
+  "check.modifier": [
+   {
+    "clause": "FM2",
+    "index": 0,
+    "rule": "chk-proben"
+   },
+   {
+    "clause": "FM2",
+    "index": 1,
+    "rule": "chk-proben"
+   }
+  ],
+  "check.qs": [
+   {
+    "clause": "QS1",
+    "index": 1,
+    "rule": "chk-proben"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "id": "S1",
+     "none": "a state only",
+     "text": "Ein Status."
+    }
+   ],
+   "id": "chk-bann",
+   "kind": "state",
+   "name": "chk-bann",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B1",
+        "index": 0,
+        "rule": "chk-begabung"
+       },
+       "payload": {
+        "die": {
+         "ids": [
+          "any"
+         ],
+         "kind": "dice"
+        },
+        "keep": "better",
+        "max": 1,
+        "per": "action"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "reroll",
+       "when": {
+        "fact": "check.onOption",
+        "is": true
+       }
+      }
+     ],
+     "id": "B1",
+     "text": "Einen W20 neu würfeln."
+    },
+    {
+     "effects": [
+      {
+       "because": "Doppel-20: Begabung nicht erlaubt",
+       "origin": {
+        "clause": "B5",
+        "index": 0,
+        "rule": "chk-begabung"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "chk-begabung.B1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "atLeast": 2,
+        "fact": "check.twenties"
+       }
+      }
+     ],
+     "id": "B5",
+     "text": "Nicht bei Doppel-20."
+    }
+   ],
+   "id": "chk-begabung",
+   "kind": "advantage",
+   "name": "Begabung",
+   "options": "sid",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 0,
+        "rule": "chk-magie"
+       },
+       "payload": {
+        "amount": {
+         "number": 8
+        },
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "check.result",
+          "is": "success"
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 1,
+        "rule": "chk-magie"
+       },
+       "payload": {
+        "amount": {
+         "number": 7
+        },
+        "onFailure": 0.5,
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "M1",
+     "text": "Die Kosten in AsP; misslingt der Zauber, die Hälfte."
+    }
+   ],
+   "id": "chk-magie",
+   "kind": "core",
+   "name": "Zauberkosten",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "id": "S1",
+     "none": "a state only",
+     "text": "Ein Status."
+    }
+   ],
+   "id": "chk-mut",
+   "kind": "state",
+   "name": "chk-mut",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "VP2",
+        "index": 0,
+        "rule": "chk-pforte"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "TAL_8"
+         ],
+         "kind": "talent"
+        },
+        "onFailure": [
+         {
+          "because": "Selbstbeherrschung misslungen: der Zauber misslingt",
+          "origin": {
+           "clause": "VP2",
+           "index": "0.onFailure.0",
+           "rule": "chk-pforte"
+          },
+          "payload": {
+           "what": {
+            "ids": [
+             "spell"
+            ],
+            "kind": "check"
+           }
+          },
+          "phase": "legality",
+          "ruling": [],
+          "verb": "forbid",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "fact": "check.kind",
+        "is": "spell"
+       }
+      }
+     ],
+     "id": "VP2",
+     "text": "Misslingt die Selbstbeherrschung, misslingt der Zauber."
+    }
+   ],
+   "id": "chk-pforte",
+   "kind": "specialAbility",
+   "name": "Verbotene Pforten",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": "effektiver Eigenschaftswert 0 oder weniger: keine Probe möglich",
+       "origin": {
+        "clause": "FP2",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "talent",
+          "spell",
+          "liturgy"
+         ],
+         "kind": "check"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "all": [
+         {
+          "fact": "query.target",
+          "is": "check.attribute"
+         },
+         {
+          "atMost": 0,
+          "fact": "query.result"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "FP2",
+     "text": "Ein EEW von 0 oder weniger, keine Probe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "FP3",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "fw.current"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "check.fw"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "FP3",
+     "text": "Der FW gleicht aus."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "FP5",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "target": {
+             "name": "check.fw"
+            }
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         },
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "check.spent"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": -1
+          }
+         }
+        ],
+        "to": {
+         "name": "check.fp"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "FP5",
+     "text": "Was übrig bleibt, sind die FP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "QS1",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "name": "chk-proben.qs",
+        "value": {
+         "0-3": 1,
+         "10-12": 4,
+         "13-15": 5,
+         "16+": 6,
+         "4-6": 2,
+         "7-9": 3
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "QS1",
+        "index": 1,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "sum": [
+         {
+          "table": {
+           "key": "check.fp",
+           "name": "chk-proben.qs"
+          }
+         }
+        ],
+        "to": {
+         "name": "check.qs"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "check.result",
+        "is": "success"
+       }
+      }
+     ],
+     "id": "QS1",
+     "text": "FP zu QS."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "QS2",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "min": {
+         "number": 1
+        },
+        "to": [
+         {
+          "name": "check.fp"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "floor",
+       "when": {
+        "fact": "check.result",
+        "is": "success"
+       }
+      }
+     ],
+     "id": "QS2",
+     "text": "Mindestens 1 FP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "FM2",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "gmFact.checkModifier"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "above": 0,
+        "fact": "gmFact.checkModifier"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "FM2",
+        "index": 1,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": {
+           "fact": "gmFact.checkModifier"
+          },
+          "max": null,
+          "min": null,
+          "of": {
+           "number": 0
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "below": 0,
+        "fact": "gmFact.checkModifier"
+       }
+      }
+     ],
+     "id": "FM2",
+     "text": "Der Meister erleichtert oder erschwert."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "KR1",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "text": "Doppel-1",
+        "to": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "atLeast": 2,
+        "fact": "check.ones"
+       }
+      }
+     ],
+     "id": "KR1",
+     "text": "Doppel-1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "KR2",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "text": "Dreifach-1",
+        "to": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "atLeast": 3,
+        "fact": "check.ones"
+       }
+      }
+     ],
+     "id": "KR2",
+     "text": "Dreifach-1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "PZ1",
+        "index": 0,
+        "rule": "chk-proben"
+       },
+       "payload": {
+        "text": "Dreifach-20",
+        "to": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "atLeast": 3,
+        "fact": "check.twenties"
+       }
+      }
+     ],
+     "id": "PZ1",
+     "text": "Doppel-20, Dreifach-20."
+    }
+   ],
+   "id": "chk-proben",
+   "kind": "core",
+   "name": "Fertigkeitsproben",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "NW1",
+        "index": 0,
+        "rule": "chk-schip"
+       },
+       "payload": {
+        "die": {
+         "ids": [
+          "any"
+         ],
+         "kind": "dice"
+        },
+        "keep": "second",
+        "max": 1,
+        "per": "action"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "reroll",
+       "when": {
+        "fact": "check.kind",
+        "in": [
+         "talent",
+         "spell",
+         "liturgy"
+        ]
+       }
+      }
+     ],
+     "id": "NW1",
+     "text": "Neuer Wurf."
+    }
+   ],
+   "id": "chk-schip",
+   "kind": "core",
+   "name": "Schip",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "critical",
+        "index": 0,
+        "rule": "chk-schwimmen"
+       },
+       "payload": {
+        "text": "Der Held schwimmt die Strecke in Bestzeit.",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "all": [
+         {
+          "fact": "check.talent",
+          "is": "chk-schwimmen"
+         },
+         {
+          "atLeast": 2,
+          "fact": "check.ones"
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "critical",
+        "index": 1,
+        "rule": "chk-schwimmen"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.fp"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "fw.current"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 2
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [
+        "chk-schwimmen.crit"
+       ],
+       "verb": "set",
+       "when": {
+        "all": [
+         {
+          "fact": "check.talent",
+          "is": "chk-schwimmen"
+         },
+         {
+          "atLeast": 2,
+          "fact": "check.ones"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "critical",
+     "text": "In Bestzeit. FP = doppelter FW."
+    }
+   ],
+   "id": "chk-schwimmen",
+   "kind": "talent",
+   "name": "Schwimmen",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "FP = doppelter FW.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "chk-schwimmen.crit",
+     "question": "What QS?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "FS1",
+        "index": 0,
+        "rule": "chk-spez"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.fw"
+         }
+        ],
+        "value": {
+         "number": 2
+        }
+       },
+       "phase": "add",
+       "ruling": [
+        "chk-spez.when"
+       ],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "check.onOption",
+          "is": true
+         },
+         {
+          "fact": "check.applicationOnOption",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "FS1",
+     "text": "+2 auf den FW."
+    }
+   ],
+   "id": "chk-spez",
+   "kind": "specialAbility",
+   "name": "Fertigkeitsspezialisierung",
+   "options": "sid",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "When the check names the Anwendungsgebiet.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "chk-spez.when",
+     "question": "When does it apply?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "SE1",
+        "index": 0,
+        "rule": "chk-wille"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "TAL_23"
+         ],
+         "kind": "talent"
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "SE1",
+           "index": "0.onFailure.0",
+           "rule": "chk-wille"
+          },
+          "payload": {
+           "levels": 1,
+           "rule": "chk-bann"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "gain",
+          "when": null
+         }
+        ],
+        "onSuccess": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "SE1",
+           "index": "0.onSuccess.0",
+           "rule": "chk-wille"
+          },
+          "payload": {
+           "levels": 1,
+           "rule": "chk-mut"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "gain",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "fact": "gmFact.trigger",
+        "is": "chk-wille"
+       }
+      }
+     ],
+     "id": "SE1",
+     "text": "Eine Probe auf Willenskraft."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "SE2",
+        "index": 0,
+        "rule": "chk-wille"
+       },
+       "payload": {
+        "text": "gibt der Schlechten Eigenschaft nach",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "all": [
+         {
+          "fact": "gmFact.trigger",
+          "is": "chk-wille"
+         },
+         {
+          "fact": "check.talent",
+          "is": "TAL_23"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "SE2",
+     "text": "Misslingt sie, gibt er nach."
+    }
+   ],
+   "id": "chk-wille",
+   "kind": "disadvantage",
+   "name": "Autoritätsglaube",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "FP = doppelter FW.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "chk-schwimmen.crit",
+   "question": "What QS?",
+   "status": "decided"
+  },
+  {
+   "answer": "When the check names the Anwendungsgebiet.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "chk-spez.when",
+   "question": "When does it apply?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "e251f7f39bc426f0db9e4a805585e9892db68241a48092570ce888ebae9cbc74",
+ "vocabularyVersion": 1
+}

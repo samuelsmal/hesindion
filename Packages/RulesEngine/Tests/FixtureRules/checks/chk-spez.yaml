@@ -1,0 +1,20 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: SA_9.FS1's shape, its ruling decided: +2 on the FW for the chosen Anwendungsgebiet.
+id: chk-spez
+name: Fertigkeitsspezialisierung
+kind: specialAbility
+options: sid
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: when
+    question: When does it apply?
+    answer: When the check names the Anwendungsgebiet.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: FS1
+    text: +2 auf den FW.
+    effects:
+      - when: { check.onOption: true, check.applicationOnOption: true }
+        add: { to: check.fw, value: 2 }
+        ruling: when

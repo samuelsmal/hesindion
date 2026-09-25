@@ -15,4 +15,9 @@ public enum Action: Hashable, Sendable {
     /// Take an offered choice: its `costs` are paid through the same cost interpreter (ruling
     /// R23). The choice's fact itself is the caller's to state; an event only records the costs.
     case take(choice: String)
+    /// A talent, spell or liturgy check (spec §6, `CheckProcedure`): its stage breakdowns, and with
+    /// the situation's `rolls` (one per attribute) the dice and the confirm's events. Step by step
+    /// (rerolls between the dice and the confirm) is `CheckProcedure.start` and
+    /// `ProcedureState.step`.
+    case check(CheckRequest)
 }

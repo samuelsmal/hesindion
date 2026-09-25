@@ -1,0 +1,21 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: TAL_7.critical's shape, its ruling decided: FP = doppelter FW on a Doppel-1.
+id: chk-schwimmen
+name: Schwimmen
+kind: talent
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: crit
+    question: What QS?
+    answer: FP = doppelter FW.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: critical
+    text: In Bestzeit. FP = doppelter FW.
+    effects:
+      - when: { check.talent: chk-schwimmen, check.ones: { atLeast: 2 } }
+        tell: { to: player, text: "Der Held schwimmt die Strecke in Bestzeit." }
+      - when: { check.talent: chk-schwimmen, check.ones: { atLeast: 2 } }
+        set: { to: check.fp, value: { of: fw.current, times: 2 } }
+        ruling: crit

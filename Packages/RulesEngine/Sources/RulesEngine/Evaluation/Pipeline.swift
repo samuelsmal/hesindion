@@ -467,7 +467,12 @@ extension Evaluation {
     /// computes the replacer's value (an `add` then gives a `.replaced` line, `was` its own
     /// amount; a `set` keeps its kind, with the replacer in `via`). Last, the modifiers typed in
     /// for the query (`freeLines`).
+    ///
+    /// A 3W20 check's attribute stage `check.attribute(index: i)` (spec §6, fertigkeitsproben.FM1)
+    /// is the attribute (its base) plus the one shared `check.modifier` of the check: the modifier's
+    /// lines come first, as they are, and its questions with them.
     private func addPhase(_ state: inout PipelineState) {
+        if state.query.name == "check.attribute" { modifierLines(&state) }
         let effects = state.candidates.filter { $0.phase == .add }
         var sets: [(effect: Effect, value: ValueResult, used: [FactUse], via: [ClauseRef], by: Control?)] = []
         for e in effects {
@@ -505,8 +510,30 @@ extension Evaluation {
         freeLines(&state)
     }
 
+    /// The lines of the check's shared `check.modifier` (its `talent:` / `spell:` context from the
+    /// stated `check.kind`, `check.talent`, `check.spell`), evaluated one level deeper.
+    private func modifierLines(_ state: inout PipelineState) {
+        let modifier = breakdown(Query(TargetRef(name: "check.modifier", context: checkContext)), depth: state.depth + 1)
+        if modifier.depthExceeded { state.depthExceeded = true }
+        state.lines += modifier.lines
+        for q in modifier.questions {
+            for origin in q.origins { state.ask([UnknownFact(name: q.fact, owner: q.owner)], for: origin) }
+        }
+    }
+
+    /// The context of the check the situation states: `spell: X` for a spell check, `talent: X`
+    /// for a talent check, none for a liturgy or no check.
+    var checkContext: [String: String] {
+        let kind = situation.facts["check.kind"]?.value.string
+        if kind == "spell" || kind == nil, let spell = situation.facts["check.spell"]?.value.string { return ["spell": spell] }
+        if kind == "talent" || kind == nil, let talent = situation.facts["check.talent"]?.value.string { return ["talent": talent] }
+        return [:]
+    }
+
     /// One `add`: its value (or its replacer's), times the fact `per` when given, as a line; or
-    /// that many steps along its `scale`.
+    /// that many steps along its `scale`. A line whose number is read from facts all stated by the
+    /// GM (or all by the player) carries that owner: the GM's modifier is the GM's line
+    /// (fertigkeitsproben.FM2, plan Task 26).
     private func add(_ e: Effect, _ a: Add, _ state: inout PipelineState) {
         let rule = e.origin.rule
         let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
@@ -552,8 +579,10 @@ extension Evaluation {
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via).uniqued(), facts: facts, &state)
         } else {
+            let owners = Set(r.used.map(\.owner))
+            let owner = owners.count == 1 && (owners.first == .gm || owners.first == .player) ? owners.first : nil
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
-                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts))
+                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts, owner: owner))
         }
     }
 

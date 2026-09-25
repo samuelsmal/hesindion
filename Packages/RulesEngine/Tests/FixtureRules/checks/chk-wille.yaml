@@ -1,0 +1,22 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: the check verb's shapes: DISADV_37 (a check whose failure the player is told), COND_6.SZ2
+# (a check whose success clears a state, whose failure gains one).
+id: chk-wille
+name: Autoritätsglaube
+kind: disadvantage
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: SE1
+    text: Eine Probe auf Willenskraft.
+    effects:
+      - when: { gmFact.trigger: chk-wille }
+        check:
+          of: { talent: [TAL_23] }
+          onSuccess: [{ gain: { rule: chk-mut, levels: 1 } }]
+          onFailure: [{ gain: { rule: chk-bann, levels: 1 } }]
+  - id: SE2
+    text: Misslingt sie, gibt er nach.
+    effects:
+      - when: { gmFact.trigger: chk-wille, check.talent: TAL_23, check.result: failure }
+        tell: { to: player, text: "gibt der Schlechten Eigenschaft nach" }

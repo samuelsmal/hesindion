@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: a Schip's Neuer Wurf (not written in schicksalspunkte yet): one die again, the new
+# result stands, once per check.
+id: chk-schip
+name: Schip
+kind: core
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: NW1
+    text: Neuer Wurf.
+    effects:
+      - when: { check.kind: [talent, spell, liturgy] }
+        reroll: { die: { dice: any }, keep: second, max: 1, per: action }

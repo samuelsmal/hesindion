@@ -42,7 +42,9 @@ public struct Line: Hashable, Sendable {
     /// Every fact the line read, with its value and who stated it.
     public var facts: [FactUse]
     /// Who stated the line's number when it is no rule's: `sheet` for a base from the sheet,
-    /// `player` for a modifier typed in (`.free`), `gm` for the GM's. nil for a rule's line.
+    /// `player` for a modifier typed in (`.free`), `gm` for the GM's. A rule's `add` line whose
+    /// value reads facts all stated by the GM (all by the player) carries `gm` (`player`): the
+    /// GM's check modifier (fertigkeitsproben.FM2). nil for any other rule's line.
     public var owner: Owner?
     public var note: String?
     public var was: Int?

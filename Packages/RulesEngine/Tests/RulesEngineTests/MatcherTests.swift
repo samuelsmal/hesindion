@@ -557,16 +557,114 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(Set(situationKeys).subtracting(Matcher.situationKeys.union(Matcher.actionKeys)), [])
     }
 
-    /// `sequence`, `rolls`, `events`, `fp`, `qs`, `spent`, `success` need the action layer:
-    /// `ActionRunner.canRun` is false for them until Task 26.
-    func testActionLayerSituationsAreUnsupported() throws {
+    /// U1 (Task 26): the action layer runs a 3W20 check. `rolls`, `fp`, `qs`, `spent`, `success`,
+    /// `result` and a `sequence` of reroll steps run when the situation states a talent or spell
+    /// check whose Probe rules.db knows, with one die per attribute; `events`, dice without a
+    /// check and any other step stay unsupported.
+    func testOnlyA3W20CheckRunsOnTheActionLayer() throws {
+        let check = #""facts": [{"name": "check.kind", "value": "talent", "owner": "player"}, {"name": "check.talent", "value": "TAL_10", "owner": "player"}]"#
+        let reroll = #"{"choose": {"choice.reroll": "ADV_4", "choice.rerollDie": 2}, "rolls": {"roll.reroll": 11}, "expect": {"fp": 8}}"#
+        try XCTSkipIf(CheckAttributes.all["TAL_10"] == nil, "rules.db has no skill_details")
+        XCTAssertEqual(CheckAttributes.all["TAL_10"], ["KL", "IN", "IN"])
         XCTAssertTrue(ActionRunner.canRun(try situation(#"{"expect": [{"query": "at"}]}"#)))
         XCTAssertFalse(ActionRunner.canRun(try situation(#"{"rolls": [3, 4, 5]}"#)))
         XCTAssertFalse(ActionRunner.canRun(try situation(#"{"sequence": [{"rolls": {"check.result": "failure"}}]}"#)))
         for key in ["events", "fp", "qs", "spent", "success", "result"] {
             XCTAssertFalse(ActionRunner.canRun(try situation(#"{"expectSituation": {"\#(key)": []}}"#)), key)
         }
+        XCTAssertTrue(ActionRunner.canRun(try situation(#"{\#(check), "rolls": [3, 4, 5], "expectSituation": {"fp": 1, "qs": 1}}"#)))
+        XCTAssertTrue(ActionRunner.canRun(try situation(#"{\#(check), "rolls": [3, 4, 5], "sequence": [\#(reroll)]}"#)))
+        XCTAssertFalse(ActionRunner.canRun(try situation(#"{\#(check), "rolls": [3, 4], "expectSituation": {"fp": 1}}"#)))
+        XCTAssertFalse(ActionRunner.canRun(try situation(#"{\#(check), "rolls": [3, 4, 5], "expectSituation": {"events": []}}"#)))
+        XCTAssertFalse(ActionRunner.canRun(try situation(#"{\#(check), "rolls": [3, 4, 5], "sequence": [{"rolls": {"check.result": "failure"}}]}"#)))
+        XCTAssertNotNil(ActionRunner.RerollStep(try JSONDecoder().decode(JSONValue.self, from: Data(reroll.utf8))))
         XCTAssertEqual(ActionRunner.needs(try situation(#"{"rolls": [1], "expectSituation": {"events": []}}"#)), [.rolls, .events])
+    }
+
+    /// V1 (Task 26): `values` compares the attribute stage's effective values; without a check
+    /// it is an unsupported shape, and malformed values are reported.
+    func testValuesCompareTheAttributeStage() throws {
+        let q = QueryExpectation(query: "check.attribute", values: .array([12, 14, 14]))
+        var c = MatchResult()
+        Matcher.query(q, Breakdown(query: Query("check.attribute")), values: [12, 14, 14], &c)
+        XCTAssertEqual(kinds(c.mismatches), [])
+        c = MatchResult()
+        Matcher.query(q, Breakdown(query: Query("check.attribute")), values: [11, 13, 13], &c)
+        XCTAssertEqual(kinds(c.mismatches), [.values])
+        c = MatchResult()
+        Matcher.query(q, Breakdown(query: Query("check.attribute")), &c)
+        XCTAssertEqual(c.mismatches.map(\.shape), ["values"])
+        c = MatchResult()
+        Matcher.query(QueryExpectation(query: "check.attribute", values: .array(["a"])), Breakdown(query: Query("check.attribute")),
+                      values: [12], &c)
+        XCTAssertEqual(c.mismatches.map(\.shape), ["malformed values"])
+    }
+
+    /// O4 (Task 26): a `reroll` offer entry matches the check's reroll offers by clause (or rule)
+    /// and `from`; offered needs a legal one; `notOffered` with `because` needs an illegal one
+    /// refused by it; a reroll not offered at all cannot show its reason; other fields are shapes.
+    func testRerollOffersMatchTheChecksRerolls() {
+        let b5 = NotApplied(origin: ref("ADV_4.B5"), reason: .forbidden, because: "Doppel-20: Begabung nicht erlaubt")
+        let legal = RerollOffer(origin: ref("ADV_4.B1"), name: "Begabung", dice: [0, 1, 2], keep: "better", remaining: 1)
+        let refused = RerollOffer(origin: ref("ADV_4.B1"), name: "Begabung", dice: [0, 1, 2], keep: "better", remaining: 1,
+                                  reasons: [b5])
+        func check(_ entry: [String: JSONValue], _ wanted: Bool, _ offers: [RerollOffer]) -> [Mismatch.Kind] {
+            kinds(Matcher.offer(.object(entry), wanted: wanted, in: [], notApplied: [], offering: [:], rerolls: offers))
+        }
+        XCTAssertEqual(check(["reroll": "ADV_4.B1"], true, [legal]), [])
+        XCTAssertEqual(check(["reroll": "ADV_4"], true, [legal]), [], "a rule id names its reroll")
+        XCTAssertEqual(check(["reroll": "ADV_4.B1"], true, [refused]), [.missingOffer])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "from": "ADV_4.B7"], true, [legal]), [.missingOffer])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "because": "ADV_4.B5"], false, [refused]), [])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "because": "Doppel-20: Begabung nicht erlaubt"], false, [refused]), [])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "because": "ADV_4.B6"], false, [refused]), [.wrongOffer])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1"], false, [legal]), [.unexpectedOffer])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "because": "ADV_4.B5"], false, []), [.unsupportedShape])
+        XCTAssertEqual(check(["reroll": "ADV_4.B1", "togetherWith": "x"], true, [legal]), [.unsupportedShape])
+        // Without a check the entry stays the action layer's.
+        XCTAssertEqual(kinds(Matcher.offer(.object(["reroll": "ADV_4.B1"]), wanted: true, in: [], notApplied: [], offering: [:])),
+                       [.unsupportedShape])
+    }
+
+    /// R1 (Task 26): `fp`, `qs`, `spent`, `success`, `result {success, kind, from}` and `dice`
+    /// compare the procedure's result (fixture book, probe-fertigkeiten's numbers).
+    func testTheResultKeysCompareTheProcedure() throws {
+        let engine = CheckProcedureTests.fixture
+        let facts: [Fact] = [("attr.KL", 12), ("attr.IN", 14), ("fw.TAL_10", 8)].map { Fact(name: $0.0, value: .int($0.1), owner: .sheet) }
+        let s = Situation(owned: ["chk-begabung": OwnedRule(level: 1, option: "TAL_10")], facts: facts)
+        let request = CheckRequest(kind: .talent, id: "TAL_10", attributes: ["KL", "IN", "IN"])
+        let rolled = CheckProcedure.start(request, in: s, engine: engine).state.step(.dice([5, 19, 12]), engine: engine)
+        let view = ProcedureView(stages: rolled.state.stages, result: rolled.state.result, offers: rolled.offers)
+        func compare(_ expect: String, _ v: ProcedureView = view) throws -> [Mismatch] {
+            let o = try XCTUnwrap(try JSONDecoder().decode(JSONValue.self, from: Data(expect.utf8)).objectValue)
+            var c = MatchResult()
+            ActionRunner.compareResult(o, v, step: nil, &c)
+            return c.mismatches
+        }
+        XCTAssertEqual(kinds(try compare(#"{"fp": 3, "qs": 1, "spent": [0, 5, 0], "success": true, "result": {"kind": "regular"}}"#)), [])
+        XCTAssertEqual(kinds(try compare(#"{"fp": 4, "qs": 2, "spent": [0, 0, 0], "success": false}"#)), [.fp, .qs, .spent, .success])
+        XCTAssertEqual(try compare(#"{"fp": 4}"#).first?.query, "check.fp", "R41 reads the stage the key stands for")
+        XCTAssertEqual(kinds(try compare(#"{"result": {"kind": "patzer", "from": "chk-proben.PZ1"}}"#)), [.checkResult])
+        XCTAssertEqual(kinds(try compare(#"{"result": {"kind": "regular", "note": "x"}}"#)), [.unsupportedShape])
+
+        let after = rolled.state.step(.reroll(die: 1, face: 11), engine: engine)
+        let v2 = ProcedureView(stages: after.state.stages, result: after.state.result, offers: after.offers)
+        XCTAssertEqual(kinds(try compare(#"{"dice": [{"die": 2, "rolled": [19, 11], "counts": 11, "from": "chk-begabung.B1"}]}"#, v2)), [])
+        XCTAssertEqual(kinds(try compare(#"{"dice": [{"die": 2, "rolled": [19, 11], "counts": 11, "from": "chk-begabung.B2"}]}"#, v2)), [.dice])
+        XCTAssertEqual(kinds(try compare(#"{"fp": 8, "qs": 3, "spent": [0, 0, 0]}"#, v2)), [])
+    }
+
+    /// Q2 (Task 26 extra 8): a situation whose action part cannot run still has its query
+    /// expectations compared, and only those.
+    func testOnlyTheQueriesOfAnUnsupportedSituationAreCompared() throws {
+        let s = try situation(#"""
+            {"base": {"pa": 8}, "expect": [{"query": "pa", "total": 5}],
+             "expectSituation": {"events": [{"paid": "asp"}], "texts": [{"gm": "x"}], "legal": {"allowed": false}}}
+            """#)
+        XCTAssertFalse(ActionRunner.canRun(s))
+        let run = Matcher.run(s, engine: Engine(book: Self.book), onlyQueries: true)
+        XCTAssertEqual(kinds(run.mismatches), [.total])
+        XCTAssertEqual(run.mismatches.first?.query, "pa")
     }
 
     // MARK: - The conflicts list and the file filter
