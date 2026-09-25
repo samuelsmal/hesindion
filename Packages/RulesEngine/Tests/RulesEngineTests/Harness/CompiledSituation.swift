@@ -33,6 +33,20 @@ struct CompiledSituation: Decodable {
 
     private enum CodingKeys: String, CodingKey { case id, file, name, rolls, sequence, expect, expectSituation, pending }
 
+    /// The situation the engine runs on. Situations state the current LE and AsP as `base`
+    /// values (`leCurrent`, `aspCurrent`), not as `pools`; the pools are filled from them, the
+    /// max from `leMax` / `aspMax` when stated (else the current value), so that
+    /// `hero.leCurrent` and payments read them (R39). A pool the situation states is kept.
+    var engineSituation: Situation {
+        var out = situation
+        for pool in Pool.allCases where out.pools[pool] == nil {
+            guard let target = pool.currentTarget, let current = situation.base[target] else { continue }
+            let max = situation.base[target.replacingOccurrences(of: "Current", with: "Max")] ?? current
+            out.pools[pool] = PoolState(current: current, max: max)
+        }
+        return out
+    }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -50,6 +64,9 @@ struct CompiledSituation: Decodable {
 /// What one query should give (`expectQueryKeys`: total, result, values, lines, notApplied,
 /// legal, base).
 struct QueryExpectation: Decodable {
+    /// Every key the decoder reads; `VocabularyDriftTests` holds it to `expectQueryKeys`.
+    enum CodingKeys: String, CodingKey, CaseIterable { case query, total, result, lines, notApplied, legal, base, values }
+
     var query: String
     var total: Int?
     var result: Int?
@@ -66,6 +83,9 @@ struct QueryExpectation: Decodable {
 /// An expected line (`lineKeys`: value, from, via, ruling, source, kind, was, term). rulec has
 /// qualified `ruling` already.
 struct ExpectedLine: Decodable {
+    /// Every key the decoder reads; `VocabularyDriftTests` holds it to `lineKeys`.
+    enum CodingKeys: String, CodingKey, CaseIterable { case from, value, via, ruling, source, kind, was, term }
+
     var from: String?
     var value: Int?
     var via: [String]?

@@ -3,8 +3,9 @@ import Foundation
 
 // Matching a compiled situation against the engine (spec §10.2), with the bridge rules of the
 // Task 24 extra scope where the engine's output shape and the situations' expectation shape
-// differ. What a situation does not mention is never checked; what it states in a shape the
-// engine does not model is reported as `unsupportedShape`, never passed silently.
+// differ. What a situation does not mention is never checked. What it states in a shape the
+// engine does not model, or states malformed, is reported as `unsupportedShape` (with a short
+// `shape` tag), never passed silently.
 
 /// One way the engine's answer differs from what a situation expects.
 struct Mismatch: Codable, Hashable, CustomStringConvertible {
@@ -16,20 +17,58 @@ struct Mismatch: Codable, Hashable, CustomStringConvertible {
         // notApplied
         case missingNotApplied, wrongReason, wrongBecause, wrongNotApplied
         // the player-facing parts
-        case missingOffer, unexpectedOffer, missingQuestion, unexpectedQuestion, missingText, unexpectedText
-        /// An expectation the engine's output has no field for (`legal.span`, `term`, prose
-        /// reasons, a situation-level `legal`, an offer that is no choice, …).
+        case missingOffer, unexpectedOffer, wrongOffer, missingQuestion, unexpectedQuestion, missingText, unexpectedText
+        /// An expectation the engine's output has no field for (`legal.span`, `term`, a
+        /// situation-level `legal`, an offer that is no choice, …), or a malformed one.
         case unsupportedShape
     }
+
+    /// What a mismatch is about, for R41: which open rulings could explain it.
+    enum Area: String, Codable { case value, notApplied, legal, offers, questions, texts, shape }
 
     var kind: Kind
     /// The expected query, nil for a situation-level expectation.
     var query: String?
     var detail: String
+    /// What the expectation names: clause refs (`RULE.CLAUSE`), rule ids and ruling ids (R41).
+    var names: [String]
+    /// For `unsupportedShape`: the shape's short tag (R42 lists them).
+    var shape: String?
 
-    init(kind: Kind, query: String? = nil, detail: String) { self.kind = kind; self.query = query; self.detail = detail }
+    init(kind: Kind, query: String? = nil, detail: String, names: [String] = [], shape: String? = nil) {
+        self.kind = kind; self.query = query; self.detail = detail; self.names = names; self.shape = shape
+    }
+
+    static func shape(_ tag: String, _ detail: String, query: String? = nil) -> Mismatch {
+        Mismatch(kind: .unsupportedShape, query: query, detail: detail, shape: tag)
+    }
+
+    var area: Area {
+        switch kind {
+        case .missingLine, .wrongValue, .wrongVia, .wrongRuling, .wrongWas, .wrongKind, .wrongSource, .wrongTerm,
+             .total, .result, .base: .value
+        case .missingNotApplied, .wrongReason, .wrongBecause, .wrongNotApplied: .notApplied
+        case .legal: .legal
+        case .missingOffer, .unexpectedOffer, .wrongOffer: .offers
+        case .missingQuestion, .unexpectedQuestion: .questions
+        case .missingText, .unexpectedText: .texts
+        case .unsupportedShape: .shape
+        }
+    }
 
     var description: String { "[\(kind.rawValue)] \(query.map { "\($0): " } ?? "")\(detail)" }
+}
+
+/// An open ruling a run met, and the clause whose effect rests on it (R32/R41).
+struct OpenHit: Hashable {
+    var ruling: String
+    var origin: ClauseRef?
+}
+
+/// What a comparison found: the mismatches, and notes that are no mismatch (a prose reason).
+struct MatchResult {
+    var mismatches: [Mismatch] = []
+    var notes: [String] = []
 }
 
 enum Matcher {
@@ -40,46 +79,94 @@ enum Matcher {
 
     struct Run {
         var mismatches: [Mismatch]
-        /// Every open ruling the run met: a `notApplied(openRuling)` or an open-ruling text in
-        /// any of its breakdowns (R32).
-        var openRulingsHit: Set<String>
+        var notes: [String]
+        /// Every open ruling the run met, with its clause: a `notApplied(openRuling)` or an
+        /// open-ruling text in any breakdown, an `openRuling` reason of an offer, and, without a
+        /// query, the offers `Engine.offers(in:)` leaves out for resting on an open ruling.
+        var hits: [OpenHit]
     }
 
-    /// Evaluates every expected query, and `Engine.offers(in:)` when offers are expected without
-    /// a query, then compares.
+    /// Evaluates every expected query on the situation with its pools (`engineSituation`), and
+    /// `Engine.offers(in:)` when offers are expected without a query, then compares.
     static func run(_ s: CompiledSituation, engine: Engine) -> Run {
-        let breakdowns = s.expect.map { engine.evaluate(Query($0.query), in: s.situation) }
+        let situation = s.engineSituation
+        let breakdowns = s.expect.map { engine.evaluate(Query($0.query), in: situation) }
         let wantsOffers = s.expectSituation["offered"] != nil || s.expectSituation["notOffered"] != nil
-        let offers = s.expect.isEmpty && wantsOffers ? engine.offers(in: s.situation) : []
-        return Run(mismatches: compare(s, breakdowns: breakdowns, offers: offers),
-                   openRulingsHit: openRulings(in: breakdowns))
+        var offers: [OfferedChoice] = []
+        var hits = openRulings(in: breakdowns) + openRulings(in: breakdowns.flatMap(\.offers))
+        if s.expect.isEmpty && wantsOffers {
+            offers = engine.offers(in: situation)
+            hits += openRulings(in: offers)
+            // `offers(in:)` skips an offer resting on an open ruling without a trace; a breakdown
+            // of no target (it sees every `*` offer) records it. Only its offers' entries count.
+            let offering = Set(offeringClauses(engine.book).values.flatMap { $0 })
+            hits += openRulings(in: [engine.evaluate(Query("offers"), in: situation)])
+                .filter { $0.origin.map(offering.contains) ?? false }
+        }
+        let c = compare(s, breakdowns: breakdowns, offers: offers, offering: offeringClauses(engine.book))
+        return Run(mismatches: c.mismatches, notes: c.notes, hits: hits.distinct())
     }
 
     /// Compares `s` with the breakdowns of its expected queries (in `s.expect`'s order) and, for
-    /// a situation without a query, `Engine.offers(in:)`.
-    static func compare(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice]) -> [Mismatch] {
-        var out: [Mismatch] = []
-        for (q, b) in zip(s.expect, breakdowns) { out += query(q, b) }
-        out += situationLevel(s, breakdowns: breakdowns, offers: offers)
+    /// a situation without a query, `Engine.offers(in:)`. `offering`: choice id → the clauses
+    /// that offer it (for a `notOffered` whose offer was suppressed).
+    static func compare(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice],
+                        offering: [String: [ClauseRef]] = [:]) -> MatchResult {
+        var c = MatchResult()
+        for (q, b) in zip(s.expect, breakdowns) { query(q, b, &c) }
+        situationLevel(s, breakdowns: breakdowns, offers: offers, offering: offering, &c)
+        if checkedExpectations(s) == 0 {
+            c.mismatches.append(.shape("nothing to compare", "the situation states no expectation the harness checks"))
+        }
+        return c
+    }
+
+    /// How many expectations `s` states that the matcher checks (the action layer's excluded).
+    static func checkedExpectations(_ s: CompiledSituation) -> Int {
+        let perQuery = s.expect.reduce(0) { n, q in
+            n + [q.total != nil, q.result != nil, q.lines != nil, q.notApplied != nil, q.legal != nil, q.base != nil,
+                 q.values != nil].filter { $0 }.count
+        }
+        return perQuery + s.expectSituation.keys.filter { !actionKeys.contains($0) }.count
+    }
+
+    static func openRulings(in breakdowns: [Breakdown]) -> [OpenHit] {
+        var out: [OpenHit] = []
+        for b in breakdowns {
+            for n in b.notApplied where n.reason == .openRuling { out += n.rulings.map { OpenHit(ruling: $0, origin: n.origin) } }
+            for t in b.texts where t.kind == .openRuling { if let r = t.ruling { out.append(OpenHit(ruling: r, origin: t.origin)) } }
+        }
         return out
     }
 
-    static func openRulings(in breakdowns: [Breakdown]) -> Set<String> {
-        var out: Set<String> = []
-        for b in breakdowns {
-            for n in b.notApplied where n.reason == .openRuling { out.formUnion(n.rulings) }
-            for t in b.texts where t.kind == .openRuling { if let r = t.ruling { out.insert(r) } }
+    /// The `openRuling` entries among offers' reasons and their refused options' reasons.
+    static func openRulings(in offers: [OfferedChoice]) -> [OpenHit] {
+        offers.flatMap { $0.reasons + $0.refused.flatMap(\.reasons) }
+            .filter { $0.reason == .openRuling }
+            .flatMap { n in n.rulings.map { OpenHit(ruling: $0, origin: n.origin) } }
+    }
+
+    /// Choice id → the clauses whose `offer` offers it.
+    static func offeringClauses(_ book: RuleBook) -> [String: [ClauseRef]] {
+        var out: [String: [ClauseRef]] = [:]
+        for rule in book.rules.values {
+            for clause in rule.clauses {
+                for e in clause.effects {
+                    if case .offer(let o) = e.payload { out[o.choice, default: []].append(e.origin.clauseRef) }
+                }
+            }
         }
         return out
     }
 
     // MARK: - One query
 
-    static func query(_ q: QueryExpectation, _ b: Breakdown) -> [Mismatch] {
-        var out: [Mismatch] = []
-        func add(_ kind: Mismatch.Kind, _ detail: String) { out.append(Mismatch(kind: kind, query: q.query, detail: detail)) }
+    static func query(_ q: QueryExpectation, _ b: Breakdown, _ c: inout MatchResult) {
+        func add(_ kind: Mismatch.Kind, _ detail: String, names: [String] = []) {
+            c.mismatches.append(Mismatch(kind: kind, query: q.query, detail: detail, names: names))
+        }
 
-        if let expected = q.lines { out += lines(expected, b, query: q.query) }
+        if let expected = q.lines { c.mismatches += lines(expected, b, query: q.query) }
         if let t = q.total {
             // Bridge 2: a derived base counts in the situation's `total` (leMax 37); a sheet base
             // does not (at −5); without a base the total is the lines' sum.
@@ -94,13 +181,12 @@ enum Matcher {
         if let r = q.result, b.result != r {
             add(.result, "expected result \(r), got \(b.result.map(String.init) ?? "none (no base)")")
         }
-        for e in q.notApplied ?? [] { out += notApplied(e, in: b.notApplied, query: q.query) }
-        if let legal = q.legal { out += self.legal(legal, b.legal, query: q.query) }
-        if let base = q.base { out += self.base(base, b) .map { Mismatch(kind: $0.kind, query: q.query, detail: $0.detail) } }
+        for e in q.notApplied ?? [] { notApplied(e, in: b.notApplied, query: q.query, &c) }
+        if let legal = q.legal { c.mismatches += self.legal(legal, b.legal, query: q.query) }
+        if let base = q.base { c.mismatches += self.base(base, b, query: q.query) }
         if q.values != nil {
-            add(.unsupportedShape, "values (a check's stage values) are not in a breakdown before Task 26")
+            c.mismatches.append(.shape("values", "values (a check's stage values) are not in a breakdown before Task 26", query: q.query))
         }
-        return out
     }
 
     // MARK: Lines
@@ -127,11 +213,20 @@ enum Matcher {
             let own = shown.filter { $0.origin == x && $0.kind != .multiplied }
             let sum = own.reduce(0) { $0 + $1.value }
             let line = Line(value: sum + d.value, kind: own[0].kind, origin: x,
-                            via: (own.flatMap(\.via) + [m] + d.via.filter { $0 != x }).uniquedRefs(),
-                            rulings: (own.flatMap(\.rulings) + d.rulings).uniquedStrings(),
+                            via: (own.flatMap(\.via) + [m] + d.via.filter { $0 != x }).distinct(),
+                            rulings: (own.flatMap(\.rulings) + d.rulings).distinct(),
                             facts: own.flatMap(\.facts) + d.facts, owner: own[0].owner, was: sum)
             return (line, m)
         }
+    }
+
+    /// What an expected line names (R41): its clause and rule, its `via`, its rulings.
+    static func names(_ e: ExpectedLine) -> [String] {
+        var out: [String] = []
+        if let f = e.from { out.append(f); if let r = ClauseRef(f) { out.append(r.rule) } }
+        out += e.via ?? []
+        out += e.ruling ?? []
+        return out
     }
 
     /// Each expected line must match a distinct shown line (§10.2: any order; actual lines the
@@ -157,11 +252,12 @@ enum Matcher {
             guard let term = e.term else { continue }
             if let actual = shown[j].term {
                 if actual != term {
-                    out.append(Mismatch(kind: .wrongTerm, query: query, detail: "expected term \"\(term)\", got \"\(actual)\""))
+                    out.append(Mismatch(kind: .wrongTerm, query: query, detail: "expected term \"\(term)\", got \"\(actual)\"",
+                                        names: names(e)))
                 }
             } else {
-                out.append(Mismatch(kind: .unsupportedShape, query: query,
-                                    detail: "term \"\(term)\" on \(e.from ?? "a line"): the engine does not name a line's term"))
+                out.append(.shape("term", "term \"\(term)\" on \(e.from ?? "a line"): the engine does not name a line's term",
+                                  query: query))
             }
         }
         return out
@@ -195,9 +291,10 @@ enum Matcher {
         guard let j = best, let kind = failures(j).first else {
             let what = e.from.map { "no line from \($0)" } ?? "no line carrying \(e.ruling ?? [])"
             let extra = same.isEmpty ? "" : " (its \(same.count) line(s) match other expected lines)"
-            return Mismatch(kind: .missingLine, query: query, detail: "expected \(want): \(what)\(extra) — shown: \(show(shown))")
+            return Mismatch(kind: .missingLine, query: query, detail: "expected \(want): \(what)\(extra) — shown: \(show(shown))",
+                            names: names(e))
         }
-        return Mismatch(kind: kind, query: query, detail: "expected \(want), got \(show([shown[j]]))")
+        return Mismatch(kind: kind, query: query, detail: "expected \(want), got \(show([shown[j]]))", names: names(e))
     }
 
     /// Bipartite matching by augmenting paths: `fits[i]` are the right-hand indices left `i` may
@@ -232,10 +329,17 @@ enum Matcher {
         !text.contains(where: \.isWhitespace) && ClauseRef(text) != nil
     }
 
-    /// Bridge 6: the entry's own `because` text, or a clause ref that is the suppressor or
-    /// forbid in the entry's `via` (or its `because`).
+    /// Bridge 6: a text `because` is the entry's own `because`. A clause ref names what
+    /// suppressed, overrode or forbade the entry: only for those reasons, and only as the
+    /// entry's first `via` (the suppressor), its `because` (the winning clause) or, for a forbid,
+    /// its origin.
     static func because(_ b: String, _ n: NotApplied) -> Bool {
-        n.because == b || (isRef(b) && n.via.contains { $0.description == b })
+        guard isRef(b) else { return n.because == b }
+        switch n.reason {
+        case .suppressed, .overridden: return n.via.first?.description == b || n.because == b
+        case .forbidden: return n.via.first?.description == b || n.because == b || n.origin.description == b
+        default: return false
+        }
     }
 
     static func failures(_ e: ExpectedNotApplied, _ n: NotApplied) -> [Mismatch.Kind] {
@@ -251,71 +355,87 @@ enum Matcher {
         return out
     }
 
+    static func names(_ e: ExpectedNotApplied) -> [String] {
+        [e.rule] + (e.clause.map { ["\(e.rule).\($0)"] } ?? []) + (e.because.map { [$0] } ?? [])
+            + (e.reason.flatMap { isRef($0) ? [$0] : nil } ?? []) + (e.ruling ?? [])
+    }
+
     /// `notApplied` matches by rule (and clause, when given) and reason code (§10.2), plus
-    /// `because`, `ruling` and `value` when given.
-    static func notApplied(_ e: ExpectedNotApplied, in entries: [NotApplied], query: String?) -> [Mismatch] {
-        var out: [Mismatch] = []
+    /// `because`, `ruling` and `value` when given. A prose `reason` (R42) is matched by rule and
+    /// clause only, and kept as a note.
+    static func notApplied(_ e: ExpectedNotApplied, in entries: [NotApplied], query: String?, _ c: inout MatchResult) {
         let name = e.clause.map { "\(e.rule).\($0)" } ?? e.rule
         if case .prose(let p)? = e.reason.map(reasonForm) {
-            out.append(Mismatch(kind: .unsupportedShape, query: query,
-                                detail: "notApplied \(name): reason \"\(p)\" is prose, not a reason code"))
+            c.notes.append("\(query.map { "\($0): " } ?? "")notApplied \(name): reason \"\(p)\" is prose; matched by rule and clause only")
         }
         let same = entries.filter { $0.rule == e.rule && (e.clause == nil || $0.clause == e.clause) }
         guard !same.isEmpty else {
             let got = entries.filter { $0.rule == e.rule }.map { "\($0.origin) \($0.reason.rawValue)" }
-            out.append(Mismatch(kind: .missingNotApplied, query: query,
-                                detail: "no notApplied entry for \(name)" + (got.isEmpty ? "" : " (the rule's: \(got))")))
-            return out
+            c.mismatches.append(Mismatch(kind: .missingNotApplied, query: query,
+                                         detail: "no notApplied entry for \(name)" + (got.isEmpty ? "" : " (the rule's: \(got))"),
+                                         names: names(e)))
+            return
         }
-        if same.contains(where: { failures(e, $0).isEmpty }) { return out }
+        if same.contains(where: { failures(e, $0).isEmpty }) { return }
         let best = same.min { failures(e, $0).count < failures(e, $1).count }!
-        out.append(Mismatch(kind: failures(e, best)[0], query: query,
-                            detail: "expected notApplied \(name) \(describe(e)), got \(best.origin) \(best.reason.rawValue)"
-                                + " because \(best.because ?? "–") via \(best.via.map(\.description)) rulings \(best.rulings)"
-                                + " value \(best.value.map(String.init) ?? "–")"))
-        return out
+        c.mismatches.append(Mismatch(kind: failures(e, best)[0], query: query,
+                                     detail: "expected notApplied \(name) \(describe(e)), got \(best.origin) \(best.reason.rawValue)"
+                                         + " because \(best.because ?? "–") via \(best.via.map(\.description)) rulings \(best.rulings)"
+                                         + " value \(best.value.map(String.init) ?? "–")",
+                                     names: names(e)))
     }
 
     // MARK: legal, base
 
     /// Bridge 7: `allowed` compares when given (a bare bool is `allowed`); `because` matches when
-    /// any firing forbid or require is it; `ruling` when any of them rests on it; `span` and
-    /// `via` are not modelled.
+    /// any firing forbid or require is it; `ruling` when any of them rests on it; `span`, `via`
+    /// and any other key are not modelled; a malformed value is reported.
     static func legal(_ expected: JSONValue, _ actual: Legality, query: String?) -> [Mismatch] {
-        func mismatch(_ kind: Mismatch.Kind, _ d: String) -> Mismatch { Mismatch(kind: kind, query: query, detail: d) }
         let firing = actual.reasons.map { "\($0.origin)" + ($0.because.map { " (\($0))" } ?? "") }
         switch expected {
         case .bool(let allowed):
-            return actual.allowed == allowed ? [] : [mismatch(.legal, "expected legal \(allowed), got \(actual.allowed) \(firing)")]
+            return actual.allowed == allowed ? []
+                : [Mismatch(kind: .legal, query: query, detail: "expected legal \(allowed), got \(actual.allowed) \(firing)")]
         case .object(let o):
             var out: [Mismatch] = []
-            if let allowed = o["allowed"], case .bool(let a) = allowed, actual.allowed != a {
-                return [mismatch(.legal, "expected allowed \(a), got \(actual.allowed) \(firing)")]
+            let names = [o["because"]?.string].compactMap { $0 } + (o["ruling"].map(strings) ?? [])
+            func mismatch(_ d: String) -> Mismatch { Mismatch(kind: .legal, query: query, detail: d, names: names) }
+            if let allowed = o["allowed"] {
+                guard case .bool(let a) = allowed else {
+                    return [.shape("legal.malformed", "legal.allowed \(allowed) is not a bool", query: query)]
+                }
+                if actual.allowed != a { return [mismatch("expected allowed \(a), got \(actual.allowed) \(firing)")] }
             }
-            if let b = o["because"]?.string,
-               !actual.reasons.contains(where: { $0.origin.description == b || $0.because == b }) {
-                out.append(mismatch(.legal, "expected a firing \(b), firing: \(firing)"))
+            if let raw = o["because"] {
+                if let b = raw.string {
+                    if !actual.reasons.contains(where: { $0.origin.description == b || $0.because == b }) {
+                        out.append(mismatch("expected a firing \(b), firing: \(firing)"))
+                    }
+                } else {
+                    out.append(.shape("legal.malformed", "legal.because \(raw) is not a string", query: query))
+                }
             }
             if let r = o["ruling"].map(strings), !r.allSatisfy({ ruling in actual.reasons.contains { rulingMatches(ruling, $0.rulings) } }) {
-                out.append(mismatch(.legal, "expected a firing entry resting on \(r), firing: \(firing)"))
+                out.append(mismatch("expected a firing entry resting on \(r), firing: \(firing)"))
             }
             for key in o.keys.sorted() where !["allowed", "because", "ruling"].contains(key) {
-                out.append(mismatch(.unsupportedShape, "legal.\(key) is not modelled"))
+                out.append(.shape("legal.\(key)", "legal.\(key) is not modelled", query: query))
             }
             return out
         default:
-            return [mismatch(.unsupportedShape, "legal \(expected) is not a bool or an object")]
+            return [.shape("legal.malformed", "legal \(expected) is not a bool or an object", query: query)]
         }
     }
 
     /// The query key `base`: `from` is the base's clause or one of its parts', `value` the
     /// base's value, `ruling` and `via` are carried by the base or its parts.
-    static func base(_ expected: JSONValue, _ b: Breakdown) -> [Mismatch] {
-        guard case .object(let o) = expected else { return [Mismatch(kind: .unsupportedShape, detail: "base \(expected)")] }
+    static func base(_ expected: JSONValue, _ b: Breakdown, query: String) -> [Mismatch] {
+        guard case .object(let o) = expected else { return [.shape("base.malformed", "base \(expected)", query: query)] }
         var out: [Mismatch] = []
         let lines = b.base.map { [$0] + $0.parts } ?? []
         var wrong: [String] = []
-        if let from = o["from"]?.string, !lines.contains(where: { $0.origin?.description == from }) { wrong.append("from \(from)") }
+        let from = o["from"]?.string
+        if let from, !lines.contains(where: { $0.origin?.description == from }) { wrong.append("from \(from)") }
         if let v = o["value"]?.int, b.base?.value != v { wrong.append("value \(v)") }
         if let r = o["ruling"].map(strings), !Set(r).allSatisfy({ x in lines.contains { rulingMatches(x, $0.rulings) } }) {
             wrong.append("ruling \(r)")
@@ -324,11 +444,13 @@ enum Matcher {
             wrong.append("via \(via)")
         }
         if !wrong.isEmpty {
-            out.append(Mismatch(kind: .base, detail: "expected base \(wrong.joined(separator: ", ")), got "
-                                + (b.base.map { show([$0] + $0.parts) } ?? "no base")))
+            let names = (from.map { [$0] + [ClauseRef($0)?.rule].compactMap { $0 } } ?? []) + (o["via"].map(strings) ?? [])
+                + (o["ruling"].map(strings) ?? [])
+            out.append(Mismatch(kind: .base, query: query, detail: "expected base \(wrong.joined(separator: ", ")), got "
+                                + (b.base.map { show([$0] + $0.parts) } ?? "no base"), names: names))
         }
         for key in o.keys.sorted() where !["from", "value", "ruling", "via"].contains(key) {
-            out.append(Mismatch(kind: .unsupportedShape, detail: "base.\(key) is not modelled"))
+            out.append(.shape("base.\(key)", "base.\(key) is not modelled", query: query))
         }
         return out
     }
@@ -341,91 +463,135 @@ enum Matcher {
 
     // MARK: - Situation level
 
-    /// The keys the action layer matches (`ActionRunner`).
-    static let actionKeys: Set<String> = ["events", "fp", "qs", "spent", "success", "result"]
+    /// The situation-level keys the action layer matches (`ActionRunner.Need`).
+    static var actionKeys: Set<String> { Set(ActionRunner.Need.allCases.map(\.rawValue)) }
+    /// The situation-level keys this matcher handles.
+    static let situationKeys: Set<String> = ["offered", "notOffered", "notApplied", "questions", "texts", "legal"]
 
-    static func situationLevel(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice]) -> [Mismatch] {
-        var out: [Mismatch] = []
+    static func situationLevel(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice],
+                               offering: [String: [ClauseRef]], _ c: inout MatchResult) {
         let es = s.expectSituation
         let noQuery = breakdowns.isEmpty
-        func unsupported(_ d: String) { out.append(Mismatch(kind: .unsupportedShape, detail: d)) }
+        func shape(_ tag: String, _ d: String) { c.mismatches.append(.shape(tag, d)) }
         func needsQuery(_ key: String) -> Bool {
             guard noQuery else { return false }
-            unsupported("situation-level \(key) without a query: the engine has no situation-wide breakdown")
+            shape("situation \(key) without a query", "situation-level \(key) without a query: the engine has no situation-wide breakdown")
             return true
+        }
+        func list(_ key: String) -> [JSONValue]? {
+            guard let raw = es[key] else { return nil }
+            guard let a = raw.arrayValue else { shape("malformed \(key)", "\(key) \(raw) is not a list"); return nil }
+            return a
         }
 
         // Bridge 8: with a query, the breakdowns' offers (a phase-4 suppress acts there);
         // otherwise `Engine.offers(in:)`.
         let pool = noQuery ? offers : breakdowns.flatMap(\.offers)
+        let entries = breakdowns.flatMap(\.notApplied)
         for (key, wanted) in [("offered", true), ("notOffered", false)] {
-            guard case .array(let entries)? = es[key] else { continue }
-            for entry in entries {
-                if let m = offer(entry, wanted: wanted, in: pool) { out.append(m) }
+            for entry in list(key) ?? [] {
+                if let m = offer(entry, wanted: wanted, in: pool, notApplied: entries, offering: offering) { c.mismatches.append(m) }
             }
         }
-        if let raw = es["notApplied"], !needsQuery("notApplied") {
-            let all = breakdowns.flatMap(\.notApplied)
-            for case let e? in (raw.arrayValue ?? []).map(ExpectedNotApplied.init) {
-                out += notApplied(e, in: all, query: nil)
+        if es["notApplied"] != nil, !needsQuery("notApplied") {
+            for raw in list("notApplied") ?? [] {
+                guard let e = ExpectedNotApplied(raw) else { shape("malformed notApplied", "notApplied entry \(raw) has no rule"); continue }
+                notApplied(e, in: entries, query: nil, &c)
             }
         }
-        if let raw = es["questions"], !needsQuery("questions") {
+        if es["questions"] != nil, !needsQuery("questions"), let expected = list("questions") {
             let asked = breakdowns.flatMap(\.questions)
-            let entries = raw.arrayValue ?? []
-            if entries.isEmpty, !asked.isEmpty {
-                out.append(Mismatch(kind: .unexpectedQuestion, detail: "expected no question, asked: \(asked.map(\.fact).uniquedStrings())"))
+            if expected.isEmpty, !asked.isEmpty {
+                c.mismatches.append(Mismatch(kind: .unexpectedQuestion, detail: "expected no question, asked: \(asked.map(\.fact).distinct())"))
             }
-            for e in entries {
-                guard case .object(let o) = e, let fact = o["fact"]?.string else { unsupported("question \(e)"); continue }
+            for e in expected {
+                guard case .object(let o) = e, let fact = o["fact"]?.string else { shape("malformed question", "question \(e)"); continue }
                 if !asked.contains(where: { $0.fact == fact }) {
-                    out.append(Mismatch(kind: .missingQuestion, detail: "no question for \(fact)"))
+                    let names = [o["from"]?.string, o["ruling"]?.string].compactMap { $0 }
+                    c.mismatches.append(Mismatch(kind: .missingQuestion, detail: "no question for \(fact)", names: names))
                 }
             }
         }
-        if let raw = es["texts"], !needsQuery("texts") {
-            out += texts(raw.arrayValue ?? [], in: breakdowns.flatMap(\.texts))
+        if es["texts"] != nil, !needsQuery("texts"), let expected = list("texts") {
+            c.mismatches += texts(expected, in: breakdowns.flatMap(\.texts))
         }
         if let legal = es["legal"] {
             let keys = legal.objectValue.map { $0.keys.sorted() } ?? []
-            unsupported("situation-level legal \(keys.isEmpty ? "\(legal)" : "\(keys)") is not modelled")
+            shape("situation legal", "situation-level legal \(keys.isEmpty ? "\(legal)" : "\(keys)") is not modelled")
         }
-        for key in es.keys.sorted() where !["offered", "notOffered", "notApplied", "questions", "texts", "legal"].contains(key)
-            && !actionKeys.contains(key) {
-            unsupported("situation-level \(key) is not modelled")
+        for key in es.keys.sorted() where !situationKeys.contains(key) && !actionKeys.contains(key) {
+            shape("situation \(key)", "situation-level \(key) is not modelled")
         }
-        return out
     }
 
     /// `offered` / `notOffered`: by choice and origin clause (bridge 8). A choice is offered when
     /// an offer of it is legal; `choice.option` is that option of the offer, offered when the
     /// offer lists it and does not refuse it.
-    static func offer(_ entry: JSONValue, wanted: Bool, in pool: [OfferedChoice]) -> Mismatch? {
+    ///
+    /// A `notOffered` with `because` / `ruling` needs a reason that says so: an illegal offer
+    /// whose refusals hold the `because` (by origin or text) and rest on the `ruling`; or, for an
+    /// offer that is not there, a `suppressed` entry on its offering clause whose suppressor is
+    /// the `because`. When neither can be found the case cannot be decided: an unsupported shape.
+    static func offer(_ entry: JSONValue, wanted: Bool, in pool: [OfferedChoice], notApplied: [NotApplied],
+                      offering: [String: [ClauseRef]]) -> Mismatch? {
+        let key = wanted ? "offered" : "notOffered"
         guard case .object(let o) = entry, let choice = o["choice"]?.string else {
-            return Mismatch(kind: .unsupportedShape,
-                            detail: "\(wanted ? "offered" : "notOffered") entry without a choice \(entry.objectValue.map { $0.keys.sorted() } ?? []) is the action layer's")
+            return .shape("offer without a choice", "\(key) entry without a choice \(entry.objectValue.map { $0.keys.sorted() } ?? []) is the action layer's")
         }
-        let from = o["from"]?.string
+        if let f = o["from"], f.string == nil { return .shape("malformed offer", "\(key) \(choice): from \(f) is not a string") }
+        if let b = o["because"], b.string == nil { return .shape("malformed offer", "\(key) \(choice): because \(b) is not a string") }
+        let from = o["from"]?.string, because = o["because"]?.string, ruling = o["ruling"].map(strings)
+        let names = [from, because].compactMap { $0 } + (ruling ?? [])
         func origin(_ c: OfferedChoice) -> Bool { from == nil || c.origin.description == from }
+
         var offered = pool.contains { $0.choice == choice && origin($0) && $0.legal }
         var seen = pool.filter { $0.choice == choice && origin($0) }
+        var parent = choice, option: String?
+        var refusals = seen.filter { !$0.legal }.flatMap(\.reasons)
         if !offered, seen.isEmpty, let dot = choice.firstIndex(of: ".") {
-            let parent = String(choice[..<dot]), option = String(choice[choice.index(after: dot)...])
+            parent = String(choice[..<dot]); option = String(choice[choice.index(after: dot)...])
             seen = pool.filter { $0.choice == parent && origin($0) }
             offered = seen.contains { c in
                 c.legal && (c.options ?? []).contains { text($0) == option } && !c.refused.contains { text($0.option) == option }
             }
+            refusals = seen.flatMap { c in (c.legal ? [] : c.reasons) + c.refused.filter { text($0.option) == option }.flatMap(\.reasons) }
         }
-        guard offered != wanted else { return nil }
         let got = seen.isEmpty ? "not offered"
             : seen.map { "\($0.origin) legal \($0.legal)" + ($0.because.map { " because \($0)" } ?? "") }.joined(separator: "; ")
-        return Mismatch(kind: wanted ? .missingOffer : .unexpectedOffer,
-                        detail: "expected \(choice)\(from.map { " from \($0)" } ?? "") \(wanted ? "offered" : "not offered"), got \(got)")
+        if offered != wanted {
+            return Mismatch(kind: wanted ? .missingOffer : .unexpectedOffer,
+                            detail: "expected \(choice)\(from.map { " from \($0)" } ?? "") \(wanted ? "offered" : "not offered"), got \(got)",
+                            names: names)
+        }
+        guard !wanted, because != nil || ruling != nil else { return nil }
+
+        func wrong(_ d: String) -> Mismatch { Mismatch(kind: .wrongOffer, detail: "expected \(choice) not offered \(d)", names: names) }
+        let expectation = [because.map { "because \($0)" }, ruling.map { "on \($0)" }].compactMap { $0 }.joined(separator: " ")
+        if !refusals.isEmpty {
+            let rulings = seen.flatMap(\.rulings) + refusals.flatMap(\.rulings)
+            let becauseOK = because.map { b in refusals.contains { $0.origin.description == b || $0.because == b } } ?? true
+            let rulingOK = ruling.map { $0.allSatisfy { rulingMatches($0, rulings) } } ?? true
+            if becauseOK && rulingOK { return nil }
+            let why = refusals.map { "\($0.origin) \($0.reason.rawValue)" + ($0.because.map { " (\($0))" } ?? "") + " rulings \($0.rulings)" }
+            return wrong("\(expectation), refused by \(why)")
+        }
+        // Not there at all: suppressed on its offering clause?
+        let clauses = from.flatMap(ClauseRef.init).map { [$0] } ?? offering[choice] ?? offering[parent] ?? []
+        let suppressed = notApplied.filter { $0.reason == .suppressed && clauses.contains($0.origin) }
+        if !suppressed.isEmpty {
+            let becauseOK = because.map { b in suppressed.contains { $0.via.first?.description == b || $0.because == b } } ?? true
+            let rulingOK = ruling.map { $0.allSatisfy { r in suppressed.contains { rulingMatches(r, $0.rulings) } } } ?? true
+            if becauseOK && rulingOK { return nil }
+            return wrong("\(expectation), suppressed by \(suppressed.map { $0.via.first?.description ?? $0.because ?? "?" })")
+        }
+        return .shape("notOffered reason undecidable",
+                      "notOffered \(choice) \(expectation): it is not offered at all, so its reason cannot be checked")
     }
 
     /// `texts`: an entry matches a text by origin (`from`), open ruling (`ruling`) and, for an
     /// audience key (`player`, `gm`, `opponent`) with a string, that audience and exact text.
-    /// `[]` asserts no `tell`. Other keys, or a structured text, are unsupported shapes.
+    /// `[]` asserts no `tell`. Other keys, a structured text or a malformed field are unsupported
+    /// shapes.
     static func texts(_ entries: [JSONValue], in actual: [TextLine]) -> [Mismatch] {
         var out: [Mismatch] = []
         let tells = actual.filter { $0.kind == .tell }
@@ -433,11 +599,12 @@ enum Matcher {
             out.append(Mismatch(kind: .unexpectedText, detail: "expected no tell, got \(tells.map { "\($0.origin.map(\.description) ?? "–"): \($0.text)" })"))
         }
         for e in entries {
-            guard case .object(let o) = e else { out.append(Mismatch(kind: .unsupportedShape, detail: "text \(e)")); continue }
+            guard case .object(let o) = e else { out.append(.shape("text shape", "text \(e)")); continue }
             let other = o.keys.filter { !["from", "ruling"].contains($0) && Audience(rawValue: $0) == nil }
             let audience = o.keys.compactMap(Audience.init(rawValue:)).first
-            if !other.isEmpty || audience.map({ o[$0.rawValue]?.string == nil }) == true {
-                out.append(Mismatch(kind: .unsupportedShape, detail: "text \(o.keys.sorted()) \(e): only from, ruling and a plain audience text are matched"))
+            let malformed = ["from", "ruling"].contains { o[$0] != nil && o[$0]?.string == nil }
+            if !other.isEmpty || malformed || audience.map({ o[$0.rawValue]?.string == nil }) == true {
+                out.append(.shape("text shape", "text \(o.keys.sorted()) \(e): only from, ruling and a plain audience text are matched"))
                 continue
             }
             let from = o["from"]?.string, ruling = o["ruling"]?.string
@@ -449,7 +616,8 @@ enum Matcher {
             if !hit {
                 let near = actual.filter { from == nil || $0.origin?.description == from }
                     .map { "\($0.kind.rawValue) \($0.audience.rawValue): \($0.text)" }
-                out.append(Mismatch(kind: .missingText, detail: "expected text \(e), got \(near.isEmpty ? "none from there" : "\(near)")"))
+                out.append(Mismatch(kind: .missingText, detail: "expected text \(e), got \(near.isEmpty ? "none from there" : "\(near)")",
+                                    names: [from, ruling].compactMap { $0 }))
             }
         }
         return out
@@ -498,15 +666,56 @@ enum Matcher {
     }
 }
 
+// MARK: - R41: which open rulings could explain a mismatch
+
+enum Explainer {
+    /// Whether the open ruling `hit` met could explain `m` (R41):
+    /// - the expectation names the ruling, or the clause or rule its effect sits on;
+    /// - its effect (the clause's effect resting on the ruling) reaches the mismatched query's
+    ///   target by a non-`*` reach entry;
+    /// - `m` is about offers / questions / texts and the effect is a `*` offer / ask / tell.
+    /// `*`-indexed open-ruling texts alone never explain a value mismatch. An unsupported shape
+    /// is explained by nothing.
+    static func explains(_ hit: OpenHit, _ m: Mismatch, book: RuleBook?) -> Bool {
+        guard m.area != .shape else { return false }
+        if m.names.contains(hit.ruling) { return true }
+        guard let o = hit.origin else { return false }
+        if m.names.contains(o.description) || m.names.contains(o.rule) { return true }
+        guard let book else { return false }
+        // The reach entries of the clause's effects that rest on the ruling (nested ones included).
+        let here = { (e: EffectOrigin) in
+            e.rule == o.rule && e.clause == o.clause && (book.effect(at: e).map { rests($0, on: hit.ruling) } ?? false)
+        }
+        if let q = m.query, (book.reach[TargetRef(q).name] ?? []).contains(where: here) { return true }
+        let verb: Verb? = switch m.area {
+        case .offers: .offer
+        case .questions: .ask
+        case .texts: .tell
+        default: nil
+        }
+        guard let verb else { return false }
+        return (book.reach["*"] ?? []).contains { here($0) && book.effect(at: $0)?.payload.verb == verb }
+    }
+
+    /// Whether `e` or an effect nested in it rests on `ruling`.
+    static func rests(_ e: Effect, on ruling: String) -> Bool {
+        e.ruling.contains(ruling) || e.payload.nested.contains { $0.effects.contains { rests($0, on: ruling) } }
+    }
+
+    /// The rulings among `hits` that are on the situation's static pending list and explain one
+    /// of its mismatches, sorted.
+    static func explaining(_ hits: [OpenHit], _ mismatches: [Mismatch], pending: [String], book: RuleBook?) -> [String] {
+        let open = Set(pending)
+        return Set(hits.filter { h in open.contains(h.ruling) && mismatches.contains { explains(h, $0, book: book) } }.map(\.ruling))
+            .sorted()
+    }
+}
+
 extension JSONValue {
     var arrayValue: [JSONValue]? { if case .array(let a) = self { a } else { nil } }
     var objectValue: [String: JSONValue]? { if case .object(let o) = self { o } else { nil } }
 }
 
-extension Array where Element == ClauseRef {
-    func uniquedRefs() -> [ClauseRef] { var seen: Set<ClauseRef> = []; return filter { seen.insert($0).inserted } }
-}
-
-extension Array where Element == String {
-    func uniquedStrings() -> [String] { var seen: Set<String> = []; return filter { seen.insert($0).inserted } }
+extension Array where Element: Hashable {
+    func distinct() -> [Element] { var seen: Set<Element> = []; return filter { seen.insert($0).inserted } }
 }

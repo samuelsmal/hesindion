@@ -9,9 +9,11 @@ import Foundation
 /// `events`, the check stages `fp`/`qs`, `spent`, `success`, and the situation-level `result`).
 enum ActionRunner {
     /// What makes a situation the action layer's: a `sequence`, dice (`rolls` as a list), or a
-    /// situation-level expectation of events or check stages.
+    /// situation-level expectation of events, check stages or a check's result.
     enum Need: String, CaseIterable, Codable {
         case sequence, rolls, events, fp, qs, spent, success
+        /// The situation-level check result (`{success, kind, from}`, Task 26).
+        case result
     }
 
     /// The needs the action layer can run. Empty until Task 26.
