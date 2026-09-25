@@ -253,7 +253,7 @@ rulings:
       Yes: a zone piece of any armour counts as a Rüstungsteil for its zone; only the torso piece
       is 'the armour'.
     decided: { by: "@samuelsmal", date: 2026-09-24 }
-    appliesTo: [RS2, RS3]
+    appliesTo: [RS2, RS3, RS4]
     notes: >
       Each zone offers every armour type (RS6 prices every complete armour per zone so its parts
       can be bought on their own); "Rüstungen lassen sich … nicht kombinieren" limits the torso

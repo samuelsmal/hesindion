@@ -86,9 +86,10 @@ final class Evaluation {
     /// Line control (phase 4) is decided before phase 3 computes a line: a `replace` swaps the
     /// replaced effect's value before its `per` (plan A.3), and a suppressed effect is never
     /// computed, so it asks nothing. This differs from running phase 4 after phase 3 in two
-    /// ways: a suppressed effect is recorded as `suppressed` even when its own `when` is no or
-    /// unknown (it would have given no line anyway), and a suppressed `set` takes no part in
-    /// choosing the winner, so the next firing set wins.
+    /// ways: a suppressed effect is recorded as `suppressed` even when its own `when` is unknown
+    /// (it would have given no line anyway), or no while another effect the suppress names may
+    /// act (Task 32 fix round 1: a suppress naming only effects whose `when` is no is not read),
+    /// and a suppressed `set` takes no part in choosing the winner, so the next firing set wins.
     ///
     /// Legality, the offers and the texts belong to the query asked (depth 0). A nested
     /// evaluation (an operand, `hero.levelOf`) gives a number only: they would add questions that
@@ -535,11 +536,18 @@ extension Evaluation {
             // offer reaches the query.
             let targets = controllable.filter { e in
                 guard selects(selector, effect: e) else { return false }
-                guard replace != nil else { return true }
-                switch e.payload {
-                case .add, .set: return true
-                default: return false
+                if replace != nil {
+                    switch e.payload {
+                    case .add, .set: break
+                    default: return false
+                    }
                 }
+                // Fix round 1: an effect whose own `when` is no would not act here, so nothing
+                // is controlled on it (regeneration.T1's asks, gated on the Regenerationsphase's
+                // value, do not make R6's suppress of T1 ask for the environment elsewhere).
+                guard let when = e.when else { return true }
+                let level = ruleLevel(e.origin.rule, levels: state.levels, depth: state.depth)
+                return condition(when, level: level, rule: e.origin.rule, depth: state.depth, local: state.local).truth != .no
             }
             guard targets.contains(where: { applicability(of: $0.origin.rule, depth: state.depth).applies }),
                   applies(e, &state) else { continue }
@@ -712,10 +720,12 @@ extension Evaluation {
                                     was: was, now: amount))
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via + perVia).uniqued(), facts: facts, &state)
-        } else if amount == 0, case .proportion(let p) = a.value, p.above != .number(0) {
+        } else if case .proportion(let p) = a.value, p.above != .number(0), nothingAbove(p, e, level: level, state) {
             // Task 32: a value per point above a threshold with nothing above it (schaden.S3's
             // Schadensbonus: "Besitzt der Träger … mehr Punkte … als die Schadensschwelle") is the
-            // effect's condition not met: no line, `conditionFalse` with the facts it read.
+            // effect's condition not met: no line, `conditionFalse` with the facts it read. Fix
+            // round 1: `of ≤ above`, not a line of 0 (a point above, rounded or clamped to 0, is
+            // a line).
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .conditionFalse, because: e.because, rulings: e.ruling,
                                     facts: facts, via: (via + r.via + perVia).uniqued()))
         } else {
@@ -723,6 +733,14 @@ extension Evaluation {
                                     via: (via + r.via + perVia).uniqued(), rulings: (decided(e) + offerRulings(reading: e, state)).uniqued(),
                                     facts: facts, owner: gmNumber(a.value, r) ? .gm : nil))
         }
+    }
+
+    /// Whether a proportion's `of` is not above its `above` (Task 32 fix round 1): the bare
+    /// `{ of, above }`, without `per`, `times`, rounding down or bounds, is 0.
+    private func nothingAbove(_ p: Proportion, _ e: Effect, level: Int?, _ state: PipelineState) -> Bool {
+        let bare = value(.proportion(Proportion(of: p.of, above: p.above)), level: level, rule: e.origin.rule,
+                         depth: state.depth, local: state.local)
+        return bare.value == 0
     }
 
     /// R49: whether a value's number is the GM's: a proportion over exactly one fact, that fact

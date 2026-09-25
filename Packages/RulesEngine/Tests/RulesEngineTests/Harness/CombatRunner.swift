@@ -106,20 +106,6 @@ enum CombatRunner {
         return out
     }
 
-    /// Task 32: a situation that states dice (`rolls: [n…]`) and nothing the action layer runs or
-    /// the matcher compares (no check, no step, no expectation): no action of the engine reads the
-    /// dice. The mismatch names what the rules ask the roll layer for instead (the sheet's
-    /// questions to `roll`: trefferzonen.TZ2's `hit.zone`, rolled and looked up by the app).
-    static func unreadDice(_ s: CompiledSituation, engine: Engine) -> Mismatch? {
-        guard ActionRunner.needs(s) == [.rolls], s.expect.isEmpty, s.expectSituation.isEmpty,
-              ActionRunner.checkStated(s) == nil else { return nil }
-        let asked = engine.sheet(in: s.engineSituation).questions.filter { $0.owner == .roll }
-        let roll = asked.map { "\($0.fact) (\($0.origins.map(\.description).joined(separator: ", ")))" }
-        return Mismatch(kind: .dice, detail: "the dice \(s.rolls) are read by no action of the engine; the rules ask the roll layer for "
-                        + (roll.isEmpty ? "nothing" : roll.joined(separator: "; ")),
-                        names: asked.flatMap { $0.origins.map(\.description) })
-    }
-
     // MARK: - Running
 
     static func run(_ s: CompiledSituation, engine: Engine, attributes: [String: [String]] = CheckAttributes.all) -> Run {
@@ -515,7 +501,8 @@ enum CombatRunner {
             if let d = o["damage"] {
                 // Task 32: a damage event by a dice formula (TZ.12's `damage: { formula: 1W3+1 }`).
                 // The engine's damage is `damaged` with an amount (R53), and no dice value form
-                // exists (MIGRATION "Open questions"), so no event of the action can be it.
+                // exists (MIGRATION "Open questions"), so no event of the action can be it. Revisit
+                // this comparison once that form exists: until then it cannot succeed.
                 guard let f = d.objectValue, Set(f.keys) == ["formula"], let formula = f["formula"]?.string,
                       Set(o.keys).isSubset(of: ["damage", "from", "ruling", "via"]) else {
                     out.append(.shape("event damage", "damage event \(o.keys.sorted()) is not { damage: { formula }, from }"))

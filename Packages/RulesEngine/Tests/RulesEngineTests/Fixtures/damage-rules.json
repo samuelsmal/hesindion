@@ -17,6 +17,16 @@
     "rule": "dm-ease"
    },
    {
+    "clause": "Q1",
+    "index": 0,
+    "rule": "dm-quiet"
+   },
+   {
+    "clause": "Q2",
+    "index": 0,
+    "rule": "dm-quiet"
+   },
+   {
     "clause": "R1",
     "index": 0,
     "rule": "dm-rs"
@@ -92,6 +102,11 @@
    }
   ],
   "ini": [
+   {
+    "clause": "B2",
+    "index": 0,
+    "rule": "dm-bonus"
+   },
    {
     "clause": "Z3",
     "index": 0,
@@ -238,6 +253,46 @@
      ],
      "id": "B1",
      "text": "Pro Punkt über der Schwelle 1 TP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B2",
+        "index": 0,
+        "rule": "dm-bonus"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 14,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "attr.KK"
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "down",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "B2",
+     "text": "Pro zwei Punkte über der Schwelle 1 INI."
     }
    ],
    "id": "dm-bonus",
@@ -489,6 +544,76 @@
    "id": "dm-hand",
    "kind": "core",
    "name": "Hand",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q1",
+        "index": 0,
+        "rule": "dm-quiet"
+       },
+       "payload": {
+        "fact": "choice.lager",
+        "who": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "ask",
+       "when": {
+        "fact": "query.target",
+        "is": "gs"
+       }
+      }
+     ],
+     "id": "Q1",
+     "text": "Lagerplatz?"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q2",
+        "index": 0,
+        "rule": "dm-quiet"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "dm-quiet.Q1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "choice.sturm",
+        "is": true
+       }
+      }
+     ],
+     "id": "Q2",
+     "text": "Sturm."
+    }
+   ],
+   "id": "dm-quiet",
+   "kind": "core",
+   "name": "Ruhe",
    "reviewed": null,
    "rulings": [],
    "source": {

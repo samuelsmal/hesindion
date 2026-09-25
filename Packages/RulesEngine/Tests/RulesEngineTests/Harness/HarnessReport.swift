@@ -22,9 +22,14 @@ enum Verdict: Equatable {
     /// A match passes. Otherwise, in order: only unsupported shapes (R42, and R69 for a listed
     /// conflict); a listed conflict (R43); pending when open rulings it hit explain every mismatch (R41, R46); else failed.
     static func of(_ s: CompiledSituation, mismatches: [Mismatch], hits: [OpenHit], book: RuleBook?,
-                   conflicts: Set<ConflictRef>) -> Verdict {
+                   conflicts: Set<ConflictRef>, expectationMissing: Set<ConflictRef> = []) -> Verdict {
         guard !mismatches.isEmpty else { return .passed }
         let real = mismatches.filter { $0.kind != .unsupportedShape }
+        // Ruling R73: a listed conflict whose listed reason is a missing expectation is a conflict
+        // on the shape "no expectation".
+        let ref = ConflictRef(file: s.file, id: s.id)
+        if real.isEmpty, mismatches.allSatisfy({ $0.shape == "no expectation" }), conflicts.contains(ref),
+           expectationMissing.contains(ref) { return .conflict }
         // Ruling R69: a listed conflict is a conflict when a comparable part mismatches; with
         // unsupported shapes alone it stays unsupported.
         if real.isEmpty { return .unsupported(mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()) }
@@ -46,6 +51,19 @@ struct ConflictRef: Hashable, Encodable, CustomStringConvertible {
 /// ranges (`15.4–15.8`) expanded in the file's order.
 enum Conflicts {
     static let section = "## Expectation conflicts for the owner"
+
+    /// Ruling R73: the situations named by an entry of the section whose reason says that the
+    /// expectation is missing (the phrase "expectation missing").
+    static func expectationMissing(_ markdown: String, order: [String: [String]]) -> Set<ConflictRef> {
+        guard let start = markdown.range(of: section) else { return [] }
+        let rest = markdown[start.upperBound...]
+        let body = rest.range(of: "\n## ").map { rest[..<$0.lowerBound] } ?? rest
+        var out: Set<ConflictRef> = []
+        for entry in body.components(separatedBy: "\n- ") where entry.contains("expectation missing") {
+            out.formUnion(parse(section + "\n- " + entry, order: order) ?? [])
+        }
+        return out
+    }
 
     /// nil when the section is missing.
     static func parse(_ markdown: String, order: [String: [String]]) -> [ConflictRef]? {

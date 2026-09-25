@@ -27,13 +27,14 @@ final class SituationsHarnessTests: XCTestCase {
         if listed == nil { XCTFail("MIGRATION.md has no section \"\(Conflicts.section)\"") }
         if listed?.isEmpty == true { XCTFail("MIGRATION.md's conflicts section lists no situation") }
         let conflicts = Set(listed ?? [])
+        let missing = Self.expectationMissing(all)
 
         var report = HarnessReport()
         let known = Set(all.situations.map { ConflictRef(file: $0.file, id: $0.id) })
         report.conflictsUnknown = (listed ?? []).filter { !known.contains($0) }.map(\.description)
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
-            let judged = Self.judge(s, engine: engine, conflicts: conflicts)
+            let judged = Self.judge(s, engine: engine, conflicts: conflicts, expectationMissing: missing)
             switch judged.path {
             case .combat: report.combatRun.append(s.id)
             case .state: report.stateRun.append(s.id)
@@ -68,9 +69,17 @@ final class SituationsHarnessTests: XCTestCase {
 
     /// Runs one situation the way the harness does and gives its verdict (the harness test and
     /// the log round trip, Task 29, both use it).
-    static func judge(_ s: CompiledSituation, engine: Engine, conflicts: Set<ConflictRef>) -> Judged {
+    static func judge(_ s: CompiledSituation, engine: Engine, conflicts: Set<ConflictRef>,
+                      expectationMissing: Set<ConflictRef> = []) -> Judged {
         func verdict(_ mismatches: [Mismatch], _ hits: [OpenHit]) -> Verdict {
-            Verdict.of(s, mismatches: mismatches, hits: hits, book: engine.book, conflicts: conflicts)
+            Verdict.of(s, mismatches: mismatches, hits: hits, book: engine.book, conflicts: conflicts,
+                       expectationMissing: expectationMissing)
+        }
+        // Ruling R73: a situation that expects nothing at all (trefferzonen TZ.9–TZ.11: dice, no
+        // expect key) is the shape "no expectation", never a pass.
+        if s.expect.isEmpty, s.expectSituation.isEmpty, s.sequence.isEmpty {
+            let shape = Mismatch.shape("no expectation", "the situation states no expectation")
+            return Judged(path: .unsupported, verdict: verdict([shape], []), mismatches: [shape], notes: [])
         }
         // Task 27: a hit on the hero, or the rolls of an attack.
         if CombatRunner.canRun(s, book: engine.book) {
@@ -89,11 +98,6 @@ final class SituationsHarnessTests: XCTestCase {
             let mismatches = run.mismatches + state.mismatches
             return Judged(path: .state, verdict: verdict(mismatches, run.hits), mismatches: mismatches,
                           notes: run.notes + state.notes)
-        }
-        // Task 32 (R62): dice and nothing else (trefferzonen TZ.9–TZ.11's zone dice): no action of
-        // the engine reads them; a mismatch of the dice, never a silent pass.
-        if let unread = CombatRunner.unreadDice(s, engine: engine) {
-            return Judged(path: .combat, verdict: verdict([unread], []), mismatches: [unread], notes: [])
         }
         guard ActionRunner.canRun(s) else {
             // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
@@ -125,6 +129,13 @@ final class SituationsHarnessTests: XCTestCase {
         let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
         let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
         return Conflicts.parse(migration, order: order)
+    }
+
+    /// R73: the listed conflicts whose listed reason is that the expectation is missing.
+    static func expectationMissing(_ all: CompiledSituations) -> Set<ConflictRef> {
+        let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
+        let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
+        return Conflicts.expectationMissing(migration, order: order)
     }
 
     /// R50: whether `s` expects a `gained` or `cleared` event, at the top or in a step: its query

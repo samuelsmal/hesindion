@@ -168,9 +168,11 @@ clauses:
       wird, gilt als kleines Ziel. Ist nur ein Viertel, beispielsweise die Unterschenkel,
       außerhalb der Deckung, gilt er als winziges Ziel.
     effects:
-      - ask: { fact: target.cover, who: gm, options: [keine, teilweise, weitgehend] }
+      - when: { query.target: fk }
+        ask: { fact: target.cover, who: gm, options: [keine, teilweise, weitgehend] }
         ruling: cover-as-size
         # The old `offer: { fact: … }` asks a fact of its owner: `ask` (target.* is the GM's).
+        # Asked on a ranged attack only (Task 32 fix round 1): ungated, every query asked it.
       - when: { target.cover: [teilweise, weitgehend] }
         replace: { line: { line: fernkampf.FK6 }, with: "table(fernkampf.FK6, target.sizeInCover)" }
         ruling: cover-as-size

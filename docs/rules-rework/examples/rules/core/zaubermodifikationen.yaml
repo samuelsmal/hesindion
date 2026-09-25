@@ -212,25 +212,25 @@ clauses:
       Zauberdauer senken: Zauberdauer um eine Stufe gesenkt, Zauberprobe um -1 erschwert
       Geste oder Formel weglassen: Zauberprobe um jeweils -2 erschwert
     effects:
-      - when: { choice.spellModification.erzwingen: true }
+      - when: { check.kind: spell, choice.spellModification.erzwingen: true }
         add: { to: check.modifier, value: 1 }
       - when: { choice.spellModification.erzwingen: true }
         add: { to: spell.cost, value: 1, scale: zaubermodifikationen.kosten }
         ruling: cost-off-table
-      - when: { choice.spellModification.kostenSenken: true }
+      - when: { check.kind: spell, choice.spellModification.kostenSenken: true }
         add: { to: check.modifier, value: -1 }
       - when: { choice.spellModification.kostenSenken: true }
         add: { to: spell.cost, value: -1, scale: zaubermodifikationen.kosten }
         ruling: cost-off-table
-      - when: { choice.spellModification.reichweiteErhoehen: true }
+      - when: { check.kind: spell, choice.spellModification.reichweiteErhoehen: true }
         add: { to: check.modifier, value: -1 }
       - when: { choice.spellModification.reichweiteErhoehen: true }
         add: { to: spell.range, value: 1, scale: zaubermodifikationen.reichweite }
-      - when: { choice.spellModification.zauberdauerErhoehen: true }
+      - when: { check.kind: spell, choice.spellModification.zauberdauerErhoehen: true }
         add: { to: check.modifier, value: 1 }
       - when: { choice.spellModification.zauberdauerErhoehen: true }
         add: { to: spell.castingTime, value: 1, scale: zaubermodifikationen.zauberdauer }
-      - when: { choice.spellModification.zauberdauerSenken: true }
+      - when: { check.kind: spell, choice.spellModification.zauberdauerSenken: true }
         add: { to: check.modifier, value: -1 }
       - when: { choice.spellModification.zauberdauerSenken: true }
         add: { to: spell.castingTime, value: -1, scale: zaubermodifikationen.zauberdauer }
@@ -241,13 +241,15 @@ clauses:
         # an `add` with `scale`, as its own effect. The check modifier (the old `to: check`) is
         # `check.modifier`, the one Erschwernis/Erleichterung of the 3W20 check (spec §6).
         # The two cost steps rest on cost-off-table (what a step does to a cost off ZM8's table).
-      - when: { choice.spellModification.gesteWeglassen: true }
+      - when: { check.kind: spell, choice.spellModification.gesteWeglassen: true }
         add: { to: check.modifier, value: -2 }
         ruling: omit-counts
-      - when: { choice.spellModification.formelWeglassen: true }
+      - when: { check.kind: spell, choice.spellModification.formelWeglassen: true }
         add: { to: check.modifier, value: -2 }
         ruling: omit-counts
         # The old `when: { choice: [geste…, formel…] }` with `per: choice`: −2 for each left out.
+        # Each check modifier is gated on a spell check (`check.kind: spell`, Task 32 fix round 1):
+        # ungated, a talent check's modifier asked for the spell modifications.
       - when: { spell.forbidsErzwingen: true }
         forbid: { what: { choice: spellModification.erzwingen } }
         because: "beim Zauber ausgeschlossen"

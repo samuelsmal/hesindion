@@ -63,8 +63,10 @@ clauses:
       Bedingungen wie in einem Sturm oder auf einen Pferderücken gebunden fällt die Regeneration
       ganz aus.
     effects:
-      - ask: { fact: choice.environment, who: player, options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
-        # "Wie ist die Umgebung?"
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.environment, who: player, options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
+        # "Wie ist die Umgebung?" Asked on the Regenerationsphase's value only (Task 32 fix round 1,
+        # as R7's tell): ungated, every query asked it.
       - when: { choice.environment: "unruhig, nass oder kalt" }
         multiply: { to: regeneration.le, by: 0.5, round: up }
         ruling: [round-up, ADV_44.vr-halving]
@@ -119,17 +121,22 @@ clauses:
       Furchtbare Umgebung (extrem schlechtes Wetter) | Regeneration von LeP, AsP und KaP fällt aus
       Pro volle 2 Stein Eisen am Körper (siehe Bann des Eisens Seite 256 im Regelwerk) | –1 AsP
     effects:
-      # "Lagerplatz und Nacht?" — any number of the rows apply, so one question per row.
-      - ask: { fact: choice.schlechterLagerplatz, who: player }
+      # "Lagerplatz und Nacht?" — any number of the rows apply, so one question per row, asked on
+      # the Regenerationsphase's value only (Task 32 fix round 1).
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.schlechterLagerplatz, who: player }
       - when: { choice.schlechterLagerplatz: true }
         add: { to: regeneration.le, value: -1 }
-      - ask: { fact: choice.unterbrechung, who: player }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.unterbrechung, who: player }
       - when: { choice.unterbrechung: true }
         add: { to: regeneration.le, value: -1 }
-      - ask: { fact: choice.laengereUnterbrechung, who: player }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.laengereUnterbrechung, who: player }
       - when: { choice.laengereUnterbrechung: true }
         add: { to: regeneration.le, value: -2 }
-      - ask: { fact: choice.guteUnterkunft, who: player }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.guteUnterkunft, who: player }
       - when: { choice.guteUnterkunft: true }
         add: { to: regeneration.le, value: 1 }
         # The erkrankt/vergiftet, halved and none rows restate R6 and R7. The iron row is AsP only.

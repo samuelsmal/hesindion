@@ -87,7 +87,7 @@ Why a: it reads the page the way verweichlicht-scope already read Verweichlicht'
 
 ### `fernkampf` · range-input
 
-Answer in [`rules/core/fernkampf.yaml:406`](./rules/core/fernkampf.yaml#L406)
+Answer in [`rules/core/fernkampf.yaml:408`](./rules/core/fernkampf.yaml#L408)
 
 **How does the app learn the range band (nah / mittel / weit / beyond)? By the player naming the band, or by the distance in Schritt, which the app turns into the band from the weapon?**
 
@@ -102,7 +102,7 @@ Why b: the GM usually says "about 40 Schritt" and the player knows their bow; sh
 
 ### `fernkampf` · cover-as-size
 
-Answer in [`rules/core/fernkampf.yaml:427`](./rules/core/fernkampf.yaml#L427)
+Answer in [`rules/core/fernkampf.yaml:429`](./rules/core/fernkampf.yaml#L429)
 
 **FK8: a target in cover "gilt als" a smaller size. Does cover replace the target's size (the part that is visible decides: chest-high wall → klein, whoever stands behind it), or step the target's own size down (an Oger, groß, behind the same wall → mittel)?**
 
@@ -117,7 +117,7 @@ Why a: it reproduces both of the page's examples for a human (bis zur Brust → 
 
 ### `fernkampf` · zielen-interrupted
 
-Answer in [`rules/core/fernkampf.yaml:448`](./rules/core/fernkampf.yaml#L448)
+Answer in [`rules/core/fernkampf.yaml:450`](./rules/core/fernkampf.yaml#L450)
 
 **FK11: aiming is "eine länger dauernde Handlung bis zum eigentlichen Angriff". What ends it without a shot — a defence, taking damage, the target moving out of sight — and does it carry over into the next Kampfrunde?**
 
@@ -180,7 +180,7 @@ Why a: the four sides are one fact with four values, and a picker asks it once a
 
 ### `zaubermodifikationen` · omit-counts
 
-Answer in [`rules/core/zaubermodifikationen.yaml:297`](./rules/core/zaubermodifikationen.yaml#L297)
+Answer in [`rules/core/zaubermodifikationen.yaml:299`](./rules/core/zaubermodifikationen.yaml#L299)
 
 **Does leaving out a Geste or a Formel count against the FW/4 number of modifications (ZM1)?**
 
@@ -196,7 +196,7 @@ Why a: the page lists it among the Modifikationen in the same breath as the othe
 
 ### `zaubermodifikationen` · cost-off-table
 
-Answer in [`rules/core/zaubermodifikationen.yaml:321`](./rules/core/zaubermodifikationen.yaml#L321)
+Answer in [`rules/core/zaubermodifikationen.yaml:323`](./rules/core/zaubermodifikationen.yaml#L323)
 
 **Erzwingen and Kosten senken move the cost "um eine Stufe" on ZM8's table (1, 2, 4, … 32 AsP). What do they do to a cost that is not on the table, or not one number?**
 

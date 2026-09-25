@@ -10,3 +10,7 @@ clauses:
     text: Pro Punkt über der Schwelle 1 TP.
     effects:
       - add: { to: tp, value: { of: attr.KK, above: 14 } }
+  - id: B2
+    text: Pro zwei Punkte über der Schwelle 1 INI.
+    effects:
+      - add: { to: ini, value: { of: attr.KK, above: 14, per: 2, round: down } }

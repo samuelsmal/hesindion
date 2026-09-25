@@ -115,7 +115,7 @@ final class DamageTests: XCTestCase {
     /// A replace naming a clause replaces its lines only: on a query no line of that clause
     /// reaches (the clause's offer does, a `*` effect), it is not read and asks nothing.
     func testAReplaceOfAClauseAsksNothingWhereNoLineOfItIs() {
-        let s = situation(facts: ["choice.zone": "kopf"], base: ["at": 14, "ini": 10])
+        let s = situation(facts: ["choice.zone": "kopf", "attr.KK": 14], base: ["at": 14, "ini": 10])
         XCTAssertEqual(engine.evaluate(Query("ini"), in: s).questions.map(\.fact), [])
         let at = engine.evaluate(Query("at"), in: s)
         XCTAssertEqual(at.result, 10)
@@ -134,6 +134,16 @@ final class DamageTests: XCTestCase {
         XCTAssertTrue(entry.facts.contains { $0.name == "attr.KK" && $0.value == 14 })
         let at16 = engine.evaluate(Query("tp"), in: situation(facts: ["attr.KK": 16], base: ["tp": 5]))
         XCTAssertEqual(at16.lines.first { $0.origin == ref("dm-bonus.B1") }?.value, 2)
+    }
+
+    /// Fix round 1: "nothing above" is the value not above the threshold, not a line of 0: one
+    /// point above, rounded down per two, is a line of 0, not a condition unmet.
+    func testAPointAboveTheThresholdRoundedToZeroIsStillALine() {
+        let b = engine.evaluate(Query("ini"), in: situation(facts: ["attr.KK": 15], base: ["ini": 10]))
+        XCTAssertEqual(b.lines.filter { $0.origin == ref("dm-bonus.B2") }.map(\.value), [0])
+        XCTAssertNil(b.notApplied.first { $0.origin == ref("dm-bonus.B2") && $0.reason == .conditionFalse })
+        let at14 = engine.evaluate(Query("ini"), in: situation(facts: ["attr.KK": 14], base: ["ini": 10]))
+        XCTAssertEqual(at14.notApplied.first { $0.origin == ref("dm-bonus.B2") }?.reason, .conditionFalse)
     }
 
     // MARK: - The opponent's values
@@ -156,6 +166,15 @@ final class DamageTests: XCTestCase {
     func testASetWithoutABaseGivesTheResult() {
         XCTAssertEqual(engine.evaluate(Query("gs"), in: situation()).result, 3)
         XCTAssertEqual(engine.evaluate(Query("gs"), in: situation(base: ["gs": 8])).result, 3)
+    }
+
+    /// Fix round 1: a suppress is read only where an effect it names would act: on a query where
+    /// the named clause's ask is gated off, the suppress's condition is not asked.
+    func testASuppressIsNotReadWhereWhatItNamesIsGatedOff() {
+        let s = situation(facts: ["attr.KK": 14], base: ["ini": 10, "gs": 8])
+        XCTAssertFalse(engine.evaluate(Query("ini"), in: s).questions.contains { $0.fact == "choice.sturm" })
+        let gs = engine.evaluate(Query("gs"), in: s).questions.map(\.fact)
+        XCTAssertTrue(gs.contains("choice.sturm") && gs.contains("choice.lager"), "\(gs)")
     }
 
     // MARK: - A combination a together forbid refuses
