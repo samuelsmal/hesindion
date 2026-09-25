@@ -54,7 +54,7 @@ ruleset: fokus.waffeneigenschaften # or `core`, the default
 source: { url, book, page, checked, hash, also: [...] }
 reviewed: null                    # or { by, date }
 levels: 7                         # when the rule has Stufen, e.g. ADV_25 Hohe Lebenskraft
-options: sid                      # when the hero file chooses one, e.g. DISADV_37 Schlechte Eigenschaft
+options: sid                      # when the hero file chooses one (Schlechte Eigenschaft's `sid`)
 provides: { ... }                 # tables and ordered scales other rules read
 clauses: [ ... ]
 rulings: [ ... ]
@@ -110,9 +110,26 @@ written in a migrated clause:
 | | `item` | `item: { instance: { loadout: mount }, change: { ridden: false } }` | `reiterkampf.RK6` |
 | | `reroll` | `reroll: { die: { dice: any }, keep: better, max: 1, per: action }` | `ADV_4.B1` |
 
-`check` carries `onSuccess` and `onFailure` lists of effects (see `DISADV_37.SE1`/`SE2` above: the
-check is `SE1`, its `onFailure` line is `SE2`'s `tell`). `gain` covers Zustand Stufen and Status in
-both directions — negative `levels` removes them.
+`check` carries `onSuccess` and `onFailure` lists of effects, nested under it. As written in
+`trefferzonen.TZ8`:
+
+```yaml
+check:
+  of: { talent: TAL_8, with: "table(trefferzonen.TZ11.application, hit.zone)" }
+  modifier: { of: hit.sp, per: wundschwelle, times: -1, round: down }
+  onFailure:
+    - when: { hit.zone: [kopf, beine] }
+      gain: { rule: "table(trefferzonen.TZ11.effect, hit.zone)" }
+    - when: { hit.zone: arme, hit.heldInHand: weapon, not: { loadout.twoHanded: true } }
+      item: { instance: { loadout: weapon }, change: { held: false } }
+      ruling: wundeffekt-arm-drop
+```
+
+(trimmed; the real clause has a third `onFailure` entry, for the other hand). `DISADV_37.SE1`/`SE2`
+show the drafts' other pattern for the same thing, not nesting: `SE1` is a bare
+`check: { of: { talent: TAL_23 } }`, and `SE2` is its own clause, gated on the shared
+`check.result: failure` fact, with a `tell`. `gain` covers Zustand Stufen and Status in both
+directions — negative `levels` removes them.
 
 Targets (design §4.4) are one closed list too: `at`, `pa`, `aw`, `fk`, `ini`, `gs`, `leMax`,
 `wundschwelle`, `tp`, `rs`, `sp`, and the stage targets of a check (`check.attribute`,
