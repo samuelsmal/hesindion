@@ -224,14 +224,25 @@ clauses:
       Konsequenzen.
     # sic: "misslungenen" is the page's typo for "misslungen".
     effects:
-      - when: { hero.mounted: true, choice.order: [niederreiten, sturmangriffZuPferd, flucht, mountAttack] }
+      - when: { hero.mounted: true, choice.order: [niederreiten, sturmangriffZuPferd, flucht] }
         cost: { pool: actions, amount: 1 }
         # "Statt eines eigenen Angriffs … mit einer Aktion" (the old `costs: action`).
-      - when: { hero.mounted: true, choice.order: [niederreiten, flucht, mountAttack] }
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        cost: { pool: actions, amount: 1 }
+        ruling: svellttaler-kaltblut.mount-own-attack
+        # Ruling R71 (Task 31 fix round 2): the mount's own attack is an order like any other
+        # (the ruling's `appliesTo` names RK12), so its Aktion and check rest on the ruling.
+      - when: { hero.mounted: true, choice.order: [niederreiten, flucht] }
         check:
           of: { talent: TAL_6, with: Kampfmanöver }
           onFailure:
             - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+        ruling: svellttaler-kaltblut.mount-own-attack
         # The old `defines: { action: order, … requires_check }`: every order is an Aktion and a
         # Reiten (Kampfmanöver) check; on a failure the order is not carried out and nothing
         # worse follows. RK13–RK15 and svellttaler-kaltblut.SK3 offer the orders. The

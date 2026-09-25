@@ -434,7 +434,7 @@ enum CombatRunner {
     /// `[]` does not count a hit's `damaged`: the situations that state a hit (its SP) and
     /// expect `events: []` say that no check follows (the old `checks_first: []`); the LeP the hit
     /// takes is the hit itself.
-    static func events(_ expected: [JSONValue], events all: [Event], checks: [PendingCheck]) -> [Mismatch] {
+    static func events(_ expected: [JSONValue], events all: [Event], checks: [PendingCheck], attacks: [PendingAttack] = []) -> [Mismatch] {
         if expected.isEmpty {
             let actual = all.filter { $0.kind != .damaged }
             let got = actual.map { "\($0.kind.rawValue) \($0.rule ?? $0.note ?? "")" } + checks.map { "check \($0.id) from \($0.origin)" }
@@ -443,7 +443,7 @@ enum CombatRunner {
         }
         let actual = all
         var out: [Mismatch] = []
-        var usedEvents = Set<Int>(), usedChecks = Set<Int>()
+        var usedEvents = Set<Int>(), usedChecks = Set<Int>(), usedAttacks = Set<Int>()
         for raw in expected {
             guard let o = raw.objectValue else { out.append(.shape("malformed event", "event \(raw) is not an object")); continue }
             let from = o["from"]?.string, ruling = o["ruling"].map(strings) ?? [], via = o["via"].map(strings) ?? []
@@ -451,15 +451,25 @@ enum CombatRunner {
             if let check = o["check"]?.objectValue {
                 let kind = ["talent", "spell"].first { check[$0] != nil }
                 let extra = Set(check.keys).subtracting(["talent", "spell", "application", "with"])
-                guard let kind, extra.isEmpty, let id = check[kind]?.string else {
-                    // Task 31 fix round 1 (R62): a check that is no 3W20 check (the mount's attack) is
-                    // compared by its clause: the engine asks talent and spell checks only.
-                    if let from {
-                        let got = checks.map { "\($0.id) from \($0.origin)" }
-                        out.append(Mismatch(kind: .missingEvent, detail: "expected the check \(check) from \(from); the engine asks 3W20 checks only, got "
-                                            + (got.isEmpty ? "none" : got.joined(separator: "; ")), names: names))
-                        continue
+                if let attack = check["attack"]?.string, Set(check.keys).isSubset(of: ["attack", "by", "at", "tp"]) {
+                    // Ruling R72: an attack check against the attacks the action asks.
+                    let fits = attacks.indices.filter { i in
+                        let a = attacks[i]
+                        return !usedAttacks.contains(i) && a.attack == attack && (check["by"].map { $0.string == a.by } ?? true)
+                            && (check["at"].map { $0.int == a.at } ?? true) && (check["tp"].map { $0.string == a.tp } ?? true)
+                            && (from == nil || a.origin.description == from) && Set(via).isSubset(of: a.via.map(\.description))
+                            && ruling.allSatisfy { Matcher.rulingMatches($0, a.rulings) }
                     }
+                    if let i = fits.first {
+                        usedAttacks.insert(i)
+                    } else {
+                        let got = attacks.map { "\($0.attack ?? "?") by \($0.by ?? "?") AT \($0.at.map(String.init) ?? "?") TP \($0.tp ?? "?") from \($0.origin) via \($0.via)" }
+                        out.append(Mismatch(kind: .missingEvent, detail: "expected the attack \(check)\(from.map { " from \($0)" } ?? ""), got "
+                                            + (got.isEmpty ? "none" : got.joined(separator: "; ")), names: names))
+                    }
+                    continue
+                }
+                guard let kind, extra.isEmpty, let id = check[kind]?.string else {
                     out.append(.shape("event check \(check.keys.sorted())", "event check \(check.keys.sorted()) is not a 3W20 check the engine asks"))
                     continue
                 }

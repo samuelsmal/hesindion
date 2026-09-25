@@ -103,6 +103,7 @@ public struct ActionLayer: Sendable {
         let evaluation = engine.evaluation(stated)
         var run: ActionRun
         var checks: [PendingCheck] = []
+        var attacks: [PendingAttack] = []
         switch action {
         case .cast(_, let modifications):                           // the spell is stated by `stated`
             run = evaluation.actionRun(controlling: evaluation.actionEffects())
@@ -168,6 +169,8 @@ public struct ActionLayer: Sendable {
                 checks = DamageChain.checksCalledFor(in: chosen, engine: engine, &run.pipeline) {
                     $0.when?.factNames.contains("choice.\(choice)") ?? false
                 }
+                // Ruling R72: and the attack checks it gates (a mount's attack on an order).
+                attacks = taken.attacksCalledFor(&run.pipeline) { $0.when?.factNames.contains("choice.\(choice)") ?? false }
             }
         case .advance(let process):
             run = evaluation.actionRun(controlling: [])
@@ -193,7 +196,7 @@ public struct ActionLayer: Sendable {
         let breakdowns = run.read.uniqued().map { engine.evaluate(Query($0), in: stated) }
         return ActionResult(events: run.events, situation: stated.applying(run.events, book: engine.book),
                             breakdowns: breakdowns, questions: run.pipeline.questions,
-                            texts: run.pipeline.texts, notApplied: run.pipeline.notApplied, checks: checks)
+                            texts: run.pipeline.texts, notApplied: run.pipeline.notApplied, checks: checks, attacks: attacks)
     }
 
     /// The situation as the action states it for its own evaluation, before its events: a cast

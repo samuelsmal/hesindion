@@ -142,8 +142,10 @@ enum StateRunner {
         s.expectSituation["events"] != nil || s.sequence.contains { $0.objectValue?["expect"]?.objectValue?["events"] != nil }
     }
 
-    static func run(_ s: CompiledSituation, engine: Engine) -> Run {
+    static func run(_ s: CompiledSituation, engine: Engine, attributes: [String: [String]] = CheckAttributes.all) -> Run {
         let layer = ActionLayer(engine: engine)
+        // Fix round 2: the checks the last action asked, whose result a later step may enter.
+        var pending: [PendingCheck] = []
         var c = MatchResult()
         var all: [Breakdown] = []
         let start = s.engineSituation
@@ -157,6 +159,7 @@ enum StateRunner {
             ? (implied(s, book: engine.book) ?? implied(start, events: events)) : nil
         if let action = topAction {
             let r = layer.perform(action, in: start)
+            pending = r.checks
             all += r.breakdowns + [record(r)]
             viewBreakdowns += r.breakdowns + [record(r)]
             if let raw = s.expectSituation["events"] {
@@ -183,6 +186,22 @@ enum StateRunner {
             let label = "step \(n + 1)"
             guard let o = raw.objectValue else { continue }
             let expect = o["expect"]?.objectValue ?? [:]
+            // Fix round 2: a step stating only a check's result (`rolls: { check.result }`) enters
+            // the outcome of the check the last action asked (reiterkampf.RK12's Reiten): its
+            // `onFailure` runs, and the step's texts, entries and events are its.
+            if let rolls = o["rolls"]?.objectValue, Set(rolls.keys) == ["check.result"], Set(o.keys).isSubset(of: ["rolls", "expect"]),
+               let check = pending.first, let probe = attributes[check.id] {
+                let begun = CheckProcedure.start(check.request(attributes: probe), in: current, engine: engine)
+                let out = begun.state.step(.outcome(success: rolls["check.result"]?.string == "success"), engine: engine)
+                all += begun.breakdowns + out.breakdowns
+                pending = []
+                let after = current.applying(out.events, book: engine.book)
+                CombatRunner.compare(expect, label: label, events: out.events, checks: [], texts: out.texts, notApplied: out.notApplied,
+                                     questions: out.questions, success: nil, successQuery: nil,
+                                     breakdown: { engine.evaluate(Query($0), in: after) }, &c)
+                current = after
+                continue
+            }
             let before = current
             var stated = current
             let action: Action?
@@ -213,6 +232,7 @@ enum StateRunner {
                 action = implied(stated, events: events)
             }
             let r = action.map { layer.perform($0, in: stated) }
+            if let r, !r.checks.isEmpty { pending = r.checks }
             if let r {
                 all += r.breakdowns + [record(r)]
                 viewBreakdowns.append(record(r))                  // the situation-level texts of the run
@@ -440,7 +460,7 @@ enum StateRunner {
         }
         if !plain.isEmpty || expected.isEmpty {
             let rest = r.events.indices.filter { !used.contains($0) }.map { r.events[$0] }
-            out += CombatRunner.events(plain, events: rest, checks: r.checks)
+            out += CombatRunner.events(plain, events: rest, checks: r.checks, attacks: r.attacks)
         }
         return out
     }
@@ -533,9 +553,16 @@ enum StateRunner {
     static func paid(_ o: [String: JSONValue], _ p: [String: JSONValue], _ r: ActionResult, before: Situation, _ used: inout Set<Int>) -> [Mismatch] {
         let from = o["from"]?.string, ruling = o["ruling"].map(strings) ?? [], via = o["via"].map(strings) ?? []
         let names = [from].compactMap { $0 } + ruling + via
-        for key in o.keys.sorted() where !["paid", "from", "ruling", "via", "over"].contains(key) {
-            return [.shape("event field \(key)", "paid event: field \(key) is not modelled")]
-        }
+        // Fix round 2: an unmodelled field is a shape, and the rest is still compared (its ruling).
+        let fieldShapes = o.keys.sorted().filter { !["paid", "from", "ruling", "via", "over"].contains($0) }
+            .map { Mismatch.shape("event field \($0)", "paid event: field \($0) is not modelled") }
+        return fieldShapes + paidFields(o, p, r, before: before, &used)
+    }
+
+    private static func paidFields(_ o: [String: JSONValue], _ p: [String: JSONValue], _ r: ActionResult, before: Situation,
+                                   _ used: inout Set<Int>) -> [Mismatch] {
+        let from = o["from"]?.string, ruling = o["ruling"].map(strings) ?? [], via = o["via"].map(strings) ?? []
+        let names = [from].compactMap { $0 } + ruling + via
         let payments = r.events.indices.filter { i in
             let e = r.events[i]
             return !used.contains(i) && e.kind == .paid && (from == nil || e.origin?.description == from)

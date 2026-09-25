@@ -198,4 +198,41 @@ final class MeleeTests: XCTestCase {
         XCTAssertEqual(entry.reason, .suppressed)
         XCTAssertTrue(entry.rulings.contains("me-core.quiet"))
     }
+
+    // MARK: - Fix round 2
+
+    /// A provided fact a `when` reads puts its providing clause in the legality entry's `via`
+    /// (groessenkategorie.GK4 over svellttaler-kaltblut.SK7's `mount.size`).
+    func testALegalityEntryCarriesTheClauseProvidingAFactItsWhenRead() throws {
+        let s = situation(owned: ["me-horse": 1], facts: ["choice.order": "flucht"], base: ["opponent.pa": 8])
+        let b = engine.evaluate(Query("opponent.pa(with: weapon)"), in: s)
+        XCTAssertFalse(b.legal.allowed)
+        XCTAssertEqual(b.legal.reasons.first { $0.origin == ref("me-core.G4") }?.via, [ref("me-horse.H7")])
+    }
+
+    /// R67 (fix round 2): a line takes the rulings of the offers whose option its `when` reads
+    /// only (RK13's order options are not RK15's).
+    func testALineTakesTheRulingsOfTheOfferOfTheOptionItReads() throws {
+        let s = situation(owned: ["me-horse": 1], facts: ["hero.mounted": true, "choice.order": "flucht"], base: ["at": 14])
+        let line = try XCTUnwrap(lines(engine.evaluate(Query("at"), in: s), from: "me-core.Z6").first)
+        XCTAssertFalse(line.rulings.contains("me-horse.storm"), "\(line.rulings)")
+        let storm = situation(owned: ["me-horse": 1], facts: ["hero.mounted": true, "choice.order": "sturm"], base: ["at": 14])
+        XCTAssertEqual(lines(engine.evaluate(Query("at"), in: storm), from: "me-core.Z6"), [], "Z6 reads flucht only")
+    }
+
+    /// R72: taking a choice asks the attack checks it gates, with the attack's values from the
+    /// profile row the rule provides.
+    func testTakingAChoiceAsksTheAttackCheckItGates() throws {
+        var s = situation(owned: ["me-horse": 1], facts: ["hero.mounted": true, "choice.mountAttack": "Tritt"])
+        s.pools[.actions] = PoolState(current: 1, max: 1)
+        s.facts["choice.order"] = Fact(name: "choice.order", value: .string("flucht"), owner: .player)
+        let r = ActionLayer(engine: engine).perform(.take(choice: "order"), in: s)
+        let attack = try XCTUnwrap(r.attacks.first)
+        XCTAssertEqual(attack.origin, ref("me-horse.H3"))
+        XCTAssertEqual(attack.attack, "Tritt")
+        XCTAssertEqual(attack.by, "mount")
+        XCTAssertEqual(attack.at, 15)
+        XCTAssertEqual(attack.tp, "1W6+7")
+        XCTAssertEqual(attack.via, [ref("me-horse.H3")])
+    }
 }

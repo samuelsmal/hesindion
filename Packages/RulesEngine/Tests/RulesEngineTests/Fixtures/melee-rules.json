@@ -47,7 +47,27 @@
     "rule": "me-horse"
    },
    {
+    "clause": "H3",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H3",
+    "index": 1,
+    "rule": "me-horse"
+   },
+   {
     "clause": "H4",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H7",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H8",
     "index": 0,
     "rule": "me-horse"
    },
@@ -134,6 +154,11 @@
     "rule": "me-core"
    },
    {
+    "clause": "Z6",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
     "clause": "P1",
     "index": 0,
     "rule": "me-position"
@@ -158,6 +183,13 @@
     "clause": "R1",
     "index": 0,
     "rule": "me-rider"
+   }
+  ],
+  "opponent.pa": [
+   {
+    "clause": "G4",
+    "index": 0,
+    "rule": "me-core"
    }
   ],
   "pa": [
@@ -569,6 +601,74 @@
      ],
      "id": "S3",
      "text": "Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G4",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "opponent.weaponParry"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "all": [
+         {
+          "fact": "choice.order",
+          "is": "flucht"
+         },
+         {
+          "fact": "mount.size",
+          "is": "gross"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "G4",
+     "text": "Gegen einen großen Angreifer nur Schild oder Ausweichen."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z6",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.order",
+        "is": "flucht"
+       }
+      }
+     ],
+     "id": "Z6",
+     "text": "Auf der Flucht −1 AT."
     }
    ],
    "id": "me-core",
@@ -684,13 +784,128 @@
      ],
      "id": "H4",
      "text": "Aktionen 1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H3",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.attacks",
+        "value": [
+         {
+          "at": 15,
+          "name": "Tritt",
+          "tp": "1W6+7"
+         }
+        ]
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "H3",
+        "index": 1,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "choice.mountAttack"
+         ],
+         "kind": "attack",
+         "with": "mount"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "choice.order",
+          "is": "flucht"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "H3",
+     "text": "Tritt: AT 15 TP 1W6+7"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H7",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.size",
+        "value": "gross"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "H7",
+     "text": "Größenkategorie: groß"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H8",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "choice": "order",
+        "options": [
+         "sturm"
+        ]
+       },
+       "phase": "player",
+       "ruling": [
+        "me-horse.storm"
+       ],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "H8",
+     "text": "Der Befehl zum Sturm."
     }
    ],
    "id": "me-horse",
    "kind": "creature",
    "name": "Kaltblut",
    "reviewed": null,
-   "rulings": [],
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-horse.storm",
+     "question": "Sturm?",
+     "status": "decided"
+    }
+   ],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
@@ -1170,7 +1385,25 @@
          ],
          "kind": "talent",
          "with": "Kampfmanöver"
-        }
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "R12",
+           "index": "2.onFailure.0",
+           "rule": "me-rider"
+          },
+          "payload": {
+           "text": "Der Befehl wird nicht ausgeführt.",
+           "to": "player"
+          },
+          "phase": "player",
+          "ruling": [],
+          "verb": "tell",
+          "when": null
+         }
+        ]
        },
        "phase": "action",
        "ruling": [],
@@ -1392,6 +1625,12 @@
    "answer": "ja",
    "id": "me-core.quiet",
    "question": "Leise?",
+   "status": "decided"
+  },
+  {
+   "answer": "ja",
+   "id": "me-horse.storm",
+   "question": "Sturm?",
    "status": "decided"
   },
   {

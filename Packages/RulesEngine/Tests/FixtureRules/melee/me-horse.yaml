@@ -14,3 +14,22 @@ clauses:
     text: Aktionen 1.
     effects:
       - provide: { name: mount.actions, value: 1, readBy: display }
+  - id: H3
+    text: "Tritt: AT 15 TP 1W6+7"
+    effects:
+      - provide: { name: mount.attacks, value: [{ name: Tritt, at: 15, tp: 1W6+7 }] }
+      - when: { hero.mounted: true, choice.order: flucht }
+        check: { of: { attack: choice.mountAttack, with: mount } }
+  - id: H7
+    text: "Größenkategorie: groß"
+    effects:
+      - provide: { name: mount.size, value: gross }
+  - id: H8
+    text: Der Befehl zum Sturm.
+    effects:
+      - offer: { choice: order, options: [sturm] }
+        ruling: storm
+rulings:
+  - id: storm
+    question: Sturm?
+    answer: ja

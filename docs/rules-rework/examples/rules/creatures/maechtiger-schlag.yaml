@@ -51,8 +51,11 @@ clauses:
       Die Probe ist für den Gegner um die Hälfte der Punkte erschwert, die die Körperkraft des
       Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
     effects:
-      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.check.talent: TAL_5, creature.kk: { above: 20 } }
-        add: { to: opponent.check.modifier, value: { of: creature.kk, above: 20, per: 2, times: -1, round: up } }
+      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.check.talent: TAL_5, mount.kk: { above: 20 } }
+        add: { to: opponent.check.modifier, value: { of: mount.kk, above: 20, per: 2, times: -1, round: up } }
+        # The creature is the mount (the `when` gates on its attack on an order): its KK is the
+        # profile's `mount.kk` (svellttaler-kaltblut.SK2), not `creature.kk`, which nothing provides
+        # (Task 31 fix round 2).
         ruling: round-up
         # The old `opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }`:
         # the opponent's Kraftakt (TAL_5) modifier (A.5), after the mount's attack hit. "Up" rounds the half away from zero, before

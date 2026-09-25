@@ -259,4 +259,44 @@ final class MeleeHarnessTests: XCTestCase {
                              notApplied: [], questions: [], success: nil, successQuery: nil, breakdown: { _ in b }, &ok)
         XCTAssertEqual(ok.mismatches, [])
     }
+
+    // MARK: - Fix round 2
+
+    /// R72: an attack check event is compared with the attacks the action asks: name, who,
+    /// AT, TP, origin, via and ruling.
+    func testAnAttackCheckEventIsComparedWithTheAttacksAsked() {
+        let tritt = PendingAttack(origin: ref("x.SK3"), attack: "Tritt", by: "mount", at: 15, tp: "1W6+7", rulings: ["x.own"],
+                                  via: [ref("x.RK12")])
+        let good: JSONValue = .object(["check": .object(["attack": "Tritt", "by": "mount", "at": 15, "tp": "1W6+7"]), "from": "x.SK3",
+                                       "ruling": "x.own"])
+        XCTAssertEqual(CombatRunner.events([good], events: [], checks: [], attacks: [tritt]), [])
+        let wrong: JSONValue = .object(["check": .object(["attack": "Tritt", "by": "mount", "at": 16]), "from": "x.SK3"])
+        XCTAssertEqual(CombatRunner.events([wrong], events: [], checks: [], attacks: [tritt]).map(\.kind), [.missingEvent])
+    }
+
+    /// A paid event's unmodelled field is a shape, and the rest (its ruling) is still compared.
+    func testAPaidEventsExtraFieldDoesNotMaskItsRuling() {
+        let paid = Event(kind: .paid, origin: ref("x.RK12"), pool: .actions, amount: 1, rulings: [])
+        let r = ActionResult(events: [paid], situation: Situation(owned: [:], facts: []))
+        var used = Set<Int>()
+        let m = StateRunner.paid(["paid": .object(["pool": "actions", "amount": 1]), "instead_of": "x", "from": "x.RK12", "ruling": "x.own"],
+                                 ["pool": "actions", "amount": 1], r, before: r.situation, &used)
+        XCTAssertEqual(m.map(\.kind).sorted { $0.rawValue < $1.rawValue }, [.missingEvent, .unsupportedShape])
+    }
+
+    /// A malformed `legal.via` or `offered.on` is an unsupported shape.
+    func testMalformedViaAndOnAreShapes() {
+        let actual = Legality(allowed: false, reasons: [NotApplied(origin: ref("g.GK4"), reason: .forbidden)])
+        XCTAssertEqual(Matcher.legal(.object(["allowed": false, "via": 3]), actual, query: "pa").map(\.shape), ["legal.malformed"])
+        XCTAssertEqual(Matcher.offer(.object(["choice": "c", "on": 3]), wanted: true, in: [offer("c", "x.X1")], notApplied: [],
+                                     offering: [:]).map(\.shape), ["malformed offer"])
+    }
+
+    /// A step stating only its check's result enters the outcome of the check the last action
+    /// asked, and its texts (an `onFailure` tell) are compared.
+    func testAStepStatingACheckResultEntersThePendingCheck() throws {
+        let s = try situation(#"{"facts": [{"name": "hero.mounted", "value": true, "owner": "loadout"}, {"name": "choice.order", "value": "flucht", "owner": "player"}], "expectSituation": {"events": [{"check": {"talent": "TAL_6"}, "from": "me-rider.R12"}]}, "sequence": [{"rolls": {"check.result": "failure"}, "expect": {"texts": [{"player": "Der Befehl wird nicht ausgeführt.", "from": "me-rider.R12"}]}}]}"#)
+        let run = StateRunner.run(s, engine: engine, attributes: ["TAL_6": ["MU", "GE", "KK"]])
+        XCTAssertEqual(run.mismatches, [])
+    }
 }

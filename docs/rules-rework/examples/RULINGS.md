@@ -164,7 +164,7 @@ Why a: it reads nothing into the missing page: the pages that exist name these f
 
 ### `reiterkampf` · mounted-attack-side
 
-Answer in [`rules/core/reiterkampf.yaml:407`](./rules/core/reiterkampf.yaml#L407)
+Answer in [`rules/core/reiterkampf.yaml:418`](./rules/core/reiterkampf.yaml#L418)
 
 **RK5: mounted, a shield blocks only attacks from the front and the shield-arm side; an attack from the weapon-arm side can only be parried with the weapon or dodged. How does the app learn which side an attack on a mounted hero comes from?**
 

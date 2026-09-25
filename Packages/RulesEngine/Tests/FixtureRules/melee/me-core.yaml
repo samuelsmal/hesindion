@@ -48,6 +48,16 @@ clauses:
     text: Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde.
     effects:
       - provide: { name: loadout.shield.technique, value: CT_10, readBy: loadout }
+  - id: G4
+    text: Gegen einen großen Angreifer nur Schild oder Ausweichen.
+    effects:
+      - when: { choice.order: flucht, mount.size: gross }
+        forbid: { what: { defence: opponent.weaponParry } }
+  - id: Z6
+    text: Auf der Flucht −1 AT.
+    effects:
+      - when: { choice.order: flucht }
+        add: { to: at, value: -1 }
 rulings:
   - id: quiet
     question: Leise?

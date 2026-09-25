@@ -619,7 +619,9 @@ enum Matcher {
                     out.append(mismatch("expected a firing entry lasting the \(raw.string!), the choices it read are offered for \(spans)"))
                 }
             }
-            if let via = o["via"].map(strings), !Set(via).isSubset(of: actual.reasons.flatMap(\.via).map(\.description)) {
+            if let raw = o["via"], raw.string == nil, raw.arrayValue?.allSatisfy({ $0.string != nil }) != true {
+                out.append(.shape("legal.malformed", "legal.via \(raw) is not a clause or a list of clauses", query: query))
+            } else if let via = o["via"].map(strings), !Set(via).isSubset(of: actual.reasons.flatMap(\.via).map(\.description)) {
                 // Task 31 fix round 1: the firing entries' `via`.
                 out.append(mismatch("expected a firing entry via \(via), firing: \(actual.reasons.map { "\($0.origin) via \($0.via)" })"))
             }
@@ -1019,6 +1021,7 @@ enum Matcher {
             return .shape("malformed offer", "offered \(choice): costs \(raw) is no pool and amount")
         }
         if let m = o["max"], m.int == nil { return .shape("malformed offer", "offered \(choice): max \(m) is not a number") }
+        if let on = o["on"], on.string == nil { return .shape("malformed offer", "offered \(choice): on \(on) is not a screen") }
         let from = o["from"]?.string, because = o["because"]?.string, ruling = o["ruling"].map(strings)
         let names = [from, because].compactMap { $0 } + (ruling ?? [])
         // Task 31: `from` is the offering clause, or the require that enables its rule for a hero

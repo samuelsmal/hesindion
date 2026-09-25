@@ -35,7 +35,10 @@ clauses:
       - when: { hero.mounted: true, choice.order: [flucht] }
         cost: { pool: actions, amount: 1 }
       - when: { hero.mounted: true, choice.order: [flucht] }
-        check: { of: { talent: TAL_6, with: Kampfmanöver } }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt." }
   - id: R3
     text: Beritten keine Spezialmanöver.
     effects:

@@ -149,10 +149,13 @@ public struct ActionResult: Hashable, Sendable {
     /// The checks the action calls for, the caller's to run (`.takeHit`: the Wundeffekt's
     /// Selbstbeherrschung, trefferzonen.TZ8; the rider's Reiten, reiterkampf.RK10).
     public var checks: [PendingCheck]
+    /// Ruling R72: the attack checks the action calls for (a mount's attack on an order,
+    /// svellttaler-kaltblut.SK3, reiterkampf.RK13), the caller's to roll.
+    public var attacks: [PendingAttack]
 
     public init(events: [Event] = [], situation: Situation, breakdowns: [Breakdown] = [], questions: [Question] = [],
-                texts: [TextLine] = [], notApplied: [NotApplied] = [], checks: [PendingCheck] = []) {
+                texts: [TextLine] = [], notApplied: [NotApplied] = [], checks: [PendingCheck] = [], attacks: [PendingAttack] = []) {
         self.events = events; self.situation = situation; self.breakdowns = breakdowns; self.questions = questions
-        self.texts = texts; self.notApplied = notApplied; self.checks = checks
+        self.texts = texts; self.notApplied = notApplied; self.checks = checks; self.attacks = attacks
     }
 }

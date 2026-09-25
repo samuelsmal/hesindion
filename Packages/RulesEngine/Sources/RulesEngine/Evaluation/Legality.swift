@@ -58,8 +58,11 @@ extension Evaluation {
             guard names(selector, state.query), applies(e, &state), !isSuppressed(e, &state) else { continue }
             let rule = e.origin.rule
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
-            let via = ruleVia(rule, state)
+            var via = ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
+            // Task 31 fix round 2: a provided fact its `when` read joins `via` with its providing
+            // clause (GK4 over svellttaler-kaltblut.SK7's `mount.size`), as a value's does.
+            via = (via + providedVia(used, depth: state.depth)).uniqued()
             let origin = e.origin.clauseRef
             switch e.payload {
             case .require(let r):
@@ -406,6 +409,12 @@ extension Evaluation {
         }
     }
 
+    /// The clauses providing the facts among `used` that nobody stated (`Evaluation.providedFact`).
+    func providedVia(_ used: [FactUse], depth: Int) -> [ClauseRef] {
+        used.filter { $0.owner == .derived && situation.facts[$0.name] == nil }
+            .compactMap { providedFact($0.name, depth: depth)?.via.first }.uniqued()
+    }
+
     /// Ruling R67: a line rests on the decided rulings of the live offers of the choices its
     /// effect's `when` reads (trefferzonen.TZ5's zone line reads `choice.targetZone`, which
     /// passierschlag.PS3 offers on the ruling passierschlag-zone during a Passierschlag). An offer
@@ -414,7 +423,12 @@ extension Evaluation {
         let choices = (e.when?.factNames ?? []).filter { $0.hasPrefix("choice.") }.map { String($0.dropFirst("choice.".count)) }
         guard !choices.isEmpty else { return [] }
         var out: [String] = []
+        // Fix round 2: of an offer with options, only one offering an option the `when` compares
+        // the choice with (RK13's `niederreiten`, not RK15's `flucht`).
+        let compared = e.when.map { Self.comparedValues($0) } ?? [:]
         for o in offers where choices.contains(o.offer.choice) && !o.effect.ruling.isEmpty {
+            if let options = o.offer.options, let values = compared["choice.\(o.offer.choice)"], !values.isEmpty,
+               !options.contains(where: { opt in values.contains { Conditions.same($0, opt) } }) { continue }
             guard applicability(of: o.rule, depth: state.depth).applies,
                   !o.effect.ruling.contains(where: { book.rulings[$0]?.status == .open }) else { continue }
             let level = ruleLevel(o.rule, levels: state.levels, depth: state.depth)
@@ -423,6 +437,21 @@ extension Evaluation {
             out += decided(o.effect)
         }
         return out.uniqued()
+    }
+
+    /// The values a condition compares each fact with by `is` / `in`, outside a `not`.
+    static func comparedValues(_ c: Condition) -> [String: [JSONValue]] {
+        switch c {
+        case .all(let cs), .any(let cs):
+            return cs.map(comparedValues).reduce(into: [:]) { acc, m in m.forEach { acc[$0.key, default: []] += $0.value } }
+        case .not: return [:]
+        case .fact(let name, let comparison):
+            switch comparison {
+            case .is(let v): return [name: [v]]
+            case .in(let vs): return [name: vs]
+            default: return [:]
+            }
+        }
     }
 
     /// Ruling R67: an offer of a manoeuvre rests on the decided rulings of the manoeuvre
