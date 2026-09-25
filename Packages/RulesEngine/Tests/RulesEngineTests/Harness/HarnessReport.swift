@@ -8,8 +8,8 @@ import Foundation
 enum Verdict: Equatable {
     case passed
     case failed
-    /// It mismatched, and these open rulings of its static `pending` list, met by its run, could
-    /// explain a mismatch (R41).
+    /// It mismatched, and every mismatch is explained by these open rulings of its static
+    /// `pending` list, met by its run, on live effects (R41, R46).
     case pending([String])
     /// It mismatched and is listed in MIGRATION's "Expectation conflicts for the owner" (R43).
     case conflict
@@ -20,15 +20,15 @@ enum Verdict: Equatable {
     var passesTheTest: Bool { self != .failed }
 
     /// A match passes. Otherwise, in order: a listed conflict (R43); only unsupported shapes
-    /// (R42); pending when an open ruling it hit explains a mismatch (R41); else failed.
+    /// (R42); pending when open rulings it hit explain every mismatch (R41, R46); else failed.
     static func of(_ s: CompiledSituation, mismatches: [Mismatch], hits: [OpenHit], book: RuleBook?,
                    conflicts: Set<ConflictRef>) -> Verdict {
         guard !mismatches.isEmpty else { return .passed }
         if conflicts.contains(ConflictRef(file: s.file, id: s.id)) { return .conflict }
         let real = mismatches.filter { $0.kind != .unsupportedShape }
         if real.isEmpty { return .unsupported(mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()) }
-        let explaining = Explainer.explaining(hits, real, pending: s.pending, book: book)
-        return explaining.isEmpty ? .failed : .pending(explaining)
+        let explaining = Explainer.explaining(hits, real, pending: s.pending, book: book, situation: s.engineSituation)
+        return explaining.map { .pending($0) } ?? .failed
     }
 }
 

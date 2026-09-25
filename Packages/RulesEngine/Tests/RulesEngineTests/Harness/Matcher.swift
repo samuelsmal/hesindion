@@ -669,24 +669,29 @@ enum Matcher {
 // MARK: - R41: which open rulings could explain a mismatch
 
 enum Explainer {
-    /// Whether the open ruling `hit` met could explain `m` (R41):
+    /// Whether the open ruling `hit` met could explain `m` (R41, tightened by R46):
     /// - the expectation names the ruling, or the clause or rule its effect sits on;
     /// - its effect (the clause's effect resting on the ruling) reaches the mismatched query's
     ///   target by a non-`*` reach entry;
     /// - `m` is about offers / questions / texts and the effect is a `*` offer / ask / tell.
+    ///
+    /// With a book, the explaining effect must be live (R46): its `when` (and, for a ruling on a
+    /// nested effect, the nested effect's) is not `no` in `situation`, read with `Conditions`.
     /// `*`-indexed open-ruling texts alone never explain a value mismatch. An unsupported shape
     /// is explained by nothing.
-    static func explains(_ hit: OpenHit, _ m: Mismatch, book: RuleBook?) -> Bool {
+    static func explains(_ hit: OpenHit, _ m: Mismatch, book: RuleBook?, situation: Situation) -> Bool {
         guard m.area != .shape else { return false }
-        if m.names.contains(hit.ruling) { return true }
-        guard let o = hit.origin else { return false }
-        if m.names.contains(o.description) || m.names.contains(o.rule) { return true }
-        guard let book else { return false }
-        // The reach entries of the clause's effects that rest on the ruling (nested ones included).
-        let here = { (e: EffectOrigin) in
-            e.rule == o.rule && e.clause == o.clause && (book.effect(at: e).map { rests($0, on: hit.ruling) } ?? false)
+        guard let o = hit.origin else { return m.names.contains(hit.ruling) }
+        let named = m.names.contains(hit.ruling) || m.names.contains(o.description) || m.names.contains(o.rule)
+        guard let book else { return named }
+        // The top-level effects of the clause that rest on the ruling and are live.
+        let live = { (e: EffectOrigin) in
+            e.rule == o.rule && e.clause == o.clause
+                && (book.effect(at: e).map { self.live($0, on: hit.ruling, in: situation) } ?? false)
         }
-        if let q = m.query, (book.reach[TargetRef(q).name] ?? []).contains(where: here) { return true }
+        let clauseEffects = book.rules[o.rule]?.clauses.flatMap(\.effects).filter { $0.origin.clause == o.clause } ?? []
+        if named { return clauseEffects.contains { live($0.origin) } }
+        if let q = m.query, (book.reach[TargetRef(q).name] ?? []).contains(where: live) { return true }
         let verb: Verb? = switch m.area {
         case .offers: .offer
         case .questions: .ask
@@ -694,20 +699,29 @@ enum Explainer {
         default: nil
         }
         guard let verb else { return false }
-        return (book.reach["*"] ?? []).contains { here($0) && book.effect(at: $0)?.payload.verb == verb }
+        return (book.reach["*"] ?? []).contains { live($0) && book.effect(at: $0)?.payload.verb == verb }
     }
 
-    /// Whether `e` or an effect nested in it rests on `ruling`.
-    static func rests(_ e: Effect, on ruling: String) -> Bool {
-        e.ruling.contains(ruling) || e.payload.nested.contains { $0.effects.contains { rests($0, on: ruling) } }
+    /// Whether `e`, or an effect nested in it, rests on `ruling` with every `when` on the way not
+    /// `no` (R46).
+    static func live(_ e: Effect, on ruling: String, in situation: Situation) -> Bool {
+        if let w = e.when, Conditions.evaluate(w, in: situation, rule: e.origin.rule).truth == .no { return false }
+        return e.ruling.contains(ruling)
+            || e.payload.nested.contains { $0.effects.contains { live($0, on: ruling, in: situation) } }
     }
 
-    /// The rulings among `hits` that are on the situation's static pending list and explain one
-    /// of its mismatches, sorted.
-    static func explaining(_ hits: [OpenHit], _ mismatches: [Mismatch], pending: [String], book: RuleBook?) -> [String] {
-        let open = Set(pending)
-        return Set(hits.filter { h in open.contains(h.ruling) && mismatches.contains { explains(h, $0, book: book) } }.map(\.ruling))
-            .sorted()
+    /// R46: the rulings explaining the mismatches when every one of them is explained by a hit on
+    /// the situation's static pending list (sorted); nil when any mismatch is unexplained.
+    static func explaining(_ hits: [OpenHit], _ mismatches: [Mismatch], pending: [String], book: RuleBook?,
+                           situation: Situation) -> [String]? {
+        let open = hits.filter { Set(pending).contains($0.ruling) }
+        var rulings: Set<String> = []
+        for m in mismatches {
+            let by = open.filter { explains($0, m, book: book, situation: situation) }
+            if by.isEmpty { return nil }
+            rulings.formUnion(by.map(\.ruling))
+        }
+        return rulings.isEmpty ? nil : rulings.sorted()
     }
 }
 

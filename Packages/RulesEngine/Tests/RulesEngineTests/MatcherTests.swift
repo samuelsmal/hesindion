@@ -41,7 +41,8 @@ final class MatcherTests: XCTestCase {
     }()
 
     /// The pipeline book with pl-moves.M1 (a `*` offer), pl-talk.T1 (a `*` tell) and pl-talk.T2
-    /// (a `*` ask) resting on the ruling `t.open`.
+    /// (a `*` ask) resting on the ruling `t.open`, and pl-adds.A4 (the open-q add on `pa`) with
+    /// `when: gmFact.fromBehind`.
     private static let tagged: RuleBook = {
         let url = Bundle.module.url(forResource: "pipeline-rules", withExtension: "json", subdirectory: "Fixtures")!
         var top = try! JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
@@ -50,6 +51,11 @@ final class MatcherTests: XCTestCase {
             var rule = rule
             rule["clauses"] = (rule["clauses"] as! [[String: Any]]).map { clause in
                 var clause = clause
+                if "\(rule["id"]!).\(clause["id"] ?? "")" == "pl-adds.A4" {
+                    clause["effects"] = (clause["effects"] as! [[String: Any]]).map { e in
+                        var e = e; e["when"] = ["fact": "gmFact.fromBehind", "is": true]; return e
+                    }
+                }
                 guard tag.contains("\(rule["id"]!).\(clause["id"] ?? "")") else { return clause }
                 clause["effects"] = (clause["effects"] as? [[String: Any]] ?? []).map { e in
                     var e = e; e["ruling"] = ["t.open"]; return e
@@ -441,6 +447,38 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(Verdict.of(s, mismatches: [], hits: [a4], book: Self.book, conflicts: []), .passed)
         XCTAssertFalse(Verdict.failed.passesTheTest)
         XCTAssertTrue(Verdict.pending(["a.open"]).passesTheTest)
+    }
+
+    /// R46.1: pending only when every mismatch is explained; one unexplained mismatch fails it.
+    func testEveryMismatchMustBeExplainedForPending() throws {
+        let s = try situation(#"{"pending": ["a.open"]}"#)
+        let explained = Mismatch(kind: .missingLine, query: "at", detail: "", names: ["a.A1", "a"])
+        let unexplained = Mismatch(kind: .missingLine, query: "at", detail: "", names: ["b.B1", "b"])
+        let alsoExplained = Mismatch(kind: .result, query: "gs", detail: "", names: ["a.open"])
+        let h = [hit("a.open", "a.A1")]
+        XCTAssertEqual(Verdict.of(s, mismatches: [explained, unexplained], hits: h, book: nil, conflicts: []), .failed)
+        XCTAssertEqual(Verdict.of(s, mismatches: [explained, alsoExplained], hits: h, book: nil, conflicts: []), .pending(["a.open"]))
+        // Unsupported shapes beside explained mismatches need no explaining.
+        XCTAssertEqual(Verdict.of(s, mismatches: [explained, .shape("term", "x")], hits: h, book: nil, conflicts: []),
+                       .pending(["a.open"]))
+    }
+
+    /// R46.2: the explaining open-ruling effect's `when` must not be `no` in the situation
+    /// (`unknown` and `yes` explain), whether it explains by reach or by name.
+    func testAnOpenRulingEffectWhoseWhenIsNoExplainsNothing() throws {
+        let pa = [Mismatch(kind: .total, query: "pa", detail: "")]
+        let named = [Mismatch(kind: .missingLine, query: "at", detail: "", names: ["pl-adds.A4", "pl-adds"])]
+        let a4 = [hit("pl-adds.open-q", "pl-adds.A4")]
+        func verdict(_ fromBehind: String?, _ m: [Mismatch]) throws -> Verdict {
+            let facts = fromBehind.map { #", "facts": [{"name": "gmFact.fromBehind", "value": \#($0), "owner": "gm"}]"# } ?? ""
+            let s = try situation(#"{"pending": ["pl-adds.open-q"]"# + facts + "}")
+            return Verdict.of(s, mismatches: m, hits: a4, book: Self.tagged, conflicts: [])
+        }
+        XCTAssertEqual(try verdict("false", pa), .failed)
+        XCTAssertEqual(try verdict("false", named), .failed)
+        XCTAssertEqual(try verdict(nil, pa), .pending(["pl-adds.open-q"]))
+        XCTAssertEqual(try verdict("true", pa), .pending(["pl-adds.open-q"]))
+        XCTAssertEqual(try verdict("true", named), .pending(["pl-adds.open-q"]))
     }
 
     /// R43: a mismatching situation listed in MIGRATION's conflicts is `conflict` before any
