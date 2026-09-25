@@ -74,13 +74,17 @@ situations:
           - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
         notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
       "opponent.pa": { legal: { allowed: false, because: reiterkampf.RK13 } }                   # the old `opponent_may_only: [aw]`
-      "opponent.check.modifier":                                                          # the old `on_attack_success.tell`: Kraftakt, Liegend (STATE_10) on a failure (maechtiger-schlag.MS1)
-        total: -3
-        lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }]              # −⌈(25 − 20)/2⌉
       texts:
-        - { opponent: { check: Kraftakt, on_failure: STATE_10 }, from: maechtiger-schlag.MS1 }
         - { mount: runs on at GS 12 to the end of the KR; turning it costs Boronmir 1 action, from: reiterkampf.RK13 }   # the old `after`
     sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_attack_success`: Kupperus's attack hit
+        opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
+        expect:
+          "opponent.check.modifier":
+            total: -3
+            lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }]          # −⌈(25 − 20)/2⌉
+          texts:
+            - { opponent: { check: Kraftakt, on_failure: STATE_10 }, from: maechtiger-schlag.MS1 }
       - rolls: { check.result: failure }                                                # the old `on_check_failure`
         expect:
           texts: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
@@ -122,10 +126,13 @@ situations:
         notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
       # the old `not_asked: [{ gait: galopp, runUp: 4, reason: "only Niederreiten needs them
       # (reiterkampf.RK13)" }]`: no expect key says "not asked" (MIGRATION.md, expectation conflicts)
-      "opponent.pa(with: weapon)": { legal: { allowed: false, because: groessenkategorie.GK4 } }   # the old `opponent_may_only: [shieldParry, aw]`, via svellttaler-kaltblut.SK7: a groß attacker
-      "opponent.check.modifier": { total: -3, lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }] }
-      texts: [{ opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS1, ruling: round-up }]   # the old `on_attack_success.tell`
+      "opponent.pa(with: weapon)": { legal: { allowed: false, because: groessenkategorie.GK4, via: [svellttaler-kaltblut.SK7] } }   # the old `opponent_may_only: [shieldParry, aw]`: a groß attacker
     sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_attack_success`: Kupperus's Tritt hit
+        opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
+        expect:
+          "opponent.check.modifier": { total: -3, lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }] }
+          texts: [{ opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS1, ruling: round-up }]
       - rolls: { check.result: failure }                                                # the old `on_check_failure`
         expect:
           texts: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
@@ -140,7 +147,8 @@ situations:
     opponent: { onFoot: true, size: mittel, defence: shieldParry, defenceResult: success }   # the old `defence: { kind, result }`
     choose: { choice.order: mountAttack, choice.mountAttack: Tritt }
     expect:
-      "mount.tp": { total: 0 }                                                          # the old `on_hit: { tp: none }`
+      # the old `on_hit: { tp: none }`: the parried Tritt rolls no damage — no expect key says
+      # "no roll" (MIGRATION.md, expectation conflicts)
       texts:
         - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS3, ruling: round-up }
     appToday: the note says a parry does not help — same, with −2 — wrong
@@ -300,10 +308,13 @@ situations:
     name: Großschild parry against an arrow, and against a thrown spear
     rulesets: [fokus.waffeneigenschaften]
     loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { action.defence: shieldParry }
+    # the old `incoming: pfeil|wurfspeer` is the GM's `gmFact.incomingAttack: ranged` and
+    # `gmFact.incomingMissile` (ITEMTPL_29.GR2)
     sequence:
-      - incoming: pfeil
+      - gm: { gmFact.incomingAttack: ranged, gmFact.incomingMissile: pfeil }
         expect: { pa: { lines: [{ value: 1, from: ITEMTPL_29.GR2 }] } }   # after the shield's doubled +3 (schilde)
-      - incoming: wurfspeer
+      - gm: { gmFact.incomingAttack: ranged, gmFact.incomingMissile: wurfspeer }
         expect: { notApplied: [{ rule: ITEMTPL_29, clause: GR2, reason: not a Pfeil or Bolzen }] }
     appToday: '"+1 PA vs. Fernkampf" as the shield''s note in both cases, never added'
 

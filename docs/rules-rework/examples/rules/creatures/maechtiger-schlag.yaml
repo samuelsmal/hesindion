@@ -33,9 +33,11 @@ clauses:
       (passiv) Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner
       eine Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
     effects:
-      - when: { action.attack: hit, opponent.size: [winzig, klein, mittel] }
+      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.size: [winzig, klein, mittel] }
         tell: { to: opponent, text: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)" }
-        # The creature's attack succeeded (the old `creature.attack: success`); the old
+        # The creature's attack succeeded (the old `creature.attack: success`): the mount's
+        # attack on the rider's order (reiterkampf.RK13, svellttaler-kaltblut.SK3) hit — never
+        # the rider's own attack. The old
         # structured `tell` (a Kraftakt check, Liegend on a failure) is its text, since the
         # opponent's check is the GM's.
         # Kupperus attacking: the opponent is the GM's, so this is a line on Kupperus's attack
@@ -49,11 +51,11 @@ clauses:
       Die Probe ist für den Gegner um die Hälfte der Punkte erschwert, die die Körperkraft des
       Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
     effects:
-      - when: { creature.kk: { above: 20 } }
+      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.check.talent: TAL_5, creature.kk: { above: 20 } }
         add: { to: opponent.check.modifier, value: { of: creature.kk, above: 20, per: 2, times: -1, round: up } }
         ruling: round-up
         # The old `opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }`:
-        # the opponent's Kraftakt modifier (A.5). "Up" rounds the half away from zero, before
+        # the opponent's Kraftakt (TAL_5) modifier (A.5), after the mount's attack hit. "Up" rounds the half away from zero, before
         # the sign, as the page's examples do.
         # Rounded up: the page's own example settles it — "bei einer KK von 23 um -2, bei einer
         # von 26 um -3" (23: 1.5 → 2) — so no ruling is needed; it agrees with rulings.yaml
@@ -65,12 +67,12 @@ clauses:
       Dem Mächtigen Schlag kann man nur mittels Ausweichen komplett entgehen. Bei einer Parade,
       gleich ob gelungen oder nicht, muss die Probe auf Kraftakt gewürfelt werden.
     effects:
-      - when: { opponent.defence: aw, opponent.defenceResult: success }
+      - when: { choice.order: [mountAttack, niederreiten], opponent.defence: aw, opponent.defenceResult: success }
         suppress: { line: { line: maechtiger-schlag.MS1 } }
         because: dem Mächtigen Schlag entgeht man nur durch Ausweichen komplett
         # The old `cancels: MS1`, when the opponent dodges successfully (the old
         # `action.defence: success`: the opponent's defence, stated by the GM).
-      - when: { opponent.defence: [pa, shieldParry] }
+      - when: { choice.order: [mountAttack, niederreiten], opponent.defence: [pa, shieldParry] }
         tell: { to: opponent, text: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)" }
         # The old structured `tell` with `whatever_the_parry: true`.
         # A parried blow does no damage but still asks for the Kraftakt check. The app's note

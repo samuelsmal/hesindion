@@ -14,6 +14,12 @@ source:
 reviewed: null
 
 clauses:
+  - id: SZ0
+    text: >
+      Wann immer ein Held von einem Hausdach, einer Felswand oder einem Pferd fällt, muss er damit
+      rechnen, sich blaue Flecken, eine Verstauchung oder eine schlimmere Verletzung zuzuziehen.
+    none: framing
+
   - id: SZ1
     text: >
       Für jeden Schritt Höhe, den ein Held stürzt, wird 1W6 gewürfelt und die Gesamtsumme mit den

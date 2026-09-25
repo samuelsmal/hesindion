@@ -98,6 +98,19 @@ clauses:
         # nothing until it is answered. The side is the GM's call per attack (`gmFact.attackSide`,
         # the old `attack.from: weaponArmSide`).
         # FORMAT: needs the side an attack comes from — a question to the player, not modelled today.
+      - when: { hero.mounted: true, not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
+        forbid: { what: { defence: shieldParry } }
+        because: beritten schützt der Schild nicht gegen Angriffe von hinten
+        ruling: angriff-von-hinten.mounted-from-behind-shield
+      - when: { hero.mounted: true, not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
+        suppress: { line: { line: schilde.SCH1 } }
+        because: Großschild (passiv) — von hinten, beritten
+        ruling: angriff-von-hinten.mounted-from-behind-shield
+        # From behind, the one side the app already asks (angriff-von-hinten's GM fact): the
+        # shield is not between the attacker and the rider, so no shield parry, and the weapon
+        # parry loses the shield's passive bonus (schilde.SCH1), shown as not applied. Decided
+        # (angriff-von-hinten.mounted-from-behind-shield); moved here from angriff-von-hinten.AH1
+        # (the old `from: reiterkampf.RK5`).
         # App gap: the app does not know which side an attack comes from; until it asks, shown as
         # text on the shield parry. From behind is encoded through the app's one side question,
         # angriff-von-hinten.AH1 (ruling angriff-von-hinten.mounted-from-behind-shield).
@@ -211,14 +224,16 @@ clauses:
       - when: { hero.mounted: true, choice.order: [niederreiten, sturmangriffZuPferd, flucht, mountAttack] }
         cost: { pool: actions, amount: 1 }
         # "Statt eines eigenen Angriffs … mit einer Aktion" (the old `costs: action`).
-      - when: { hero.mounted: true, choice.order: [niederreiten, sturmangriffZuPferd, flucht, mountAttack] }
+      - when: { hero.mounted: true, choice.order: [niederreiten, flucht, mountAttack] }
         check:
           of: { talent: TAL_6, with: Kampfmanöver }
           onFailure:
             - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
         # The old `defines: { action: order, … requires_check }`: every order is an Aktion and a
         # Reiten (Kampfmanöver) check; on a failure the order is not carried out and nothing
-        # worse follows. RK13–RK15 and svellttaler-kaltblut.SK3 offer the orders.
+        # worse follows. RK13–RK15 and svellttaler-kaltblut.SK3 offer the orders. The
+        # Sturmangriff zu Pferd's check is RK14's own, whose text names it; the Aktion (the cost
+        # above) is every order's.
 
   - id: RK13
     name: Niederreiten
@@ -269,9 +284,17 @@ clauses:
       - when: { hero.mounted: true, hero.has: SA_43, action.gait: galopp }
         offer: { choice: order, options: [sturmangriffZuPferd] }
         ruling: two-sturmangriffe
-        # The Reiten (Kampfmanöver) check the text names is RK12's, not repeated here; the
-        # attack is the hero's own, part of the order, and costs no further Aktion (the old
+        # The attack is the hero's own, part of the order, and costs no further Aktion (the old
         # `attack: { by: hero }`).
+      - when: { hero.mounted: true, choice.order: sturmangriffZuPferd }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+        ruling: two-sturmangriffe
+        # "Nach der Probe auf Reiten (Kampfmanöver) wird eine Attacke ausgeführt": RK14's own
+        # check (RK12 checks the other orders); on a failure, RK12's "keine weiterführenden
+        # Konsequenzen".
       - when: { hero.mounted: true, choice.order: sturmangriffZuPferd }
         forbid: { what: { defence: [opponent.weaponParry] } }
         because: gegen den Sturmangriff zu Pferd nur Parade mit dem Schild oder Ausweichen

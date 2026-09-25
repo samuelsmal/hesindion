@@ -9,7 +9,7 @@ source:
   page: 239
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # Also Kodex des Schwertes p. 76. A melee rule. The ranged target-size modifier is a separate
 # rule (fernkampf.zielgroesse — not drafted; RangedModifiers.groesse in the app); the
 # Trefferzonen aiming penalty replaces this one (trefferzonen.TZ5, ruling
@@ -66,6 +66,13 @@ clauses:
         # `defence` selector (the hero's pa) already says; the size is the attacker's.
         # The forbidden defence is not offered, and the breakdown says why (GK4). Against a
         # riesig attacker, mounted: the AW still carries reiterkampf.RK6's −2.
+      - when: { choice.order: [mountAttack, niederreiten], mount.size: gross }
+        forbid: { what: { defence: [opponent.weaponParry] } }
+        because: gegen einen großen Angreifer nur Parade mit dem Schild oder Ausweichen
+        ruling: mounted-size
+        # The mount's own attacks on the rider's order come from a groß being (ruling
+        # mounted-size; svellttaler-kaltblut.SK7 provides `mount.size`): the opponent may not
+        # parry them with a weapon. Niederreiten's own restriction (AW only) is reiterkampf.RK13's.
 
 rulings:
   - id: mounted-size

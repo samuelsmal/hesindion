@@ -37,21 +37,9 @@ clauses:
         ruling: from-behind-ranged
         # The hero attacks in melee: an opponent line, the GM subtracts it (ADR-0005). The
         # ranged announcement does not ask it.
-      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true, hero.mounted: true }
-        forbid: { what: { defence: shieldParry } }
-        because: beritten schützt der Schild nicht gegen Angriffe von hinten (reiterkampf.RK5)
-        ruling: mounted-from-behind-shield
-      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true, hero.mounted: true }
-        suppress: { line: { line: schilde.SCH1 } }
-        because: Großschild (passiv) — von hinten, beritten (reiterkampf.RK5)
-        ruling: mounted-from-behind-shield
-        # The weapon parry loses the shield's passive bonus: the shield is not between the
-        # attacker and the rider. Shown as not applied: "Großschild (passiv) +3 — von hinten,
-        # beritten (RK5)". The old `exempt: { from: schilde.SCH1 }`.
-        # Both effects belong to reiterkampf.RK5's text (the old `from: reiterkampf.RK5`, now in
-        # their `because`), but only become encodable through this rule's fact: RK5 needs the
-        # side an attack comes from, and "from behind" is the one side the app already asks.
-        # The other sides are reiterkampf.mounted-attack-side.
+      # Mounted from behind (ruling mounted-from-behind-shield): no shield parry and no passive
+      # shield bonus. Those two effects are reiterkampf.RK5's, which this rule's fact makes
+      # encodable; they live there, reading `gmFact.fromBehind`.
 
 rulings:
   - id: from-behind-ranged
