@@ -1,0 +1,30 @@
+# The source of Tests/RulesEngineTests/Fixtures/mini-rules.json (make rules-engine-fixture).
+# A levelled rule other effects point at (useLevel, replace, gain, suppress, cap.over).
+id: mini-levelled
+name: Gestufte Fertigkeit
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+levels: 3
+options: sid
+passive: true
+techniques: [Schwerter, Schilde]
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+source: { url: https://example.invalid/levelled, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: { by: "@fixture", date: 2026-09-25 }
+rulings:
+  - id: open-question
+    question: Does it stack?
+clauses:
+  - id: L1
+    name: Stufen
+    page: { book: Regelwerk, page: 1 }
+    text: PA mit Schild +Stufe−1.
+    effects:
+      - add: { to: "pa(with: shield)", value: level - 1 }
+        ruling: open-question
+  - id: L2
+    text: Unencoded text.
+    unencoded: not yet in the vocabulary
+  - id: L3
+    text: Nothing to encode.
+    none: flavour text

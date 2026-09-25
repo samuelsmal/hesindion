@@ -20,6 +20,12 @@ final class VocabularyTests: XCTestCase {
         XCTAssertEqual(v["events"] as? [String], EventKind.allCases.map(\.rawValue))
         XCTAssertEqual(v["audiences"] as? [String], Audience.allCases.map(\.rawValue))
         XCTAssertEqual(v["lineKinds"] as? [String], LineKind.allCases.map(\.rawValue))
+        XCTAssertEqual(v["selectorKinds"] as? [String], SelectorKind.allCases.map(\.rawValue))
+        XCTAssertEqual(v["rounding"] as? [String], Rounding.allCases.map(\.rawValue))
+        XCTAssertEqual(v["readers"] as? [String], Reader.allCases.map(\.rawValue))
+        XCTAssertEqual(v["comparisons"] as? [String], Comparison.names)
+        XCTAssertEqual(v["valueForms"] as? [String], ValueExpr.forms)
+        XCTAssertEqual(v["itemFields"] as? [String], ItemDelta.fields)
         XCTAssertEqual(Set((v["targets"] as! [String: Any]).keys), Vocabulary.targets)
         XCTAssertEqual(v["targetPrefixes"] as? [String], Vocabulary.targetPrefixes)
         let facts = (v["facts"] as! [String: [String: String]]).mapValues { $0["owner"]! }

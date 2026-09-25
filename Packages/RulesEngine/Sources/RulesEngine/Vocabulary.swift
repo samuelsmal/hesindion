@@ -54,6 +54,14 @@ public enum Audience: String, Codable, CaseIterable, Sendable { case player, gm,
 public enum LineKind: String, Codable, CaseIterable, Sendable {
     case base, add, set, levelAs, replaced, multiplied, capped, floored, rerolled, free
 }
+/// What a selector picks (`{ defence: [pa] }`, `{ line: RULE.CLAUSE }`, …).
+public enum SelectorKind: String, Codable, CaseIterable, Sendable {
+    case action, attack, defence, manoeuvre, choice, check, talent, spell, loadout
+    case line, rule, lineKind, dice, target, ruleKind
+}
+public enum Rounding: String, Codable, CaseIterable, Sendable { case up, down }
+/// Who reads a `provide`d value that no rule computes with (`readBy`).
+public enum Reader: String, Codable, CaseIterable, Sendable { case display, loadout, roll }
 
 public enum Vocabulary {
     public static let version = 1

@@ -1,0 +1,78 @@
+# The source of Tests/RulesEngineTests/Fixtures/mini-rules.json (make rules-engine-fixture).
+# One effect per verb, plus every value, operand, bound, selector and condition shape rulec emits.
+id: mini-core
+name: Grundregel
+kind: core
+ruleset: fokus.fixture
+catalogId: GRW_fixture
+provides: { reach: [kurz, lang], weight: 2 }
+source: { url: https://example.invalid/core, book: Regelwerk, page: 2, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: decided-question
+    question: Which side?
+    answer: The hero's.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: V1
+    text: Values.
+    effects:
+      # add: a sum operand, a list bound, a number bound, a target `above`, `per`
+      - add: { to: [at, "pa(with: shield)"], value: { of: [attr.MU, attr.GE], per: 2, max: [10, gsNatural], min: 1, above: leCurrent }, per: fw.current }
+        ruling: shared-rounding
+        because: halbe Summe
+      # add: a fact `above`, a target `of` and `per`, round down, times, a target bound
+      - add: { to: ini, value: { of: spell.cost, per: spell.range, above: gmFact.threshold, times: 2, round: down, max: gsNatural } }
+      - add: { to: spell.cost, value: 1, scale: mini.scale }
+      - add: { to: "rs(zone: kopf)", value: "table(mini.table, attr.KO)" }
+      - add: { to: "level(rule: mini-levelled)", value: 2 * level + 1 }
+      - set: { to: ini, value: 5 }
+      - multiply: { to: tp, by: 0.5, round: up, line: { line: mini-levelled.L1 } }
+      - cap: { to: at, max: { of: leCurrent, per: 2 }, min: 0, over: { rule: mini-levelled } }
+      - floor: { to: pa, min: 0 }
+      - derive: { to: wundschwelle, sum: [{ of: attr.KO, per: 2 }, "table(mini.table, attr.KO)", 1] }
+  - id: V2
+    text: Levels and lines.
+    effects:
+      - useLevel: { rule: mini-levelled, as: level }
+      - useLevel: { rule: mini-levelled, lowerBy: 1, min: 1 }
+      - replace: { line: { line: mini-levelled.L1 }, with: 2 }
+      - suppress: { line: { line: mini-levelled.L1 } }
+        phase: add
+  - id: G1
+    text: Legality.
+    effects:
+      - forbid: { what: { manoeuvre: { kind: spezialmanoever, mountedCombat: false } }, together: true }
+      - forbid: { what: { defence: [opponent.weaponParry, aw] } }
+      - require: { that: { hero.mounted: true }, for: { defence: pa }, enables: true }
+      - limit: { what: { attack: at }, per: round, max: 1 }
+        when:
+          all:
+            - any: [{ hero.mounted: true }, { hit.zone: [kopf, arme] }]
+            - not: { check.result: failure }
+            - round.number: { atLeast: 2 }
+            - round.parries: { atMost: 3 }
+            - attr.MU: { above: 12 }
+            - attr.KO: { below: 20 }
+            - choice.power: 3
+  - id: P1
+    text: Player.
+    effects:
+      - offer: { choice: power, options: [a, b], default: false, span: action, costs: [{ cost: { pool: asp, amount: 1 } }] }
+      - ask: { fact: gmFact.threshold, who: gm, options: [1, 2] }
+      - tell: { to: player, text: Hinweis }
+      - provide: { name: mini.table, value: { "0-3": 1, "4+": 2 }, readBy: display }
+      - provide: { name: mini.scale, value: [1, 2, 4, 8] }
+      - provide: { name: mini.wounds, value: { kopf: mini-levelled, arme: mini-levelled } }
+  - id: A1
+    text: Actions.
+    effects:
+      - check: { of: { talent: [Kriegskunst], with: [MU, KL] }, modifier: { of: attr.MU, per: 2 }, onSuccess: [{ tell: { to: gm, text: Gelungen } }], onFailure: [{ cost: { pool: le, amount: 1 } }, { item: { instance: { loadout: shield }, change: { destroyed: true } } }] }
+      - check: { of: { spell: Ignifaxius, with: KL } }
+      - gain: { rule: mini-levelled, levels: 1, span: fight }
+      - gain: { rule: "table(mini.wounds, hit.zone)" }
+      - cost: { pool: asp, amount: { of: [attr.MU, 2], per: 2 }, split: { pools: [asp, kap], min: { asp: 1 } }, fallThrough: [le], onFailure: 0.5, every: { minutes: spell.interval } }
+      - cost: { pool: actions, amount: 1, every: { rounds: 2 } }
+      - process: { id: laden, steps: 3, advancedBy: { action: [laden] }, breaksOff: { hero.mounted: true }, completes: [{ item: { instance: { loadout: weapon }, change: { loaded: true } } }], exclusive: true, span: fight }
+      - item: { instance: { loadout: shield }, change: { structurePoints: { of: hit.tp, times: -1 } } }
+      - reroll: { die: { dice: [check] }, keep: better, max: 1, per: fight }

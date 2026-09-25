@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture
 
 build:
 	xcodebuild \
@@ -188,6 +188,15 @@ rules-json:
 # The new rules engine (Packages/RulesEngine): pure Swift, runs on macOS without a simulator.
 test-rules-engine: rules-json
 	swift test --package-path Packages/RulesEngine
+
+# The engine tests' hand-made book: the rule files in Packages/RulesEngine/Tests/FixtureRules/mini,
+# compiled by rulec into Tests/RulesEngineTests/Fixtures/mini-rules.json. Rerun after a change to
+# those files or to rulec's output shape, and commit the JSON.
+RULES_ENGINE_FIXTURE = Packages/RulesEngine/Tests/RulesEngineTests/Fixtures
+rules-engine-fixture:
+	$(RULEC) build --rules ../Packages/RulesEngine/Tests/FixtureRules/mini --out ../build/rules-engine-fixture
+	mkdir -p $(RULES_ENGINE_FIXTURE)
+	cp build/rules-engine-fixture/rules.json $(RULES_ENGINE_FIXTURE)/mini-rules.json
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

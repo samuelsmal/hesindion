@@ -1,0 +1,5 @@
+# The source of Tests/RulesEngineTests/Fixtures/mini-rules.json (make rules-engine-fixture).
+- id: shared-rounding
+  question: Up or down?
+  answer: Up.
+  decided: { by: "@fixture", date: 2026-09-25 }

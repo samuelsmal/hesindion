@@ -1,0 +1,1431 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 1,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 2,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 3,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 4,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 5,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 6,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 7,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "A1",
+    "index": 8,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 1,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 2,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 3,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 4,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "P1",
+    "index": 5,
+    "rule": "mini-core"
+   }
+  ],
+  "at": [
+   {
+    "clause": "G1",
+    "index": 3,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V1",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V1",
+    "index": 7,
+    "rule": "mini-core"
+   }
+  ],
+  "aw": [
+   {
+    "clause": "G1",
+    "index": 1,
+    "rule": "mini-core"
+   }
+  ],
+  "fk": [
+   {
+    "clause": "G1",
+    "index": 3,
+    "rule": "mini-core"
+   }
+  ],
+  "ini": [
+   {
+    "clause": "V1",
+    "index": 1,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V1",
+    "index": 5,
+    "rule": "mini-core"
+   }
+  ],
+  "level": [
+   {
+    "clause": "V1",
+    "index": 4,
+    "rule": "mini-core"
+   }
+  ],
+  "opponent.pa": [
+   {
+    "clause": "G1",
+    "index": 1,
+    "rule": "mini-core"
+   }
+  ],
+  "pa": [
+   {
+    "clause": "G1",
+    "index": 2,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V1",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V1",
+    "index": 8,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 1,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 2,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 3,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "mini-levelled"
+   }
+  ],
+  "rs": [
+   {
+    "clause": "V1",
+    "index": 3,
+    "rule": "mini-core"
+   }
+  ],
+  "spell.cost": [
+   {
+    "clause": "V1",
+    "index": 2,
+    "rule": "mini-core"
+   }
+  ],
+  "tp": [
+   {
+    "clause": "V1",
+    "index": 6,
+    "rule": "mini-core"
+   }
+  ],
+  "wundschwelle": [
+   {
+    "clause": "V1",
+    "index": 9,
+    "rule": "mini-core"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "catalogId": "GRW_fixture",
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": "halbe Summe",
+       "origin": {
+        "clause": "V1",
+        "index": 0,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "per": "fw.current",
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "pa",
+          "with": "shield"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": {
+           "target": {
+            "name": "leCurrent"
+           }
+          },
+          "max": {
+           "each": [
+            {
+             "number": 10
+            },
+            {
+             "target": {
+              "name": "gsNatural"
+             }
+            }
+           ]
+          },
+          "min": 1,
+          "of": {
+           "sum": [
+            {
+             "fact": "attr.MU"
+            },
+            {
+             "fact": "attr.GE"
+            }
+           ]
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [
+        "shared.shared-rounding"
+       ],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 1,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": {
+           "fact": "gmFact.threshold"
+          },
+          "max": {
+           "target": {
+            "name": "gsNatural"
+           }
+          },
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "target": {
+            "name": "spell.range"
+           }
+          },
+          "round": "down",
+          "times": 2
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 2,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "scale": "mini.scale",
+        "to": [
+         {
+          "name": "spell.cost"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 3,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "rs",
+          "zone": "kopf"
+         }
+        ],
+        "value": {
+         "table": {
+          "key": "attr.KO",
+          "name": "mini.table"
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 4,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "level",
+          "rule": "mini-levelled"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 1,
+          "times": 2
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 5,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "number": 5
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "set",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 6,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "by": 0.5,
+        "line": {
+         "ids": [
+          "mini-levelled.L1"
+         ],
+         "kind": "line"
+        },
+        "round": "up",
+        "to": [
+         {
+          "name": "tp"
+         }
+        ]
+       },
+       "phase": "multiply",
+       "ruling": [],
+       "verb": "multiply",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 7,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "max": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "leCurrent"
+           }
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "min": {
+         "number": 0
+        },
+        "over": {
+         "ids": [
+          "mini-levelled"
+         ],
+         "kind": "rule"
+        },
+        "to": [
+         {
+          "name": "at"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 8,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "min": {
+         "number": 0
+        },
+        "to": [
+         {
+          "name": "pa"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "floor",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 9,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.KO"
+           },
+           "per": {
+            "number": 2
+           },
+           "round": "up",
+           "times": 1
+          }
+         },
+         {
+          "table": {
+           "key": "attr.KO",
+           "name": "mini.table"
+          }
+         },
+         {
+          "number": 1
+         }
+        ],
+        "to": {
+         "name": "wundschwelle"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "V1",
+     "text": "Values."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "V2",
+        "index": 0,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "as": {
+         "level": {
+          "plus": 0,
+          "times": 1
+         }
+        },
+        "rule": "mini-levelled"
+       },
+       "phase": "level",
+       "ruling": [],
+       "verb": "useLevel",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V2",
+        "index": 1,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "lowerBy": {
+         "number": 1
+        },
+        "min": 1,
+        "rule": "mini-levelled"
+       },
+       "phase": "level",
+       "ruling": [],
+       "verb": "useLevel",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V2",
+        "index": 2,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "mini-levelled.L1"
+         ],
+         "kind": "line"
+        },
+        "with": {
+         "number": 2
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "replace",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V2",
+        "index": 3,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "mini-levelled.L1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "suppress",
+       "when": null
+      }
+     ],
+     "id": "V2",
+     "text": "Levels and lines."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "together": true,
+        "what": {
+         "ids": [
+          {
+           "kind": "spezialmanoever",
+           "mountedCombat": false
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 1,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "opponent.weaponParry",
+          "aw"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 2,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "enables": true,
+        "for": {
+         "ids": [
+          "pa"
+         ],
+         "kind": "defence"
+        },
+        "that": {
+         "fact": "hero.mounted",
+         "is": true
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 3,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "max": {
+         "number": 1
+        },
+        "per": "round",
+        "what": {
+         "ids": [
+          "at"
+         ],
+         "kind": "attack"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": {
+        "all": [
+         {
+          "any": [
+           {
+            "fact": "hero.mounted",
+            "is": true
+           },
+           {
+            "fact": "hit.zone",
+            "in": [
+             "kopf",
+             "arme"
+            ]
+           }
+          ]
+         },
+         {
+          "not": {
+           "fact": "check.result",
+           "is": "failure"
+          }
+         },
+         {
+          "atLeast": 2,
+          "fact": "round.number"
+         },
+         {
+          "atMost": 3,
+          "fact": "round.parries"
+         },
+         {
+          "above": 12,
+          "fact": "attr.MU"
+         },
+         {
+          "below": 20,
+          "fact": "attr.KO"
+         },
+         {
+          "fact": "choice.power",
+          "is": 3
+         }
+        ]
+       }
+      }
+     ],
+     "id": "G1",
+     "text": "Legality."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 0,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "choice": "power",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "P1",
+           "index": "0.costs.0",
+           "rule": "mini-core"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "asp"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ],
+        "default": false,
+        "options": [
+         "a",
+         "b"
+        ],
+        "span": "action"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 1,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "fact": "gmFact.threshold",
+        "options": [
+         1,
+         2
+        ],
+        "who": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "ask",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 2,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "text": "Hinweis",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 3,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "name": "mini.table",
+        "readBy": "display",
+        "value": {
+         "0-3": 1,
+         "4+": 2
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 4,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "name": "mini.scale",
+        "value": [
+         1,
+         2,
+         4,
+         8
+        ]
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 5,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "name": "mini.wounds",
+        "value": {
+         "arme": "mini-levelled",
+         "kopf": "mini-levelled"
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "P1",
+     "text": "Player."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "modifier": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "attr.MU"
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "of": {
+         "ids": [
+          "Kriegskunst"
+         ],
+         "kind": "talent",
+         "with": [
+          "MU",
+          "KL"
+         ]
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "0.onFailure.0",
+           "rule": "mini-core"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "le"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         },
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "0.onFailure.1",
+           "rule": "mini-core"
+          },
+          "payload": {
+           "change": {
+            "destroyed": true
+           },
+           "instance": {
+            "ids": [
+             "shield"
+            ],
+            "kind": "loadout"
+           }
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "item",
+          "when": null
+         }
+        ],
+        "onSuccess": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "0.onSuccess.0",
+           "rule": "mini-core"
+          },
+          "payload": {
+           "text": "Gelungen",
+           "to": "gm"
+          },
+          "phase": "player",
+          "ruling": [],
+          "verb": "tell",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 1,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "Ignifaxius"
+         ],
+         "kind": "spell",
+         "with": "KL"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 2,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "mini-levelled",
+        "span": "fight"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 3,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "rule": {
+         "table": {
+          "key": "hit.zone",
+          "name": "mini.wounds"
+         }
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 4,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "sum": [
+            {
+             "fact": "attr.MU"
+            },
+            {
+             "number": 2
+            }
+           ]
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "every": {
+         "minutes": "spell.interval"
+        },
+        "fallThrough": [
+         "le"
+        ],
+        "onFailure": 0.5,
+        "pool": "asp",
+        "split": {
+         "min": {
+          "asp": 1
+         },
+         "pools": [
+          "asp",
+          "kap"
+         ]
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 5,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "amount": {
+         "number": 1
+        },
+        "every": {
+         "rounds": 2
+        },
+        "pool": "actions"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 6,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "advancedBy": {
+         "ids": [
+          "laden"
+         ],
+         "kind": "action"
+        },
+        "breaksOff": {
+         "fact": "hero.mounted",
+         "is": true
+        },
+        "completes": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "6.completes.0",
+           "rule": "mini-core"
+          },
+          "payload": {
+           "change": {
+            "loaded": true
+           },
+           "instance": {
+            "ids": [
+             "weapon"
+            ],
+            "kind": "loadout"
+           }
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "item",
+          "when": null
+         }
+        ],
+        "exclusive": true,
+        "id": "laden",
+        "span": "fight",
+        "steps": {
+         "number": 3
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "process",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 7,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "change": {
+         "structurePoints": {
+          "of": "hit.tp",
+          "times": -1
+         }
+        },
+        "instance": {
+         "ids": [
+          "shield"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "item",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 8,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "die": {
+         "ids": [
+          "check"
+         ],
+         "kind": "dice"
+        },
+        "keep": "better",
+        "max": 1,
+        "per": "fight"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "reroll",
+       "when": null
+      }
+     ],
+     "id": "A1",
+     "text": "Actions."
+    }
+   ],
+   "id": "mini-core",
+   "kind": "core",
+   "name": "Grundregel",
+   "provides": {
+    "reach": [
+     "kurz",
+     "lang"
+    ],
+    "weight": 2
+   },
+   "reviewed": null,
+   "ruleset": "fokus.fixture",
+   "rulings": [
+    {
+     "answer": "The hero's.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "mini-core.decided-question",
+     "question": "Which side?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 2,
+    "url": "https://example.invalid/core"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "mini-levelled"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "pa",
+          "with": "shield"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": -1,
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [
+        "mini-levelled.open-question"
+       ],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "L1",
+     "name": "Stufen",
+     "page": {
+      "book": "Regelwerk",
+      "page": 1
+     },
+     "text": "PA mit Schild +Stufe−1."
+    },
+    {
+     "id": "L2",
+     "text": "Unencoded text.",
+     "unencoded": "not yet in the vocabulary"
+    },
+    {
+     "id": "L3",
+     "none": "flavour text",
+     "text": "Nothing to encode."
+    }
+   ],
+   "group": "Kampfsonderfertigkeiten",
+   "id": "mini-levelled",
+   "kind": "specialAbility",
+   "levels": 3,
+   "manoeuvre": {
+    "kind": "spezialmanoever",
+    "mountedCombat": false
+   },
+   "name": "Gestufte Fertigkeit",
+   "options": "sid",
+   "passive": true,
+   "reviewed": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "rulings": [
+    {
+     "id": "mini-levelled.open-question",
+     "question": "Does it stack?",
+     "status": "open"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/levelled"
+   },
+   "techniques": [
+    "Schwerter",
+    "Schilde"
+   ]
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "The hero's.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "mini-core.decided-question",
+   "question": "Which side?",
+   "status": "decided"
+  },
+  {
+   "id": "mini-levelled.open-question",
+   "question": "Does it stack?",
+   "status": "open"
+  },
+  {
+   "answer": "Up.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "shared.shared-rounding",
+   "question": "Up or down?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "e251f7f39bc426f0db9e4a805585e9892db68241a48092570ce888ebae9cbc74",
+ "vocabularyVersion": 1
+}
