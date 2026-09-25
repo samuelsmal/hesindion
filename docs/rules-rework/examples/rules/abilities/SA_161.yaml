@@ -12,7 +12,7 @@ source:
   page: 153
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: GS1
@@ -21,14 +21,22 @@ clauses:
       gezielt eine Trefferzone beschießen. Dazu ist eine Probe auf Fernkampf nötig, die
       entsprechend dem Zonenaufschlag erschwert ist. Erschwernis: je nach Zone
     effects:
-      - offer:
-          manoeuvre: gezielterSchuss
-          on: fk
-          requires: { choice: targetZone }
-          ruling: SA_160.halving-by-manoeuvre
-      - when: { action.manoeuvre: gezielterSchuss }
-        multiply: { line: trefferzonen.TZ5.aim, by: 0.5 }
+      - when: { query.target: fk }
+        offer: { choice: gezielterSchuss }
+        ruling: SA_160.halving-by-manoeuvre
+        # As SA_160.GA1 (the old `offer: { manoeuvre: gezielterSchuss, on: fk }`): aiming itself
+        # is trefferzonen.TZ5's; this is the Spezialmanöver announced on top of it.
+      - require: { that: { not: { choice.targetZone: none } }, for: { choice: gezielterSchuss } }
+        because: nur mit einer angesagten Trefferzone
+        ruling: SA_160.halving-by-manoeuvre
+        # The old offer's `requires: { choice: targetZone }`: a zone must be announced
+        # (trefferzonen.TZ5's offer, whose default `none` is no zone).
+      - when: { choice.gezielterSchuss: true }
+        multiply: { to: fk, by: 0.5, line: { line: trefferzonen.TZ5 } }
         ruling: [SA_160.halving-by-manoeuvre, trefferzonen.surprised-then-halved]
+        # Halves TZ5's aiming line only: the old effect id `trefferzonen.TZ5.aim` is gone (Group
+        # 4), the clause is named, as in SA_160.GA1. The old `action.manoeuvre: gezielterSchuss`
+        # is `choice.gezielterSchuss`.
     # The same question as SA_160's; the ruling lives there and covers both.
 
   - id: GS2

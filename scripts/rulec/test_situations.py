@@ -414,6 +414,25 @@ class ErrorTests(unittest.TestCase):
             '      "rs(zone: armLinks)": { result: 3 }\n'
             "      armourScore: { result: 26 }\n"), [])
 
+    def test_group_8_additions(self):
+        # Item state by instance in the loadout section (`item.<instance>.loaded`, kept as a full
+        # name), the weapon's instance and Ladezeit, the player's movement and melee, the band and
+        # sight as GM facts, and the query `item.ladezeit` (probe-fernkampf).
+        s = one("    loadout: { weapon: Kurzbogen, weapon.instance: kurzbogen1, weapon.ladezeit: 1,"
+                " item.kurzbogen1.loaded: false, quiver: true }\n"
+                "    choose: { hero.lastMovement: geht, hero.inMelee: false }\n"
+                "    gm: { target.rangeBand: weit, gmFact.sicht: 2 }\n"
+                "    expect:\n"
+                "      item.ladezeit: { result: 1 }\n"
+                '      "fk(with: Kurzbogen)": { lines: [{ kind: capped }] }\n')
+        names = {f["name"]: f["owner"] for f in s["facts"]}
+        self.assertEqual(names["item.kurzbogen1.loaded"], "loadout")
+        self.assertEqual(names["loadout.weapon.instance"], "loadout")
+        self.assertEqual(names["loadout.quiver"], "loadout")
+        self.assertEqual(names["hero.lastMovement"], "player")
+        self.assertEqual(names["target.rangeBand"], "gm")
+        self.assertEqual([q["query"] for q in s["expect"]], ["item.ladezeit", "fk(with: Kurzbogen)"])
+
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

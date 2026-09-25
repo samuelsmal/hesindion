@@ -17,6 +17,14 @@ reviewed: null
 #
 # The app holds the modifier tables in RangedModifiers (all `rules: []`, so no line names a
 # rule) and the distance TP in CombatFernkampfViews (`distanzTP`), outside the evaluator.
+#
+# Facts (plan Task 15): the range band is `target.rangeBand` (nah / mittel / weit / bogen /
+# ausserReichweite), stated until ruling range-input says whether the app derives it from the
+# distance through FK4's table; the target's size, movement and cover are `target.*`, the sight
+# `gmFact.sicht` (0–4), the archer's own movement `hero.lastMovement`, a hero in melee
+# `hero.inMelee`. "The hero shoots" is the hero's attack with a ranged weapon
+# (`loadout.weapon.kind: ranged`); an incoming ranged attack is `gmFact.incomingAttack: ranged`
+# (as schilde.SCH8). A die face of the hero's attack or defence is `roll.attack` / `roll.defence`.
 
 clauses:
   - id: FK1
@@ -33,9 +41,12 @@ clauses:
       abhängig. Wie gut das Ziel zu sehen ist, ob es sich bewegt oder sogar teilweise hinter einer
       Deckung steht, beeinflusst die Wahrscheinlichkeit, das Ziel zu treffen.
     effects:
-      - forbid: { attack: ranged, when: { target.distance: { above: "weapon.farRange * 1.5" } } }
+      - when: { target.rangeBand: ausserReichweite }
+        forbid: { what: { attack: ranged } }
         because: "außer Reichweite der Waffe"
-        # Up to farRange a normal shot; farRange–1.5× only the untargeted shot of FK4.
+        # Up to farRange a normal shot; farRange–1.5× only the untargeted shot of FK4 (band
+        # `bogen`). Beyond 1.5× the band is `ausserReichweite` (FK4's table): a comparison takes
+        # constants, so the old `target.distance above weapon.farRange * 1.5` is the band.
 
   - id: FK3
     text: >
@@ -43,7 +54,8 @@ clauses:
       befindlich gelten alle Wesen, die in Angriffsdistanz zueinander stehen und Angriffs- oder
       Verteidigungsaktionen gegeneinander ausführen.
     effects:
-      - forbid: { attack: ranged, when: { hero.inMelee: true } }
+      - when: { hero.inMelee: true }
+        forbid: { what: { attack: ranged } }
         because: "im Nahkampf keine Fernkampfangriffe"
         # hero.inMelee is a fact the player states (in reach of someone and exchanging attacks or
         # defences with them), as `fromBehind`. The app never asks it: the Fernkampf button is
@@ -58,21 +70,27 @@ clauses:
       Maximalreichweite der Waffe. Solche Schüsse sind immer ungezielt und reichen höchstens dazu
       aus, um auf eine größere Fläche, über eine Stadtmauer oder ins Schlachtgetümmel zu schießen.
     effects:
-      - provides:
-          range_band:
-            nah:    { upto: weapon.closeRange }
-            mittel: { upto: weapon.mediumRange }
-            weit:   { upto: weapon.farRange }
-            bogen:  { upto: "weapon.farRange * 1.5" }
+      - provide:
+          name: fernkampf.FK4
+          value:
+            nah:    { upto: loadout.weapon.closeRange }
+            mittel: { upto: loadout.weapon.mediumRange }
+            weit:   { upto: loadout.weapon.farRange }
+            bogen:  { upto: { of: loadout.weapon.farRange, times: 1.5 } }
+            ausserReichweite: { above: { of: loadout.weapon.farRange, times: 1.5 } }
         ruling: range-input
         # Optolith gives every ranged weapon closeRange / mediumRange / farRange in Schritt
-        # (Kurzbogen 10/50/80). A stated distance in Schritt picks the band; the band is what
-        # FK5 reads. A variation of reichweite's `scale` (an ordered enum), keyed on weapon data
-        # like ITEMTPL_19's L+S threshold.
-      - when: { range_band: bogen }
-        forbid: { choice: [zielen, aimedAttack] }
+        # (Kurzbogen 10/50/80). A stated distance in Schritt (`target.distance`) picks the band
+        # `target.rangeBand`; the band is what FK2, FK4 and FK5 read. A variation of reichweite's
+        # `scale` (an ordered enum), keyed on weapon data like ITEMTPL_19's L+S threshold. Which
+        # of the two the app asks is ruling range-input (open); until it is decided the band is
+        # stated, and this table is shown, not applied.
+      - when: { target.rangeBand: bogen }
+        forbid: { what: { choice: [zielen, targetZone, gezielterSchuss] } }
         because: "Schüsse über die Maximalreichweite sind immer ungezielt"
-        # What an untargeted shot hits is the GM's: no target, no defence; shown as text.
+        # What an untargeted shot hits is the GM's: no target, no defence; shown as text. The old
+        # `aimedAttack` is an aimed zone: trefferzonen.TZ5's `targetZone` and SA_161's
+        # `gezielterSchuss`; `zielen` is FK11's action.
 
   - id: FK5
     text: |
@@ -82,11 +100,18 @@ clauses:
       Mittel | +/–0 auf FK
       Weit | –2 auf FK (–1 TP)
     effects:
-      - table: { key: range_band, rows: { nah: { fk: 2, tp: 1 }, mittel: { fk: 0, tp: 0 }, weit: { fk: -2, tp: -1 } } }
-      - add: { to: fk, value: "table(FK5, range_band).fk" }
-      - add: { to: tp, value: "table(FK5, range_band).tp" }
+      - provide: { name: fernkampf.FK5.fk, value: { nah: 2, mittel: 0, weit: -2 } }
+      - provide: { name: fernkampf.FK5.tp, value: { nah: 1, mittel: 0, weit: -1 } }
+        # The old one table with an `fk` and a `tp` column is two provides, one per column
+        # (as trefferzonen.TZ11's application / effect).
+      - when: { target.rangeBand: [nah, mittel, weit] }
+        add: { to: fk, value: "table(fernkampf.FK5.fk, target.rangeBand)" }
+      - when: { target.rangeBand: [nah, mittel, weit], loadout.weapon.kind: ranged }
+        add: { to: tp, value: "table(fernkampf.FK5.tp, target.rangeBand)" }
         # One fact, two lines on two values (FK now, TP on the hit), both citing FK5. The app
         # computes the TP half in the view (CombatFernkampfViews.distanzTP), not in the evaluator.
+        # The bands only: the untargeted `bogen` shot has no row. The TP line is on a ranged
+        # weapon's hit only, so a melee TP query does not ask the band.
 
   - id: FK6
     text: |
@@ -97,10 +122,12 @@ clauses:
       Groß | +4 auf FK | Oger, Troll, Rind
       Riesig | +8 auf FK | Drache, Riese, Elefant
     effects:
-      - add: { to: fk, value: { table: { winzig: -8, klein: -4, mittel: 0, gross: 4, riesig: 8 }, key: target.size_for_fk } }
-        # target.size_for_fk is the target's size unless FK8's cover says otherwise.
+      - provide: { name: fernkampf.FK6, value: { winzig: -8, klein: -4, mittel: 0, gross: 4, riesig: 8 } }
+      - add: { to: fk, value: "table(fernkampf.FK6, target.size)" }
+        # The target's size; FK8's cover replaces this line (the old `target.size_for_fk`).
         # Not groessenkategorie (the melee rule on defences by size): two rules keyed on the same
-        # size scale, as reiterkampf's "two rules with one name".
+        # size scale, as reiterkampf's "two rules with one name". trefferzonen.TZ5 suppresses
+        # this line when a zone is aimed at.
 
   - id: FK7
     text: |
@@ -112,18 +139,22 @@ clauses:
       Schütze geht (4 Schritt und weniger in letzter Handlung) | –2 auf FK
       Schütze rennt (5 Schritt oder mehr in letzter Handlung) | –4 auf FK
     effects:
-      - add: { to: fk, value: { table: { still: 2, leicht: 0, schnell: -2 }, key: target.movement } }
+      - provide: { name: fernkampf.FK7.target, value: { still: 2, leicht: 0, schnell: -2 } }
+      - add: { to: fk, value: "table(fernkampf.FK7.target, target.movement)" }
       - when: { target.haken: true }
         add: { to: fk, value: -4 }
         # "zusätzlich": on top of schnell (−2), so −6 in all. A reading — the table row says only
         # "zusätzlich", which reads as added to the running row.
-      - when: { target.haken: true, side: opponent }
-        set: { opponent.gs: "opponent.gs / 2" }
+      - when: { target.haken: true }
+        multiply: { to: opponent.gs, by: 0.5, round: up }
         ruling: round-up
-        # The target pays for its Haken with half its GS — an opponent-side effect, not shown on
-        # the hero's FK line; when the *hero* is the target, it is a line on his GS.
-      - add: { to: fk, value: { table: { steht: 0, geht: -2, rennt: -4 }, key: hero.movement.lastAction } }
-        # The hero's own movement in his last action: a fact the player states (the app asks it).
+        # The target pays for its Haken with half its GS — an opponent-side effect (the old
+        # `side: opponent` is the `opponent.` prefix), not shown on the hero's FK line; when the
+        # *hero* is the target, it is a line on his GS.
+      - provide: { name: fernkampf.FK7.shooter, value: { steht: 0, geht: -2, rennt: -4 } }
+      - add: { to: fk, value: "table(fernkampf.FK7.shooter, hero.lastMovement)" }
+        # The hero's own movement in his last action: a fact the player states (the app asks it;
+        # the old `hero.movement.lastAction`).
 
   - id: FK8
     # From the subpage "Größenkategorie im Fernkampf" (Kodex des Schwertes p. 80).
@@ -133,14 +164,19 @@ clauses:
       wird, gilt als kleines Ziel. Ist nur ein Viertel, beispielsweise die Unterschenkel,
       außerhalb der Deckung, gilt er als winziges Ziel.
     effects:
-      - offer: { fact: target.cover, options: [keine, teilweise, weitgehend] }
+      - ask: { fact: target.cover, who: gm, options: [keine, teilweise, weitgehend] }
         ruling: cover-as-size
+        # The old `offer: { fact: … }` asks a fact of its owner: `ask` (target.* is the GM's).
       - when: { target.cover: [teilweise, weitgehend] }
-        set: { target.size_for_fk: "cover_size(target.size, target.cover)" }
+        replace: { line: { line: fernkampf.FK6 }, with: "table(fernkampf.FK6, target.sizeInCover)" }
         ruling: cover-as-size
         # A variation of ADV_49's apply_level: one fact makes another rule's table (FK6) read a
-        # different row. The line reads "Deckung: gilt als klein (−4)", citing FK6 via FK8. The
-        # app has no cover input; the player picks a smaller size by hand.
+        # different row. The line reads "Deckung: gilt als klein (−4)", FK6's line replaced by
+        # FK8 (it keeps its origin and shows `was:`, as trefferzonen.TZ5's easing). The old
+        # `cover_size(target.size, target.cover)` is the fact `target.sizeInCover`, the size the
+        # target counts as behind its cover: how it follows from the size and the cover (a step
+        # down, or the visible part) is what ruling cover-as-size asks. The app has no cover
+        # input; the player picks a smaller size by hand.
 
   - id: FK9
     text: |
@@ -151,13 +187,18 @@ clauses:
       Stufe 3 | Ziel schemenhaft erkennbar | starker Nebel, Sternenlicht | –6 auf FK
       Stufe 4 | Ziel unsichtbar | dichter Rauch, völlige Dunkelheit | Glückstreffer bei einer gewürfelten 1 auf 1W20
     effects:
-      - add: { to: fk, value: { table: { 0: 0, 1: -2, 2: -4, 3: -6 }, key: sicht } }
-      - when: { sicht: 4 }
-        result: { hit: "roll == 1", else: miss }
-        # A variation of passierschlag.PS4's `roll: 1 → result: hit`: here every other roll
-        # misses, whatever the FK. The modifier lines do not apply (the FK value is not read);
-        # the screen says "Glückstreffer: nur bei einer 1". The app's picker stops at Stufe 3.
-        # Whether the 1 is a Kritischer Erfolg that needs confirming: FK12 applies unchanged —
+      - provide: { name: fernkampf.FK9, value: { "0": 0, "1": -2, "2": -4, "3": -6 } }
+      - when: { gmFact.sicht: { atMost: 3 } }
+        add: { to: fk, value: "table(fernkampf.FK9, gmFact.sicht)" }
+      - when: { gmFact.sicht: 4 }
+        cap: { to: fk, max: 0 }
+      - when: { gmFact.sicht: 4 }
+        tell: { to: player, text: "Glückstreffer: der Schuss trifft nur bei einer gewürfelten 1" }
+        # The old `result: { hit: "roll == 1", else: miss }` has no verb: a check's result is the
+        # procedure's (spec §6). Every roll but a 1 misses, whatever the FK: FK capped at 0, so
+        # only the 1 that succeeds on any value (passierschlag.passierschlag-dice) hits; the
+        # screen says "Glückstreffer: nur bei einer 1". The app's picker stops at Stufe 3.
+        # Whether the 1 is a Kritischer Erfolg that needs confirming: FK13 applies unchanged —
         # a reading; the page does not say.
 
   - id: FK10
@@ -169,12 +210,17 @@ clauses:
       Tier im Trab | fast unmöglich (Glückstreffer bei einer gewürfelten 1 auf W20)
       Tier im Galopp | –8 auf FK
     effects:
-      - when: { hero.mounted: true }
-        add: { to: fk, value: { table: { steht: 0, schritt: -4, galopp: -8 }, key: mount.gait } }
-      - when: { hero.mounted: true, mount.gait: trab }
-        result: { hit: "roll == 1", else: miss }
+      - provide: { name: fernkampf.FK10, value: { steht: 0, schritt: -4, galopp: -8 } }
+      - when: { hero.mounted: true, action.gait: [steht, schritt, galopp] }
+        add: { to: fk, value: "table(fernkampf.FK10, action.gait)" }
+        # The mount's gait is reiterkampf's `action.gait` (the old `mount.gait`).
+      - when: { hero.mounted: true, action.gait: trab }
+        cap: { to: fk, max: 0 }
+      - when: { hero.mounted: true, action.gait: trab }
+        tell: { to: player, text: "Glückstreffer: im Trab trifft der Schuss nur bei einer gewürfelten 1" }
         # As FK9's Stufe 4. The app offers steht / Schritt / Galopp only (vomPferd 0/−4/−8).
-      - forbid: { attack: ranged, when: { hero.mounted: true, weapon: ITEMTPL_65 } }
+      - when: { hero.mounted: true, loadout.weapon: ITEMTPL_65 }
+        forbid: { what: { attack: ranged } }
         because: "vom Pferd kein Langbogen"
         # Legality over the loadout while mounted, like reiterkampf.RK4. The app offers it.
 
@@ -184,13 +230,26 @@ clauses:
       zu einem Maximum von 4 erhöht werden. Zielen ist eine länger dauernde Handlung bis zum
       eigentlichen Angriff.
     effects:
-      - process:
+      - when: { loadout.weapon.kind: ranged }
+        offer: { choice: zielen, costs: [{ cost: { pool: actions, amount: 1 } }] }
+        # "Jede zum Zielen genutzte Aktion": aiming is an action (the old `step: { costs: {
+        # action: 1 } }`), offered as liegend's standing up is (STATE_10.L4).
+      - when: { loadout.weapon.kind: ranged }
+        process:
           id: zielen
-          step: { costs: { action: 1 } }
-          accumulates: { to: fk, value: 2, per: step, cap: 4 }
-          ends: [shot, interrupted]
-          span: untilShot
-          ruling: zielen-interrupted
+          steps: 2
+          advancedBy: { action: zielen }
+          breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: ranged }
+        ruling: zielen-interrupted
+        # Two steps of +2 each: "bis zu einem Maximum von 4" is the process's cap, so a third
+        # action buys nothing (the old `accumulates: { per: step, cap: 4 }`). The shot ends it
+        # (the old `ends: shot` and `span: untilShot`): the hero's attack with the ranged weapon.
+        # What else ends it without a shot, and whether it carries into the next Kampfrunde, is
+        # ruling zielen-interrupted (open), so the process rests on it.
+      - when: { process.zielen: { atLeast: 1 } }
+        add: { to: fk, value: 2, per: process.zielen }
+        # The bonus on the shot: +2 per step taken (`process.zielen`, the running process's
+        # progress), read before the shot ends the process.
         # FORMAT: a länger dauernde Handlung — a process spread over several actions, possibly
         # over several rounds, whose progress is state the app must keep, and which a later
         # action consumes (the shot) or something breaks (ruling zielen-interrupted). Not the
@@ -199,7 +258,8 @@ clauses:
         # ladezeiten.LZ2 (loading) and, likely, a spell's Zauberdauer. The page defining
         # "länger dauernde Handlung" (linked from ladezeiten) was not found on 2026-09-24.
         # The app offers Zielen as a picker (0/+2/+4) on the shot screen: the bonus is taken
-        # without the actions ever being spent.
+        # without the actions ever being spent. Searched again on 2026-09-25, not found:
+        # ladezeiten.laengere-handlungen asks what else is one.
 
   - id: FK12
     text: |
@@ -217,17 +277,22 @@ clauses:
       Wenn der Bestätigungswurf gelingt, treten die folgenden Effekte ein: Der Verteidigungswert des Gegners wird für diesen Angriff halbiert. Die Trefferpunkte werden samt aller Modifikatoren verdoppelt.
       Wenn der Bestätigungswurf misslingt, tritt folgender Effekt ein: Der Verteidigungswert des Gegners wird für diesen Angriff halbiert.
     effects:
-      - when: { roll: 1 }
-        requires_check: { check: confirm, value: fk }
-        on_success:
-          - { side: opponent, halve: { value: vw, span: attack }, ruling: round-up }
-          - { multiply: { value: tp, by: 2, after: all } }
-        on_failure:
-          - { side: opponent, halve: { value: vw, span: attack }, ruling: round-up }
-        # A variation of trefferzonen.TZ8's requires_check / on_failure, triggered by a die face
-        # (passierschlag.PS4's `roll: 1`). "samt aller Modifikatoren" is kampfwerte's "an effect
-        # over other effects' sum, applied last" (`after: all`). The confirmation roll itself is
-        # drafted nowhere else yet (passierschlag only forbids it).
+      - when: { roll.attack: 1, loadout.weapon.kind: ranged }
+        check:
+          of: { check: confirm, with: fk }
+          onSuccess:
+            - multiply: { to: [opponent.pa, opponent.aw], by: 0.5, round: up }
+              ruling: round-up
+            - multiply: { to: tp, by: 2 }
+          onFailure:
+            - multiply: { to: [opponent.pa, opponent.aw], by: 0.5, round: up }
+              ruling: round-up
+        # A variation of trefferzonen.TZ8's check / onFailure, triggered by a die face
+        # (`roll.attack`, the d20 of the hero's attack) of a shot. "samt aller Modifikatoren" is
+        # the multiply phase, after every add (the old `after: all`). The confirmation roll is
+        # the combat roll's confirm stage, a check on the same target (spec §6). The opponent's
+        # Verteidigungswert is `opponent.pa` / `opponent.aw`; "für diesen Angriff" is the check's
+        # own consequence (the old `span: attack`).
 
   - id: FK14
     text: |
@@ -235,9 +300,14 @@ clauses:
       Wenn der Bestätigungswurf gelingt, geschieht Folgendes: gewöhnliches Misslingen
       Wenn der Bestätigungswurf misslingt, geschieht Folgendes: Der Held erleidet 1W6+2 SP.
     effects:
-      - when: { roll: 20 }
-        requires_check: { check: confirm, value: fk }
-        on_failure: [{ damage: { formula: 1W6+2, to: hero, sp: true } }]
+      - when: { roll.attack: 20, loadout.weapon.kind: ranged }
+        check:
+          of: { check: confirm, with: fk }
+          onFailure:
+            - tell: { to: player, text: "Patzer: der Held erleidet 1W6+2 SP" }
+        # The old `damage: { formula: 1W6+2 }` needs a dice value form, which the vocabulary does
+        # not have (plan A.4, as trefferzonen.TZ11's "1W3+1 SP"): the player is told to roll it,
+        # and the SP are not applied by the engine (MIGRATION.md, open questions).
         # The optional Fernkampf-Patzertabelle replaces the 1W6+2 (the app has it, FumbleTable).
         # Note the page's inversion: the *failed* confirmation is the Patzer.
 
@@ -248,15 +318,17 @@ clauses:
       Schusswaffenangriff | -4
       Wurfwaffenangriff | -2
     effects:
-      - when: { incoming: ranged }
-        forbid: { defence: weaponParry }
+      - when: { gmFact.incomingAttack: ranged }
+        forbid: { what: { defence: weaponParry } }
         because: "Fernkampfangriffe nur mit Schild parieren oder ausweichen"
         # The same fact kampfwerte example 16 found missing (the app never asks whether the
-        # attack is ranged).
-      - when: { incoming: { ranged: schuss } }
-        add: { to: [shieldParry, aw], value: -4 }
-      - when: { incoming: { ranged: wurf } }
-        add: { to: [shieldParry, aw], value: -2 }
+        # attack is ranged); schilde.SCH8 forbids the same parry. The old `incoming` is the GM's
+        # `gmFact.incomingAttack` (plan A.8).
+      - when: { gmFact.incomingAttack: ranged, gmFact.incomingRangedKind: schusswaffe }
+        add: { to: ["pa(with: shield)", aw], value: -4 }
+      - when: { gmFact.incomingAttack: ranged, gmFact.incomingRangedKind: wurfwaffe }
+        add: { to: ["pa(with: shield)", aw], value: -2 }
+        # The old `shieldParry` target is `pa(with: shield)`.
 
   - id: FK16
     text: |
@@ -274,12 +346,22 @@ clauses:
       Wenn der Bestätigungswurf gelingt, tritt der folgende Effekt ein: Die Verteidigung sinkt nicht um 3 wie üblich bei der nächsten Verteidigung in dieser Kampfrunde.
       Wenn der Bestätigungswurf misslingt, tritt der folgende Effekt ein: Die nächste Verteidigung in dieser Kampfrunde ist nur um 2 statt um 3 (zusätzlich) erschwert.
     effects:
-      - when: { defence.roll: 1 }
-        requires_check: { check: confirm, value: defence }
-        on_success: [{ replace: { line: mehrfache-verteidigung.next, value: 0, span: nextDefence } }]
-        on_failure: [{ replace: { line: mehrfache-verteidigung.next, value: -2, span: nextDefence } }]
-        # A variation of "replaces" (another rule's line dropped or changed while this applies,
-        # schilde/SA_65), with a span of one defence.
+      - when: { roll.defence: 1, gmFact.incomingAttack: ranged }
+        check: { of: { check: confirm, with: [pa, aw] } }
+        # The confirmation of a rolled 1 on a defence against a shot (`roll.defence`). Its result
+        # is kept for the next defence of the round: `round.previousDefenceCrit` (confirmed /
+        # unconfirmed), which the combat roll states and the new round clears.
+      - when: { round.previousDefenceCrit: confirmed }
+        add: { to: [pa, aw], value: 3 }
+        # "sinkt nicht um 3 wie üblich": mehrfache-verteidigung.MV1's −3 for this defence is
+        # given back.
+      - when: { round.previousDefenceCrit: unconfirmed }
+        add: { to: [pa, aw], value: 1 }
+        # "nur um 2 statt um 3 (zusätzlich)": one of MV1's 3 is given back.
+        # The old `replace` of MV1's line with a span of one defence: `replace` swaps MV1's value
+        # before its `per` (−3 × defences made), so it would be right only on the second defence
+        # of a round, and no span is one defence. An `add` of the difference on the defence after
+        # it is right on any defence.
 
   - id: FK18
     text: |
@@ -287,9 +369,12 @@ clauses:
       Wenn der Bestätigungswurf gelingt, geschieht Folgendes: gewöhnliches Misslingen
       Wenn der Bestätigungswurf misslingt, geschieht Folgendes: Der Held erleidet 1W6+2 SP.
     effects:
-      - when: { defence.roll: 20 }
-        requires_check: { check: confirm, value: defence }
-        on_failure: [{ damage: { formula: 1W6+2, to: hero, sp: true } }]
+      - when: { roll.defence: 20, gmFact.incomingAttack: ranged }
+        check:
+          of: { check: confirm, with: [pa, aw] }
+          onFailure:
+            - tell: { to: player, text: "Patzer: der Held erleidet 1W6+2 SP" }
+        # As FK14: no dice value form, so the 1W6+2 SP are told, not applied.
 
   - id: FK19
     text: |

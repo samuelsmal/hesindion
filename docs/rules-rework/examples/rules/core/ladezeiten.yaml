@@ -19,6 +19,18 @@ reviewed: null
 # FORMAT note, unencoded); this is the first rule that needs it to *progress* over actions.
 # The app keeps none: the Fernkampf button is available every action unless a Ladehemmung
 # (Fernkampf-Patzer) shuts it (Hero.activeCombatJamUntilRound).
+#
+# Item state is kept per item instance (`item.<instance>.loaded`, `.strung`; spec §7); the rules
+# read it for the weapon in hand as `loadout.weapon.loaded` / `loadout.weapon.strung`, resolved
+# through `loadout.weapon.instance`, and change it through `item: { instance: { loadout: weapon } }`.
+# "The hero shoots" is the hero's attack with a ranged weapon: `action.attack: [hit, miss]` with
+# `loadout.weapon.kind: ranged`.
+#
+# Länger dauernde Handlungen (LZ3, LZ4, LZ6): the page LZ4 links was not found on 2026-09-24,
+# nor on 2026-09-25 (the wiki's start page, searched for "länger … handlung", lists nothing). The
+# `process` payload is therefore kept to what Zielen (fernkampf.FK11) and Laden (LZ2) need: the
+# steps, the action that advances them, what breaks them off. Ruling laengere-handlungen asks
+# which other actions continue across rounds.
 
 clauses:
   - id: LZ1
@@ -27,9 +39,10 @@ clauses:
       man für diesen Vorgang braucht, bis man einen Fernkampfangriff ausführen kann, wird
       Ladezeit genannt.
     effects:
-      - provides: { item.value: ladezeit, from: weapon.reloadTime }
+      - derive: { to: item.ladezeit, sum: [{ of: loadout.weapon.ladezeit }] }
         # A value of the item that other rules modify (SA_60), like a derived value (SA_51 on
-        # INI) — but on the weapon, not the hero.
+        # INI) — but on the weapon, not the hero. Its base is the weapon's data,
+        # `loadout.weapon.ladezeit` (Optolith's reloadTime; the old `from: weapon.reloadTime`).
 
   - id: LZ2
     text: >
@@ -38,21 +51,30 @@ clauses:
       benötigt der Fernkämpfer 1 freie Aktion statt einer regulären Aktion zum Nachladen. Der
       Auflistung der Waffen kann man die Ladezeiten der einzelnen Waffen entnehmen.
     effects:
-      - process:
-          id: laden
-          of: item
-          steps: item.ladezeit
-          step: { costs: { action: 1 } }
-          completes: { set: { item.loaded: true } }
-        # FORMAT: the same process shape as fernkampf.FK11 (Zielen), bound to the weapon and
-        # counted in the weapon's own (modifiable) number of actions.
-      - when: { item.ladezeit: 0 }
-        process: { id: laden, step: { costs: { freeAction: 1 } }, steps: 1 }
-        # 0 changes the *kind* of action, not only the count: a floor with a transformation.
-      - forbid: { attack: ranged, when: { item.loaded: false } }
+      - when: { loadout.weapon.loaded: false, ladezeit.current: { atLeast: 1 } }
+        offer: { choice: laden, costs: [{ cost: { pool: actions, amount: 1 } }] }
+        # Each action of the Ladezeit is an Aktion (the old `step: { costs: { action: 1 } }`),
+        # offered as liegend's standing up is (STATE_10.L4).
+      - when: { loadout.weapon.loaded: false, ladezeit.current: { atLeast: 1 } }
+        process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: melee } }
+        # FORMAT: the same process shape as fernkampf.FK11 (Zielen), bound to the weapon (the
+        # old `of: item`: `completes` changes the instance in the weapon slot) and counted in the
+        # weapon's own (modifiable) number of actions: `{ of: item.ladezeit }` reads the target,
+        # after SA_60's lines. The process payload is plan A.7's, verbatim.
+      - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
+        offer: { choice: laden, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
+      - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
+        process: { id: laden, steps: 1, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ] }
+        # 0 changes the *kind* of action, not only the count: one step, paid with a freie Aktion
+        # (the old `step: { costs: { freeAction: 1 } }`). `ladezeit.current` is the Ladezeit
+        # after every rule (SA_60's −1 or halving), not the weapon's own `loadout.weapon.ladezeit`.
+      - when: { loadout.weapon.loaded: false }
+        forbid: { what: { attack: ranged } }
         because: "die Waffe ist nicht geladen"
-      - after: { attack: ranged, set: { item.loaded: false } }
-        # The shot empties the weapon (not an Armbrust: LZ3).
+      - when: { action.attack: [hit, miss], loadout.weapon.kind: ranged }
+        item: { instance: { loadout: weapon }, change: { loaded: false } }
+        # The shot empties the weapon (the old `after: { attack: ranged, set: … }`); a crossbow
+        # carried loaded stays loaded until it shoots (LZ3).
 
   - id: LZ3
     text: >
@@ -60,10 +82,14 @@ clauses:
       inklusive Zielens). Ausgenommen hiervon sind Armbrüste, die, wenn sie einmal geladen sind,
       nur noch eine freie Aktion zum Bereitmachen benötigen.
     effects:
-      - when: { loadout.weapon.technique: CT_1, item.loaded: true }
-        requires: { costs: { freeAction: 1 }, before: { attack: ranged } }
+      - when: { loadout.weapon.technique: CT_1, loadout.weapon.loaded: true }
+        offer: { choice: bereitmachen, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
+      - when: { loadout.weapon.technique: CT_1, loadout.weapon.loaded: true }
+        require: { that: { choice.bereitmachen: true }, for: { attack: ranged } }
+        because: "eine geladene Armbrust wird mit einer freien Aktion bereitgemacht"
         # A loaded crossbow stays loaded (it can be carried loaded); readying it is a free
-        # action. Loading and Zielen may run as one länger dauernde Handlung ("eventuell
+        # action before the shot (the old `requires: { costs: { freeAction: 1 }, before: { attack:
+        # ranged } }`). Loading and Zielen may run as one länger dauernde Handlung ("eventuell
         # inklusive Zielens"): the two processes may chain.
 
   - id: LZ4
@@ -72,7 +98,8 @@ clauses:
       dauernde Handlungen).
     none: >
       carried by LZ2's process; what interrupts a länger dauernde Handlung is on a page not found
-      on 2026-09-24 (fernkampf.zielen-interrupted asks the same for aiming)
+      on 2026-09-24 nor on 2026-09-25 (ruling laengere-handlungen; fernkampf.zielen-interrupted
+      asks the same for aiming)
 
   - id: LZ5
     text: >
@@ -80,9 +107,12 @@ clauses:
       Aktionen, ihn schussbereit zu machen. Dabei kann man keine anderen Aktionen als das Spannen
       ausführen.
     effects:
-      - when: { loadout.weapon.technique: CT_2, item.strung: false }
-        process: { id: spannen, of: item, steps: 4, step: { costs: { action: 1 } }, exclusive: true, completes: { set: { item.strung: true } } }
+      - when: { loadout.weapon.technique: CT_2, loadout.weapon.strung: false }
+        offer: { choice: spannen, costs: [{ cost: { pool: actions, amount: 1 } }] }
+      - when: { loadout.weapon.technique: CT_2, loadout.weapon.strung: false }
+        process: { id: spannen, steps: 4, advancedBy: { action: spannen }, exclusive: true, completes: [ { item: { instance: { loadout: weapon }, change: { strung: true } } } ] }
         # Another item state (gespannt); "keine anderen Aktionen" — exclusive for its duration.
+        # Each of the 4 is an Aktion (the old `step: { costs: { action: 1 } }`).
 
   - id: LZ6
     text: >
@@ -96,11 +126,38 @@ clauses:
       aber als unbrauchbar für eine weitere Benutzung. Wurfgeschosse können hingegen eingesammelt
       und wiederverwendet werden.
     effects:
-      - after: { attack: ranged, costs: { item: weapon.ammunition, count: 1 } }
-        # A variation of schicksalspunkte's `costs: { schip: 1 }`, spending an inventory item
-        # instead of a pool. A thrown weapon leaves the hand (the loadout), and can be picked up
-        # again. The app tracks no ammunition.
+      - when: { action.attack: [hit, miss], loadout.weapon.technique: [CT_1, CT_2, CT_11] }
+        cost: { pool: ammunition, amount: 1 }
+        # A variation of schicksalspunkte's `costs: { schip: 1 }`: the shot spends one Bolzen,
+        # Pfeil or Kugel (Armbrüste, Bögen, Schleudern) from the pool `ammunition`. A thrown
+        # weapon (Wurfwaffen, Diskusse) spends none: it leaves the hand (the loadout), and can be
+        # picked up again. Blasrohre are not named on the page. The app tracks no ammunition.
 
   - id: LZ8
     text: "Mögliche Wiederverwendung von Geschossen (Optionale Regel)"
     none: a link to an optional rule, not read
+
+rulings:
+  - id: laengere-handlungen
+    status: open
+    question: >
+      Which actions besides Zielen (fernkampf.FK11), Laden (LZ2, LZ4), Bogen spannen (LZ5) and
+      Armbrüste bespannen (LZ6) are länger dauernde Handlungen that continue across Kampfrunden,
+      and what breaks such an action off?
+    context: >
+      LZ4 refers to the page "Länger dauernde Handlungen", which defines them. It was not found
+      on 2026-09-24, and a search of the wiki's start page on 2026-09-25 for "länger … handlung"
+      found nothing either. The `process` verb's payload is kept to what Zielen and Laden need
+      (steps, the action that advances them, what breaks them off): Laden breaks off on a melee
+      attack (plan A.7), Zielen with the shot (what else is ruling fernkampf.zielen-interrupted).
+      A spell with a Zauberdauer of several actions is likely one too (spec §7); nothing in the
+      drafts encodes it as a process yet.
+    situations: [probe-fernkampf 21.6, probe-fernkampf 21.8]
+    options:
+      a: { says: "Only the actions the pages name (Zielen, Laden, Spannen, Bespannen) are länger dauernde Handlungen; every other action ends within its round.", app: "the four processes; a Zauberdauer of several actions is counted within one round" }
+      b: { says: "Every action that takes more than one Aktion (a Zauberdauer of 2+ Aktionen, a long Fertigkeitsprobe in combat) is one, and continues and breaks off like Laden.", app: "a process for each such action, shown with its progress across rounds" }
+    recommended: a
+    whyRecommended: >
+      it reads nothing into the missing page: the pages that exist name these four. To be
+      re-read when the page is found
+    answer: null

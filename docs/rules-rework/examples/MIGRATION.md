@@ -29,10 +29,10 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_161.yaml
 
-- [ ] L25 clauses[GS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L26 clauses[GS1].effects[0].offer.on: on — not a field of `offer`
-- [ ] L27 clauses[GS1].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L28 clauses[GS1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L25 clauses[GS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L26 clauses[GS1].effects[0].offer.on: on — not a field of `offer`
+- [x] L27 clauses[GS1].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L28 clauses[GS1].effects[0].offer.ruling: ruling — not a field of `offer`
 
 ## rules/abilities/SA_172.yaml
 
@@ -90,12 +90,12 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_60.yaml
 
-- [ ] L28 clauses[SL1].effects[0].when.hero.has.SA_60.option_for: option_for — snake_case key, no mapping
-- [ ] L29 clauses[SL1].effects[0].add.floor: floor — not a field of `add`
-- [ ] L37 clauses[SL2].effects[0].when.hero.has.SA_60.option_for: option_for — snake_case key, no mapping
-- [ ] L74 clauses[SL7].effects[0].requires: requires — a key that is not a fact: hero.has_item, fact
-- [ ] L74 clauses[SL7].effects[0].requires.any_of: any_of — snake_case key, no mapping
-- [ ] L74 clauses[SL7].effects[0].requires.any_of[0].hero.has_item: hero.has_item — snake_case key, no mapping
+- [x] L28 clauses[SL1].effects[0].when.hero.has.SA_60.option_for: option_for — snake_case key, no mapping
+- [x] L29 clauses[SL1].effects[0].add.floor: floor — not a field of `add`
+- [x] L37 clauses[SL2].effects[0].when.hero.has.SA_60.option_for: option_for — snake_case key, no mapping
+- [x] L74 clauses[SL7].effects[0].requires: requires — a key that is not a fact: hero.has_item, fact
+- [x] L74 clauses[SL7].effects[0].requires.any_of: any_of — snake_case key, no mapping
+- [x] L74 clauses[SL7].effects[0].requires.any_of[0].hero.has_item: hero.has_item — snake_case key, no mapping
 
 ## rules/abilities/SA_62.yaml
 
@@ -322,46 +322,46 @@ No residue.
 
 ## rules/core/fernkampf.yaml
 
-- [ ] L36 clauses[FK2].effects[0].forbid.attack: attack — not a field of `forbid`
-- [ ] L36 clauses[FK2].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L46 clauses[FK3].effects[0].forbid.attack: attack — not a field of `forbid`
-- [ ] L46 clauses[FK3].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L61 clauses[FK4].effects[0].provides: provides — a snake_case name, or not a mapping of names
-- [ ] L62 clauses[FK4].effects[0].provides.range_band: range_band — snake_case key, no mapping
-- [ ] L72 clauses[FK4].effects[1].when.range_band: range_band — not a fact in the vocabulary
-- [ ] L73 clauses[FK4].effects[1].forbid.choice: choice — not a field of `forbid`
-- [ ] L85 clauses[FK5].effects[0].table: table — no one-to-one verb
-- [ ] L120 clauses[FK7].effects[2].when.side: side — not a fact in the vocabulary
-- [ ] L121 clauses[FK7].effects[2].set.opponent.gs: opponent.gs — not a field of `set`
-- [ ] L136 clauses[FK8].effects[0].offer.fact: fact — not a field of `offer`
-- [ ] L139 clauses[FK8].effects[1].set.target.size_for_fk: target.size_for_fk — not a field of `set`
-- [ ] L155 clauses[FK9].effects[1].when.sicht: sicht — not a fact in the vocabulary
-- [ ] L156 clauses[FK9].effects[1].result: result — no one-to-one verb
-- [ ] L175 clauses[FK10].effects[1].result: result — no one-to-one verb
-- [ ] L177 clauses[FK10].effects[2].forbid.attack: attack — not a field of `forbid`
-- [ ] L177 clauses[FK10].effects[2].forbid.when: when — not a field of `forbid`
-- [ ] L189 clauses[FK11].effects[0].process.step: step — not a field of `process`
-- [ ] L190 clauses[FK11].effects[0].process.accumulates: accumulates — not a field of `process`
-- [ ] L191 clauses[FK11].effects[0].process.ends: ends — not a field of `process`
-- [ ] L193 clauses[FK11].effects[0].process.ruling: ruling — not a field of `process`
-- [ ] L220 clauses[FK13].effects[0].when.roll: roll — not a fact in the vocabulary
-- [ ] L221 clauses[FK13].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L222 clauses[FK13].effects[0].on_success: on_success — no one-to-one verb
-- [ ] L225 clauses[FK13].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L238 clauses[FK14].effects[0].when.roll: roll — not a fact in the vocabulary
-- [ ] L239 clauses[FK14].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L240 clauses[FK14].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L251 clauses[FK15].effects[0].when.incoming: incoming — not a fact in the vocabulary
-- [ ] L252 clauses[FK15].effects[0].forbid.defence: defence — not a field of `forbid`
-- [ ] L256 clauses[FK15].effects[1].when.incoming: incoming — not a fact in the vocabulary
-- [ ] L258 clauses[FK15].effects[2].when.incoming: incoming — not a fact in the vocabulary
-- [ ] L277 clauses[FK17].effects[0].when.defence.roll: defence.roll — not a fact in the vocabulary
-- [ ] L278 clauses[FK17].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L279 clauses[FK17].effects[0].on_success: on_success — no one-to-one verb
-- [ ] L280 clauses[FK17].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L290 clauses[FK18].effects[0].when.defence.roll: defence.roll — not a fact in the vocabulary
-- [ ] L291 clauses[FK18].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L292 clauses[FK18].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L36 clauses[FK2].effects[0].forbid.attack: attack — not a field of `forbid`
+- [x] L36 clauses[FK2].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L46 clauses[FK3].effects[0].forbid.attack: attack — not a field of `forbid`
+- [x] L46 clauses[FK3].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L61 clauses[FK4].effects[0].provides: provides — a snake_case name, or not a mapping of names
+- [x] L62 clauses[FK4].effects[0].provides.range_band: range_band — snake_case key, no mapping
+- [x] L72 clauses[FK4].effects[1].when.range_band: range_band — not a fact in the vocabulary
+- [x] L73 clauses[FK4].effects[1].forbid.choice: choice — not a field of `forbid`
+- [x] L85 clauses[FK5].effects[0].table: table — no one-to-one verb
+- [x] L120 clauses[FK7].effects[2].when.side: side — not a fact in the vocabulary
+- [x] L121 clauses[FK7].effects[2].set.opponent.gs: opponent.gs — not a field of `set`
+- [x] L136 clauses[FK8].effects[0].offer.fact: fact — not a field of `offer`
+- [x] L139 clauses[FK8].effects[1].set.target.size_for_fk: target.size_for_fk — not a field of `set`
+- [x] L155 clauses[FK9].effects[1].when.sicht: sicht — not a fact in the vocabulary
+- [x] L156 clauses[FK9].effects[1].result: result — no one-to-one verb
+- [x] L175 clauses[FK10].effects[1].result: result — no one-to-one verb
+- [x] L177 clauses[FK10].effects[2].forbid.attack: attack — not a field of `forbid`
+- [x] L177 clauses[FK10].effects[2].forbid.when: when — not a field of `forbid`
+- [x] L189 clauses[FK11].effects[0].process.step: step — not a field of `process`
+- [x] L190 clauses[FK11].effects[0].process.accumulates: accumulates — not a field of `process`
+- [x] L191 clauses[FK11].effects[0].process.ends: ends — not a field of `process`
+- [x] L193 clauses[FK11].effects[0].process.ruling: ruling — not a field of `process`
+- [x] L220 clauses[FK13].effects[0].when.roll: roll — not a fact in the vocabulary
+- [x] L221 clauses[FK13].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L222 clauses[FK13].effects[0].on_success: on_success — no one-to-one verb
+- [x] L225 clauses[FK13].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L238 clauses[FK14].effects[0].when.roll: roll — not a fact in the vocabulary
+- [x] L239 clauses[FK14].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L240 clauses[FK14].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L251 clauses[FK15].effects[0].when.incoming: incoming — not a fact in the vocabulary
+- [x] L252 clauses[FK15].effects[0].forbid.defence: defence — not a field of `forbid`
+- [x] L256 clauses[FK15].effects[1].when.incoming: incoming — not a fact in the vocabulary
+- [x] L258 clauses[FK15].effects[2].when.incoming: incoming — not a fact in the vocabulary
+- [x] L277 clauses[FK17].effects[0].when.defence.roll: defence.roll — not a fact in the vocabulary
+- [x] L278 clauses[FK17].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L279 clauses[FK17].effects[0].on_success: on_success — no one-to-one verb
+- [x] L280 clauses[FK17].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L290 clauses[FK18].effects[0].when.defence.roll: defence.roll — not a fact in the vocabulary
+- [x] L291 clauses[FK18].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L292 clauses[FK18].effects[0].on_failure: on_failure — no one-to-one verb
 
 ## rules/core/fertigkeitsproben.yaml
 
@@ -433,17 +433,17 @@ No residue.
 
 ## rules/core/ladezeiten.yaml
 
-- [ ] L30 clauses[LZ1].effects[0].provides: provides — `from` is a pointer, not a named value
-- [ ] L43 clauses[LZ2].effects[0].process.of: of — not a field of `process`
-- [ ] L45 clauses[LZ2].effects[0].process.step: step — not a field of `process`
-- [ ] L50 clauses[LZ2].effects[1].process.step: step — not a field of `process`
-- [ ] L52 clauses[LZ2].effects[2].forbid.attack: attack — not a field of `forbid`
-- [ ] L52 clauses[LZ2].effects[2].forbid.when: when — not a field of `forbid`
-- [ ] L54 clauses[LZ2].effects[3].after: after — no one-to-one verb
-- [ ] L64 clauses[LZ3].effects[0].requires: requires — a key that is not a fact: costs, before
-- [ ] L84 clauses[LZ5].effects[0].process.of: of — not a field of `process`
-- [ ] L84 clauses[LZ5].effects[0].process.step: step — not a field of `process`
-- [ ] L99 clauses[LZ7].effects[0].after: after — no one-to-one verb
+- [x] L30 clauses[LZ1].effects[0].provides: provides — `from` is a pointer, not a named value
+- [x] L43 clauses[LZ2].effects[0].process.of: of — not a field of `process`
+- [x] L45 clauses[LZ2].effects[0].process.step: step — not a field of `process`
+- [x] L50 clauses[LZ2].effects[1].process.step: step — not a field of `process`
+- [x] L52 clauses[LZ2].effects[2].forbid.attack: attack — not a field of `forbid`
+- [x] L52 clauses[LZ2].effects[2].forbid.when: when — not a field of `forbid`
+- [x] L54 clauses[LZ2].effects[3].after: after — no one-to-one verb
+- [x] L64 clauses[LZ3].effects[0].requires: requires — a key that is not a fact: costs, before
+- [x] L84 clauses[LZ5].effects[0].process.of: of — not a field of `process`
+- [x] L84 clauses[LZ5].effects[0].process.step: step — not a field of `process`
+- [x] L99 clauses[LZ7].effects[0].after: after — no one-to-one verb
 
 ## rules/core/lebensenergie.yaml
 
@@ -1099,24 +1099,24 @@ No residue.
 
 ## situations/probe-fernkampf.yaml
 
-- [ ] L20 situations["21.1"].target: target — not a situation key in the vocabulary
-- [ ] L22 situations["21.1"].expect.range_band: range_band — neither an expect key nor a query
-- [ ] L29 situations["21.1"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L38 situations["21.2"].target: target — not a situation key in the vocabulary
-- [ ] L39 situations["21.2"].sicht: sicht — not a situation key in the vocabulary
-- [ ] L41 situations["21.2"].expect.range_band: range_band — neither an expect key nor a query
-- [ ] L50 situations["21.2"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L56 situations["21.3"].target: target — not a situation key in the vocabulary
-- [ ] L68 situations["21.4"].sicht: sicht — not a situation key in the vocabulary
-- [ ] L71 situations["21.4"].expect.fk.replaced_by: replaced_by — snake_case key, no mapping
-- [ ] L72 situations["21.4"].expect.outcomes: outcomes — neither an expect key nor a query
-- [ ] L78 situations["21.5"].mount: mount — not a situation key in the vocabulary
-- [ ] L81 situations["21.5"].expect.with_Kurzbogen: with_Kurzbogen — neither an expect key nor a query
-- [ ] L82 situations["21.5"].expect.with_Kurzbogen.fk.replaced_by: replaced_by — snake_case key, no mapping
-- [ ] L90 situations["21.6"].target: target — not a situation key in the vocabulary
-- [ ] L99 situations["21.6"].open: open — not a situation key in the vocabulary
-- [ ] L113 situations["21.8"].cases: cases — not a situation key in the vocabulary
-- [ ] L128 situations["21.8"].cases[5].expect.before_shot: before_shot — snake_case key, no mapping
+- [x] L20 situations["21.1"].target: target — not a situation key in the vocabulary
+- [x] L22 situations["21.1"].expect.range_band: range_band — neither an expect key nor a query
+- [x] L29 situations["21.1"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L38 situations["21.2"].target: target — not a situation key in the vocabulary
+- [x] L39 situations["21.2"].sicht: sicht — not a situation key in the vocabulary
+- [x] L41 situations["21.2"].expect.range_band: range_band — neither an expect key nor a query
+- [x] L50 situations["21.2"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L56 situations["21.3"].target: target — not a situation key in the vocabulary
+- [x] L68 situations["21.4"].sicht: sicht — not a situation key in the vocabulary
+- [x] L71 situations["21.4"].expect.fk.replaced_by: replaced_by — snake_case key, no mapping
+- [x] L72 situations["21.4"].expect.outcomes: outcomes — neither an expect key nor a query
+- [x] L78 situations["21.5"].mount: mount — not a situation key in the vocabulary
+- [x] L81 situations["21.5"].expect.with_Kurzbogen: with_Kurzbogen — neither an expect key nor a query
+- [x] L82 situations["21.5"].expect.with_Kurzbogen.fk.replaced_by: replaced_by — snake_case key, no mapping
+- [x] L90 situations["21.6"].target: target — not a situation key in the vocabulary
+- [x] L99 situations["21.6"].open: open — not a situation key in the vocabulary
+- [x] L113 situations["21.8"].cases: cases — not a situation key in the vocabulary
+- [x] L128 situations["21.8"].cases[5].expect.before_shot: before_shot — snake_case key, no mapping
 
 ## situations/probe-fertigkeiten.yaml
 
@@ -1409,6 +1409,11 @@ No residue.
 - situations/probe-magie.yaml 20.7: expects the 3 AsP `from: [zaubermodifikationen.ZM12, SA_74.VP1]`. One `paid` event has one origin. With LeP chosen, SA_74.VP1 suppresses ZM12's AsP-only cost and pays the whole cost with its own `split` cost, so the AsP come from VP1 and ZM12 is in `notApplied` (suppressed). The owner decides whether the expectation names VP1 alone, or whether a split cost should keep ZM12 as its origin (with VP1 in `via`), which no verb expresses.
 - situations/probe-magie.yaml 20.8: expects the half cost `from: [SA_74.VP3, zaubermodifikationen.ZM12]`. VP3's `cost` ("wie sonst die Hälfte") is its own effect, and ZM12 is suppressed by VP1 once LeP are chosen, so the payments come from VP3 alone; ZM12 is the clause VP3's text points at, not an origin.
 
+- situations/probe-fernkampf.yaml 21.1, 21.2: expect the range band a distance gives (`range_band: { value: nah, from: fernkampf.FK4, ruling: fernkampf.range-input }`, `{ value: weit, from: fernkampf.FK4 }`). No expect key states a fact's value, and while ruling range-input is open the band is stated, not derived from the distance: the band is now input (`target.rangeBand`, with `target.distance` kept) and the expectation a comment.
+- situations/probe-fernkampf.yaml 21.1: `on_hit: { tp: { formula: "1W6+4 +1" } }`: the TP formula is a comment (as reiterkampf.yaml); the query `tp(with: Kurzbogen)` keeps its total and line.
+- situations/probe-fernkampf.yaml 21.4, 21.5b: expect the FK `replaced_by: { result: "hit only on a 1" }` from fernkampf.FK9 / FK10. No verb sets a roll's result: the rules cap FK at 0 (`cap … max: 0`, a line of kind `capped`) and tell the player, so only a natural 1 hits; the other modifier lines still show (the old comment: "the modifier lines do not apply"). The expectation is a `capped` line from that clause plus a `texts` entry `{ result: "hit only on a 1", from }`; the two outcomes are `sequence` steps with `success`.
+- situations/probe-fernkampf.yaml 21.6: the `sequence` steps expect `process: { zielen: 2 }`, `{ zielen: 4, capped: true }`, `{ zielen: ended }`. No expect key names a process's state; they are left as written for Task 28, which defines the steps (the `progressed` / `brokenOff` events and the progress `process.zielen`, whose bonus is 2 per step).
+
 ## Reviews reset by hand edits
 
 - kampfwerte.KW1: the MU term is its own `derive` with `when: { not: { loadout.weapon.technique: Peitschen } }`, so KW6's FF term stands in for it; the KtW term stays unconditional
@@ -1552,17 +1557,42 @@ No residue.
 - SA_74.VP2: `requires_check` + `on_failure: { set: { cast.outcome: failed } }` is `check: { of: { talent: TAL_8 } }` whose `onFailure` forbids the spell check (`forbid: { what: { check: [spell] } }`, as fertigkeitsproben.FP2), on `choice.split.le: { atLeast: 1 }`
 - SA_74.VP3: `charge { pools: [asp, le], half, round: up }` on `check_failed: VP2` is `cost { onFailure: 0.5, fallThrough: [le] }` on a failed spell check with LeP chosen; it now also rests on vp-sequence (whether a spell check that failed on its own pays this way)
 
+- fernkampf.FK2: the forbid reads the band `target.rangeBand: ausserReichweite` (FK4's table), not `target.distance above farRange × 1.5` (a comparison takes constants); the selector is `{ attack: ranged }`
+- fernkampf.FK4: the band table is `provide: { name: fernkampf.FK4 }` with a fifth band `ausserReichweite`, the weapon ranges `loadout.weapon.closeRange | mediumRange | farRange`; the untargeted shot forbids the choices `zielen`, `targetZone` and `gezielterSchuss` (was `zielen, aimedAttack`)
+- fernkampf.FK5: the table is two provides (`fernkampf.FK5.fk`, `.tp`) read by `table(…, target.rangeBand)`; both adds apply on the bands nah / mittel / weit only, and the TP add only with a ranged weapon in hand (`loadout.weapon.kind: ranged`)
+- fernkampf.FK6: the add reads `table(fernkampf.FK6, target.size)` (was `target.size_for_fk`); cover is FK8's `replace` of this line
+- fernkampf.FK7: both tables are provides; the opponent's Haken halving is `multiply: { to: opponent.gs, by: 0.5, round: up }` (was `set … opponent.gs / 2` with `side: opponent`); the archer's movement is `hero.lastMovement` (was `hero.movement.lastAction`)
+- fernkampf.FK8: the cover is asked (`ask: { fact: target.cover, who: gm }`, was an `offer`); the `set` of `target.size_for_fk` by `cover_size(…)` is a `replace` of FK6's line by `table(fernkampf.FK6, target.sizeInCover)`, a new GM fact for the size behind the cover (both on ruling cover-as-size)
+- fernkampf.FK9: the table is a provide read by `gmFact.sicht` (was `sicht`), on Stufe 0–3; Stufe 4's `result: { hit: roll == 1, else: miss }` is `cap: { to: fk, max: 0 }` and a `tell`
+- fernkampf.FK10: the gait is `action.gait` (was `mount.gait`); the trot's `result` is `cap … max: 0` and a `tell`, as FK9; the Langbogen forbid is `when: { hero.mounted, loadout.weapon: ITEMTPL_65 }`, `forbid: { what: { attack: ranged } }`
+- fernkampf.FK11: new `offer: { choice: zielen }` costing an Aktion (was the process's `step`); the process is `steps: 2`, `advancedBy: { action: zielen }`, broken off by the shot (`action.attack: [hit, miss]` with a ranged weapon), with ruling zielen-interrupted on the effect; the bonus is `add: { to: fk, value: 2, per: process.zielen }` (was `accumulates … cap: 4`, `ends`, `span: untilShot`)
+- fernkampf.FK13: `requires_check` / `on_success` / `on_failure` is `check: { of: { check: confirm, with: fk } }` with nested multiplies on `opponent.pa` / `opponent.aw` (½, round up) and on `tp` (× 2); it fires on `roll.attack: 1` with a ranged weapon (was `roll: 1`, any attack)
+- fernkampf.FK14: the same `check` on `roll.attack: 20` with a ranged weapon; the failed confirmation's `damage: 1W6+2 SP` is a `tell` (no dice value form)
+- fernkampf.FK17: the confirmation `check` on `roll.defence: 1` against a ranged attack; the `replace` of mehrfache-verteidigung's line with a span of one defence is an `add` on the next defence of the round (+3 confirmed, +1 not), read from the new round fact `round.previousDefenceCrit`
+- fernkampf.FK18: the `check` on `roll.defence: 20` against a ranged attack; the 1W6+2 SP are a `tell`, as FK14
+- ladezeiten.LZ2: new `offer: { choice: laden }` costing an Aktion, or a freie Aktion when the Ladezeit after every rule (`ladezeit.current`) is 0 (was the process's `step`); the process is plan A.7's (`steps: { of: item.ladezeit }`, `completes` an `item` change of the weapon instance, `breaksOff: { action.attack: melee }`), and the 0 case a one-step process; the forbid reads `loadout.weapon.loaded`; the shot's `after … set item.loaded: false` is an `item` change on `action.attack: [hit, miss]` with a ranged weapon
+- ladezeiten.LZ3: `requires: { costs: { freeAction: 1 }, before: { attack: ranged } }` is an `offer: { choice: bereitmachen }` costing a freie Aktion and a `require` of it for the ranged attack, reading `loadout.weapon.loaded`
+- ladezeiten.LZ5: new `offer: { choice: spannen }` costing an Aktion (was the process's `step`); the process reads `loadout.weapon.strung` and `completes` an `item` change of the weapon instance
+- ladezeiten.LZ7: `after: { attack: ranged, costs: { item: weapon.ammunition } }` is `cost: { pool: ammunition, amount: 1 }` on the shot, for Armbrüste, Bögen and Schleudern only (was every ranged attack; thrown weapons spend none)
+- SA_60.SL1: the instance gate `option_for: weapon.technique` is `option: 2` with Bögen or `option: 3` with Wurfwaffen; the add's `floor: 0` is its own `floor` effect
+- SA_60.SL2: the instance gate is `option: 1` with Armbrüste
+- SA_60.SL7: the note is a rule-level `require` (Schnellladen with a bow applies only with a quiver worn, `loadout.quiver`, or the arrows at hand, `gmFact.pfeileGriffbereit`), with `because`
+- SA_161.GS1: as SA_160.GA1: the offer is `offer: { choice: gezielterSchuss }` on `query.target: fk`; its `requires: { choice: targetZone }` is a `require … for: { choice: gezielterSchuss }` that a zone is announced; the halving reads `choice.gezielterSchuss` (was `action.manoeuvre`) and is `multiply: { to: fk, by: 0.5, line: { line: trefferzonen.TZ5 } }` (was the effect id `trefferzonen.TZ5.aim`, gone since Group 4)
+
 ## Open questions
 
-- trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden.
+- trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden, and for fernkampf.FK14 / FK18 (a failed confirmation of a Patzer: "1W6+2 SP", a `tell`).
 - zustaende.Z5 / SA_41: `hero.conditionLevels` counts each Zustand's Stufe before any `useLevel`, so Zäher Hund does not lower the count (ruling ADV_49.zaeher-hund-counts). The same definition counts Belastung before Belastungsgewöhnung (SA_41.G1's `useLevel`): Boronmir in Plattenrüstung counts Belastung III, not I. lebensenergie 15.8's comment counts I (1 + 3 + 3 + 1 = 8; 10 by this definition). Its expected result (Handlungsunfähig) holds either way. Does Belastungsgewöhnung lower the Stufe the hero has, or only its effects?
 - COND_6.SZ3: the Stufe from the LP thresholds is a `derive` (the base of `level(rule: COND_6)`); a Stufe stated on the sheet (a Patzer, a wound effect) is the rule's owned level. The engine plan takes a stated base before a derive, so LP Stufen and stated Stufen do not add up today (zustaende.Z1 says they should: "Die einzelnen Zustände addieren sich auf").
 - fertigkeitsproben.QS1: the QS derive reads `table(fertigkeitsproben.qs, check.fp)` (plan A.4, verbatim). `check.fp` is a stage target, not a fact, and the table's keys are ranges ("0-3", "16+"). The engine's `table(name, key)` (plan Task 22) looks up a fact's value by exact key; it must resolve a key that names a target through the target's value, and match a number against range keys (trefferzonen's tables need the same).
-- ADV_4 / SA_9: a hero may own several instances of one rule (Begabung up to three Fertigkeiten, Fertigkeitsspezialisierung up to three Anwendungsgebiete per talent). A situation's owned entry and the Optolith import (`hero.py`, `entries[0]`) hold one instance, and `check.onOption` / `check.applicationOnOption` are defined per instance. How the engine evaluates a rule once per instance is open.
+- ADV_4 / SA_9: a hero may own several instances of one rule (Begabung up to three Fertigkeiten, Fertigkeitsspezialisierung up to three Anwendungsgebiete per talent). A situation's owned entry and the Optolith import (`hero.py`, `entries[0]`) hold one instance, and `check.onOption` / `check.applicationOnOption` are defined per instance. How the engine evaluates a rule once per instance is open. The same holds for SA_60 (Schnellladen, one instance per combat technique, `sid` 1–6): SL1/SL2 gate on `option` against the technique in hand, so a hero with Schnellladen for Bögen and for Armbrüste holds two instances.
 - TAL_7 (kind `talent`): a talent rule is not owned (the sheet has its FW, `fw.TAL_7`) and not core. Its effects are gated on `check.talent: TAL_7`; the engine must apply a talent rule to a check on that talent (situations `pending` counts only owned and core rules).
 - DISADV_37.SE4 (Group 2): `add: { to: check.modifier, value: { of: gmFact.triggerModifier } }` is 0 for an Erschwernis under the proportion's `max(0, of − above)` clamp (plan Task 22), which breaks boronmir-neu 19.11's expected −2 from SE4 (`gmFact.triggerModifier: -2`). Either the engine clamps only when `above` is given (so `{ of: <fact> }` keeps its sign), or SE4 takes fertigkeitsproben.FM2's two-add pattern (`above: 0` → `of` the fact; `below: 0` → `{ of: 0, above: <fact>, times: -1 }`).
 - zaubermodifikationen (spell data): the `spell.` fact family is owned by `player`, but `spell.duration`, `spell.interval`, `spell.range` (the spell's own), `spell.foreignTradition`, `spell.forbidsErzwingen` and `spell.forbidsKostenSenken` are the spell's data (rules.db spell_details, the spell's text). Unstated they are unknown and ask the player on every cast. Should the engine state them from the spell's data (a new owner or a data-sourced `provide`), and where does a spell's base cost, casting time and range come from (probe-magie states them as the queries' base `values`)?
-- zaubermodifikationen.ZM1 (pending): ZM1's second `limit` rests on the open ruling omit-counts, and a `limit` on a `choice` is indexed under `*`, so every situation of every file is pending on omit-counts (before Task 14 the same came from cost-off-table on ZM8's provides). `pending` counts a core rule's `*` effects whatever their `when` (`check.kind: spell`). Either the reach index keys a choice's legality under something narrower, or pending looks at the effect's `when`.
+- zaubermodifikationen.ZM1 (pending): ZM1's second `limit` rests on the open ruling omit-counts, and a `limit` on a `choice` is indexed under `*`, so every situation of every file is pending on omit-counts (before Task 14 the same came from cost-off-table on ZM8's provides). `pending` counts a core rule's `*` effects whatever their `when` (`check.kind: spell`). Either the reach index keys a choice's legality under something narrower, or pending looks at the effect's `when`. Group 8 adds three more to every situation's pending list the same way: fernkampf.range-input (FK4's provide), fernkampf.cover-as-size (FK8's ask) and fernkampf.zielen-interrupted (FK11's process), all `*` effects of a core rule. The count stays 309 of 309.
+
+- `action.attack` (Group 8): plan A.7 breaks Laden off on `action.attack: melee` (the kind of attack), while SA_48, SA_59, SA_62, SA_67, SA_172, schaden.S3 and others read `action.attack: hit | miss` (the attack's outcome). One string fact cannot say both. Group 8's own effects read "the hero shoots" as `action.attack: [hit, miss]` with `loadout.weapon.kind: ranged`; A.7's `melee` is kept verbatim, and as the fact is stated today it is never `melee`, so Laden never breaks off. Either the fact carries both (a list), or the kind moves to its own fact (`action.attackKind`) and A.7's `breaksOff` reads that.
+- ladezeiten.laengere-handlungen (Group 8): the page "Länger dauernde Handlungen" was searched for again on 2026-09-25 (the wiki's start page, `länger … handlung`) and not found. The `process` payload is kept to what Zielen and Laden need (`steps`, `advancedBy`, `breaksOff`, `completes`); the open ruling asks which other actions continue across rounds.
 
 ## Notes for the engine tasks
 
@@ -1579,3 +1609,8 @@ Procedure and harness work the rules rest on (Tasks 22–28); no owner decision.
 - probe-magie 20.7, 20.8 (Tasks 25, 26): SA_74.VP1's `suppress` of zaubermodifikationen.ZM12 drops ZM12's `cost`s (no `paid` event; ZM12 in `notApplied`, suppressed). VP2's failed Selbstbeherrschung forbids the spell check (`onFailure: forbid { check: [spell] }`); the procedure reads a spell check forbidden that way as a failed cast: `result: { success: false, from: SA_74.VP2 }` (20.8) and `check.result: failure` for the spell, on which VP3's cost fires. In 20.7 `rolls: { check.result: success }` stands for both checks.
 - probe-magie 20.8 (Task 25): a `fallThrough` payment is expected as one entry `paid: { amount: 4, pools: [{ asp: 3 }, { le: 1 }] }`; the engine gives `paid(asp, 3)`, `paid(le, 1)` (plan Task 25). The harness matches the entry against the events of one `cost` effect: their sum and the pools in order.
 - probe-magie 20.7 (Task 25): `notApplied: [{ rule: trefferzonen, clause: TZ8, reason: "LeP aufgewendet, kein Schaden" }]`: paying LeP lowers `leCurrent` but is no hit, so no Wundschwelle or Wundeffekt check follows; the harness matches the entry by rule and clause (TZ8 is also out of its ruleset there).
+- probe-fernkampf (Task 28): item state is kept per instance (`item.<instance>.loaded`, `.strung`). The rules read the weapon in hand's as `loadout.weapon.loaded` / `loadout.weapon.strung`, which the engine resolves through `loadout.weapon.instance`; an `item` effect with `instance: { loadout: weapon }` changes that instance. `ladezeit.current` is the result of the query `item.ladezeit` for the weapon in hand (after SA_60), for LZ2's `when`; the weapon's own Ladezeit is `loadout.weapon.ladezeit`, the base of LZ1's `derive`.
+- probe-fernkampf 21.6, 21.8 (Task 28): an action that advances a process is offered as a choice with its cost (`offer: { choice: laden, costs: [cost { pool: actions | freeActions }] }`, as STATE_10.L4); taking it is the process's `advancedBy: { action: laden }`. The progress of a running process is the fact `process.<id>` (Zielen's bonus is `2 per process.zielen`); `steps` bounds it, so a third Zielen action gives no progress (`capped`). Zielen's bonus is read by the shot's FK query before the shot states `action.attack` and breaks the process off. An `offered` entry's `costs: { action | freeAction: 1 }` is matched against the offer's `cost` (pool `actions` / `freeActions`, amount 1).
+- probe-fernkampf 21.4, 21.5b (Task 27): FK9 Stufe 4 and FK10's trot cap FK at 0; the combat roll gives `success: true` for a natural 1 at FK ≤ 0 and `false` for any other face (a 1 always succeeds, as passierschlag.passierschlag-dice reads it).
+- fernkampf.FK13, FK14, FK17, FK18 (Task 27): the combat roll states the d20 of the hero's attack as `roll.attack` and of a defence as `roll.defence`; a `check: { of: { check: confirm, with: … } }` is the confirm stage of that roll (spec §6), running its `onSuccess` / `onFailure` for this attack. After a confirmation on a defence the combat roll states `round.previousDefenceCrit: confirmed | unconfirmed` for the next defence of the round (FK17), and clears it after that defence and at the end of the round.
+- probe-fernkampf 21.3 (Task 22): FK8's `replace` of FK6's line keeps FK6 as the origin, puts FK8 in `via` and shows `was:`; its `term` ("Deckung: gilt als klein") names the row the replacement reads (`target.sizeInCover: klein`).

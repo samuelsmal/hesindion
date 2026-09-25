@@ -18,23 +18,27 @@ reviewed: null
 # Bought once per combat technique: Optolith's select options (rules.db select_options) are
 # 1 Armbrüste, 2 Bögen, 3 Wurfwaffen, 4 Schleudern, 5 Blasrohre, 6 Diskusse; a hero holds one
 # instance per technique, each with its `sid`. The effect applies to a weapon only when the hero
-# holds the instance for its technique.
+# holds the instance for its technique: the fact `option` (the instance's `sid`) against the
+# technique in hand, 1 ↔ CT_1 Armbrüste, 2 ↔ CT_2 Bögen, 3 ↔ CT_14 Wurfwaffen.
 
 clauses:
   - id: SL1
     text: >
       Das Nachladen von Bögen und das Bereitmachen von Wurfwaffen verkürzen sich um 1 Aktion.
     effects:
-      - when: { loadout.weapon.technique: [CT_2, CT_14], hero.has: { SA_60: { option_for: weapon.technique } } }
-        add: { to: item.ladezeit, value: -1, floor: 0 }
-        # Kurzbogen 1 → 0, which ladezeiten.LZ2 turns into one free action. The instance gate is
-        # a variation of DISADV_37's `sid` (which option the hero holds) and of the shared
-        # kampfstil-techniques / sf-technique-lists (the technique in hand).
+      - when: { any: [{ loadout.weapon.technique: CT_2, option: 2 }, { loadout.weapon.technique: CT_14, option: 3 }] }
+        add: { to: item.ladezeit, value: -1 }
+      - when: { any: [{ loadout.weapon.technique: CT_2, option: 2 }, { loadout.weapon.technique: CT_14, option: 3 }] }
+        floor: { to: item.ladezeit, min: 0 }
+        # Kurzbogen 1 → 0, which ladezeiten.LZ2 turns into one free action. The old `floor: 0`
+        # on the add is its own `floor`. The instance gate (the old `option_for:
+        # weapon.technique`) is a variation of DISADV_37's `sid` (which option the hero holds)
+        # and of the shared kampfstil-techniques / sf-technique-lists (the technique in hand).
 
   - id: SL2
     text: Das Nachladen von Armbrüsten dauert nur die Hälfte der angegebenen Aktionen.
     effects:
-      - when: { loadout.weapon.technique: CT_1, hero.has: { SA_60: { option_for: weapon.technique } } }
+      - when: { loadout.weapon.technique: CT_1, option: 1 }
         multiply: { to: item.ladezeit, by: 0.5, round: up }
         ruling: round-up
         # Leichte Armbrust 8 → 4, schwere 15 → 7.5 → 8 (the shared round-up; the page does not
@@ -44,7 +48,7 @@ clauses:
     text: >
       Diese Sonderfertigkeit muss für die drei Fernkampftechniken Armbrüste, Bögen und
       Wurfwaffen einzeln erworben werden.
-    none: carried by the `option_for` gate on SL1 and SL2
+    none: carried by the `option` gate on SL1 and SL2 (one instance per technique)
 
   - id: SL4
     text: "Voraussetzungen: FF 13"
@@ -71,7 +75,10 @@ clauses:
       Pfeile nicht griffbereit hat). (...)" [Regelwerk, S. 374 "Waffenzubehör"] — Feuerspeien hat
       zwar einen AP-Wert, fehlt aber bei den Kampftechniken
     effects:
-      - requires: { any_of: [{ hero.has_item: Köcher }, { fact: pfeileGriffbereit }] }
-        when: { loadout.weapon.technique: CT_2 }
-        # Equipment as a precondition (the Köcher), with a GM fact as the way around it. Shown as
-        # a note; the app knows the inventory but not what is worn where.
+      - when: { loadout.weapon.technique: CT_2 }
+        require: { that: { any: [{ loadout.quiver: true }, { gmFact.pfeileGriffbereit: true }] } }
+        because: "ohne Köcher kein Schnellladen, sofern die Pfeile nicht griffbereit sind"
+        # Equipment as a precondition (the Köcher, worn: `loadout.quiver`, the old
+        # `hero.has_item: Köcher`), with a GM fact as the way around it (`gmFact.pfeileGriffbereit`).
+        # A rule-level `require` (no `for`): with a bow in hand, Schnellladen applies only when
+        # it holds. The app knows the inventory but not what is worn where.

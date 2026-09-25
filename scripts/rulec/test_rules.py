@@ -500,6 +500,65 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(e[7]["payload"]["fallThrough"], ["le"])
         self.assertEqual(e[7]["phase"], "action")
 
+    def test_group_8_vocabulary(self):
+        v = vocab.load()
+        for fact, owner in {"hero.inMelee": "player", "hero.lastMovement": "player",
+                            "ladezeit.current": "derived", "loadout.quiver": "loadout",
+                            "loadout.weapon.closeRange": "loadout", "loadout.weapon.mediumRange": "loadout",
+                            "loadout.weapon.farRange": "loadout", "loadout.weapon.instance": "loadout",
+                            "loadout.weapon.ladezeit": "loadout", "loadout.weapon.loaded": "loadout",
+                            "loadout.weapon.strung": "loadout", "round.previousDefenceCrit": "round",
+                            "process.zielen": "round"}.items():
+            self.assertEqual(v.fact_owner(fact), owner, fact)
+        self.assertEqual(v.raw["factFamilies"]["process."]["type"], "int")
+        # Item state is keyed by instance: `item.<instance>.loaded` is an `item.` family fact.
+        self.assertEqual(v.fact_owner("item.kurzbogen1.loaded"), "loadout")
+
+    def test_the_group_8_encodings(self):
+        # ladezeiten LZ1 (the Ladezeit derived from the weapon's data), LZ2 (an action offered
+        # with its cost, plan A.7's process verbatim, the item change of the instance in the
+        # weapon slot), LZ7 (ammunition spent); fernkampf FK11 (a bonus per step of a process),
+        # FK13 (a confirmation check with nested multiplies), FK15 (a shield parry); SA_60 SL1/SL2
+        # (the instance gate `option`, a floor and a halving of the item value).
+        body = textwrap.dedent("""\
+            - derive: { to: item.ladezeit, sum: [{ of: loadout.weapon.ladezeit }] }
+            - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
+              offer: { choice: laden, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
+            - process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: melee } }
+            - when: { action.attack: [hit, miss], loadout.weapon.technique: [CT_1, CT_2, CT_11] }
+              cost: { pool: ammunition, amount: 1 }
+            - when: { process.zielen: { atLeast: 1 } }
+              add: { to: fk, value: 2, per: process.zielen }
+            - when: { roll.attack: 1, loadout.weapon.kind: ranged }
+              check:
+                of: { check: confirm, with: fk }
+                onSuccess:
+                  - multiply: { to: [opponent.pa, opponent.aw], by: 0.5, round: up }
+                  - multiply: { to: tp, by: 2 }
+            - when: { gmFact.incomingAttack: ranged, round.previousDefenceCrit: confirmed }
+              add: { to: ["pa(with: shield)", aw], value: 3 }
+            - when: { any: [{ loadout.weapon.technique: CT_2, option: 2 }, { loadout.weapon.technique: CT_14, option: 3 }] }
+              floor: { to: item.ladezeit, min: 0 }
+            - when: { loadout.weapon.technique: CT_2, hero.inMelee: false, hero.lastMovement: steht }
+              require: { that: { any: [{ loadout.quiver: true }, { gmFact.pfeileGriffbereit: true }] } }
+            """)
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                           textwrap.indent(body, "      ")))
+        self.assertEqual(errors, [])
+        e = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(e[0]["payload"]["sum"][0]["proportion"]["of"], {"fact": "loadout.weapon.ladezeit"})
+        # `{ of: item.ladezeit }` reads the target (after SA_60's lines), not the `item.` fact
+        self.assertEqual(e[2]["payload"]["steps"]["proportion"]["of"], {"target": {"name": "item.ladezeit"}})
+        self.assertEqual(e[2]["payload"]["advancedBy"], {"kind": "action", "ids": ["laden"]})
+        self.assertEqual(e[2]["payload"]["completes"][0]["payload"],
+                         {"instance": {"kind": "loadout", "ids": ["weapon"]}, "change": {"loaded": True}})
+        self.assertEqual(e[3]["payload"], {"pool": "ammunition", "amount": {"number": 1}})
+        self.assertEqual(e[4]["payload"]["per"], "process.zielen")
+        self.assertEqual(e[5]["payload"]["of"], {"kind": "check", "ids": ["confirm"], "with": "fk"})
+        self.assertEqual([t["name"] for t in e[5]["payload"]["onSuccess"][0]["payload"]["to"]],
+                         ["opponent.pa", "opponent.aw"])
+        self.assertEqual(e[6]["payload"]["to"], [{"name": "pa", "with": "shield"}, {"name": "aw"}])
+
     def test_a_prefixed_target_stays_a_family_fact(self):
         # Only a name listed in `targets` beats a fact family: `mount.gs` (prefix + target) is
         # still the `mount.` fact, as reiterkampf.RK14 reads it.

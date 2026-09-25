@@ -111,6 +111,10 @@
       "owner": "gm",
       "type": "any"
     },
+    "process.": {
+      "owner": "round",
+      "type": "int"
+    },
     "roll.": {
       "owner": "roll",
       "type": "any"
@@ -241,6 +245,14 @@
       "owner": "sheet",
       "type": "ruleId"
     },
+    "hero.inMelee": {
+      "owner": "player",
+      "type": "bool"
+    },
+    "hero.lastMovement": {
+      "owner": "player",
+      "type": "string"
+    },
     "hero.leCurrent": {
       "owner": "derived",
       "type": "int"
@@ -289,6 +301,10 @@
       "owner": "loadout",
       "type": "int"
     },
+    "ladezeit.current": {
+      "owner": "derived",
+      "type": "int"
+    },
     "level": {
       "owner": "sheet",
       "type": "int"
@@ -317,6 +333,10 @@
       "owner": "loadout",
       "type": "string"
     },
+    "loadout.quiver": {
+      "owner": "loadout",
+      "type": "bool"
+    },
     "loadout.reach": {
       "owner": "loadout",
       "type": "string"
@@ -341,11 +361,35 @@
       "owner": "loadout",
       "type": "string"
     },
+    "loadout.weapon.closeRange": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.weapon.farRange": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.weapon.instance": {
+      "owner": "loadout",
+      "type": "string"
+    },
     "loadout.weapon.kind": {
       "owner": "loadout",
       "type": "string"
     },
+    "loadout.weapon.ladezeit": {
+      "owner": "loadout",
+      "type": "int"
+    },
     "loadout.weapon.leit": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.weapon.loaded": {
+      "owner": "loadout",
+      "type": "bool"
+    },
+    "loadout.weapon.mediumRange": {
       "owner": "loadout",
       "type": "int"
     },
@@ -356,6 +400,10 @@
     "loadout.weapon.schadensschwelle": {
       "owner": "loadout",
       "type": "int"
+    },
+    "loadout.weapon.strung": {
+      "owner": "loadout",
+      "type": "bool"
     },
     "loadout.weapon.technique": {
       "owner": "loadout",
@@ -410,6 +458,10 @@
       "type": "int"
     },
     "round.phase": {
+      "owner": "round",
+      "type": "string"
+    },
+    "round.previousDefenceCrit": {
       "owner": "round",
       "type": "string"
     },
