@@ -348,6 +348,11 @@ enum CombatRunner {
                     c.mismatches.append(.shape("step \(key)", "\(label): \(key) \(raw) is not modelled"))
                     continue
                 }
+                // R42: a key no query expectation holds (kampfwerte 16.12's `from`, `kept`) is a
+                // shape, never dropped (Task 30).
+                let extra = Set(o.keys).subtracting(QueryExpectation.CodingKeys.allCases.map(\.rawValue)).sorted()
+                c.mismatches += extra.map { .shape("step query key \($0)", "\(label): \(key).\($0) is not a query key").at(label) }
+                o = o.filter { !extra.contains($0.key) }
                 o["query"] = .string(key)
                 guard let data = try? JSONEncoder().encode(JSONValue.object(o)),
                       let q = try? JSONDecoder().decode(QueryExpectation.self, from: data) else {

@@ -9,14 +9,16 @@ source:
   page: 368
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # The page names no publication; book and page are Optolith's (US25001 p. 368, and Aventurische
 # Rüstkammer p. 75). Optolith's numbers match the page.
 
 provides:
   technique: CT_12           # Schwerter
   tp: 1W6+4
-  ls: { attribute: [GE, KK], threshold: 15 }
+  kind: melee                # a Nahkampfwaffe: it has a Schadensschwelle (schaden.S3)
+  leiteigenschaft: [GE, KK]  # L+S GE/KK 15: the weapon's Leiteigenschaft …
+  schadensschwelle: 15       # … and its Schadensschwelle (was `ls: { attribute, threshold }`)
   atMod: 0
   paMod: 0
   reach: mittel

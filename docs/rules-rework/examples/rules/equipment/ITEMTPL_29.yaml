@@ -11,7 +11,7 @@ source:
   page: 367
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # The page also lists Archiv der Ausrüstung pp. 98, 279, Aventurische Rüstkammer p. 67 (Optolith's
 # source for the Waffenvorteil and -nachteil), Kodex der Helden p. 464, Kodex des Schwertes p. 378
 # and Straßenstaub & Halsabschneider p. 30. Optolith's numbers match the page; it has no length.
@@ -21,7 +21,9 @@ reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 provides:
   technique: CT_10           # Schilde
   tp: 1W6+1
-  ls: { attribute: [KK], threshold: 16 }
+  kind: melee                # a Nahkampfwaffe: it has a Schadensschwelle (schaden.S3)
+  leiteigenschaft: [KK]      # L+S KK 16: the weapon's Leiteigenschaft …
+  schadensschwelle: 16       # … and its Schadensschwelle (was `ls: { attribute, threshold }`)
   atMod: -6
   paMod: 3
   reach: kurz
@@ -45,7 +47,10 @@ clauses:
     effects:
       - provide: { name: loadout.shield.size, value: gross }
       - provide: { name: loadout.shield.structurePoints, value: 30 }
-      - when: { loadout.shield: ITEMTPL_29, action.with: mainHand }
+      - when: { loadout.shield: Großschild, action.with: [mainHand, weapon] }
+        # The shield and the attack by what the loadout and the query name (Task 30): the item's
+        # name (as fernkampf.FK10 names the Langbogen), and the Hauptwaffe as `mainHand` or
+        # `weapon` (`at` or `at(with: weapon)`), not the shield itself (situation 16.8).
         add: { to: at, value: -1 }
         # The AT of the Hauptwaffe only: not a shield attack (schilde.SCH2, situation 16.8).
         # Core (the Regelwerk's table note), not a Waffeneigenschaft: on without any Fokusregel.
@@ -79,7 +84,7 @@ clauses:
   - id: GR4
     text: "Der Träger eines Großschilds erleidet einen Abzug von 1 auf GS."
     effects:
-      - when: { rulesets: fokus.waffeneigenschaften, loadout.shield: ITEMTPL_29 }
+      - when: { rulesets: fokus.waffeneigenschaften, loadout.shield: Großschild }
         add: { to: gs, value: -1 }
         ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
         # The carrier's GS. Mounted, reiterkampf reads the mount's GS (RK14, RK15), which this

@@ -6,7 +6,8 @@ A situations file is `{heroFile?, hero?, rulesets?, situations: [...]}`. Each si
   `hero`. The rule-owning maps (`abilities`, `advantages`, `disadvantages`, `conditions`,
   `states`, and `creatures`: a mount's profile, kind `creature`) are replaced whole by a later
   layer; `values` (query string → base value), `attributes`, `techniques`, `talents` and `spells`
-  (a spell's FW, the fact `fw.SPELL_…`) are merged key by key. An owned entry is a level
+  (a spell's FW, the fact `fw.SPELL_…`) and `sheet` (a fact the sheet owns that no other map
+  names: `species.le`, `hero.purchased.le`; Task 30) are merged key by key. An owned entry is a level
   (int), `{sid: n}` (→ `option`, level 1; with `sid2: m` also → `option2`) or `true` (level 1).
 - facts, each in the section of its owner (`SECTIONS`); a prefixed section names the fact with
   its prefix (`round: { parries: 1 }` is `round.parries`). `rolls` is either dice (a list, passed
@@ -34,7 +35,7 @@ from .rules import SHARED, _plain
 
 RULE_MAPS = ("abilities", "advantages", "disadvantages", "conditions", "states", "creatures")
 FACT_MAPS = {"attributes": "attr.", "techniques": "ktw.", "talents": "fw.", "spells": "fw."}
-HERO_KEYS = RULE_MAPS + ("values",) + tuple(FACT_MAPS)
+HERO_KEYS = RULE_MAPS + ("values", "sheet") + tuple(FACT_MAPS)
 # The rule map an Optolith activatable belongs to, by its id's prefix.
 _OPTOLITH_MAPS = (("DISADV_", "disadvantages"), ("ADV_", "advantages"), ("SA_", "abilities"))
 ATTRIBUTES = set(hero_mod.ATTR.values())
@@ -186,6 +187,8 @@ class _File:
                 if f["name"].startswith(prefix):
                     layer[key][f["name"][len(prefix):]] = f["value"]
                     break                               # `fw.` facts go to `talents`, not `spells`
+            else:
+                layer["sheet"][f["name"]] = f["value"]  # the sheet's other facts (hero.purchased.le)
         return layer
 
     def hero(self, raw, line):
@@ -200,6 +203,15 @@ class _File:
                 self.err(f"unknown hero key {k}", kline)
             elif not isinstance(val, dict):
                 self.err(f"wrong type for hero.{k}", kline)
+            elif k == "sheet":
+                for name, n in val.items():
+                    actual = self.v.fact_owner(str(name))
+                    if actual is None:
+                        self.err(f"unknown fact {name}", _line(val, name, kline))
+                    elif actual != "sheet":
+                        self.err(f"fact {name} is owned by {actual}, not sheet", _line(val, name, kline))
+                    else:
+                        layer["sheet"][str(name)] = _plain(n)
             elif k in RULE_MAPS:
                 layer["owned"][k] = {}
                 for rid, entry in val.items():
@@ -245,6 +257,8 @@ class _File:
         for key, prefix in FACT_MAPS.items():
             for name, n in layer[key].items():
                 facts[prefix + name] = {"name": prefix + name, "value": n, "owner": "sheet"}
+        for name, n in layer["sheet"].items():
+            facts[name] = {"name": name, "value": n, "owner": "sheet"}
         rulesets = s.get("rulesets", file_rulesets)
         if rulesets is not None:
             facts["rulesets"] = {"name": "rulesets", "value": _plain(rulesets),
@@ -454,13 +468,13 @@ class _File:
 
 
 def _empty_layer():
-    return {"owned": {}, "values": {}, **{k: {} for k in FACT_MAPS}}
+    return {"owned": {}, "values": {}, "sheet": {}, **{k: {} for k in FACT_MAPS}}
 
 
 def _merge(base, over):
     """`over` on top of `base`: rule maps replaced whole, the value maps merged key by key."""
     return {"owned": {**base["owned"], **over["owned"]},
-            **{k: {**base[k], **over[k]} for k in ("values", *FACT_MAPS)}}
+            **{k: {**base[k], **over[k]} for k in ("values", "sheet", *FACT_MAPS)}}
 
 
 def _owned_entry(raw):

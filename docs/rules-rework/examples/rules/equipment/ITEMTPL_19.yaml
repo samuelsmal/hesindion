@@ -22,7 +22,9 @@ reviewed: null
 provides:
   technique: CT_5            # Hiebwaffen
   tp: 1W6+4
-  ls: { attribute: [KK], threshold: 14 }
+  kind: melee                # a Nahkampfwaffe: it has a Schadensschwelle (schaden.S3)
+  leiteigenschaft: [KK]      # L+S KK 14: the weapon's Leiteigenschaft …
+  schadensschwelle: 14       # … and its Schadensschwelle (was `ls: { attribute, threshold }`)
   atMod: 0
   paMod: -1
   reach: mittel

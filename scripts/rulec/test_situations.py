@@ -466,6 +466,17 @@ class ErrorTests(unittest.TestCase):
                          ["unknown key form"])
         self.assertEqual(errors_of("    hero: { armour: [Platte] }\n"), ["unknown hero key armour"])
 
+    def test_hero_sheet_states_the_sheets_own_facts(self):
+        # Task 30 (R61): `hero: { sheet: {...} }` states a fact the sheet owns and no other
+        # section can (`species.le`), layered like `values`.
+        s = one("    hero: { sheet: { species.le: 5, hero.purchased.le: 2 } }\n")
+        names = {f["name"]: f for f in s["facts"]}
+        self.assertEqual(names["species.le"], {"name": "species.le", "value": 5, "owner": "sheet"})
+        self.assertEqual(names["hero.purchased.le"]["value"], 2)
+        self.assertEqual(errors_of("    hero: { sheet: { choice.x: 1 } }\n"),
+                         ["fact choice.x is owned by player, not sheet"])
+        self.assertEqual(errors_of("    hero: { sheet: { nothing.here: 1 } }\n"), ["unknown fact nothing.here"])
+
     def test_owned_value_forms(self):
         self.assertEqual(errors_of("    hero: { advantages: [ADV_5] }\n"),
                          ["wrong type for hero.advantages"])

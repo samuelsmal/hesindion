@@ -1,0 +1,34 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: kampfwerte.KW1/KW2/KW21 and at-pa-modifikatoren.M1, read through the loadout facts.
+id: sh-kampf
+name: Kampfwerte
+kind: core
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: K1
+    text: AT = KtW + MU über 8 / 3.
+    effects:
+      - derive: { to: at, sum: [{ of: ktw.current }] }
+      - derive: { to: at, sum: [{ of: attr.MU, above: 8, per: 3, round: down }] }
+        when: { not: { loadout.weapon.technique: Peitschen } }
+  - id: K2
+    text: PA = KtW / 2 + Leiteigenschaft über 8 / 3.
+    effects:
+      - derive: { to: pa, sum: [{ of: ktw.current, per: 2, round: up }, { of: technique.leit, above: 8, per: 3, round: down }] }
+  - id: T1
+    text: Leiteigenschaften.
+    effects:
+      - provide: { name: kampfwerte.leiteigenschaft, value: { Schwerter: [GE, KK], Schilde: [KK], Raufen: [GE, KK], Hiebwaffen: [KK] }, readBy: loadout }
+      - provide: { name: kampfwerte.kampftechnik, value: { CT_5: Hiebwaffen, CT_12: Schwerter }, readBy: loadout }
+  - id: M1
+    text: AT/PA-Mod der Waffe.
+    effects:
+      - add: { to: at, value: 1, per: item.atMod }
+      - when: { action.defence: weaponParry }
+        add: { to: pa, value: 1, per: item.paMod }
+  - id: M2
+    text: Großer Schild, −1 GS.
+    effects:
+      - when: { loadout.shield.size: gross }
+        add: { to: gs, value: -1 }

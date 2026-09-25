@@ -18,7 +18,8 @@ struct Applicability: Hashable {
     }
 
     var status: Status
-    /// The `require { enables: true }` clause that made the rule apply; its lines carry it in `via`.
+    /// The `require { enables: true }` clause that made the rule apply, or the clauses whose
+    /// derives gave its level (Task 30); its lines carry them in `via`.
     var via: [ClauseRef] = []
     /// A rule that applies by its derived level: the questions that could change that level
     /// (R38, `BaseLevel.carried`); every effect of the rule asks them.
@@ -37,6 +38,8 @@ struct BaseLevel: Hashable {
     /// A known level: the questions its operands brought along (LE's open `when`s under
     /// Schmerz), which could change it. It keeps its value; whoever reads it asks them (R38).
     var carried: [UnknownFact] = []
+    /// The clauses whose derives gave it (Task 30): a rule that applies by it rests on them.
+    var via: [ClauseRef] = []
 }
 
 /// A memo entry: `computing` breaks a cycle (a rule whose applicability needs itself does not apply).
@@ -52,8 +55,8 @@ extension Evaluation {
     /// - the hero owns it (`owned` covers conditions, states, abilities, advantages, disadvantages
     ///   and creatures), or
     /// - it is `core` and its `ruleset` (if any) is in the fact `rulesets`, or
-    /// - it is `equipment` and a `loadout.*` fact names an item whose `item.<name>.template` is
-    ///   the rule, or
+    /// - it is `equipment` and a `loadout.*` fact names an item whose template is the rule
+    ///   (`item.<name>.template`, else the equipment rule of that name: Task 30), or
     /// - it is a `talent` and the fact `check.talent` is the rule, or
     /// - it has a level (`level(rule: X)` derives to it) and that level is above 0 (Schmerz from
     ///   LE, Belastung from armour), or
@@ -94,7 +97,7 @@ extension Evaluation {
         var derived: BaseLevel?
         if !levelDerives(of: id).isEmpty {
             let level = baseLevel(of: id, depth: depth)
-            if let v = level.value, v > 0 { return Applicability(status: .applies, carried: level.carried) }
+            if let v = level.value, v > 0 { return Applicability(status: .applies, via: level.via, carried: level.carried) }
             derived = level
         }
         if let via = enablingRequire(of: id, depth: depth) {
@@ -119,7 +122,7 @@ extension Evaluation {
     private func isEquipped(_ id: String) -> Bool {
         situation.facts.values.contains { f in
             guard f.name.hasPrefix("loadout."), let item = f.value.string else { return false }
-            return situation.facts["item.\(item).template"]?.value == .string(id)
+            return book.template(ofItem: item, in: situation) == id
         }
     }
 
@@ -181,8 +184,9 @@ extension Evaluation {
         let open = Set(b.notApplied.filter { $0.reason == .unknownFact }.map(\.origin))
         let failed = b.depthExceeded || b.texts.contains { $0.kind == .notApplicable }
         if open.isEmpty && !failed {
+            let derives = (b.base.map { $0.parts.isEmpty ? [$0] : $0.parts } ?? []).compactMap(\.origin).uniqued()
             level = BaseLevel(value: b.base?.value ?? situation.owned[id]?.level ?? 0, unknown: [],
-                              carried: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) })
+                              carried: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) }, via: derives)
         } else {
             level = BaseLevel(value: nil, unknown: b.questions.filter { !open.isDisjoint(with: $0.origins) }
                 .map { UnknownFact(name: $0.fact, owner: $0.owner) })
@@ -203,6 +207,8 @@ extension Evaluation {
     /// - `ladezeit.current` (`targetFacts`): the result of the query `item.ladezeit`.
     /// - `choice.<id>` (Task 30, R61): unstated, the `default` the choice's offers state, when
     ///   they state one and agree (reiterkampf.RK6's `jumpOff: false`); the player's.
+    /// - `hero.conditionLevels` (Task 30, zustaende.Z5): the sum of every condition's
+    ///   `hero.levelOf`, the Stufen the hero has before any useLevel; unknown while one of them is.
     /// - `belastung.source` (Task 30): `armour` while the hero wears an armour (`loadout.armour`
     ///   names one), the one source of Belastung the rules encode; unknown without a stated armour
     ///   (asking for `loadout.armour`), and with none worn.
@@ -215,6 +221,14 @@ extension Evaluation {
     ///   with no owned option cannot say: unknown, nobody asked.
     func prepared(_ names: Set<String>, depth: Int, local: [String: Fact] = [:],
                   rule: String? = nil) -> (situation: Situation, behind: [String: [UnknownFact]]) {
+        let p = prepare(names, depth: depth, local: local, rule: rule)
+        return (p.situation, p.behind)
+    }
+
+    /// `prepared`, with what each derived loadout fact rests on (`Loadout.swift`): the facts it
+    /// read and the clauses behind it, which a value reading it carries.
+    func prepare(_ names: Set<String>, depth: Int, local: [String: Fact] = [:],
+                 rule: String? = nil) -> (situation: Situation, behind: [String: [UnknownFact]], sources: [String: Derived]) {
         let prefix = "hero.levelOf."
         var s = situation
         var behind: [String: [UnknownFact]] = [:]
@@ -259,6 +273,39 @@ extension Evaluation {
                 s.facts[name] = Fact(name: name, value: d, owner: .player)
             }
         }
+        var sources: [String: Derived] = [:]
+        // Task 30: the loadout facts the sheet derives (`Loadout.swift`), which read the query's
+        // own facts (the piece its `with:` names) as well.
+        let withLocal = local.values.reduce(into: s) { $0.facts[$1.name] = $0.facts[$1.name] ?? $1 }
+        for name in names.sorted() where Self.isLoadoutFact(name) && s.fact(name) == nil {
+            let d = loadoutFact(name, in: withLocal)
+            if let v = d.value {
+                s.facts[name] = Fact(name: name, value: v, owner: .derived)
+                sources[name] = d
+            } else {
+                s.unstated.insert(name)
+                behind[name] = d.unknown
+            }
+        }
+        if names.contains("hero.conditionLevels"), s.facts["hero.conditionLevels"] == nil {
+            // Task 30 (zustaende.Z5): the Stufen of every Zustand the hero has, each as
+            // `hero.levelOf` gives it, before any useLevel (ADV_49.zaeher-hund-counts).
+            var sum = 0, lacking: [UnknownFact] = [], known = true
+            for id in book.rules.keys.sorted() where book.rules[id]!.kind == .condition {
+                guard situation.owned[id] != nil || !levelDerives(of: id).isEmpty
+                        || situation.base[Self.levelQuery(id).description] != nil else { continue }
+                if let v = baseLevel(of: id, depth: depth).value { sum += max(0, v) } else {
+                    known = false
+                    lacking += baseLevel(of: id, depth: depth).unknown
+                }
+            }
+            if known {
+                s.facts["hero.conditionLevels"] = Fact(name: "hero.conditionLevels", value: .int(sum), owner: .derived)
+            } else {
+                s.unstated.insert("hero.conditionLevels")
+                behind["hero.conditionLevels"] = lacking.uniqued()
+            }
+        }
         if names.contains("belastung.source"), s.facts["belastung.source"] == nil {
             // Task 30: armour is the one source of Belastung the rules encode
             // (ruestung-und-belastung.A1; the Traglast, COND_1.B2, is not written).
@@ -292,7 +339,7 @@ extension Evaluation {
                 if !level.unknown.isEmpty { behind[name] = level.unknown }
             }
         }
-        return (s, behind)
+        return (s, behind, sources)
     }
 
     /// The derived facts that are a target's result (MIGRATION probe-fernkampf): `ladezeit.current`
@@ -326,20 +373,29 @@ extension Evaluation {
 
     /// Evaluates a value with the derived facts it reads; a target operand runs its own query one
     /// level deeper, at the depth `Values` passes on.
-    func value(_ v: ValueExpr, level: Int?, rule: String, depth: Int) -> ValueResult {
-        let (s, behind) = prepared(v.factNames, depth: depth, rule: rule)
+    /// A derived loadout fact read carries what it rests on (Task 30): the facts it read join
+    /// `used`, its clauses (the equipment row, the Leiteigenschaft table) `via`.
+    func value(_ v: ValueExpr, level: Int?, rule: String, depth: Int, local: [String: Fact] = [:]) -> ValueResult {
+        let (s, behind, sources) = prepare(v.factNames, depth: depth, local: local, rule: rule)
         var r = Values.evaluate(v, level: level, in: s, book: book, rule: rule, depth: depth) { [unowned self] target, d in
             self.resolve(target, depth: d)
         }
         r.unknown = (r.unknown.flatMap { behind[$0.name] ?? [$0] } + carried(v.factNames, depth: depth)).uniqued()
+        for name in v.factNames.sorted() {
+            guard let d = sources[name], r.used.contains(where: { $0.name == name }) else { continue }
+            r.used = (r.used + d.used).uniqued()
+            r.via = (r.via + d.via).uniqued()
+        }
         return r
     }
 
-    /// A fact read directly (`add.per`), with the derived facts it may be.
-    func fact(_ name: String, level: Int?, rule: String, depth: Int) -> (use: FactUse?, unknown: [UnknownFact]) {
-        let (s, behind) = prepared([name], depth: depth, rule: rule)
-        if let use = s.fact(name, level: level, rule: rule) { return (use, []) }
-        return (nil, behind[name] ?? [UnknownFact(name)])
+    /// A fact read directly (`add.per`), with the derived facts it may be, and what a derived
+    /// loadout fact rests on.
+    func fact(_ name: String, level: Int?, rule: String, depth: Int,
+              local: [String: Fact] = [:]) -> (use: FactUse?, unknown: [UnknownFact], used: [FactUse], via: [ClauseRef]) {
+        let (s, behind, sources) = prepare([name], depth: depth, local: local, rule: rule)
+        if let use = s.fact(name, level: level, rule: rule) { return (use, [], sources[name]?.used ?? [], sources[name]?.via ?? []) }
+        return (nil, behind[name] ?? [UnknownFact(name)], [], [])
     }
 
     /// An operand target, as its own query at `depth` (R26): its result, the clauses behind it

@@ -25,7 +25,8 @@ heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24
 
 # Boronmir, species R_1 (Mensch), KO 15, LE 37 (15.1); AT 16 with the Rabenschnabel, no armour.
 hero: { attributes: { KO: 15 }, values: { at: 16, gs: 8 },
-        advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1 } }
+        advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1 },
+        sheet: { species.le: 5 } }   # Mensch, LE-Grundwert 5 (the header; R61, Task 30)
 
 situations:
 

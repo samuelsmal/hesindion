@@ -16,7 +16,8 @@ import Foundation
 ///   (`.take(choice: X)`, which advances the processes X names);
 /// - `advanceClock: { minutes: n }`, `endRound`, `endFight`: the clock;
 /// - statements (`choose`, `gm`, `loadout`, `opponent`, `round`, `hero: { values }`, `rolls` as
-///   facts), then the implied action if there is one.
+///   facts, `event: { RULE: n }` the Stufe the hero now has: Task 30), then the implied action if
+///   there is one.
 ///
 /// Each step builds on the situation the one before left (`ActionResult.situation`). Its `expect`:
 /// - `events`: as `CombatRunner.events`, plus `after: { aspCurrent, leCurrent, conditions }`
@@ -46,7 +47,7 @@ enum StateRunner {
 
     /// The step keys this runner models.
     static let stepKeys: Set<String> = ["action", "advanceClock", "endRound", "endFight", "choose", "gm", "loadout", "opponent",
-                                        "round", "hero", "rolls", "expect"]
+                                        "round", "hero", "rolls", "expect", "event"]
 
     /// A situation this runner takes: a `sequence` whose every step it models, or none and an
     /// expectation of events; dice (`rolls` as a list) and a 3W20 result are other runners'.
@@ -208,6 +209,14 @@ enum StateRunner {
     static func applying(_ step: [String: JSONValue], to situation: Situation) -> (Situation, [Mismatch]) {
         var rest = step
         var s = situation
+        // Task 30: `event: { RULE: n }` is the Stufe the hero now has of the rule (kampfwerte
+        // 16.12: the plate taken off, Belastung 0), stated as the sheet's `level(rule: RULE)`.
+        if let e = rest.removeValue(forKey: "event") {
+            guard let levels = e.objectValue, !levels.isEmpty, levels.values.allSatisfy({ $0.int != nil }) else {
+                return (situation, [.shape("step event", "step event \(e) is not { rule: Stufe }")])
+            }
+            for (rule, n) in levels { s.base[Evaluation.levelQuery(rule).description] = n.int! }
+        }
         for (key, prefix, owner) in [("opponent", "opponent.", Owner.gm), ("round", "round.", Owner.round)] {
             guard let o = rest.removeValue(forKey: key) else { continue }
             guard let facts = o.objectValue else { return (situation, [.shape("step \(key)", "step \(key) \(o) is not modelled")]) }
@@ -224,7 +233,7 @@ enum StateRunner {
 
     static func compare(_ expect: [String: JSONValue], label: String, action: Action?, result r: ActionResult?, before: Situation,
                         stated: Situation, after: Situation, engine: Engine, _ c: inout MatchResult, _ all: inout [Breakdown]) {
-        let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result"]
+        let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result", "offered", "notOffered"]
         // The step's queries first: its `notApplied`, `texts` and `questions` are looked up in them too.
         var queried: [String: Breakdown] = [:]
         for key in expect.keys.sorted() where !special.contains(key) {
@@ -263,6 +272,15 @@ enum StateRunner {
                 let texts = breakdowns.flatMap(\.texts), entries = breakdowns.flatMap(\.notApplied), asked = breakdowns.flatMap(\.questions)
                 CombatRunner.compare([key: raw], label: label, events: [], checks: [], texts: texts, notApplied: entries,
                                      questions: asked, success: nil, successQuery: nil, breakdown: { _ in Breakdown(query: Query("none")) }, &c)
+            case "offered", "notOffered":
+                // Task 30 (R62): as a situation's, against the offers of the step's breakdowns.
+                guard let list = raw.arrayValue else { c.mismatches.append(.shape("malformed \(key)", "\(label): \(key) \(raw) is not a list")); continue }
+                let pool = breakdowns.flatMap(\.offers)
+                let offering = Matcher.offeringClauses(engine.book)
+                for entry in list {
+                    c.mismatches += Matcher.offer(entry, wanted: key == "offered", in: pool, notApplied: breakdowns.flatMap(\.notApplied),
+                                                  offering: offering).map { $0.at(label) }
+                }
             case "result":
                 c.mismatches.append(.shape("step result", "\(label): the result of a cast is not modelled (no check procedure runs)"))
             default:

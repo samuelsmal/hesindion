@@ -18,6 +18,25 @@ public struct Engine: Sendable {
         evaluation(situation).breakdown(query, depth: 0)
     }
 
+    /// The hero sheet (Task 30): the breakdown of no target, which only the effects every query
+    /// sees reach (the reach index's `"*"`): the tells the player is shown whatever is asked, the
+    /// offers, the questions, the unencoded clauses, and the entries of those that do not apply
+    /// (ADV_75.SW1's "nur durch Alkohol verursacht"). It has no base and no lines.
+    public func sheet(in situation: Situation) -> Breakdown {
+        evaluation(situation).breakdown(Query(Self.sheetQuery), depth: 0)
+    }
+
+    /// Whether the pieces `ids` name may be carried (Task 30, the loadout screen): every top-level
+    /// `forbid` of kind `loadout` naming one of them (`secondArmour`, `other`) whose rule applies
+    /// and whose `when` is yes refuses it (`forbidden`), as does a `require` for one whose `that`
+    /// is no (`requirementNotMet`). An unknown `when` or `that` refuses nothing and is not asked.
+    public func legality(ofLoadout ids: [String], in situation: Situation) -> Legality {
+        evaluation(situation).loadoutLegality(Set(ids))
+    }
+
+    /// The name of the sheet's query: no target, so every `"*"` effect and nothing else reaches it.
+    public static let sheetQuery = "sheet"
+
     /// Every offer in the book whose rule applies and whose `when` is not no (read without a
     /// query: `query.target` is unknown), in rule-id and clause order. Each says whether it is
     /// legal (and every entry refusing it), its bound (`max`), its refused options, its `span`

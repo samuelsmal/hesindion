@@ -25,11 +25,13 @@ clauses:
       hinzuaddieren. Beim gleichzeitigen Einsatz einer zweiten Parierwaffe und/oder eines
       Schildes zählt nur der höchste Parade-Bonus.
     effects:
-      - when: { action.defence: weaponParry, action.with: mainHand, loadout.other: [parryingWeapon, shield] }
+      - when: { action.defence: weaponParry, not: { action.with: [offHand, shield, parryingWeapon] }, loadout.other: [parryingWeapon, shield] }
         add: { to: pa, value: { of: loadout.other.paMod } }
         ruling: shield-bonus-raufen
         # A line of its own: "Großschild (passiv) +3". Bare hands count as the Hauptwaffe: a Raufen
-        # parry gets it too (ruling shield-bonus-raufen). The bonus is the piece's PA-Mod from its
+        # parry gets it too (ruling shield-bonus-raufen). The parry of the Hauptwaffe is any
+        # weapon parry not made with the off hand, the shield or the Parierwaffe: `mainHand`,
+        # `weapon` (`pa(with: weapon)`) or a bare-handed technique (`Raufen`; Task 30). The bonus is the piece's PA-Mod from its
         # table row. A Parierwaffe is marked as one in its table row (Optolith:
         # isParryingWeapon); an ordinary second weapon gives nothing here.
         # "only the highest": `loadout.other.paMod` is the highest PA-Mod among the Parierwaffen

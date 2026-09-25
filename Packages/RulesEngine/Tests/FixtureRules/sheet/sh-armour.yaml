@@ -10,3 +10,14 @@ clauses:
     text: Belastung nach Rüstung.
     effects:
       - derive: { to: "level(rule: sh-load)", sum: [{ of: loadout.armour.belastung }] }
+      - forbid: { what: { loadout: secondArmour } }
+        because: eine Rüstung zur Zeit
+        ruling: one
+      - when: { loadout.shield.size: gross }
+        forbid: { what: { loadout: other } }
+        because: der große Schild braucht die zweite Hand
+rulings:
+  - id: one
+    question: Several armours?
+    answer: One at a time.
+    decided: { by: "@fixture", date: 2026-09-25 }

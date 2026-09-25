@@ -236,7 +236,8 @@ situations:
   - id: "16.14"
     name: Arbosch parries actively with the Holzschild
     hero: { values: { at: 14, "pa(with: weapon)": 8, "pa(with: shield)": 8 } }
-    loadout: { weapon: Streitaxt, shield: Holzschild, other: shield, item.Streitaxt.atMod: 0, item.Streitaxt.paMod: -1, item.Holzschild.paMod: 1 }
+    loadout: { weapon: Streitaxt, shield: Holzschild, other: shield, item.Streitaxt.atMod: 0, item.Streitaxt.paMod: -1, item.Holzschild.paMod: 1,
+               item.Holzschild.technique: Schilde }   # "Schilde PA 8" (16.13's note), the shield's technique (R61, Task 30)
     choose: { action.defence: shieldParry }
     expect:
       "pa(with: shield)": { result: 10, base: { value: 8, technique: Schilde }, lines: [{ value: 2, from: schilde.SCH3 }] }   # 2 × 1
@@ -269,7 +270,7 @@ situations:
 
   - id: "16.17"
     name: Boronmir in plate takes a hit of 9 TP
-    hero: { values: { leCurrent: 37 } }
+    hero: { values: { leCurrent: 37, rs: 6 } }   # RS 6: the Plattenrüstung (header; R61, Task 30)
     loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rolls: { hit.tp: 9 }                                                 # the hit on the hero
     expect:
@@ -279,7 +280,7 @@ situations:
 
   - id: "16.18"
     name: A hit that does not get through the plate
-    hero: { values: { leCurrent: 37 } }
+    hero: { values: { leCurrent: 37, rs: 6 } }   # RS 6: the Plattenrüstung (header; R61, Task 30)
     loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rolls: { hit.tp: 5 }
     expect:
@@ -289,7 +290,7 @@ situations:
 
   - id: "16.19"
     name: A spell's damage, which ignores armour
-    hero: { values: { leCurrent: 37 } }
+    hero: { values: { leCurrent: 37, rs: 6 } }   # RS 6: the Plattenrüstung (header; R61, Task 30)
     loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rolls: { hit.tp: 7 }
     choose: { choice.ignoresRS: true }
@@ -325,6 +326,7 @@ situations:
     name: A Rabenschnabel in the hands of a hero with KK 16
     hero: { attributes: { KK: 16 } }
     loadout: { weapon: Rabenschnabel }
+    choose: { action.attack: hit }                                       # "on a hit" (R61, Task 30)
     expect:
       tp: { total: 2, lines: [{ value: 2, from: schaden.S3 }] }          # on a hit: 1W6+4 +2; KK 16 − 14
     appToday: >

@@ -71,6 +71,8 @@ situations:
         TAL_6: 12
         TAL_8: 9
         TAL_9: 3
+      sheet:
+        hero.purchased.le: 0
       values:
         "at(with: Großschild)": 6
         "at(with: Langschwert)": 14
@@ -91,25 +93,50 @@ situations:
       choice.formation.bonus: at
     expect:
       at:
-        total: 1
+        total: 16
+        result: 16
         lines:
+          - from: kampfwerte.KW1
+            value: 14
+            via: [ITEMTPL_19.RS0]
+          - from: kampfwerte.KW1
+            value: 2
           - from: SA_41.G1
             value: 1
             ruling: [SA_41.table-shift]
           - from: COND_1.B3
             value: -1
-            via: [SA_41.G1]
+            via: [ruestung-und-belastung.A1, SA_41.G1]
             ruling: [SA_41.table-shift]
+          - from: ITEMTPL_29.GR1
+            value: -1
           - from: SA_862.F2
             value: 2
+          - from: at-pa-modifikatoren.M1
+            value: 0
+            via: [ITEMTPL_19.RS0]
       pa:
-        total: -1
+        total: 10
+        result: 10
         lines:
+          - from: kampfwerte.KW2
+            value: 7
+            via: [ITEMTPL_19.RS0]
+          - from: kampfwerte.KW2
+            value: 2
+            via: [ITEMTPL_19.RS0, kampfwerte.KW21]
           - from: SA_41.G1
             value: 1
             ruling: [SA_41.table-shift]
           - from: COND_1.B3
             value: -1
-            via: [SA_41.G1]
+            via: [ruestung-und-belastung.A1, SA_41.G1]
             ruling: [SA_41.table-shift]
+          - from: at-pa-modifikatoren.M1
+            value: -1
+            via: [ITEMTPL_19.RS0]
+          - from: schilde.SCH1
+            value: 3
+            via: [ITEMTPL_29.GR0]
+            ruling: [schilde.shield-bonus-raufen]
     appToday: "das war falsch: Belastung (COND_1.B3) zieht 3 statt 1 ab, Rüstungsgewöhnung (SA_41.G1) wird nicht angerechnet, und AT und PA haben keinen Basiswert (Rabenschnabel 16/11)"

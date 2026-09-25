@@ -8,7 +8,7 @@ import Foundation
 /// - `hero`: the owned rules by map (`abilities`, `advantages`, `disadvantages`, `conditions`,
 ///   `states`, by the id's prefix; any other id under `abilities`, since rulec merges the maps),
 ///   an entry with an option as `{level, sid, sid2}`; the sheet facts `attr.` / `ktw.` / `fw.` as
-///   `attributes`, `techniques`, `talents`; the base values as `values`, with the LE and AsP pools
+///   `attributes`, `techniques`, `talents`, the sheet's other facts as `sheet`; the base values as `values`, with the LE and AsP pools
 ///   as `leCurrent` / `leMax` / `aspCurrent` / `aspMax` (the harness fills the pools from them);
 /// - each fact in its owner's section: `choose` (player), `ally` (player, `ally.*`), `gm`,
 ///   `opponent` (gm, `opponent.*`), `round` (these three without their prefix), `loadout` (without `loadout.` where that name is no loadout fact of its own; an
@@ -21,7 +21,7 @@ import Foundation
 ///   (a sheet base, a modifier typed in) as a comment, `# also shown: …`;
 /// - `appToday`: the note.
 ///
-/// What has no section (a derived fact, a roll fact beside dice, another sheet fact, a pool
+/// What has no section (a derived fact, a roll fact beside dice, a pool
 /// other than LE and AsP, a process, the clock, a timed Stufe, a non-scalar value) is left out,
 /// and a comment at the top lists it.
 public enum SituationDraft {
@@ -139,6 +139,9 @@ private struct Draft {
     var owned: [Owned] = []
     /// Hero map → name → value (`attributes: {MU: 14}`).
     var sheet: [String: [(String, Int)]] = [:]
+    /// The sheet's other facts, written under `hero: { sheet: … }` (`species.le`,
+    /// `hero.purchased.le`; Task 30).
+    var sheetFacts: [(String, JSONValue)] = []
     var values: [(String, Int)] = []
     var inSections: [String: [Entry]] = [:]
     /// Roll facts written as the `rolls` mapping (no dice).
@@ -190,6 +193,8 @@ private struct Draft {
             if f.owner == .sheet {
                 if let m = Self.sheetMaps.first(where: { f.name.hasPrefix($0.prefix) }), let n = f.value.intValue {
                     sheet[m.map, default: []].append((String(f.name.dropFirst(m.prefix.count)), n))
+                } else if Vocabulary.owner(ofFact: f.name) == .sheet, !f.value.isList {
+                    sheetFacts.append((f.name, f.value))
                 } else {
                     leftOut.append(who)
                 }
@@ -277,7 +282,7 @@ private struct Draft {
 
         let heroMaps = Self.ruleMaps.filter { m in owned.contains { $0.map == m } }
         let sheetMaps = Self.sheetMaps.map(\.map).filter { sheet[$0] != nil }
-        if !heroMaps.isEmpty || !sheetMaps.isEmpty || !values.isEmpty {
+        if !heroMaps.isEmpty || !sheetMaps.isEmpty || !sheetFacts.isEmpty || !values.isEmpty {
             line(4, "hero:")
             for m in heroMaps {
                 line(6, m + ":")
@@ -292,6 +297,10 @@ private struct Draft {
             for m in sheetMaps {
                 line(6, m + ":")
                 for (k, v) in sheet[m] ?? [] { line(8, key(k) + " \(v)") }
+            }
+            if !sheetFacts.isEmpty {
+                line(6, "sheet:")
+                for (k, v) in sheetFacts { line(8, key(k) + " " + SituationDraft.scalar(v)) }
             }
             if !values.isEmpty {
                 line(6, "values:")
@@ -364,6 +373,7 @@ private struct Draft {
         for m in Self.sheetMaps {
             for (k, v) in sheet[m.map] ?? [] { fact(m.prefix + k, .int(v), .sheet) }
         }
+        for (k, v) in sheetFacts { fact(k, v, .sheet) }
         for section in Self.sections {
             for e in inSections[section.name] ?? [] { fact(e.fact.name, e.fact.value, e.fact.owner) }
         }

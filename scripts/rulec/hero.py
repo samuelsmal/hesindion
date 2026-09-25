@@ -1,5 +1,6 @@
 """An Optolith hero file resolved into what a situation states about the hero: the rules it owns
-(`owned`, from `activatable`) and the sheet's facts (attributes, combat techniques, talents)."""
+(`owned`, from `activatable`) and the sheet's facts (attributes, combat techniques, talents, the
+LE bought with AP)."""
 import json
 from pathlib import Path
 
@@ -23,4 +24,6 @@ def from_optolith(path: Path) -> dict:
              for a in d["attr"]["values"]]
     facts += [{"name": f"ktw.{k}", "value": v, "owner": "sheet"} for k, v in sorted(d.get("ct", {}).items())]
     facts += [{"name": f"fw.{k}", "value": v, "owner": "sheet"} for k, v in sorted(d.get("talents", {}).items())]
+    if isinstance(d["attr"].get("lp"), int):              # the LE bought with AP (lebensenergie.LE2)
+        facts.append({"name": "hero.purchased.le", "value": d["attr"]["lp"], "owner": "sheet"})
     return {"id": d["id"], "owned": owned, "facts": facts}

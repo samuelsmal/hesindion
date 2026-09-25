@@ -1,0 +1,16 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: an equipment row (ITEMTPL_35), found by the item's name.
+id: sh-sword
+name: Schwert
+kind: equipment
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+provides:
+  technique: Schwerter
+  atMod: 0
+  paMod: -1
+clauses:
+  - id: R0
+    text: Schwert | AT/PA-Mod 0/-1
+    effects:
+      - provide: { name: loadout.weapon, value: provides }

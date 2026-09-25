@@ -99,7 +99,8 @@ final class Evaluation {
             return Breakdown(query: query, depthExceeded: true)
         }
         var state = PipelineState(query: query, depth: depth, candidates: candidates(for: query))
-        for (name, value) in query.checkFacts where situation.facts[name] == nil {
+        for (name, value) in query.checkFacts.merging(combatFacts(of: query), uniquingKeysWith: { a, _ in a })
+            where situation.facts[name] == nil {
             state.local[name] = Fact(name: name, value: value, owner: .derived)
         }
         for phase in Phase.allCases where phase <= last {
@@ -326,20 +327,20 @@ extension Evaluation {
             let via = own ? [] : ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
             if let by = control[clause], let replace = by.replace {
-                let own = d.sum.map { value($0, level: level, rule: rule, depth: state.depth).value }
+                let own = d.sum.map { value($0, level: level, rule: rule, depth: state.depth, local: state.local).value }
                 let was = own.contains(nil) ? nil : own.reduce(0) { $0 + $1! }
                 state.record(NotApplied(origin: clause, reason: .replaced, because: by.because, rulings: e.ruling,
                                         facts: used, via: via, value: was))
                 // The clause's value is replaced once, however many derives it holds.
                 guard replacedClauses.insert(clause).inserted else { continue }
-                let r = value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth)
+                let r = value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth, local: state.local)
                 guard computed([r], of: by.effect, used: used, via: via, &state, [replace.with]), let v = r.value else { continue }
                 parts.append(Line(value: v, kind: .replaced, origin: clause, via: (via + r.via + [by.ref]).uniqued(),
                                   rulings: (decided(e) + decided(by.effect)).uniqued(), facts: (used + r.used).uniqued(),
                                   was: was, now: v))
                 continue
             }
-            let results = d.sum.map { value($0, level: level, rule: rule, depth: state.depth) }
+            let results = d.sum.map { value($0, level: level, rule: rule, depth: state.depth, local: state.local) }
             guard computed(results, of: e, used: used, via: via, &state, d.sum) else { continue }
             parts += results.map { r in
                 Line(value: r.value!, kind: .base, origin: e.origin.clauseRef, via: (via + r.via).uniqued(),
@@ -602,7 +603,7 @@ extension Evaluation {
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
-            let r = value(modifier, level: level, rule: rule, depth: state.depth)
+            let r = value(modifier, level: level, rule: rule, depth: state.depth, local: state.local)
             guard computed([r], of: e, used: used, via: via, &state, [modifier]), let v = r.value else { continue }
             state.lines.append(Line(value: v, kind: .add, origin: e.origin.clauseRef, via: (via + r.via).uniqued(),
                                     rulings: decided(e), facts: (used + r.used).uniqued()))
@@ -638,8 +639,9 @@ extension Evaluation {
         let via = ruleVia(rule, state)
         guard var used = gate(e, level: level, via: via, &state) else { return }
         var times = 1.0
+        var perVia: [ClauseRef] = []
         if let per = a.per {
-            let f = fact(per, level: level, rule: rule, depth: state.depth)
+            let f = fact(per, level: level, rule: rule, depth: state.depth, local: state.local)
             guard let use = f.use else {
                 state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact, because: e.because,
                                         rulings: e.ruling, facts: used, via: via))
@@ -650,7 +652,8 @@ extension Evaluation {
                 fail(e, "\(per) ist keine Zahl", &state)
                 return
             }
-            used = (used + [use]).uniqued()
+            used = (used + [use] + f.used).uniqued()
+            perVia = f.via
             times = n
             state.ask(carried([per], depth: state.depth), for: e.origin.clauseRef)
         }
@@ -671,14 +674,14 @@ extension Evaluation {
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .replaced, because: by.because, rulings: e.ruling,
                                     facts: used, via: via, value: was))
             state.lines.append(Line(value: amount, kind: .replaced, origin: e.origin.clauseRef,
-                                    via: (via + r.via + [by.ref]).uniqued(),
+                                    via: (via + r.via + perVia + [by.ref]).uniqued(),
                                     rulings: (decided(e) + decided(by.effect)).uniqued(), facts: facts,
                                     was: was, now: amount))
         } else if let scale = a.scale {
-            step(e, along: scale, by: amount, via: (via + r.via).uniqued(), facts: facts, &state)
+            step(e, along: scale, by: amount, via: (via + r.via + perVia).uniqued(), facts: facts, &state)
         } else {
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
-                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts,
+                                    via: (via + r.via + perVia).uniqued(), rulings: decided(e), facts: facts,
                                     owner: gmNumber(a.value, r) ? .gm : nil))
         }
     }
@@ -699,10 +702,10 @@ extension Evaluation {
     private func swapped(_ own: ValueExpr, of e: Effect, level: Int?,
                          _ state: PipelineState) -> (result: ValueResult, by: Control?, original: Int?) {
         guard let by = state.replacements[e.origin.clauseRef], let replace = by.replace else {
-            return (value(own, level: level, rule: e.origin.rule, depth: state.depth), nil, nil)
+            return (value(own, level: level, rule: e.origin.rule, depth: state.depth, local: state.local), nil, nil)
         }
-        let original = value(own, level: level, rule: e.origin.rule, depth: state.depth).value
-        return (value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth), by, original)
+        let original = value(own, level: level, rule: e.origin.rule, depth: state.depth, local: state.local).value
+        return (value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth, local: state.local), by, original)
     }
 
     /// Phase 4 on one effect: when a firing suppress names it (its clause, rule or rule kind), it
@@ -799,7 +802,7 @@ extension Evaluation {
             let via = ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
             let exprs = [low, high].compactMap { $0 }
-            let results = exprs.map { value($0, level: level, rule: rule, depth: state.depth) }
+            let results = exprs.map { value($0, level: level, rule: rule, depth: state.depth, local: state.local) }
             guard computed(results, of: e, used: used, via: via, &state, exprs) else { continue }
             var bounds = results.makeIterator()
             let lo = low != nil ? bounds.next()?.value : nil

@@ -41,6 +41,11 @@ class FromOptolithTests(unittest.TestCase):
         self.assertEqual(self.facts["ktw.CT_5"], {"name": "ktw.CT_5", "value": 14, "owner": "sheet"})
         self.assertEqual(self.facts["fw.TAL_23"], {"name": "fw.TAL_23", "value": 9, "owner": "sheet"})
 
+    def test_the_le_bought_is_the_sheets_purchased_le(self):
+        # Task 30 (R61): `attr.lp`, the LE bought with AP, is the fact `hero.purchased.le`
+        # (lebensenergie.LE2).
+        self.assertEqual(self.facts["hero.purchased.le"], {"name": "hero.purchased.le", "value": 0, "owner": "sheet"})
+
     def test_every_fact_is_owned_by_the_sheet(self):
         self.assertEqual({f["owner"] for f in self.h["facts"]}, {"sheet"})
 

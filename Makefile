@@ -190,10 +190,9 @@ rules-json:
 
 # The new rules engine (Packages/RulesEngine): pure Swift, runs on macOS without a simulator.
 # The situations harness (SituationsHarnessTests) runs the situations files RULES_FILES names:
-# `make test-rules-engine RULES_FILES=kampfwerte,lebensenergie`, or `RULES_FILES=all`. It writes
-# build/rules/harness-report.json. Until Phase C makes it green (Task 30) the default is `none`,
-# which skips it, so the red harness does not block the other engine tests.
-RULES_FILES ?= none
+# `make test-rules-engine RULES_FILES=kampfwerte,lebensenergie`; unset (the default) or
+# `RULES_FILES=all` runs every file, `RULES_FILES=none` skips it. It writes
+# build/rules/harness-report.json.
 test-rules-engine: rules-json
 	RULES_FILES=$(RULES_FILES) swift test --package-path Packages/RulesEngine
 

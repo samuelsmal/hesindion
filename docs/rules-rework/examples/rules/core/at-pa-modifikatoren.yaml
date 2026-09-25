@@ -11,7 +11,7 @@ source:
   page: 366
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: M1
@@ -20,9 +20,11 @@ clauses:
       modifizieren. Dies wird in den Waffentabellen angegeben, die Modifikatoren werden erst nach
       der Ermittlung der Basiswerte verrechnet.
     effects:
-      - add: { to: at, value: { of: item.atMod } }
+      - add: { to: at, value: 1, per: item.atMod }
       - when: { action.defence: weaponParry }
-        add: { to: pa, value: { of: item.paMod } }
+        add: { to: pa, value: 1, per: item.paMod }
+        # `value: 1, per: …` (Task 30): a Mod is signed (the Rabenschnabel's PA −1, the
+        # Großschild's AT −6), and a proportion `{ of: … }` counts only what is above 0.
         # `item.` is the piece the roll is made with; "erst nach der Ermittlung der Basiswerte" is
         # the phase order (an `add` after KW1's and KW2's `derive`).
         # Keyed on the piece the roll is made with, not on the loadout: in a double attack each

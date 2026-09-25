@@ -104,6 +104,37 @@ extension Evaluation {
         }
     }
 
+    /// `Engine.legality(ofLoadout:)`: the loadout forbids and requires naming `ids`.
+    func loadoutLegality(_ ids: Set<String>) -> Legality {
+        let effects = book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }
+        var state = PipelineState(query: Query("loadout"), depth: 0, candidates: effects.filter { $0.phase == .lines })
+        control(effects.filter { $0.phase == .legality }, &state)
+        for e in effects {
+            let selector: RuleSelector
+            switch e.payload {
+            case .forbid(let f) where f.together != true: selector = f.what
+            case .require(let r) where r.enables != true && r.for != nil: selector = r.for!
+            default: continue
+            }
+            guard selector.kind == .loadout, !ids.isDisjoint(with: selector.ids.compactMap(\.id)),
+                  applies(e, &state), !isSuppressed(e, &state) else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: [:], depth: 0)
+            let via = ruleVia(rule, state)
+            guard let used = gate(e, level: level, via: via, &state, asking: false) else { continue }
+            if case .require(let r) = e.payload {
+                let c = condition(r.that, level: level, rule: rule, depth: 0)
+                guard c.truth == .no else { continue }
+                forbid(NotApplied(origin: e.origin.clauseRef, reason: .requirementNotMet, because: e.because, rulings: e.ruling,
+                                  facts: (used + c.used).uniqued(), via: via), &state)
+            } else {
+                forbid(NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because, rulings: e.ruling,
+                                  facts: used, via: via), &state)
+            }
+        }
+        return state.legal
+    }
+
     private func forbid(_ entry: NotApplied, _ state: inout PipelineState) {
         state.legal.allowed = false
         if !state.legal.reasons.contains(entry) { state.legal.reasons.append(entry) }

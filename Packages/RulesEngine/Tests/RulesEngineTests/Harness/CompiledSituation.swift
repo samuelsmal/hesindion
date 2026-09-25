@@ -102,6 +102,24 @@ struct ExpectedLine: Decodable {
     var kind: String?
     var was: Int?
     var term: String?
+
+    /// A `via` or `ruling` may be one string: rulec passes a `sequence` step's lines through as
+    /// written (Task 30).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        func list(_ key: CodingKeys) throws -> [String]? {
+            if let one = try? c.decode(String.self, forKey: key) { return [one] }
+            return try c.decodeIfPresent([String].self, forKey: key)
+        }
+        from = try c.decodeIfPresent(String.self, forKey: .from)
+        value = try c.decodeIfPresent(Int.self, forKey: .value)
+        via = try list(.via)
+        ruling = try list(.ruling)
+        source = try c.decodeIfPresent(String.self, forKey: .source)
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        was = try c.decodeIfPresent(Int.self, forKey: .was)
+        term = try c.decodeIfPresent(String.self, forKey: .term)
+    }
 }
 
 /// An expected `notApplied` entry: `rule`, and when given `clause`, `reason` (a reason code, a

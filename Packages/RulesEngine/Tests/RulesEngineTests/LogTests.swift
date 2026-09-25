@@ -240,7 +240,10 @@ final class LogTests: XCTestCase {
         XCTAssertTrue(yaml.contains("    rolls: [7, 12]\n"), yaml)
         XCTAssertTrue(yaml.contains("hit.zone (roll)"), "a roll fact beside dice is left out, and said so")
         XCTAssertTrue(yaml.contains("belastung.source (derived)"), yaml)
-        XCTAssertTrue(yaml.contains("species.le (sheet)"), yaml)
+        // A sheet fact outside the attribute, technique and talent maps is `hero: { sheet: … }`
+        // (Task 30), which rulec reads back.
+        XCTAssertTrue(yaml.contains("      sheet:\n        species.le: 5\n"), yaml)
+        XCTAssertFalse(yaml.contains("species.le (sheet)"), yaml)
         XCTAssertTrue(yaml.contains("pool kap"), yaml)
         // expect: the total by the derived-base rule, the lines with from / via / ruling and the
         // value after the step for `set`; no line without a clause.

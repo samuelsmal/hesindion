@@ -207,7 +207,10 @@ public enum Tables {
             .first { Vocabulary.facts[$0] == .loadout }
         guard let naming, let item = t.fact(naming) else { return nil }
         guard let itemName = item.string else { return nil }             // nothing in that slot
-        guard let template = t.fact("item.\(itemName).template")?.string else { return nil }
+        // The stated template, else the equipment rule of the item's name (Task 30).
+        let stated = "item.\(itemName).template"
+        let named = t.situation.fact(stated) == nil ? book.template(ofItem: itemName, in: t.situation) : nil
+        guard let template = named ?? t.fact(stated)?.string else { return nil }
         return providers.first { $0.rule == template }.flatMap(value)
     }
 

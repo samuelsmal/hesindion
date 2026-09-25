@@ -248,7 +248,7 @@ final class MatcherTests: XCTestCase {
         let other = try situation(#"{"expect": [{"query": "at", "notApplied": [{"rule": "c", "clause": "B3", "because": "x.X1"}]}]}"#)
         XCTAssertEqual(kinds(compare(other, breakdowns: [Breakdown(query: Query("at"), notApplied: [entry])], offers: [])), [.wrongBecause])
         // A ref is the suppressor, winner or forbid only: never a later `via` entry, never a
-        // `conditionFalse` entry's `via`.
+        // `conditionFalse` entry's `via` (unless its `when` read the level: Task 30).
         let second = NotApplied(origin: ref("c.B3"), reason: .suppressed, via: [ref("e.E1"), ref("s.SP-zustand")])
         XCTAssertEqual(kinds(compare(clause, breakdowns: [Breakdown(query: Query("at"), notApplied: [second])], offers: [])), [.wrongBecause])
         let unmet = NotApplied(origin: ref("c.B3"), reason: .conditionFalse, via: [ref("s.SP-zustand")])
@@ -872,17 +872,34 @@ final class MatcherTests: XCTestCase {
         XCTAssertFalse(CombatRunner.canRun(try situation(#"{"expect": [{"query": "at"}]}"#), book: book))
     }
 
-    /// R52: in a hit run without a query, a situation-level `notApplied` for a rule no stage of the
-    /// hit evaluates is about the hero sheet: an unsupported shape, not a failure. A rule a stage
-    /// does evaluate is compared as ever.
-    func testASheetWideNotAppliedIsAnUnsupportedShape() throws {
+    /// R52, Task 30: in a hit run without a query, a situation-level `notApplied` for a rule no
+    /// stage of the hit evaluates is about the hero sheet: it is looked up in the sheet's
+    /// breakdown (`Engine.sheet(in:)`). A rule a stage does evaluate is compared as ever.
+    func testASheetWideNotAppliedIsLookedUpOnTheSheet() throws {
         let s = try situation(#"{"expectSituation": {"notApplied": [{"rule": "DISADV_57", "reason": "needs the Fokusregel"}, {"rule": "trefferzonen", "clause": "TZ8", "reason": "conditionFalse"}]}}"#)
         let stage = Breakdown(query: Query("wundschwelle"), base: line(8, "trefferzonen.TZ8", kind: .base))
         let hit = HitView(queries: [:], breakdowns: [stage], situation: Situation(owned: [:], facts: []))
         var c = MatchResult()
-        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], hit: hit, &c)
-        XCTAssertEqual(c.mismatches.compactMap(\.shape), ["sheet-wide notApplied"])
-        XCTAssertEqual(kinds(c.mismatches), [.unsupportedShape, .missingNotApplied])
+        let sheet = Breakdown(query: Query("sheet"), notApplied: [NotApplied(origin: ref("DISADV_57.VW1"), reason: .conditionFalse)])
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], hit: hit, sheet: sheet, &c)
+        XCTAssertEqual(kinds(c.mismatches), [.missingNotApplied], "DISADV_57 is on the sheet; TZ8 is not in the stage")
+        var none = MatchResult()
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], hit: hit, sheet: Breakdown(query: Query("sheet")), &none)
+        XCTAssertEqual(kinds(none.mismatches), [.missingNotApplied, .missingNotApplied])
+    }
+
+    /// Task 30 (R62): a situation without a query compares its situation-level `texts`,
+    /// `notApplied` and `questions` with the hero sheet's breakdown (lebensenergie 15.17–15.19).
+    func testASituationWithoutAQueryReadsTheSheet() throws {
+        let s = try situation(#"{"expectSituation": {"texts": [{"player": "Heilkräuter wirken dennoch.", "from": "r.R7"}]}}"#)
+        let sheet = Breakdown(query: Query("sheet"), texts: [TextLine(kind: .tell, audience: .player, text: "Heilkräuter wirken dennoch.",
+                                                                      origin: ref("r.R7"))])
+        var c = MatchResult()
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], sheet: sheet, &c)
+        XCTAssertEqual(c.mismatches, [])
+        var without = MatchResult()
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], &without)
+        XCTAssertEqual(without.mismatches.compactMap(\.shape), ["situation texts without a query"])
     }
 
     // MARK: - Sequences and implied actions (Task 28)
@@ -903,7 +920,7 @@ final class MatcherTests: XCTestCase {
         XCTAssertFalse(StateRunner.canRun(try situation(#"{"expectSituation": {"events": [{"after": {"leCurrent": 23}}]}}"#)),
                        "no implied action gives a regeneration's LeP")
         XCTAssertFalse(StateRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}]}]}"#)))
-        XCTAssertFalse(StateRunner.canRun(try situation(#"{"sequence": [{"event": {"COND_1": 0}}]}"#)))
+        XCTAssertTrue(StateRunner.canRun(try situation(#"{"sequence": [{"event": {"COND_1": 0}}]}"#)), "Task 30: a Stufe stated")
         XCTAssertFalse(StateRunner.canRun(try situation(#"{"expect": [{"query": "at", "total": 1}]}"#)))
     }
 
@@ -980,4 +997,105 @@ final class MatcherTests: XCTestCase {
         XCTAssertTrue(StateRunner.canRun(s))
         XCTAssertEqual(StateRunner.run(s, engine: engine).mismatches, [])
     }
+
+    // MARK: - Task 30
+
+    /// A step `event: { RULE: n }` states the Stufe the hero now has of the rule (kampfwerte
+    /// 16.12: the plate taken off, Belastung 0), as the sheet's `level(rule: RULE)`.
+    func testAStepEventStatesAStufe() throws {
+        let engine = Engine(book: Self.book)
+        let s = try situation(#"""
+            {"owned": {"COND_1": {"level": 2}}, "base": {"at": 14},
+             "sequence": [{"expect": {"at": {"total": -2}}},
+                          {"event": {"COND_1": 0}, "expect": {"at": {"total": 0, "result": 14}}}]}
+            """#)
+        XCTAssertTrue(StateRunner.canRun(s))
+        XCTAssertEqual(StateRunner.run(s, engine: engine).mismatches, [])
+        let bad = try situation(#"{"sequence": [{"event": {"COND_1": "off"}}]}"#)
+        XCTAssertEqual(StateRunner.run(bad, engine: engine).mismatches.compactMap(\.shape), ["step event"])
+    }
+
+    /// A step's query expectation holds the query keys only: any other key is an unsupported
+    /// shape (R42), never dropped; a line's `ruling` in a step (which rulec passes through) may be
+    /// a string.
+    func testAStepsQueryKeysAreChecked() throws {
+        let engine = Engine(book: Self.book)
+        let s = try situation(#"""
+            {"owned": {"COND_1": {"level": 2}, "SA_41": {"level": 1}}, "base": {"at": 14},
+             "sequence": [{"expect": {"at": {"result": 13, "from": "COND_1.B3", "kept": {"w6": 4},
+                                              "lines": [{"from": "COND_1.B3", "value": -1, "ruling": "SA_41.table-shift"}]}}}]}
+            """#)
+        let run = StateRunner.run(s, engine: engine)
+        XCTAssertEqual(run.mismatches.compactMap(\.shape).sorted(), ["step query key from", "step query key kept"])
+        XCTAssertEqual(run.mismatches.filter { $0.shape == nil }, [])
+    }
+
+    /// Bridge 6, Task 30: a clause ref `because` also names what made a `when` false through the
+    /// level it reads: the useLevel first in the entry's `via` (lebensenergie 15.4: Schmerz I
+    /// treated as none by ADV_49.ZH4).
+    func testAClauseBecauseNamesTheUseLevelBehindAFalseCondition() {
+        let level = [FactUse(name: "level", value: 0, owner: .sheet)]
+        let entry = NotApplied(origin: ref("COND_6.SZ5"), reason: .conditionFalse, facts: level, via: [ref("ADV_49.ZH4")])
+        XCTAssertTrue(Matcher.because("ADV_49.ZH4", entry))
+        XCTAssertFalse(Matcher.because("ADV_49.ZH1", entry))
+        XCTAssertFalse(Matcher.because("ADV_49.ZH4", NotApplied(origin: ref("COND_6.SZ5"), reason: .conditionFalse, facts: level)))
+        // A `when` that read no level: the rule's `via` (an enabling require) is no reason for it.
+        XCTAssertFalse(Matcher.because("ADV_49.ZH4", NotApplied(origin: ref("COND_6.SZ5"), reason: .conditionFalse,
+                                                                via: [ref("ADV_49.ZH4")])))
+    }
+
+    /// Task 30 (R62): a situation-level `legal` says what the hero may do: `actions: none` (no
+    /// action query, `at` and `fk`, is allowed), `defences: none` (neither `pa` nor `aw`), and
+    /// `loadout: [...]` (each piece's `Engine.legality(ofLoadout:)`, with `allowed`, `because`,
+    /// `ruling`). Any other key is an unsupported shape.
+    func testASituationLevelLegalIsCompared() throws {
+        let refused = NotApplied(origin: ref("STATE_8.H2"), reason: .forbidden, because: "Handlungsunfähig")
+        let no = Breakdown(query: Query("at"), legal: Legality(allowed: false, reasons: [refused]))
+        let yes = Breakdown(query: Query("aw"))
+        let armour = Legality(allowed: false, reasons: [NotApplied(origin: ref("r.A1"), reason: .forbidden, because: "eine Rüstung",
+                                                                   rulings: ["r.one"])])
+        let view = LegalView(actions: [no, no], defences: [no, yes],
+                             loadout: [["armour": "Leder", "secondArmour": true]: armour])
+        let s = try situation(#"""
+            {"expectSituation": {"legal": {"actions": "none", "defences": "none",
+                                           "loadout": [{"armour": "Leder", "secondArmour": true, "allowed": false, "because": "r.A1", "ruling": "one"}],
+                                           "exclusive": []}}}
+            """#)
+        var c = MatchResult()
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], legal: view, &c)
+        XCTAssertEqual(kinds(c.mismatches), [.legal, .unsupportedShape])
+        XCTAssertTrue(c.mismatches[0].detail.contains("defences"), c.mismatches[0].detail)
+        XCTAssertEqual(c.mismatches[1].shape, "situation legal exclusive")
+        let wrong = try situation(#"{"expectSituation": {"legal": {"loadout": [{"armour": "Leder", "secondArmour": true, "allowed": true}]}}}"#)
+        var w = MatchResult()
+        Matcher.situationLevel(wrong, breakdowns: [], offers: [], offering: [:], legal: view, &w)
+        XCTAssertEqual(kinds(w.mismatches), [.legal])
+    }
+
+    /// Task 30: `base.technique` is the technique the value is for: a KtW the base read, else the
+    /// technique the query is made with (either form).
+    func testABasesTechnique() throws {
+        var part = line(10, "kampfwerte.KW1", kind: .base)
+        part.facts = [FactUse(name: "ktw.Schilde", value: 10, owner: .sheet)]
+        let derived = Breakdown(query: Query("at"), base: Line(value: 12, kind: .base, origin: ref("kampfwerte.KW1"), parts: [part]))
+        let want: JSONValue = .object(["value": 12, "technique": "Schilde"])
+        XCTAssertEqual(Matcher.base(want, derived, query: "at"), [])
+        let sheet = Breakdown(query: Query("pa(with: shield)"), base: sheetBase(12))
+        XCTAssertEqual(Matcher.base(want, sheet, query: "pa(with: shield)", techniques: ["CT_10", "Schilde"]), [])
+        XCTAssertEqual(kinds(Matcher.base(want, sheet, query: "pa(with: shield)", techniques: [])), [.base])
+    }
+
+    /// Task 30 (R62): a step's `offered` / `notOffered` is matched as a situation's, against the
+    /// offers of the step's breakdowns; an offer's `default` is compared (belastung 4.5).
+    func testAStepsOffersAndAnOffersDefault() throws {
+        let c = OfferedChoice(choice: "belastungZaehlt", origin: ref("COND_1.B3"), default: false, rulings: ["COND_1.maybe"])
+        XCTAssertEqual(Matcher.offerFailures(["default": false], c), [])
+        XCTAssertEqual(Matcher.offerFailures(["default": true], c).count, 1)
+        let engine = Engine(book: Self.book)
+        let s = try situation(#"""
+            {"sequence": [{"expect": {"offered": [{"choice": "nothingOffersThis"}]}}]}
+            """#)
+        XCTAssertEqual(kinds(StateRunner.run(s, engine: engine).mismatches), [.missingOffer])
+    }
 }
+

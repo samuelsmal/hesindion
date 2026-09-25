@@ -248,6 +248,11 @@ clauses:
         # The loadout reads this table to resolve the fact `technique.leit` (KW2's second term):
         # the value of the technique's Leiteigenschaft, the higher of two (KW7).
         # Optolith carries it as combat_technique_details.primary_attr_1/2.
+      - provide: { name: kampfwerte.kampftechnik, value: { CT_1: Armbrüste, CT_2: Bögen, CT_3: Dolche, CT_4: Fechtwaffen, CT_5: Hiebwaffen, CT_6: Kettenwaffen, CT_7: Lanzen, CT_8: Peitschen, CT_9: Raufen, CT_10: Schilde, CT_11: Schleudern, CT_12: Schwerter, CT_13: Stangenwaffen, CT_14: Wurfwaffen, CT_15: Zweihandhiebwaffen, CT_16: Zweihandschwerter, CT_17: Feuerspeien, CT_18: Blasrohre, CT_19: Diskusse, CT_20: Fächer, CT_21: Spießwaffen }, readBy: loadout }
+        # The table's techniques by their Optolith ids (rules.db rules_i18n): an equipment row
+        # names its technique by id (ITEMTPL_19 `technique: CT_5`), the hero file its KtW
+        # (`ktw.CT_5`); this table and the situations by name. The loadout reads a technique in
+        # either form (Task 30).
 
   - id: KW6
     page:
