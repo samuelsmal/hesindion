@@ -80,6 +80,21 @@ struct LegalView {
     var defences: [Breakdown] = []
     /// A `loadout` entry (its keys but `allowed`, `because`, `ruling`) → the pieces' legality.
     var loadout: [[String: JSONValue]: Legality] = [:]
+    /// Task 31: a `combinations` entry's `choices` → whether they may be taken together
+    /// (`Engine.legality(ofCombination:)`).
+    var combinations: [[String]: Legality] = [:]
+    /// Task 31: `actions: { attack, spell, freeAction }`: the breakdowns of each kind's queries
+    /// (`at` and `fk`; a spell check's `check.modifier(spell: any)`); a free action has none (R37:
+    /// an action selector names `at`, `fk` and `check.*`).
+    var actionKinds: [String: [Breakdown]] = [:]
+    /// The firing entries of the action kinds' breakdowns that come from a `forbid` whose action
+    /// selector names every action (`any`) or a free action, which would take free actions too.
+    var freeActionForbids: [NotApplied] = []
+    /// The combinations' breakdowns: the open rulings their forbids met (R32).
+    var recorded: [Breakdown] = []
+
+    /// The queries an `actions` kind stands for.
+    static let actionQueries: [String: [String]] = ["attack": ["at", "fk"], "spell": ["check.modifier(spell: any)"], "freeAction": []]
 
     static let entryFields: Set<String> = ["allowed", "because", "ruling"]
 
@@ -97,6 +112,22 @@ struct LegalView {
         guard let o = legal?.objectValue else { return nil }
         var v = LegalView()
         if o["actions"] != nil { v.actions = ["at", "fk"].map { engine.evaluate(Query($0), in: situation) } }
+        if let kinds = o["actions"]?.objectValue {
+            for kind in kinds.keys { v.actionKinds[kind] = (actionQueries[kind] ?? []).map { engine.evaluate(Query($0), in: situation) } }
+            let firing = v.actionKinds.values.flatMap { $0 }.flatMap(\.legal.reasons)
+            v.freeActionForbids = firing.filter { n in
+                engine.book.rules[n.origin.rule]?.clauses.first { $0.id == n.origin.clause }?.effects.contains { e in
+                    guard case .forbid(let f) = e.payload, f.what.kind == .action else { return false }
+                    return f.what.ids.contains { ["any", "freeAction"].contains($0.id ?? "") }
+                } ?? false
+            }
+        }
+        for raw in (o["combinations"]?.arrayValue ?? []) + (o["exclusive"]?.arrayValue ?? []) {
+            guard let choices = raw.objectValue?["choices"]?.arrayValue?.compactMap(\.string) else { continue }
+            let b = engine.evaluation(situation).combinationBreakdown(choices)
+            v.combinations[choices] = b.legal
+            v.recorded.append(b)
+        }
         if o["defences"] != nil { v.defences = ["pa", "aw"].map { engine.evaluate(Query($0), in: situation) } }
         for raw in o["loadout"]?.arrayValue ?? [] {
             guard let entry = raw.objectValue else { continue }
@@ -152,14 +183,18 @@ enum Matcher {
         let options = wantsOffers && expectsCombatOptions(s) ? CombatRoll.options(in: situation, engine: engine) : nil
         let seen = (breakdowns + (view?.breakdowns ?? []) + (hit?.breakdowns ?? []) + (options ?? []).map(\.target)).distinct()
         var hits = openRulings(in: seen) + openRulings(in: seen.flatMap(\.offers))
+        var offerEntries: [NotApplied] = []
         if s.expect.isEmpty && wantsOffers && view == nil {
             offers = engine.offers(in: situation)
             hits += openRulings(in: offers)
             // `offers(in:)` skips an offer resting on an open ruling without a trace; a breakdown
             // of no target (it sees every `*` offer) records it. Only its offers' entries count.
             let offering = Set(offeringClauses(engine.book).values.flatMap { $0 })
-            hits += openRulings(in: [engine.evaluate(Query("offers"), in: situation)])
-                .filter { $0.origin.map(offering.contains) ?? false }
+            let recorded = engine.evaluate(Query("offers"), in: situation)
+            hits += openRulings(in: [recorded]).filter { $0.origin.map(offering.contains) ?? false }
+            // Task 31: its entries on the offering clauses say why an offer is not there (its own
+            // `when` is no: SA_66.V3).
+            offerEntries = recorded.notApplied.filter { offering.contains($0.origin) }
         }
         if let view { hits += openRulings(in: view.offers.flatMap(\.reasons)) }
         // Task 30 (R52, R62): the situation-level entries of a situation without a query are the
@@ -168,13 +203,26 @@ enum Matcher {
             ? engine.sheet(in: situation) : nil
         if let sheet { hits += openRulings(in: [sheet]) }
         let legal = onlyQueries ? nil : LegalView.read(s.expectSituation["legal"], in: hit?.situation ?? situation, engine: engine)
-        if let legal { hits += openRulings(in: legal.actions + legal.defences) + openRulings(in: legal.loadout.values.flatMap(\.reasons)) }
+        if let legal {
+            hits += openRulings(in: legal.actions + legal.defences + legal.recorded + legal.actionKinds.values.flatMap { $0 })
+                + openRulings(in: legal.loadout.values.flatMap(\.reasons))
+        }
         // Task 30: the technique each query expecting `base.technique` is made with.
         let evaluation = engine.evaluation(situation)
         let techniques = Dictionary(uniqueKeysWithValues: s.expect.filter { $0.base?.objectValue?["technique"] != nil }
             .map { ($0.query, evaluation.techniqueForms(of: Query($0.query))) })
+        // Task 31: a situation-level `notApplied` entry for a rule the breakdowns compared do not
+        // touch is looked up where its clause acts: the hero sheet (a `*` effect) and the targets
+        // its effects reach, on the situation the run leaves.
+        let after = hit?.situation ?? situation
+        let fallback: (ExpectedNotApplied) -> [NotApplied] = { e in
+            let targets = engine.book.reach.filter { $0.key != "*" }
+                .filter { $0.value.contains { $0.rule == e.rule && (e.clause == nil || $0.clause == e.clause) } }.keys.sorted()
+            return ([engine.sheet(in: after)] + targets.map { engine.evaluate(Query($0), in: after) }).flatMap(\.notApplied)
+        }
         let c = compare(s, breakdowns: breakdowns, offers: offers, offering: offeringClauses(engine.book), view: view,
-                        hit: hit, options: options, onlyQueries: onlyQueries, sheet: sheet, legal: legal, techniques: techniques)
+                        hit: hit, options: options, onlyQueries: onlyQueries, sheet: sheet, legal: legal, techniques: techniques,
+                        book: engine.book, offerEntries: offerEntries, fallback: fallback)
         return Run(mismatches: c.mismatches, notes: c.notes, hits: hits.distinct())
     }
 
@@ -188,14 +236,15 @@ enum Matcher {
     static func compare(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice],
                         offering: [String: [ClauseRef]] = [:], view: ProcedureView? = nil, hit: HitView? = nil,
                         options: [CombatOption]? = nil, onlyQueries: Bool = false, sheet: Breakdown? = nil,
-                        legal: LegalView? = nil, techniques: [String: [String]] = [:]) -> MatchResult {
+                        legal: LegalView? = nil, techniques: [String: [String]] = [:], book: RuleBook? = nil,
+                        offerEntries: [NotApplied] = [], fallback: ((ExpectedNotApplied) -> [NotApplied])? = nil) -> MatchResult {
         var c = MatchResult()
         for (q, b) in zip(s.expect, breakdowns) {
             query(q, b, values: view?.values(for: q.query), techniques: techniques[q.query], &c)
         }
         if onlyQueries { return c }
         situationLevel(s, breakdowns: breakdowns, offers: offers, offering: offering, view: view, hit: hit, options: options,
-                       sheet: sheet, legal: legal, &c)
+                       sheet: sheet, legal: legal, book: book, offerEntries: offerEntries, fallback: fallback, &c)
         let run = hit.map { _ in s.expectSituation.keys.filter(CombatRunner.handled.contains).count + s.sequence.count } ?? 0
         if checkedExpectations(s, check: view != nil) + run == 0 {
             c.mismatches.append(.shape("nothing to compare", "the situation states no expectation the harness checks"))
@@ -268,7 +317,7 @@ enum Matcher {
             add(.result, "expected result \(r), got \(b.result.map(String.init) ?? "none (no base)")")
         }
         for e in q.notApplied ?? [] { notApplied(e, in: b.notApplied, query: q.query, &c) }
-        if let legal = q.legal { c.mismatches += self.legal(legal, b.legal, query: q.query) }
+        if let legal = q.legal { c.mismatches += self.legal(legal, b.legal, query: q.query, offers: b.offers) }
         if let base = q.base { c.mismatches += self.base(base, b, query: q.query, techniques: techniques) }
         if let raw = q.values {
             // Task 26: a check's attribute stage, one effective value per Teilprobe.
@@ -365,7 +414,8 @@ enum Matcher {
         if let from = e.from, a.origin?.description != from { out.append(.missingLine) }
         if let v = e.value, stated(a) != v { out.append(.wrongValue) }
         if let via = e.via, !Set(via).isSubset(of: a.via.map(\.description)) { out.append(.wrongVia) }
-        if let r = e.ruling, !Set(r).isSubset(of: a.rulings) { out.append(.wrongRuling) }
+        // Task 31: a ruling as written (a `sequence` step's `round-up`) or qualified (`shared.round-up`).
+        if let r = e.ruling, !r.allSatisfy({ rulingMatches($0, a.rulings) }) { out.append(.wrongRuling) }
         if let was = e.was, a.was != was { out.append(.wrongWas) }
         if let k = e.kind, a.kind.rawValue != k { out.append(.wrongKind) }
         if let s = e.source, a.owner?.rawValue != s { out.append(.wrongSource) }
@@ -458,7 +508,16 @@ enum Matcher {
 
     static func names(_ e: ExpectedNotApplied) -> [String] {
         [e.rule] + (e.clause.map { ["\(e.rule).\($0)"] } ?? []) + (e.because.map { [$0] } ?? [])
-            + (e.reason.flatMap { isRef($0) ? [$0] : nil } ?? []) + (e.ruling ?? [])
+            + (e.reason.flatMap { isRef($0) ? [$0] : nil } ?? []) + (e.ruling ?? []) + (e.reason.map(proseRulings) ?? [])
+    }
+
+    /// Task 31: the rulings a prose reason cites as "ruling <id>" ("in Formation instead (ruling
+    /// formation-and-plaenkler)"), for R41: they name what the entry rests on.
+    static func proseRulings(_ reason: String) -> [String] {
+        guard !isRef(reason) else { return [] }
+        let words = reason.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        return zip(words, words.dropFirst()).filter { $0.0.hasSuffix("ruling") }
+            .map { $0.1.trimmingCharacters(in: CharacterSet(charactersIn: "(),;:.")) }.filter { !$0.isEmpty }
     }
 
     /// `notApplied` matches by rule (and clause, when given) and reason code (§10.2), plus
@@ -489,9 +548,11 @@ enum Matcher {
     // MARK: legal, base
 
     /// Bridge 7: `allowed` compares when given (a bare bool is `allowed`); `because` matches when
-    /// any firing forbid or require is it; `ruling` when any of them rests on it; `span`, `via`
-    /// and any other key are not modelled; a malformed value is reported.
-    static func legal(_ expected: JSONValue, _ actual: Legality, query: String?) -> [Mismatch] {
+    /// any firing forbid or require is it; `ruling` when any of them rests on it; `span` (Task 31)
+    /// when a firing entry read a choice (`choice.vorstoss`) that an offer among `offers` offers for
+    /// that span (SA_66.V3's `round`: the defences are gone until the round ends); `via` and any
+    /// other key are not modelled; a malformed value is reported.
+    static func legal(_ expected: JSONValue, _ actual: Legality, query: String?, offers: [OfferedChoice] = []) -> [Mismatch] {
         let firing = actual.reasons.map { "\($0.origin)" + ($0.because.map { " (\($0))" } ?? "") }
         switch expected {
         case .bool(let allowed):
@@ -519,7 +580,17 @@ enum Matcher {
             if let r = o["ruling"].map(strings), !r.allSatisfy({ ruling in actual.reasons.contains { rulingMatches(ruling, $0.rulings) } }) {
                 out.append(mismatch("expected a firing entry resting on \(r), firing: \(firing)"))
             }
-            for key in o.keys.sorted() where !["allowed", "because", "ruling"].contains(key) {
+            if let raw = o["span"] {
+                let choices = Set(actual.reasons.flatMap(\.facts).map(\.name).filter { $0.hasPrefix("choice.") }
+                    .map { String($0.dropFirst("choice.".count)) })
+                let spans = offers.filter { choices.contains($0.choice) }.compactMap(\.span?.rawValue)
+                if raw.string == nil {
+                    out.append(.shape("legal.malformed", "legal.span \(raw) is not a string", query: query))
+                } else if !spans.contains(raw.string!) {
+                    out.append(mismatch("expected a firing entry lasting the \(raw.string!), the choices it read are offered for \(spans)"))
+                }
+            }
+            for key in o.keys.sorted() where !["allowed", "because", "ruling", "span"].contains(key) {
                 out.append(.shape("legal.\(key)", "legal.\(key) is not modelled", query: query))
             }
             return out
@@ -584,7 +655,8 @@ enum Matcher {
     static func situationLevel(_ s: CompiledSituation, breakdowns queried: [Breakdown], offers: [OfferedChoice],
                                offering: [String: [ClauseRef]], view: ProcedureView? = nil, hit: HitView? = nil,
                                options: [CombatOption]? = nil, sheet: Breakdown? = nil, legal legalView: LegalView? = nil,
-                               _ c: inout MatchResult) {
+                               book: RuleBook? = nil, offerEntries: [NotApplied] = [],
+                               fallback: ((ExpectedNotApplied) -> [NotApplied])? = nil, _ c: inout MatchResult) {
         let es = s.expectSituation
         // A check's stage breakdowns, and a hit's, count as the situation's too; without them, the
         // sheet's.
@@ -613,7 +685,8 @@ enum Matcher {
                     combatOffer(o, wanted: wanted, options: options, &c)
                     continue
                 }
-                c.mismatches += offer(entry, wanted: wanted, in: pool, notApplied: entries, offering: offering, rerolls: view?.offers)
+                c.mismatches += offer(entry, wanted: wanted, in: pool, notApplied: entries + offerEntries, offering: offering,
+                                      rerolls: view?.offers, book: book)
             }
         }
         if es["notApplied"] != nil, !needsQuery("notApplied") {
@@ -630,7 +703,8 @@ enum Matcher {
                     notApplied(e, in: sheet.notApplied, query: nil, &c)
                     continue
                 }
-                notApplied(e, in: entries, query: nil, &c)
+                let own = entries.contains { $0.rule == e.rule && (e.clause == nil || $0.clause == e.clause) }
+                notApplied(e, in: own ? entries : entries + (fallback?(e) ?? []), query: nil, &c)
             }
         }
         if es["questions"] != nil, !needsQuery("questions"), let expected = list("questions") {
@@ -667,6 +741,12 @@ enum Matcher {
         for key in o.keys.sorted() {
             let raw = o[key]!
             switch key {
+            case "actions" where raw.objectValue != nil:
+                out += actionKinds(raw.objectValue!, view)
+            case "combinations":
+                out += combinations(raw, view)
+            case "exclusive":
+                out += exclusive(raw, view)
             case "actions", "defences":
                 guard raw.string == "none" else { out.append(.shape("situation legal \(key)", "legal \(key): \(raw) is not `none`")); continue }
                 let breakdowns = key == "actions" ? view.actions : view.defences
@@ -701,6 +781,103 @@ enum Matcher {
         return out
     }
 
+    /// Task 31: `actions: { attack: forbidden, spell: forbidden, freeAction: { allowed, ruling } }`.
+    /// A kind with queries is forbidden when none of them is allowed, allowed when all are; a free
+    /// action has no query (R37), so it is allowed unless a firing forbid names every action or a
+    /// free action. `because` / `ruling` are the firing entries' of the action kinds.
+    static func actionKinds(_ o: [String: JSONValue], _ view: LegalView) -> [Mismatch] {
+        var out: [Mismatch] = []
+        let firing = view.actionKinds.values.flatMap { $0 }.flatMap(\.legal.reasons)
+        for kind in o.keys.sorted() {
+            let raw = o[kind]!
+            let spec = raw.objectValue ?? [:]
+            let want: Bool? = raw.string.map { $0 == "allowed" } ?? spec["allowed"].flatMap { if case .bool(let b) = $0 { b } else { nil } }
+            guard let want, LegalView.actionQueries[kind] != nil, raw.string == nil || ["allowed", "forbidden"].contains(raw.string!),
+                  Set(spec.keys).isSubset(of: ["allowed", "because", "ruling"]) else {
+                out.append(.shape("situation legal actions \(kind)", "legal actions \(kind): \(raw) is not modelled"))
+                continue
+            }
+            let breakdowns = view.actionKinds[kind] ?? []
+            let got = breakdowns.isEmpty ? view.freeActionForbids.isEmpty : breakdowns.allSatisfy(\.legal.allowed)
+            let names = [spec["because"]?.string].compactMap { $0 } + (spec["ruling"].map(strings) ?? [])
+            if breakdowns.isEmpty ? got != want : (want ? !got : breakdowns.contains(where: \.legal.allowed)) {
+                out.append(Mismatch(kind: .legal, detail: "expected \(kind) \(want ? "allowed" : "forbidden"), got "
+                                    + breakdowns.map { "\($0.query) \($0.legal.allowed)" }.joined(separator: ", ")
+                                    + (breakdowns.isEmpty ? "free actions \(got ? "allowed" : "forbidden by \(view.freeActionForbids.map(\.origin))")" : ""),
+                                    names: names))
+            }
+            let pool = breakdowns.isEmpty ? firing : breakdowns.flatMap(\.legal.reasons)
+            if let b = spec["because"]?.string, !pool.contains(where: { $0.origin.description == b || $0.because == b }) {
+                out.append(Mismatch(kind: .legal, detail: "\(kind): expected a firing \(b), firing: \(pool.map(\.origin))", names: names))
+            }
+            if let r = spec["ruling"].map(strings), !r.allSatisfy({ x in pool.contains { rulingMatches(x, $0.rulings) } }) {
+                out.append(Mismatch(kind: .legal, detail: "\(kind): expected a firing entry resting on \(r), firing: \(pool.map { "\($0.origin) \($0.rulings)" })",
+                                    names: names))
+            }
+        }
+        return out
+    }
+
+    /// Task 31: `combinations: [{ choices, allowed, because, from, ruling }]` against
+    /// `Engine.legality(ofCombination:)`. `because` and `from` name a refusing entry (by clause or
+    /// text), `ruling` one it rests on; an allowed combination has no refusing entry, so a `from`
+    /// on it is never met.
+    static func combinations(_ raw: JSONValue, _ view: LegalView) -> [Mismatch] {
+        guard let list = raw.arrayValue else { return [.shape("situation legal combinations", "legal combinations \(raw) is not a list")] }
+        var out: [Mismatch] = []
+        for entry in list {
+            guard let e = entry.objectValue, let choices = e["choices"]?.arrayValue?.compactMap(\.string),
+                  Set(e.keys).isSubset(of: ["choices", "allowed", "because", "from", "ruling"]), let legality = view.combinations[choices] else {
+                out.append(.shape("situation legal combinations", "legal combinations entry \(entry) is not modelled"))
+                continue
+            }
+            let names = [e["because"]?.string, e["from"]?.string].compactMap { $0 } + (e["ruling"].map(strings) ?? [])
+            var wrong: [String] = []
+            if let want = e["allowed"], want != .bool(legality.allowed) { wrong.append("allowed \(want)") }
+            for key in ["because", "from"] {
+                if let b = e[key]?.string, !legality.reasons.contains(where: { $0.origin.description == b || $0.because == b }) {
+                    wrong.append("\(key) \(b)")
+                }
+            }
+            if let r = e["ruling"].map(strings), !r.allSatisfy({ x in legality.reasons.contains { rulingMatches(x, $0.rulings) } }) {
+                wrong.append("ruling \(r)")
+            }
+            if !wrong.isEmpty {
+                out.append(Mismatch(kind: .legal, detail: "combination \(choices): expected \(wrong.joined(separator: ", ")), got allowed \(legality.allowed) "
+                                    + legality.reasons.map { "\($0.origin) \($0.because ?? "")" }.joined(separator: "; "), names: names))
+            }
+        }
+        return out
+    }
+
+    /// Task 31: `exclusive: [{ choices, ruling, because }]`: the choices may not be taken together
+    /// (`Engine.legality(ofCombination:)` refuses them), resting on the `ruling`.
+    static func exclusive(_ raw: JSONValue, _ view: LegalView) -> [Mismatch] {
+        guard let list = raw.arrayValue else { return [.shape("situation legal exclusive", "legal exclusive \(raw) is not a list")] }
+        var out: [Mismatch] = []
+        for entry in list {
+            guard let e = entry.objectValue, let choices = e["choices"]?.arrayValue?.compactMap(\.string),
+                  Set(e.keys).isSubset(of: ["choices", "because", "ruling"]), let legality = view.combinations[choices] else {
+                out.append(.shape("situation legal exclusive", "legal exclusive entry \(entry) is not modelled"))
+                continue
+            }
+            let names = [e["because"]?.string].compactMap { $0 } + (e["ruling"].map(strings) ?? [])
+            var wrong: [String] = []
+            if legality.allowed { wrong.append("refused") }
+            if let b = e["because"]?.string, !legality.reasons.contains(where: { $0.origin.description == b || $0.because == b }) {
+                wrong.append("because \(b)")
+            }
+            if let r = e["ruling"].map(strings), !r.allSatisfy({ x in legality.reasons.contains { rulingMatches(x, $0.rulings) } }) {
+                wrong.append("ruling \(r)")
+            }
+            if !wrong.isEmpty {
+                out.append(Mismatch(kind: .legal, detail: "exclusive \(choices): expected \(wrong.joined(separator: ", ")), got allowed \(legality.allowed)",
+                                    names: names))
+            }
+        }
+        return out
+    }
+
     /// `offered` / `notOffered`: by choice and origin clause (bridge 8). A choice is offered when
     /// an offer of it is legal; `choice.option` is that option of the offer, offered when the
     /// offer lists it and does not refuse it.
@@ -710,11 +887,11 @@ enum Matcher {
     /// offer that is not there, a `suppressed` entry on its offering clause whose suppressor is
     /// the `because`. When neither can be found the case cannot be decided: an unsupported shape.
     /// The `offered` fields `OfferedChoice` models (R47); every other field is an unsupported shape.
-    static let offeredFields: Set<String> = ["choice", "from", "ruling", "options", "max", "costs", "via", "default"]
+    static let offeredFields: Set<String> = ["choice", "from", "ruling", "options", "max", "costs", "via", "default", "kind"]
     static let notOfferedFields: Set<String> = ["choice", "from", "because", "ruling"]
 
     static func offer(_ entry: JSONValue, wanted: Bool, in pool: [OfferedChoice], notApplied: [NotApplied],
-                      offering: [String: [ClauseRef]], rerolls: [RerollOffer]? = nil) -> [Mismatch] {
+                      offering: [String: [ClauseRef]], rerolls: [RerollOffer]? = nil, book: RuleBook? = nil) -> [Mismatch] {
         let key = wanted ? "offered" : "notOffered"
         if let rerolls, let o = entry.objectValue, o["reroll"] != nil { return reroll(o, wanted: wanted, in: rerolls) }
         guard case .object(let o) = entry, let choice = o["choice"]?.string else {
@@ -723,9 +900,10 @@ enum Matcher {
         if let f = o["from"], f.string == nil { return [.shape("malformed offer", "\(key) \(choice): from \(f) is not a string")] }
         if let b = o["because"], b.string == nil { return [.shape("malformed offer", "\(key) \(choice): because \(b) is not a string")] }
         // R47: never ignore a field.
-        let shapes = o.keys.sorted().filter { !(wanted ? offeredFields : notOfferedFields).contains($0) }
+        // Task 31: `kind` (the manoeuvre kind of the offering rule) needs the book.
+        let shapes = o.keys.sorted().filter { !(wanted ? offeredFields : notOfferedFields).contains($0) || ($0 == "kind" && book == nil) }
             .map { Mismatch.shape("\(key) field \($0)", "\(key) \(choice): field \($0) \(o[$0]!) is not modelled") }
-        return shapes + (offerFindings(o, choice: choice, wanted: wanted, in: pool, notApplied: notApplied, offering: offering)
+        return shapes + (offerFindings(o, choice: choice, wanted: wanted, in: pool, notApplied: notApplied, offering: offering, book: book)
             .map { [$0] } ?? [])
     }
 
@@ -754,8 +932,13 @@ enum Matcher {
     /// The modelled `offered` fields an offer does not meet (R47): `ruling` (in its rulings),
     /// `options` (each listed and not refused), `max`, `default` (Task 30), `via` (each in its via) and `costs`
     /// (each a `cost` of that pool and constant amount). nil entries are malformed fields.
-    static func offerFailures(_ o: [String: JSONValue], _ c: OfferedChoice) -> [String] {
+    static func offerFailures(_ o: [String: JSONValue], _ c: OfferedChoice, book: RuleBook? = nil) -> [String] {
         var out: [String] = []
+        if let k = o["kind"], let book {
+            // Task 31: the manoeuvre kind of the offering rule (SA_48's `basismanoever`).
+            let have = book.rules[c.origin.rule]?.manoeuvre?["kind"]
+            if have != k { out.append("kind \(k) (the offering rule's \(have.map { "\($0)" } ?? "none"))") }
+        }
         if let r = o["ruling"].map(strings), !r.allSatisfy({ rulingMatches($0, c.rulings) }) {
             out.append("ruling \(r) (offer rulings \(c.rulings))")
         }
@@ -786,14 +969,23 @@ enum Matcher {
     }
 
     static func offerFindings(_ o: [String: JSONValue], choice: String, wanted: Bool, in pool: [OfferedChoice],
-                              notApplied: [NotApplied], offering: [String: [ClauseRef]]) -> Mismatch? {
+                              notApplied: [NotApplied], offering: [String: [ClauseRef]], book: RuleBook? = nil) -> Mismatch? {
         if let raw = o["costs"], costs(raw) == nil {
             return .shape("malformed offer", "offered \(choice): costs \(raw) is no pool and amount")
         }
         if let m = o["max"], m.int == nil { return .shape("malformed offer", "offered \(choice): max \(m) is not a number") }
         let from = o["from"]?.string, because = o["because"]?.string, ruling = o["ruling"].map(strings)
         let names = [from, because].compactMap { $0 } + (ruling ?? [])
-        func origin(_ c: OfferedChoice) -> Bool { from == nil || c.origin.description == from }
+        // Task 31: `from` is the offering clause, or the require that enables its rule for a hero
+        // who does not own it (SA_884.P4: the companion's formation), the first of the offer's `via`.
+        func enabler(_ ref: ClauseRef) -> Bool {
+            book?.rules[ref.rule]?.clauses.first { $0.id == ref.clause }?.effects.contains {
+                if case .require(let r) = $0.payload { r.enables == true } else { false }
+            } ?? false
+        }
+        func origin(_ c: OfferedChoice) -> Bool {
+            from == nil || c.origin.description == from || (c.via.first.map { $0.description == from && enabler($0) } ?? false)
+        }
 
         var offered = pool.contains { $0.choice == choice && origin($0) && $0.legal }
         var seen = pool.filter { $0.choice == choice && origin($0) }
@@ -819,7 +1011,7 @@ enum Matcher {
             let legal = seen.filter { c in
                 c.legal && (option.map { opt in (c.options ?? []).contains { text($0) == opt } && !c.refused.contains { text($0.option) == opt } } ?? true)
             }
-            let failures = legal.map { offerFailures(o, $0) }
+            let failures = legal.map { offerFailures(o, $0, book: book) }
             if failures.contains(where: \.isEmpty) { return nil }
             let best = failures.min { $0.count < $1.count } ?? []
             return Mismatch(kind: .wrongOffer, detail: "expected \(choice) offered with \(best.joined(separator: "; "))", names: names)
@@ -839,6 +1031,13 @@ enum Matcher {
         // Not there at all: suppressed on its offering clause?
         let clauses = from.flatMap(ClauseRef.init).map { [$0] } ?? offering[choice] ?? offering[parent] ?? []
         let suppressed = notApplied.filter { $0.reason == .suppressed && clauses.contains($0.origin) }
+        // Task 31: not offered because its own `when` is no (SA_66.V3's "am Anfang der Runde"): a
+        // `conditionFalse` entry on its offering clause, when that clause is the `because`.
+        let ownWhen = notApplied.filter { $0.reason == .conditionFalse && clauses.contains($0.origin) }
+        if suppressed.isEmpty, !ownWhen.isEmpty, let because, ownWhen.contains(where: { $0.origin.description == because || $0.because == because }) {
+            let rulingOK = ruling.map { $0.allSatisfy { r in ownWhen.contains { rulingMatches(r, $0.rulings) } } } ?? true
+            return rulingOK ? nil : wrong("\(expectation), its own condition is false, resting on \(ownWhen.flatMap(\.rulings))")
+        }
         if !suppressed.isEmpty {
             let becauseOK = because.map { b in suppressed.contains { $0.via.first?.description == b || $0.because == b } } ?? true
             let rulingOK = ruling.map { $0.allSatisfy { r in suppressed.contains { rulingMatches(r, $0.rulings) } } } ?? true
@@ -992,7 +1191,9 @@ enum Explainer {
     static func explains(_ hit: OpenHit, _ m: Mismatch, book: RuleBook?, situation: Situation) -> Bool {
         guard m.area != .shape else { return false }
         guard let o = hit.origin else { return m.names.contains(hit.ruling) }
-        let named = m.names.contains(hit.ruling) || m.names.contains(o.description) || m.names.contains(o.rule)
+        // A ruling as a situation writes it: qualified, or by its own name (Task 31).
+        let named = m.names.contains { $0 == hit.ruling || hit.ruling.hasSuffix("." + $0) } || m.names.contains(o.description)
+            || m.names.contains(o.rule)
         guard let book else { return named }
         // The top-level effects of the clause that rest on the ruling and are live.
         let live = { (e: EffectOrigin) in
@@ -1002,6 +1203,16 @@ enum Explainer {
         let clauseEffects = book.rules[o.rule]?.clauses.flatMap(\.effects).filter { $0.origin.clause == o.clause } ?? []
         if named { return clauseEffects.contains { live($0.origin) } }
         if let q = m.query, operandChain(TargetRef(q).name, book).contains(where: { (book.reach[$0] ?? []).contains(where: live) }) {
+            return true
+        }
+        // Task 31 (R48 through a named clause): the targets the effects of a clause the mismatch
+        // names read, and their operand chains (trefferzonen.TZ8's Wundeffekt check reads the
+        // Wundschwelle, on which ADV_54.E1 rests on eisern-scope: boronmir-neu 19.7).
+        let namedEffects = m.names.compactMap(ClauseRef.init).flatMap { c in
+            book.rules[c.rule]?.clauses.first { $0.id == c.clause }?.effects ?? []
+        }
+        let read = namedEffects.flatMap { operandTargets($0.payload) }.distinct()
+        if read.flatMap({ operandChain($0, book) }).contains(where: { (book.reach[$0] ?? []).contains(where: live) }) {
             return true
         }
         let verb: Verb? = switch m.area {
@@ -1039,6 +1250,7 @@ enum Explainer {
         case .cap(let c): values = [c.max, c.min].compactMap { $0 }
         case .floor(let f): values = [f.min]
         case .replace(let r): values = [r.with]
+        case .check(let c): values = [c.modifier].compactMap { $0 }
         default: values = []
         }
         return values.flatMap(\.targets).map(\.name)

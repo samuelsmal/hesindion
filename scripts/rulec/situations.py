@@ -89,6 +89,22 @@ def _effect_rulings(effect, out):
     return out
 
 
+def _value_targets(node):
+    """Every target a compiled payload's values read (`{"target": {"name": …}}`), nested effects'
+    included (ruling R51)."""
+    out = set()
+    if isinstance(node, dict):
+        t = node.get("target")
+        if isinstance(t, dict) and isinstance(t.get("name"), str):
+            out.add(t["name"])
+        for val in node.values():
+            out |= _value_targets(val)
+    elif isinstance(node, list):
+        for x in node:
+            out |= _value_targets(x)
+    return out
+
+
 def check(situations_dir: Path, book: dict, reach: dict, v, shared_rulings=()):
     """Validate and compile every `*.yaml` under `situations_dir` against the checked `book`, its
     `reach` index and the vocabulary. `shared_rulings` is `rules.shared_rulings(rules_dir)`.
@@ -303,14 +319,25 @@ class _File:
         on_path = set(queried)
         if set(expect_situation) & _results(self.v) or s.get("sequence") or s.get("rolls"):
             on_path.add(STAR)
-        for target in on_path:
+        # Task 31: a rule a line comes `from` applies in the situation, owned or not (a companion's
+        # formation enabled for a hero without the SF): its effects on the path count.
+        named = {ref.rpartition(".")[0] for ref in from_clauses}
+        # Ruling R51: the targets the path's effects read are on the path too, transitively (the
+        # static twin of R48: ADV_54.eisern-scope on the Wundschwelle a Wundeffekt check reads).
+        queue, seen = list(on_path), set()
+        while queue:
+            target = queue.pop()
+            if target in seen:
+                continue
+            seen.add(target)
             for ref in ctx.reach.get(target, []):
                 rule = ctx.book.get(ref["rule"])
-                if rule is None or not (ref["rule"] in owned or rule.get("kind") == "core"):
+                if rule is None or not (ref["rule"] in owned or ref["rule"] in named or rule.get("kind") == "core"):
                     continue
                 e = ctx.effects.get((ref["rule"], ref["clause"], ref["index"]))
                 if e is not None:
                     pending |= ctx.open(_effect_rulings(e, set()))
+                    queue.extend(_value_targets(e.get("payload")) - seen)
 
         return {
             "id": sid, "file": self.rel, "name": s.get("name"),

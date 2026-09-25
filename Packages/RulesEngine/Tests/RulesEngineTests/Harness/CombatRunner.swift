@@ -65,15 +65,42 @@ enum CombatRunner {
         return (e.when?.factNames ?? []).union(c.modifier?.factNames ?? []).contains { $0.hasPrefix("hit.") }
     }
 
-    /// The steps as rolls of the attack's die, when every step is one (`rolls: [{ w20: n }]`).
+    /// The steps as rolls of the attack's die, when every step is one (`rolls: [{ w20: n }]`, or
+    /// the bare face `rolls: [n]`: kampfsituationen 17.1, Task 31).
     static func rollSteps(_ s: CompiledSituation) -> [(die: Int, expect: [String: JSONValue])]? {
         guard !s.sequence.isEmpty else { return nil }
         var out: [(Int, [String: JSONValue])] = []
         for raw in s.sequence {
             guard let o = raw.objectValue, Set(o.keys).isSubset(of: ["rolls", "expect"]),
-                  let rolls = o["rolls"]?.arrayValue, rolls.count == 1, let roll = rolls[0].objectValue,
-                  Set(roll.keys) == ["w20"], let die = roll["w20"]?.int else { return nil }
+                  let rolls = o["rolls"]?.arrayValue, rolls.count == 1 else { return nil }
+            if let die = rolls[0].int {
+                out.append((die, o["expect"]?.objectValue ?? [:]))
+                continue
+            }
+            guard let roll = rolls[0].objectValue, Set(roll.keys) == ["w20"], let die = roll["w20"]?.int else { return nil }
             out.append((die, o["expect"]?.objectValue ?? [:]))
+        }
+        return out
+    }
+
+    /// Task 31: a roll step's `legal: { confirm, ruling }`: `confirm` whether the die asks for a
+    /// confirmation (a 1 or a 20 under passierschlag.PS4 asks none), `ruling` one an entry the roll
+    /// recorded rests on (PS4's forbid of the critical result, passierschlag-dice).
+    static func rollLegal(_ raw: JSONValue, label: String, confirmation: Bool, recorded: [NotApplied], query: String?) -> [Mismatch] {
+        guard let o = raw.objectValue, Set(o.keys).isSubset(of: ["confirm", "ruling"]), !o.isEmpty else {
+            return [.shape("step legal", "\(label): legal \(raw) is not { confirm, ruling }")]
+        }
+        var out: [Mismatch] = []
+        let names = o["ruling"].map(strings) ?? []
+        if let want = o["confirm"] {
+            guard case .bool(let b) = want else { return [.shape("step legal", "\(label): legal.confirm \(want) is not a bool")] }
+            if b != confirmation {
+                out.append(Mismatch(kind: .legal, query: query, detail: "\(label): expected confirm \(b), got \(confirmation)", names: names))
+            }
+        }
+        if !names.allSatisfy({ r in recorded.contains { Matcher.rulingMatches(r, $0.rulings) } }) {
+            out.append(Mismatch(kind: .legal, query: query, detail: "\(label): expected an entry resting on \(names), got "
+                                + recorded.map { "\($0.origin) \($0.rulings)" }.joined(separator: "; "), names: names))
         }
         return out
     }
@@ -89,6 +116,7 @@ enum CombatRunner {
     private static func rolls(_ s: CompiledSituation, engine: Engine) -> Run {
         var c = MatchResult()
         var all: [Breakdown] = []
+        var rolledEvents: [Event] = []
         let weapon = s.situation.facts["loadout.weapon"]?.value.string
         for (n, step) in (rollSteps(s) ?? []).enumerated() {
             let label = "step \(n + 1)"
@@ -100,10 +128,24 @@ enum CombatRunner {
                                              detail: "\(label): the die \(step.die) was refused: \(rolled.texts.map(\.text))"))
                 continue
             }
-            compare(step.expect, label: label, events: rolled.events, checks: [], texts: rolled.texts,
+            rolledEvents += rolled.events
+            var expect = step.expect
+            if let legal = expect.removeValue(forKey: "legal") {
+                c.mismatches += rollLegal(legal, label: label, confirmation: rolled.state.result?.confirmation != nil,
+                                          recorded: rolled.notApplied, query: start.state.stages.target.query.description)
+            }
+            compare(expect, label: label, events: rolled.events, checks: [], texts: rolled.texts,
                     notApplied: rolled.notApplied, questions: rolled.questions, success: rolled.state.result?.success,
                     successQuery: start.state.stages.target.query.description,
                     breakdown: { engine.evaluate(Query($0), in: rolled.situation) }, &c)
+        }
+        // Task 31: the top-level `events` are those of every roll (17.1: no Handlung paid).
+        if let raw = s.expectSituation["events"] {
+            if let expected = raw.arrayValue {
+                c.mismatches += events(expected, events: rolledEvents, checks: [])
+            } else {
+                c.mismatches.append(.shape("malformed events", "events \(raw) is not a list"))
+            }
         }
         return Run(view: HitView(queries: [:], breakdowns: [], situation: s.engineSituation), mismatches: c.mismatches,
                    notes: c.notes, breakdowns: all)

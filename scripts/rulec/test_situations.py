@@ -232,6 +232,59 @@ class PendingTests(unittest.TestCase):
                 "      - expect: { at: { lines: [{ value: 9, from: CORE.K1 }] } }\n")
         self.assertEqual(s["pending"], ["CORE.k1", "SA_1.r1", "SA_2.r2"])
 
+    # Task 31: a rule a line of the situation comes `from` is on the path as an owned one is: the
+    # situation says it applies (a companion's formation, enabled for a hero who does not own it).
+    def test_a_rule_a_line_comes_from_is_on_the_path(self):
+        files = {"UN": HEAD.format(id="UN", kind="specialAbility") + """\
+clauses:
+  - id: U1
+    text: "u"
+    effects:
+      - add: { to: at, value: 2 }
+  - id: U2
+    text: "v"
+    effects:
+      - tell: { to: player, text: hallo }
+        ruling: u2
+rulings:
+  - id: u2
+    question: q
+    answer: null
+"""}
+        s = one("    expect: { at: { lines: [{ value: 2, from: UN.U1 }] }, texts: [] }\n", rule_files=files)
+        self.assertEqual(s["pending"], ["UN.u2"])
+        s = one("    expect: { at: { total: 2 }, texts: [] }\n", rule_files=files)
+        self.assertEqual(s["pending"], [])
+
+    # Ruling R51 (Task 31): the static twin of R48 — an effect on the path that reads a target puts
+    # that target's effects on the path too (ADV_54.eisern-scope on the Wundschwelle a hit's
+    # Wundeffekt check reads).
+    def test_the_operand_chain_of_the_path_is_on_the_path(self):
+        files = {
+            "OP": HEAD.format(id="OP", kind="core") + """\
+clauses:
+  - id: O1
+    text: "o"
+    effects:
+      - add: { to: pa, value: { of: wundschwelle } }
+""",
+            "IRON": HEAD.format(id="IRON", kind="advantage") + """\
+clauses:
+  - id: I1
+    text: "i"
+    effects:
+      - add: { to: wundschwelle, value: 1 }
+        ruling: i1
+rulings:
+  - id: i1
+    question: q
+    answer: null
+"""}
+        s = one("    hero: { advantages: { IRON: 1 } }\n    expect: { pa: { total: 0 } }\n", rule_files=files)
+        self.assertEqual(s["pending"], ["IRON.i1"])
+        s = one("    expect: { pa: { total: 0 } }\n", rule_files=files)
+        self.assertEqual(s["pending"], [])
+
     def test_pending_is_sorted_and_unique(self):
         s = one("    hero: { abilities: { SA_1: 1, SA_3: 1 } }\n"
                 "    expect:\n"

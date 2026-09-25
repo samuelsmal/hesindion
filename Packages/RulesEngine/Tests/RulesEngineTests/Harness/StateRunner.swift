@@ -72,6 +72,7 @@ enum StateRunner {
     /// Regenerationsphase). nil for any other situation.
     static func implied(_ s: CompiledSituation, book: RuleBook) -> Action? {
         let events = expectedEvents(s)
+        if let taken = taking(s, book: book) { return taken }
         guard !events.isEmpty, s.sequence.isEmpty, events.allSatisfy({ $0.objectValue?["after"] != nil }) else { return nil }
         let queried = Set(s.expect.map { Query($0.query).name })
         let choices = book.rules.values.flatMap { $0.clauses.flatMap(\.effects) }.compactMap { e -> String? in
@@ -81,6 +82,32 @@ enum StateRunner {
         }
         let distinct = Set(choices)
         return distinct.count == 1 ? .take(choice: distinct.first!) : nil
+    }
+
+    /// Task 31: the choice a situation takes (`choice.X` stated, not `false`) when every event it
+    /// expects at the top comes `from` a clause whose `item`, `cost`, `gain` or talent `check` is
+    /// gated on that choice (reiterkampf.RK6's jump off the horse, RK14's Reiten for an order):
+    /// `.take(choice: X)`. nil for any other situation.
+    static func taking(_ s: CompiledSituation, book: RuleBook) -> Action? {
+        let events = s.expectSituation["events"]?.arrayValue ?? []
+        let froms = events.compactMap { $0.objectValue?["from"]?.string.flatMap(ClauseRef.init) }
+        guard !events.isEmpty, froms.count == events.count else { return nil }
+        let taken = s.situation.facts.values.filter { $0.name.hasPrefix("choice.") && $0.value != .bool(false) && $0.value != .null }
+            .map { String($0.name.dropFirst("choice.".count)) }
+        var choices: Set<String> = []
+        for from in froms {
+            let effects = book.rules[from.rule]?.clauses.first { $0.id == from.clause }?.effects ?? []
+            let gating = effects.filter { e in
+                switch e.payload {
+                case .item, .cost, .gain: true
+                case .check(let c): [.talent, .spell].contains(c.of.kind)
+                default: false
+                }
+            }.flatMap { e in taken.filter { (e.when?.factNames ?? []).contains("choice.\($0)") } }
+            guard !gating.isEmpty else { return nil }
+            choices.formUnion(gating)
+        }
+        return choices.count == 1 ? .take(choice: choices.first!) : nil
     }
 
     /// Whether the situation, or a step of it, states a spell check (its implied action is a cast).
@@ -251,7 +278,8 @@ enum StateRunner {
 
     static func compare(_ expect: [String: JSONValue], label: String, action: Action?, result r: ActionResult?, before: Situation,
                         stated: Situation, after: Situation, engine: Engine, _ c: inout MatchResult, _ all: inout [Breakdown]) {
-        let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result", "offered", "notOffered"]
+        let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result", "offered", "notOffered",
+                                    "legal"]
         // The step's queries first: its `notApplied`, `texts` and `questions` are looked up in them too.
         var queried: [String: Breakdown] = [:]
         for key in expect.keys.sorted() where !special.contains(key) {
@@ -287,7 +315,21 @@ enum StateRunner {
                                                  detail: "\(label): expected success \(want), got \(got.map(String.init) ?? "none")"))
                 }
             case "texts", "notApplied", "questions":
-                let texts = breakdowns.flatMap(\.texts), entries = breakdowns.flatMap(\.notApplied), asked = breakdowns.flatMap(\.questions)
+                // Task 31: a step that runs no action and queries nothing states facts only; its
+                // entries are the hero sheet's there, and a `notApplied` entry for a rule the sheet
+                // does not show is looked up in the targets its clause reaches (ITEMTPL_29.GR2 on `pa`).
+                var looked = breakdowns
+                if looked.isEmpty {
+                    looked = [engine.sheet(in: after)]
+                    if key == "notApplied" {
+                        let named = (raw.arrayValue ?? []).compactMap(ExpectedNotApplied.init)
+                        let targets = engine.book.reach.filter { $0.key != "*" }.filter { entry in
+                            entry.value.contains { o in named.contains { $0.rule == o.rule && ($0.clause == nil || $0.clause == o.clause) } }
+                        }.keys.sorted()
+                        looked += targets.map { engine.evaluate(Query($0), in: after) }
+                    }
+                }
+                let texts = looked.flatMap(\.texts), entries = looked.flatMap(\.notApplied), asked = looked.flatMap(\.questions)
                 CombatRunner.compare([key: raw], label: label, events: [], checks: [], texts: texts, notApplied: entries,
                                      questions: asked, success: nil, successQuery: nil, breakdown: { _ in Breakdown(query: Query("none")) }, &c)
             case "offered", "notOffered":
@@ -297,8 +339,15 @@ enum StateRunner {
                 let offering = Matcher.offeringClauses(engine.book)
                 for entry in list {
                     c.mismatches += Matcher.offer(entry, wanted: key == "offered", in: pool, notApplied: breakdowns.flatMap(\.notApplied),
-                                                  offering: offering).map { $0.at(label) }
+                                                  offering: offering, book: engine.book).map { $0.at(label) }
                 }
+            case "legal":
+                // Task 31: a situation-level `legal` of a step (19.5's `exclusive`), on the
+                // situation the step leaves; the open rulings its combinations met count (R32).
+                let view = LegalView.read(raw, in: after, engine: engine)
+                all += view?.recorded ?? []
+                all += view.map { $0.actions + $0.defences } ?? []
+                c.mismatches += Matcher.situationLegal(raw, view).map { $0.at(label) }
             case "result":
                 c.mismatches.append(.shape("step result", "\(label): the result of a cast is not modelled (no check procedure runs)"))
             default:

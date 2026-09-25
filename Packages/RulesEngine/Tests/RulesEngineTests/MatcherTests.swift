@@ -272,7 +272,8 @@ final class MatcherTests: XCTestCase {
     // MARK: - legal
 
     /// Bridge 7: `allowed` compares; `because` matches any firing forbid or require (RK13 while
-    /// GK4 also fires); a bare bool is `allowed`; `span` and `via` are unsupported shapes.
+    /// GK4 also fires); a bare bool is `allowed`; `via` is an unsupported shape, and `span` (Task 31)
+    /// is compared: no firing entry here read a choice offered for the round.
     func testLegalComparesAllowedAndAnyFiringBecause() throws {
         let reasons = [NotApplied(origin: ref("g.GK4"), reason: .forbidden), NotApplied(origin: ref("r.RK13"), reason: .forbidden)]
         let b = Breakdown(query: Query("opponent.pa"), legal: Legality(allowed: false, reasons: reasons))
@@ -285,7 +286,7 @@ final class MatcherTests: XCTestCase {
         let other = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": false, "because": "x.X1"}}]}"#)
         XCTAssertEqual(kinds(compare(other, breakdowns: [b], offers: [])), [.legal])
         let span = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": false, "because": "r.RK13", "span": "round", "via": ["s.SK7"]}}]}"#)
-        XCTAssertEqual(kinds(compare(span, breakdowns: [b], offers: [])), [.unsupportedShape, .unsupportedShape])
+        XCTAssertEqual(kinds(compare(span, breakdowns: [b], offers: [])), [.legal, .unsupportedShape])
         let malformed = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": "no"}}, {"query": "opponent.pa", "legal": {"because": 3}}]}"#)
         XCTAssertEqual(compare(malformed, breakdowns: [b, b], offers: []).map(\.shape), ["legal.malformed", "legal.malformed"])
     }
@@ -1047,7 +1048,8 @@ final class MatcherTests: XCTestCase {
     /// Task 30 (R62): a situation-level `legal` says what the hero may do: `actions: none` (no
     /// action query, `at` and `fk`, is allowed), `defences: none` (neither `pa` nor `aw`), and
     /// `loadout: [...]` (each piece's `Engine.legality(ofLoadout:)`, with `allowed`, `because`,
-    /// `ruling`). Any other key is an unsupported shape.
+    /// `ruling`). Any other key is an unsupported shape (Task 31 models `combinations`, `exclusive`
+    /// and an `actions` object: MeleeHarnessTests).
     func testASituationLevelLegalIsCompared() throws {
         let refused = NotApplied(origin: ref("STATE_8.H2"), reason: .forbidden, because: "Handlungsunfähig")
         let no = Breakdown(query: Query("at"), legal: Legality(allowed: false, reasons: [refused]))
@@ -1059,13 +1061,13 @@ final class MatcherTests: XCTestCase {
         let s = try situation(#"""
             {"expectSituation": {"legal": {"actions": "none", "defences": "none",
                                            "loadout": [{"armour": "Leder", "secondArmour": true, "allowed": false, "because": "r.A1", "ruling": "one"}],
-                                           "exclusive": []}}}
+                                           "reach": []}}}
             """#)
         var c = MatchResult()
         Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], legal: view, &c)
         XCTAssertEqual(kinds(c.mismatches), [.legal, .unsupportedShape])
         XCTAssertTrue(c.mismatches[0].detail.contains("defences"), c.mismatches[0].detail)
-        XCTAssertEqual(c.mismatches[1].shape, "situation legal exclusive")
+        XCTAssertEqual(c.mismatches[1].shape, "situation legal reach")
         let wrong = try situation(#"{"expectSituation": {"legal": {"loadout": [{"armour": "Leder", "secondArmour": true, "allowed": true}]}}}"#)
         var w = MatchResult()
         Matcher.situationLevel(wrong, breakdowns: [], offers: [], offering: [:], legal: view, &w)
