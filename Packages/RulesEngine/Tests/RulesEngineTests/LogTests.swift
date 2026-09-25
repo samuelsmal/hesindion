@@ -232,8 +232,8 @@ final class LogTests: XCTestCase {
         // The pools as the values the harness reads them from (LE 25 of 31).
         XCTAssertTrue(yaml.contains("      values:\n        \"at(with: Rabenschnabel)\": 16\n        aw: 7\n        leCurrent: 25\n        leMax: 31\n"), yaml)
         // Each fact in its owner's section; the prefixed sections drop their prefix.
-        XCTAssertTrue(yaml.contains("    choose:\n      ally.has: \"yes\"\n      choice.formation: true\n      choice.formation.bonus: \"on\"\n"), yaml)
-        XCTAssertTrue(yaml.contains("    gm:\n      gmFact.visibility: \"12\"\n      opponent.size: \"groß\"\n      rulesets: [fokus, \"no\"]\n"), yaml)
+        XCTAssertTrue(yaml.contains("    choose:\n      choice.formation: true\n      choice.formation.bonus: \"on\"\n    ally:\n      has: \"yes\"\n"), yaml)
+        XCTAssertTrue(yaml.contains("    gm:\n      gmFact.visibility: \"12\"\n      rulesets: [fokus, \"no\"]\n    opponent:\n      size: \"groß\"\n"), yaml)
         XCTAssertTrue(yaml.contains("    round:\n      parries: 1\n"), yaml)
         XCTAssertTrue(yaml.contains("    loadout:\n      hero.mounted: false\n      item.armbrust-1.loaded: true\n      shield: null\n      weapon: Rabenschnabel\n"), yaml)
         // The dice; the roll facts beside them have no section and are left out.
@@ -246,6 +246,7 @@ final class LogTests: XCTestCase {
         // value after the step for `set`; no line without a clause.
         XCTAssertTrue(yaml.contains("""
               at:
+                # also shown: 16 base (sheet); -2 free (player)
                 total: -4
                 result: 12
                 lines:
@@ -292,7 +293,7 @@ final class LogTests: XCTestCase {
         XCTAssertEqual(SituationDraft.scalar(.string("a\\b\n\t")), "\"a\\\\b\\n\\t\"")
     }
 
-    func testTheCompiledDraftIsWhatTheYAMLStates() throws {
+    func testTheCompiledDraftStatesTheEntryAndMatchesItsBreakdowns() throws {
         let entry = draftEntry()
         let c = try SituationDraft.compiled(from: entry, id: "19.1", name: "n")
         XCTAssertEqual(c.id, "19.1")
@@ -302,6 +303,8 @@ final class LogTests: XCTestCase {
         XCTAssertEqual(c.engineSituation.pools[.le], PoolState(current: 25, max: 31))
         XCTAssertEqual(c.situation.facts["loadout.shield"], Fact(name: "loadout.shield", value: .null, owner: .loadout))
         XCTAssertEqual(c.situation.items["armbrust-1"]?.loaded, true)
+        XCTAssertEqual(c.situation.facts["ally.has"]?.owner, .player)
+        XCTAssertEqual(c.situation.facts["opponent.size"]?.owner, .gm)
         XCTAssertNil(c.situation.facts["hit.zone"], "left out beside dice")
         XCTAssertNil(c.situation.facts["belastung.source"])
         XCTAssertEqual(c.rolls, [7, 12])
@@ -337,9 +340,11 @@ final class LogTests: XCTestCase {
         let (engine, all) = try real()
         let s = try XCTUnwrap(all.situations.first { $0.id == "19.1" })
         let entry = LogEntry.query(s.expect.map { Query($0.query) }, in: s.engineSituation, engine: engine,
-                                   appVersion: "fixture", note: "das war falsch: die Formation gibt +2 AT",
+                                   appVersion: "fixture",
+                                   note: "das war falsch: Belastung (COND_1.B3) zieht 3 statt 1 ab, Rüstungsgewöhnung "
+                                       + "(SA_41.G1) wird nicht angerechnet, und AT und PA haben keinen Basiswert (Rabenschnabel 16/11)",
                                    flagged: true, id: Self.uuid, date: Self.date)
-        let fresh = SituationDraft.yaml(from: entry, id: s.id, name: s.name ?? s.id)
+        let fresh = SituationDraft.yaml(from: entry, id: s.id + "-draft", name: s.name ?? s.id)
         let url = Repo.url("scripts/rulec/fixtures/draft-from-log.yaml")
         let onDisk = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         if onDisk != fresh {
@@ -352,8 +357,18 @@ final class LogTests: XCTestCase {
     /// For every situation the harness passes: run it → `LogEntry` → JSON Lines → read back →
     /// `SituationDraft.compiled` → run again. The breakdowns are equal, the situation is the
     /// same, and the draft passes the harness's Matcher against the run.
+    ///
+    /// Each draft's YAML and its compiled object are written to `build/rules/drafts/` (`<id>.yaml`,
+    /// `<id>.json`): rulec's `test_draft_fixture.py` reads every YAML back and checks it compiles to that
+    /// object, so the draft re-imports as the situation (§8). `make test-rules-engine` writes them;
+    /// run it before `make test-rulec`.
     func testEveryPassingSituationRoundTrips() throws {
         let (engine, all) = try real()
+        let drafts = Repo.url("build/rules/drafts")
+        try? FileManager.default.removeItem(at: drafts)
+        try FileManager.default.createDirectory(at: drafts, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
         let conflicts = Set(SituationsHarnessTests.conflicts(all) ?? [])
         var passing = 0, withQueries = 0
         for s in all.situations {
@@ -366,6 +381,10 @@ final class LogTests: XCTestCase {
             XCTAssertEqual(read, [entry], "\(s.id): the export reads back as the entry")
             guard let back = read.first else { continue }
             let draft = try SituationDraft.compiled(from: back, id: s.id, name: s.name ?? s.id)
+            try SituationDraft.yaml(from: back, id: s.id, name: s.name ?? s.id)
+                .write(to: drafts.appending(path: "\(s.id).yaml"), atomically: true, encoding: .utf8)
+            try encoder.encode(SituationDraft.compiledJSON(from: back, id: s.id, name: s.name ?? s.id))
+                .write(to: drafts.appending(path: "\(s.id).json"))
             XCTAssertEqual(draft.engineSituation, situation, "\(s.id): the draft states the same situation")
             let again = draft.expect.map { engine.evaluate(Query($0.query), in: draft.engineSituation) }
             XCTAssertEqual(again, entry.breakdowns, "\(s.id): the draft runs to the same breakdowns")

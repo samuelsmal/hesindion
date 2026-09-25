@@ -2,6 +2,7 @@
 Swift test `LogTests.testTheDraftOf19_1IsRecordedForRulec` records the draft of situation 19.1 in
 `fixtures/draft-from-log.yaml`; here rulec compiles that file against the real rules, so a draft
 the engine writes is one rulec accepts."""
+import json
 import shutil
 import tempfile
 import unittest
@@ -11,6 +12,10 @@ from rulec import compile, rules, situations, vocab
 from rulec.__main__ import EXAMPLES
 
 FIXTURE = Path(__file__).parent / "fixtures" / "draft-from-log.yaml"
+# Written by the engine's round trip (`LogTests.testEveryPassingSituationRoundTrips`, run by
+# `make test-rules-engine`): each passing situation's draft (`<id>.yaml`) and the object the
+# engine says it compiles to (`<id>.json`).
+DRAFTS = Path(__file__).resolve().parents[2] / "build" / "rules" / "drafts"
 
 
 class TheDraftFromTheLogCompiles(unittest.TestCase):
@@ -29,7 +34,7 @@ class TheDraftFromTheLogCompiles(unittest.TestCase):
     def test_no_errors(self):
         sits, errors = self.compile()
         self.assertEqual([str(e) for e in errors], [])
-        self.assertEqual([s["id"] for s in sits], ["19.1"])
+        self.assertEqual([s["id"] for s in sits], ["19.1-draft"])
 
     def test_the_sections_compile_to_their_owners(self):
         (s,), _ = self.compile()
@@ -51,6 +56,31 @@ class TheDraftFromTheLogCompiles(unittest.TestCase):
         original = next(s for s in examples if s["id"] == "19.1")
         for key in ("owned", "facts", "base", "rolls"):
             self.assertEqual(draft[key], original[key], key)
+
+
+class EveryDraftReimports(unittest.TestCase):
+    """Spec §8: re-importing a run's draft as a situation reproduces it. The engine compares its
+    breakdowns; here rulec reads each draft's YAML back and must compile it to exactly the object
+    the engine ran (`SituationDraft.compiledJSON`)."""
+
+    def test_every_draft_compiles_to_what_the_engine_ran(self):
+        yamls = sorted(DRAFTS.glob("*.yaml")) if DRAFTS.is_dir() else []
+        if not yamls:
+            self.skipTest(f"no drafts in {DRAFTS}: run `make test-rules-engine` first")
+        v = vocab.load()
+        shared = rules.shared_rulings(EXAMPLES / "rules")
+        book, errors = rules.check(EXAMPLES / "rules", v)
+        self.assertEqual([str(e) for e in errors], [])
+        out = compile.build_rules(book, v, shared)
+        sits, errors = situations.check(DRAFTS, book, out["reach"], v, shared)
+        self.assertEqual([str(e) for e in errors], [])
+        by_id = {s["id"]: s for s in sits}
+        self.assertEqual(len(by_id), len(yamls))
+        for path in yamls:
+            want = json.loads(path.with_suffix(".json").read_text())
+            got = by_id[want["id"]]
+            for key in ("owned", "facts", "base", "rolls", "expect"):
+                self.assertEqual(got[key], want[key], f"{path.name}: {key}")
 
 
 if __name__ == "__main__":

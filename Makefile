@@ -176,6 +176,9 @@ test-rules-review:
 # the Swift engine (Packages/RulesEngine).
 RULEC = cd scripts && uv run --with pyyaml python -m rulec
 
+# test_draft_fixture.py also reads build/rules/drafts/ (every passing situation's log draft and
+# its compiled object), which `make test-rules-engine` writes: run the engine tests first to
+# check that rulec re-imports them. Without the drafts that test skips and says so.
 test-rulec:
 	uv run --with pyyaml --with ruamel.yaml python -m unittest discover -s scripts/rulec -t scripts -p 'test_*.py' -v
 

@@ -1,10 +1,10 @@
-# Drafted from a log entry (spec §8): the engine's result as `expect`. Correct what was wrong, then move it
-# into a situations file.
+# Drafted from a log entry (spec §8): the engine's result as `expect`. Correct what was wrong, give it a new id,
+# then move it into a situations file.
 # entry 00000000-0000-0000-0000-000000000029, 2026-09-21T14:13:20Z, query at
-# app fixture, rules.json sha256 c93c8c0d6b2fd58b6040de016e0effca13c8579fcadabe95827f029947c3384e, vocabulary 1, hero none
+# app fixture, vocabulary 1, hero none
 # flagged: this looks wrong
 situations:
-  - id: "19.1"
+  - id: "19.1-draft"
     name: "In Formation on foot, the formation takes +2 AT"
     hero:
       abilities:
@@ -102,4 +102,4 @@ situations:
         lines:
           - from: COND_1.B3
             value: -3
-    appToday: "das war falsch: die Formation gibt +2 AT"
+    appToday: "das war falsch: Belastung (COND_1.B3) zieht 3 statt 1 ab, Rüstungsgewöhnung (SA_41.G1) wird nicht angerechnet, und AT und PA haben keinen Basiswert (Rabenschnabel 16/11)"

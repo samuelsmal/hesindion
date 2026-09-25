@@ -10,14 +10,15 @@ import Foundation
 ///   an entry with an option as `{level, sid, sid2}`; the sheet facts `attr.` / `ktw.` / `fw.` as
 ///   `attributes`, `techniques`, `talents`; the base values as `values`, with the LE and AsP pools
 ///   as `leCurrent` / `leMax` / `aspCurrent` / `aspMax` (the harness fills the pools from them);
-/// - each fact in its owner's section: `choose` (player), `gm`, `round` (without the `round.`
-///   prefix), `loadout` (without `loadout.` where that name is no loadout fact of its own; an
+/// - each fact in its owner's section: `choose` (player), `ally` (player, `ally.*`), `gm`,
+///   `opponent` (gm, `opponent.*`), `round` (these three without their prefix), `loadout` (without `loadout.` where that name is no loadout fact of its own; an
 ///   item's state as `item.<instance>.<field>`), and roll facts as the `rolls` mapping when there
 ///   are no dice;
 /// - `rolls`: the dice;
 /// - `expect`, keyed by query: `total` (with a derived base, the result: the harness's bridge 2),
 ///   `result`, and each shown line with a clause as `from`, `value` (after the step for `set`,
-///   `levelAs`, `replaced` and a scale step), `via` and `ruling`;
+///   `levelAs`, `replaced` and a scale step), `via` and `ruling`; the shown lines no clause gave
+///   (a sheet base, a modifier typed in) as a comment, `# also shown: …`;
 /// - `appToday`: the note.
 ///
 /// What has no section (a derived fact, a roll fact beside dice, another sheet fact, a pool
@@ -115,15 +116,24 @@ private struct Draft {
     struct Owned { var map: String; var id: String; var level: Int; var option: JSONValue?; var option2: JSONValue? }
     struct Entry { var key: String; var fact: Fact }
     struct ExpectedLine { var from: String; var value: Int; var via: [String]; var ruling: [String] }
-    struct Expected { var query: String; var total: Int; var result: Int?; var lines: [ExpectedLine] }
+    struct Expected { var query: String; var total: Int; var result: Int?; var lines: [ExpectedLine]; var alsoShown: [String] }
 
     static let ruleMaps = ["abilities", "advantages", "disadvantages", "conditions", "states"]
     /// Sheet fact prefix → its hero map.
     static let sheetMaps: [(prefix: String, map: String)] = [("attr.", "attributes"), ("ktw.", "techniques"), ("fw.", "talents")]
-    /// Section → its owner and the prefix its keys drop.
+    /// Section → its owner and the prefix its keys drop, as `situations.py`'s `SECTIONS`. A fact
+    /// goes to the first section of its owner whose prefix it has (`ally.has` → `ally: {has}`,
+    /// `opponent.size` → `opponent: {size}`), else to the owner's unprefixed section.
     static let sections: [(name: String, owner: Owner, prefix: String)] = [
-        ("loadout", .loadout, "loadout."), ("choose", .player, ""), ("gm", .gm, ""), ("round", .round, "round."),
+        ("loadout", .loadout, "loadout."), ("choose", .player, ""), ("ally", .player, "ally."), ("gm", .gm, ""),
+        ("opponent", .gm, "opponent."), ("round", .round, "round."),
     ]
+
+    static func section(of name: String, owner: Owner) -> (name: String, owner: Owner, prefix: String)? {
+        let own = sections.filter { $0.owner == owner }
+        return own.first { !$0.prefix.isEmpty && $0.name != "loadout" && name.hasPrefix($0.prefix) && name.count > $0.prefix.count }
+            ?? own.first { $0.prefix.isEmpty || $0.name == "loadout" || $0.name == "round" }
+    }
 
     var entry: LogEntry
     var owned: [Owned] = []
@@ -194,7 +204,7 @@ private struct Draft {
                 if entry.rolls.isEmpty { rollFacts.append(Entry(key: f.name, fact: f)) } else { leftOut.append("\(who): beside dice") }
                 continue
             }
-            guard let section = Self.sections.first(where: { $0.owner == f.owner }) else { leftOut.append(who); continue }
+            guard let section = Self.section(of: f.name, owner: f.owner) else { leftOut.append(who); continue }
             guard let key = Self.key(f.name, section: section.name, prefix: section.prefix) else { leftOut.append(who); continue }
             inSections[section.name, default: []].append(Entry(key: key, fact: f))
         }
@@ -244,7 +254,12 @@ private struct Draft {
                                  ruling: l.rulings.uniqued())
                 }
             }
-            expect.append(Expected(query: query, total: derived ? (b.result ?? b.total) : b.total, result: b.result, lines: lines))
+            // The shown lines no clause gave (a sheet base, a modifier typed in) have no `from`: a comment.
+            let alsoShown = b.shownLines.filter { $0.origin == nil }.map { l in
+                "\(l.value) \(l.kind.rawValue)" + (l.owner.map { " (\($0.rawValue))" } ?? "")
+            }
+            expect.append(Expected(query: query, total: derived ? (b.result ?? b.total) : b.total, result: b.result, lines: lines,
+                                   alsoShown: alsoShown))
         }
     }
 
@@ -298,6 +313,7 @@ private struct Draft {
             line(4, "expect:")
             for q in expect {
                 line(6, key(q.query))
+                if !q.alsoShown.isEmpty { line(8, "# also shown: " + q.alsoShown.joined(separator: "; ")) }
                 line(8, "total: \(q.total)")
                 if let r = q.result { line(8, "result: \(r)") }
                 guard !q.lines.isEmpty else { continue }
@@ -324,10 +340,11 @@ private struct Draft {
             what = "action " + (json ?? "none")
         }
         var out = [
-            "Drafted from a log entry (spec §8): the engine's result as `expect`. Correct what was wrong, then move it",
-            "into a situations file.",
+            "Drafted from a log entry (spec §8): the engine's result as `expect`. Correct what was wrong, give it a new id,",
+            "then move it into a situations file.",
             "entry \(entry.id.uuidString), \(ISO8601DateFormatter().string(from: entry.date)), \(what)",
-            "app \(entry.appVersion), rules.json sha256 \(entry.rulesSha256), vocabulary \(entry.vocabularyVersion), hero \(entry.heroId ?? "none")",
+            // No rules sha256 (R59): the draft changes only when what it states changes.
+            "app \(entry.appVersion), vocabulary \(entry.vocabularyVersion), hero \(entry.heroId ?? "none")",
         ]
         if entry.flagged { out.append("flagged: this looks wrong") }
         if !leftOut.isEmpty {
