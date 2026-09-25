@@ -1,6 +1,7 @@
 # DRAFT FORMAT — see ../../README.md.
 # Drafted in the Group 1 hand migration (plan Task 8): COND_1.B4 gains it, and zustaende.Z5,
-# COND_6.SZ2/SZ5 name it (as `handlungsunfaehig`). The page is one paragraph, split per sentence.
+# COND_6.SZ2/SZ5 name it (as `handlungsunfaehig`; re-keyed to STATE_8 in Group 5). The page is
+# one paragraph, split per sentence.
 id: STATE_8
 name: Handlungsunfähig
 kind: state                # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap
@@ -32,9 +33,14 @@ clauses:
 
   - id: H3
     text: In den meisten Situationen gilt sie zudem als liegend.
-    none: >
-      carried by STATE_10's decided ruling handlungsunfaehig-liegend: when this status starts, a
-      question asks whether the hero now lies (STATE_10)
+    effects:
+      - ask: { fact: choice.liegend, who: player }
+        ruling: STATE_10.handlungsunfaehig-liegend
+        # "Liegt der Held?": asked when this status starts, from whatever cause (ruling
+        # STATE_10.handlungsunfaehig-liegend). "Nein" leaves room for the hero tied to a mast.
+      - when: { choice.liegend: true }
+        gain: { rule: STATE_10 }
+        ruling: STATE_10.handlungsunfaehig-liegend
 
   - id: H4
     text: >

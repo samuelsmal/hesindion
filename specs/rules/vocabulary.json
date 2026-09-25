@@ -86,6 +86,10 @@
       "owner": "gm",
       "type": "any"
     },
+    "hero.levelOf.": {
+      "owner": "derived",
+      "type": "int"
+    },
     "item.": {
       "owner": "loadout",
       "type": "any"
@@ -129,7 +133,8 @@
     "string",
     "list",
     "ruleId",
-    "any"
+    "any",
+    "number"
   ],
   "facts": {
     "action.attack": {
@@ -192,6 +197,10 @@
       "owner": "round",
       "type": "int"
     },
+    "hero.conditionLevels": {
+      "owner": "derived",
+      "type": "int"
+    },
     "hero.gs": {
       "owner": "derived",
       "type": "int"
@@ -203,6 +212,10 @@
     "hero.leCurrent": {
       "owner": "derived",
       "type": "int"
+    },
+    "hero.leShare": {
+      "owner": "derived",
+      "type": "number"
     },
     "hero.mounted": {
       "owner": "loadout",

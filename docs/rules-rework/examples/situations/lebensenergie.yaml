@@ -123,7 +123,8 @@ situations:
         - { check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, fw: 9, attributes: [MU 14, MU 14, KO 15] },
             before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
     sequence:
-      - rolls: { check.result: success }   # after the check is passed
+      - choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }   # COND_6.SZ2's check
+        rolls: { check.result: success }   # after the check is passed
         expect:
           "level(rule: COND_6)": { result: 3, lines: [{ kind: levelAs, value: 3, ruling: ADV_49.zaeher-hund-iv }] }
           at: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
@@ -269,6 +270,7 @@ situations:
   - id: "15.18"
     name: Berauscht III, with Schnell wieder auf den Beinen
     hero: { conditions: { COND_9: 3 }, advantages: { ADV_25: 2, ADV_49: 1, ADV_44: 2, ADV_54: 1, ADV_75: 1 } }   # + ADV_75
+    gm: { gmFact.cause: alcohol }   # Berauscht comes from alcohol (ruling ADV_75.alcohol-scope)
     expect:
       texts: [{ player: "Berauscht baut sich jede Stunde um 1 Stufe ab (statt alle 2), wenn er nichts mehr trinkt.", from: ADV_75.SW1 }]
     appToday: the chip says 2 hours (Strings state.berauscht.removal) — wrong

@@ -1,7 +1,7 @@
 # DRAFT FORMAT — see ../../README.md.
 id: STATE_10
 name: Liegend
-kind: status               # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap
+kind: state                # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap (the old `kind: status`)
 source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Liegend.html
   book: Regelwerk
@@ -11,10 +11,11 @@ source:
 reviewed: null
 
 # Who can be liegend: the hero (stated, or answered "ja" when Handlungsunfähig starts — ruling
-# handlungsunfaehig-liegend) and the opponent (stated per attack on the opponent profile).
-# FORMAT: one rule whose effects land on whichever side carries the status. The same clause
-# gives the hero's own lines when the hero lies, and opponent lines when the opponent does.
-applies_to_side: [hero, opponent]
+# handlungsunfaehig-liegend, asked by STATE_8.H3) and the opponent (stated per attack on the
+# opponent profile). One rule whose effects land on whichever side carries the status: the
+# hero's own lines when `hero.has: STATE_10`, the opponent's lines and texts when
+# `opponent.has: STATE_10` (the old `applies_to_side: [hero, opponent]` and `side:`), as
+# STATE_13.
 
 clauses:
   - id: L1
@@ -26,26 +27,27 @@ clauses:
   - id: L2
     text: So lange die Person liegt, kann sie sich nur sehr langsam fortbewegen (GS 1).
     effects:
-      - when: { side: hero }
-        set: { value: gs, to: 1 }
-        # FORMAT: a value *set*, not a modifier. Handlungsunfähig sets GS 0; when both hold,
-        # the lower set wins — the format needs an order for competing sets.
-      - when: { side: opponent }
+      - when: { hero.has: STATE_10 }
+        set: { to: gs, value: 1 }
+        # A value *set*, not a modifier. Handlungsunfähig sets GS 0 (STATE_8.H2); when both
+        # hold, the later set in rule-id order wins (plan Task 22): "STATE_10" sorts before
+        # "STATE_8", so GS 0 wins (liegend 7.4, 7.5).
+      - when: { opponent.has: STATE_10 }
         tell: { to: opponent, text: "GS 1" }
 
   - id: L3
     text: Ihre Verteidigung ist um 2 erschwert, ihre Angriffe um 4.
     effects:
-      - when: { side: hero }
+      - when: { hero.has: STATE_10 }
         add: { to: [pa, aw], value: -2 }
-      - when: { side: hero }
+      - when: { hero.has: STATE_10 }
         add: { to: [at, fk], value: -4 }
         ruling: liegend-attacks
-      - when: { side: opponent }
+      - when: { opponent.has: STATE_10 }
         add: { to: [opponent.pa, opponent.aw], value: -2 }
         # Printed as the opponent's own calculation on the announcement and the damage screen;
         # the hero's AT does not change. The rules give the attacker nothing else for it.
-      - when: { side: opponent }
+      - when: { opponent.has: STATE_10 }
         tell: { to: opponent, text: "AT −4" }
         # The opponent's attack roll is not ours (ADR-0005); the hero's defence does not change.
 
@@ -56,16 +58,26 @@ clauses:
       eine Probe auf Körperbeherrschung (Kampfmanöver) ablegen. Bei Gelingen bekommt er keinen
       Passierschlag ab.
     effects:
-      - when: { side: hero }
-        offer:
-          action: aufstehen
-          costs: action
-          then: { remove_state: STATE_10 }
-          if_opponent_in_reach:
-            optional_check: { talent: Körperbeherrschung, application: Kampfmanöver }
-            on_check_failed_or_skipped: { tell: { opponent: passierschlag } }
-        # FORMAT: an action whose outcome is a question about the other side ("is an opponent
-        # in reach?") and an optional check that decides whether they get a free attack.
+      - when: { hero.has: STATE_10 }
+        offer: { choice: aufstehen, costs: [{ cost: { pool: actions, amount: 1 } }] }
+      - when: { hero.has: STATE_10, choice.aufstehen: true }
+        gain: { rule: STATE_10, levels: -1 }
+        # Standing up clears the status (the old `then: { remove_state: STATE_10 }`).
+      - when: { hero.has: STATE_10, choice.aufstehen: true, opponent.inReach: true }
+        offer: { choice: passierschlagVermeiden, default: false }
+        # "kann der Held eine Probe … ablegen": the check is the player's to take (the old
+        # `optional_check`), asked only with an opponent in reach (`if_opponent_in_reach`).
+      - when: { hero.has: STATE_10, choice.aufstehen: true, opponent.inReach: true, choice.passierschlagVermeiden: true }
+        check:
+          of: { talent: TAL_4, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: opponent, text: passierschlag }
+        # Körperbeherrschung (TAL_4) (Kampfmanöver). "Bei Gelingen bekommt er keinen
+        # Passierschlag ab"; on a failure the opponent may make one.
+      - when: { hero.has: STATE_10, choice.aufstehen: true, opponent.inReach: true, choice.passierschlagVermeiden: false }
+        tell: { to: opponent, text: passierschlag }
+        # The check skipped (the old `on_check_failed_or_skipped`): the opponent may make a
+        # Passierschlag.
 
 rulings:
   - id: liegend-attacks

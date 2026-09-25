@@ -1,0 +1,59 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 5 hand migration (plan Task 12): ADV_75.SW1 halves its decay
+# (situation lebensenergie 15.18). The page is one paragraph and a table, split per sentence.
+id: COND_9
+name: Berauscht
+kind: condition
+levels: 4                  # Stufe IV converts at once (BR3), so the Stufe rests below IV
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Berauscht.html
+  book: DSA5-Meisterschirm
+  page: 13
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: BR1
+    text: >
+      Damit ein Held nicht gleich nach dem Genuss von drei Bieren Zustandsstufen von Betäubung
+      erhält, gibt es den neuen Zustand Berauscht.
+    none: introduction
+
+  - id: BR2
+    text: >
+      Diesen erleidet der Held meistens nach dem Misslingen einer Giftprobe bei Alkohol,
+      allerdings ist dies von Alkoholsorte zu Alkoholsorte unterschiedlich.
+    none: where the Stufen come from (a failed Giftprobe against the drink); the GM sets them
+
+  - id: BR3
+    text: >
+      Ist Zustandsstufe IV erreicht, erhält der Held eine Stufe Betäubung und 4 Stufen Berauscht
+      werden gestrichen. Die restlichen Stufen Berauscht bleiben bestehen.
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: COND_2, levels: 1 }
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: COND_9, levels: -4 }
+        # Four Stufen struck; any above IV stay ("die restlichen Stufen … bleiben bestehen").
+
+  - id: BR4
+    text: >
+      Berauscht baut sich nach 2 Stunden um 1 Stufe ab, vorausgesetzt der Held trinkt in dieser
+      Zeit keinen weiteren Alkohol.
+    effects:
+      - tell: { to: player, text: "Berauscht baut sich alle 2 Stunden um 1 Stufe ab, wenn er nichts mehr trinkt." }
+        # The app keeps no time outside combat rounds: the duration is said, not counted.
+        # ADV_75 (Schnell wieder auf den Beinen) halves it (situation lebensenergie 15.18).
+
+  - id: BR5
+    text: |
+      Berauschtstufe | Auswirkungen
+      Stufe I | Proben auf Zechen sind um 1 erschwert
+      Stufe II | Proben auf Zechen sind um 2 erschwert
+      Stufe III | Proben auf Zechen sind um 3 erschwert
+      Stufe IV | Held erleidet eine Stufe Betäubung, 4 Stufen Berauscht werden gestrichen, darüber hinaus erlittene Stufen des Zustands Berauscht bleiben bestehen.
+    effects:
+      - when: { level: [1, 2, 3], check.talent: TAL_14 }
+        add: { to: check.modifier, value: -1, per: level }
+        # Zechen (TAL_14) only. The Stufe IV row is BR3's conversion, encoded there.

@@ -1,8 +1,25 @@
 # Example 4 — Schmerz, the Zustand cap and the Schip "Zustand ignorieren". Same conventions as
-# belastung.yaml. Base hero LE 30; `lp` is the current LP. No armour unless stated.
+# belastung.yaml. Base hero LE 30 (`values: { leMax: 30 }`); `leCurrent` is the current LP (the
+# old `lp`). No armour unless stated; Plattenrüstung is stated in `loadout` (Belastung 3, extra 0),
+# as in belastung.yaml.
 # DRAFT FORMAT — see ../README.md.
+#
+# Re-keyed under §10.1 (plan Task 12):
+#   `conditions: { COND_6: n }` (expected)  → the query `level(rule: COND_6)` with `result: n`
+#   `talent` / `spell` (expected)           → `check.modifier(talent: …)` / `check.modifier(spell: any)`
+#   `checks` (input)                        → the queries themselves
+#   `states: { handlungsunfaehig }`         → `events: [{ gained: STATE_8 }]` (Handlungsunfähig)
+#   `bewusstlos`                            → STATE_2 (Bewusstlos)
+#   `requires_check`                        → `offered: [{ check: … }]`, as lebensenergie 15.7
+#   `on_failure`                            → a `sequence` step with `check.result: failure`
+#   `passed: [COND_6.SZ2]`                  → the SZ2 check stated (`choose: { check.* }`) and
+#                                             `rolls: { check.result: success }`
+#   `round: { choices: [x] }`               → `choose: { choice.x: true }`
+#   `gs: { set: n, from }`                  → `gs: { result: n, lines: [{ kind: set, from }] }`
+#   `suppressed: [{ from, by }]`            → `notApplied: [{ rule, clause, reason: suppressed, because }]`
+#   `GRW_zustandsbegrenzung`                → zustaende.Z3
 
-hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, le: 30 }
+hero: { values: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, leMax: 30 } }
 
 situations:
 
@@ -10,47 +27,55 @@ situations:
 
   - id: S1
     name: LP 22 of 30 — below three quarters (22.5)
-    hero: { lp: 22 }
+    hero: { values: { leCurrent: 22 } }
     expect:
-      conditions: { COND_6: 1 }
+      "level(rule: COND_6)": { result: 1 }
       at:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5, via: [COND_6.SZ3] }] }
-      talent: { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
-      spell:  { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      "check.modifier(talent: any)": { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      "check.modifier(spell: any)":  { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
       gs:     { total: -1, lines: [{ value: -1, from: COND_6.SZ5 }] }
       ini:    { total: 0 }          # INI is not a Probe, and the page does not list it
     appToday: checks −1; GS 0 — wrong (no reader applies Schmerz to GS)
 
   - id: S2
     name: LP 15 of 30 — half
-    hero: { lp: 15 }
+    hero: { values: { leCurrent: 15 } }
     expect:
-      conditions: { COND_6: 2 }
+      "level(rule: COND_6)": { result: 2 }
       at: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
       gs: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
     appToday: checks −2; GS 0 — wrong
 
   - id: S3
     name: LP 5 of 30 — a quarter and "5 or fewer" — Stufe IV
-    hero: { lp: 5 }
+    hero: { values: { leCurrent: 5 } }
     expect:
-      conditions: { COND_6: 4 }
-      requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
-      on_failure: { states: { handlungsunfaehig: { from: COND_6.SZ5 } } }
-      gs: { set: 0, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }
+      "level(rule: COND_6)": { result: 4 }
+      offered:
+        - { check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren }, before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
+      gs: { result: 0, lines: [{ kind: set, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }] }
+    sequence:
+      - choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }
+        rolls: { check.result: failure }   # the old `on_failure`
+        expect:
+          events: [{ gained: STATE_8, from: COND_6.SZ5 }]   # Handlungsunfähig
     appToday: Handlungsunfähig outright, no check offered; GS 8 — wrong
 
   - id: S4
     name: LP 23 of 30 — just above three quarters
-    hero: { lp: 23 }
+    hero: { values: { leCurrent: 23 } }
     expect:
-      conditions: { COND_6: { level: 0, from: COND_6.SZ3, ruling: COND_6.schmerz-thresholds } }   # 23 > 22.5, compared exactly
+      "level(rule: COND_6)":   # 23 > 22.5, compared exactly: SZ3 gives no Stufe
+        result: 0
+        notApplied: [{ rule: COND_6, clause: SZ3, ruling: COND_6.schmerz-thresholds }]
     appToday: same
 
   # --- Schmerz with Belastung, and the cap (zustaende.Z3) ------------------------------------
 
   - id: S5
     name: Schmerz II in Platte — exactly at the cap
-    hero: { lp: 15, armour: [Plattenrüstung] }
+    hero: { values: { leCurrent: 15 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
       at:
         total: -5
@@ -61,9 +86,11 @@ situations:
 
   - id: S6
     name: Schmerz III in Platte — over the cap
-    hero: { lp: 7, armour: [Plattenrüstung] }
+    hero: { values: { leCurrent: 7 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_6: 3, COND_1: 3 }
+      "level(rule: COND_6)": { result: 3 }
+      "level(rule: COND_1)": { result: 3 }
       at:
         total: -5
         lines:
@@ -81,58 +108,61 @@ situations:
 
   - id: S7
     name: Eight Zustandsstufen — Schmerz III, Belastung III, Betäubung II
-    hero: { lp: 7, armour: [Plattenrüstung], conditions: { COND_2: 2 } }
+    hero: { values: { leCurrent: 7 }, conditions: { COND_2: 2 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
-      states: { handlungsunfaehig: { from: zustaende.Z5 } }
+      events: [{ gained: STATE_8, from: zustaende.Z5 }]   # Handlungsunfähig
     appToday: same (Hero.isHandlungsunfaehigFromZustaende counts Belastung)
 
   - id: S8
     name: Schip "Zustand ignorieren" — Schmerz II in Platte
-    hero: { lp: 15, armour: [Plattenrüstung] }
-    round: { choices: [schipZustandIgnorieren] }
+    hero: { values: { leCurrent: 15 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { choice.schipZustandIgnorieren: true }
     expect:
       at:
         total: 0
-        suppressed:
-          - { value: -2, from: COND_6.SZ5, by: schicksalspunkte.SP-zustand }
-          - { value: -3, from: COND_1.B3, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
+        notApplied:
+          - { rule: COND_6, clause: SZ5, value: -2, reason: suppressed, because: schicksalspunkte.SP-zustand }
+          - { rule: COND_1, clause: B3, value: -3, reason: suppressed, because: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
       gs:
         total: 0
-        suppressed:
-          - { value: -2, from: COND_6.SZ5, by: schicksalspunkte.SP-zustand }
-          - { value: -3, from: COND_1.B3, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
+        notApplied:
+          - { rule: COND_6, clause: SZ5, value: -2, reason: suppressed, because: schicksalspunkte.SP-zustand }
+          - { rule: COND_1, clause: B3, value: -3, reason: suppressed, because: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-ignore-belastung }
     appToday: AT −3 (Belastung is never ignored) — wrong
 
   - id: S9
     name: Schip "Zustand ignorieren" at Schmerz IV
-    hero: { lp: 5 }
-    round: { choices: [schipZustandIgnorieren] }
+    hero: { values: { leCurrent: 5 } }
+    choose: { choice.schipZustandIgnorieren: true }
     expect:
-      states: {}                                     # able to act this Kampfrunde
-      at: { total: 0, suppressed: [{ from: COND_6.SZ5, by: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-lifts-incapacity }] }
+      events: []                                     # the old `states: {}`: able to act this Kampfrunde
+      at: { total: 0, notApplied: [{ rule: COND_6, clause: SZ5, reason: suppressed, because: schicksalspunkte.SP-zustand, ruling: schicksalspunkte.schip-lifts-incapacity }] }
     appToday: same
 
   - id: S10
     name: Schip "Zustand ignorieren" does not wake a Bewusstlos hero
-    hero: { states: [bewusstlos] }
-    round: { choices: [schipZustandIgnorieren] }
+    hero: { states: { STATE_2: true } }
+    choose: { choice.schipZustandIgnorieren: true }
     expect:
-      states: { handlungsunfaehig: { from: STATE_2, ruling: schicksalspunkte.schip-lifts-incapacity } }
+      events: [{ gained: STATE_8, from: STATE_2.BW3, ruling: schicksalspunkte.schip-lifts-incapacity }]   # Handlungsunfähig
     appToday: same
 
   - id: S11
     name: A talent and a spell with Schmerz II
-    hero: { lp: 15 }
-    checks: [{ talent: Überreden }, { spell: any }]
-    expect:
-      talent: { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
-      spell:  { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
+    hero: { values: { leCurrent: 15 } }
+    expect:   # the old `checks: [{ talent: Überreden }, { spell: any }]` are the two queries
+      "check.modifier(talent: TAL_21)": { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }   # Überreden
+      "check.modifier(spell: any)":     { total: -2, lines: [{ value: -2, from: COND_6.SZ5 }] }
     appToday: same — Schmerz reaches every check, Belastung only some (belastung.yaml 4.x)
 
   - id: S12
     name: Schmerz IV, the Selbstbeherrschung check passed, in Platte
-    hero: { lp: 5, armour: [Plattenrüstung] }
-    passed: [COND_6.SZ2]                              # for this one action (COND_6.schmerz-iv-check)
+    hero: { values: { leCurrent: 5 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }
+    rolls: { check.result: success }                 # the old `passed: [COND_6.SZ2]`, for this one action (COND_6.schmerz-iv-check)
     expect:
       at:
         total: -5
@@ -140,5 +170,5 @@ situations:
           - { value: -4, from: COND_6.SZ5 }
           - { value: -3, from: COND_1.B3 }
           - { value: 2, from: zustaende.Z3 }
-      gs: { set: 0, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }   # a set value, not capped
+      gs: { result: 0, lines: [{ kind: set, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }] }   # a set value, not capped
     appToday: Handlungsunfähig — the check does not exist

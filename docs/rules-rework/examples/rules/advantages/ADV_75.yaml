@@ -8,7 +8,7 @@ source:
   page: 13
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 # Despite the name, this advantage has nothing to do with standing up from Liegend (STATE_10.L4):
 # it halves the time Betäubung and Berauscht take to wear off. Standing up costs 1 action and
@@ -21,21 +21,27 @@ clauses:
       Mit diesem Vorteil benötigt man nur noch die Hälfte der Zeit, bis eine Stufe des Zustands
       Betäubung oder Berauscht, der durch Alkohol verursacht wurde, abgebaut ist.
     effects:
-      - when: { condition: COND_2, cause: alcohol }
-        scale: { duration: COND_2.decay, by: 0.5 }       # 3 h Ruhephase → 1½ h per Stufe
+      - when: { hero.has: COND_2, gmFact.cause: alcohol }
+        tell: { to: player, text: "Jede Stufe Betäubung baut sich nach 1½ Stunden Ruhe ab (statt 3)." }
         ruling: alcohol-scope
-      - when: { condition: COND_9, cause: alcohol }
-        scale: { duration: COND_9.decay, by: 0.5 }       # 2 h → 1 h per Stufe
+        # 3 h Ruhephase (COND_2.BT2) → 1½ h per Stufe.
+      - when: { hero.has: COND_2, gmFact.cause: alcohol }
+        suppress: { line: { line: COND_2.BT2 } }
+        because: halbe Zeit durch Alkohol (Schnell wieder auf den Beinen)
         ruling: alcohol-scope
-        # Both Zustände only from alcohol (ruling alcohol-scope).
-        # App gap: the app keeps no time outside combat rounds and no cause for a Zustand; until
-        # it does, shown as text on the Betäubung and Berauscht chips ("baut sich in der halben
-        # Zeit ab — Schnell wieder auf den Beinen"). COND_2 (Betäubung,
-        # https://dsa.ulisses-regelwiki.de/Sta_Bet%C3%A4ubung.html: "nach einer Ruhephase von 3
-        # Stunden") and COND_9 (Berauscht, https://dsa.ulisses-regelwiki.de/Sta_Berauscht.html:
-        # "nach 2 Stunden um 1 Stufe") have no rule file yet.
-    # FORMAT: an effect on another rule's *duration*, and a condition on a Zustand's *cause* —
-    # neither exists in the vocabulary, and the app tracks neither.
+      - when: { hero.has: COND_9, gmFact.cause: alcohol }
+        tell: { to: player, text: "Berauscht baut sich jede Stunde um 1 Stufe ab (statt alle 2), wenn er nichts mehr trinkt." }
+        ruling: alcohol-scope
+        # 2 h (COND_9.BR4) → 1 h per Stufe.
+      - when: { hero.has: COND_9, gmFact.cause: alcohol }
+        suppress: { line: { line: COND_9.BR4 } }
+        because: halbe Zeit durch Alkohol (Schnell wieder auf den Beinen)
+        ruling: alcohol-scope
+        # Both Zustände only from alcohol (ruling alcohol-scope); the GM states the cause
+        # (`gmFact.cause`). The old `scale: { duration: COND_2.decay | COND_9.decay, by: 0.5 }`:
+        # the app keeps no time outside combat rounds and no cause for a Zustand, so a Zustand's
+        # decay is a text (COND_2.BT2, COND_9.BR4), and this advantage replaces that text with
+        # the halved one (situations lebensenergie 15.17–15.19).
 
   - id: SW2
     text: "Voraussetzung: Keine"

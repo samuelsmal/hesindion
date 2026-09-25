@@ -11,14 +11,11 @@ source:
   hash: null
 reviewed: null
 
-# Where a Stufe comes from: the LP thresholds (SZ3) plus whatever sets Schmerz directly
-# (a Patzer, a wound effect, a spell). Zäher Hund (ADV_49) lowers it (ADV_49.yaml).
-level:
-  from:
-    - clause: SZ3
-    - set_by: [event, gm]
-  effects_lowered_by: [ADV_49]   # the Stufe stays; ADV_49 lowers the Stufe whose *effects* apply
-                                 # (ruling ADV_49.zaeher-hund-counts)
+# Where a Stufe comes from: the LP thresholds (SZ3 derives `level(rule: COND_6)` from the current
+# LeP) or a Stufe stated on the sheet (a Patzer, a wound effect, a spell: the hero's
+# `conditions: { COND_6: n }`). Zäher Hund (ADV_49) changes the Stufe whose *effects* apply
+# (`useLevel`), never the Stufe the hero has (ruling ADV_49.zaeher-hund-counts): `level` in the
+# `when`s below is the Stufe acted at, `hero.levelOf.COND_6` the Stufe the hero has.
 
 clauses:
   - id: SZ1
@@ -32,14 +29,16 @@ clauses:
       Um trotz immenser Schmerzen (Stufe IV) handlungsfähig zu bleiben, ist eine Probe auf
       Selbstbeherrschung (Handlungsfähigkeit bewahren) nötig.
     effects:
-      - when: { level: 4, before: action }
-        requires_check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren }
-        on_failure: { gain: { state: handlungsunfaehig } }
-        on_success: { see: SZ5 }
+      - when: { level: { atLeast: 4 } }
+        check:
+          of: { talent: TAL_8, with: Handlungsfähigkeit bewahren }
+          onSuccess:
+            - gain: { rule: STATE_8, levels: -1, span: action }
         ruling: schmerz-iv-check
-        # Rolled before each action the hero wants to take; a success lets that one action
-        # through at −4 (SZ5), a failure leaves the hero Handlungsunfähig for it.
-        # FORMAT: a check that decides whether a state applies, repeated per action.
+        # Selbstbeherrschung (TAL_8), rolled before each action the hero wants to take (ruling
+        # schmerz-iv-check; the old `before: action` is the check procedure's, spec §6). The
+        # hero is Handlungsunfähig at Stufe IV (SZ5); a success lifts it for that one action,
+        # taken at −4 (SZ5), a failure leaves it (the old `on_failure: gain`, now SZ5's gain).
 
   - id: SZ3
     text: >
@@ -49,18 +48,32 @@ clauses:
       Lebenspunkte wieder über diese Begrenzungen, verschwindet damit auch die entsprechende
       Stufe Schmerz. Sinkt sie auf 5 oder weniger, erhält er eine weitere Stufe Schmerz.
     effects:
-      - sets: { condition: COND_6, level: "count(lp <= le*3/4, lp <= le/2, lp <= le/4, lp <= 5)" }
+      - when: { hero.leShare: { atMost: 0.75 } }
+        derive: { to: "level(rule: COND_6)", sum: [1] }
         ruling: schmerz-thresholds
-        # FORMAT: a level derived from a formula over the hero's current values, recomputed
-        # whenever LP change.
+      - when: { hero.leShare: { atMost: 0.5 } }
+        derive: { to: "level(rule: COND_6)", sum: [1] }
+        ruling: schmerz-thresholds
+      - when: { hero.leShare: { atMost: 0.25 } }
+        derive: { to: "level(rule: COND_6)", sum: [1] }
+        ruling: schmerz-thresholds
+      - when: { hero.leCurrent: { atMost: 5 } }
+        derive: { to: "level(rule: COND_6)", sum: [1] }
+        ruling: schmerz-thresholds
+        # One Stufe per threshold reached (the old `sets: … count(lp <= le*3/4, lp <= le/2,
+        # lp <= le/4, lp <= 5)`). `hero.leShare` is the current LeP over the LE maximum, compared
+        # exactly (ruling schmerz-thresholds: LE 30 gives Schmerz I at 22 LP, not 23). A `derive`
+        # (phase base), so the Stufe the hero has is known before Zäher Hund's `useLevel`
+        # (phase level) acts on it. "Steigen die Lebenspunkte wieder über diese Begrenzungen"
+        # needs nothing more: the derive follows the current LeP. Same shape as
+        # svellttaler-kaltblut.SK10's thresholds for a mount.
 
   - id: SZ4
     text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.
-    # Would encode as: lower: { condition: COND_6, by: 1, every: 4h, not_for: SZ3 } — the LP
-    # part (SZ3) goes with healing, not with time. Out-of-combat time is not tracked; the app
-    # shows this as text on the Schmerz chip.
-    status: unencoded
-    why: the app does not keep time outside combat rounds
+    unencoded: >
+      the app does not keep time outside combat rounds; shown as text on the Schmerz chip. Would
+      be a `gain: { rule: COND_6, levels: -1 }` every 4 hours, for the Stufen not from the LP
+      thresholds (SZ3 goes with healing, not with time)
 
   - id: SZ5
     text: |
@@ -69,20 +82,28 @@ clauses:
       Stufe III: starke Schmerzen, alle Proben –3, GS –3
       Stufe IV: Handlungsunfähig, ansonsten alle Proben –4
     effects:
-      - when: { level: [1, 3] }
-        add: { to: [check, gs], value: -1, per: level }
-        # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies. Not INI — an INI roll is
-        # not a Probe, and unlike Belastung the page does not list INI.
-      - when: { level: 4 }
-        gain: { rule: handlungsunfaehig }
-        unless: { check_passed: SZ2 }
-      - when: { level: 4, check_passed: SZ2 }
-        add: { to: check, value: -4 }
-      - when: { level: 4 }
-        set: { value: gs, to: 0 }
+      # `level: [1, 2, 3]`: Stufe I to III (a list is a set of values, not a range; the old
+      # `[1, 3]` left Stufe II out, as in COND_1.B3).
+      - when: { level: [1, 2, 3] }
+        add: { to: [at, pa, aw, fk, check.modifier, gs], value: -1, per: level }
+        # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies (`check.modifier`), as
+        # COND_2.BT3. Not INI — an INI roll is not a Probe, and unlike Belastung the page does
+        # not list INI.
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: STATE_8 }
+        ruling: schmerz-iv-check
+        # Handlungsunfähig (STATE_8) at Stufe IV; the passed Selbstbeherrschung check of SZ2
+        # lifts it for one action (the old `unless: { check_passed: SZ2 }`).
+      - when: { level: { atLeast: 4 }, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
+        add: { to: [at, pa, aw, fk, check.modifier], value: -4 }
+        ruling: schmerz-iv-check
+        # "ansonsten alle Proben –4": with SZ2's check passed (the old `check_passed: SZ2`).
+      - when: { level: { atLeast: 4 } }
+        set: { to: gs, value: 0 }
         ruling: schmerz-iv-gs
         # Passed check or not, the hero cannot move at Stufe IV; speaking stays possible.
-        # FORMAT: a value set, not a modifier (like STATE_10's GS 1).
+        # A value set, not a modifier (like STATE_10's GS 1), so the Zustand cap
+        # (zustaende.Z3) does not reach it.
 
 rulings:
   - id: schmerz-thresholds

@@ -193,14 +193,14 @@ No residue.
 
 ## rules/advantages/ADV_49.yaml
 
-- [ ] L25 clauses[ZH1].effects[0].when.condition: condition — not a fact in the vocabulary
-- [ ] L27 clauses[ZH1].effects[0].keeps: keeps — no one-to-one verb
-- [ ] L27 clauses[ZH1].effects[0].keeps.condition_level: condition_level — snake_case key, no mapping
-- [ ] L41 clauses[ZH3].effects[0].when.condition: condition — not a fact in the vocabulary
-- [ ] L42 clauses[ZH3].effects[0].keep: keep — no one-to-one verb
-- [ ] L44 clauses[ZH3].effects[1].when.condition: condition — not a fact in the vocabulary
-- [ ] L44 clauses[ZH3].effects[1].when.check_passed: check_passed — not a fact in the vocabulary
-- [ ] L51 clauses[ZH4].effects[0].when.condition: condition — not a fact in the vocabulary
+- [x] L25 clauses[ZH1].effects[0].when.condition: condition — not a fact in the vocabulary
+- [x] L27 clauses[ZH1].effects[0].keeps: keeps — no one-to-one verb
+- [x] L27 clauses[ZH1].effects[0].keeps.condition_level: condition_level — snake_case key, no mapping
+- [x] L41 clauses[ZH3].effects[0].when.condition: condition — not a fact in the vocabulary
+- [x] L42 clauses[ZH3].effects[0].keep: keep — no one-to-one verb
+- [x] L44 clauses[ZH3].effects[1].when.condition: condition — not a fact in the vocabulary
+- [x] L44 clauses[ZH3].effects[1].when.check_passed: check_passed — not a fact in the vocabulary
+- [x] L51 clauses[ZH4].effects[0].when.condition: condition — not a fact in the vocabulary
 
 ## rules/advantages/ADV_5.yaml
 
@@ -213,12 +213,12 @@ No residue.
 
 ## rules/advantages/ADV_75.yaml
 
-- [ ] L24 clauses[SW1].effects[0].when.condition: condition — not a fact in the vocabulary
-- [ ] L24 clauses[SW1].effects[0].when.cause: cause — not a fact in the vocabulary
-- [ ] L25 clauses[SW1].effects[0].scale: scale — no one-to-one verb
-- [ ] L27 clauses[SW1].effects[1].when.condition: condition — not a fact in the vocabulary
-- [ ] L27 clauses[SW1].effects[1].when.cause: cause — not a fact in the vocabulary
-- [ ] L28 clauses[SW1].effects[1].scale: scale — no one-to-one verb
+- [x] L24 clauses[SW1].effects[0].when.condition: condition — not a fact in the vocabulary
+- [x] L24 clauses[SW1].effects[0].when.cause: cause — not a fact in the vocabulary
+- [x] L25 clauses[SW1].effects[0].scale: scale — no one-to-one verb
+- [x] L27 clauses[SW1].effects[1].when.condition: condition — not a fact in the vocabulary
+- [x] L27 clauses[SW1].effects[1].when.cause: cause — not a fact in the vocabulary
+- [x] L28 clauses[SW1].effects[1].scale: scale — no one-to-one verb
 
 ## rules/conditions/COND_1.yaml
 
@@ -235,36 +235,36 @@ No residue.
 
 ## rules/conditions/COND_6.yaml
 
-- [ ] L16 level: level — not a rule key in the vocabulary
-- [ ] L19 level.from[1].set_by: set_by — snake_case key, no mapping
-- [ ] L20 level.effects_lowered_by: effects_lowered_by — snake_case key, no mapping
-- [ ] L35 clauses[SZ2].effects[0].when.before: before — not a fact in the vocabulary
-- [ ] L36 clauses[SZ2].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L37 clauses[SZ2].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L38 clauses[SZ2].effects[0].on_success: on_success — no one-to-one verb
-- [ ] L52 clauses[SZ3].effects[0].sets: sets — no one-to-one verb
-- [ ] L62 clauses[SZ4].status: status — not a clause key in the vocabulary
-- [ ] L63 clauses[SZ4].why: why — `why` without `effects: none`: the clause has no body to carry it
-- [ ] L78 clauses[SZ5].effects[1].unless: unless — next to a `when`: which of the two conditions wins is not mechanical
-- [ ] L78 clauses[SZ5].effects[1].unless.check_passed: check_passed — snake_case key, no mapping
-- [ ] L79 clauses[SZ5].effects[2].when.check_passed: check_passed — not a fact in the vocabulary
+- [x] L16 level: level — not a rule key in the vocabulary
+- [x] L19 level.from[1].set_by: set_by — snake_case key, no mapping
+- [x] L20 level.effects_lowered_by: effects_lowered_by — snake_case key, no mapping
+- [x] L35 clauses[SZ2].effects[0].when.before: before — not a fact in the vocabulary
+- [x] L36 clauses[SZ2].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L37 clauses[SZ2].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L38 clauses[SZ2].effects[0].on_success: on_success — no one-to-one verb
+- [x] L52 clauses[SZ3].effects[0].sets: sets — no one-to-one verb
+- [x] L62 clauses[SZ4].status: status — not a clause key in the vocabulary
+- [x] L63 clauses[SZ4].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L78 clauses[SZ5].effects[1].unless: unless — next to a `when`: which of the two conditions wins is not mechanical
+- [x] L78 clauses[SZ5].effects[1].unless.check_passed: check_passed — snake_case key, no mapping
+- [x] L79 clauses[SZ5].effects[2].when.check_passed: check_passed — not a fact in the vocabulary
 
 ## rules/conditions/STATE_10.yaml
 
-- [ ] L17 applies_to_side: applies_to_side — not a rule key in the vocabulary
-- [ ] L29 clauses[L2].effects[0].when.side: side — not a fact in the vocabulary
-- [ ] L33 clauses[L2].effects[1].when.side: side — not a fact in the vocabulary
-- [ ] L39 clauses[L3].effects[0].when.side: side — not a fact in the vocabulary
-- [ ] L41 clauses[L3].effects[1].when.side: side — not a fact in the vocabulary
-- [ ] L44 clauses[L3].effects[2].when.side: side — not a fact in the vocabulary
-- [ ] L48 clauses[L3].effects[3].when.side: side — not a fact in the vocabulary
-- [ ] L59 clauses[L4].effects[0].when.side: side — not a fact in the vocabulary
-- [ ] L61 clauses[L4].effects[0].offer.action: action — not a field of `offer`
-- [ ] L63 clauses[L4].effects[0].offer.then: then — not a field of `offer`
-- [ ] L63 clauses[L4].effects[0].offer.then.remove_state: remove_state — snake_case key, no mapping
-- [ ] L64 clauses[L4].effects[0].offer.if_opponent_in_reach: if_opponent_in_reach — not a field of `offer`
-- [ ] L65 clauses[L4].effects[0].offer.if_opponent_in_reach.optional_check: optional_check — snake_case key, no mapping
-- [ ] L66 clauses[L4].effects[0].offer.if_opponent_in_reach.on_check_failed_or_skipped: on_check_failed_or_skipped — snake_case key, no mapping
+- [x] L17 applies_to_side: applies_to_side — not a rule key in the vocabulary
+- [x] L29 clauses[L2].effects[0].when.side: side — not a fact in the vocabulary
+- [x] L33 clauses[L2].effects[1].when.side: side — not a fact in the vocabulary
+- [x] L39 clauses[L3].effects[0].when.side: side — not a fact in the vocabulary
+- [x] L41 clauses[L3].effects[1].when.side: side — not a fact in the vocabulary
+- [x] L44 clauses[L3].effects[2].when.side: side — not a fact in the vocabulary
+- [x] L48 clauses[L3].effects[3].when.side: side — not a fact in the vocabulary
+- [x] L59 clauses[L4].effects[0].when.side: side — not a fact in the vocabulary
+- [x] L61 clauses[L4].effects[0].offer.action: action — not a field of `offer`
+- [x] L63 clauses[L4].effects[0].offer.then: then — not a field of `offer`
+- [x] L63 clauses[L4].effects[0].offer.then.remove_state: remove_state — snake_case key, no mapping
+- [x] L64 clauses[L4].effects[0].offer.if_opponent_in_reach: if_opponent_in_reach — not a field of `offer`
+- [x] L65 clauses[L4].effects[0].offer.if_opponent_in_reach.optional_check: optional_check — snake_case key, no mapping
+- [x] L66 clauses[L4].effects[0].offer.if_opponent_in_reach.on_check_failed_or_skipped: on_check_failed_or_skipped — snake_case key, no mapping
 
 ## rules/conditions/STATE_13.yaml
 
@@ -670,13 +670,13 @@ No residue.
 
 ## rules/core/zustaende.yaml
 
-- [ ] L35 clauses[Z3].effects[0].cap.lines: lines — not a field of `cap`
-- [ ] L35 clauses[Z3].effects[0].cap.on: on — not a field of `cap`
-- [ ] L55 clauses[Z4].status: status — not a clause key in the vocabulary
-- [ ] L56 clauses[Z4].why: why — `why` without `effects: none`: the clause has no body to carry it
-- [ ] L63 clauses[Z5].effects[0].when.sum: sum — not a fact in the vocabulary
-- [ ] L63 clauses[Z5].effects[0].when.sum.condition_levels: condition_levels — snake_case key, no mapping
-- [ ] L63 clauses[Z5].effects[0].when.min: min — not a fact in the vocabulary
+- [x] L35 clauses[Z3].effects[0].cap.lines: lines — not a field of `cap`
+- [x] L35 clauses[Z3].effects[0].cap.on: on — not a field of `cap`
+- [x] L55 clauses[Z4].status: status — not a clause key in the vocabulary
+- [x] L56 clauses[Z4].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L63 clauses[Z5].effects[0].when.sum: sum — not a fact in the vocabulary
+- [x] L63 clauses[Z5].effects[0].when.sum.condition_levels: condition_levels — snake_case key, no mapping
+- [x] L63 clauses[Z5].effects[0].when.min: min — not a fact in the vocabulary
 
 ## rules/creatures/maechtiger-schlag.yaml
 
@@ -1062,21 +1062,21 @@ No residue.
 
 ## situations/liegend.yaml
 
-- [ ] L21 situations["7.2"].check: check — not a situation key in the vocabulary
-- [ ] L31 situations["7.3"].expect.opponent_lines: opponent_lines — neither an expect key nor a query
-- [ ] L33 situations["7.3"].expect.told: told — neither an expect key nor a query
-- [ ] L40 situations["7.4"].expect.states: states — neither an expect key nor a query
-- [ ] L43 situations["7.4"].expect.actions: actions — neither an expect key nor a query
-- [ ] L44 situations["7.4"].expect.defences: defences — neither an expect key nor a query
-- [ ] L54 situations["7.5"].expect.states: states — neither an expect key nor a query
-- [ ] L66 situations["7.6"].choose.action: action — not a fact in the vocabulary
-- [ ] L66 situations["7.6"].choose.check: check — not a fact in the vocabulary
-- [ ] L69 situations["7.6"].expect.after: after — neither an expect key nor a query
-- [ ] L70 situations["7.6"].expect.told: told — neither an expect key nor a query
-- [ ] L77 situations["7.7"].choose.action: action — not a fact in the vocabulary
-- [ ] L77 situations["7.7"].choose.check: check — not a fact in the vocabulary
-- [ ] L79 situations["7.7"].expect.after: after — neither an expect key nor a query
-- [ ] L80 situations["7.7"].expect.told: told — neither an expect key nor a query
+- [x] L21 situations["7.2"].check: check — not a situation key in the vocabulary
+- [x] L31 situations["7.3"].expect.opponent_lines: opponent_lines — neither an expect key nor a query
+- [x] L33 situations["7.3"].expect.told: told — neither an expect key nor a query
+- [x] L40 situations["7.4"].expect.states: states — neither an expect key nor a query
+- [x] L43 situations["7.4"].expect.actions: actions — neither an expect key nor a query
+- [x] L44 situations["7.4"].expect.defences: defences — neither an expect key nor a query
+- [x] L54 situations["7.5"].expect.states: states — neither an expect key nor a query
+- [x] L66 situations["7.6"].choose.action: action — not a fact in the vocabulary
+- [x] L66 situations["7.6"].choose.check: check — not a fact in the vocabulary
+- [x] L69 situations["7.6"].expect.after: after — neither an expect key nor a query
+- [x] L70 situations["7.6"].expect.told: told — neither an expect key nor a query
+- [x] L77 situations["7.7"].choose.action: action — not a fact in the vocabulary
+- [x] L77 situations["7.7"].choose.check: check — not a fact in the vocabulary
+- [x] L79 situations["7.7"].expect.after: after — neither an expect key nor a query
+- [x] L80 situations["7.7"].expect.told: told — neither an expect key nor a query
 
 ## situations/mehrfache-verteidigung.yaml
 
@@ -1244,22 +1244,22 @@ No residue.
 
 ## situations/schmerz.yaml
 
-- [ ] L15 situations[S1].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L17 situations[S1].expect.talent: talent — neither an expect key nor a query
-- [ ] L18 situations[S1].expect.spell: spell — neither an expect key nor a query
-- [ ] L27 situations[S2].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L36 situations[S3].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L37 situations[S3].expect.requires_check: requires_check — neither an expect key nor a query
-- [ ] L38 situations[S3].expect.on_failure: on_failure — neither an expect key nor a query
-- [ ] L46 situations[S4].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L66 situations[S6].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L86 situations[S7].expect.states: states — neither an expect key nor a query
-- [ ] L111 situations[S9].expect.states: states — neither an expect key nor a query
-- [ ] L120 situations[S10].expect.states: states — neither an expect key nor a query
-- [ ] L126 situations[S11].checks: checks — not a situation key in the vocabulary
-- [ ] L128 situations[S11].expect.talent: talent — neither an expect key nor a query
-- [ ] L129 situations[S11].expect.spell: spell — neither an expect key nor a query
-- [ ] L135 situations[S12].passed: passed — not a situation key in the vocabulary
+- [x] L15 situations[S1].expect.conditions: conditions — neither an expect key nor a query
+- [x] L17 situations[S1].expect.talent: talent — neither an expect key nor a query
+- [x] L18 situations[S1].expect.spell: spell — neither an expect key nor a query
+- [x] L27 situations[S2].expect.conditions: conditions — neither an expect key nor a query
+- [x] L36 situations[S3].expect.conditions: conditions — neither an expect key nor a query
+- [x] L37 situations[S3].expect.requires_check: requires_check — neither an expect key nor a query
+- [x] L38 situations[S3].expect.on_failure: on_failure — neither an expect key nor a query
+- [x] L46 situations[S4].expect.conditions: conditions — neither an expect key nor a query
+- [x] L66 situations[S6].expect.conditions: conditions — neither an expect key nor a query
+- [x] L86 situations[S7].expect.states: states — neither an expect key nor a query
+- [x] L111 situations[S9].expect.states: states — neither an expect key nor a query
+- [x] L120 situations[S10].expect.states: states — neither an expect key nor a query
+- [x] L126 situations[S11].checks: checks — not a situation key in the vocabulary
+- [x] L128 situations[S11].expect.talent: talent — neither an expect key nor a query
+- [x] L129 situations[S11].expect.spell: spell — neither an expect key nor a query
+- [x] L135 situations[S12].passed: passed — not a situation key in the vocabulary
 
 ## situations/sturmangriff.yaml
 
@@ -1402,6 +1402,8 @@ No residue.
 - situations/kampfsituationen.yaml 17.9: RK10's Reiten check after "Reittier getroffen" reads the mount's SP (`hit.mountSp`), which the situation does not state; the expected check event holds, but its modifier (−1 per 5 SP) is unknown there and raises a question.
 - situations/boronmir-neu.yaml 19.9: expects `wundschwelle` total 9 with `rulesets: []`. The Wundschwelle's derive (⌈KO/2⌉) is trefferzonen.TZ8's, and the whole file is `ruleset: fokus.trefferzonen`, so with the Fokusregel off only ADV_54's +1 remains. Pending on ADV_54's open ruling eisern-scope, which asks exactly this.
 - situations/kampfwerte.yaml 16.20: expects `events: [{ gained: imSterben, from: schaden.S8 }]`. There is no rule `imSterben` and the Regel-Wiki has no page to draft one from; schaden.S8 now `tell`s the hero "Ab 0 Lebenspunkten liegt ein Held im Sterben."
+- situations/lebensenergie.yaml 15.7: before the check, expects the gained Handlungsunfähig `from: COND_6.SZ5, via: [ADV_49.ZH3]`; after it is passed, the −3 lines `via: [ADV_49.ZH1, ADV_49.ZH3]`. ZH1 covers Stufen II–III (as the old encoding, `level: [2, 3]`), and ZH3's old first effect (`keep` Stufe IV's Handlungsunfähigkeit) was a no-op beside it and is dropped, so before the check no Zäher Hund effect acts and the gain has no `via`; after the pass only ZH3's `useLevel … as: 3` acts, so the lines' `via` is [ADV_49.ZH3]. Satisfying both would need ZH1 to reach Stufe IV and SZ5's gain to read the Stufe the hero has (`hero.levelOf.COND_6`) instead of the one acted at; the owner decides.
+- situations/lebensenergie.yaml 15.4–15.8: expect `level(rule: COND_6)` to have one `base` line of the whole Stufe (value 1, 2, 3), with `ruling: ADV_49.zaeher-hund-counts`. COND_6.SZ3 is one `derive` of 1 per LE threshold reached, so the base comes as one line of 1 per threshold, each from COND_6.SZ3 with ruling COND_6.schmerz-thresholds; zaeher-hund-counts sits on ADV_49's `useLevel` (the `levelAs` line). Whether base lines of one clause are summed, and whether a line-level ruling may match another line of the query, is the harness's call.
 
 ## Reviews reset by hand edits
 
@@ -1502,6 +1504,23 @@ No residue.
 - SA_160.GA1: the offer is `offer: { choice: gezielterAngriff }` on `query.target: at`; its `requires: { choice: targetZone }` is a `require … for: { choice: gezielterAngriff }` that a zone is announced; the halving reads `choice.gezielterAngriff` (was `action.manoeuvre`) and is `multiply: { to: at, by: 0.5, line: { line: trefferzonen.TZ5 } }` (was the effect id `TZ5.aim`)
 - STATE_13.UE1: `opponent.state`/`hero.state: ueberrascht` are `opponent.has`/`hero.has: STATE_13`, `check: [at, fk]` is `query.target`; the forbid's `until: surpriseActionResolved` is a new `gain: { rule: STATE_13, levels: -1 }` when `round.phase: start` (the regular round begins), with a `because` on the forbid
 
+- COND_6 (header): the `level:` block (`from`, `set_by`, `effects_lowered_by`) is a comment; SZ3 derives the Stufe, a sheet-stated Stufe is the rule's owned level
+- COND_6.SZ2: `requires_check`/`on_failure`/`on_success` are a `check` of Selbstbeherrschung (TAL_8, Handlungsfähigkeit bewahren) at Stufe IV (A.4); `on_failure: gain handlungsunfaehig` is dropped (SZ5's gain holds until a pass), `on_success` is `gain: { rule: STATE_8, levels: -1, span: action }` (lifted for that one action); `before: action` is dropped (the check procedure's timing, ruling schmerz-iv-check)
+- COND_6.SZ3: `sets: … count(lp <= le*3/4, …, lp <= 5)` is four `derive`s of 1 to `level(rule: COND_6)`, one per threshold, over the new derived facts `hero.leShare` (≤ 0.75, 0.5, 0.25) and `hero.leCurrent` (≤ 5)
+- COND_6.SZ5: `level: [1, 3]` (Stufe I or III) is now `[1, 2, 3]`; the target `check` is `[at, pa, aw, fk, check.modifier]`; the gain of `handlungsunfaehig` is `gain: { rule: STATE_8 }` without the `unless: { check_passed: SZ2 }` (SZ2's `onSuccess` lifts it); `check_passed: SZ2` is `check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success`; `level: 4` is `atLeast: 4`
+- zustaende.Z3: `cap: { lines: { kind: condition }, on: [check, gs, ini] }` is `cap: { to: [at, pa, aw, fk, check.modifier, gs, ini], over: { ruleKind: condition }, min: -5 }` (`check` spelled out as the check targets)
+- zustaende.Z5: `sum: { condition_levels: all }, min: 8` is the new derived fact `hero.conditionLevels: { atLeast: 8 }` (the Stufen the hero has, before any `useLevel`); `gain: { rule: handlungsunfaehig }` is `gain: { rule: STATE_8 }`; ruling ADV_49.zaeher-hund-counts is now on the effect
+- ADV_49.ZH1: `condition: COND_6, level: [2, 3]` is `hero.levelOf.COND_6: [2, 3]` (the Stufe the hero has); `useLevel` names the rule COND_6 (was the clause COND_6.SZ5); `keeps: { condition_level: level }` is dropped (it is what `useLevel` means)
+- ADV_49.ZH3: the first effect, `keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }`, is dropped: ZH1 stops at Stufe III, so COND_6.SZ5's Handlungsunfähig at IV holds without it; the passed-check `useLevel … as: 3` conditions on `hero.levelOf.COND_6: 4` and `check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success` (was `check_passed: COND_6.SZ2`)
+- ADV_49.ZH4: `condition: COND_6, level: 1` is `hero.levelOf.COND_6: 1`; `useLevel` names the rule COND_6
+- ADV_75.SW1: `scale: { duration: COND_2.decay | COND_9.decay, by: 0.5 }` is a `tell` of the halved duration plus a `suppress` of COND_2.BT2's / COND_9.BR4's decay text, with `because`; `condition`/`cause: alcohol` are `hero.has: COND_2 | COND_9` and `gmFact.cause: alcohol`
+- STATE_10.L2: `side: hero` / `side: opponent` are `hero.has: STATE_10` / `opponent.has: STATE_10` (the old `applies_to_side`), as STATE_13
+- STATE_10.L3: the same `side` → `hero.has` / `opponent.has` re-keying
+- STATE_10.L4: the offer `{ action: aufstehen, costs: action, then: remove_state, if_opponent_in_reach: optional_check … }` is `offer: { choice: aufstehen, costs: [1 action] }`, a `gain: { rule: STATE_10, levels: -1 }` on `choice.aufstehen`, and with `opponent.inReach` an `offer: { choice: passierschlagVermeiden }` that runs a `check` of Körperbeherrschung (TAL_4, Kampfmanöver) whose `onFailure` tells the opponent `passierschlag`; the check skipped tells it as well
+- STATE_8.H3: was `none`; now `ask: { fact: choice.liegend, who: player }` and, on "ja", `gain: { rule: STATE_10 }`, both on ruling STATE_10.handlungsunfaehig-liegend (liegend 7.4, 7.5 expect the question)
+
 ## Open questions
 
 - trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden.
+- zustaende.Z5 / SA_41: `hero.conditionLevels` counts each Zustand's Stufe before any `useLevel`, so Zäher Hund does not lower the count (ruling ADV_49.zaeher-hund-counts). The same definition counts Belastung before Belastungsgewöhnung (SA_41.G1's `useLevel`): Boronmir in Plattenrüstung counts Belastung III, not I. lebensenergie 15.8's comment counts I (1 + 3 + 3 + 1 = 8; 10 by this definition). Its expected result (Handlungsunfähig) holds either way. Does Belastungsgewöhnung lower the Stufe the hero has, or only its effects?
+- COND_6.SZ3: the Stufe from the LP thresholds is a `derive` (the base of `level(rule: COND_6)`); a Stufe stated on the sheet (a Patzer, a wound effect) is the rule's owned level. The engine plan takes a stated base before a derive, so LP Stufen and stated Stufen do not add up today (zustaende.Z1 says they should: "Die einzelnen Zustände addieren sich auf").

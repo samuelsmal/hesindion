@@ -32,12 +32,15 @@ clauses:
       insgesamt mehr als 5 Stufen und damit auch eine höhere Erschwernis als 5 angesammelt hat,
       hat solange eine Erschwernis von 5, bis die addierten Zustandsstufen unter 5 sinken.
     effects:
-      - cap: { lines: { kind: condition }, min: -5, on: [check, gs, ini] }
+      - cap: { to: [at, pa, aw, fk, check.modifier, gs, ini], over: { ruleKind: condition }, min: -5 }
         ruling: cap-scope
-        # Each value is capped on its own: AT −6 → −5 and GS −6 → −5 are two correction lines.
-        # A value a Zustand *sets* (GS 0 at Schmerz IV) is not a penalty and is not capped.
-        # FORMAT: an effect over other effects' sum, applied last and shown as its own
-        # correction line ("Zustände: höchstens −5, +1").
+        # The lines of every rule of kind `condition` (the Zustände: Belastung, Schmerz,
+        # Betäubung, Furcht, …) are summed and bounded at −5; the difference is a `capped` line
+        # ("Zustände: höchstens −5, +1"). Each value is capped on its own: AT −6 → −5 and
+        # GS −6 → −5 are two correction lines. "Erschwernis" on checks (AT, PA, AW, FK and
+        # `check.modifier`) and, per ruling cap-scope, GS and INI (the old `on: [check, gs,
+        # ini]`). A value a Zustand *sets* (GS 0 at Schmerz IV) is not a penalty and is not
+        # capped; the armour's own extra penalty (ruestung-und-belastung.A1) is not a Zustand.
 
   - id: Z3a
     text: >
@@ -52,16 +55,20 @@ clauses:
       Sofern ein Zustand durch einen Zauber oder eine Liturgie verursacht wurde und zum Status
       Handlungs- oder Bewegungsunfähigkeit führte, endet dieser Status sofort, wenn die Wirkung
       des Zaubers aufhört. Die entsprechenden Stufen des Zustands verschwinden augenblicklich.
-    status: unencoded
-    why: the app does not track a Zustand's cause or a spell's duration; shown as text on the state
+    unencoded: the app does not track a Zustand's cause or a spell's duration; shown as text on the state
 
   - id: Z5
     text: >
       Wenn ein Held insgesamt 8 oder mehr Zustandsstufen angesammelt hat, erleidet er den Status
       Handlungsunfähig, auch wenn kein einzelner Zustand bei ihm bislang Stufe IV aufweist.
     effects:
-      - when: { sum: { condition_levels: all }, min: 8 }
-        gain: { rule: handlungsunfaehig }
+      - when: { hero.conditionLevels: { atLeast: 8 } }
+        gain: { rule: STATE_8 }
+        ruling: ADV_49.zaeher-hund-counts
+        # Handlungsunfähig (STATE_8; the old file-less `handlungsunfaehig`). `hero.conditionLevels`
+        # is the sum of the Stufen the hero *has* of every Zustand (each `level(rule: X)` before
+        # a `useLevel`), so Zäher Hund's "wirkt wie" does not lower the count (ruling
+        # ADV_49.zaeher-hund-counts; lebensenergie 15.8).
 
   - id: Z6
     # The page's "Anmerkung/Info-Box:" — an info box under the rule, not a paragraph of it.

@@ -1,0 +1,33 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 5 hand migration (plan Task 12): situations schmerz S10 and liegend 7.4
+# name it (as `bewusstlos`). The page is one paragraph, split per sentence.
+id: STATE_2
+name: Bewusstlos
+kind: state                # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap
+source:
+  url: https://dsa.ulisses-regelwiki.de/St_Bewusstlos.html
+  book: Regelwerk
+  page: 34
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: BW1
+    text: >
+      Wenn eine Person etwa schläft oder einen sehr harten Schlag auf den Kopf bekommen hat,
+      zählt sie als Bewusstlos.
+    none: introduces the status; the player or GM sets it
+
+  - id: BW2
+    text: >
+      Zwar ist ihr Körper nicht eingeschränkt, aber ihr Geist ist entweder anderweitig
+      beschäftigt oder inaktiv.
+    none: describes the status; what it does at the table is BW3
+
+  - id: BW3
+    text: Zusätzlich erleidet der Held auch noch den Status Handlungsunfähig.
+    effects:
+      - gain: { rule: STATE_8 }
+        # Handlungsunfähig (STATE_8) while Bewusstlos. Carried by a Status, not by a Zustand, so
+        # the Schip "Zustand ignorieren" does not lift it (schicksalspunkte.schip-lifts-incapacity).

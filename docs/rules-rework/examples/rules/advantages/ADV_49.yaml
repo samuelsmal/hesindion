@@ -8,13 +8,13 @@ source:
   page: 169
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 # Works on Schmerz from every source — the LP thresholds (COND_6.SZ3), a Patzer, a spell: the
 # page says "des Zustands Schmerz", not "durch Lebenspunkte".
-# FORMAT: a rule that changes which Stufe of *another rule's* table applies, without (per ruling
-# zaeher-hund-counts) changing the Stufe the hero has. The format needs to tell "the
-# Stufe you have" from "the Stufe whose effects you suffer".
+# `useLevel` on COND_6: `as` is evaluated at COND_6's own Stufe ("level - 1"), and changes only
+# the Stufe whose effects apply; the Stufe the hero has (`hero.levelOf.COND_6`, the base of
+# `level(rule: COND_6)`) stays, for zustaende.Z3/Z5 and the chip (ruling zaeher-hund-counts).
 
 clauses:
   - id: ZH1
@@ -22,12 +22,12 @@ clauses:
       Dieser Vorteil sorgt dafür, dass der Held die Auswirkungen der höchsten Stufe des Zustands
       Schmerz ignorieren darf. Er erleidet lediglich die Auswirkungen der nächstniedrigeren Stufe.
     effects:
-      - when: { condition: COND_6, level: [2, 3] }
-        useLevel: { rule: COND_6.SZ5, as: "level - 1" }
-        keeps: { condition_level: level }
+      - when: { hero.levelOf.COND_6: [2, 3] }
+        useLevel: { rule: COND_6, as: "level - 1" }
         ruling: zaeher-hund-counts
         # The breakdown shows the line as "Schmerz III, wirkt wie II (Zäher Hund): −2", citing
-        # COND_6.SZ5 via ADV_49.ZH1.
+        # COND_6.SZ5 via ADV_49.ZH1. Stufe I is ZH4, Stufe IV is ZH3. The old `keeps:
+        # { condition_level: level }` is what `useLevel` means: the Stufe the hero has is kept.
 
   - id: ZH2
     text: >
@@ -38,18 +38,19 @@ clauses:
   - id: ZH3
     text: Bei Schmerz Stufe IV wird der Held dennoch handlungsunfähig.
     effects:
-      - when: { condition: COND_6, level: 4 }
-        keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }
-        # The Selbstbeherrschung check of COND_6.SZ2 is offered as for anyone.
-      - when: { condition: COND_6, level: 4, check_passed: COND_6.SZ2 }
-        useLevel: { rule: COND_6.SZ5, as: 3 }
+      - when: { hero.levelOf.COND_6: 4, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
+        useLevel: { rule: COND_6, as: 3 }
         ruling: zaeher-hund-iv
+        # "dennoch handlungsunfähig": ZH1 does not reach Stufe IV, so COND_6.SZ5's Handlungsunfähig
+        # holds (the old `keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }`, a no-op
+        # beside ZH1's Stufen II–III). The Selbstbeherrschung check of COND_6.SZ2 is offered as
+        # for anyone; once passed (the old `check_passed: COND_6.SZ2`), the hero acts as Stufe III.
 
   - id: ZH4
     text: Schmerz Stufe I wird so behandelt, als hätte der Held keine Stufe Schmerz.
     effects:
-      - when: { condition: COND_6, level: 1 }
-        useLevel: { rule: COND_6.SZ5, as: 0 }
+      - when: { hero.levelOf.COND_6: 1 }
+        useLevel: { rule: COND_6, as: 0 }
         ruling: zaeher-hund-counts
         # No line at all; "nicht angewandt: Schmerz I — Zäher Hund" in the not-applied list.
 
