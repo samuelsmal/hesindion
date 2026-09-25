@@ -83,8 +83,9 @@ final class EventTests: XCTestCase {
         // A state has no Stufen: owning it once is all.
         let helpless = situation(owned: ["act-helpless": 1])
         let again = layer.perform(.state(rule: "act-helpless", levels: 1), in: helpless)
-        XCTAssertEqual(again.events.map(\.levels), [0])
-        XCTAssertEqual(helpless.applying(again.events).owned["act-helpless"]?.level, 1)
+        XCTAssertEqual(again.events, [], "nothing to gain: no event")
+        XCTAssertEqual(again.texts.map(\.text),
+                       ["Nichts geändert: act-helpless ist bereits auf Stufe 1 (höchstens Stufe 1)"])
         // A rule the book does not have is a text, no event.
         let unknown = layer.perform(.state(rule: "act-nothing", levels: 1), in: s)
         XCTAssertEqual(unknown.events, [])
@@ -111,7 +112,98 @@ final class EventTests: XCTestCase {
         XCTAssertEqual(entry?.because, "Schip, Zustand ignorieren")
     }
 
+    func testTwoConditionsGainingOneStateGiveOneGainAndNoneWhenItIsHeld() {
+        // COND_1.B4 and COND_2.BT4 both at IV gain STATE_8: one `gained(…, 1)`, not two.
+        let s = situation(owned: ["act-stunned": 4, "act-heavy": 4])
+        let r = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        let gained = r.events.filter { $0.kind == .gained && $0.rule == "act-helpless" }
+        XCTAssertEqual(gained.map(\.levels), [1])
+        XCTAssertEqual(gained.map(\.origin), [ref("act-heavy.B4")])
+        let second = r.notApplied.first { $0.origin == ref("act-stunned.S4") }
+        XCTAssertEqual(second?.reason, .overridden)
+        XCTAssertEqual(second?.because, "act-helpless bereits auf Stufe 1 (höchstens Stufe 1)")
+        XCTAssertEqual(s.applying(r.events).owned["act-helpless"]?.level, 1)
+        // Held already: no event at all, the entry says why.
+        let held = situation(owned: ["act-stunned": 4, "act-helpless": 1])
+        let again = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: held)
+        XCTAssertEqual(again.events.filter { $0.kind == .gained }, [])
+        XCTAssertEqual(again.notApplied.first { $0.origin == ref("act-stunned.S4") }?.reason, .overridden)
+    }
+
+    func testApplyingWithTheBookRespectsTheRulesStufen() {
+        let s = situation(owned: ["act-stunned": 3, "act-helpless": 1])
+        let events = [Event(kind: .gained, rule: "act-stunned", levels: 5), Event(kind: .gained, rule: "act-helpless"),
+                      Event(kind: .gained, rule: "act-damage", levels: 7)]
+        let capped = s.applying(events, book: PoolTests.book)
+        XCTAssertEqual(capped.owned["act-stunned"]?.level, 4)
+        XCTAssertEqual(capped.owned["act-helpless"]?.level, 1)
+        XCTAssertEqual(capped.owned["act-damage"]?.level, 7, "a rule with neither Stufen nor state kind has no bound")
+    }
+
+    func testExtremeNumbersNeverTrap() {
+        // Decoded events with extreme amounts and levels saturate instead of trapping.
+        let s = situation(owned: ["act-stunned": 2], pools: [.le: PoolState(current: -5, max: 29)])
+        let after = s.applying([Event(kind: .paid, pool: .le, amount: Int.max),
+                                Event(kind: .gained, rule: "act-stunned", levels: Int.max),
+                                Event(kind: .cleared, rule: "act-helpless", levels: Int.min)])
+        XCTAssertEqual(after.pools[.le]?.current, Int.min)
+        XCTAssertEqual(after.owned["act-stunned"]?.level, Int.max)
+        // An action with an extreme count is a text, not a trap.
+        let clear = layer.perform(.state(rule: "act-stunned", levels: Int.min), in: s)
+        XCTAssertEqual(clear.events, [])
+        XCTAssertEqual(clear.texts.map(\.kind), [.notApplicable])
+        let pay = layer.perform(.pay(.le, Int.max), in: situation(pools: [.le: PoolState(current: -5, max: 29)]))
+        XCTAssertEqual(pay.events, [])
+        XCTAssertEqual(pay.texts.map(\.kind), [.notApplicable])
+    }
+
+    func testAnActionThatChangesNothingSaysWhy() {
+        let pay = layer.perform(.pay(.asp, 0), in: situation())
+        XCTAssertEqual(pay.events, [])
+        XCTAssertEqual(pay.texts.map(\.text), ["Kosten konnten nicht bezahlt werden: der Betrag 0 ist nicht positiv"])
+        XCTAssertEqual(layer.perform(.pay(.asp, -3), in: situation()).texts.count, 1)
+        let state = layer.perform(.state(rule: "act-stunned", levels: 0), in: situation())
+        XCTAssertEqual(state.events, [])
+        XCTAssertEqual(state.texts.map(\.text), ["Nichts geändert: act-stunned um 0 Stufen"])
+    }
+
     // MARK: - Paying LeP is not damage (probe-magie 20.7)
+
+    func testACastPayingLePThroughTheRulesIsNoHitOnABookWithADamageChain() {
+        // act-damage is schaden.S2 (SP lower LE) and TZ8 (a Wundeffekt over the Wundschwelle).
+        let s = situation(owned: ["act-fall": 1], facts: ["choice.fall": true], base: ["spell.cost": 8],
+                          pools: [.asp: PoolState(current: 5, max: 30), .le: PoolState(current: 29, max: 29)])
+        let r = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        XCTAssertEqual(r.events.map(\.kind), [.paid, .paid])
+        XCTAssertEqual(r.events.map(\.pool), [.asp, .le])
+        XCTAssertFalse(r.events.contains { $0.origin?.rule == "act-damage" })
+        let after = s.applying(r.events)
+        XCTAssertFalse(after.facts.keys.contains { $0.hasPrefix("hit.") })
+        XCTAssertEqual(after.owned, s.owned, "no Wundeffekt")
+        // LE is lowered by the payment, not by a damage line: D1 has no SP to read.
+        let le = engine.evaluate(Query("leCurrent"), in: after)
+        XCTAssertEqual(le.result, 26)
+        XCTAssertEqual(le.lines.filter { $0.origin == ref("act-damage.D1") }, [])
+    }
+
+    func testOnTheRealRulesASplitOntoLePIsNoHit() throws {
+        let url = Repo.url("build/rules/rules.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { throw XCTSkip("run make rules-json") }
+        let real = ActionLayer(engine: Engine(book: try RuleBook.load(from: url)))
+        let s = situation(owned: ["SA_74": 1], facts: ["choice.split.le": 5, "check.result": "success", "attr.KO": 12],
+                          base: ["spell.cost": 8],
+                          pools: [.asp: PoolState(current: 3, max: 30), .le: PoolState(current: 29, max: 29)])
+        let r = real.perform(.cast(spell: "SPELL_21", modifications: []), in: s)
+        XCTAssertEqual(r.events.map(\.kind), [.paid, .paid], "no gained, no logged: no Wundeffekt")
+        XCTAssertEqual(r.events.map(\.pool), [.asp, .le])
+        let after = s.applying(r.events)
+        XCTAssertFalse(after.facts.keys.contains { $0.hasPrefix("hit.") })
+        XCTAssertEqual(after.owned, s.owned)
+        let le = real.engine.evaluate(Query("leCurrent"), in: after)
+        XCTAssertEqual(le.result, 24)
+        XCTAssertEqual(le.lines.filter { $0.origin == ClauseRef("schaden.S2") }, [], "no SP line")
+    }
+
 
     func testPayingLePLowersLEOnlyAndNoDamageFollows() {
         let s = situation(owned: ["act-stunned": 1], facts: ["attr.KO": 12], base: ["at": 12],

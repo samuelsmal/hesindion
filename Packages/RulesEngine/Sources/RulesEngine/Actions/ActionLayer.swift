@@ -35,6 +35,11 @@ public struct ActionLayer: Sendable {
             evaluation.run(effects, &run)
         case .pay(let pool, let amount):
             run = evaluation.actionRun(controlling: [])
+            guard amount > 0 else {
+                run.pipeline.show(TextLine(kind: .notApplicable,
+                                           text: "Kosten konnten nicht bezahlt werden: der Betrag \(amount) ist nicht positiv"))
+                break
+            }
             evaluation.charge(Cost(pool: pool, amount: .number(Double(amount))), amount: amount, effect: nil,
                               facts: [], via: [], &run)
         case .state(let rule, let levels):
@@ -78,6 +83,8 @@ public struct ActionLayer: Sendable {
 struct ActionRun {
     var pipeline: PipelineState
     var pools: [Pool: PoolState]
+    /// Rule id → the Stufe the hero has as the events so far leave it (a gain's bound).
+    var owned: [String: Int]
     var events: [Event] = []
     var read: [TargetRef] = []
 }
@@ -103,7 +110,7 @@ extension Evaluation {
         var pipeline = PipelineState(query: Query("action"), depth: 0, candidates: controls)
         pipeline.local = [:]
         control(effects, &pipeline)
-        return ActionRun(pipeline: pipeline, pools: situation.pools)
+        return ActionRun(pipeline: pipeline, pools: situation.pools, owned: situation.owned.mapValues(\.level))
     }
 
     /// Reads each effect as the pipeline does (applies, not suppressed, `when` yes) and runs it.
@@ -176,7 +183,17 @@ extension Evaluation {
             unknown(e, missing.uniqued(), facts: facts, via: via, &run)
             return
         }
-        shares[c.pool] = amount - shares.values.reduce(0, +)
+        // Checked: the shares are the player's numbers, however large.
+        var chosen = 0
+        for n in shares.values {
+            let (sum, overflow) = chosen.addingReportingOverflow(n)
+            guard !overflow else {
+                fail(e, "die gewählten Anteile liegen außerhalb des Zahlenbereichs", &run.pipeline)
+                return
+            }
+            chosen = sum
+        }
+        shares[c.pool] = amount - chosen          // amount ≥ 0 and chosen ≥ 0: no overflow
         let order = (split.pools.contains(c.pool) ? split.pools : [c.pool] + split.pools)
         for p in order {
             let n = shares[p] ?? 0
@@ -188,8 +205,13 @@ extension Evaluation {
         }
         for p in order {
             let n = shares[p] ?? 0
-            if n > 0, p != .le, let state = run.pools[p], state.current < n {
+            guard n > 0, let state = run.pools[p] else { continue }
+            if p != .le, state.current < n {
                 fail(e, "\(n) \(p.rawValue) gefordert, \(max(0, state.current)) vorhanden", &run.pipeline)
+                return
+            }
+            if state.current.subtractingReportingOverflow(n).overflow {
+                fail(e, "\(n) \(p.rawValue) liegt außerhalb des Zahlenbereichs", &run.pipeline)
                 return
             }
         }
@@ -221,6 +243,10 @@ extension Evaluation {
             if last {
                 guard remaining <= available || p == .le else {
                     refuse(e, "\(remaining) \(p.rawValue) gefordert, \(available) vorhanden", &run)
+                    return
+                }
+                guard !state.current.subtractingReportingOverflow(remaining).overflow else {
+                    refuse(e, "\(remaining) \(p.rawValue) liegt außerhalb des Zahlenbereichs", &run)
                     return
                 }
                 plan.append((p, remaining))
@@ -289,9 +315,17 @@ extension Evaluation {
         }
     }
 
-    /// `gained` within the rule's Stufen (`levels`; a state has one, a rule with neither has no
-    /// bound), with a note when fewer are gained than asked; `cleared` for a negative count.
+    /// `gained` within the rule's Stufen (`Rule.most`), counted against the Stufe the hero has
+    /// as this action's events so far leave it: two conditions at IV gaining one state give one
+    /// `gained(…, 1)`. Nothing left to gain gives no event: the effect is recorded `overridden`
+    /// with the reason (the player's own `.state`: a text). A note says when fewer are gained
+    /// than asked. A negative count gives `cleared`; a count of 0, or one beyond `Int`, a text.
     func gain(_ id: String, levels: Int, effect e: Effect?, facts: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+        func nothing(_ reason: String) {
+            if let e { fail(e, reason, &run.pipeline) } else {
+                run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: \(reason)"))
+            }
+        }
         guard let target = book.rules[id] else {
             let reason = "die Regel \(id) gibt es nicht"
             if let e { fail(e, reason, &run.pipeline) } else {
@@ -299,21 +333,43 @@ extension Evaluation {
             }
             return
         }
+        guard levels != 0 else {
+            nothing("\(id) um 0 Stufen")
+            return
+        }
+        guard levels != .min else {
+            let reason = "\(levels) Stufen liegen außerhalb des Zahlenbereichs"
+            if let e { fail(e, reason, &run.pipeline) } else {
+                run.pipeline.show(TextLine(kind: .notApplicable, text: "Regel konnte nicht angewandt werden: \(reason)"))
+            }
+            return
+        }
         let origin = e?.origin.clauseRef, rulings = e.map(decided) ?? []
+        let have = run.owned[id] ?? 0
         if levels < 0 {
             run.events.append(Event(kind: .cleared, origin: origin, rule: id, levels: -levels, via: via, rulings: rulings,
                                     facts: facts))
+            run.owned[id] = max(0, have.subtractingSaturating(-levels))
             return
         }
-        guard levels > 0 else { return }
         var granted = levels, note: String?
-        if let most = target.levels ?? (target.kind == .state ? 1 : nil) {
-            let have = situation.owned[id]?.level ?? 0
-            granted = max(0, min(levels, most - have))
+        if let most = target.most {
+            granted = max(0, min(levels, most.subtractingSaturating(have)))
+            guard granted > 0 else {
+                let reason = "\(id) bereits auf Stufe \(have) (höchstens Stufe \(most))"
+                if let e {
+                    run.pipeline.record(NotApplied(origin: e.origin.clauseRef, reason: .overridden, because: reason,
+                                                   rulings: e.ruling, facts: facts, via: via))
+                } else {
+                    run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: \(id) ist bereits auf Stufe \(have) (höchstens Stufe \(most))"))
+                }
+                return
+            }
             if granted < levels { note = "höchstens Stufe \(most)" }
         }
         run.events.append(Event(kind: .gained, origin: origin, rule: id, levels: granted, via: via, rulings: rulings,
                                 facts: facts, note: note))
+        run.owned[id] = have.addingSaturating(granted)
     }
 }
 

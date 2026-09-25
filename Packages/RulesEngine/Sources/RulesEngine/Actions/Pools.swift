@@ -41,31 +41,44 @@ extension Situation {
     /// - `gained` adds `levels` (1 when absent) to `owned[rule].level`; `cleared` removes `levels`
     ///   (all when absent). A rule whose level reaches 0 is no longer owned.
     /// - The other kinds are Tasks 26–28's and change nothing yet.
+    ///
+    /// Arithmetic saturates: an event decoded with an extreme amount or count never traps.
+    /// This form trusts a `gained`'s `levels` (the action layer bounds them); `applying(_:book:)`
+    /// also holds each rule within its Stufen.
     public func applying(_ events: [Event]) -> Situation {
         var s = self
-        for e in events { s.apply(e) }
+        for e in events { s.apply(e, book: nil) }
         return s
     }
 
-    private mutating func apply(_ e: Event) {
+    /// `applying(_:)`, holding a `gained` within the rule's Stufen (`Rule.most`), as the action
+    /// layer does: a state is owned once, a condition at most at its highest Stufe.
+    public func applying(_ events: [Event], book: RuleBook) -> Situation {
+        var s = self
+        for e in events { s.apply(e, book: book) }
+        return s
+    }
+
+    private mutating func apply(_ e: Event, book: RuleBook?) {
         switch e.kind {
         case .paid:
             guard let pool = e.pool, let amount = e.amount, var state = pools[pool] else { return }
-            state.current -= amount
+            state.current = state.current.subtractingSaturating(amount)
             pools[pool] = state
         case .gained:
             guard let rule = e.rule else { return }
-            changeLevel(of: rule, by: e.levels ?? 1)
+            changeLevel(of: rule, by: e.levels ?? 1, most: book?.rules[rule]?.most)
         case .cleared:
             guard let rule = e.rule else { return }
-            if let n = e.levels { changeLevel(of: rule, by: -n) } else { owned[rule] = nil }
+            if let n = e.levels { changeLevel(of: rule, by: n == .min ? .min : -abs(n)) } else { owned[rule] = nil }
         case .progressed, .completed, .brokenOff, .itemChanged, .logged:
             break
         }
     }
 
-    private mutating func changeLevel(of rule: String, by delta: Int) {
-        let level = (owned[rule]?.level ?? 0) + delta
+    private mutating func changeLevel(of rule: String, by delta: Int, most: Int? = nil) {
+        var level = (owned[rule]?.level ?? 0).addingSaturating(delta)
+        if let most, delta > 0 { level = min(level, max(most, owned[rule]?.level ?? 0)) }
         guard level > 0 else {
             owned[rule] = nil
             return
@@ -73,6 +86,24 @@ extension Situation {
         var entry = owned[rule] ?? OwnedRule(level: level)
         entry.level = level
         owned[rule] = entry
+    }
+}
+
+extension Rule {
+    /// The highest Stufe the hero can have: `levels`, 1 for a state, nil (no bound) for a rule
+    /// with neither (COND_9 keeps Stufen above IV).
+    public var most: Int? { levels ?? (kind == .state ? 1 : nil) }
+}
+
+extension Int {
+    func addingSaturating(_ other: Int) -> Int {
+        let (r, overflow) = addingReportingOverflow(other)
+        return overflow ? (other > 0 ? .max : .min) : r
+    }
+
+    func subtractingSaturating(_ other: Int) -> Int {
+        let (r, overflow) = subtractingReportingOverflow(other)
+        return overflow ? (other > 0 ? .min : .max) : r
     }
 }
 

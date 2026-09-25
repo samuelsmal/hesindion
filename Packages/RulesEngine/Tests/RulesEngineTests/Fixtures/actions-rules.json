@@ -2,6 +2,11 @@
  "reach": {
   "*": [
    {
+    "clause": "D2",
+    "index": 0,
+    "rule": "act-damage"
+   },
+   {
     "clause": "F1",
     "index": 0,
     "rule": "act-fall"
@@ -10,6 +15,11 @@
     "clause": "F2",
     "index": 0,
     "rule": "act-fall"
+   },
+   {
+    "clause": "B4",
+    "index": 0,
+    "rule": "act-heavy"
    },
    {
     "clause": "H1",
@@ -108,9 +118,99 @@
     "index": 0,
     "rule": "act-stunned"
    }
+  ],
+  "leCurrent": [
+   {
+    "clause": "D1",
+    "index": 0,
+    "rule": "act-damage"
+   }
   ]
  },
  "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D1",
+        "index": 0,
+        "rule": "act-damage"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "leCurrent"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "sp"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "D1",
+     "text": "Die SP senken die LeP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D2",
+        "index": 0,
+        "rule": "act-damage"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "act-stunned"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "atLeast": 1,
+        "fact": "hit.overWundschwelle"
+       }
+      }
+     ],
+     "id": "D2",
+     "text": "Über der Wundschwelle ein Wundeffekt."
+    }
+   ],
+   "id": "act-damage",
+   "kind": "core",
+   "name": "Schaden",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
   {
    "clauses": [
     {
@@ -205,6 +305,47 @@
    "id": "act-fall",
    "kind": "specialAbility",
    "name": "Notfall",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B4",
+        "index": 0,
+        "rule": "act-heavy"
+       },
+       "payload": {
+        "rule": "act-helpless"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "B4",
+     "text": "Ab Stufe IV handlungsunfähig."
+    }
+   ],
+   "id": "act-heavy",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Beladen",
    "reviewed": null,
    "rulings": [],
    "source": {
