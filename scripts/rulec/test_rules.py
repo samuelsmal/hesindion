@@ -156,6 +156,12 @@ class RuleValidationTests(unittest.TestCase):
         _, errors = check(VALID.replace(EFFECT, "      - replace: { line: { line: SA_1.T2 }, with: 3 }"))
         self.one_error(errors, "replace names a clause without effects", 11)
 
+    def test_two_clauses_without_an_id_report_missing_key_twice(self):
+        _, errors = check(VALID.replace("  - id: T1\n    text:", "  - text:")
+                          .replace("  - id: T2\n    text:", "  - text:"))
+        self.assertEqual([(e.message, e.line) for e in errors],
+                         [("missing key id", 8), ("missing key id", 12)])
+
     def test_unknown_phase(self):
         _, errors = check(VALID.replace("        when: { hero.mounted: true }\n",
                                         "        when: { hero.mounted: true }\n        phase: late\n"))

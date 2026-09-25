@@ -197,9 +197,11 @@ class _Rule:
             nc = self.clause(c)
             if nc is None:
                 continue
-            if nc.get("id") in seen:
-                self.err(f"duplicate clause id {nc['id']}", _key_line(c, "id"))
-            seen.add(nc.get("id"))
+            cid = nc.get("id")
+            if cid is not None:                     # an id-less clause is already `missing key id`
+                if cid in seen:
+                    self.err(f"duplicate clause id {cid}", _key_line(c, "id"))
+                seen.add(cid)
             rule["clauses"].append(nc)
         return rule
 
