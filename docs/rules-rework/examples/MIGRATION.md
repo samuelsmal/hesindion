@@ -1380,6 +1380,7 @@ No residue.
 
 ## Reviews reset by hand edits
 
+- kampfwerte.KW1: the MU term is its own `derive` with `when: { not: { loadout.weapon.technique: Peitschen } }`, so KW6's FF term stands in for it; the KtW term stays unconditional
 - kampfwerte.KW6: the `replace` of KW1's MU by FF is now its own `derive` term (FF above 8, per 3) for Peitschen; KW1's MU term carries `when: { not: { loadout.weapon.technique: Peitschen } }`
 - kampfwerte.KW7: the pick-the-higher `choose` effect is dropped; the higher Leiteigenschaft is the loadout-resolved fact `technique.leit` that KW2 reads (clause now `none`)
 - kampfwerte.KW11: the `recompute` effect is dropped; INI is KW10's `derive` over the stored W6 `roll.ini`, so its modifiers are live (clause now `none`)
@@ -1387,8 +1388,13 @@ No residue.
 - COND_1.B4: `gain: { state: handlungsunfaehig, until: level-below-4 }` is now `gain: { rule: STATE_8 }`; the `until` has no span in the vocabulary and is carried by B4's `when`
 - regeneration.R2: the offer's `outside: combat` is dropped (a comment: the Regenerieren sheet is not a combat screen)
 - regeneration.R4: the `add … lines: [T1, ADV_44.VR1]` effect (a pointer, no value) is dropped; the roll is a `derive` over `roll.regeneration`
+- regeneration.R6: new `suppress` of ADV_44's line and of T1's rows, with `because`, when regeneration fails in a storm or tied to a horse (a `set` applies before the `add`s, so it alone would keep them)
+- regeneration.R7: the same `suppress` of ADV_44 and T1 while Vergiftet or Krank
 - regeneration.T1: one multi-select `ask` with named lines is now one `ask` (a `choice.*` fact) and one `add` per row
+- schilde.SCH1: "only the highest" moved from `max(loadout.other.paMod)` into how the loadout fact `loadout.other.paMod` is resolved (the highest PA-Mod among the Parierwaffen and shields carried); `with: mainHand` is `action.with: mainHand`
 - schilde.SCH2: the offer is now `offer: { choice: action.with, options: [shield, parryingWeapon] }` when such a piece is carried; its `value: technique.at` is dropped (kampfwerte.KW1 gives it)
 - schilde.SCH3: the offer is now `offer: { choice: action.defence, options: [shieldParry] }` when a shield is carried; its `value` is dropped (kampfwerte.KW2 with the Schilde KtW)
 - schilde.SCH6: the `allow` (the default) and the one-shield `cap` are dropped; the loadout holds one shield (clause now `none`)
 - waffeneigenschaften.WE2: the `gates` effect is dropped; the gate is the `when: { rulesets: fokus.waffeneigenschaften }` on each equipment effect (clause now `none`)
+- ADV_44.VR1: the `when: { event: regeneration.R4, energy: le, regenerates: true }` is dropped; the target `regeneration.le` carries R4 and LeP, and "wenn er regeneriert" is regeneration.R6/R7's `suppress` of this line
+- schicksalspunkte.SP-verteidigung: the offer's `before: defenceRoll` is dropped (a comment); the timing ("vor dem Würfeln der Verteidigung") is left to the check procedure, which offers it with the defence's breakdown before the dice

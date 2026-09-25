@@ -9,7 +9,7 @@ source:
   page: 169
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: VR1
@@ -23,9 +23,9 @@ clauses:
         # Vergiftet or Krank — regeneration.R6, R7) he does not regenerate, and gets nothing.
         # The target is the LeP regained in one Regenerationsphase (regeneration.R4): only there
         # (ruling vr-scope), and only for LeP. `before: regeneration.R6` is the phase order: an
-        # `add` runs before R6's `multiply` halves the result (ruling vr-halving). When R6 or R7
-        # sets the regeneration to 0 the hero does not regenerate and this line is not applied
-        # (situations 15.11, 15.12).
+        # `add` runs before R6's `multiply` halves the result (ruling vr-halving). When
+        # regeneration fails outright, regeneration.R6 and R7 suppress this line with a
+        # `because` (situations 15.11, 15.12): "wenn er regeneriert" lives there, not here.
         # FORMAT: one effect resting on two rulings (when it applies, and in which order) — the
         # other files only ever name one.
 

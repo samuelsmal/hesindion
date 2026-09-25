@@ -153,7 +153,7 @@ situations:
           - { value: -2, from: reiterkampf.RK6 }
       gs:    { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }        # not a Kampfprobe
       "check.modifier(spell: any)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
-      ini:   { total: 0 }        # the mount's base, no Belastung (ruling reiterkampf.rider-ini)
+      ini:   { total: 0, lines: [{ ruling: reiterkampf.rider-ini }] }   # the mount's base, no Belastung
     appToday: same, except the RK6 line cites no rule
 
   - id: "3.2"
