@@ -3,6 +3,7 @@
 id: pl-aim
 name: Gezielt
 kind: specialAbility
+manoeuvre: { kind: basismanoever }
 source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
 reviewed: null
 clauses:

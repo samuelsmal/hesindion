@@ -20,6 +20,9 @@ struct Applicability: Hashable {
     var status: Status
     /// The `require { enables: true }` clause that made the rule apply; its lines carry it in `via`.
     var via: [ClauseRef] = []
+    /// A rule that applies by its derived level: the questions that could change that level
+    /// (R38, `BaseLevel.carried`); every effect of the rule asks them.
+    var carried: [UnknownFact] = []
 
     static let silent = Applicability(status: .silent)
     var applies: Bool { status == .applies }
@@ -31,6 +34,9 @@ struct BaseLevel: Hashable {
     var value: Int?
     /// The facts whose absence keeps `value` nil.
     var unknown: [UnknownFact]
+    /// A known level: the questions its operands brought along (LE's open `when`s under
+    /// Schmerz), which could change it. It keeps its value; whoever reads it asks them (R38).
+    var carried: [UnknownFact] = []
 }
 
 /// A memo entry: `computing` breaks a cycle (a rule whose applicability needs itself does not apply).
@@ -88,7 +94,7 @@ extension Evaluation {
         var derived: BaseLevel?
         if !levelDerives(of: id).isEmpty {
             let level = baseLevel(of: id, depth: depth)
-            if let v = level.value, v > 0 { return applies }
+            if let v = level.value, v > 0 { return Applicability(status: .applies, carried: level.carried) }
             derived = level
         }
         if let via = enablingRequire(of: id, depth: depth) {
@@ -175,7 +181,8 @@ extension Evaluation {
         let open = Set(b.notApplied.filter { $0.reason == .unknownFact }.map(\.origin))
         let failed = b.depthExceeded || b.texts.contains { $0.kind == .notApplicable }
         if open.isEmpty && !failed {
-            level = BaseLevel(value: b.base?.value ?? situation.owned[id]?.level ?? 0, unknown: [])
+            level = BaseLevel(value: b.base?.value ?? situation.owned[id]?.level ?? 0, unknown: [],
+                              carried: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) })
         } else {
             level = BaseLevel(value: nil, unknown: b.questions.filter { !open.isDisjoint(with: $0.origins) }
                 .map { UnknownFact(name: $0.fact, owner: $0.owner) })
@@ -220,6 +227,14 @@ extension Evaluation {
         return (s, behind)
     }
 
+    /// The questions carried by the derived levels among `names` that are not stated
+    /// (`hero.levelOf.X`, R38).
+    func carried(_ names: Set<String>, depth: Int) -> [UnknownFact] {
+        let prefix = "hero.levelOf."
+        return names.sorted().filter { $0.hasPrefix(prefix) && $0.count > prefix.count && situation.facts[$0] == nil }
+            .flatMap { baseLevel(of: String($0.dropFirst(prefix.count)), depth: depth).carried }.uniqued()
+    }
+
     /// Evaluates `when` with the derived facts it reads and the query's own (`local`).
     func condition(_ c: Condition, level: Int?, rule: String, depth: Int, local: [String: Fact] = [:]) -> ConditionResult {
         let (s, behind) = prepared(c.factNames, depth: depth, local: local)
@@ -235,7 +250,7 @@ extension Evaluation {
         var r = Values.evaluate(v, level: level, in: s, book: book, rule: rule, depth: depth) { [unowned self] target, d in
             self.resolve(target, depth: d)
         }
-        r.unknown = r.unknown.flatMap { behind[$0.name] ?? [$0] }.uniqued()
+        r.unknown = (r.unknown.flatMap { behind[$0.name] ?? [$0] } + carried(v.factNames, depth: depth)).uniqued()
         return r
     }
 

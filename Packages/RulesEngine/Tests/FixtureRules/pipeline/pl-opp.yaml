@@ -27,3 +27,7 @@ clauses:
     effects:
       - forbid: { what: { manoeuvre: [{ kind: spezialmanoever, mountedCombat: false }] } }
         when: { hero.mounted: true }
+  - id: O5
+    text: Nur ein Basismanöver je Handlung.
+    effects:
+      - limit: { what: { manoeuvre: [{ kind: basismanoever }] }, max: 1, per: action }

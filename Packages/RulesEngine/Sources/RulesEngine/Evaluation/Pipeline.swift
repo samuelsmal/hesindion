@@ -67,7 +67,10 @@ final class Evaluation {
     ///
     /// Line control (phase 4) is decided before phase 3 computes a line: a `replace` swaps the
     /// replaced effect's value before its `per` (plan A.3), and a suppressed effect is never
-    /// computed, so it asks nothing. Its entries and lines are the same as if it ran after phase 3.
+    /// computed, so it asks nothing. This differs from running phase 4 after phase 3 in two
+    /// ways: a suppressed effect is recorded as `suppressed` even when its own `when` is no or
+    /// unknown (it would have given no line anyway), and a suppressed `set` takes no part in
+    /// choosing the winner, so the next firing set wins.
     ///
     /// Legality, the offers and the texts belong to the query asked (depth 0). A nested
     /// evaluation (an operand, `hero.levelOf`) gives a number only: they would add questions that
@@ -363,6 +366,9 @@ extension Evaluation {
                     continue
                 }
                 guard computed([r], of: e, used: used, via: via, &state), let v = r.value else { continue }
+                if target != levelRule, !levelDerives(of: target).isEmpty {
+                    state.ask(baseLevel(of: target, depth: state.depth).carried, for: e.origin.clauseRef)
+                }
                 let after = max(u.as != nil ? v : before - v, u.min ?? 0)
                 state.lines.append(Line(value: target == levelRule ? after - before : 0, kind: .levelAs,
                                         origin: e.origin.clauseRef, via: (via + r.via).uniqued(), rulings: decided(e),
@@ -388,11 +394,11 @@ extension Evaluation {
     /// a rule that applies (or only a derive, which phase 1 handled: R35) is not read, so it
     /// neither asks nor is recorded twice. A second replace of one clause is `overridden`.
     private func linesPhase(_ state: inout PipelineState) {
-        // A tell is shown at depth 0 only (`playerParts`).
+        // A tell, ask, offer and legality effect acts at depth 0 only (phase 7, `playerParts`).
         let controllable = state.candidates.filter { e in
             switch e.payload {
             case .add, .set: return true
-            case .tell: return state.depth == 0
+            case .tell, .ask, .offer, .forbid, .require, .limit: return state.depth == 0
             default: return false
             }
         }
@@ -403,8 +409,12 @@ extension Evaluation {
             case .replace(let r): (selector, replace) = (r.line, r)
             default: continue
             }
-            // The cheap tests first: the controlling rule applies, and it names something here.
-            guard applicability(of: e.origin.rule, depth: state.depth).applies else { continue }
+            // The cheap tests first: the controlling rule may apply, and it names something here.
+            // A rule whose level is unknown goes on to `applies`, which records it and asks.
+            switch applicability(of: e.origin.rule, depth: state.depth).status {
+            case .applies, .unknownLevel: break
+            case .rulesetOff, .silent: continue
+            }
             let targets = controllable.filter { selects(selector, effect: $0) }
             guard targets.contains(where: { applicability(of: $0.origin.rule, depth: state.depth).applies }),
                   applies(e, &state) else { continue }
@@ -502,18 +512,22 @@ extension Evaluation {
             }
             used = (used + [use]).uniqued()
             times = n
+            state.ask(carried([per], depth: state.depth), for: e.origin.clauseRef)
         }
         let (r, by, original) = swapped(a.value, of: e, level: level, state)
         guard computed([r], of: by?.effect ?? e, used: used, via: via, &state, [by?.replace?.with ?? a.value]),
               let v = r.value else { return }
-        let amount = Int(Values.round(Double(v) * times, .up))
+        guard let amount = Values.int(Values.round(Double(v) * times, .up)) else {
+            fail(e, "\(v) × \(times) liegt außerhalb des Zahlenbereichs", &state)
+            return
+        }
         let facts = (used + r.used).uniqued()
         if let by {
             guard a.scale == nil else {
                 fail(by.effect, "ersetzt eine Stufe auf der Skala \(a.scale!)", &state)
                 return
             }
-            let was = original.map { Int(Values.round(Double($0) * times, .up)) }
+            let was = original.flatMap { Values.int(Values.round(Double($0) * times, .up)) }
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .replaced, because: by.because, rulings: e.ruling,
                                     facts: used, via: via, value: was))
             state.lines.append(Line(value: amount, kind: .replaced, origin: e.origin.clauseRef,
@@ -569,11 +583,12 @@ extension Evaluation {
         ]
         for k in kinds {
             guard let f = [q.description, q.name].lazy.compactMap({ self.situation.facts[k.prefix + $0] }).first else { continue }
-            guard let n = f.value.double else {
-                state.show(TextLine(kind: .notApplicable, text: "Regel konnte nicht angewandt werden: \(f.name) – keine Zahl"))
+            guard let n = f.value.double.flatMap({ Values.int(Values.round($0, .up)) }) else {
+                state.show(TextLine(kind: .notApplicable,
+                                    text: "Regel konnte nicht angewandt werden: \(f.name) – keine Zahl im Zahlenbereich"))
                 continue
             }
-            state.lines.append(Line(value: Int(Values.round(n, .up)), kind: k.kind,
+            state.lines.append(Line(value: n, kind: k.kind,
                                     facts: [FactUse(name: f.name, value: f.value, owner: f.owner)], owner: f.owner,
                                     note: k.note))
         }
@@ -603,7 +618,10 @@ extension Evaluation {
                 guard state.base != nil else { continue }               // no value to scale
                 old = state.running
             }
-            let now = Int(Values.round(Double(old) * m.by, m.round ?? .up))
+            guard let now = Values.int(Values.round(Double(old) * m.by, m.round ?? .up)) else {
+                fail(e, "\(old) × \(m.by) liegt außerhalb des Zahlenbereichs", &state)
+                continue
+            }
             state.lines.append(Line(value: now - old, kind: .multiplied, origin: e.origin.clauseRef,
                                     via: (via + scaled).uniqued(), rulings: decided(e), facts: used, was: old, now: now))
         }
@@ -703,7 +721,9 @@ extension Evaluation {
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact,
                                     because: "Stufe von \(e.origin.rule) unbekannt", rulings: e.ruling))
             state.ask(unknown, for: e.origin.clauseRef)
-        case .applies, .silent:
+        case .applies:
+            state.ask(a.carried, for: e.origin.clauseRef)
+        case .silent:
             break
         }
         return a.applies
@@ -726,6 +746,8 @@ extension Evaluation {
         var r = ConditionResult(truth: .yes)
         if let when = e.when {
             r = condition(when, level: level, rule: e.origin.rule, depth: state.depth, local: state.local)
+            // R38: a derived level read here brings the questions that could change it.
+            if asking { state.ask(carried(when.factNames, depth: state.depth), for: origin) }
         }
         if r.truth == .no {
             state.record(NotApplied(origin: origin, reason: .conditionFalse, because: e.because, rulings: e.ruling,

@@ -85,7 +85,7 @@ public enum Values {
         case .table(let name, let key):
             v = Tables.entry(name, key: key, book: book, &t, resolve)?.double
         }
-        return t.result(v.map { Int(round($0, .up)) })
+        return t.result(v.flatMap { int(round($0, .up)) })
     }
 
     private static func proportion(_ p: Proportion, _ t: inout Trace, _ resolve: TargetResolver) -> Double? {
@@ -106,6 +106,12 @@ public enum Values {
             for m in maxes { x = Swift.min(x, m) }
         }
         return round(x, p.round)
+    }
+
+    /// `x` as an `Int`; nil when it is not finite or beyond ±2⁵³, which no rule's value reaches
+    /// (`Int(_:)` would trap: spec §11, the engine never stops).
+    static func int(_ x: Double) -> Int? {
+        x.isFinite && abs(x) <= 9_007_199_254_740_992 ? Int(x) : nil
     }
 
     /// Rounds the magnitude, keeping the sign. A whole number (to 1e-9) stays as it is, so

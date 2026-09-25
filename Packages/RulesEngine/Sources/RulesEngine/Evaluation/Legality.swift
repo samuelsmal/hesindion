@@ -52,10 +52,10 @@ extension Evaluation {
             switch e.payload {
             case .forbid(let f) where f.together != true: selector = f.what
             case .require(let r) where r.enables != true && r.for != nil: selector = r.for!
-            case .limit(let l): selector = l.what
+            case .limit(let l) where l.what.kind != .choice && l.what.kind != .manoeuvre: selector = l.what   // choiceRules
             default: continue
             }
-            guard names(selector, state.query), applies(e, &state) else { continue }
+            guard names(selector, state.query), applies(e, &state), !isSuppressed(e, &state) else { continue }
             let rule = e.origin.rule
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)
@@ -111,10 +111,12 @@ extension Evaluation {
 
     /// Whether a legality selector names the query's action: the query itself (a `defence`,
     /// `attack` or `check` target, on the same side: `opponent.weaponParry` names
-    /// `opponent.pa(with: weapon)`), or what the situation declares (`action.defence`,
-    /// `action.attack`, `action.manoeuvre`; `action` names any declared attack or manoeuvre).
+    /// `opponent.pa(with: weapon)`; an `action`, the hero's action queries, R37), or what the
+    /// situation declares (`action.defence`, `action.manoeuvre`). `action.attack` states an
+    /// attack's outcome (hit, miss), never what is declared.
     func names(_ selector: RuleSelector, _ query: Query) -> Bool {
         switch selector.kind {
+        case .action: return selector.ids.contains { action($0, names: query) }
         case .defence where selector.ids.contains(where: { defence($0, names: query) }): return true
         case .attack where selector.ids.contains(where: { attack($0, names: query) }): return true
         case .check where check(selector, names: query): return true
@@ -165,6 +167,15 @@ extension Evaluation {
         }
     }
 
+    /// R37: an action id names the action queries on its side: `at`, `fk` and `check.*`, never a
+    /// defence (a reaction) or a value such as `tp`. Every id (`any`, `aktion`) names all of them.
+    private func action(_ id: SelectorID, names query: Query) -> Bool {
+        guard let raw = id.id else { return false }
+        let (qSide, qName) = side(query.name)
+        guard side(raw).side == qSide else { return false }
+        return qName == "at" || qName == "fk" || qName.hasPrefix("check.")
+    }
+
     /// A check selector names a `check.*` query whose context (`talent:`, `spell:`) or whose
     /// `check.kind` it lists (fertigkeitsproben.FP2: `talent`, `spell`, `liturgy`).
     private func check(_ selector: RuleSelector, names query: Query) -> Bool {
@@ -174,24 +185,20 @@ extension Evaluation {
         return situation.facts["check.kind"]?.value.string.map(ids.contains) ?? false
     }
 
-    /// A selector names what the situation declares: the value (or any entry) of `action.defence`,
-    /// `action.attack` or `action.manoeuvre` is one of its ids (or it lists `any`); a manoeuvre
-    /// match (`{ kind: spezialmanoever }`) names a declared manoeuvre whose rule has those
-    /// properties. `action` names any declared attack or manoeuvre.
+    /// A selector names what the situation declares: the value (or any entry) of `action.defence`
+    /// or `action.manoeuvre` is one of its ids (or it lists `any`); a manoeuvre match
+    /// (`{ kind: spezialmanoever }`) names a declared manoeuvre whose rule has those properties.
     private func declared(_ selector: RuleSelector) -> Bool {
         let facts: [String]
         switch selector.kind {
-        case .attack: facts = ["action.attack"]
         case .defence: facts = ["action.defence"]
         case .manoeuvre: facts = ["action.manoeuvre"]
-        case .action: facts = ["action.attack", "action.manoeuvre"]
         default: return false
         }
         let values = facts.compactMap { situation.facts[$0]?.value }
             .flatMap { v -> [JSONValue] in if case .array(let a) = v { a } else { [v] } }
             .filter { $0 != .null }
         guard !values.isEmpty else { return false }
-        if selector.kind == .action { return true }
         return selector.ids.contains { id in
             switch id {
             case .id(let s): return s == "any" || values.contains(.string(s))
@@ -384,7 +391,8 @@ extension Evaluation {
         for e in effects {
             guard case .offer(let o) = e.payload else { continue }
             let rule = e.origin.rule
-            guard recording ? applies(e, &state) : applicability(of: rule, depth: state.depth).applies else { continue }
+            guard recording ? applies(e, &state) && !isSuppressed(e, &state)
+                            : applicability(of: rule, depth: state.depth).applies else { continue }
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)
             let truth = e.when.map { condition($0, level: level, rule: rule, depth: state.depth, local: state.local).truth } ?? .yes
@@ -475,7 +483,7 @@ extension Evaluation {
                 guard gate(e, level: level, via: ruleVia(rule, state), &state, asking: false) != nil else { continue }
                 state.show(TextLine(kind: .tell, audience: t.to, text: t.text, origin: origin))
             case .ask(let a):
-                guard applies(e, &state) else { continue }
+                guard applies(e, &state), !isSuppressed(e, &state) else { continue }
                 let rule = e.origin.rule
                 let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
                 if let when = e.when,

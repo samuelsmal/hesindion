@@ -800,6 +800,73 @@ extension PipelineTests {
         XCTAssertTrue(deep.texts.contains { $0.text.hasPrefix("Regel konnte nicht angewandt werden: pl-loop.L1 – ") })
     }
 
+    // MARK: Fix round 1
+
+    func testAManoeuvreLimitIsTheChoicesNotPhase7s() {
+        // kampfsonderfertigkeiten.KS3: nothing in phase 7 counts manoeuvres.
+        let b = engine.evaluate(Query("at"), in: situation(owned: ["pl-opp": 1],
+            facts: ["action.manoeuvre": "pl-aim", "gmFact.tight": false], base: ["at": 12]))
+        XCTAssertFalse(b.texts.contains { $0.origin == ref("pl-opp.O5") }, "\(b.texts)")
+        XCTAssertTrue(b.legal.allowed)
+    }
+
+    func testAnActionSelectorNamesTheHerosActionQueriesOnly() {
+        // R37: STATE_8.H2 [any] and SA_65.VH1 [aktion] name at, fk, check.*; not a defence, not tp.
+        let s = situation(owned: ["pl-still": 1], facts: ["gmFact.frozen": true, "choice.stance": true],
+                          base: ["at": 12, "pa": 8, "tp": 5, "opponent.rs": 2])
+        for q in ["at", "fk", "check.modifier(talent: TAL_1)"] {
+            XCTAssertEqual(engine.evaluate(Query(q), in: s).legal.reasons.map(\.origin),
+                           [ref("pl-still.S1"), ref("pl-still.S2")], q)
+        }
+        for q in ["pa", "aw", "tp", "opponent.rs"] {
+            XCTAssertTrue(engine.evaluate(Query(q), in: s).legal.allowed, q)
+        }
+    }
+
+    func testActionAttackIsAnOutcomeNeverADeclaration() {
+        let s = situation(owned: ["pl-still": 1], facts: ["action.attack": "hit", "gmFact.hitCheck": true,
+                                                          "gmFact.frozen": false, "choice.stance": false], base: ["at": 12])
+        XCTAssertTrue(engine.evaluate(Query("at"), in: s).legal.allowed)
+    }
+
+    func testAKnownDerivedLevelAsksTheQuestionsThatCouldChangeIt() throws {
+        // R38: carryingCapacity 25 gives pl-weak II; P1's open when on that input is asked, the level used.
+        let s = situation(base: ["carryingCapacity": 25, "at": 14])
+        XCTAssertEqual(engine.evaluate(Query("level(rule: pl-weak)"), in: s).result, 2)
+        let b = engine.evaluate(Query("at"), in: s)
+        XCTAssertEqual(lines(b, from: "pl-weak.W2").map(\.value), [-2])
+        XCTAssertTrue(b.questions.contains { $0.fact == "gmFact.drain" && $0.origins.contains(ref("pl-weak.W2")) },
+                      "\(b.questions)")
+        let known = engine.evaluate(Query("at"), in: situation(facts: ["gmFact.drain": false],
+                                                              base: ["carryingCapacity": 25, "at": 14]))
+        XCTAssertFalse(known.questions.contains { $0.fact == "gmFact.drain" })
+    }
+
+    func testASuppressedClauseStopsItsOffersAsksAndForbidsToo() {
+        // Q4 names only an ask, an offer and a forbid: no line of this query.
+        let s = situation(owned: ["pl-quiet": 1, "pl-talk": 1, "pl-moves": 1, "pl-defence": 1],
+                          facts: ["choice.hush": true, "round.defendedThisAttack": false, "round.defencesMade": 1,
+                                  "round.parries": 0], base: ["pa": 2])
+        let b = engine.evaluate(Query("pa"), in: s)
+        XCTAssertEqual(b.result, -1)
+        XCTAssertTrue(b.legal.allowed, "V3's forbid is suppressed with its clause")
+        XCTAssertNil(offer(b.offers, "doppel"))
+        XCTAssertFalse(b.questions.contains { $0.fact == "target.cover" })
+        for c in ["pl-talk.T2", "pl-moves.M3", "pl-defence.V3"] {
+            XCTAssertTrue(notApplied(b, c).contains { $0.reason == .suppressed }, c)
+        }
+    }
+
+    func testANumberBeyondIntGivesATextNotATrap() throws {
+        let huge = situation(owned: ["pl-adds": 1], facts: ["round.parries": .double(1e300),
+                                                            "choice.freeModifier.pa": .double(1e300)], base: ["pa": 8])
+        let b = engine.evaluate(Query("pa"), in: huge)
+        XCTAssertEqual(lines(b, from: "pl-adds.A2"), [])
+        XCTAssertTrue(b.texts.contains { $0.origin == ref("pl-adds.A2") && $0.kind == .notApplicable })
+        XCTAssertFalse(b.lines.contains { $0.kind == .free })
+        XCTAssertTrue(b.texts.contains { $0.text.hasPrefix("Regel konnte nicht angewandt werden: choice.freeModifier.pa") })
+    }
+
     // MARK: Carried from the Task 22 review
 
     func testASuppressorsOwnLevelIsReadAsItsDerivesAre() throws {

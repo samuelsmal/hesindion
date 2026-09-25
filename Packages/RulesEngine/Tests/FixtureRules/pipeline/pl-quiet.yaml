@@ -21,3 +21,8 @@ clauses:
     effects:
       - suppress: { line: { ruleKind: condition } }
         when: { choice.schip: true }
+  - id: Q4
+    text: Ganz still.
+    effects:
+      - suppress: { line: { line: [pl-talk.T2, pl-moves.M3, pl-defence.V3] } }
+        when: { choice.hush: true }

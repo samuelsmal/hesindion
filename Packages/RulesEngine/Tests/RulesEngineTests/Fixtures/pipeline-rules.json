@@ -67,6 +67,11 @@
     "rule": "pl-opp"
    },
    {
+    "clause": "O5",
+    "index": 0,
+    "rule": "pl-opp"
+   },
+   {
     "clause": "Q2",
     "index": 0,
     "rule": "pl-quiet"
@@ -78,6 +83,11 @@
    },
    {
     "clause": "Q3",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "Q4",
     "index": 0,
     "rule": "pl-quiet"
    },
@@ -95,6 +105,16 @@
     "clause": "S2",
     "index": 0,
     "rule": "pl-spell"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "pl-still"
+   },
+   {
+    "clause": "S2",
+    "index": 0,
+    "rule": "pl-still"
    },
    {
     "clause": "T1",
@@ -173,6 +193,11 @@
     "rule": "pl-kampfwerte"
    },
    {
+    "clause": "S3",
+    "index": 0,
+    "rule": "pl-still"
+   },
+   {
     "clause": "E1",
     "index": 0,
     "rule": "pl-sword"
@@ -181,6 +206,11 @@
     "clause": "C1",
     "index": 0,
     "rule": "pl-tired"
+   },
+   {
+    "clause": "W2",
+    "index": 0,
+    "rule": "pl-weak"
    }
   ],
   "aw": [
@@ -225,6 +255,11 @@
     "rule": "pl-kampfwerte"
    },
    {
+    "clause": "Q4",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
     "clause": "VS1",
     "index": 0,
     "rule": "pl-style"
@@ -238,6 +273,13 @@
     "clause": "T1",
     "index": 0,
     "rule": "pl-target"
+   }
+  ],
+  "carryingCapacity": [
+   {
+    "clause": "P1",
+    "index": 0,
+    "rule": "pl-pool"
    }
   ],
   "check.modifier": [
@@ -287,6 +329,11 @@
     "clause": "T2",
     "index": 0,
     "rule": "pl-kampfwerte"
+   },
+   {
+    "clause": "S3",
+    "index": 0,
+    "rule": "pl-still"
    }
   ],
   "gs": [
@@ -466,6 +513,11 @@
     "rule": "pl-two"
    },
    {
+    "clause": "W1",
+    "index": 0,
+    "rule": "pl-weak"
+   },
+   {
     "clause": "Z1",
     "index": 0,
     "rule": "pl-zones"
@@ -551,6 +603,11 @@
    },
    {
     "clause": "Q1",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "Q4",
     "index": 0,
     "rule": "pl-quiet"
    },
@@ -1074,6 +1131,9 @@
    ],
    "id": "pl-aim",
    "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "basismanoever"
+   },
    "name": "Gezielt",
    "reviewed": null,
    "rulings": [],
@@ -3182,6 +3242,38 @@
      ],
      "id": "O4",
      "text": "Beritten keine Spezialmanöver."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O5",
+        "index": 0,
+        "rule": "pl-opp"
+       },
+       "payload": {
+        "max": {
+         "number": 1
+        },
+        "per": "action",
+        "what": {
+         "ids": [
+          {
+           "kind": "basismanoever"
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": null
+      }
+     ],
+     "id": "O5",
+     "text": "Nur ein Basismanöver je Handlung."
     }
    ],
    "id": "pl-opp",
@@ -3355,6 +3447,53 @@
       {
        "because": null,
        "origin": {
+        "clause": "P1",
+        "index": 0,
+        "rule": "pl-pool"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "carryingCapacity"
+         }
+        ],
+        "value": {
+         "number": -10
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "gmFact.drain",
+        "is": true
+       }
+      }
+     ],
+     "id": "P1",
+     "text": "Erschöpft −10."
+    }
+   ],
+   "id": "pl-pool",
+   "kind": "core",
+   "name": "Tragkraft",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "Q1",
         "index": 0,
         "rule": "pl-quiet"
@@ -3449,6 +3588,37 @@
      ],
      "id": "Q3",
      "text": "Zustände zählen nicht."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q4",
+        "index": 0,
+        "rule": "pl-quiet"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-talk.T2",
+          "pl-moves.M3",
+          "pl-defence.V3"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "choice.hush",
+        "is": true
+       }
+      }
+     ],
+     "id": "Q4",
+     "text": "Ganz still."
     }
    ],
    "id": "pl-quiet",
@@ -3802,6 +3972,109 @@
    "kind": "condition",
    "levels": 4,
    "name": "Stufen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "pl-still"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "any"
+         ],
+         "kind": "action"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "gmFact.frozen",
+        "is": true
+       }
+      }
+     ],
+     "id": "S1",
+     "text": "Keine Handlung."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S2",
+        "index": 0,
+        "rule": "pl-still"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "aktion"
+         ],
+         "kind": "action"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "choice.stance",
+        "is": true
+       }
+      }
+     ],
+     "id": "S2",
+     "text": "In der Haltung keine Aktion."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "pl-still"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "hit"
+         ],
+         "kind": "attack"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "gmFact.hitCheck",
+        "is": true
+       }
+      }
+     ],
+     "id": "S3",
+     "text": "Kein Angriff namens Treffer."
+    }
+   ],
+   "id": "pl-still",
+   "kind": "specialAbility",
+   "name": "Starre",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -4515,6 +4788,97 @@
    "kind": "condition",
    "levels": 3,
    "name": "Zweifach",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W1",
+        "index": 0,
+        "rule": "pl-weak"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "target": {
+             "name": "carryingCapacity"
+            }
+           },
+           "per": {
+            "number": 10
+           },
+           "round": "down",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-weak"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "W1",
+     "text": "Stufe = Tragkraft / 10."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W2",
+        "index": 0,
+        "rule": "pl-weak"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "W2",
+     "text": "AT −Stufe."
+    }
+   ],
+   "id": "pl-weak",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Schwäche",
    "reviewed": null,
    "rulings": [],
    "source": {
