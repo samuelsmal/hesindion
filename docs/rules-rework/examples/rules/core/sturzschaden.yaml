@@ -1,0 +1,45 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted for reiterkampf.RK10 ("ansonsten stürzt der Reiter (siehe auch Sturzschaden)"), whose
+# old encoding cited it (`on_failure: { rule: sturzschaden }`) before it had a rule file.
+# The table rows were read off the page's table; check the column layout on review.
+id: sturzschaden
+name: Sturzschaden
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sturzschaden.html
+  book: Regelwerk (3. überarb. Aufl.)
+  page: 340
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: SZ1
+    text: >
+      Für jeden Schritt Höhe, den ein Held stürzt, wird 1W6 gewürfelt und die Gesamtsumme mit den
+      untenstehenden Boni und Mali verrechnet. Negativergebnisse werden als 0 gewertet.
+    unencoded: >
+      damage by dice per Schritt of height; the engine rolls no dice and has no dice value form,
+      so the player sees the text (reiterkampf.RK10 tells the rider he falls)
+
+  - id: SZ2
+    text: >
+      Um den Sturzschaden zu verringern, kann der Held eine Probe auf Körperbeherrschung
+      (Springen) ablegen. Der Sturzschaden wird um QS x 2 verringert.
+    unencoded: the reduction applies to SZ1's rolled damage, which is not encoded either
+
+  - id: SZ3
+    text: Rüstungen helfen beim Sturzschaden nach Meisterentscheid.
+    unencoded: the GM's call
+
+  - id: SZ4
+    text: |
+      Art | Beispiel | Schaden
+      Weicher Boden | Heu, Schlamm, Schnee, Wasser | –1 bis –4 SP
+      Normaler Boden | Erdboden, Kisten | +/–0
+      Harter Boden | Steine, Marmor, fiese Splitter | +1 bis +4 SP
+      Sturz vom Pferd | | wie ein Sturz aus 2 Schritt Höhe
+      Sturz vom Pferd (Galopp) | | wie ein Sturz aus 3 Schritt Höhe
+    unencoded: >
+      the ground's modifier is the GM's call within a range, and the falls from a horse are a
+      height for SZ1's dice; shown as text

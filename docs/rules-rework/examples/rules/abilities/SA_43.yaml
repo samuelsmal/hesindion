@@ -20,9 +20,9 @@ clauses:
     none: >
       The orders are defined in reiterkampf (RK13, RK14) and require this SF there. This clause
       is what they point to, so a player sees why the orders appear.
-    enables: [reiterkampf.RK13, reiterkampf.RK14]
-    # FORMAT: the dependency runs both ways; which side holds it? Here: the order requires the
-    # SF (`requires: { hero.has: SA_43 }`), and this back-reference is for the reader only.
+    # The old `enables: [reiterkampf.RK13, reiterkampf.RK14]` is a back-reference for the reader
+    # only: the orders hold the dependency (`hero.has: SA_43` in RK13's and RK14's offers), and
+    # SA_43 is owned, so an `enables` require here would switch on nothing.
 
   - id: BK2
     text: "Voraussetzungen: Reiten 10"

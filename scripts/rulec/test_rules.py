@@ -269,6 +269,40 @@ class RuleValidationTests(unittest.TestCase):
                          {"each": [{"number": 10}, {"target": {"name": "gsNatural"}}]})
         self.assertEqual(effects[4]["payload"]["change"], {"destroyed": True})
 
+    def test_group_3_vocabulary(self):
+        v = vocab.load()
+        expected = {"reach.gap": "derived", "query.target": "derived", "action.gait": "player",
+                    "action.gaitChange": "player"}
+        self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
+        self.assertTrue(v.is_target("carryingCapacity"))
+        self.assertTrue(v.is_target("mount.carryingCapacity"))
+        self.assertIn("ridden", v.raw["itemFields"])
+        self.assertIn("was", v.raw["lineKeys"])
+        self.assertTrue({"actions", "freeActions"} <= set(v.raw["pools"]))
+
+    def test_the_group_3_encodings(self):
+        # reichweite RW3 / SA_172 U1, reiterkampf RK6, RK7, RK9, RK12, svellttaler-kaltblut SK12.
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n", textwrap.indent(
+            textwrap.dedent("""\
+                - when: { reach.gap: { atLeast: 1 } }
+                  add: { to: at, value: { of: reach.gap, times: -2 } }
+                - when: { hero.mounted: true, query.target: [at, pa, aw, fk] }
+                  add: { to: aw, value: -2 }
+                - when: { choice.jumpOff: true }
+                  item: { instance: { loadout: mount }, change: { ridden: false } }
+                - when: { action.gaitChange: true, action.gait: galopp }
+                  cost: { pool: freeActions, amount: 1 }
+                - offer: { choice: order, options: [flucht], costs: [{ cost: { pool: actions, amount: 1 } }] }
+                - set: { to: mount.carryingCapacity, value: 210 }
+                """), "      ")))
+        self.assertEqual(errors, [])
+        effects = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(effects[0]["payload"]["value"]["proportion"]["of"], {"fact": "reach.gap"})
+        self.assertEqual(effects[1]["when"]["all"][1], {"fact": "query.target", "in": ["at", "pa", "aw", "fk"]})
+        self.assertEqual(effects[2]["payload"]["change"], {"ridden": False})
+        self.assertEqual(effects[4]["payload"]["costs"][0]["payload"]["pool"], "actions")
+        self.assertEqual(effects[5]["payload"]["to"], [{"name": "mount.carryingCapacity"}])
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

@@ -12,9 +12,10 @@ source:
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 # Reach steps, shortest first. A "Stufe" of reach disadvantage (SA_172) is one step.
-# FORMAT: an ordered enum the rules count steps along — Unterlaufen needs the order, not just
-# the matrix.
-scale: { reach: [kurz, mittel, lang] }
+# The derived fact `reach.gap` counts along it: how many steps the opponent's reach
+# (`opponent.reach`) is longer than the hero's (`loadout.reach`), negative when the hero's is
+# longer (the old `per: { steps: [loadout.reach, opponent.reach] }` and `longer_than`).
+provides: { reach: [kurz, mittel, lang] }
 
 clauses:
   - id: RW1
@@ -43,11 +44,12 @@ clauses:
       Mittlere Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -2 auf ihre Attacke.
       Lange Waffe — Vorteil: Kurze und mittlere Waffen erleiden Erschwernisse gegen lange Waffen.
     effects:
-      - when: { check: at, opponent.reach: { longer_than: loadout.reach } }
-        add: { to: at, value: -2, per: { steps: [loadout.reach, opponent.reach] } }
-        id: RW3.at      # named so SA_172 can lower exactly this line
-        # FORMAT: −2 per reach step the opponent is longer: kurz/mittel −2, kurz/lang −4,
+      - when: { reach.gap: { atLeast: 1 } }
+        add: { to: at, value: { of: reach.gap, times: -2 } }
+        # −2 per reach step the opponent is longer: kurz/mittel −2, kurz/lang −4,
         # mittel/lang −2 — the page's matrix, written as a rate. The matrix (RW4) is the check.
+        # The old `check: at` is the target. The rate is the value (not a `per`), so that
+        # SA_172.U1's `replace` of this clause can lower the step count.
 
   - id: RW4
     # The page's table: a row is one weapon, a column ("Gegen") the weapon it fights, the cell

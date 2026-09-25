@@ -1,5 +1,6 @@
 # DRAFT FORMAT — see ../../README.md.
-# FORMAT: a new kind, `creatureAbility` — a Tierische Kampfsonderfertigkeit. The wiki's overview
+# A Tierische Kampfsonderfertigkeit, kind `creature` (the draft's `creatureAbility`: the
+# vocabulary has one kind for a creature's rules). The wiki's overview
 # (https://dsa.ulisses-regelwiki.de/TSF_Kampfsonderfertigkeiten.html) says they work like any
 # Kampfsonderfertigkeit, but one without Kampftechniken cannot be learned by a hero. It has no
 # Optolith id (SA_226 "Befehl Mächtiger Schlag" is a different thing, a Tier-Befehl), so the file
@@ -7,7 +8,7 @@
 # (Kupperus attacking for Boronmir) or its opponent's (a creature attacking Boronmir).
 id: maechtiger-schlag
 name: Mächtiger Schlag
-kind: creatureAbility
+kind: creature
 group: Tierische Kampfsonderfertigkeiten
 passive: true      # the page's header "(passiv)", kept in MS1's text as SA_160.GA1 keeps "(Spezialmanöver)"
 source:
@@ -16,7 +17,7 @@ source:
   page: 126
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # The page lists thirteen books; Aventurisches Bestiarium p. 7 is the first, Aventurische
 # Tiergefährten p. 126 the one Kupperus's profile comes from.
 #
@@ -32,8 +33,11 @@ clauses:
       (passiv) Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner
       eine Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
     effects:
-      - when: { creature.attack: success, opponent.size: [winzig, klein, mittel] }
-        tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 } } }
+      - when: { action.attack: hit, opponent.size: [winzig, klein, mittel] }
+        tell: { to: opponent, text: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)" }
+        # The creature's attack succeeded (the old `creature.attack: success`); the old
+        # structured `tell` (a Kraftakt check, Liegend on a failure) is its text, since the
+        # opponent's check is the GM's.
         # Kupperus attacking: the opponent is the GM's, so this is a line on Kupperus's attack
         # result (ADR-0005). A creature with it attacking Boronmir: his own Kraftakt check, then
         # Liegend — not modelled on the take-damage side today.
@@ -46,7 +50,11 @@ clauses:
       Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
     effects:
       - when: { creature.kk: { above: 20 } }
-        opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2", round: up }
+        add: { to: opponent.check.modifier, value: { of: creature.kk, above: 20, per: 2, times: -1, round: up } }
+        ruling: round-up
+        # The old `opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }`:
+        # the opponent's Kraftakt modifier (A.5). "Up" rounds the half away from zero, before
+        # the sign, as the page's examples do.
         # Rounded up: the page's own example settles it — "bei einer KK von 23 um -2, bei einer
         # von 26 um -3" (23: 1.5 → 2) — so no ruling is needed; it agrees with rulings.yaml
         # round-up / ADR-0006. Kupperus, KK 25: −⌈2.5⌉ = −3. The app floors it, (kk − 20) / 2 in
@@ -57,10 +65,14 @@ clauses:
       Dem Mächtigen Schlag kann man nur mittels Ausweichen komplett entgehen. Bei einer Parade,
       gleich ob gelungen oder nicht, muss die Probe auf Kraftakt gewürfelt werden.
     effects:
-      - when: { opponent.defence: aw, action.defence: success }
-        cancels: MS1
+      - when: { opponent.defence: aw, opponent.defenceResult: success }
+        suppress: { line: { line: maechtiger-schlag.MS1 } }
+        because: dem Mächtigen Schlag entgeht man nur durch Ausweichen komplett
+        # The old `cancels: MS1`, when the opponent dodges successfully (the old
+        # `action.defence: success`: the opponent's defence, stated by the GM).
       - when: { opponent.defence: [pa, shieldParry] }
-        tell: { opponent: { check: { talent: Kraftakt }, on_failure: { state: STATE_10 }, whatever_the_parry: true } }
+        tell: { to: opponent, text: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)" }
+        # The old structured `tell` with `whatever_the_parry: true`.
         # A parried blow does no damage but still asks for the Kraftakt check. The app's note
         # says so ("Parade hilft nicht — nur Ausweichen schützt vollständig").
 

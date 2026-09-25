@@ -8,17 +8,17 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_152.yaml
 
-- [ ] L26 clauses[AD1].effects[0].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
-- [ ] L26 clauses[AD1].effects[0].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
-- [ ] L31 clauses[AD1].effects[1].when.announced: announced — not a fact in the vocabulary
-- [ ] L31 clauses[AD1].effects[1].when.loadout.reach.longer_than: longer_than — snake_case key, no mapping
-- [ ] L43 clauses[AD2].effects[0].offer.announce: announce — not a field of `offer`
-- [ ] L43 clauses[AD2].effects[0].offer.at: at — not a field of `offer`
-- [ ] L43 clauses[AD2].effects[0].offer.lasts: lasts — not a field of `offer`
-- [ ] L46 clauses[AD2].effects[1].when.announced: announced — not a fact in the vocabulary
-- [ ] L47 clauses[AD2].effects[1].forbid.manoeuvre: manoeuvre — not a field of `forbid`
-- [ ] L50 clauses[AD2].effects[2].when.announced: announced — not a fact in the vocabulary
-- [ ] L50 clauses[AD2].effects[2].when.loadout.reach.not_longer_than: not_longer_than — snake_case key, no mapping
+- [x] L26 clauses[AD1].effects[0].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
+- [x] L26 clauses[AD1].effects[0].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
+- [x] L31 clauses[AD1].effects[1].when.announced: announced — not a fact in the vocabulary
+- [x] L31 clauses[AD1].effects[1].when.loadout.reach.longer_than: longer_than — snake_case key, no mapping
+- [x] L43 clauses[AD2].effects[0].offer.announce: announce — not a field of `offer`
+- [x] L43 clauses[AD2].effects[0].offer.at: at — not a field of `offer`
+- [x] L43 clauses[AD2].effects[0].offer.lasts: lasts — not a field of `offer`
+- [x] L46 clauses[AD2].effects[1].when.announced: announced — not a fact in the vocabulary
+- [x] L47 clauses[AD2].effects[1].forbid.manoeuvre: manoeuvre — not a field of `forbid`
+- [x] L50 clauses[AD2].effects[2].when.announced: announced — not a fact in the vocabulary
+- [x] L50 clauses[AD2].effects[2].when.loadout.reach.not_longer_than: not_longer_than — snake_case key, no mapping
 
 ## rules/abilities/SA_160.yaml
 
@@ -36,18 +36,18 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_172.yaml
 
-- [ ] L28 clauses[U1].effects[0].lower: lower — no one-to-one verb
-- [ ] L28 clauses[U1].effects[0].lower.by_steps: by_steps — snake_case key, no mapping
-- [ ] L40 clauses[U2].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L41 clauses[U2].effects[0].offer.announce: announce — not a field of `offer`
-- [ ] L43 clauses[U2].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L43 clauses[U2].effects[0].offer.requires.opponent.reach.longer_than: longer_than — snake_case key, no mapping
-- [ ] L44 clauses[U2].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L64 clauses[U4].ruling: ruling — not a clause key in the vocabulary
+- [x] L28 clauses[U1].effects[0].lower: lower — no one-to-one verb
+- [x] L28 clauses[U1].effects[0].lower.by_steps: by_steps — snake_case key, no mapping
+- [x] L40 clauses[U2].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L41 clauses[U2].effects[0].offer.announce: announce — not a field of `offer`
+- [x] L43 clauses[U2].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L43 clauses[U2].effects[0].offer.requires.opponent.reach.longer_than: longer_than — snake_case key, no mapping
+- [x] L44 clauses[U2].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L64 clauses[U4].ruling: ruling — not a clause key in the vocabulary
 
 ## rules/abilities/SA_173.yaml
 
-- [ ] L22 clauses[VU1].lifts: lifts — not a clause key in the vocabulary
+- [x] L22 clauses[VU1].lifts: lifts — not a clause key in the vocabulary
 
 ## rules/abilities/SA_40.yaml
 
@@ -66,7 +66,7 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_43.yaml
 
-- [ ] L23 clauses[BK1].enables: enables — not a clause key in the vocabulary
+- [x] L23 clauses[BK1].enables: enables — not a clause key in the vocabulary
 
 ## rules/abilities/SA_48.yaml
 
@@ -118,10 +118,10 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_661.yaml
 
-- [ ] L24 clauses[GS1].effects[0].when.loadout: loadout — not a fact in the vocabulary
-- [ ] L25 clauses[GS1].effects[0].raise: raise — no one-to-one verb
-- [ ] L35 clauses[GS2].effects[0].when.loadout: loadout — not a fact in the vocabulary
-- [ ] L44 clauses[GS3].effects[0].define: define — no one-to-one verb
+- [x] L24 clauses[GS1].effects[0].when.loadout: loadout — not a fact in the vocabulary
+- [x] L25 clauses[GS1].effects[0].raise: raise — no one-to-one verb
+- [x] L35 clauses[GS2].effects[0].when.loadout: loadout — not a fact in the vocabulary
+- [x] L44 clauses[GS3].effects[0].define: define — no one-to-one verb
 
 ## rules/abilities/SA_67.yaml
 
@@ -275,20 +275,20 @@ No residue.
 
 ## rules/core/angriff-von-hinten.yaml
 
-- [ ] L24 clauses[AH1].effects[0].when.side: side — not a fact in the vocabulary
-- [ ] L24 clauses[AH1].effects[0].when.attack.kind: attack.kind — not a fact in the vocabulary
-- [ ] L24 clauses[AH1].effects[0].when.span: span — not a fact in the vocabulary
-- [ ] L30 clauses[AH1].effects[1].when.side: side — not a fact in the vocabulary
-- [ ] L30 clauses[AH1].effects[1].when.attack.kind: attack.kind — not a fact in the vocabulary
-- [ ] L30 clauses[AH1].effects[1].when.span: span — not a fact in the vocabulary
-- [ ] L35 clauses[AH1].effects[2].when.side: side — not a fact in the vocabulary
-- [ ] L35 clauses[AH1].effects[2].when.attack.kind: attack.kind — not a fact in the vocabulary
-- [ ] L36 clauses[AH1].effects[2].forbid.defence: defence — not a field of `forbid`
-- [ ] L37 clauses[AH1].effects[2].from: from — no one-to-one verb
-- [ ] L39 clauses[AH1].effects[3].when.side: side — not a fact in the vocabulary
-- [ ] L39 clauses[AH1].effects[3].when.attack.kind: attack.kind — not a fact in the vocabulary
-- [ ] L40 clauses[AH1].effects[3].exempt: exempt — no one-to-one verb
-- [ ] L41 clauses[AH1].effects[3].from: from — no one-to-one verb
+- [x] L24 clauses[AH1].effects[0].when.side: side — not a fact in the vocabulary
+- [x] L24 clauses[AH1].effects[0].when.attack.kind: attack.kind — not a fact in the vocabulary
+- [x] L24 clauses[AH1].effects[0].when.span: span — not a fact in the vocabulary
+- [x] L30 clauses[AH1].effects[1].when.side: side — not a fact in the vocabulary
+- [x] L30 clauses[AH1].effects[1].when.attack.kind: attack.kind — not a fact in the vocabulary
+- [x] L30 clauses[AH1].effects[1].when.span: span — not a fact in the vocabulary
+- [x] L35 clauses[AH1].effects[2].when.side: side — not a fact in the vocabulary
+- [x] L35 clauses[AH1].effects[2].when.attack.kind: attack.kind — not a fact in the vocabulary
+- [x] L36 clauses[AH1].effects[2].forbid.defence: defence — not a field of `forbid`
+- [x] L37 clauses[AH1].effects[2].from: from — no one-to-one verb
+- [x] L39 clauses[AH1].effects[3].when.side: side — not a fact in the vocabulary
+- [x] L39 clauses[AH1].effects[3].when.attack.kind: attack.kind — not a fact in the vocabulary
+- [x] L40 clauses[AH1].effects[3].exempt: exempt — no one-to-one verb
+- [x] L41 clauses[AH1].effects[3].from: from — no one-to-one verb
 
 ## rules/core/at-pa-modifikatoren.yaml
 
@@ -299,8 +299,8 @@ No residue.
 
 ## rules/core/beengte-umgebung.yaml
 
-- [ ] L19 applies_when: applies_when — not a rule key in the vocabulary
-- [ ] L62 clauses[BU3].ruling: ruling — not a clause key in the vocabulary
+- [x] L19 applies_when: applies_when — not a rule key in the vocabulary
+- [x] L62 clauses[BU3].ruling: ruling — not a clause key in the vocabulary
 
 ## rules/core/beidhaendiger-kampf.yaml
 
@@ -395,14 +395,14 @@ No residue.
 
 ## rules/core/groessenkategorie.yaml
 
-- [ ] L18 scale: scale — not a rule key in the vocabulary
-- [ ] L39 clauses[GK2].ruling: ruling — not a clause key in the vocabulary
-- [ ] L47 clauses[GK3].effects[GK3.at].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
-- [ ] L49 clauses[GK3].effects[GK3.at].id: id — no one-to-one verb
-- [ ] L57 clauses[GK4].effects[0].when.side: side — not a fact in the vocabulary
-- [ ] L58 clauses[GK4].effects[0].forbid.defence: defence — not a field of `forbid`
-- [ ] L59 clauses[GK4].effects[1].when.side: side — not a fact in the vocabulary
-- [ ] L60 clauses[GK4].effects[1].forbid.defence: defence — not a field of `forbid`
+- [x] L18 scale: scale — not a rule key in the vocabulary
+- [x] L39 clauses[GK2].ruling: ruling — not a clause key in the vocabulary
+- [x] L47 clauses[GK3].effects[GK3.at].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
+- [x] L49 clauses[GK3].effects[GK3.at].id: id — no one-to-one verb
+- [x] L57 clauses[GK4].effects[0].when.side: side — not a fact in the vocabulary
+- [x] L58 clauses[GK4].effects[0].forbid.defence: defence — not a field of `forbid`
+- [x] L59 clauses[GK4].effects[1].when.side: side — not a fact in the vocabulary
+- [x] L60 clauses[GK4].effects[1].forbid.defence: defence — not a field of `forbid`
 
 ## rules/core/kampfsonderfertigkeiten.yaml
 
@@ -500,53 +500,53 @@ No residue.
 
 ## rules/core/reichweite.yaml
 
-- [ ] L17 scale: scale — not a rule key in the vocabulary
-- [ ] L46 clauses[RW3].effects[RW3.at].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
-- [ ] L46 clauses[RW3].effects[RW3.at].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
-- [ ] L48 clauses[RW3].effects[RW3.at].id: id — no one-to-one verb
+- [x] L17 scale: scale — not a rule key in the vocabulary
+- [x] L46 clauses[RW3].effects[RW3.at].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
+- [x] L46 clauses[RW3].effects[RW3.at].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
+- [x] L48 clauses[RW3].effects[RW3.at].id: id — no one-to-one verb
 
 ## rules/core/reiterkampf.yaml
 
-- [ ] L16 applies_when: applies_when — not a rule key in the vocabulary
-- [ ] L37 clauses[RK1].effects[0].replace.value: value — not a field of `replace`
-- [ ] L46 clauses[RK2].effects[0].grants: grants — no one-to-one verb
-- [ ] L54 clauses[RK3].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
-- [ ] L60 clauses[RK4].effects[0].forbid.loadout: loadout — not a field of `forbid`
-- [ ] L68 clauses[RK5].effects[0].when.attack.from: attack.from — not a fact in the vocabulary
-- [ ] L69 clauses[RK5].effects[0].forbid.defence: defence — not a field of `forbid`
-- [ ] L70 clauses[RK5].effects[0].open_ruling: open_ruling — no one-to-one verb
-- [ ] L82 clauses[RK6].effects[0].when.check: check — `check: aw` names the kind of check, not a talent: `check.talent` would change the meaning
-- [ ] L84 clauses[RK6].effects[1].offer.on: on — not a field of `offer`
-- [ ] L84 clauses[RK6].effects[1].offer.then: then — not a field of `offer`
-- [ ] L93 clauses[RK7].effects[0].when.check: check — not a fact in the vocabulary
-- [ ] L94 clauses[RK7].effects[0].lower: lower — no one-to-one verb
-- [ ] L94 clauses[RK7].effects[0].lower.penalty_only: penalty_only — snake_case key, no mapping
-- [ ] L105 clauses[RK8].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L112 clauses[RK9].effects[0].costs: costs — no one-to-one verb
-- [ ] L120 clauses[RK10].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L121 clauses[RK10].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L122 clauses[RK10].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L127 clauses[RK11].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L128 clauses[RK11].effects[0].offer.on: on — not a field of `offer`
-- [ ] L128 clauses[RK11].effects[0].offer.label: label — not a field of `offer`
-- [ ] L128 clauses[RK11].effects[0].offer.then: then — not a field of `offer`
-- [ ] L143 clauses[RK12].effects[0].defines: defines — no one-to-one verb
-- [ ] L143 clauses[RK12].effects[0].defines.requires_check: requires_check — snake_case key, no mapping
-- [ ] L157 clauses[RK13].effects[0].offer.order: order — not a field of `offer`
-- [ ] L158 clauses[RK13].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L159 clauses[RK13].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L163 clauses[RK13].effects[0].offer.attack: attack — not a field of `offer`
-- [ ] L164 clauses[RK13].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
-- [ ] L165 clauses[RK13].effects[0].offer.after: after — not a field of `offer`
-- [ ] L182 clauses[RK14].ruling: ruling — not a clause key in the vocabulary
-- [ ] L185 clauses[RK14].effects[0].offer.order: order — not a field of `offer`
-- [ ] L186 clauses[RK14].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L189 clauses[RK14].effects[0].offer.attack: attack — not a field of `offer`
-- [ ] L190 clauses[RK14].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
-- [ ] L191 clauses[RK14].effects[0].offer.on_hit: on_hit — not a field of `offer`
-- [ ] L207 clauses[RK15].effects[0].offer.order: order — not a field of `offer`
-- [ ] L208 clauses[RK15].effects[0].offer.requires_check: requires_check — not a field of `offer`
-- [ ] L209 clauses[RK15].effects[0].offer.on_success: on_success — not a field of `offer`
+- [x] L16 applies_when: applies_when — not a rule key in the vocabulary
+- [x] L37 clauses[RK1].effects[0].replace.value: value — not a field of `replace`
+- [x] L46 clauses[RK2].effects[0].grants: grants — no one-to-one verb
+- [x] L54 clauses[RK3].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
+- [x] L60 clauses[RK4].effects[0].forbid.loadout: loadout — not a field of `forbid`
+- [x] L68 clauses[RK5].effects[0].when.attack.from: attack.from — not a fact in the vocabulary
+- [x] L69 clauses[RK5].effects[0].forbid.defence: defence — not a field of `forbid`
+- [x] L70 clauses[RK5].effects[0].open_ruling: open_ruling — no one-to-one verb
+- [x] L82 clauses[RK6].effects[0].when.check: check — `check: aw` names the kind of check, not a talent: `check.talent` would change the meaning
+- [x] L84 clauses[RK6].effects[1].offer.on: on — not a field of `offer`
+- [x] L84 clauses[RK6].effects[1].offer.then: then — not a field of `offer`
+- [x] L93 clauses[RK7].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L94 clauses[RK7].effects[0].lower: lower — no one-to-one verb
+- [x] L94 clauses[RK7].effects[0].lower.penalty_only: penalty_only — snake_case key, no mapping
+- [x] L105 clauses[RK8].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L112 clauses[RK9].effects[0].costs: costs — no one-to-one verb
+- [x] L120 clauses[RK10].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L121 clauses[RK10].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L122 clauses[RK10].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L127 clauses[RK11].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L128 clauses[RK11].effects[0].offer.on: on — not a field of `offer`
+- [x] L128 clauses[RK11].effects[0].offer.label: label — not a field of `offer`
+- [x] L128 clauses[RK11].effects[0].offer.then: then — not a field of `offer`
+- [x] L143 clauses[RK12].effects[0].defines: defines — no one-to-one verb
+- [x] L143 clauses[RK12].effects[0].defines.requires_check: requires_check — snake_case key, no mapping
+- [x] L157 clauses[RK13].effects[0].offer.order: order — not a field of `offer`
+- [x] L158 clauses[RK13].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L159 clauses[RK13].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L163 clauses[RK13].effects[0].offer.attack: attack — not a field of `offer`
+- [x] L164 clauses[RK13].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
+- [x] L165 clauses[RK13].effects[0].offer.after: after — not a field of `offer`
+- [x] L182 clauses[RK14].ruling: ruling — not a clause key in the vocabulary
+- [x] L185 clauses[RK14].effects[0].offer.order: order — not a field of `offer`
+- [x] L186 clauses[RK14].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L189 clauses[RK14].effects[0].offer.attack: attack — not a field of `offer`
+- [x] L190 clauses[RK14].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
+- [x] L191 clauses[RK14].effects[0].offer.on_hit: on_hit — not a field of `offer`
+- [x] L207 clauses[RK15].effects[0].offer.order: order — not a field of `offer`
+- [x] L208 clauses[RK15].effects[0].offer.requires_check: requires_check — not a field of `offer`
+- [x] L209 clauses[RK15].effects[0].offer.on_success: on_success — not a field of `offer`
 
 ## rules/core/ruestung-und-belastung.yaml
 
@@ -622,13 +622,13 @@ No residue.
 
 ## rules/core/vorteilhafte-position.yaml
 
-- [ ] L15 applies_when: applies_when — not a rule key in the vocabulary
-- [ ] L18 applies_when.any[1].granted_by: granted_by — snake_case key, no mapping
-- [ ] L32 clauses[VP1].effects[VP1.at].id: id — no one-to-one verb
-- [ ] L42 clauses[VP2].status: status — not a clause key in the vocabulary
-- [ ] L43 clauses[VP2].why: why — `why` without `effects: none`: the clause has no body to carry it
-- [ ] L49 clauses[VP3].status: status — not a clause key in the vocabulary
-- [ ] L50 clauses[VP3].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L15 applies_when: applies_when — not a rule key in the vocabulary
+- [x] L18 applies_when.any[1].granted_by: granted_by — snake_case key, no mapping
+- [x] L32 clauses[VP1].effects[VP1.at].id: id — no one-to-one verb
+- [x] L42 clauses[VP2].status: status — not a clause key in the vocabulary
+- [x] L43 clauses[VP2].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L49 clauses[VP3].status: status — not a clause key in the vocabulary
+- [x] L50 clauses[VP3].why: why — `why` without `effects: none`: the clause has no body to carry it
 
 ## rules/core/waffeneigenschaften.yaml
 
@@ -680,26 +680,26 @@ No residue.
 
 ## rules/creatures/maechtiger-schlag.yaml
 
-- [ ] L36 clauses[MS1].effects[0].tell: tell — tell: the text is a structure, not a text
-- [ ] L36 clauses[MS1].effects[0].tell.opponent.on_failure: on_failure — snake_case key, no mapping
-- [ ] L49 clauses[MS2].effects[0].opponent_add: opponent_add — keys outside the row: round
-- [ ] L61 clauses[MS3].effects[0].cancels: cancels — no one-to-one verb
-- [ ] L63 clauses[MS3].effects[1].tell: tell — tell: the text is a structure, not a text
-- [ ] L63 clauses[MS3].effects[1].tell.opponent.on_failure: on_failure — snake_case key, no mapping
-- [ ] L63 clauses[MS3].effects[1].tell.opponent.whatever_the_parry: whatever_the_parry — snake_case key, no mapping
+- [x] L36 clauses[MS1].effects[0].tell: tell — tell: the text is a structure, not a text
+- [x] L36 clauses[MS1].effects[0].tell.opponent.on_failure: on_failure — snake_case key, no mapping
+- [x] L49 clauses[MS2].effects[0].opponent_add: opponent_add — keys outside the row: round
+- [x] L61 clauses[MS3].effects[0].cancels: cancels — no one-to-one verb
+- [x] L63 clauses[MS3].effects[1].tell: tell — tell: the text is a structure, not a text
+- [x] L63 clauses[MS3].effects[1].tell.opponent.on_failure: on_failure — snake_case key, no mapping
+- [x] L63 clauses[MS3].effects[1].tell.opponent.whatever_the_parry: whatever_the_parry — snake_case key, no mapping
 
 ## rules/creatures/ruhiges-temperament.yaml
 
-- [ ] L24 clauses[RT1].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L24 clauses[RT1].effects[0].when.check: check — not a fact in the vocabulary
 
 ## rules/creatures/svellttaler-kaltblut.yaml
 
-- [ ] L26 profile: profile — not a rule key in the vocabulary
-- [ ] L88 clauses[SK3].effects[1].offer.order: order — not a field of `offer`
-- [ ] L88 clauses[SK3].effects[1].offer.attacks: attacks — not a field of `offer`
-- [ ] L88 clauses[SK3].effects[1].offer.via: via — not a field of `offer`
-- [ ] L112 clauses[SK5].effects[0].grants: grants — no one-to-one verb
-- [ ] L159 clauses[SK10].effects[0].when.mount.lep.at_most: at_most — snake_case key, no mapping
+- [x] L26 profile: profile — not a rule key in the vocabulary
+- [x] L88 clauses[SK3].effects[1].offer.order: order — not a field of `offer`
+- [x] L88 clauses[SK3].effects[1].offer.attacks: attacks — not a field of `offer`
+- [x] L88 clauses[SK3].effects[1].offer.via: via — not a field of `offer`
+- [x] L112 clauses[SK5].effects[0].grants: grants — no one-to-one verb
+- [x] L159 clauses[SK10].effects[0].when.mount.lep.at_most: at_most — snake_case key, no mapping
 
 ## rules/disadvantages/DISADV_37.yaml
 
@@ -894,34 +894,34 @@ No residue.
 
 ## situations/kampfsituationen.yaml
 
-- [ ] L28 mount: mount — not a situations-file key in the vocabulary
-- [ ] L37 situations["17.1"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L40 situations["17.1"].expect.costs: costs — neither an expect key nor a query
-- [ ] L41 situations["17.1"].expect.tell: tell — neither an expect key nor a query
-- [ ] L42 situations["17.1"].expect.rolls: rolls — neither an expect key nor a query
-- [ ] L52 situations["17.2"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L63 situations["17.3"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L77 situations["17.4"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L77 situations["17.4"].choose.targetZone: targetZone — not a fact in the vocabulary
-- [ ] L85 situations["17.4"].expect.rolls: rolls — neither an expect key nor a query
-- [ ] L91 situations["17.5"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L104 situations["17.6"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L116 situations["17.7"].choose.attacks: attacks — not a fact in the vocabulary
-- [ ] L118 situations["17.7"].expect.each: each — neither an expect key nor a query
-- [ ] L119 situations["17.7"].expect.actions_used: actions_used — neither an expect key nor a query
-- [ ] L120 situations["17.7"].expect.counts_as_defence: counts_as_defence — neither an expect key nor a query
-- [ ] L126 situations["17.8"].event: event — not a situation key in the vocabulary
-- [ ] L129 situations["17.8"].expect.next: next — neither an expect key nor a query
-- [ ] L136 situations["17.9"].event: event — not a situation key in the vocabulary
-- [ ] L140 situations["17.9"].expect.with_choice: with_choice — neither an expect key nor a query
-- [ ] L141 situations["17.9"].expect.target: target — neither an expect key nor a query
-- [ ] L142 situations["17.9"].expect.then: then — neither an expect key nor a query
-- [ ] L189 situations["17.12"].expect.opponent_lines: opponent_lines — neither an expect key nor a query
-- [ ] L195 situations["17.13"].attack: attack — not a situation key in the vocabulary
-- [ ] L217 situations["17.15"].choose.defence: defence — not a fact in the vocabulary
-- [ ] L225 situations["17.16"].choose.defence: defence — not a fact in the vocabulary
-- [ ] L233 situations["17.17"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L290 situations["17.22"].expect.tell: tell — neither an expect key nor a query
+- [x] L28 mount: mount — not a situations-file key in the vocabulary
+- [x] L37 situations["17.1"].choose.attack: attack — not a fact in the vocabulary
+- [x] L40 situations["17.1"].expect.costs: costs — neither an expect key nor a query
+- [x] L41 situations["17.1"].expect.tell: tell — neither an expect key nor a query
+- [x] L42 situations["17.1"].expect.rolls: rolls — neither an expect key nor a query
+- [x] L52 situations["17.2"].choose.attack: attack — not a fact in the vocabulary
+- [x] L63 situations["17.3"].choose.attack: attack — not a fact in the vocabulary
+- [x] L77 situations["17.4"].choose.attack: attack — not a fact in the vocabulary
+- [x] L77 situations["17.4"].choose.targetZone: targetZone — not a fact in the vocabulary
+- [x] L85 situations["17.4"].expect.rolls: rolls — neither an expect key nor a query
+- [x] L91 situations["17.5"].choose.attack: attack — not a fact in the vocabulary
+- [x] L104 situations["17.6"].choose.attack: attack — not a fact in the vocabulary
+- [x] L116 situations["17.7"].choose.attacks: attacks — not a fact in the vocabulary
+- [x] L118 situations["17.7"].expect.each: each — neither an expect key nor a query
+- [x] L119 situations["17.7"].expect.actions_used: actions_used — neither an expect key nor a query
+- [x] L120 situations["17.7"].expect.counts_as_defence: counts_as_defence — neither an expect key nor a query
+- [x] L126 situations["17.8"].event: event — not a situation key in the vocabulary
+- [x] L129 situations["17.8"].expect.next: next — neither an expect key nor a query
+- [x] L136 situations["17.9"].event: event — not a situation key in the vocabulary
+- [x] L140 situations["17.9"].expect.with_choice: with_choice — neither an expect key nor a query
+- [x] L141 situations["17.9"].expect.target: target — neither an expect key nor a query
+- [x] L142 situations["17.9"].expect.then: then — neither an expect key nor a query
+- [x] L189 situations["17.12"].expect.opponent_lines: opponent_lines — neither an expect key nor a query
+- [x] L195 situations["17.13"].attack: attack — not a situation key in the vocabulary
+- [x] L217 situations["17.15"].choose.defence: defence — not a fact in the vocabulary
+- [x] L225 situations["17.16"].choose.defence: defence — not a fact in the vocabulary
+- [x] L233 situations["17.17"].choose.attack: attack — not a fact in the vocabulary
+- [x] L290 situations["17.22"].expect.tell: tell — neither an expect key nor a query
 
 ## situations/kampfwerte.yaml
 
@@ -959,60 +959,60 @@ No residue.
 
 ## situations/kupperus-und-waffen.yaml
 
-- [ ] L32 mount: mount — not a situations-file key in the vocabulary
-- [ ] L42 situations["18.1"].choose.order: order — not a fact in the vocabulary
-- [ ] L42 situations["18.1"].choose.gait: gait — not a fact in the vocabulary
-- [ ] L42 situations["18.1"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L45 situations["18.1"].expect.costs: costs — neither an expect key nor a query
-- [ ] L46 situations["18.1"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L54 situations["18.1"].expect.on_check_failure: on_check_failure — neither an expect key nor a query
-- [ ] L56 situations["18.1"].expect.attack: attack — neither an expect key nor a query
-- [ ] L59 situations["18.1"].expect.attack.opponent_may_only: opponent_may_only — snake_case key, no mapping
-- [ ] L60 situations["18.1"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L62 situations["18.1"].expect.on_attack_success: on_attack_success — neither an expect key nor a query
-- [ ] L64 situations["18.1"].expect.on_attack_success.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
-- [ ] L67 situations["18.1"].expect.after: after — neither an expect key nor a query
-- [ ] L80 situations["18.2"].mount: mount — not a situation key in the vocabulary
-- [ ] L81 situations["18.2"].choose.order: order — not a fact in the vocabulary
-- [ ] L81 situations["18.2"].choose.gait: gait — not a fact in the vocabulary
-- [ ] L81 situations["18.2"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L83 situations["18.2"].expect.attack: attack — neither an expect key nor a query
-- [ ] L84 situations["18.2"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L91 situations["18.3"].choose.order: order — not a fact in the vocabulary
-- [ ] L91 situations["18.3"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L94 situations["18.3"].expect.costs: costs — neither an expect key nor a query
-- [ ] L94 situations["18.3"].expect.costs[0].instead_of: instead_of — snake_case key, no mapping
-- [ ] L95 situations["18.3"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L104 situations["18.3"].expect.not_asked: not_asked — neither an expect key nor a query
-- [ ] L105 situations["18.3"].expect.on_check_failure: on_check_failure — neither an expect key nor a query
-- [ ] L107 situations["18.3"].expect.attack: attack — neither an expect key nor a query
-- [ ] L110 situations["18.3"].expect.attack.opponent_may_only: opponent_may_only — snake_case key, no mapping
-- [ ] L112 situations["18.3"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L114 situations["18.3"].expect.on_attack_success: on_attack_success — neither an expect key nor a query
-- [ ] L116 situations["18.3"].expect.on_attack_success.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
-- [ ] L126 situations["18.4"].choose.order: order — not a fact in the vocabulary
-- [ ] L126 situations["18.4"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L128 situations["18.4"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L129 situations["18.4"].expect.tell: tell — neither an expect key nor a query
-- [ ] L130 situations["18.4"].expect.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
-- [ ] L139 situations["18.5"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
-- [ ] L148 situations["18.5"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L160 situations["18.6"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
-- [ ] L164 situations["18.6"].sequence[0].expect.on_hit: on_hit — snake_case key, no mapping
-- [ ] L169 situations["18.6"].sequence[1].expect.on_hit: on_hit — snake_case key, no mapping
-- [ ] L183 situations["18.7"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L197 situations["18.8"].choose.order: order — not a fact in the vocabulary
-- [ ] L197 situations["18.8"].choose.gait: gait — not a fact in the vocabulary
-- [ ] L197 situations["18.8"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
-- [ ] L199 situations["18.8"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L222 situations["18.9"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L233 situations["18.10"].choose.attack: attack — not a fact in the vocabulary
-- [ ] L235 situations["18.10"].expect.conditions: conditions — neither an expect key nor a query
-- [ ] L250 situations["18.11"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L271 situations["18.13"].expect.tell: tell — neither an expect key nor a query
-- [ ] L291 situations["18.15"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
-- [ ] L297 situations["18.16"].expect.mount_carrying_capacity: mount_carrying_capacity — neither an expect key nor a query
-- [ ] L309 situations["18.17"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L32 mount: mount — not a situations-file key in the vocabulary
+- [x] L42 situations["18.1"].choose.order: order — not a fact in the vocabulary
+- [x] L42 situations["18.1"].choose.gait: gait — not a fact in the vocabulary
+- [x] L42 situations["18.1"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L45 situations["18.1"].expect.costs: costs — neither an expect key nor a query
+- [x] L46 situations["18.1"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L54 situations["18.1"].expect.on_check_failure: on_check_failure — neither an expect key nor a query
+- [x] L56 situations["18.1"].expect.attack: attack — neither an expect key nor a query
+- [x] L59 situations["18.1"].expect.attack.opponent_may_only: opponent_may_only — snake_case key, no mapping
+- [x] L60 situations["18.1"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L62 situations["18.1"].expect.on_attack_success: on_attack_success — neither an expect key nor a query
+- [x] L64 situations["18.1"].expect.on_attack_success.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
+- [x] L67 situations["18.1"].expect.after: after — neither an expect key nor a query
+- [x] L80 situations["18.2"].mount: mount — not a situation key in the vocabulary
+- [x] L81 situations["18.2"].choose.order: order — not a fact in the vocabulary
+- [x] L81 situations["18.2"].choose.gait: gait — not a fact in the vocabulary
+- [x] L81 situations["18.2"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L83 situations["18.2"].expect.attack: attack — neither an expect key nor a query
+- [x] L84 situations["18.2"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L91 situations["18.3"].choose.order: order — not a fact in the vocabulary
+- [x] L91 situations["18.3"].choose.attack: attack — not a fact in the vocabulary
+- [x] L94 situations["18.3"].expect.costs: costs — neither an expect key nor a query
+- [x] L94 situations["18.3"].expect.costs[0].instead_of: instead_of — snake_case key, no mapping
+- [x] L95 situations["18.3"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L104 situations["18.3"].expect.not_asked: not_asked — neither an expect key nor a query
+- [x] L105 situations["18.3"].expect.on_check_failure: on_check_failure — neither an expect key nor a query
+- [x] L107 situations["18.3"].expect.attack: attack — neither an expect key nor a query
+- [x] L110 situations["18.3"].expect.attack.opponent_may_only: opponent_may_only — snake_case key, no mapping
+- [x] L112 situations["18.3"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L114 situations["18.3"].expect.on_attack_success: on_attack_success — neither an expect key nor a query
+- [x] L116 situations["18.3"].expect.on_attack_success.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
+- [x] L126 situations["18.4"].choose.order: order — not a fact in the vocabulary
+- [x] L126 situations["18.4"].choose.attack: attack — not a fact in the vocabulary
+- [x] L128 situations["18.4"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L129 situations["18.4"].expect.tell: tell — neither an expect key nor a query
+- [x] L130 situations["18.4"].expect.tell[0].opponent.on_failure: on_failure — snake_case key, no mapping
+- [x] L139 situations["18.5"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
+- [x] L148 situations["18.5"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L160 situations["18.6"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
+- [x] L164 situations["18.6"].sequence[0].expect.on_hit: on_hit — snake_case key, no mapping
+- [x] L169 situations["18.6"].sequence[1].expect.on_hit: on_hit — snake_case key, no mapping
+- [x] L183 situations["18.7"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L197 situations["18.8"].choose.order: order — not a fact in the vocabulary
+- [x] L197 situations["18.8"].choose.gait: gait — not a fact in the vocabulary
+- [x] L197 situations["18.8"].choose.dornenspitze: dornenspitze — not a fact in the vocabulary
+- [x] L199 situations["18.8"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L222 situations["18.9"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L233 situations["18.10"].choose.attack: attack — not a fact in the vocabulary
+- [x] L235 situations["18.10"].expect.conditions: conditions — neither an expect key nor a query
+- [x] L250 situations["18.11"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L271 situations["18.13"].expect.tell: tell — neither an expect key nor a query
+- [x] L291 situations["18.15"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
+- [x] L297 situations["18.16"].expect.mount_carrying_capacity: mount_carrying_capacity — neither an expect key nor a query
+- [x] L309 situations["18.17"].expect.on_hit: on_hit — neither an expect key nor a query
 
 ## situations/lebensenergie.yaml
 
@@ -1199,48 +1199,48 @@ No residue.
 
 ## situations/reichweite.yaml
 
-- [ ] L7 weapons: weapons — not a situations-file key in the vocabulary
-- [ ] L61 situations[RW.6].check: check — not a situation key in the vocabulary
-- [ ] L72 situations[RW.7].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L76 situations[RW.7].expect.on_miss: on_miss — neither an expect key nor a query
-- [ ] L83 situations[RW.8].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L92 situations[RW.9].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L116 situations[RW.12].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L132 situations[RW.13].expect.excludes: excludes — neither an expect key nor a query
-- [ ] L138 situations[RW.14].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
-- [ ] L138 situations[RW.14].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L150 situations[RW.15].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
-- [ ] L152 situations[RW.15].expect.not_combinable: not_combinable — neither an expect key nor a query
-- [ ] L153 situations[RW.15].expect.told: told — neither an expect key nor a query
-- [ ] L159 situations[RW.16].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L7 weapons: weapons — not a situations-file key in the vocabulary
+- [x] L61 situations[RW.6].check: check — not a situation key in the vocabulary
+- [x] L72 situations[RW.7].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L76 situations[RW.7].expect.on_miss: on_miss — neither an expect key nor a query
+- [x] L83 situations[RW.8].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L92 situations[RW.9].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L116 situations[RW.12].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L132 situations[RW.13].expect.excludes: excludes — neither an expect key nor a query
+- [x] L138 situations[RW.14].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
+- [x] L138 situations[RW.14].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L150 situations[RW.15].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
+- [x] L152 situations[RW.15].expect.not_combinable: not_combinable — neither an expect key nor a query
+- [x] L153 situations[RW.15].expect.told: told — neither an expect key nor a query
+- [x] L159 situations[RW.16].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
 
 ## situations/reiterkampf.yaml
 
-- [ ] L5 mount: mount — not a situations-file key in the vocabulary
-- [ ] L51 situations["5.5"].choose.jumpOff: jumpOff — not a fact in the vocabulary
-- [ ] L55 situations["5.5"].expect.after: after — neither an expect key nor a query
-- [ ] L123 situations["5.10"].choose.order: order — not a fact in the vocabulary
-- [ ] L123 situations["5.10"].choose.gait: gait — not a fact in the vocabulary
-- [ ] L125 situations["5.10"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L126 situations["5.10"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L128 situations["5.10"].expect.opponent_may_only: opponent_may_only — neither an expect key nor a query
-- [ ] L134 situations["5.11"].mount: mount — not a situation key in the vocabulary
-- [ ] L135 situations["5.11"].choose.order: order — not a fact in the vocabulary
-- [ ] L135 situations["5.11"].choose.gait: gait — not a fact in the vocabulary
-- [ ] L137 situations["5.11"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L144 situations["5.12"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L144 situations["5.12"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L147 situations["5.12"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L149 situations["5.12"].expect.on_miss: on_miss — neither an expect key nor a query
-- [ ] L151 situations["5.12"].expect.excludes: excludes — neither an expect key nor a query
-- [ ] L157 situations["5.13"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L157 situations["5.13"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L159 situations["5.13"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L165 situations["5.14"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L165 situations["5.14"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L168 situations["5.14"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L181 situations["5.16"].expect.not_selectable: not_selectable — neither an expect key nor a query
-- [ ] L189 situations["5.17"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
+- [x] L5 mount: mount — not a situations-file key in the vocabulary
+- [x] L51 situations["5.5"].choose.jumpOff: jumpOff — not a fact in the vocabulary
+- [x] L55 situations["5.5"].expect.after: after — neither an expect key nor a query
+- [x] L123 situations["5.10"].choose.order: order — not a fact in the vocabulary
+- [x] L123 situations["5.10"].choose.gait: gait — not a fact in the vocabulary
+- [x] L125 situations["5.10"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L126 situations["5.10"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L128 situations["5.10"].expect.opponent_may_only: opponent_may_only — neither an expect key nor a query
+- [x] L134 situations["5.11"].mount: mount — not a situation key in the vocabulary
+- [x] L135 situations["5.11"].choose.order: order — not a fact in the vocabulary
+- [x] L135 situations["5.11"].choose.gait: gait — not a fact in the vocabulary
+- [x] L137 situations["5.11"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L144 situations["5.12"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L144 situations["5.12"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L147 situations["5.12"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L149 situations["5.12"].expect.on_miss: on_miss — neither an expect key nor a query
+- [x] L151 situations["5.12"].expect.excludes: excludes — neither an expect key nor a query
+- [x] L157 situations["5.13"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L157 situations["5.13"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L159 situations["5.13"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L165 situations["5.14"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L165 situations["5.14"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L168 situations["5.14"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L181 situations["5.16"].expect.not_selectable: not_selectable — neither an expect key nor a query
+- [x] L189 situations["5.17"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
 
 ## situations/schmerz.yaml
 
@@ -1385,6 +1385,13 @@ No residue.
 - situations/boronmir-sf.yaml 14.13: expects `pa(with: shield)` total −7, result 6, with a −6 line from SA_59.SS2 ("removes schilde.SCH3"). The base 13 (`pa(with: Großschild)`) folds in SCH3's doubled bonus; the rules give the shield parry as KW2's Schilde PA 7 plus SCH3's +6 line, and SS2 is a `suppress` of that line, which lands in notApplied (reason suppressed), not as a −6 line. Faithful to the rules: base 7, no SCH3 line, total −1, result 6.
 - situations/boronmir-sf.yaml 14.17: expects `pa` result 11 and `pa(with: shield)` result 13 with only the P2 and B3 lines (total 0). The bases 11 and 13 fold in SCH1's +3 and SCH3's +6; the rules add those as lines (schilde.SCH1, schilde.SCH3), so the totals would be +3 and +6, with the same results.
 - situations/boronmir-neu.yaml 19.2: the same as 14.17 for Formation's +2 VW: `pa` result 12 and `pa(with: shield)` result 14 with totals 1 come from folded bases 11 / 13; the rules give SCH1's +3 and SCH3's +6 as lines of their own.
+- situations/reiterkampf.yaml 5.10: expects the Reiten (Kampfmanöver) check before the Sturmangriff zu Pferd `from: reiterkampf.RK14` (the old `checks_first`, now an `events` entry). RK14's text names the check, but the rules carry it once, on RK12 (every order's Aktion and check); RK14 does not repeat it, so the event comes from RK12.
+- situations/kampfsituationen.yaml 17.7: expects `counts_as_defence: false` (a Passierschlag does not move mehrfache-verteidigung). No expect key says that a fact did not change; it is a comment. `actions_used: 0` is `events: []`.
+- situations/kampfsituationen.yaml 17.8: expects `next: takeDamage` (the take-damage screen follows). No expect key names the next screen; it is a comment.
+- situations/kupperus-und-waffen.yaml 18.3: expects `not_asked: [{ gait: galopp, runUp: 4 }]` (a mount attack does not ask for gait or run-up). No expect key says "not asked" (`questions: []` would assert that nothing at all is asked); it is a comment.
+- situations/kupperus-und-waffen.yaml 18.1: expects the mount's Niederreiten attack (AT 15, TP 2W6+6) `from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13]`, now an `events` entry. The rules make it RK13's `check` of the mount's Niederreiten line, whose values are SK3's provided data, so the event comes from RK13; the AT and TP are data, not lines.
+- situations/kupperus-und-waffen.yaml 18.2: expects Niederreiten with an Elenviner Vollblut's AT 15 and TP 2W6+4. There is no profile file for that horse, so nothing states its attack lines (`mount.hasAttack`) or values; RK13's offer is unknown and the numbers cannot come from the rules.
+- situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{ mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text expectation compares audience and source only.
 
 ## Reviews reset by hand edits
 
@@ -1428,3 +1435,34 @@ No residue.
 - DISADV_37.SE4: the `gm.modifier` offer is an `ask` of `gmFact.triggerModifier` (the GM) and an `add` of it to `check.modifier` on that check; its `default: 0` is a comment
 - DISADV_37.SE6: `provides: { text_by_option: sid }` is `provide: { name: DISADV_37.eigenschaft, value: { sid: name } }`: the name, whose line of SE6's text is the trigger
 - mehrfache-verteidigung.MV3: the `check: [pa, aw]` condition is dropped (no such fact); the forbid reads `query.result: { atMost: 0 }` and is limited to defence queries only by its `defence` selector's reach (pa, aw); `this_kind` is `[pa, aw]` per query
+- reiterkampf.RK0: the header `applies_when: { hero.mounted: true }` is `hero.mounted: true` in every effect's `when` (RK1–RK15); RK0 stays `none`, its text now says so
+- reiterkampf.RK1: `replace: { value: ini.base, with: mount.ini.base }` is a `suppress` of kampfwerte.KW9 and a `derive` of `iniBase` from `mount.iniBase`; ruling rider-ini is now an effect of its own, `useLevel: { rule: COND_1, as: 0 }` on the INI (`query.target: ini`), a zero-valued line
+- reiterkampf.RK2: `grants: { rule: vorteilhafte-position }` is `require: { that, enables: true, for: { rule: vorteilhafte-position } }`; the condition (mounted, opponent on foot) is also in vorteilhafte-position.VP1's `when`
+- reiterkampf.RK4: `forbid: { loadout: { twoHandedOnly: true } }` is `forbid: { what: { loadout: weapon } }` when `loadout.twoHanded`
+- reiterkampf.RK5: `attack.from: weaponArmSide` is the GM's `gmFact.attackSide: weaponArm`; `open_ruling` is the effect's `ruling` (still open: applies nothing)
+- reiterkampf.RK6: `check: aw` is the target; the offer's `on: aw` is `query.target: aw`; its `then: { hero.mounted: false }` is an `item` change of the mount (`ridden: false`)
+- reiterkampf.RK7: `lower: { condition: COND_1, by: 1, penalty_only }` is `useLevel: { rule: COND_1, lowerBy: 1, min: 0 }` for the queries of AT, PA, AW, FK and a Reiten (TAL_6) check modifier (`query.target`), so the Stufe itself is untouched
+- reiterkampf.RK8: of the three occasions, only the change of gait keeps a check here; the mount hurt is RK10's check and an order RK12's (the old encoding asked for both twice)
+- reiterkampf.RK9: `costs: { action: free, of: [hero, mount] }` is `cost: { pool: freeActions, amount: 1 }` on `action.gaitChange`; the mount's own free action is not counted
+- reiterkampf.RK10: `event: mountTakesSP` is `gmFact.mountTakesSP` or RK11's `choice.mountHit`; the modifier reads `hit.sp` (was `mount.spTaken`); `on_failure: { rule: sturzschaden }` is a `tell` of the fall (core/sturzschaden newly drafted, all clauses unencoded); ruling passierschlag-on-mount cited on it
+- reiterkampf.RK11: the offer's `then: { damage.to: mount }` is a `suppress` of schaden.S1 and a `tell` that the SP go to the mount's LE; `event: passierschlagSuffered` is `gmFact.incomingAttack: passierschlag`
+- reiterkampf.RK12: `defines: { action: order, costs: action, requires_check }` is a `cost` of 1 from the new pool `actions` and a Reiten (Kampfmanöver) `check` (a `tell` on failure) for every `choice.order`
+- reiterkampf.RK13: the offer is `offer: { choice: order, options: [niederreiten] }` with its requirements in `when` (`mount.hasAttack: Niederreiten` for the profile line); `attack` is a `check` of the mount's Niederreiten attack; `opponent_may_only: [aw]` a `forbid` of the opponent's parries; `after` a `tell`
+- reiterkampf.RK14: the clause-level ruling two-sturmangriffe is on the effects; `opponent_may_only` is a `forbid` of the opponent's weapon parry; the `on_hit` TP "2 + mount.gs / 2" is `{ of: [mount.gs, 4], per: 2, round: up }`
+- reiterkampf.RK15: the offer's `requires_check` is RK12's check plus an `add` of −1 per `gmFact.opponentsInReach` to the Reiten check; `on_success: { move }` is a `tell`
+- vorteilhafte-position.VP1: the header `applies_when` (GM fact per attack, or granted by reiterkampf.RK2) is each effect's `when: { any: [gmFact.vorteilhaftePosition, mounted against a fighter on foot] }`; the `span: attack` is dropped (a GM fact is stated per attack); the effect `id` is dropped
+- beengte-umgebung.BU2: the header `applies_when: { gm.fact: beengt, span: round }` is `gmFact.beengt: true` in each effect's `when`; the `span` is dropped
+- beengte-umgebung.BU3: the same `gmFact.beengt`; the clause-level ruling beengt-shield-carried is on each effect
+- angriff-von-hinten.AH1: `side` is carried by the targets; `attack.kind: melee` is `not: { gmFact.incomingAttack: ranged }` for the hero's defence and `loadout.weapon.kind: melee` for his attack; `span: attack` dropped; `exempt: { from: schilde.SCH1 }` is a `suppress`; `from: reiterkampf.RK5` is in the `because`
+- SA_661.GS1: `raise` of vorteilhafte-position.VP1's AT line by 2 is an `add` of its own under the mounted condition; the style condition is written out (`loadout.weapon` Rabenschnabel or Großschild); ruling passierschlag.passierschlag-sf is cited on it (kampfsituationen 17.3)
+- SA_661.GS2: `loadout: { style: SA_661 }` is written out as `loadout.weapon` Rabenschnabel or Großschild
+- SA_661.GS3: the `define` of the style condition is gone (clause now `none`): GS1 and GS2 carry it
+- SA_172.U1: `lower: { line: reichweite.RW3.at, by_steps: 1, per: tier, min: 0 }` is two `replace`s of reichweite.RW3 (Stufe I: the steps above 1, Stufe II: above 2, at −2 each); reads `choice.unterlaufen` (was `action.manoeuvre`)
+- SA_172.U2: the offer is `offer: { choice: unterlaufen, span: action }` (was `span: attack`); its `requires` is `require … for: { choice: unterlaufen }` on `reach.gap`; the tell reads `choice.unterlaufen`
+- maechtiger-schlag.MS1: `creature.attack: success` is `action.attack: hit`; the structured `tell` is a text to the opponent
+- maechtiger-schlag.MS2: `opponent_add` is an `add` to `opponent.check.modifier` with the value `{ of: creature.kk, above: 20, per: 2, times: -1, round: up }`; ruling round-up cited on it
+- maechtiger-schlag.MS3: `cancels: MS1` is a `suppress` of MS1 when `opponent.defence: aw` and `opponent.defenceResult: success` (was `action.defence: success`); the structured `tell` is a text
+- ruhiges-temperament.RT1: `mount.has: ruhiges-temperament` is dropped from `when` (the rule applies when the mount has it: svellttaler-kaltblut.SK5 enables it); `check: { talent: Reiten }` is `check.talent: TAL_6`, the target `check.modifier`
+- svellttaler-kaltblut.SK3: the offer `{ order: mount_attack, attacks, via: reiterkampf.RK12 }` is `offer: { choice: order, options: [mountAttack] }`, an offer of `choice.mountAttack` (Tritt, Biss) and a `check` of that attack; RK12 carries the Aktion and the Reiten check
+- svellttaler-kaltblut.SK5: `grants: { rules: [ruhiges-temperament, maechtiger-schlag] }` is one `require … enables: true, for: { rule: … }` per rule
+- svellttaler-kaltblut.SK10: `add … per: threshold_crossed` over `mount.lep: { at_most: [49, 33, 16, 5] }` is four `add`s of 1 to `mount.level(rule: COND_6)`, one per threshold of `mount.leCurrent`

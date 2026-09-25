@@ -23,12 +23,14 @@ clauses:
       Reichweite größer ist als die Reichweite des Widersachers. Ist diese Voraussetzung erfüllt,
       erhöhen sich die AT-Erschwernisse für den Gegner zusätzlich um -1 pro Stufe der SF.
     effects:
-      - when: { check: at, opponent.has: SA_152, opponent.reach: { longer_than: loadout.reach } }
-        add: { to: at, value: -1, per: opponent.tier }
+      - when: { opponent.has: SA_152, reach.gap: { atLeast: 1 } }
+        add: { to: at, value: -1, per: opponent.level.SA_152 }
         ruling: SA_172.auf-distanz-halten
         # The opponent's Stufe is a GM question, asked like the opponent's reach
-        # (OpponentProfile). FORMAT: `per: opponent.tier` — a tier the hero does not own.
-      - when: { announced: aufDistanzHalten, loadout.reach: { longer_than: opponent.reach } }
+        # (OpponentProfile). FORMAT: `per: opponent.level.SA_152` (the old `opponent.tier`) — a
+        # Stufe the hero does not own. `reach.gap` ≥ 1: the opponent's weapon is the longer
+        # (reichweite); the old `check: at` is the target.
+      - when: { choice.aufDistanzHalten: true, reach.gap: { atMost: -1 } }
         tell: { to: opponent, text: "AT −<tier> (Auf Distanz halten <I/II>)" }
         # Opponents are not modelled (ADR-0005); the hero's use is a reminder. Only in a round
         # where AD2's announcement was made: owning the SF and the longer weapon is not enough.
@@ -39,15 +41,17 @@ clauses:
       Dafür kann der Held in dieser KR keine Basismanöver einsetzen. Auf Distanz halten muss am
       Anfang der Runde angesagt werden.
     effects:
-      - when: { hero.has: SA_152 }
-        offer: { announce: aufDistanzHalten, at: round_start, lasts: round }
-        # FORMAT: "Anfang der Runde" — the same round-start announcement as SA_65.VH1 and
-        # SA_66. The app has none yet; it would be a toggle on the combat round.
-      - when: { announced: aufDistanzHalten }
-        forbid: { manoeuvre: { kind: basismanoever } }
+      - when: { hero.has: SA_152, round.phase: start }
+        offer: { choice: aufDistanzHalten, span: round }
+        # "Anfang der Runde" — the same round-start announcement as SA_65.VH1 and SA_66
+        # (`round.phase: start`, the old `at: round_start`; `span: round`, the old `lasts`). The
+        # app has none yet; it would be a toggle on the combat round.
+      - when: { choice.aufDistanzHalten: true }
+        forbid: { what: { manoeuvre: { kind: basismanoever } } }
+        because: Auf Distanz halten — in dieser KR keine Basismanöver
         # Only Basismanöver (Finte, Wuchtschlag, …). A plain attack, a Spezialmanöver and the
         # defences stay allowed: the page forbids nothing else. The picker hides them and says why.
-      - when: { announced: aufDistanzHalten, loadout.reach: { not_longer_than: opponent.reach } }
+      - when: { choice.aufDistanzHalten: true, reach.gap: { atLeast: 0 } }
         tell: { to: player, text: "Auf Distanz halten wirkt nur mit der längeren Waffe (AD1)" }
 
   - id: AD3
@@ -60,7 +64,7 @@ clauses:
       Reihe ist.
     none: >
       the page's own example of AD1, and the same statement as SA_172.U4: AD1's line is its own,
-      so Unterlaufen, which lowers only reichweite.RW3.at, never reaches it (reichweite RW.12).
+      so Unterlaufen, which lowers only reichweite.RW3's line, never reaches it (reichweite RW.12).
 
   - id: AD4
     text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Auf Distanz halten I"

@@ -19,9 +19,9 @@ clauses:
     none: >
       it lifts SA_172.U3's exclusion; the lift is written there (`unless: { hero.has: SA_173 }`),
       so the exclusion and its exception are read in one place.
-    lifts: [SA_172.U3]
-    # FORMAT: same two-sided dependency as SA_43 ↔ reiterkampf orders. Here the rule being
-    # lifted holds the condition; this back-reference is for the reader.
+    # The old `lifts: [SA_172.U3]` is a back-reference for the reader: the rule being lifted holds
+    # the condition (U3's `when: { not: { hero.has: SA_173 } }`), so a `suppress` of U3 here
+    # would say it twice. Same two-sided dependency as SA_43 ↔ reiterkampf orders.
 
   - id: VU2
     text: "Voraussetzungen: Unterlaufen I"

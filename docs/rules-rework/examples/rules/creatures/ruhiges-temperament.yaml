@@ -1,9 +1,9 @@
 # DRAFT FORMAT — see ../../README.md.
-# FORMAT: a new kind, `creatureAdvantage` — a Tiervorteil. Its owner is the animal, its effect
+# A Tiervorteil, kind `creature` (the draft's `creatureAdvantage`). Its owner is the animal, its effect
 # lands on the rider's check: the first rule here whose holder and beneficiary differ.
 id: ruhiges-temperament
 name: Ruhiges Temperament
-kind: creatureAdvantage
+kind: creature
 group: Vorteile (Tiere)
 source:
   url: https://dsa.ulisses-regelwiki.de/vor-und-nachteile/tiervor-und-nachteile/vorteile-tiere/ruhiges-temperament.html
@@ -11,7 +11,7 @@ source:
   page: 118
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # Kupperus has it through his profile (svellttaler-kaltblut.SK5). The Optolith export has no
 # field for an animal's Vorteile. Only the free-text `skills` has it, and only when the player
 # types it in: Kupperus's says "Mächtiger Schlag, Ruhiges Temperament" since the 2026-09-24
@@ -21,11 +21,13 @@ clauses:
   - id: RT1
     text: "Regel: Proben auf Reiten sind bei einem Tier mit ruhigem Temperament um +1 erleichtert."
     effects:
-      - when: { check: { talent: Reiten }, mount.has: ruhiges-temperament }
-        add: { to: check, value: 1 }
+      - when: { check.talent: TAL_6 }
+        add: { to: check.modifier, value: 1 }
         ruling: svellttaler-kaltblut.mount-profile-data
         # Every Reiten check on this animal, the Kampfmanöver ones of reiterkampf.RK8, RK10,
-        # RK12 and RK15 included.
+        # RK12 and RK15 included. Reiten is TAL_6. The old `mount.has: ruhiges-temperament` is
+        # the rule's applicability: a creature rule applies when the mount has it, which
+        # svellttaler-kaltblut.SK5 enables for Kupperus (so the line carries `via: [SK5]`).
 
   - id: RT2
     text: "Voraussetzungen: Tier lässt sich reiten"

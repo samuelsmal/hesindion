@@ -21,18 +21,20 @@ clauses:
       Kämpft der Held beritten gegen Fußkämpfer, erhöht sich die aus der vorteilhaften Position
       resultierende Erleichterung auf AT um +2.
     effects:
-      - when: { hero.mounted: true, opponent.onFoot: true, loadout: { style: SA_661 } }   # GS3
-        raise: { line: vorteilhafte-position.VP1.at, by: 2 }
-        ruling: kampfstil-techniques
-        # FORMAT: raises another rule's line. The breakdown shows "Vorteilhafte Position +2" and
-        # "Golgariten-Stil +2" as two lines, the second marked as raising the first.
+      - when: { hero.mounted: true, opponent.onFoot: true, any: [{ loadout.weapon: Rabenschnabel }, { loadout.weapon: Großschild }] }   # GS3
+        add: { to: at, value: 2 }
+        ruling: [kampfstil-techniques, passierschlag.passierschlag-sf]
+        # Raises vorteilhafte-position.VP1's AT line (the old `raise: { line: VP1.at, by: 2 }`)
+        # as a line of its own under VP1's mounted condition: the breakdown shows "Vorteilhafte
+        # Position +2" and "Golgariten-Stil +2" as two lines (reiterkampf 5.6).
+        # passierschlag-sf: a Kampfstil still applies on a Passierschlag (kampfsituationen 17.3).
 
   - id: GS2
     text: >
       Außerdem bekommt der Abenteurer noch einen Bonus von +1 PA, wenn er sich auf dem Rücken
       eines Reittiers befindet.
     effects:
-      - when: { hero.mounted: true, loadout: { style: SA_661 } }   # GS3
+      - when: { hero.mounted: true, any: [{ loadout.weapon: Rabenschnabel }, { loadout.weapon: Großschild }] }   # GS3
         add: { to: pa, value: 1 }
         ruling: kampfstil-techniques
 
@@ -40,12 +42,12 @@ clauses:
     text: >
       Kampftechniken: Hiebwaffen (nur Rabenschnabel), Schilde (nur Großschild und nur von einem
       Reittier aus)
-    effects:
-      - define: { loadout.style: SA_661, any: [{ weapon: ITEMTPL_19 }, { weapon: ITEMTPL_29, hero.mounted: true }] }
-        ruling: kampfstil-techniques
-        # The condition GS1 and GS2 read: a Rabenschnabel (ITEMTPL_19), or a Großschild
-        # (ITEMTPL_29) from a mount. FORMAT: a list narrowed to named weapons, one of them only
-        # mounted — a condition on the loadout, defined once and read by the style's clauses.
+    none: >
+      the condition GS1 and GS2 carry in their `when` (ruling kampfstil-techniques): the piece
+      the roll is made with is a Rabenschnabel (ITEMTPL_19), or a Großschild (ITEMTPL_29) from a
+      mount — both clauses are mounted only, so "nur von einem Reittier aus" always holds there.
+      The old `define: { loadout.style: SA_661, … }` named that condition once; the vocabulary
+      has no named condition, so it is written out in each.
 
   - id: GS4
     text: "Erweiterte Kampfsonderfertigkeiten: Frontalangriff, Mächtiger Rundumschlag, Schildstoß"

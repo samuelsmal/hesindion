@@ -8,14 +8,14 @@ source:
   page: 238
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
-# Active when the GM says so for this attack, or when another rule grants it
-# (reiterkampf.RK2: mounted against a fighter on foot).
-applies_when:
-  any:
-    - { gm.fact: advantageousPosition, span: attack }
-    - { granted_by: reiterkampf.RK2 }
+# Active when the GM says so for this attack (`gmFact.vorteilhaftePosition`, the old
+# `gm.fact: advantageousPosition, span: attack`: a GM fact is stated per attack), or when another
+# rule grants it (reiterkampf.RK2: mounted against a fighter on foot, whose `require … enables`
+# gives VP1's lines `via: [reiterkampf.RK2]`). The old header `applies_when` is each effect's
+# `when`: this is a core rule, so it applies to everyone, and a rule-level `require` would forbid
+# the query instead of switching the lines off.
 
 clauses:
   - id: VP1
@@ -26,11 +26,13 @@ clauses:
       vorteilhafte Position kann auch beim Schwimmen, beim Klettern in der Takelage eines
       Schiffes, beim Fliegen usw. entstehen.
     # The second and third sentences are examples of what the GM may call a vorteilhafte
-    # Position — the gm.fact in applies_when; they add nothing to the numbers.
+    # Position — the GM fact in the `when`; they add nothing to the numbers.
     effects:
-      - add: { to: at, value: 2 }
-        id: VP1.at          # named so that SA_661.GS1 can raise exactly this line
-      - add: { to: [pa, aw], value: 2 }
+      - when: { any: [{ gmFact.vorteilhaftePosition: true }, { hero.mounted: true, opponent.onFoot: true }] }
+        add: { to: at, value: 2 }
+        # SA_661.GS1 adds its +2 as a line of its own under the same condition.
+      - when: { any: [{ gmFact.vorteilhaftePosition: true }, { hero.mounted: true, opponent.onFoot: true }] }
+        add: { to: [pa, aw], value: 2 }
 
   - id: VP2
     text: >
@@ -39,12 +41,10 @@ clauses:
       Körperbeherrschung (Kampfmanöver) notwendig. Bei einer misslungenen Probe erleidet der
       Kämpfer keine zusätzlichen Nachteile. Bei einem Patzer kann der Meister dem Gegner einen
       Passierschlag zugestehen.
-    status: unencoded
-    why: getting into position is the GM's call and happens outside a roll; shown as text on the toggle
+    unencoded: getting into position is the GM's call and happens outside a roll; shown as text on the toggle
 
   - id: VP3
     text: >
       Bei bestimmten Situationen kann der Meister statt der Probe auf Körperbeherrschung
       (Kampfmanöver) auch andere Talente bestimmen.
-    status: unencoded
-    why: which talent VP2's check uses is the GM's call, outside any roll of ours; shown as text on the toggle with VP2
+    unencoded: which talent VP2's check uses is the GM's call, outside any roll of ours; shown as text on the toggle with VP2

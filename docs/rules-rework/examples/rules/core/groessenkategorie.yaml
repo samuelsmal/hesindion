@@ -15,7 +15,7 @@ reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 # Trefferzonen aiming penalty replaces this one (trefferzonen.TZ5, ruling
 # trefferzonen.zone-replaces-size).
 
-scale: { size: [winzig, klein, mittel, gross, riesig] }
+provides: { size: [winzig, klein, mittel, gross, riesig] }
 
 clauses:
   - id: GK1
@@ -35,8 +35,8 @@ clauses:
     none: >
       says whose size counts — the opponent's: the target's when the hero attacks (GK3), the
       attacker's when the hero defends (GK4). A rider is his own size, not the mount's; only the
-      mount's own attacks (Niederreiten, Tritt, Biss) come from a groß being
-    ruling: mounted-size
+      mount's own attacks (Niederreiten, Tritt, Biss) come from a groß being. Its ruling
+      mounted-size sits on GK4's effects, the ones it decides.
 
   - id: GK3
     text: |
@@ -44,20 +44,26 @@ clauses:
       Klein (Rehkitz, Schaf, Ziege): +/–0 AT
       Mittel (Mensch, Zwerg, Esel): +/–0 AT
     effects:
-      - when: { check: at, opponent.size: winzig }
+      - when: { opponent.size: winzig }
         add: { to: at, value: -4 }
-        id: GK3.at
-        # trefferzonen.TZ5 replaces this line: with a zone announced, it is dropped.
+        # trefferzonen.TZ5 replaces this line (the clause GK3): with a zone announced, it is
+        # dropped. The old `check: at` is the target.
 
   - id: GK4
     text: |
       Groß (Oger, Troll, Rind): Nur Parade mit dem Schild oder Ausweichen zulässig
       Riesig (Drache, Riese, Elefant): Nur Ausweichen zulässig
     effects:
-      - when: { side: opponent, opponent.size: gross }
-        forbid: { defence: weaponParry }
-      - when: { side: opponent, opponent.size: riesig }
-        forbid: { defence: [weaponParry, shieldParry] }
+      - when: { opponent.size: gross }
+        forbid: { what: { defence: weaponParry } }
+        because: gegen einen großen Gegner nur Parade mit dem Schild oder Ausweichen
+        ruling: mounted-size
+      - when: { opponent.size: riesig }
+        forbid: { what: { defence: [weaponParry, shieldParry] } }
+        because: gegen einen riesigen Gegner nur Ausweichen
+        ruling: mounted-size
+        # The old `side: opponent`: the opponent attacks and the hero defends, which the
+        # `defence` selector (the hero's pa) already says; the size is the attacker's.
         # The forbidden defence is not offered, and the breakdown says why (GK4). Against a
         # riesig attacker, mounted: the AW still carries reiterkampf.RK6's −2.
 

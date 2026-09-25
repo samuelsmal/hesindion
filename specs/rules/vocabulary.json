@@ -136,6 +136,14 @@
       "owner": "player",
       "type": "string"
     },
+    "action.gait": {
+      "owner": "player",
+      "type": "string"
+    },
+    "action.gaitChange": {
+      "owner": "player",
+      "type": "bool"
+    },
     "action.manoeuvre": {
       "owner": "player",
       "type": "string"
@@ -284,6 +292,14 @@
       "owner": "derived",
       "type": "int"
     },
+    "query.target": {
+      "owner": "derived",
+      "type": "string"
+    },
+    "reach.gap": {
+      "owner": "derived",
+      "type": "int"
+    },
     "round.defencesMade": {
       "owner": "round",
       "type": "int"
@@ -357,7 +373,8 @@
     "strung",
     "structurePoints",
     "damaged",
-    "destroyed"
+    "destroyed",
+    "ridden"
   ],
   "kinds": [
     "specialAbility",
@@ -376,7 +393,8 @@
     "via",
     "ruling",
     "source",
-    "kind"
+    "kind",
+    "was"
   ],
   "lineKinds": [
     "base",
@@ -413,7 +431,9 @@
     "asp",
     "kap",
     "schips",
-    "ammunition"
+    "ammunition",
+    "actions",
+    "freeActions"
   ],
   "reasons": [
     "conditionFalse",
@@ -534,6 +554,9 @@
       "contexts": []
     },
     "belastung": {
+      "contexts": []
+    },
+    "carryingCapacity": {
       "contexts": []
     },
     "check.attribute": {

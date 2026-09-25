@@ -382,6 +382,17 @@ class ErrorTests(unittest.TestCase):
             "    round: { phase: start, defendedThisAttack: false }\n"
             "    choose: { action.runUp: 4, choice.finte: 2 }\n"), [])
 
+    def test_group_3_additions(self):
+        # A mount's profile owned as a creature, its values as bases, the gait and a replaced
+        # line's value before the replacement (`was`).
+        self.assertEqual(errors_of(
+            "    hero: { creatures: { svellttaler-kaltblut: true }, values: { mount.gs: 12, mount.iniBase: 14 } }\n"
+            "    loadout: { hero.mounted: true }\n"
+            "    choose: { choice.order: niederreiten, action.gait: galopp, action.gaitChange: false }\n"
+            "    expect: { at: { lines: [{ value: -2, was: -4, from: SA_1.T1 }] } }\n"), [])
+        s = one("    hero: { creatures: { svellttaler-kaltblut: true } }\n")
+        self.assertEqual(s["owned"]["svellttaler-kaltblut"], {"level": 1})
+
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

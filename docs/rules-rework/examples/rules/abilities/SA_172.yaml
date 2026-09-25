@@ -12,7 +12,7 @@ source:
   page: 155
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: U1
@@ -24,10 +24,15 @@ clauses:
       Reichweitenvorteil nicht komplett ignorieren, sind die Nachteile zumindest um 1 Stufe
       verringert.
     effects:
-      - when: { action.manoeuvre: unterlaufen }
-        lower: { line: reichweite.RW3.at, by_steps: 1, per: tier, min: 0 }
-        # FORMAT: lowers another rule's line by reach *steps*, not by a number. The breakdown
-        # shows "Reichweite −4 → −2 (Unterlaufen I)", so the player sees what was ignored.
+      - when: { choice.unterlaufen: true, level: 1 }
+        replace: { line: { line: reichweite.RW3 }, with: { of: reach.gap, above: 1, times: -2 } }
+      - when: { choice.unterlaufen: true, level: 2 }
+        replace: { line: { line: reichweite.RW3 }, with: { of: reach.gap, above: 2, times: -2 } }
+        # Lowers RW3's line by reach *steps*, one per Stufe, not by a number (the old `lower: {
+        # by_steps: 1, per: tier, min: 0 }`): RW3's −2 per step counts only the steps above the
+        # Stufe, never below 0 — Stufe I: kurz/lang −4 → −2, kurz/mittel −2 → 0; Stufe II: 0.
+        # The breakdown shows "Reichweite −4 → −2 (Unterlaufen I)" (a replaced line with
+        # `via: [SA_172.U1]`), so the player sees what was ignored.
 
   - id: U2
     text: >
@@ -36,16 +41,16 @@ clauses:
       Misslingt die AT, steht dem Gegner ein Passierschlag zu. Der Vorteil des Manövers gilt nur
       für einen Angriff.
     effects:
-      - offer:
-          manoeuvre: unterlaufen
-          announce: before-at
-          span: attack
-          requires: { opponent.reach: { longer_than: loadout.reach } }
-          ruling: sf-technique-lists
-          # The technique gate is U6's.
-          # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
-          # or shorter one it gains nothing and still risks a Passierschlag.
-      - when: { action.manoeuvre: unterlaufen, action.attack: miss }
+      - offer: { choice: unterlaufen, span: action }
+        ruling: sf-technique-lists
+        # Announced before the AT (the old `announce: before-at`), for that one attack (the old
+        # `span: attack`: the one action). The technique gate is U6's.
+      - require: { that: { reach.gap: { atLeast: 1 } }, for: { choice: unterlaufen } }
+        because: nur gegen einen Gegner mit der längeren Waffe
+        # The old offer's `requires: { opponent.reach: { longer_than: loadout.reach } }`.
+        # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
+        # or shorter one it gains nothing and still risks a Passierschlag.
+      - when: { choice.unterlaufen: true, action.attack: miss }
         tell: { to: opponent, text: passierschlag }
 
   - id: U3
@@ -60,8 +65,8 @@ clauses:
       dennoch bei seiner AT als Erschwernis einrechnen.
     none: >
       the penalty is SA_152.AD1's own line, asked as an opponent fact on the announcement (ruling
-      auf-distanz-halten); U1 lowers only reichweite.RW3.at, so it never reaches that line.
-    ruling: auf-distanz-halten
+      auf-distanz-halten, cited on SA_152.AD1's effect); U1 replaces only reichweite.RW3's line,
+      so it never reaches that one.
 
   - id: U5
     text: "Voraussetzungen: Stufe I: GE 13; Stufe II: GE 15, Unterlaufen I"

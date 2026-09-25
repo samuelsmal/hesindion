@@ -9,14 +9,15 @@ source:
   page: 238
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # Also Kodex des Schwertes p. 74. The same table is on the status Eingeengt (STATE_6, Regelwerk
 # p. 35f), which the app uses as the switch. Optolith's STATE_6 text adds "Talentanwendungen
 # können … um bis zu 2 erschwert werden" — not on this page; STATE_6 is not drafted here.
 # reichweite.RW2 restates the weapon rows from the reach side.
 
-# The GM decides that the place is beengt (BU1); every clause below applies only then.
-applies_when: { gm.fact: beengt, span: round }
+# The GM decides that the place is beengt (BU1); every clause below applies only then: the old
+# header `applies_when: { gm.fact: beengt, span: round }` is `gmFact.beengt: true` in each
+# effect's `when` (a core rule applies to everyone; the GM fact is stated for the round).
 # FORMAT: the app keeps this as the hero's status STATE_6 (eingeengt), which persists across
 # fights; the page makes it a property of the place, decided by the GM.
 
@@ -26,7 +27,7 @@ clauses:
       In kleinen Räumen, Gängen und ähnlichem Umfeld kann der Spielleiter entscheiden, dass es
       sich um eine beengte Umgebung handelt. Waffen mit der Reichweite kurz erleiden hier keine
       Abzüge. Größere Waffen erleiden Abzüge.
-    none: the switch (`applies_when`) and a summary of BU2's rows
+    none: the switch (`gmFact.beengt` in BU2's and BU3's effects) and a summary of BU2's rows
 
   - id: BU2
     text: |
@@ -34,11 +35,11 @@ clauses:
       Mittlere Waffen: -4 auf AT; -4 auf PA
       Lange Waffen: -8 auf AT; -8 auf PA
     effects:
-      - when: { action.with: weapon, loadout.reach: mittel }
+      - when: { gmFact.beengt: true, action.with: weapon, loadout.reach: mittel }
         add: { to: [at, pa], value: -4 }
-      - when: { action.with: weapon, loadout.reach: lang }
+      - when: { gmFact.beengt: true, action.with: weapon, loadout.reach: lang }
         add: { to: [at, pa], value: -8 }
-      # `roll.with` is the piece the AT or PA is rolled with — on a parry the parrying piece,
+      # `action.with` is the piece the AT or PA is rolled with — on a parry the parrying piece,
       # not the main weapon. Bare hands are kurz (reichweite.RW1). AW is not on the table.
 
   - id: BU3
@@ -47,19 +48,24 @@ clauses:
       Mittlere Schilde: -4 auf AT; -3 auf PA
       Große Schilde: -6 auf AT; -4 auf PA
     effects:
-      - when: { action.with: shield, loadout.shield.size: klein }
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: klein }
         add: { to: at, value: -2 }
-      - when: { action.with: shield, loadout.shield.size: klein }
+        ruling: beengt-shield-carried
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: klein }
         add: { to: pa, value: -2 }
-      - when: { action.with: shield, loadout.shield.size: mittel }
+        ruling: beengt-shield-carried
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: mittel }
         add: { to: at, value: -4 }
-      - when: { action.with: shield, loadout.shield.size: mittel }
+        ruling: beengt-shield-carried
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: mittel }
         add: { to: pa, value: -3 }
-      - when: { action.with: shield, loadout.shield.size: gross }
+        ruling: beengt-shield-carried
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: gross }
         add: { to: at, value: -6 }
-      - when: { action.with: shield, loadout.shield.size: gross }
+        ruling: beengt-shield-carried
+      - when: { gmFact.beengt: true, action.with: shield, loadout.shield.size: gross }
         add: { to: pa, value: -4 }
-    ruling: beengt-shield-carried
+        ruling: beengt-shield-carried
     # FORMAT: a shield's size is equipment data the app does not have. Optolith states it only
     # in the item's note text ("großer Schild, 30 Strukturpunkte" for Großschild, ITEMTPL_29);
     # its `reach` field says kurz for every shield. An equipment/ rule file per shield template

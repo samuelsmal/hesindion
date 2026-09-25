@@ -1,14 +1,23 @@
 # Example 2 — Reiterkampf. Same conventions as belastung.yaml. No armour unless stated.
 # DRAFT FORMAT — see ../README.md.
+# The mount is a Kriegspferd with GS 12 and INI Basiswert 12 (the old file-level `mount`), stated
+# as the base values of `mount.gs` and `mount.iniBase`. Mounted is `hero.mounted` in the
+# situation's `loadout`.
+# An order is `choice.order` (the old `order:`), the gait asked for `action.gait` (the old
+# `gait:`); an announced manoeuvre is `choice.<name>` (the old `manoeuvre:`), the run-up
+# `action.runUp`. "On a hit" / "on a miss" is `action.attack: hit` / `miss`, as `sequence` steps
+# where a situation expects both. A TP formula is a comment. The Reiten (Kampfmanöver) check
+# before an order (the old `checks_first`) is an `events` entry; what the opponent may not do
+# (the old `opponent_may_only`) is the opponent's query's `legal`; what is not selectable a
+# situation-level `legal.loadout`.
 
-hero: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 }
-mount: { name: Kriegspferd, gs: 12, ini: 12 }
+hero: { values: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, gsNatural: 8, mount.gs: 12, mount.iniBase: 12 } }
 
 situations:
 
   - id: "5.1"
     name: Mounted, attacking a fighter on foot
-    hero: { mounted: true }
+    loadout: { hero.mounted: true }
     opponent: { onFoot: true }
     expect:
       at: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
@@ -16,7 +25,7 @@ situations:
 
   - id: "5.2"
     name: Mounted, parrying a fighter on foot
-    hero: { mounted: true }
+    loadout: { hero.mounted: true }
     opponent: { onFoot: true }
     expect:
       pa: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
@@ -24,7 +33,7 @@ situations:
 
   - id: "5.3"
     name: Mounted, dodging a fighter on foot — the two lines cancel, both shown
-    hero: { mounted: true }
+    loadout: { hero.mounted: true }
     opponent: { onFoot: true }
     expect:
       aw:
@@ -36,7 +45,7 @@ situations:
 
   - id: "5.4"
     name: Mounted, against another rider
-    hero: { mounted: true }
+    loadout: { hero.mounted: true }
     opponent: { onFoot: false }
     expect:
       at: { total: 0 }
@@ -46,25 +55,26 @@ situations:
 
   - id: "5.5"
     name: Mounted, dodging by jumping off
-    hero: { mounted: true }
+    loadout: { hero.mounted: true }
     opponent: { onFoot: false }
-    choose: { jumpOff: true }
+    choose: { choice.jumpOff: true }
     expect:
       offered: [{ choice: jumpOff, from: reiterkampf.RK6 }]
       aw: { total: 0 }
-      after: { hero.mounted: false }
+      events: [{ itemChanged: loadout.mount, change: { ridden: false }, from: reiterkampf.RK6 }]   # the old `after: { hero.mounted: false }`
     appToday: not offered
 
   - id: "5.6"
     name: Golgarite with a Rabenschnabel, mounted against a fighter on foot
-    hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Rabenschnabel } }
+    hero: { abilities: { SA_661: 1 } }
+    loadout: { weapon: Rabenschnabel, hero.mounted: true }
     opponent: { onFoot: true }
     expect:
       at:
         total: 4
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
-          - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
+          - { value: 2, from: SA_661.GS1 }                            # raises vorteilhafte-position.VP1
       pa:
         total: 3
         lines:
@@ -79,7 +89,8 @@ situations:
 
   - id: "5.7"
     name: Golgarite with a Schwert, mounted against a fighter on foot
-    hero: { mounted: true, abilities: { SA_661: 1 }, loadout: { weapon: Schwert } }
+    hero: { abilities: { SA_661: 1 } }
+    loadout: { weapon: Schwert, hero.mounted: true }
     opponent: { onFoot: true }
     expect:
       at: { total: 2, lines: [{ value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }] }
@@ -91,7 +102,8 @@ situations:
 
   - id: "5.8"
     name: Golgarite on foot
-    hero: { mounted: false, abilities: { SA_661: 1 }, loadout: { weapon: Rabenschnabel } }
+    hero: { abilities: { SA_661: 1 } }
+    loadout: { weapon: Rabenschnabel, hero.mounted: false }
     expect:
       at: { total: 0 }
       pa: { total: 0 }
@@ -102,89 +114,96 @@ situations:
   - id: "5.9"
     name: What a rider may do
     hero:
-      mounted: true
       abilities: { SA_48: 1, SA_67: 1, SA_66: 1, SA_59: 1, SA_62: 1, SA_43: 1 }
+    loadout: { hero.mounted: true }
     expect:
       offered:
-        - { manoeuvre: finte, kind: basismanoever }
-        - { manoeuvre: wuchtschlag, kind: basismanoever }
-        - { order: sturmangriffZuPferd, from: reiterkampf.RK14 }
-        - { order: niederreiten, from: reiterkampf.RK13 }
-        - { order: flucht, from: reiterkampf.RK15 }
+        - { choice: finte, kind: basismanoever }
+        - { choice: wuchtschlag, kind: basismanoever }
+        - { choice: order, options: [sturmangriffZuPferd], from: reiterkampf.RK14 }
+        - { choice: order, options: [niederreiten], from: reiterkampf.RK13 }
+        - { choice: order, options: [flucht], from: reiterkampf.RK15 }
       notOffered:
-        - { manoeuvre: vorstoss, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
-        - { manoeuvre: schildspalter, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
-        - { manoeuvre: sturmangriff, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
+        - { choice: vorstoss, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
+        - { choice: schildspalter, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
+        - { choice: sturmangriff, because: reiterkampf.RK3, ruling: reiterkampf.mounted-manoeuvres }
     appToday: offers Vorstoß and Schildspalter too — wrong
 
   - id: "5.10"
     name: Sturmangriff zu Pferd, mount GS 12
-    hero: { mounted: true, abilities: { SA_43: 1 } }
-    choose: { order: sturmangriffZuPferd, gait: galopp }
+    hero: { abilities: { SA_43: 1 } }
+    loadout: { hero.mounted: true }
+    choose: { choice.order: sturmangriffZuPferd, action.gait: galopp, action.attack: hit }
     expect:
-      checks_first: [{ talent: Reiten, application: Kampfmanöver, from: reiterkampf.RK14 }]
-      on_hit:
-        tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14, formula: "2 + 12/2" }] }
-      opponent_may_only: [shieldParry, aw]
+      events: [{ check: { talent: TAL_6, with: Kampfmanöver }, from: reiterkampf.RK14 }]   # Reiten (the old `checks_first`)
+      tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14 }] }                     # on the hit: 2 + 12/2
+      "opponent.pa(with: weapon)": { legal: { allowed: false, because: reiterkampf.RK14 } }   # the old `opponent_may_only: [shieldParry, aw]`
     appToday: TP +8; Reiten check and the defence restriction to check
 
   - id: "5.11"
     name: Sturmangriff zu Pferd, mount GS 11 — rounding
-    hero: { mounted: true, abilities: { SA_43: 1 } }
-    mount: { gs: 11 }
-    choose: { order: sturmangriffZuPferd, gait: galopp }
+    hero: { abilities: { SA_43: 1 }, values: { mount.gs: 11 } }
+    loadout: { hero.mounted: true }
+    choose: { choice.order: sturmangriffZuPferd, action.gait: galopp, action.attack: hit }
     expect:
-      on_hit:
-        tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14, formula: "2 + ⌈11/2⌉", ruling: round-up }] }
+      tp: { total: 8, lines: [{ value: 8, from: reiterkampf.RK14, ruling: round-up }] }   # on the hit: 2 + ⌈11/2⌉
     appToday: +7 — wrong
 
   - id: "5.12"
     name: Sturmangriff on foot (SA_62), GS 8, 4 Schritt run-up
     hero: { abilities: { SA_62: 1 } }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    loadout: { weapon: Schwert, weapon.technique: CT_12 }
+    choose: { choice.sturmangriff: true, action.runUp: 4 }
     expect:
       at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
-      on_hit:
-        tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2, formula: "2 + 8/2" }] }
-      on_miss:
-        tell: [{ opponent: passierschlag, from: SA_62.ST3 }]
-      excludes: [finte]
+      legal: { combinations: [{ choices: [sturmangriff, finte], allowed: false }] }   # the old `excludes: [finte]`
+    sequence:
+      - choose: { action.attack: hit }
+        expect:
+          tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2 }] }        # 2 + 8/2
+      - choose: { action.attack: miss }
+        expect:
+          texts: [{ opponent: passierschlag, from: SA_62.ST3 }]
     appToday: not offered on foot — wrong
 
   - id: "5.13"
     name: Sturmangriff on foot, GS 7 — rounding
-    hero: { abilities: { SA_62: 1 }, gs: 7 }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 }, values: { gs: 7, gsNatural: 7 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12 }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
     expect:
-      on_hit:
-        tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2, formula: "2 + ⌈7/2⌉", ruling: round-up }] }
+      tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2, ruling: round-up }] }      # on the hit: 2 + ⌈7/2⌉
 
   - id: "5.14"
     name: Sturmangriff on foot in Platte — the current GS counts
-    hero: { abilities: { SA_62: 1 }, armour: [Plattenrüstung] }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { choice.sturmangriff: true, action.runUp: 4 }
     expect:
       at: { total: -5, lines: [{ value: -3, from: COND_1.B3 }, { value: -2, from: SA_62.ST4 }] }
-      on_hit:
-        tp: { total: 5, lines: [{ value: 5, from: SA_62.ST2, formula: "2 + ⌈5/2⌉", ruling: [SA_62.sturmangriff-gs, round-up] }] }
+    sequence:
+      - choose: { action.attack: hit }
+        expect:
+          tp: { total: 5, lines: [{ value: 5, from: SA_62.ST2, ruling: [SA_62.sturmangriff-gs, round-up] }] }   # 2 + ⌈5/2⌉
 
   - id: "5.15"
     name: Sturmangriff on foot, GS 3
-    hero: { abilities: { SA_62: 1 }, gs: 3 }
+    hero: { abilities: { SA_62: 1 }, values: { gs: 3, gsNatural: 3 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12 }
     expect:
-      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
+      notOffered: [{ choice: sturmangriff, because: SA_62.ST1 }]
 
   - id: "5.16"
     name: A two-handed weapon while mounted
-    hero: { mounted: true, loadout: { weapon: Zweihänder } }
+    loadout: { weapon: Zweihänder, twoHanded: true, hero.mounted: true }
     expect:
-      not_selectable: [{ weapon: Zweihänder, because: reiterkampf.RK4 }]
+      legal: { loadout: [{ weapon: Zweihänder, allowed: false, because: reiterkampf.RK4 }] }   # the old `not_selectable`
     appToday: same
 
   - id: "5.17"
     name: Initiative while mounted
-    hero: { mounted: true, armour: [Plattenrüstung] }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
     expect:
-      iniBase: { value: 12, from: reiterkampf.RK1 }     # the mount's
-      ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
+      iniBase: { lines: [{ value: 12, from: reiterkampf.RK1 }] }     # the mount's
+      ini: { lines: [{ value: 0, ruling: reiterkampf.rider-ini }] }   # the old `ini_belastung: { total: 0 }`: no Belastung on the mount's base
     appToday: same

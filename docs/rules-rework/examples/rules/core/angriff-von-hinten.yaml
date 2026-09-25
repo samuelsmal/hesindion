@@ -21,33 +21,37 @@ clauses:
       Wenn dies geschieht, so ist die Verteidigung des Gegners um -4 erschwert, da er den
       Angriff nur schlecht sieht oder spät wahrnimmt.
     effects:
-      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, span: attack }
+      # `side` (who attacks) is carried by the targets: the hero's `pa`/`aw` when the opponent
+      # attacks, `opponent.pa`/`opponent.aw` when the hero does. "Melee" is, for the hero's
+      # defence, the GM's `gmFact.incomingAttack` not being `ranged` (the same fact as
+      # schilde.SCH8), and for the hero's own attack `loadout.weapon.kind: melee`. The old
+      # `span: attack` is how long the GM fact holds: it is stated per attack.
+      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
         add: { to: [pa, aw], value: -4 }
         ruling: from-behind-ranged
         # The hero defends against a melee attack: every defence, shield parry included. Against
         # a shot from behind the question is not asked (FORMAT: the defence screen must know the
         # attack is ranged — schilde.SCH8 needs the same fact).
-      - when: { side: hero, attack.kind: melee, gmFact.fromBehind: true, span: attack }
+      - when: { loadout.weapon.kind: melee, gmFact.fromBehind: true }
         add: { to: [opponent.pa, opponent.aw], value: -4 }
         ruling: from-behind-ranged
         # The hero attacks in melee: an opponent line, the GM subtracts it (ADR-0005). The
         # ranged announcement does not ask it.
-      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, hero.mounted: true }
-        forbid: { defence: shieldParry }
-        from: reiterkampf.RK5
+      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true, hero.mounted: true }
+        forbid: { what: { defence: shieldParry } }
+        because: beritten schützt der Schild nicht gegen Angriffe von hinten (reiterkampf.RK5)
         ruling: mounted-from-behind-shield
-      - when: { side: opponent, attack.kind: melee, gmFact.fromBehind: true, hero.mounted: true }
-        exempt: { from: schilde.SCH1 }
-        from: reiterkampf.RK5
+      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true, hero.mounted: true }
+        suppress: { line: { line: schilde.SCH1 } }
+        because: Großschild (passiv) — von hinten, beritten (reiterkampf.RK5)
         ruling: mounted-from-behind-shield
         # The weapon parry loses the shield's passive bonus: the shield is not between the
         # attacker and the rider. Shown as not applied: "Großschild (passiv) +3 — von hinten,
-        # beritten (RK5)".
-        # FORMAT: an effect that belongs to another rule's clause (RK5) but only becomes
-        # encodable through this rule's fact: RK5 needs the side an attack comes from, and
-        # "from behind" is the one side the app already asks. Where does it live — here, or in
-        # reiterkampf with `when: gm.fact fromBehind`? Written here to be seen. The other sides
-        # are reiterkampf.mounted-attack-side.
+        # beritten (RK5)". The old `exempt: { from: schilde.SCH1 }`.
+        # Both effects belong to reiterkampf.RK5's text (the old `from: reiterkampf.RK5`, now in
+        # their `because`), but only become encodable through this rule's fact: RK5 needs the
+        # side an attack comes from, and "from behind" is the one side the app already asks.
+        # The other sides are reiterkampf.mounted-attack-side.
 
 rulings:
   - id: from-behind-ranged

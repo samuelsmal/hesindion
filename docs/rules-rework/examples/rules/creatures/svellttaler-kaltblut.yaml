@@ -1,13 +1,14 @@
 # DRAFT FORMAT — see ../../README.md.
-# FORMAT: a new kind, `creatureProfile` — a Bestiarium stat block. Unlike a rule it is mostly
-# data other rules read: Reiterkampf needs the mount's INI base (RK1), GS (RK14, RK15), its
+# A Bestiarium stat block, kind `creature` (the draft's `creatureProfile`). Unlike a rule it is
+# mostly data other rules read: Reiterkampf needs the mount's INI base (RK1), GS (RK14, RK15), its
 # Niederreiten line (RK13) and its LeP (RK10). The stat block's lines are clauses as usual; the
-# values are repeated under `profile:` so a rule can name them (mount.ini.base,
-# mount.attack(Niederreiten).at). Whether profiles belong with the rules at all, or with the
+# values are repeated under `provides:` (the old `profile:`) so a rule can name them
+# (mount.iniBase, mount.gs, the Niederreiten line). A situation owns it as the hero's mount
+# (`hero: { creatures: { svellttaler-kaltblut: true } }`). Whether profiles belong with the rules at all, or with the
 # equipment data (Optolith has no bestiary), is a format question.
 id: svellttaler-kaltblut
 name: Svellttaler Kaltblut
-kind: creatureProfile
+kind: creature
 source:
   url: https://dsa.ulisses-regelwiki.de/Best_Svellttaler_Kaltblut.html
   book: Aventurische Tiergefährten
@@ -23,7 +24,7 @@ reviewed: null
 # (OptolithImportService.parsePets, Pet). Its attacks come only from the free-text `notes`,
 # parsed by a regex (OptolithImportService.parsePetAttacks); the structured `attack`/`dp`/`at`/
 # `reach` fields hold one attack (Niederreiten) and `at` is not read.
-profile:
+provides:
   attributes: { MU: 12, KL: 10, IN: 12, CH: 12, FF: 8, GE: 15, KO: 24, KK: 25 }
   lep: 75
   ini: { base: 14, dice: 1W6 }
@@ -54,7 +55,7 @@ clauses:
       MU 12 KL 10 (t) IN 12 CH 12 FF 8 GE 15 KO 24 KK 25
       LeP 75 AsP – KaP – INI 14+1W6 VW 7 SK 0 ZK 0 GS 12
     effects:
-      - provide: { name: mount.ini.base, value: 14 }
+      - provide: { name: mount.iniBase, value: 14 }
         ruling: mount-profile-data
       - provide: { name: mount.gs, value: 12 }
         ruling: mount-profile-data
@@ -85,10 +86,19 @@ clauses:
         # Attackewert in Niederreiten", "Der Schaden ist der Beschreibung des jeweiligen
         # Reittiers zu entnehmen").
       - when: { hero.mounted: true }
-        offer: { order: mount_attack, attacks: [Tritt, Biss], via: reiterkampf.RK12 }
+        offer: { choice: order, options: [mountAttack] }
         ruling: mount-own-attack
-        # An order (RK12): instead of the rider's own attack, 1 action and a Reiten
-        # (Kampfmanöver) check; no gallop or run-up, unlike RK13.
+        # An order (reiterkampf.RK12, the old `via: reiterkampf.RK12`): instead of the rider's own
+        # attack, 1 action and a Reiten (Kampfmanöver) check, both RK12's effects on
+        # `choice.order`; no gallop or run-up, unlike RK13.
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        offer: { choice: mountAttack, options: [Tritt, Biss] }
+        ruling: mount-own-attack
+        # Which attack (the old `attacks: [Tritt, Biss]`).
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        check: { of: { attack: choice.mountAttack, with: mount } }
+        ruling: mount-own-attack
+        # The mount attacks with the line picked, AT and TP from `mount.attacks` above.
         # FORMAT: an attack made by someone other than the hero, on the hero's screen.
 
   - id: SK4
@@ -109,8 +119,12 @@ clauses:
       Vorteile/Nachteile: Ruhiges Temperament, (empfohlen: Geduldig) / (empfohlen: Einzelgänger)
       Sonderfertigkeiten: Mächtiger Schlag
     effects:
-      - grants: { rules: [ruhiges-temperament, maechtiger-schlag] }
+      - require: { that: { hero.has: svellttaler-kaltblut }, enables: true, for: { rule: ruhiges-temperament } }
         ruling: mount-profile-data
+      - require: { that: { hero.has: svellttaler-kaltblut }, enables: true, for: { rule: maechtiger-schlag } }
+        ruling: mount-profile-data
+        # The old `grants: { rules: [ruhiges-temperament, maechtiger-schlag] }`: the profile
+        # switches on the animal's Vorteil and SF, whose lines then carry `via: [SK5]`.
         # "empfohlen" ones are suggestions for a player's own animal, not part of the profile.
         # The export's `skills` is free text, read into Pet.specialSkills. Since the 2026-09-24
         # export it says "Mächtiger Schlag, Ruhiges Temperament" because the player typed both.
@@ -156,9 +170,20 @@ clauses:
   - id: SK10
     text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
     effects:
-      - when: { mount.lep: { at_most: [49, 33, 16, 5] } }
-        add: { to: mount.conditions.COND_6, value: 1, per: threshold_crossed }
+      - when: { mount.leCurrent: { atMost: 49 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
         ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 33 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 16 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 5 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+        # One Stufe Schmerz per threshold crossed (the old `per: threshold_crossed` over
+        # `mount.lep: { at_most: [49, 33, 16, 5] }`): the mount's current LeP at or below each.
         # The app keeps the mount's LeP (Pet.currentLifeEnergy) but has no Zustände for it, so
         # nothing applies this today.
 
@@ -175,7 +200,7 @@ clauses:
     name: Packesel
     text: "Sonderregeln: Packesel: Svellttaler Kaltblüter können ein Gewicht von bis zu 210 Stein tragen."
     effects:
-      - set: { value: mount.carryingCapacity, to: 210 }
+      - set: { to: mount.carryingCapacity, value: 210 }
         # The app computes every pet's capacity as KK × 2 (Pet.carryingCapacity: 50 for
         # Kupperus) and adds it to the hero's (Hero.totalCarryingCapacity).
 
