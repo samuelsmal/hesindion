@@ -62,6 +62,15 @@ class VocabularyTests(unittest.TestCase):
             self.assertIn(fact["type"], types, name)
 
     def test_events_are_the_specs_and_damage(self):
-        # Spec §7's events, plus `damaged` (ruling R53): LE lost to a hit, which is not a `paid`.
+        # Spec §7's events, plus `damaged` (ruling R53): LE lost to a hit, which is not a `paid`;
+        # and `clockAdvanced` / `stated` (ruling R56): the clock and a lasting fact change only by
+        # an event too.
         self.assertEqual(self.v.raw["events"], ["paid", "damaged", "progressed", "completed", "brokenOff",
-                                                "itemChanged", "gained", "cleared", "logged"])
+                                                "itemChanged", "gained", "cleared", "logged", "clockAdvanced",
+                                                "stated"])
+
+    def test_a_recurring_costs_start_is_a_derived_fact(self):
+        # Ruling R57: a recurring cost counts from its start, `upkeep.<rule>.<clause>` (the minute
+        # or round it began), which the engine states with a `stated` event.
+        self.assertEqual(self.v.raw["factFamilies"]["upkeep."], {"owner": "derived", "type": "int"})
+        self.assertEqual(self.v.fact_owner("upkeep.zaubermodifikationen.ZM5"), "derived")

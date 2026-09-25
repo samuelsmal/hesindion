@@ -56,6 +56,20 @@ public struct ItemState: Codable, Hashable, Sendable {
         return true
     }
 
+    /// Makes `name` unknown again.
+    public mutating func clear(_ name: String) {
+        switch name {
+        case "loaded": loaded = nil
+        case "strung": strung = nil
+        case "structurePoints": structurePoints = nil
+        case "damaged": damaged = nil
+        case "destroyed": destroyed = nil
+        case "ridden": ridden = nil
+        case "held": held = nil
+        default: break
+        }
+    }
+
     public var isEmpty: Bool { self == ItemState() }
 }
 

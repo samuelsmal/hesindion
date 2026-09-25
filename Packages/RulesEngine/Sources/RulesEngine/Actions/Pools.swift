@@ -51,6 +51,8 @@ extension Situation {
     /// - `itemChanged` sets each field of `change` on the instance `item`. A destroyed item leaves
     ///   the loadout: the slot holding it is stated empty (`loadout.<slot>: null`) and its
     ///   `loadout.<slot>.*` facts go.
+    /// - `clockAdvanced` moves the clock and ends its `ends` (`end(_:book:)`); `stated` sets its
+    ///   fact (no value: the fact goes).
     /// - `logged` changes nothing.
     ///
     /// Arithmetic saturates: an event decoded with an extreme amount or count never traps.
@@ -109,9 +111,52 @@ extension Situation {
             for (field, value) in e.change ?? [:] { item.set(field, value) }
             items[instance] = item
             if item.destroyed == true { leaveLoadout(instance) }
+        case .clockAdvanced:
+            clock.minutes = clock.minutes.addingSaturating(e.minutes ?? 0)
+            clock.round = clock.round.addingSaturating(e.rounds ?? 0)
+            end(Set(e.ends), book: book)
+        case .stated:
+            guard let name = e.fact else { return }
+            if let value = e.value {
+                state(Fact(name: name, value: value, owner: e.owner ?? Vocabulary.owner(ofFact: name) ?? .derived))
+            } else {
+                facts[name] = nil
+                if let (instance, field) = Self.itemFact(name) { items[instance]?.clear(field) }
+            }
         case .logged:
             break
         }
+    }
+
+    /// Ends `spans` (R56, `clockAdvanced`): the round's facts (`round.*`) when the round ends; the
+    /// choices the book offers with one of `spans` (`choice.<id>` and its options
+    /// `choice.<id>.*`; without a book no choice is known to end); and every Stufe gained or
+    /// cleared for one of `spans` is undone. A choice offered `whileFormed` stays until it is
+    /// cleared, a Stufe gained `untilCleared` until a `cleared` event.
+    mutating func end(_ spans: Set<Span>, book: RuleBook?) {
+        guard !spans.isEmpty else { return }
+        if spans.contains(.round) {
+            for name in facts.keys where name.hasPrefix("round.") { facts[name] = nil }
+        }
+        if let book {
+            var choices: Set<String> = []
+            for rule in book.rules.values {
+                for clause in rule.clauses {
+                    for e in clause.effects {
+                        if case .offer(let o) = e.payload, let span = o.span, spans.contains(span) { choices.insert(o.choice) }
+                    }
+                }
+            }
+            let prefix = "choice."
+            for name in facts.keys where name.hasPrefix(prefix) {
+                let rest = name.dropFirst(prefix.count)
+                if choices.contains(where: { rest == $0 || rest.hasPrefix($0 + ".") }) { facts[name] = nil }
+            }
+        }
+        for t in timed where spans.contains(t.span) && t.levels != .min {
+            changeLevel(of: t.rule, by: -t.levels, most: t.levels < 0 ? book?.rules[t.rule]?.most : nil)
+        }
+        timed.removeAll { spans.contains($0.span) }
     }
 
     /// A Stufe change for a span: the inverse of a recorded one (same rule and span) takes that

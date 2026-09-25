@@ -27,7 +27,8 @@ import Foundation
 /// - `process: { <id>: n | ended, capped }`: the running process's progress, `ended` when none
 ///   runs after a step that had one, `capped` when the step gave it no progress;
 /// - `success`: the attack's (`action.attack` hit or miss);
-/// - `texts`, `notApplied`, `questions`: the step's action and breakdowns;
+/// - `texts`, `notApplied`, `questions`: the step's action, its breakdowns and the step's own
+///   query breakdowns (read first);
 /// - any other key is a query: the action's own breakdown of it (the shot's `fk`), else read by the
 ///   before/after rule (`CombatRunner.choose`) around the step.
 ///
@@ -223,7 +224,19 @@ enum StateRunner {
 
     static func compare(_ expect: [String: JSONValue], label: String, action: Action?, result r: ActionResult?, before: Situation,
                         stated: Situation, after: Situation, engine: Engine, _ c: inout MatchResult, _ all: inout [Breakdown]) {
-        let breakdowns = (r?.breakdowns ?? []) + (r.map { [record($0)] } ?? [])
+        let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result"]
+        // The step's queries first: its `notApplied`, `texts` and `questions` are looked up in them too.
+        var queried: [String: Breakdown] = [:]
+        for key in expect.keys.sorted() where !special.contains(key) {
+            if let own = r?.breakdowns.first(where: { $0.query.description == key }) {
+                queried[key] = own
+            } else if let r {
+                queried[key] = choose(key, action: r, before: stated, engine: engine).0
+            } else {
+                queried[key] = engine.evaluate(Query(key), in: after)
+            }
+        }
+        let breakdowns = ((r?.breakdowns ?? []) + (r.map { [record($0)] } ?? []) + queried.keys.sorted().map { queried[$0]! }).distinct()
         for key in expect.keys.sorted() {
             let raw = expect[key]!
             switch key {
@@ -253,14 +266,7 @@ enum StateRunner {
             case "result":
                 c.mismatches.append(.shape("step result", "\(label): the result of a cast is not modelled (no check procedure runs)"))
             default:
-                let b: Breakdown
-                if let own = r?.breakdowns.first(where: { $0.query.description == key }) {
-                    b = own
-                } else if let r {
-                    b = choose(key, action: r, before: stated, engine: engine).0
-                } else {
-                    b = engine.evaluate(Query(key), in: after)
-                }
+                let b = queried[key]!
                 all.append(b)
                 CombatRunner.compare([key: raw], label: label, events: [], checks: [], texts: [], notApplied: [], questions: [],
                                      success: nil, successQuery: nil, breakdown: { _ in b }, &c)

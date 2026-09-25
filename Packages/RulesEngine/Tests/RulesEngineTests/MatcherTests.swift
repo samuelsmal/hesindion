@@ -950,4 +950,16 @@ final class MatcherTests: XCTestCase {
         XCTAssertTrue(wrong[1].detail.contains("expected 60 minutes to pass, 180 passed"))
         XCTAssertTrue(wrong[3].detail.contains("an event has one origin"))
     }
+
+    /// A step's `notApplied` is looked up in the step's own query breakdowns too (18.6's shape):
+    /// the query is read first.
+    func testAStepsNotAppliedSeesItsOwnQueries() throws {
+        let engine = Engine(book: ProcessTests.state)
+        let s = try situation(#"""
+            {"base": {"fk": 10},
+             "sequence": [{"choose": {"process.x": 1}, "expect": {"fk": {"result": 10}, "notApplied": [{"rule": "st-aim", "clause": "A1", "reason": "conditionFalse"}]}}]}
+            """#)
+        XCTAssertTrue(StateRunner.canRun(s))
+        XCTAssertEqual(StateRunner.run(s, engine: engine).mismatches, [])
+    }
 }

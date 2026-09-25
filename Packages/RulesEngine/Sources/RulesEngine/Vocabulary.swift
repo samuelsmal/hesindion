@@ -48,7 +48,7 @@ public enum RuleKind: String, Codable, CaseIterable, Sendable {
 public enum Span: String, Codable, CaseIterable, Sendable { case action, round, fight, whileFormed, untilCleared }
 public enum Pool: String, Codable, CaseIterable, Sendable { case le, asp, kap, schips, ammunition, actions, freeActions }
 public enum EventKind: String, Codable, CaseIterable, Sendable {
-    case paid, damaged, progressed, completed, brokenOff, itemChanged, gained, cleared, logged
+    case paid, damaged, progressed, completed, brokenOff, itemChanged, gained, cleared, logged, clockAdvanced, stated
 }
 public enum Audience: String, Codable, CaseIterable, Sendable { case player, gm, opponent }
 public enum LineKind: String, Codable, CaseIterable, Sendable {
@@ -179,6 +179,7 @@ public enum Vocabulary {
         "spell.": .player,
         "stage.": .roll,
         "target.": .gm,
+        "upkeep.": .derived,
     ]
 
     public static func owner(ofFact name: String) -> Owner? {

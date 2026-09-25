@@ -13,12 +13,25 @@ public struct Clock: Codable, Hashable, Sendable {
 
     public init(round: Int = 1, minutes: Int = 0) { self.round = round; self.minutes = minutes }
 
-    /// How many multiples of `interval` the minutes pass on the way from `from` to `to`
-    /// (`from` < m ≤ `to`): 2 AsP every 5 minutes, from 0 to 12, falls due twice (5 and 10).
-    /// 0 for an interval that is not positive or a clock that does not move forward.
-    public static func due(every interval: Int, from: Int, to: Int) -> Int {
+    enum CodingKeys: String, CodingKey { case round, minutes }
+
+    /// Each key may be left out: it is then 0.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        round = try c.decodeIfPresent(Int.self, forKey: .round) ?? 0
+        minutes = try c.decodeIfPresent(Int.self, forKey: .minutes) ?? 0
+    }
+
+    /// How many intervals, counted from `since` (the recurring cost's start, R57), end on the
+    /// way from `from` to `to` (`from` < m ≤ `to`): 2 AsP every 5 minutes from minute 0, from 0 to
+    /// 12, falls due twice (5 and 10); kept up from minute 3, at 8 (not at 5). 0 for an interval
+    /// that is not positive or a clock that does not move forward.
+    public static func due(every interval: Int, since: Int = 0, from: Int, to: Int) -> Int {
         guard interval > 0, to > from else { return 0 }
-        func marks(_ m: Int) -> Int { m >= 0 ? m / interval : -((-m + interval - 1) / interval) }
+        func marks(_ m: Int) -> Int {
+            let d = m - since
+            return d >= 0 ? d / interval : -((-d + interval - 1) / interval)
+        }
         return marks(to) - marks(from)
     }
 }

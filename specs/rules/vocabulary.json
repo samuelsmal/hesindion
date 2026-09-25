@@ -42,7 +42,9 @@
     "itemChanged",
     "gained",
     "cleared",
-    "logged"
+    "logged",
+    "clockAdvanced",
+    "stated"
   ],
   "expectKeys": [
     "offered",
@@ -131,6 +133,10 @@
     "target.": {
       "owner": "gm",
       "type": "any"
+    },
+    "upkeep.": {
+      "owner": "derived",
+      "type": "int"
     }
   },
   "factTypes": [

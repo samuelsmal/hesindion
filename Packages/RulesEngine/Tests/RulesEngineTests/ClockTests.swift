@@ -51,13 +51,16 @@ final class ClockTests: XCTestCase {
         XCTAssertEqual(Clock.due(every: 0, from: 0, to: 12), 0)
     }
 
-    /// A cost counted in rounds falls due at the end of a round: 1 KaP every two rounds.
+    /// A cost counted in rounds falls due at the end of a round, two rounds after its start
+    /// (R57): 1 KaP every two rounds, started when the first round ends.
     func testACostEveryTwoRoundsFallsDueAtTheRoundsEnd() {
         let s = situation(["choice.prayer": true], pools: [.kap: PoolState(current: 5, max: 5)])
-        let second = layer.perform(.endRound, in: s)                 // round 1 → 2
-        XCTAssertEqual(paid(second).map(\.pool), [.kap])
-        let third = layer.perform(.endRound, in: second.situation)   // 2 → 3
-        XCTAssertEqual(paid(third), [])
+        let second = layer.perform(.endRound, in: s)                 // round 1 → 2: it starts at 1
+        XCTAssertEqual(paid(second), [])
+        XCTAssertEqual(second.situation.facts["upkeep.st-upkeep.U3"]?.value, .int(1))
+        let third = layer.perform(.endRound, in: second.situation)   // 2 → 3: due at 3
+        XCTAssertEqual(paid(third).map(\.pool), [.kap])
+        XCTAssertEqual(paid(layer.perform(.endRound, in: third.situation)), [])
         XCTAssertEqual(paid(layer.perform(.advanceClock(minutes: 30), in: s)), [], "minutes do not move the round counter")
     }
 
@@ -96,7 +99,8 @@ final class ClockTests: XCTestCase {
 
     /// A Stufe gained for a span ends with it: the round's at `.endRound`, the fight's at
     /// `.endFight`; one gained `untilCleared` lasts until a `cleared` event; one cleared for the
-    /// action comes back when the round ends.
+    /// action comes back when the round ends. The end is the `clockAdvanced` event's (R56):
+    /// applying it undoes the timed Stufen.
     func testStufenGainedForASpanEndWithIt() {
         let s = situation(["choice.brace": true, "choice.heat": true, "choice.curse": true])
         let settled = layer.perform(.settle, in: s)
@@ -107,17 +111,15 @@ final class ClockTests: XCTestCase {
         now.facts = [:]                                              // the choices are spent
 
         let round = layer.perform(.endRound, in: now)
-        XCTAssertEqual(round.events.map(\.kind), [.cleared])
-        XCTAssertEqual(round.events.first?.rule, "st-braced")
-        XCTAssertEqual(round.events.first?.origin, ref("st-spans.P2"))
+        XCTAssertEqual(round.events, [Event(kind: .clockAdvanced, rounds: 1, ends: [.action, .round])])
         XCTAssertNil(round.situation.owned["st-braced"])
         XCTAssertEqual(round.situation.timed.map(\.rule), ["st-heated", "st-cursed"])
 
         let fight = layer.perform(.endFight, in: round.situation)
-        XCTAssertEqual(fight.events.map(\.rule), ["st-heated"])
+        XCTAssertEqual(fight.events.map(\.ends), [[.action, .round, .fight]])
         XCTAssertNil(fight.situation.owned["st-heated"])
         XCTAssertEqual(fight.situation.owned["st-cursed"]?.level, 1, "untilCleared outlives the fight")
-        XCTAssertEqual(layer.perform(.endFight, in: fight.situation).events, [])
+        XCTAssertEqual(layer.perform(.endFight, in: fight.situation).situation.owned["st-cursed"]?.level, 1)
 
         let lifted = fight.situation.applying([Event(kind: .cleared, rule: "st-cursed")], book: ProcessTests.state)
         XCTAssertNil(lifted.owned["st-cursed"])
@@ -132,7 +134,7 @@ final class ClockTests: XCTestCase {
         var later = calmed.situation
         later.facts = [:]
         let back = layer.perform(.endRound, in: later)
-        XCTAssertEqual(back.events.map(\.kind), [.gained])
+        XCTAssertEqual(back.events.map(\.kind), [.clockAdvanced])
         XCTAssertEqual(back.situation.owned["st-heated"]?.level, 2)
         XCTAssertEqual(back.situation.timed, [])
     }
@@ -144,7 +146,7 @@ final class ClockTests: XCTestCase {
         var now = settled.situation
         now.facts = ["choice.vorstoss": Fact(name: "choice.vorstoss", value: true, owner: .player)]
         let later = layer.perform(.advanceClock(minutes: 10), in: now)
-        XCTAssertEqual(later.events.map(\.kind), [.cleared])
+        XCTAssertEqual(later.events, [Event(kind: .clockAdvanced, minutes: 10, ends: [.action, .round])])
         XCTAssertNil(later.situation.owned["st-braced"])
         XCTAssertNil(later.situation.facts["choice.vorstoss"])
         XCTAssertEqual(later.situation.clock, Clock(round: 1, minutes: 10))
@@ -191,5 +193,91 @@ final class ClockTests: XCTestCase {
         for unrelated in ["hero.mounted", "action.attack", "action.gaitChange", "choice.order", "hit.tp"] {
             XCTAssertFalse(asked.contains(unrelated), "\(unrelated) is not the cast's: \(asked.sorted())")
         }
+    }
+
+    // MARK: - R56 and R57
+
+    /// R57: a recurring cost counts from its start. A spell kept up from minute 3 (the cast starts
+    /// its upkeep with a `stated` event) pays at minute 8, not at 5.
+    func testARecurringCostCountsFromItsStart() {
+        var s = situation(["choice.upkeep": true], pools: magic)
+        s.clock.minutes = 3
+        let cast = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        let start = cast.events.filter { $0.kind == .stated && $0.fact == "upkeep.st-upkeep.U1" }
+        XCTAssertEqual(start.map(\.value), [.int(3)])
+        XCTAssertEqual(start.first?.origin, ref("st-upkeep.U1"))
+        XCTAssertEqual(start.first?.owner, .derived)
+        let five = layer.perform(.advanceClock(minutes: 2), in: cast.situation)
+        XCTAssertEqual(paid(five), [], "nothing at minute 5")
+        let eight = layer.perform(.advanceClock(minutes: 3), in: five.situation)
+        XCTAssertEqual(paid(eight).map(\.amount), [2])
+        XCTAssertEqual(Clock.due(every: 5, since: 3, from: 3, to: 8), 1)
+        XCTAssertEqual(Clock.due(every: 5, since: 3, from: 3, to: 7), 0)
+        // A second cast does not restart it.
+        XCTAssertFalse(layer.perform(.cast(spell: "SPELL_1", modifications: []), in: eight.situation).events.contains { $0.kind == .stated })
+    }
+
+    /// R56's invariant: an action's situation is the one it began in with its events applied,
+    /// but for its one-query inputs (`Situation.isOneQueryInput`: a cast's `check.spell`, a roll's
+    /// die). The clock, span facts, a roll's `action.attack` and `round.previousDefenceCrit` all
+    /// come as events.
+    func testTheSituationAfterAnActionIsTheOneBeforeWithItsEvents() throws {
+        let real = ActionLayer(engine: try XCTUnwrap(CombatRollTests.real, "run make rules-json"))
+        func strip(_ s: Situation) -> Situation {
+            var s = s
+            for name in s.facts.keys where Situation.isOneQueryInput(name) { s.facts[name] = nil }
+            return s
+        }
+        func check(_ layer: ActionLayer, _ a: Action, _ s: Situation, line: UInt = #line) {
+            let r = layer.perform(a, in: s)
+            XCTAssertEqual(strip(r.situation), strip(s.applying(r.events, book: layer.engine.book)), "\(a)", line: line)
+        }
+        var spans = situation(["round.parries": 2, "choice.vorstoss": true, "choice.wut": true, "choice.brace": true, "choice.upkeep": true],
+                              pools: magic)
+        spans = layer.perform(.settle, in: spans).situation
+        for a in [Action.endRound, .endFight, .advanceClock(minutes: 12), .settle, .cast(spell: "SPELL_1", modifications: [])] {
+            check(layer, a, spans)
+        }
+        var defence = ProcessTests.situation(facts: ["gmFact.incomingAttack": "ranged"], base: ["aw": 7, "at": 14])
+        defence.rolls = [1, 3]
+        check(real, .defend(kind: .aw), defence)
+        let crit = real.perform(.defend(kind: .aw), in: defence)
+        XCTAssertTrue(crit.events.contains { $0.kind == .stated && $0.fact == "round.previousDefenceCrit" && $0.value == "confirmed" })
+        var next = crit.situation
+        next.rolls = [5]
+        check(real, .defend(kind: .aw), next)
+        XCTAssertTrue(real.perform(.defend(kind: .aw), in: next).events.contains {
+            $0.kind == .stated && $0.fact == "round.previousDefenceCrit" && $0.value == nil
+        }, "the next defence clears it: a stated event without a value")
+        var shot = ProcessTests.situation(facts: ["loadout.weapon": "Kurzbogen", "loadout.weapon.kind": "ranged",
+                                                  "loadout.weapon.instance": "bogen1", "item.bogen1.loaded": true],
+                                          base: ["fk(with: Kurzbogen)": 14])
+        shot.rolls = [4]
+        check(real, .attack(with: "Kurzbogen"), shot)
+        let laden = ProcessTests.situation(owned: ["SA_60": OwnedRule(level: 1, option: .int(1))],
+                                           facts: ["loadout.weapon": "Leichte Armbrust", "loadout.weapon.technique": "CT_1",
+                                                   "loadout.weapon.kind": "ranged", "loadout.weapon.ladezeit": 4,
+                                                   "loadout.weapon.instance": "armbrust1", "item.armbrust1.loaded": false])
+        check(real, .take(choice: "laden"), laden)
+        check(real, .takeHit(tp: 9), ProcessTests.situation(facts: ["attr.KO": 12], base: ["rs": 2, "leCurrent": 30]))
+    }
+
+    /// Events of the new kinds round-trip through JSON; a `stated` without a value removes the
+    /// fact, one with `null` states it empty.
+    func testClockAndStatedEventsApplyAndRoundTrip() throws {
+        let s = situation(["round.parries": 1, "loadout.shield": "Großschild"])
+        let events = [Event(kind: .clockAdvanced, minutes: 5, rounds: 2, ends: [.round]),
+                      Event(kind: .stated, fact: "action.attack", value: "hit", owner: .player),
+                      Event(kind: .stated, fact: "loadout.shield", value: .null, owner: .loadout),
+                      Event(kind: .stated, fact: "gmFact.x")]
+        for e in events { XCTAssertEqual(try JSONDecoder().decode(Event.self, from: JSONEncoder().encode(e)), e) }
+        let after = s.applying(events)
+        XCTAssertEqual(after.clock, Clock(round: 3, minutes: 5))
+        XCTAssertNil(after.facts["round.parries"])
+        XCTAssertEqual(after.facts["action.attack"]?.value, "hit")
+        XCTAssertEqual(after.facts["loadout.shield"]?.value, .null)
+        XCTAssertEqual(try JSONDecoder().decode(Clock.self, from: Data(#"{"minutes": 4}"#.utf8)), Clock(round: 0, minutes: 4))
+        XCTAssertEqual(Situation(owned: [:], facts: []).fact("process.zielen.x")?.value, nil, "one segment after process.")
+        XCTAssertEqual(Situation(owned: [:], facts: []).fact("process.zielen")?.value, .int(0))
     }
 }

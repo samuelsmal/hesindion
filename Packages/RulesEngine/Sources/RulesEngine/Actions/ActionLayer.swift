@@ -58,7 +58,24 @@ public struct ActionLayer: Sendable {
         default:
             out = local(action, in: situation)
         }
-        return breakingOff(out, from: start)
+        return breakingOff(lasting(out, from: situation), from: start)
+    }
+
+    /// R56: every lasting fact the action set (or took away) in its situation is a `stated` event,
+    /// so that `situation.applying(events, book:)` gives the action's situation, but for its
+    /// one-query inputs (`Situation.isOneQueryInput`).
+    private func lasting(_ result: ActionResult, from situation: Situation) -> ActionResult {
+        let applied = situation.applying(result.events, book: engine.book)
+        let names = Set(applied.facts.keys).union(result.situation.facts.keys).filter { !Situation.isOneQueryInput($0) }
+        let events = names.sorted().compactMap { name -> Event? in
+            let now = result.situation.facts[name]
+            guard applied.facts[name] != now else { return nil }
+            return Event(kind: .stated, fact: name, value: now?.value, owner: now?.owner ?? applied.facts[name]?.owner)
+        }
+        guard !events.isEmpty else { return result }
+        var out = result
+        out.events += events
+        return out
     }
 
     /// The actions the layer itself runs (no procedure).
@@ -71,6 +88,7 @@ public struct ActionLayer: Sendable {
             run = evaluation.actionRun(controlling: evaluation.actionEffects())
             consequences(reading: Set(["check.kind", "check.spell"] + modifications.map { "choice.spellModification.\($0)" }),
                          &run)
+            evaluation.startRecurring(&run)
         case .pay(let pool, let amount):
             run = evaluation.actionRun(controlling: [])
             guard amount > 0 else {
@@ -123,16 +141,13 @@ public struct ActionLayer: Sendable {
                 run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: die Uhr geht um \(minutes) Minuten nicht vor"))
                 break
             }
-            ending(Span.round.ending, of: situation, &run)
-            evaluation.recurring(.minutes, from: situation.clock.minutes, to: stated.clock.minutes, &run)
-        case .endRound:
+            run.events.append(Event(kind: .clockAdvanced, minutes: minutes, ends: Span.allCases.filter(Span.round.ending.contains)))
+            evaluation.recurring(.minutes, from: situation.clock.minutes, to: situation.clock.minutes + minutes, &run)
+        case .endRound, .endFight:
             run = evaluation.actionRun(controlling: evaluation.recurringCosts())
-            ending(Span.round.ending, of: situation, &run)
-            evaluation.recurring(.rounds, from: situation.clock.round, to: stated.clock.round, &run)
-        case .endFight:
-            run = evaluation.actionRun(controlling: evaluation.recurringCosts())
-            ending(Span.fight.ending, of: situation, &run)
-            evaluation.recurring(.rounds, from: situation.clock.round, to: stated.clock.round, &run)
+            let span: Span = action == .endRound ? .round : .fight
+            run.events.append(Event(kind: .clockAdvanced, rounds: 1, ends: Span.allCases.filter(span.ending.contains)))
+            evaluation.recurring(.rounds, from: situation.clock.round, to: situation.clock.round.addingSaturating(1), &run)
         case .settle:
             let gains = evaluation.actionEffects().filter { if case .gain = $0.payload { true } else { false } }
             run = evaluation.actionRun(controlling: gains)
@@ -144,14 +159,10 @@ public struct ActionLayer: Sendable {
                             texts: run.pipeline.texts, notApplied: run.pipeline.notApplied)
     }
 
-    /// The situation as the action states it, before its events:
-    /// - a cast states `check.kind: spell`, `check.spell` and `choice.spellModification.<id>: true`,
-    ///   each the player's;
-    /// - `.advanceClock(minutes:)` moves the clock's minutes on; `.endRound` and `.endFight` its
-    ///   round;
-    /// - a span that ends (`.endRound`, `.advanceClock`: the round and the action; `.endFight`: the
-    ///   fight too) clears the facts that last that long: the round's (`round.*`) and the choices
-    ///   offered with that span (`choice.<id>`, `choice.<id>.*`).
+    /// The situation as the action states it for its own evaluation, before its events: a cast
+    /// states `check.kind: spell`, `check.spell` and `choice.spellModification.<id>: true`, each
+    /// the player's (one-query inputs, `Situation.isOneQueryInput`). Everything lasting is an event
+    /// (R56): the clock and the spans it ends are `clockAdvanced`.
     static func stated(_ action: Action, in situation: Situation, book: RuleBook? = nil) -> Situation {
         var s = situation
         switch action {
@@ -159,16 +170,6 @@ public struct ActionLayer: Sendable {
             let facts = [("check.kind", JSONValue.string("spell")), ("check.spell", .string(spell))]
                 + modifications.map { ("choice.spellModification.\($0)", JSONValue.bool(true)) }
             for (name, value) in facts { s.facts[name] = Fact(name: name, value: value, owner: .player) }
-        case .advanceClock(let minutes):
-            guard minutes > 0 else { break }
-            s.clock.minutes = s.clock.minutes.addingSaturating(minutes)
-            s.end(Span.round.ending, book: book)
-        case .endRound:
-            s.clock.round = s.clock.round.addingSaturating(1)
-            s.end(Span.round.ending, book: book)
-        case .endFight:
-            s.clock.round = s.clock.round.addingSaturating(1)
-            s.end(Span.fight.ending, book: book)
         default:
             break
         }
@@ -277,45 +278,8 @@ public struct ActionLayer: Sendable {
         out.situation = result.situation.applying(events, book: engine.book)
         return out
     }
-
-    // MARK: - Spans
-
-    /// Undoes every Stufe change of `situation` that lasts one of `spans`: the inverse event, with
-    /// the same span and origin.
-    private func ending(_ spans: Set<Span>, of situation: Situation, _ run: inout ActionRun) {
-        for t in situation.timed where spans.contains(t.span) {
-            guard t.levels != 0, t.levels != .min else { continue }
-            run.events.append(Event(kind: t.levels > 0 ? .cleared : .gained, origin: t.origin, rule: t.rule,
-                                    levels: abs(t.levels), span: t.span, note: "Ende: \(t.span.rawValue)"))
-        }
-    }
 }
 
-extension Situation {
-    /// Clears what lasts only `spans`: the round's facts (`round.*`) when the round ends, and the
-    /// choices the book offers with one of `spans` (`choice.<id>` and its options
-    /// `choice.<id>.*`). A choice offered `whileFormed` stays until it is cleared.
-    mutating func end(_ spans: Set<Span>, book: RuleBook?) {
-        if spans.contains(.round) {
-            for name in facts.keys where name.hasPrefix("round.") { facts[name] = nil }
-        }
-        guard let book else { return }
-        var choices: Set<String> = []
-        for rule in book.rules.values {
-            for clause in rule.clauses {
-                for e in clause.effects {
-                    if case .offer(let o) = e.payload, let span = o.span, spans.contains(span) { choices.insert(o.choice) }
-                }
-            }
-        }
-        for name in facts.keys {
-            let choice = "choice."
-            guard name.hasPrefix(choice) else { continue }
-            let rest = name.dropFirst(choice.count)
-            if choices.contains(where: { rest == $0 || rest.hasPrefix($0 + ".") }) { facts[name] = nil }
-        }
-    }
-}
 
 /// What one action builds up: the situation it starts from (`base`: what the action stated),
 /// the pipeline state its effects are read in (phase 4's control, the records, questions and
@@ -453,9 +417,38 @@ extension Evaluation {
                 fail(e, "das Intervall \(interval) ist nicht positiv", &run.pipeline)
                 continue
             }
-            let due = Clock.due(every: interval, from: from, to: to)
+            // R57: counted from the cost's start; a cost nobody started starts where the clock stands.
+            let name = Self.upkeepFact(e)
+            let since: Int
+            if let start = situation.facts[name]?.value.int {
+                since = start
+            } else {
+                since = from
+                run.events.append(Event(kind: .stated, origin: e.origin.clauseRef, fact: name, value: .int(from), owner: .derived))
+            }
+            let due = Clock.due(every: interval, since: since, from: from, to: to)
             guard due > 0 else { continue }
             for _ in 0..<due { cost(c, e, level: level, used: facts, via: via, &run) }
+        }
+    }
+
+    /// The fact a recurring cost's start is kept in (R57): `upkeep.<rule>.<clause>`, in the cost's
+    /// unit (a minute or a round of the clock).
+    static func upkeepFact(_ e: Effect) -> String { "upkeep.\(e.origin.rule).\(e.origin.clause)" }
+
+    /// R57: the recurring costs this action starts: every `cost { every }` that acts now (its rule
+    /// applies, it is not suppressed, its `when` is yes) and has no start yet gets one, the clock's
+    /// minute (or round) as a `stated` event. The cast of a maintained spell starts its upkeep. A
+    /// cost that does not act now is read quietly: it records and asks nothing.
+    func startRecurring(_ run: inout ActionRun) {
+        for e in recurringCosts() {
+            guard case .cost(let c) = e.payload, let every = c.every else { continue }
+            let name = Self.upkeepFact(e)
+            // Read quietly: a cost that does not start now asks nothing of the action.
+            var quiet = run
+            guard situation.facts[name] == nil, admitted(e, &quiet) != nil else { continue }
+            let now = every.unit == .minutes ? situation.clock.minutes : situation.clock.round
+            run.events.append(Event(kind: .stated, origin: e.origin.clauseRef, fact: name, value: .int(now), owner: .derived))
         }
     }
 

@@ -18,7 +18,12 @@ import Foundation
 /// - `completed`, `brokenOff`: `process` (it ends);
 /// - `itemChanged`: `item` (the instance), `change` (each changed field's value after the
 ///   change), `amount` (for `structurePoints`: the change, `{ of: hit.tp, times: -1 }` → −TP);
-/// - `logged`: `note` (Task 26).
+/// - `logged`: `note` (Task 26);
+/// - `clockAdvanced` (R56): `minutes`, `rounds` (how far the clock moves) and `ends` (the spans
+///   that end with it: their facts and choices are cleared, their timed Stufen undone);
+/// - `stated` (R56): `fact`, `value`, `owner`: a lasting fact an action sets
+///   (`round.previousDefenceCrit`, `action.attack`, a recurring cost's start `upkeep.<rule>.<clause>`,
+///   R57). No `value` removes the fact; a JSON `null` states it empty.
 public struct Event: Codable, Hashable, Sendable {
     public var kind: EventKind
     public var origin: ClauseRef?
@@ -37,6 +42,14 @@ public struct Event: Codable, Hashable, Sendable {
     public var index: EffectIndex?
     /// `gained` / `cleared`: how long the change lasts (nil: until changed again).
     public var span: Span?
+    /// `clockAdvanced`: the minutes and rounds the clock moves, and the spans that end.
+    public var minutes: Int?
+    public var rounds: Int?
+    public var ends: [Span]
+    /// `stated`: the fact, its value (nil: the fact goes) and who states it.
+    public var fact: String?
+    public var value: JSONValue?
+    public var owner: Owner?
     /// As `Line.via`: the enabling require and useLevels of the origin's rule, then the clauses
     /// behind every target its amount read (R26).
     public var via: [ClauseRef]
@@ -46,15 +59,19 @@ public struct Event: Codable, Hashable, Sendable {
     public init(kind: EventKind, origin: ClauseRef? = nil, pool: Pool? = nil, amount: Int? = nil, rule: String? = nil,
                 levels: Int? = nil, process: String? = nil, item: String? = nil, change: [String: JSONValue]? = nil,
                 progress: Int? = nil, steps: Int? = nil, index: EffectIndex? = nil, span: Span? = nil,
+                minutes: Int? = nil, rounds: Int? = nil, ends: [Span] = [], fact: String? = nil, value: JSONValue? = nil,
+                owner: Owner? = nil,
                 via: [ClauseRef] = [], rulings: [String] = [], facts: [FactUse] = [], note: String? = nil) {
         self.kind = kind; self.origin = origin; self.pool = pool; self.amount = amount; self.rule = rule
         self.levels = levels; self.process = process; self.item = item; self.change = change; self.note = note
         self.progress = progress; self.steps = steps; self.index = index; self.span = span
+        self.minutes = minutes; self.rounds = rounds; self.ends = ends; self.fact = fact; self.value = value; self.owner = owner
         self.via = via; self.rulings = rulings; self.facts = facts
     }
 
     enum CodingKeys: String, CodingKey {
-        case kind, origin, pool, amount, rule, levels, process, item, change, progress, steps, index, span, note, via, rulings, facts
+        case kind, origin, pool, amount, rule, levels, process, item, change, progress, steps, index, span, minutes, rounds, ends
+        case fact, value, owner, note, via, rulings, facts
     }
 
     /// Absent fields and empty lists may be left out.
@@ -73,6 +90,12 @@ public struct Event: Codable, Hashable, Sendable {
                   steps: try c.decodeIfPresent(Int.self, forKey: .steps),
                   index: try c.decodeIfPresent(EffectIndex.self, forKey: .index),
                   span: try c.decodeIfPresent(Span.self, forKey: .span),
+                  minutes: try c.decodeIfPresent(Int.self, forKey: .minutes),
+                  rounds: try c.decodeIfPresent(Int.self, forKey: .rounds),
+                  ends: try c.decodeIfPresent([Span].self, forKey: .ends) ?? [],
+                  fact: try c.decodeIfPresent(String.self, forKey: .fact),
+                  value: c.contains(.value) ? (try c.decodeNil(forKey: .value) ? .null : c.decode(JSONValue.self, forKey: .value)) : nil,
+                  owner: try c.decodeIfPresent(Owner.self, forKey: .owner),
                   via: try c.decodeIfPresent([ClauseRef].self, forKey: .via) ?? [],
                   rulings: try c.decodeIfPresent([String].self, forKey: .rulings) ?? [],
                   facts: try c.decodeIfPresent([FactUse].self, forKey: .facts) ?? [],
@@ -95,6 +118,12 @@ public struct Event: Codable, Hashable, Sendable {
         try c.encodeIfPresent(steps, forKey: .steps)
         try c.encodeIfPresent(index, forKey: .index)
         try c.encodeIfPresent(span, forKey: .span)
+        try c.encodeIfPresent(minutes, forKey: .minutes)
+        try c.encodeIfPresent(rounds, forKey: .rounds)
+        if !ends.isEmpty { try c.encode(ends, forKey: .ends) }
+        try c.encodeIfPresent(fact, forKey: .fact)
+        try c.encodeIfPresent(value, forKey: .value)
+        try c.encodeIfPresent(owner, forKey: .owner)
         try c.encodeIfPresent(note, forKey: .note)
         if !via.isEmpty { try c.encode(via, forKey: .via) }
         if !rulings.isEmpty { try c.encode(rulings, forKey: .rulings) }
