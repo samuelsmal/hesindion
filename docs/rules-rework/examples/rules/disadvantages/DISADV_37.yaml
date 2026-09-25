@@ -66,10 +66,15 @@ clauses:
     effects:
       - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23 }
         ask: { fact: gmFact.triggerModifier, who: gm }
-      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23 }
+      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23, gmFact.triggerModifier: { above: 0 } }
         add: { to: check.modifier, value: { of: gmFact.triggerModifier } }
+      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23, gmFact.triggerModifier: { below: 0 } }
+        add: { to: check.modifier, value: { of: 0, above: gmFact.triggerModifier, times: -1 } }
         # A GM input, not a ruling (README "How rulings are kept"): shown as its own line,
-        # "Meister (Stärke des Auslösers)", 0 unless the GM says otherwise (the old `default: 0`).
+        # "Meister (Stärke des Auslösers)", 0 unless the GM says otherwise (the old `default: 0`):
+        # no line at 0. Two effects, as fertigkeitsproben.FM2: a proportion is
+        # max(0, of − above) × times, so an Erleichterung is `of` the fact and an Erschwernis is
+        # `0 above` it, negated (−2 → max(0, 0 − (−2)) × −1 = −2, boronmir-neu 19.11).
 
   - id: SE5
     text: >
@@ -96,6 +101,7 @@ clauses:
       - provide:
           name: DISADV_37.eigenschaft
           value: { 1: Aberglaube, 2: Autoritätsglaube, 3: Geiz, 4: Goldgier, 5: Jähzorn, 6: Kleptomanie, 7: Naiv, 8: Neugier, 9: Rachsucht, 10: Spielsucht, 11: Verschwendungssucht, 15: Sikaryan-Durst }
+          readBy: display
         # Keyed by the hero file's `option` (sid): the name, whose line of this clause's text
         # (the old `text_by_option: sid`) is the trigger.
         # The line for the hero's own Eigenschaft is what the sheet and the SE1 check show as

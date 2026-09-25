@@ -42,8 +42,10 @@
   appliesTo: [SA_48.F1, SA_67.W1]
   notes: >
     The trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe would
-    make a higher Stufe a handicap against strong defenders. Encoded as `tiers: up_to_owned`, and
-    the effects count `per: chosen_tier`. The app offers every Wuchtschlag Stufe already, but only
+    make a higher Stufe a handicap against strong defenders. Encoded as one offer per owned Stufe,
+    `offer: { choice: finte, options: [1, …, level] }` (gated on `level`), read as the player fact
+    `choice.finte` whose value is the Stufe announced; the effects count `per: choice.finte`
+    (SA_48.F1, SA_67.W1). The app offers every Wuchtschlag Stufe already, but only
     the highest Finte Stufe (CombatAttackViews.availableManeuvers offers hero.finteTier): Finte
     gains Stufe I/II rows (finte 8.3).
 

@@ -42,6 +42,8 @@ clauses:
     effects:
       - offer: { choice: passierschlag }
         # A melee attack (`at`) that takes no Handlung: the old `costs: none`, `domain: meleeAttack`.
+        # An offer carries what taking it costs in `costs` (ruling R23, as beidhaendiger-kampf.ZW2's
+        # Aktion); this one has none, so it pays nothing from `actions` (kampfsituationen 17.7).
       - when: { choice.passierschlag: true }
         add: { to: at, value: -4 }
         # Every other line of a melee AT still applies (Belastung, Beengte Umgebung, winzig

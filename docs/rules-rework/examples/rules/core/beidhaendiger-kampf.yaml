@@ -49,10 +49,11 @@ clauses:
       bestimmt und mit RS und Lebensenergie des Getroffenen verrechnet.
     effects:
       - when: { not: { loadout.other: null } }
-        offer: { choice: doubleAttack }
+        offer: { choice: doubleAttack, costs: [{ cost: { pool: actions, amount: 1 } }] }
         ruling: raufen-double-attack
         # With a second piece in hand (a fist counts, ruling raufen-double-attack). The double
-        # attack is the hero's Aktion (the old `costs: action`). It is two rolls, the main hand's
+        # attack is the hero's Aktion: "mit 1 Aktion" (the old `costs: action`; ruling R23, as
+        # STATE_10.L4 and fernkampf.FK11 carry theirs). It is two rolls, the main hand's
         # and then the off hand's, `at(with: mainHand)` and `at(with: offHand)`, each with its own
         # breakdown and its own damage (the old `then`); making it sets `round.doubleAttack`,
         # which ZW3 reads for the rest of the round.

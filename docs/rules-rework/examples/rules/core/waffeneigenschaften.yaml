@@ -21,7 +21,7 @@ clauses:
     text: >
       Waffeneigenschaften sind eine Fokusregel der Stufe I für den Themenkomplex Ausrüstung.
     effects:
-      - provide: { name: fokus.waffeneigenschaften, value: { theme: Ausrüstung, level: 1 } }
+      - provide: { name: fokus.waffeneigenschaften, value: { theme: Ausrüstung, level: 1 }, readBy: display }
         # The Fokusregel's Themenkomplex and Stufe (formerly the file's `fokus:` key); the
         # ruleset itself is the file's `ruleset:`, switched on through the `rulesets` fact.
         # The app has no such Fokusregel (FokusRule: trefferzonen, kritische Erfolge,

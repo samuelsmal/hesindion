@@ -167,7 +167,7 @@ situations:
     gm: { gmFact.incomingAttack: passierschlag }                              # the old `event: { hero: passierschlagSuffered }`
     expect:
       notOffered: [{ defence: [pa, aw], because: passierschlag.PS2 }]
-      offered: [{ choice: mountHit, on: takeDamage, from: reiterkampf.RK11, ruling: reiterkampf.passierschlag-on-mount }]
+      offered: [{ choice: mountHit, "on": takeDamage, from: reiterkampf.RK11, ruling: reiterkampf.passierschlag-on-mount }]
     sequence:
       - choose: { choice.mountHit: true }                                     # the old `with_choice`
         expect:

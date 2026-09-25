@@ -59,7 +59,7 @@ clauses:
       für große Humanoide würfeln, ein großer Gegner gegen einen mittelgroßen Helden auf der
       Tabelle für kleine Humanoide.
     effects:
-      - provide: { name: trefferzonen.TZ3, value: { "-2": winzig, "-1": klein, "0": mittel, "1": gross, "2": riesig } }
+      - provide: { name: trefferzonen.TZ3, value: { "-2": winzig, "-1": klein, "0": mittel, "1": gross, "2": riesig }, readBy: roll }
         ruling: relative-size-table
         # The old `table_for: { size: "mittel + (target.size - attacker.size)", clampTo:
         # target.bodyPlan.sizes }`: the size of the table, keyed by the size steps the target is
@@ -77,7 +77,9 @@ clauses:
   # rolls on. Zone keys are TZ11's (kopf, torso, arme, beine). The app holds the same tables in
   # HitZoneTable (Hesindion/Models/HitZoneTable.swift).
   # FORMAT: a clause whose only effect is data other clauses look up (`provides: tables.*`); a
-  # range such as "1-6" is a key, not a number.
+  # range such as "1-6" is a key, not a number. `readBy: roll`: the app rolls on these tables
+  # (and on TZ3's choice among them, TZ4c's side) when TZ2 asks for `hit.zone`; no rule reads
+  # them through `table(...)`, so the build counts them reachable by that declaration.
   - id: TZ4
     text: |
       Humanoid, Größenkategorie klein
@@ -87,7 +89,7 @@ clauses:
       11-18 | Arme
       19-20 | Beine
     effects:
-      - provide: { name: tables.humanoid.klein, value: { "1-6": kopf, "7-10": torso, "11-18": arme, "19-20": beine } }
+      - provide: { name: tables.humanoid.klein, value: { "1-6": kopf, "7-10": torso, "11-18": arme, "19-20": beine }, readBy: roll }
 
   - id: TZ4a
     text: |
@@ -98,7 +100,7 @@ clauses:
       13-16 | Arme
       17-20 | Beine
     effects:
-      - provide: { name: tables.humanoid.mittel, value: { "1-2": kopf, "3-12": torso, "13-16": arme, "17-20": beine } }
+      - provide: { name: tables.humanoid.mittel, value: { "1-2": kopf, "3-12": torso, "13-16": arme, "17-20": beine }, readBy: roll }
 
   - id: TZ4b
     text: |
@@ -109,7 +111,7 @@ clauses:
       7-16 | Arme
       17-20 | Beine
     effects:
-      - provide: { name: tables.humanoid.gross, value: { "1-2": kopf, "3-6": torso, "7-16": arme, "17-20": beine } }
+      - provide: { name: tables.humanoid.gross, value: { "1-2": kopf, "3-6": torso, "7-16": arme, "17-20": beine }, readBy: roll }
 
   - id: TZ4c
     text: >
@@ -117,7 +119,7 @@ clauses:
       trifft die linke Seite.
     effects:
       - when: { hit.zone: [arme, beine] }
-        provide: { name: trefferzonen.TZ4c, value: { odd: links, even: rechts } }
+        provide: { name: trefferzonen.TZ4c, value: { odd: links, even: rechts }, readBy: roll }
         # The old `sets: { hit.side: …, of: TZ2.roll }`: the side by the zone die's parity, which
         # the app reads off the die it rolled for TZ2 and states as `hit.side` (a roll fact).
         # TZ8's arm Wundeffekt (ruling wundeffekt-arm-drop, through `hit.heldInHand`) and the
@@ -132,7 +134,7 @@ clauses:
       13-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provide: { name: tables.vierbeinig.klein, value: { "1-4": kopf, "5-12": torso, "13-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.klein, value: { "1-4": kopf, "5-12": torso, "13-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
 
   - id: TZ4e
     text: |
@@ -143,7 +145,7 @@ clauses:
       11-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provide: { name: tables.vierbeinig.mittel, value: { "1-4": kopf, "5-10": torso, "11-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.mittel, value: { "1-4": kopf, "5-10": torso, "11-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
 
   - id: TZ4f
     text: |
@@ -154,7 +156,7 @@ clauses:
       12-16 | vordere Beine
       17-20 | hintere Beine
     effects:
-      - provide: { name: tables.vierbeinig.gross, value: { "1-5": kopf, "6-11": torso, "12-16": vordereBeine, "17-20": hintereBeine } }
+      - provide: { name: tables.vierbeinig.gross, value: { "1-5": kopf, "6-11": torso, "12-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
         # Kupperus's table (svellttaler-kaltblut.SK7: groß, Tier, nicht humanoid).
 
   - id: TZ4g
@@ -168,7 +170,7 @@ clauses:
       17-18 | hintere Gliedmaßen
       19-20 | Schwanz
     effects:
-      - provide: { name: tables.sechsGliedmassen.gross, value: { "1-4": kopf, "5-12": torso, "13-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
+      - provide: { name: tables.sechsGliedmassen.gross, value: { "1-4": kopf, "5-12": torso, "13-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz }, readBy: roll }
 
   - id: TZ4h
     text: |
@@ -181,7 +183,7 @@ clauses:
       17-18 | hintere Gliedmaßen
       19-20 | Schwanz
     effects:
-      - provide: { name: tables.sechsGliedmassen.riesig, value: { "1-2": kopf, "3-10": torso, "11-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz } }
+      - provide: { name: tables.sechsGliedmassen.riesig, value: { "1-2": kopf, "3-10": torso, "11-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz }, readBy: roll }
 
   - id: TZ4i
     text: |
@@ -191,7 +193,7 @@ clauses:
       3-6 | Kopf
       | Der Rest der Zahlen verteilt sich gleichmäßig auf die Fangarme, Überschüsse werden auf den Torso aufgeschlagen.
     effects:
-      - provide: { name: tables.fangarme.mittelBisRiesig, value: { "1-2": torso, "3-6": kopf, "7-20": { splitEvenly: fangarme, overflow: torso } } }
+      - provide: { name: tables.fangarme.mittelBisRiesig, value: { "1-2": torso, "3-6": kopf, "7-20": { splitEvenly: fangarme, overflow: torso } }, readBy: roll }
         # How many Fangarme there are is the creature's profile's; the fourteen numbers 7–20 are
         # dealt out evenly, one range per arm, and the remainder goes back on the torso.
 
@@ -202,7 +204,7 @@ clauses:
       Ergebnis | Zone
       1-20 | Körper
     effects:
-      - provide: { name: tables.keineZonen, value: { "1-20": koerper } }
+      - provide: { name: tables.keineZonen, value: { "1-20": koerper }, readBy: roll }
         # One zone: no Wundeffekt row for it (TZ11).
       - when: { opponent.bodyPlan: keineZonen }
         forbid: { what: { choice: targetZone } }

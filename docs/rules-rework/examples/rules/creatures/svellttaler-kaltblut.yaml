@@ -106,9 +106,9 @@ clauses:
       RS/BE: 0/0
       Aktionen: 1
     effects:
-      - provide: { name: mount.rs, value: 0 }
+      - provide: { name: mount.rs, value: 0, readBy: display }
         ruling: [mount-profile-data, mount-own-attack]
-      - provide: { name: mount.actions, value: 1 }
+      - provide: { name: mount.actions, value: 1, readBy: display }
         ruling: [mount-profile-data, mount-own-attack]
         # RS matters for reiterkampf.RK10 (SP = TP − RS; the player enters the SP today,
         # CombatMountDamageView). Aktionen 1: the horse acts only on the rider's order (RK12,

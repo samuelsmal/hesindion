@@ -239,7 +239,7 @@ clauses:
       Zweihandschwerter | KK | C
       *) Kampftechnik wird nur unter Verwendung der Sonderfertigkeit Feuerschlucker eingesetzt.
     effects:
-      - provide: { name: kampfwerte.leiteigenschaft, value: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] } }
+      - provide: { name: kampfwerte.leiteigenschaft, value: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] }, readBy: loadout }
         # The Regelwerk's own Leiteigenschaft table, one row per technique: `leit` for KW2 and
         # for the Schadensbonus (schaden.S3, "Bei allen Nahkampfwaffen" — Peitschen included, FF).
         # The ranged rows are here for completeness; S3 is melee only and KW5 reads FF directly.

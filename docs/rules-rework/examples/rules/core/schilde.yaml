@@ -43,7 +43,10 @@ clauses:
       für den beidhändigen Nahkampf oder als einzelne Nahkampfwaffe einsetzbar.
     effects:
       - when: { loadout.other: [shield, parryingWeapon] }
-        offer: { choice: action.with, options: [shield, parryingWeapon] }
+        offer: { choice: attackWith, options: [shield, parryingWeapon] }
+        # The piece picked (`choice.attackWith`) is the attack's `with:` (`at(with: shield)`),
+        # which the rules read as `action.with`, as beidhaendiger-kampf.ZW7's `parryWith` is the
+        # parry's (a choice never names an action fact: `offer: { choice: X }` is `choice.X`).
         # An attack with the piece: its AT is its own technique's (kampfwerte.KW1, with
         # `ktw.current` that technique's KtW); its AT-Mod is at-pa-modifikatoren.M1's line, keyed
         # on the piece attacked with (the Großschild −6, situation 16.8), not added here. Its TP
@@ -58,8 +61,10 @@ clauses:
       Kampftechnik Schilde pariert und so den Bonus des Schilds doppelt bekommt.
     effects:
       - when: { not: { loadout.shield: null } }
-        offer: { choice: action.defence, options: [shieldParry] }
+        offer: { choice: shieldParry }
         # Its value is kampfwerte.KW2 for the Schilde technique (`ktw.current` = Schilde).
+        # Taking it (`choice.shieldParry: true`) is the defence `action.defence: shieldParry`
+        # (`pa(with: shield)`), which the add below, SCH5 and the shield rules read.
       - when: { action.defence: shieldParry }
         add: { to: pa, value: { of: item.paMod, times: 2 } }
         # Two lines: "Schilde PA 7" and "Großschild aktiv +6 (2 × 3)". The choice between
