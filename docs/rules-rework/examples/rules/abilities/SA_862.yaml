@@ -64,8 +64,9 @@ clauses:
       Nur einer der Kämpfer benötigt die Sonderfertigkeit, damit alle davon profitieren. Verfügen
       mehrere Kämpfer darüber, können auch entsprechend mehr Kämpfer die Vorteile nutzen.
     effects:
-      - require: { that: { any: [{ hero.has: SA_862 }, { ally.has: SA_862 }] } }
-        # As SA_884.P4: a companion without the SF standing in Boronmir's formation gets F2.
+      - require: { that: { any: [{ hero.has: SA_862 }, { ally.has: SA_862 }] }, enables: true }
+        # As SA_884.P4: a companion without the SF standing in Boronmir's formation gets F2; the
+        # require enables the rule for a hero who does not own it (Task 31, boronmir-neu 19.3).
         # FORMAT: `ally.has`, as in SA_884.
 
   - id: F5

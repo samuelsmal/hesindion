@@ -64,8 +64,10 @@ clauses:
       Nur einer der Kämpfer benötigt die Sonderfertigkeit, damit alle davon profitieren. Verfügen
       mehrere Kämpfer darüber, können auch entsprechend mehr Kämpfer die Vorteile nutzen.
     effects:
-      - require: { that: { any: [{ hero.has: SA_884 }, { ally.has: SA_884 }] } }
-        # A hero without the SF can stand in a companion's formation and gets P2 all the same.
+      - require: { that: { any: [{ hero.has: SA_884 }, { ally.has: SA_884 }] }, enables: true }
+        # A hero without the SF can stand in a companion's formation and gets P2 all the same:
+        # the require enables the rule for a hero who does not own it (Task 31), so its offer
+        # and P2's line come `via: [SA_884.P4]` (situation boronmir-sf 14.18).
         # FORMAT: `ally.has` — an ally's ability the app cannot see; the player states it
         # ("in einer Plänkler-Formation"), and the line cites SA_884 without the hero owning it.
         # Today only an owner is offered the toggle (CombatSetupView, hero.hasPlaenklerFormation).

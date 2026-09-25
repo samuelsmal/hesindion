@@ -59,7 +59,7 @@ situations:
   - id: "8.5"
     name: Finte with a Morgenstern (Kettenwaffen — not on Finte's list)
     hero: { abilities: { SA_48: 1 } }
-    loadout: { weapon: Morgenstern }
+    loadout: { weapon: Morgenstern, weapon.technique: CT_6 }   # the header's Kettenwaffen (R61)
     expect:
       notOffered: [{ choice: finte, because: SA_48.F3, ruling: sf-technique-lists }]
     appToday: offered (availableManeuvers checks no technique) — wrong

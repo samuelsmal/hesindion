@@ -218,7 +218,8 @@ situations:
     name: The order comes from his Komtur — the GM makes it 2 harder — and Boronmir has Schmerz II
     loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     gm: { gmFact.trigger: DISADV_37, gmFact.triggerModifier: -2 }
-    hero: { values: { leCurrent: 16 } }  # LE 37: ½ = 18.5, ¼ = 9.25 → Schmerz II; Zäher Hund → acts as I
+    hero: { values: { leCurrent: 16 }, sheet: { species.le: 5 } }  # LE 37: ½ = 18.5, ¼ = 9.25 → Schmerz II; Zäher Hund → acts as I
+    # species.le: the Mensch's LE-Grundwert 5 (the hero file's race R_1; R61), which with KO 15 and Hohe Lebenskraft II gives the LE 37 above
     choose: { check.kind: talent, check.talent: TAL_23 }   # Willenskraft
     expect:
       "check.modifier(talent: TAL_23)":

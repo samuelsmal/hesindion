@@ -52,7 +52,7 @@ situations:
   - id: "9.5"
     name: Wuchtschlag with a Dolch (Dolche — not on Wuchtschlag's list)
     hero: { abilities: { SA_67: 1 } }
-    loadout: { weapon: Dolch }
+    loadout: { weapon: Dolch, weapon.technique: CT_3 }   # the header's Dolche (R61)
     expect:
       notOffered: [{ choice: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
     appToday: offered (the catalog note on SA_67 says so on purpose, pending issue #14) — wrong

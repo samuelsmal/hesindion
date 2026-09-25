@@ -24,7 +24,7 @@ Why b: the caster commits to the LeP before casting, and "misslingt auch der Zau
 
 ### `SA_862` · formation-mounted
 
-Answer in [`rules/abilities/SA_862.yaml:84`](./rules/abilities/SA_862.yaml#L84)
+Answer in [`rules/abilities/SA_862.yaml:85`](./rules/abilities/SA_862.yaml#L85)
 
 **Can riders form a Formation — may Boronmir take its +2 while fighting from Kupperus?**
 
@@ -40,7 +40,7 @@ Why a: the spacing is the same as Plänkler-Formation's, and deciding the two th
 
 ### `SA_862` · formation-and-plaenkler
 
-Answer in [`rules/abilities/SA_862.yaml:106`](./rules/abilities/SA_862.yaml#L106)
+Answer in [`rules/abilities/SA_862.yaml:107`](./rules/abilities/SA_862.yaml#L107)
 
 **Can one fighter stand in a Formation and a Plänkler-Formation at once, and take both bonuses (+2 and +1)?**
 

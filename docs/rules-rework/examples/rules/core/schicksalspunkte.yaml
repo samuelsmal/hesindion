@@ -38,6 +38,10 @@ clauses:
         # which is shown before its dice come in; once the roll is in, it is no longer offered.
       - when: { choice.schipVerteidigung: true }
         add: { to: [pa, aw], value: 4 }
+        ruling: SA_65.vh-stacking
+        # The ruling's `appliesTo` names this clause: the Schip's +4 stacks with
+        # Verteidigungshaltung's (mehrfache-verteidigung V12). It is decided, so the line applies
+        # as before and carries it.
 
   - id: SP-zustand
     name: Zustand ignorieren

@@ -38,6 +38,7 @@ situations:
 
   - id: V5
     name: A parry after dodging an arrow — ranged defences count too
+    loadout: { hero.mounted: false }            # on foot, as the header says (R61)
     round: { defencesMade: 1 }                  # a dodge against a ranged attack
     expect:
       pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
@@ -53,7 +54,7 @@ situations:
   - id: V7
     name: Vinsalt-Stil with a Rapier, third defence
     hero: { abilities: { SA_923: 1 } }
-    loadout: { weapon: Rapier }                 # Fechtwaffe
+    loadout: { weapon: Rapier, weapon.technique: CT_4, hero.mounted: false }   # Fechtwaffe; on foot (R61: the comment and the header)
     round: { defencesMade: 2 }                  # pa, aw
     expect:
       pa: { total: -4, lines: [{ value: -4, from: mehrfache-verteidigung.MV1, via: [SA_923.VS1], ruling: kampfstil-techniques }] }   # changed by VS1
@@ -107,6 +108,7 @@ situations:
   - id: V12
     name: Verteidigungshaltung and the Schip "Verteidigung" together
     hero: { abilities: { SA_65: 1 } }
+    loadout: { hero.mounted: false }            # on foot, as the header says (R61)
     choose: { choice.verteidigungshaltung: true, choice.schipVerteidigung: true }
     expect:
       pa:

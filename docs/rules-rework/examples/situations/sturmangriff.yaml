@@ -28,7 +28,7 @@ situations:
   - id: "10.2"
     name: With a Dolch (Dolche — not on Sturmangriff's list)
     hero: { abilities: { SA_62: 1 } }
-    loadout: { weapon: Dolch }
+    loadout: { weapon: Dolch, weapon.technique: CT_3 }   # Dolche, as the name says (R61)
     choose: { action.runUp: 4 }
     expect:
       notOffered: [{ choice: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]

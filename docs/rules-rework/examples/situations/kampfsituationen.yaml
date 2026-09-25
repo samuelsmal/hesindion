@@ -207,7 +207,7 @@ situations:
 
   - id: "17.11"
     name: On foot, Langschwert and Großschild, attacked from behind
-    loadout: { weapon: Langschwert, reach: mittel, shield: Großschild, other: shield, shield.size: gross }
+    loadout: { weapon: Langschwert, reach: mittel, shield: Großschild, other: shield, shield.size: gross, hero.mounted: false }   # on foot, as the name says (R61)
     gm: { gmFact.fromBehind: true, gmFact.incomingAttack: melee }
     expect:
       "pa(with: shield)": { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 13 → 9

@@ -14,7 +14,7 @@ source:
   page: 151
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: AD1
@@ -23,6 +23,11 @@ clauses:
       Reichweite größer ist als die Reichweite des Widersachers. Ist diese Voraussetzung erfüllt,
       erhöhen sich die AT-Erschwernisse für den Gegner zusätzlich um -1 pro Stufe der SF.
     effects:
+      - require: { that: { opponent.has: SA_152 }, enables: true }
+        ruling: SA_172.auf-distanz-halten
+        # The opponent's SF acts on the hero, who does not own it (Task 31): the GM's answer
+        # "Gegner hat Auf Distanz halten" enables the rule, so the line below applies (reichweite
+        # RW.12). The hero's own use is AD2's offer, gated on `hero.has`.
       - when: { opponent.has: SA_152, reach.gap: { atLeast: 1 } }
         add: { to: at, value: -1, per: opponent.level.SA_152 }
         ruling: SA_172.auf-distanz-halten

@@ -163,7 +163,7 @@ situations:
 
   - id: "11.10"
     name: A Kettenwaffe with a second weapon, and with a shield
-    loadout: { weapon: Morgenstern }
+    loadout: { weapon: Morgenstern, weapon.technique: CT_6 }   # the header's Kettenwaffen (R61)
     expect:
       # the old `not_selectable` / `selectable`: which piece may go in the off hand
       legal: { loadout: [{ other: Dolch, allowed: false, because: beidhaendiger-kampf.ZW1 }, { other: Holzschild, allowed: true }] }
