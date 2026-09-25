@@ -30,7 +30,12 @@ public enum Action: Hashable, Sendable {
     /// A hit on the hero (`DamageChain`): TP → RS → SP → the Wundschwelle → the checks it calls for
     /// (`ActionResult.checks`). `tp` nil: the situation's `hit.tp`, or its stated SP. Paying LeP
     /// (`.pay(.le, n)`, a `paid(le)` event) is not a hit and never runs the chain.
-    case takeHit(tp: Int?, zone: String? = nil, side: String? = nil)
+    ///
+    /// `failedDefence` (R58): the hit came through a defence of the hero's that failed (a shield
+    /// parry against Schildspalter). The defence's outcome is a one-query input of its own roll, so
+    /// the hit carries it: it states `check.result: failure` for the rules that read the failed
+    /// defence with the hit (SA_59.SS3: "Misslingt die Parade …").
+    case takeHit(tp: Int?, zone: String? = nil, side: String? = nil, failedDefence: Bool = false)
     /// One step of the process `process` (spec §7), as the action its `advancedBy` names does,
     /// without paying that action's cost: a running process progresses; else a `process` effect
     /// with that id whose `when` holds starts one (bound to the weapon in hand). Taking the offered

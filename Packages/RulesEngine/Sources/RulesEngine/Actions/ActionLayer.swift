@@ -49,8 +49,10 @@ public struct ActionLayer: Sendable {
             start = begun.situation
             out = CombatRoll.perform(.defend(kind: kind, with: with), in: situation, engine: engine)
             out = following(out, stated: changedFacts(from: start, to: out.situation))
-        case .takeHit(let tp, let zone, let side):
-            let r = DamageChain.run(hit: tp, zone: zone, side: side, in: situation, engine: engine)
+        case .takeHit(let tp, let zone, let side, let failedDefence):
+            var hit = situation
+            if failedDefence { hit.facts["check.result"] = Fact(name: "check.result", value: .string("failure"), owner: .roll) }
+            let r = DamageChain.run(hit: tp, zone: zone, side: side, in: hit, engine: engine)
             out = ActionResult(events: r.events, situation: r.situation.applying(r.events, book: engine.book),
                                breakdowns: r.breakdowns, questions: r.questions, texts: r.texts,
                                notApplied: r.notApplied, checks: r.checks)
@@ -58,7 +60,24 @@ public struct ActionLayer: Sendable {
         default:
             out = local(action, in: situation)
         }
-        return breakingOff(lasting(out, from: situation), from: start)
+        return oneQuery(breakingOff(lasting(out, from: situation), from: start), from: situation)
+    }
+
+    /// R58: the action's one-query inputs (`Situation.isOneQueryInput`: a cast's `check.spell`, a
+    /// roll's die, a hit's `hit.*`) do not outlive it. Each is given back the value it had where
+    /// the action began (or none), so `situation.applying(events, book:)` is the action's
+    /// situation, whole. A rule that reads across actions gets the earlier result as a `stated`
+    /// fact (`action.attack`, `round.previousDefenceCrit`) or as an input of the later action
+    /// (`.takeHit(failedDefence:)`).
+    private func oneQuery(_ result: ActionResult, from situation: Situation) -> ActionResult {
+        var out = result
+        let names = Set(out.situation.facts.keys).union(situation.facts.keys).filter(Situation.isOneQueryInput)
+        for name in names { out.situation.facts[name] = situation.facts[name] }
+        let bases = Set(out.situation.base.keys).union(situation.base.keys).filter(Situation.isOneQueryBase)
+        for key in bases { out.situation.base[key] = situation.base[key] }
+        out.situation.unstated = situation.unstated
+        out.situation.inForce = situation.inForce
+        return out
     }
 
     /// R56: every lasting fact the action set (or took away) in its situation is a `stated` event,

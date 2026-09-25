@@ -169,4 +169,31 @@ final class ItemStateTests: XCTestCase {
         XCTAssertFalse(failed.texts.contains { $0.text.contains("nicht ausgeführt") })
         XCTAssertEqual(check.situation.applying(failed.events).fact("loadout.weapon.held")?.value, .bool(false))
     }
+
+    /// R58, across two actions on the real book: a shield parry against Schildspalter fails, then
+    /// the hit comes through it. The parry's outcome is its own roll's (it does not outlive it);
+    /// the hit carries it (`failedDefence`), and SA_59.SS3 takes the TP off the shield's StP.
+    func testAFailedShieldParryThenTheHitLowersTheShieldsStP() throws {
+        let layer = ActionLayer(engine: try XCTUnwrap(CombatRollTests.real, "run make rules-json"))
+        var s = situation(["loadout.shield": "Großschild", "loadout.shield.instance": "grossschild1",
+                           "loadout.shield.structurePoints": 30, "opponent.manoeuvre": "schildspalter"],
+                          base: ["pa(with: shield)": 7], owned: ["SA_59": OwnedRule(level: 1)])
+        s.pools[.le] = PoolState(current: 30, max: 30)
+        s.rolls = [15]
+        let parry = layer.perform(.defend(kind: .pa, with: "shield"), in: s)
+        XCTAssertNil(parry.situation.facts["roll.defence"], "the parry's die is its own")
+        XCTAssertNil(parry.situation.facts["check.result"])
+        var next = parry.situation
+        next.rolls = []
+        let hit = layer.perform(.takeHit(tp: 7, failedDefence: true), in: next)
+        let change = try XCTUnwrap(hit.events.first { $0.kind == .itemChanged })
+        XCTAssertEqual(change.origin, ref("SA_59.SS3"))
+        XCTAssertEqual(change.change, ["structurePoints": .int(23)])
+        XCTAssertEqual(hit.situation.items["grossschild1"]?.structurePoints, 23)
+        XCTAssertEqual(hit.situation.pools[.le]?.current, 30, "the TP go on the shield, not the LeP")
+        XCTAssertNil(hit.situation.facts["check.result"], "the carried outcome is the hit's input only")
+        // Without the failed defence the hit does not reach the shield.
+        let plain = layer.perform(.takeHit(tp: 7), in: next)
+        XCTAssertEqual(plain.events.filter { $0.kind == .itemChanged }, [])
+    }
 }

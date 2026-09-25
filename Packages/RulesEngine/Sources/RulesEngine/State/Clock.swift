@@ -15,10 +15,10 @@ public struct Clock: Codable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey { case round, minutes }
 
-    /// Each key may be left out: it is then 0.
+    /// Each key may be left out: as `Clock()`, round 1 and minute 0.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        round = try c.decodeIfPresent(Int.self, forKey: .round) ?? 0
+        round = try c.decodeIfPresent(Int.self, forKey: .round) ?? 1
         minutes = try c.decodeIfPresent(Int.self, forKey: .minutes) ?? 0
     }
 

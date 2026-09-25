@@ -217,20 +217,17 @@ final class ClockTests: XCTestCase {
         XCTAssertFalse(layer.perform(.cast(spell: "SPELL_1", modifications: []), in: eight.situation).events.contains { $0.kind == .stated })
     }
 
-    /// R56's invariant: an action's situation is the one it began in with its events applied,
-    /// but for its one-query inputs (`Situation.isOneQueryInput`: a cast's `check.spell`, a roll's
-    /// die). The clock, span facts, a roll's `action.attack` and `round.previousDefenceCrit` all
-    /// come as events.
+    /// R56/R58's invariant: an action's situation is the one it began in with its events applied,
+    /// whole. Its one-query inputs (`Situation.isOneQueryInput`: a cast's `check.spell`, a roll's
+    /// die, a hit's `hit.*`) do not outlive it; the clock, span facts, a roll's `action.attack` and
+    /// `round.previousDefenceCrit` all come as events.
     func testTheSituationAfterAnActionIsTheOneBeforeWithItsEvents() throws {
         let real = ActionLayer(engine: try XCTUnwrap(CombatRollTests.real, "run make rules-json"))
-        func strip(_ s: Situation) -> Situation {
-            var s = s
-            for name in s.facts.keys where Situation.isOneQueryInput(name) { s.facts[name] = nil }
-            return s
-        }
         func check(_ layer: ActionLayer, _ a: Action, _ s: Situation, line: UInt = #line) {
             let r = layer.perform(a, in: s)
-            XCTAssertEqual(strip(r.situation), strip(s.applying(r.events, book: layer.engine.book)), "\(a)", line: line)
+            XCTAssertEqual(r.situation, s.applying(r.events, book: layer.engine.book), "\(a)", line: line)
+            XCTAssertFalse(r.situation.facts.keys.contains { Situation.isOneQueryInput($0) && s.facts[$0] == nil },
+                           "\(a) leaves no one-query input behind", line: line)
         }
         var spans = situation(["round.parries": 2, "choice.vorstoss": true, "choice.wut": true, "choice.brace": true, "choice.upkeep": true],
                               pools: magic)
@@ -259,7 +256,17 @@ final class ClockTests: XCTestCase {
                                                    "loadout.weapon.kind": "ranged", "loadout.weapon.ladezeit": 4,
                                                    "loadout.weapon.instance": "armbrust1", "item.armbrust1.loaded": false])
         check(real, .take(choice: "laden"), laden)
-        check(real, .takeHit(tp: 9), ProcessTests.situation(facts: ["attr.KO": 12], base: ["rs": 2, "leCurrent": 30]))
+        check(real, .advance(process: "laden"), real.perform(.take(choice: "laden"), in: laden).situation)
+        let hit = ProcessTests.situation(facts: ["attr.KO": 12], base: ["rs": 2, "leCurrent": 30])
+        check(real, .takeHit(tp: 9), hit)
+        XCTAssertNil(real.perform(.takeHit(tp: 9), in: hit).situation.facts["hit.tp"], "the hit's facts do not outlive it")
+        check(layer, .pay(.asp, 3), spans)
+        check(layer, .state(rule: "st-braced", levels: 1), spans)
+        var talent = ProcessTests.situation(facts: ["attr.MU": 14, "attr.KO": 12, "fw.TAL_8": 6], base: [:])
+        talent.rolls = [5, 5, 5]
+        check(real, .check(CheckRequest(kind: .talent, id: "TAL_8", attributes: ["MU", "MU", "KO"])), talent)
+        let cast = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: spans)
+        XCTAssertNil(cast.situation.facts["check.spell"], "the cast's own inputs do not outlive it")
     }
 
     /// Events of the new kinds round-trip through JSON; a `stated` without a value removes the
@@ -276,7 +283,8 @@ final class ClockTests: XCTestCase {
         XCTAssertNil(after.facts["round.parries"])
         XCTAssertEqual(after.facts["action.attack"]?.value, "hit")
         XCTAssertEqual(after.facts["loadout.shield"]?.value, .null)
-        XCTAssertEqual(try JSONDecoder().decode(Clock.self, from: Data(#"{"minutes": 4}"#.utf8)), Clock(round: 0, minutes: 4))
+        XCTAssertEqual(try JSONDecoder().decode(Clock.self, from: Data(#"{"minutes": 4}"#.utf8)), Clock(round: 1, minutes: 4))
+        XCTAssertEqual(try JSONDecoder().decode(Clock.self, from: Data(#"{}"#.utf8)), Clock())
         XCTAssertEqual(Situation(owned: [:], facts: []).fact("process.zielen.x")?.value, nil, "one segment after process.")
         XCTAssertEqual(Situation(owned: [:], facts: []).fact("process.zielen")?.value, .int(0))
     }

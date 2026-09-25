@@ -218,12 +218,19 @@ extension Situation {
 }
 
 extension Situation {
-    /// The facts an action states for its own evaluation only (R56): its one-query inputs, which
-    /// are no lasting state and so no `stated` event. They are a check's (`check.*`, `fw.current`),
+    /// The facts an action states for its own evaluation only (R56, R58): its one-query inputs,
+    /// which are no lasting state, so no `stated` event, and which `ActionResult.situation` does
+    /// not keep (they go back to what the situation stated before the action). They are a check's (`check.*`, `fw.current`),
     /// a cast's (`choice.spellModification.*` beside `check.*`), a roll's die and declaration
     /// (`roll.*`, `action.defence`, `action.with`), a hit's (`hit.*`) and a query's own
     /// (`query.*`). A roll's outcome (`action.attack`) and `round.previousDefenceCrit` last: they are
     /// `stated`.
+    /// A sheet base value an action states for its own evaluation only (R58): a check's stages
+    /// (`check.attribute(index: i)`, the Probe's attributes as the check's sheet).
+    public static func isOneQueryBase(_ query: String) -> Bool {
+        TargetRef(query).name.hasPrefix("check.")
+    }
+
     public static func isOneQueryInput(_ name: String) -> Bool {
         let prefixes = ["check.", "roll.", "hit.", "query.", "choice.spellModification."]
         return prefixes.contains { name.hasPrefix($0) } || ["fw.current", "action.defence", "action.with"].contains(name)
