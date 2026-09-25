@@ -26,13 +26,20 @@ clauses:
       Kettenwaffen können für beidhändigen Kampf nicht genutzt werden (außer in Kombination mit
       einem Schild).
     effects:
-      - forbid: { loadout: { dualWield: true, any: { twoHandedOnly: true } } }
-      - forbid: { loadout: { dualWield: true, any: { technique: Kettenwaffen }, not: { other: shield } } }
-      - allow: { loadout: { dualWield: true, any: { technique: Raufen } } }
-        ruling: raufen-double-attack
-        # Each fist counts as one of the two weapons: fist and fist, or weapon and fist. The fist
-        # in the off hand takes ZW4 like any other item. FORMAT: `allow` overrides the default
-        # that Raufen fills both hands.
+      - when: { loadout.twoHanded: true }
+        forbid: { what: { loadout: other } }
+        because: keine Waffen, die man mit zwei Händen führen muss
+        # No second piece beside a weapon that needs both hands (`loadout.other` is the second
+        # piece: a weapon, a Parierwaffe or a shield).
+      - when: { any: [{ loadout.weapon.technique: CT_6 }, { loadout.other.technique: CT_6 }], not: { loadout.other: shield } }
+        forbid: { what: { loadout: other } }
+        because: Kettenwaffen im beidhändigen Kampf nur mit einem Schild
+        # Kettenwaffen is CT_6: with a Morgenstern the second piece may be a shield, not a
+        # second weapon (situation 11.10).
+      # Raufen in a hand is allowed, the default: each fist counts as one of the two weapons,
+      # fist and fist, or weapon and fist (ruling raufen-double-attack, on ZW2's offer). The fist
+      # in the off hand takes ZW4 like any other item. The old `allow` overrode the default that
+      # Raufen fills both hands; allowed is the default, so it has no effect of its own.
 
   - id: ZW2
     text: >
@@ -41,13 +48,16 @@ clauses:
       gegen die einzelnen Angriffe verwenden. Für jeden Treffer werden die Trefferpunkte einzeln
       bestimmt und mit RS und Lebensenergie des Getroffenen verrechnet.
     effects:
-      - offer:
-          action: doubleAttack
-          requires: { loadout: { dualWield: true } }
-          costs: action
-          then: [{ attack: mainHand }, { attack: offHand }]
-          # FORMAT: one action producing two separate rolls, each with its own breakdown and
-          # its own damage. An action shape, not a modifier.
+      - when: { not: { loadout.other: null } }
+        offer: { choice: doubleAttack }
+        ruling: raufen-double-attack
+        # With a second piece in hand (a fist counts, ruling raufen-double-attack). The double
+        # attack is the hero's Aktion (the old `costs: action`). It is two rolls, the main hand's
+        # and then the off hand's, `at(with: mainHand)` and `at(with: offHand)`, each with its own
+        # breakdown and its own damage (the old `then`); making it sets `round.doubleAttack`,
+        # which ZW3 reads for the rest of the round.
+        # FORMAT: one action producing two separate rolls, each with its own breakdown and
+        # its own damage. An action shape, not a modifier.
 
   - id: ZW3
     text: >
@@ -58,11 +68,12 @@ clauses:
       Verteidigung mit einem Schild, sehr wohl aber beim Angriff mit diesem. Durch die
       Sonderfertigkeiten Beidhändiger Kampf I-II kann dieser Abzug gesenkt werden.
     effects:
-      - id: ZW3.penalty      # named so that SA_42 can lower exactly this line
-        when: { round.doubleAttack: true, not: { action.defence: shieldParry } }
+      - when: { round.doubleAttack: true, not: { action.defence: shieldParry } }
         add: { to: [at, pa, aw], value: -2 }
-        lasts: round
         ruling: zw3-earlier-defences
+        # SA_42.BH1 lowers this line with an add of its own under the same `when`. "In der
+        # laufenden Kampfrunde" (the old `lasts: round`): `round.doubleAttack` is a round fact,
+        # true from the double attack to the end of the round.
         # From the double attack on: a defence rolled earlier in the round is not charged.
         # FORMAT: a penalty switched on by an action and lasting to the end of the round —
         # a round-scoped fact written by the double attack, read by every later check.
@@ -74,9 +85,9 @@ clauses:
       Erschwernis gilt nicht bei der Verteidigung mit einem Schild, sehr wohl aber beim Angriff
       mit diesem.
     effects:
-      - id: ZW4.offHand      # named so that ADV_5 can remove exactly this line
-        when: { hand: off, not: { action.defence: shieldParry } }
+      - when: { action.with: offHand, not: { action.defence: shieldParry } }
         add: { to: [at, pa], value: -4 }
+        # ADV_5.V2 suppresses this clause's line; schilde.SCH5 too, for a shield parry.
         # Not AW: a dodge is made with no weapon. Applies to every attack or parry made
         # with the off-hand item, double attack or not.
 
@@ -88,7 +99,8 @@ clauses:
     text: Als Kampfsonderfertigkeiten dürfen bei beiden Angriffen nur Basismanöver ausgeführt werden.
     effects:
       - when: { round.doubleAttack: true }
-        forbid: { manoeuvre: { kind: spezialmanoever } }
+        forbid: { what: { manoeuvre: { kind: spezialmanoever } } }
+        because: bei beidhändigem Angriff nur Basismanöver
 
   - id: ZW7
     text: >
@@ -96,16 +108,21 @@ clauses:
       möchte. Auch hier gelten die entsprechenden Abzüge von beidhändigem Kampf und Kampf mit der
       falschen Hand.
     effects:
-      - offer: { choice: parryWith, among: [mainHand, offHand] }
+      - offer: { choice: parryWith, options: [mainHand, offHand] }
         # The penalties are ZW3 and ZW4 themselves; this clause only makes both hands a choice.
+        # The hand picked is the parry's `with:` (`pa(with: offHand)`), which ZW4 reads as
+        # `action.with`.
 
   - id: ZW8
     text: >
       Sollte der Kämpfer einen Patzer würfeln, so kann er keine zweite Attacke würfeln. Würfelt
       er den Patzer erst bei der zweiten Attacke, dann gilt die erste dennoch als gelungen.
     effects:
-      - when: { action: doubleAttack, action.attack: first, result: patzer }
-        cancel: { attack: second }
+      - when: { round.doubleAttack: true, roll.firstAttack: patzer }
+        forbid: { what: { attack: offHand } }
+        because: Patzer bei der ersten Attacke, keine zweite
+        # The second attack is the off hand's. A Patzer on the second leaves the first standing:
+        # nothing to encode.
 
   - id: ZW9
     text: >

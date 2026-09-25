@@ -15,7 +15,7 @@ source:
   page: 249
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # Optolith's text ends "Mehr zu Strukturpunkten siehe Seite 349"; the page does not have it.
 
 clauses:
@@ -24,22 +24,25 @@ clauses:
       Hierzu wird eine Attacke gegen den Schild durchgeführt, gegen die der Gegner mit einer
       Parade mit dem Schild oder Ausweichen verteidigen darf.
     effects:
-      - offer:
-          manoeuvre: schildspalter
-          opponent_may_only: [shieldParry, aw]
-          ruling: [sf-technique-lists, manoeuvre-combination]
-      - when: { action.manoeuvre: schildspalter }
+      - offer: { choice: schildspalter }
+        ruling: [sf-technique-lists, manoeuvre-combination]
+      - when: { choice.schildspalter: true }
+        forbid: { what: { defence: [opponent.weaponParry] } }
+        because: gegen Schildspalter nur Schildparade oder Ausweichen
+        # The old offer's `opponent_may_only: [shieldParry, aw]`: what the opponent may not do.
+      - when: { choice.schildspalter: true }
         tell: { to: opponent, text: "Nur Schildparade oder Ausweichen" }
         # Opponents are not modelled (ADR-0005): printed on the announcement and the defence
         # screen. Today the note says only "Schaden gegen Schild-SP" (CombatManeuver.infoText).
       - when: { opponent.manoeuvre: schildspalter }
-        forbid: { defence: weaponParry }
+        forbid: { what: { defence: weaponParry } }
+        because: gegen Schildspalter nur Schildparade oder Ausweichen
         ruling: schildspalter-against-hero
 
   - id: SS2
     text: Für eine Parade mit dem Schild kann der Parade-Bonus des Schildes nicht genutzt werden.
     effects:
-      - when: { action.manoeuvre: schildspalter }
+      - when: { choice.schildspalter: true }
         tell: { to: opponent, text: "Schildparade ohne Parade-Bonus des Schildes" }
       - when: { opponent.manoeuvre: schildspalter, action.defence: shieldParry }
         suppress: { line: { line: schilde.SCH3 } }
@@ -53,14 +56,25 @@ clauses:
       Misslingt die Parade oder das Ausweichen, wird der Schaden von den Strukturpunkten des
       Schildes abgezogen. Fallen diese auf 0, ist der Schild zerstört.
     effects:
-      - when: { action.manoeuvre: schildspalter, action.attack: hit }
+      - when: { choice.schildspalter: true, action.attack: hit }
         tell: { to: opponent, text: "TP gehen auf die Strukturpunkte des Schildes; bei 0 ist er zerstört" }
         # The damage roll is the attack's own (weapon TP, plus Wuchtschlag if combined under
         # manoeuvre-combination). It is the GM's to subtract (ADR-0005).
-      - when: { opponent.manoeuvre: schildspalter, action.defence: failed }
-        damage: { to: loadout.shield.structurePoints, not: le }
-        then: { when: { loadout.shield.structurePoints: { max: 0 } }, destroy: loadout.shield }
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure }
+        item: { instance: { loadout: shield }, change: { structurePoints: { of: hit.tp, times: -1 } } }
         ruling: schildspalter-against-hero
+        # The shield's current StP go down by the TP. "Misslingt die Parade oder das
+        # Ausweichen" is the defence roll's result (the old `action.defence: failed`).
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure }
+        suppress: { line: { line: schaden.S1 } }
+        because: die TP gehen auf die Strukturpunkte des Schildes, nicht auf die LeP
+        ruling: schildspalter-against-hero
+        # The old `damage: { …, not: le }`: nothing of this hit reaches the hero's LeP.
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure, loadout.shield.structurePoints: { atMost: 0 } }
+        item: { instance: { loadout: shield }, change: { destroyed: true } }
+        ruling: schildspalter-against-hero
+        # "Fallen diese auf 0": read after the StP change above, as its event updates the fact;
+        # a destroyed shield leaves the loadout.
         # The player states the opponent's manoeuvre with a toggle on the defence screen.
         # FORMAT: damage to an item, not to the hero. Needs the shield's current StP, which the
         # app does not keep yet (Shield.structurePoints is the maximum, shown on HeroDetailView).

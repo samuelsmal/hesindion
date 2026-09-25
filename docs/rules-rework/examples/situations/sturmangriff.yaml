@@ -6,70 +6,79 @@
 #   5.14 in Platte (current GS 5: TP +5)       5.15 GS 3: not offered
 #   5.9  not offered on horseback (reiterkampf.RK3)
 # Open rulings named without a prefix live in ../rules/rulings.yaml once added.
+# The announced Sturmangriff is `choice.sturmangriff` (the old `manoeuvre: sturmangriff`), the
+# run-up in Schritt `action.runUp` (the old `runUp`). "On a hit" / "on a miss" is
+# `action.attack: hit` / `miss`. GS: `gs` is the current GS, `gsNatural` the natural one (the old
+# `gs: { natural, current }`); unless a situation says otherwise both are 8. A TP formula is a
+# comment.
 
-hero: { at: 14, pa: 8, aw: 7, gs: 8 }
+hero: { values: { at: 14, pa: 8, aw: 7, gs: 8, gsNatural: 8 } }
 
 situations:
 
   - id: "10.1"
     name: Less than 4 Schritt run-up
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert } }
-    choose: { runUp: 3 }
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { action.runUp: 3 }
     expect:
-      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST1 }]
+      notOffered: [{ choice: sturmangriff, because: SA_62.ST1 }]
     appToday: not offered at all on foot
 
   - id: "10.2"
     name: With a Dolch (Dolche — not on Sturmangriff's list)
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Dolch } }
-    choose: { runUp: 4 }
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Dolch }
+    choose: { action.runUp: 4 }
     expect:
-      notOffered: [{ manoeuvre: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
+      notOffered: [{ choice: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
     appToday: same, but only because it is never offered on foot
 
   - id: "10.3"
     name: With Finte
-    hero: { abilities: { SA_62: 1, SA_48: 1 }, loadout: { weapon: Schwert } }
+    hero: { abilities: { SA_62: 1, SA_48: 1 } }
+    loadout: { weapon: Schwert }
     expect:
-      not_combinable: [{ manoeuvres: [sturmangriff, finte], because: SA_62.ST4 }]
+      legal: { combinations: [{ choices: [sturmangriff, finte], allowed: false, because: SA_62.ST4 }] }
 
   - id: "10.4"
     name: The attack misses
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: miss }
     expect:
       at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
-      on_miss:
-        told: [{ opponent: passierschlag, from: SA_62.ST3 }]
+      texts: [{ opponent: passierschlag, from: SA_62.ST3 }]     # on the miss
     appToday: not offered at all on foot
 
   - id: "10.5"
     name: GS raised above the natural GS — the natural-GS cap binds
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert }, gs: { natural: 8, current: 14 } }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 }, values: { gs: 14, gsNatural: 8 } }   # current 14, natural 8
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
     expect:
-      on_hit:
-        tp:
-          total: 8
-          lines: [{ value: 8, from: SA_62.ST2, formula: "min(2 + ⌈14/2⌉, 10, 8)", ruling: [SA_62.sturmangriff-gs, round-up] }]
+      tp:                           # on the hit
+        total: 8
+        lines: [{ value: 8, from: SA_62.ST2, ruling: [SA_62.sturmangriff-gs, round-up] }]   # min(2 + ⌈14/2⌉, 10, 8)
     note: 2 + 7 = 9 would be the uncapped bonus; the natural GS 8 caps it
 
   - id: "10.6"
     name: GS 20, natural 12 — the +10 cap binds
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: Schwert }, gs: { natural: 12, current: 20 } }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 }, values: { gs: 20, gsNatural: 12 } }  # current 20, natural 12
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
     expect:
-      on_hit:
-        tp:
-          total: 10
-          lines: [{ value: 10, from: SA_62.ST2, formula: "min(2 + ⌈20/2⌉, 10, 12)" }]
+      tp:                           # on the hit
+        total: 10
+        lines: [{ value: 10, from: SA_62.ST2 }]     # min(2 + ⌈20/2⌉, 10, 12)
 
   - id: "10.7"
     name: With Wuchtschlag I, GS 8
-    hero: { abilities: { SA_62: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvres: [sturmangriff, wuchtschlag], tier: { wuchtschlag: 1 }, runUp: 4 }
+    hero: { abilities: { SA_62: 1, SA_67: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, choice.wuchtschlag: 1, action.runUp: 4, action.attack: hit }
     expect:
-      combinable: [{ manoeuvres: [sturmangriff, wuchtschlag], from: kampfsonderfertigkeiten.KS5 }]
+      legal: { combinations: [{ choices: [sturmangriff, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
       at: { total: -4, lines: [{ value: -2, from: SA_62.ST4 }, { value: -2, from: SA_67.W1 }] }
       tp: { total: 8, lines: [{ value: 6, from: SA_62.ST2 }, { value: 2, from: SA_67.W1 }] }
       # Near the cap, at GS 16,
@@ -79,9 +88,9 @@ situations:
 
   - id: "10.8"
     name: Unarmed (Raufen — on the list)
-    hero: { abilities: { SA_62: 1 }, loadout: { weapon: null } }
-    choose: { manoeuvre: sturmangriff, runUp: 4 }
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: null }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
     expect:
       at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
-      on_hit:
-        tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2, formula: "2 + ⌈8/2⌉" }] }
+      tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2 }] }        # on the hit: 2 + ⌈8/2⌉

@@ -15,8 +15,7 @@ clauses:
     text: >
       Der Held erleidet keine Erschwernisse bei Fertigkeitsproben, wenn er die falsche Hand
       benutzt.
-    status: unencoded
-    why: >
+    unencoded: >
       The app has no notion of which hand a talent check uses, and no rule in these examples
       puts a penalty on it. Shown as text on the hero sheet.
 
@@ -25,7 +24,8 @@ clauses:
       Im Kampf hebt der Vorteil alle Abzüge auf, die durch das Führen einer Waffe mit der
       falschen Hand anfallen.
     effects:
-      - suppress: { line: { line: beidhaendiger-kampf.ZW4.offHand } }
+      - suppress: { line: { line: beidhaendiger-kampf.ZW4 } }
+        because: Beidhändig hebt die Abzüge der falschen Hand auf
         # FORMAT: cancels another rule's line. The breakdown shows nothing for the off hand,
         # and "not applied: Falsche Hand — aufgehoben durch Beidhändig" in the not-applied list.
         # Not ZW3's −2: that is coordination, not the wrong hand.

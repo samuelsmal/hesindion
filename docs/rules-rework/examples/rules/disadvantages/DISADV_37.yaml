@@ -29,26 +29,29 @@ clauses:
       Eigenschaft konfrontiert wird, muss er eine Probe auf Willenskraft bestehen, um sich zu
       beherrschen.
     effects:
-      - offer:
-          check: { talent: Willenskraft, application: null }
-          cause: { rule: DISADV_37, option: sid }
-          when: gm.fact.trigger
-          ruling: schlechte-eigenschaft-check
-          # FORMAT: a check the rule *offers*, not a modifier on one; its trigger is a GM fact
-          # the app cannot see. `application: null`: none of Willenskraft's Anwendungsgebiete
-          # (Bedrohungen, Bekehren & Überzeugen, Betören, Einschüchtern, Überreden standhalten)
-          # is "sich beherrschen", so no Fertigkeitsspezialisierung counts.
-          # Belastung does not reach it (COND_1.belastung-reach: not a movement talent); Schmerz
-          # and the other Zustände on every check do.
+      - when: { gmFact.trigger: DISADV_37 }
+        check: { of: { talent: TAL_23 } }
+        ruling: schlechte-eigenschaft-check
+        # FORMAT: a check the rule *offers*, not a modifier on one; its trigger is a GM fact
+        # the app cannot see. Willenskraft is TAL_23; the check's cause is this rule and the
+        # hero's Eigenschaft (`option`, the old `cause: { rule: DISADV_37, option: sid }`),
+        # which its line carries. What the app offers (an action on the sheet, a hint, text
+        # only) is the open ruling; until it is answered this applies nothing.
+        # No Anwendungsgebiet (the old `application: null`): none of Willenskraft's
+        # Anwendungsgebiete (Bedrohungen, Bekehren & Überzeugen, Betören, Einschüchtern,
+        # Überreden standhalten) is "sich beherrschen", so no Fertigkeitsspezialisierung counts.
+        # Belastung does not reach it (COND_1.belastung-reach: not a movement talent); Schmerz
+        # and the other Zustände on every check do.
 
   - id: SE2
     text: >
       Gelingt ihm diese Probe, ist alles in Ordnung, ansonsten muss er entsprechend der
       Schlechten Eigenschaft agieren.
     effects:
-      - on_failure: { log: "gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }
+      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23, check.result: failure }
+        tell: { to: player, text: "gibt der Schlechten Eigenschaft nach" }
         # Roleplay: nothing the app computes changes. The result is logged with the Eigenschaft's
-        # name so the table can see it later.
+        # name so the table can see it later (the old `on_failure: { log: … }` of SE1's check).
 
   - id: SE3
     text: Seine Schlechte Eigenschaft hat ihn so lange im Griff, wie er dem Auslöser ausgesetzt ist.
@@ -61,9 +64,12 @@ clauses:
       Der Meister kann für die Probe auf Willenskraft entsprechend der Stärke des Auslösers
       Erschwernisse oder Erleichterungen aussprechen.
     effects:
-      - offer: { gm.modifier: { on: SE1, default: 0 } }
+      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23 }
+        ask: { fact: gmFact.triggerModifier, who: gm }
+      - when: { gmFact.trigger: DISADV_37, check.talent: TAL_23 }
+        add: { to: check.modifier, value: { of: gmFact.triggerModifier } }
         # A GM input, not a ruling (README "How rulings are kept"): shown as its own line,
-        # "Meister (Stärke des Auslösers)".
+        # "Meister (Stärke des Auslösers)", 0 unless the GM says otherwise (the old `default: 0`).
 
   - id: SE5
     text: >
@@ -87,7 +93,11 @@ clauses:
       Verschwendungssucht: Geld bleibt nicht lange im Besitz des Helden. Er gibt es mit vollen Händen (für sinnlose Dinge) aus. AP-Wert: –5 Abenteuerpunkte
       Sikaryan-Durst (nur für Sikaryan-Räuber; automatisch vergeben bei Zustand Sikaryan-Verlust): Diese Schlechte Eigenschaft sorgt dafür, dass ein Sikaryan-Räuber seinen Hunger stillen will. Je höher sein Sikaryan-Verlust ist, desto eindringlicher will er dem Verlangen nachgehen und ist bereit, seine Tarnung aufzugeben und sich auf den nächsten Kulturschaffenden zu stürzen.
     effects:
-      - provides: { text_by_option: sid }
+      - provide:
+          name: DISADV_37.eigenschaft
+          value: { 1: Aberglaube, 2: Autoritätsglaube, 3: Geiz, 4: Goldgier, 5: Jähzorn, 6: Kleptomanie, 7: Naiv, 8: Neugier, 9: Rachsucht, 10: Spielsucht, 11: Verschwendungssucht, 15: Sikaryan-Durst }
+        # Keyed by the hero file's `option` (sid): the name, whose line of this clause's text
+        # (the old `text_by_option: sid`) is the trigger.
         # The line for the hero's own Eigenschaft is what the sheet and the SE1 check show as
         # the trigger ("zweifelt nicht an den Worten höhergestellter Personen …"), so the player
         # sees what they are resisting. Exhibitionismus, Lüsternheit and Voyeurismus (sid 12–14)

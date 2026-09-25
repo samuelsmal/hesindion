@@ -140,6 +140,10 @@
       "owner": "player",
       "type": "string"
     },
+    "action.runUp": {
+      "owner": "player",
+      "type": "int"
+    },
     "action.with": {
       "owner": "player",
       "type": "string"
@@ -174,6 +178,10 @@
     },
     "clock.minutes": {
       "owner": "round",
+      "type": "int"
+    },
+    "hero.gs": {
+      "owner": "derived",
       "type": "int"
     },
     "hero.has": {
@@ -228,6 +236,10 @@
       "owner": "loadout",
       "type": "int"
     },
+    "loadout.other.technique": {
+      "owner": "loadout",
+      "type": "string"
+    },
     "loadout.reach": {
       "owner": "loadout",
       "type": "string"
@@ -239,6 +251,14 @@
     "loadout.shield.size": {
       "owner": "loadout",
       "type": "string"
+    },
+    "loadout.shield.structurePoints": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.twoHanded": {
+      "owner": "loadout",
+      "type": "bool"
     },
     "loadout.weapon": {
       "owner": "loadout",
@@ -260,9 +280,17 @@
       "owner": "sheet",
       "type": "int"
     },
+    "query.result": {
+      "owner": "derived",
+      "type": "int"
+    },
     "round.defencesMade": {
       "owner": "round",
       "type": "int"
+    },
+    "round.defendedThisAttack": {
+      "owner": "round",
+      "type": "bool"
     },
     "round.dodges": {
       "owner": "round",
@@ -279,6 +307,10 @@
     "round.parries": {
       "owner": "round",
       "type": "int"
+    },
+    "round.phase": {
+      "owner": "round",
+      "type": "string"
     },
     "rulesets": {
       "owner": "gm",
@@ -324,7 +356,8 @@
     "loaded",
     "strung",
     "structurePoints",
-    "damaged"
+    "damaged",
+    "destroyed"
   ],
   "kinds": [
     "specialAbility",
@@ -535,6 +568,9 @@
       ]
     },
     "gs": {
+      "contexts": []
+    },
+    "gsNatural": {
       "contexts": []
     },
     "ini": {

@@ -20,16 +20,24 @@ clauses:
       um -1 erschweren, was beim Gelingen die Verteidigung des Gegners um -2 pro Stufe der
       Sonderfertigkeit erschwert.
     effects:
-      - offer:
-          manoeuvre: finte
-          tiers: up_to_owned           # any Stufe up to the owned one, chosen per attack
-          ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
-      - when: { action.manoeuvre: finte }
-        add: { to: at, value: -1, per: chosen_tier }
-      - when: { action.manoeuvre: finte, action.attack: hit }
-        opponent_add: { to: [pa, aw], value: -2, per: chosen_tier }
+      # The manoeuvre is announced as `choice.finte`, whose value is the Stufe announced: any
+      # Stufe up to the owned one (`level`), chosen per attack — one offer per owned Stufe.
+      - when: { level: 1 }
+        offer: { choice: finte, options: [1] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 2 }
+        offer: { choice: finte, options: [1, 2] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 3 }
+        offer: { choice: finte, options: [1, 2, 3] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { choice.finte: { atLeast: 1 } }
+        add: { to: at, value: -1, per: choice.finte }
+      - when: { choice.finte: { atLeast: 1 }, action.attack: hit }
+        add: { to: [opponent.pa, opponent.aw], value: -2, per: choice.finte }
         # "Verteidigung" — parry or dodge, whichever the opponent uses.
-        # FORMAT: `chosen_tier` (the Stufe the player announced) is not `tier` (the Stufe owned).
+        # FORMAT: `per: choice.finte` counts the Stufe the player announced, not `level` (the
+        # Stufe owned).
 
   - id: F2
     text: "Erschwernis: -1/-2/-3"

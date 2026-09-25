@@ -19,8 +19,12 @@ clauses:
       üblich -2. Bei Stufe II der Sonderfertigkeit sinken die Erschwernisse zusätzlich zu dem
       Bonus aus Beidhändiger Kampf I um einen weiteren Punkt auf insgesamt 0.
     effects:
-      - raise: { line: beidhaendiger-kampf.ZW3.penalty, by: 1, per: tier, max_total: 0 }
+      - when: { round.doubleAttack: true, not: { action.defence: shieldParry } }
+        add: { to: [at, pa, aw], value: level }
         ruling: [sa42-dodge, sf-technique-lists]
+        # Lowers beidhaendiger-kampf.ZW3's −2 by 1 per Stufe: an add with ZW3's own targets and
+        # `when`, so it applies exactly where ZW3 does. At Stufe II the two come to 0, the old
+        # `max_total: 0`, which the Stufe (at most II) can never pass.
         # FORMAT: lowers another rule's penalty. The breakdown shows "Beidhändiger Kampf −2"
         # and "Beidhändiger Kampf I +1" as two lines, the second marked as lowering the first —
         # or one line "−1 (−2, gelindert durch SF I)"; a display choice for the design.
@@ -28,8 +32,9 @@ clauses:
   - id: BH2
     text: "Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter"
     effects:
-      - requires: { loadout.mainHand.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12], loadout.offHand.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12] }
+      - require: { that: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12], loadout.other.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12] } }
         ruling: sf-technique-lists
+        # The main hand is `loadout.weapon`, the off hand `loadout.other`.
         # Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter. BH1 lowers the
         # penalty only when both pieces of the double attack are on the list: a Morgenstern
         # (Kettenwaffen) with a shield pays the full −2. A fist as one hand is ruling

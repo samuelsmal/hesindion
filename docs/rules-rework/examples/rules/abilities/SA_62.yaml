@@ -21,11 +21,13 @@ clauses:
       Anlaufstrecke von mindestens 4 Schritt hat und über eine GS von mindestens 4 verfügt. Die
       Bewegung ist Teil der Aktion, mit der man angreift.
     effects:
-      - offer:
-          manoeuvre: sturmangriff
-          requires: { runUp: { min: 4 }, hero.gs: { min: 4 } }
-          ruling: [sturmangriff-gs, sf-technique-lists]
-          # runUp is asked (a toggle, "4 Schritt Anlauf?"); GS is the hero's current GS.
+      - offer: { choice: sturmangriff }
+        ruling: [sturmangriff-gs, sf-technique-lists]
+      - require: { that: { action.runUp: { atLeast: 4 }, hero.gs: { atLeast: 4 } }, for: { choice: sturmangriff } }
+        because: mindestens 4 Schritt Anlauf und GS 4
+        ruling: sturmangriff-gs
+        # `action.runUp` is asked (a toggle, "4 Schritt Anlauf?"): an unstated fact is a
+        # question. `hero.gs` is the hero's current GS, the `gs` query's result.
 
   - id: ST2
     # A splice: the +10 sentence is the third of the Regel, the natural-GS sentence its last
@@ -35,9 +37,11 @@ clauses:
       maximal jedoch insgesamt um +10 TP. […] Maximal kann ein TP-Bonus in Höhe der natürlichen
       GS entstehen.
     effects:
-      - when: { action.manoeuvre: sturmangriff, action.attack: hit }
-        add: { to: tp, value: "min(2 + hero.gs / 2, 10, hero.gs.natural)" }
+      - when: { choice.sturmangriff: true, action.attack: hit }
+        add: { to: tp, value: { of: [gs, 4], per: 2, round: up, max: [10, gsNatural] } }
         ruling: [round-up, sturmangriff-gs, sturmangriff-cap-scope]
+        # 2 + ⌈GS/2⌉ = ⌈(GS + 4)/2⌉, with the current GS (`gs`), at most 10 and at most the
+        # natural GS (`gsNatural`): both caps bind this one line (sturmangriff-cap-scope).
         # FORMAT: a formula with two caps, and a ruling on which value it reads. The caps only
         # bind above the unhindered range: for current GS 4–16, 2 + ⌈GS/2⌉ ≤ 10, and it exceeds
         # the natural GS only when the current GS is raised above it (a spell, an elixir).
@@ -47,7 +51,7 @@ clauses:
       Dieser Angriff kann regulär abgewehrt werden. Sollte der Sturmangriff misslingen, erhält
       der Verteidiger die Gelegenheit für einen Passierschlag.
     effects:
-      - when: { action.manoeuvre: sturmangriff, action.attack: miss }
+      - when: { choice.sturmangriff: true, action.attack: miss }
         tell: { to: opponent, text: passierschlag }
         # Opponent side, display only (ADR-0005).
         # "Regulär abgewehrt" has no line: every defence stays allowed, the default. The
@@ -60,7 +64,7 @@ clauses:
       Erschwernis: -2
     # "[…]" is the natural-GS cap sentence, quoted in ST2.
     effects:
-      - when: { action.manoeuvre: sturmangriff }
+      - when: { choice.sturmangriff: true }
         add: { to: at, value: -2 }
       - forbid: { what: { manoeuvre: finte }, together: true }
         ruling: manoeuvre-combination

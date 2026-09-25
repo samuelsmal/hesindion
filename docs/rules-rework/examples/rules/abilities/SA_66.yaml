@@ -14,7 +14,7 @@ source:
   page: 250
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: V1
@@ -35,25 +35,27 @@ clauses:
     text: Dafür kann man diese Kampfrunde keine Verteidigung mehr ausführen.
     effects:
       - when: { choice.vorstoss: true }
-        forbid: { defence: [pa, aw], span: round }
+        forbid: { what: { defence: [pa, aw] } }
+        because: Vorstoß, keine Verteidigung in dieser Kampfrunde
         # Verteidigung: parry (weapon or shield) and dodge. The app does this today
         # (CombatRootView.defenseHardBlocked), from the moment the attack is announced.
+        # "Diese Kampfrunde": the forbid lasts as long as `choice.vorstoss`, which V3 offers
+        # with `span: round`.
 
   - id: V3
     text: Ein Vorstoß muss am Anfang der Runde angesagt werden.
     effects:
-      - offer:
-          choice: vorstoss
-          when: { round.phase: start }
-          span: round
-          # FORMAT: "Anfang der Runde" — as for SA_65.VH1 and SA_152.AD2. The app has no
-          # round-start step; the nearest it can check is "the hero has not yet acted or
-          # defended in this round". Three rules now want the same round-start announcement.
+      - when: { round.phase: start }
+        offer: { choice: vorstoss, span: round }
+        # FORMAT: "Anfang der Runde" — as for SA_65.VH1 and SA_152.AD2. The app has no
+        # round-start step; the nearest it can check is "the hero has not yet acted or
+        # defended in this round". Three rules now want the same round-start announcement.
 
   - id: V4
     text: Der Vorstoß kann nicht im Status Liegend ausgeführt werden.
     effects:
-      - requires: { not: { hero.state: STATE_10 } }
+      - require: { that: { not: { hero.has: STATE_10 } }, for: { choice: vorstoss } }
+        because: nicht im Status Liegend
         # Not offered while Liegend. Knocked down after announcing it: the page does not say
         # whether the defences come back; not asked here, as no case has come up.
 

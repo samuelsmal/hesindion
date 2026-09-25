@@ -19,7 +19,7 @@ clauses:
       nicht Erschwernisse von jeweils -3, sondern nur von jeweils -2.
     effects:
       - when: { loadout.weapon.technique: [CT_1, CT_4, CT_16] }   # VS2's list
-        change: { line: mehrfache-verteidigung.MV1.step, set: { value: -2 } }
+        replace: { line: { line: mehrfache-verteidigung.MV1 }, with: -2 }
         ruling: kampfstil-techniques
         # FORMAT: replaces another rule's constant. The breakdown shows one line,
         # "Mehrfache Verteidigung −4", marked as changed by Vinsalt-Stil — not two lines.
@@ -31,7 +31,6 @@ clauses:
       fights with one of these. "Zweihänder" is not a Kampftechnik name — it means CT_16
       Zweihandschwerter; Armbrüste is CT_1, Fechtwaffen CT_4. With an Armbrust in hand the
       style lowers the dodge penalty only, as a crossbow does not parry.
-    ruling: kampfstil-techniques
 
   - id: VS3
     text: >

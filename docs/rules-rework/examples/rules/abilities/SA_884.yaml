@@ -22,15 +22,14 @@ clauses:
       die sich maximal einen halben Schritt rechts und links von ihm befinden müssen, eine
       Schlachtreihe aufstellen.
     effects:
-      - offer:
-          choice: plaenklerFormation
-          span: whileFormed
-          ruling: plaenkler-mounted
-          # A fact the player states, for as long as the line stands — set and cleared at any
-          # point in the fight, not only at setup. The spacing (½ Schritt, left and right, three
-          # fighters) is the player's to judge; shown as text beside the toggle.
-          # FORMAT: a span that ends when the table says so, not at the end of a round or fight.
-      - forbid: { choice: plaenklerFormation, when: { hero.mounted: true } }
+      - offer: { choice: plaenklerFormation, span: whileFormed }
+        ruling: plaenkler-mounted
+        # A fact the player states, for as long as the line stands — set and cleared at any
+        # point in the fight, not only at setup. The spacing (½ Schritt, left and right, three
+        # fighters) is the player's to judge; shown as text beside the toggle.
+        # FORMAT: a span that ends when the table says so, not at the end of a round or fight.
+      - when: { hero.mounted: true }
+        forbid: { what: { choice: plaenklerFormation } }
         because: "nur zu Fuß: die Formation steht Schulter an Schulter"
         ruling: plaenkler-mounted
         # Mounting mid-fight ends the formation, and with it P2's bonus.
@@ -55,8 +54,10 @@ clauses:
       Alle Beteiligten müssen sich bei der Bildung der Formationen auf einen der beiden Boni
       einigen.
     effects:
-      - offer: { choice: plaenklerFormation.bonus, options: [at, vw], when: formed }
-        # One answer for the whole line, chosen when it forms; changing it means re-forming.
+      - when: { choice.plaenklerFormation: true }
+        offer: { choice: plaenklerFormation.bonus, options: [at, vw] }
+        # One answer for the whole line, chosen when it forms (the old `when: formed`); changing
+        # it means re-forming.
 
   - id: P4
     text: >

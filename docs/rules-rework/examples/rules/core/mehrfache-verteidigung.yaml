@@ -24,10 +24,13 @@ clauses:
       reagieren. Wiederholte Verteidigung wird aber zunehmend schwerer: Die erste Verteidigung
       ist nicht erschwert, jede weitere in der laufenden Kampfrunde um -3.
     effects:
-      - when: { check: [pa, aw], round.defencesMade: { min: 1 } }
-        add: { to: check, value: -3, per: round.defencesMade }
-        id: MV1.step          # named so SA_923 can change the step
-      - forbid: { second_defence_against: same_attack }
+      - when: { round.defencesMade: { atLeast: 1 } }
+        add: { to: [pa, aw], value: -3, per: round.defencesMade }
+        # SA_923.VS1 names this clause (`replace: { line: { line: mehrfache-verteidigung.MV1 } }`):
+        # the replace swaps this effect's value before `per`, keeping its targets and `when`.
+      - when: { round.defendedThisAttack: true }
+        forbid: { what: { defence: [pa, aw] } }
+        because: nur eine Verteidigung gegen einen Angriff
 
   - id: MV2
     text: >
@@ -43,11 +46,13 @@ clauses:
       Verteidigung zur Verfügung, deren Wert trotz der Abzüge nicht auf 0 gefallen ist, kann
       jedoch diese genutzt werden.
     effects:
-      - when: { check: [pa, aw], value.after: { max: 0 } }
-        forbid: { defence: this_kind }
+      - when: { query.result: { atMost: 0 } }
+        forbid: { what: { defence: [pa, aw] } }
+        because: Verteidigungswert 0 oder weniger
         ruling: zero-value
-        # FORMAT: a legality rule that reads the *result* of all other modifiers — it has to be
-        # evaluated after them, unlike every add.
+        # `query.result` is the queried defence's value after every other phase; legality runs
+        # last (spec §5.2), so it reads the result of all other modifiers. Each defence is its
+        # own query, so only the kind whose value reached 0 is blocked; another stays open.
 
   - id: MV4
     text: >

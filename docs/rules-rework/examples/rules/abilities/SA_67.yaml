@@ -19,14 +19,21 @@ clauses:
       Die Attacke wird um -2 pro Stufe der Sonderfertigkeit erschwert. Bei Erfolg werden die
       Trefferpunkte um 2 pro Stufe der Sonderfertigkeit erhöht.
     effects:
-      - offer:
-          manoeuvre: wuchtschlag
-          tiers: up_to_owned           # any Stufe up to the owned one, chosen per attack
-          ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
-      - when: { action.manoeuvre: wuchtschlag }
-        add: { to: at, value: -2, per: chosen_tier }
-      - when: { action.manoeuvre: wuchtschlag, action.attack: hit }
-        add: { to: tp, value: 2, per: chosen_tier }
+      # The manoeuvre is announced as `choice.wuchtschlag`, whose value is the Stufe announced:
+      # any Stufe up to the owned one (`level`), chosen per attack — one offer per owned Stufe.
+      - when: { level: 1 }
+        offer: { choice: wuchtschlag, options: [1] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 2 }
+        offer: { choice: wuchtschlag, options: [1, 2] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 3 }
+        offer: { choice: wuchtschlag, options: [1, 2, 3] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { choice.wuchtschlag: { atLeast: 1 } }
+        add: { to: at, value: -2, per: choice.wuchtschlag }
+      - when: { choice.wuchtschlag: { atLeast: 1 }, action.attack: hit }
+        add: { to: tp, value: 2, per: choice.wuchtschlag }
 
   - id: W2
     text: "Erschwernis: -2/-4/-6"

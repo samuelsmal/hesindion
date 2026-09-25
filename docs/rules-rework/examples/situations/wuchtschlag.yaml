@@ -1,77 +1,84 @@
 # Example 9 — Wuchtschlag. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # Weapons: Schwert (Schwerter, CT_12, 1W6+4), Dolch (Dolche, CT_3, 1W6+1).
 # Open rulings named without a prefix live in ../rules/rulings.yaml once added.
+# The announced Wuchtschlag is `choice.wuchtschlag`, its value the Stufe announced (the old
+# `manoeuvre: wuchtschlag, tier: n`); a line's old `tier` is that value, now a comment. "On a
+# hit" / "on a miss" is `action.attack: hit` / `miss`; the TP formula is a comment.
 
-hero: { at: 14, pa: 8, aw: 7 }
+hero: { values: { at: 14, pa: 8, aw: 7 } }
 
 situations:
 
   - id: "9.1"
     name: Wuchtschlag I with a Schwert, hits
-    hero: { abilities: { SA_67: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: wuchtschlag, tier: 1 }
+    hero: { abilities: { SA_67: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.wuchtschlag: 1, action.attack: hit }
     expect:
-      at: { total: -2, lines: [{ value: -2, from: SA_67.W1, tier: 1 }] }
-      on_hit:
-        tp: { total: 2, lines: [{ value: 2, from: SA_67.W1, tier: 1 }], formula: "1W6+4 +2" }
+      at: { total: -2, lines: [{ value: -2, from: SA_67.W1 }] }        # Stufe 1
+      tp: { total: 2, lines: [{ value: 2, from: SA_67.W1 }] }          # on the hit: 1W6+4 +2
     appToday: same
 
   - id: "9.2"
     name: Wuchtschlag III, used at III
-    hero: { abilities: { SA_67: 3 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: wuchtschlag, tier: 3 }
+    hero: { abilities: { SA_67: 3 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.wuchtschlag: 3, action.attack: hit }
     expect:
-      at: { total: -6, lines: [{ value: -6, from: SA_67.W1, tier: 3 }] }
-      on_hit:
-        tp: { total: 6, lines: [{ value: 6, from: SA_67.W1, tier: 3 }] }
+      at: { total: -6, lines: [{ value: -6, from: SA_67.W1 }] }        # Stufe 3
+      tp: { total: 6, lines: [{ value: 6, from: SA_67.W1 }] }          # on the hit, Stufe 3
     appToday: same
 
   - id: "9.3"
     name: Wuchtschlag III, the player chooses II
-    hero: { abilities: { SA_67: 3 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: wuchtschlag, tier: 2 }
+    hero: { abilities: { SA_67: 3 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.wuchtschlag: 2, action.attack: hit }
     expect:
-      at: { total: -4, lines: [{ value: -4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
-      on_hit:
-        tp: { total: 4, lines: [{ value: 4, from: SA_67.W1, tier: 2, ruling: tiered-manoeuvre-stufe }] }
+      at: { total: -4, lines: [{ value: -4, from: SA_67.W1, ruling: tiered-manoeuvre-stufe }] }   # Stufe 2
+      tp: { total: 4, lines: [{ value: 4, from: SA_67.W1, ruling: tiered-manoeuvre-stufe }] }     # on the hit, Stufe 2
     appToday: same (every Stufe up to the owned one is on the list)
 
   - id: "9.4"
     name: Wuchtschlag misses
-    hero: { abilities: { SA_67: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: wuchtschlag, tier: 1 }
+    hero: { abilities: { SA_67: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.wuchtschlag: 1, action.attack: miss }
     expect:
       at: { total: -2 }
-      on_miss: { tp: none }
+      tp: { total: 0 }              # the old `on_miss: { tp: none }`: no TP bonus without a hit
     appToday: same
 
   - id: "9.5"
     name: Wuchtschlag with a Dolch (Dolche — not on Wuchtschlag's list)
-    hero: { abilities: { SA_67: 1 }, loadout: { weapon: Dolch } }
+    hero: { abilities: { SA_67: 1 } }
+    loadout: { weapon: Dolch }
     expect:
-      notOffered: [{ manoeuvre: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
+      notOffered: [{ choice: wuchtschlag, because: SA_67.W3, ruling: sf-technique-lists }]
     appToday: offered (the catalog note on SA_67 says so on purpose, pending issue #14) — wrong
 
   - id: "9.6"
     name: Wuchtschlag unarmed (Raufen — on the list)
-    hero: { abilities: { SA_67: 1 }, loadout: { weapon: null } }
-    choose: { manoeuvre: wuchtschlag, tier: 1 }
+    hero: { abilities: { SA_67: 1 } }
+    loadout: { weapon: null }
+    choose: { choice.wuchtschlag: 1, action.attack: hit }
     expect:
-      at: { total: -2, lines: [{ value: -2, from: SA_67.W1, tier: 1 }] }
-      on_hit:
-        tp: { total: 2, lines: [{ value: 2, from: SA_67.W1, tier: 1 }], formula: "1W6 +2" }
+      at: { total: -2, lines: [{ value: -2, from: SA_67.W1 }] }        # Stufe 1
+      tp: { total: 2, lines: [{ value: 2, from: SA_67.W1 }] }          # on the hit: 1W6 +2
     appToday: same
 
   - id: "9.7"
     name: Wuchtschlag on horseback
-    hero: { abilities: { SA_67: 1 }, loadout: { weapon: Schwert }, mounted: true }
+    hero: { abilities: { SA_67: 1 } }
+    loadout: { weapon: Schwert, hero.mounted: true }
     expect:
-      offered: [{ manoeuvre: wuchtschlag, from: SA_67.W1 }]   # a Basismanöver: reiterkampf.RK3 allows it
+      offered: [{ choice: wuchtschlag, from: SA_67.W1 }]   # a Basismanöver: reiterkampf.RK3 allows it
     appToday: same
 
   - id: "9.8"
     name: Wuchtschlag together with Sturmangriff
-    hero: { abilities: { SA_67: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
-    expect: { combinable: [{ manoeuvres: [wuchtschlag, sturmangriff], from: kampfsonderfertigkeiten.KS5 }] }
+    hero: { abilities: { SA_67: 1, SA_62: 1 } }
+    loadout: { weapon: Schwert }
+    expect: { legal: { combinations: [{ choices: [wuchtschlag, sturmangriff], allowed: true, from: kampfsonderfertigkeiten.KS5 }] } }
     # the numbers are sturmangriff 10.7
     appToday: one manoeuvre per attack; SA_62 not offered on foot

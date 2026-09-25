@@ -1,101 +1,109 @@
 # Example 8 — Finte. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # Weapons: Schwert (Schwerter, CT_12), Morgenstern (Kettenwaffen, CT_6).
-# `opponent_lines` are printed as the opponent's own calculation; the hero's values do not move.
+# The opponent's lines (the old `opponent_lines`) are the queries `opponent.pa` / `opponent.aw`,
+# printed as the opponent's own calculation; the hero's values do not move. "Verteidigung" is
+# parry or dodge: `opponent.pa` stands for the one the opponent rolls unless a situation says
+# which (8.4). "On a hit" / "on a miss" is `action.attack: hit` / `miss`.
+# The announced Finte is `choice.finte`, its value the Stufe announced (the old
+# `manoeuvre: finte, tier: n`); a line's old `tier` is that value, now a comment.
+# Whether two manoeuvres combine is the situation's `legal.combinations` (the old
+# `not_combinable`); what the player is told is `texts` (the old `told`).
 # Rulings named here without a prefix live in ../rules/rulings.yaml
 # (sf-technique-lists, manoeuvre-combination, tiered-manoeuvre-stufe).
 
-hero: { at: 14, pa: 8, aw: 7 }
+hero: { values: { at: 14, pa: 8, aw: 7 } }
 
 situations:
 
   - id: "8.1"
     name: Finte I with a Schwert, hits
-    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: finte, tier: 1 }
+    hero: { abilities: { SA_48: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.finte: 1, action.attack: hit }
     expect:
-      at: { total: -1, lines: [{ value: -1, from: SA_48.F1, tier: 1 }] }
-      on_hit:
-        opponent_lines:
-          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1 }] }
+      at: { total: -1, lines: [{ value: -1, from: SA_48.F1 }] }                     # Stufe 1
+      "opponent.pa": { total: -2, lines: [{ value: -2, from: SA_48.F1 }] }          # on the hit, Stufe 1
     appToday: same
 
   - id: "8.2"
     name: Finte III, used at III
-    hero: { abilities: { SA_48: 3 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: finte, tier: 3 }
+    hero: { abilities: { SA_48: 3 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.finte: 3, action.attack: hit }
     expect:
-      at: { total: -3, lines: [{ value: -3, from: SA_48.F1, tier: 3 }] }
-      on_hit:
-        opponent_lines:
-          defence: { total: -6, lines: [{ value: -6, from: SA_48.F1, tier: 3 }] }
+      at: { total: -3, lines: [{ value: -3, from: SA_48.F1 }] }                     # Stufe 3
+      "opponent.pa": { total: -6, lines: [{ value: -6, from: SA_48.F1 }] }          # on the hit, Stufe 3
     appToday: same
 
   - id: "8.3"
     name: Finte III, the player wants Finte I
-    hero: { abilities: { SA_48: 3 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: finte, tier: 1 }
+    hero: { abilities: { SA_48: 3 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.finte: 1, action.attack: hit }
     expect:
-      offered: [{ manoeuvre: finte, tiers: [1, 2, 3], ruling: tiered-manoeuvre-stufe }]
-      at: { total: -1, lines: [{ value: -1, from: SA_48.F1, tier: 1, ruling: tiered-manoeuvre-stufe }] }
-      on_hit:
-        opponent_lines:
-          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, ruling: tiered-manoeuvre-stufe }] }
+      offered: [{ choice: finte, options: [1, 2, 3], ruling: tiered-manoeuvre-stufe }]
+      at: { total: -1, lines: [{ value: -1, from: SA_48.F1, ruling: tiered-manoeuvre-stufe }] }                  # Stufe 1
+      "opponent.pa": { total: -2, lines: [{ value: -2, from: SA_48.F1, ruling: tiered-manoeuvre-stufe }] }       # on the hit, Stufe 1
     appToday: only Finte III is offered (CombatAttackViews.availableManeuvers offers hero.finteTier), while Wuchtschlag offers every Stufe — wrong
 
   - id: "8.4"
     name: The opponent dodges instead of parrying
-    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: finte, tier: 1 }
-    opponent: { defends_with: aw }
+    hero: { abilities: { SA_48: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.finte: 1, action.attack: hit }
+    opponent: { defendsWith: aw }
     expect:
-      on_hit:
-        opponent_lines:
-          defence: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 1, applies_to: aw }] }
+      "opponent.aw": { total: -2, lines: [{ value: -2, from: SA_48.F1 }] }          # on the hit, Stufe 1; the old `applies_to: aw`
     appToday: the −2 line is shown for "the defence", but the manoeuvre's info text says "Gegner PA −2" (CombatManeuver.infoText) — the label is wrong for a dodge
 
   - id: "8.5"
     name: Finte with a Morgenstern (Kettenwaffen — not on Finte's list)
-    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Morgenstern } }
+    hero: { abilities: { SA_48: 1 } }
+    loadout: { weapon: Morgenstern }
     expect:
-      notOffered: [{ manoeuvre: finte, because: SA_48.F3, ruling: sf-technique-lists }]
+      notOffered: [{ choice: finte, because: SA_48.F3, ruling: sf-technique-lists }]
     appToday: offered (availableManeuvers checks no technique) — wrong
 
   - id: "8.6"
     name: Finte unarmed (Raufen — on the list)
-    hero: { abilities: { SA_48: 1 }, loadout: { weapon: null } }
+    hero: { abilities: { SA_48: 1 } }
+    loadout: { weapon: null }
     expect:
-      offered: [{ manoeuvre: finte, from: SA_48.F1 }]
+      offered: [{ choice: finte, from: SA_48.F1 }]
     appToday: same
 
   - id: "8.7"
     name: Finte together with Sturmangriff
-    hero: { abilities: { SA_48: 1, SA_62: 1 }, loadout: { weapon: Schwert } }
+    hero: { abilities: { SA_48: 1, SA_62: 1 } }
+    loadout: { weapon: Schwert }
     expect:
-      not_combinable: [{ manoeuvres: [finte, sturmangriff], because: SA_62.ST4 }]
-      told: "Sturmangriff lässt sich nicht mit Finte kombinieren (Sturmangriff)"
+      legal: { combinations: [{ choices: [finte, sturmangriff], allowed: false, because: SA_62.ST4 }] }
+      texts: [{ player: "Sturmangriff lässt sich nicht mit Finte kombinieren (Sturmangriff)" }]
     appToday: moot — one manoeuvre per attack, and SA_62 is not offered on foot
 
   - id: "8.8"
     name: Finte together with Wuchtschlag
-    hero: { abilities: { SA_48: 1, SA_67: 1 }, loadout: { weapon: Schwert } }
+    hero: { abilities: { SA_48: 1, SA_67: 1 } }
+    loadout: { weapon: Schwert }
     expect:
-      not_combinable: [{ manoeuvres: [finte, wuchtschlag], because: kampfsonderfertigkeiten.KS3 }]
-      told: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung"
+      legal: { combinations: [{ choices: [finte, wuchtschlag], allowed: false, because: kampfsonderfertigkeiten.KS3 }] }
+      texts: [{ player: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung" }]
     appToday: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
 
   - id: "8.9"
     name: Finte on horseback
-    hero: { abilities: { SA_48: 1 }, loadout: { weapon: Schwert }, mounted: true }
+    hero: { abilities: { SA_48: 1 } }
+    loadout: { weapon: Schwert, hero.mounted: true }
     expect:
-      offered: [{ manoeuvre: finte, from: SA_48.F1 }]    # a Basismanöver: reiterkampf.RK3 allows it
+      offered: [{ choice: finte, from: SA_48.F1 }]    # a Basismanöver: reiterkampf.RK3 allows it
     appToday: same
 
   - id: "8.10"
     name: Finte misses
-    hero: { abilities: { SA_48: 2 }, loadout: { weapon: Schwert } }
-    choose: { manoeuvre: finte, tier: 2 }
+    hero: { abilities: { SA_48: 2 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.finte: 2, action.attack: miss }
     expect:
-      at: { total: -2, lines: [{ value: -2, from: SA_48.F1, tier: 2 }] }
-      on_miss:
-        opponent_lines: {}          # "beim Gelingen" — nothing for the opponent
+      at: { total: -2, lines: [{ value: -2, from: SA_48.F1 }] }                     # Stufe 2
+      "opponent.pa": { total: 0 }   # the old `opponent_lines: {}`: "beim Gelingen" — nothing for the opponent
     appToday: same — the line only matters for the opponent's defence, which follows a hit

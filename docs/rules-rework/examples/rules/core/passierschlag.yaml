@@ -22,7 +22,8 @@ clauses:
       Kämpfers misslingen, oder er einfach durch die Angriffsdistanz eines neuen Gegners rennt
       ohne sich ihm zu stellen.
     effects:
-      - when: { event: movesThroughReach, of: newOpponent, not: { engages: true } }
+      - when: { gmFact.movesThroughReach: newOpponent, not: { gmFact.engages: true } }
+        # The GM states it: the hero runs through a new opponent's reach without facing them.
         tell: { to: player, text: "Passierschlag des Gegners" }
       # The other triggers are the other rules' own clauses, which point here:
       #   Flucht (misslungen) — the Flucht page, not drafted; mounted: reiterkampf.RK15
@@ -39,18 +40,23 @@ clauses:
       mit einer Verteidigung reagiert werden kann. Es handelt sich um eine um -4 erschwerte
       Attacke.
     effects:
-      - offer: { attack: passierschlag, costs: none, domain: meleeAttack }
-      - when: { action.attack: passierschlag }
+      - offer: { choice: passierschlag }
+        # A melee attack (`at`) that takes no Handlung: the old `costs: none`, `domain: meleeAttack`.
+      - when: { choice.passierschlag: true }
         add: { to: at, value: -4 }
         # Every other line of a melee AT still applies (Belastung, Beengte Umgebung, winzig
         # target, vorteilhafte Position) — only the manoeuvres are out (PS3).
-      - when: { action.attack: passierschlag, side: hero }
-        opponent_may_only: []
+      - when: { choice.passierschlag: true }
+        forbid: { what: { defence: [opponent.pa, opponent.aw] } }
+        because: auf einen Passierschlag kann nicht mit einer Verteidigung reagiert werden
+        # The hero strikes it: the opponent may not defend (the old `opponent_may_only: []`).
+      - when: { choice.passierschlag: true }
         tell: { to: opponent, text: "keine Verteidigung" }
-      - when: { action.attack: passierschlag, side: opponent }
-        forbid: { defence: [pa, aw] }
-        then: { go_to: takeDamage }
-        # The hero suffers it: no defence is offered; straight to the damage screen.
+      - when: { gmFact.incomingAttack: passierschlag }
+        forbid: { what: { defence: [pa, aw] } }
+        because: auf einen Passierschlag kann nicht mit einer Verteidigung reagiert werden
+        # The hero suffers it (the GM states it): no defence is offered; the app goes straight
+        # to the damage screen (the old `then: { go_to: takeDamage }`).
         # Mounted and struck by a fighter on foot: the mount is the target (reiterkampf.RK11,
         # ruling reiterkampf.passierschlag-on-mount).
 
@@ -59,12 +65,13 @@ clauses:
       Der Passierschlag lässt sich nicht mit Kampfsonderfertigkeiten kombinieren (z.B. Finten
       oder Wuchtschlägen).
     effects:
-      - when: { action.attack: passierschlag }
-        forbid: { manoeuvre: any }
+      - when: { choice.passierschlag: true }
+        forbid: { what: { manoeuvre: any } }
+        because: der Passierschlag lässt sich nicht mit Kampfsonderfertigkeiten kombinieren
         ruling: passierschlag-sf
         # Basis- and Spezialmanöver only. Passive SF and Kampfstile still apply (Golgariten-Stil's
         # +2 on the vorteilhafte Position, kampfsituationen 17.3).
-      - when: { action.attack: passierschlag, rulesets: fokus.trefferzonen }
+      - when: { choice.passierschlag: true, rulesets: fokus.trefferzonen }
         offer: { choice: targetZone }
         ruling: passierschlag-zone
         # Aiming is not a Kampfsonderfertigkeit (trefferzonen.TZ5): the full zone penalty, never
@@ -74,27 +81,25 @@ clauses:
   - id: PS4
     text: Es gibt keine Kritischen Erfolge oder Patzer bei Passierschlägen.
     effects:
-      - when: { action.attack: passierschlag }
-        forbid: { roll: [kritischerErfolg, patzer] }
+      - when: { choice.passierschlag: true }
+        forbid: { what: { check: [kritischerErfolg, patzer] } }
+        because: bei Passierschlägen gibt es keine Kritischen Erfolge oder Patzer
+        ruling: passierschlag-dice
         # no confirmation roll, no table
-      - when: { action.attack: passierschlag, roll: 1 }
-        result: hit
-        ruling: passierschlag-dice
-      - when: { action.attack: passierschlag, roll: 20 }
-        result: miss
-        ruling: passierschlag-dice
-        # A 1 hits and a 20 misses whatever the AT, as on every check; only the confirmation roll
-        # and the table are gone.
+        # A 1 hits and a 20 misses whatever the AT, as on every check (the check procedure,
+        # spec §6); only the confirmation roll and the table are gone. The old `result: hit` on
+        # a 1 and `result: miss` on a 20 restated that procedure and have no effect of their own.
 
   - id: PS5
     text: >
       Anmerkung: Für einen Passierschlag braucht man keine Handlungen aufwenden. Man kann
       beliebig viele Passierschläge pro Runde durchführen.
-    effects:
-      - limit: { attack: passierschlag, per: round, max: none }
-        # FORMAT: an explicit "no limit" — worth stating, because Mehrfache Verteidigung and
-        # the action count would otherwise suggest one. A Passierschlag is not an action and
-        # not a defence, so it touches neither count.
+    none: >
+      no limit is the default: a Passierschlag is not an action (PS2's offer costs none) and not
+      a defence, so it touches neither the action count nor mehrfache-verteidigung's count
+    # The old `limit: { …, max: none }` stated "no limit" explicitly — worth saying, because
+    # Mehrfache Verteidigung and the action count would otherwise suggest one; a limit takes a
+    # number.
 
   - id: PS6
     text: >

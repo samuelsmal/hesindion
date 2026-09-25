@@ -21,19 +21,18 @@ clauses:
       um +4 erhöhen. Dafür kann man diese Kampfrunde keine Aktionen mehr ausführen.
       Verteidigungshaltung muss am Anfang der Runde angesagt werden.
     effects:
-      - offer:
-          choice: verteidigungshaltung
-          when: { round.phase: start }
-          span: round
-          # FORMAT: a choice announced once and held for the Kampfrunde — like the Schip
-          # "Verteidigung", but only offered at the start.
+      - when: { round.phase: start }
+        offer: { choice: verteidigungshaltung, span: round }
+        # FORMAT: a choice announced once and held for the Kampfrunde — like the Schip
+        # "Verteidigung", but only offered at the start.
       - when: { choice.verteidigungshaltung: true }
         add: { to: [pa, aw], value: 4 }
         ruling: [vh-scope, vh-stacking]
         # Every defence, against melee and ranged attacks alike; a line of its own beside the
         # Schip "Verteidigung" +4, which it stacks with.
       - when: { choice.verteidigungshaltung: true }
-        forbid: { action: aktion }
+        forbid: { what: { action: aktion } }
+        because: Verteidigungshaltung, keine Aktionen in dieser Kampfrunde
         ruling: vh-free-actions
         # Aktionen only (attack, spell, Fernkampf); freie Aktionen and defences stay.
 
@@ -42,10 +41,15 @@ clauses:
       Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Raufen, Schilde, Schwerter,
       Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
     effects:
-      - requires: { loadout.any.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12, CT_13, CT_15, CT_16] }
+      - require:
+          that:
+            any:
+              - { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12, CT_13, CT_15, CT_16] }
+              - { loadout.other.technique: [CT_3, CT_20, CT_4, CT_5, CT_9, CT_10, CT_12, CT_13, CT_15, CT_16] }
         ruling: sf-technique-lists
-        # The offer in VH1 needs one of these in hand: no ranged techniques, so a hero holding
-        # only a bow cannot take the stance. Raufen (CT_9) is the empty hand.
+        # The offer in VH1 needs one of these in hand (the weapon or the second piece): no ranged
+        # techniques, so a hero holding only a bow cannot take the stance. Raufen (CT_9) is the
+        # empty hand.
 
   - id: VH3
     text: >

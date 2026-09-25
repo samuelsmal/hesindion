@@ -20,16 +20,32 @@
 # Kampfproben. Mounted on Kupperus against foot fighters: Vorteilhafte Position +2, Golgariten-Stil
 # +2 AT (Rabenschnabel).
 # `total` is the sum of the lines; `result` is the value on the check, from the base above.
+# The base values below are the old per-item `values`; KO 15 and Willenskraft (TAL_23) FW 9 are
+# the sheet's attribute and talent; the Wundschwelle 9 is derived (19.6), not stated. Every
+# situation states its loadout in full, as the file-level `hero` holds none (the old file-level
+# `armour` and `loadout`): Rabenschnabel and Großschild in the Plattenrüstung (Belastung 3, no
+# extra) unless it says otherwise.
+# A toggle chosen is its `choice.<name>`; "then" is a `sequence` step. A hit's SP after RS are
+# `values: { sp: n }` and its zone `rolls: { hit.zone }` (the old `hit:`), as verweichlicht.yaml
+# states them; the Wundeffekt check is the Selbstbeherrschung (TAL_8) check, the old
+# `checks_first`: none asked is `events: []`. The GM's trigger and modifier are `gmFact.trigger`
+# and `gmFact.triggerModifier` (the old `gm: { fact: { trigger }, modifier }`).
 
 heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 hero:
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1 }
   advantages: { ADV_25: 2, ADV_44: 2, ADV_49: 1, ADV_54: 1 }
   disadvantages: { DISADV_37: { sid: 2 } }      # Autoritätsglaube
-  armour: [Plattenrüstung]
-  loadout: { weapon: Rabenschnabel, shield: Großschild }
-  values: { Rabenschnabel: { at: 16, pa: 11 }, Langschwert: { at: 14, pa: 11 }, Großschild: { at: 6, pa: 13 }, aw: 7,
-            ko: 15, wundschwelle: 9, talents: { Willenskraft: 9 } }
+  attributes: { KO: 15 }
+  talents: { TAL_23: 9 }                         # Willenskraft
+  values:
+    "at(with: Rabenschnabel)": 16
+    "pa(with: Rabenschnabel)": 11
+    "at(with: Langschwert)": 14
+    "pa(with: Langschwert)": 11
+    "at(with: Großschild)": 6
+    "pa(with: Großschild)": 13
+    aw: 7
 
 situations:
 
@@ -37,6 +53,7 @@ situations:
 
   - id: "19.1"
     name: In Formation on foot, the formation takes +2 AT
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
       offered: [{ choice: formation, from: SA_862.F1 }]
@@ -54,6 +71,7 @@ situations:
 
   - id: "19.2"
     name: In Formation on foot, the formation takes +2 VW — weapon parry, shield parry, dodge
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     choose: { choice.formation: true, choice.formation.bonus: vw }
     expect:
       pa:            { total: 1, result: 12, lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
@@ -65,6 +83,7 @@ situations:
   - id: "19.3"
     name: A companion without the SF, standing in Boronmir's formation
     hero: { abilities: {} }          # any hero without SA_862
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     ally: { has: SA_862 }
     choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
@@ -74,7 +93,7 @@ situations:
 
   - id: "19.4"
     name: Formation on Kupperus, against foot fighters, Rabenschnabel
-    hero: { mounted: true }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
     opponent: { onFoot: true }
     choose: { choice.formation: true, choice.formation.bonus: at }
     expect:
@@ -84,34 +103,38 @@ situations:
         result: 20
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
-          - { value: 2, from: SA_661.GS1, raises: vorteilhafte-position.VP1 }
+          - { value: 2, from: SA_661.GS1 }                            # raises vorteilhafte-position.VP1
         notApplied:
-          - { rule: COND_1.B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }
+          - { rule: COND_1, clause: B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }
           - { rule: SA_862, reason: "not while mounted (SA_862.F1, ruling formation-mounted)" }
     appToday: AT 20 — right, but only because the app has no Formation to offer; nothing says why
 
   - id: "19.5"
     name: A companion holds Plänkler-Formation, Boronmir holds Formation — one line, not two
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     ally: { has: SA_884 }
-    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at, then: { formation: true, bonus: at } }
-    expect:
-      offered:
-        - { choice: plaenklerFormation, from: SA_884.P4 }
-        - { choice: formation, from: SA_862.F1 }
-      exclusive: [{ choices: [plaenklerFormation, formation], ruling: SA_862.formation-and-plaenkler }]
-      at:
-        total: 1
-        result: 17
-        lines:
-          - { value: 2, from: SA_862.F2 }
-          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
-        notApplied: [{ rule: SA_884, reason: "in Formation instead (ruling formation-and-plaenkler)" }]
+    choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at }
+    sequence:
+      - choose: { choice.formation: true, choice.formation.bonus: at }   # then he forms his Formation
+        expect:
+          offered:
+            - { choice: plaenklerFormation, from: SA_884.P4 }
+            - { choice: formation, from: SA_862.F1 }
+          legal: { exclusive: [{ choices: [plaenklerFormation, formation], ruling: SA_862.formation-and-plaenkler }] }
+          at:
+            total: 1
+            result: 17
+            lines:
+              - { value: 2, from: SA_862.F2 }
+              - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+            notApplied: [{ rule: SA_884, reason: "in Formation instead (ruling formation-and-plaenkler)" }]
     appToday: neither is offered — Boronmir no longer holds SA_884 and the app has no SA_862; AT 15 — wrong
 
   # --- Eisern (ADV_54) and the Wundschwelle ----------------------------------------------------
 
   - id: "19.6"
     name: Boronmir's Wundschwelle
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rulesets: [fokus.trefferzonen]
     expect:
       wundschwelle:
@@ -126,35 +149,44 @@ situations:
 
   - id: "19.7"
     name: 8 SP on the torso — the Wundschwelle without Eisern, so no Wundeffekt
+    hero: { values: { sp: 8 } }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rulesets: [fokus.trefferzonen]
-    hit: { zone: torso, sp: 8 }
+    rolls: { hit.zone: torso }
     expect:
-      checks_first: []
-      notApplied: [{ rule: trefferzonen.TZ8, reason: "8 SP < Wundschwelle 9 (Eisern +1, ADV_54.E1)" }]
+      events: []                    # no Wundeffekt check (the old `checks_first: []`)
+      notApplied: [{ rule: trefferzonen, clause: TZ8, reason: "8 SP < Wundschwelle 9 (Eisern +1, ADV_54.E1)" }]
     appToday: >
       same outcome; the row says "Schaden 8 < Wundschwelle 9" (CombatWundschwelleRow) without
       naming Eisern as the reason it is 9
 
   - id: "19.8"
     name: 17 SP on the torso — one multiple of 9, not two of 8
+    hero: { values: { sp: 17 } }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rulesets: [fokus.trefferzonen]
-    hit: { zone: torso, sp: 17 }
+    rolls: { hit.zone: torso }
+    # the Wundeffekt check asked first (the old `checks_first`): Selbstbeherrschung (TAL_8)
+    choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }
+    gm: { gmFact.cause: woundEffect }
     expect:
-      checks_first:
-        - talent: Selbstbeherrschung
-          application: Handlungsfähigkeit bewahren
-          modifier: { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8, via: [ADV_54.E1] }] }
-      on_failure: { damage: { formula: 1W3+1, from: trefferzonen.TZ11 } }
+      "check.modifier(talent: TAL_8)": { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8, via: [ADV_54.E1] }] }
+    sequence:
+      - rolls: { check.result: failure }   # the old `on_failure`
+        expect:
+          events: [{ damage: { formula: 1W3+1 }, from: trefferzonen.TZ11 }]
     appToday: same (−1, from `wundschwelle.max`); the line does not say Eisern made it −1 rather than −2
 
   - id: "19.9"
     name: Trefferzonen not played — 12 SP
+    hero: { values: { sp: 12 } }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     rulesets: []
-    hit: { sp: 12 }
     expect:
-      checks_first: []
-      sheet:
-        wundschwelle: { total: 9, note: "wirkt nur mit Fokusregel Trefferzonen", ruling: ADV_54.eisern-scope }
+      events: []                    # no Wundeffekt check (the old `checks_first: []`)
+      # on the sheet (the old `sheet:`), with its note
+      wundschwelle: { total: 9, lines: [{ ruling: ADV_54.eisern-scope }] }
+      texts: [{ player: "wirkt nur mit Fokusregel Trefferzonen", ruling: ADV_54.eisern-scope }]
     appToday: >
       the take-damage screen says "Wundschwelle erreicht" and "Wundeffekte gibt es nur mit der
       Fokusregel Trefferzonen" (CombatWundschwelleRow); no check, which is right. The sheet shows
@@ -164,15 +196,18 @@ situations:
 
   - id: "19.10"
     name: The GM says Autoritätsglaube is triggered — a superior's order that makes no sense
-    gm: { fact: { trigger: DISADV_37 }, modifier: 0 }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    gm: { gmFact.trigger: DISADV_37, gmFact.triggerModifier: 0 }
+    choose: { check.kind: talent, check.talent: TAL_23 }   # Willenskraft
     expect:
       offered:
         - check: { talent: Willenskraft, application: null }
           cause: { rule: DISADV_37.SE1, option: Autoritätsglaube }
           text: "zweifelt nicht an den Worten höhergestellter Personen, selbst wenn sie unlogische Befehle erteilen oder unglaubwürdig sind"   # SE6
           ruling: DISADV_37.schlechte-eigenschaft-check
-      check: { talent: Willenskraft, fw: 9, modifier: { total: 0, lines: [] } }
-      notApplied: [{ rule: COND_1.B3, reason: "Willenskraft is not hindered by Belastung (ruling COND_1.belastung-reach)" }]
+      "check.fw(talent: TAL_23)": { result: 9 }
+      "check.modifier(talent: TAL_23)": { total: 0, lines: [] }
+      notApplied: [{ rule: COND_1, clause: B3, reason: "Willenskraft is not hindered by Belastung (ruling COND_1.belastung-reach)" }]
     appToday: >
       nothing offers the check. The sheet lists "Schlechte Eigenschaft (Autoritätsglaube)" with the
       page behind a swipe (HeroDetailView.disadvantagesSection); a Willenskraft check opened from
@@ -181,25 +216,28 @@ situations:
 
   - id: "19.11"
     name: The order comes from his Komtur — the GM makes it 2 harder — and Boronmir has Schmerz II
-    gm: { fact: { trigger: DISADV_37 }, modifier: -2 }
-    hero: { lp: 16 }                   # LE 37: ½ = 18.5, ¼ = 9.25 → Schmerz II; Zäher Hund → acts as I
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    gm: { gmFact.trigger: DISADV_37, gmFact.triggerModifier: -2 }
+    hero: { values: { leCurrent: 16 } }  # LE 37: ½ = 18.5, ¼ = 9.25 → Schmerz II; Zäher Hund → acts as I
+    choose: { check.kind: talent, check.talent: TAL_23 }   # Willenskraft
     expect:
-      check:
-        talent: Willenskraft
-        modifier:
-          total: -3
-          lines:
-            - { value: -2, from: DISADV_37.SE4, source: gm }
-            - { value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }
+      "check.modifier(talent: TAL_23)":
+        total: -3
+        lines:
+          - { value: -2, from: DISADV_37.SE4, source: gm }
+          - { value: -1, from: COND_6.SZ5, via: [ADV_49.ZH1] }
     appToday: >
       only if the player opens Willenskraft from the talent list and enters the −2 as a free
       modifier: then −3, with the GM's −2 named by nothing
 
   - id: "19.12"
     name: The check fails
-    gm: { fact: { trigger: DISADV_37 }, modifier: 0 }
-    fail: [Willenskraft]
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    gm: { gmFact.trigger: DISADV_37, gmFact.triggerModifier: 0 }
+    choose: { check.kind: talent, check.talent: TAL_23 }   # Willenskraft
+    rolls: { check.result: failure }   # the old `fail: [Willenskraft]`
     expect:
-      log: { text: "Autoritätsglaube: gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }
-      states: []                       # SE3: for as long as the trigger lasts, which is the GM's to end
+      # the old `log`; no state is gained (the old `states: []`) — SE3: for as long as the
+      # trigger lasts, which is the GM's to end
+      events: [{ logged: "Autoritätsglaube: gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }]
     appToday: a plain Willenskraft failure in the log, if it was rolled at all

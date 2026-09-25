@@ -374,6 +374,14 @@ class ErrorTests(unittest.TestCase):
             "      at: { result: 16, base: { value: 16, from: SA_1.T1 } }\n"
             '      "level(rule: SA_1)": { result: 1 }\n'), [])
 
+    def test_group_2_additions(self):
+        # The Group 2 facts a situation states, and the natural GS as a base value.
+        self.assertEqual(errors_of(
+            "    hero: { values: { gs: 14, gsNatural: 8 } }\n"
+            "    loadout: { other: weapon, other.technique: CT_3, twoHanded: false, shield.structurePoints: 30 }\n"
+            "    round: { phase: start, defendedThisAttack: false }\n"
+            "    choose: { action.runUp: 4, choice.finte: 2 }\n"), [])
+
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

@@ -65,6 +65,19 @@ class ValueFormTests(unittest.TestCase):
         with self.assertRaises(RulecError):
             self.f.value({"of": ["attr.MU"], "per": 2})
 
+    def test_a_proportion_bound_may_be_an_operand_or_a_list_of_them(self):
+        # SA_62.ST2: ⌈(GS + 4)/2⌉, at most 10 and at most the natural GS, as one line.
+        p = self.f.value({"of": ["gs", 4], "per": 2, "max": [10, "gsNatural"], "min": "hero.gs"})["proportion"]
+        self.assertEqual(p["of"], {"sum": [{"target": {"name": "gs"}}, {"number": 4}]})
+        self.assertEqual(p["max"], {"each": [{"number": 10}, {"target": {"name": "gsNatural"}}]})
+        self.assertEqual(p["min"], {"fact": "hero.gs"})
+        self.assertEqual(self.f.value({"of": "gs", "max": 10})["proportion"]["max"], 10)   # a number stays
+
+    def test_a_bad_bound_is_an_error(self):
+        for bound in ([10], "nope", {"of": "gs"}):
+            with self.assertRaises(RulecError):
+                self.f.value({"of": "gs", "max": bound})
+
     def test_the_level_target_takes_a_rule(self):
         self.assertEqual(self.f.target("level(rule: COND_1)"), {"name": "level", "rule": "COND_1"})
 

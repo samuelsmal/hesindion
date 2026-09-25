@@ -10,7 +10,7 @@ source:
   page: 246
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: A1
@@ -19,8 +19,13 @@ clauses:
       Erleichterung von +2 auf Sinnesschärfe (Hinterhalt entdecken), um seine Gegner zu
       entdecken.
     effects:
-      - when: { check: { talent: TAL_10, application: Hinterhalt entdecken }, situation: ambush }
-        add: { to: check, value: 2 }
+      - when: { check.talent: TAL_10 }
+        offer: { choice: hinterhaltUeberraschung, default: false }
+        ruling: aufmerksamkeit-when
+        # The toggle "Hinterhalt / Überraschung" on the Sinnesschärfe check, off by default: the
+        # old fact `situation: ambush`, which the decided ruling makes the player's to state.
+      - when: { check.talent: TAL_10, check.application: Hinterhalt entdecken, choice.hinterhaltUeberraschung: true }
+        add: { to: check.modifier, value: 2 }
         ruling: aufmerksamkeit-when
         # Sinnesschärfe is TAL_10. Failing the check leaves the hero Überrascht (STATE_13).
         # FORMAT: an Anwendungsgebiet of a talent — the app does not model applications, and

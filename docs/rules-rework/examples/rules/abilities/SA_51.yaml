@@ -16,14 +16,14 @@ clauses:
   - id: KR1
     text: Der INI-Basiswert steigt um 1 pro Stufe der Sonderfertigkeit.
     effects:
-      - add: { to: ini.base, value: 1, per: tier, after: reiterkampf.RK1 }
+      - add: { to: iniBase, value: level }
         ruling: kampfreflexe-mounted
         # FORMAT: modifies a *derived value* (the INI Basiswert on the hero sheet), not a check.
         # It belongs in the value's own breakdown — "INI 12 = (MU+GE)/2 12 + Kampfreflexe II 2"
         # — the way Eisern belongs in the Wundschwelle's (ADR-0006), and so reaches every INI roll.
-        # FORMAT: `after:` — mounted, RK1 swaps the base for the mount's and the SF still adds to
-        # it (ruling kampfreflexe-mounted), so the swap must come first. A modifier that survives a
-        # source swap needs an order between the two effects.
+        # Mounted, RK1 swaps the base for the mount's and the SF still adds to it (ruling
+        # kampfreflexe-mounted), so the swap must come first: the old `after: reiterkampf.RK1` is
+        # the phase order (spec §5.2), where the base (and every `set`) comes before the adds.
 
   - id: KR2
     text: "Voraussetzungen: Stufe I: IN 13; Stufe II: IN 15, Kampfreflexe I; Stufe III: IN 17, Kampfreflexe II"

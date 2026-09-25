@@ -1,11 +1,13 @@
 # Example 12 — Kampfreflexe. Same conventions as belastung.yaml.
 # DRAFT FORMAT — see ../README.md.
 #
-# `ini_base` is the hero sheet's INI Basiswert with its own breakdown; `ini` is what the
-# initiative roll starts from before 1W6 (Basiswert plus penalties such as Belastung).
+# `iniBase` is the hero sheet's INI Basiswert with its own breakdown (kampfwerte.KW9, the old
+# `derived.ini`); `ini` is what the initiative roll starts from before 1W6 (Basiswert plus
+# penalties such as Belastung).
+# The mount is a Kriegspferd with INI Basiswert 12 (the old file-level `mount`), stated as the
+# base value of `mount.iniBase`.
 
-hero: { mu: 12, ge: 12, ini: 12, gs: 8 }     # INI Basiswert (MU+GE)/2 = 12
-mount: { name: Kriegspferd, ini: 12 }
+hero: { attributes: { MU: 12, GE: 12 }, values: { ini: 12, gs: 8, mount.iniBase: 12 } }     # INI Basiswert (MU+GE)/2 = 12
 
 situations:
 
@@ -16,7 +18,7 @@ situations:
       iniBase:
         total: 13
         lines:
-          - { value: 12, from: derived.ini }        # (MU+GE)/2, ADR-0006
+          - { value: 12, from: kampfwerte.KW9 }     # (MU+GE)/2, ADR-0006
           - { value: 1, from: SA_51.KR1 }
     appToday: 12 — Kampfreflexe is ignored (OptolithImportService, DerivedValueFormulas.initiative; catalog status todo) — wrong
 
@@ -24,41 +26,44 @@ situations:
     name: Kampfreflexe III
     hero: { abilities: { SA_51: 3 } }
     expect:
-      iniBase: { total: 15, lines: [{ value: 12, from: derived.ini }, { value: 3, from: SA_51.KR1 }] }
+      iniBase: { total: 15, lines: [{ value: 12, from: kampfwerte.KW9 }, { value: 3, from: SA_51.KR1 }] }
     appToday: 12 — wrong
 
   - id: "12.3"
     name: Kampfreflexe II in Plattenrüstung
-    hero: { abilities: { SA_51: 2 }, armour: [Plattenrüstung] }
+    hero: { abilities: { SA_51: 2 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
       iniBase: { total: 14 }
       ini:
         total: 11
         lines:
-          - { value: 14, from: [derived.ini, SA_51.KR1] }
+          - { value: 14, from: kampfwerte.KW10, via: [kampfwerte.KW9, SA_51.KR1] }   # the Basiswert (the old `from: [derived.ini, SA_51.KR1]`)
           - { value: -3, from: COND_1.B3 }
     appToday: 9 — wrong
 
   - id: "12.4"
     name: Kampfreflexe I and a Lederrüstung's extra −1 INI
-    hero: { abilities: { SA_51: 1 }, armour: [Lederrüstung] }
+    hero: { abilities: { SA_51: 1 } }
+    loadout: { armour: Lederrüstung, armour.belastung: 1, armour.extraPenalty: -1 }
     expect:
       ini:
         total: 11
         lines:
-          - { value: 13, from: [derived.ini, SA_51.KR1] }
+          - { value: 13, from: kampfwerte.KW10, via: [kampfwerte.KW9, SA_51.KR1] }   # the Basiswert (the old `from: [derived.ini, SA_51.KR1]`)
           - { value: -1, from: COND_1.B3 }
           - { value: -1, from: ruestung-und-belastung.A1 }
     appToday: 10 — wrong
 
   - id: "12.5"
     name: Kampfreflexe II, mounted
-    hero: { abilities: { SA_51: 2 }, mounted: true }
+    hero: { abilities: { SA_51: 2 } }
+    loadout: { hero.mounted: true }
     expect:
       iniBase:
         total: 14
         lines:
           - { value: 12, from: reiterkampf.RK1 }             # the mount's
           - { value: 2, from: SA_51.KR1, ruling: SA_51.kampfreflexe-mounted }
-      ini_belastung: { total: 0, ruling: reiterkampf.rider-ini }
+      ini: { lines: [{ value: 0, ruling: reiterkampf.rider-ini }] }   # the old `ini_belastung: { total: 0 }`: no Belastung on the mount's base
     appToday: 12 — the mount's base; Kampfreflexe ignored — wrong

@@ -25,17 +25,16 @@ clauses:
       die sich maximal einen halben Schritt vor, hinter, links und rechts von ihm befinden
       dürfen, eine Formation aufbauen.
     effects:
-      - offer:
-          choice: formation
-          span: whileFormed
-          ruling: formation-mounted
-          # As SA_884.P1: a fact the player states for as long as the formation stands, set and
-          # cleared at any point in the fight. Five fighters, ½ Schritt in every direction, is
-          # the player's to judge; shown as text beside the toggle.
-      - forbid: { choice: formation, when: { hero.mounted: true } }
+      - offer: { choice: formation, span: whileFormed }
+        ruling: formation-mounted
+        # As SA_884.P1: a fact the player states for as long as the formation stands, set and
+        # cleared at any point in the fight. Five fighters, ½ Schritt in every direction, is
+        # the player's to judge; shown as text beside the toggle.
+      - when: { hero.mounted: true }
+        forbid: { what: { choice: formation } }
         because: "nur zu Fuß: die Formation steht Schulter an Schulter"
         ruling: formation-mounted
-      - forbid: { choice: [formation, plaenklerFormation], together: true }
+      - forbid: { what: { choice: [formation, plaenklerFormation] }, together: true }
         because: "ein Kämpfer steht in einer Formation, nicht in zweien"
         ruling: formation-and-plaenkler
 
@@ -55,8 +54,10 @@ clauses:
       Alle Beteiligten müssen sich bei der Bildung der Formationen auf einen der beiden Boni
       einigen.
     effects:
-      - offer: { choice: formation.bonus, options: [at, vw], when: formed }
-        # One answer for the whole formation, chosen when it forms; changing it means re-forming.
+      - when: { choice.formation: true }
+        offer: { choice: formation.bonus, options: [at, vw] }
+        # One answer for the whole formation, chosen when it forms (the old `when: formed`);
+        # changing it means re-forming.
 
   - id: F4
     text: >

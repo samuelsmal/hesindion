@@ -236,6 +236,39 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertIs(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["default"], False)
 
+    # --- vocabulary added by the Group 2 hand migration (plan Task 9) -------------------------
+    def test_group_2_facts_have_their_owners(self):
+        v = vocab.load()
+        expected = {"round.defendedThisAttack": "round", "round.phase": "round",
+                    "query.result": "derived", "hero.gs": "derived", "action.runUp": "player",
+                    "loadout.other.technique": "loadout", "loadout.twoHanded": "loadout",
+                    "loadout.shield.structurePoints": "loadout"}
+        self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
+        self.assertTrue(v.is_target("gsNatural"))
+        self.assertIn("destroyed", v.raw["itemFields"])
+
+    def test_the_group_2_encodings(self):
+        # mehrfache-verteidigung MV1/MV3, SA_62 ST1/ST2, SA_59 SS3, beidhaendiger-kampf ZW1.
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n", textwrap.indent(
+            textwrap.dedent("""\
+                - when: { round.defendedThisAttack: true }
+                  forbid: { what: { defence: [pa, aw] } }
+                - when: { query.result: { atMost: 0 } }
+                  forbid: { what: { defence: [pa, aw] } }
+                - require: { that: { action.runUp: { atLeast: 4 }, hero.gs: { atLeast: 4 } }, for: { choice: sturm } }
+                - add: { to: tp, value: { of: [gs, 4], per: 2, round: up, max: [10, gsNatural] } }
+                - when: { round.phase: start, loadout.shield.structurePoints: { atMost: 0 } }
+                  item: { instance: { loadout: shield }, change: { destroyed: true } }
+                - when: { loadout.twoHanded: true, loadout.other.technique: CT_6 }
+                  forbid: { what: { loadout: other } }
+                """), "      ")))
+        self.assertEqual(errors, [])
+        effects = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(effects[1]["when"], {"fact": "query.result", "atMost": 0})
+        self.assertEqual(effects[3]["payload"]["value"]["proportion"]["max"],
+                         {"each": [{"number": 10}, {"target": {"name": "gsNatural"}}]})
+        self.assertEqual(effects[4]["payload"]["change"], {"destroyed": True})
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

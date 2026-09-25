@@ -51,8 +51,8 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_40.yaml
 
-- [ ] L22 clauses[A1].effects[0].when.check: check — not a fact in the vocabulary
-- [ ] L22 clauses[A1].effects[0].when.situation: situation — not a fact in the vocabulary
+- [x] L22 clauses[A1].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L22 clauses[A1].effects[0].when.situation: situation — not a fact in the vocabulary
 
 ## rules/abilities/SA_41.yaml
 
@@ -60,9 +60,9 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_42.yaml
 
-- [ ] L22 clauses[BH1].effects[0].raise: raise — no one-to-one verb
-- [ ] L22 clauses[BH1].effects[0].raise.max_total: max_total — snake_case key, no mapping
-- [ ] L31 clauses[BH2].effects[0].requires: requires — a key that is not a fact: loadout.mainHand.technique, loadout.offHand.technique
+- [x] L22 clauses[BH1].effects[0].raise: raise — no one-to-one verb
+- [x] L22 clauses[BH1].effects[0].raise.max_total: max_total — snake_case key, no mapping
+- [x] L31 clauses[BH2].effects[0].requires: requires — a key that is not a fact: loadout.mainHand.technique, loadout.offHand.technique
 
 ## rules/abilities/SA_43.yaml
 
@@ -70,23 +70,23 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_48.yaml
 
-- [ ] L24 clauses[F1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L25 clauses[F1].effects[0].offer.tiers: tiers — not a field of `offer`
-- [ ] L26 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L30 clauses[F1].effects[2].opponent_add: opponent_add — keys outside the row: per
+- [x] L24 clauses[F1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L25 clauses[F1].effects[0].offer.tiers: tiers — not a field of `offer`
+- [x] L26 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L30 clauses[F1].effects[2].opponent_add: opponent_add — keys outside the row: per
 
 ## rules/abilities/SA_51.yaml
 
-- [ ] L19 clauses[KR1].effects[0].add.after: after — not a field of `add`
+- [x] L19 clauses[KR1].effects[0].add.after: after — not a field of `add`
 
 ## rules/abilities/SA_59.yaml
 
-- [ ] L28 clauses[SS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L29 clauses[SS1].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
-- [ ] L30 clauses[SS1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L36 clauses[SS1].effects[2].forbid.defence: defence — not a field of `forbid`
-- [ ] L61 clauses[SS3].effects[1].damage: damage — no one-to-one verb
-- [ ] L62 clauses[SS3].effects[1].then: then — no one-to-one verb
+- [x] L28 clauses[SS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L29 clauses[SS1].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
+- [x] L30 clauses[SS1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L36 clauses[SS1].effects[2].forbid.defence: defence — not a field of `forbid`
+- [x] L61 clauses[SS3].effects[1].damage: damage — no one-to-one verb
+- [x] L62 clauses[SS3].effects[1].then: then — no one-to-one verb
 
 ## rules/abilities/SA_60.yaml
 
@@ -99,22 +99,22 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_62.yaml
 
-- [ ] L25 clauses[ST1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L26 clauses[ST1].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L27 clauses[ST1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L25 clauses[ST1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L26 clauses[ST1].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L27 clauses[ST1].effects[0].offer.ruling: ruling — not a field of `offer`
 
 ## rules/abilities/SA_65.yaml
 
-- [ ] L26 clauses[VH1].effects[0].offer.when: when — not a field of `offer`
-- [ ] L36 clauses[VH1].effects[2].forbid.action: action — not a field of `forbid`
-- [ ] L45 clauses[VH2].effects[0].requires: requires — a key that is not a fact: loadout.any.technique
+- [x] L26 clauses[VH1].effects[0].offer.when: when — not a field of `offer`
+- [x] L36 clauses[VH1].effects[2].forbid.action: action — not a field of `forbid`
+- [x] L45 clauses[VH2].effects[0].requires: requires — a key that is not a fact: loadout.any.technique
 
 ## rules/abilities/SA_66.yaml
 
-- [ ] L38 clauses[V2].effects[0].forbid.defence: defence — not a field of `forbid`
-- [ ] L38 clauses[V2].effects[0].forbid.span: span — not a field of `forbid`
-- [ ] L47 clauses[V3].effects[0].offer.when: when — not a field of `offer`
-- [ ] L56 clauses[V4].effects[0].requires: requires — a key that is not a fact: hero.state
+- [x] L38 clauses[V2].effects[0].forbid.defence: defence — not a field of `forbid`
+- [x] L38 clauses[V2].effects[0].forbid.span: span — not a field of `forbid`
+- [x] L47 clauses[V3].effects[0].offer.when: when — not a field of `offer`
+- [x] L56 clauses[V4].effects[0].requires: requires — a key that is not a fact: hero.state
 
 ## rules/abilities/SA_661.yaml
 
@@ -125,9 +125,9 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_67.yaml
 
-- [ ] L23 clauses[W1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
-- [ ] L24 clauses[W1].effects[0].offer.tiers: tiers — not a field of `offer`
-- [ ] L25 clauses[W1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L23 clauses[W1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
+- [x] L24 clauses[W1].effects[0].offer.tiers: tiers — not a field of `offer`
+- [x] L25 clauses[W1].effects[0].offer.ruling: ruling — not a field of `offer`
 
 ## rules/abilities/SA_74.yaml
 
@@ -145,18 +145,18 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_862.yaml
 
-- [ ] L31 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L35 clauses[F1].effects[1].forbid.choice: choice — not a field of `forbid`
-- [ ] L35 clauses[F1].effects[1].forbid.when: when — not a field of `forbid`
-- [ ] L38 clauses[F1].effects[2].forbid.choice: choice — not a field of `forbid`
-- [ ] L58 clauses[F3].effects[0].offer.when: when — not a field of `offer`
+- [x] L31 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L35 clauses[F1].effects[1].forbid.choice: choice — not a field of `forbid`
+- [x] L35 clauses[F1].effects[1].forbid.when: when — not a field of `forbid`
+- [x] L38 clauses[F1].effects[2].forbid.choice: choice — not a field of `forbid`
+- [x] L58 clauses[F3].effects[0].offer.when: when — not a field of `offer`
 
 ## rules/abilities/SA_884.yaml
 
-- [ ] L28 clauses[P1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L33 clauses[P1].effects[1].forbid.choice: choice — not a field of `forbid`
-- [ ] L33 clauses[P1].effects[1].forbid.when: when — not a field of `forbid`
-- [ ] L58 clauses[P3].effects[0].offer.when: when — not a field of `offer`
+- [x] L28 clauses[P1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L33 clauses[P1].effects[1].forbid.choice: choice — not a field of `forbid`
+- [x] L33 clauses[P1].effects[1].forbid.when: when — not a field of `forbid`
+- [x] L58 clauses[P3].effects[0].offer.when: when — not a field of `offer`
 
 ## rules/abilities/SA_9.yaml
 
@@ -164,8 +164,8 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_923.yaml
 
-- [ ] L22 clauses[VS1].effects[0].change: change — no one-to-one verb
-- [ ] L34 clauses[VS2].ruling: ruling — not a clause key in the vocabulary
+- [x] L22 clauses[VS1].effects[0].change: change — no one-to-one verb
+- [x] L34 clauses[VS2].ruling: ruling — not a clause key in the vocabulary
 
 ## rules/advantages/ADV_25.yaml
 
@@ -204,8 +204,8 @@ No residue.
 
 ## rules/advantages/ADV_5.yaml
 
-- [ ] L18 clauses[V1].status: status — not a clause key in the vocabulary
-- [ ] L19 clauses[V1].why: why — `why` without `effects: none`: the clause has no body to carry it
+- [x] L18 clauses[V1].status: status — not a clause key in the vocabulary
+- [x] L19 clauses[V1].why: why — `why` without `effects: none`: the clause has no body to carry it
 
 ## rules/advantages/ADV_54.yaml
 
@@ -304,21 +304,21 @@ No residue.
 
 ## rules/core/beidhaendiger-kampf.yaml
 
-- [ ] L29 clauses[ZW1].effects[0].forbid.loadout: loadout — not a field of `forbid`
-- [ ] L30 clauses[ZW1].effects[1].forbid.loadout: loadout — not a field of `forbid`
-- [ ] L31 clauses[ZW1].effects[2].allow: allow — no one-to-one verb
-- [ ] L45 clauses[ZW2].effects[0].offer.action: action — not a field of `offer`
-- [ ] L46 clauses[ZW2].effects[0].offer.requires: requires — not a field of `offer`
-- [ ] L48 clauses[ZW2].effects[0].offer.then: then — not a field of `offer`
-- [ ] L61 clauses[ZW3].effects[ZW3.penalty].id: id — no one-to-one verb
-- [ ] L64 clauses[ZW3].effects[ZW3.penalty].lasts: lasts — no one-to-one verb
-- [ ] L77 clauses[ZW4].effects[ZW4.offHand].id: id — no one-to-one verb
-- [ ] L78 clauses[ZW4].effects[ZW4.offHand].when.hand: hand — not a fact in the vocabulary
-- [ ] L91 clauses[ZW6].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
-- [ ] L99 clauses[ZW7].effects[0].offer.among: among — not a field of `offer`
-- [ ] L107 clauses[ZW8].effects[0].when.action: action — not a fact in the vocabulary
-- [ ] L107 clauses[ZW8].effects[0].when.result: result — not a fact in the vocabulary
-- [ ] L108 clauses[ZW8].effects[0].cancel: cancel — no one-to-one verb
+- [x] L29 clauses[ZW1].effects[0].forbid.loadout: loadout — not a field of `forbid`
+- [x] L30 clauses[ZW1].effects[1].forbid.loadout: loadout — not a field of `forbid`
+- [x] L31 clauses[ZW1].effects[2].allow: allow — no one-to-one verb
+- [x] L45 clauses[ZW2].effects[0].offer.action: action — not a field of `offer`
+- [x] L46 clauses[ZW2].effects[0].offer.requires: requires — not a field of `offer`
+- [x] L48 clauses[ZW2].effects[0].offer.then: then — not a field of `offer`
+- [x] L61 clauses[ZW3].effects[ZW3.penalty].id: id — no one-to-one verb
+- [x] L64 clauses[ZW3].effects[ZW3.penalty].lasts: lasts — no one-to-one verb
+- [x] L77 clauses[ZW4].effects[ZW4.offHand].id: id — no one-to-one verb
+- [x] L78 clauses[ZW4].effects[ZW4.offHand].when.hand: hand — not a fact in the vocabulary
+- [x] L91 clauses[ZW6].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
+- [x] L99 clauses[ZW7].effects[0].offer.among: among — not a field of `offer`
+- [x] L107 clauses[ZW8].effects[0].when.action: action — not a fact in the vocabulary
+- [x] L107 clauses[ZW8].effects[0].when.result: result — not a fact in the vocabulary
+- [x] L108 clauses[ZW8].effects[0].cancel: cancel — no one-to-one verb
 
 ## rules/core/fernkampf.yaml
 
@@ -406,18 +406,18 @@ No residue.
 
 ## rules/core/kampfsonderfertigkeiten.yaml
 
-- [ ] L30 clauses[KS2].effects[0].when.ability: ability — not a fact in the vocabulary
-- [ ] L31 clauses[KS2].effects[0].apply: apply — no one-to-one verb
-- [ ] L36 clauses[KS2].effects[1].show: show — no one-to-one verb
-- [ ] L46 clauses[KS3].effects[0].limit.manoeuvre: manoeuvre — not a field of `limit`
-- [ ] L56 clauses[KS4].effects[0].limit.manoeuvre: manoeuvre — not a field of `limit`
-- [ ] L63 clauses[KS5].effects[0].offer.pickers: pickers — not a field of `offer`
-- [ ] L63 clauses[KS5].effects[0].offer.per: per — not a field of `offer`
-- [ ] L65 clauses[KS5].effects[1].show: show — no one-to-one verb
-- [ ] L69 clauses[KS5].effects[2].when.manoeuvres: manoeuvres — not a fact in the vocabulary
-- [ ] L69 clauses[KS5].effects[2].when.manoeuvres.excluded_by: excluded_by — snake_case key, no mapping
-- [ ] L70 clauses[KS5].effects[2].forbid.combination: combination — not a field of `forbid`
-- [ ] L90 clauses[KS6].ruling: ruling — not a clause key in the vocabulary
+- [x] L30 clauses[KS2].effects[0].when.ability: ability — not a fact in the vocabulary
+- [x] L31 clauses[KS2].effects[0].apply: apply — no one-to-one verb
+- [x] L36 clauses[KS2].effects[1].show: show — no one-to-one verb
+- [x] L46 clauses[KS3].effects[0].limit.manoeuvre: manoeuvre — not a field of `limit`
+- [x] L56 clauses[KS4].effects[0].limit.manoeuvre: manoeuvre — not a field of `limit`
+- [x] L63 clauses[KS5].effects[0].offer.pickers: pickers — not a field of `offer`
+- [x] L63 clauses[KS5].effects[0].offer.per: per — not a field of `offer`
+- [x] L65 clauses[KS5].effects[1].show: show — no one-to-one verb
+- [x] L69 clauses[KS5].effects[2].when.manoeuvres: manoeuvres — not a fact in the vocabulary
+- [x] L69 clauses[KS5].effects[2].when.manoeuvres.excluded_by: excluded_by — snake_case key, no mapping
+- [x] L70 clauses[KS5].effects[2].forbid.combination: combination — not a field of `forbid`
+- [x] L90 clauses[KS6].ruling: ruling — not a clause key in the vocabulary
 
 ## rules/core/kampfwerte.yaml
 
@@ -451,33 +451,33 @@ No residue.
 
 ## rules/core/mehrfache-verteidigung.yaml
 
-- [ ] L27 clauses[MV1].effects[MV1.step].when.check: check — not a fact in the vocabulary
-- [ ] L29 clauses[MV1].effects[MV1.step].id: id — no one-to-one verb
-- [ ] L30 clauses[MV1].effects[1].forbid.second_defence_against: second_defence_against — not a field of `forbid`
-- [ ] L46 clauses[MV3].effects[0].when.check: check — not a fact in the vocabulary
-- [ ] L46 clauses[MV3].effects[0].when.value.after: value.after — not a fact in the vocabulary
-- [ ] L47 clauses[MV3].effects[0].forbid.defence: defence — not a field of `forbid`
+- [x] L27 clauses[MV1].effects[MV1.step].when.check: check — not a fact in the vocabulary
+- [x] L29 clauses[MV1].effects[MV1.step].id: id — no one-to-one verb
+- [x] L30 clauses[MV1].effects[1].forbid.second_defence_against: second_defence_against — not a field of `forbid`
+- [x] L46 clauses[MV3].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L46 clauses[MV3].effects[0].when.value.after: value.after — not a fact in the vocabulary
+- [x] L47 clauses[MV3].effects[0].forbid.defence: defence — not a field of `forbid`
 
 ## rules/core/passierschlag.yaml
 
-- [ ] L25 clauses[PS1].effects[0].when.event: event — not a fact in the vocabulary
-- [ ] L25 clauses[PS1].effects[0].when.of: of — not a fact in the vocabulary
-- [ ] L25 clauses[PS1].effects[0].when.not.engages: engages — not a fact in the vocabulary
-- [ ] L42 clauses[PS2].effects[0].offer.attack: attack — not a field of `offer`
-- [ ] L42 clauses[PS2].effects[0].offer.domain: domain — not a field of `offer`
-- [ ] L47 clauses[PS2].effects[2].when.side: side — not a fact in the vocabulary
-- [ ] L48 clauses[PS2].effects[2].opponent_may_only: opponent_may_only — no one-to-one verb
-- [ ] L50 clauses[PS2].effects[3].when.side: side — not a fact in the vocabulary
-- [ ] L51 clauses[PS2].effects[3].forbid.defence: defence — not a field of `forbid`
-- [ ] L52 clauses[PS2].effects[3].then: then — no one-to-one verb
-- [ ] L52 clauses[PS2].effects[3].then.go_to: go_to — snake_case key, no mapping
-- [ ] L63 clauses[PS3].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
-- [ ] L78 clauses[PS4].effects[0].forbid.roll: roll — not a field of `forbid`
-- [ ] L80 clauses[PS4].effects[1].when.roll: roll — not a fact in the vocabulary
-- [ ] L81 clauses[PS4].effects[1].result: result — no one-to-one verb
-- [ ] L83 clauses[PS4].effects[2].when.roll: roll — not a fact in the vocabulary
-- [ ] L84 clauses[PS4].effects[2].result: result — no one-to-one verb
-- [ ] L94 clauses[PS5].effects[0].limit.attack: attack — not a field of `limit`
+- [x] L25 clauses[PS1].effects[0].when.event: event — not a fact in the vocabulary
+- [x] L25 clauses[PS1].effects[0].when.of: of — not a fact in the vocabulary
+- [x] L25 clauses[PS1].effects[0].when.not.engages: engages — not a fact in the vocabulary
+- [x] L42 clauses[PS2].effects[0].offer.attack: attack — not a field of `offer`
+- [x] L42 clauses[PS2].effects[0].offer.domain: domain — not a field of `offer`
+- [x] L47 clauses[PS2].effects[2].when.side: side — not a fact in the vocabulary
+- [x] L48 clauses[PS2].effects[2].opponent_may_only: opponent_may_only — no one-to-one verb
+- [x] L50 clauses[PS2].effects[3].when.side: side — not a fact in the vocabulary
+- [x] L51 clauses[PS2].effects[3].forbid.defence: defence — not a field of `forbid`
+- [x] L52 clauses[PS2].effects[3].then: then — no one-to-one verb
+- [x] L52 clauses[PS2].effects[3].then.go_to: go_to — snake_case key, no mapping
+- [x] L63 clauses[PS3].effects[0].forbid.manoeuvre: manoeuvre — not a field of `forbid`
+- [x] L78 clauses[PS4].effects[0].forbid.roll: roll — not a field of `forbid`
+- [x] L80 clauses[PS4].effects[1].when.roll: roll — not a fact in the vocabulary
+- [x] L81 clauses[PS4].effects[1].result: result — no one-to-one verb
+- [x] L83 clauses[PS4].effects[2].when.roll: roll — not a fact in the vocabulary
+- [x] L84 clauses[PS4].effects[2].result: result — no one-to-one verb
+- [x] L94 clauses[PS5].effects[0].limit.attack: attack — not a field of `limit`
 
 ## rules/core/regeneration.yaml
 
@@ -703,14 +703,14 @@ No residue.
 
 ## rules/disadvantages/DISADV_37.yaml
 
-- [ ] L33 clauses[SE1].effects[0].offer.check: check — not a field of `offer`
-- [ ] L34 clauses[SE1].effects[0].offer.cause: cause — not a field of `offer`
-- [ ] L35 clauses[SE1].effects[0].offer.when: when — not a field of `offer`
-- [ ] L36 clauses[SE1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L49 clauses[SE2].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L64 clauses[SE4].effects[0].offer.gm.modifier: gm.modifier — not a field of `offer`
-- [ ] L90 clauses[SE6].effects[0].provides: provides — a snake_case name, or not a mapping of names
-- [ ] L90 clauses[SE6].effects[0].provides.text_by_option: text_by_option — snake_case key, no mapping
+- [x] L33 clauses[SE1].effects[0].offer.check: check — not a field of `offer`
+- [x] L34 clauses[SE1].effects[0].offer.cause: cause — not a field of `offer`
+- [x] L35 clauses[SE1].effects[0].offer.when: when — not a field of `offer`
+- [x] L36 clauses[SE1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L49 clauses[SE2].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L64 clauses[SE4].effects[0].offer.gm.modifier: gm.modifier — not a field of `offer`
+- [x] L90 clauses[SE6].effects[0].provides: provides — a snake_case name, or not a mapping of names
+- [x] L90 clauses[SE6].effects[0].provides.text_by_option: text_by_option — snake_case key, no mapping
 
 ## rules/disadvantages/DISADV_57.yaml
 
@@ -751,23 +751,23 @@ No residue.
 
 ## situations/beidhaendiger-kampf.yaml
 
-- [ ] L8 weapons: weapons — not a situations-file key in the vocabulary
-- [ ] L19 situations["11.1"].choose.action: action — not a fact in the vocabulary
-- [ ] L19 situations["11.1"].choose.with: with — not a fact in the vocabulary
-- [ ] L29 situations["11.2"].choose.action: action — not a fact in the vocabulary
-- [ ] L57 situations["11.4"].choose.action: action — not a fact in the vocabulary
-- [ ] L81 situations[11.4b].choose.action: action — not a fact in the vocabulary
-- [ ] L100 situations["11.6"].choose.parryWith: parryWith — not a fact in the vocabulary
-- [ ] L108 situations["11.7"].choose.action: action — not a fact in the vocabulary
-- [ ] L121 situations["11.8"].choose.action: action — not a fact in the vocabulary
-- [ ] L122 situations["11.8"].rolls.attack_main: attack_main — snake_case key, no mapping
-- [ ] L124 situations["11.8"].expect.cancelled: cancelled — neither an expect key nor a query
-- [ ] L130 situations["11.9"].choose.action: action — not a fact in the vocabulary
-- [ ] L150 situations["11.10"].expect.not_selectable: not_selectable — neither an expect key nor a query
-- [ ] L151 situations["11.10"].expect.selectable: selectable — neither an expect key nor a query
-- [ ] L157 situations["11.11"].choose.action: action — not a fact in the vocabulary
-- [ ] L170 situations["11.12"].hero.loadout.player_says: player_says — snake_case key, no mapping
-- [ ] L171 situations["11.12"].choose.action: action — not a fact in the vocabulary
+- [x] L8 weapons: weapons — not a situations-file key in the vocabulary
+- [x] L19 situations["11.1"].choose.action: action — not a fact in the vocabulary
+- [x] L19 situations["11.1"].choose.with: with — not a fact in the vocabulary
+- [x] L29 situations["11.2"].choose.action: action — not a fact in the vocabulary
+- [x] L57 situations["11.4"].choose.action: action — not a fact in the vocabulary
+- [x] L81 situations[11.4b].choose.action: action — not a fact in the vocabulary
+- [x] L100 situations["11.6"].choose.parryWith: parryWith — not a fact in the vocabulary
+- [x] L108 situations["11.7"].choose.action: action — not a fact in the vocabulary
+- [x] L121 situations["11.8"].choose.action: action — not a fact in the vocabulary
+- [x] L122 situations["11.8"].rolls.attack_main: attack_main — snake_case key, no mapping
+- [x] L124 situations["11.8"].expect.cancelled: cancelled — neither an expect key nor a query
+- [x] L130 situations["11.9"].choose.action: action — not a fact in the vocabulary
+- [x] L150 situations["11.10"].expect.not_selectable: not_selectable — neither an expect key nor a query
+- [x] L151 situations["11.10"].expect.selectable: selectable — neither an expect key nor a query
+- [x] L157 situations["11.11"].choose.action: action — not a fact in the vocabulary
+- [x] L170 situations["11.12"].hero.loadout.player_says: player_says — snake_case key, no mapping
+- [x] L171 situations["11.12"].choose.action: action — not a fact in the vocabulary
 
 ## situations/belastung.yaml
 
@@ -809,88 +809,88 @@ No residue.
 
 ## situations/boronmir-neu.yaml
 
-- [ ] L96 situations["19.5"].choose.then: then — not a fact in the vocabulary
-- [ ] L101 situations["19.5"].expect.exclusive: exclusive — neither an expect key nor a query
-- [ ] L130 situations["19.7"].hit: hit — not a situation key in the vocabulary
-- [ ] L132 situations["19.7"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L141 situations["19.8"].hit: hit — not a situation key in the vocabulary
-- [ ] L143 situations["19.8"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L147 situations["19.8"].expect.on_failure: on_failure — neither an expect key nor a query
-- [ ] L153 situations["19.9"].hit: hit — not a situation key in the vocabulary
-- [ ] L155 situations["19.9"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L156 situations["19.9"].expect.sheet: sheet — neither an expect key nor a query
-- [ ] L174 situations["19.10"].expect.check: check — neither an expect key nor a query
-- [ ] L187 situations["19.11"].expect.check: check — neither an expect key nor a query
-- [ ] L201 situations["19.12"].fail: fail — not a situation key in the vocabulary
-- [ ] L203 situations["19.12"].expect.log: log — neither an expect key nor a query
-- [ ] L204 situations["19.12"].expect.states: states — neither an expect key nor a query
+- [x] L96 situations["19.5"].choose.then: then — not a fact in the vocabulary
+- [x] L101 situations["19.5"].expect.exclusive: exclusive — neither an expect key nor a query
+- [x] L130 situations["19.7"].hit: hit — not a situation key in the vocabulary
+- [x] L132 situations["19.7"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L141 situations["19.8"].hit: hit — not a situation key in the vocabulary
+- [x] L143 situations["19.8"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L147 situations["19.8"].expect.on_failure: on_failure — neither an expect key nor a query
+- [x] L153 situations["19.9"].hit: hit — not a situation key in the vocabulary
+- [x] L155 situations["19.9"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L156 situations["19.9"].expect.sheet: sheet — neither an expect key nor a query
+- [x] L174 situations["19.10"].expect.check: check — neither an expect key nor a query
+- [x] L187 situations["19.11"].expect.check: check — neither an expect key nor a query
+- [x] L201 situations["19.12"].fail: fail — not a situation key in the vocabulary
+- [x] L203 situations["19.12"].expect.log: log — neither an expect key nor a query
+- [x] L204 situations["19.12"].expect.states: states — neither an expect key nor a query
 
 ## situations/boronmir-sf.yaml
 
-- [ ] L27 hero.added_for_this_example: added_for_this_example — snake_case key, no mapping
-- [ ] L38 situations["14.1"].choose.vorstoss: vorstoss — not a fact in the vocabulary
-- [ ] L38 situations["14.1"].choose.at: at — not a fact in the vocabulary
-- [ ] L47 situations["14.1"].expect.not_allowed: not_allowed — neither an expect key nor a query
-- [ ] L53 situations["14.2"].round.parries_so_far: parries_so_far — snake_case key, no mapping
-- [ ] L84 situations["14.6"].choose.vorstoss: vorstoss — not a fact in the vocabulary
-- [ ] L84 situations["14.6"].choose.at: at — not a fact in the vocabulary
-- [ ] L84 situations["14.6"].choose.then: then — not a fact in the vocabulary
-- [ ] L86 situations["14.6"].expect.passierschlag_at: passierschlag_at — neither an expect key nor a query
-- [ ] L100 situations["14.7"].choose.vorstoss: vorstoss — not a fact in the vocabulary
-- [ ] L100 situations["14.7"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L100 situations["14.7"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L102 situations["14.7"].expect.combinable: combinable — neither an expect key nor a query
-- [ ] L111 situations["14.8"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L118 situations["14.8"].expect.tell: tell — neither an expect key nor a query
-- [ ] L121 situations["14.8"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L154 situations["14.12"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L154 situations["14.12"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L156 situations["14.12"].expect.combinable: combinable — neither an expect key nor a query
-- [ ] L164 situations["14.13"].expect.not_allowed: not_allowed — neither an expect key nor a query
-- [ ] L172 situations["14.13"].expect.on_failed_defence: on_failed_defence — neither an expect key nor a query
-- [ ] L184 situations["14.14"].check: check — not a situation key in the vocabulary
-- [ ] L187 situations["14.14"].expect.check: check — neither an expect key nor a query
-- [ ] L198 situations["14.15"].check: check — not a situation key in the vocabulary
-- [ ] L200 situations["14.15"].expect.check: check — neither an expect key nor a query
-- [ ] L258 situations["14.20"].choose.then: then — not a fact in the vocabulary
-- [ ] L267 situations["14.21"].choose.plaenklerFormation: plaenklerFormation — not a fact in the vocabulary
-- [ ] L267 situations["14.21"].choose.bonus: bonus — not a fact in the vocabulary
-- [ ] L267 situations["14.21"].choose.vorstoss: vorstoss — not a fact in the vocabulary
-- [ ] L267 situations["14.21"].choose.at: at — not a fact in the vocabulary
+- [x] L27 hero.added_for_this_example: added_for_this_example — snake_case key, no mapping
+- [x] L38 situations["14.1"].choose.vorstoss: vorstoss — not a fact in the vocabulary
+- [x] L38 situations["14.1"].choose.at: at — not a fact in the vocabulary
+- [x] L47 situations["14.1"].expect.not_allowed: not_allowed — neither an expect key nor a query
+- [x] L53 situations["14.2"].round.parries_so_far: parries_so_far — snake_case key, no mapping
+- [x] L84 situations["14.6"].choose.vorstoss: vorstoss — not a fact in the vocabulary
+- [x] L84 situations["14.6"].choose.at: at — not a fact in the vocabulary
+- [x] L84 situations["14.6"].choose.then: then — not a fact in the vocabulary
+- [x] L86 situations["14.6"].expect.passierschlag_at: passierschlag_at — neither an expect key nor a query
+- [x] L100 situations["14.7"].choose.vorstoss: vorstoss — not a fact in the vocabulary
+- [x] L100 situations["14.7"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L100 situations["14.7"].choose.tier: tier — not a fact in the vocabulary
+- [x] L102 situations["14.7"].expect.combinable: combinable — neither an expect key nor a query
+- [x] L111 situations["14.8"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L118 situations["14.8"].expect.tell: tell — neither an expect key nor a query
+- [x] L121 situations["14.8"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L154 situations["14.12"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L154 situations["14.12"].choose.tier: tier — not a fact in the vocabulary
+- [x] L156 situations["14.12"].expect.combinable: combinable — neither an expect key nor a query
+- [x] L164 situations["14.13"].expect.not_allowed: not_allowed — neither an expect key nor a query
+- [x] L172 situations["14.13"].expect.on_failed_defence: on_failed_defence — neither an expect key nor a query
+- [x] L184 situations["14.14"].check: check — not a situation key in the vocabulary
+- [x] L187 situations["14.14"].expect.check: check — neither an expect key nor a query
+- [x] L198 situations["14.15"].check: check — not a situation key in the vocabulary
+- [x] L200 situations["14.15"].expect.check: check — neither an expect key nor a query
+- [x] L258 situations["14.20"].choose.then: then — not a fact in the vocabulary
+- [x] L267 situations["14.21"].choose.plaenklerFormation: plaenklerFormation — not a fact in the vocabulary
+- [x] L267 situations["14.21"].choose.bonus: bonus — not a fact in the vocabulary
+- [x] L267 situations["14.21"].choose.vorstoss: vorstoss — not a fact in the vocabulary
+- [x] L267 situations["14.21"].choose.at: at — not a fact in the vocabulary
 
 ## situations/finte.yaml
 
-- [ ] L14 situations["8.1"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L14 situations["8.1"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L17 situations["8.1"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L18 situations["8.1"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
-- [ ] L25 situations["8.2"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L25 situations["8.2"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L28 situations["8.2"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L29 situations["8.2"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
-- [ ] L36 situations["8.3"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L36 situations["8.3"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L40 situations["8.3"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L41 situations["8.3"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
-- [ ] L48 situations["8.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L48 situations["8.4"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L49 situations["8.4"].opponent.defends_with: defends_with — snake_case key, no mapping
-- [ ] L51 situations["8.4"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L52 situations["8.4"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
-- [ ] L53 situations["8.4"].expect.on_hit.opponent_lines.defence.lines[0].applies_to: applies_to — snake_case key, no mapping
-- [ ] L74 situations["8.7"].expect.not_combinable: not_combinable — neither an expect key nor a query
-- [ ] L75 situations["8.7"].expect.told: told — neither an expect key nor a query
-- [ ] L82 situations["8.8"].expect.not_combinable: not_combinable — neither an expect key nor a query
-- [ ] L83 situations["8.8"].expect.told: told — neither an expect key nor a query
-- [ ] L96 situations["8.10"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L96 situations["8.10"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L99 situations["8.10"].expect.on_miss: on_miss — neither an expect key nor a query
-- [ ] L100 situations["8.10"].expect.on_miss.opponent_lines: opponent_lines — snake_case key, no mapping
+- [x] L14 situations["8.1"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L14 situations["8.1"].choose.tier: tier — not a fact in the vocabulary
+- [x] L17 situations["8.1"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L18 situations["8.1"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
+- [x] L25 situations["8.2"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L25 situations["8.2"].choose.tier: tier — not a fact in the vocabulary
+- [x] L28 situations["8.2"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L29 situations["8.2"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
+- [x] L36 situations["8.3"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L36 situations["8.3"].choose.tier: tier — not a fact in the vocabulary
+- [x] L40 situations["8.3"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L41 situations["8.3"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
+- [x] L48 situations["8.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L48 situations["8.4"].choose.tier: tier — not a fact in the vocabulary
+- [x] L49 situations["8.4"].opponent.defends_with: defends_with — snake_case key, no mapping
+- [x] L51 situations["8.4"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L52 situations["8.4"].expect.on_hit.opponent_lines: opponent_lines — snake_case key, no mapping
+- [x] L53 situations["8.4"].expect.on_hit.opponent_lines.defence.lines[0].applies_to: applies_to — snake_case key, no mapping
+- [x] L74 situations["8.7"].expect.not_combinable: not_combinable — neither an expect key nor a query
+- [x] L75 situations["8.7"].expect.told: told — neither an expect key nor a query
+- [x] L82 situations["8.8"].expect.not_combinable: not_combinable — neither an expect key nor a query
+- [x] L83 situations["8.8"].expect.told: told — neither an expect key nor a query
+- [x] L96 situations["8.10"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L96 situations["8.10"].choose.tier: tier — not a fact in the vocabulary
+- [x] L99 situations["8.10"].expect.on_miss: on_miss — neither an expect key nor a query
+- [x] L100 situations["8.10"].expect.on_miss.opponent_lines: opponent_lines — snake_case key, no mapping
 
 ## situations/kampfreflexe.yaml
 
-- [ ] L8 mount: mount — not a situations-file key in the vocabulary
-- [ ] L63 situations["12.5"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
+- [x] L8 mount: mount — not a situations-file key in the vocabulary
+- [x] L63 situations["12.5"].expect.ini_belastung: ini_belastung — neither an expect key nor a query
 
 ## situations/kampfsituationen.yaml
 
@@ -1080,22 +1080,22 @@ No residue.
 
 ## situations/mehrfache-verteidigung.yaml
 
-- [ ] L12 situations[V1].check: check — not a situation key in the vocabulary
-- [ ] L20 situations[V2].check: check — not a situation key in the vocabulary
-- [ ] L28 situations[V3].check: check — not a situation key in the vocabulary
-- [ ] L36 situations[V4].check: check — not a situation key in the vocabulary
-- [ ] L44 situations[V5].check: check — not a situation key in the vocabulary
-- [ ] L52 situations[V6].previous_round: previous_round — not a situation key in the vocabulary
-- [ ] L53 situations[V6].check: check — not a situation key in the vocabulary
-- [ ] L62 situations[V7].check: check — not a situation key in the vocabulary
-- [ ] L64 situations[V7].expect.pa.lines[0].changed_by: changed_by — snake_case key, no mapping
-- [ ] L71 situations[V8].check: check — not a situation key in the vocabulary
-- [ ] L83 situations[V9].expect.pa.not_selectable: not_selectable — snake_case key, no mapping
-- [ ] L91 situations[V10].check: check — not a situation key in the vocabulary
-- [ ] L98 situations[V10].expect.pa_value: pa_value — neither an expect key nor a query
-- [ ] L108 situations[V11].expect.actions: actions — neither an expect key nor a query
-- [ ] L108 situations[V11].expect.actions.free_action: free_action — snake_case key, no mapping
-- [ ] L115 situations[V12].check: check — not a situation key in the vocabulary
+- [x] L12 situations[V1].check: check — not a situation key in the vocabulary
+- [x] L20 situations[V2].check: check — not a situation key in the vocabulary
+- [x] L28 situations[V3].check: check — not a situation key in the vocabulary
+- [x] L36 situations[V4].check: check — not a situation key in the vocabulary
+- [x] L44 situations[V5].check: check — not a situation key in the vocabulary
+- [x] L52 situations[V6].previous_round: previous_round — not a situation key in the vocabulary
+- [x] L53 situations[V6].check: check — not a situation key in the vocabulary
+- [x] L62 situations[V7].check: check — not a situation key in the vocabulary
+- [x] L64 situations[V7].expect.pa.lines[0].changed_by: changed_by — snake_case key, no mapping
+- [x] L71 situations[V8].check: check — not a situation key in the vocabulary
+- [x] L83 situations[V9].expect.pa.not_selectable: not_selectable — snake_case key, no mapping
+- [x] L91 situations[V10].check: check — not a situation key in the vocabulary
+- [x] L98 situations[V10].expect.pa_value: pa_value — neither an expect key nor a query
+- [x] L108 situations[V11].expect.actions: actions — neither an expect key nor a query
+- [x] L108 situations[V11].expect.actions.free_action: free_action — snake_case key, no mapping
+- [x] L115 situations[V12].check: check — not a situation key in the vocabulary
 
 ## situations/probe-fernkampf.yaml
 
@@ -1263,25 +1263,25 @@ No residue.
 
 ## situations/sturmangriff.yaml
 
-- [ ] L17 situations["10.1"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L25 situations["10.2"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L34 situations["10.3"].expect.not_combinable: not_combinable — neither an expect key nor a query
-- [ ] L39 situations["10.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L39 situations["10.4"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L42 situations["10.4"].expect.on_miss: on_miss — neither an expect key nor a query
-- [ ] L49 situations["10.5"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L49 situations["10.5"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L51 situations["10.5"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L60 situations["10.6"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L60 situations["10.6"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L62 situations["10.6"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L70 situations["10.7"].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
-- [ ] L70 situations["10.7"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L70 situations["10.7"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L72 situations["10.7"].expect.combinable: combinable — neither an expect key nor a query
-- [ ] L83 situations["10.8"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L83 situations["10.8"].choose.runUp: runUp — not a fact in the vocabulary
-- [ ] L86 situations["10.8"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L17 situations["10.1"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L25 situations["10.2"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L34 situations["10.3"].expect.not_combinable: not_combinable — neither an expect key nor a query
+- [x] L39 situations["10.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L39 situations["10.4"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L42 situations["10.4"].expect.on_miss: on_miss — neither an expect key nor a query
+- [x] L49 situations["10.5"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L49 situations["10.5"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L51 situations["10.5"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L60 situations["10.6"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L60 situations["10.6"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L62 situations["10.6"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L70 situations["10.7"].choose.manoeuvres: manoeuvres — not a fact in the vocabulary
+- [x] L70 situations["10.7"].choose.tier: tier — not a fact in the vocabulary
+- [x] L70 situations["10.7"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L72 situations["10.7"].expect.combinable: combinable — neither an expect key nor a query
+- [x] L83 situations["10.8"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L83 situations["10.8"].choose.runUp: runUp — not a fact in the vocabulary
+- [x] L86 situations["10.8"].expect.on_hit: on_hit — neither an expect key nor a query
 
 ## situations/trefferzonen.yaml
 
@@ -1361,22 +1361,22 @@ No residue.
 
 ## situations/wuchtschlag.yaml
 
-- [ ] L12 situations["9.1"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L12 situations["9.1"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L15 situations["9.1"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L22 situations["9.2"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L22 situations["9.2"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L25 situations["9.2"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L32 situations["9.3"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L32 situations["9.3"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L35 situations["9.3"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L42 situations["9.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L42 situations["9.4"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L45 situations["9.4"].expect.on_miss: on_miss — neither an expect key nor a query
-- [ ] L58 situations["9.6"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
-- [ ] L58 situations["9.6"].choose.tier: tier — not a fact in the vocabulary
-- [ ] L61 situations["9.6"].expect.on_hit: on_hit — neither an expect key nor a query
-- [ ] L75 situations["9.8"].expect.combinable: combinable — neither an expect key nor a query
+- [x] L12 situations["9.1"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L12 situations["9.1"].choose.tier: tier — not a fact in the vocabulary
+- [x] L15 situations["9.1"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L22 situations["9.2"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L22 situations["9.2"].choose.tier: tier — not a fact in the vocabulary
+- [x] L25 situations["9.2"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L32 situations["9.3"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L32 situations["9.3"].choose.tier: tier — not a fact in the vocabulary
+- [x] L35 situations["9.3"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L42 situations["9.4"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L42 situations["9.4"].choose.tier: tier — not a fact in the vocabulary
+- [x] L45 situations["9.4"].expect.on_miss: on_miss — neither an expect key nor a query
+- [x] L58 situations["9.6"].choose.manoeuvre: manoeuvre — not a fact in the vocabulary
+- [x] L58 situations["9.6"].choose.tier: tier — not a fact in the vocabulary
+- [x] L61 situations["9.6"].expect.on_hit: on_hit — neither an expect key nor a query
+- [x] L75 situations["9.8"].expect.combinable: combinable — neither an expect key nor a query
 
 ## Reviews reset by hand edits
 
@@ -1398,3 +1398,24 @@ No residue.
 - waffeneigenschaften.WE2: the `gates` effect is dropped; the gate is the `when: { rulesets: fokus.waffeneigenschaften }` on each equipment effect (clause now `none`)
 - ADV_44.VR1: the `when: { event: regeneration.R4, energy: le, regenerates: true }` is dropped; the target `regeneration.le` carries R4 and LeP, and "wenn er regeneriert" is regeneration.R6/R7's `suppress` of this line
 - schicksalspunkte.SP-verteidigung: the offer's `before: defenceRoll` is dropped (a comment); the timing ("vor dem Würfeln der Verteidigung") is left to the check procedure, which offers it with the defence's breakdown before the dice
+- kampfsonderfertigkeiten.KS2: the `apply: always` effect is dropped (every passive SF's lines apply without a choice, the engine's default for a rule with no `manoeuvre` key); the `show` is a `tell` to the player
+- kampfsonderfertigkeiten.KS5: its effects are dropped (clause now `none`): the two pickers are each manoeuvre's own `choice.<name>` offer, "one of each" is KS3's and KS4's limits, and the exclusion message is each excluding rule's `forbid` with its `because`; the generic `forbid: { combination: this }` and its template `tell` are gone
+- SA_40.A1: `situation: ambush` is now the player's toggle, an `offer` of `choice.hinterhaltUeberraschung` (default off) on a TAL_10 check, per the decided ruling aufmerksamkeit-when; the add reads it, and its target is `check.modifier`
+- SA_66.V2: the forbid's `span: round` is dropped; the round is carried by `choice.vorstoss`, which V3 offers with `span: round`
+- SA_59.SS1: the offer's `opponent_may_only: [shieldParry, aw]` is its own effect, `forbid: { what: { defence: [opponent.weaponParry] } }` with a `because`, when `choice.schildspalter`
+- SA_59.SS3: `damage: { to: loadout.shield.structurePoints, not: le }` and its `then: destroy` are now an `item` change (StP lowered by `hit.tp`), a `suppress` of schaden.S1 (no LeP lost) and a second `item` change (`destroyed: true`) when `loadout.shield.structurePoints` is at most 0; "the defence failed" is `check.result: failure` (was `action.defence: failed`)
+- SA_42.BH1: the `raise` of beidhaendiger-kampf.ZW3's line by 1 per Stufe is its own `add: { to: [at, pa, aw], value: level }` under ZW3's `when`; `max_total: 0` is dropped (Stufe II brings the sum to 0 and no Stufe goes higher)
+- SA_48.F1: the one offer with `tiers: up_to_owned` is three offers of `choice.finte` (options 1…Stufe), each gated by `level`; the adds read `choice.finte` (was `action.manoeuvre: finte`) and count `per: choice.finte` (was `chosen_tier`); `opponent_add` is an `add` to `opponent.pa`/`opponent.aw`
+- SA_67.W1: the same as SA_48.F1 for `choice.wuchtschlag`
+- passierschlag.PS2: the offer is `offer: { choice: passierschlag }` (its `costs: none` and `domain: meleeAttack` are a comment) and the effects read `choice.passierschlag`; `opponent_may_only: []` is a `forbid` of `opponent.pa`/`opponent.aw`; the hero's side (`side: opponent`) is `gmFact.incomingAttack: passierschlag`, and its `then: { go_to: takeDamage }` is dropped (a comment)
+- passierschlag.PS4: the `result: hit` on a 1 and `result: miss` on a 20 are dropped (the check procedure does that on every check); ruling passierschlag-dice moves onto the `forbid` of the critical and fumble checks
+- passierschlag.PS5: the `limit: { …, max: none }` is dropped (clause now `none`): no limit is the default
+- beidhaendiger-kampf.ZW1: the `dualWield` loadout forbids are `forbid: { what: { loadout: other } }` when `loadout.twoHanded`, or when either piece is a Kettenwaffe (CT_6) and the second is not a shield; the `allow` of Raufen is dropped (allowed is the default) and its ruling raufen-double-attack moves onto ZW2's offer
+- beidhaendiger-kampf.ZW2: the offer is `offer: { choice: doubleAttack }` when a second piece is carried; its `costs: action` and `then: [attack mainHand, attack offHand]` are dropped (a comment)
+- beidhaendiger-kampf.ZW3: the effect `id` and `lasts: round` are dropped; the round is carried by the round fact `round.doubleAttack`; SA_42.BH1 is an add of its own
+- beidhaendiger-kampf.ZW4: `hand: off` is `action.with: offHand`; the effect `id` is dropped (ADV_5.V2 suppresses the clause)
+- beidhaendiger-kampf.ZW8: `cancel: { attack: second }` is `forbid: { what: { attack: offHand } }` with a `because`, when `round.doubleAttack` and `roll.firstAttack: patzer` (was `action: doubleAttack, action.attack: first, result: patzer`)
+- DISADV_37.SE1: the offer of a check is `check: { of: { talent: TAL_23 } }` when `gmFact.trigger: DISADV_37`; its `cause` and `application: null` are a comment (still on the open ruling schlechte-eigenschaft-check)
+- DISADV_37.SE2: `on_failure: { log: … }` is a `tell` to the player when the Willenskraft check under the trigger fails (`check.result: failure`)
+- DISADV_37.SE4: the `gm.modifier` offer is an `ask` of `gmFact.triggerModifier` (the GM) and an `add` of it to `check.modifier` on that check; its `default: 0` is a comment
+- DISADV_37.SE6: `provides: { text_by_option: sid }` is `provide: { name: DISADV_37.eigenschaft, value: { sid: name } }`: the name, whose line of SE6's text is the trigger

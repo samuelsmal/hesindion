@@ -35,11 +35,26 @@ class Forms:
         if isinstance(raw, dict) and "of" in raw and set(raw) <= PROPORTION_KEYS:
             p = {"of": self.operand(raw["of"], line), "per": self.operand(raw.get("per", 1), line),
                  "times": raw.get("times", 1), "above": raw.get("above", 0),
-                 "round": raw.get("round", "up"), "min": raw.get("min"), "max": raw.get("max")}
+                 "round": raw.get("round", "up"),
+                 "min": self.bound(raw.get("min"), line), "max": self.bound(raw.get("max"), line)}
             if p["round"] not in self.v.raw["rounding"]:
                 self.err(f"unknown rounding {p['round']}", line)
             return {"proportion": p}
         self.err("value outside the four forms", line)
+
+    def bound(self, raw, line):
+        """A proportion's `min` or `max`: absent (None), a number (kept as is), a fact or target
+        (an operand), or a list of those, every one of which holds (`{"each": [...]}`):
+        `max: [10, gsNatural]` is at most 10 and at most the natural GS (SA_62.ST2)."""
+        if raw is None or (isinstance(raw, (int, float)) and not isinstance(raw, bool)):
+            return raw
+        if isinstance(raw, list):
+            if len(raw) < 2:
+                self.err("a list of bounds lists two or more", line)
+            return {"each": [self.operand(x, line) for x in raw]}
+        if isinstance(raw, str):
+            return self.operand(raw, line)
+        self.err(f"unknown bound {raw!r}", line)
 
     def operand(self, raw, line):
         """A number, a fact or a target; a list of those is their sum (`{"sum": [...]}`), taken
