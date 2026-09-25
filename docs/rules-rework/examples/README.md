@@ -29,15 +29,138 @@ rules/
   disadvantages/ DISADV_*
   equipment/     ITEMTPL_*: a weapon's table row and its Waffenvorteil/-nachteil
   creatures/     animal profiles and their abilities: a mount, what it can do in a fight
+  talents/       TAL_*: a talent rule, not owned — gated on `check.talent` (see "Facts" below)
   rulings.yaml   rulings that cut across several rules
 situations/      one file per example
 sweeps/          the rules that affect one hero, for the review TUI
 ```
 
-A rule file holds: id, name, kind, the page (URL, book, page, date checked), whether a person has
-reviewed it, the page's text split into **clauses** (verbatim, per the 2026-09-23 decision), and for
-each clause either its **effects** or an explicit statement that nothing is encoded and why. A clause
-that could not be encoded is shown to the player as text, never dropped.
+Every `<file>.yaml` under `rules/` is written in the engine's rule format
+([design §4](../../plans/2026-09-24-rules-engine-design.md#4-the-rule-format)), the same format the compiler
+(`scripts/rulec`) reads. **The vocabulary is closed**: an id, verb, target, fact, owner or value
+form outside [`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) is a compile
+error, not a warning. `make rules-check` runs the compiler over every rule file; run it after
+every edit. This section is what it checks against — the rest of the vocabulary (`kinds`,
+`comparisons`, `selectorKinds`, item fields, …) is in the JSON itself.
+
+### The file header (design §4.1)
+
+```yaml
+id: waffeneigenschaften
+name: Waffeneigenschaften
+kind: core                        # specialAbility | advantage | disadvantage | condition | state
+                                  # | core | equipment | creature | talent
+ruleset: fokus.waffeneigenschaften # or `core`, the default
+source: { url, book, page, checked, hash, also: [...] }
+reviewed: null                    # or { by, date }
+levels: 7                         # when the rule has Stufen, e.g. ADV_25 Hohe Lebenskraft
+options: sid                      # when the hero file chooses one, e.g. DISADV_37 Schlechte Eigenschaft
+provides: { ... }                 # tables and ordered scales other rules read
+clauses: [ ... ]
+rulings: [ ... ]
+agentPass: null                   # the review queue's flag; see "What waits for an agent"
+```
+
+(from `rules/core/waffeneigenschaften.yaml`, trimmed). The `# DRAFT FORMAT — see ../../README.md.`
+comment (`../README.md.` for `rulings.yaml`) at the top of every file points back here.
+
+### Clauses (design §4.2)
+
+Every clause has its verbatim `id` and `text`, and **exactly one** of:
+
+| Key | Meaning | Example |
+|---|---|---|
+| `effects: [...]` | What the app does with it | most clauses |
+| `unencoded: <why>` | The app cannot apply it; the player sees the text | `trefferzonen.TZ7`: "creatures are not modelled; …" |
+| `none: <why>` | Nothing to do at the table: a prerequisite, a cost, the page's own example | `ADV_49.ZH5`: "purchase prerequisite, not a rule at the table" |
+
+A clause that could not be encoded is shown to the player as text, never dropped. `rulec check`
+refuses a clause with none, or more than one, of these three keys.
+
+### Effects and their verbs (design §4.3)
+
+An effect is one verb with its payload, plus `when` (a condition over facts, see "Facts" below),
+and optionally `ruling` (an id or a list), `because` (the reason text shown when it forbids or does
+not apply) and `phase` (design §5.2, only where the default is wrong). The verb is one of these
+twenty-two — a verb outside this list is a compile error — each shown below as it is actually
+written in a migrated clause:
+
+| Group | Verb | As written | Clause |
+|---|---|---|---|
+| Value | `add` | `add: { to: at, value: 2 }` | `SA_862.F2` |
+| | `set` | `set: { to: sp, value: { of: hit.tp } }` | `schaden.S5` |
+| | `multiply` | `multiply: { to: regeneration.le, by: 0.5, round: up }` | `regeneration.R6` |
+| | `cap` | `cap: { to: [at, pa, aw, fk, check.modifier, gs, ini], over: { ruleKind: condition }, min: -5 }` | `zustaende.Z3` |
+| | `floor` | `floor: { to: regeneration.le, min: 0 }` | `regeneration.R4` |
+| | `useLevel` | `useLevel: { rule: COND_6, as: "level - 1" }` | `ADV_49.ZH1` |
+| Line control | `replace` | `replace: { line: { line: schaden.S3 }, with: { of: loadout.weapon.leit, above: loadout.weapon.schadensschwelle } }` | `schaden.S4` |
+| | `suppress` | `suppress: { line: { line: kampfwerte.KW9 } }` | `reiterkampf.RK1` |
+| Legality | `forbid` | `forbid: { what: { defence: weaponParry } }` | `groessenkategorie.GK4` |
+| | `require` | `require: { that: { hero.mounted: true, opponent.onFoot: true }, enables: true, for: { rule: vorteilhafte-position } }` | `reiterkampf.RK2` |
+| | `limit` | `limit: { per: action, what: { manoeuvre: { kind: basismanoever } }, max: 1 }` | `kampfsonderfertigkeiten.KS3` |
+| Player and GM | `offer` | `offer: { choice: ignoresRS, default: false }` | `schaden.S5` |
+| | `ask` | `ask: { fact: gmFact.triggerModifier, who: gm }` | `DISADV_37.SE4` |
+| | `tell` | `tell: { to: player, text: "gibt der Schlechten Eigenschaft nach" }` | `DISADV_37.SE2` |
+| Data | `provide` | `provide: { name: trefferzonen.TZ6, value: { kopf: -10, torso: -4, arme: -8, beine: -8 } }` | `trefferzonen.TZ6` |
+| | `derive` | `derive: { to: iniBase, sum: [{ of: mount.iniBase }] }` | `reiterkampf.RK1` |
+| Consequence | `check` | `check: { of: { talent: TAL_23 } }` | `DISADV_37.SE1` |
+| | `gain` | `gain: { rule: STATE_8 }` | `zustaende.Z5` |
+| | `cost` | `cost: { pool: asp, amount: { of: spell.costPerInterval }, every: { minutes: spell.interval } }` | `zaubermodifikationen.ZM5` |
+| | `process` | `process: { id: laden, steps: 1, advancedBy: { action: laden }, completes: [{ item: { instance: { loadout: weapon }, change: { loaded: true } } }] }` | `ladezeiten.LZ2` |
+| | `item` | `item: { instance: { loadout: mount }, change: { ridden: false } }` | `reiterkampf.RK6` |
+| | `reroll` | `reroll: { die: { dice: any }, keep: better, max: 1, per: action }` | `ADV_4.B1` |
+
+`check` carries `onSuccess` and `onFailure` lists of effects (see `DISADV_37.SE1`/`SE2` above: the
+check is `SE1`, its `onFailure` line is `SE2`'s `tell`). `gain` covers Zustand Stufen and Status in
+both directions — negative `levels` removes them.
+
+Targets (design §4.4) are one closed list too: `at`, `pa`, `aw`, `fk`, `ini`, `gs`, `leMax`,
+`wundschwelle`, `tp`, `rs`, `sp`, and the stage targets of a check (`check.attribute`,
+`check.modifier`, `check.fw`, `check.qs`, `check.dice`), with `opponent.<target>`, `mount.<target>`
+and `ally.<target>` for the other side of the table or a mount/companion, and `pa(with: weapon |
+shield)` for a defence with a named piece in hand.
+
+### Values (design §4.5)
+
+Four forms only — never a free formula, so each clause has one readable encoding. This is what
+`scripts/rulec/forms.py` (`Forms.value`) actually accepts, extensions included:
+
+| Form | Example | Notes |
+|---|---|---|
+| a number | `2` (`SA_862.F2`) | |
+| a level expression | `level` (`ADV_25.HL1`), `level - 1` (`ADV_49.ZH1`) | also `N * level`, `level + N` |
+| a proportion | `{ of: hit.sp, per: wundschwelle, times: -1, round: down }` (`trefferzonen.TZ8`) | `of`/`per` are **operands**: a number, a fact, a target, or a summed list of those (`sum: [{ of: [attr.MU, attr.GE], per: 2, round: up }]`, `(Mut + Gewandtheit) / 2`, `kampfwerte.KW9`). `above` (default 0) is a number, or an operand naming a fact (`DISADV_37.SE4`: `above: gmFact.triggerModifier`) or a target (`schaden.S3`: `above: loadout.weapon.schadensschwelle`). `min`/`max` are a number, an operand, or a **list of operands, all of which bind** (`max: [10, gsNatural]`, `SA_62.ST2`: at most 10 and at most the natural GS). `round` names the shared ruling it follows where the page does not say (`round-up`). |
+| a table lookup | `table(trefferzonen.TZ6, choice.targetZone)` (`trefferzonen.TZ5`) | `name` is a `provide`d table (or a nested key into one, `trefferzonen-ruestungsschutz.RS4.belastung`); `key` is the fact or target whose value looks the row up. |
+
+### Facts and their owners (design §4.6)
+
+`when` is `all` / `any` / `not` over named **facts**. Every fact has one **owner**, which decides
+who is asked for it and is recorded on every line that used it. In a situation file
+(`scripts/rulec/situations.py`), each section maps to one owner (a prefixed section names the fact
+with that prefix):
+
+| Situation section | Owner | Prefix |
+|---|---|---|
+| `choose` | `player` | — |
+| `gm` | `gm` | — |
+| `opponent` | `gm` | `opponent.` |
+| `ally` | `player` | `ally.` |
+| `round` | `round` | `round.` |
+| `loadout` | `loadout` | `loadout.` |
+| `rolls` | `roll` | — |
+
+(A rule file's own facts add two more owners the vocabulary lists but no situation section states
+directly: `sheet` — attributes, owned rules, talents, `hero.has` — and `derived`, a value another
+query computed.) A fact nobody has stated is **unknown**, not false; an effect whose `when` depends
+on an unknown fact produces a question, not a guess.
+
+See [`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) for the full, closed
+lists this section only samples (all facts, targets, verbs, comparisons, `selectorKinds`, item
+fields, …), and
+[the design](../../plans/2026-09-24-rules-engine-design.md#4-the-rule-format) for the reasoning
+behind the format. [`MIGRATION.md`](./MIGRATION.md) has the file-by-file record of the 2026-09
+migration into this format — its "Expectation conflicts for the owner", "Open questions" and
+"Notes for the engine tasks" sections are what is still unresolved.
 
 ## How rulings are kept
 
@@ -113,14 +236,19 @@ watch and steer; it does not commit). Two kinds:
 
 - **An answered ruling.** Turn it into `status: decided` with `decided: { by, date }` (the person
   who answered, and the day), and update the effects and situations that rest on it.
-- **A flagged rule**, `agent_pass: { requested: { by, date }, about: [...], note }`. The note says
+- **A flagged rule**, `agentPass: { requested: { by, date }, about: [...], note }`. The note says
   what is wrong; `about`, when present, names the clauses and rulings it concerns. Re-read the page,
   then fix what the note names. For a ruling, that means rewriting its question, context, options
   and recommendation. It stays `status: open` with `answer: null`, and the owner answers it afresh.
   If the note is right that the ruling is not needed, remove it and the `ruling:` references to it.
   If you disagree with the note, say why in the ruling's `context` rather than ignoring it. Then
-  delete the `agent_pass` block. If the pass changed a clause's effects, withdraw the rule's
+  delete the `agentPass` block. If the pass changed a clause's effects, withdraw the rule's
   `reviewed` (set it to `null`): the review was of the old version.
+
+Whatever you change, keep it inside the closed vocabulary ("Layout of the draft rule files" above)
+and run `make rules-check` after every edit — it compiles every rule file against
+[`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) and catches an unknown verb,
+target, fact or value form before it reaches `make test-rules-review`.
 
 ## The set
 
