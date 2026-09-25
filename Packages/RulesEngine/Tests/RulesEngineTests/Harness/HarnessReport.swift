@@ -151,6 +151,9 @@ struct HarnessReport: Encodable {
     /// Unsupported situations with query expectations left uncompared because they expect a
     /// `gained` / `cleared` event (R50).
     var stateChangeUnsupported: [String] = []
+    /// Situations run as a hit on the hero or as the rolls of an attack (Task 27, `CombatRunner`);
+    /// their queries follow the before/after rule.
+    var combatRun: [String] = []
     /// How often each mismatch kind is the first of a failed situation, and in all of them.
     var firstMismatchKinds: [String: Int] = [:]
     var mismatchKinds: [String: Int] = [:]

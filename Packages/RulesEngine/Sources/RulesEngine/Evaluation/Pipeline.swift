@@ -103,9 +103,20 @@ final class Evaluation {
 
     /// The effects that reach `query`: `book.effects(reaching:)`, less those whose own targets do
     /// not match its context. A `level(rule: X)` query keeps the useLevels acting on X (rulec lists
-    /// every useLevel under `level`), and no other rule's.
+    /// every useLevel under `level`), and no other rule's. Then the value effects a procedure put
+    /// in force for this action (`Situation.inForce`) whose targets match it.
     private func candidates(for query: Query) -> [Effect] {
         let levelRule = query.levelRule
+        let inForce = situation.inForce.filter { e in
+            switch e.payload {
+            case .add(let a): a.to.contains { $0.matches(query.target) }
+            case .set(let s): s.to.contains { $0.matches(query.target) }
+            case .multiply(let m): m.to.contains { $0.matches(query.target) }
+            case .cap(let c): c.to.contains { $0.matches(query.target) }
+            case .floor(let f): f.to.contains { $0.matches(query.target) }
+            default: false
+            }
+        }
         return book.effects(reaching: query.name).filter { e in
             switch e.payload {
             case .add(let a): return a.to.contains { $0.matches(query.target) }
@@ -117,7 +128,7 @@ final class Evaluation {
             case .useLevel(let u): return levelRule == nil || u.rule == levelRule
             default: return true
             }
-        }
+        } + inForce
     }
 }
 
@@ -510,7 +521,29 @@ extension Evaluation {
             guard case .add(let a) = e.payload, applies(e, &state), !isSuppressed(e, &state) else { continue }
             add(e, a, &state)
         }
+        if state.query.name == "check.modifier" { checkModifiers(&state) }
         freeLines(&state)
+    }
+
+    /// A `check` effect's `modifier` (spec §6: a rule asking for a check makes it harder) is a line
+    /// of the `check.modifier` of the check it names, while its `when` holds: trefferzonen.TZ8's
+    /// −1 per full Wundschwelle on the Wundeffekt check, reiterkampf.RK10's −1 per 5 SP of the
+    /// mount. Its `via` holds the clauses behind the targets it reads (R26: Eisern behind the
+    /// Wundschwelle).
+    private func checkModifiers(_ state: inout PipelineState) {
+        for e in state.candidates {
+            guard case .check(let c) = e.payload, let modifier = c.modifier,
+                  namesCheck(c.of, context: state.query.target.context, rule: e.origin.rule, depth: state.depth),
+                  applies(e, &state), !isSuppressed(e, &state) else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+            let via = ruleVia(rule, state)
+            guard let used = gate(e, level: level, via: via, &state) else { continue }
+            let r = value(modifier, level: level, rule: rule, depth: state.depth)
+            guard computed([r], of: e, used: used, via: via, &state, [modifier]), let v = r.value else { continue }
+            state.lines.append(Line(value: v, kind: .add, origin: e.origin.clauseRef, via: (via + r.via).uniqued(),
+                                    rulings: decided(e), facts: (used + r.used).uniqued()))
+        }
     }
 
     /// The lines of the check's shared `check.modifier` (its `talent:` / `spell:` context from the

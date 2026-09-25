@@ -132,7 +132,7 @@ extension Evaluation {
 
     /// What a defence id stands for, as rulec indexes it (`compile._defence_targets`): `aw`, `pa`,
     /// or both.
-    private func defenceTarget(_ id: String) -> String? {
+    static func defenceTarget(_ id: String) -> String? {
         let n = id.lowercased()
         if n == "aw" || n.contains("ausweich") || n.contains("dodge") { return "aw" }
         if n == "pa" || n.hasSuffix("parry") || n.hasSuffix("parade") { return "pa" }
@@ -145,7 +145,7 @@ extension Evaluation {
         guard let raw = id.id else { return false }
         let (qSide, qName) = side(query.name), (idSide, idName) = side(raw)
         guard qSide == idSide, qName == "pa" || qName == "aw" else { return false }
-        guard let target = defenceTarget(idName) else { return true }
+        guard let target = Self.defenceTarget(idName) else { return true }
         guard target == qName else { return false }
         let piece = idName.lowercased(), with = query.target.context["with"]
         if piece.hasPrefix("shield") || piece.hasPrefix("schild") { return with == nil || with == "shield" }
@@ -225,7 +225,7 @@ extension Evaluation {
         guard selector.kind == .defence else { return nil }
         let ids = selector.ids.compactMap(\.id).map(side)
         guard !ids.isEmpty, ids.allSatisfy({ $0.side.isEmpty }) else { return nil }
-        let targets = Set(ids.map { defenceTarget($0.name) ?? "both" })
+        let targets = Set(ids.map { Self.defenceTarget($0.name) ?? "both" })
         if targets == ["pa"] { return "round.parries" }
         if targets == ["aw"] { return "round.dodges" }
         return "round.defencesMade"
@@ -316,7 +316,9 @@ extension Evaluation {
     /// Whether `selector` names the offer `o` of `rule`: a choice id equal to it (`doppel`) or
     /// above it (`spellModification` names `spellModification.x`), a manoeuvre id or match its
     /// rule fits, or its rule. With `option`, whether it names that option: the choice id
-    /// `<choice>.<option>` (`spellModification.erzwingen`).
+    /// `<choice>.<option>` (`spellModification.erzwingen`). The manoeuvre id `any` names the offers
+    /// of manoeuvre rules only (passierschlag.PS3 forbids every manoeuvre beside the
+    /// Passierschlag, not the Passierschlag's own offer: ruling passierschlag-sf).
     private func names(_ selector: RuleSelector, offer o: Offer, of rule: String, option: String?) -> Bool {
         switch selector.kind {
         case .choice:
@@ -326,7 +328,7 @@ extension Evaluation {
         case .manoeuvre where option == nil:
             return selector.ids.contains { id in
                 switch id {
-                case .id(let s): return s == "any" || s == o.choice || s == rule
+                case .id(let s): return (s == "any" && book.rules[rule]?.manoeuvre != nil) || s == o.choice || s == rule
                 case .match(let properties): return ruleHas(rule, properties)
                 }
             }

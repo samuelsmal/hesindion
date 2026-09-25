@@ -77,6 +77,11 @@ public struct Situation: Codable, Hashable, Sendable {
     /// Derived facts the evaluator could not compute: unknown, whatever the sheet's fallback
     /// (`hero.levelOf.X` whose derive lacks a fact). Only the evaluator sets it.
     var unstated: Set<String> = []
+    /// Value effects a procedure's consequence put in force for the rest of this action (a
+    /// confirmed shot's `onSuccess` doubling the TP, fernkampf.FK13: "für diesen Angriff"). Every
+    /// query they reach reads them as it reads the book's. Only a procedure sets it
+    /// (`CombatRoll`); it is not part of the JSON, since it lasts one action.
+    var inForce: [Effect] = []
 
     public init(owned: [String: OwnedRule], facts: [Fact], base: [String: Int] = [:], rolls: [Int] = [],
                 pools: [Pool: PoolState] = [:], heroId: String? = nil) {

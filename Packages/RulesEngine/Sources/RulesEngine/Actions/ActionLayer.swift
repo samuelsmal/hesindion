@@ -25,7 +25,16 @@ public struct ActionLayer: Sendable {
     /// - `gain { rule, levels }` gives `gained(rule, levels)` within the rule's Stufen (a state:
     ///   one), a negative `levels` gives `cleared`.
     public func perform(_ action: Action, in situation: Situation) -> ActionResult {
-        if case .check(let request) = action { return CheckProcedure.perform(request, in: situation, engine: engine) }
+        switch action {
+        case .check(let request): return CheckProcedure.perform(request, in: situation, engine: engine)
+        case .attack(let with): return CombatRoll.perform(.attack(with: with), in: situation, engine: engine)
+        case .defend(let kind, let with): return CombatRoll.perform(.defend(kind: kind, with: with), in: situation, engine: engine)
+        case .takeHit(let tp, let zone, let side):
+            let r = DamageChain.run(hit: tp, zone: zone, side: side, in: situation, engine: engine)
+            return ActionResult(breakdowns: r.breakdowns, questions: r.questions, texts: r.texts, notApplied: r.notApplied,
+                                checks: r.checks)
+        default: break
+        }
         let stated = Self.stated(action, in: situation)
         let evaluation = engine.evaluation(stated)
         var run: ActionRun
@@ -46,7 +55,7 @@ public struct ActionLayer: Sendable {
         case .state(let rule, let levels):
             run = evaluation.actionRun(controlling: [])
             evaluation.gain(rule, levels: levels, effect: nil, facts: [], via: [], &run)
-        case .check:
+        case .check, .attack, .defend, .takeHit:
             run = evaluation.actionRun(controlling: [])                // handled above
 
         case .take(let choice):

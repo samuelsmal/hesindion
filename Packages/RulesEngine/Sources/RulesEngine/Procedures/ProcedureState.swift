@@ -166,6 +166,10 @@ public enum ProcedureInput: Hashable, Sendable {
     /// A check forbidden by another check's consequence (`StepResult.forbidden`, SA_74.VP2's failed
     /// Selbstbeherrschung): read as a failed check, and confirmed at once.
     case forbidden([NotApplied])
+    /// The check made at the table without its dice: only whether it succeeded is entered (a
+    /// situation's `rolls: { check.result: failure }`). No FP and no QS; confirmed at once, so its
+    /// consequences follow (a failed Wundeffekt check's Status, trefferzonen.TZ8).
+    case outcome(success: Bool)
     case confirm
 }
 

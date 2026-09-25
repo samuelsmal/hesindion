@@ -72,6 +72,13 @@ public enum CheckProcedure {
             var out = confirm(stages, failed, engine)
             out.notApplied = (entries + out.notApplied).uniqued()
             return out
+        case (.awaitingDice(let stages), .outcome(let success)):
+            guard stages.legal.allowed else { return refuse(state, "die Probe ist nicht erlaubt") }
+            let entered = evaluate(stages, faces: [], rolled: [], rerolls: [], uses: [:], diceLines: [], forbiddenBy: nil,
+                                   stated: success, engine)
+            return confirm(stages, entered, engine)
+        case (.rolled, .outcome):
+            return refuse(state, "die Würfel sind schon gefallen")
         case (.awaitingDice, _):
             return refuse(state, "erst die Würfel (\(state.stages.request.attributes.count)W20)")
         case (.rolled, .dice):
@@ -188,10 +195,11 @@ public enum CheckProcedure {
 
     /// The result of `faces`: the spend per die, FP left, success, the kind counted from the faces
     /// and its classifying clause, then `check.fp` and `check.qs` with `check.result` stated.
-    /// With `forbiddenBy` the check was never rolled: a failure, named by that entry.
+    /// With `forbiddenBy` the check was never rolled: a failure, named by that entry. With `stated`
+    /// it was rolled at the table and only its success is known (`.outcome`).
     private static func evaluate(_ stages: Stages, faces: [Int], rolled: [[Int]], rerolls: [RerolledDie],
                                  uses: [ClauseRef: Int], diceLines: [Line], forbiddenBy: NotApplied?,
-                                 _ engine: Engine) -> CheckResult {
+                                 stated: Bool? = nil, _ engine: Engine) -> CheckResult {
         let eew = faces.isEmpty ? [] : stages.eew.map { $0 ?? 0 }
         let spent = zip(faces, eew).map { face, e -> Int in
             let (d, overflow) = face.subtractingReportingOverflow(e)
@@ -211,6 +219,8 @@ public enum CheckProcedure {
         var from: ClauseRef?
         if let forbiddenBy {
             (kind, success, from) = (.regular, false, forbiddenBy.origin)
+        } else if let stated {
+            (kind, success) = (.regular, stated)
         } else if twenties >= 2 {
             (kind, success) = (twenties >= 3 ? .dreifach20 : .patzer, false)
             from = classifying("check.twenties", count: twenties, in: s, engine)
@@ -225,8 +235,9 @@ public enum CheckProcedure {
         if let success { state("check.result", .string(success ? "success" : "failure"), .roll) }
         let fpStage = engine.evaluate(Query("check.fp"), in: s)
         let qsStage = engine.evaluate(Query("check.qs"), in: s)
-        return CheckResult(faces: faces, rolled: rolled, eew: eew, spent: spent, fp: forbiddenBy == nil ? fpStage.result : nil,
-                           qs: success == true ? qsStage.result : nil, success: success, kind: kind, from: from,
+        return CheckResult(faces: faces, rolled: rolled, eew: eew, spent: spent,
+                           fp: forbiddenBy == nil && stated == nil ? fpStage.result : nil,
+                           qs: success == true && stated == nil ? qsStage.result : nil, success: success, kind: kind, from: from,
                            ones: ones, twenties: twenties, rerolls: rerolls, uses: uses,
                            dice: Breakdown(query: Query("check.dice"), lines: diceLines), fpStage: fpStage, qsStage: qsStage,
                            situation: s)
@@ -329,11 +340,13 @@ public enum CheckProcedure {
 
         // The `check` effects asking for this check, read where they were asked.
         let outer = engine.evaluation(stages.outer)
+        let stated = engine.evaluation(stages.situation)
         var asked = PipelineState(query: Query("check"), depth: 0, candidates: [])
         asked.local = [:]
         var consequences: [Effect] = []
         for e in all {
-            guard case .check(let c) = e.payload, names(c.of, request, stages.situation), outer.applies(e, &asked) else { continue }
+            guard case .check(let c) = e.payload, names(c.of, request, stated, rule: e.origin.rule),
+                  outer.applies(e, &asked) else { continue }
             let rule = e.origin.rule
             let level = outer.ruleLevel(rule, levels: [:], depth: 0)
             guard outer.gate(e, level: level, via: outer.ruleVia(rule, asked), &asked) != nil,
@@ -399,18 +412,21 @@ public enum CheckProcedure {
     }
 
     /// Whether a `check` effect's `of` names this check: a `talent` / `spell` selector by id (with
-    /// `with`, the check's Anwendungsgebiet too), a `check` selector by kind.
-    static func names(_ of: RuleSelector, _ request: CheckRequest, _ situation: Situation) -> Bool {
-        let ids = of.ids.compactMap(\.id)
-        let matches: Bool
+    /// `with`, the check's Anwendungsgebiet too, a `table(…)` form looked up in the situation: the
+    /// Wundeffekt check's by hit zone, trefferzonen.TZ8), a `check` selector by kind.
+    static func names(_ of: RuleSelector, _ request: CheckRequest, _ evaluation: Evaluation, rule: String) -> Bool {
         switch of.kind {
-        case .talent: matches = request.kind == .talent && (ids.contains(request.id) || ids.contains("any"))
-        case .spell: matches = request.kind == .spell && (ids.contains(request.id) || ids.contains("any"))
-        case .check: matches = ids.contains(request.kind.rawValue)
-        default: matches = false
+        case .talent, .spell:
+            return of.kind.rawValue == request.kind.rawValue
+                && evaluation.namesCheck(of, context: context(request), rule: rule, depth: 0)
+        case .check:
+            guard of.ids.compactMap(\.id).contains(request.kind.rawValue) else { return false }
+            guard let with = of.with else { return true }
+            let stated = evaluation.situation.facts["check.application"]?.value.string
+            return with.contains { evaluation.application($0, rule: rule, depth: 0).value.map { $0 == stated } ?? false }
+        default:
+            return false
         }
-        guard matches, let with = of.with else { return matches }
-        return situation.facts["check.application"]?.value.string.map(with.contains) ?? false
     }
 
     static func mergeQuestions(_ questions: [Question]) -> [Question] {
@@ -453,5 +469,52 @@ extension Condition {
             default: return nil
             }
         }
+    }
+}
+
+// MARK: - What a `check` effect names
+
+extension Evaluation {
+    /// A `check` selector's `with` entry as this situation reads it: plain text (`Kampfmanöver`),
+    /// or `table(name, key)`, the provided table's entry for the key (trefferzonen.TZ8's
+    /// Anwendungsgebiet by `hit.zone`, from TZ11). nil when the key is unknown (`unknown`) or the
+    /// table has no text there.
+    func application(_ text: String, rule: String, depth: Int) -> (value: String?, used: [FactUse], unknown: [UnknownFact]) {
+        guard let form = Self.tableForm(text) else { return (text, [], []) }
+        let (s, behind) = prepared([form.key], depth: depth, rule: rule)
+        let t = Tables.lookup(form.name, key: form.key, level: nil, in: s, book: book, rule: rule, depth: depth) {
+            [unowned self] target, d in self.resolve(target, depth: d)
+        }
+        return (t.value?.string, t.used, t.unknown.flatMap { behind[$0.name] ?? [$0] }.uniqued())
+    }
+
+    /// `table(name, key)` written as text (a selector's `with`) → its name and key.
+    static func tableForm(_ text: String) -> (name: String, key: String)? {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        guard t.hasPrefix("table("), t.hasSuffix(")") else { return nil }
+        let parts = t.dropFirst("table(".count).dropLast().split(separator: ",", maxSplits: 1)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else { return nil }
+        return (parts[0], parts[1])
+    }
+
+    /// Whether a `check` effect's `of` names the 3W20 check `context` is a stage of (`talent: X` /
+    /// `spell: X`; without one, the stated `check.kind` with `check.talent` / `check.spell`): a
+    /// `talent` or `spell` selector listing it (or `any`), and with a `with` the stated
+    /// `check.application` among its entries (`application`).
+    func namesCheck(_ of: RuleSelector, context: [String: String], rule: String, depth: Int) -> Bool {
+        let key: String
+        switch of.kind {
+        case .talent: key = "talent"
+        case .spell: key = "spell"
+        default: return false
+        }
+        let stated = situation.facts["check.kind"]?.value.string == key ? situation.facts["check.\(key)"]?.value.string : nil
+        guard let subject = context[key] ?? (context.isEmpty ? stated : nil) else { return false }
+        let ids = of.ids.compactMap(\.id)
+        guard ids.contains(subject) || ids.contains("any") else { return false }
+        guard let with = of.with else { return true }
+        guard let application = situation.facts["check.application"]?.value.string else { return false }
+        return with.contains { self.application($0, rule: rule, depth: depth).value == application }
     }
 }

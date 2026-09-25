@@ -748,4 +748,103 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(FileFilter("none").unknown(among: files), [])
         XCTAssertEqual(HarnessReport().summary, "harness: 0 passed, 0 failed, 0 pending, 0 conflict, 0 unsupported")
     }
+
+    // MARK: - Task 27: hits, combat rolls, attacks and defences
+
+    private func check(_ id: String, _ application: String?, from: String, via: [String] = []) -> PendingCheck {
+        PendingCheck(origin: ref(from), kind: .talent, id: id, application: application, onSuccess: [], onFailure: [],
+                     situation: Situation(owned: [:], facts: []), via: via.map(ref))
+    }
+
+    /// E1: `events` against what the action gave. A `check` entry is a check it asked for (talent,
+    /// application or `with`, clause, `via`); `gained` / `cleared` / `logged` / `paid` are events by
+    /// kind, rule or note, clause; each actual entry matches once; `[]` asserts neither an event nor
+    /// a check; an event the engine has no kind for (`damage`, `itemChanged`) is an unsupported shape.
+    func testEventsMatchTheChecksAskedForAndTheEventsGiven() throws {
+        let tz8 = check("TAL_8", "Handlungsfähigkeit bewahren", from: "trefferzonen.TZ8", via: ["ADV_54.E1"])
+        let gained = Event(kind: .gained, origin: ref("trefferzonen.TZ8"), rule: "STATE_10", levels: 1)
+        func events(_ json: String, _ actual: [Event] = [], _ checks: [PendingCheck] = []) throws -> [Mismatch] {
+            let list = try JSONDecoder().decode([JSONValue].self, from: Data(json.utf8))
+            return CombatRunner.events(list, events: actual, checks: checks)
+        }
+        XCTAssertEqual(try events(#"[{"check": {"talent": "TAL_8", "application": "Handlungsfähigkeit bewahren"}, "from": "trefferzonen.TZ8"}]"#, [], [tz8]), [])
+        XCTAssertEqual(try events(#"[{"check": {"talent": "TAL_8", "with": null}, "from": "trefferzonen.TZ8", "via": ["ADV_54.E1"]}]"#, [], [tz8]), [])
+        XCTAssertEqual(kinds(try events(#"[{"check": {"talent": "TAL_8", "application": "Störungen ignorieren"}}]"#, [], [tz8])), [.missingEvent])
+        XCTAssertEqual(kinds(try events(#"[{"check": {"talent": "TAL_8"}}, {"check": {"talent": "TAL_8"}}]"#, [], [tz8])), [.missingEvent])
+        XCTAssertEqual(try events(#"[{"gained": "STATE_10", "from": "trefferzonen.TZ8", "levels": 1}]"#, [gained]), [])
+        XCTAssertEqual(kinds(try events(#"[{"gained": "STATE_10", "from": "trefferzonen.TZ11"}]"#, [gained])), [.missingEvent])
+        XCTAssertEqual(try events("[]"), [])
+        XCTAssertEqual(kinds(try events("[]", [], [tz8])), [.unexpectedEvent])
+        XCTAssertEqual(kinds(try events("[]", [gained])), [.unexpectedEvent])
+        let shapes = try events(#"[{"damage": {"formula": "1W3+1"}, "from": "trefferzonen.TZ11"}, {"itemChanged": {"held": false}, "from": "trefferzonen.TZ11"}, {"check": {"at": 15, "attack": "Tritt", "by": "mount"}}]"#)
+        XCTAssertEqual(kinds(shapes), [.unsupportedShape, .unsupportedShape, .unsupportedShape])
+    }
+
+    /// C1: an `offered` / `notOffered` entry naming an attack or a defence (`defence: shieldParry`,
+    /// `defence: [pa, aw]`, `attack: ranged`) matches `CombatRoll.options`: a generic id names every
+    /// option on its target; offered needs a legal one (from `from`, with `result` / `base` / `lines`
+    /// compared on its target); not offered needs none legal, refused by the `because` and `ruling`.
+    func testAttackAndDefenceEntriesMatchTheCombatOptions() throws {
+        let gk4 = NotApplied(origin: ref("groessenkategorie.GK4"), reason: .forbidden, because: "nur Schild oder Ausweichen",
+                             rulings: ["groessenkategorie.mounted-size"])
+        func target(_ q: String, _ result: Int) -> Breakdown { Breakdown(query: Query(q), base: sheetBase(result)) }
+        let options = [
+            CombatOption(kind: .attack, id: "melee", request: .attack(), origin: nil, target: target("at", 14), reasons: []),
+            CombatOption(kind: .defence, id: "weaponParry", request: .defend(kind: .pa, with: "weapon"), origin: nil,
+                         target: target("pa(with: weapon)", 8), reasons: [gk4]),
+            CombatOption(kind: .defence, id: "shieldParry", request: .defend(kind: .pa, with: "shield"), origin: ref("schilde.SCH3"),
+                         target: target("pa(with: shield)", 13), reasons: []),
+            CombatOption(kind: .defence, id: "aw", request: .defend(kind: .aw), origin: nil, target: target("aw", 7), reasons: []),
+        ]
+        func match(_ json: String, _ wanted: Bool) throws -> MatchResult {
+            let o = try XCTUnwrap(try JSONDecoder().decode(JSONValue.self, from: Data(json.utf8)).objectValue)
+            var c = MatchResult()
+            Matcher.combatOffer(o, wanted: wanted, options: options, &c)
+            return c
+        }
+        XCTAssertEqual(try match(#"{"defence": "shieldParry", "from": "schilde.SCH3", "result": 13}"#, true).mismatches, [])
+        XCTAssertEqual(kinds(try match(#"{"defence": "shieldParry", "result": 12}"#, true).mismatches), [.result])
+        XCTAssertEqual(kinds(try match(#"{"defence": "shieldParry", "from": "schilde.SCH6"}"#, true).mismatches), [.missingOffer])
+        XCTAssertEqual(try match(#"{"defence": "weaponParry", "because": "groessenkategorie.GK4", "ruling": "groessenkategorie.mounted-size"}"#, false).mismatches, [])
+        XCTAssertEqual(kinds(try match(#"{"defence": "weaponParry", "because": "passierschlag.PS2"}"#, false).mismatches), [.wrongOffer])
+        // `pa` names both parries: the shield parry is still legal.
+        XCTAssertEqual(kinds(try match(#"{"defence": ["pa", "aw"], "because": "groessenkategorie.GK4"}"#, false).mismatches),
+                       [.unexpectedOffer, .unexpectedOffer])
+        XCTAssertEqual(try match(#"{"attack": "at"}"#, true).mismatches, [])
+        XCTAssertEqual(kinds(try match(#"{"attack": "ranged"}"#, true).mismatches), [.missingOffer])
+        let prose = try match(#"{"attack": "ranged", "reason": "im Nahkampf nicht"}"#, false)
+        XCTAssertEqual(prose.mismatches, [])
+        XCTAssertEqual(prose.notes.count, 1)
+        XCTAssertEqual(kinds(try match(#"{"defence": "aw", "on": "takeDamage"}"#, true).mismatches), [.unsupportedShape])
+    }
+
+    /// R50 kept, per expectation (Task 27): a query is compared after the action when its breakdown
+    /// there differs and reads what the action changed (a fact it stated, a rule an event gained or
+    /// cleared); otherwise before.
+    func testAQueryDescribesTheStateAfterTheActionWhenItReadsWhatTheActionChanged() {
+        let before = Breakdown(query: Query("check.modifier"), lines: [line(-2, "DISADV_57.VW1")])
+        var tz8 = line(-1, "trefferzonen.TZ8")
+        tz8.facts = [FactUse(name: "hit.overWundschwelle", value: 1, owner: .derived)]
+        let after = Breakdown(query: Query("check.modifier"), lines: [line(-2, "DISADV_57.VW1"), tz8])
+        XCTAssertTrue(CombatRunner.describesTheAfter(after, differsFrom: before, changed: ["hit.overWundschwelle"], rules: []))
+        XCTAssertFalse(CombatRunner.describesTheAfter(after, differsFrom: before, changed: ["hit.sp"], rules: []))
+        XCTAssertFalse(CombatRunner.describesTheAfter(before, differsFrom: before, changed: ["hit.overWundschwelle"], rules: []))
+        let liegend = Breakdown(query: Query("pa"), lines: [line(-2, "STATE_10.L2")])
+        XCTAssertTrue(CombatRunner.describesTheAfter(liegend, differsFrom: Breakdown(query: Query("pa")), changed: [], rules: ["STATE_10"]))
+    }
+
+    /// Which situations run as a hit or as the rolls of an attack: the SP or a `hit.*` fact stated
+    /// (at the top or in a step), a check event expected from a clause whose `check` reads a hit
+    /// (reiterkampf.RK10), or steps that are all `rolls: [{ w20: n }]`.
+    func testAHitOrAnAttacksRollsRunOnTheCombatRunner() throws {
+        let book = try XCTUnwrap(try? RuleBook.load(from: Repo.url("build/rules/rules.json")), "run make rules-json")
+        XCTAssertTrue(CombatRunner.canRun(try situation(#"{"base": {"sp": 7}}"#), book: book))
+        XCTAssertTrue(CombatRunner.canRun(try situation(#"{"facts": [{"name": "hit.tp", "value": 9, "owner": "roll"}]}"#), book: book))
+        XCTAssertTrue(CombatRunner.canRun(try situation(#"{"sequence": [{"hero": {"values": {"sp": 5}}}]}"#), book: book))
+        XCTAssertTrue(CombatRunner.canRun(try situation(#"{"sequence": [{"choose": {"choice.mountHit": true}, "expect": {"events": [{"check": {"talent": "TAL_6"}, "from": "reiterkampf.RK10"}]}}]}"#), book: book))
+        XCTAssertFalse(CombatRunner.canRun(try situation(#"{"expectSituation": {"events": [{"check": {"talent": "TAL_6"}, "from": "reiterkampf.RK12"}]}}"#), book: book))
+        XCTAssertTrue(CombatRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}], "expect": {"success": false}}]}"#), book: book))
+        XCTAssertFalse(CombatRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}]}, {"round": {"phase": "start"}}]}"#), book: book))
+        XCTAssertFalse(CombatRunner.canRun(try situation(#"{"expect": [{"query": "at"}]}"#), book: book))
+    }
 }

@@ -35,6 +35,18 @@ final class SituationsHarnessTests: XCTestCase {
         report.conflictsUnknown = (listed ?? []).filter { !known.contains($0) }.map(\.description)
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
+            // Task 27: a hit on the hero, or the rolls of an attack.
+            if CombatRunner.canRun(s, book: engine.book) {
+                report.combatRun.append(s.id)
+                let combat = CombatRunner.run(s, engine: engine)
+                var run = Matcher.run(s, engine: engine, hit: combat.view)
+                run.hits = (run.hits + Matcher.openRulings(in: combat.breakdowns)).distinct()
+                let mismatches = run.mismatches + combat.mismatches
+                let verdict = Verdict.of(s, mismatches: mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
+                report.add(s, verdict, mismatches, notes: run.notes + combat.notes, conflicts: conflicts)
+                if verdict == .failed { failures.append((s, mismatches)) }
+                continue
+            }
             guard ActionRunner.canRun(s) else {
                 // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
                 let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }
@@ -65,7 +77,7 @@ final class SituationsHarnessTests: XCTestCase {
         }
 
         report.stateChangeUnsupported = all.situations.filter { filter.keeps($0.file) && !ActionRunner.canRun($0)
-            && !$0.expect.isEmpty && Self.expectsStateChange($0) }.map(\.id)
+            && !CombatRunner.canRun($0, book: engine.book) && !$0.expect.isEmpty && Self.expectsStateChange($0) }.map(\.id)
         try report.write(to: Repo.url("build/rules/harness-report.json"))
         print(report.summary)
         report.fileLines.forEach { print($0) }

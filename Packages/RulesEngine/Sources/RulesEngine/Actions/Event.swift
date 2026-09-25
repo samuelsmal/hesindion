@@ -79,18 +79,22 @@ public struct Event: Codable, Hashable, Sendable {
 }
 
 /// What an action gave: its events (not yet applied), the breakdowns of the targets its amounts
-/// read (`spell.cost`), what was asked and shown, and every effect that did not act and why
-/// (a suppressed cost, an illegal offer, a `when` that is no or unknown).
+/// read (`spell.cost`) or of its procedure's stages, what was asked and shown, every effect that
+/// did not act and why (a suppressed cost, an illegal offer, a `when` that is no or unknown), and
+/// the checks it calls for.
 public struct ActionResult: Hashable, Sendable {
     public var events: [Event]
     public var breakdowns: [Breakdown]
     public var questions: [Question]
     public var texts: [TextLine]
     public var notApplied: [NotApplied]
+    /// The checks the action calls for, the caller's to run (`.takeHit`: the Wundeffekt's
+    /// Selbstbeherrschung, trefferzonen.TZ8; the rider's Reiten, reiterkampf.RK10).
+    public var checks: [PendingCheck]
 
     public init(events: [Event] = [], breakdowns: [Breakdown] = [], questions: [Question] = [], texts: [TextLine] = [],
-                notApplied: [NotApplied] = []) {
+                notApplied: [NotApplied] = [], checks: [PendingCheck] = []) {
         self.events = events; self.breakdowns = breakdowns; self.questions = questions; self.texts = texts
-        self.notApplied = notApplied
+        self.notApplied = notApplied; self.checks = checks
     }
 }

@@ -20,6 +20,8 @@ struct Mismatch: Codable, Hashable, CustomStringConvertible {
         case missingOffer, unexpectedOffer, wrongOffer, missingQuestion, unexpectedQuestion, missingText, unexpectedText
         // a check's stages and result (Task 26)
         case values, fp, qs, spent, success, checkResult, dice
+        // an action's events and the checks it asks for (Task 27)
+        case missingEvent, unexpectedEvent
         /// An expectation the engine's output has no field for (`legal.span`, `term`, a
         /// situation-level `legal`, an offer that is no choice, …), or a malformed one.
         case unsupportedShape
@@ -48,7 +50,8 @@ struct Mismatch: Codable, Hashable, CustomStringConvertible {
     var area: Area {
         switch kind {
         case .missingLine, .wrongValue, .wrongVia, .wrongRuling, .wrongWas, .wrongKind, .wrongSource, .wrongTerm,
-             .total, .result, .base, .values, .fp, .qs, .spent, .success, .checkResult, .dice: .value
+             .total, .result, .base, .values, .fp, .qs, .spent, .success, .checkResult, .dice,
+             .missingEvent, .unexpectedEvent: .value
         case .missingNotApplied, .wrongReason, .wrongBecause, .wrongNotApplied: .notApplied
         case .legal: .legal
         case .missingOffer, .unexpectedOffer, .wrongOffer: .offers
@@ -93,14 +96,21 @@ enum Matcher {
     ///
     /// With a check's `view` (Task 26), a stage query is the procedure's breakdown, `values` its
     /// effective attributes, a `reroll` offer entry its rerolls, and the situation-level entries
-    /// are looked up in its breakdowns too. `onlyQueries` compares the query expectations alone:
-    /// a situation whose action part cannot run (extra 8).
-    static func run(_ s: CompiledSituation, engine: Engine, view: ProcedureView? = nil, onlyQueries: Bool = false) -> Run {
+    /// are looked up in its breakdowns too. With a hit's `hit` (Task 27), each query is the one the
+    /// before/after rule chose and the situation-level entries are looked up in the chain's
+    /// breakdowns too. An `offered` / `notOffered` entry naming an attack or a defence is matched
+    /// against `CombatRoll.options`. `onlyQueries` compares the query expectations alone: a
+    /// situation whose action part cannot run (extra 8).
+    static func run(_ s: CompiledSituation, engine: Engine, view: ProcedureView? = nil, hit: HitView? = nil,
+                    onlyQueries: Bool = false) -> Run {
         let situation = s.engineSituation
-        let breakdowns = s.expect.map { view?.breakdown(for: $0.query) ?? engine.evaluate(Query($0.query), in: situation) }
+        let breakdowns = s.expect.map {
+            view?.breakdown(for: $0.query) ?? hit?.breakdown(for: $0.query) ?? engine.evaluate(Query($0.query), in: situation)
+        }
         let wantsOffers = !onlyQueries && (s.expectSituation["offered"] != nil || s.expectSituation["notOffered"] != nil)
         var offers: [OfferedChoice] = []
-        let seen = (breakdowns + (view?.breakdowns ?? [])).distinct()
+        let options = wantsOffers && expectsCombatOptions(s) ? CombatRoll.options(in: situation, engine: engine) : nil
+        let seen = (breakdowns + (view?.breakdowns ?? []) + (hit?.breakdowns ?? []) + (options ?? []).map(\.target)).distinct()
         var hits = openRulings(in: seen) + openRulings(in: seen.flatMap(\.offers))
         if s.expect.isEmpty && wantsOffers && view == nil {
             offers = engine.offers(in: situation)
@@ -113,7 +123,7 @@ enum Matcher {
         }
         if let view { hits += openRulings(in: view.offers.flatMap(\.reasons)) }
         let c = compare(s, breakdowns: breakdowns, offers: offers, offering: offeringClauses(engine.book), view: view,
-                        onlyQueries: onlyQueries)
+                        hit: hit, options: options, onlyQueries: onlyQueries)
         return Run(mismatches: c.mismatches, notes: c.notes, hits: hits.distinct())
     }
 
@@ -125,13 +135,14 @@ enum Matcher {
     /// a situation without a query, `Engine.offers(in:)`. `offering`: choice id → the clauses
     /// that offer it (for a `notOffered` whose offer was suppressed).
     static func compare(_ s: CompiledSituation, breakdowns: [Breakdown], offers: [OfferedChoice],
-                        offering: [String: [ClauseRef]] = [:], view: ProcedureView? = nil,
-                        onlyQueries: Bool = false) -> MatchResult {
+                        offering: [String: [ClauseRef]] = [:], view: ProcedureView? = nil, hit: HitView? = nil,
+                        options: [CombatOption]? = nil, onlyQueries: Bool = false) -> MatchResult {
         var c = MatchResult()
         for (q, b) in zip(s.expect, breakdowns) { query(q, b, values: view?.values(for: q.query), &c) }
         if onlyQueries { return c }
-        situationLevel(s, breakdowns: breakdowns, offers: offers, offering: offering, view: view, &c)
-        if checkedExpectations(s, check: view != nil) == 0 {
+        situationLevel(s, breakdowns: breakdowns, offers: offers, offering: offering, view: view, hit: hit, options: options, &c)
+        let run = hit.map { _ in s.expectSituation.keys.filter(CombatRunner.handled.contains).count + s.sequence.count } ?? 0
+        if checkedExpectations(s, check: view != nil) + run == 0 {
             c.mismatches.append(.shape("nothing to compare", "the situation states no expectation the harness checks"))
         }
         return c
@@ -498,10 +509,11 @@ enum Matcher {
     static let situationKeys: Set<String> = ["offered", "notOffered", "notApplied", "questions", "texts", "legal"]
 
     static func situationLevel(_ s: CompiledSituation, breakdowns queried: [Breakdown], offers: [OfferedChoice],
-                               offering: [String: [ClauseRef]], view: ProcedureView? = nil, _ c: inout MatchResult) {
+                               offering: [String: [ClauseRef]], view: ProcedureView? = nil, hit: HitView? = nil,
+                               options: [CombatOption]? = nil, _ c: inout MatchResult) {
         let es = s.expectSituation
-        // A check's stage breakdowns count as the situation's too.
-        let breakdowns = (queried + (view?.breakdowns ?? [])).distinct()
+        // A check's stage breakdowns, and a hit's, count as the situation's too.
+        let breakdowns = (queried + (view?.breakdowns ?? []) + (hit?.breakdowns ?? [])).distinct()
         let noQuery = breakdowns.isEmpty
         func shape(_ tag: String, _ d: String) { c.mismatches.append(.shape(tag, d)) }
         func needsQuery(_ key: String) -> Bool {
@@ -517,10 +529,14 @@ enum Matcher {
 
         // Bridge 8: with a query, the breakdowns' offers (a phase-4 suppress acts there);
         // otherwise `Engine.offers(in:)`.
-        let pool = queried.isEmpty && view == nil ? offers : breakdowns.flatMap(\.offers)
+        let pool = queried.isEmpty && view == nil && hit == nil ? offers : breakdowns.flatMap(\.offers)
         let entries = breakdowns.flatMap(\.notApplied)
         for (key, wanted) in [("offered", true), ("notOffered", false)] {
             for entry in list(key) ?? [] {
+                if let options, let o = entry.objectValue, o["defence"] != nil || o["attack"] != nil {
+                    combatOffer(o, wanted: wanted, options: options, &c)
+                    continue
+                }
                 c.mismatches += offer(entry, wanted: wanted, in: pool, notApplied: entries, offering: offering, rerolls: view?.offers)
             }
         }

@@ -20,4 +20,14 @@ public enum Action: Hashable, Sendable {
     /// (rerolls between the dice and the confirm) is `CheckProcedure.start` and
     /// `ProcedureState.step`.
     case check(CheckRequest)
+    /// The hero's attack (spec §6 combat roll, `CombatRoll`): its target (`at`, or `fk` with a
+    /// ranged weapon in hand), and with the situation's `rolls` the die and, for a 1 or a 20, the
+    /// confirmation. Step by step: `CombatRoll.start` and `CombatState.step`.
+    case attack(with: String? = nil)
+    /// The hero's defence: `pa(with: …)` or `aw`, rolled as `.attack` is.
+    case defend(kind: DefenceKind, with: String? = nil)
+    /// A hit on the hero (`DamageChain`): TP → RS → SP → the Wundschwelle → the checks it calls for
+    /// (`ActionResult.checks`). `tp` nil: the situation's `hit.tp`, or its stated SP. Paying LeP
+    /// (`.pay(.le, n)`, a `paid(le)` event) is not a hit and never runs the chain.
+    case takeHit(tp: Int?, zone: String? = nil, side: String? = nil)
 }
