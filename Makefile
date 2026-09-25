@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json
 
 build:
 	xcodebuild \
@@ -170,6 +170,20 @@ rules-agent:
 test-rules-review:
 	uv run --with pyyaml python -m unittest discover -s $(RULES_EXAMPLES) -p 'test_*.py' -v
 	uv run --with pyyaml python $(RULES_EXAMPLES)/rulings.py --check
+
+# The new rule format's compiler (docs/plans/2026-09-24-rules-engine-design.md). Validates the
+# rule and situation files against specs/rules/vocabulary.json and compiles them to JSON for
+# the Swift engine (Packages/RulesEngine).
+RULEC = cd scripts && uv run --with pyyaml python -m rulec
+
+test-rulec:
+	uv run --with pyyaml --with ruamel.yaml python -m unittest discover -s scripts/rulec -t scripts -p 'test_*.py' -v
+
+rules-check:
+	$(RULEC) check
+
+rules-json:
+	$(RULEC) build --out ../build/rules
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
