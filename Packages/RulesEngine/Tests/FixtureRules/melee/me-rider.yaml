@@ -1,0 +1,36 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# Reiterkampf: a rider is in a vorteilhafte Position (reiterkampf.RK2).
+id: me-rider
+name: Reiterkampf
+kind: core
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: R2
+    text: Beritten in vorteilhafter Position.
+    effects:
+      - when: { hero.mounted: true }
+        require: { that: { hero.mounted: true }, enables: true, for: { rule: me-position } }
+  - id: R1
+    text: Beritten gilt der INI-Basiswert des Pferdes.
+    effects:
+      - when: { hero.mounted: true }
+        derive: { to: iniBase, sum: [{ of: mount.iniBase }] }
+      - when: { hero.mounted: true }
+        add: { to: tp, value: { of: mount.gs, per: 2, round: up } }
+  - id: R6
+    text: Abspringen.
+    effects:
+      - when: { hero.mounted: true }
+        offer: { choice: jumpOff, default: false }
+      - when: { hero.mounted: true, choice.jumpOff: true }
+        item: { instance: { loadout: mount }, change: { ridden: false } }
+  - id: R12
+    text: Ein Befehl kostet eine Aktion und eine Probe auf Reiten.
+    effects:
+      - when: { hero.mounted: true }
+        offer: { choice: order, options: [flucht] }
+      - when: { hero.mounted: true, choice.order: [flucht] }
+        cost: { pool: actions, amount: 1 }
+      - when: { hero.mounted: true, choice.order: [flucht] }
+        check: { of: { talent: TAL_6, with: Kampfmanöver } }

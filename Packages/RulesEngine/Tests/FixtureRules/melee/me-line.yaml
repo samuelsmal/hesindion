@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# Two formations that exclude each other on an open ruling (SA_862.F1, formation-and-plaenkler).
+id: me-line
+name: Formation
+kind: specialAbility
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: L1
+    text: Formation.
+    effects:
+      - offer: { choice: line }
+      - offer: { choice: skirmish }
+      - forbid: { what: { choice: [line, skirmish] }, together: true }
+        ruling: both
+rulings:
+  - id: both
+    question: Beide zugleich?
+    answer: null

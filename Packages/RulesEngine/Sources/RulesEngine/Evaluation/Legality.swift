@@ -135,6 +135,42 @@ extension Evaluation {
         return state.legal
     }
 
+    /// `Engine.legality(ofCombination:)`.
+    func combinationLegality(_ ids: [String]) -> Legality { combinationBreakdown(ids).legal }
+
+    /// The combination as a breakdown of no target: its `legal`, and the entries of the forbids
+    /// it read that did not refuse it (one resting on an open ruling: `openRuling`, and its text).
+    func combinationBreakdown(_ ids: [String]) -> Breakdown {
+        let effects = book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }
+        var state = PipelineState(query: Query("combination"), depth: 0, candidates: effects.filter { $0.phase == .lines })
+        state.local = [:]
+        control(effects.filter { $0.phase == .legality }, &state)
+        let choices = ids.uniqued()
+        let all = self.offers
+        func offers(of choice: String) -> [(offer: Offer, effect: Effect, rule: String)] {
+            all.filter { $0.offer.choice == choice }
+        }
+        func named(_ selector: RuleSelector) -> [String] {
+            choices.filter { c in offers(of: c).contains { names(selector, offer: $0.offer, of: $0.rule, option: nil) } }
+        }
+        for e in effects {
+            guard case .forbid(let f) = e.payload, f.together == true, applies(e, &state), !isSuppressed(e, &state) else { continue }
+            let rule = e.origin.rule
+            let via = ruleVia(rule, state)
+            guard let used = gate(e, level: ruleLevel(rule, levels: [:], depth: 0), via: via, &state, asking: false) else { continue }
+            let them = named(f.what)
+            let own = choices.filter { c in offers(of: c).contains { $0.rule == rule } }
+            guard !them.isEmpty, Set(them + own).count >= 2 else { continue }
+            forbid(NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because, rulings: e.ruling,
+                              facts: used, via: via), &state)
+        }
+        for r in choiceRules() {
+            guard case .limit(let s, let max) = r.kind, named(s).count > max else { continue }
+            forbid(r.entry(.forbidden), &state)
+        }
+        return state.breakdown
+    }
+
     private func forbid(_ entry: NotApplied, _ state: inout PipelineState) {
         state.legal.allowed = false
         if !state.legal.reasons.contains(entry) { state.legal.reasons.append(entry) }
@@ -384,7 +420,7 @@ extension Evaluation {
 
     /// The entries that refuse the offer `o` of `rule` (or, with `option`, that option): a
     /// forbid naming it, a require for it (or its rule's own) not met, a limit naming it whose
-    /// count has reached its max (another one may not be taken).
+    /// count of the other choices taken has reached its max (another one may not be taken).
     private func refusals(of o: Offer, _ rule: String, option: String? = nil, _ rules: [ChoiceRule]) -> [NotApplied] {
         rules.compactMap { r in
             switch r.kind {
@@ -395,7 +431,11 @@ extension Evaluation {
             case .require(nil):
                 return option == nil && r.rule == rule ? r.entry(.requirementNotMet) : nil
             case .limit(let s, let max):
-                return names(s, offer: o, of: rule, option: option) && chosen(s).count >= max ? r.entry(.forbidden) : nil
+                // Task 31: the other choices taken count, not the offer's own (a chosen Finte is
+                // still offered under "one Basismanöver per action"; a second one is not). An
+                // option's count is unchanged (Task 23: the options chosen, its own included).
+                let others = chosen(s).filter { $0 != o.choice }
+                return names(s, offer: o, of: rule, option: option) && others.count >= max ? r.entry(.forbidden) : nil
             }
         }
     }
@@ -497,6 +537,26 @@ extension Evaluation {
 
     // MARK: - Texts and questions
 
+    /// Task 31: on the hero sheet, each action-layer effect every query sees (a `gain`, `cost`,
+    /// `item`, `restore` or `check`) of a rule that applies whose `when` is no: an entry
+    /// `conditionFalse` (ITEMTPL_19.RS4's Betäubung with the Fokusregel off). One that may act is
+    /// the action layer's, and is not listed.
+    private func actionEffectsNotApplying(_ state: inout PipelineState) {
+        for e in state.candidates {
+            switch e.payload {
+            case .gain, .cost, .item, .restore, .check: break
+            default: continue
+            }
+            guard let when = e.when, applicability(of: e.origin.rule, depth: state.depth).applies else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+            let c = condition(when, level: level, rule: rule, depth: state.depth, local: state.local)
+            guard c.truth == .no else { continue }
+            state.record(NotApplied(origin: e.origin.clauseRef, reason: .conditionFalse, because: e.because, rulings: e.ruling,
+                                    facts: c.used, via: ruleVia(rule, state)))
+        }
+    }
+
     /// The player-facing parts of a breakdown (depth 0, after phase 7):
     /// - the offers that reach the query (`offered`);
     /// - each applicable `tell` whose `when` is yes → a `.tell` text to its audience (a suppressed
@@ -535,6 +595,7 @@ extension Evaluation {
                 continue
             }
         }
+        if state.query.name == Engine.sheetQuery { actionEffectsNotApplying(&state) }
         let reaching = (book.reach[state.query.name] ?? []).map(\.rule).uniqued()
         for id in reaching where applicability(of: id, depth: state.depth).applies {
             for clause in book.rules[id]?.clauses ?? [] {

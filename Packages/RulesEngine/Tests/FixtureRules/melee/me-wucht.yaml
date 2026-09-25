@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# A second Basismanöver (SA_67).
+id: me-wucht
+name: Wuchtschlag
+kind: specialAbility
+manoeuvre: { kind: basismanoever }
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: W1
+    text: Wuchtschlag.
+    effects:
+      - offer: { choice: wuchtschlag }

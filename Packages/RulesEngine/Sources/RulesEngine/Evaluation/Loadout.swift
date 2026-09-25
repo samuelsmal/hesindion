@@ -257,14 +257,19 @@ extension Evaluation {
     /// it reads where the situation states none (MIGRATION kampfwerte 16.1–16.16):
     /// - `action.with`: the piece its `with:` names (`pa(with: shield)`, `at(with: Hiebwaffen)`),
     ///   else `mainHand` for `at`, `pa`, `fk` and `tp`: the sheet's value is the Hauptwaffe's;
-    /// - `action.defence` for `pa`: `shieldParry` with the shield, else `weaponParry`;
+    /// - `action.defence` for `pa`: `shieldParry` with the shield, else `weaponParry`; for `aw`:
+    ///   `aw` (Task 31, and no `action.with`); for an attack (`at`, `fk`, `tp`): none;
     /// - `loadout.weapon.technique`: a technique its `with:` names (one the hero has a KtW in), by
     ///   its id.
     func combatFacts(of query: Query) -> [String: JSONValue] {
+        // Task 31: a dodge is the defence `aw`, made with no piece.
+        if query.name == "aw" { return ["action.defence": .string("aw")] }
         guard ["at", "pa", "fk", "tp"].contains(query.name) else { return [:] }
         let with = query.target.context["with"]
         var out: [String: JSONValue] = ["action.with": .string(with ?? "mainHand")]
-        if query.name == "pa" { out["action.defence"] = .string(with == "shield" ? "shieldParry" : "weaponParry") }
+        // An attack (and its TP) is no defence: `action.defence` is none (Task 31: ZW3's
+        // `not: { action.defence: shieldParry }` holds for the attack).
+        out["action.defence"] = query.name == "pa" ? .string(with == "shield" ? "shieldParry" : "weaponParry") : .null
         if let with, ktw(with, in: situation) != nil { out["loadout.weapon.technique"] = .string(techniqueId(with)) }
         return out
     }

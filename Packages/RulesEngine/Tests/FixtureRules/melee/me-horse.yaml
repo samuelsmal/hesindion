@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# A mount's profile, owned as a creature (svellttaler-kaltblut.SK2).
+id: me-horse
+name: Kaltblut
+kind: creature
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: H2
+    text: INI 14+1W6.
+    effects:
+      - provide: { name: mount.iniBase, value: 14 }

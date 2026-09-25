@@ -250,12 +250,17 @@ public enum DamageChain {
     /// Every top-level `check` effect of a talent or spell whose `when` or `modifier` reads a
     /// `hit.*` fact, in rule-id and clause order, read as the pipeline reads an effect; each whose
     /// `when` holds is pending. A firing `suppress` naming it stops it.
-    static func checksCalledFor(in s: Situation, engine: Engine, _ records: inout PipelineState) -> [PendingCheck] {
+    ///
+    /// `asking` (Task 31) chooses the checks another action calls for instead: taking a choice
+    /// asks those whose `when` reads it (reiterkampf.RK12's Reiten for an order).
+    static func checksCalledFor(in s: Situation, engine: Engine, _ records: inout PipelineState,
+                                asking: ((Effect) -> Bool)? = nil) -> [PendingCheck] {
         let book = engine.book
         let evaluation = engine.evaluation(s)
         let all = book.rules.keys.sorted(by: Evaluation.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }
         let asked = all.filter { e in
             guard case .check(let c) = e.payload, [.talent, .spell].contains(c.of.kind) else { return false }
+            if let asking { return asking(e) }
             let reads = (e.when?.factNames ?? []).union(c.modifier?.factNames ?? [])
             return reads.contains { $0.hasPrefix("hit.") }
         }

@@ -102,6 +102,7 @@ public struct ActionLayer: Sendable {
         let stated = Self.stated(action, in: situation, book: engine.book)
         let evaluation = engine.evaluation(stated)
         var run: ActionRun
+        var checks: [PendingCheck] = []
         switch action {
         case .cast(_, let modifications):                           // the spell is stated by `stated`
             run = evaluation.actionRun(controlling: evaluation.actionEffects())
@@ -151,14 +152,22 @@ public struct ActionLayer: Sendable {
             } else {
                 advance(.action(choice), &run)
                 // Ruling R64: what taking the choice restores (regeneration.R4's LeP), read with the
-                // choice taken.
+                // choice taken. Task 31: so every `cost`, `gain`, `item` and `restore` that reads the
+                // choice (reiterkampf.RK6's jump off the horse, RK12's Aktion for an order) runs, and
+                // each talent `check` that reads it is asked (RK12's Reiten). A choice the situation
+                // states keeps its value (the order given); else it is taken as `true`.
                 var chosen = situation
-                chosen.facts["choice.\(choice)"] = Fact(name: "choice.\(choice)", value: .bool(true), owner: .player)
-                let taken = engine.evaluation(chosen)
-                let restores = taken.actionEffects().filter {
-                    if case .restore = $0.payload { $0.reads.contains("choice.\(choice)") } else { false }
+                if chosen.facts["choice.\(choice)"] == nil {
+                    chosen.facts["choice.\(choice)"] = Fact(name: "choice.\(choice)", value: .bool(true), owner: .player)
                 }
-                taken.run(restores, &run)
+                let taken = engine.evaluation(chosen)
+                let paidFor = Set(offer.costs.map(\.origin))
+                let gated = taken.actionEffects().filter { $0.reads.contains("choice.\(choice)") && !paidFor.contains($0.origin) }
+                taken.control(gated, &run.pipeline)
+                taken.run(gated, &run)
+                checks = DamageChain.checksCalledFor(in: chosen, engine: engine, &run.pipeline) {
+                    $0.when?.factNames.contains("choice.\(choice)") ?? false
+                }
             }
         case .advance(let process):
             run = evaluation.actionRun(controlling: [])
@@ -184,7 +193,7 @@ public struct ActionLayer: Sendable {
         let breakdowns = run.read.uniqued().map { engine.evaluate(Query($0), in: stated) }
         return ActionResult(events: run.events, situation: stated.applying(run.events, book: engine.book),
                             breakdowns: breakdowns, questions: run.pipeline.questions,
-                            texts: run.pipeline.texts, notApplied: run.pipeline.notApplied)
+                            texts: run.pipeline.texts, notApplied: run.pipeline.notApplied, checks: checks)
     }
 
     /// The situation as the action states it for its own evaluation, before its events: a cast

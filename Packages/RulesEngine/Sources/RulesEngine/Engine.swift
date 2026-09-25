@@ -34,6 +34,16 @@ public struct Engine: Sendable {
         evaluation(situation).loadoutLegality(Set(ids))
     }
 
+    /// Whether the choices `ids` may be taken together for one action (Task 31, the combat
+    /// screens' manoeuvre pickers): every top-level `forbid { together: true }` of a rule that
+    /// applies whose `when` is yes refuses a combination holding a choice its selector names and
+    /// another (one of the holder's own offers, or a second one it names) — SA_62.ST4, Sturmangriff
+    /// with Finte; and every choice `limit` (kampfsonderfertigkeiten.KS3, one Basismanöver) refuses
+    /// one holding more of the choices it names than its max. Each refusal is `forbidden`.
+    public func legality(ofCombination ids: [String], in situation: Situation) -> Legality {
+        evaluation(situation).combinationLegality(ids)
+    }
+
     /// The name of the sheet's query: no target, so every `"*"` effect and nothing else reaches it.
     public static let sheetQuery = "sheet"
 

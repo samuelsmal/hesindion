@@ -62,7 +62,9 @@ extension Evaluation {
     ///   LE, Belastung from armour), or
     /// - a `require { enables: true }` whose `when` and `that` are yes enables it: the rule holding
     ///   the require (it needs no other reason), or the rules its `for: { rule: … }` names (the
-    ///   holder must apply). Its lines then carry the require's clause in `via`.
+    ///   holder must apply). Its lines then carry the require's clause in `via`, also when the
+    ///   rule applies anyway as a core, equipment or talent rule (Task 31: vorteilhafte-position via
+    ///   reiterkampf.RK2); an owned rule carries none.
     ///
     /// A rule is owned once, at one level: several instances (Begabung for two talents) are a
     /// known gap.
@@ -89,9 +91,11 @@ extension Evaluation {
         let applies = Applicability(status: .applies)
         if situation.owned[id] != nil { return applies }
         switch rule.kind {
-        case .core where rulesetIsOn(rule): return applies
-        case .equipment where isEquipped(id): return applies
-        case .talent where situation.facts["check.talent"]?.value == .string(id): return applies
+        case .core where rulesetIsOn(rule), .equipment where isEquipped(id),
+             .talent where situation.facts["check.talent"]?.value == .string(id):
+            // Task 31: a rule that applies anyway still rests on a require that enables it
+            // (reiterkampf.RK2 over the core vorteilhafte-position: its lines carry RK2 in `via`).
+            return Applicability(status: .applies, via: enablingRequire(of: id, depth: depth).map { [$0] } ?? [])
         default: break
         }
         var derived: BaseLevel?
@@ -204,7 +208,8 @@ extension Evaluation {
     /// - `hero.levelOf.X`: the base phase of `level(rule: X)` (R34).
     /// - `fw.current`: the FW of the check's spell (`check.spell`), else of its talent
     ///   (`check.talent`): MIGRATION probe-magie 20.1.
-    /// - `ladezeit.current` (`targetFacts`): the result of the query `item.ladezeit`.
+    /// - `ladezeit.current`, `hero.gs` (`targetFacts`): the result of the query `item.ladezeit`, `gs`.
+    /// - `reach.gap` (`scaleFacts`, Task 31): the reach steps between the hero and the opponent.
     /// - `choice.<id>` (Task 30, R61): unstated, the `default` the choice's offers state, when
     ///   they state one and agree (reiterkampf.RK6's `jumpOff: false`); the player's.
     /// - `loadout.<slot>.technique` (Task 30): stated or derived, in its id form (`CT_8`).
@@ -213,6 +218,10 @@ extension Evaluation {
     /// - `belastung.source` (Task 30): `armour` while the hero wears an armour (`loadout.armour`
     ///   names one), the one source of Belastung the rules encode; unknown without a stated armour
     ///   (asking for `loadout.armour`), and with none worn.
+    /// - `rulesets` (Task 31): unstated, none (`[]`), as applicability reads it.
+    /// - any other fact nobody states (Task 31, R61): the value one applying non-equipment rule
+    ///   `provide`s under its name (its clause joins `via`), else the sheet's base value of that
+    ///   name when the fact is the sheet's (`mount.gs`).
     /// - `check.onOption` / `check.applicationOnOption` (MIGRATION ADV_4.B1, SA_9.FS1; plan Task
     ///   26): read by `rule`, from the instance the hero owns: its `option` against the check's
     ///   `check.spell` / `check.talent`, its `option2` against `check.application`. An unknown
@@ -329,6 +338,16 @@ extension Evaluation {
                 behind["belastung.source"] = []
             }
         }
+        for name in names.sorted() where Self.scaleFacts[name] != nil && s.facts[name] == nil {
+            let d = scaleFact(name, in: withLocal)
+            if let v = d.value {
+                s.facts[name] = Fact(name: name, value: v, owner: .derived)
+                sources[name] = d
+            } else {
+                s.unstated.insert(name)
+                behind[name] = d.unknown
+            }
+        }
         for (name, target) in Self.targetFacts.sorted(by: { $0.key < $1.key }) where names.contains(name) && s.facts[name] == nil {
             let r = resolve(TargetRef(target), depth: depth + 1)
             if let v = r.value {
@@ -347,13 +366,75 @@ extension Evaluation {
                 if !level.unknown.isEmpty { behind[name] = level.unknown }
             }
         }
+        if names.contains("rulesets"), s.fact("rulesets") == nil {
+            // Task 31: no rulesets stated, none is on, as a rule's applicability reads it
+            // (`rulesetIsOn`): ITEMTPL_19.RS3's Fokusregel is off, not unknown.
+            s.facts["rulesets"] = Fact(name: "rulesets", value: .array([]), owner: Vocabulary.owner(ofFact: "rulesets") ?? .gm)
+        }
+        for name in names.sorted() where !["level", "option"].contains(name) && s.fact(name) == nil && !s.unstated.contains(name) {
+            // Task 31 (R61): a fact nobody states is the value a rule that applies provides under
+            // its name (the owned mount's profile: svellttaler-kaltblut.SK2's `mount.iniBase`),
+            // whose clause joins `via`; else the value the sheet states under that name
+            // (reiterkampf's `mount.gs`, a sheet value).
+            if let d = providedFact(name, depth: depth) {
+                s.facts[name] = Fact(name: name, value: d.value!, owner: .derived)
+                sources[name] = d
+            } else if let v = situation.base[name], Vocabulary.owner(ofFact: name) == .sheet {
+                s.facts[name] = Fact(name: name, value: .int(v), owner: .sheet)
+            }
+        }
         return (s, behind, sources)
+    }
+
+    /// The one `provide` of `name` by a rule that applies and is no equipment (an equipment row is
+    /// the loadout's), with its clause; nil when none or several give it.
+    func providedFact(_ name: String, depth: Int) -> Derived? {
+        let providers = book.providers(of: name).filter { p in
+            book.rules[p.rule].map { $0.kind != .equipment } ?? false && applicability(of: p.rule, depth: depth).applies
+        }
+        guard providers.count == 1 else { return nil }
+        return Derived(value: providers[0].value, via: [providers[0].origin.clauseRef])
     }
 
     /// The derived facts that are a target's result (MIGRATION probe-fernkampf): `ladezeit.current`
     /// is the query `item.ladezeit` for the weapon in hand, after every rule (SA_60's −1 or
-    /// halving), for LZ2's `when`. Unknown when the target has no result; its questions are asked.
-    static let targetFacts: [String: String] = ["ladezeit.current": "item.ladezeit"]
+    /// halving), for LZ2's `when`; `hero.gs` (Task 31) the hero's current GS, the query `gs`
+    /// (SA_62.ST1). Unknown when the target has no result; its questions are asked.
+    static let targetFacts: [String: String] = ["ladezeit.current": "item.ladezeit", "hero.gs": "gs"]
+
+    /// The derived facts that count steps along a provided scale (Task 31): `reach.gap` is how many
+    /// steps of the `reach` scale (reichweite's `provides`) the opponent's reach (`opponent.reach`)
+    /// is longer than the hero's (`loadout.reach`, else the reach of the piece the roll is made
+    /// with); negative when the hero's is longer.
+    static let scaleFacts: [String: (scale: String, from: String, to: String)] = [
+        "reach.gap": ("reach", "loadout.reach", "opponent.reach"),
+    ]
+
+    /// A `scaleFacts` fact in `s` (the situation with the query's own facts): the steps from the
+    /// `from` fact's value to the `to` fact's along the one scale a rule `provides` under that
+    /// name. Unknown, asking for them, while either value is; unknown, asking nothing, when the
+    /// book has no such scale or a value is not on it.
+    func scaleFact(_ name: String, in s: Situation) -> Derived {
+        guard let spec = Self.scaleFacts[name] else { return .lacking([]) }
+        let scales = book.rules.values.compactMap { r -> [JSONValue]? in
+            if case .array(let a)? = r.provides[spec.scale] { a } else { nil }
+        }
+        guard scales.count == 1 else { return .lacking([]) }
+        let steps = scales[0]
+        var used: [FactUse] = [], via: [ClauseRef] = [], lacking: [UnknownFact] = []
+        var from = s.fact(spec.from)
+        if from == nil, spec.from == "loadout.reach" {
+            // The hero's reach: the reach of the piece the roll is made with (its equipment row).
+            let d = loadoutFact("item.reach", in: s)
+            if let v = d.value { from = FactUse(name: spec.from, value: v, owner: .derived); via += d.via; used += d.used }
+        }
+        if let from { used.append(from) } else { lacking.append(UnknownFact(spec.from)) }
+        let to = s.fact(spec.to)
+        if let to { used.append(to) } else { lacking.append(UnknownFact(spec.to)) }
+        guard lacking.isEmpty, let from, let to else { return .lacking(lacking) }
+        guard let a = steps.firstIndex(of: from.value), let b = steps.firstIndex(of: to.value) else { return .lacking([]) }
+        return Derived(value: .int(b - a), used: used.uniqued(), via: via.uniqued())
+    }
 
     /// Whether a rule's option names the check's: two strings or two numbers compare; a number
     /// against a string (an Anwendungsgebiet's id against its name) cannot be told: nil.

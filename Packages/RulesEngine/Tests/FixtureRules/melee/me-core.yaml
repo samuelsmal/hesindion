@@ -1,0 +1,35 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# Task 31: the melee rules the harness situations lean on — one Basismanöver per action
+# (kampfsonderfertigkeiten.KS3), the reach steps (reichweite.RW3), the double attack's −2
+# (beidhaendiger-kampf.ZW3) and the GS a Sturmangriff needs (SA_62.ST1).
+id: me-core
+name: Nahkampf
+kind: core
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+provides: { reach: [kurz, mittel, lang] }
+clauses:
+  - id: K3
+    text: Nur ein Basismanöver pro Handlung.
+    effects:
+      - limit: { per: action, what: { manoeuvre: { kind: basismanoever } }, max: 1 }
+        because: nur ein Basismanöver pro Handlung
+  - id: R3
+    text: Je Stufe Reichweite −2 AT.
+    effects:
+      - when: { reach.gap: { atLeast: 1 } }
+        add: { to: at, value: { of: reach.gap, times: -2 } }
+  - id: Z3
+    text: Beidhändig −2 auf AT und alle Verteidigungen.
+    effects:
+      - when: { round.doubleAttack: true, not: { action.defence: shieldParry } }
+        add: { to: [at, pa, aw], value: -2 }
+  - id: S1
+    text: Sturmangriff nur mit GS 4.
+    effects:
+      - require: { that: { hero.gs: { atLeast: 4 } }, for: { choice: finte } }
+        because: GS 4
+  - id: W8
+    text: Wundeffekt je volle Wundschwelle −1.
+    effects:
+      - check: { of: { talent: TAL_8 }, modifier: { of: hit.sp, per: wundschwelle, times: -1, round: down } }

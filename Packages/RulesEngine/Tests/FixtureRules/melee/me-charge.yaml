@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# A Spezialmanöver that does not combine with Finte (SA_62.ST4).
+id: me-charge
+name: Sturmangriff
+kind: specialAbility
+manoeuvre: { kind: spezialmanoever }
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: C1
+    text: Sturmangriff.
+    effects:
+      - offer: { choice: sturmangriff }
+  - id: C4
+    text: Nicht mit Finte.
+    effects:
+      - forbid: { what: { manoeuvre: finte }, together: true }
