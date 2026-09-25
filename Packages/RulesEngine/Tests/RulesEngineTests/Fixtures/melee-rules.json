@@ -12,12 +12,22 @@
     "rule": "me-charge"
    },
    {
+    "clause": "C5",
+    "index": 0,
+    "rule": "me-charge"
+   },
+   {
     "clause": "K3",
     "index": 0,
     "rule": "me-core"
    },
    {
     "clause": "S1",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "S3",
     "index": 0,
     "rule": "me-core"
    },
@@ -33,6 +43,11 @@
    },
    {
     "clause": "H2",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H4",
     "index": 0,
     "rule": "me-horse"
    },
@@ -72,6 +87,11 @@
     "rule": "me-rider"
    },
    {
+    "clause": "R3",
+    "index": 0,
+    "rule": "me-rider"
+   },
+   {
     "clause": "R6",
     "index": 0,
     "rule": "me-rider"
@@ -99,7 +119,17 @@
     "rule": "me-core"
    },
    {
+    "clause": "S9",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
     "clause": "Z3",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "Z5",
     "index": 0,
     "rule": "me-core"
    },
@@ -114,6 +144,13 @@
     "clause": "Z3",
     "index": 0,
     "rule": "me-core"
+   }
+  ],
+  "gs": [
+   {
+    "clause": "R1",
+    "index": 2,
+    "rule": "me-rider"
    }
   ],
   "iniBase": [
@@ -200,6 +237,32 @@
      ],
      "id": "C4",
      "text": "Nicht mit Finte."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C5",
+        "index": 0,
+        "rule": "me-charge"
+       },
+       "payload": {
+        "choice": "zone"
+       },
+       "phase": "player",
+       "ruling": [
+        "me-charge.aim"
+       ],
+       "verb": "offer",
+       "when": {
+        "fact": "choice.sturmangriff",
+        "is": true
+       }
+      }
+     ],
+     "id": "C5",
+     "text": "Beim Sturmangriff eine Zone anvisieren."
     }
    ],
    "id": "me-charge",
@@ -209,7 +272,14 @@
    },
    "name": "Sturmangriff",
    "reviewed": null,
-   "rulings": [],
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-charge.aim",
+     "question": "Zielen beim Sturmangriff?",
+     "status": "decided"
+    }
+   ],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
@@ -414,6 +484,91 @@
      ],
      "id": "W8",
      "text": "Wundeffekt je volle Wundschwelle −1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z5",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -10
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.zone",
+        "is": "kopf"
+       }
+      }
+     ],
+     "id": "Z5",
+     "text": "Kopf −10."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S9",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "me-core.R3"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [
+        "me-core.quiet"
+       ],
+       "verb": "suppress",
+       "when": {
+        "fact": "gmFact.quiet",
+        "is": true
+       }
+      }
+     ],
+     "id": "S9",
+     "text": "Leise."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "name": "loadout.shield.technique",
+        "readBy": "loadout",
+        "value": "CT_10"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S3",
+     "text": "Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde."
     }
    ],
    "id": "me-core",
@@ -427,7 +582,14 @@
     ]
    },
    "reviewed": null,
-   "rulings": [],
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-core.quiet",
+     "question": "Leise?",
+     "status": "decided"
+    }
+   ],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
@@ -499,6 +661,29 @@
      ],
      "id": "H2",
      "text": "INI 14+1W6."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H4",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.actions",
+        "readBy": "display",
+        "value": 1
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "H4",
+     "text": "Aktionen 1."
     }
    ],
    "id": "me-horse",
@@ -816,6 +1001,43 @@
         "fact": "hero.mounted",
         "is": true
        }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R1",
+        "index": 2,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "mount.actions"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
       }
      ],
      "id": "R1",
@@ -971,13 +1193,53 @@
      ],
      "id": "R12",
      "text": "Ein Befehl kostet eine Aktion und eine Probe auf Reiten."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R3",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          {
+           "kind": "spezialmanoever"
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "me-rider.mounted"
+       ],
+       "verb": "forbid",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "R3",
+     "text": "Beritten keine Spezialmanöver."
     }
    ],
    "id": "me-rider",
    "kind": "core",
    "name": "Reiterkampf",
    "reviewed": null,
-   "rulings": [],
+   "rulings": [
+    {
+     "answer": "Basismanöver ja",
+     "id": "me-rider.mounted",
+     "question": "Welche Manöver beritten?",
+     "status": "decided"
+    }
+   ],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
@@ -1121,6 +1383,18 @@
  ],
  "rulings": [
   {
+   "answer": "ja",
+   "id": "me-charge.aim",
+   "question": "Zielen beim Sturmangriff?",
+   "status": "decided"
+  },
+  {
+   "answer": "ja",
+   "id": "me-core.quiet",
+   "question": "Leise?",
+   "status": "decided"
+  },
+  {
    "answer": null,
    "id": "me-iron.scope",
    "question": "Nur mit Trefferzonen?",
@@ -1131,8 +1405,14 @@
    "id": "me-line.both",
    "question": "Beide zugleich?",
    "status": "open"
+  },
+  {
+   "answer": "Basismanöver ja",
+   "id": "me-rider.mounted",
+   "question": "Welche Manöver beritten?",
+   "status": "decided"
   }
  ],
- "vocabularySha256": "47915383062db4c89e5eb8ca37aa3a3e936001dca0f741f028d6a39b40dc64ad",
+ "vocabularySha256": "de8998ec4ad55d76fea842a1b6092e47fcba5f07df928989c4dd6a340ea838a4",
  "vocabularyVersion": 1
 }

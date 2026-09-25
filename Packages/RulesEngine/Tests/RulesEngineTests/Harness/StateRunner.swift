@@ -84,9 +84,9 @@ enum StateRunner {
         return distinct.count == 1 ? .take(choice: distinct.first!) : nil
     }
 
-    /// Task 31: the choice a situation takes (`choice.X` stated, not `false`) when every event it
-    /// expects at the top comes `from` a clause whose `item`, `cost`, `gain` or talent `check` is
-    /// gated on that choice (reiterkampf.RK6's jump off the horse, RK14's Reiten for an order):
+    /// Task 31: the choice a situation takes (`choice.X` stated, not `false`) when an event it
+    /// expects at the top comes `from` a clause whose `item`, `cost`, `gain` or `check` is gated
+    /// on that choice, and every event names its clause (reiterkampf.RK6's jump off the horse, RK14's Reiten for an order):
     /// `.take(choice: X)`. nil for any other situation.
     static func taking(_ s: CompiledSituation, book: RuleBook) -> Action? {
         let events = s.expectSituation["events"]?.arrayValue ?? []
@@ -94,17 +94,17 @@ enum StateRunner {
         guard !events.isEmpty, froms.count == events.count else { return nil }
         let taken = s.situation.facts.values.filter { $0.name.hasPrefix("choice.") && $0.value != .bool(false) && $0.value != .null }
             .map { String($0.name.dropFirst("choice.".count)) }
+        // Fix round 1: an event from a clause gated on a taken choice names the action; the other
+        // expected events are compared against what it gives.
         var choices: Set<String> = []
         for from in froms {
             let effects = book.rules[from.rule]?.clauses.first { $0.id == from.clause }?.effects ?? []
             let gating = effects.filter { e in
                 switch e.payload {
-                case .item, .cost, .gain: true
-                case .check(let c): [.talent, .spell].contains(c.of.kind)
+                case .item, .cost, .gain, .check: true
                 default: false
                 }
             }.flatMap { e in taken.filter { (e.when?.factNames ?? []).contains("choice.\($0)") } }
-            guard !gating.isEmpty else { return nil }
             choices.formUnion(gating)
         }
         return choices.count == 1 ? .take(choice: choices.first!) : nil

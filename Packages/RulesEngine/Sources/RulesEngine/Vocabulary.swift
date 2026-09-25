@@ -122,6 +122,8 @@ public enum Vocabulary {
         "loadout.armour": .loadout,
         "loadout.armour.belastung": .loadout,
         "loadout.armour.extraPenalty": .loadout,
+        "loadout.mount": .loadout,
+        "loadout.mount.instance": .loadout,
         "loadout.other": .loadout,
         "loadout.other.paMod": .loadout,
         "loadout.other.technique": .loadout,

@@ -286,7 +286,9 @@ final class MatcherTests: XCTestCase {
         let other = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": false, "because": "x.X1"}}]}"#)
         XCTAssertEqual(kinds(compare(other, breakdowns: [b], offers: [])), [.legal])
         let span = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": false, "because": "r.RK13", "span": "round", "via": ["s.SK7"]}}]}"#)
-        XCTAssertEqual(kinds(compare(span, breakdowns: [b], offers: [])), [.legal, .unsupportedShape])
+        // Task 31: `span` and (fix round 1) `via` are compared: no firing entry read a round choice
+        // or rests on s.SK7.
+        XCTAssertEqual(kinds(compare(span, breakdowns: [b], offers: [])), [.legal, .legal])
         let malformed = try situation(#"{"expect": [{"query": "opponent.pa", "legal": {"allowed": "no"}}, {"query": "opponent.pa", "legal": {"because": 3}}]}"#)
         XCTAssertEqual(compare(malformed, breakdowns: [b, b], offers: []).map(\.shape), ["legal.malformed", "legal.malformed"])
     }
@@ -361,7 +363,8 @@ final class MatcherTests: XCTestCase {
             XCTAssertEqual(kinds(compare(s, breakdowns: [], offers: [offer])), [.wrongOffer], field)
         }
         let kind = try situation(#"{"expectSituation": {"offered": [{"choice": "laden", "kind": "basismanoever", "on": "x"}]}}"#)
-        XCTAssertEqual(compare(kind, breakdowns: [], offers: [offer]).map(\.shape), ["offered field kind", "offered field on"])
+        // Task 31: `kind` needs the book (a shape without it); `on` is compared (fix round 1): no hit here.
+        XCTAssertEqual(compare(kind, breakdowns: [], offers: [offer]).map(\.shape), ["offered field kind", nil])
         let extra = try situation(#"{"expectSituation": {"notOffered": [{"choice": "other", "reason": "x"}]}}"#)
         XCTAssertEqual(compare(extra, breakdowns: [], offers: [offer]).map(\.shape), ["notOffered field reason"])
     }
@@ -401,7 +404,11 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(kinds(compare(empty, breakdowns: [b], offers: [])), [.unexpectedText])
         XCTAssertEqual(compare(empty, breakdowns: [Breakdown(query: Query("at"), texts: [open])], offers: []), [])
         let structured = try situation(#"{"expect": [{"query": "at"}], "expectSituation": {"texts": [{"from": "m.MS3", "opponent": {"check": "Kraftakt"}}, {"from": "r.RK13", "mount": "runs on"}]}}"#)
-        XCTAssertEqual(kinds(compare(structured, breakdowns: [b], offers: [])), [.unsupportedShape, .unsupportedShape])
+        // Task 31 fix round 1: a structured text from a clause is compared (it never matches the
+        // clause's plain texts); without a `from` it stays a shape.
+        XCTAssertEqual(kinds(compare(structured, breakdowns: [b], offers: [])), [.missingText, .missingText])
+        let loose = try situation(#"{"expect": [{"query": "at"}], "expectSituation": {"texts": [{"mount": "runs on"}]}}"#)
+        XCTAssertEqual(kinds(compare(loose, breakdowns: [b], offers: [])), [.unsupportedShape])
     }
 
     /// Situation-level `notApplied`, `questions` and `texts` are looked up in the situation's
@@ -1016,8 +1023,8 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(StateRunner.run(bad, engine: engine).mismatches.compactMap(\.shape), ["step event"])
     }
 
-    /// A step's query expectation holds the query keys only: any other key is an unsupported
-    /// shape (R42), never dropped; a line's `ruling` in a step (which rulec passes through) may be
+    /// A step's query expectation holds the query keys (and `from`, Task 31) only: any other key is
+    /// an unsupported shape (R42), never dropped; a line's `ruling` in a step (which rulec passes through) may be
     /// a string.
     func testAStepsQueryKeysAreChecked() throws {
         let engine = Engine(book: Self.book)
@@ -1027,7 +1034,8 @@ final class MatcherTests: XCTestCase {
                                               "lines": [{"from": "COND_1.B3", "value": -1, "ruling": "SA_41.table-shift"}]}}}]}
             """#)
         let run = StateRunner.run(s, engine: engine)
-        XCTAssertEqual(run.mismatches.compactMap(\.shape).sorted(), ["step query key from", "step query key kept"])
+        // Task 31 fix round 1: `from` is compared (COND_1.B3 is a line of `at`); `kept` stays a shape.
+        XCTAssertEqual(run.mismatches.compactMap(\.shape).sorted(), ["step query key kept"])
         XCTAssertEqual(run.mismatches.filter { $0.shape == nil }, [])
     }
 

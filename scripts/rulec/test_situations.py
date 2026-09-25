@@ -512,6 +512,14 @@ class ErrorTests(unittest.TestCase):
         self.assertEqual(names["target.rangeBand"], "gm")
         self.assertEqual([q["query"] for q in s["expect"]], ["item.ladezeit", "fk(with: Kurzbogen)"])
 
+
+    # Task 31 fix round 1: the mount is a loadout slot (reiterkampf.RK6's jump off changes it).
+    def test_the_mount_is_a_loadout_slot(self):
+        s = one("    loadout: { mount: Kriegspferd, mount.instance: pferd1, hero.mounted: true }\n"
+                "    expect: { aw: { total: 0 } }\n")
+        names = {f["name"]: f["owner"] for f in s["facts"]}
+        self.assertEqual(names["loadout.mount"], "loadout")
+        self.assertEqual(names["loadout.mount.instance"], "loadout")
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

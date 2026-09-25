@@ -33,3 +33,22 @@ clauses:
     text: Wundeffekt je volle Wundschwelle −1.
     effects:
       - check: { of: { talent: TAL_8 }, modifier: { of: hit.sp, per: wundschwelle, times: -1, round: down } }
+  - id: Z5
+    text: Kopf −10.
+    effects:
+      - when: { choice.zone: kopf }
+        add: { to: at, value: -10 }
+  - id: S9
+    text: Leise.
+    effects:
+      - when: { gmFact.quiet: true }
+        suppress: { line: { line: me-core.R3 } }
+        ruling: quiet
+  - id: S3
+    text: Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde.
+    effects:
+      - provide: { name: loadout.shield.technique, value: CT_10, readBy: loadout }
+rulings:
+  - id: quiet
+    question: Leise?
+    answer: ja

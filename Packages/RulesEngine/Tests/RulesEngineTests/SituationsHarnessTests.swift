@@ -101,16 +101,8 @@ final class SituationsHarnessTests: XCTestCase {
                                   mismatches: run.mismatches, notes: run.notes)
                 }
                 let shapes = run.mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()
-                let listed = conflicts.contains(ConflictRef(file: s.file, id: s.id))
-                let unrun = listed ? needs.map { Mismatch.shape($0, "\($0): not run, a listed conflict") } : []
-                return Judged(path: .queriesOnly, verdict: listed ? .conflict : .unsupported(needs + shapes),
-                              mismatches: run.mismatches + unrun, notes: run.notes)
-            }
-            // Task 31 (R43): a listed conflict is the owner's to decide whatever the harness can run
-            // of it; its verdict is `conflict`, with what it would need.
-            if conflicts.contains(ConflictRef(file: s.file, id: s.id)) {
-                return Judged(path: .unsupported, verdict: .conflict, mismatches: needs.map { .shape($0, "\($0): not run, a listed conflict") },
-                              notes: [])
+                return Judged(path: .queriesOnly, verdict: .unsupported(needs + shapes), mismatches: run.mismatches,
+                              notes: run.notes)
             }
             return Judged(path: .unsupported, verdict: .unsupported(needs), mismatches: [], notes: [])
         }

@@ -95,14 +95,81 @@ final class MeleeHarnessTests: XCTestCase {
         XCTAssertEqual(Matcher.run(s, engine: engine).mismatches, [])
     }
 
-    // MARK: - a listed conflict the harness cannot run
+    // MARK: - R69: a listed conflict is a conflict only on a comparable mismatch
 
-    func testAListedConflictThatCannotRunIsAConflict() throws {
+    func testAListedConflictThatCannotRunStaysUnsupported() throws {
         let s = try situation(#"{"expectSituation": {"events": [{"logged": "x", "from": "me-core.K3"}]}}"#)
         let listed = SituationsHarnessTests.judge(s, engine: engine, conflicts: [ConflictRef(file: "test.yaml", id: "T.1")])
-        XCTAssertEqual(listed.verdict, .conflict)
-        let unlisted = SituationsHarnessTests.judge(s, engine: engine, conflicts: [])
-        XCTAssertEqual(unlisted.verdict, .unsupported(["action: events"]))
+        XCTAssertEqual(listed.verdict, .unsupported(["action: events"]))
+        let shapes = [Mismatch.shape("term", "x")]
+        XCTAssertEqual(Verdict.of(s, mismatches: shapes, hits: [], book: nil, conflicts: [ConflictRef(file: "test.yaml", id: "T.1")]),
+                       .unsupported(["shape: term"]))
+    }
+
+    // MARK: - shapes compared as mismatches (R62)
+
+    /// A structured text from a clause is compared with that clause's plain tell: it never
+    /// matches, a real mismatch.
+    func testAStructuredTextFromAClauseIsCompared() {
+        let tell = TextLine(kind: .tell, audience: .gm, text: "Gleiche INI", origin: ref("x.GR3"))
+        let m = Matcher.texts([.object(["order": "opponent acts first", "from": "x.GR3"])], in: [tell])
+        XCTAssertEqual(m.map(\.kind), [.missingText])
+        XCTAssertEqual(Matcher.texts([.object(["order": "first"])], in: [tell]).map(\.shape), ["text shape"])
+    }
+
+    /// An offered check is no choice: the rules ask checks, they do not offer them.
+    func testAnOfferedCheckIsAMissingOffer() {
+        let entry: JSONValue = .object(["check": .object(["talent": "Willenskraft"]), "cause": .object(["rule": "x.SE1"]), "ruling": "x.open"])
+        let m = Matcher.offer(entry, wanted: true, in: [], notApplied: [], offering: [:])
+        XCTAssertEqual(m.map(\.kind), [.missingOffer])
+        XCTAssertTrue(m[0].names.contains("x.open"))
+    }
+
+    /// An expected check that is no talent check (the mount's attack) is compared by its clause.
+    func testAnAttackCheckEventIsComparedByItsClause() {
+        let m = CombatRunner.events([.object(["check": .object(["attack": "Niederreiten", "by": "mount"]), "from": "x.SK3"])],
+                                    events: [], checks: [])
+        XCTAssertEqual(m.map(\.kind), [.missingEvent])
+    }
+
+    /// `offered.on: takeDamage`: the offer is made on the take-damage screen, a hit's.
+    func testOfferedOnTheTakeDamageScreen() {
+        let o = offer("mountHit", "x.RK11")
+        XCTAssertEqual(Matcher.offer(.object(["choice": "mountHit", "on": "takeDamage"]), wanted: true, in: [o], notApplied: [],
+                                     offering: [:], screen: "takeDamage"), [])
+        XCTAssertEqual(Matcher.offer(.object(["choice": "mountHit", "on": "takeDamage"]), wanted: true, in: [o], notApplied: [],
+                                     offering: [:]).map(\.kind), [.wrongOffer])
+    }
+
+    /// `legal.via`: the firing entries' `via`.
+    func testLegalViaIsTheFiringEntriesVia() {
+        let actual = Legality(allowed: false, reasons: [NotApplied(origin: ref("g.GK4"), reason: .forbidden, via: [ref("s.SK7")])])
+        XCTAssertEqual(Matcher.legal(.object(["allowed": false, "via": .array(["s.SK7"])]), actual, query: "opponent.pa"), [])
+        XCTAssertEqual(Matcher.legal(.object(["allowed": false, "via": .array(["s.SK8"])]), actual, query: "opponent.pa").map(\.kind), [.legal])
+    }
+
+    /// A check the situation states with only its result (`rolls: { check.result: failure }`) runs
+    /// as the check's outcome, and its events are compared.
+    func testACheckWithAStatedResultRunsForItsEvents() throws {
+        let s = try situation(#"{"facts": [{"name": "check.kind", "value": "talent", "owner": "player"}, {"name": "check.talent", "value": "TAL_23", "owner": "player"}, {"name": "check.result", "value": "failure", "owner": "roll"}], "expectSituation": {"events": [{"logged": "x", "from": "me-core.K3"}]}}"#)
+        XCTAssertTrue(ActionRunner.canRun(s, attributes: ["TAL_23": ["MU", "IN", "CH"]]))
+        let run = try XCTUnwrap(ActionRunner.run(s, engine: engine, attributes: ["TAL_23": ["MU", "IN", "CH"]]))
+        XCTAssertEqual(run.mismatches.map(\.kind), [.missingEvent])
+    }
+
+    /// An `other: <item>` loadout entry states the piece's kind from data: a shield (its
+    /// technique is the shield slot's) or a weapon of its technique, never the item's name.
+    func testALoadoutEntryNamingTheOtherPieceStatesItsKind() {
+        var s = Situation(owned: [:], facts: [Fact(name: "item.Holzschild.technique", value: "CT_10", owner: .loadout),
+                                               Fact(name: "item.Dolch.technique", value: "CT_3", owner: .loadout)])
+        s.facts["loadout.weapon"] = Fact(name: "loadout.weapon", value: "Morgenstern", owner: .loadout)
+        let shield = LegalView.slotFacts(["loadout.other": "Holzschild"], in: s, book: Self.book)
+        XCTAssertEqual(shield["loadout.other"], "shield")
+        XCTAssertEqual(shield["loadout.shield"], "Holzschild")
+        let dagger = LegalView.slotFacts(["loadout.other": "Dolch"], in: s, book: Self.book)
+        XCTAssertEqual(dagger["loadout.other"], "weapon")
+        XCTAssertEqual(dagger["loadout.other.technique"], "CT_3")
+        XCTAssertEqual(LegalView.slotFacts(["loadout.other": "shield"], in: s, book: Self.book)["loadout.other"], "shield")
     }
 
     // MARK: - taking the choice the events come from
@@ -113,6 +180,9 @@ final class MeleeHarnessTests: XCTestCase {
         XCTAssertTrue(StateRunner.canRun(s, book: Self.book))
         let other = try situation(#"{"facts": [{"name": "choice.order", "value": "flucht", "owner": "player"}], "expectSituation": {"events": [{"check": {"talent": "TAL_6"}, "from": "me-core.K3"}]}}"#)
         XCTAssertNil(StateRunner.taking(other, book: Self.book))
+        // Fix round 1: one event from a gated clause names the action; the others are compared.
+        let mixed = try situation(#"{"facts": [{"name": "hero.mounted", "value": true, "owner": "loadout"}, {"name": "choice.order", "value": "flucht", "owner": "player"}], "expectSituation": {"events": [{"check": {"talent": "TAL_6"}, "from": "me-rider.R12"}, {"check": {"attack": "Tritt"}, "from": "me-core.K3"}]}}"#)
+        XCTAssertEqual(StateRunner.taking(mixed, book: Self.book), .take(choice: "order"))
     }
 
     // MARK: - roll steps with a bare die, and their legal
@@ -175,5 +245,18 @@ final class MeleeHarnessTests: XCTestCase {
         let hit = OpenHit(ruling: "me-line.both", origin: ref("me-line.L1"))
         let m = Mismatch(kind: .missingNotApplied, detail: "x", names: ["SA_884", "both"])
         XCTAssertTrue(Explainer.explains(hit, m, book: Self.book, situation: Situation(owned: ["me-line": OwnedRule()], facts: [])))
+    }
+
+    /// A step query's `from` is compared with the clauses its base and lines come from.
+    func testAStepQuerysFromIsCompared() {
+        let b = Breakdown(query: Query("ini"), base: Line(value: 18, kind: .base, origin: ref("k.KW10")))
+        var c = MatchResult()
+        CombatRunner.compare(["ini": .object(["result": 18, "from": "k.KW11"])], label: "step 2", events: [], checks: [], texts: [],
+                             notApplied: [], questions: [], success: nil, successQuery: nil, breakdown: { _ in b }, &c)
+        XCTAssertEqual(c.mismatches.map(\.kind), [.base])
+        var ok = MatchResult()
+        CombatRunner.compare(["ini": .object(["result": 18, "from": "k.KW10"])], label: "step 2", events: [], checks: [], texts: [],
+                             notApplied: [], questions: [], success: nil, successQuery: nil, breakdown: { _ in b }, &ok)
+        XCTAssertEqual(ok.mismatches, [])
     }
 }

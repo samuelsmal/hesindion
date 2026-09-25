@@ -18,6 +18,8 @@ clauses:
         derive: { to: iniBase, sum: [{ of: mount.iniBase }] }
       - when: { hero.mounted: true }
         add: { to: tp, value: { of: mount.gs, per: 2, round: up } }
+      - when: { hero.mounted: true }
+        add: { to: gs, value: { of: mount.actions } }
   - id: R6
     text: Abspringen.
     effects:
@@ -34,3 +36,13 @@ clauses:
         cost: { pool: actions, amount: 1 }
       - when: { hero.mounted: true, choice.order: [flucht] }
         check: { of: { talent: TAL_6, with: Kampfmanöver } }
+  - id: R3
+    text: Beritten keine Spezialmanöver.
+    effects:
+      - when: { hero.mounted: true }
+        forbid: { what: { manoeuvre: { kind: spezialmanoever } } }
+        ruling: mounted
+rulings:
+  - id: mounted
+    question: Welche Manöver beritten?
+    answer: Basismanöver ja

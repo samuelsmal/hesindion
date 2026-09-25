@@ -392,6 +392,16 @@ enum CombatRunner {
                 }
                 // R42: a key no query expectation holds (kampfwerte 16.12's `from`, `kept`) is a
                 // shape, never dropped (Task 30).
+                // Task 31 fix round 1 (R62): `from` is compared: a clause the query's base, its parts
+                // or its lines come from.
+                if let from = o.removeValue(forKey: "from") {
+                    let b = breakdown(key)
+                    let origins = ((b.base.map { [$0] + $0.parts } ?? []) + b.lines).compactMap(\.origin).map(\.description)
+                    if from.string == nil || !origins.contains(from.string!) {
+                        c.mismatches.append(Mismatch(kind: .base, query: key, detail: "\(label): expected \(key) from \(from), its lines come from \(origins)",
+                                                     names: [from.string].compactMap { $0 }))
+                    }
+                }
                 let extra = Set(o.keys).subtracting(QueryExpectation.CodingKeys.allCases.map(\.rawValue)).sorted()
                 c.mismatches += extra.map { .shape("step query key \($0)", "\(label): \(key).\($0) is not a query key").at(label) }
                 o = o.filter { !extra.contains($0.key) }
@@ -442,6 +452,14 @@ enum CombatRunner {
                 let kind = ["talent", "spell"].first { check[$0] != nil }
                 let extra = Set(check.keys).subtracting(["talent", "spell", "application", "with"])
                 guard let kind, extra.isEmpty, let id = check[kind]?.string else {
+                    // Task 31 fix round 1 (R62): a check that is no 3W20 check (the mount's attack) is
+                    // compared by its clause: the engine asks talent and spell checks only.
+                    if let from {
+                        let got = checks.map { "\($0.id) from \($0.origin)" }
+                        out.append(Mismatch(kind: .missingEvent, detail: "expected the check \(check) from \(from); the engine asks 3W20 checks only, got "
+                                            + (got.isEmpty ? "none" : got.joined(separator: "; ")), names: names))
+                        continue
+                    }
                     out.append(.shape("event check \(check.keys.sorted())", "event check \(check.keys.sorted()) is not a 3W20 check the engine asks"))
                     continue
                 }

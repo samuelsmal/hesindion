@@ -376,8 +376,8 @@ extension Evaluation {
             // its name (the owned mount's profile: svellttaler-kaltblut.SK2's `mount.iniBase`),
             // whose clause joins `via`; else the value the sheet states under that name
             // (reiterkampf's `mount.gs`, a sheet value).
-            if let d = providedFact(name, depth: depth) {
-                s.facts[name] = Fact(name: name, value: d.value!, owner: .derived)
+            if let d = providedFact(name, depth: depth), let v = d.value {
+                s.facts[name] = Fact(name: name, value: v, owner: .derived)
                 sources[name] = d
             } else if let v = situation.base[name], Vocabulary.owner(ofFact: name) == .sheet {
                 s.facts[name] = Fact(name: name, value: .int(v), owner: .sheet)
@@ -387,10 +387,14 @@ extension Evaluation {
     }
 
     /// The one `provide` of `name` by a rule that applies and is no equipment (an equipment row is
-    /// the loadout's), with its clause; nil when none or several give it.
+    /// the loadout's), read by the rules (no `readBy`) or the roll layer (`readBy: roll`), with its
+    /// clause; nil when none or several give it. A table the loadout or the display reads is not
+    /// a fact.
     func providedFact(_ name: String, depth: Int) -> Derived? {
         let providers = book.providers(of: name).filter { p in
-            book.rules[p.rule].map { $0.kind != .equipment } ?? false && applicability(of: p.rule, depth: depth).applies
+            guard book.rules[p.rule].map({ $0.kind != .equipment }) ?? false,
+                  case .provide(let pr)? = book.effect(at: p.origin)?.payload, pr.readBy == nil || pr.readBy == .roll else { return false }
+            return applicability(of: p.rule, depth: depth).applies
         }
         guard providers.count == 1 else { return nil }
         return Derived(value: providers[0].value, via: [providers[0].origin.clauseRef])

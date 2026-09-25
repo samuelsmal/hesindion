@@ -406,6 +406,42 @@ extension Evaluation {
         }
     }
 
+    /// Ruling R67: a line rests on the decided rulings of the live offers of the choices its
+    /// effect's `when` reads (trefferzonen.TZ5's zone line reads `choice.targetZone`, which
+    /// passierschlag.PS3 offers on the ruling passierschlag-zone during a Passierschlag). An offer
+    /// is live when its rule applies, its `when` holds and it rests on no open ruling.
+    func offerRulings(reading e: Effect, _ state: PipelineState) -> [String] {
+        let choices = (e.when?.factNames ?? []).filter { $0.hasPrefix("choice.") }.map { String($0.dropFirst("choice.".count)) }
+        guard !choices.isEmpty else { return [] }
+        var out: [String] = []
+        for o in offers where choices.contains(o.offer.choice) && !o.effect.ruling.isEmpty {
+            guard applicability(of: o.rule, depth: state.depth).applies,
+                  !o.effect.ruling.contains(where: { book.rulings[$0]?.status == .open }) else { continue }
+            let level = ruleLevel(o.rule, levels: state.levels, depth: state.depth)
+            if let when = o.effect.when,
+               condition(when, level: level, rule: o.rule, depth: state.depth, local: state.local).truth != .yes { continue }
+            out += decided(o.effect)
+        }
+        return out.uniqued()
+    }
+
+    /// Ruling R67: an offer of a manoeuvre rests on the decided rulings of the manoeuvre
+    /// legality effects it passed, that fire and do not refuse it (reiterkampf.RK3's forbid of
+    /// Spezialmanöver on a mounted Basismanöver: ruling mounted-manoeuvres).
+    private func passedRulings(of o: Offer, _ rule: String, _ rules: [ChoiceRule]) -> [String] {
+        guard book.rules[rule]?.manoeuvre != nil else { return [] }
+        let refusing = Set(refusals(of: o, rule, rules).map(\.origin))
+        return rules.filter { r in
+            let selector: RuleSelector
+            switch r.kind {
+            case .forbid(let s), .limit(let s, _): selector = s
+            case .require(let s?): selector = s
+            case .require(nil): return false
+            }
+            return selector.kind == .manoeuvre && !refusing.contains(r.effect.origin.clauseRef)
+        }.flatMap { decided($0.effect) }.uniqued()
+    }
+
     /// The choices `selector` names that the situation takes, in the selector's order (a
     /// manoeuvre selector: in the offers' order).
     private func chosen(_ selector: RuleSelector) -> [String] {
@@ -484,7 +520,7 @@ extension Evaluation {
                 return reasons.isEmpty ? nil : RefusedOption(option: option, reasons: reasons)
             }
             out.append(OfferedChoice(choice: o.choice, origin: e.origin.clauseRef, options: o.options, default: o.default,
-                                     span: o.span, costs: o.costs, rulings: decided(e), via: via,
+                                     span: o.span, costs: o.costs, rulings: (decided(e) + passedRulings(of: o, rule, rules)).uniqued(), via: via,
                                      reasons: refusals(of: o, rule, rules),
                                      max: bound(of: o, rules) ?? splitBound(of: o, rule: rule, level: level, depth: state.depth),
                                      refused: refused))

@@ -19,14 +19,16 @@ enum Verdict: Equatable {
 
     var passesTheTest: Bool { self != .failed }
 
-    /// A match passes. Otherwise, in order: a listed conflict (R43); only unsupported shapes
-    /// (R42); pending when open rulings it hit explain every mismatch (R41, R46); else failed.
+    /// A match passes. Otherwise, in order: only unsupported shapes (R42, and R69 for a listed
+    /// conflict); a listed conflict (R43); pending when open rulings it hit explain every mismatch (R41, R46); else failed.
     static func of(_ s: CompiledSituation, mismatches: [Mismatch], hits: [OpenHit], book: RuleBook?,
                    conflicts: Set<ConflictRef>) -> Verdict {
         guard !mismatches.isEmpty else { return .passed }
-        if conflicts.contains(ConflictRef(file: s.file, id: s.id)) { return .conflict }
         let real = mismatches.filter { $0.kind != .unsupportedShape }
+        // Ruling R69: a listed conflict is a conflict when a comparable part mismatches; with
+        // unsupported shapes alone it stays unsupported.
         if real.isEmpty { return .unsupported(mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()) }
+        if conflicts.contains(ConflictRef(file: s.file, id: s.id)) { return .conflict }
         let explaining = Explainer.explaining(hits, real, pending: s.pending, book: book, situation: s.engineSituation)
         return explaining.map { .pending($0) } ?? .failed
     }

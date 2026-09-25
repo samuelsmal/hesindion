@@ -403,7 +403,9 @@ extension Evaluation {
         for d in derives {
             guard let by = control[d.origin.clauseRef], by.replace == nil,
                   applies(d, &state, ownLevel: levelRule) else { continue }
-            state.record(NotApplied(origin: d.origin.clauseRef, reason: .suppressed, because: by.because, rulings: d.ruling,
+            // Ruling R68: the entry rests on the suppressor's rulings too.
+            state.record(NotApplied(origin: d.origin.clauseRef, reason: .suppressed, because: by.because,
+                                    rulings: (d.ruling + decided(by.effect)).uniqued(),
                                     via: [by.ref]))
         }
         return control
@@ -592,7 +594,8 @@ extension Evaluation {
             let replacer = winner.by.map { [$0.ref] } ?? []
             state.lines.append(Line(value: now - before, kind: .set, origin: winner.effect.origin.clauseRef,
                                     via: (winner.via + winner.value.via + replacer).uniqued(),
-                                    rulings: (decided(winner.effect) + (winner.by.map { decided($0.effect) } ?? [])).uniqued(),
+                                    rulings: (decided(winner.effect) + (winner.by.map { decided($0.effect) } ?? [])
+                                              + offerRulings(reading: winner.effect, state)).uniqued(),
                                     facts: (winner.used + winner.value.used).uniqued(), was: before, now: now))
         }
         for e in effects {
@@ -689,14 +692,14 @@ extension Evaluation {
                                     facts: used, via: via, value: was))
             state.lines.append(Line(value: amount, kind: .replaced, origin: e.origin.clauseRef,
                                     via: (via + r.via + perVia + [by.ref]).uniqued(),
-                                    rulings: (decided(e) + decided(by.effect)).uniqued(), facts: facts,
+                                    rulings: (decided(e) + decided(by.effect) + offerRulings(reading: e, state)).uniqued(), facts: facts,
                                     was: was, now: amount))
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via + perVia).uniqued(), facts: facts, &state)
         } else {
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
-                                    via: (via + r.via + perVia).uniqued(), rulings: decided(e), facts: facts,
-                                    owner: gmNumber(a.value, r) ? .gm : nil))
+                                    via: (via + r.via + perVia).uniqued(), rulings: (decided(e) + offerRulings(reading: e, state)).uniqued(),
+                                    facts: facts, owner: gmNumber(a.value, r) ? .gm : nil))
         }
     }
 
@@ -735,7 +738,9 @@ extension Evaluation {
             add(e, a, &scratch)
             wouldBe = scratch.lines.first?.value
         }
-        state.record(NotApplied(origin: e.origin.clauseRef, reason: .suppressed, because: by.because, rulings: e.ruling,
+        // Ruling R68: the entry rests on the suppressor's rulings too.
+        state.record(NotApplied(origin: e.origin.clauseRef, reason: .suppressed, because: by.because,
+                                rulings: (e.ruling + decided(by.effect)).uniqued(),
                                 via: [by.ref], value: wouldBe))
         return true
     }

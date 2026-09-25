@@ -108,6 +108,34 @@ struct LegalView {
         return ((flags + slots.keys).sorted(), flags.isEmpty ? Dictionary(uniqueKeysWithValues: slots.map { ("loadout.\($0.key)", $0.value) }) : [:])
     }
 
+    /// The kinds `loadout.other` holds; an entry naming an item there names the piece (Task 31 fix round 1).
+    static let otherKinds: Set<String> = ["weapon", "shield", "parryingWeapon"]
+
+    /// Task 31 fix round 1: an entry's slots as the app states them. `other` holds the second
+    /// piece's kind; an entry naming an item there (`other: Holzschild`) states the kind from data:
+    /// the item's technique (stated `item.<item>.technique`, else its equipment row) against the
+    /// shield slot's (schilde.SCH3's `loadout.shield.technique`): a shield is `other: shield` in
+    /// `loadout.shield`, anything else `other: weapon` with that technique. Without a technique the
+    /// name is kept, as before.
+    static func slotFacts(_ slots: [String: JSONValue], in situation: Situation, book: RuleBook) -> [String: JSONValue] {
+        var out = slots
+        guard let item = slots["loadout.other"]?.string, !otherKinds.contains(item) else { return out }
+        let evaluation = Engine(book: book).evaluation(situation)
+        let stated = situation.facts["item.\(item).technique"]?.value.string
+        let row = book.template(ofItem: item, in: situation).flatMap { book.rules[$0]?.provides["technique"]?.string }
+        guard let t = (stated ?? row).map(evaluation.techniqueId) else { return out }
+        let shield = book.providers(of: "loadout.shield.technique").filter { book.rules[$0.rule]?.kind != .equipment }
+            .compactMap { $0.value.string }.map(evaluation.techniqueId)
+        if shield.contains(t) {
+            out["loadout.other"] = "shield"
+            out["loadout.shield"] = .string(item)
+        } else {
+            out["loadout.other"] = "weapon"
+            out["loadout.other.technique"] = .string(t)
+        }
+        return out
+    }
+
     static func read(_ legal: JSONValue?, in situation: Situation, engine: Engine) -> LegalView? {
         guard let o = legal?.objectValue else { return nil }
         var v = LegalView()
@@ -134,7 +162,7 @@ struct LegalView {
             let key = entry.filter { !entryFields.contains($0.key) }
             let (ids, slots) = Self.ids(entry)
             var s = situation
-            for (name, value) in slots { s.facts[name] = Fact(name: name, value: value, owner: .loadout) }
+            for (name, value) in slotFacts(slots, in: situation, book: engine.book) { s.facts[name] = Fact(name: name, value: value, owner: .loadout) }
             v.loadout[key] = engine.legality(ofLoadout: ids, in: s)
         }
         return v
@@ -259,7 +287,8 @@ enum Matcher {
             n + [q.total != nil, q.result != nil, q.lines != nil, q.notApplied != nil, q.legal != nil, q.base != nil,
                  q.values != nil].filter { $0 }.count
         }
-        let run: Set<String> = check ? Set(ActionRunner.supported.map(\.rawValue)) : []
+        // Task 31 fix round 1: a check run as its stated outcome compares its events.
+        let run: Set<String> = check ? Set(ActionRunner.supported.map(\.rawValue) + (ActionRunner.outcome(s) != nil ? ["events"] : [])) : []
         return perQuery + s.expectSituation.keys.filter { !actionKeys.contains($0) || run.contains($0) }.count
             + (check ? s.sequence.count : 0)
     }
@@ -590,7 +619,11 @@ enum Matcher {
                     out.append(mismatch("expected a firing entry lasting the \(raw.string!), the choices it read are offered for \(spans)"))
                 }
             }
-            for key in o.keys.sorted() where !["allowed", "because", "ruling", "span"].contains(key) {
+            if let via = o["via"].map(strings), !Set(via).isSubset(of: actual.reasons.flatMap(\.via).map(\.description)) {
+                // Task 31 fix round 1: the firing entries' `via`.
+                out.append(mismatch("expected a firing entry via \(via), firing: \(actual.reasons.map { "\($0.origin) via \($0.via)" })"))
+            }
+            for key in o.keys.sorted() where !["allowed", "because", "ruling", "span", "via"].contains(key) {
                 out.append(.shape("legal.\(key)", "legal.\(key) is not modelled", query: query))
             }
             return out
@@ -686,7 +719,7 @@ enum Matcher {
                     continue
                 }
                 c.mismatches += offer(entry, wanted: wanted, in: pool, notApplied: entries + offerEntries, offering: offering,
-                                      rerolls: view?.offers, book: book)
+                                      rerolls: view?.offers, book: book, screen: hit != nil ? "takeDamage" : nil)
             }
         }
         if es["notApplied"] != nil, !needsQuery("notApplied") {
@@ -887,14 +920,23 @@ enum Matcher {
     /// offer that is not there, a `suppressed` entry on its offering clause whose suppressor is
     /// the `because`. When neither can be found the case cannot be decided: an unsupported shape.
     /// The `offered` fields `OfferedChoice` models (R47); every other field is an unsupported shape.
-    static let offeredFields: Set<String> = ["choice", "from", "ruling", "options", "max", "costs", "via", "default", "kind"]
+    static let offeredFields: Set<String> = ["choice", "from", "ruling", "options", "max", "costs", "via", "default", "kind", "on"]
     static let notOfferedFields: Set<String> = ["choice", "from", "because", "ruling"]
 
     static func offer(_ entry: JSONValue, wanted: Bool, in pool: [OfferedChoice], notApplied: [NotApplied],
-                      offering: [String: [ClauseRef]], rerolls: [RerollOffer]? = nil, book: RuleBook? = nil) -> [Mismatch] {
+                      offering: [String: [ClauseRef]], rerolls: [RerollOffer]? = nil, book: RuleBook? = nil,
+                      screen: String? = nil) -> [Mismatch] {
         let key = wanted ? "offered" : "notOffered"
         if let rerolls, let o = entry.objectValue, o["reroll"] != nil { return reroll(o, wanted: wanted, in: rerolls) }
         guard case .object(let o) = entry, let choice = o["choice"]?.string else {
+            // Task 31 fix round 1 (R62): an offered check is compared: the rules ask checks, they
+            // offer choices only, so no offer can be it.
+            if wanted, let o = entry.objectValue, o["check"] != nil {
+                let cause = o["cause"]?.objectValue?["rule"]?.string
+                let names = [cause, o["from"]?.string].compactMap { $0 } + (o["ruling"].map(strings) ?? [])
+                return [Mismatch(kind: .missingOffer, detail: "expected the check \(o["check"]!) offered: an offer offers a choice, a check is asked",
+                                 names: names)]
+            }
             return [.shape("offer without a choice", "\(key) entry without a choice \(entry.objectValue.map { $0.keys.sorted() } ?? []) is the action layer's")]
         }
         if let f = o["from"], f.string == nil { return [.shape("malformed offer", "\(key) \(choice): from \(f) is not a string")] }
@@ -903,8 +945,8 @@ enum Matcher {
         // Task 31: `kind` (the manoeuvre kind of the offering rule) needs the book.
         let shapes = o.keys.sorted().filter { !(wanted ? offeredFields : notOfferedFields).contains($0) || ($0 == "kind" && book == nil) }
             .map { Mismatch.shape("\(key) field \($0)", "\(key) \(choice): field \($0) \(o[$0]!) is not modelled") }
-        return shapes + (offerFindings(o, choice: choice, wanted: wanted, in: pool, notApplied: notApplied, offering: offering, book: book)
-            .map { [$0] } ?? [])
+        return shapes + (offerFindings(o, choice: choice, wanted: wanted, in: pool, notApplied: notApplied, offering: offering, book: book,
+                                       screen: screen).map { [$0] } ?? [])
     }
 
     /// The expected `costs` as (pool, amount): `action`, `{action: 1}`, `{freeAction: 1}`, or a
@@ -932,8 +974,10 @@ enum Matcher {
     /// The modelled `offered` fields an offer does not meet (R47): `ruling` (in its rulings),
     /// `options` (each listed and not refused), `max`, `default` (Task 30), `via` (each in its via) and `costs`
     /// (each a `cost` of that pool and constant amount). nil entries are malformed fields.
-    static func offerFailures(_ o: [String: JSONValue], _ c: OfferedChoice, book: RuleBook? = nil) -> [String] {
+    static func offerFailures(_ o: [String: JSONValue], _ c: OfferedChoice, book: RuleBook? = nil, screen: String? = nil) -> [String] {
         var out: [String] = []
+        // Task 31 fix round 1: `on` is the screen the offer is made on; a hit's is `takeDamage`.
+        if let on = o["on"], on.string != screen { out.append("on \(on) (offered on \(screen ?? "no screen of the harness"))") }
         if let k = o["kind"], let book {
             // Task 31: the manoeuvre kind of the offering rule (SA_48's `basismanoever`).
             let have = book.rules[c.origin.rule]?.manoeuvre?["kind"]
@@ -969,7 +1013,8 @@ enum Matcher {
     }
 
     static func offerFindings(_ o: [String: JSONValue], choice: String, wanted: Bool, in pool: [OfferedChoice],
-                              notApplied: [NotApplied], offering: [String: [ClauseRef]], book: RuleBook? = nil) -> Mismatch? {
+                              notApplied: [NotApplied], offering: [String: [ClauseRef]], book: RuleBook? = nil,
+                              screen: String? = nil) -> Mismatch? {
         if let raw = o["costs"], costs(raw) == nil {
             return .shape("malformed offer", "offered \(choice): costs \(raw) is no pool and amount")
         }
@@ -1011,7 +1056,7 @@ enum Matcher {
             let legal = seen.filter { c in
                 c.legal && (option.map { opt in (c.options ?? []).contains { text($0) == opt } && !c.refused.contains { text($0.option) == opt } } ?? true)
             }
-            let failures = legal.map { offerFailures(o, $0, book: book) }
+            let failures = legal.map { offerFailures(o, $0, book: book, screen: screen) }
             if failures.contains(where: \.isEmpty) { return nil }
             let best = failures.min { $0.count < $1.count } ?? []
             return Mismatch(kind: .wrongOffer, detail: "expected \(choice) offered with \(best.joined(separator: "; "))", names: names)
@@ -1112,6 +1157,14 @@ enum Matcher {
             let audience = o.keys.compactMap(Audience.init(rawValue:)).first
             let malformed = ["from", "ruling"].contains { o[$0] != nil && o[$0]?.string == nil }
             if !other.isEmpty || malformed || audience.map({ o[$0.rawValue]?.string == nil }) == true {
+                // Task 31 fix round 1 (R62): a structured text from a clause is compared with that
+                // clause's texts, which are plain: it never matches.
+                if !malformed, let from = o["from"]?.string {
+                    let near = actual.filter { $0.origin?.description == from }.map { "\($0.kind.rawValue) \($0.audience.rawValue): \($0.text)" }
+                    out.append(Mismatch(kind: .missingText, detail: "expected the structured text \(e); the rules' texts from \(from) are plain: "
+                                        + (near.isEmpty ? "none" : "\(near)"), names: [from] + [o["ruling"]?.string].compactMap { $0 }))
+                    continue
+                }
                 out.append(.shape("text shape", "text \(o.keys.sorted()) \(e): only from, ruling and a plain audience text are matched"))
                 continue
             }

@@ -50,10 +50,22 @@ enum ActionRunner {
     static func canRun(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> Bool {
         let n = Set(needs(s))
         guard !n.isEmpty else { return true }
+        // Task 31 fix round 1: a check stated with its result only (`rolls: { check.result: … }`)
+        // runs as its outcome, and its events are compared.
+        // A talent check only (a cast is the state runner's), whose events are no Stufen gained or
+        // cleared (settling's, R50).
+        if n == [.events], outcome(s) != nil, checkStated(s)?.kind == .talent,
+           !(s.expectSituation["events"]?.arrayValue ?? []).contains(where: StateRunner.settles) { return true }
         guard n.isSubset(of: supported), let stated = checkStated(s) else { return false }
         let dice = attributes[stated.id]?.count ?? 3
         if !n.isDisjoint(with: [.rolls, .fp, .qs, .spent, .success, .result, .sequence]), s.rolls.count != dice { return false }
         return s.sequence.allSatisfy { RerollStep($0) != nil }
+    }
+
+    /// The result a situation states for its check without dice (`check.result: success | failure`).
+    static func outcome(_ s: CompiledSituation) -> Bool? {
+        guard s.rolls.isEmpty, s.sequence.isEmpty, let r = s.situation.facts["check.result"]?.value.string else { return nil }
+        return r == "success" ? true : r == "failure" ? false : nil
     }
 
     /// The 3W20 check `s` states: `check.kind` talent (with `check.talent`) or spell (with
@@ -115,6 +127,14 @@ enum ActionRunner {
             return CheckRun(view: nil, mismatches: [m], notes: [], breakdowns: [])
         }
         let start = CheckProcedure.start(request, in: s.engineSituation, engine: engine)
+        if let success = outcome(s), let raw = s.expectSituation["events"] {
+            // Task 31 fix round 1: the outcome entered, then its events (a check's `onFailure`).
+            let out = start.state.step(.outcome(success: success), engine: engine)
+            let view = ProcedureView(stages: out.state.stages, result: out.state.result, offers: out.offers)
+            let mismatches = raw.arrayValue.map { CombatRunner.events($0, events: out.events, checks: []) }
+                ?? [.shape("malformed events", "events \(raw) is not a list")]
+            return CheckRun(view: view, mismatches: mismatches, notes: [], breakdowns: start.breakdowns + out.breakdowns)
+        }
         var step = start
         var all = start.breakdowns
         var mismatches: [Mismatch] = []

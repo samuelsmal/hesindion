@@ -329,6 +329,14 @@
       "owner": "loadout",
       "type": "int"
     },
+    "loadout.mount": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.mount.instance": {
+      "owner": "loadout",
+      "type": "string"
+    },
     "loadout.other": {
       "owner": "loadout",
       "type": "string"

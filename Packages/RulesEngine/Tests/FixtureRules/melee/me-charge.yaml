@@ -15,3 +15,13 @@ clauses:
     text: Nicht mit Finte.
     effects:
       - forbid: { what: { manoeuvre: finte }, together: true }
+  - id: C5
+    text: Beim Sturmangriff eine Zone anvisieren.
+    effects:
+      - when: { choice.sturmangriff: true }
+        offer: { choice: zone }
+        ruling: aim
+rulings:
+  - id: aim
+    question: Zielen beim Sturmangriff?
+    answer: ja

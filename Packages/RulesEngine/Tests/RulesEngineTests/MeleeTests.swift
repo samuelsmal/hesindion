@@ -96,6 +96,13 @@ final class MeleeTests: XCTestCase {
         XCTAssertEqual(b.base?.via, [ref("me-horse.H2")])
     }
 
+    /// A table the display reads (`readBy: display`) is no fact (fix round 1).
+    func testAProvideForTheDisplayIsNoFact() throws {
+        let b = engine.evaluate(Query("gs"), in: situation(owned: ["me-horse": 1], facts: ["hero.mounted": true], base: ["gs": 8]))
+        XCTAssertEqual(lines(b, from: "me-rider.R1"), [])
+        XCTAssertEqual(b.notApplied.first { $0.origin == ref("me-rider.R1") }?.reason, .unknownFact)
+    }
+
     func testAFactTheSheetStatesAsABaseValueIsRead() throws {
         let b = engine.evaluate(Query("iniBase"), in: situation(facts: ["hero.mounted": true], base: ["mount.iniBase": 12]))
         XCTAssertEqual(b.result, 12)
@@ -161,5 +168,34 @@ final class MeleeTests: XCTestCase {
         XCTAssertEqual(r.events.filter { $0.kind == .paid }.map(\.origin), [ref("me-rider.R12")])
         XCTAssertEqual(r.checks.map(\.origin), [ref("me-rider.R12")])
         XCTAssertEqual(r.checks.first?.application, "Kampfmanöver")
+    }
+
+    // MARK: - R67: the rulings a line or an offer passed through
+
+    func testALineCarriesTheRulingsOfTheOfferOfTheChoiceItRead() throws {
+        let s = situation(owned: ["me-charge": 1], facts: ["choice.sturmangriff": true, "choice.zone": "kopf"], base: ["at": 14])
+        let line = try XCTUnwrap(lines(engine.evaluate(Query("at"), in: s), from: "me-core.Z5").first)
+        XCTAssertEqual(line.rulings, ["me-charge.aim"])
+        let plain = situation(owned: ["me-charge": 1], facts: ["choice.zone": "kopf"], base: ["at": 14])
+        XCTAssertEqual(lines(engine.evaluate(Query("at"), in: plain), from: "me-core.Z5").first?.rulings, [])
+    }
+
+    func testAnOfferCarriesTheRulingsOfTheManoeuvreForbidsItPassed() throws {
+        let s = situation(owned: ["me-finte": 1, "me-charge": 1], facts: ["hero.mounted": true, "hero.gs": 8])
+        let finte = try XCTUnwrap(engine.offers(in: s).first { $0.choice == "finte" })
+        XCTAssertTrue(finte.legal)
+        XCTAssertTrue(finte.rulings.contains("me-rider.mounted"), "\(finte.rulings)")
+        let charge = try XCTUnwrap(engine.offers(in: s).first { $0.choice == "sturmangriff" })
+        XCTAssertFalse(charge.legal)
+        XCTAssertFalse(charge.rulings.contains("me-rider.mounted"))
+    }
+
+    // MARK: - R68: a suppressed entry carries the suppressor's rulings
+
+    func testASuppressedEntryCarriesTheSuppressorsRulings() throws {
+        let s = situation(facts: ["loadout.reach": "kurz", "opponent.reach": "lang", "gmFact.quiet": true], base: ["at": 14])
+        let entry = try XCTUnwrap(engine.evaluate(Query("at"), in: s).notApplied.first { $0.origin == ref("me-core.R3") })
+        XCTAssertEqual(entry.reason, .suppressed)
+        XCTAssertTrue(entry.rulings.contains("me-core.quiet"))
     }
 }

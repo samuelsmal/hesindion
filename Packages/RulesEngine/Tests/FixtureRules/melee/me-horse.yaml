@@ -10,3 +10,7 @@ clauses:
     text: INI 14+1W6.
     effects:
       - provide: { name: mount.iniBase, value: 14 }
+  - id: H4
+    text: Aktionen 1.
+    effects:
+      - provide: { name: mount.actions, value: 1, readBy: display }
