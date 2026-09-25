@@ -18,6 +18,7 @@ final class SituationsHarnessTests: XCTestCase {
         let all = try XCTUnwrap(try CompiledSituations.load(from: situationsURL), "run make rules-json")
         let engine = Engine(book: try RuleBook.load(from: rulesURL))
 
+        if CheckAttributes.all.isEmpty { XCTFail("rules.db missing: run make rules-db") }
         for name in filter.unknown(among: all.situations.map(\.file)) {
             XCTFail("RULES_FILES names \(name), which is no situations file")
         }
@@ -37,7 +38,8 @@ final class SituationsHarnessTests: XCTestCase {
             guard ActionRunner.canRun(s) else {
                 // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
                 let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }
-                if !s.expect.isEmpty {
+                // R50: a situation expecting a state gained or cleared is described after its action.
+                if !s.expect.isEmpty && !Self.expectsStateChange(s) {
                     report.queriesCompared.append(s.id)
                     let run = Matcher.run(s, engine: engine, onlyQueries: true)
                     if run.mismatches.contains(where: { $0.kind != .unsupportedShape }) {
@@ -62,11 +64,21 @@ final class SituationsHarnessTests: XCTestCase {
             if verdict == .failed { failures.append((s, mismatches)) }
         }
 
+        report.stateChangeUnsupported = all.situations.filter { filter.keeps($0.file) && !ActionRunner.canRun($0)
+            && !$0.expect.isEmpty && Self.expectsStateChange($0) }.map(\.id)
         try report.write(to: Repo.url("build/rules/harness-report.json"))
         print(report.summary)
         report.fileLines.forEach { print($0) }
         for (s, mismatches) in failures {
             XCTFail("situation \(s.id) (\(s.file)):\n" + mismatches.map { "  - \($0)" }.joined(separator: "\n"))
         }
+    }
+
+    /// R50: whether `s` expects a `gained` or `cleared` event, at the top or in a step: its query
+    /// expectations then describe the state after that event.
+    static func expectsStateChange(_ s: CompiledSituation) -> Bool {
+        let events = (s.expectSituation["events"]?.arrayValue ?? [])
+            + s.sequence.flatMap { $0.objectValue?["expect"]?.objectValue?["events"]?.arrayValue ?? [] }
+        return events.contains { $0.objectValue.map { $0["gained"] != nil || $0["cleared"] != nil } ?? false }
     }
 }

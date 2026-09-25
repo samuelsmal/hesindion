@@ -654,6 +654,50 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(kinds(try compare(#"{"fp": 8, "qs": 3, "spent": [0, 0, 0]}"#, v2)), [])
     }
 
+    /// R48: an open-ruling effect explains a mismatch on a target that reads its target as an
+    /// operand: SA_9.FS1 (open spezialisierung-when) reaches `check.fw`, which `check.fp` reads,
+    /// which `check.qs` reads. Not a target outside the chain (`at`). Real rules.
+    func testAnOpenRulingExplainsAMismatchDownTheOperandChain() throws {
+        let book = try XCTUnwrap(CheckProcedureTests.real?.book, "run make rules-json")
+        XCTAssertEqual(Explainer.operandChain("check.qs", book), ["check.qs", "check.fp", "check.fw"])
+        let hit = OpenHit(ruling: "SA_9.spezialisierung-when", origin: ref("SA_9.FS1"))
+        let s = Situation(owned: ["SA_9": OwnedRule(level: 1, option: "TAL_10", option2: 2)], facts: [])
+        for q in ["check.qs", "check.fp", "check.fw"] {
+            XCTAssertTrue(Explainer.explains(hit, Mismatch(kind: .qs, query: q, detail: ""), book: book, situation: s), q)
+        }
+        XCTAssertFalse(Explainer.explains(hit, Mismatch(kind: .total, query: "at", detail: ""), book: book, situation: s))
+        XCTAssertFalse(Explainer.explains(hit, Mismatch(kind: .checkResult, detail: ""), book: book, situation: s))
+    }
+
+    /// A stated check whose Probe rules.db lacks runs and mismatches; it is not unsupported.
+    /// A reroll step naming a rule that offers none stops the sequence with one mismatch.
+    func testAMissingProbeRowOrRerollIsAMismatch() throws {
+        let engine = try XCTUnwrap(CheckProcedureTests.real, "run make rules-json")
+        let facts = #""facts": [{"name": "check.kind", "value": "talent", "owner": "player"}, {"name": "check.talent", "value": "TAL_10", "owner": "player"}, {"name": "attr.KL", "value": 12, "owner": "sheet"}, {"name": "attr.IN", "value": 14, "owner": "sheet"}, {"name": "fw.TAL_10", "value": 8, "owner": "sheet"}]"#
+        let s = try situation(#"{\#(facts), "rolls": [5, 19, 12], "expectSituation": {"fp": 3}}"#)
+        XCTAssertTrue(ActionRunner.canRun(s, attributes: [:]))
+        let missing = try XCTUnwrap(ActionRunner.run(s, engine: engine, attributes: [:]))
+        XCTAssertEqual(kinds(missing.mismatches), [.checkResult])
+        XCTAssertNil(missing.view)
+
+        let probe = ["TAL_10": ["KL", "IN", "IN"]]
+        let wrongRule = try situation(#"""
+            {\#(facts), "rolls": [5, 19, 12], "expectSituation": {"fp": 3},
+             "sequence": [{"choose": {"choice.reroll": "SA_9", "choice.rerollDie": 2}, "rolls": {"roll.reroll": 11}, "expect": {"fp": 8}},
+                          {"choose": {"choice.reroll": "ADV_4", "choice.rerollDie": 1}, "rolls": {"roll.reroll": 1}, "expect": {"fp": 99}}]}
+            """#)
+        let run = try XCTUnwrap(ActionRunner.run(wrongRule, engine: engine, attributes: probe))
+        XCTAssertEqual(kinds(run.mismatches), [.missingOffer], "the sequence stops at the missing reroll: \(run.mismatches)")
+    }
+
+    /// R50: a situation expecting a `gained` / `cleared` event (at the top or in a step) keeps its
+    /// query expectations uncompared.
+    func testASituationExpectingAStateChangeIsDescribedAfterIt() throws {
+        XCTAssertTrue(SituationsHarnessTests.expectsStateChange(try situation(#"{"expectSituation": {"events": [{"gained": "STATE_8"}]}}"#)))
+        XCTAssertTrue(SituationsHarnessTests.expectsStateChange(try situation(#"{"sequence": [{"expect": {"events": [{"cleared": "X"}]}}]}"#)))
+        XCTAssertFalse(SituationsHarnessTests.expectsStateChange(try situation(#"{"expectSituation": {"events": [{"paid": "asp"}]}}"#)))
+    }
+
     /// Q2 (Task 26 extra 8): a situation whose action part cannot run still has its query
     /// expectations compared, and only those.
     func testOnlyTheQueriesOfAnUnsupportedSituationAreCompared() throws {

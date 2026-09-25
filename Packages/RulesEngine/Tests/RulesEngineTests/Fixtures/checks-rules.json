@@ -12,6 +12,11 @@
     "rule": "chk-begabung"
    },
    {
+    "clause": "G1",
+    "index": 0,
+    "rule": "chk-glueck"
+   },
+   {
     "clause": "M1",
     "index": 0,
     "rule": "chk-magie"
@@ -20,6 +25,11 @@
     "clause": "M1",
     "index": 1,
     "rule": "chk-magie"
+   },
+   {
+    "clause": "O1",
+    "index": 0,
+    "rule": "chk-owner"
    },
    {
     "clause": "VP2",
@@ -118,6 +128,23 @@
     "clause": "QS1",
     "index": 1,
     "rule": "chk-proben"
+   }
+  ],
+  "ini": [
+   {
+    "clause": "O1",
+    "index": 1,
+    "rule": "chk-owner"
+   },
+   {
+    "clause": "O2",
+    "index": 0,
+    "rule": "chk-owner"
+   },
+   {
+    "clause": "O3",
+    "index": 0,
+    "rule": "chk-owner"
    }
   ]
  },
@@ -228,6 +255,66 @@
       {
        "because": null,
        "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "chk-glueck"
+       },
+       "payload": {
+        "die": {
+         "ids": [
+          "any"
+         ],
+         "kind": "dice"
+        },
+        "keep": "second",
+        "max": 1,
+        "per": "round"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "reroll",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "in": [
+           "talent",
+           "spell",
+           "liturgy"
+          ]
+         },
+         {
+          "fact": "gmFact.glueck",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "G1",
+     "text": "Einmal je Kampfrunde einen Würfel neu."
+    }
+   ],
+   "id": "chk-glueck",
+   "kind": "core",
+   "name": "Glück",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "M1",
         "index": 0,
         "rule": "chk-magie"
@@ -313,6 +400,152 @@
    "id": "chk-mut",
    "kind": "state",
    "name": "chk-mut",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/chk"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O1",
+        "index": 0,
+        "rule": "chk-owner"
+       },
+       "payload": {
+        "name": "chk-owner.lage",
+        "value": {
+         "0-2": 1,
+         "3+": 2
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "O1",
+        "index": 1,
+        "rule": "chk-owner"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "table": {
+          "key": "gmFact.lage",
+          "name": "chk-owner.lage"
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "O1",
+     "text": "Nach Tabelle, wie der Meister die Lage sieht."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O2",
+        "index": 0,
+        "rule": "chk-owner"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "choice.bonus"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "O2",
+     "text": "So viel, wie der Spieler wählt."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O3",
+        "index": 0,
+        "rule": "chk-owner"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "gmFact.ini"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "O3",
+     "text": "So viel, wie der Meister sagt."
+    }
+   ],
+   "id": "chk-owner",
+   "kind": "core",
+   "name": "Besitzer",
    "reviewed": null,
    "rulings": [],
    "source": {

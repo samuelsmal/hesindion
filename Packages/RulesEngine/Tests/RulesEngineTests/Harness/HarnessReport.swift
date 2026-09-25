@@ -148,6 +148,9 @@ struct HarnessReport: Encodable {
     /// Situations whose action part cannot run yet but whose query expectations ran and were
     /// compared (Task 26 extra 8): a mismatch there decides the verdict.
     var queriesCompared: [String] = []
+    /// Unsupported situations with query expectations left uncompared because they expect a
+    /// `gained` / `cleared` event (R50).
+    var stateChangeUnsupported: [String] = []
     /// How often each mismatch kind is the first of a failed situation, and in all of them.
     var firstMismatchKinds: [String: Int] = [:]
     var mismatchKinds: [String: Int] = [:]

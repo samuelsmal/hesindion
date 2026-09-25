@@ -834,7 +834,8 @@ enum Explainer {
     /// Whether the open ruling `hit` met could explain `m` (R41, tightened by R46):
     /// - the expectation names the ruling, or the clause or rule its effect sits on;
     /// - its effect (the clause's effect resting on the ruling) reaches the mismatched query's
-    ///   target by a non-`*` reach entry;
+    ///   target, or a target that target reads through the operand chain (R48), by a non-`*`
+    ///   reach entry;
     /// - `m` is about offers / questions / texts and the effect is a `*` offer / ask / tell.
     ///
     /// With a book, the explaining effect must be live (R46): its `when` (and, for a ruling on a
@@ -853,7 +854,9 @@ enum Explainer {
         }
         let clauseEffects = book.rules[o.rule]?.clauses.flatMap(\.effects).filter { $0.origin.clause == o.clause } ?? []
         if named { return clauseEffects.contains { live($0.origin) } }
-        if let q = m.query, (book.reach[TargetRef(q).name] ?? []).contains(where: live) { return true }
+        if let q = m.query, operandChain(TargetRef(q).name, book).contains(where: { (book.reach[$0] ?? []).contains(where: live) }) {
+            return true
+        }
         let verb: Verb? = switch m.area {
         case .offers: .offer
         case .questions: .ask
@@ -862,6 +865,36 @@ enum Explainer {
         }
         guard let verb else { return false }
         return (book.reach["*"] ?? []).contains { live($0) && book.effect(at: $0)?.payload.verb == verb }
+    }
+
+    /// R48: `target` and every target it reads through the R26 operand chain: the targets the
+    /// values of the effects reaching it read (a derive's terms, an add's or set's value, a cap's
+    /// bounds, a table key that is a target), and theirs in turn (`check.qs` → `check.fp` →
+    /// `check.fw`). `*` entries are not followed.
+    static func operandChain(_ target: String, _ book: RuleBook) -> [String] {
+        var out = [target], i = 0
+        while i < out.count {
+            for origin in book.reach[out[i]] ?? [] {
+                guard let e = book.effect(at: origin) else { continue }
+                for t in operandTargets(e.payload) where !out.contains(t) { out.append(t) }
+            }
+            i += 1
+        }
+        return out
+    }
+
+    static func operandTargets(_ p: Payload) -> [String] {
+        let values: [ValueExpr]
+        switch p {
+        case .add(let a): values = [a.value]
+        case .set(let s): values = [s.value]
+        case .derive(let d): values = d.sum
+        case .cap(let c): values = [c.max, c.min].compactMap { $0 }
+        case .floor(let f): values = [f.min]
+        case .replace(let r): values = [r.with]
+        default: values = []
+        }
+        return values.flatMap(\.targets).map(\.name)
     }
 
     /// Whether `e`, or an effect nested in it, rests on `ruling` with every `when` on the way not

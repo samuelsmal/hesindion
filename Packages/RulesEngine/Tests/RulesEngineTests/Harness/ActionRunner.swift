@@ -44,18 +44,21 @@ enum ActionRunner {
     /// Whether the harness can run all of `s`: nothing of the action layer, or a 3W20 check whose
     /// every need is supported, with one die per attribute when its result is expected, and only
     /// reroll steps in its sequence.
-    static func canRun(_ s: CompiledSituation) -> Bool {
+    ///
+    /// A check whose Probe rules.db does not know still runs: its missing row is a mismatch
+    /// (`run`), never a silent `unsupported`.
+    static func canRun(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> Bool {
         let n = Set(needs(s))
         guard !n.isEmpty else { return true }
-        guard n.isSubset(of: supported), let request = request(s) else { return false }
-        if !n.isDisjoint(with: [.rolls, .fp, .qs, .spent, .success, .result, .sequence]),
-           s.rolls.count != request.attributes.count { return false }
+        guard n.isSubset(of: supported), let stated = checkStated(s) else { return false }
+        let dice = attributes[stated.id]?.count ?? 3
+        if !n.isDisjoint(with: [.rolls, .fp, .qs, .spent, .success, .result, .sequence]), s.rolls.count != dice { return false }
         return s.sequence.allSatisfy { RerollStep($0) != nil }
     }
 
     /// The 3W20 check `s` states: `check.kind` talent (with `check.talent`) or spell (with
-    /// `check.spell`), and the Probe's attributes. nil for anything else (a liturgy has no id fact).
-    static func request(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> CheckRequest? {
+    /// `check.spell`). nil for anything else (a liturgy has no id fact).
+    static func checkStated(_ s: CompiledSituation) -> (kind: CheckKind, id: String)? {
         let facts = s.situation.facts
         guard let kind = facts["check.kind"]?.value.string.flatMap(CheckKind.init(rawValue:)) else { return nil }
         let id: String?
@@ -64,8 +67,13 @@ enum ActionRunner {
         case .spell: id = facts["check.spell"]?.value.string
         case .liturgy: id = nil
         }
-        guard let id, let probe = attributes[id] else { return nil }
-        return CheckRequest(kind: kind, id: id, attributes: probe)
+        return id.map { (kind, $0) }
+    }
+
+    /// The check `s` states, with its Probe's attributes from rules.db; nil without a check or a row.
+    static func request(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> CheckRequest? {
+        guard let stated = checkStated(s), let probe = attributes[stated.id] else { return nil }
+        return CheckRequest(kind: stated.kind, id: stated.id, attributes: probe)
     }
 
     /// A `sequence` step that takes a reroll.
@@ -90,7 +98,8 @@ enum ActionRunner {
     /// One run of the check procedure: the view after the dice, the mismatches of the result keys
     /// and of every step, and every breakdown it computed (for the open rulings it met).
     struct CheckRun {
-        var view: ProcedureView
+        /// nil when the check could not start (no Probe row).
+        var view: ProcedureView?
         var mismatches: [Mismatch]
         var notes: [String]
         var breakdowns: [Breakdown]
@@ -98,9 +107,13 @@ enum ActionRunner {
 
     /// Runs `s`'s check when it states one and expects something of it (dice, a stage query);
     /// nil otherwise.
-    static func run(_ s: CompiledSituation, engine: Engine) -> CheckRun? {
-        guard let request = request(s),
-              !s.rolls.isEmpty || s.expect.contains(where: { ProcedureView.isStage($0.query) }) else { return nil }
+    static func run(_ s: CompiledSituation, engine: Engine, attributes: [String: [String]] = CheckAttributes.all) -> CheckRun? {
+        guard let stated = checkStated(s),
+              !s.rolls.isEmpty || !needs(s).isEmpty || s.expect.contains(where: { ProcedureView.isStage($0.query) }) else { return nil }
+        guard let request = request(s, attributes: attributes) else {
+            let m = Mismatch(kind: .checkResult, detail: "rules.db has no Probe row for \(stated.id): the check cannot run (make rules-db)")
+            return CheckRun(view: nil, mismatches: [m], notes: [], breakdowns: [])
+        }
         let start = CheckProcedure.start(request, in: s.engineSituation, engine: engine)
         var step = start
         var all = start.breakdowns
@@ -119,12 +132,19 @@ enum ActionRunner {
         for (n, raw) in s.sequence.enumerated() {
             guard let reroll = RerollStep(raw) else { continue }
             let label = "step \(n + 1)"
-            let offer = step.offers.first { $0.origin.rule == reroll.rule }
-            let next = step.state.step(.reroll(die: reroll.die - 1, face: reroll.face, using: offer?.origin), engine: engine)
-            if offer == nil || next.state == step.state {
+            // The named rule's reroll, never another's: without it the sequence stops here.
+            guard let offer = step.offers.first(where: { $0.origin.rule == reroll.rule }) else {
                 c.mismatches.append(Mismatch(kind: .missingOffer, query: "check.dice",
-                                             detail: "\(label): no reroll by \(reroll.rule) of W\(reroll.die) taken: \(next.texts.map(\.text))",
+                                             detail: "\(label): \(reroll.rule) offers no reroll (offered: \(step.offers.map(\.origin.description)))",
                                              names: [reroll.rule]))
+                break
+            }
+            let next = step.state.step(.reroll(die: reroll.die - 1, face: reroll.face, using: offer.origin), engine: engine)
+            guard next.state != step.state else {
+                c.mismatches.append(Mismatch(kind: .missingOffer, query: "check.dice",
+                                             detail: "\(label): the reroll by \(offer.origin) of W\(reroll.die) was refused: \(next.texts.map(\.text))",
+                                             names: [reroll.rule, offer.origin.description]))
+                break
             }
             step = next
             all += next.breakdowns

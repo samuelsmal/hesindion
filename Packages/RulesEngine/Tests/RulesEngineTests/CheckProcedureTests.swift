@@ -246,6 +246,35 @@ final class CheckProcedureTests: XCTestCase {
         XCTAssertEqual(other.offers.map(\.origin), [ref("chk-schip.NW1")])
     }
 
+    /// R49: a rule line is the GM's only when its number is a GM fact's value (FM2's shape,
+    /// fixture chk-owner.O3). A table keyed by a GM fact (O1) and a player's number (O2) are the
+    /// rule's: owner nil, the facts in `facts`.
+    func testOnlyAGMFactsValueMakesALineTheGMs() throws {
+        let s = Situation(owned: [:], facts: [Fact(name: "gmFact.lage", value: 3, owner: .gm),
+                                              Fact(name: "choice.bonus", value: 2, owner: .player),
+                                              Fact(name: "gmFact.ini", value: 1, owner: .gm)],
+                          base: ["ini": 10])
+        let b = fixture.evaluate(Query("ini"), in: s)
+        let owners = Dictionary(uniqueKeysWithValues: b.lines.compactMap { l in l.origin.map { ($0.clause, l.owner) } })
+        XCTAssertEqual(owners["O1"], .some(nil))
+        XCTAssertEqual(owners["O2"], .some(nil))
+        XCTAssertEqual(owners["O3"], .some(.gm))
+        XCTAssertEqual(b.lines.first { $0.origin == ref("chk-owner.O1") }?.facts.map(\.name), ["gmFact.lage"])
+        XCTAssertEqual(b.result, 15)
+    }
+
+    /// A stated Anwendungsgebiet that cannot be compared with the instance's numeric `sid2` asks
+    /// nothing (asking again cannot help); a text says why.
+    func testAnApplicationThatCannotBeComparedIsATextNotAQuestion() throws {
+        var s = hero(advantage: "chk-begabung", specialisation: "chk-spez")
+        s.owned["chk-spez"]?.option2 = 2
+        let fw = CheckProcedure.start(sinnesschaerfe("Suchen"), in: s, engine: fixture).state.stages.fw
+        XCTAssertEqual(fw.result, 8)
+        XCTAssertFalse(fw.questions.contains { $0.fact == "check.application" }, "\(fw.questions)")
+        XCTAssertTrue(fw.texts.contains { $0.origin == ref("chk-spez.FS1") && $0.text.contains("nicht vergleichbar") }, "\(fw.texts)")
+        XCTAssertTrue(fw.notApplied.contains { $0.origin == ref("chk-spez.FS1") && $0.reason == .unknownFact })
+    }
+
     // MARK: - reroll
 
     /// 22.4: [5, 19, 12]: spent [0, 5, 0], FP 3, QS 1. The Begabung rerolls die 2 (index 1) to 11:
@@ -317,6 +346,15 @@ final class CheckProcedureTests: XCTestCase {
         let third = both2.state.step(.reroll(die: 2, face: 1), engine: fixture)
         XCTAssertEqual(third.state, both2.state)
         XCTAssertFalse(third.texts.isEmpty)
+    }
+
+    /// `per`: a reroll's uses are counted within the check (`action`). One counted over another
+    /// span (fixture chk-glueck.G1, `per: round`) is not offered, and a text says why.
+    func testARerollPerRoundIsNotOfferedAndSaysWhy() throws {
+        let s = hero(["gmFact.glueck": true], advantage: "chk-begabung", specialisation: "chk-spez")
+        let step = rolled(sinnesschaerfe("Wahrnehmen"), s, [18, 19, 17], fixture)
+        XCTAssertEqual(step.offers.map(\.origin), [ref("chk-begabung.B1"), ref("chk-schip.NW1")])
+        XCTAssertTrue(step.texts.contains { $0.origin == ref("chk-glueck.G1") && $0.text.contains("round") }, "\(step.texts)")
     }
 
     // MARK: - confirm

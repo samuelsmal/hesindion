@@ -203,9 +203,10 @@ extension Evaluation {
     /// - `check.onOption` / `check.applicationOnOption` (MIGRATION ADV_4.B1, SA_9.FS1; plan Task
     ///   26): read by `rule`, from the instance the hero owns: its `option` against the check's
     ///   `check.spell` / `check.talent`, its `option2` against `check.application`. An unknown
-    ///   check subject asks for `check.talent`; an unknown Anwendungsgebiet, or one that cannot be
-    ///   compared (an application id against a name), asks the player for `check.application`. A
-    ///   rule with no owned option cannot say: unknown, nobody asked.
+    ///   check subject asks for `check.talent`; an unknown Anwendungsgebiet asks the player for
+    ///   `check.application`. One that is stated but cannot be compared (an application id against
+    ///   a name) stays unknown and asks nothing: `gate` shows a text "… nicht vergleichbar". A rule
+    ///   with no owned option cannot say: unknown, nobody asked.
     func prepared(_ names: Set<String>, depth: Int, local: [String: Fact] = [:],
                   rule: String? = nil) -> (situation: Situation, behind: [String: [UnknownFact]]) {
         let prefix = "hero.levelOf."
@@ -222,6 +223,12 @@ extension Evaluation {
             }
             if let checkFact, let same = Self.sameOption(mine, checkFact) {
                 s.facts[name] = Fact(name: name, value: .bool(same), owner: .derived)
+            } else if let checkFact {
+                // Stated but not comparable (an application id against its name): asking again
+                // cannot help. `gate` shows why.
+                s.unstated.insert(name)
+                behind[name] = []
+                if let rule { undecidable["\(rule):\(name)"] = "\(mine) und \(checkFact) sind nicht vergleichbar" }
             } else {
                 s.unstated.insert(name)
                 behind[name] = [UnknownFact(asking)]

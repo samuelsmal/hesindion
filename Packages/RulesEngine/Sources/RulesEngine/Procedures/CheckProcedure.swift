@@ -259,7 +259,8 @@ public enum CheckProcedure {
     // MARK: - Rerolls
 
     /// The book's top-level `reroll`s (rule-id and clause order) whose rule applies and whose
-    /// `when` is yes, with uses left (`max` per check). Each is illegal while a `forbid` naming
+    /// `when` is yes, with uses left (`max` per check). A `per` other than `action` is not
+    /// counted here: that reroll is not offered, and a text says so. Each is illegal while a `forbid` naming
     /// its clause or rule fires. The records (a `when` no or unknown, an open ruling) are the
     /// `check.dice` breakdown's.
     static func rerollOffers(_ result: CheckResult, _ engine: Engine) -> (offers: [RerollOffer], records: PipelineState) {
@@ -279,6 +280,11 @@ public enum CheckProcedure {
             let level = evaluation.ruleLevel(rule, levels: [:], depth: 0)
             let via = evaluation.ruleVia(rule, records)
             guard evaluation.gate(e, level: level, via: via, &records) != nil else { continue }
+            // Uses are counted within this check (`per: action`); a check cannot count another span.
+            if let per = r.per, per != .action {
+                evaluation.fail(e, "ein Neuwurf je \(per.rawValue) wird in einer Probe nicht gezählt", &records)
+                continue
+            }
             let remaining = r.max.map { max(0, $0 - (result.uses[e.origin.clauseRef] ?? 0)) }
             if remaining == 0 { continue }                           // used up: no longer offered
             var reasons: [NotApplied] = []

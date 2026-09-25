@@ -22,6 +22,9 @@ final class Evaluation {
     /// The legality effects on choices, evaluated once per call (`choiceRules()`), and the
     /// book's offers.
     var choiceRulesMemo: [ChoiceRule]?
+    /// `rule:fact` → why a derived fact stated from the check cannot be decided (a stated
+    /// Anwendungsgebiet that cannot be compared with the rule's option); `gate` shows it.
+    var undecidable: [String: String] = [:]
     var offersMemo: [(offer: Offer, effect: Effect, rule: String)]?
 
     init(book: RuleBook, situation: Situation) {
@@ -531,9 +534,8 @@ extension Evaluation {
     }
 
     /// One `add`: its value (or its replacer's), times the fact `per` when given, as a line; or
-    /// that many steps along its `scale`. A line whose number is read from facts all stated by the
-    /// GM (or all by the player) carries that owner: the GM's modifier is the GM's line
-    /// (fertigkeitsproben.FM2, plan Task 26).
+    /// that many steps along its `scale`. A line whose number is a GM-stated fact's value carries
+    /// owner `gm` (R49, `gmNumber`): the GM's modifier is the GM's line (fertigkeitsproben.FM2).
     private func add(_ e: Effect, _ a: Add, _ state: inout PipelineState) {
         let rule = e.origin.rule
         let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
@@ -579,11 +581,20 @@ extension Evaluation {
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via).uniqued(), facts: facts, &state)
         } else {
-            let owners = Set(r.used.map(\.owner))
-            let owner = owners.count == 1 && (owners.first == .gm || owners.first == .player) ? owners.first : nil
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
-                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts, owner: owner))
+                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts,
+                                    owner: gmNumber(a.value, r) ? .gm : nil))
         }
+    }
+
+    /// R49: whether a value's number is the GM's: a proportion over exactly one fact, that fact
+    /// stated by the GM, with no target and no table (`{ of: gmFact.x }`, FM2's
+    /// `{ of: 0, above: gmFact.x, times: -1 }`). A table keyed by a GM fact, or a value read from
+    /// anyone else's facts, is the rule's number: the facts are in `Line.facts`.
+    private func gmNumber(_ value: ValueExpr, _ r: ValueResult) -> Bool {
+        guard case .proportion = value, value.factNames.count == 1, value.targets.isEmpty,
+              let name = value.factNames.first else { return false }
+        return r.used.contains { $0.name == name && $0.owner == .gm }
     }
 
     /// The value an `add` or `set` computes: its own, or, when phase 4 replaced its clause, the
@@ -809,6 +820,9 @@ extension Evaluation {
             state.record(NotApplied(origin: origin, reason: .unknownFact, because: e.because, rulings: e.ruling,
                                     facts: r.used, via: via))
             if asking { state.ask(r.unknown, for: origin) }
+            for name in (e.when?.factNames ?? []).sorted() {
+                if let why = undecidable["\(e.origin.rule):\(name)"] { fail(e, "\(name): \(why)", &state) }
+            }
             return nil
         }
         return r.used
