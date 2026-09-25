@@ -13,7 +13,7 @@ source:
   page: 229 ff.        # the multiple-defence paragraphs themselves are p. 232 (Optolith's Vinsalt-Stil text)
   checked: 2026-09-23
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: MV1
@@ -50,6 +50,9 @@ clauses:
         forbid: { what: { defence: [pa, aw] } }
         because: Verteidigungswert 0 oder weniger
         ruling: zero-value
+        # The old `check: [pa, aw]` condition has no fact in the vocabulary: the `defence`
+        # selector puts this effect in the reach index under `pa` and `aw` only, so only a
+        # defence query evaluates it.
         # `query.result` is the queried defence's value after every other phase; legality runs
         # last (spec §5.2), so it reads the result of all other modifiers. Each defence is its
         # own query, so only the kind whose value reached 0 is blocked; another stays open.

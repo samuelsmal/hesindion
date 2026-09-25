@@ -1378,6 +1378,14 @@ No residue.
 - [x] L61 situations["9.6"].expect.on_hit: on_hit — neither an expect key nor a query
 - [x] L75 situations["9.8"].expect.combinable: combinable — neither an expect key nor a query
 
+## Expectation conflicts for the owner
+
+- situations/beidhaendiger-kampf.yaml 11.12: expects `at(with: offHand)` to be the Dolch (`weapon: Dolch`, total −6). No expect key names the piece a query is rolled with, so the weapon is now input (`loadout.other.technique: CT_3`) and a comment; the situation no longer checks which piece the app puts in the off hand, only the −6.
+- situations/boronmir-neu.yaml 19.12: expects no state gained on the failed check (`states: []`) beside the log entry. No expect key says "no event of this kind"; `events: [{ logged: … }]` checks the log only, so "no state" is a comment.
+- situations/boronmir-sf.yaml 14.13: expects `pa(with: shield)` total −7, result 6, with a −6 line from SA_59.SS2 ("removes schilde.SCH3"). The base 13 (`pa(with: Großschild)`) folds in SCH3's doubled bonus; the rules give the shield parry as KW2's Schilde PA 7 plus SCH3's +6 line, and SS2 is a `suppress` of that line, which lands in notApplied (reason suppressed), not as a −6 line. Faithful to the rules: base 7, no SCH3 line, total −1, result 6.
+- situations/boronmir-sf.yaml 14.17: expects `pa` result 11 and `pa(with: shield)` result 13 with only the P2 and B3 lines (total 0). The bases 11 and 13 fold in SCH1's +3 and SCH3's +6; the rules add those as lines (schilde.SCH1, schilde.SCH3), so the totals would be +3 and +6, with the same results.
+- situations/boronmir-neu.yaml 19.2: the same as 14.17 for Formation's +2 VW: `pa` result 12 and `pa(with: shield)` result 14 with totals 1 come from folded bases 11 / 13; the rules give SCH1's +3 and SCH3's +6 as lines of their own.
+
 ## Reviews reset by hand edits
 
 - kampfwerte.KW1: the MU term is its own `derive` with `when: { not: { loadout.weapon.technique: Peitschen } }`, so KW6's FF term stands in for it; the KtW term stays unconditional
@@ -1419,3 +1427,4 @@ No residue.
 - DISADV_37.SE2: `on_failure: { log: … }` is a `tell` to the player when the Willenskraft check under the trigger fails (`check.result: failure`)
 - DISADV_37.SE4: the `gm.modifier` offer is an `ask` of `gmFact.triggerModifier` (the GM) and an `add` of it to `check.modifier` on that check; its `default: 0` is a comment
 - DISADV_37.SE6: `provides: { text_by_option: sid }` is `provide: { name: DISADV_37.eigenschaft, value: { sid: name } }`: the name, whose line of SE6's text is the trigger
+- mehrfache-verteidigung.MV3: the `check: [pa, aw]` condition is dropped (no such fact); the forbid reads `query.result: { atMost: 0 }` and is limited to defence queries only by its `defence` selector's reach (pa, aw); `this_kind` is `[pa, aw]` per query

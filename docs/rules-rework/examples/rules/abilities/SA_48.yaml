@@ -33,8 +33,10 @@ clauses:
         ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
       - when: { choice.finte: { atLeast: 1 } }
         add: { to: at, value: -1, per: choice.finte }
+        ruling: tiered-manoeuvre-stufe
       - when: { choice.finte: { atLeast: 1 }, action.attack: hit }
         add: { to: [opponent.pa, opponent.aw], value: -2, per: choice.finte }
+        ruling: tiered-manoeuvre-stufe
         # "Verteidigung" — parry or dodge, whichever the opponent uses.
         # FORMAT: `per: choice.finte` counts the Stufe the player announced, not `level` (the
         # Stufe owned).

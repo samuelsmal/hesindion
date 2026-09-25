@@ -32,8 +32,10 @@ clauses:
         ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
       - when: { choice.wuchtschlag: { atLeast: 1 } }
         add: { to: at, value: -2, per: choice.wuchtschlag }
+        ruling: tiered-manoeuvre-stufe
       - when: { choice.wuchtschlag: { atLeast: 1 }, action.attack: hit }
         add: { to: tp, value: 2, per: choice.wuchtschlag }
+        ruling: tiered-manoeuvre-stufe
 
   - id: W2
     text: "Erschwernis: -2/-4/-6"
