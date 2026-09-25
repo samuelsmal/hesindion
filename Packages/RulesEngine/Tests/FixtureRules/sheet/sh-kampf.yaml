@@ -11,7 +11,12 @@ clauses:
     effects:
       - derive: { to: at, sum: [{ of: ktw.current }] }
       - derive: { to: at, sum: [{ of: attr.MU, above: 8, per: 3, round: down }] }
-        when: { not: { loadout.weapon.technique: Peitschen } }
+        when: { not: { loadout.weapon.technique: CT_8 } }
+  - id: K6
+    text: AT für Peitschen mit FF.
+    effects:
+      - derive: { to: at, sum: [{ of: attr.FF, above: 8, per: 3, round: down }] }
+        when: { loadout.weapon.technique: CT_8 }
   - id: K2
     text: PA = KtW / 2 + Leiteigenschaft über 8 / 3.
     effects:
@@ -20,7 +25,11 @@ clauses:
     text: Leiteigenschaften.
     effects:
       - provide: { name: kampfwerte.leiteigenschaft, value: { Schwerter: [GE, KK], Schilde: [KK], Raufen: [GE, KK], Hiebwaffen: [KK] }, readBy: loadout }
-      - provide: { name: kampfwerte.kampftechnik, value: { CT_5: Hiebwaffen, CT_12: Schwerter }, readBy: loadout }
+      - provide: { name: kampfwerte.kampftechnik, value: { CT_5: Hiebwaffen, CT_8: Peitschen, CT_10: Schilde, CT_12: Schwerter }, readBy: loadout }
+  - id: T2
+    text: Von zwei Leiteigenschaften die höhere.
+    effects:
+      - provide: { name: kampfwerte.hoehereLeiteigenschaft, value: true, readBy: loadout }
   - id: M1
     text: AT/PA-Mod der Waffe.
     effects:
@@ -32,3 +41,7 @@ clauses:
     effects:
       - when: { loadout.shield.size: gross }
         add: { to: gs, value: -1 }
+  - id: S3
+    text: Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde.
+    effects:
+      - provide: { name: loadout.shield.technique, value: CT_10, readBy: loadout }

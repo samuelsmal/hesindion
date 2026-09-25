@@ -55,6 +55,7 @@ extension Evaluation {
     /// The tables the loadout reads a fact from (`readBy: loadout`): `technique.leit` is the value
     /// of the technique's Leiteigenschaft, the higher of two (kampfwerte.KW21, KW7).
     static let loadoutTables: [String: String] = ["technique.leit": "kampfwerte.leiteigenschaft",
+                                                  "technique.leit.higher": "kampfwerte.hoehereLeiteigenschaft",
                                                   "technique.name": "kampfwerte.kampftechnik"]
 
     /// A technique's forms, its id and its name (`CT_5`, `Hiebwaffen`), as the loadout table
@@ -66,6 +67,21 @@ extension Evaluation {
         if let name = table[t]?.string { return ([t, name], [providers[0].origin.clauseRef]) }
         if let id = table.first(where: { $0.value == .string(t) })?.key { return ([t, id], [providers[0].origin.clauseRef]) }
         return ([t], [])
+    }
+
+    /// A technique in its id form (`Peitschen` → `CT_8`), as the rules compare it; a technique
+    /// the table does not pair is kept as it is.
+    func techniqueId(_ t: String) -> String {
+        let providers = book.providers(of: Self.loadoutTables["technique.name"]!)
+        guard providers.count == 1, case .object(let table) = providers[0].value else { return t }
+        if table[t] != nil { return t }
+        return table.first(where: { $0.value == .string(t) })?.key ?? t
+    }
+
+    /// Whether a fact names a technique (`loadout.<slot>.technique`), which reads in its id form.
+    static func isTechniqueFact(_ name: String) -> Bool {
+        let parts = name.split(separator: ".")
+        return parts.count == 3 && parts[0] == "loadout" && parts[2] == "technique"
     }
 
     /// The KtW of a technique in either form, as the sheet states it.
@@ -81,7 +97,8 @@ extension Evaluation {
     /// - `technique.leit`: the higher value of the attributes the loadout table names for it.
     /// An item's field is `item.<item>.<field>` when stated, else its template's row (the
     /// `provide` of the rule's `provides`, which joins `via`), else a `provide` of the template
-    /// named `loadout.<slot>.<field>` (the Großschild's `loadout.shield.size`).
+    /// named `loadout.<slot>.<field>` (the Großschild's `loadout.shield.size`), else what the rules
+    /// give every piece in the slot (`slotDatum`: SCH3's shield technique).
     func loadoutFact(_ name: String, in s: Situation) -> Derived {
         switch name {
         case "ktw.current":
@@ -168,7 +185,7 @@ extension Evaluation {
         guard let item = p.item else { return .lacking(p.empty ? [] : p.unknown) }
         if let f = s.fact("item.\(item).\(name)") { return Derived(value: f.value, used: [f]) }
         guard let template = book.template(ofItem: item, in: s), let rule = book.rules[template] else {
-            return .lacking([UnknownFact("item.\(item).\(name)")])
+            return slotDatum(name, of: p) ?? .lacking([UnknownFact("item.\(item).\(name)")])
         }
         if let v = rule.provides[name] {
             let row = rule.clauses.flatMap(\.effects).first { e in
@@ -181,7 +198,17 @@ extension Evaluation {
                   pr.name.split(separator: ".").count == 3 else { continue }
             return Derived(value: pr.value, via: [e.origin.clauseRef])
         }
-        return .lacking([UnknownFact("item.\(item).\(name)")])
+        return slotDatum(name, of: p) ?? .lacking([UnknownFact("item.\(item).\(name)")])
+    }
+
+    /// What the rules give every piece in a slot (schilde.SCH3: an active shield parry is made
+    /// with the technique Schilde): a `provide` of a rule that is no equipment, named
+    /// `loadout.<slot>.<field>`, when exactly one rule gives it. Its clause joins `via`.
+    func slotDatum(_ name: String, of p: Piece) -> Derived? {
+        guard let slot = p.slot else { return nil }
+        let providers = book.providers(of: "loadout.\(slot).\(name)").filter { book.rules[$0.rule]?.kind != .equipment }
+        guard providers.count == 1 else { return nil }
+        return Derived(value: providers[0].value, via: [providers[0].origin.clauseRef])
     }
 
     /// The technique of a piece: a technique without an item, else the stated
@@ -191,8 +218,9 @@ extension Evaluation {
         return field("technique", of: p, in: s)
     }
 
-    /// `technique.leit`: the higher value of the attributes the loadout table names for the
-    /// technique (kampfwerte.KW21: `Schwerter: [GE, KK]`); the table's clause joins `via`.
+    /// `technique.leit`: the value of the attribute the loadout table names for the technique
+    /// (kampfwerte.KW6: `Schwerter: [GE, KK]`); of two, the higher, where the datum
+    /// `kampfwerte.hoehereLeiteigenschaft` says so (KW7). Each clause read joins `via`.
     func leiteigenschaft(of technique: String, in s: Situation, base: Derived) -> Derived {
         let providers = book.providers(of: Self.loadoutTables["technique.leit"]!)
         let forms = techniqueForms(technique)
@@ -213,8 +241,14 @@ extension Evaluation {
             if best == nil || v > best!.value.double! { best = use(f) }
         }
         guard lacking.isEmpty, let best else { return .lacking(lacking) }
-        return Derived(value: best.value, used: (base.used + [best]).uniqued(),
-                       via: (base.via + forms.via + [providers[0].origin.clauseRef]).uniqued())
+        var via = base.via + forms.via + [providers[0].origin.clauseRef]
+        if names.count > 1 {
+            // Of two, the higher: only where the rules say so (kampfwerte.KW7), which joins `via`.
+            let higher = book.providers(of: Self.loadoutTables["technique.leit.higher"]!)
+            guard higher.count == 1, higher[0].value == .bool(true) else { return .lacking([]) }
+            via.append(higher[0].origin.clauseRef)
+        }
+        return Derived(value: best.value, used: (base.used + [best]).uniqued(), via: via.uniqued())
     }
 
     private func use(_ f: Fact) -> FactUse { FactUse(name: f.name, value: f.value, owner: f.owner) }
@@ -224,13 +258,14 @@ extension Evaluation {
     /// - `action.with`: the piece its `with:` names (`pa(with: shield)`, `at(with: Hiebwaffen)`),
     ///   else `mainHand` for `at`, `pa`, `fk` and `tp`: the sheet's value is the Hauptwaffe's;
     /// - `action.defence` for `pa`: `shieldParry` with the shield, else `weaponParry`;
-    /// - `loadout.weapon.technique`: a technique its `with:` names (one the hero has a KtW in).
+    /// - `loadout.weapon.technique`: a technique its `with:` names (one the hero has a KtW in), by
+    ///   its id.
     func combatFacts(of query: Query) -> [String: JSONValue] {
         guard ["at", "pa", "fk", "tp"].contains(query.name) else { return [:] }
         let with = query.target.context["with"]
         var out: [String: JSONValue] = ["action.with": .string(with ?? "mainHand")]
         if query.name == "pa" { out["action.defence"] = .string(with == "shield" ? "shieldParry" : "weaponParry") }
-        if let with, ktw(with, in: situation) != nil { out["loadout.weapon.technique"] = .string(with) }
+        if let with, ktw(with, in: situation) != nil { out["loadout.weapon.technique"] = .string(techniqueId(with)) }
         return out
     }
 

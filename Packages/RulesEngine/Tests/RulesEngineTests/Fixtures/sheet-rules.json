@@ -22,6 +22,11 @@
     "rule": "sh-habit"
    },
    {
+    "clause": "S3",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
     "clause": "T1",
     "index": 0,
     "rule": "sh-kampf"
@@ -29,6 +34,11 @@
    {
     "clause": "T1",
     "index": 1,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "T2",
+    "index": 0,
     "rule": "sh-kampf"
    },
    {
@@ -96,6 +106,11 @@
    {
     "clause": "K1",
     "index": 1,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "K6",
+    "index": 0,
     "rule": "sh-kampf"
    },
    {
@@ -503,13 +518,56 @@
        "when": {
         "not": {
          "fact": "loadout.weapon.technique",
-         "is": "Peitschen"
+         "is": "CT_8"
         }
        }
       }
      ],
      "id": "K1",
      "text": "AT = KtW + MU über 8 / 3."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "K6",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 8,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.FF"
+           },
+           "per": {
+            "number": 3
+           },
+           "round": "down",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "at"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "loadout.weapon.technique",
+        "is": "CT_8"
+       }
+      }
+     ],
+     "id": "K6",
+     "text": "AT für Peitschen mit FF."
     },
     {
      "effects": [
@@ -611,8 +669,10 @@
         "name": "kampfwerte.kampftechnik",
         "readBy": "loadout",
         "value": {
+         "CT_10": "Schilde",
          "CT_12": "Schwerter",
-         "CT_5": "Hiebwaffen"
+         "CT_5": "Hiebwaffen",
+         "CT_8": "Peitschen"
         }
        },
        "phase": "data",
@@ -623,6 +683,29 @@
      ],
      "id": "T1",
      "text": "Leiteigenschaften."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T2",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "kampfwerte.hoehereLeiteigenschaft",
+        "readBy": "loadout",
+        "value": true
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "T2",
+     "text": "Von zwei Leiteigenschaften die höhere."
     },
     {
      "effects": [
@@ -709,6 +792,29 @@
      ],
      "id": "M2",
      "text": "Großer Schild, −1 GS."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "loadout.shield.technique",
+        "readBy": "loadout",
+        "value": "CT_10"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S3",
+     "text": "Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde."
     }
    ],
    "id": "sh-kampf",

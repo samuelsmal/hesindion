@@ -93,14 +93,10 @@ situations:
       choice.formation.bonus: at
     expect:
       at:
-        total: 16
+        # also shown: 16 base (sheet)
+        total: 0
         result: 16
         lines:
-          - from: kampfwerte.KW1
-            value: 14
-            via: [ITEMTPL_19.RS0]
-          - from: kampfwerte.KW1
-            value: 2
           - from: SA_41.G1
             value: 1
             ruling: [SA_41.table-shift]
@@ -116,15 +112,10 @@ situations:
             value: 0
             via: [ITEMTPL_19.RS0]
       pa:
-        total: 10
-        result: 10
+        # also shown: 11 base (sheet)
+        total: 1
+        result: 12
         lines:
-          - from: kampfwerte.KW2
-            value: 7
-            via: [ITEMTPL_19.RS0]
-          - from: kampfwerte.KW2
-            value: 2
-            via: [ITEMTPL_19.RS0, kampfwerte.KW21]
           - from: SA_41.G1
             value: 1
             ruling: [SA_41.table-shift]

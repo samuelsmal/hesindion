@@ -57,7 +57,7 @@ clauses:
           to: at
           sum:
             - { of: attr.MU, above: 8, per: 3, round: down }
-        when: { not: { loadout.weapon.technique: Peitschen } }
+        when: { not: { loadout.weapon.technique: CT_8 } }
         # Two lines: "KtW 12" and "MU 14 → +2". Below 8 there is no malus ("über 8").
         # Peitschen take FF instead of MU (KW6): the MU term is its own effect so that KW6's FF
         # term can stand in for it while the KtW line stays KW1's (situation 16.21).
@@ -239,20 +239,12 @@ clauses:
       Zweihandschwerter | KK | C
       *) Kampftechnik wird nur unter Verwendung der Sonderfertigkeit Feuerschlucker eingesetzt.
     effects:
-      - provide: { name: kampfwerte.leiteigenschaft, value: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] }, readBy: loadout }
-        # The Regelwerk's own Leiteigenschaft table, one row per technique: `leit` for KW2 and
-        # for the Schadensbonus (schaden.S3, "Bei allen Nahkampfwaffen" — Peitschen included, FF).
-        # The ranged rows are here for completeness; S3 is melee only and KW5 reads FF directly.
-        # The Steigerungsfaktor column is raising cost (KW22), not a value. Row for row the same
-        # as the Kodex table (KW6), which has no Peitschen or ranged rows for the PA half.
-        # The loadout reads this table to resolve the fact `technique.leit` (KW2's second term):
-        # the value of the technique's Leiteigenschaft, the higher of two (KW7).
-        # Optolith carries it as combat_technique_details.primary_attr_1/2.
       - provide: { name: kampfwerte.kampftechnik, value: { CT_1: Armbrüste, CT_2: Bögen, CT_3: Dolche, CT_4: Fechtwaffen, CT_5: Hiebwaffen, CT_6: Kettenwaffen, CT_7: Lanzen, CT_8: Peitschen, CT_9: Raufen, CT_10: Schilde, CT_11: Schleudern, CT_12: Schwerter, CT_13: Stangenwaffen, CT_14: Wurfwaffen, CT_15: Zweihandhiebwaffen, CT_16: Zweihandschwerter, CT_17: Feuerspeien, CT_18: Blasrohre, CT_19: Diskusse, CT_20: Fächer, CT_21: Spießwaffen }, readBy: loadout }
         # The table's techniques by their Optolith ids (rules.db rules_i18n): an equipment row
         # names its technique by id (ITEMTPL_19 `technique: CT_5`), the hero file its KtW
-        # (`ktw.CT_5`); this table and the situations by name. The loadout reads a technique in
-        # either form (Task 30).
+        # (`ktw.CT_5`), and the rules compare it by id (`loadout.weapon.technique: CT_8`); the
+        # Leiteigenschaft table (KW6) and the situations name it. The loadout reads a technique
+        # in either form and states it by id (Task 30).
 
   - id: KW6
     page:
@@ -272,13 +264,19 @@ clauses:
           to: at
           sum:
             - { of: attr.FF, above: 8, per: 3, round: down }
-        when: { loadout.weapon.technique: Peitschen }
+        when: { loadout.weapon.technique: CT_8 }
         # Stands in for KW1's MU term, which does not apply to Peitschen; KW1's KtW line stays
         # (situation 16.21: "KtW 10" from KW1, "FF 11 → +1" from KW6).
         # The Optolith data carries the PA half (combat_technique_details.primary_attr_1/2);
         # the AT half (Peitschen: FF) is nowhere in it.
-        # The PA half (`technique.leit`) is defined on KW21, the Regelwerk table with every
-        # technique; this table's PA rows agree with it row for row.
+        # The PA half (`technique.leit`) is the table below.
+      - provide: { name: kampfwerte.leiteigenschaft, value: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] }, readBy: loadout }
+        # The Leiteigenschaft of each technique, one row per technique (Task 30: on this clause,
+        # the Kodex table the PA half is read from; the Regelwerk's own table, KW21, agrees row for
+        # row and adds the ranged techniques). `technique.leit` for KW2 and for the Schadensbonus
+        # (schaden.S3, "Bei allen Nahkampfwaffen" — Peitschen included, FF). The loadout reads it
+        # to resolve the fact: the value of the technique's Leiteigenschaft, of two the higher
+        # (KW7). Optolith carries it as combat_technique_details.primary_attr_1/2.
 
   - id: KW7
     page:
@@ -294,11 +292,12 @@ clauses:
       von +1 auf den Parade-Wert. In Einzelfällen kann eine Waffe eine von ihrer Kampftechnik
       abweichende Leiteigenschaft aufweisen, was sich dann auf ihren Schadensbonus auswirken kann.
       Der Paradewert der Kampftechnik ist dadurch aber nicht betroffen.
-    none: >
-      the pick-the-higher is part of the fact `technique.leit`, which the loadout resolves from
-      KW21's table and KW2 reads: where a technique names two Leiteigenschaften, the higher one's
-      value. "wählen", and the example (KW23) takes the higher: no choice for the player to make.
-      The line names the one used ("KK 16 → +2"), via KW7
+    effects:
+      - provide: { name: kampfwerte.hoehereLeiteigenschaft, value: true, readBy: loadout }
+        # Where a technique names two Leiteigenschaften, the higher one's value is `technique.leit`
+        # ("wählen", and the example, KW23, takes the higher: no choice for the player to make).
+        # The loadout reads this datum, so the Leiteigenschaft line shows "via KW7" (Task 30;
+        # was a `none` clause).
     # A weapon's own Leiteigenschaft (schaden.S4) never reaches the PA.
     # The Schadensbonus half of this paragraph is schaden.S3/S4.
 

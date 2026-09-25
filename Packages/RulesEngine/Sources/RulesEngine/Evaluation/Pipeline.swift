@@ -276,7 +276,8 @@ extension Query {
 
 extension Evaluation {
     /// Phase 1. For `leCurrent` / `aspCurrent`, the pool's current value when the situation tracks
-    /// the pool (R39). Else the sheet's value for the query (`base[query.description]`, else
+    /// the pool (R39). Else the sheet's value for the query (`base[query.description]`, else the
+    /// one keyed by the item it is made with (R66, `itemBase`), else
     /// `base[query.name]`, never for `level`: a key `level` would set every rule's level), or for
     /// `level(rule: X)` the owned level; else the sum of every applicable `derive` reaching the
     /// query, one part per `sum` term. The derives of X to its own level count whether or not X
@@ -300,7 +301,7 @@ extension Evaluation {
             state.base = Line(value: current.current, kind: .base,
                               facts: [FactUse(name: pool.currentFact!, value: .int(current.current), owner: .derived)],
                               owner: .sheet, note: "aktueller Stand")
-        } else if let v = situation.base[q.description] ?? (q.name == "level" ? nil : situation.base[q.name]) {
+        } else if let v = situation.base[q.description] ?? itemBase(q) ?? (q.name == "level" ? nil : situation.base[q.name]) {
             state.base = Line(value: v, kind: .base, owner: .sheet, note: "Grundwert laut Bogen")
         } else if let id = q.levelRule, let owned = situation.owned[id] {
             state.base = Line(value: owned.level, kind: .base,
@@ -357,6 +358,19 @@ extension Evaluation {
         state.base = Line(value: parts.reduce(0) { $0 + $1.value }, kind: .base, origin: first.origin,
                           via: parts.flatMap(\.via).uniqued(), rulings: parts.flatMap(\.rulings).uniqued(),
                           facts: parts.flatMap(\.facts).uniqued(), parts: parts)
+    }
+
+    /// Ruling R66: the sheet's base keyed `q(with: X)` (`at(with: Rabenschnabel)`) for a query `q`
+    /// made with the item X: the piece its `with:` or the action's `with` names, else the
+    /// Hauptwaffe. The weapon's own lines (at-pa-modifikatoren.M1, schilde.SCH1) still add.
+    private func itemBase(_ q: Query) -> Int? {
+        guard q.target.context["with"].map({ situation.base["\(q.name)(with: \($0))"] == nil }) ?? true else { return nil }
+        var s = situation
+        for (name, value) in combatFacts(of: q) where s.facts[name] == nil {
+            s.facts[name] = Fact(name: name, value: value, owner: .derived)
+        }
+        guard let item = piece(in: s).item else { return nil }
+        return situation.base["\(q.name)(with: \(item))"]
     }
 
     /// R35: the clauses among `derives`' that a firing `suppress` or `replace` names, with it (the

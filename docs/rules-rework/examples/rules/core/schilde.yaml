@@ -67,6 +67,10 @@ clauses:
         # Its value is kampfwerte.KW2 for the Schilde technique (`ktw.current` = Schilde).
         # Taking it (`choice.shieldParry: true`) is the defence `action.defence: shieldParry`
         # (`pa(with: shield)`), which the add below, SCH5 and the shield rules read.
+      - provide: { name: loadout.shield.technique, value: CT_10, readBy: loadout }
+        # "den Paradewert der Kampftechnik Schilde": the technique a shield parries with, for a
+        # shield no equipment row describes (the Holzschild, situation 16.14); a row's own
+        # `technique` wins (Task 30).
       - when: { action.defence: shieldParry }
         add: { to: pa, value: { of: item.paMod, times: 2 } }
         # Two lines: "Schilde PA 7" and "Großschild aktiv +6 (2 × 3)". The choice between

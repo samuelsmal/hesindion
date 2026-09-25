@@ -207,6 +207,7 @@ extension Evaluation {
     /// - `ladezeit.current` (`targetFacts`): the result of the query `item.ladezeit`.
     /// - `choice.<id>` (Task 30, R61): unstated, the `default` the choice's offers state, when
     ///   they state one and agree (reiterkampf.RK6's `jumpOff: false`); the player's.
+    /// - `loadout.<slot>.technique` (Task 30): stated or derived, in its id form (`CT_8`).
     /// - `hero.conditionLevels` (Task 30, zustaende.Z5): the sum of every condition's
     ///   `hero.levelOf`, the Stufen the hero has before any useLevel; unknown while one of them is.
     /// - `belastung.source` (Task 30): `armour` while the hero wears an armour (`loadout.armour`
@@ -285,6 +286,13 @@ extension Evaluation {
             } else {
                 s.unstated.insert(name)
                 behind[name] = d.unknown
+            }
+        }
+        for name in names.sorted() where Self.isTechniqueFact(name) {
+            // Task 30 fix round 1: a technique reads in its id form, as the rules compare it
+            // (a situation may state it by name: kampfwerte 16.21's `Peitschen`).
+            if let f = s.facts[name], let t = f.value.string, techniqueId(t) != t {
+                s.facts[name] = Fact(name: name, value: .string(techniqueId(t)), owner: f.owner)
             }
         }
         if names.contains("hero.conditionLevels"), s.facts["hero.conditionLevels"] == nil {

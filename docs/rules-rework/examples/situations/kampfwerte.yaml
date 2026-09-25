@@ -236,8 +236,7 @@ situations:
   - id: "16.14"
     name: Arbosch parries actively with the Holzschild
     hero: { values: { at: 14, "pa(with: weapon)": 8, "pa(with: shield)": 8 } }
-    loadout: { weapon: Streitaxt, shield: Holzschild, other: shield, item.Streitaxt.atMod: 0, item.Streitaxt.paMod: -1, item.Holzschild.paMod: 1,
-               item.Holzschild.technique: Schilde }   # "Schilde PA 8" (16.13's note), the shield's technique (R61, Task 30)
+    loadout: { weapon: Streitaxt, shield: Holzschild, other: shield, item.Streitaxt.atMod: 0, item.Streitaxt.paMod: -1, item.Holzschild.paMod: 1 }
     choose: { action.defence: shieldParry }
     expect:
       "pa(with: shield)": { result: 10, base: { value: 8, technique: Schilde }, lines: [{ value: 2, from: schilde.SCH3 }] }   # 2 × 1

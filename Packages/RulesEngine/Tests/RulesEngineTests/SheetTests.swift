@@ -123,7 +123,10 @@ extension SheetTests {
         let pa = engine.evaluate(Query("pa(with: Schwerter)"), in: situation(facts: hero))
         XCTAssertEqual(pa.base?.parts.map(\.value), [6, 2])        // the higher of GE 14 and KK 13
         let leit = try XCTUnwrap(pa.base?.parts.last)
-        XCTAssertEqual(leit.via, [ref("sh-kampf.T1")])
+        // Two Leiteigenschaften: the table's clause and the one that says to take the higher.
+        XCTAssertEqual(leit.via, [ref("sh-kampf.T1"), ref("sh-kampf.T2")])
+        let one = engine.evaluate(Query("pa(with: Schilde)"), in: situation(facts: hero))
+        XCTAssertEqual(one.base?.parts.last?.via, [ref("sh-kampf.T1")], "one Leiteigenschaft: no choice to make")
         XCTAssertTrue(leit.facts.contains(FactUse(name: "attr.GE", value: 14, owner: .sheet)))
         XCTAssertEqual(pa.questions.map(\.fact), [])
     }
@@ -277,5 +280,53 @@ extension SheetTests {
         XCTAssertEqual(capped.amount, 2)
         XCTAssertTrue(capped.via.contains(ref("sh-rest.R5")))
         XCTAssertEqual(near.situation.pools[.le]?.current, 30)
+    }
+}
+
+extension SheetTests {
+    /// Task 30 fix round 1: a technique fact reads in one form, its id (`CT_8`), as the rules
+    /// compare it: stated by name (`loadout.weapon.technique: Peitschen`) or named by the
+    /// query's `with:`.
+    func testATechniqueFactReadsByItsId() throws {
+        let facts: [String: JSONValue] = ["attr.MU": 14, "attr.FF": 11, "ktw.Peitschen": 10]
+        let named = engine.evaluate(Query("at(with: Peitschen)"), in: situation(facts: facts))
+        XCTAssertEqual(named.base?.parts.map(\.value), [10, 1])
+        XCTAssertEqual(named.notApplied.first { $0.origin == ref("sh-kampf.K1") && $0.facts.contains { $0.name == "loadout.weapon.technique" } }?
+                        .facts.first { $0.name == "loadout.weapon.technique" }?.value, "CT_8")
+        var stated = facts
+        stated["loadout.weapon.technique"] = "Peitschen"
+        XCTAssertEqual(engine.evaluate(Query("at(with: Peitschen)"), in: situation(facts: stated)).base?.parts.map(\.value), [10, 1])
+    }
+}
+
+extension SheetTests {
+    /// Task 30 fix round 1: a shield no equipment rule describes parries with the technique the
+    /// rules give the shield slot (schilde.SCH3: "den Paradewert der Kampftechnik Schilde"),
+    /// whose clause joins `via`.
+    func testAShieldWithoutARowHasTheSlotsTechnique() throws {
+        let facts: [String: JSONValue] = ["attr.KK": 14, "ktw.Schilde": 10, "loadout.shield": "Holzschild"]
+        let b = engine.evaluate(Query("pa(with: shield)"), in: situation(facts: facts))
+        XCTAssertEqual(b.base?.parts.map(\.value), [5, 2])
+        XCTAssertTrue(b.base?.parts.first?.via.contains(ref("sh-kampf.S3")) ?? false, "\(String(describing: b.base))")
+        XCTAssertEqual(engine.evaluation(situation(facts: facts)).techniqueForms(of: Query("pa(with: shield)")), ["CT_10", "Schilde"])
+    }
+}
+
+extension SheetTests {
+    /// Ruling R66: a sheet base keyed `q(with: X)` is the base of `q` when the item the query is
+    /// made with is X; the weapon's mods still add on top (kampfwerte 16.13).
+    func testASheetBaseKeyedByTheItemInHand() throws {
+        let facts: [String: JSONValue] = ["loadout.weapon": "Schwert"]
+        let s = situation(facts: facts, base: ["at(with: Schwert)": 16, "pa(with: Schwert)": 9])
+        let at = engine.evaluate(Query("at"), in: s)
+        XCTAssertEqual(at.base?.value, 16)
+        XCTAssertEqual(at.base?.owner, .sheet)
+        let pa = engine.evaluate(Query("pa"), in: s)
+        XCTAssertEqual(pa.base?.value, 9)
+        XCTAssertEqual(lines(pa, from: "sh-kampf.M1").map(\.value), [-1])
+        XCTAssertEqual(pa.result, 8)
+        // Another item in hand: not its base.
+        let other = engine.evaluate(Query("at"), in: situation(facts: ["loadout.weapon": "Axt"], base: ["at(with: Schwert)": 16]))
+        XCTAssertNotEqual(other.base?.value, 16)
     }
 }
