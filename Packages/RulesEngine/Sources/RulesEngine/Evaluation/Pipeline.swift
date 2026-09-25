@@ -279,6 +279,7 @@ extension Evaluation {
     /// the pool (R39). Else the sheet's value for the query (`base[query.description]`, else the
     /// one keyed by the item it is made with (R66, `itemBase`), else
     /// `base[query.name]`, never for `level`: a key `level` would set every rule's level), or for
+    /// an opponent's target (`opponent.rs`) the number the GM states under its name (Task 32), or for
     /// `level(rule: X)` the owned level; else the sum of every applicable `derive` reaching the
     /// query, one part per `sum` term. The derives of X to its own level count whether or not X
     /// applies: they decide whether it does.
@@ -303,6 +304,11 @@ extension Evaluation {
                               owner: .sheet, note: "aktueller Stand")
         } else if let v = situation.base[q.description] ?? itemBase(q) ?? (q.name == "level" ? nil : situation.base[q.name]) {
             state.base = Line(value: v, kind: .base, owner: .sheet, note: "Grundwert laut Bogen")
+        } else if q.name.hasPrefix("opponent."), q.target.context.isEmpty, let f = situation.facts[q.name], let v = f.value.int {
+            // Task 32: the opponent's value as the GM states it (`opponent: { rs: 6 }`), the base
+            // of the opponent's target as the sheet's is the hero's (kupperus-und-waffen 18.5).
+            state.base = Line(value: v, kind: .base, facts: [FactUse(name: f.name, value: f.value, owner: f.owner)],
+                              owner: f.owner, note: "Wert des Gegners")
         } else if let id = q.levelRule, let owned = situation.owned[id] {
             state.base = Line(value: owned.level, kind: .base,
                               facts: [FactUse(name: "hero.levelOf.\(id)", value: .int(owned.level), owner: .sheet)],
@@ -524,7 +530,17 @@ extension Evaluation {
             case .applies, .unknownLevel: break
             case .rulesetOff, .silent: continue
             }
-            let targets = controllable.filter { selects(selector, effect: $0) }
+            // Task 32: a replace acts on lines (an `add` or `set`), never on a clause's other
+            // effects: trefferzonen.TZ5's easing is not read, and asks nothing, where only TZ5's
+            // offer reaches the query.
+            let targets = controllable.filter { e in
+                guard selects(selector, effect: e) else { return false }
+                guard replace != nil else { return true }
+                switch e.payload {
+                case .add, .set: return true
+                default: return false
+                }
+            }
             guard targets.contains(where: { applicability(of: $0.origin.rule, depth: state.depth).applies }),
                   applies(e, &state) else { continue }
             let rule = e.origin.rule
@@ -696,6 +712,12 @@ extension Evaluation {
                                     was: was, now: amount))
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via + perVia).uniqued(), facts: facts, &state)
+        } else if amount == 0, case .proportion(let p) = a.value, p.above != .number(0) {
+            // Task 32: a value per point above a threshold with nothing above it (schaden.S3's
+            // Schadensbonus: "Besitzt der Träger … mehr Punkte … als die Schadensschwelle") is the
+            // effect's condition not met: no line, `conditionFalse` with the facts it read.
+            state.record(NotApplied(origin: e.origin.clauseRef, reason: .conditionFalse, because: e.because, rulings: e.ruling,
+                                    facts: facts, via: (via + r.via + perVia).uniqued()))
         } else {
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
                                     via: (via + r.via + perVia).uniqued(), rulings: (decided(e) + offerRulings(reading: e, state)).uniqued(),

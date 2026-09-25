@@ -399,4 +399,22 @@ final class DamageChainTests: XCTestCase {
         XCTAssertTrue(r.questions.contains { $0.fact == "hit.tp" }, "\(r.questions.map(\.fact))")
         XCTAssertEqual(r.checks, [])
     }
+
+    /// Task 32: with Trefferzonen-Rüstungsschutz the RS a hit meets is the zone's
+    /// (trefferzonen-ruestungsschutz.RS2): the zone's `rs(zone: torso)` is a stage of the chain,
+    /// among its breakdowns, and `rs` is set to it.
+    func testTheZonesRSIsAStageOfTheChain() throws {
+        let engine = try engine(Self.real)
+        let s = hero(rulesets: ["fokus.trefferzonen", "fokus.trefferzonen-rs"],
+                     facts: ["loadout.armourPiece.torso": "Plattenrüstung", "loadout.armourPiece.kopf": .null])
+        let r = DamageChain.run(hit: 10, zone: "torso", in: s, engine: engine)
+        let zone = try XCTUnwrap(r.zoneRs, "the zone's RS is a stage")
+        XCTAssertEqual(zone.query.description, "rs(zone: torso)")
+        XCTAssertEqual(zone.result, 6)
+        XCTAssertTrue(r.breakdowns.contains(zone))
+        XCTAssertEqual(r.rs.result, 6, "\(r.rs.lines) \(r.rs.notApplied.filter { $0.origin.rule.hasPrefix("trefferzonen") })")
+        XCTAssertEqual(r.sp.result, 4)
+        XCTAssertNil(DamageChain.run(hit: 10, zone: "torso", in: hero(base: ["rs": 6]), engine: engine).zoneRs,
+                     "without the Fokusregel no rule reads the zone's RS")
+    }
 }

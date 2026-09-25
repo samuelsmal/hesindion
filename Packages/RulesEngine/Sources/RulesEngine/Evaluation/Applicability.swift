@@ -53,7 +53,7 @@ extension Evaluation {
 
     /// A rule applies when (spec §5, plan Task 22):
     /// - the hero owns it (`owned` covers conditions, states, abilities, advantages, disadvantages
-    ///   and creatures), or
+    ///   and creatures) and its `ruleset`, if any, is on (Task 32: else `rulesetOff`), or
     /// - it is `core` and its `ruleset` (if any) is in the fact `rulesets`, or
     /// - it is `equipment` and a `loadout.*` fact names an item whose template is the rule
     ///   (`item.<name>.template`, else the equipment rule of that name: Task 30), or
@@ -89,7 +89,13 @@ extension Evaluation {
     private func computeApplicability(of id: String, depth: Int) -> Applicability {
         guard let rule = book.rules[id] else { return .silent }
         let applies = Applicability(status: .applies)
-        if situation.owned[id] != nil { return applies }
+        if situation.owned[id] != nil {
+            // Task 32: an owned rule of an optional rule set does nothing while the set is off
+            // (SA_160: "Without the Fokusregel the SF can still be bought … but does nothing; the
+            // breakdown says why").
+            if let ruleset = rule.ruleset, !rulesetIsOn(rule) { return Applicability(status: .rulesetOff(ruleset)) }
+            return applies
+        }
         switch rule.kind {
         case .core where rulesetIsOn(rule), .equipment where isEquipped(id),
              .talent where situation.facts["check.talent"]?.value == .string(id):
@@ -112,9 +118,10 @@ extension Evaluation {
         return .silent
     }
 
-    /// No ruleset, or one the fact `rulesets` lists. An unknown `rulesets` lists none.
+    /// No ruleset, `core` (always on), or one the fact `rulesets` lists. An unknown `rulesets`
+    /// lists none.
     private func rulesetIsOn(_ rule: Rule) -> Bool {
-        guard let ruleset = rule.ruleset else { return true }
+        guard let ruleset = rule.ruleset, ruleset != "core" else { return true }
         switch situation.facts["rulesets"]?.value {
         case .array(let on)?: return on.contains(.string(ruleset))
         case .string(let on)?: return on == ruleset
@@ -338,6 +345,16 @@ extension Evaluation {
                 behind["belastung.source"] = []
             }
         }
+        if names.contains("hit.heldInHand"), s.facts["hit.heldInHand"] == nil {
+            let d = heldInHand(in: s)
+            if let v = d.value {
+                s.facts["hit.heldInHand"] = Fact(name: "hit.heldInHand", value: v, owner: .derived)
+                sources["hit.heldInHand"] = d
+            } else {
+                s.unstated.insert("hit.heldInHand")
+                behind["hit.heldInHand"] = d.unknown
+            }
+        }
         for name in names.sorted() where Self.scaleFacts[name] != nil && s.facts[name] == nil {
             let d = scaleFact(name, in: withLocal)
             if let v = d.value {
@@ -384,6 +401,31 @@ extension Evaluation {
             }
         }
         return (s, behind, sources)
+    }
+
+    /// `hit.heldInHand` (Task 32, trefferzonen.TZ8's arm Wundeffekt): what the hand on `hit.side`
+    /// holds, by the loadout's `loadout.weaponHand` (the side the Hauptwaffe is held on): that hand
+    /// holds the Hauptwaffe (`weapon`), the other what `loadout.other` names, the shield (`shield`)
+    /// or another object (`other`: a Parierwaffe, a second weapon); an empty slot holds nothing
+    /// (`null`). Unknown while the side, the weapon hand or the slot is: the old `askIf:
+    /// handUnknown` asks which hand holds what.
+    func heldInHand(in s: Situation) -> Derived {
+        var lacking: [UnknownFact] = [], used: [FactUse] = []
+        let side = s.fact("hit.side"), hand = s.fact("loadout.weaponHand")
+        if let side { used.append(side) } else { lacking.append(UnknownFact("hit.side")) }
+        if let hand { used.append(hand) } else { lacking.append(UnknownFact("loadout.weaponHand")) }
+        guard let side, let hand else { return .lacking(lacking) }
+        let slot = Conditions.same(side.value, hand.value) ? "loadout.weapon" : "loadout.other"
+        guard let held = s.fact(slot) else { return .lacking([UnknownFact(slot)]) }
+        used.append(held)
+        let value: JSONValue
+        switch (slot, held.value) {
+        case (_, .null): value = .null
+        case ("loadout.weapon", _): value = .string("weapon")
+        case (_, .string("shield")): value = .string("shield")
+        default: value = .string("other")
+        }
+        return Derived(value: value, used: used)
     }
 
     /// The one `provide` of `name` by a rule that applies and is no equipment (an equipment row is

@@ -90,6 +90,11 @@ final class SituationsHarnessTests: XCTestCase {
             return Judged(path: .state, verdict: verdict(mismatches, run.hits), mismatches: mismatches,
                           notes: run.notes + state.notes)
         }
+        // Task 32 (R62): dice and nothing else (trefferzonen TZ.9–TZ.11's zone dice): no action of
+        // the engine reads them; a mismatch of the dice, never a silent pass.
+        if let unread = CombatRunner.unreadDice(s, engine: engine) {
+            return Judged(path: .combat, verdict: verdict([unread], []), mismatches: [unread], notes: [])
+        }
         guard ActionRunner.canRun(s) else {
             // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
             let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }

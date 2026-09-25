@@ -180,7 +180,7 @@ situations:
     name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
     rulesets: [fokus.trefferzonen]
     hero: { values: { sp: 7 } }
-    loadout: { weapon: Schwert, shield: Schild, other: shield, weaponHand: rechts }   # the old `loadout: { right: Schwert, left: Schild }`
+    loadout: { weapon: Schwert, shield: Schild, other: shield, weaponHand: rechts, twoHanded: false }   # the old `loadout: { right: Schwert, left: Schild }`
     rolls: { hit.zone: arme, hit.side: rechts }
     choose: { check.kind: talent, check.talent: TAL_8, check.application: Störungen ignorieren }
     expect:

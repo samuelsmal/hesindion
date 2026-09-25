@@ -22,8 +22,9 @@ import Foundation
 /// probe-fernkampf 21.4): each step rolls the attack with the weapon in hand and compares its
 /// `success`.
 ///
-/// Event kinds the engine has no event for (`damage`: no dice value form, `itemChanged`: Task 28,
-/// `after`) and step shapes it does not run are unsupported shapes, never passes.
+/// Event kinds the engine has no event for (`after`) and step shapes it does not run are
+/// unsupported shapes, never passes. Task 32 (R62): a `damage` by a dice formula and an
+/// `itemChanged` by its slot and item are compared (`events`).
 enum CombatRunner {
     struct Run {
         var view: HitView
@@ -105,6 +106,20 @@ enum CombatRunner {
         return out
     }
 
+    /// Task 32: a situation that states dice (`rolls: [n…]`) and nothing the action layer runs or
+    /// the matcher compares (no check, no step, no expectation): no action of the engine reads the
+    /// dice. The mismatch names what the rules ask the roll layer for instead (the sheet's
+    /// questions to `roll`: trefferzonen.TZ2's `hit.zone`, rolled and looked up by the app).
+    static func unreadDice(_ s: CompiledSituation, engine: Engine) -> Mismatch? {
+        guard ActionRunner.needs(s) == [.rolls], s.expect.isEmpty, s.expectSituation.isEmpty,
+              ActionRunner.checkStated(s) == nil else { return nil }
+        let asked = engine.sheet(in: s.engineSituation).questions.filter { $0.owner == .roll }
+        let roll = asked.map { "\($0.fact) (\($0.origins.map(\.description).joined(separator: ", ")))" }
+        return Mismatch(kind: .dice, detail: "the dice \(s.rolls) are read by no action of the engine; the rules ask the roll layer for "
+                        + (roll.isEmpty ? "nothing" : roll.joined(separator: "; ")),
+                        names: asked.flatMap { $0.origins.map(\.description) })
+    }
+
     // MARK: - Running
 
     static func run(_ s: CompiledSituation, engine: Engine, attributes: [String: [String]] = CheckAttributes.all) -> Run {
@@ -170,7 +185,7 @@ enum CombatRunner {
         }
         if let raw = s.expectSituation["events"] {
             if let expected = raw.arrayValue {
-                c.mismatches += events(expected, events: chain.events, checks: chain.checks)
+                c.mismatches += events(expected, events: chain.events, checks: chain.checks, situation: chain.situation)
             } else {
                 c.mismatches.append(.shape("malformed events", "events \(raw) is not a list"))
             }
@@ -207,7 +222,7 @@ enum CombatRunner {
                 let after = open.situation.applying(out.events, book: engine.book)
                 let rules = Set(out.events.compactMap(\.rule))
                 compare(expect, label: label, events: out.events, checks: [], texts: out.texts, notApplied: out.notApplied,
-                        questions: out.questions, success: nil, successQuery: nil,
+                        questions: out.questions, success: nil, successQuery: nil, situation: open.situation,
                         breakdown: { q in
                             let (b, _) = choose(q, before: open.situation, after: after, changed: [], rules: rules, check: nil, engine: engine)
                             return b
@@ -230,7 +245,7 @@ enum CombatRunner {
             let hitChain = chain, hitCheck = check
             compare(expect, label: label, events: chain.events, checks: chain.checks, texts: stages.flatMap(\.texts) + chain.texts,
                     notApplied: stages.flatMap(\.notApplied) + chain.notApplied,
-                    questions: stages.flatMap(\.questions) + chain.questions, success: nil, successQuery: nil,
+                    questions: stages.flatMap(\.questions) + chain.questions, success: nil, successQuery: nil, situation: chain.situation,
                     breakdown: { q in
                         choose(q, before: current, chain: hitChain, events: [], check: hitCheck?.view, engine: engine).breakdown
                     }, &c)
@@ -347,13 +362,13 @@ enum CombatRunner {
     /// any other key as a query of the state after it.
     static func compare(_ expect: [String: JSONValue], label: String, events actual: [Event], checks: [PendingCheck],
                         texts: [TextLine], notApplied: [NotApplied], questions: [Question], success: Bool?, successQuery: String?,
-                        breakdown: (String) -> Breakdown, _ c: inout MatchResult) {
+                        situation: Situation? = nil, breakdown: (String) -> Breakdown, _ c: inout MatchResult) {
         for key in expect.keys.sorted() {
             let raw = expect[key]!
             switch key {
             case "events":
                 guard let list = raw.arrayValue else { c.mismatches.append(.shape("malformed events", "\(label): events \(raw) is not a list")); continue }
-                c.mismatches += events(list, events: actual, checks: checks).map { $0.at(label) }
+                c.mismatches += events(list, events: actual, checks: checks, situation: situation).map { $0.at(label) }
             case "texts":
                 guard let list = raw.arrayValue else { c.mismatches.append(.shape("malformed texts", "\(label): texts \(raw) is not a list")); continue }
                 c.mismatches += Matcher.texts(list, in: texts).map { $0.at(label) }
@@ -429,17 +444,24 @@ enum CombatRunner {
     /// - `{ logged: text, from }`;
     /// - `{ paid: { amount, pool }, from }`;
     /// - `{ damaged: { amount, pool }, from }` (R53);
-    /// - anything else (`damage`, `itemChanged`, `after`, a check of an attack) is an unsupported shape.
+    /// - `{ check: { attack, by, at, tp }, from }`: an attack asked for (R72);
+    /// - `{ damage: { formula }, from }` (Task 32): never met, the engine's damage being an amount;
+    /// - `{ itemChanged: { <slot>: <item>, <field>: <value> }, from, ruling }` (Task 32);
+    /// - anything else (`after`) is an unsupported shape.
     ///
     /// `[]` does not count a hit's `damaged`: the situations that state a hit (its SP) and
     /// expect `events: []` say that no check follows (the old `checks_first: []`); the LeP the hit
     /// takes is the hit itself.
-    static func events(_ expected: [JSONValue], events all: [Event], checks: [PendingCheck], attacks: [PendingAttack] = []) -> [Mismatch] {
+    static func events(_ expected: [JSONValue], events all: [Event], checks: [PendingCheck], attacks: [PendingAttack] = [],
+                       situation: Situation? = nil) -> [Mismatch] {
         if expected.isEmpty {
             let actual = all.filter { $0.kind != .damaged }
+            // Task 32: an attack the action asks for is an event too (R42: never a silent pass).
             let got = actual.map { "\($0.kind.rawValue) \($0.rule ?? $0.note ?? "")" } + checks.map { "check \($0.id) from \($0.origin)" }
+                + attacks.map { "attack \($0.attack ?? "?") from \($0.origin)" }
             return got.isEmpty ? [] : [Mismatch(kind: .unexpectedEvent, detail: "expected no event, got \(got)",
-                                               names: checks.map(\.origin.description) + actual.compactMap { $0.origin?.description })]
+                                               names: checks.map(\.origin.description) + attacks.map(\.origin.description)
+                                                   + actual.compactMap { $0.origin?.description })]
         }
         let actual = all
         var out: [Mismatch] = []
@@ -490,6 +512,26 @@ enum CombatRunner {
                 }
                 continue
             }
+            if let d = o["damage"] {
+                // Task 32: a damage event by a dice formula (TZ.12's `damage: { formula: 1W3+1 }`).
+                // The engine's damage is `damaged` with an amount (R53), and no dice value form
+                // exists (MIGRATION "Open questions"), so no event of the action can be it.
+                guard let f = d.objectValue, Set(f.keys) == ["formula"], let formula = f["formula"]?.string,
+                      Set(o.keys).isSubset(of: ["damage", "from", "ruling", "via"]) else {
+                    out.append(.shape("event damage", "damage event \(o.keys.sorted()) is not { damage: { formula }, from }"))
+                    continue
+                }
+                let got = actual.filter { [.damaged, .logged].contains($0.kind) }
+                    .map { "\($0.kind.rawValue) \($0.amount.map(String.init) ?? $0.note ?? "") from \($0.origin?.description ?? "–")" }
+                out.append(Mismatch(kind: .missingEvent, detail: "expected damage \(formula)\(from.map { " from \($0)" } ?? ""): the engine's damage "
+                                    + "is an amount, and a dice formula has no value form; got \(got.isEmpty ? "none" : got.joined(separator: "; "))",
+                                    names: names))
+                continue
+            }
+            if let item = o["itemChanged"]?.objectValue {
+                out += itemChanged(item, o, actual, situation: situation, &usedEvents)
+                continue
+            }
             let kinds: [(key: String, kind: EventKind)] = [("gained", .gained), ("cleared", .cleared), ("logged", .logged), ("paid", .paid),
                                                            ("damaged", .damaged)]
             guard let (key, kind) = kinds.first(where: { o[$0.key] != nil }) else {
@@ -525,6 +567,38 @@ enum CombatRunner {
             }
         }
         return out
+    }
+}
+
+extension CombatRunner {
+    /// Task 32: `itemChanged: { <slot>: <item>, <field>: <value>… }` (TZ.14's `{ weapon: Schwert,
+    /// held: false }`): an `itemChanged` of the instance in that slot (`loadout.<slot>.instance`)
+    /// while the slot holds that item, changing each field to its value, from `from`, resting on
+    /// `ruling`. The fields are the vocabulary's item fields; the one other key is the slot.
+    static func itemChanged(_ item: [String: JSONValue], _ o: [String: JSONValue], _ actual: [Event], situation: Situation?,
+                            _ used: inout Set<Int>) -> [Mismatch] {
+        let fields = item.filter { ItemDelta.fields.contains($0.key) }
+        let slots = item.filter { !ItemDelta.fields.contains($0.key) }
+        guard slots.count <= 1, Set(o.keys).isSubset(of: ["itemChanged", "from", "ruling", "via"]), !fields.isEmpty else {
+            return [.shape("event itemChanged object", "itemChanged \(item) is not { <slot>: <item>, <field>: <value> }")]
+        }
+        let from = o["from"]?.string, ruling = o["ruling"].map(strings) ?? [], via = o["via"].map(strings) ?? []
+        var instance: String??
+        if let (slot, name) = slots.first {
+            guard let situation else { return [.shape("event itemChanged slot", "itemChanged \(slot): no situation to read the slot in")] }
+            instance = situation.fact("loadout.\(slot)")?.value == name ? .some(situation.instance(in: slot)) : .some(nil)
+        }
+        let fit = actual.indices.first { i in
+            let e = actual[i]
+            guard !used.contains(i), e.kind == .itemChanged, from == nil || e.origin?.description == from,
+                  ruling.allSatisfy({ Matcher.rulingMatches($0, e.rulings) }), Set(via).isSubset(of: e.via.map(\.description)) else { return false }
+            if let instance { guard let instance, e.item == instance else { return false } }
+            return fields.allSatisfy { k, v in e.change?[k] == v }
+        }
+        if let fit { used.insert(fit); return [] }
+        let got = actual.filter { $0.kind == .itemChanged }.map { "\($0.item ?? "?") \($0.change ?? [:]) from \($0.origin?.description ?? "–")" }
+        return [Mismatch(kind: .missingEvent, detail: "expected itemChanged \(item) from \(from ?? "–"), got \(got.isEmpty ? "none" : got.joined(separator: "; "))",
+                         names: [from].compactMap { $0 } + ruling + via)]
     }
 }
 

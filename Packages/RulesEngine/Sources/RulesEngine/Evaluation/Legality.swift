@@ -138,6 +138,24 @@ extension Evaluation {
         return state.legal
     }
 
+    /// `Engine.legality(ofRuleset:)`.
+    func rulesetLegality(_ slug: String) -> Legality {
+        var state = PipelineState(query: Query("ruleset"), depth: 0, candidates: [])
+        state.local = [:]
+        for id in book.rules.keys.sorted(by: Self.idOrder) where book.rules[id]!.ruleset == slug {
+            for e in book.rules[id]!.clauses.flatMap(\.effects) {
+                guard case .require(let r) = e.payload, r.for == nil, r.enables != true else { continue }
+                let level = ruleLevel(id, levels: [:], depth: 0)
+                guard let used = gate(e, level: level, via: [], &state, asking: false) else { continue }
+                let c = condition(r.that, level: level, rule: id, depth: 0)
+                guard c.truth == .no else { continue }
+                forbid(NotApplied(origin: e.origin.clauseRef, reason: .requirementNotMet, because: e.because, rulings: e.ruling,
+                                  facts: (used + c.used).uniqued()), &state)
+            }
+        }
+        return state.legal
+    }
+
     /// `Engine.legality(ofCombination:)`.
     func combinationLegality(_ ids: [String]) -> Legality { combinationBreakdown(ids).legal }
 

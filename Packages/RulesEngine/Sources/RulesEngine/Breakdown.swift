@@ -233,8 +233,9 @@ public struct Breakdown: Codable, Hashable, Sendable {
 
     /// The sum of `lines`, without the base.
     public var total: Int { lines.reduce(0) { $0 + $1.value } }
-    /// `base + total`; nil without a base.
-    public var result: Int? { base.map { $0.value + total } }
+    /// `base + total`; nil without a base, unless a `set` fixed the value (Task 32: RS2 sets the
+    /// `rs` the sheet does not state under Trefferzonen-Rüstungsschutz): then `total`.
+    public var result: Int? { base.map { $0.value + total } ?? (lines.contains { $0.kind == .set } ? total : nil) }
 
     /// Every line a screen lists, in order: the base's parts (or the base itself when it has
     /// none), then `lines`.

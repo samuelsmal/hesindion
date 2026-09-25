@@ -7,6 +7,21 @@
     "rule": "dm-aim"
    },
    {
+    "clause": "E1",
+    "index": 0,
+    "rule": "dm-ease"
+   },
+   {
+    "clause": "E1",
+    "index": 2,
+    "rule": "dm-ease"
+   },
+   {
+    "clause": "R1",
+    "index": 0,
+    "rule": "dm-rs"
+   },
+   {
     "clause": "U1",
     "index": 0,
     "rule": "dm-under"
@@ -29,9 +44,51 @@
     "rule": "dm-aim"
    },
    {
+    "clause": "E1",
+    "index": 1,
+    "rule": "dm-ease"
+   },
+   {
+    "clause": "E1",
+    "index": 2,
+    "rule": "dm-ease"
+   },
+   {
+    "clause": "F1",
+    "index": 0,
+    "rule": "dm-fokus"
+   },
+   {
+    "clause": "H1",
+    "index": 0,
+    "rule": "dm-hand"
+   },
+   {
+    "clause": "H1",
+    "index": 1,
+    "rule": "dm-hand"
+   },
+   {
+    "clause": "H1",
+    "index": 2,
+    "rule": "dm-hand"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "dm-state"
+   },
+   {
     "clause": "U1",
     "index": 1,
     "rule": "dm-under"
+   }
+  ],
+  "gs": [
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "dm-set"
    }
   ],
   "ini": [
@@ -51,6 +108,13 @@
     "clause": "Z2",
     "index": 1,
     "rule": "dm-zones"
+   }
+  ],
+  "tp": [
+   {
+    "clause": "B1",
+    "index": 0,
+    "rule": "dm-bonus"
    }
   ]
  },
@@ -125,6 +189,451 @@
      "status": "decided"
     }
    ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B1",
+        "index": 0,
+        "rule": "dm-bonus"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "tp"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 14,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "attr.KK"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "B1",
+     "text": "Pro Punkt über der Schwelle 1 TP."
+    }
+   ],
+   "id": "dm-bonus",
+   "kind": "core",
+   "name": "Schadensbonus",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "E1",
+        "index": 0,
+        "rule": "dm-ease"
+       },
+       "payload": {
+        "choice": "zone",
+        "default": "none"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "query.target",
+        "is": "at"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "E1",
+        "index": 1,
+        "rule": "dm-ease"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -4
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "not": {
+         "fact": "choice.zone",
+         "is": "none"
+        }
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "E1",
+        "index": 2,
+        "rule": "dm-ease"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "dm-ease.E1"
+         ],
+         "kind": "line"
+        },
+        "with": {
+         "number": -2
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "replace",
+       "when": {
+        "all": [
+         {
+          "not": {
+           "fact": "choice.zone",
+           "is": "none"
+          }
+         },
+         {
+          "fact": "opponent.has",
+          "is": "dm-state"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "E1",
+     "text": "Zielen."
+    }
+   ],
+   "id": "dm-ease",
+   "kind": "core",
+   "name": "Zielen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F1",
+        "index": 0,
+        "rule": "dm-fokus"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "F1",
+     "text": "AT −1."
+    }
+   ],
+   "id": "dm-fokus",
+   "kind": "specialAbility",
+   "name": "Fokus-SF",
+   "reviewed": null,
+   "ruleset": "fokus.dm",
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H1",
+        "index": 0,
+        "rule": "dm-hand"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hit.heldInHand",
+        "is": "weapon"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "H1",
+        "index": 1,
+        "rule": "dm-hand"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hit.heldInHand",
+        "is": "shield"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "H1",
+        "index": 2,
+        "rule": "dm-hand"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -3
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hit.heldInHand",
+        "is": "other"
+       }
+      }
+     ],
+     "id": "H1",
+     "text": "Was die Hand hält."
+    }
+   ],
+   "id": "dm-hand",
+   "kind": "core",
+   "name": "Hand",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": "braucht fokus.dm",
+       "origin": {
+        "clause": "R1",
+        "index": 0,
+        "rule": "dm-rs"
+       },
+       "payload": {
+        "that": {
+         "fact": "rulesets",
+         "is": "fokus.dm"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "dm-rs.needs"
+       ],
+       "verb": "require",
+       "when": null
+      }
+     ],
+     "id": "R1",
+     "text": "Setzt fokus.dm voraus."
+    }
+   ],
+   "id": "dm-rs",
+   "kind": "core",
+   "name": "Zonen-RS",
+   "reviewed": null,
+   "ruleset": "fokus.dm2",
+   "rulings": [
+    {
+     "answer": "No.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-26"
+     },
+     "id": "dm-rs.needs",
+     "question": "Without fokus.dm?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "dm-set"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "number": 3
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "set",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "GS ist 3."
+    }
+   ],
+   "id": "dm-set",
+   "kind": "core",
+   "name": "Setzen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/dm"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "dm-state"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "AT −2."
+    }
+   ],
+   "id": "dm-state",
+   "kind": "state",
+   "name": "Überrascht",
+   "reviewed": null,
+   "ruleset": "core",
+   "rulings": [],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-26",
@@ -399,6 +908,16 @@
    },
    "id": "dm-aim.halving",
    "question": "Announced or owned?",
+   "status": "decided"
+  },
+  {
+   "answer": "No.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-26"
+   },
+   "id": "dm-rs.needs",
+   "question": "Without fokus.dm?",
    "status": "decided"
   }
  ],

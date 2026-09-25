@@ -251,8 +251,9 @@ private struct Draft {
         for b in entry.breakdowns {
             let query = b.query.description
             guard seen.insert(query).inserted else { leftOut.append("a second breakdown of \(query)"); continue }
-            // Bridge 2: a derived base counts in the total; a sheet base does not.
-            let derived = b.base.map { $0.owner != .sheet } ?? false
+            // Bridge 2: a derived base counts in the total; a sheet base does not, nor one the GM
+            // states (Task 32: the opponent's RS).
+            let derived = b.base.map { $0.owner != .sheet && $0.owner != .gm } ?? false
             let lines = b.shownLines.compactMap { l in
                 l.origin.map { o in
                     ExpectedLine(from: o.description, value: SituationDraft.stated(l), via: l.via.map(\.description).uniqued(),

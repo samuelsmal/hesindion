@@ -50,6 +50,10 @@ public struct DamageResult: Hashable, Sendable {
     /// The TP: the hit's input (`hit.tp`, owner roll). nil when the hit states none (a situation
     /// that states the SP after RS instead).
     public var tp: Breakdown?
+    /// Task 32: the RS of the zone hit, `rs(zone: …)`, when a rule that applies reads it
+    /// (trefferzonen-ruestungsschutz.RS2's `hit.zoneRs`); nil otherwise, or while the zone is not
+    /// known.
+    public var zoneRs: Breakdown? = nil
     /// `rs`, the RS schaden.S1 subtracts: the sheet's, or with Trefferzonen-Rüstungsschutz the
     /// zone's (trefferzonen-ruestungsschutz.RS2 sets it to `hit.zoneRs`).
     public var rs: Breakdown
@@ -78,8 +82,8 @@ public struct DamageResult: Hashable, Sendable {
     /// `conditionFalse` below the Wundschwelle, `rulesetOff` without the Fokusregel).
     public var notApplied: [NotApplied]
 
-    /// The stages in order: TP (when given), RS, SP, Wundschwelle, LE.
-    public var breakdowns: [Breakdown] { [tp].compactMap { $0 } + [rs, sp, wundschwelle, leCurrent] }
+    /// The stages in order: TP (when given), the zone's RS (when read), RS, SP, Wundschwelle, LE.
+    public var breakdowns: [Breakdown] { [tp, zoneRs].compactMap { $0 } + [rs, sp, wundschwelle, leCurrent] }
 }
 
 public enum DamageChain {
@@ -151,7 +155,7 @@ public enum DamageChain {
         let le = engine.evaluate(Query("leCurrent"), in: s)
         let events = damage(le, engine: engine)
 
-        let stages = [tpStage].compactMap { $0 } + [rs, sp, wundschwelle, le]
+        let stages = [tpStage, zoneRs.breakdown].compactMap { $0 } + [rs, sp, wundschwelle, le]
         // A derived fact nobody could give is asked through what is behind it.
         var questions: [Question] = []
         for q in stages.flatMap(\.questions) + records.questions {
@@ -161,7 +165,7 @@ public enum DamageChain {
                 questions.append(q)
             }
         }
-        return DamageResult(tp: tpStage, rs: rs, sp: sp, wundschwelle: wundschwelle, leCurrent: le, situation: s,
+        return DamageResult(tp: tpStage, zoneRs: zoneRs.breakdown, rs: rs, sp: sp, wundschwelle: wundschwelle, leCurrent: le, situation: s,
                             derived: derived, events: events, checks: checks, questions: CheckProcedure.mergeQuestions(questions),
                             texts: (stages.flatMap(\.texts) + records.texts).uniqued(),
                             notApplied: (stages.flatMap(\.notApplied) + records.notApplied).uniqued())

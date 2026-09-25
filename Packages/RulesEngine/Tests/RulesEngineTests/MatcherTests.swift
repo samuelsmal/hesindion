@@ -810,7 +810,8 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(try events("[]", [damaged]), [])
         let shapes = try events(#"[{"damage": {"formula": "1W3+1"}, "from": "trefferzonen.TZ11"}, {"itemChanged": {"held": false}, "from": "trefferzonen.TZ11"}, {"check": {"at": 15, "attack": "Tritt", "by": "mount"}}]"#)
         // R72 (Task 31 fix round 2): an attack check is compared with the attacks asked (none here).
-        XCTAssertEqual(kinds(shapes), [.unsupportedShape, .unsupportedShape, .missingEvent])
+        // Task 32 (R62): a damage by a formula and an item let go are compared too (none here).
+        XCTAssertEqual(kinds(shapes), [.missingEvent, .missingEvent, .missingEvent])
     }
 
     /// C1: an `offered` / `notOffered` entry naming an attack or a defence (`defence: shieldParry`,

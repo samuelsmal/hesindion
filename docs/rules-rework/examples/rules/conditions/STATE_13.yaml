@@ -19,6 +19,10 @@ clauses:
       überrascht ist. Gegen überraschte Personen darf eine Aktion ausgeführt werden, gegen die
       keine Verteidigung genutzt werden darf. Erst danach beginnt die reguläre Kampfrunde.
     effects:
+      - require: { that: { opponent.has: STATE_13 }, enables: true }
+        # Task 32: the opponent's Überrascht acts on the hero, who does not have it (as SA_152.AD1's
+        # Auf Distanz halten): the tell below reaches the hero's attack. Every effect of this clause
+        # is gated on who has the status, so the hero's own forbid and gain stay off.
       - when: { opponent.has: STATE_13, query.target: [at, fk] }
         tell: { to: opponent, text: noDefence }
         # Opponent side, display only (ADR-0005): "Der Gegner darf sich nicht verteidigen."

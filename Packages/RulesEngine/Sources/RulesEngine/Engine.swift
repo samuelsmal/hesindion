@@ -44,6 +44,15 @@ public struct Engine: Sendable {
         evaluation(situation).combinationLegality(ids)
     }
 
+    /// Whether the rule set `slug` may be switched on (Task 32, the settings screen's Fokusregel
+    /// switches): every top-level `require` without `for` (a rule-level require, plan A.8's old
+    /// `requires_ruleset`) of a rule of that set, whose `when` is yes and whose `that` is no,
+    /// refuses it (`requirementNotMet`): trefferzonen-ruestungsschutz.RS1 without the
+    /// Trefferzonen-Regeln. An unknown `when` or `that` refuses nothing and is not asked.
+    public func legality(ofRuleset slug: String, in situation: Situation) -> Legality {
+        evaluation(situation).rulesetLegality(slug)
+    }
+
     /// The name of the sheet's query: no target, so every `"*"` effect and nothing else reaches it.
     public static let sheetQuery = "sheet"
 
