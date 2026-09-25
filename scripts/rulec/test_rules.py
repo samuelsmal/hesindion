@@ -175,6 +175,67 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(len(errors), 2, [str(e) for e in errors])  # raise's `when` never parsed
         self.assertEqual({e.message.split(" ")[1] for e in errors}, {"key", "verb"})
 
+    def test_unknown_key_on_a_ruling_in_a_rule_file(self):
+        text = VALID.replace("rulings: []\n", textwrap.dedent("""\
+            rulings:
+              - id: r
+                question: q
+                answer: null
+                source: somewhere
+            """))
+        _, errors = check(text)
+        self.one_error(errors, "unknown key source", 20)
+
+    def test_unknown_key_on_a_shared_ruling(self):
+        shared = "- id: round-up\n  question: q\n  answer: null\n  colour: red\n"
+        _, errors = check(VALID, shared=shared)
+        self.assertEqual([(e.message, e.line) for e in errors], [("unknown key colour", 4)])
+        self.assertTrue(errors[0].file.endswith("rulings.yaml"), errors[0].file)
+
+    def test_a_ruling_may_name_what_to_see(self):
+        shared = "- id: round-up\n  question: q\n  answer: yes\n  see: [docs/adr/0006.md]\n"
+        _, errors = check(VALID, shared=shared)
+        self.assertEqual(errors, [])
+
+    # --- vocabulary added by the Group 1 hand migration (plan Task 8) -------------------------
+    def test_group_1_facts_have_their_owners(self):
+        v = vocab.load()
+        expected = {"ktw.current": "loadout", "technique.leit": "loadout", "species.le": "sheet",
+                    "hero.purchased.le": "sheet", "belastung.source": "derived",
+                    "check.kind": "player", "check.hinderedByBelastung": "derived",
+                    "loadout.armour.belastung": "loadout", "loadout.armour.extraPenalty": "loadout",
+                    "loadout.other": "loadout", "loadout.other.paMod": "loadout"}
+        self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
+
+    def test_a_derive_over_the_group_1_facts(self):
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n", textwrap.indent(
+            textwrap.dedent("""\
+                - derive:
+                    to: pa
+                    sum:
+                      - { of: ktw.current, per: 2, round: up }
+                      - { of: technique.leit, above: 8, per: 3, round: down }
+                - derive: { to: leMax, sum: [{ of: species.le }, { of: attr.KO, times: 2 }] }
+                - derive: { to: "level(rule: SA_1)", sum: [{ of: loadout.armour.belastung }] }
+                - useLevel: { rule: SA_1, lowerBy: level, min: 0 }
+                  when: { belastung.source: armour }
+                """), "      ")))
+        self.assertEqual(errors, [])
+        effects = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(effects[2]["payload"]["to"], {"name": "level", "rule": "SA_1"})
+        self.assertEqual(effects[3]["when"], {"fact": "belastung.source", "is": "armour"})
+
+    def test_a_suppress_by_rule_kind(self):
+        book, errors = check(VALID.replace(EFFECT, "      - suppress: { line: { ruleKind: condition } }"))
+        self.assertEqual(errors, [])
+        self.assertEqual(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["line"],
+                         {"kind": "ruleKind", "ids": ["condition"]})
+
+    def test_an_offer_default_may_be_a_bool(self):
+        book, errors = check(VALID.replace(EFFECT, "      - offer: { choice: belastungZaehlt, default: false }"))
+        self.assertEqual(errors, [])
+        self.assertIs(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["default"], False)
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

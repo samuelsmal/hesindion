@@ -1,11 +1,11 @@
 # DRAFT FORMAT — see ../../README.md.
-# FORMAT: a new kind, `weapon`. The table row is data every other rule reads (the Kampftechnik,
-# TP, the Schadensschwelle, AT/PA-Mod, reach), kept under `stats`; the Anmerkung, Waffenvorteil
+# FORMAT: kind `equipment`. The table row is data every other rule reads (the Kampftechnik,
+# TP, the Schadensschwelle, AT/PA-Mod, reach), kept under `provides`; the Anmerkung, Waffenvorteil
 # and Waffennachteil are clauses. The first is core, the other two belong to the Fokusregel
 # Waffeneigenschaften (core/waffeneigenschaften) — so a ruleset per clause, not per file.
 id: ITEMTPL_19
 name: Rabenschnabel
-kind: weapon
+kind: equipment
 source:
   url: https://dsa.ulisses-regelwiki.de/rabenschnabel.html
   book: Regelwerk
@@ -19,12 +19,12 @@ reviewed: null
 # text as the page. It has a second Rabenschnabel, ITEMTPL_796, without the geweiht note; the
 # app treats both as this one (RulesDatabase, Hero.isConsecrated).
 
-stats:
+provides:
   technique: CT_5            # Hiebwaffen
   tp: 1W6+4
   ls: { attribute: [KK], threshold: 14 }
-  at_mod: 0
-  pa_mod: -1
+  atMod: 0
+  paMod: -1
   reach: mittel
   weight: 1.5                # Stein
   length: 110                # HF
@@ -36,7 +36,7 @@ clauses:
   - id: RS0
     text: "Rabenschnabel | TP 1W6+4 | L+S KK 14 | AT/PA-Mod 0/-1 | RW mittel | 1,5 Stein | 110 HF | 105 S | einf"
     effects:
-      - provide: { name: loadout.weapon, value: stats }
+      - provide: { name: loadout.weapon, value: provides }
         # The row. AT/PA-Mod: the AT- und PA-Modifikatoren rule (added after the base values).
         # L+S: the Schadensbonus on the Kampftechniken page — +1 TP per point of the
         # Leiteigenschaft above the threshold (schaden.S3): Boronmir's KK 14 is the threshold
@@ -59,9 +59,10 @@ clauses:
       erleiden dadurch einen Malus von -2 auf RS.
     effects:
       - when: { rulesets: fokus.waffeneigenschaften }
-        offer: { choice: dornenspitze, on: at }
+        offer: { choice: dornenspitze }
+        # On the attack: the choice between the Hammerseite and the Dornenspitze.
         ruling: rabenschnabel-waffeneigenschaft
-      - when: { rulesets: fokus.waffeneigenschaften, choice.dornenspitze: true, action.attack: hit, opponent.armour: worn, opponent.rs: { min: 6 } }
+      - when: { rulesets: fokus.waffeneigenschaften, choice.dornenspitze: true, action.attack: hit, opponent.armour: worn, opponent.rs: { atLeast: 6 } }
         add: { to: opponent.rs, value: -2 }
         ruling: [rabenschnabel-waffeneigenschaft, dornenspitze-rs]
         # Opponent side: the app has no opponent RS (ADR-0005) and shows the line as a note,
@@ -87,7 +88,7 @@ clauses:
       zusätzlich 1 Stufe Betäubung.
     effects:
       - when: { rulesets: fokus.waffeneigenschaften, action.attack: confirmedFumble }
-        raise: { condition: COND_2, by: 1 }
+        gain: { rule: COND_2, levels: 1 }
         ruling: rabenschnabel-waffeneigenschaft
         # In addition to the Patzer table's result. The app does this in Swift, always
         # (WeaponFumbleExtras, keyed by the weapon's name).

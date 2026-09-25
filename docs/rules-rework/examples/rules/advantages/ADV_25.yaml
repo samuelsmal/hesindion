@@ -15,7 +15,7 @@ clauses:
   - id: HL1
     text: Der LE-Grundwert steigt durch diesen Vorteil um 1 Punkt pro Stufe des Vorteils.
     effects:
-      - add: { to: le.base, value: 1, per: tier }
+      - add: { to: leMax, value: level }
         # FORMAT: modifies a *derived value* (the LE maximum), not a check — like SA_51 on the
         # INI Basiswert. Its line belongs in the LE breakdown on the hero sheet:
         # "LE 37 = Grundwert 5 + 2×KO 30 + Hohe Lebenskraft II 2" (lebensenergie.LE3). The page

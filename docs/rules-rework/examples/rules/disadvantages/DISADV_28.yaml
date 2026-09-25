@@ -1,0 +1,30 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 1 hand migration (plan Task 8): situations/lebensenergie.yaml 15.2 cites
+# its line. The mirror of ADV_25 (Hohe Lebenskraft).
+id: DISADV_28
+name: Niedrige Lebenskraft
+kind: disadvantage
+levels: 7
+source:
+  url: https://dsa.ulisses-regelwiki.de/nachteil.html?nachteil=Niedrige%20Lebenskraft%20I-VII
+  book: Regelwerk
+  page: 174
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: NL1
+    text: Der LE-Grundwert sinkt durch diesen Nachteil um 1 Punkt pro Stufe des Nachteils.
+    effects:
+      - add: { to: leMax, value: -level }
+        # A line in the LE breakdown, via lebensenergie.LE3 ("+/- Punkte aus Vor- und
+        # Nachteilen"), like ADV_25.HL1.
+
+  - id: NL2
+    text: "Voraussetzung: Kein Vorteil Hohe Lebenskraft"
+    none: purchase prerequisite, not a rule at the table
+
+  - id: NL3
+    text: "AP-Wert: -4 Abenteuerpunkte (pro Stufe)"
+    none: cost, not a rule at the table

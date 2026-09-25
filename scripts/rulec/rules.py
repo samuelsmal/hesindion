@@ -56,7 +56,16 @@ def _normalize_ruling(prefix, r):
     return out
 
 
-def _load_shared(rules_dir: Path, errors):
+def _check_ruling_keys(r, path, v, errors):
+    """Every key of a ruling must be one of the vocabulary's `rulingKeys` (spec §4.7)."""
+    if v is None:
+        return
+    for k in r:
+        if k not in v.raw["rulingKeys"]:
+            errors.append(RulecError(f"unknown key {k}", str(path), _key_line(r, k)))
+
+
+def _load_shared(rules_dir: Path, errors, v=None):
     path = rules_dir / "rulings.yaml"
     if not path.exists():
         return []
@@ -73,6 +82,7 @@ def _load_shared(rules_dir: Path, errors):
         if not isinstance(r, dict) or "id" not in r:
             errors.append(RulecError("a ruling needs an id", str(path), getattr(r, "line", None)))
             continue
+        _check_ruling_keys(r, path, v, errors)
         out.append(_normalize_ruling(SHARED, r))
     return out
 
@@ -82,7 +92,7 @@ def shared_rulings(rules_dir: Path) -> list:
     return _load_shared(Path(rules_dir), [])
 
 
-def _rule_rulings(rid, path, doc, errors):
+def _rule_rulings(rid, path, doc, errors, v=None):
     raw = doc.get("rulings") or []
     if not isinstance(raw, list):
         errors.append(RulecError("wrong type for field rulings", str(path), _key_line(doc, "rulings")))
@@ -93,6 +103,7 @@ def _rule_rulings(rid, path, doc, errors):
             errors.append(RulecError("a ruling needs an id", str(path),
                                      getattr(r, "line", None) or _key_line(doc, "rulings")))
             continue
+        _check_ruling_keys(r, path, v, errors)
         out.append(_normalize_ruling(rid, r))
     return out
 
@@ -121,8 +132,8 @@ def check(rules_dir: Path, v):
             continue
         raw[rid] = (path, doc)
 
-    shared = _load_shared(rules_dir, errors)
-    per_rule = {rid: _rule_rulings(rid, path, doc, errors) for rid, (path, doc) in raw.items()}
+    shared = _load_shared(rules_dir, errors, v)
+    per_rule = {rid: _rule_rulings(rid, path, doc, errors, v) for rid, (path, doc) in raw.items()}
     known_rulings = {r["id"] for r in shared} | {r["id"] for rs in per_rule.values() for r in rs}
 
     book, pending = {}, []

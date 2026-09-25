@@ -27,9 +27,10 @@ clauses:
     effects:
       # The armour's own values come from the equipment data (Optolith item templates, or what
       # the hero sheet says), not from this file: the table on the page is an excerpt.
-      - sets: { condition: COND_1, level: armour.belastung }
-        # FORMAT: an effect that feeds a condition's level rather than a check.
-      - add: { to: [gs, ini], value: armour.extraPenalty }
+      - derive: { to: "level(rule: COND_1)", sum: [{ of: loadout.armour.belastung }] }
+        # The Stufe of Belastung the armour gives, with `belastung.source: armour` (what SA_41.G1
+        # lowers). FORMAT: an effect that feeds a condition's level rather than a check.
+      - add: { to: [gs, ini], value: { of: loadout.armour.extraPenalty } }
         # A line of its own, named after this clause — not part of Belastung, so it is not
         # lowered by Belastungsgewöhnung or by the mounted relief, and is not a Zustand.
 

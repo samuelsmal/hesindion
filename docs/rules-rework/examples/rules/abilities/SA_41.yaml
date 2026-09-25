@@ -22,8 +22,10 @@ clauses:
       Belastungsgewöhnung I nur noch behindern wie eine Kettenrüstung (was BE, GS und INI
       angeht).
     effects:
-      - lower: { condition: COND_1, source: armour, by: 1, per: tier, min: 0 }
+      - useLevel: { rule: COND_1, lowerBy: level, min: 0 }
+        when: { belastung.source: armour }
         ruling: table-shift
+        # `lowerBy: level` is SA_41's own Stufe: II lowers Belastung by 2 (plan Appendix A.2).
         # FORMAT: modifies another rule's input (the level armour gives Belastung), not a check.
         # The armour's extra GS/INI (ruestung-und-belastung.A1) is deliberately untouched.
 

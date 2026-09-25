@@ -20,10 +20,11 @@ clauses:
       modifizieren. Dies wird in den Waffentabellen angegeben, die Modifikatoren werden erst nach
       der Ermittlung der Basiswerte verrechnet.
     effects:
-      - when: { attack.with: item }
-        add: { to: at, value: item.atMod, after: kampfwerte.KW1 }
-      - when: { action.defence: weaponParry, with: item }
-        add: { to: pa, value: item.paMod, after: kampfwerte.KW2 }
+      - add: { to: at, value: { of: item.atMod } }
+      - when: { action.defence: weaponParry }
+        add: { to: pa, value: { of: item.paMod } }
+        # `item.` is the piece the roll is made with; "erst nach der Ermittlung der Basiswerte" is
+        # the phase order (an `add` after KW1's and KW2's `derive`).
         # Keyed on the piece the roll is made with, not on the loadout: in a double attack each
         # hand's attack carries its own weapon's AT-Mod, a shield attack (schilde.SCH2) the
         # shield's (the Großschild −6, situation 16.8), and a parry with either hand

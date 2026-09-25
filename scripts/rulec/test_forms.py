@@ -55,6 +55,19 @@ class ValueFormTests(unittest.TestCase):
             },
         )
 
+    def test_a_proportion_of_a_sum(self):
+        # kampfwerte.KW9: (MU + GE) / 2, rounded once, as one line.
+        p = self.f.value({"of": ["attr.MU", "attr.GE"], "per": 2})["proportion"]
+        self.assertEqual(p["of"], {"sum": [{"fact": "attr.MU"}, {"fact": "attr.GE"}]})
+        self.assertEqual(p["per"], {"number": 2})
+
+    def test_a_sum_of_one_operand_is_an_error(self):
+        with self.assertRaises(RulecError):
+            self.f.value({"of": ["attr.MU"], "per": 2})
+
+    def test_the_level_target_takes_a_rule(self):
+        self.assertEqual(self.f.target("level(rule: COND_1)"), {"name": "level", "rule": "COND_1"})
+
     def test_a_table_lookup(self):
         self.assertEqual(
             self.f.value("table(trefferzonen.TZ11, hit.zone)"),

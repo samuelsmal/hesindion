@@ -366,6 +366,14 @@ class ErrorTests(unittest.TestCase):
         self.assertEqual(errors_of("    expect: { at: { lines: [{ value: 1, from: SA_1.T1, ruling: nope }] } }\n"),
                          ["unknown ruling in expect nope"])
 
+    def test_group_1_additions(self):
+        # A query's base value, the level a leveled rule acts at, and the Group 1 loadout facts.
+        self.assertEqual(errors_of(
+            "    loadout: { armour: Platte, armour.belastung: 3, armour.extraPenalty: 0, other: Linkhand }\n"
+            "    expect:\n"
+            "      at: { result: 16, base: { value: 16, from: SA_1.T1 } }\n"
+            '      "level(rule: SA_1)": { result: 1 }\n'), [])
+
     def test_unknown_keys(self):
         self.assertEqual(errors_of("    colour: red\n"), ["unknown key colour"])
         self.assertEqual(errors_of("    expect: { at: { totl: 1 } }\n"), ["unknown key totl"])

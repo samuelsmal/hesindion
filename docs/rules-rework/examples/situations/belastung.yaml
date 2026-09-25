@@ -7,17 +7,19 @@
 #   ruling: the ruling the line rests on, shown as "Auslegung" in game
 # `total` is what the check or value changes by. Values not listed do not change.
 # `open: <ruling>` means the expectation waits on an open ruling.
+# `level(rule: COND_1)` is the Stufe of Belastung the hero acts at (after SA_41's useLevel).
+#
+# The armour rows (ruestung-und-belastung.A2), stated in each situation's `loadout` as
+# `armour.belastung` and `armour.extraPenalty`:
+#   Stoffrüstung    Belastung 1, extra 0
+#   Lederrüstung    Belastung 1, extra −1
+#   Kettenrüstung   Belastung 2, extra 0
+#   Schuppenrüstung Belastung 2, extra −1
+#   Plattenrüstung  Belastung 3, extra 0
+#   Gestechrüstung  Belastung 4, extra 0
+#   Turnierrüstung  Belastung 5, extra 0
 
-hero: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 }
-
-armour:
-  Stoffrüstung:   { belastung: 1, extra: 0 }
-  Lederrüstung:   { belastung: 1, extra: -1 }
-  Kettenrüstung:  { belastung: 2, extra: 0 }
-  Schuppenrüstung: { belastung: 2, extra: -1 }
-  Plattenrüstung: { belastung: 3, extra: 0 }
-  Gestechrüstung: { belastung: 4, extra: 0 }
-  Turnierrüstung: { belastung: 5, extra: 0 }
+hero: { values: { at: 14, pa: 8, aw: 7, fk: 10, ini: 12, gs: 8 } }
 
 situations:
 
@@ -25,9 +27,9 @@ situations:
 
   - id: "1.1"
     name: Stoffrüstung
-    hero: { armour: [Stoffrüstung] }
+    loadout: { armour: Stoffrüstung, armour.belastung: 1, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 1 }
+      "level(rule: COND_1)": { result: 1 }
       at:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
       pa:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
       aw:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
@@ -36,9 +38,9 @@ situations:
 
   - id: "1.2"
     name: Lederrüstung — the page's own example
-    hero: { armour: [Lederrüstung] }
+    loadout: { armour: Lederrüstung, armour.belastung: 1, armour.extraPenalty: -1 }
     expect:
-      conditions: { COND_1: 1 }
+      "level(rule: COND_1)": { result: 1 }
       at:  { total: -1, lines: [{ value: -1, from: COND_1.B3 }] }
       ini:
         total: -2
@@ -53,87 +55,93 @@ situations:
 
   - id: "1.3"
     name: Plattenrüstung
-    hero: { armour: [Plattenrüstung] }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 3 }
+      "level(rule: COND_1)": { result: 3 }
       at:  { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
       ini: { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }
     appToday: same
 
   - id: "1.4"
     name: Gestechrüstung on foot — Belastung IV
-    hero: { armour: [Gestechrüstung] }
+    loadout: { armour: Gestechrüstung, armour.belastung: 4, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 4 }
-      states: { handlungsunfaehig: { from: COND_1.B4 } }
-      actions: none
+      "level(rule: COND_1)": { result: 4 }
+      events: [{ gained: STATE_8, from: COND_1.B4 }]
+      legal: { actions: none }
     appToday: acts at −4 — wrong
 
   - id: "1.5"
     name: Turnierrüstung on foot — Belastung 5, and there is no Stufe V
-    hero: { armour: [Turnierrüstung] }
+    loadout: { armour: Turnierrüstung, armour.belastung: 5, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 4 }          # capped at the highest Stufe
-      states: { handlungsunfaehig: { from: COND_1.B4 } }
+      "level(rule: COND_1)": { result: 4 }   # capped at the highest Stufe
+      events: [{ gained: STATE_8, from: COND_1.B4 }]
     appToday: acts at −5 — wrong
 
   # --- Belastungsgewöhnung (ruling SA_41.table-shift: −1 Belastung per Stufe, extras stay) ---
 
   - id: "2.1"
     name: Platte, Belastungsgewöhnung I
-    hero: { armour: [Plattenrüstung], abilities: { SA_41: 1 } }
+    hero: { abilities: { SA_41: 1 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 2 }
+      "level(rule: COND_1)": { result: 2 }
       at:  { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
       ini: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
 
   - id: "2.2"
     name: Platte, Belastungsgewöhnung II
-    hero: { armour: [Plattenrüstung], abilities: { SA_41: 2 } }
+    hero: { abilities: { SA_41: 2 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 1 }
+      "level(rule: COND_1)": { result: 1 }
       at:  { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: SA_41.table-shift }] }
       ini: { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: SA_41.table-shift }] }
     appToday: same
 
   - id: "2.4"
     name: Schuppe, Belastungsgewöhnung II — Belastung gone, the extra stays
-    hero: { armour: [Schuppenrüstung], abilities: { SA_41: 2 } }
+    hero: { abilities: { SA_41: 2 } }
+    loadout: { armour: Schuppenrüstung, armour.belastung: 2, armour.extraPenalty: -1 }
     expect:
-      conditions: { COND_1: 0 }
+      "level(rule: COND_1)": { result: 0 }
       at:  { total: 0 }
       ini: { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
       gs:  { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
 
   - id: "2.8"
     name: Leder, Belastungsgewöhnung II
-    hero: { armour: [Lederrüstung], abilities: { SA_41: 2 } }
+    hero: { abilities: { SA_41: 2 } }
+    loadout: { armour: Lederrüstung, armour.belastung: 1, armour.extraPenalty: -1 }
     expect:
-      conditions: { COND_1: 0 }
+      "level(rule: COND_1)": { result: 0 }
       at:  { total: 0 }
       ini: { total: -1, lines: [{ value: -1, from: ruestung-und-belastung.A1, ruling: SA_41.table-shift }] }
     appToday: same
 
   - id: "2.10"
     name: Gestech, Belastungsgewöhnung I — able to act again
-    hero: { armour: [Gestechrüstung], abilities: { SA_41: 1 } }
+    hero: { abilities: { SA_41: 1 } }
+    loadout: { armour: Gestechrüstung, armour.belastung: 4, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 3 }
-      states: {}
+      "level(rule: COND_1)": { result: 3 }
+      events: []
       at: { total: -3, lines: [{ value: -3, from: COND_1.B3, via: [SA_41.G1] }] }
 
   - id: "2.11"
     name: Gestech, Belastungsgewöhnung II
-    hero: { armour: [Gestechrüstung], abilities: { SA_41: 2 } }
+    hero: { abilities: { SA_41: 2 } }
+    loadout: { armour: Gestechrüstung, armour.belastung: 4, armour.extraPenalty: 0 }
     expect:
-      conditions: { COND_1: 2 }
+      "level(rule: COND_1)": { result: 2 }
       at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1] }] }
 
   # --- Mounted (reiterkampf.RK7: Belastung −1 for Kampfproben only) -------------------------
 
   - id: "3.1"
     name: Platte, mounted, against another rider (so no vorteilhafte Position)
-    hero: { armour: [Plattenrüstung], mounted: true }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
     opponent: { onFoot: false }
     expect:
       at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7] }] }
@@ -144,96 +152,98 @@ situations:
           - { value: -2, from: COND_1.B3, via: [reiterkampf.RK7] }
           - { value: -2, from: reiterkampf.RK6 }
       gs:    { total: -3, lines: [{ value: -3, from: COND_1.B3 }] }        # not a Kampfprobe
-      spell: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
-      ini:   { total: 0, ruling: reiterkampf.rider-ini }                   # the mount's base, no Belastung
+      "check.modifier(spell: any)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+      ini:   { total: 0 }        # the mount's base, no Belastung (ruling reiterkampf.rider-ini)
     appToday: same, except the RK6 line cites no rule
 
   - id: "3.2"
     name: Platte, Belastungsgewöhnung II, mounted
-    hero: { armour: [Plattenrüstung], abilities: { SA_41: 2 }, mounted: true }
+    hero: { abilities: { SA_41: 2 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
     opponent: { onFoot: false }
     expect:
       at:    { total: 0 }        # Belastung I, lowered to 0 for the Kampfprobe
       gs:    { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
-      spell: { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: COND_1.belastung-reach }] }
+      "check.modifier(spell: any)": { total: -1, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1], ruling: COND_1.belastung-reach }] }
 
   - id: "3.3"
     name: Gestechrüstung, mounted — the jouster, without Belastungsgewöhnung
-    hero: { armour: [Gestechrüstung], mounted: true }
+    loadout: { armour: Gestechrüstung, armour.belastung: 4, armour.extraPenalty: 0, hero.mounted: true }
     expect:
-      conditions: { COND_1: 4 }
-      states: { handlungsunfaehig: { from: COND_1.B4, ruling: reiterkampf.mounted-jouster } }
+      "level(rule: COND_1)": { result: 4 }
+      events: [{ gained: STATE_8, from: COND_1.B4, ruling: reiterkampf.mounted-jouster }]
       # RK7 lowers the penalty on a Kampfprobe; it does not lift Stufe IV.
 
   - id: "3.4"
     name: Gestechrüstung, mounted, Belastungsgewöhnung I — the jouster can act
-    hero: { armour: [Gestechrüstung], abilities: { SA_41: 1 }, mounted: true }
+    hero: { abilities: { SA_41: 1 } }
+    loadout: { armour: Gestechrüstung, armour.belastung: 4, armour.extraPenalty: 0, hero.mounted: true }
     opponent: { onFoot: false }
     expect:
-      conditions: { COND_1: 3 }
-      states: {}
+      "level(rule: COND_1)": { result: 3 }
+      events: []
       at: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [SA_41.G1, reiterkampf.RK7], ruling: reiterkampf.mounted-jouster }] }
 
   # --- Which checks Belastung reaches (ruling COND_1.belastung-reach) -----------------------
 
   - id: "4.1"
     name: Klettern in Platte — a movement talent
-    hero: { armour: [Plattenrüstung] }
-    check: { talent: Klettern }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: talent, check.talent: TAL_3 }   # Klettern
     expect:
-      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+      "check.modifier(talent: TAL_3)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
     appToday: 0 — wrong
 
   - id: "4.2"
     name: Überreden in Platte — a speaking talent
-    hero: { armour: [Plattenrüstung] }
-    check: { talent: Überreden }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: talent, check.talent: TAL_21 }   # Überreden
     expect:
-      check: { total: 0 }
+      "check.modifier(talent: TAL_21)": { total: 0 }
     appToday: same
 
   - id: "4.3"
     name: Casting a spell in Platte
-    hero: { armour: [Plattenrüstung] }
-    check: { spell: any }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: spell }
     expect:
-      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+      "check.modifier(spell: any)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
     appToday: same
 
   - id: "4.4"
     name: Reiten (Kampfmanöver) in Platte, mounted — relieved like a Kampfprobe
-    hero: { armour: [Plattenrüstung], mounted: true }
-    check: { talent: Reiten, application: Kampfmanöver }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    choose: { check.kind: talent, check.talent: TAL_6, check.application: Kampfmanöver }   # Reiten
     expect:
-      check: { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7], ruling: [COND_1.belastung-reach, reiterkampf.rk7-reiten] }] }
+      "check.modifier(talent: TAL_6)": { total: -2, lines: [{ value: -2, from: COND_1.B3, via: [reiterkampf.RK7], ruling: [COND_1.belastung-reach, reiterkampf.rk7-reiten] }] }
     appToday: 0 — wrong
 
   - id: "4.6"
     name: Reiten in Platte, on foot (leading the horse through a river, say)
-    hero: { armour: [Plattenrüstung] }
-    check: { talent: Reiten }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: talent, check.talent: TAL_6 }   # Reiten
     expect:
-      check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
+      "check.modifier(talent: TAL_6)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: COND_1.belastung-reach }] }
     appToday: 0 — wrong
 
   - id: "4.5"
     name: Sinnesschärfe in Platte — a talent flagged "maybe"
-    hero: { armour: [Plattenrüstung] }
-    check: { talent: Sinnesschärfe }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { check.kind: talent, check.talent: TAL_10 }   # Sinnesschärfe
     sequence:
       - expect:
           offered: [{ choice: belastungZaehlt, default: false, from: COND_1.B3, ruling: COND_1.belastung-talents-maybe }]
-          check: { total: 0 }
-      - choose: { belastungZaehlt: true }
+          "check.modifier(talent: TAL_10)": { total: 0 }
+      - choose: { choice.belastungZaehlt: true }
         expect:
-          check: { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: [COND_1.belastung-reach, COND_1.belastung-talents-maybe] }] }
+          "check.modifier(talent: TAL_10)": { total: -3, lines: [{ value: -3, from: COND_1.B3, ruling: [COND_1.belastung-reach, COND_1.belastung-talents-maybe] }] }
     appToday: 0, no toggle — right only while the toggle is off
 
   # --- One armour (ruling ruestung-und-belastung.several-armour-pieces) --------------------
 
   - id: "6.1"
     name: Two armours equipped, no Trefferzonen-RS
-    hero: { armour: [Kettenrüstung, Lederrüstung] }
+    loadout: { armour: [Kettenrüstung, Lederrüstung] }
     expect:
-      not_selectable: [{ second_armour: true, because: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
+      notOffered: [{ secondArmour: true, from: ruestung-und-belastung.A1, ruling: ruestung-und-belastung.several-armour-pieces }]
     appToday: both equipped, Belastung 3 and INI −4 — wrong

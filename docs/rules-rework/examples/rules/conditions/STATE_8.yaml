@@ -1,0 +1,43 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 1 hand migration (plan Task 8): COND_1.B4 gains it, and zustaende.Z5,
+# COND_6.SZ2/SZ5 name it (as `handlungsunfaehig`). The page is one paragraph, split per sentence.
+id: STATE_8
+name: Handlungsunfähig
+kind: state                # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Handlungsunf%C3%A4hig.html
+  book: Regelwerk
+  page: 36
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: H1
+    text: >
+      Die Person ist durch Zustände oder andere Modifikatoren so angeschlagen, dass sie nicht
+      mehr handeln kann.
+    none: >
+      introduces the status; what sets it is each Zustand's Stufe IV (COND_1.B4, COND_6.SZ5),
+      eight Zustandsstufen in sum (zustaende.Z5), or the GM
+
+  - id: H2
+    text: Ihre GS fällt auf 0 und sie kann keine Aktionen oder Verteidigungen ausführen.
+    effects:
+      - set: { to: gs, value: 0 }
+      - forbid: { what: { action: any } }
+        because: Handlungsunfähig
+      - forbid: { what: { defence: [pa, aw] } }
+        because: Handlungsunfähig
+
+  - id: H3
+    text: In den meisten Situationen gilt sie zudem als liegend.
+    none: >
+      carried by STATE_10's decided ruling handlungsunfaehig-liegend: when this status starts, a
+      question asks whether the hero now lies (STATE_10)
+
+  - id: H4
+    text: >
+      Je nach Situation kann der Spielleiter erlauben, freie Aktionen auszuführen, um zu
+      sprechen.
+    none: the GM's call at the table; the app forbids nothing it could offer here

@@ -25,7 +25,7 @@ source:
   page: 229
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: KW15
@@ -49,9 +49,18 @@ clauses:
       Attacke (AT)
       Berechnung: voller Kampftechnikwert + jeweils 3 volle Punkte Mut über 8
     effects:
-      - set: { value: technique.at, to: "ktw + floor(max(0, MU - 8) / 3)" }
+      - derive:
+          to: at
+          sum:
+            - { of: ktw.current }                       # KtW of the technique in hand
+      - derive:
+          to: at
+          sum:
+            - { of: attr.MU, above: 8, per: 3, round: down }
+        when: { not: { loadout.weapon.technique: Peitschen } }
         # Two lines: "KtW 12" and "MU 14 → +2". Below 8 there is no malus ("über 8").
-        # Peitschen take FF instead of MU (KW6).
+        # Peitschen take FF instead of MU (KW6): the MU term is its own effect so that KW6's FF
+        # term can stand in for it while the KtW line stays KW1's (situation 16.21).
 
   - id: KW2
     text: |
@@ -60,9 +69,13 @@ clauses:
       + jeweils 3 volle Punkte in der Leiteigenschaft der
       Kampftechnik über 8
     effects:
-      - set: { value: technique.pa, to: "ceil(ktw / 2) + floor(max(0, leit - 8) / 3)" }
-        # Rounding from KW4; `leit` is the technique's Leiteigenschaft (KW21), the higher of two
-        # where it names two (KW7). That Peitschen have no parry at all is out of scope here
+      - derive:
+          to: pa
+          sum:
+            - { of: ktw.current, per: 2, round: up }
+            - { of: technique.leit, above: 8, per: 3, round: down }
+        # Rounding from KW4; `technique.leit` is the value of the technique's Leiteigenschaft
+        # (KW21), the higher of two where it names two (KW7) — resolved by the loadout. That Peitschen have no parry at all is out of scope here
         # (see the header); nothing encodes it.
 
   - id: KW3
@@ -70,7 +83,7 @@ clauses:
       Ausweichen (AW)
       Berechnung: Gewandtheit / 2
     effects:
-      - set: { value: aw.base, to: "ceil(GE / 2)" }
+      - derive: { to: aw, sum: [{ of: attr.GE, per: 2, round: up }] }
         # The page gives no rounding; the Basiswerte page's examples settle it (KW25: "Gewandtheit
         # 15 / 2 = 8"), as does ADR-0006 — no ruling needed. Advantages add to it (KW8).
 
@@ -144,7 +157,11 @@ clauses:
       Fingerfertigkeit. Pro 3 vollen Punkten über 8 in Fingerfertigkeit steigt der Fernkampfwert
       um 1 (also bei 11 um 1, bei 14 um 2 usw.).
     effects:
-      - set: { value: technique.fk, to: "ktw + floor(max(0, FF - 8) / 3)" }
+      - derive:
+          to: fk
+          sum:
+            - { of: ktw.current }
+            - { of: attr.FF, above: 8, per: 3, round: down }
 
   - id: KW19
     page:
@@ -222,13 +239,14 @@ clauses:
       Zweihandschwerter | KK | C
       *) Kampftechnik wird nur unter Verwendung der Sonderfertigkeit Feuerschlucker eingesetzt.
     effects:
-      - defines: { value: technique.leit, table: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] } }
+      - provide: { name: kampfwerte.leiteigenschaft, value: { Armbrüste: [FF], Blasrohre: [FF], Bögen: [FF], Diskusse: [FF], Dolche: [GE], Fächer: [GE], Fechtwaffen: [GE], Feuerspeien: [FF], Hiebwaffen: [KK], Kettenwaffen: [KK], Lanzen: [KK], Peitschen: [FF], Raufen: [GE, KK], Schilde: [KK], Schleudern: [FF], Schwerter: [GE, KK], Spießwaffen: [KK], Stangenwaffen: [GE, KK], Wurfwaffen: [FF], Zweihandhiebwaffen: [KK], Zweihandschwerter: [KK] } }
         # The Regelwerk's own Leiteigenschaft table, one row per technique: `leit` for KW2 and
         # for the Schadensbonus (schaden.S3, "Bei allen Nahkampfwaffen" — Peitschen included, FF).
         # The ranged rows are here for completeness; S3 is melee only and KW5 reads FF directly.
         # The Steigerungsfaktor column is raising cost (KW22), not a value. Row for row the same
         # as the Kodex table (KW6), which has no Peitschen or ranged rows for the PA half.
-        # FORMAT: a table that fills in a variable of another clause's formula, per technique.
+        # The loadout reads this table to resolve the fact `technique.leit` (KW2's second term):
+        # the value of the technique's Leiteigenschaft, the higher of two (KW7).
         # Optolith carries it as combat_technique_details.primary_attr_1/2.
 
   - id: KW6
@@ -245,9 +263,13 @@ clauses:
       Parade für Hiebwaffen, Kettenwaffen, Lanzen, Schilde, Spießwaffen, Zweihandschwerter, Zweihandhiebwaffen | KK
       Fernkampf | FF
     effects:
-      - when: { technique: Peitschen }
-        replace: { value: "KW1.MU", with: FF }
-        # FORMAT: a table that fills in a variable of another clause's formula, per technique.
+      - derive:
+          to: at
+          sum:
+            - { of: attr.FF, above: 8, per: 3, round: down }
+        when: { loadout.weapon.technique: Peitschen }
+        # Stands in for KW1's MU term, which does not apply to Peitschen; KW1's KtW line stays
+        # (situation 16.21: "KtW 10" from KW1, "FF 11 → +1" from KW6).
         # The Optolith data carries the PA half (combat_technique_details.primary_attr_1/2);
         # the AT half (Peitschen: FF) is nowhere in it.
         # The PA half (`technique.leit`) is defined on KW21, the Regelwerk table with every
@@ -267,12 +289,12 @@ clauses:
       von +1 auf den Parade-Wert. In Einzelfällen kann eine Waffe eine von ihrer Kampftechnik
       abweichende Leiteigenschaft aufweisen, was sich dann auf ihren Schadensbonus auswirken kann.
       Der Paradewert der Kampftechnik ist dadurch aber nicht betroffen.
-    effects:
-      - when: { technique.leit: { count: 2 } }
-        choose: { value: leit, of: technique.leit, pick: max }
-        # "wählen", and the example (KW23) takes the higher: no choice for the player to make,
-        # the better one is always taken. The line names the one used ("KK 16 → +2").
-        # A weapon's own Leiteigenschaft (schaden.S4) never reaches the PA.
+    none: >
+      the pick-the-higher is part of the fact `technique.leit`, which the loadout resolves from
+      KW21's table and KW2 reads: where a technique names two Leiteigenschaften, the higher one's
+      value. "wählen", and the example (KW23) takes the higher: no choice for the player to make.
+      The line names the one used ("KK 16 → +2"), via KW7
+    # A weapon's own Leiteigenschaft (schaden.S4) never reaches the PA.
     # The Schadensbonus half of this paragraph is schaden.S3/S4.
 
   - id: KW22
@@ -377,7 +399,7 @@ clauses:
       (Mut + Gewandtheit) / 2
       +/- Punkte aus Vor- und Nachteilen
     effects:
-      - set: { value: ini.base, to: "ceil((MU + GE) / 2)" }
+      - derive: { to: iniBase, sum: [{ of: [attr.MU, attr.GE], per: 2, round: up }] }
         # The page's examples settle the rounding (KW25: "(Mut 15 + Gewandtheit 12) / 2 = 14",
         # 27 / 2 rounded up) — no ruling needed. SA_51.KR1 (Kampfreflexe) adds to this base
         # (KW24); mounted, reiterkampf.RK1 replaces it.
@@ -394,8 +416,9 @@ clauses:
       würfelt und den Initiative-Basiswert hinzuaddiert. Kurz gesagt: Initiative =
       Initiative-Basiswert + 1W6 +/-Modifikator.
     effects:
-      - defines: { roll: ini, formula: "ini.base + 1W6", once_per: fight }
-        # The modifiers are other rules' lines (COND_1.B3 −1 per Stufe, SA_51 via the base).
+      - derive: { to: ini, sum: [{ of: iniBase }, { of: roll.ini }] }
+        # `roll.ini` is the W6 as rolled, stated once per fight and kept (KW11); the engine never
+        # rolls. The modifiers are other rules' lines (COND_1.B3 −1 per Stufe, SA_51 via the base).
         # The page's example (KW26): base 14, W6 4, Belastung II → 16.
 
   - id: KW26
@@ -419,12 +442,10 @@ clauses:
     text: >
       Die Initiative gilt für den gesamten Kampf und wird nicht jede Kampfrunde neu ausgewürfelt.
       Nur besondere Situationen wie der Zustand Belastung kann die Initiative noch verändern.
-    effects:
-      - when: { event: iniModifierChanged }
-        recompute: { value: ini, keep: rolled.w6 }
-        # The W6 stays; the modifiers are live. Belastung that changes mid-fight (a load dropped,
-        # Traglast) changes the INI at once. FORMAT: a rolled value whose dice are kept and whose
-        # modifiers are re-read — the roll is stored as its parts, not as a total.
+    none: >
+      built into KW10's encoding: INI is a query, the W6 is the stored roll fact `roll.ini` and
+      every modifier is a live line, so a Belastung that changes mid-fight (a load dropped,
+      Traglast) changes the INI at the next query while the W6 stays (situation 16.12)
 
   - id: KW12
     page:

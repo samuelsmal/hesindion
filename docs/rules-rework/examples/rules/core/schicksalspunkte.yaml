@@ -33,7 +33,9 @@ clauses:
       Bonus erhöht auch die Anzahl der maximalen Verteidigungen eines Helden, da bei mehreren
       Verteidigungen sein Verteidigungswert erst später auf 0 sinkt.
     effects:
-      - offer: { choice: schipVerteidigung, costs: { schip: 1 }, span: round, before: defenceRoll }
+      - offer: { choice: schipVerteidigung, costs: [{ cost: { pool: schips, amount: 1 } }], span: round }
+        # "aber vor dem Würfeln der Verteidigung": the offer is part of the defence's breakdown,
+        # which is shown before its dice come in; once the roll is in, it is no longer offered.
       - when: { choice.schipVerteidigung: true }
         add: { to: [pa, aw], value: 4 }
 
@@ -43,9 +45,10 @@ clauses:
       Es kostet ebenfalls 1 Schip, alle Zustände, durch die man betroffen ist, für eine
       Kampfrunde zu ignorieren.
     effects:
-      - offer: { choice: schipZustandIgnorieren, costs: { schip: 1 }, span: round }
+      - offer: { choice: schipZustandIgnorieren, costs: [{ cost: { pool: schips, amount: 1 } }], span: round }
       - when: { choice.schipZustandIgnorieren: true }
-        suppress: { kind: condition }
+        suppress: { line: { ruleKind: condition } }
+        because: Schip, Zustand ignorieren
         ruling: [schip-ignore-belastung, schip-lifts-incapacity]
         # FORMAT: switches off every effect of every Zustand for the round — the lines on
         # checks, the GS/INI penalties, and the Handlungsunfähig a Stufe IV carries. The
@@ -76,5 +79,7 @@ rulings:
       Yes, for that Kampfrunde — it is carried by Zustände. It does not lift a Handlungsunfähig
       stated outright or implied by a Status (Bewusstlos, Versteinert).
     decided: { by: "@samuelsmal", date: 2026-09-20 }
-    source: recorded from the doc comment on Hero.isHandlungsunfaehigFromZustaende ("owner ruling, 2026-09-20")
+    notes: >
+      Recorded from the doc comment on Hero.isHandlungsunfaehigFromZustaende ("owner ruling,
+      2026-09-20").
     appliesTo: [SP-zustand]

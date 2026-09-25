@@ -9,17 +9,13 @@ source:
   page: 32
   checked: 2026-09-23
   hash: null               # filled in by the drift check
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }             # { by, date } once a person has read every clause against the page
+reviewed: null             # { by, date } once a person has read every clause against the page
 
-# Where a Stufe comes from. Not a clause of this page: armour is `core/ruestung-und-belastung`,
-# carried weight is the Traglast rule (not written yet).
+# Where a Stufe comes from. Not a clause of this page: armour is `core/ruestung-und-belastung`
+# (A1 derives `level(rule: COND_1)` from the armour worn, `belastung.source: armour`), carried
+# weight is the Traglast rule (not written yet). Lowered by SA_41.G1 (`useLevel`, armour only).
 # FORMAT: a condition whose level is *computed* (armour, load) rather than set by the GM or an
 # event, and which other rules then lower (SA_41) or lower for some checks only (Reiterkampf RK7).
-level:
-  from:
-    - rule: ruestung-und-belastung
-    - rule: traglast        # not written yet
-  lowered_by: [SA_41.G1]    # listed here for the reader; the effect lives in SA_41
 
 clauses:
   - id: B1
@@ -28,7 +24,7 @@ clauses:
       Bewegungsfreiheit einschränken. So lange diese Lasten getragen werden, erleidet die Person
       entsprechende Stufen an Belastung. Werden die Lasten abgelegt, verschwinden auch die
       Belastungsstufen.
-    none: describes where the level comes from; see `level`
+    none: describes where the level comes from; see the note above the clauses
 
   - id: B2
     text: >
@@ -41,35 +37,40 @@ clauses:
       Stufe II: belastet, Proben auf Talente, die durch Belastung erschwert sind –2, AT –2, Verteidigung –2, INI –2, GS –2
       Stufe III: schwer belastet, Proben auf Talente, die durch Belastung erschwert sind –3, AT –3, Verteidigung –3, INI –3, GS –3
     effects:
-      - when: { level: [1, 3] }
+      # `level: [1, 2, 3]`: Stufe I to III (a list is a set of values, not a range).
+      - when: { level: [1, 2, 3] }
         add: { to: [at, pa, aw, ini, gs], value: -1, per: level }
-      - when: { level: [1, 3] }
+      - when: { level: [1, 2, 3] }
         add: { to: fk, value: -1, per: level }
         ruling: belastung-fk
         # The page says "AT"; read as every attack roll, FK included (ruling belastung-fk).
-      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: true }
-        add: { to: check, value: -1, per: level }
+      - when: { level: [1, 2, 3], check.kind: talent, check.hinderedByBelastung: true }
+        add: { to: check.modifier, value: -1, per: level }
         ruling: belastung-reach
-      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe }
+        # `check.hinderedByBelastung` is derived from the talent's own Belastung flag (yes / no /
+        # maybe; skill_details.encumbrance), ruling belastung-reach.
+      - when: { level: [1, 2, 3], check.kind: talent, check.hinderedByBelastung: maybe }
         offer: { choice: belastungZaehlt, default: false }
         ruling: belastung-talents-maybe
         # "Belastung zählt", a toggle on the check screen of the seven talents the book marks
         # "evtl." (skill_details.encumbrance maybe); off unless the player turns it on.
-      - when: { level: [1, 3], check: talent, talent.hinderedByBelastung: maybe, choice.belastungZaehlt: true }
-        add: { to: check, value: -1, per: level }
+      - when: { level: [1, 2, 3], check.kind: talent, check.hinderedByBelastung: maybe, choice.belastungZaehlt: true }
+        add: { to: check.modifier, value: -1, per: level }
         ruling: [belastung-reach, belastung-talents-maybe]
-      - when: { level: [1, 3], check: [spell, liturgy] }
-        add: { to: check, value: -1, per: level }
+      - when: { level: [1, 2, 3], check.kind: [spell, liturgy] }
+        add: { to: check.modifier, value: -1, per: level }
         ruling: belastung-reach
 
   - id: B4
     text: "Stufe IV: Handlungsunfähig, bis auf Last fallen lassen."
     effects:
-      - when: { level: { min: 4 } }
-        gain: { state: handlungsunfaehig, until: level-below-4 }
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: STATE_8 }
+        # Handlungsunfähig (STATE_8) while the Stufe is IV or more; "bis auf Last fallen lassen":
+        # dropping the load lowers the Stufe, and this `when` stops holding.
     # A hero in Gestechrüstung (Belastung 4) on foot is Handlungsunfähig. That is intended:
     # it is what Belastungsgewöhnung is for (ruling 2026-09-23).
-    # `min: 4`, not `4`: the Rüstung-und-Belastung table gives Turnierrüstung Belastung 5, and
+    # `atLeast: 4`, not `4`: the Rüstung-und-Belastung table gives Turnierrüstung Belastung 5, and
     # the page has no Stufe V. Anything at or above 4 is this clause (`levels: 4` above is the
     # highest Stufe the page names; situations/belastung.yaml 1.5 shows the level capped at 4).
 

@@ -5,14 +5,13 @@ id: waffeneigenschaften
 name: Waffeneigenschaften
 kind: core
 ruleset: fokus.waffeneigenschaften
-fokus: { theme: Ausrüstung, level: 1 }
 source:
   url: https://dsa.ulisses-regelwiki.de/Waffeneigenschaften.html
   book: Aventurische Rüstkammer
   page: 56
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 # FORMAT: the gated clauses live in other files (every weapon's Waffenvorteil/-nachteil). Each
 # names the ruleset in its own `when`; this file only defines it. The alternative, a file-level
 # `ruleset:`, does not work for a weapon, whose table row is core and whose Waffenvorteil is not.
@@ -22,7 +21,9 @@ clauses:
     text: >
       Waffeneigenschaften sind eine Fokusregel der Stufe I für den Themenkomplex Ausrüstung.
     effects:
-      - defines: { ruleset: fokus.waffeneigenschaften }
+      - provide: { name: fokus.waffeneigenschaften, value: { theme: Ausrüstung, level: 1 } }
+        # The Fokusregel's Themenkomplex and Stufe (formerly the file's `fokus:` key); the
+        # ruleset itself is the file's `ruleset:`, switched on through the `rulesets` fact.
         # The app has no such Fokusregel (FokusRule: trefferzonen, kritische Erfolge,
         # karmaleObjekte) and applies the Waffenvorteile it knows always (catalog ITEMTPL_19,
         # WeaponFumbleExtras).
@@ -32,10 +33,11 @@ clauses:
       Die hier vorgestellten Waffen verfügen nicht nur über die bereits bekannten Werte aus dem
       Regelwerk, sondern auch über Waffeneigenschaften. Dabei handelt es sich um spezielle Vor-
       und Nachteile für Waffen, die nur zum Tragen kommen, wenn du mit der Fokusregel spielst.
-    effects:
-      - gates: { clauses: "every Waffenvorteil and Waffennachteil clause in rules/equipment/", ruleset: fokus.waffeneigenschaften }
-        ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft
-        # The weapon's table row and its Anmerkung (e.g. the Großschild's "zusätzlich -1 AT auf
+    none: >
+      the gate is a `when: { rulesets: fokus.waffeneigenschaften }` on each Waffenvorteil and
+      Waffennachteil effect in rules/equipment/, each resting on the ruling
+      ITEMTPL_19.rabenschnabel-waffeneigenschaft
+    # The weapon's table row and its Anmerkung (e.g. the Großschild's "zusätzlich -1 AT auf
         # die Hauptwaffe") are Regelwerk values and stay on without the Fokusregel.
 
   - id: WE3

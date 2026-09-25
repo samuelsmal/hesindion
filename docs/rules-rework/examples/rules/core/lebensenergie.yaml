@@ -29,7 +29,7 @@ clauses:
       Es ist im späteren Spiel möglich, diese Werte durch Zukauf mit Abenteuerpunkten zu erhöhen.
       Dieser Zukauf kann erst nach Spielbeginn erfolgen, nicht bereits bei der Heldenerschaffung.
     effects:
-      - add: { to: le.max, value: hero.purchased.le }
+      - add: { to: leMax, value: { of: hero.purchased.le } }
         # Optolith's attr.lp. A line of its own ("zugekauft +n"), zero for Boronmir.
 
   - id: LE3
@@ -40,7 +40,7 @@ clauses:
       + 2 x Konstitution
       +/- Punkte aus Vor- und Nachteilen
     effects:
-      - set: { value: le.base, to: "species.le + 2 * ko" }
+      - derive: { to: leMax, sum: [{ of: species.le }, { of: attr.KO, times: 2 }] }
         # FORMAT: a derived value with its own breakdown on the hero sheet — the lines are the
         # species Grundwert, 2×KO, and every rule that adds to it (ADV_25.HL1, DISADV_28 Niedrige
         # Lebenskraft, not written yet), then LE2's purchase. The maximum is what COND_6.SZ3

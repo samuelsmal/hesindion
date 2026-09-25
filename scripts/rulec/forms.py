@@ -42,6 +42,12 @@ class Forms:
         self.err("value outside the four forms", line)
 
     def operand(self, raw, line):
+        """A number, a fact or a target; a list of those is their sum (`{"sum": [...]}`), taken
+        before the proportion's `per` — `(MU + GE) / 2` is `{ of: [attr.MU, attr.GE], per: 2 }`."""
+        if isinstance(raw, list):
+            if len(raw) < 2:
+                self.err("a summed operand lists two or more", line)
+            return {"sum": [self.operand(x, line) for x in raw]}
         if isinstance(raw, (int, float)) and not isinstance(raw, bool):
             return {"number": raw}
         if isinstance(raw, str) and (self.v.fact_owner(raw) or self.v.is_target(raw.split("(")[0])):

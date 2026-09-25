@@ -17,9 +17,10 @@ clauses:
       ignorieren) bei Wundeffekten bekommt die Heldin eine Erschwernis von 2.
     effects:
       - when:
-          check: { talent: Selbstbeherrschung, application: [Handlungsfähigkeit bewahren, Störungen ignorieren] }
-          cause: woundEffect
-        add: { to: check, value: -2 }
+          check.talent: TAL_8              # Selbstbeherrschung
+          check.application: [Handlungsfähigkeit bewahren, Störungen ignorieren]
+          gmFact.cause: woundEffect
+        add: { to: check.modifier, value: -2 }
         ruling: verweichlicht-scope
         # FORMAT: gated on *why* the check is rolled (a Wundeffekt), not only on which talent —
         # a Selbstbeherrschung check for any other reason is untouched. The cause has to travel

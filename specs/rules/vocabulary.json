@@ -62,7 +62,8 @@
     "values",
     "lines",
     "notApplied",
-    "legal"
+    "legal",
+    "base"
   ],
   "factFamilies": {
     "attr.": {
@@ -147,7 +148,19 @@
       "owner": "player",
       "type": "ruleId"
     },
+    "belastung.source": {
+      "owner": "derived",
+      "type": "string"
+    },
     "check.application": {
+      "owner": "player",
+      "type": "string"
+    },
+    "check.hinderedByBelastung": {
+      "owner": "derived",
+      "type": "any"
+    },
+    "check.kind": {
       "owner": "player",
       "type": "string"
     },
@@ -171,6 +184,10 @@
       "owner": "loadout",
       "type": "bool"
     },
+    "hero.purchased.le": {
+      "owner": "sheet",
+      "type": "int"
+    },
     "hit.sp": {
       "owner": "derived",
       "type": "int"
@@ -183,6 +200,10 @@
       "owner": "roll",
       "type": "string"
     },
+    "ktw.current": {
+      "owner": "loadout",
+      "type": "int"
+    },
     "level": {
       "owner": "sheet",
       "type": "int"
@@ -190,6 +211,22 @@
     "loadout.armour": {
       "owner": "loadout",
       "type": "string"
+    },
+    "loadout.armour.belastung": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.armour.extraPenalty": {
+      "owner": "loadout",
+      "type": "int"
+    },
+    "loadout.other": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.other.paMod": {
+      "owner": "loadout",
+      "type": "int"
     },
     "loadout.reach": {
       "owner": "loadout",
@@ -246,6 +283,14 @@
     "rulesets": {
       "owner": "gm",
       "type": "list"
+    },
+    "species.le": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "technique.leit": {
+      "owner": "loadout",
+      "type": "int"
     }
   },
   "fieldTypes": [
@@ -388,7 +433,8 @@
     "answer",
     "decided",
     "appliesTo",
-    "notes"
+    "notes",
+    "see"
   ],
   "selectorKinds": [
     "action",
@@ -404,7 +450,8 @@
     "rule",
     "lineKind",
     "dice",
-    "target"
+    "target",
+    "ruleKind"
   ],
   "situationFileKeys": [
     "heroFile",
@@ -514,6 +561,11 @@
     },
     "leMax": {
       "contexts": []
+    },
+    "level": {
+      "contexts": [
+        "rule"
+      ]
     },
     "pa": {
       "contexts": [
@@ -697,7 +749,7 @@
       },
       "optional": {
         "costs": "effects",
-        "default": "string",
+        "default": "data",
         "options": "list",
         "span": "span"
       },

@@ -17,12 +17,15 @@ clauses:
     # the Optolith text ends in a full stop. Nothing appears to be missing — kept verbatim.
     text: Für jede Stufe des Vorteils bekommt der Held 1 zusätzlichen Punkt dazu, wenn er regeneriert,
     effects:
-      - when: { event: regeneration.R4, energy: le, regenerates: true }
-        add: { to: regeneration.le, value: 1, per: tier, before: regeneration.R6 }
+      - add: { to: regeneration.le, value: level }
         ruling: [vr-scope, vr-halving]
         # "wenn er regeneriert": when regeneration fails outright (a storm, tied to a horse's back,
         # Vergiftet or Krank — regeneration.R6, R7) he does not regenerate, and gets nothing.
-        # FORMAT: `before:` — the bonus is added before R6 halves the result (ruling vr-halving).
+        # The target is the LeP regained in one Regenerationsphase (regeneration.R4): only there
+        # (ruling vr-scope), and only for LeP. `before: regeneration.R6` is the phase order: an
+        # `add` runs before R6's `multiply` halves the result (ruling vr-halving). When R6 or R7
+        # sets the regeneration to 0 the hero does not regenerate and this line is not applied
+        # (situations 15.11, 15.12).
         # FORMAT: one effect resting on two rulings (when it applies, and in which order) — the
         # other files only ever name one.
 

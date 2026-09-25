@@ -1,0 +1,49 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 1 hand migration (plan Task 8): situations/lebensenergie.yaml 15.8 cites
+# its line.
+id: COND_4
+name: Furcht
+kind: condition
+levels: 4
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Furcht.html
+  book: Regelwerk (3. Auflage)
+  page: 33
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: FU1
+    text: >
+      Besonders grauenerregende Kreaturen, aber auch Zauber oder der Nachteil Angst vor … können
+      Furcht auslösen. Wesen reagieren recht unterschiedlich auf Furcht. Manche versuchen den
+      Auslöser der Furcht ständig im Auge zu behalten, auf Abstand zu bleiben oder zu fliehen,
+      andere versuchen meist recht unkoordiniert, ihn aus dem Weg zu räumen. Im schlimmsten Falle
+      verfallen sie in Katatonie.
+    none: introduction and narration; the Stufen come from whatever triggers them
+
+  - id: FU2
+    text: >
+      So lange der Auslöser der Furcht in der Nähe bleibt, bleiben auch die negativen Effekte der
+      Furcht bestehen. Ist der Auslöser nicht mehr vorhanden, baut sich die Furcht alle 5 Minuten
+      um 1 Stufe ab, so nichts anderes angegeben ist.
+    unencoded: >
+      the app keeps neither the trigger's presence nor time outside combat rounds; shown as text
+      on the Furcht chip
+
+  - id: FU3
+    text: |
+      Stufe I: beunruhigt, alle Proben –1
+      Stufe II: verängstigt, alle Proben –2
+      Stufe III: in Panik, alle Proben –3
+    effects:
+      - when: { level: [1, 2, 3] }
+        add: { to: [at, pa, aw, fk, check.modifier], value: -1, per: level }
+        # "alle Proben", as Betäubung (COND_2.BT3). Not INI and not GS.
+
+  - id: FU4
+    text: "Stufe IV: katatonisch, Handlungsunfähig"
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: STATE_8 }

@@ -10,7 +10,7 @@ source:
   page: 339
   checked: 2026-09-24
   hash: null
-reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+reviewed: null
 
 clauses:
   - id: R1
@@ -22,13 +22,13 @@ clauses:
   - id: R2
     text: Eine Regenerationsphase ist eine Ruhe- und Schlafphase von mindestens 6 Stunden Dauer.
     effects:
-      - offer: { action: regenerationsphase, outside: combat }
-        # The app's Regenerieren sheet (RegenerierenSheet) is this action.
+      - offer: { choice: regenerationsphase }
+        # The app's Regenerieren sheet (RegenerierenSheet) is this action, offered outside a
+        # fight only (the sheet is not a combat screen).
 
   - id: R3
     text: Pro Tag können bis zu zwei Regenerationsphasen genutzt werden.
-    status: unencoded
-    why: the app keeps no days; shown as text on the Regenerieren sheet
+    unencoded: the app keeps no days; shown as text on the Regenerieren sheet
 
   - id: R4
     text: >
@@ -36,9 +36,12 @@ clauses:
       verrechnet das Ergebnis mit den Mali und Boni seiner augenblicklichen Situation und addiert
       dann den Wert zu seiner Energie. Negative Ergebnisse werden als 0 gewertet.
     effects:
-      - roll: { dice: 1W6, per: energy, into: regeneration.le }
-      - add: { to: regeneration.le, lines: [T1, ADV_44.VR1] }
-      - floor: { value: regeneration.le, min: 0, after: R6 }
+      - derive: { to: regeneration.le, sum: [{ of: roll.regeneration }] }
+        # The 1W6 as rolled, one roll per reduced energy (only LeP in these examples). The
+        # situational lines are T1's and ADV_44.VR1's own effects on the same target.
+      - floor: { to: regeneration.le, min: 0 }
+        # A floor runs in the cap phase, after R6's halving (the page: "Negative Ergebnisse
+        # werden als 0 gewertet").
         # FORMAT: a rolled value with its own breakdown — the roll, then situational lines, then
         # a floor. Like a check, but the result is added to a resource, not compared.
 
@@ -47,7 +50,7 @@ clauses:
       Kein Held kann Punkte über den Höchstwert seiner Lebens-, Astral- oder Karmapunkte hinaus
       ansammeln.
     effects:
-      - cap: { value: le.current, max: le.max }
+      - cap: { to: leCurrent, max: { of: leMax } }
 
   - id: R6
     text: >
@@ -56,13 +59,14 @@ clauses:
       Bedingungen wie in einem Sturm oder auf einen Pferderücken gebunden fällt die Regeneration
       ganz aus.
     effects:
-      - ask: { who: player, question: "Wie ist die Umgebung?", options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
-      - when: { answer: "unruhig, nass oder kalt" }
+      - ask: { fact: choice.environment, who: player, options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
+        # "Wie ist die Umgebung?"
+      - when: { choice.environment: "unruhig, nass oder kalt" }
         multiply: { to: regeneration.le, by: 0.5, round: up }
         ruling: [round-up, ADV_44.vr-halving]
         # round-up (rules/rulings.yaml) is decided for every halving the rules do not settle.
-      - when: { answer: "Sturm, auf ein Pferd gebunden" }
-        set: { value: regeneration.le, to: 0 }
+      - when: { choice.environment: "Sturm, auf ein Pferd gebunden" }
+        set: { to: regeneration.le, value: 0 }
         # No roll, and no bonus: the hero does not regenerate (ADV_44.VR1 "wenn er regeneriert").
 
   - id: R7
@@ -72,8 +76,8 @@ clauses:
       Heilkräuter, die gegen Gifte und Krankheiten wirken oder Lebenspunkte regenerieren, wirken
       in den Regenerationsphasen dennoch.
     effects:
-      - when: { hero.states: { any: [STATE_15, STATE_9] } }
-        set: { value: regeneration.le, to: 0 }
+      - when: { hero.has: [STATE_15, STATE_9] }
+        set: { to: regeneration.le, value: 0 }
         # The app knows both statuses (StateCatalog vergiftet, krank) and even says so on their
         # chips ("keine normale Regeneration"), but the Regenerieren sheet does not read them.
         # The table (T1) says "keine LeP-Regeneration"; the text says no regeneration at all.
@@ -93,12 +97,19 @@ clauses:
       Furchtbare Umgebung (extrem schlechtes Wetter) | Regeneration von LeP, AsP und KaP fällt aus
       Pro volle 2 Stein Eisen am Körper (siehe Bann des Eisens Seite 256 im Regelwerk) | –1 AsP
     effects:
-      - ask: { who: player, question: "Lagerplatz und Nacht?", multi: true }
-        lines:
-          - { when: schlechter-lagerplatz, add: { to: regeneration.le, value: -1 } }
-          - { when: unterbrechung, add: { to: regeneration.le, value: -1 } }
-          - { when: laengere-unterbrechung, add: { to: regeneration.le, value: -2 } }
-          - { when: gute-unterkunft, add: { to: regeneration.le, value: 1 } }
+      # "Lagerplatz und Nacht?" — any number of the rows apply, so one question per row.
+      - ask: { fact: choice.schlechterLagerplatz, who: player }
+      - when: { choice.schlechterLagerplatz: true }
+        add: { to: regeneration.le, value: -1 }
+      - ask: { fact: choice.unterbrechung, who: player }
+      - when: { choice.unterbrechung: true }
+        add: { to: regeneration.le, value: -1 }
+      - ask: { fact: choice.laengereUnterbrechung, who: player }
+      - when: { choice.laengereUnterbrechung: true }
+        add: { to: regeneration.le, value: -2 }
+      - ask: { fact: choice.guteUnterkunft, who: player }
+      - when: { choice.guteUnterkunft: true }
+        add: { to: regeneration.le, value: 1 }
         # The erkrankt/vergiftet, halved and none rows restate R6 and R7. The iron row is AsP only.
         # FORMAT: a table whose rows are named lines on one rolled value; the text above says
         # the same things in prose. One clause for the table, the prose clauses carry the logic.

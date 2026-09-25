@@ -1,0 +1,47 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 1 hand migration (plan Task 8): situations/lebensenergie.yaml cites its
+# lines (15.8, 15.19), and ITEMTPL_19.RS4 and trefferzonen.TZ11 raise it.
+id: COND_2
+name: Betäubung
+kind: condition
+levels: 4
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Bet%C3%A4ubung.html
+  book: Regelwerk (3. Auflage)
+  page: 32
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: BT1
+    text: >
+      Durch zu viel Wein, Erschöpfung oder eine zünftige Schlägerei kann ein Held Stufen von
+      Betäubung erleiden.
+    none: introduction; the Stufen come from whatever sets them (a blow, alcohol, a Patzer)
+
+  - id: BT2
+    text: >
+      Jede Stufe Betäubung verschwindet für sich betrachtet, so nichts anderes angegeben ist,
+      nach einer Ruhephase von 3 Stunden.
+    effects:
+      - tell: { to: player, text: "Jede Stufe Betäubung baut sich nach 3 Stunden Ruhe ab." }
+        # The app keeps no time outside combat rounds: the duration is said, not counted.
+        # ADV_75 (Schnell wieder auf den Beinen) halves it for alcohol (situation 15.17).
+
+  - id: BT3
+    text: |
+      Stufe I: leicht angeschlagen, alle Proben –1
+      Stufe II: angeschlagen, alle Proben –2
+      Stufe III: schwer angeschlagen, alle Proben –3
+    effects:
+      - when: { level: [1, 2, 3] }
+        add: { to: [at, pa, aw, fk, check.modifier], value: -1, per: level }
+        # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies — as Schmerz (COND_6.SZ5).
+        # Not INI and not GS: the page names neither.
+
+  - id: BT4
+    text: "Stufe IV: Handlungsunfähig"
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: STATE_8 }

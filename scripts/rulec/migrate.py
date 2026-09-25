@@ -89,6 +89,10 @@ def _yaml(top_level_list=False):
 
 
 def is_snake(key) -> bool:
+    """A snake_case key. A query key (`check.modifier(talent: TAL_8)`) is judged by its target
+    name: the context value is a name (a rule or talent id), not a key."""
+    if isinstance(key, str) and "(" in key:
+        key = key.split("(", 1)[0]
     return isinstance(key, str) and "_" in key and not RULE_ID.match(key)
 
 

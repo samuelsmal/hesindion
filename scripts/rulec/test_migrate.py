@@ -400,6 +400,11 @@ class LayoutTests(unittest.TestCase):
         out, _ = sits(src)
         self.assertEqual(out, src.replace("base_hero:", "hero:"))
 
+    def test_a_query_key_is_judged_by_its_target_name(self):
+        self.assertFalse(migrate.is_snake("check.modifier(talent: TAL_8)"))
+        self.assertFalse(migrate.is_snake("level(rule: COND_1)"))
+        self.assertTrue(migrate.is_snake("pa_shield(with: x)"))
+
     def test_rule_id_keys_are_never_residue(self):
         out, residue = sits("hero:\n  abilities: { SA_40: 1, ITEMTPL_19: 1 }\nsituations: []\n")
         self.assertEqual(residue, [])
