@@ -1,8 +1,8 @@
 import Foundation
 
 // The value pipeline (spec §5.2): every query runs the phases in `Phase.allCases` order, each a
-// function of its own over one `PipelineState`. Phases 1–3 (base, level, add) are here; lines,
-// multiply, cap and legality are Task 23's.
+// function of its own over one `PipelineState`. Phases 1–6 are here; phase 7 (legality), the
+// offers and the texts are in `Legality.swift`.
 
 /// One `Engine.evaluate` call. The memos live exactly as long as the call and are shared by its
 /// nested evaluations (operand targets, `hero.levelOf`), never by another call.
@@ -19,6 +19,10 @@ final class Evaluation {
     /// memoized (`settle`).
     var depthHits = 0
     var cycleHits: [String: Int] = [:]
+    /// The legality effects on choices, evaluated once per call (`choiceRules()`), and the
+    /// book's offers.
+    var choiceRulesMemo: [ChoiceRule]?
+    var offersMemo: [(offer: Offer, effect: Effect, rule: String)]?
 
     init(book: RuleBook, situation: Situation) {
         self.book = book
@@ -60,6 +64,14 @@ final class Evaluation {
 
     /// The breakdown of `query`, running the phases up to `last`. Beyond `Values.maxDepth` a nested
     /// evaluation gives an empty breakdown flagged `depthExceeded`.
+    ///
+    /// Line control (phase 4) is decided before phase 3 computes a line: a `replace` swaps the
+    /// replaced effect's value before its `per` (plan A.3), and a suppressed effect is never
+    /// computed, so it asks nothing. Its entries and lines are the same as if it ran after phase 3.
+    ///
+    /// Legality, the offers and the texts belong to the query asked (depth 0). A nested
+    /// evaluation (an operand, `hero.levelOf`) gives a number only: they would add questions that
+    /// cannot change it.
     func breakdown(_ query: Query, depth: Int, through last: Phase = .legality) -> Breakdown {
         guard depth <= Values.maxDepth else {
             depthHits += 1
@@ -70,10 +82,16 @@ final class Evaluation {
             switch phase {
             case .base: basePhase(&state)
             case .level: levelPhase(&state)
-            case .add: addPhase(&state)
-            case .lines, .multiply, .cap, .legality: break      // Task 23
+            case .add:
+                linesPhase(&state)
+                addPhase(&state)
+            case .lines: break                                  // decided with phase 3, above
+            case .multiply: multiplyPhase(&state)
+            case .cap: capPhase(&state)
+            case .legality: if depth == 0 { legalityPhase(&state) }
             }
         }
+        if depth == 0 && last == .legality { playerParts(&state) }
         return state.breakdown
     }
 
@@ -97,6 +115,18 @@ final class Evaluation {
     }
 }
 
+/// A firing `suppress` or `replace` (phase 4), with the level its rule acts at.
+struct Control {
+    var effect: Effect
+    var level: Int?
+    /// The replace's payload; nil for a suppress.
+    var replace: Replace?
+
+    var ref: ClauseRef { effect.origin.clauseRef }
+    /// What the controlled effect's entry says: the effect's `because`, else its clause.
+    var because: String { effect.because ?? ref.description }
+}
+
 /// What the phases of one query build up.
 struct PipelineState {
     let query: Query
@@ -107,27 +137,49 @@ struct PipelineState {
     var notApplied: [NotApplied] = []
     var questions: [Question] = []
     var texts: [TextLine] = []
+    var offers: [OfferedChoice] = []
+    var legal = Legality()
     /// Rule id → its level after the useLevels so far (phase 2).
     var levels: [String: Int] = [:]
     /// Rule id → the useLevels that acted on it, in order (R28); every later line of the rule
     /// carries them in `via`.
     var levelVia: [String: [ClauseRef]] = [:]
+    /// Phase 4: the firing suppresses by the clause, rule or rule kind they name, and the firing
+    /// replaces by clause.
+    var suppressedClauses: [ClauseRef: Control] = [:]
+    var suppressedRules: [String: Control] = [:]
+    var suppressedKinds: [RuleKind: Control] = [:]
+    var replacements: [ClauseRef: Control] = [:]
+    /// The query's own facts, which every `when` of it reads: `query.target` (its name), and
+    /// `query.result` once phase 7 runs.
+    var local: [String: Fact]
     var depthExceeded = false
 
     init(query: Query, depth: Int, candidates: [Effect]) {
         self.query = query; self.depth = depth; self.candidates = candidates
+        local = ["query.target": Fact(name: "query.target", value: .string(query.name), owner: .derived)]
     }
 
     /// The value so far: the base plus every line.
     var running: Int { (base?.value ?? 0) + lines.reduce(0) { $0 + $1.value } }
 
+    /// The lines so far as a screen lists them: the base's parts (or the base), then the lines.
+    var shown: [Line] { (base.map { $0.parts.isEmpty ? [$0] : $0.parts } ?? []) + lines }
+
     var breakdown: Breakdown {
-        Breakdown(query: query, base: base, lines: lines, notApplied: notApplied, questions: questions,
-                  texts: texts, depthExceeded: depthExceeded)
+        Breakdown(query: query, base: base, lines: lines, notApplied: notApplied, offers: offers, questions: questions,
+                  texts: texts, legal: legal, depthExceeded: depthExceeded)
     }
 
+    /// The suppress acting on `e` (of a rule of `kind`), if any.
+    func suppressor(of e: Effect, kind: RuleKind?) -> Control? {
+        suppressedClauses[e.origin.clauseRef] ?? suppressedRules[e.origin.rule] ?? kind.flatMap { suppressedKinds[$0] }
+    }
+
+    /// One question per unknown fact, with the asking clauses. The query's own facts
+    /// (`query.result` of a query without a result) are the engine's: nobody is asked for them.
     mutating func ask(_ unknown: [UnknownFact], for origin: ClauseRef) {
-        for u in unknown {
+        for u in unknown where !u.name.hasPrefix("query.") {
             if let i = questions.firstIndex(where: { $0.fact == u.name }) {
                 if !questions[i].origins.contains(origin) { questions[i].origins.append(origin) }
             } else {
@@ -159,11 +211,13 @@ extension Evaluation {
     /// query, one part per `sum` term. The derives of X to its own level count whether or not X
     /// applies: they decide whether it does.
     ///
-    /// R35: a `suppress` naming a clause that holds one of these derives acts here, before the
-    /// sum (alternative derives: trefferzonen-ruestungsschutz.RS4 over ruestung-und-belastung.A1,
-    /// reiterkampf.RK1 over kampfwerte.KW9). Its applicability and `when` are read as usual; the
-    /// derives of the clauses it names go to `notApplied(suppressed)`. Every other suppress is the
-    /// lines phase's.
+    /// R35: a `suppress` or `replace` naming a clause that holds one of these derives acts here,
+    /// before the sum (alternative derives: trefferzonen-ruestungsschutz.RS4 over
+    /// ruestung-und-belastung.A1, reiterkampf.RK1 over kampfwerte.KW9). Its applicability and
+    /// `when` are read as usual, at its rule's level as the derives read theirs. A suppressed
+    /// derive goes to `notApplied(suppressed)`; a replaced one (its `when` kept) gives one
+    /// `.replaced` part of the replacer's value, with `was` its own sum, and goes to
+    /// `notApplied(replaced)` with that sum. Every other suppress and replace is phase 4's.
     private func basePhase(_ state: inout PipelineState) {
         let q = state.query
         let derives = state.candidates.filter { $0.phase == .base }
@@ -181,17 +235,34 @@ extension Evaluation {
             }
             return
         }
-        let suppressed = suppressions(of: derives, &state)
+        let control = baseControl(of: derives, &state)
         var parts: [Line] = []
-        for e in derives where suppressed[e.origin.clauseRef] == nil {
+        var replacedClauses: Set<ClauseRef> = []
+        for e in derives {
+            let clause = e.origin.clauseRef
+            if let by = control[clause], by.replace == nil { continue }
             guard case .derive(let d) = e.payload, applies(e, &state, ownLevel: q.levelRule) else { continue }
             let rule = e.origin.rule
             let own = rule == q.levelRule
             let level = own ? nil : ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = own ? [] : ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
+            if let by = control[clause], let replace = by.replace {
+                let own = d.sum.map { value($0, level: level, rule: rule, depth: state.depth).value }
+                let was = own.contains(nil) ? nil : own.reduce(0) { $0 + $1! }
+                state.record(NotApplied(origin: clause, reason: .replaced, because: by.because, rulings: e.ruling,
+                                        facts: used, via: via, value: was))
+                // The clause's value is replaced once, however many derives it holds.
+                guard replacedClauses.insert(clause).inserted else { continue }
+                let r = value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth)
+                guard computed([r], of: by.effect, used: used, via: via, &state, [replace.with]), let v = r.value else { continue }
+                parts.append(Line(value: v, kind: .replaced, origin: clause, via: (via + r.via + [by.ref]).uniqued(),
+                                  rulings: (decided(e) + decided(by.effect)).uniqued(), facts: (used + r.used).uniqued(),
+                                  was: was, now: v))
+                continue
+            }
             let results = d.sum.map { value($0, level: level, rule: rule, depth: state.depth) }
-            guard computed(results, of: e, used: used, via: via, &state) else { continue }
+            guard computed(results, of: e, used: used, via: via, &state, d.sum) else { continue }
             parts += results.map { r in
                 Line(value: r.value!, kind: .base, origin: e.origin.clauseRef, via: (via + r.via).uniqued(),
                      rulings: decided(e), facts: (used + r.used).uniqued())
@@ -203,27 +274,40 @@ extension Evaluation {
                           facts: parts.flatMap(\.facts).uniqued(), parts: parts)
     }
 
-    /// R35: the clauses among `derives`' that a firing `suppress` names, with the suppressor. Each
-    /// suppressed derive that would apply is recorded as `notApplied(suppressed)`.
-    private func suppressions(of derives: [Effect], _ state: inout PipelineState) -> [ClauseRef: Effect] {
+    /// R35: the clauses among `derives`' that a firing `suppress` or `replace` names, with it (the
+    /// first in compiler order wins). Each suppressed derive that would apply is recorded as
+    /// `notApplied(suppressed)`.
+    ///
+    /// The controlling effect's applicability and level are read as the derives' are: in the
+    /// query `level(rule: X)`, X's own suppress counts whether or not X applies, and reads no
+    /// level (extra 1: `hero.levelOf.X` and `level(rule: X)` then agree).
+    private func baseControl(of derives: [Effect], _ state: inout PipelineState) -> [ClauseRef: Control] {
         let clauses = Set(derives.map(\.origin.clauseRef))
-        var suppressed: [ClauseRef: Effect] = [:]
+        let levelRule = state.query.levelRule
+        var control: [ClauseRef: Control] = [:]
         for e in state.candidates {
-            guard case .suppress(let s) = e.payload, s.line.kind == .line else { continue }
-            let named = s.line.ids.compactMap { $0.id.flatMap(ClauseRef.init) }.filter(clauses.contains)
-            guard !named.isEmpty, applies(e, &state) else { continue }
+            let selector: RuleSelector, replace: Replace?
+            switch e.payload {
+            case .suppress(let s): (selector, replace) = (s.line, nil)
+            case .replace(let r): (selector, replace) = (r.line, r)
+            default: continue
+            }
+            guard selector.kind == .line else { continue }
+            let named = selector.ids.compactMap { $0.id.flatMap(ClauseRef.init) }.filter(clauses.contains)
+            guard !named.isEmpty, applies(e, &state, ownLevel: levelRule) else { continue }
             let rule = e.origin.rule
-            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
-            guard gate(e, level: level, via: ruleVia(rule, state), &state) != nil else { continue }
-            for c in named where suppressed[c] == nil { suppressed[c] = e }
+            let own = rule == levelRule
+            let level = own ? nil : ruleLevel(rule, levels: state.levels, depth: state.depth)
+            guard gate(e, level: level, via: own ? [] : ruleVia(rule, state), &state) != nil else { continue }
+            for c in named where control[c] == nil { control[c] = Control(effect: e, level: level, replace: replace) }
         }
         for d in derives {
-            guard let by = suppressed[d.origin.clauseRef], applies(d, &state, ownLevel: state.query.levelRule) else { continue }
-            state.record(NotApplied(origin: d.origin.clauseRef, reason: .suppressed,
-                                    because: by.because ?? by.origin.clauseRef.description, rulings: d.ruling,
-                                    via: [by.origin.clauseRef]))
+            guard let by = control[d.origin.clauseRef], by.replace == nil,
+                  applies(d, &state, ownLevel: levelRule) else { continue }
+            state.record(NotApplied(origin: d.origin.clauseRef, reason: .suppressed, because: by.because, rulings: d.ruling,
+                                    via: [by.ref]))
         }
-        return suppressed
+        return control
     }
 
     /// Phase 2. Each applicable `useLevel` changes its target rule's level (R28): the useLevels on
@@ -293,22 +377,87 @@ extension Evaluation {
         }
     }
 
+    /// Phase 4, line control: which clauses the firing `suppress`es and `replace`s of this query
+    /// act on. Decided before phase 3 computes a line (see `breakdown`), and applied there: a
+    /// suppressed `add`, `set` or `tell` gives no line or text and goes to
+    /// `notApplied(suppressed)`; a replaced `add` or `set` computes the replacer's `with` in
+    /// place of its `value`, before its `per`, keeping its targets and `when` (plan A.3).
+    ///
+    /// A suppress names clauses (`line`), rules (`rule`) or rule kinds (`ruleKind`: every
+    /// condition's lines); a replace names clauses. One naming nothing this query computes from
+    /// a rule that applies (or only a derive, which phase 1 handled: R35) is not read, so it
+    /// neither asks nor is recorded twice. A second replace of one clause is `overridden`.
+    private func linesPhase(_ state: inout PipelineState) {
+        // A tell is shown at depth 0 only (`playerParts`).
+        let controllable = state.candidates.filter { e in
+            switch e.payload {
+            case .add, .set: return true
+            case .tell: return state.depth == 0
+            default: return false
+            }
+        }
+        for e in state.candidates where e.phase == .lines {
+            let selector: RuleSelector, replace: Replace?
+            switch e.payload {
+            case .suppress(let s): (selector, replace) = (s.line, nil)
+            case .replace(let r): (selector, replace) = (r.line, r)
+            default: continue
+            }
+            // The cheap tests first: the controlling rule applies, and it names something here.
+            guard applicability(of: e.origin.rule, depth: state.depth).applies else { continue }
+            let targets = controllable.filter { selects(selector, effect: $0) }
+            guard targets.contains(where: { applicability(of: $0.origin.rule, depth: state.depth).applies }),
+                  applies(e, &state) else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+            guard gate(e, level: level, via: ruleVia(rule, state), &state) != nil else { continue }
+            let control = Control(effect: e, level: level, replace: replace)
+            if replace != nil {
+                for c in Set(targets.map(\.origin.clauseRef)).sorted(by: { $0.description < $1.description }) {
+                    if let first = state.replacements[c] {
+                        state.record(NotApplied(origin: control.ref, reason: .overridden, because: first.ref.description,
+                                                rulings: e.ruling))
+                    } else {
+                        state.replacements[c] = control
+                    }
+                }
+                continue
+            }
+            for id in selector.ids.compactMap(\.id) {
+                switch selector.kind {
+                case .line: if let c = ClauseRef(id), state.suppressedClauses[c] == nil { state.suppressedClauses[c] = control }
+                case .rule: if state.suppressedRules[id] == nil { state.suppressedRules[id] = control }
+                case .ruleKind, .lineKind:
+                    if let k = RuleKind(rawValue: id), state.suppressedKinds[k] == nil { state.suppressedKinds[k] = control }
+                default: break
+                }
+            }
+        }
+    }
+
     /// Phase 3. The applicable `set`s whose `when` is yes apply first: the last in rule-id order
     /// wins, giving a `.set` line of `target − (base + lines so far)`; the others are `overridden`.
     /// Then each `add`: its value, times the fact `per` when given, or that many steps along its
-    /// `scale`.
+    /// `scale`. Phase 4's control acts here: a suppressed effect is skipped, a replaced one
+    /// computes the replacer's value (an `add` then gives a `.replaced` line, `was` its own
+    /// amount; a `set` keeps its kind, with the replacer in `via`). Last, the modifiers typed in
+    /// for the query (`freeLines`).
     private func addPhase(_ state: inout PipelineState) {
         let effects = state.candidates.filter { $0.phase == .add }
-        var sets: [(effect: Effect, value: ValueResult, used: [FactUse], via: [ClauseRef])] = []
+        var sets: [(effect: Effect, value: ValueResult, used: [FactUse], via: [ClauseRef], by: Control?)] = []
         for e in effects {
-            guard case .set(let s) = e.payload, applies(e, &state) else { continue }
+            guard case .set(let s) = e.payload, applies(e, &state), !isSuppressed(e, &state) else { continue }
             let rule = e.origin.rule
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)
             guard let used = gate(e, level: level, via: via, &state) else { continue }
-            let r = value(s.value, level: level, rule: rule, depth: state.depth)
-            guard computed([r], of: e, used: used, via: via, &state) else { continue }
-            sets.append((e, r, used, via))
+            let (r, by, original) = swapped(s.value, of: e, level: level, state)
+            guard computed([r], of: by?.effect ?? e, used: used, via: via, &state, [by?.replace?.with ?? s.value]) else { continue }
+            if let by {
+                state.record(NotApplied(origin: e.origin.clauseRef, reason: .replaced, because: by.because, rulings: e.ruling,
+                                        facts: used, via: via, value: original))
+            }
+            sets.append((e, r, used, via, by))
         }
         if let winner = sets.last {
             for lost in sets.dropLast() {
@@ -318,42 +467,188 @@ extension Evaluation {
                                         value: lost.value.value))
             }
             let before = state.running, now = winner.value.value!
+            let replacer = winner.by.map { [$0.ref] } ?? []
             state.lines.append(Line(value: now - before, kind: .set, origin: winner.effect.origin.clauseRef,
-                                    via: (winner.via + winner.value.via).uniqued(), rulings: decided(winner.effect),
+                                    via: (winner.via + winner.value.via + replacer).uniqued(),
+                                    rulings: (decided(winner.effect) + (winner.by.map { decided($0.effect) } ?? [])).uniqued(),
                                     facts: (winner.used + winner.value.used).uniqued(), was: before, now: now))
         }
         for e in effects {
-            guard case .add(let a) = e.payload, applies(e, &state) else { continue }
+            guard case .add(let a) = e.payload, applies(e, &state), !isSuppressed(e, &state) else { continue }
+            add(e, a, &state)
+        }
+        freeLines(&state)
+    }
+
+    /// One `add`: its value (or its replacer's), times the fact `per` when given, as a line; or
+    /// that many steps along its `scale`.
+    private func add(_ e: Effect, _ a: Add, _ state: inout PipelineState) {
+        let rule = e.origin.rule
+        let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+        let via = ruleVia(rule, state)
+        guard var used = gate(e, level: level, via: via, &state) else { return }
+        var times = 1.0
+        if let per = a.per {
+            let f = fact(per, level: level, rule: rule, depth: state.depth)
+            guard let use = f.use else {
+                state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact, because: e.because,
+                                        rulings: e.ruling, facts: used, via: via))
+                state.ask(f.unknown, for: e.origin.clauseRef)
+                return
+            }
+            guard let n = use.value.double else {
+                fail(e, "\(per) ist keine Zahl", &state)
+                return
+            }
+            used = (used + [use]).uniqued()
+            times = n
+        }
+        let (r, by, original) = swapped(a.value, of: e, level: level, state)
+        guard computed([r], of: by?.effect ?? e, used: used, via: via, &state, [by?.replace?.with ?? a.value]),
+              let v = r.value else { return }
+        let amount = Int(Values.round(Double(v) * times, .up))
+        let facts = (used + r.used).uniqued()
+        if let by {
+            guard a.scale == nil else {
+                fail(by.effect, "ersetzt eine Stufe auf der Skala \(a.scale!)", &state)
+                return
+            }
+            let was = original.map { Int(Values.round(Double($0) * times, .up)) }
+            state.record(NotApplied(origin: e.origin.clauseRef, reason: .replaced, because: by.because, rulings: e.ruling,
+                                    facts: used, via: via, value: was))
+            state.lines.append(Line(value: amount, kind: .replaced, origin: e.origin.clauseRef,
+                                    via: (via + r.via + [by.ref]).uniqued(),
+                                    rulings: (decided(e) + decided(by.effect)).uniqued(), facts: facts,
+                                    was: was, now: amount))
+        } else if let scale = a.scale {
+            step(e, along: scale, by: amount, via: (via + r.via).uniqued(), facts: facts, &state)
+        } else {
+            state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
+                                    via: (via + r.via).uniqued(), rulings: decided(e), facts: facts))
+        }
+    }
+
+    /// The value an `add` or `set` computes: its own, or, when phase 4 replaced its clause, the
+    /// replacer's `with` at the replacer's level. `original` is then its own value, computed
+    /// quietly for `was` (nil when it cannot be: a replaced value asks nothing).
+    private func swapped(_ own: ValueExpr, of e: Effect, level: Int?,
+                         _ state: PipelineState) -> (result: ValueResult, by: Control?, original: Int?) {
+        guard let by = state.replacements[e.origin.clauseRef], let replace = by.replace else {
+            return (value(own, level: level, rule: e.origin.rule, depth: state.depth), nil, nil)
+        }
+        let original = value(own, level: level, rule: e.origin.rule, depth: state.depth).value
+        return (value(replace.with, level: by.level, rule: by.effect.origin.rule, depth: state.depth), by, original)
+    }
+
+    /// Phase 4 on one effect: when a firing suppress names it (its clause, rule or rule kind), it
+    /// goes to `notApplied(suppressed)` with the suppressor as `because` and in `via`, and, for an
+    /// `add`, the value its line would have had (computed on a copy of the state: it asks and
+    /// records nothing; nil when it would give no line).
+    func isSuppressed(_ e: Effect, _ state: inout PipelineState) -> Bool {
+        guard let by = state.suppressor(of: e, kind: book.rules[e.origin.rule]?.kind) else { return false }
+        var wouldBe: Int?
+        if case .add(let a) = e.payload {
+            var scratch = state
+            scratch.lines = []
+            add(e, a, &scratch)
+            wouldBe = scratch.lines.first?.value
+        }
+        state.record(NotApplied(origin: e.origin.clauseRef, reason: .suppressed, because: by.because, rulings: e.ruling,
+                                via: [by.ref], value: wouldBe))
+        return true
+    }
+
+    /// A modifier typed in for this query (spec §5.5): `choice.freeModifier.<query>`, the
+    /// player's, is a `.free` line "frei eingegeben"; `gmFact.modifier.<query>`, the GM's, is an
+    /// `.add` line. Each has the fact's owner and the fact. `<query>` is the query as written
+    /// (`pa(with: shield)`), else its name (`pa`). A value that is no number is a §11 text.
+    private func freeLines(_ state: inout PipelineState) {
+        let q = state.query
+        let kinds: [(prefix: String, kind: LineKind, note: String)] = [
+            ("choice.freeModifier.", .free, "frei eingegeben"), ("gmFact.modifier.", .add, "vom Meister"),
+        ]
+        for k in kinds {
+            guard let f = [q.description, q.name].lazy.compactMap({ self.situation.facts[k.prefix + $0] }).first else { continue }
+            guard let n = f.value.double else {
+                state.show(TextLine(kind: .notApplicable, text: "Regel konnte nicht angewandt werden: \(f.name) – keine Zahl"))
+                continue
+            }
+            state.lines.append(Line(value: Int(Values.round(n, .up)), kind: k.kind,
+                                    facts: [FactUse(name: f.name, value: f.value, owner: f.owner)], owner: f.owner,
+                                    note: k.note))
+        }
+    }
+
+    /// Phase 5. Each applicable `multiply` whose `when` is yes scales the lines its `line` names
+    /// (base parts included), or without one the value so far. The difference is a `.multiplied`
+    /// line: `was` the value before, `now` after, the scaled clauses in `via`.
+    ///
+    /// Rounding (`round`, default up) rounds the magnitude of the scaled value, keeping its sign:
+    /// 15 × ½ = 7.5 → 8 (probe-fernkampf 21.8e), −5 × ½ = −2.5 → −3.
+    private func multiplyPhase(_ state: inout PipelineState) {
+        for e in state.candidates where e.phase == .multiply {
+            guard case .multiply(let m) = e.payload, applies(e, &state) else { continue }
             let rule = e.origin.rule
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)
-            guard var used = gate(e, level: level, via: via, &state) else { continue }
-            var times = 1.0
-            if let per = a.per {
-                let f = fact(per, level: level, rule: rule, depth: state.depth)
-                guard let use = f.use else {
-                    state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact, because: e.because,
-                                            rulings: e.ruling, facts: used, via: via))
-                    state.ask(f.unknown, for: e.origin.clauseRef)
-                    continue
-                }
-                guard let n = use.value.double else {
-                    fail(e, "\(per) ist keine Zahl", &state)
-                    continue
-                }
-                used = (used + [use]).uniqued()
-                times = n
-            }
-            let r = value(a.value, level: level, rule: rule, depth: state.depth)
-            guard computed([r], of: e, used: used, via: via, &state), let v = r.value else { continue }
-            let amount = Int(Values.round(Double(v) * times, .up))
-            let facts = (used + r.used).uniqued()
-            if let scale = a.scale {
-                step(e, along: scale, by: amount, via: (via + r.via).uniqued(), facts: facts, &state)
+            guard let used = gate(e, level: level, via: via, &state) else { continue }
+            let old: Int
+            var scaled: [ClauseRef] = []
+            if let selector = m.line {
+                let named = state.shown.filter { selects(selector, line: $0) }
+                guard !named.isEmpty else { continue }                  // nothing of it in this query
+                old = named.reduce(0) { $0 + $1.value }
+                scaled = named.compactMap(\.origin).uniqued()
             } else {
-                state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
-                                        via: (via + r.via).uniqued(), rulings: decided(e), facts: facts))
+                guard state.base != nil else { continue }               // no value to scale
+                old = state.running
             }
+            let now = Int(Values.round(Double(old) * m.by, m.round ?? .up))
+            state.lines.append(Line(value: now - old, kind: .multiplied, origin: e.origin.clauseRef,
+                                    via: (via + scaled).uniqued(), rulings: decided(e), facts: used, was: old, now: now))
+        }
+    }
+
+    /// Phase 6. Each applicable `cap` and `floor` whose `when` is yes bounds a sum, and the
+    /// difference is a `.capped` or `.floored` line (`was` the sum, `now` the bounded one); a sum
+    /// within the bounds gives none.
+    /// - A `cap` with `over` bounds the sum of the `add` lines of the rules it selects
+    ///   (`ruleKind: condition`: the −5 Zustand cap, zustaende.Z3). A `set` line is never summed
+    ///   (Schmerz IV's GS 0).
+    /// - A `cap` without `over`, and a `floor`, bound the value so far.
+    private func capPhase(_ state: inout PipelineState) {
+        for e in state.candidates where e.phase == .cap {
+            let low: ValueExpr?, high: ValueExpr?, over: RuleSelector?, kind: LineKind
+            switch e.payload {
+            case .cap(let c): (low, high, over, kind) = (c.min, c.max, c.over, .capped)
+            case .floor(let f): (low, high, over, kind) = (f.min, nil, nil, .floored)
+            default: continue
+            }
+            guard applies(e, &state) else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+            let via = ruleVia(rule, state)
+            guard let used = gate(e, level: level, via: via, &state) else { continue }
+            let exprs = [low, high].compactMap { $0 }
+            let results = exprs.map { value($0, level: level, rule: rule, depth: state.depth) }
+            guard computed(results, of: e, used: used, via: via, &state, exprs) else { continue }
+            var bounds = results.makeIterator()
+            let lo = low != nil ? bounds.next()?.value : nil
+            let hi = high != nil ? bounds.next()?.value : nil
+            let old: Int
+            if let over {
+                old = state.lines.filter { $0.kind == .add && selects(over, line: $0) }.reduce(0) { $0 + $1.value }
+            } else {
+                guard state.base != nil else { continue }               // no value to bound
+                old = state.running
+            }
+            var now = old
+            if let lo { now = max(now, lo) }
+            if let hi { now = min(now, hi) }
+            guard now != old else { continue }
+            state.lines.append(Line(value: now - old, kind: kind, origin: e.origin.clauseRef,
+                                    via: (via + results.flatMap(\.via)).uniqued(), rulings: decided(e),
+                                    facts: (used + results.flatMap(\.used)).uniqued(), was: old, now: now))
         }
     }
 
@@ -391,14 +686,19 @@ extension Evaluation {
 
 extension Evaluation {
     /// Whether the effect's rule applies; a core rule outside the rulesets records `rulesetOff`.
-    /// `ownLevel`: in the query `level(rule: X)`, X's derives to its own level count regardless.
-    private func applies(_ e: Effect, _ state: inout PipelineState, ownLevel: String? = nil) -> Bool {
+    /// A rule whose level cannot be known records `unknownFact` and asks the facts behind it, or,
+    /// with no fact to ask (a derive that cannot be computed, a cycle, the depth guard), shows
+    /// the §11 text. `ownLevel`: in the query `level(rule: X)`, X's derives to its own level
+    /// count regardless.
+    func applies(_ e: Effect, _ state: inout PipelineState, ownLevel: String? = nil) -> Bool {
         if let ownLevel, e.origin.rule == ownLevel { return true }
         let a = applicability(of: e.origin.rule, depth: state.depth)
         switch a.status {
         case .rulesetOff(let ruleset):
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .rulesetOff,
                                     because: "Regelset \(ruleset) nicht aktiv", rulings: e.ruling))
+        case .unknownLevel(let unknown) where unknown.isEmpty:
+            fail(e, "die Stufe von \(e.origin.rule) ist nicht berechenbar", &state)
         case .unknownLevel(let unknown):
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact,
                                     because: "Stufe von \(e.origin.rule) unbekannt", rulings: e.ruling))
@@ -411,18 +711,22 @@ extension Evaluation {
 
     /// The clauses every line of `rule` rests on: the require that enabled it, then the useLevels
     /// that acted on it so far.
-    private func ruleVia(_ rule: String, _ state: PipelineState) -> [ClauseRef] {
+    func ruleVia(_ rule: String, _ state: PipelineState) -> [ClauseRef] {
         (applicability(of: rule, depth: state.depth).via + (state.levelVia[rule] ?? [])).uniqued()
     }
 
-    /// The effect's `when`: the facts it read when it is yes and the effect rests on no open
-    /// ruling; else nil, with the reason recorded: no → `conditionFalse`; an open ruling →
-    /// `openRuling` and the clause text with the ruling's question; unknown → `unknownFact` and
-    /// one question per unknown fact, with its owner.
-    private func gate(_ e: Effect, level: Int?, via: [ClauseRef], _ state: inout PipelineState) -> [FactUse]? {
+    /// The effect's `when` (with the query's own facts): the facts it read when it is yes and the
+    /// effect rests on no open ruling; else nil, with the reason recorded: no →
+    /// `conditionFalse`; an open ruling → `openRuling` and the clause text with the ruling's
+    /// question; unknown → `unknownFact` and, when `asking`, one question per unknown fact, with
+    /// its owner (a tell changes no number, so it asks nothing).
+    func gate(_ e: Effect, level: Int?, via: [ClauseRef], _ state: inout PipelineState,
+              asking: Bool = true) -> [FactUse]? {
         let origin = e.origin.clauseRef
         var r = ConditionResult(truth: .yes)
-        if let when = e.when { r = condition(when, level: level, rule: e.origin.rule, depth: state.depth) }
+        if let when = e.when {
+            r = condition(when, level: level, rule: e.origin.rule, depth: state.depth, local: state.local)
+        }
         if r.truth == .no {
             state.record(NotApplied(origin: origin, reason: .conditionFalse, because: e.because, rulings: e.ruling,
                                     facts: r.used, via: via))
@@ -438,7 +742,7 @@ extension Evaluation {
         if r.truth == .unknown {
             state.record(NotApplied(origin: origin, reason: .unknownFact, because: e.because, rulings: e.ruling,
                                     facts: r.used, via: via))
-            state.ask(r.unknown, for: origin)
+            if asking { state.ask(r.unknown, for: origin) }
             return nil
         }
         return r.used
@@ -446,10 +750,11 @@ extension Evaluation {
 
     /// Whether every value of an effect was computed. When one was not: its unknown facts give
     /// `unknownFact` and questions; the depth guard or anything else gives a text "Regel konnte
-    /// nicht angewandt werden" (spec §11). A computed value that read an operand with open
-    /// questions asks them too.
-    private func computed(_ results: [ValueResult], of e: Effect, used: [FactUse], via: [ClauseRef],
-                          _ state: inout PipelineState) -> Bool {
+    /// nicht angewandt werden" (spec §11), naming a table without the row when `exprs` (the
+    /// values, in the order of `results`) says so. A computed value that read an operand with
+    /// open questions asks them too.
+    func computed(_ results: [ValueResult], of e: Effect, used: [FactUse], via: [ClauseRef],
+                  _ state: inout PipelineState, _ exprs: [ValueExpr] = []) -> Bool {
         let origin = e.origin.clauseRef
         let unknown = results.flatMap(\.unknown).uniqued()
         if results.contains(where: \.depthExceeded) {
@@ -460,7 +765,11 @@ extension Evaluation {
         }
         if results.contains(where: { $0.value == nil }) {
             if unknown.isEmpty {
-                fail(e, "Wert nicht berechenbar", &state)
+                let table = zip(exprs, results).lazy.compactMap { x, r -> String? in
+                    guard r.value == nil, case .table(let name, let key) = x else { return nil }
+                    return "die Tabelle \(name) hat keinen Eintrag für \(key)"
+                }.first
+                fail(e, table ?? "Wert nicht berechenbar", &state)
             } else {
                 state.record(NotApplied(origin: origin, reason: .unknownFact, because: e.because, rulings: e.ruling,
                                         facts: (used + results.flatMap(\.used)).uniqued(), via: via))
@@ -472,7 +781,7 @@ extension Evaluation {
         return true
     }
 
-    private func fail(_ e: Effect, _ reason: String, _ state: inout PipelineState) {
+    func fail(_ e: Effect, _ reason: String, _ state: inout PipelineState) {
         let origin = e.origin.clauseRef
         state.show(TextLine(kind: .notApplicable, text: "Regel konnte nicht angewandt werden: \(origin) – \(reason)",
                             origin: origin))
@@ -480,12 +789,37 @@ extension Evaluation {
 
     /// The decided rulings an applied effect rests on (an unknown id counts as decided: rulec
     /// checks every id).
-    private func decided(_ e: Effect) -> [String] {
+    func decided(_ e: Effect) -> [String] {
         e.ruling.filter { book.rulings[$0]?.status != .open }
     }
 
-    private func clauseText(_ ref: ClauseRef) -> String? {
-        book.rules[ref.rule]?.clauses.first { $0.id == ref.clause }?.text
+    /// A clause's text, without the line break a YAML block leaves at its end.
+    func clauseText(_ ref: ClauseRef) -> String? {
+        book.rules[ref.rule]?.clauses.first { $0.id == ref.clause }?.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Whether `selector` (of a suppress or replace) names the effect: its clause (`line`), its
+    /// rule (`rule`), or its rule's kind (`ruleKind`; a `lineKind` naming a rule kind the same).
+    func selects(_ selector: RuleSelector, effect e: Effect) -> Bool {
+        selects(selector, clause: e.origin.clauseRef)
+    }
+
+    /// Whether `selector` (of a multiply or cap) names the line: as `selects(_:effect:)` by the
+    /// line's origin, or a `lineKind` naming the line's kind. The sheet's lines have no origin.
+    func selects(_ selector: RuleSelector, line: Line) -> Bool {
+        if selector.kind == .lineKind, selector.ids.contains(where: { $0.id == line.kind.rawValue }) { return true }
+        guard let origin = line.origin else { return false }
+        return selects(selector, clause: origin)
+    }
+
+    private func selects(_ selector: RuleSelector, clause: ClauseRef) -> Bool {
+        let ids = selector.ids.compactMap(\.id)
+        switch selector.kind {
+        case .line: return ids.contains(clause.description)
+        case .rule: return ids.contains(clause.rule)
+        case .ruleKind, .lineKind: return book.rules[clause.rule].map { ids.contains($0.kind.rawValue) } ?? false
+        default: return false
+        }
     }
 
     /// R28: rule id, then the clause's position in the rule, then the effect's index.

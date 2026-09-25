@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23 (extra 3): a level with a base whose second derive's when is unknown.
+id: pl-two
+name: Zweifach
+kind: condition
+levels: 3
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: W1
+    text: Stufe nach W1, bei W2 eine mehr.
+    effects:
+      - derive: { to: "level(rule: pl-two)", sum: [{ of: gmFact.w1 }] }
+      - derive: { to: "level(rule: pl-two)", sum: [1] }
+        when: { gmFact.w2: true }
+  - id: W3
+    text: AsP −Stufe.
+    effects:
+      - add: { to: aspCurrent, value: -1, per: level }

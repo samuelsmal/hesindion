@@ -152,6 +152,14 @@ extension Evaluation {
 
     /// `hero.levelOf.id`: the base-phase result of `level(rule: id)`, before any useLevel. With no
     /// stated base, no owned level and no derive, it is 0 (the sheet is complete).
+    ///
+    /// The level is known only when nothing could still change it: no base-phase effect (a
+    /// derive, or a suppress or replace of one) is left undecided for want of a fact (its
+    /// `when`, its value), no derive failed (a notApplicable text) and nothing hit the depth
+    /// guard. Otherwise it is nil, with the facts those effects ask for, or with none when a
+    /// derive could not be computed at all (the caller shows a §11 text). A question an operand
+    /// brings along while its value was computed (LE's own open `when`s under Schmerz) does not
+    /// make the level unknown.
     func baseLevel(of id: String, depth: Int) -> BaseLevel {
         let key = "levelOf:" + id
         switch baseLevelMemo[id] {
@@ -164,12 +172,13 @@ extension Evaluation {
         baseLevelMemo[id] = .computing
         let (b, final) = settle(key) { breakdown(Self.levelQuery(id), depth: depth + 1, through: .base) }
         let level: BaseLevel
-        if let base = b.base {
-            level = BaseLevel(value: base.value, unknown: [])
-        } else if b.questions.isEmpty && !b.depthExceeded && !b.texts.contains(where: { $0.kind == .notApplicable }) {
-            level = BaseLevel(value: situation.owned[id]?.level ?? 0, unknown: [])
+        let open = Set(b.notApplied.filter { $0.reason == .unknownFact }.map(\.origin))
+        let failed = b.depthExceeded || b.texts.contains { $0.kind == .notApplicable }
+        if open.isEmpty && !failed {
+            level = BaseLevel(value: b.base?.value ?? situation.owned[id]?.level ?? 0, unknown: [])
         } else {
-            level = BaseLevel(value: nil, unknown: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) })
+            level = BaseLevel(value: nil, unknown: b.questions.filter { !open.isDisjoint(with: $0.origins) }
+                .map { UnknownFact(name: $0.fact, owner: $0.owner) })
         }
         baseLevelMemo[id] = final ? .done(level) : nil
         return level
@@ -177,13 +186,28 @@ extension Evaluation {
 
     // MARK: - Derived facts
 
-    /// `situation` with the derived facts `names` needs stated (`hero.levelOf.X`, from the base
-    /// phase of `level(rule: X)`), and for each one that stays unknown, the facts behind it: a
-    /// question asks for those, not for the derived fact.
-    func prepared(_ names: Set<String>, depth: Int) -> (situation: Situation, behind: [String: [UnknownFact]]) {
+    /// `situation` with the derived facts `names` needs stated, and for each one that stays
+    /// unknown, the facts behind it: a question asks for those, not for the derived fact.
+    /// - `local`: the query's own facts (`query.target`, and `query.result` in the legality
+    ///   phase), which the query states whatever the situation says.
+    /// - `hero.levelOf.X`: the base phase of `level(rule: X)` (R34).
+    /// - `fw.current`: the FW of the check's spell (`check.spell`), else of its talent
+    ///   (`check.talent`): MIGRATION probe-magie 20.1.
+    func prepared(_ names: Set<String>, depth: Int,
+                  local: [String: Fact] = [:]) -> (situation: Situation, behind: [String: [UnknownFact]]) {
         let prefix = "hero.levelOf."
         var s = situation
         var behind: [String: [UnknownFact]] = [:]
+        for (name, f) in local where names.contains(name) { s.facts[name] = f }
+        if names.contains("fw.current"), s.facts["fw.current"] == nil {
+            let subject = (s.facts["check.spell"] ?? s.facts["check.talent"])?.value.string
+            if let subject, let fw = s.facts["fw.\(subject)"] {
+                s.facts["fw.current"] = Fact(name: "fw.current", value: fw.value, owner: .derived)
+            } else {
+                s.unstated.insert("fw.current")
+                behind["fw.current"] = [UnknownFact(subject.map { "fw.\($0)" } ?? "check.spell")]
+            }
+        }
         for name in names.sorted() where name.hasPrefix(prefix) && name.count > prefix.count && s.facts[name] == nil {
             let level = baseLevel(of: String(name.dropFirst(prefix.count)), depth: depth)
             if let v = level.value {
@@ -196,9 +220,9 @@ extension Evaluation {
         return (s, behind)
     }
 
-    /// Evaluates `when` with the derived facts it reads.
-    func condition(_ c: Condition, level: Int?, rule: String, depth: Int) -> ConditionResult {
-        let (s, behind) = prepared(c.factNames, depth: depth)
+    /// Evaluates `when` with the derived facts it reads and the query's own (`local`).
+    func condition(_ c: Condition, level: Int?, rule: String, depth: Int, local: [String: Fact] = [:]) -> ConditionResult {
+        let (s, behind) = prepared(c.factNames, depth: depth, local: local)
         var r = Conditions.evaluate(c, in: s, level: level, rule: rule)
         r.unknown = r.unknown.flatMap { behind[$0.name] ?? [$0] }.uniqued()
         return r

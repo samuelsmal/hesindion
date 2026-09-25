@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: a replace with a table value (fernkampf.FK8 on FK6).
+id: pl-cover
+name: Deckung
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: C1
+    text: FK nach Größe.
+    effects:
+      - provide: { name: pl.size, value: { klein: -4, mittel: 0 } }
+      - add: { to: fk, value: "table(pl.size, target.size)" }
+  - id: C2
+    text: In Deckung gilt das Ziel als klein.
+    effects:
+      - replace: { line: { line: pl-cover.C1 }, with: "table(pl.size, target.sizeInCover)" }
+        when: { target.cover: [teilweise] }

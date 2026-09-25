@@ -2,6 +2,16 @@
  "reach": {
   "*": [
    {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-cover"
+   },
+   {
+    "clause": "C2",
+    "index": 0,
+    "rule": "pl-cover"
+   },
+   {
     "clause": "E1",
     "index": 0,
     "rule": "pl-enabled"
@@ -20,6 +30,100 @@
     "clause": "T1",
     "index": 0,
     "rule": "pl-kampfwerte"
+   },
+   {
+    "clause": "M1",
+    "index": 0,
+    "rule": "pl-moves"
+   },
+   {
+    "clause": "M2",
+    "index": 0,
+    "rule": "pl-moves"
+   },
+   {
+    "clause": "M3",
+    "index": 0,
+    "rule": "pl-moves"
+   },
+   {
+    "clause": "M4",
+    "index": 0,
+    "rule": "pl-moves"
+   },
+   {
+    "clause": "M4",
+    "index": 1,
+    "rule": "pl-moves"
+   },
+   {
+    "clause": "O3",
+    "index": 0,
+    "rule": "pl-opp"
+   },
+   {
+    "clause": "O4",
+    "index": 0,
+    "rule": "pl-opp"
+   },
+   {
+    "clause": "Q2",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "Q2",
+    "index": 1,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "Q3",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "pl-spell"
+   },
+   {
+    "clause": "S1",
+    "index": 1,
+    "rule": "pl-spell"
+   },
+   {
+    "clause": "S2",
+    "index": 0,
+    "rule": "pl-spell"
+   },
+   {
+    "clause": "T1",
+    "index": 0,
+    "rule": "pl-talk"
+   },
+   {
+    "clause": "T2",
+    "index": 0,
+    "rule": "pl-talk"
+   },
+   {
+    "clause": "T4",
+    "index": 0,
+    "rule": "pl-talk"
+   }
+  ],
+  "aspCurrent": [
+   {
+    "clause": "W3",
+    "index": 0,
+    "rule": "pl-two"
+   }
+  ],
+  "aspMax": [
+   {
+    "clause": "B2",
+    "index": 0,
+    "rule": "pl-broken"
    }
   ],
   "at": [
@@ -32,6 +136,31 @@
     "clause": "G1",
     "index": 0,
     "rule": "SA_41"
+   },
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "pl-aim"
+   },
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "pl-cap"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-dazed"
+   },
+   {
+    "clause": "D2",
+    "index": 0,
+    "rule": "pl-double"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-hurt"
    },
    {
     "clause": "D2",
@@ -47,6 +176,11 @@
     "clause": "E1",
     "index": 0,
     "rule": "pl-sword"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-tired"
    }
   ],
   "aw": [
@@ -61,6 +195,26 @@
     "rule": "SA_41"
    },
    {
+    "clause": "V1",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V1",
+    "index": 1,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V3",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V5",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
     "clause": "E2",
     "index": 0,
     "rule": "pl-enabled"
@@ -69,6 +223,16 @@
     "clause": "D1",
     "index": 0,
     "rule": "pl-kampfwerte"
+   },
+   {
+    "clause": "VS1",
+    "index": 0,
+    "rule": "pl-style"
+   },
+   {
+    "clause": "X1",
+    "index": 0,
+    "rule": "pl-swap"
    },
    {
     "clause": "T1",
@@ -83,12 +247,37 @@
     "rule": "pl-b"
    },
    {
+    "clause": "S3",
+    "index": 0,
+    "rule": "pl-spell"
+   },
+   {
+    "clause": "S3",
+    "index": 1,
+    "rule": "pl-spell"
+   },
+   {
     "clause": "T1",
     "index": 0,
     "rule": "pl-talent"
    }
   ],
   "fk": [
+   {
+    "clause": "K1",
+    "index": 0,
+    "rule": "pl-cap"
+   },
+   {
+    "clause": "C1",
+    "index": 1,
+    "rule": "pl-cover"
+   },
+   {
+    "clause": "C2",
+    "index": 0,
+    "rule": "pl-cover"
+   },
    {
     "clause": "F1",
     "index": 0,
@@ -102,6 +291,26 @@
   ],
   "gs": [
    {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "pl-cap"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-dazed"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-hurt"
+   },
+   {
+    "clause": "C4",
+    "index": 0,
+    "rule": "pl-hurt"
+   },
+   {
     "clause": "P1",
     "index": 0,
     "rule": "pl-pain"
@@ -110,6 +319,11 @@
     "clause": "P2",
     "index": 0,
     "rule": "pl-pain"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-tired"
    },
    {
     "clause": "Z1",
@@ -137,6 +351,11 @@
     "clause": "K1",
     "index": 0,
     "rule": "pl-steps"
+   },
+   {
+    "clause": "T5",
+    "index": 0,
+    "rule": "pl-talk"
    }
   ],
   "iniBase": [
@@ -156,6 +375,25 @@
     "rule": "pl-setb"
    }
   ],
+  "item.ladezeit": [
+   {
+    "clause": "D3",
+    "index": 0,
+    "rule": "pl-double"
+   }
+  ],
+  "kapMax": [
+   {
+    "clause": "A1",
+    "index": 1,
+    "rule": "pl-armour"
+   },
+   {
+    "clause": "Z1",
+    "index": 0,
+    "rule": "pl-zones"
+   }
+  ],
   "level": [
    {
     "clause": "G1",
@@ -165,7 +403,27 @@
    {
     "clause": "A1",
     "index": 0,
+    "rule": "pl-alt"
+   },
+   {
+    "clause": "A2",
+    "index": 0,
+    "rule": "pl-alt"
+   },
+   {
+    "clause": "A2",
+    "index": 1,
+    "rule": "pl-alt"
+   },
+   {
+    "clause": "A1",
+    "index": 0,
     "rule": "pl-armour"
+   },
+   {
+    "clause": "B1",
+    "index": 0,
+    "rule": "pl-broken"
    },
    {
     "clause": "G1",
@@ -198,6 +456,16 @@
     "rule": "pl-tough"
    },
    {
+    "clause": "W1",
+    "index": 0,
+    "rule": "pl-two"
+   },
+   {
+    "clause": "W1",
+    "index": 1,
+    "rule": "pl-two"
+   },
+   {
     "clause": "Z1",
     "index": 0,
     "rule": "pl-zones"
@@ -206,6 +474,18 @@
     "clause": "Z1",
     "index": 1,
     "rule": "pl-zones"
+   }
+  ],
+  "opponent.pa": [
+   {
+    "clause": "O1",
+    "index": 0,
+    "rule": "pl-opp"
+   },
+   {
+    "clause": "O2",
+    "index": 0,
+    "rule": "pl-opp"
    }
   ],
   "pa": [
@@ -243,6 +523,41 @@
     "clause": "A5",
     "index": 0,
     "rule": "pl-adds"
+   },
+   {
+    "clause": "V1",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V1",
+    "index": 1,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V3",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "V4",
+    "index": 0,
+    "rule": "pl-defence"
+   },
+   {
+    "clause": "D4",
+    "index": 0,
+    "rule": "pl-double"
+   },
+   {
+    "clause": "Q1",
+    "index": 0,
+    "rule": "pl-quiet"
+   },
+   {
+    "clause": "VS1",
+    "index": 0,
+    "rule": "pl-style"
    }
   ],
   "regeneration.asp": [
@@ -253,6 +568,11 @@
    }
   ],
   "regeneration.kap": [
+   {
+    "clause": "R1",
+    "index": 0,
+    "rule": "pl-alt-reader"
+   },
    {
     "clause": "I1",
     "index": 0,
@@ -293,6 +613,13 @@
     "rule": "pl-strain"
    }
   ],
+  "sp": [
+   {
+    "clause": "F1",
+    "index": 0,
+    "rule": "pl-cap"
+   }
+  ],
   "spell.cost": [
    {
     "clause": "S2",
@@ -308,6 +635,11 @@
    }
   ],
   "tp": [
+   {
+    "clause": "D1",
+    "index": 0,
+    "rule": "pl-double"
+   },
    {
     "clause": "L1",
     "index": 0,
@@ -715,6 +1047,223 @@
        "origin": {
         "clause": "A1",
         "index": 0,
+        "rule": "pl-aim"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -5
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.aim",
+        "is": true
+       }
+      }
+     ],
+     "id": "A1",
+     "text": "AT −5."
+    }
+   ],
+   "id": "pl-aim",
+   "kind": "specialAbility",
+   "name": "Gezielt",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "pl-alt"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "gmFact.altA"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-alt"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "A1",
+     "text": "Stufe nach A."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A2",
+        "index": 0,
+        "rule": "pl-alt"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-alt.A1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "gmFact.altMode",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A2",
+        "index": 1,
+        "rule": "pl-alt"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "gmFact.altB"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-alt"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "gmFact.altMode",
+        "is": true
+       }
+      }
+     ],
+     "id": "A2",
+     "text": "Im Modus B nach B statt nach A."
+    }
+   ],
+   "id": "pl-alt",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Wechsel",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R1",
+        "index": 0,
+        "rule": "pl-alt-reader"
+       },
+       "payload": {
+        "per": "hero.levelOf.pl-alt",
+        "to": [
+         {
+          "name": "regeneration.kap"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "R1",
+     "text": "KaP-Regeneration +1 je Stufe Wechsel."
+    }
+   ],
+   "id": "pl-alt-reader",
+   "kind": "advantage",
+   "name": "Leser des Wechsels",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
         "rule": "pl-armour"
        },
        "payload": {
@@ -743,6 +1292,28 @@
        "phase": "base",
        "ruling": [],
        "verb": "derive",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 1,
+        "rule": "pl-armour"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "kapMax"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
        "when": null
       }
      ],
@@ -828,6 +1399,83 @@
       {
        "because": null,
        "origin": {
+        "clause": "B1",
+        "index": 0,
+        "rule": "pl-broken"
+       },
+       "payload": {
+        "sum": [
+         {
+          "table": {
+           "key": "attr.KO",
+           "name": "pl.table"
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-broken"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "B1",
+     "text": "Stufe nach Tabelle."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B2",
+        "index": 0,
+        "rule": "pl-broken"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "aspMax"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "B2",
+     "text": "AsP-Maximum −1."
+    }
+   ],
+   "id": "pl-broken",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Kaputt",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "C1",
         "index": 0,
         "rule": "pl-c"
@@ -869,6 +1517,587 @@
    "id": "pl-c",
    "kind": "core",
    "name": "Leser von AW",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z3",
+        "index": 0,
+        "rule": "pl-cap"
+       },
+       "payload": {
+        "min": {
+         "number": -5
+        },
+        "over": {
+         "ids": [
+          "condition"
+         ],
+         "kind": "ruleKind"
+        },
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "gs"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": null
+      }
+     ],
+     "id": "Z3",
+     "text": "Zustände höchstens −5."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "K1",
+        "index": 0,
+        "rule": "pl-cap"
+       },
+       "payload": {
+        "max": {
+         "number": 0
+        },
+        "to": [
+         {
+          "name": "fk"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": {
+        "fact": "gmFact.sicht",
+        "is": 4
+       }
+      }
+     ],
+     "id": "K1",
+     "text": "Bei Sicht IV höchstens 0."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F1",
+        "index": 0,
+        "rule": "pl-cap"
+       },
+       "payload": {
+        "min": {
+         "number": 0
+        },
+        "to": [
+         {
+          "name": "sp"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "floor",
+       "when": null
+      }
+     ],
+     "id": "F1",
+     "text": "SP nicht unter 0."
+    }
+   ],
+   "id": "pl-cap",
+   "kind": "specialAbility",
+   "name": "Grenzen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "pl-cover"
+       },
+       "payload": {
+        "name": "pl.size",
+        "value": {
+         "klein": -4,
+         "mittel": 0
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 1,
+        "rule": "pl-cover"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "fk"
+         }
+        ],
+        "value": {
+         "table": {
+          "key": "target.size",
+          "name": "pl.size"
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "FK nach Größe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C2",
+        "index": 0,
+        "rule": "pl-cover"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-cover.C1"
+         ],
+         "kind": "line"
+        },
+        "with": {
+         "table": {
+          "key": "target.sizeInCover",
+          "name": "pl.size"
+         }
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "replace",
+       "when": {
+        "fact": "target.cover",
+        "in": [
+         "teilweise"
+        ]
+       }
+      }
+     ],
+     "id": "C2",
+     "text": "In Deckung gilt das Ziel als klein."
+    }
+   ],
+   "id": "pl-cover",
+   "kind": "specialAbility",
+   "name": "Deckung",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "pl-dazed"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT und GS −Stufe."
+    }
+   ],
+   "id": "pl-dazed",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Betäubt",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 0,
+        "rule": "pl-defence"
+       },
+       "payload": {
+        "per": "round.defencesMade",
+        "to": [
+         {
+          "name": "pa"
+         },
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -3
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "atLeast": 1,
+        "fact": "round.defencesMade"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "V1",
+        "index": 1,
+        "rule": "pl-defence"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "pa",
+          "aw"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "round.defendedThisAttack",
+        "is": true
+       }
+      }
+     ],
+     "id": "V1",
+     "text": "Jede weitere Verteidigung −3; keine zweite gegen denselben Angriff."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "V3",
+        "index": 0,
+        "rule": "pl-defence"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "pa",
+          "aw"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "pl-defence.zero-value"
+       ],
+       "verb": "forbid",
+       "when": {
+        "atMost": 0,
+        "fact": "query.result"
+       }
+      }
+     ],
+     "id": "V3",
+     "text": "Bei 0 oder weniger keine Verteidigung."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "V4",
+        "index": 0,
+        "rule": "pl-defence"
+       },
+       "payload": {
+        "max": {
+         "number": 1
+        },
+        "per": "round",
+        "what": {
+         "ids": [
+          "pa"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": null
+      }
+     ],
+     "id": "V4",
+     "text": "Nur eine Parade pro Runde."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "V5",
+        "index": 0,
+        "rule": "pl-defence"
+       },
+       "payload": {
+        "for": {
+         "ids": [
+          "aw"
+         ],
+         "kind": "defence"
+        },
+        "that": {
+         "fact": "gmFact.room",
+         "is": true
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": null
+      }
+     ],
+     "id": "V5",
+     "text": "Ausweichen braucht Platz."
+    }
+   ],
+   "id": "pl-defence",
+   "kind": "specialAbility",
+   "name": "Verteidigung",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "No.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "pl-defence.zero-value",
+     "question": "Is a defence at 0 allowed?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D1",
+        "index": 0,
+        "rule": "pl-double"
+       },
+       "payload": {
+        "by": 2,
+        "to": [
+         {
+          "name": "tp"
+         }
+        ]
+       },
+       "phase": "multiply",
+       "ruling": [],
+       "verb": "multiply",
+       "when": {
+        "fact": "choice.double",
+        "is": true
+       }
+      }
+     ],
+     "id": "D1",
+     "text": "TP verdoppelt."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D2",
+        "index": 0,
+        "rule": "pl-double"
+       },
+       "payload": {
+        "by": 0.5,
+        "line": {
+         "ids": [
+          "pl-aim.A1"
+         ],
+         "kind": "line"
+        },
+        "to": [
+         {
+          "name": "at"
+         }
+        ]
+       },
+       "phase": "multiply",
+       "ruling": [],
+       "verb": "multiply",
+       "when": {
+        "fact": "choice.halve",
+        "is": true
+       }
+      }
+     ],
+     "id": "D2",
+     "text": "Zonenabzug halbiert."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D3",
+        "index": 0,
+        "rule": "pl-double"
+       },
+       "payload": {
+        "by": 0.5,
+        "round": "up",
+        "to": [
+         {
+          "name": "item.ladezeit"
+         }
+        ]
+       },
+       "phase": "multiply",
+       "ruling": [],
+       "verb": "multiply",
+       "when": null
+      }
+     ],
+     "id": "D3",
+     "text": "Ladezeit halbiert, aufgerundet."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D4",
+        "index": 0,
+        "rule": "pl-double"
+       },
+       "payload": {
+        "by": 0.5,
+        "round": "down",
+        "to": [
+         {
+          "name": "pa"
+         }
+        ]
+       },
+       "phase": "multiply",
+       "ruling": [],
+       "verb": "multiply",
+       "when": {
+        "fact": "choice.halvePa",
+        "is": true
+       }
+      }
+     ],
+     "id": "D4",
+     "text": "Parade halbiert, abgerundet."
+    }
+   ],
+   "id": "pl-double",
+   "kind": "specialAbility",
+   "name": "Verdoppeln",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -1031,6 +2260,88 @@
    "name": "Fokusregel",
    "reviewed": null,
    "ruleset": "fokus.pl",
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "pl-hurt"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT und GS −Stufe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C4",
+        "index": 0,
+        "rule": "pl-hurt"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "number": 0
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "set",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "C4",
+     "text": "Ab Stufe IV GS 0."
+    }
+   ],
+   "id": "pl-hurt",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Schmerzen",
+   "reviewed": null,
    "rulings": [],
    "source": {
     "book": "Regelwerk",
@@ -1590,6 +2901,309 @@
       {
        "because": null,
        "origin": {
+        "clause": "M1",
+        "index": 0,
+        "rule": "pl-moves"
+       },
+       "payload": {
+        "choice": "vorstoss",
+        "span": "round"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "round.phase",
+        "is": "start"
+       }
+      }
+     ],
+     "id": "M1",
+     "text": "Vorstoß zu Beginn der Runde."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M2",
+        "index": 0,
+        "rule": "pl-moves"
+       },
+       "payload": {
+        "that": {
+         "fact": "loadout.weapon.technique",
+         "in": [
+          "CT_3"
+         ]
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": null
+      }
+     ],
+     "id": "M2",
+     "text": "Nur mit Schwertern."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M3",
+        "index": 0,
+        "rule": "pl-moves"
+       },
+       "payload": {
+        "choice": "doppel",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "M3",
+           "index": "0.costs.0",
+           "rule": "pl-moves"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "actions"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "M3",
+     "text": "Doppelangriff für eine Aktion."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M4",
+        "index": 0,
+        "rule": "pl-moves"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "doppel"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "M4",
+        "index": 1,
+        "rule": "pl-moves"
+       },
+       "payload": {
+        "for": {
+         "ids": [
+          "doppel"
+         ],
+         "kind": "choice"
+        },
+        "that": {
+         "not": {
+          "fact": "hero.has",
+          "is": "pl-pain"
+         }
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": null
+      }
+     ],
+     "id": "M4",
+     "text": "Nicht beritten, nicht mit Schmerzen."
+    }
+   ],
+   "id": "pl-moves",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "spezialmanoever",
+    "mountedCombat": false
+   },
+   "name": "Vorstoß",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O1",
+        "index": 0,
+        "rule": "pl-opp"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "opponent.weaponParry"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "choice.charge",
+        "is": true
+       }
+      }
+     ],
+     "id": "O1",
+     "text": "Keine Waffenparade gegen den Ansturm."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O2",
+        "index": 0,
+        "rule": "pl-opp"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "opponent.weaponParry",
+          "opponent.shieldParry"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "choice.charge",
+        "is": true
+       }
+      }
+     ],
+     "id": "O2",
+     "text": "Auch keine Schildparade."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O3",
+        "index": 0,
+        "rule": "pl-opp"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "finte"
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "gmFact.tight",
+        "is": true
+       }
+      }
+     ],
+     "id": "O3",
+     "text": "Keine Finte im Gedränge."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "O4",
+        "index": 0,
+        "rule": "pl-opp"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          {
+           "kind": "spezialmanoever",
+           "mountedCombat": false
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "O4",
+     "text": "Beritten keine Spezialmanöver."
+    }
+   ],
+   "id": "pl-opp",
+   "kind": "specialAbility",
+   "name": "Ansturm",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "U2",
         "index": 0,
         "rule": "pl-order"
@@ -1724,6 +3338,122 @@
    "kind": "condition",
    "levels": 4,
    "name": "Schmerz",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q1",
+        "index": 0,
+        "rule": "pl-quiet"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-adds.A1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "choice.quiet",
+        "is": true
+       }
+      }
+     ],
+     "id": "Q1",
+     "text": "Ohne den ersten Zuschlag."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q2",
+        "index": 0,
+        "rule": "pl-quiet"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-talk.T4"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q2",
+        "index": 1,
+        "rule": "pl-quiet"
+       },
+       "payload": {
+        "text": "Leiser Hinweis.",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": null
+      }
+     ],
+     "id": "Q2",
+     "text": "Statt des lauten Hinweises dieser."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Q3",
+        "index": 0,
+        "rule": "pl-quiet"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "condition"
+         ],
+         "kind": "ruleKind"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "choice.schip",
+        "is": true
+       }
+      }
+     ],
+     "id": "Q3",
+     "text": "Zustände zählen nicht."
+    }
+   ],
+   "id": "pl-quiet",
+   "kind": "specialAbility",
+   "name": "Stille",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -1876,6 +3606,173 @@
       {
        "because": null,
        "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "pl-spell"
+       },
+       "payload": {
+        "choice": "mod",
+        "options": [
+         "a",
+         "b",
+         "c"
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 1,
+        "rule": "pl-spell"
+       },
+       "payload": {
+        "max": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "fw.current"
+          },
+          "per": {
+           "number": 4
+          },
+          "round": "down",
+          "times": 1
+         }
+        },
+        "per": "action",
+        "what": {
+         "ids": [
+          "mod.a",
+          "mod.b",
+          "mod.c"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "Modifikationen, höchstens FW/4."
+    },
+    {
+     "effects": [
+      {
+       "because": "höchstens eine aus a und b",
+       "origin": {
+        "clause": "S2",
+        "index": 0,
+        "rule": "pl-spell"
+       },
+       "payload": {
+        "max": {
+         "number": 1
+        },
+        "per": "action",
+        "what": {
+         "ids": [
+          "mod.a",
+          "mod.b"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": null
+      }
+     ],
+     "id": "S2",
+     "text": "Höchstens eine aus a und b."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "pl-spell"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "number": 2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.mod.a",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 1,
+        "rule": "pl-spell"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.mod.c",
+        "is": true
+       }
+      }
+     ],
+     "id": "S3",
+     "text": "a gibt +2, c gibt +1."
+    }
+   ],
+   "id": "pl-spell",
+   "kind": "specialAbility",
+   "name": "Modifikationen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "K1",
         "index": 0,
         "rule": "pl-steps"
@@ -2009,6 +3906,117 @@
       {
        "because": null,
        "origin": {
+        "clause": "VS1",
+        "index": 0,
+        "rule": "pl-style"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-defence.V1"
+         ],
+         "kind": "line"
+        },
+        "with": {
+         "number": -2
+        }
+       },
+       "phase": "lines",
+       "ruling": [
+        "pl-style.style"
+       ],
+       "verb": "replace",
+       "when": {
+        "fact": "loadout.weapon.technique",
+        "in": [
+         "CT_1"
+        ]
+       }
+      }
+     ],
+     "id": "VS1",
+     "text": "Nur −2 je Verteidigung."
+    }
+   ],
+   "id": "pl-style",
+   "kind": "specialAbility",
+   "name": "Verteidigungsstil",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "CT_1.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "pl-style.style",
+     "question": "Which techniques?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "X1",
+        "index": 0,
+        "rule": "pl-swap"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-kampfwerte.D1"
+         ],
+         "kind": "line"
+        },
+        "with": {
+         "number": 5
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "replace",
+       "when": {
+        "fact": "choice.swap",
+        "is": true
+       }
+      }
+     ],
+     "id": "X1",
+     "text": "AW ist 5."
+    }
+   ],
+   "id": "pl-swap",
+   "kind": "specialAbility",
+   "name": "Tausch",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "E1",
         "index": 0,
         "rule": "pl-sword"
@@ -2099,6 +4107,128 @@
        "origin": {
         "clause": "T1",
         "index": 0,
+        "rule": "pl-talk"
+       },
+       "payload": {
+        "text": "Achtung.",
+        "to": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "fact": "gmFact.alarm",
+        "is": true
+       }
+      }
+     ],
+     "id": "T1",
+     "text": "Achtung, Meister."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T2",
+        "index": 0,
+        "rule": "pl-talk"
+       },
+       "payload": {
+        "fact": "target.cover",
+        "options": [
+         "keine",
+         "teilweise"
+        ],
+        "who": "gm"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "ask",
+       "when": null
+      }
+     ],
+     "id": "T2",
+     "text": "Deckung fragen."
+    },
+    {
+     "id": "T3",
+     "text": "Ein Satz, den die App nicht abbilden kann.",
+     "unencoded": "the app keeps no days"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T4",
+        "index": 0,
+        "rule": "pl-talk"
+       },
+       "payload": {
+        "text": "Lauter Hinweis.",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": null
+      }
+     ],
+     "id": "T4",
+     "text": "Lauter Hinweis."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T5",
+        "index": 0,
+        "rule": "pl-talk"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "ini"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "T5",
+     "text": "INI +1."
+    }
+   ],
+   "id": "pl-talk",
+   "kind": "specialAbility",
+   "name": "Hinweise",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T1",
+        "index": 0,
         "rule": "pl-target"
        },
        "payload": {
@@ -2124,6 +4254,57 @@
    "id": "pl-target",
    "kind": "specialAbility",
    "name": "Vorteilhafte Position",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "pl-tired"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT und GS −Stufe."
+    }
+   ],
+   "id": "pl-tired",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Müdigkeit",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -2238,6 +4419,119 @@
       {
        "because": null,
        "origin": {
+        "clause": "W1",
+        "index": 0,
+        "rule": "pl-two"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "gmFact.w1"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-two"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "W1",
+        "index": 1,
+        "rule": "pl-two"
+       },
+       "payload": {
+        "sum": [
+         {
+          "number": 1
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-two"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "gmFact.w2",
+        "is": true
+       }
+      }
+     ],
+     "id": "W1",
+     "text": "Stufe nach W1, bei W2 eine mehr."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W3",
+        "index": 0,
+        "rule": "pl-two"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "aspCurrent"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "W3",
+     "text": "AsP −Stufe."
+    }
+   ],
+   "id": "pl-two",
+   "kind": "condition",
+   "levels": 3,
+   "name": "Zweifach",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "Z1",
         "index": 0,
         "rule": "pl-zones"
@@ -2335,6 +4629,26 @@
    "id": "pl-adds.open-q",
    "question": "Does it stack?",
    "status": "open"
+  },
+  {
+   "answer": "No.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "pl-defence.zero-value",
+   "question": "Is a defence at 0 allowed?",
+   "status": "decided"
+  },
+  {
+   "answer": "CT_1.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "pl-style.style",
+   "question": "Which techniques?",
+   "status": "decided"
   },
   {
    "answer": "The lower one.",

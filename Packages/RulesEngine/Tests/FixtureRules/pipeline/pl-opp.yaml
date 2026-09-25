@@ -1,0 +1,29 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: forbids on the opponent's parry (two fire at once), on a declared manoeuvre, on
+# every mounted special manoeuvre.
+id: pl-opp
+name: Ansturm
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: O1
+    text: Keine Waffenparade gegen den Ansturm.
+    effects:
+      - forbid: { what: { defence: [opponent.weaponParry] } }
+        when: { choice.charge: true }
+  - id: O2
+    text: Auch keine Schildparade.
+    effects:
+      - forbid: { what: { defence: [opponent.weaponParry, opponent.shieldParry] } }
+        when: { choice.charge: true }
+  - id: O3
+    text: Keine Finte im Gedränge.
+    effects:
+      - forbid: { what: { manoeuvre: [finte] } }
+        when: { gmFact.tight: true }
+  - id: O4
+    text: Beritten keine Spezialmanöver.
+    effects:
+      - forbid: { what: { manoeuvre: [{ kind: spezialmanoever, mountedCombat: false }] } }
+        when: { hero.mounted: true }

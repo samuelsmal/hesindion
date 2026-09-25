@@ -1,0 +1,23 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: suppress of a line, of a tell, and of every condition's lines.
+id: pl-quiet
+name: Stille
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: Q1
+    text: Ohne den ersten Zuschlag.
+    effects:
+      - suppress: { line: { line: pl-adds.A1 } }
+        when: { choice.quiet: true }
+  - id: Q2
+    text: Statt des lauten Hinweises dieser.
+    effects:
+      - suppress: { line: { line: pl-talk.T4 } }
+      - tell: { text: "Leiser Hinweis.", to: player }
+  - id: Q3
+    text: Zustände zählen nicht.
+    effects:
+      - suppress: { line: { ruleKind: condition } }
+        when: { choice.schip: true }

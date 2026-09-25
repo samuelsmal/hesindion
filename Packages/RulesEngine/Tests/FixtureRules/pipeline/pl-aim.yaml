@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: a line another rule multiplies (trefferzonen.TZ5).
+id: pl-aim
+name: Gezielt
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: AT −5.
+    effects:
+      - add: { to: at, value: -5 }
+        when: { choice.aim: true }

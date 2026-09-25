@@ -1,0 +1,27 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: multiply the result, one line, with rounding up and down.
+id: pl-double
+name: Verdoppeln
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: D1
+    text: TP verdoppelt.
+    effects:
+      - multiply: { to: tp, by: 2 }
+        when: { choice.double: true }
+  - id: D2
+    text: Zonenabzug halbiert.
+    effects:
+      - multiply: { to: at, by: 0.5, line: { line: pl-aim.A1 } }
+        when: { choice.halve: true }
+  - id: D3
+    text: Ladezeit halbiert, aufgerundet.
+    effects:
+      - multiply: { to: item.ladezeit, by: 0.5, round: up }
+  - id: D4
+    text: Parade halbiert, abgerundet.
+    effects:
+      - multiply: { to: pa, by: 0.5, round: down }
+        when: { choice.halvePa: true }

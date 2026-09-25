@@ -18,12 +18,16 @@ public struct Query: Hashable, Sendable, CustomStringConvertible {
 
 /// One step of a value, with where it comes from.
 ///
-/// `value` is always what the line adds to the total, so `Breakdown.total` is the sum of the
-/// lines' values and no number changes without a line. A line that states a value rather than a
-/// step also carries `was` and `now`: for a `set` or a scale step, the query's running value
-/// before and after it; for a `.levelAs` line, the rule's level before and after the useLevel
-/// (not the query's value). A replaced line (Task 23) carries in `was` the value it would have
-/// had.
+/// `value` is always what the line adds to the total (the step), so `Breakdown.total` is the sum
+/// of the lines' values, the shown lines sum to `result`, and no number changes without a line.
+/// A line that states a value rather than a step also carries `was` and `now`:
+/// - `set`, a scale step, `.multiplied` (no `line`), `.capped` (no `over`), `.floored`: the
+///   query's running value before and after it;
+/// - `.multiplied` with a `line`, `.capped` with an `over`: the sum of the lines it scaled or
+///   bounded, before and after;
+/// - `.levelAs`: the rule's level before and after the useLevel (not the query's value);
+/// - `.replaced`: the value the line would have had (nil when that could not be computed) and
+///   the one it has. It keeps its origin; the replacing clause is in `via`.
 public struct Line: Hashable, Sendable {
     public var value: Int
     public var kind: LineKind
@@ -38,7 +42,7 @@ public struct Line: Hashable, Sendable {
     /// Every fact the line read, with its value and who stated it.
     public var facts: [FactUse]
     /// Who stated the line's number when it is no rule's: `sheet` for a base from the sheet,
-    /// `player` for a modifier typed in, `gm` for the GM's (Task 23). nil for a rule's line.
+    /// `player` for a modifier typed in (`.free`), `gm` for the GM's. nil for a rule's line.
     public var owner: Owner?
     public var note: String?
     public var was: Int?
@@ -47,7 +51,8 @@ public struct Line: Hashable, Sendable {
     /// "term"); not filled in yet.
     public var term: String?
     /// A base's terms: one line per `sum` term of each `derive` that made it (KW1's KtW and its
-    /// MU bonus). Empty for any other line. A lines-phase `suppress` (Task 23) removes a part.
+    /// MU bonus). Empty for any other line. A `suppress` of a derive drops its parts; a `replace`
+    /// of one gives a single `.replaced` part (R35).
     public var parts: [Line]
 
     public init(value: Int, kind: LineKind, origin: ClauseRef? = nil, via: [ClauseRef] = [], rulings: [String] = [],
@@ -73,7 +78,8 @@ public struct NotApplied: Hashable, Sendable {
     public var facts: [FactUse]
     /// The clauses that acted on its rule (enabling require, useLevels), as a line of it would carry.
     public var via: [ClauseRef]
-    /// The value it would have given (`replaced`, Task 23); nil when it was never computed.
+    /// The value it would have given (`replaced`, and a suppressed `add`); nil when it was never
+    /// computed.
     public var value: Int?
 
     public init(origin: ClauseRef, reason: ReasonCode, because: String? = nil, rulings: [String] = [],
@@ -92,7 +98,7 @@ public struct Question: Hashable, Sendable {
     public var owner: Owner?
     /// The clauses that need it, each once.
     public var origins: [ClauseRef]
-    /// The answers an `ask` offers (Task 23).
+    /// The answers an `ask` offers.
     public var options: [JSONValue]?
 
     public init(fact: String, owner: Owner?, origins: [ClauseRef] = [], options: [JSONValue]? = nil) {
@@ -104,9 +110,9 @@ public struct Question: Hashable, Sendable {
 /// be applied.
 public struct TextLine: Hashable, Sendable {
     public enum Kind: String, Hashable, Sendable, CaseIterable {
-        /// A `tell` (Task 23).
+        /// A `tell`, to its audience.
         case tell
-        /// An unencoded clause of an applicable rule (Task 23).
+        /// An unencoded clause of an applicable rule that reaches the query.
         case unencoded
         /// An effect resting on an open ruling: its clause text, and the ruling's question.
         case openRuling
@@ -130,33 +136,62 @@ public struct TextLine: Hashable, Sendable {
     }
 }
 
-/// A choice the query could take (`offer`, Task 23). Named so, not to shadow the `Offer` payload.
+/// A choice the query could take (`offer`). Named so, not to shadow the `Offer` payload.
 public struct OfferedChoice: Hashable, Sendable {
     public var choice: String
     public var origin: ClauseRef
     public var options: [JSONValue]?
     public var `default`: JSONValue?
     public var span: Span?
+    /// Paid when the offer is taken (ruling R23); the action layer charges them.
     public var costs: [Effect]
     public var rulings: [String]
-    /// false when a `forbid` on the choice fires.
+    /// The clauses the offering rule rests on (its enabling require, the useLevels on it).
+    public var via: [ClauseRef]
+    /// false when a `forbid` on the choice (or on the offering rule's manoeuvre kind) fires, a
+    /// `require` for it (or the offering rule's own `require`) is not met, or a `limit` on it is
+    /// reached. Every such entry is in `reasons`.
     public var legal: Bool
+    /// The first reason's `because`, else its clause (`RULE.CLAUSE`).
     public var because: String?
+    public var reasons: [NotApplied]
+    /// How many of `options` may be taken: the `max` of the `limit` naming the most of them
+    /// (zaubermodifikationen.ZM1: FW 9 → 2). nil without such a limit.
+    public var max: Int?
+    /// The options that may not be taken (another one), each with the entries refusing it.
+    public var refused: [RefusedOption]
 
     public init(choice: String, origin: ClauseRef, options: [JSONValue]? = nil, default: JSONValue? = nil,
-                span: Span? = nil, costs: [Effect] = [], rulings: [String] = [], legal: Bool = true, because: String? = nil) {
+                span: Span? = nil, costs: [Effect] = [], rulings: [String] = [], via: [ClauseRef] = [],
+                reasons: [NotApplied] = [], max: Int? = nil, refused: [RefusedOption] = []) {
         self.choice = choice; self.origin = origin; self.options = options; self.default = `default`
-        self.span = span; self.costs = costs; self.rulings = rulings; self.legal = legal; self.because = because
+        self.span = span; self.costs = costs; self.rulings = rulings; self.via = via
+        self.legal = reasons.isEmpty; self.because = reasons.first.map { $0.because ?? $0.origin.description }
+        self.reasons = reasons; self.max = max; self.refused = refused
     }
 }
 
-/// Whether the action the query stands for is allowed (Task 23), and the entries that forbid it.
+/// An option of an offered choice that may not be taken, and why (a `forbid` of `choice.option`,
+/// a `limit` whose count is reached).
+public struct RefusedOption: Hashable, Sendable {
+    public var option: JSONValue
+    public var reasons: [NotApplied]
+
+    public init(option: JSONValue, reasons: [NotApplied]) { self.option = option; self.reasons = reasons }
+}
+
+/// Whether the action the query stands for is allowed, and every entry that forbids it: each
+/// firing `forbid` (`forbidden`), unmet `require` (`requirementNotMet`) and reached `limit`
+/// (`forbidden`), in rule-id and clause order. Several may fire at once (reiterkampf.RK13 and
+/// groessenkategorie.GK4 on one parry); all are kept.
 public struct Legality: Hashable, Sendable {
     public var allowed: Bool
-    /// `forbidden`, `requirementNotMet` entries.
     public var reasons: [NotApplied]
 
     public init(allowed: Bool = true, reasons: [NotApplied] = []) { self.allowed = allowed; self.reasons = reasons }
+
+    /// Each reason's `because`, else its clause (`RULE.CLAUSE`).
+    public var because: [String] { reasons.map { $0.because ?? $0.origin.description } }
 }
 
 public struct Breakdown: Hashable, Sendable {

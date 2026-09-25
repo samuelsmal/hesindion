@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: a replace naming a derive in the base's parts.
+id: pl-swap
+name: Tausch
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: X1
+    text: AW ist 5.
+    effects:
+      - replace: { line: { line: pl-kampfwerte.D1 }, with: 5 }
+        when: { choice.swap: true }

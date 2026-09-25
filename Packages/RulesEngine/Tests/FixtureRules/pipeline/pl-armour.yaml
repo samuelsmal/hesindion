@@ -10,3 +10,4 @@ clauses:
     text: Belastung nach Rüstung.
     effects:
       - derive: { to: "level(rule: pl-load)", sum: [{ of: loadout.armour.belastung }] }
+      - add: { to: kapMax, value: -1 }
