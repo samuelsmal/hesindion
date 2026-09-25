@@ -457,6 +457,71 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(effects[9]["payload"]["to"], [{"name": "check.fw"}])
         self.assertEqual(effects[10]["payload"]["value"]["proportion"]["times"], 2)
 
+    # --- vocabulary added by the Group 7 hand migration (plan Task 14) -------------------------
+    def test_group_7_vocabulary(self):
+        v = vocab.load()
+        self.assertEqual(v.fact_owner("check.spell"), "player")
+        self.assertEqual(v.fact_owner("hero.aspCurrent"), "derived")
+        self.assertTrue(v.is_target("aspCurrent"))
+        self.assertTrue(v.raw["targets"]["spell.costPerInterval"]["scale"])
+        self.assertEqual(v.verbs["limit"]["fields"]["max"], "value")
+        self.assertIn("term", v.raw["lineKeys"])
+
+    def test_the_group_7_encodings(self):
+        # zaubermodifikationen ZM1 (a limit whose max is a value), ZM5 (a derive from the target
+        # spell.cost, a scale step, a recurring cost every spell.interval minutes), ZM8/ZM11 (a
+        # provided scale and an add along it), ZM12 (a cost halved on failure); SA_74 VP1 (a
+        # split with a minimum) and VP3 (AsP, then LeP).
+        body = textwrap.dedent("""\
+            - limit: { what: { choice: [a.b, a.c] }, max: { of: fw.current, per: 4, round: down }, per: action }
+            - derive: { to: spell.costPerInterval, sum: [{ of: spell.cost }] }
+            - provide: { name: SA_1.kosten, value: [1, 2, 4, 8] }
+            - add: { to: spell.costPerInterval, value: -1, scale: SA_1.kosten }
+            - cost: { pool: asp, amount: { of: spell.costPerInterval }, every: { minutes: spell.interval } }
+            - cost: { pool: asp, amount: { of: [spell.cost, spell.costPerInterval] }, onFailure: 0.5 }
+            - cost: { pool: asp, amount: { of: spell.cost }, split: { pools: [asp, le], min: { asp: 1 } } }
+            - cost: { pool: asp, amount: { of: spell.cost }, onFailure: 0.5, fallThrough: [le] }
+            - when: { hero.aspCurrent: 0, check.spell: SPELL_21 }
+              forbid: { what: { choice: split.le } }
+            """)
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                           textwrap.indent(body, "      ")))
+        self.assertEqual(errors, [])
+        e = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(e[0]["payload"]["max"]["proportion"]["of"], {"fact": "fw.current"})
+        # `spell.cost` is a listed target, read as the target although the `spell.` family covers it
+        self.assertEqual(e[1]["payload"]["sum"][0]["proportion"]["of"], {"target": {"name": "spell.cost"}})
+        self.assertEqual(e[3]["payload"]["scale"], "SA_1.kosten")
+        self.assertEqual(e[4]["payload"]["every"], {"minutes": "spell.interval"})
+        self.assertEqual(e[5]["payload"]["amount"]["proportion"]["of"],
+                         {"sum": [{"target": {"name": "spell.cost"}}, {"target": {"name": "spell.costPerInterval"}}]})
+        self.assertEqual(e[5]["payload"]["onFailure"], 0.5)
+        self.assertEqual(e[6]["payload"]["split"], {"pools": ["asp", "le"], "min": {"asp": 1}})
+        self.assertEqual(e[7]["payload"]["fallThrough"], ["le"])
+        self.assertEqual(e[7]["phase"], "action")
+
+    def test_a_prefixed_target_stays_a_family_fact(self):
+        # Only a name listed in `targets` beats a fact family: `mount.gs` (prefix + target) is
+        # still the `mount.` fact, as reiterkampf.RK14 reads it.
+        book, errors = check(VALID.replace(EFFECT, "      - add: { to: tp, value: { of: mount.gs } }"))
+        self.assertEqual(errors, [])
+        self.assertEqual(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["value"]["proportion"]["of"],
+                         {"fact": "mount.gs"})
+
+    def test_a_scale_must_be_provided_and_its_target_on_a_scale(self):
+        _, errors = check(VALID.replace(EFFECT, "      - add: { to: spell.cost, value: 1, scale: nowhere }"))
+        self.assertEqual([e.message for e in errors], ["unknown scale nowhere"])
+        body = ("      - provide: { name: SA_1.k, value: [1, 2] }\n"
+                "      - add: { to: at, value: 1, scale: SA_1.k }")
+        _, errors = check(VALID.replace(EFFECT, body))
+        self.assertEqual([e.message for e in errors], ["at is not on a scale"])
+
+    def test_a_duration_reads_an_int_or_a_known_fact(self):
+        _, errors = check(VALID.replace(EFFECT, "      - cost: { pool: asp, amount: 1, every: { minutes: nothing.here } }"))
+        self.assertEqual([e.message for e in errors], ["unknown fact nothing.here"])
+        _, errors = check(VALID.replace(EFFECT, "      - cost: { pool: asp, amount: 1, every: { minutes: 1.5 } }"))
+        self.assertEqual([e.message for e in errors], ["wrong type for field every"])
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

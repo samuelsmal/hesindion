@@ -26,7 +26,7 @@ indexed: they are reached through their parent, which is always under `"*"`, and
 the parent runs them. Indexing them on their own would let a query apply them without the parent.
 
 A clause with `effects` whose top-level effects are all `provide` naming a table that no
-`table(name, …)` reference anywhere reads (exact name match) can never fire: the build fails with
+`table(name, …)` reference nor `add`'s `scale` anywhere reads (exact name match) can never fire: the build fails with
 `clause can never fire: RULE.CLAUSE`.
 """
 import datetime as _dt
@@ -94,8 +94,22 @@ def _table_reads(x, out):
     return out
 
 
+def _scale_reads(x, out):
+    """Every scale name an `add` steps along (`add: { …, scale: NAME }`), nested effects included."""
+    if isinstance(x, dict):
+        if x.get("verb") == "add" and isinstance(x.get("payload", {}).get("scale"), str):
+            out.add(x["payload"]["scale"])
+        for v in x.values():
+            _scale_reads(v, out)
+    elif isinstance(x, list):
+        for v in x:
+            _scale_reads(v, out)
+    return out
+
+
 def _check_reachable(rules_sorted):
-    read = _table_reads([r["clauses"] for r in rules_sorted], set())
+    clauses = [r["clauses"] for r in rules_sorted]
+    read = _table_reads(clauses, set()) | _scale_reads(clauses, set())
     for r in rules_sorted:
         for c in r["clauses"]:
             if "effects" not in c:

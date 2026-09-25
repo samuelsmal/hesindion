@@ -149,6 +149,21 @@ class CompileTests(unittest.TestCase):
         self.assertIn(ref("X", "X1"), out["reach"]["*"])
         self.assertEqual(out["reach"]["at"], [ref("X", "X2")])
 
+    def test_a_scale_an_add_steps_along_is_reachable(self):
+        # zaubermodifikationen.ZM8 (Group 7): its provides are read only by ZM11's `add … scale`.
+        out = one_rule("""\
+  - id: X1
+    text: "Stufen"
+    effects:
+      - provide: { name: X.kosten, value: [1, 2, 4, 8] }
+  - id: X2
+    text: "eine Stufe"
+    effects:
+      - add: { to: spell.cost, value: 1, scale: X.kosten }
+""")
+        self.assertIn(ref("X", "X1"), out["reach"]["*"])
+        self.assertEqual(out["reach"]["spell.cost"], [ref("X", "X2")])
+
     def test_provide_read_from_a_nested_effect_is_reachable(self):
         out = one_rule("""\
   - id: X1

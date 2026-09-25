@@ -76,7 +76,14 @@ class Forms:
         if isinstance(raw, (int, float)) and not isinstance(raw, bool):
             return {"number": raw}
         if isinstance(raw, str) and (self.v.fact_owner(raw) or self.v.is_target(raw.split("(")[0])):
-            return {"fact": raw} if self.v.fact_owner(raw) else {"target": self.target(raw, line)}
+            # A name listed as such in `targets` is read as that target, even where a fact
+            # family's prefix also covers it: `spell.cost` is the cost after the modifications
+            # (the target), not a `spell.` fact (zaubermodifikationen.ZM5). A fact listed by its
+            # own name still wins, and a prefixed target (`mount.gs`) stays a family fact.
+            if raw in self.v.raw["facts"] or raw.split("(")[0] not in self.v.raw["targets"]:
+                if self.v.fact_owner(raw):
+                    return {"fact": raw}
+            return {"target": self.target(raw, line)}
         self.err(f"unknown operand {raw!r}", line)
 
     # --- targets ----------------------------------------------------------------------------

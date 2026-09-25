@@ -270,6 +270,12 @@ class HeroTests(unittest.TestCase):
         s = one("    hero: { abilities: { SA_1: { sid: TAL_10, sid2: 2 } } }\n")
         self.assertEqual(s["owned"], {"SA_1": {"level": 1, "option": "TAL_10", "option2": 2}})
 
+    def test_spells_are_fw_facts(self):
+        # probe-magie (Group 7): a spell's FW is the sheet fact `fw.SPELL_…`, as a talent's.
+        s = one("    hero: { spells: { SPELL_21: 9 }, talents: { TAL_8: 6 } }\n")
+        self.assertEqual(s["facts"], [{"name": "fw.SPELL_21", "value": 9, "owner": "sheet"},
+                                      {"name": "fw.TAL_8", "value": 6, "owner": "sheet"}])
+
     def test_without_hero_file(self):
         s = one("    hero: { abilities: { SA_1: 3 }, attributes: { MU: 11 } }\n")
         self.assertEqual(s["owned"], {"SA_1": {"level": 3}})

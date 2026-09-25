@@ -131,17 +131,17 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_74.yaml
 
-- [ ] L35 clauses[VP1].effects[0].offer.amount: amount — not a field of `offer`
-- [ ] L36 clauses[VP1].effects[0].offer.when: when — not a field of `offer`
-- [ ] L37 clauses[VP1].effects[0].offer.ruling: ruling — not a field of `offer`
-- [ ] L40 clauses[VP1].effects[1].forbid.choice: choice — not a field of `forbid`
-- [ ] L40 clauses[VP1].effects[1].forbid.when: when — not a field of `forbid`
-- [ ] L42 clauses[VP1].effects[2].split: split — no one-to-one verb
-- [ ] L50 clauses[VP2].effects[0].when.amount: amount — not a fact in the vocabulary
-- [ ] L51 clauses[VP2].effects[0].requires_check: requires_check — no one-to-one verb
-- [ ] L52 clauses[VP2].effects[0].on_failure: on_failure — no one-to-one verb
-- [ ] L67 clauses[VP3].effects[0].when.check_failed: check_failed — not a fact in the vocabulary
-- [ ] L68 clauses[VP3].effects[0].charge: charge — keys outside the row: round, pools, ruling; missing pool
+- [x] L35 clauses[VP1].effects[0].offer.amount: amount — not a field of `offer`
+- [x] L36 clauses[VP1].effects[0].offer.when: when — not a field of `offer`
+- [x] L37 clauses[VP1].effects[0].offer.ruling: ruling — not a field of `offer`
+- [x] L40 clauses[VP1].effects[1].forbid.choice: choice — not a field of `forbid`
+- [x] L40 clauses[VP1].effects[1].forbid.when: when — not a field of `forbid`
+- [x] L42 clauses[VP1].effects[2].split: split — no one-to-one verb
+- [x] L50 clauses[VP2].effects[0].when.amount: amount — not a fact in the vocabulary
+- [x] L51 clauses[VP2].effects[0].requires_check: requires_check — no one-to-one verb
+- [x] L52 clauses[VP2].effects[0].on_failure: on_failure — no one-to-one verb
+- [x] L67 clauses[VP3].effects[0].when.check_failed: check_failed — not a fact in the vocabulary
+- [x] L68 clauses[VP3].effects[0].charge: charge — keys outside the row: round, pools, ruling; missing pool
 
 ## rules/abilities/SA_862.yaml
 
@@ -638,35 +638,35 @@ No residue.
 
 ## rules/core/zaubermodifikationen.yaml
 
-- [ ] L40 clauses[ZM1].effects[0].offer.pickers: pickers — not a field of `offer`
-- [ ] L40 clauses[ZM1].effects[0].offer.per: per — not a field of `offer`
-- [ ] L40 clauses[ZM1].effects[0].offer.before: before — not a field of `offer`
-- [ ] L41 clauses[ZM1].effects[1].limit.choice: choice — not a field of `limit`
-- [ ] L54 clauses[ZM2].effects[0].limit.category: category — not a field of `limit`
-- [ ] L54 clauses[ZM2].effects[0].limit.max_steps: max_steps — not a field of `limit`
-- [ ] L62 clauses[ZM3].effects[0].forbid.choice: choice — not a field of `forbid`
-- [ ] L71 clauses[ZM4].effects[0].forbid.choice: choice — not a field of `forbid`
-- [ ] L71 clauses[ZM4].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L83 clauses[ZM5].effects[0].derive.value: value — not a field of `derive`
-- [ ] L83 clauses[ZM5].effects[0].derive.from: from — not a field of `derive`
-- [ ] L83 clauses[ZM5].effects[0].derive.steps: steps — not a field of `derive`
-- [ ] L83 clauses[ZM5].effects[0].derive.table: table — not a field of `derive`
-- [ ] L86 clauses[ZM5].effects[1].cap.value: value — not a field of `cap`
-- [ ] L87 clauses[ZM5].effects[2].charge: charge — keys outside the row: every, while
-- [ ] L100 clauses[ZM6].effects[0].limit.choice: choice — not a field of `limit`
-- [ ] L100 clauses[ZM6].effects[0].limit.each: each — not a field of `limit`
-- [ ] L107 clauses[ZM7].effects[0].forbid.choice: choice — not a field of `forbid`
-- [ ] L107 clauses[ZM7].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L167 clauses[ZM11].effects[0].shift: shift — the effect already has `add`: two verbs in one effect
-- [ ] L170 clauses[ZM11].effects[1].shift: shift — the effect already has `add`: two verbs in one effect
-- [ ] L173 clauses[ZM11].effects[2].shift: shift — the effect already has `add`: two verbs in one effect
-- [ ] L176 clauses[ZM11].effects[3].shift: shift — the effect already has `add`: two verbs in one effect
-- [ ] L179 clauses[ZM11].effects[4].shift: shift — the effect already has `add`: two verbs in one effect
-- [ ] L184 clauses[ZM11].effects[5].when.choice: choice — not a fact in the vocabulary
-- [ ] L187 clauses[ZM11].effects[6].forbid.choice: choice — not a field of `forbid`
-- [ ] L187 clauses[ZM11].effects[6].forbid.when: when — not a field of `forbid`
-- [ ] L205 clauses[ZM12].effects[0].on_success: on_success — no one-to-one verb
-- [ ] L206 clauses[ZM12].effects[1].on_failure: on_failure — no one-to-one verb
+- [x] L40 clauses[ZM1].effects[0].offer.pickers: pickers — not a field of `offer`
+- [x] L40 clauses[ZM1].effects[0].offer.per: per — not a field of `offer`
+- [x] L40 clauses[ZM1].effects[0].offer.before: before — not a field of `offer`
+- [x] L41 clauses[ZM1].effects[1].limit.choice: choice — not a field of `limit`
+- [x] L54 clauses[ZM2].effects[0].limit.category: category — not a field of `limit`
+- [x] L54 clauses[ZM2].effects[0].limit.max_steps: max_steps — not a field of `limit`
+- [x] L62 clauses[ZM3].effects[0].forbid.choice: choice — not a field of `forbid`
+- [x] L71 clauses[ZM4].effects[0].forbid.choice: choice — not a field of `forbid`
+- [x] L71 clauses[ZM4].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L83 clauses[ZM5].effects[0].derive.value: value — not a field of `derive`
+- [x] L83 clauses[ZM5].effects[0].derive.from: from — not a field of `derive`
+- [x] L83 clauses[ZM5].effects[0].derive.steps: steps — not a field of `derive`
+- [x] L83 clauses[ZM5].effects[0].derive.table: table — not a field of `derive`
+- [x] L86 clauses[ZM5].effects[1].cap.value: value — not a field of `cap`
+- [x] L87 clauses[ZM5].effects[2].charge: charge — keys outside the row: every, while
+- [x] L100 clauses[ZM6].effects[0].limit.choice: choice — not a field of `limit`
+- [x] L100 clauses[ZM6].effects[0].limit.each: each — not a field of `limit`
+- [x] L107 clauses[ZM7].effects[0].forbid.choice: choice — not a field of `forbid`
+- [x] L107 clauses[ZM7].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L167 clauses[ZM11].effects[0].shift: shift — the effect already has `add`: two verbs in one effect
+- [x] L170 clauses[ZM11].effects[1].shift: shift — the effect already has `add`: two verbs in one effect
+- [x] L173 clauses[ZM11].effects[2].shift: shift — the effect already has `add`: two verbs in one effect
+- [x] L176 clauses[ZM11].effects[3].shift: shift — the effect already has `add`: two verbs in one effect
+- [x] L179 clauses[ZM11].effects[4].shift: shift — the effect already has `add`: two verbs in one effect
+- [x] L184 clauses[ZM11].effects[5].when.choice: choice — not a fact in the vocabulary
+- [x] L187 clauses[ZM11].effects[6].forbid.choice: choice — not a field of `forbid`
+- [x] L187 clauses[ZM11].effects[6].forbid.when: when — not a field of `forbid`
+- [x] L205 clauses[ZM12].effects[0].on_success: on_success — no one-to-one verb
+- [x] L206 clauses[ZM12].effects[1].on_failure: on_failure — no one-to-one verb
 
 ## rules/core/zustaende.yaml
 
@@ -1156,46 +1156,46 @@ No residue.
 
 ## situations/probe-magie.yaml
 
-- [ ] L32 situations["20.1"].cast: cast — not a situation key in the vocabulary
-- [ ] L35 situations["20.1"].expect.check: check — neither an expect key nor a query
-- [ ] L36 situations["20.1"].expect.spell: spell — neither an expect key nor a query
-- [ ] L37 situations["20.1"].expect.charge: charge — neither an expect key nor a query
-- [ ] L45 situations["20.2"].cast: cast — not a situation key in the vocabulary
-- [ ] L47 situations["20.2"].expect.check: check — neither an expect key nor a query
-- [ ] L53 situations["20.2"].expect.spell: spell — neither an expect key nor a query
-- [ ] L54 situations["20.2"].expect.spell.cost.lines[0].from_rule: from_rule — snake_case key, no mapping
-- [ ] L55 situations["20.2"].expect.spell.castingTime.lines[0].from_rule: from_rule — snake_case key, no mapping
-- [ ] L56 situations["20.2"].expect.charge: charge — neither an expect key nor a query
-- [ ] L64 situations["20.3"].cast: cast — not a situation key in the vocabulary
-- [ ] L65 situations["20.3"].fail: fail — not a situation key in the vocabulary
-- [ ] L67 situations["20.3"].expect.check: check — neither an expect key nor a query
-- [ ] L73 situations["20.3"].expect.spell: spell — neither an expect key nor a query
-- [ ] L74 situations["20.3"].expect.charge: charge — neither an expect key nor a query
-- [ ] L79 situations["20.4"].cast: cast — not a situation key in the vocabulary
-- [ ] L79 situations["20.4"].cast.formel_weglassen: formel_weglassen — snake_case key, no mapping
-- [ ] L86 situations["20.4"].expect.check: check — neither an expect key nor a query
-- [ ] L87 situations["20.4"].expect.spell: spell — neither an expect key nor a query
-- [ ] L94 situations["20.5"].cast: cast — not a situation key in the vocabulary
-- [ ] L95 situations["20.5"].maintain: maintain — not a situation key in the vocabulary
-- [ ] L97 situations["20.5"].expect.check: check — neither an expect key nor a query
-- [ ] L98 situations["20.5"].expect.spell: spell — neither an expect key nor a query
-- [ ] L101 situations["20.5"].expect.charge: charge — neither an expect key nor a query
-- [ ] L112 situations["20.6"].cast: cast — not a situation key in the vocabulary
-- [ ] L114 situations["20.6"].expect.open: open — neither an expect key nor a query
-- [ ] L115 situations["20.6"].expect.check: check — neither an expect key nor a query
-- [ ] L116 situations["20.6"].expect.spell: spell — neither an expect key nor a query
-- [ ] L117 situations["20.6"].expect.charge: charge — neither an expect key nor a query
-- [ ] L125 situations["20.7"].cast: cast — not a situation key in the vocabulary
-- [ ] L126 situations["20.7"].choose.payWithLeP: payWithLeP — not a fact in the vocabulary
-- [ ] L129 situations["20.7"].expect.checks_first: checks_first — neither an expect key nor a query
-- [ ] L131 situations["20.7"].expect.charge: charge — neither an expect key nor a query
-- [ ] L134 situations["20.7"].expect.after: after — neither an expect key nor a query
-- [ ] L143 situations["20.8"].cast: cast — not a situation key in the vocabulary
-- [ ] L144 situations["20.8"].choose.payWithLeP: payWithLeP — not a fact in the vocabulary
-- [ ] L145 situations["20.8"].fail: fail — not a situation key in the vocabulary
-- [ ] L147 situations["20.8"].expect.cast: cast — neither an expect key nor a query
-- [ ] L148 situations["20.8"].expect.charge: charge — neither an expect key nor a query
-- [ ] L153 situations["20.8"].expect.after: after — neither an expect key nor a query
+- [x] L32 situations["20.1"].cast: cast — not a situation key in the vocabulary
+- [x] L35 situations["20.1"].expect.check: check — neither an expect key nor a query
+- [x] L36 situations["20.1"].expect.spell: spell — neither an expect key nor a query
+- [x] L37 situations["20.1"].expect.charge: charge — neither an expect key nor a query
+- [x] L45 situations["20.2"].cast: cast — not a situation key in the vocabulary
+- [x] L47 situations["20.2"].expect.check: check — neither an expect key nor a query
+- [x] L53 situations["20.2"].expect.spell: spell — neither an expect key nor a query
+- [x] L54 situations["20.2"].expect.spell.cost.lines[0].from_rule: from_rule — snake_case key, no mapping
+- [x] L55 situations["20.2"].expect.spell.castingTime.lines[0].from_rule: from_rule — snake_case key, no mapping
+- [x] L56 situations["20.2"].expect.charge: charge — neither an expect key nor a query
+- [x] L64 situations["20.3"].cast: cast — not a situation key in the vocabulary
+- [x] L65 situations["20.3"].fail: fail — not a situation key in the vocabulary
+- [x] L67 situations["20.3"].expect.check: check — neither an expect key nor a query
+- [x] L73 situations["20.3"].expect.spell: spell — neither an expect key nor a query
+- [x] L74 situations["20.3"].expect.charge: charge — neither an expect key nor a query
+- [x] L79 situations["20.4"].cast: cast — not a situation key in the vocabulary
+- [x] L79 situations["20.4"].cast.formel_weglassen: formel_weglassen — snake_case key, no mapping
+- [x] L86 situations["20.4"].expect.check: check — neither an expect key nor a query
+- [x] L87 situations["20.4"].expect.spell: spell — neither an expect key nor a query
+- [x] L94 situations["20.5"].cast: cast — not a situation key in the vocabulary
+- [x] L95 situations["20.5"].maintain: maintain — not a situation key in the vocabulary
+- [x] L97 situations["20.5"].expect.check: check — neither an expect key nor a query
+- [x] L98 situations["20.5"].expect.spell: spell — neither an expect key nor a query
+- [x] L101 situations["20.5"].expect.charge: charge — neither an expect key nor a query
+- [x] L112 situations["20.6"].cast: cast — not a situation key in the vocabulary
+- [x] L114 situations["20.6"].expect.open: open — neither an expect key nor a query
+- [x] L115 situations["20.6"].expect.check: check — neither an expect key nor a query
+- [x] L116 situations["20.6"].expect.spell: spell — neither an expect key nor a query
+- [x] L117 situations["20.6"].expect.charge: charge — neither an expect key nor a query
+- [x] L125 situations["20.7"].cast: cast — not a situation key in the vocabulary
+- [x] L126 situations["20.7"].choose.payWithLeP: payWithLeP — not a fact in the vocabulary
+- [x] L129 situations["20.7"].expect.checks_first: checks_first — neither an expect key nor a query
+- [x] L131 situations["20.7"].expect.charge: charge — neither an expect key nor a query
+- [x] L134 situations["20.7"].expect.after: after — neither an expect key nor a query
+- [x] L143 situations["20.8"].cast: cast — not a situation key in the vocabulary
+- [x] L144 situations["20.8"].choose.payWithLeP: payWithLeP — not a fact in the vocabulary
+- [x] L145 situations["20.8"].fail: fail — not a situation key in the vocabulary
+- [x] L147 situations["20.8"].expect.cast: cast — neither an expect key nor a query
+- [x] L148 situations["20.8"].expect.charge: charge — neither an expect key nor a query
+- [x] L153 situations["20.8"].expect.after: after — neither an expect key nor a query
 
 ## situations/reichweite.yaml
 
@@ -1406,6 +1406,8 @@ No residue.
 - situations/lebensenergie.yaml 15.16: (a) expects the Körperbeherrschung check itself offered (`optional: true`, with FW and attributes) before any choice. `offer` offers choices only: STATE_10.L4 offers `choice.passierschlagVermeiden` beside the stand-up, and its `check` runs once the hero stands up with it chosen, so no check is offered. (b) expects ADV_75 not applied `because: "betrifft nur Betäubung und Berauscht"`, while 15.19 expects `because: "nur durch Alkohol verursacht"` for the same effects. An effect has one `because`; SW1's tells carry the alcohol one (15.19), and the hero without Betäubung or Berauscht fails the same `when` (`hero.has: COND_2 | COND_9`).
 - situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from: ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per: action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{ reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's origin is ADV_4.B1. One effect cannot come from two clauses, so either these three or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the reroll.
 - situations/probe-fertigkeiten.yaml 22.7: expects the Schip reroll offered `from: ADV_4.B7`, `togetherWith: ADV_4.B1`. Real: B7 grants no reroll of its own (it only allows a Schip before or after the Begabung), and the Schip's Neuer Wurf is not written (schicksalspunkte says so in its header), so no effect offers it. Also plan-mandated by A.8 (`allow` → nothing), so B7 is `none`. The entry keeps its own `open:` note.
+- situations/probe-magie.yaml 20.7: expects the 3 AsP `from: [zaubermodifikationen.ZM12, SA_74.VP1]`. One `paid` event has one origin. With LeP chosen, SA_74.VP1 suppresses ZM12's AsP-only cost and pays the whole cost with its own `split` cost, so the AsP come from VP1 and ZM12 is in `notApplied` (suppressed). The owner decides whether the expectation names VP1 alone, or whether a split cost should keep ZM12 as its origin (with VP1 in `via`), which no verb expresses.
+- situations/probe-magie.yaml 20.8: expects the half cost `from: [SA_74.VP3, zaubermodifikationen.ZM12]`. VP3's `cost` ("wie sonst die Hälfte") is its own effect, and ZM12 is suppressed by VP1 once LeP are chosen, so the payments come from VP3 alone; ZM12 is the clause VP3's text points at, not an origin.
 
 ## Reviews reset by hand edits
 
@@ -1539,6 +1541,17 @@ No residue.
 - ADV_4.B7: `allow: { together: [B1, schicksalspunkte.neuer-wurf], order: any }` is `none` (plan A.8: allowed is the default; the procedure offers every open reroll in either order)
 - SA_9.FS1: `add: { to: fw }` is `add: { to: check.fw }` (plan A.4); the gate `check: { talent: option.sid, application: option.sid2 }` is the new derived facts `check.onOption` and `check.applicationOnOption` (the check's Anwendungsgebiet is the instance's `sid2`)
 
+- zaubermodifikationen.ZM1: `offer: { pickers, per: cast, before: check }` is `offer: { choice: spellModification, options: [7 modifications] }` on a spell check; the one `limit` (max `floor(spell.fw / 4)`, ruling omit-counts) is two: over the five parameter modifications with no ruling, and over all seven with ruling omit-counts; `max` is the value `{ of: fw.current, per: 4, round: down }` (limit's `max` now takes a value)
+- zaubermodifikationen.ZM2: `limit: { category: [kosten, zauberdauer, reichweite], max_steps: 1 }` is one limit of 1 per category over the modifications that move it (Erzwingen + Kosten senken; Zauberdauer erhöhen + senken), with `because`; Reichweite's one modification is left to ZM6
+- zaubermodifikationen.ZM5: the `derive` of the upkeep from `spell.cost.base` is `derive` + `add … scale: zaubermodifikationen.kosten` (−1) + `floor` (min 1, the old `cap … min`) on the new target `spell.costPerInterval`, all on `spell.duration: aufrechterhaltend`; it now reads the cost after the modifications (target `spell.cost`); the `charge … every: spell.interval, while: maintained` is `cost { every: { minutes: spell.interval } }` on `spell.maintained: true`
+- zaubermodifikationen.ZM6: `limit: { choice: spellModification, each: 1 }` is seven limits, one per modification, max 1 per action, with `because`
+- zaubermodifikationen.ZM8: the provides are named `zaubermodifikationen.zauberdauer | reichweite | kosten` (were `tables.*`), and ruling cost-off-table moved off all three onto ZM11's two cost steps, so the scales apply while it is open
+- zaubermodifikationen.ZM11: each `shift` + `add` is two effects: `add` to `check.modifier` (was `check`) and `add … scale` on `spell.cost` / `spell.range` / `spell.castingTime`; the two cost steps carry ruling cost-off-table; the omission's `per: choice` is one −2 effect per omission; the `forbid … when: { spell.forbids: that }` is one forbid per modification on the new spell facts `spell.forbidsErzwingen` / `spell.forbidsKostenSenken`
+- zaubermodifikationen.ZM12: `on_success` / `on_failure` + `charge` are two `cost`s on `check.kind: spell` and `check.result: success | failure`; the failure's `half(base + perInterval)` rounded up is `amount: { of: [spell.cost, spell.costPerInterval] }, onFailure: 0.5`
+- SA_74.VP1: the offer `payWithLeP` with an `amount` range is `offer: { choice: split.le }` (the split fact of plan Task 25); the forbid reads the new derived fact `hero.aspCurrent`; the `split` is `cost { split: { pools: [asp, le], min: { asp: 1 } } }` on a successful spell check with LeP chosen; new `suppress` of zaubermodifikationen.ZM12 when LeP are chosen, so the cost is paid once
+- SA_74.VP2: `requires_check` + `on_failure: { set: { cast.outcome: failed } }` is `check: { of: { talent: TAL_8 } }` whose `onFailure` forbids the spell check (`forbid: { what: { check: [spell] } }`, as fertigkeitsproben.FP2), on `choice.split.le: { atLeast: 1 }`
+- SA_74.VP3: `charge { pools: [asp, le], half, round: up }` on `check_failed: VP2` is `cost { onFailure: 0.5, fallThrough: [le] }` on a failed spell check with LeP chosen; it now also rests on vp-sequence (whether a spell check that failed on its own pays this way)
+
 ## Open questions
 
 - trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden.
@@ -1548,6 +1561,8 @@ No residue.
 - ADV_4 / SA_9: a hero may own several instances of one rule (Begabung up to three Fertigkeiten, Fertigkeitsspezialisierung up to three Anwendungsgebiete per talent). A situation's owned entry and the Optolith import (`hero.py`, `entries[0]`) hold one instance, and `check.onOption` / `check.applicationOnOption` are defined per instance. How the engine evaluates a rule once per instance is open.
 - TAL_7 (kind `talent`): a talent rule is not owned (the sheet has its FW, `fw.TAL_7`) and not core. Its effects are gated on `check.talent: TAL_7`; the engine must apply a talent rule to a check on that talent (situations `pending` counts only owned and core rules).
 - DISADV_37.SE4 (Group 2): `add: { to: check.modifier, value: { of: gmFact.triggerModifier } }` is 0 for an Erschwernis under the proportion's `max(0, of − above)` clamp (plan Task 22), which breaks boronmir-neu 19.11's expected −2 from SE4 (`gmFact.triggerModifier: -2`). Either the engine clamps only when `above` is given (so `{ of: <fact> }` keeps its sign), or SE4 takes fertigkeitsproben.FM2's two-add pattern (`above: 0` → `of` the fact; `below: 0` → `{ of: 0, above: <fact>, times: -1 }`).
+- zaubermodifikationen (spell data): the `spell.` fact family is owned by `player`, but `spell.duration`, `spell.interval`, `spell.range` (the spell's own), `spell.foreignTradition`, `spell.forbidsErzwingen` and `spell.forbidsKostenSenken` are the spell's data (rules.db spell_details, the spell's text). Unstated they are unknown and ask the player on every cast. Should the engine state them from the spell's data (a new owner or a data-sourced `provide`), and where does a spell's base cost, casting time and range come from (probe-magie states them as the queries' base `values`)?
+- zaubermodifikationen.ZM1 (pending): ZM1's second `limit` rests on the open ruling omit-counts, and a `limit` on a `choice` is indexed under `*`, so every situation of every file is pending on omit-counts (before Task 14 the same came from cost-off-table on ZM8's provides). `pending` counts a core rule's `*` effects whatever their `when` (`check.kind: spell`). Either the reach index keys a choice's legality under something narrower, or pending looks at the effect's `when`.
 
 ## Notes for the engine tasks
 
@@ -1557,3 +1572,10 @@ Procedure and harness work the rules rest on (Tasks 22–28); no owner decision.
 - probe-fertigkeiten 22.5, 22.6, 22.8 (Task 26): the harness reads the situation-level `result` key (`success`, `kind`, `from`). The procedure classifies the result from the faces (spec §6 result stage) and names the classifying clause: fertigkeitsproben.KR1 for a Doppel-1 (kind kritischerErfolg; KR2 dreifach1), fertigkeitsproben.PZ1 for a Doppel-20 (kind patzer) or Dreifach-20 (dreifach20) — for 22.6, PZ1 even though it is a Doppel-20; `regular` otherwise (22.5).
 - ADV_4.B1, SA_9.FS1 (Task 22): the derived facts `check.onOption` and `check.applicationOnOption` take their value from the owned instance of the rule that reads them (`option` = `sid`, `option2` = `sid2`) against the check's `check.talent` / `check.application`. When `check.application` is unknown, the question goes to the player (the fact's owner; fertigkeitsproben.FP8 asks it).
 - Talent texts (follow-up, rules authoring): fertigkeitsproben.KR1/PZ1's generic `provide: { name: text, value: skill.critical | skill.botch }` went with the Group 6 migration; only TAL_7 (Schwimmen) has a rule file carrying its Kritischer Erfolg and Patzer. Every other talent's crit/botch text (and the 11 talents' "FP = doppelter FW") is lost until either one rule file per talent exists or a data-sourced `provide` (Optolith de-DE/Skills.yaml `critical`/`botch`, rules.db) supplies them.
+- probe-magie 20.2 (Task 22): a step along a scale (`add … scale`) is a line whose `value` is the parameter after the step and whose `was` is the value before (8 → 16), as a lowered line carries `was` (reichweite.yaml); its `via` holds the clause that provides the scale (zaubermodifikationen.ZM8), as ruling R26 adds the rules behind a target operand.
+- probe-magie 20.2–20.5 (Task 22/24): the line key `term` names the modification a ZM11 line belongs to ("Erzwingen", "Zauberdauer erhöhen"), since one clause gives several lines. The engine takes it from the choice option the line's `when` read (`choice.spellModification.erzwingen`); the display names of the options (lowerCamelCase ids) must come from somewhere, e.g. the picker's labels.
+- probe-magie 20.1, 20.7 (Task 23): an `offered` entry's `max` is the choice's bound: for `spellModification` the max of zaubermodifikationen.ZM1's first `limit` (FW 9 → 2); for `split.le` the cost less the other pools' `split.min` (8 − 1 = 7, SA_74.VP1). A `limit` over a list of choice ids counts how many of them are chosen (`choice.spellModification.<id>: true`); `fw.current` on a spell check is the FW of `check.spell` (`fw.SPELL_…`).
+- probe-magie 20.5 (Task 28): the `sequence` step `advanceClock: { minutes: 180 }` advances the game clock; ZM5's `cost { every: { minutes: spell.interval } }` reads the interval from the fact. The expected `paid` of 3 AsP `over: { minutes: 180 }` is the sum of the three payments of 1 in that step: the harness sums the `paid` events of one origin and pool within a step.
+- probe-magie 20.7, 20.8 (Tasks 25, 26): SA_74.VP1's `suppress` of zaubermodifikationen.ZM12 drops ZM12's `cost`s (no `paid` event; ZM12 in `notApplied`, suppressed). VP2's failed Selbstbeherrschung forbids the spell check (`onFailure: forbid { check: [spell] }`); the procedure reads a spell check forbidden that way as a failed cast: `result: { success: false, from: SA_74.VP2 }` (20.8) and `check.result: failure` for the spell, on which VP3's cost fires. In 20.7 `rolls: { check.result: success }` stands for both checks.
+- probe-magie 20.8 (Task 25): a `fallThrough` payment is expected as one entry `paid: { amount: 4, pools: [{ asp: 3 }, { le: 1 }] }`; the engine gives `paid(asp, 3)`, `paid(le, 1)` (plan Task 25). The harness matches the entry against the events of one `cost` effect: their sum and the pools in order.
+- probe-magie 20.7 (Task 25): `notApplied: [{ rule: trefferzonen, clause: TZ8, reason: "LeP aufgewendet, kein Schaden" }]`: paying LeP lowers `leCurrent` but is no hit, so no Wundschwelle or Wundeffekt check follows; the harness matches the entry by rule and clause (TZ8 is also out of its ruleset there).

@@ -5,7 +5,8 @@ A situations file is `{heroFile?, hero?, rulesets?, situations: [...]}`. Each si
 - `hero`: the rules it owns and its sheet values, layered hero file → file `hero` → situation
   `hero`. The rule-owning maps (`abilities`, `advantages`, `disadvantages`, `conditions`,
   `states`, and `creatures`: a mount's profile, kind `creature`) are replaced whole by a later
-  layer; `values` (query string → base value), `attributes`, `techniques` and `talents` are merged key by key. An owned entry is a level
+  layer; `values` (query string → base value), `attributes`, `techniques`, `talents` and `spells`
+  (a spell's FW, the fact `fw.SPELL_…`) are merged key by key. An owned entry is a level
   (int), `{sid: n}` (→ `option`, level 1; with `sid2: m` also → `option2`) or `true` (level 1).
 - facts, each in the section of its owner (`SECTIONS`); a prefixed section names the fact with
   its prefix (`round: { parries: 1 }` is `round.parries`). `rolls` is either dice (a list, passed
@@ -30,7 +31,7 @@ from .forms import Forms
 from .rules import SHARED, _plain
 
 RULE_MAPS = ("abilities", "advantages", "disadvantages", "conditions", "states", "creatures")
-FACT_MAPS = {"attributes": "attr.", "techniques": "ktw.", "talents": "fw."}
+FACT_MAPS = {"attributes": "attr.", "techniques": "ktw.", "talents": "fw.", "spells": "fw."}
 HERO_KEYS = RULE_MAPS + ("values",) + tuple(FACT_MAPS)
 # The rule map an Optolith activatable belongs to, by its id's prefix.
 _OPTOLITH_MAPS = (("DISADV_", "disadvantages"), ("ADV_", "advantages"), ("SA_", "abilities"))
@@ -174,6 +175,7 @@ class _File:
             for key, prefix in FACT_MAPS.items():
                 if f["name"].startswith(prefix):
                     layer[key][f["name"][len(prefix):]] = f["value"]
+                    break                               # `fw.` facts go to `talents`, not `spells`
         return layer
 
     def hero(self, raw, line):

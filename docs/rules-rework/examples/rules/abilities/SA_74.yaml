@@ -30,27 +30,45 @@ clauses:
       Ein Zauberer kann Anstelle von AsP auch LeP für die Zauberkosten aufwenden. Es muss jedoch
       pro Zauber mindestens 1 AsP aufgewendet werden.
     effects:
-      - offer:
-          choice: payWithLeP
-          amount: { pool: le, min: 0, max: "spell.cost.effective - 1" }
-          when: { cast: spell }
-          ruling: vp-sequence
-          # One LeP for one AsP (the page gives no rate). The rest of the cost, at least 1, is
-          # AsP (zaubermodifikationen.ZM12). With 0 AsP left, the SF cannot be used.
-      - forbid: { choice: payWithLeP, when: { hero.asp.current: 0 } }
+      - when: { check.kind: spell }
+        offer: { choice: split.le }
+        ruling: vp-sequence
+        # The old `offer: { choice: payWithLeP, amount: { pool: le, min: 0, max:
+        # "spell.cost.effective - 1" } }`: the player's split is the fact `choice.split.le`
+        # (plan Task 25: `split` reads `choice.split.<pool>`), how many of the cost's points are
+        # LeP. Its bounds are the cost's `split` below: 0 up to the cost less VP1's 1 AsP.
+        # One LeP for one AsP (the page gives no rate). The rest of the cost, at least 1, is
+        # AsP (zaubermodifikationen.ZM12). With 0 AsP left, the SF cannot be used.
+      - when: { hero.aspCurrent: 0 }
+        forbid: { what: { choice: split.le } }
         because: "mindestens 1 AsP pro Zauber"
-      - split: { charge: spell.cost.effective, pools: { le: choice.payWithLeP, asp: rest }, min: { asp: 1 } }
-        # FORMAT: the `split` above — see the header.
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: success }
+        cost: { pool: asp, amount: { of: spell.cost }, split: { pools: [asp, le], min: { asp: 1 } } }
+        # The old `split: { charge: spell.cost.effective, pools: { le: choice.payWithLeP, asp:
+        # rest }, min: { asp: 1 } }` (plan A.6): the cost after the modifications, split between
+        # AsP and LeP at the player's choice, at least 1 AsP.
+      - when: { choice.split.le: { atLeast: 1 } }
+        suppress: { line: { line: zaubermodifikationen.ZM12 } }
+        because: "Verbotene Pforten: die Kosten werden geteilt (VP1) bzw. bei Misslingen nach VP3 gezahlt"
+        # ZM12's AsP-only cost gives way to VP1's split (and, on a failure, VP3's half), so the
+        # cost is paid once.
 
   - id: VP2
     text: >
       Dies ist ausgesprochen schmerzhaft und erfordert daher eine Probe auf das Talent
       Selbstbeherrschung. Misslingt diese, misslingt auch der Zauber.
     effects:
-      - when: { choice.payWithLeP: true, amount: { min: 1 } }
-        requires_check: { talent: Selbstbeherrschung, application: null }
-        on_failure: { set: { cast.outcome: failed } }
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 } }
+        check:
+          of: { talent: TAL_8 }
+          onFailure:
+            - forbid: { what: { check: [spell] } }
+              because: "Selbstbeherrschung misslungen: der Zauber misslingt"
         ruling: vp-sequence
+        # Selbstbeherrschung is TAL_8. The old `on_failure: { set: { cast.outcome: failed } }`:
+        # no verb sets a check's result, so the failed Selbstbeherrschung forbids the spell check,
+        # as fertigkeitsproben.FP2 forbids a check that cannot succeed; the procedure reads the
+        # forbidden cast as failed (see MIGRATION.md, "Notes for the engine tasks").
         # FORMAT: one check deciding the outcome of *another* check (the spell's). The set has
         # checks that gate an offer (reiterkampf's orders: Reiten before the order happens) but
         # none that overturns a roll already made — which it is, if the Selbstbeherrschung
@@ -64,12 +82,13 @@ clauses:
       Der Zauberkundige muss dann wie sonst die Hälfte der Kosten aufbringen, wobei diese zuerst
       von den AsP und, sollten diese nicht ausreichen, dann von seinen LE abgezogen werden.
     effects:
-      - when: { check_failed: VP2 }
-        charge:
-          amount: "half(spell.cost.effective)"
-          round: up
-          pools: [asp, le]          # in this order: AsP until empty, the rest from LE
-          ruling: round-up
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: failure }
+        cost: { pool: asp, amount: { of: spell.cost }, onFailure: 0.5, fallThrough: [le] }
+        ruling: [vp-sequence, round-up]
+        # AsP until empty, the rest from LE (`fallThrough`, plan A.6); half, rounded up
+        # (`onFailure: 0.5`). The old `when: { check_failed: VP2 }` is the cast failed with LeP
+        # chosen, which VP2's failed Selbstbeherrschung makes it. Whether a spell check that
+        # failed on its own also pays this way is what vp-sequence asks, so the effect rests on it.
         # "wie sonst" points at zaubermodifikationen.ZM12's half cost. The LeP the player chose
         # in VP1 do not matter any more: the half is paid AsP first.
         # FORMAT: an ordered fallback between pools (AsP, then LE), part of the `split` concept.

@@ -37,11 +37,28 @@ clauses:
       eine Zaubermodifikation anwenden, auf 8 kann er zwei verwenden, auf 12 drei usw. Je nach
       Modifikation wird die Probe auf den Zauberspruch erleichtert oder erschwert.
     effects:
-      - offer: { pickers: [spellModification], per: cast, before: check }
-      - limit: { per: cast, choice: spellModification, max: "floor(spell.fw / 4)" }
+      - when: { check.kind: spell }
+        offer:
+          choice: spellModification
+          options: [erzwingen, kostenSenken, reichweiteErhoehen, zauberdauerErhoehen, zauberdauerSenken, gesteWeglassen, formelWeglassen]
+        # The old `per: cast, before: check`: the offer belongs to the spell check's start
+        # breakdown (spec §6), before the dice. Each option picked is the player fact
+        # `choice.spellModification.<option>: true`.
+      - limit:
+          what: { choice: [spellModification.erzwingen, spellModification.kostenSenken, spellModification.reichweiteErhoehen, spellModification.zauberdauerErhoehen, spellModification.zauberdauerSenken] }
+          max: { of: fw.current, per: 4, round: down }
+          per: action
+        # FW 9 → 2, FW 12 → 3 (`fw.current` is the FW of the spell the check is on). Variation of
+        # kampfsonderfertigkeiten KS3–KS5's `limit` (one Basis- and one Spezialmanöver per
+        # action), with the max computed from a value. The five modifications that move a
+        # parameter count without question.
+      - limit:
+          what: { choice: [spellModification.erzwingen, spellModification.kostenSenken, spellModification.reichweiteErhoehen, spellModification.zauberdauerErhoehen, spellModification.zauberdauerSenken, spellModification.gesteWeglassen, spellModification.formelWeglassen] }
+          max: { of: fw.current, per: 4, round: down }
+          per: action
         ruling: omit-counts
-        # FW 9 → 2, FW 12 → 3. Variation of kampfsonderfertigkeiten KS3–KS5's `limit` (one
-        # Basis- and one Spezialmanöver per action), with the max computed from a value.
+        # The same count with Geste and Formel weglassen in it: whether they count is the open
+        # ruling omit-counts, so only this limit rests on it.
 
   - id: ZM2
     text: >
@@ -51,15 +68,21 @@ clauses:
       und Erzwingen jeweils um eine Stufe erhöht oder verringert werden. Mehr als eine Stufe pro
       Kategorie zu verändern ist nicht möglich.
     effects:
-      - limit: { per: cast, category: [kosten, zauberdauer, reichweite], max_steps: 1 }
+      - limit: { what: { choice: [spellModification.erzwingen, spellModification.kostenSenken] }, max: 1, per: action }
+        because: "höchstens eine Stufe pro Kategorie (Kosten)"
+      - limit: { what: { choice: [spellModification.zauberdauerErhoehen, spellModification.zauberdauerSenken] }, max: 1, per: action }
+        because: "höchstens eine Stufe pro Kategorie (Zauberdauer)"
         # One step per category, so Erzwingen and Kosten senken exclude each other (both move
         # Kosten), and so do Zauberdauer senken and erhöhen. A reading: the page forbids "more
         # than one Stufe", and the pair would be two changes of one category that cancel out.
+        # The old `category: [kosten, zauberdauer, reichweite], max_steps: 1` is one limit per
+        # category over the modifications that move it. Reichweite has one modification
+        # (Reichweite erhöhen), so its one step is ZM6's "keine mehrfach".
 
   - id: ZM3
     text: "Die Reichweite eines Zaubers zu senken ist nicht möglich."
     effects:
-      - forbid: { choice: spellModification.reichweiteSenken }
+      - forbid: { what: { choice: spellModification.reichweiteSenken } }
         because: "die Reichweite lässt sich nur erhöhen"
         # There is no such modification in ZM11 either; stated so the picker never grows one.
 
@@ -68,9 +91,12 @@ clauses:
       Bei Zaubersprüchen mit der Reichweite selbst, also solchen, die nur auf den Zaubernden
       selbst wirken, kann die Reichweite nicht erhöht werden.
     effects:
-      - forbid: { choice: spellModification.reichweiteErhoehen, when: { spell.range: selbst } }
+      - when: { spell.range: selbst }
+        forbid: { what: { choice: spellModification.reichweiteErhoehen } }
         because: "Reichweite selbst"
-        # Legality read from a spell parameter — as reiterkampf.RK4 reads the weapon.
+        # Legality read from a spell parameter — as reiterkampf.RK4 reads the weapon. The fact
+        # `spell.range` is the spell's own range as its data states it; the target `spell.range`
+        # is the range after the modifications (ZM11).
 
   - id: ZM5
     text: >
@@ -80,11 +106,21 @@ clauses:
       Kosten entsprechend beim Aufrechterhalten. Die Kosten können nie unter 1 AsP pro Intervall
       fallen.
     effects:
-      - derive: { value: spell.cost.perInterval, from: spell.cost.base, steps: -1, table: ZM8.kosten }
-        when: { spell.duration: aufrechterhaltend }
+      - when: { spell.duration: aufrechterhaltend }
+        derive: { to: spell.costPerInterval, sum: [{ of: spell.cost }] }
+      - when: { spell.duration: aufrechterhaltend }
+        add: { to: spell.costPerInterval, value: -1, scale: zaubermodifikationen.kosten }
+        # The old `derive: { from: spell.cost.base, steps: -1, table: ZM8.kosten }`: the cost of
+        # the cast (the target `spell.cost`, after Kosten senken or Erzwingen, so the upkeep
+        # follows them) one step down ZM8's Kosten scale.
         # Flim Flam: 2 AsP + 1 AsP pro Stunde — the data agrees with the rule (2 → 1).
-      - cap: { value: spell.cost.perInterval, min: 1 }
-      - charge: { pool: asp, amount: spell.cost.perInterval, every: spell.interval, while: maintained }
+      - when: { spell.duration: aufrechterhaltend }
+        floor: { to: spell.costPerInterval, min: 1 }
+        # "nie unter 1 AsP pro Intervall" (the old `cap … min: 1`, a floor).
+      - when: { spell.duration: aufrechterhaltend, spell.maintained: true }
+        cost: { pool: asp, amount: { of: spell.costPerInterval }, every: { minutes: spell.interval } }
+        # `spell.interval` is the spell's interval in minutes, from its data (Flim Flam: 60);
+        # `spell.maintained` the player keeping the spell up (the old `while: maintained`).
         # FORMAT: a recurring cost, charged every game-time interval (5 Minuten, 1 Stunde) for as
         # long as the caster keeps the spell up. Nothing in the set charges a resource over
         # time; Zustand durations (ADV_75 on Betäubung, the Regenerationsphase) are spans or
@@ -97,14 +133,29 @@ clauses:
       Ein Zauberkundiger kann diese Zaubermodifikationen für einen Zauberspruch beliebig
       kombinieren, jedoch keine mehrfach wählen.
     effects:
-      - limit: { per: cast, choice: spellModification, each: 1 }
+      - limit: { what: { choice: spellModification.erzwingen }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.kostenSenken }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.reichweiteErhoehen }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.zauberdauerErhoehen }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.zauberdauerSenken }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.gesteWeglassen }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
+      - limit: { what: { choice: spellModification.formelWeglassen }, max: 1, per: action }
+        because: "keine Modifikation mehrfach"
         # Each modification at most once; any combination within ZM1's count and ZM2's one step
-        # per category.
+        # per category. The old `each: 1` is one limit per modification (a `limit` over a list
+        # counts the list together, as ZM2's do).
 
   - id: ZM7
     text: "Zaubersprüche fremder Traditionen (Fremdtradition) lassen sich nicht modifizieren."
     effects:
-      - forbid: { choice: spellModification, when: { spell.foreignTradition: true } }
+      - when: { spell.foreignTradition: true }
+        forbid: { what: { choice: spellModification } }
         because: "Fremdtradition: nicht modifizierbar"
         # The app asks "Fremdtradition" as a toggle on the cast (SpellProbeModal) and applies its
         # −2 (section 4, MagicModifiers.foreignTradition); the hero's tradition and the spell's
@@ -122,20 +173,18 @@ clauses:
       32 Aktionen | 64 Schritt | 32 AsP
     effects:
       - provide:
-          name: tables.zauberdauer
+          name: zaubermodifikationen.zauberdauer
           value: [1, 2, 4, 8, 16, 32]                        # Aktionen
-        ruling: cost-off-table
       - provide:
-          name: tables.reichweite
+          name: zaubermodifikationen.reichweite
           value: [beruehren, 4, 8, 16, 32, 64]               # Schritt
-        ruling: cost-off-table
       - provide:
-          name: tables.kosten
+          name: zaubermodifikationen.kosten
           value: [1, 2, 4, 8, 16, 32]                        # AsP
-        ruling: cost-off-table
-        # Ordered scales the modifications step along — reichweite.yaml's ordered enum of reach.
-        # What a step means for a value off the table (3 AsP, "4/8/16 AsP", "1 AsP pro LeP")
-        # is ruling cost-off-table.
+        # Ordered scales the modifications step along — reichweite.yaml's ordered enum of reach;
+        # ZM11's `add … scale:` and ZM5 read them. What a step means for a value off the table
+        # (3 AsP, "4/8/16 AsP", "1 AsP pro LeP") is ruling cost-off-table, which sits on the
+        # cost steps it concerns (ZM11's Erzwingen and Kosten senken), not on the scales.
 
   - id: ZM9
     text: >
@@ -164,30 +213,51 @@ clauses:
       Geste oder Formel weglassen: Zauberprobe um jeweils -2 erschwert
     effects:
       - when: { choice.spellModification.erzwingen: true }
-        shift: { param: spell.cost.base, steps: 1, table: ZM8.kosten }
-        add: { to: check, value: 1 }
+        add: { to: check.modifier, value: 1 }
+      - when: { choice.spellModification.erzwingen: true }
+        add: { to: spell.cost, value: 1, scale: zaubermodifikationen.kosten }
+        ruling: cost-off-table
       - when: { choice.spellModification.kostenSenken: true }
-        shift: { param: spell.cost.base, steps: -1, table: ZM8.kosten }
-        add: { to: check, value: -1 }
+        add: { to: check.modifier, value: -1 }
+      - when: { choice.spellModification.kostenSenken: true }
+        add: { to: spell.cost, value: -1, scale: zaubermodifikationen.kosten }
+        ruling: cost-off-table
       - when: { choice.spellModification.reichweiteErhoehen: true }
-        shift: { param: spell.range, steps: 1, table: ZM8.reichweite }
-        add: { to: check, value: -1 }
+        add: { to: check.modifier, value: -1 }
+      - when: { choice.spellModification.reichweiteErhoehen: true }
+        add: { to: spell.range, value: 1, scale: zaubermodifikationen.reichweite }
       - when: { choice.spellModification.zauberdauerErhoehen: true }
-        shift: { param: spell.castingTime, steps: 1, table: ZM8.zauberdauer }
-        add: { to: check, value: 1 }
+        add: { to: check.modifier, value: 1 }
+      - when: { choice.spellModification.zauberdauerErhoehen: true }
+        add: { to: spell.castingTime, value: 1, scale: zaubermodifikationen.zauberdauer }
       - when: { choice.spellModification.zauberdauerSenken: true }
-        shift: { param: spell.castingTime, steps: -1, table: ZM8.zauberdauer }
-        add: { to: check, value: -1 }
+        add: { to: check.modifier, value: -1 }
+      - when: { choice.spellModification.zauberdauerSenken: true }
+        add: { to: spell.castingTime, value: -1, scale: zaubermodifikationen.zauberdauer }
         # The casting time is how many Aktionen the cast takes (section 3: over 1 Aktion it is
         # a länger dauernde Handlung). The app already turns casting_time_short into a
         # multi-round cast (CombatSpellViews.castingActions); a shifted time must feed it.
-      - when: { choice: [spellModification.gesteWeglassen, spellModification.formelWeglassen] }
-        add: { to: check, value: -2, per: choice }
+        # Each old effect held a `shift` beside its `add` (two verbs); plan A.6 makes the shift
+        # an `add` with `scale`, as its own effect. The check modifier (the old `to: check`) is
+        # `check.modifier`, the one Erschwernis/Erleichterung of the 3W20 check (spec §6).
+        # The two cost steps rest on cost-off-table (what a step does to a cost off ZM8's table).
+      - when: { choice.spellModification.gesteWeglassen: true }
+        add: { to: check.modifier, value: -2 }
         ruling: omit-counts
-      - forbid: { choice: [spellModification.erzwingen, spellModification.kostenSenken], when: { spell.forbids: that } }
+      - when: { choice.spellModification.formelWeglassen: true }
+        add: { to: check.modifier, value: -2 }
+        ruling: omit-counts
+        # The old `when: { choice: [geste…, formel…] }` with `per: choice`: −2 for each left out.
+      - when: { spell.forbidsErzwingen: true }
+        forbid: { what: { choice: spellModification.erzwingen } }
+        because: "beim Zauber ausgeschlossen"
+      - when: { spell.forbidsKostenSenken: true }
+        forbid: { what: { choice: spellModification.kostenSenken } }
         because: "beim Zauber ausgeschlossen"
         # "bei einigen Zaubern nicht anwendbar, dann aber extra erwähnt": the exception lives in
         # the spell's own text. As waffeneigenschaften: a rule whose gates live in other files.
+        # The old `forbid: { choice: [erzwingen, kostenSenken], when: { spell.forbids: that } }`
+        # is one forbid per modification, each on a spell fact that says the spell excludes it.
         # FORMAT: `shift` — a rule that moves a *parameter of the action* (its cost, how long it
         # takes, how far it reaches) along an ordered scale, and the check modifier comes with
         # it. The set has steps along an ordered scale (reichweite.R*, a penalty per step) and
@@ -202,10 +272,17 @@ clauses:
       Misslingen der Probe werden zur Berechnung des AsP-Verlustes die Grundkosten + die Kosten
       für die erste Zeiteinheit herangezogen.
     effects:
-      - on_success: { charge: { pool: asp, amount: spell.cost.effective } }
-      - on_failure:
-          charge: { pool: asp, amount: "half(spell.cost.base + spell.cost.perInterval)", round: up }
-          ruling: round-up
+      - when: { check.kind: spell, check.result: success }
+        cost: { pool: asp, amount: { of: spell.cost } }
+        # The old `on_success: { charge: … spell.cost.effective }`: the target `spell.cost` is the
+        # cost after the modifications (ZM11).
+      - when: { check.kind: spell, check.result: failure }
+        cost: { pool: asp, amount: { of: [spell.cost, spell.costPerInterval] }, onFailure: 0.5 }
+        ruling: round-up
+        # The old `on_failure: { charge: "half(spell.cost.base + spell.cost.perInterval)", round:
+        # up }`: `onFailure: 0.5` halves the amount, rounded up, on a failed check (plan Task 25).
+        # `spell.costPerInterval` is ZM5's upkeep; for a spell that is not aufrechterhaltend
+        # nothing derives it, so it adds nothing.
         # "Die Hälfte der so berechneten": after the modifications. Rounded up per the shared
         # round-up ruling (ADR-0006) — the app's `(cost + 1) / 2` agrees.
         # FORMAT: a resource charge whose amount depends on the check's outcome (success, failure,

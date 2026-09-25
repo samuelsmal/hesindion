@@ -172,6 +172,9 @@ def _cross_checks(book, pending, errors):
                 for rid in rows:
                     if not isinstance(rid, str) or rid not in book:
                         errors.append(RulecError(f"unknown rule in table {value}: {rid}", file, line))
+        elif kind == "scale":
+            if value not in provided:
+                errors.append(RulecError(f"unknown scale {value}", file, line))
         elif kind == "rule":
             if value not in book:
                 errors.append(RulecError(f"unknown rule {value}", file, line))
@@ -363,6 +366,14 @@ class _Rule:
             if ftype == "rule" and verb != "useLevel":        # useLevel's rule is checked below
                 kind, ref = ("ruleTable", val["table"]["name"]) if isinstance(val, dict) else ("rule", val)
                 self.pending.append((kind, ref, self.file, _key_line(raw, k, vline)))
+        if verb == "add" and ok and "scale" in out:
+            # A step along an ordered scale: the scale is a provided table, and every target
+            # is one whose value lies on a scale (`scale: true`, the spell parameters).
+            for t in out["to"]:
+                if not self.v.raw["targets"].get(t["name"], {}).get("scale"):
+                    self.err(f"{t['name']} is not on a scale", _key_line(raw, "to", vline))
+                    ok = False
+            self.pending.append(("scale", out["scale"], self.file, _key_line(raw, "scale", vline)))
         if verb == "useLevel" and ok and ("as" in raw) == ("lowerBy" in raw):
             self.err("useLevel needs exactly one of as, lowerBy", vline)
             ok = False
@@ -454,8 +465,16 @@ class _Rule:
                     return self._bad(f"unknown pool {p}", line)
             return {"pools": list(val["pools"]), "min": dict(val.get("min", {}))}
         if ftype == "duration":
+            # `{ minutes: 5 }`, `{ rounds: 1 }`, or the count read from a fact: the interval a
+            # spell's own data states (`{ minutes: spell.interval }`, zaubermodifikationen.ZM5).
             if (not isinstance(val, dict) or len(val) != 1
-                    or next(iter(val)) not in ("minutes", "rounds") or not _is_int(next(iter(val.values())))):
+                    or next(iter(val)) not in ("minutes", "rounds")):
+                return wrong()
+            n = next(iter(val.values()))
+            if isinstance(n, str):
+                if self.v.fact_owner(n) is None:
+                    return self._bad(f"unknown fact {n}", line)
+            elif not _is_int(n):
                 return wrong()
             return _plain(val)
         return self._bad(f"unknown field type {ftype}", line)   # vocabulary out of step with rulec
