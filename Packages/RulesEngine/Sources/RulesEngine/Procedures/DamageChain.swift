@@ -57,8 +57,7 @@ public struct DamageResult: Hashable, Sendable {
     public var sp: Breakdown
     /// `wundschwelle`: trefferzonen.TZ8's derive and the lines on it (Eisern).
     public var wundschwelle: Breakdown
-    /// `leCurrent`: the LE after the hit, schaden.S2's line (−SP). No event applies it: §7 has no
-    /// event for damage (`paid` is not damage); the caller writes this result into the LE.
+    /// `leCurrent`: the LE after the hit, schaden.S2's line (−SP).
     public var leCurrent: Breakdown
     /// The hit's situation: `hit.tp`, `hit.zone`, `hit.side` as given, and the derived facts the
     /// chain read from the rules (`derived`).
@@ -66,6 +65,10 @@ public struct DamageResult: Hashable, Sendable {
     /// `hit.sp` (the `sp` result), `hit.overWundschwelle` (the count trefferzonen.TZ8's proportion
     /// defines), `hit.zoneRs` (the zone's `rs`, where a rule that applies reads it).
     public var derived: [FactUse]
+    /// `damaged(le, n)` (ruling R53): one per line of `leCurrent` whose clause computes with the
+    /// SP (schaden.S2), its amount the LeP that line takes. `Situation.applying` lowers LE by it;
+    /// none when the SP are 0 or the loss is suppressed (a mount's hit, reiterkampf.RK11).
+    public var events: [Event]
     /// The checks the hit calls for: every `check` effect reading a `hit.*` fact whose rule applies
     /// and whose `when` holds.
     public var checks: [PendingCheck]
@@ -104,7 +107,11 @@ public enum DamageChain {
     public static func run(hit tp: Int?, zone: String? = nil, side: String? = nil, in situation: Situation,
                            engine: Engine) -> DamageResult {
         var s = situation
+        s.inForce = []                                            // an earlier action's consequences are not this hit's
         func state(_ name: String, _ value: JSONValue, _ owner: Owner) { s.facts[name] = Fact(name: name, value: value, owner: owner) }
+        // A hit given here replaces the one before it: no `hit.*` fact of an earlier hit stays
+        // (its zone, side, the mount's SP). Without `tp` the situation states the hit itself.
+        if tp != nil { for name in s.facts.keys where name.hasPrefix("hit.") { s.facts[name] = nil } }
         if let tp { state("hit.tp", .int(tp), .roll) }
         if let zone { state("hit.zone", .string(zone), .roll) }
         if let side { state("hit.side", .string(side), .roll) }
@@ -142,6 +149,7 @@ public enum DamageChain {
         count.texts.forEach { records.show($0) }
         let checks = checksCalledFor(in: s, engine: engine, &records)
         let le = engine.evaluate(Query("leCurrent"), in: s)
+        let events = damage(le, engine: engine)
 
         let stages = [tpStage].compactMap { $0 } + [rs, sp, wundschwelle, le]
         // A derived fact nobody could give is asked through what is behind it.
@@ -154,9 +162,24 @@ public enum DamageChain {
             }
         }
         return DamageResult(tp: tpStage, rs: rs, sp: sp, wundschwelle: wundschwelle, leCurrent: le, situation: s,
-                            derived: derived, checks: checks, questions: CheckProcedure.mergeQuestions(questions),
+                            derived: derived, events: events, checks: checks, questions: CheckProcedure.mergeQuestions(questions),
                             texts: (stages.flatMap(\.texts) + records.texts).uniqued(),
                             notApplied: (stages.flatMap(\.notApplied) + records.notApplied).uniqued())
+    }
+
+    // MARK: - The damage
+
+    /// The `damaged` events of the LE after a hit: each line of `leCurrent` that lowers it and
+    /// comes from a clause whose effects compute with the target `sp` (schaden.S2's `−sp`).
+    static func damage(_ le: Breakdown, engine: Engine) -> [Event] {
+        le.lines.compactMap { line in
+            guard line.value < 0, let origin = line.origin,
+                  let clause = engine.book.rules[origin.rule]?.clauses.first(where: { $0.id == origin.clause }),
+                  clause.effects.contains(where: { $0.payload.values.contains { $0.targets.contains { $0.name == "sp" } } })
+            else { return nil }
+            return Event(kind: .damaged, origin: origin, pool: .le, amount: -line.value, via: line.via, rulings: line.rulings,
+                         facts: line.facts)
+        }
     }
 
     // MARK: - The derived facts
@@ -192,11 +215,19 @@ public enum DamageChain {
         let book = engine.book
         let evaluation = engine.evaluation(s)
         var found: [(value: Int, origin: ClauseRef)] = []
+        var texts: [TextLine] = []
         for id in book.rules.keys.sorted(by: Evaluation.idOrder) where evaluation.applicability(of: id, depth: 0).applies {
             for e in book.rules[id]!.clauses.flatMap(\.effects) where e.when?.factNames.contains("hit.overWundschwelle") == true {
                 for v in e.payload.values {
                     guard case .proportion(var p) = v, p.of.factNames.contains("hit.sp") else { continue }
-                    p.times = abs(p.times)
+                    // A count is the proportion itself, its sign aside: only times ±1 says so.
+                    guard abs(p.times) == 1 else {
+                        texts.append(TextLine(kind: .notApplicable,
+                                              text: "Regel konnte nicht angewandt werden: \(e.origin.clauseRef) – hit.overWundschwelle: der Anteil ist mit \(p.times) vervielfacht, keine Anzahl",
+                                              origin: e.origin.clauseRef))
+                        continue
+                    }
+                    p.times = 1
                     let level = evaluation.ruleLevel(id, levels: [:], depth: 0)
                     if let n = evaluation.value(.proportion(p), level: level, rule: id, depth: 0).value {
                         found.append((n, e.origin.clauseRef))
@@ -204,14 +235,14 @@ public enum DamageChain {
                 }
             }
         }
-        guard let first = found.first else { return (nil, []) }
+        guard let first = found.first else { return (nil, texts) }
         if found.contains(where: { $0.value != first.value }) {
             let which = found.map { "\($0.origin) \($0.value)" }.joined(separator: ", ")
             return (nil, [TextLine(kind: .notApplicable,
                                    text: "Regel konnte nicht angewandt werden: \(first.origin) – hit.overWundschwelle wird verschieden bestimmt (\(which))",
                                    origin: first.origin)])
         }
-        return (first.value, [])
+        return (first.value, texts)
     }
 
     // MARK: - The checks a hit calls for

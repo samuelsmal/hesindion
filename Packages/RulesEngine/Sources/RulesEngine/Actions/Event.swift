@@ -7,6 +7,8 @@ import Foundation
 ///
 /// Which fields a kind fills:
 /// - `paid`: `pool`, `amount` (one event per pool: a fall-through or a split gives several);
+/// - `damaged`: `pool` (`le`), `amount` (the LeP a hit took, from the damage clause:
+///   schaden.S2; ruling R53). Damage, unlike `paid`;
 /// - `gained`: `rule`, `levels` (the Stufen actually added, within the rule's Stufen);
 /// - `cleared`: `rule`, `levels` (the Stufen removed, as a positive number; nil: all);
 /// - `progressed`, `completed`, `brokenOff`: `process` (Task 28);

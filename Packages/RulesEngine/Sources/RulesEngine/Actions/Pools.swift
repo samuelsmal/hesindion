@@ -38,6 +38,8 @@ extension Situation {
     /// - `paid` lowers `pools[pool].current` by `amount`. LE may fall to 0 and below (im
     ///   Sterben). A pool the situation does not track stays untracked. Paying LeP is not damage:
     ///   it changes the pool and nothing else (no hit, no RS, no Wundschwelle).
+    /// - `damaged` (R53) lowers the pool the same way. It is the damage a hit did; applying it
+    ///   runs no chain again (the chain gave it).
     /// - `gained` adds `levels` (1 when absent) to `owned[rule].level`; `cleared` removes `levels`
     ///   (all when absent). A rule whose level reaches 0 is no longer owned.
     /// - The other kinds are Tasks 26–28's and change nothing yet.
@@ -61,7 +63,7 @@ extension Situation {
 
     private mutating func apply(_ e: Event, book: RuleBook?) {
         switch e.kind {
-        case .paid:
+        case .paid, .damaged:
             guard let pool = e.pool, let amount = e.amount, var state = pools[pool] else { return }
             state.current = state.current.subtractingSaturating(amount)
             pools[pool] = state

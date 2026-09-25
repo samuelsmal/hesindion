@@ -79,7 +79,8 @@ public struct CombatResult: Hashable, Sendable {
     public var from: ClauseRef?
     /// The situation after the die: the roll fact (`roll.attack` / `roll.defence`), the attack's
     /// outcome (`action.attack: hit | miss | confirmedFumble`), a defence's crit for the next one
-    /// (`round.previousDefenceCrit`), the confirmation's consequences in force.
+    /// (`round.previousDefenceCrit`). The confirmation's value consequences are not in it: they
+    /// act on this roll's `consequence` only.
     public var situation: Situation
 
     public init(face: Int, value: Int?, success: Bool?, confirmation: Confirmation?, kind: CheckResultKind = .regular,
@@ -182,6 +183,7 @@ public enum CombatRoll {
     /// The target stage, awaiting the die (spec §6 `target`).
     public static func start(_ request: CombatRequest, in situation: Situation, engine: Engine) -> CombatStep {
         var s = situation
+        s.inForce = []                                            // an earlier action's consequences are not this one's
         func state(_ name: String, _ value: JSONValue, _ owner: Owner) { s.facts[name] = Fact(name: name, value: value, owner: owner) }
         // An earlier roll's die and outcome are not this one's.
         s.facts[request.rollFact] = nil
@@ -246,6 +248,10 @@ public enum CombatRoll {
                    situation: state.result?.situation ?? state.stages.situation)
     }
 
+    /// Who `action.attack` (the attack's outcome, R37) is stated by: the vocabulary's owner of the
+    /// fact, as a situation states it in `choose`.
+    static let outcomeOwner: Owner = Vocabulary.owner(ofFact: "action.attack") ?? .player
+
     /// A 1 always succeeds, a 20 always fails; any other face at or below the value.
     static func succeeds(_ face: Int, against value: Int?) -> Bool? {
         switch face {
@@ -269,7 +275,7 @@ public enum CombatRoll {
         put(stages.request.rollFact, .int(face), .roll)
         let value = stages.target.result
         let success = succeeds(face, against: value)
-        if stages.request.isAttack, let success { put("action.attack", .string(success ? "hit" : "miss"), .roll) }
+        if stages.request.isAttack, let success { put("action.attack", .string(success ? "hit" : "miss"), outcomeOwner) }
         // A defence reads the crit of the one before it (fernkampf.FK17), then it is used up.
         if !stages.request.isAttack { s.facts["round.previousDefenceCrit"] = nil }
 
@@ -348,8 +354,8 @@ public enum CombatRoll {
     /// The confirmation is a check on the same target (spec §6). A confirmed 1 is a Kritischer
     /// Erfolg, a 20 whose confirmation fails a Patzer; otherwise the die's own result stands. Each
     /// of the rules' confirm checks runs its `onSuccess` or `onFailure` for this roll: costs and
-    /// gains through the action layer, a `tell` shown and logged, a value effect in force for the
-    /// rest of the action (`Situation.inForce`).
+    /// gains through the action layer, a `tell` shown and logged, a value effect in force for this
+    /// roll's consequence stage (`Situation.inForce`), and for nothing after it.
     private static func confirm(_ stages: CombatStages, _ result: CombatResult, _ face: Int, _ state: CombatState,
                                 _ engine: Engine) -> CombatStep {
         guard (1...20).contains(face) else { return refuse(state, "ein W20 zeigt 1 bis 20, nicht \(face)") }
@@ -368,7 +374,7 @@ public enum CombatRoll {
         }
         var s = result.situation
         func put(_ name: String, _ value: JSONValue, _ owner: Owner) { s.facts[name] = Fact(name: name, value: value, owner: owner) }
-        if stages.request.isAttack, r.kind == .patzer { put("action.attack", .string("confirmedFumble"), .roll) }
+        if stages.request.isAttack, r.kind == .patzer { put("action.attack", .string("confirmedFumble"), outcomeOwner) }
         if !stages.request.isAttack, confirmation.of == .kritischerErfolg {
             put("round.previousDefenceCrit", .string(success ? "confirmed" : "unconfirmed"), .round)
         }
@@ -381,7 +387,10 @@ public enum CombatRoll {
             guard case .check(let c) = e.payload else { return [] }
             return success ? c.onSuccess : c.onFailure
         }
-        s.inForce += consequences.filter {
+        // Value consequences act on this roll's consequence stage only ("für diesen Angriff"):
+        // they are not part of the situation the step leaves.
+        var inForce = s
+        inForce.inForce = consequences.filter {
             switch $0.payload {
             case .add, .set, .multiply, .cap, .floor: true
             default: false
@@ -414,7 +423,7 @@ public enum CombatRoll {
             }
         }
         r.situation = s
-        var out = resolved(stages, r, events: run.events, engine)
+        var out = resolved(stages, r, events: run.events, consequencesIn: inForce, engine)
         out.questions = CheckProcedure.mergeQuestions(out.questions + records.questions + run.pipeline.questions)
         out.texts = (out.texts + records.texts + run.pipeline.texts).uniqued()
         out.notApplied = (out.notApplied + records.notApplied + run.pipeline.notApplied).uniqued()
@@ -422,11 +431,14 @@ public enum CombatRoll {
     }
 
     /// The resolved state, with an attack's consequence stage when it hit.
-    private static func resolved(_ stages: CombatStages, _ result: CombatResult, events: [Event], _ engine: Engine) -> CombatStep {
+    /// The consequence is evaluated in `consequencesIn` (the result's situation with the
+    /// confirmation's value consequences in force), never returned with them.
+    private static func resolved(_ stages: CombatStages, _ result: CombatResult, events: [Event],
+                                 consequencesIn: Situation? = nil, _ engine: Engine) -> CombatStep {
         var out = CombatStep(state: .resolved(stages, result, events), events: events, situation: result.situation)
         if stages.request.isAttack, result.success == true {
             let tp = engine.evaluate(Query(TargetRef(name: "tp", context: stages.request.with.map { ["with": $0] } ?? [:])),
-                                     in: result.situation)
+                                     in: consequencesIn ?? result.situation)
             out.consequence = tp
             out.gather([tp])
         }

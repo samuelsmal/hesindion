@@ -60,3 +60,8 @@ class VocabularyTests(unittest.TestCase):
         types = set(self.v.raw["factTypes"])
         for name, fact in {**self.v.raw["facts"], **self.v.raw["factFamilies"]}.items():
             self.assertIn(fact["type"], types, name)
+
+    def test_events_are_the_specs_and_damage(self):
+        # Spec §7's events, plus `damaged` (ruling R53): LE lost to a hit, which is not a `paid`.
+        self.assertEqual(self.v.raw["events"], ["paid", "damaged", "progressed", "completed", "brokenOff",
+                                                "itemChanged", "gained", "cleared", "logged"])

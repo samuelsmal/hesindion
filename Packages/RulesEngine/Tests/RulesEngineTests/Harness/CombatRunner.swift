@@ -9,8 +9,9 @@ import Foundation
 /// (reiterkampf.RK10 after "Reittier getroffen", kampfsituationen 17.9). The harness runs the chain
 /// on it, and when it states a 3W20 check (`check.kind`, `check.talent`) starts that check where
 /// the chain asked for it (the pending check's situation: the hit with its derived facts). Then:
-/// - `events` (top): the chain's checks, as `{ check: { talent, application | with }, from }`;
-///   `[]` asserts none. The chain itself gives no event.
+/// - `events` (top): the chain's `damaged` (R53) and its checks, as `{ check: { talent,
+///   application | with }, from }`; `[]` asserts that the hit gives no check and no event beyond
+///   its own `damaged`, which is the hit the situation states (its SP or TP), not a consequence.
 /// - each `sequence` step either changes the situation (`hero: { values }`, `choose`, `gm`,
 ///   `loadout`, `rolls: { hit.* }`), and the chain runs again on it, or enters the check's result
 ///   (`rolls: { check.result: failure }`: `.outcome`), which confirms the check and gives its events
@@ -127,7 +128,7 @@ enum CombatRunner {
         }
         if let raw = s.expectSituation["events"] {
             if let expected = raw.arrayValue {
-                c.mismatches += events(expected, events: [], checks: chain.checks)
+                c.mismatches += events(expected, events: chain.events, checks: chain.checks)
             } else {
                 c.mismatches.append(.shape("malformed events", "events \(raw) is not a list"))
             }
@@ -185,7 +186,7 @@ enum CombatRunner {
             all += check?.view.breakdowns ?? []
             let stages = chain.breakdowns + (check?.view.breakdowns ?? [])
             let hitChain = chain, hitCheck = check
-            compare(expect, label: label, events: [], checks: chain.checks, texts: stages.flatMap(\.texts) + chain.texts,
+            compare(expect, label: label, events: chain.events, checks: chain.checks, texts: stages.flatMap(\.texts) + chain.texts,
                     notApplied: stages.flatMap(\.notApplied) + chain.notApplied,
                     questions: stages.flatMap(\.questions) + chain.questions, success: nil, successQuery: nil,
                     breakdown: { q in
@@ -370,13 +371,20 @@ enum CombatRunner {
     /// - `{ gained | cleared: RULE, from, levels, ruling, via }`;
     /// - `{ logged: text, from }`;
     /// - `{ paid: { amount, pool }, from }`;
+    /// - `{ damaged: { amount, pool }, from }` (R53);
     /// - anything else (`damage`, `itemChanged`, `after`, a check of an attack) is an unsupported shape.
-    static func events(_ expected: [JSONValue], events actual: [Event], checks: [PendingCheck]) -> [Mismatch] {
+    ///
+    /// `[]` does not count a hit's `damaged`: the situations that state a hit (its SP) and
+    /// expect `events: []` say that no check follows (the old `checks_first: []`); the LeP the hit
+    /// takes is the hit itself.
+    static func events(_ expected: [JSONValue], events all: [Event], checks: [PendingCheck]) -> [Mismatch] {
         if expected.isEmpty {
+            let actual = all.filter { $0.kind != .damaged }
             let got = actual.map { "\($0.kind.rawValue) \($0.rule ?? $0.note ?? "")" } + checks.map { "check \($0.id) from \($0.origin)" }
             return got.isEmpty ? [] : [Mismatch(kind: .unexpectedEvent, detail: "expected no event, got \(got)",
                                                names: checks.map(\.origin.description) + actual.compactMap { $0.origin?.description })]
         }
+        let actual = all
         var out: [Mismatch] = []
         var usedEvents = Set<Int>(), usedChecks = Set<Int>()
         for raw in expected {
@@ -407,7 +415,8 @@ enum CombatRunner {
                 }
                 continue
             }
-            let kinds: [(key: String, kind: EventKind)] = [("gained", .gained), ("cleared", .cleared), ("logged", .logged), ("paid", .paid)]
+            let kinds: [(key: String, kind: EventKind)] = [("gained", .gained), ("cleared", .cleared), ("logged", .logged), ("paid", .paid),
+                                                           ("damaged", .damaged)]
             guard let (key, kind) = kinds.first(where: { o[$0.key] != nil }) else {
                 out.append(.shape("event \(o.keys.filter { $0 != "from" && $0 != "ruling" && $0 != "via" }.sorted())",
                                   "event \(o.keys.sorted()) has no engine event"))
@@ -425,7 +434,7 @@ enum CombatRunner {
                 switch kind {
                 case .gained, .cleared: if e.rule != value.string { return false }
                 case .logged: if e.note != value.string { return false }
-                case .paid:
+                case .paid, .damaged:
                     guard let p = value.objectValue, p["pool"]?.string == e.pool?.rawValue, p["amount"]?.int == e.amount else { return false }
                 default: return false
                 }

@@ -19,6 +19,7 @@ public enum CheckProcedure {
     /// The stage breakdowns, awaiting dice (spec §6 step 1).
     public static func start(_ request: CheckRequest, in situation: Situation, engine: Engine) -> StepResult {
         var s = situation
+        s.inForce = []                                            // an earlier action's consequences are not this check's
         func state(_ name: String, _ value: JSONValue?, _ owner: Owner) {
             s.facts[name] = value.map { Fact(name: name, value: $0, owner: owner) }
         }

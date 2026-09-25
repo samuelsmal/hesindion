@@ -64,6 +64,9 @@ final class CombatRollTests: XCTestCase {
         XCTAssertEqual(r.value, 14)
         XCTAssertNil(r.confirmation)
         XCTAssertEqual(hit.situation.facts["action.attack"]?.value, "hit")
+        // Stated with the vocabulary's owner of the fact, as a situation's `choose` states it.
+        XCTAssertEqual(hit.situation.facts["action.attack"]?.owner, Vocabulary.owner(ofFact: "action.attack"))
+        XCTAssertEqual(hit.situation.facts["action.attack"]?.owner, .player)
         XCTAssertEqual(hit.situation.facts["roll.attack"]?.value, 14)
         let miss = rolled(.attack(), hero(), 15, e)
         XCTAssertEqual(miss.state.result?.success, false)
@@ -147,6 +150,19 @@ final class CombatRollTests: XCTestCase {
         // Unconfirmed: no doubling.
         let plain = one.state.step(.confirm(18), engine: e)
         XCTAssertEqual(plain.consequence?.result, 7)
+        // The doubling is this shot's only: the situation the crit leaves carries no consequence,
+        // and the next shot's TP is not doubled (nor, after a second crit, quadrupled).
+        XCTAssertEqual(crit.situation.inForce, [])
+        let next = CombatRoll.start(.attack(with: "Kurzbogen"), in: crit.situation, engine: e).state.step(.dice([5]), engine: e)
+        XCTAssertEqual(next.consequence?.result, 7)
+        XCTAssertEqual(next.consequence?.lines.filter { $0.kind == .multiplied }, [])
+        let again = rolled(.attack(with: "Kurzbogen"), crit.situation, 1, e).state.step(.confirm(9), engine: e)
+        XCTAssertEqual(again.consequence?.result, 14)
+        // Whatever an older situation still holds, every entry point starts without it.
+        var stale = s
+        stale.inForce = [try XCTUnwrap(e.book.effect(at: EffectOrigin(rule: "fernkampf", clause: "FK13", index: .nested("0.onSuccess.1"))))]
+        XCTAssertEqual(CombatRoll.start(.attack(with: "Kurzbogen"), in: stale, engine: e).state.stages.situation.inForce, [])
+        XCTAssertEqual(DamageChain.run(hit: 5, in: stale, engine: e).situation.inForce, [])
         // A melee weapon asks for no FK13 confirm.
         XCTAssertEqual(rolled(.attack(), hero(), 1, e).state.result?.confirmation?.checks, [])
     }

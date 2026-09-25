@@ -776,6 +776,12 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(try events("[]"), [])
         XCTAssertEqual(kinds(try events("[]", [], [tz8])), [.unexpectedEvent])
         XCTAssertEqual(kinds(try events("[]", [gained])), [.unexpectedEvent])
+        // R53: a hit's `damaged` matches by amount, pool and clause; `[]` does not count it (the
+        // hit is the situation's own statement).
+        let damaged = Event(kind: .damaged, origin: ref("schaden.S2"), pool: .le, amount: 8)
+        XCTAssertEqual(try events(#"[{"damaged": {"amount": 8, "pool": "le"}, "from": "schaden.S2"}]"#, [damaged]), [])
+        XCTAssertEqual(kinds(try events(#"[{"damaged": {"amount": 9, "pool": "le"}}]"#, [damaged])), [.missingEvent])
+        XCTAssertEqual(try events("[]", [damaged]), [])
         let shapes = try events(#"[{"damage": {"formula": "1W3+1"}, "from": "trefferzonen.TZ11"}, {"itemChanged": {"held": false}, "from": "trefferzonen.TZ11"}, {"check": {"at": 15, "attack": "Tritt", "by": "mount"}}]"#)
         XCTAssertEqual(kinds(shapes), [.unsupportedShape, .unsupportedShape, .unsupportedShape])
     }
@@ -846,5 +852,18 @@ final class MatcherTests: XCTestCase {
         XCTAssertTrue(CombatRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}], "expect": {"success": false}}]}"#), book: book))
         XCTAssertFalse(CombatRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}]}, {"round": {"phase": "start"}}]}"#), book: book))
         XCTAssertFalse(CombatRunner.canRun(try situation(#"{"expect": [{"query": "at"}]}"#), book: book))
+    }
+
+    /// R52: in a hit run without a query, a situation-level `notApplied` for a rule no stage of the
+    /// hit evaluates is about the hero sheet: an unsupported shape, not a failure. A rule a stage
+    /// does evaluate is compared as ever.
+    func testASheetWideNotAppliedIsAnUnsupportedShape() throws {
+        let s = try situation(#"{"expectSituation": {"notApplied": [{"rule": "DISADV_57", "reason": "needs the Fokusregel"}, {"rule": "trefferzonen", "clause": "TZ8", "reason": "conditionFalse"}]}}"#)
+        let stage = Breakdown(query: Query("wundschwelle"), base: line(8, "trefferzonen.TZ8", kind: .base))
+        let hit = HitView(queries: [:], breakdowns: [stage], situation: Situation(owned: [:], facts: []))
+        var c = MatchResult()
+        Matcher.situationLevel(s, breakdowns: [], offers: [], offering: [:], hit: hit, &c)
+        XCTAssertEqual(c.mismatches.compactMap(\.shape), ["sheet-wide notApplied"])
+        XCTAssertEqual(kinds(c.mismatches), [.unsupportedShape, .missingNotApplied])
     }
 }

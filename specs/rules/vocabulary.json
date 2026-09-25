@@ -35,6 +35,7 @@
   ],
   "events": [
     "paid",
+    "damaged",
     "progressed",
     "completed",
     "brokenOff",

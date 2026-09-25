@@ -31,7 +31,7 @@ public struct ActionLayer: Sendable {
         case .defend(let kind, let with): return CombatRoll.perform(.defend(kind: kind, with: with), in: situation, engine: engine)
         case .takeHit(let tp, let zone, let side):
             let r = DamageChain.run(hit: tp, zone: zone, side: side, in: situation, engine: engine)
-            return ActionResult(breakdowns: r.breakdowns, questions: r.questions, texts: r.texts, notApplied: r.notApplied,
+            return ActionResult(events: r.events, breakdowns: r.breakdowns, questions: r.questions, texts: r.texts, notApplied: r.notApplied,
                                 checks: r.checks)
         default: break
         }
