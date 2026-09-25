@@ -230,6 +230,7 @@ public struct RuleBook: Sendable {
 
     private let byOrigin: [EffectOrigin: Effect]
     private let tables: [String: JSONValue]
+    private let providersByName: [String: [Provision]]
 
     public static func load(from url: URL) throws -> RuleBook {
         try decode(Data(contentsOf: url))
@@ -259,9 +260,13 @@ public struct RuleBook: Sendable {
     private init(_ rules: [Rule], _ rulings: [Ruling], _ reach: [String: [EffectOrigin]], _ sha256: String,
                  _ vocabularyVersion: Int, _ vocabularySha256: String) {
         var byOrigin: [EffectOrigin: Effect] = [:], tables: [String: JSONValue] = [:]
+        var providers: [String: [Provision]] = [:]
         func index(_ e: Effect) {
             byOrigin[e.origin] = e
-            if case .provide(let p) = e.payload, tables[p.name] == nil { tables[p.name] = p.value }
+            if case .provide(let p) = e.payload {
+                if tables[p.name] == nil { tables[p.name] = p.value }
+                providers[p.name, default: []].append(Provision(rule: e.origin.rule, value: p.value, origin: e.origin))
+            }
             for (_, nested) in e.payload.nested { nested.forEach(index) }
         }
         for rule in rules {                            // rules.json lists them sorted by id
@@ -275,6 +280,7 @@ public struct RuleBook: Sendable {
         self.vocabularySha256 = vocabularySha256
         self.byOrigin = byOrigin
         self.tables = tables
+        self.providersByName = providers
     }
 
     /// The effect at `origin`, top-level or nested.
@@ -294,6 +300,19 @@ public struct RuleBook: Sendable {
     /// The value a `provide` gives under `name`. Several rules may provide one name (each
     /// weapon its `loadout.weapon` row); this is the first, in rule-id and clause order.
     public func table(_ name: String) -> JSONValue? { tables[name] }
+
+    /// Every `provide` of `name`, in rule-id and clause order: several equipment rules each give
+    /// their own `loadout.weapon` row, and only the equipped item's is the one to read
+    /// (`Tables.row`).
+    public func providers(of name: String) -> [Provision] { providersByName[name] ?? [] }
+}
+
+/// One rule's `provide` of a name.
+public struct Provision: Hashable, Sendable {
+    public var rule: String
+    /// The provided value; the string `provides` stands for the rule's own `provides` row.
+    public var value: JSONValue
+    public var origin: EffectOrigin
 }
 
 private func firstDuplicate(_ ids: [String]) -> String? {
