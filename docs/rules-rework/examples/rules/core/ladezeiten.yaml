@@ -56,15 +56,21 @@ clauses:
         # Each action of the Ladezeit is an Aktion (the old `step: { costs: { action: 1 } }`),
         # offered as liegend's standing up is (STATE_10.L4).
       - when: { loadout.weapon.loaded: false, ladezeit.current: { atLeast: 1 } }
-        process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: melee } }
+        process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: melee } }
+        ruling: laengere-handlungen
         # FORMAT: the same process shape as fernkampf.FK11 (Zielen), bound to the weapon (the
         # old `of: item`: `completes` changes the instance in the weapon slot) and counted in the
         # weapon's own (modifiable) number of actions: `{ of: item.ladezeit }` reads the target,
-        # after SA_60's lines. The process payload is plan A.7's, verbatim.
+        # after SA_60's lines. The process payload is plan A.7's, except `breaksOff`: A.7's
+        # `action.attack: melee` is never stated (`action.attack` is the attack's outcome, hit /
+        # miss), so a melee attack is `action.attack: [hit, miss]` with a melee weapon in hand,
+        # as schaden.S3 reads it. What else breaks Laden off is ruling laengere-handlungen (open),
+        # so the process rests on it.
       - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
         offer: { choice: laden, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
       - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
         process: { id: laden, steps: 1, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ] }
+        ruling: laengere-handlungen
         # 0 changes the *kind* of action, not only the count: one step, paid with a freie Aktion
         # (the old `step: { costs: { freeAction: 1 } }`). `ladezeit.current` is the Ladezeit
         # after every rule (SA_60's −1 or halving), not the weapon's own `loadout.weapon.ladezeit`.
@@ -111,8 +117,10 @@ clauses:
         offer: { choice: spannen, costs: [{ cost: { pool: actions, amount: 1 } }] }
       - when: { loadout.weapon.technique: CT_2, loadout.weapon.strung: false }
         process: { id: spannen, steps: 4, advancedBy: { action: spannen }, exclusive: true, completes: [ { item: { instance: { loadout: weapon }, change: { strung: true } } } ] }
+        ruling: laengere-handlungen
         # Another item state (gespannt); "keine anderen Aktionen" — exclusive for its duration.
-        # Each of the 4 is an Aktion (the old `step: { costs: { action: 1 } }`).
+        # Each of the 4 is an Aktion (the old `step: { costs: { action: 1 } }`). Spannen is one
+        # of the actions ruling laengere-handlungen asks about (what breaks it off).
 
   - id: LZ6
     text: >

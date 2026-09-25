@@ -112,7 +112,7 @@
       "type": "any"
     },
     "process.": {
-      "owner": "round",
+      "owner": "derived",
       "type": "int"
     },
     "roll.": {

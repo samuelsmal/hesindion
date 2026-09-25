@@ -79,9 +79,9 @@ situations:
         total: 4
         result: 18
         lines:
-          - { value: 2, from: fernkampf.FK5 }
+          - { value: 2, from: fernkampf.FK5, ruling: fernkampf.range-input }
           - { value: 2, from: fernkampf.FK7 }
-      "tp(with: Kurzbogen)": { total: 1, lines: [{ value: 1, from: fernkampf.FK5 }] }   # on a hit: 1W6+4 +1
+      "tp(with: Kurzbogen)": { total: 1, lines: [{ value: 1, from: fernkampf.FK5, ruling: fernkampf.range-input }] }   # on a hit: 1W6+4 +1
     appToday: >
       FK +4 and TP +1 — same numbers, if the player picks "nah" (the app asks the band, not the
       Schritt). No line names a rule (RangedModifiers `rules: []`; the TP line is built in

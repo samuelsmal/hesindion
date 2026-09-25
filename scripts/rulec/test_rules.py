@@ -508,7 +508,7 @@ class RuleValidationTests(unittest.TestCase):
                             "loadout.weapon.farRange": "loadout", "loadout.weapon.instance": "loadout",
                             "loadout.weapon.ladezeit": "loadout", "loadout.weapon.loaded": "loadout",
                             "loadout.weapon.strung": "loadout", "round.previousDefenceCrit": "round",
-                            "process.zielen": "round"}.items():
+                            "process.zielen": "derived"}.items():
             self.assertEqual(v.fact_owner(fact), owner, fact)
         self.assertEqual(v.raw["factFamilies"]["process."]["type"], "int")
         # Item state is keyed by instance: `item.<instance>.loaded` is an `item.` family fact.
@@ -524,7 +524,7 @@ class RuleValidationTests(unittest.TestCase):
             - derive: { to: item.ladezeit, sum: [{ of: loadout.weapon.ladezeit }] }
             - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
               offer: { choice: laden, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
-            - process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: melee } }
+            - process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: melee } }
             - when: { action.attack: [hit, miss], loadout.weapon.technique: [CT_1, CT_2, CT_11] }
               cost: { pool: ammunition, amount: 1 }
             - when: { process.zielen: { atLeast: 1 } }

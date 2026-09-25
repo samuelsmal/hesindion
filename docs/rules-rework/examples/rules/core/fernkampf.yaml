@@ -44,6 +44,7 @@ clauses:
       - when: { target.rangeBand: ausserReichweite }
         forbid: { what: { attack: ranged } }
         because: "außer Reichweite der Waffe"
+        ruling: range-input
         # Up to farRange a normal shot; farRange–1.5× only the untargeted shot of FK4 (band
         # `bogen`). Beyond 1.5× the band is `ausserReichweite` (FK4's table): a comparison takes
         # constants, so the old `target.distance above weapon.farRange * 1.5` is the band.
@@ -106,12 +107,15 @@ clauses:
         # (as trefferzonen.TZ11's application / effect).
       - when: { target.rangeBand: [nah, mittel, weit] }
         add: { to: fk, value: "table(fernkampf.FK5.fk, target.rangeBand)" }
+        ruling: range-input
       - when: { target.rangeBand: [nah, mittel, weit], loadout.weapon.kind: ranged }
         add: { to: tp, value: "table(fernkampf.FK5.tp, target.rangeBand)" }
+        ruling: range-input
         # One fact, two lines on two values (FK now, TP on the hit), both citing FK5. The app
         # computes the TP half in the view (CombatFernkampfViews.distanzTP), not in the evaluator.
         # The bands only: the untargeted `bogen` shot has no row. The TP line is on a ranged
-        # weapon's hit only, so a melee TP query does not ask the band.
+        # weapon's hit only, so a melee TP query does not ask the band. FK2 and both adds read
+        # `target.rangeBand`, whose source ruling range-input decides, so they rest on it.
 
   - id: FK6
     text: |
@@ -219,10 +223,11 @@ clauses:
       - when: { hero.mounted: true, action.gait: trab }
         tell: { to: player, text: "Glückstreffer: im Trab trifft der Schuss nur bei einer gewürfelten 1" }
         # As FK9's Stufe 4. The app offers steht / Schritt / Galopp only (vomPferd 0/−4/−8).
-      - when: { hero.mounted: true, loadout.weapon: ITEMTPL_65 }
+      - when: { hero.mounted: true, loadout.weapon: Langbogen }
         forbid: { what: { attack: ranged } }
         because: "vom Pferd kein Langbogen"
-        # Legality over the loadout while mounted, like reiterkampf.RK4. The app offers it.
+        # Legality over the loadout while mounted, like reiterkampf.RK4. The app offers it. The
+        # weapon by name (ITEMTPL_65), as SA_661.GS3 names the Rabenschnabel.
 
   - id: FK11
     text: >
@@ -351,13 +356,20 @@ clauses:
         # The confirmation of a rolled 1 on a defence against a shot (`roll.defence`). Its result
         # is kept for the next defence of the round: `round.previousDefenceCrit` (confirmed /
         # unconfirmed), which the combat roll states and the new round clears.
-      - when: { round.previousDefenceCrit: confirmed }
+      - when: { round.previousDefenceCrit: confirmed, not: { hero.has: SA_923, loadout.weapon.technique: [CT_1, CT_4, CT_16] } }
         add: { to: [pa, aw], value: 3 }
         # "sinkt nicht um 3 wie üblich": mehrfache-verteidigung.MV1's −3 for this defence is
         # given back.
-      - when: { round.previousDefenceCrit: unconfirmed }
+      - when: { round.previousDefenceCrit: confirmed, hero.has: SA_923, loadout.weapon.technique: [CT_1, CT_4, CT_16] }
+        add: { to: [pa, aw], value: 2 }
+        ruling: kampfstil-techniques
+        # With Vinsalt-Stil (SA_923.VS1, its technique list VS2: Armbrüste, Fechtwaffen,
+        # Zweihandschwerter) the step is −2, so the step given back is 2.
+      - when: { round.previousDefenceCrit: unconfirmed, not: { hero.has: SA_923, loadout.weapon.technique: [CT_1, CT_4, CT_16] } }
         add: { to: [pa, aw], value: 1 }
-        # "nur um 2 statt um 3 (zusätzlich)": one of MV1's 3 is given back.
+        # "nur um 2 statt um 3 (zusätzlich)": one of MV1's 3 is given back. With Vinsalt-Stil
+        # the step is already −2, so this gives back 0 or 1: left out, an open question in
+        # MIGRATION.md.
         # The old `replace` of MV1's line with a span of one defence: `replace` swaps MV1's value
         # before its `per` (−3 × defences made), so it would be right only on the second defence
         # of a round, and no span is one defence. An `add` of the difference on the defence after
