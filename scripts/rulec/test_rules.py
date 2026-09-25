@@ -490,6 +490,19 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(v.verbs["limit"]["fields"]["max"], "value")
         self.assertIn("term", v.raw["lineKeys"])
 
+    def test_a_restore_raises_a_pool(self):
+        # Ruling R64 (Task 30): `restore: { pool, amount }`, an action verb, gives the event
+        # `restored` (regeneration.R4: the LeP of a Regenerationsphase).
+        body = "- when: { choice.regenerationsphase: true }\n  restore: { pool: le, amount: { of: regeneration.le } }\n"
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n", textwrap.indent(body, "      ")))
+        self.assertEqual(errors, [])
+        e = book["SA_1"]["clauses"][0]["effects"][0]
+        self.assertEqual((e["verb"], e["phase"]), ("restore", "action"))
+        self.assertEqual(e["payload"]["pool"], "le")
+        self.assertEqual(e["payload"]["amount"]["proportion"]["of"], {"target": {"name": "regeneration.le"}})
+        _, errors = check(VALID.replace(EFFECT, "      - restore: { pool: lp, amount: 1 }"))
+        self.assertEqual(len(errors), 1, [str(x) for x in errors])
+
     def test_the_group_7_encodings(self):
         # zaubermodifikationen ZM1 (a limit whose max is a value), ZM5 (a derive from the target
         # spell.cost, a scale step, a recurring cost every spell.interval minutes), ZM8/ZM11 (a

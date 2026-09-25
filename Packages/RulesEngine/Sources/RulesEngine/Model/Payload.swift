@@ -10,6 +10,7 @@ public enum Payload: Hashable, Sendable {
     case replace(Replace), suppress(Suppress), forbid(Forbid), require(Require), limit(Limit)
     case offer(Offer), ask(Ask), tell(Tell), provide(Provide), derive(Derive)
     case check(Check), gain(Gain), cost(Cost), process(ProcessPayload), item(ItemChange), reroll(Reroll)
+    case restore(Restore)
 
     public var verb: Verb {
         switch self {
@@ -35,6 +36,7 @@ public enum Payload: Hashable, Sendable {
         case .process: .process
         case .item: .item
         case .reroll: .reroll
+        case .restore: .restore
         }
     }
 
@@ -75,6 +77,7 @@ public enum Payload: Hashable, Sendable {
         case .process: return .process(try c.decode(ProcessPayload.self, forKey: k))
         case .item: return .item(try c.decode(ItemChange.self, forKey: k))
         case .reroll: return .reroll(try c.decode(Reroll.self, forKey: k))
+        case .restore: return .restore(try c.decode(Restore.self, forKey: k))
         }
     }
 
@@ -103,6 +106,7 @@ public enum Payload: Hashable, Sendable {
         case .process(let p): try c.encode(p, forKey: k)
         case .item(let p): try c.encode(p, forKey: k)
         case .reroll(let p): try c.encode(p, forKey: k)
+        case .restore(let p): try c.encode(p, forKey: k)
         }
     }
 }
@@ -281,6 +285,15 @@ public struct Gain: Codable, Hashable, Sendable {
     public var rule: RuleRef
     public var levels: Int? = nil
     public var span: Span? = nil
+}
+
+/// Ruling R64 (Task 30): raises `pool` by `amount` (regeneration.R4: the LeP of a
+/// Regenerationsphase), an `restored` event; the pool's own caps (regeneration.R5) hold it.
+public struct Restore: Codable, Hashable, Sendable {
+    public var pool: Pool
+    public var amount: ValueExpr
+
+    public init(pool: Pool, amount: ValueExpr) { self.pool = pool; self.amount = amount }
 }
 
 public struct Cost: Codable, Hashable, Sendable {

@@ -76,3 +76,4 @@ clauses:
       - process: { id: laden, steps: 3, advancedBy: { action: [laden] }, breaksOff: { hero.mounted: true }, completes: [{ item: { instance: { loadout: weapon }, change: { loaded: true } } }], exclusive: true, span: fight }
       - item: { instance: { loadout: shield }, change: { structurePoints: { of: hit.tp, times: -1 } } }
       - reroll: { die: { dice: [check] }, keep: better, max: 1, per: fight }
+      - restore: { pool: le, amount: { of: attr.KO, per: 3 } }

@@ -45,7 +45,7 @@ final class SituationsHarnessTests: XCTestCase {
         }
 
         report.stateChangeUnsupported = all.situations.filter { filter.keeps($0.file) && !ActionRunner.canRun($0)
-            && !CombatRunner.canRun($0, book: engine.book) && !StateRunner.canRun($0) && !$0.expect.isEmpty
+            && !CombatRunner.canRun($0, book: engine.book) && !StateRunner.canRun($0, book: engine.book) && !$0.expect.isEmpty
             && Self.expectsStateChange($0) }.map(\.id)
         try report.write(to: Repo.url("build/rules/harness-report.json"))
         print(report.summary)
@@ -82,7 +82,7 @@ final class SituationsHarnessTests: XCTestCase {
                           notes: run.notes + combat.notes)
         }
         // Task 28: a sequence of actions, or the action a situation expecting events implies.
-        if !ActionRunner.canRun(s), StateRunner.canRun(s) {
+        if !ActionRunner.canRun(s), StateRunner.canRun(s, book: engine.book) {
             let state = StateRunner.run(s, engine: engine)
             var run = Matcher.run(s, engine: engine, hit: state.view)
             run.hits = (run.hits + Matcher.openRulings(in: state.breakdowns)).distinct()

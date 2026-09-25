@@ -150,6 +150,15 @@ public struct ActionLayer: Sendable {
                 }
             } else {
                 advance(.action(choice), &run)
+                // Ruling R64: what taking the choice restores (regeneration.R4's LeP), read with the
+                // choice taken.
+                var chosen = situation
+                chosen.facts["choice.\(choice)"] = Fact(name: "choice.\(choice)", value: .bool(true), owner: .player)
+                let taken = engine.evaluation(chosen)
+                let restores = taken.actionEffects().filter {
+                    if case .restore = $0.payload { $0.reads.contains("choice.\(choice)") } else { false }
+                }
+                taken.run(restores, &run)
             }
         case .advance(let process):
             run = evaluation.actionRun(controlling: [])
@@ -330,6 +339,8 @@ extension Effect {
             if case .fact(let f) = c.every?.count { out.insert(f) }
         case .gain(let g):
             if case .table(_, let key) = g.rule { out.insert(key) }
+        case .restore(let r):
+            out.formUnion(r.amount.factNames)
         case .item(let i):
             if case .scaled(let of, _) = i.change.structurePoints { out.insert(of) }
         default: break
@@ -345,7 +356,7 @@ extension Evaluation {
         book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }.filter {
             switch $0.payload {
             case .cost(let c): c.every == nil
-            case .gain, .item: true
+            case .gain, .item, .restore: true
             default: false
             }
         }
@@ -387,6 +398,7 @@ extension Evaluation {
             switch e.payload {
             case .cost(let c): cost(c, e, level: level, used: used, via: via, &run)
             case .gain(let g): gain(g, e, level: level, used: used, via: via, &run)
+            case .restore(let r): restore(r, e, level: level, used: used, via: via, &run)
             case .item(let i): item(i, e, level: level, used: used, via: via, &run)
             default: continue
             }
@@ -618,6 +630,32 @@ extension Evaluation {
     }
 
     // MARK: - cost
+
+    /// Ruling R64: `restore` raises its pool by its amount, held by the caps of the pool's target
+    /// (`leCurrent`: regeneration.R5 at `leMax`), which join the `restored` event's `via`. An
+    /// untracked pool, or one no target reads, gains nothing and says so.
+    func restore(_ r: Restore, _ e: Effect, level: Int?, used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+        run.read += r.amount.targets
+        let v = value(r.amount, level: level, rule: e.origin.rule, depth: 0)
+        guard computed([v], of: e, used: used, via: via, &run.pipeline, [r.amount]), let amount = v.value else { return }
+        guard amount >= 0 else {
+            fail(e, "negative Erholung (\(amount))", &run.pipeline)
+            return
+        }
+        guard let state = run.pools[r.pool], let target = r.pool.currentTarget else {
+            fail(e, "der Vorrat \(r.pool.rawValue) wird nicht geführt", &run.pipeline)
+            return
+        }
+        var raised = run.base.applying(run.events, book: book)
+        raised.pools[r.pool] = PoolState(current: state.current.addingSaturating(amount), max: state.max)
+        let b = Evaluation(book: book, situation: raised).breakdown(Query(target), depth: 0)
+        let held = b.result.map { min($0, state.current.addingSaturating(amount)) } ?? state.current.addingSaturating(amount)
+        let granted = max(0, held - state.current)
+        let caps = b.lines.filter { $0.kind == .capped }.compactMap(\.origin)
+        run.events.append(Event(kind: .restored, origin: e.origin.clauseRef, pool: r.pool, amount: granted,
+                                via: (via + v.via + caps).uniqued(), rulings: decided(e), facts: (used + v.used).uniqued()))
+        run.pools[r.pool] = PoolState(current: state.current + granted, max: state.max)
+    }
 
     func cost(_ c: Cost, _ e: Effect, level: Int?, used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
         let rule = e.origin.rule

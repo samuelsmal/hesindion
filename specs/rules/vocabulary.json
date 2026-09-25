@@ -44,7 +44,8 @@
     "cleared",
     "logged",
     "clockAdvanced",
-    "stated"
+    "stated",
+    "restored"
   ],
   "expectKeys": [
     "offered",
@@ -1059,6 +1060,14 @@
         "min": "int"
       },
       "phase": "level"
+    },
+    "restore": {
+      "fields": {
+        "amount": "value",
+        "pool": "pool"
+      },
+      "optional": {},
+      "phase": "action"
     }
   },
   "version": 1

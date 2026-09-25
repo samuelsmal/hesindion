@@ -6,7 +6,8 @@ from rulec import vocab
 CAMEL = re.compile(r"^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)*\.?$")
 SPEC_VERBS = {"add", "set", "multiply", "cap", "floor", "useLevel", "replace", "suppress",
               "forbid", "require", "limit", "offer", "ask", "tell", "provide", "derive",
-              "check", "gain", "cost", "process", "item", "reroll"}
+              "check", "gain", "cost", "process", "item", "reroll",
+              "restore"}   # ruling R64 (Task 30): a pool raised, the Regenerationsphase's LeP
 
 
 class VocabularyTests(unittest.TestCase):
@@ -63,11 +64,11 @@ class VocabularyTests(unittest.TestCase):
 
     def test_events_are_the_specs_and_damage(self):
         # Spec §7's events, plus `damaged` (ruling R53): LE lost to a hit, which is not a `paid`;
-        # and `clockAdvanced` / `stated` (ruling R56): the clock and a lasting fact change only by
-        # an event too.
+        # `clockAdvanced` / `stated` (ruling R56): the clock and a lasting fact change only by
+        # an event too; and `restored` (ruling R64): a pool raised (a Regenerationsphase's LeP).
         self.assertEqual(self.v.raw["events"], ["paid", "damaged", "progressed", "completed", "brokenOff",
                                                 "itemChanged", "gained", "cleared", "logged", "clockAdvanced",
-                                                "stated"])
+                                                "stated", "restored"])
 
     def test_a_recurring_costs_start_is_a_derived_fact(self):
         # Ruling R57: a recurring cost counts from its start, `upkeep.<rule>.<clause>` (the minute

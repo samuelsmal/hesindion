@@ -52,6 +52,16 @@
     "rule": "sh-note"
    },
    {
+    "clause": "R2",
+    "index": 0,
+    "rule": "sh-rest"
+   },
+   {
+    "clause": "R4",
+    "index": 1,
+    "rule": "sh-rest"
+   },
+   {
     "clause": "S0",
     "index": 0,
     "rule": "sh-shield"
@@ -135,6 +145,20 @@
     "rule": "sh-kampf"
    }
   ],
+  "leCurrent": [
+   {
+    "clause": "R5",
+    "index": 0,
+    "rule": "sh-rest"
+   }
+  ],
+  "leMax": [
+   {
+    "clause": "R9",
+    "index": 0,
+    "rule": "sh-rest"
+   }
+  ],
   "level": [
    {
     "clause": "A1",
@@ -157,6 +181,13 @@
     "clause": "M1",
     "index": 1,
     "rule": "sh-kampf"
+   }
+  ],
+  "regeneration.le": [
+   {
+    "clause": "R4",
+    "index": 0,
+    "rule": "sh-rest"
    }
   ]
  },
@@ -984,6 +1015,200 @@
       {
        "because": null,
        "origin": {
+        "clause": "R2",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "choice": "regenerationsphase"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "R2",
+     "text": "Eine Regenerationsphase."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R4",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "roll.regeneration"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "regeneration.le"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R4",
+        "index": 1,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "regeneration.le"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "pool": "le"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "restore",
+       "when": {
+        "fact": "choice.regenerationsphase",
+        "is": true
+       }
+      }
+     ],
+     "id": "R4",
+     "text": "1W6 LeP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R5",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "max": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "leMax"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "to": [
+         {
+          "name": "leCurrent"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": null
+      }
+     ],
+     "id": "R5",
+     "text": "Nicht über den Höchstwert."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R9",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.KO"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 2
+          }
+         }
+        ],
+        "to": {
+         "name": "leMax"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "R9",
+     "text": "LE-Höchstwert."
+    }
+   ],
+   "id": "sh-rest",
+   "kind": "core",
+   "name": "Regeneration",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "S0",
         "index": 0,
         "rule": "sh-shield"
@@ -1159,6 +1384,6 @@
    "status": "decided"
   }
  ],
- "vocabularySha256": "0b009d61aae5fe3f1fb1c231cfc5a65f144d004336056319611b97d4157d9ae5",
+ "vocabularySha256": "47915383062db4c89e5eb8ca37aa3a3e936001dca0f741f028d6a39b40dc64ad",
  "vocabularyVersion": 1
 }

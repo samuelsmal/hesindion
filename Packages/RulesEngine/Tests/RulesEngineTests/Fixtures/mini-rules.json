@@ -47,6 +47,11 @@
     "rule": "mini-core"
    },
    {
+    "clause": "A1",
+    "index": 9,
+    "rule": "mini-core"
+   },
+   {
     "clause": "G1",
     "index": 0,
     "rule": "mini-core"
@@ -1309,6 +1314,36 @@
        "ruling": [],
        "verb": "reroll",
        "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 9,
+        "rule": "mini-core"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "attr.KO"
+          },
+          "per": {
+           "number": 3
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "pool": "le"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "restore",
+       "when": null
       }
      ],
      "id": "A1",
@@ -1477,6 +1512,6 @@
    "status": "decided"
   }
  ],
- "vocabularySha256": "0b009d61aae5fe3f1fb1c231cfc5a65f144d004336056319611b97d4157d9ae5",
+ "vocabularySha256": "47915383062db4c89e5eb8ca37aa3a3e936001dca0f741f028d6a39b40dc64ad",
  "vocabularyVersion": 1
 }

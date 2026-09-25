@@ -1097,5 +1097,31 @@ final class MatcherTests: XCTestCase {
             """#)
         XCTAssertEqual(kinds(StateRunner.run(s, engine: engine).mismatches), [.missingOffer])
     }
+
+    /// Ruling R64 (Task 30): a situation expecting `after` whose queries read what a `restore`
+    /// restores (`regeneration.le`) implies taking the choice that restore is gated on
+    /// (`.take(choice: regenerationsphase)`); `after` compares `levels` (the base of
+    /// `level(rule: X)`) and `actsAs` (its result), and its `from` is an event's origin or `via`.
+    func testARestoresChoiceIsTheImpliedActionOfAnAfter() throws {
+        let book = try RuleBook.load(from: Bundle.module.url(forResource: "sheet-rules", withExtension: "json", subdirectory: "Fixtures")!)
+        let engine = Engine(book: book)
+        let s = try situation(#"""
+            {"owned": {"sh-stun": {"level": 2}}, "base": {"leCurrent": 28, "leMax": 30},
+             "facts": [{"name": "roll.regeneration", "value": 5, "owner": "roll"}, {"name": "attr.KO", "value": 15, "owner": "sheet"}],
+             "expect": [{"query": "regeneration.le", "total": 5}],
+             "expectSituation": {"events": [{"after": {"leCurrent": 30, "levels": {"sh-stun": 2}, "actsAs": {"sh-stun": 2}}, "from": "sh-rest.R5"}]}}
+            """#)
+        XCTAssertTrue(StateRunner.canRun(s, book: book))
+        XCTAssertFalse(StateRunner.canRun(s), "without the book no restore is known")
+        XCTAssertEqual(StateRunner.implied(s, book: book), .take(choice: "regenerationsphase"))
+        XCTAssertEqual(StateRunner.run(s, engine: engine).mismatches, [])
+        let wrong = try situation(#"""
+            {"base": {"leCurrent": 20, "leMax": 30},
+             "facts": [{"name": "roll.regeneration", "value": 5, "owner": "roll"}, {"name": "attr.KO", "value": 15, "owner": "sheet"}],
+             "expect": [{"query": "regeneration.le", "total": 5}],
+             "expectSituation": {"events": [{"after": {"leCurrent": 26, "actsAs": {"sh-stun": 1}}, "from": "sh-rest.R5"}]}}
+            """#)
+        XCTAssertEqual(StateRunner.run(wrong, engine: engine).mismatches.map(\.kind), [.missingEvent, .missingEvent, .missingEvent])
+    }
 }
 

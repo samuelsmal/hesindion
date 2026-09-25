@@ -258,3 +258,24 @@ extension SheetTests {
         XCTAssertEqual(unknown.questions.map(\.fact), ["loadout.armour"], "the armour behind the unknown Stufe")
     }
 }
+
+extension SheetTests {
+    /// Ruling R64: taking the Regenerationsphase restores its `regeneration.le` to LE, held at
+    /// the maximum by the cap on `leCurrent` (regeneration.R5), which joins the event's `via`.
+    func testTakingTheRegenerationsphaseRestoresLE() throws {
+        let layer = ActionLayer(engine: engine)
+        var s = situation(facts: ["roll.regeneration": 5, "attr.KO": 15])
+        s.pools = [.le: PoolState(current: 20, max: 30)]
+        let r = layer.perform(.take(choice: "regenerationsphase"), in: s)
+        let e = try XCTUnwrap(r.events.first { $0.kind == .restored })
+        XCTAssertEqual(e.amount, 5)
+        XCTAssertEqual(e.origin, ref("sh-rest.R4"))
+        XCTAssertEqual(r.situation.pools[.le]?.current, 25)
+        s.pools = [.le: PoolState(current: 28, max: 30)]
+        let near = layer.perform(.take(choice: "regenerationsphase"), in: s)
+        let capped = try XCTUnwrap(near.events.first { $0.kind == .restored })
+        XCTAssertEqual(capped.amount, 2)
+        XCTAssertTrue(capped.via.contains(ref("sh-rest.R5")))
+        XCTAssertEqual(near.situation.pools[.le]?.current, 30)
+    }
+}

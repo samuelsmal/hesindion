@@ -39,6 +39,10 @@ clauses:
       - derive: { to: regeneration.le, sum: [{ of: roll.regeneration }] }
         # The 1W6 as rolled, one roll per reduced energy (only LeP in these examples). The
         # situational lines are T1's and ADV_44.VR1's own effects on the same target.
+      - when: { choice.regenerationsphase: true }
+        restore: { pool: le, amount: { of: regeneration.le } }
+        # "addiert dann den Wert zu seiner Energie": taking the Regenerationsphase (R2's offer)
+        # raises LE by the phase's result, held at the maximum by R5 (ruling R64, Task 30).
       - floor: { to: regeneration.le, min: 0 }
         # A floor runs in the cap phase, after R6's halving (the page: "Negative Ergebnisse
         # werden als 0 gewertet").

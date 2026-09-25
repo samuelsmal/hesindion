@@ -56,14 +56,31 @@ enum StateRunner {
     /// Stufen gained or cleared. A situation expecting other events of no cast (a regeneration's
     /// LeP, a jump off the horse's `itemChanged`, a check's `logged`) needs an action the harness
     /// cannot name, and stays unsupported.
-    static func canRun(_ s: CompiledSituation) -> Bool {
+    static func canRun(_ s: CompiledSituation, book: RuleBook? = nil) -> Bool {
         guard s.rolls.isEmpty, Set(ActionRunner.needs(s)).isSubset(of: [.sequence, .events]) else { return false }
         let stepsOK = s.sequence.allSatisfy { raw in
             guard let o = raw.objectValue, Set(o.keys).isSubset(of: stepKeys) else { return false }
             return o["rolls"].map { $0.objectValue != nil } ?? true
         }
         guard stepsOK, !s.sequence.isEmpty || s.expectSituation["events"] != nil else { return false }
+        if let book, implied(s, book: book) != nil { return true }
         return casts(s) || expectedEvents(s).allSatisfy(settles)
+    }
+
+    /// Ruling R64 (Task 30): the choice a situation expecting only `after` events takes, when its
+    /// queries read what a `restore` gated on that choice restores (`regeneration.le`: taking the
+    /// Regenerationsphase). nil for any other situation.
+    static func implied(_ s: CompiledSituation, book: RuleBook) -> Action? {
+        let events = expectedEvents(s)
+        guard !events.isEmpty, s.sequence.isEmpty, events.allSatisfy({ $0.objectValue?["after"] != nil }) else { return nil }
+        let queried = Set(s.expect.map { Query($0.query).name })
+        let choices = book.rules.values.flatMap { $0.clauses.flatMap(\.effects) }.compactMap { e -> String? in
+            guard case .restore(let r) = e.payload, !Set(r.amount.targets.map(\.name)).isDisjoint(with: queried) else { return nil }
+            let names = e.when?.factNames ?? []
+            return names.first { $0.hasPrefix("choice.") }.map { String($0.dropFirst("choice.".count)) }
+        }
+        let distinct = Set(choices)
+        return distinct.count == 1 ? .take(choice: distinct.first!) : nil
     }
 
     /// Whether the situation, or a step of it, states a spell check (its implied action is a cast).
@@ -109,7 +126,8 @@ enum StateRunner {
         // The situation's own action, when it expects events of its own (or has no steps).
         var queries: [String: Breakdown] = [:]
         var viewBreakdowns: [Breakdown] = []
-        let topAction = (s.expectSituation["events"] != nil || s.sequence.isEmpty) ? implied(start, events: events) : nil
+        let topAction = (s.expectSituation["events"] != nil || s.sequence.isEmpty)
+            ? (implied(s, book: engine.book) ?? implied(start, events: events)) : nil
         if let action = topAction {
             let r = layer.perform(action, in: start)
             all += r.breakdowns + [record(r)]
@@ -349,7 +367,11 @@ enum StateRunner {
                 continue
             }
             if let a = o["after"] {
-                out += after(a, r.situation, book: engine.book)
+                out += after(a, r.situation, engine: engine)
+                // Task 30: the `from` of an `after` is an event's origin or `via` (the cap R5).
+                if let from = o["from"]?.string, !r.events.contains(where: { $0.origin?.description == from || $0.via.contains { $0.description == from } }) {
+                    out.append(Mismatch(kind: .missingEvent, detail: "expected the state after from \(from), no event of it", names: [from]))
+                }
                 continue
             }
             if let item = o["itemChanged"] {
@@ -389,9 +411,11 @@ enum StateRunner {
         return nil
     }
 
-    /// `after: { aspCurrent, leCurrent, conditions }`: the pools and the Zustände and Status (rule
-    /// → Stufe) the action leaves.
-    static func after(_ raw: JSONValue, _ s: Situation, book: RuleBook) -> [Mismatch] {
+    /// `after: { aspCurrent, leCurrent, conditions, levels, actsAs }`: the pools, the Zustände and
+    /// Status (rule → Stufe) the action leaves, and a rule's Stufe (`levels`) and the Stufe it acts
+    /// at (`actsAs`) there.
+    static func after(_ raw: JSONValue, _ s: Situation, engine: Engine) -> [Mismatch] {
+        let book = engine.book
         guard let o = raw.objectValue else { return [.shape("malformed after", "after \(raw) is not an object")] }
         var out: [Mismatch] = []
         for key in o.keys.sorted() {
@@ -411,6 +435,18 @@ enum StateRunner {
                 let wanted = want.compactMapValues(\.int)
                 if have != wanted {
                     out.append(Mismatch(kind: .missingEvent, detail: "expected the Zustände \(wanted) after, got \(have)"))
+                }
+            case "levels", "actsAs":
+                // Task 30: a Stufe the hero has after (the base of `level(rule: X)`) and the one it
+                // acts at (its result).
+                guard let want = o[key]!.objectValue else { out.append(.shape("malformed after", "after.\(key) is not an object")); continue }
+                for (rule, n) in want.sorted(by: { $0.key < $1.key }) {
+                    let b = engine.evaluate(Evaluation.levelQuery(rule), in: s)
+                    let got = key == "levels" ? b.base?.value : b.result
+                    if got != n.int {
+                        out.append(Mismatch(kind: .missingEvent, query: Evaluation.levelQuery(rule).description,
+                                            detail: "expected \(key) \(rule) \(n) after, got \(got.map(String.init) ?? "none")", names: [rule]))
+                    }
                 }
             default:
                 out.append(.shape("after field \(key)", "after.\(key) is not modelled"))

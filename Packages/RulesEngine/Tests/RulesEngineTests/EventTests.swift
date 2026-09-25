@@ -225,3 +225,15 @@ final class EventTests: XCTestCase {
         XCTAssertFalse(after.facts.keys.contains { $0.hasPrefix("hit.") }, "a payment states no hit")
     }
 }
+
+extension EventTests {
+    /// Ruling R64 (Task 30): `restored` raises the pool by its amount (the action that gives it
+    /// holds it within the pool's caps); an untracked pool stays untracked.
+    func testRestoredRaisesThePool() {
+        var s = Situation(owned: [:], facts: [])
+        s.pools = [.le: PoolState(current: 9, max: 37)]
+        let after = s.applying([Event(kind: .restored, origin: ref("regeneration.R4"), pool: .le, amount: 6)])
+        XCTAssertEqual(after.pools[.le], PoolState(current: 15, max: 37))
+        XCTAssertNil(s.applying([Event(kind: .restored, pool: .asp, amount: 2)]).pools[.asp])
+    }
+}

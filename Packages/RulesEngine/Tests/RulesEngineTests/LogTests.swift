@@ -34,6 +34,7 @@ final class LogTests: XCTestCase {
             Event(kind: .clockAdvanced, minutes: 5, rounds: 1, ends: [.action, .round]),
             Event(kind: .stated, fact: "round.previousDefenceCrit", value: true, owner: .round),
             Event(kind: .stated, fact: "loadout.weapon", value: .null, owner: .loadout),
+            Event(kind: .restored, origin: ClauseRef("regeneration.R4"), pool: .le, amount: 6),
             Event(kind: .logged, note: "n"),
         ]
     }

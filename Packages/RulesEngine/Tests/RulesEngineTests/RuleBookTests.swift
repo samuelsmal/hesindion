@@ -61,7 +61,7 @@ final class RuleBookTests: XCTestCase {
         // Merged in rulec's `_ref_key` order: rule, clause, then index.
         XCTAssertEqual(got.map(\.description), [
             "mini-core.A1[0]", "mini-core.A1[1]", "mini-core.A1[2]", "mini-core.A1[3]", "mini-core.A1[4]",
-            "mini-core.A1[5]", "mini-core.A1[6]", "mini-core.A1[7]", "mini-core.A1[8]",
+            "mini-core.A1[5]", "mini-core.A1[6]", "mini-core.A1[7]", "mini-core.A1[8]", "mini-core.A1[9]",
             "mini-core.G1[0]", "mini-core.G1[2]",
             "mini-core.P1[0]", "mini-core.P1[1]", "mini-core.P1[2]", "mini-core.P1[3]", "mini-core.P1[4]", "mini-core.P1[5]",
             "mini-core.V1[0]", "mini-core.V1[8]",

@@ -1626,6 +1626,7 @@ No residue.
 - situations/kampfwerte.yaml 16.22 (Task 30, R61): `choose: { action.attack: hit }`, the "on a hit" its comment states (schaden.S3 reads it)
 - situations/kampfwerte.yaml 16.14 (Task 30, R61): `loadout: { item.Holzschild.technique: Schilde }`, the shield's technique ("Schilde PA 8", the note on 16.13; SCH3: "den Paradewert der Kampftechnik Schilde"); no equipment rule describes the Holzschild
 - situations/lebensenergie.yaml file `hero` (Task 30, R61): `sheet: { species.le: 5 }`, the Mensch's LE-Grundwert the header states; `hero.purchased.le` comes from the hero file (`attr.lp`, rulec's import)
+- regeneration.R4 (Task 30, ruling R64): new `restore: { pool: le, amount: { of: regeneration.le } }` gated on `choice.regenerationsphase: true`: taking the Regenerationsphase (R2's offer) raises LE by its result ("addiert dann den Wert zu seiner Energie"), a `restored` event held at the maximum by R5's cap; review reset
 
 ## Open questions
 

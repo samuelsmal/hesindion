@@ -3,7 +3,7 @@ import Foundation
 public enum Verb: String, Codable, CaseIterable, Sendable {
     case add, set, multiply, cap, floor, useLevel, replace, suppress
     case forbid, require, limit, offer, ask, tell, provide, derive
-    case check, gain, cost, process, item, reroll
+    case check, gain, cost, process, item, reroll, restore
 
     /// The pipeline phase a value verb runs in (spec §5.2); nil for data, player and action verbs.
     public var phase: Phase? {
@@ -48,7 +48,7 @@ public enum RuleKind: String, Codable, CaseIterable, Sendable {
 public enum Span: String, Codable, CaseIterable, Sendable { case action, round, fight, whileFormed, untilCleared }
 public enum Pool: String, Codable, CaseIterable, Sendable { case le, asp, kap, schips, ammunition, actions, freeActions }
 public enum EventKind: String, Codable, CaseIterable, Sendable {
-    case paid, damaged, progressed, completed, brokenOff, itemChanged, gained, cleared, logged, clockAdvanced, stated
+    case paid, damaged, progressed, completed, brokenOff, itemChanged, gained, cleared, logged, clockAdvanced, stated, restored
 }
 public enum Audience: String, Codable, CaseIterable, Sendable { case player, gm, opponent }
 public enum LineKind: String, Codable, CaseIterable, Sendable {

@@ -38,6 +38,8 @@ extension Situation {
     /// - `paid` lowers `pools[pool].current` by `amount`. LE may fall to 0 and below (im
     ///   Sterben). A pool the situation does not track stays untracked. Paying LeP is not damage:
     ///   it changes the pool and nothing else (no hit, no RS, no Wundschwelle).
+    /// - `restored` (R64) raises `pools[pool].current` by `amount`, held within the pool's caps
+    ///   by the action that gave it (regeneration.R5).
     /// - `damaged` (R53) lowers the pool the same way. It is the damage a hit did; applying it
     ///   runs no chain again (the chain gave it).
     /// - `gained` adds `levels` (1 when absent) to `owned[rule].level`; `cleared` removes `levels`
@@ -77,6 +79,11 @@ extension Situation {
         case .paid, .damaged:
             guard let pool = e.pool, let amount = e.amount, var state = pools[pool] else { return }
             state.current = state.current.subtractingSaturating(amount)
+            pools[pool] = state
+        case .restored:
+            // Ruling R64: the pool rises; the action held the amount within the pool's caps.
+            guard let pool = e.pool, let amount = e.amount, var state = pools[pool] else { return }
+            state.current = state.current.addingSaturating(amount)
             pools[pool] = state
         case .gained:
             guard let rule = e.rule else { return }
