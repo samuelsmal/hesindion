@@ -136,6 +136,8 @@ extension Situation {
     ///   useLevel, and 0 for a rule the hero does not own (the sheet is complete). The evaluator
     ///   states it first from the base phase of `level(rule: X)` (R34), so this is the fallback
     ///   when there is neither an owned level nor a derive.
+    /// - `hero.leCurrent` / `hero.aspCurrent`: the current value of the pool (R39); unknown
+    ///   when the situation does not track the pool.
     /// - anything else: unknown. The other derived facts (`hero.conditionLevels`, `fw.current`,
     ///   `hit.*`, …) are the evaluator's (Task 22).
     ///
@@ -150,6 +152,9 @@ extension Situation {
             return FactUse(name: name, value: o, owner: .sheet)
         default:
             break
+        }
+        if let pool = Pool.current(fact: name), let p = pools[pool] {
+            return FactUse(name: name, value: .int(p.current), owner: .derived)
         }
         if let f = facts[name] { return FactUse(name: f.name, value: f.value, owner: f.owner) }
         if unstated.contains(name) { return nil }

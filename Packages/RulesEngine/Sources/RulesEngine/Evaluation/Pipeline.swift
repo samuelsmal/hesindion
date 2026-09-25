@@ -208,7 +208,8 @@ extension Query {
 // MARK: - The phases
 
 extension Evaluation {
-    /// Phase 1. The sheet's value for the query (`base[query.description]`, else
+    /// Phase 1. For `leCurrent` / `aspCurrent`, the pool's current value when the situation tracks
+    /// the pool (R39). Else the sheet's value for the query (`base[query.description]`, else
     /// `base[query.name]`, never for `level`: a key `level` would set every rule's level), or for
     /// `level(rule: X)` the owned level; else the sum of every applicable `derive` reaching the
     /// query, one part per `sum` term. The derives of X to its own level count whether or not X
@@ -224,7 +225,12 @@ extension Evaluation {
     private func basePhase(_ state: inout PipelineState) {
         let q = state.query
         let derives = state.candidates.filter { $0.phase == .base }
-        if let v = situation.base[q.description] ?? (q.name == "level" ? nil : situation.base[q.name]) {
+        if q.target.context.isEmpty, let pool = Pool.current(target: q.name), let current = situation.pools[pool] {
+            // R39: the pool's current value, whatever the sheet's base says.
+            state.base = Line(value: current.current, kind: .base,
+                              facts: [FactUse(name: pool.currentFact!, value: .int(current.current), owner: .derived)],
+                              owner: .sheet, note: "aktueller Stand")
+        } else if let v = situation.base[q.description] ?? (q.name == "level" ? nil : situation.base[q.name]) {
             state.base = Line(value: v, kind: .base, owner: .sheet, note: "Grundwert laut Bogen")
         } else if let id = q.levelRule, let owned = situation.owned[id] {
             state.base = Line(value: owned.level, kind: .base,
@@ -402,6 +408,15 @@ extension Evaluation {
             default: return false
             }
         }
+        control(controllable, &state)
+    }
+
+    /// Phase 4's decision over `controllable`: registers each firing `suppress` and `replace`
+    /// among `state.candidates` that names one of them (from a rule that applies) in `state`, for
+    /// `isSuppressed` and `swapped` to act on. The lines phase passes a query's value, text,
+    /// player and legality effects; the action layer its `cost`s and `gain`s (SA_74.VP1 over
+    /// zaubermodifikationen.ZM12, MIGRATION "Notes for the engine tasks").
+    func control(_ controllable: [Effect], _ state: inout PipelineState) {
         for e in state.candidates where e.phase == .lines {
             let selector: RuleSelector, replace: Replace?
             switch e.payload {

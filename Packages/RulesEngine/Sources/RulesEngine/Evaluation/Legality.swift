@@ -412,7 +412,9 @@ extension Evaluation {
             }
             out.append(OfferedChoice(choice: o.choice, origin: e.origin.clauseRef, options: o.options, default: o.default,
                                      span: o.span, costs: o.costs, rulings: decided(e), via: via,
-                                     reasons: refusals(of: o, rule, rules), max: bound(of: o, rules), refused: refused))
+                                     reasons: refusals(of: o, rule, rules),
+                                     max: bound(of: o, rules) ?? splitBound(of: o, rule: rule, level: level, depth: state.depth),
+                                     refused: refused))
         }
         return out
     }

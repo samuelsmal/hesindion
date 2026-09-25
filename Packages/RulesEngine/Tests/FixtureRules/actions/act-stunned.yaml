@@ -1,0 +1,23 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: a condition that gains a state at Stufe IV and loses a Stufe on recovery.
+id: act-stunned
+name: Benommen
+kind: condition
+levels: 4
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: S1
+    text: AT −Stufe.
+    effects:
+      - add: { to: at, value: -1 * level }
+  - id: S4
+    text: Ab Stufe IV handlungsunfähig.
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: act-helpless }
+  - id: S5
+    text: Erholt man sich, eine Stufe weniger.
+    effects:
+      - when: { choice.recover: true }
+        gain: { rule: act-stunned, levels: -1 }

@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: a cost that falls through from AsP to LeP (the plan's probe-magie case).
+id: act-fall
+name: Notfall
+kind: specialAbility
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: F1
+    text: Die Kosten zuerst aus AsP, der Rest aus LeP.
+    effects:
+      - when: { check.kind: spell, choice.fall: true }
+        cost: { pool: asp, amount: { of: spell.cost }, fallThrough: [le] }
+  - id: F2
+    text: Geteilt zwischen AsP und KaP, mindestens 2 AsP.
+    effects:
+      - when: { choice.share: true }
+        cost: { pool: asp, amount: 6, split: { pools: [asp, kap], min: { asp: 2 } } }

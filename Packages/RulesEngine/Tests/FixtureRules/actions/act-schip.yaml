@@ -1,0 +1,16 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: schicksalspunkte.SP-zustand's shape: a Schip, paid when the choice is taken, and the
+# suppress of every condition's effects (their gains included).
+id: act-schip
+name: Schip
+kind: core
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: SP1
+    text: Ein Schip, und die Zustände zählen nicht.
+    effects:
+      - offer: { choice: schipZustand, costs: [{ cost: { pool: schips, amount: 1 } }], span: round }
+      - when: { choice.schipZustand: true }
+        suppress: { line: { ruleKind: condition } }
+        because: Schip, Zustand ignorieren

@@ -29,7 +29,7 @@ public struct Engine: Sendable {
     /// One call's evaluation of the situation as the rules read it: a choice it takes that is
     /// not legal (forbidden, a requirement unmet, beyond a limit) is not taken (MIGRATION
     /// probe-magie 20.4). When it takes none such, the evaluation that checked is the one used.
-    private func evaluation(_ situation: Situation) -> Evaluation {
+    func evaluation(_ situation: Situation) -> Evaluation {
         let raw = Evaluation(book: book, situation: situation)
         guard situation.facts.keys.contains(where: { $0.hasPrefix("choice.") }),
               let taken = raw.withoutRefusedChoices() else { return raw }

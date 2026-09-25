@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: trefferzonen.TZ8/TZ11's shape: the rule gained is read from a table by zone.
+id: act-zones
+name: Wunden
+kind: core
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: Z1
+    text: Kopf benommen, Beine hilflos.
+    effects:
+      - provide: { name: act.zone.effect, value: { kopf: act-stunned, beine: act-helpless } }
+      - when: { gmFact.wound: true }
+        gain: { rule: "table(act.zone.effect, hit.zone)" }

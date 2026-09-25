@@ -1,0 +1,968 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "F1",
+    "index": 0,
+    "rule": "act-fall"
+   },
+   {
+    "clause": "F2",
+    "index": 0,
+    "rule": "act-fall"
+   },
+   {
+    "clause": "H1",
+    "index": 0,
+    "rule": "act-helpless"
+   },
+   {
+    "clause": "M1",
+    "index": 0,
+    "rule": "act-magie"
+   },
+   {
+    "clause": "M1",
+    "index": 1,
+    "rule": "act-magie"
+   },
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "act-moves"
+   },
+   {
+    "clause": "A2",
+    "index": 0,
+    "rule": "act-moves"
+   },
+   {
+    "clause": "A3",
+    "index": 0,
+    "rule": "act-moves"
+   },
+   {
+    "clause": "P1",
+    "index": 0,
+    "rule": "act-pforten"
+   },
+   {
+    "clause": "P1",
+    "index": 1,
+    "rule": "act-pforten"
+   },
+   {
+    "clause": "P1",
+    "index": 2,
+    "rule": "act-pforten"
+   },
+   {
+    "clause": "P1",
+    "index": 3,
+    "rule": "act-pforten"
+   },
+   {
+    "clause": "P3",
+    "index": 0,
+    "rule": "act-pforten"
+   },
+   {
+    "clause": "SP1",
+    "index": 0,
+    "rule": "act-schip"
+   },
+   {
+    "clause": "SP1",
+    "index": 1,
+    "rule": "act-schip"
+   },
+   {
+    "clause": "S4",
+    "index": 0,
+    "rule": "act-stunned"
+   },
+   {
+    "clause": "S5",
+    "index": 0,
+    "rule": "act-stunned"
+   },
+   {
+    "clause": "Z1",
+    "index": 0,
+    "rule": "act-zones"
+   },
+   {
+    "clause": "Z1",
+    "index": 1,
+    "rule": "act-zones"
+   }
+  ],
+  "at": [
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "act-low"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "act-stunned"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F1",
+        "index": 0,
+        "rule": "act-fall"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "fallThrough": [
+         "le"
+        ],
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "choice.fall",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "F1",
+     "text": "Die Kosten zuerst aus AsP, der Rest aus LeP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F2",
+        "index": 0,
+        "rule": "act-fall"
+       },
+       "payload": {
+        "amount": {
+         "number": 6
+        },
+        "pool": "asp",
+        "split": {
+         "min": {
+          "asp": 2
+         },
+         "pools": [
+          "asp",
+          "kap"
+         ]
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "fact": "choice.share",
+        "is": true
+       }
+      }
+     ],
+     "id": "F2",
+     "text": "Geteilt zwischen AsP und KaP, mindestens 2 AsP."
+    }
+   ],
+   "id": "act-fall",
+   "kind": "specialAbility",
+   "name": "Notfall",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H1",
+        "index": 0,
+        "rule": "act-helpless"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "any"
+         ],
+         "kind": "action"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": null
+      }
+     ],
+     "id": "H1",
+     "text": "Keine Aktionen."
+    }
+   ],
+   "id": "act-helpless",
+   "kind": "state",
+   "name": "Hilflos",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "act-low"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "below": 20,
+        "fact": "hero.leCurrent"
+       }
+      }
+     ],
+     "id": "L1",
+     "text": "Unter 20 LeP AT −2."
+    }
+   ],
+   "id": "act-low",
+   "kind": "core",
+   "name": "Erschöpft",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 0,
+        "rule": "act-magie"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "check.result",
+          "is": "success"
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 1,
+        "rule": "act-magie"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "onFailure": 0.5,
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "M1",
+     "text": "Die Kosten in AsP; misslingt der Zauber, die Hälfte."
+    }
+   ],
+   "id": "act-magie",
+   "kind": "core",
+   "name": "Zauberkosten",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "act-moves"
+       },
+       "payload": {
+        "choice": "doppel",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "0.costs.0",
+           "rule": "act-moves"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "actions"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "A1",
+     "text": "Doppelangriff für eine Aktion."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A2",
+        "index": 0,
+        "rule": "act-moves"
+       },
+       "payload": {
+        "choice": "passierschlag"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "A2",
+     "text": "Ein Passierschlag kostet nichts."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A3",
+        "index": 0,
+        "rule": "act-moves"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "doppel"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "gmFact.noDouble",
+        "is": true
+       }
+      }
+     ],
+     "id": "A3",
+     "text": "Ohne Aktion kein Doppelangriff."
+    }
+   ],
+   "id": "act-moves",
+   "kind": "core",
+   "name": "Manöver",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 0,
+        "rule": "act-pforten"
+       },
+       "payload": {
+        "choice": "split.le"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "check.kind",
+        "is": "spell"
+       }
+      },
+      {
+       "because": "mindestens 1 AsP pro Zauber",
+       "origin": {
+        "clause": "P1",
+        "index": 1,
+        "rule": "act-pforten"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "split.le"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "hero.aspCurrent",
+        "is": 0
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 2,
+        "rule": "act-pforten"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "pool": "asp",
+        "split": {
+         "min": {
+          "asp": 1
+         },
+         "pools": [
+          "asp",
+          "le"
+         ]
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "atLeast": 1,
+          "fact": "choice.split.le"
+         },
+         {
+          "fact": "check.result",
+          "is": "success"
+         }
+        ]
+       }
+      },
+      {
+       "because": "Pforten: die Kosten werden geteilt",
+       "origin": {
+        "clause": "P1",
+        "index": 3,
+        "rule": "act-pforten"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "act-magie.M1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "atLeast": 1,
+        "fact": "choice.split.le"
+       }
+      }
+     ],
+     "id": "P1",
+     "text": "LeP statt AsP, mindestens 1 AsP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P3",
+        "index": 0,
+        "rule": "act-pforten"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "spell.cost"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "fallThrough": [
+         "le"
+        ],
+        "onFailure": 0.5,
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "atLeast": 1,
+          "fact": "choice.split.le"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "P3",
+     "text": "Misslingt er, die Hälfte, erst AsP, dann LeP."
+    }
+   ],
+   "id": "act-pforten",
+   "kind": "specialAbility",
+   "name": "Pforten",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "SP1",
+        "index": 0,
+        "rule": "act-schip"
+       },
+       "payload": {
+        "choice": "schipZustand",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "SP1",
+           "index": "0.costs.0",
+           "rule": "act-schip"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "schips"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ],
+        "span": "round"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": "Schip, Zustand ignorieren",
+       "origin": {
+        "clause": "SP1",
+        "index": 1,
+        "rule": "act-schip"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "condition"
+         ],
+         "kind": "ruleKind"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "choice.schipZustand",
+        "is": true
+       }
+      }
+     ],
+     "id": "SP1",
+     "text": "Ein Schip, und die Zustände zählen nicht."
+    }
+   ],
+   "id": "act-schip",
+   "kind": "core",
+   "name": "Schip",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "act-stunned"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "AT −Stufe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S4",
+        "index": 0,
+        "rule": "act-stunned"
+       },
+       "payload": {
+        "rule": "act-helpless"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "S4",
+     "text": "Ab Stufe IV handlungsunfähig."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S5",
+        "index": 0,
+        "rule": "act-stunned"
+       },
+       "payload": {
+        "levels": -1,
+        "rule": "act-stunned"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "choice.recover",
+        "is": true
+       }
+      }
+     ],
+     "id": "S5",
+     "text": "Erholt man sich, eine Stufe weniger."
+    }
+   ],
+   "id": "act-stunned",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Benommen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z1",
+        "index": 0,
+        "rule": "act-zones"
+       },
+       "payload": {
+        "name": "act.zone.effect",
+        "value": {
+         "beine": "act-helpless",
+         "kopf": "act-stunned"
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z1",
+        "index": 1,
+        "rule": "act-zones"
+       },
+       "payload": {
+        "rule": {
+         "table": {
+          "key": "hit.zone",
+          "name": "act.zone.effect"
+         }
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "gmFact.wound",
+        "is": true
+       }
+      }
+     ],
+     "id": "Z1",
+     "text": "Kopf benommen, Beine hilflos."
+    }
+   ],
+   "id": "act-zones",
+   "kind": "core",
+   "name": "Wunden",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  }
+ ],
+ "rulings": [],
+ "vocabularySha256": "e251f7f39bc426f0db9e4a805585e9892db68241a48092570ce888ebae9cbc74",
+ "vocabularyVersion": 1
+}

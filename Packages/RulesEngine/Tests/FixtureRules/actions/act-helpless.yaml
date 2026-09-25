@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: a state (no Stufen).
+id: act-helpless
+name: Hilflos
+kind: state
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: H1
+    text: Keine Aktionen.
+    effects:
+      - forbid: { what: { action: [any] } }

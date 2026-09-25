@@ -1,0 +1,21 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25 (R23): an offer's action cost, and an offer that costs nothing (passierschlag.PS2).
+id: act-moves
+name: Manöver
+kind: core
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Doppelangriff für eine Aktion.
+    effects:
+      - offer: { choice: doppel, costs: [{ cost: { pool: actions, amount: 1 } }] }
+  - id: A2
+    text: Ein Passierschlag kostet nichts.
+    effects:
+      - offer: { choice: passierschlag }
+  - id: A3
+    text: Ohne Aktion kein Doppelangriff.
+    effects:
+      - when: { gmFact.noDouble: true }
+        forbid: { what: { choice: [doppel] } }

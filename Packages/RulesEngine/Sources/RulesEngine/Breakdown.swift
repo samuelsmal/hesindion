@@ -156,7 +156,8 @@ public struct OfferedChoice: Hashable, Sendable {
     public var because: String?
     public var reasons: [NotApplied]
     /// How many of `options` may be taken: the `max` of the `limit` naming the most of them
-    /// (zaubermodifikationen.ZM1: FW 9 → 2). nil without such a limit.
+    /// (zaubermodifikationen.ZM1: FW 9 → 2); for a `split.<pool>` choice, the offering rule's split
+    /// cost less the other pools' minimums (SA_74.VP1: 8 − 1 AsP = 7). nil without either.
     public var max: Int?
     /// The options that may not be taken (another one), each with the entries refusing it.
     public var refused: [RefusedOption]
