@@ -13,6 +13,12 @@ final class Evaluation {
     var baseLevelMemo: [String: Memo<BaseLevel>] = [:]
     /// Operand targets already evaluated in this call, by query.
     var operandMemo: [String: ResolvedTarget] = [:]
+    /// The answers that depend on where the evaluation stands, since the memos are not keyed by
+    /// depth: depth-guard hits, and `.computing` memo hits (a cycle) by memo key. A result whose
+    /// computation met the guard, or a cycle through an entry still open outside it, is not
+    /// memoized (`settle`).
+    var depthHits = 0
+    var cycleHits: [String: Int] = [:]
 
     init(book: RuleBook, situation: Situation) {
         self.book = book
@@ -27,14 +33,6 @@ final class Evaluation {
             return nil
         }
 
-    /// Rule id → the useLevels in the book that act on it. A `level(rule: X)` query runs them all:
-    /// the reach index lists a useLevel under its target rule's targets, not under `level`.
-    private(set) lazy var useLevels: [String: [Effect]] = book.rules.keys.sorted(by: Self.idOrder)
-        .flatMap { id in book.rules[id]!.clauses.flatMap(\.effects) }
-        .reduce(into: [:]) { acc, e in
-            if case .useLevel(let u) = e.payload { acc[u.rule, default: []].append(e) }
-        }
-
     /// Rule id → the derives to `level(rule: id)`, in the compiler's order.
     private(set) lazy var levelDerivesByRule: [String: [Effect]] = (book.reach["level"] ?? [])
         .sorted(by: EffectOrigin.compilerOrder)
@@ -45,6 +43,16 @@ final class Evaluation {
             }
         }
 
+    /// Runs `compute` for the memo entry `key` (nil for an entry with no `.computing` state) and
+    /// says whether its result is final: it met no depth guard, and every cycle it met went
+    /// through `key` itself, which is now closed.
+    func settle<T>(_ key: String?, _ compute: () -> T) -> (value: T, final: Bool) {
+        let depthMark = depthHits, cyclesBefore = cycleHits
+        let value = compute()
+        if let key { cycleHits[key] = nil }
+        return (value, depthHits == depthMark && cycleHits == cyclesBefore)
+    }
+
     /// Rule ids as rulec sorts them (Unicode scalars, as Python compares strings).
     static func idOrder(_ a: String, _ b: String) -> Bool {
         a.unicodeScalars.lexicographicallyPrecedes(b.unicodeScalars)
@@ -53,7 +61,10 @@ final class Evaluation {
     /// The breakdown of `query`, running the phases up to `last`. Beyond `Values.maxDepth` a nested
     /// evaluation gives an empty breakdown flagged `depthExceeded`.
     func breakdown(_ query: Query, depth: Int, through last: Phase = .legality) -> Breakdown {
-        guard depth <= Values.maxDepth else { return Breakdown(query: query, depthExceeded: true) }
+        guard depth <= Values.maxDepth else {
+            depthHits += 1
+            return Breakdown(query: query, depthExceeded: true)
+        }
         var state = PipelineState(query: query, depth: depth, candidates: candidates(for: query))
         for phase in Phase.allCases where phase <= last {
             switch phase {
@@ -67,11 +78,11 @@ final class Evaluation {
     }
 
     /// The effects that reach `query`: `book.effects(reaching:)`, less those whose own targets do
-    /// not match its context. A `level(rule: X)` query takes the useLevels acting on X, and no
-    /// other rule's.
+    /// not match its context. A `level(rule: X)` query keeps the useLevels acting on X (rulec lists
+    /// every useLevel under `level`), and no other rule's.
     private func candidates(for query: Query) -> [Effect] {
         let levelRule = query.levelRule
-        var effects = book.effects(reaching: query.name).filter { e in
+        return book.effects(reaching: query.name).filter { e in
             switch e.payload {
             case .add(let a): return a.to.contains { $0.matches(query.target) }
             case .set(let s): return s.to.contains { $0.matches(query.target) }
@@ -83,11 +94,6 @@ final class Evaluation {
             default: return true
             }
         }
-        if let levelRule {
-            let known = Set(effects.map(\.origin))
-            effects += (useLevels[levelRule] ?? []).filter { !known.contains($0.origin) }
-        }
-        return effects
     }
 }
 
@@ -148,13 +154,20 @@ extension Query {
 
 extension Evaluation {
     /// Phase 1. The sheet's value for the query (`base[query.description]`, else
-    /// `base[query.name]`), or for `level(rule: X)` the owned level; else the sum of every
-    /// applicable `derive` reaching the query, one part per `sum` term. The derives of X to its
-    /// own level count whether or not X applies: they decide whether it does.
+    /// `base[query.name]`, never for `level`: a key `level` would set every rule's level), or for
+    /// `level(rule: X)` the owned level; else the sum of every applicable `derive` reaching the
+    /// query, one part per `sum` term. The derives of X to its own level count whether or not X
+    /// applies: they decide whether it does.
+    ///
+    /// R35: a `suppress` naming a clause that holds one of these derives acts here, before the
+    /// sum (alternative derives: trefferzonen-ruestungsschutz.RS4 over ruestung-und-belastung.A1,
+    /// reiterkampf.RK1 over kampfwerte.KW9). Its applicability and `when` are read as usual; the
+    /// derives of the clauses it names go to `notApplied(suppressed)`. Every other suppress is the
+    /// lines phase's.
     private func basePhase(_ state: inout PipelineState) {
         let q = state.query
         let derives = state.candidates.filter { $0.phase == .base }
-        if let v = situation.base[q.description] ?? situation.base[q.name] {
+        if let v = situation.base[q.description] ?? (q.name == "level" ? nil : situation.base[q.name]) {
             state.base = Line(value: v, kind: .base, owner: .sheet, note: "Grundwert laut Bogen")
         } else if let id = q.levelRule, let owned = situation.owned[id] {
             state.base = Line(value: owned.level, kind: .base,
@@ -168,8 +181,9 @@ extension Evaluation {
             }
             return
         }
+        let suppressed = suppressions(of: derives, &state)
         var parts: [Line] = []
-        for e in derives {
+        for e in derives where suppressed[e.origin.clauseRef] == nil {
             guard case .derive(let d) = e.payload, applies(e, &state, ownLevel: q.levelRule) else { continue }
             let rule = e.origin.rule
             let own = rule == q.levelRule
@@ -189,6 +203,29 @@ extension Evaluation {
                           facts: parts.flatMap(\.facts).uniqued(), parts: parts)
     }
 
+    /// R35: the clauses among `derives`' that a firing `suppress` names, with the suppressor. Each
+    /// suppressed derive that would apply is recorded as `notApplied(suppressed)`.
+    private func suppressions(of derives: [Effect], _ state: inout PipelineState) -> [ClauseRef: Effect] {
+        let clauses = Set(derives.map(\.origin.clauseRef))
+        var suppressed: [ClauseRef: Effect] = [:]
+        for e in state.candidates {
+            guard case .suppress(let s) = e.payload, s.line.kind == .line else { continue }
+            let named = s.line.ids.compactMap { $0.id.flatMap(ClauseRef.init) }.filter(clauses.contains)
+            guard !named.isEmpty, applies(e, &state) else { continue }
+            let rule = e.origin.rule
+            let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
+            guard gate(e, level: level, via: ruleVia(rule, state), &state) != nil else { continue }
+            for c in named where suppressed[c] == nil { suppressed[c] = e }
+        }
+        for d in derives {
+            guard let by = suppressed[d.origin.clauseRef], applies(d, &state, ownLevel: state.query.levelRule) else { continue }
+            state.record(NotApplied(origin: d.origin.clauseRef, reason: .suppressed,
+                                    because: by.because ?? by.origin.clauseRef.description, rulings: d.ruling,
+                                    via: [by.origin.clauseRef]))
+        }
+        return suppressed
+    }
+
     /// Phase 2. Each applicable `useLevel` changes its target rule's level (R28): the useLevels on
     /// one target chain in rule-id order, then clause order. `as` is evaluated with `level` bound
     /// to the target's level after the earlier useLevels; `lowerBy` with `level` bound to the
@@ -206,8 +243,11 @@ extension Evaluation {
             if case .useLevel(let u) = e.payload { chains[u.rule, default: []].append(e) }
         }
         for target in chains.keys.sorted(by: Self.idOrder) {
-            let relevant = target == levelRule || (applicability(of: target, depth: state.depth).applies
-                && state.candidates.contains { $0.origin.rule == target && $0.phase != nil && $0.phase != .level })
+            // The cheap test first: asking a rule's applicability from inside its own (Schmerz's
+            // level reads LE, whose query sees the useLevels on Schmerz) is a cycle.
+            let relevant = target == levelRule
+                || (state.candidates.contains { $0.origin.rule == target && $0.phase != nil && $0.phase != .level }
+                    && applicability(of: target, depth: state.depth).applies)
             guard relevant else { continue }
             var current = target == levelRule
                 ? state.base?.value
@@ -355,9 +395,16 @@ extension Evaluation {
     private func applies(_ e: Effect, _ state: inout PipelineState, ownLevel: String? = nil) -> Bool {
         if let ownLevel, e.origin.rule == ownLevel { return true }
         let a = applicability(of: e.origin.rule, depth: state.depth)
-        if case .rulesetOff(let ruleset) = a.status {
+        switch a.status {
+        case .rulesetOff(let ruleset):
             state.record(NotApplied(origin: e.origin.clauseRef, reason: .rulesetOff,
                                     because: "Regelset \(ruleset) nicht aktiv", rulings: e.ruling))
+        case .unknownLevel(let unknown):
+            state.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact,
+                                    because: "Stufe von \(e.origin.rule) unbekannt", rulings: e.ruling))
+            state.ask(unknown, for: e.origin.clauseRef)
+        case .applies, .silent:
+            break
         }
         return a.applies
     }
@@ -407,6 +454,7 @@ extension Evaluation {
         let unknown = results.flatMap(\.unknown).uniqued()
         if results.contains(where: \.depthExceeded) {
             state.depthExceeded = true
+            depthHits += 1
             fail(e, "Rekursionstiefe \(Values.maxDepth) überschritten", &state)
             return false
         }

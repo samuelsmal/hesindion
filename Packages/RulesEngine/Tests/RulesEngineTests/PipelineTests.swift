@@ -286,6 +286,69 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(b.questions.first?.owner, .gm)
     }
 
+    func testAnUnknownDerivedLevelIsNoGuessItsEffectsAskForTheFacts() throws {
+        // pl-strain's level derives from gmFact.strain, which nobody stated: not silent, not 0.
+        let b = engine.evaluate(Query("rs"), in: situation(base: ["rs": 3]))
+        XCTAssertEqual(lines(b, from: "pl-strain.D2"), [])
+        XCTAssertEqual(notApplied(b, "pl-strain.D2").map(\.reason), [.unknownFact])
+        XCTAssertEqual(b.questions, [Question(fact: "gmFact.strain", owner: .gm, origins: [ref("pl-strain.D2")])])
+    }
+
+    func testHeroLevelOfIsTheLevelBeforeAnyUseLevel() throws {
+        // pl-lower.G1: pl-strain acts as 0; hero.levelOf.pl-strain stays 2 for pl-reader.R1.
+        let s = situation(owned: ["pl-reader": 1, "pl-lower": 1], facts: ["gmFact.strain": 2], base: ["rs": 3])
+        let b = engine.evaluate(Query("rs"), in: s)
+        XCTAssertEqual(b.lines.filter { $0.kind == .levelAs }.map(\.note), ["Stufe 2 wirkt wie 0"])
+        XCTAssertEqual(lines(b, from: "pl-strain.D2").map(\.value), [0])
+        let r1 = try XCTUnwrap(lines(b, from: "pl-reader.R1").first)
+        XCTAssertEqual(r1.facts, [FactUse(name: "hero.levelOf.pl-strain", value: .int(2), owner: .derived)])
+        XCTAssertEqual(engine.evaluate(Query("level(rule: pl-strain)"), in: s).result, 0)
+    }
+
+    func testTheNameFallbackOfTheBaseNeverSetsALevel() {
+        let s = situation(owned: ["pl-pain": 2], base: ["level": 4])
+        XCTAssertEqual(engine.evaluate(Query("level(rule: pl-pain)"), in: s).result, 2)
+    }
+
+    // MARK: - R35: a suppress between alternative derives acts in the base phase
+
+    func testASuppressPicksOneOfTwoAlternativeLevelDerives() throws {
+        let facts: [String: JSONValue] = ["loadout.armour.belastung": 3, "gmFact.zoneLoad": 1]
+        var zones = facts; zones["rulesets"] = .array(["fokus.zones"])
+        let level = engine.evaluate(Query("level(rule: pl-load)"), in: situation(facts: zones))
+        XCTAssertEqual(level.base?.parts.map(\.origin), [ref("pl-zones.Z1")])
+        XCTAssertEqual(level.result, 1, "not 3 + 1")
+        let na = try XCTUnwrap(notApplied(level, "pl-armour.A1").first)
+        XCTAssertEqual(na.reason, .suppressed)
+        XCTAssertEqual(na.because, "pl-zones.Z1")
+        // hero.levelOf and the rule's own lines read the same level.
+        let asp = engine.evaluate(Query("regeneration.asp"), in: situation(facts: zones, base: ["regeneration.asp": 5]))
+        XCTAssertEqual(lines(asp, from: "pl-load.L1").map(\.value), [-1])
+
+        var off = facts; off["rulesets"] = .array([])
+        let plain = engine.evaluate(Query("level(rule: pl-load)"), in: situation(facts: off))
+        XCTAssertEqual(plain.result, 3)
+        XCTAssertEqual(notApplied(plain, "pl-zones.Z1").map(\.reason), [.rulesetOff])
+    }
+
+    func testASuppressWithAWhenActsOnlyWhenItHolds() throws {
+        // The iniBase shape: pl-mount.M1 suppresses pl-kampfwerte.I1 and derives instead when mounted.
+        let mounted = engine.evaluate(Query("regeneration.kap"),
+                                      in: situation(facts: ["attr.KL": 12, "hero.mounted": true, "mount.kap": 3]))
+        XCTAssertEqual(mounted.base?.parts.map(\.origin), [ref("pl-mount.M1")])
+        XCTAssertEqual(mounted.result, 3)
+        XCTAssertEqual(notApplied(mounted, "pl-kampfwerte.I1").map(\.reason), [.suppressed])
+
+        let afoot = engine.evaluate(Query("regeneration.kap"),
+                                    in: situation(facts: ["attr.KL": 12, "hero.mounted": false, "mount.kap": 3]))
+        XCTAssertEqual(afoot.result, 6)
+        XCTAssertEqual(notApplied(afoot, "pl-kampfwerte.I1"), [])
+
+        let unknown = engine.evaluate(Query("regeneration.kap"), in: situation(facts: ["attr.KL": 12]))
+        XCTAssertEqual(unknown.result, 6, "a suppress whose when is unknown suppresses nothing")
+        XCTAssertEqual(unknown.questions.map(\.fact), ["hero.mounted"])
+    }
+
     // MARK: - R26: operand provenance, tables, the depth guard
 
     func testAnOperandsContributorsJoinVia() throws {
@@ -296,6 +359,14 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(line.value, -2)
         XCTAssertEqual(line.via, [ref("pl-a.A1")])
         XCTAssertTrue(line.facts.contains(FactUse(name: "hit.sp", value: .int(16), owner: .derived)))
+    }
+
+    func testTheClausesSettingAnOperandsBaseJoinVia() throws {
+        // pl-c.C1 reads aw, whose base is pl-kampfwerte.D1's derive.
+        let b = engine.evaluate(Query("regeneration.le"), in: situation(facts: ["attr.GE": 13]))
+        let line = try XCTUnwrap(lines(b, from: "pl-c.C1").first)
+        XCTAssertEqual(line.value, 2)
+        XCTAssertEqual(line.via, [ref("pl-kampfwerte.D1")])
     }
 
     func testATableReadPutsItsProviderInVia() throws {

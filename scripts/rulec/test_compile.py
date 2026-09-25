@@ -113,6 +113,7 @@ class CompileTests(unittest.TestCase):
             "pa": [ref("A", "A1")],
             "aw": [ref("A", "A1")],
             "at": [ref("B", "B1"), ref("B", "B2")],
+            "level": [ref("B", "B1")],          # a useLevel is also under `level`
         })
 
     def test_unread_provide_can_never_fire(self):
@@ -244,7 +245,7 @@ class CompileTests(unittest.TestCase):
         self.assertEqual(out["reach"]["at"], [ref("X", "X1"), ref("X", "X2", 0), ref("X", "X2", 1)])
         self.assertEqual(out["reach"]["pa"], out["reach"]["at"])
 
-    def test_use_level_of_a_rule_reaching_no_target_goes_under_star(self):
+    def test_use_level_of_a_rule_reaching_no_target_goes_under_level_only(self):
         out = one_rule("""\
   - id: X1
     text: "t"
@@ -258,7 +259,19 @@ clauses:
     unencoded: true
 rulings: []
 """})
-        self.assertEqual(out["reach"], {"*": [ref("X", "X1")]})
+        self.assertEqual(out["reach"], {"level": [ref("X", "X1")]})
+
+    def test_use_level_goes_under_level_as_well_as_its_rules_targets(self):
+        # The query `level(rule: R)` runs the useLevels on R (engine Task 22, R35 fix round).
+        out = one_rule("""\
+  - id: X1
+    text: "t"
+    effects:
+      - useLevel: { rule: R, lowerBy: 1 }
+""", extra=self.CHAIN)
+        self.assertIn(ref("X", "X1"), out["reach"]["level"])
+        self.assertIn(ref("X", "X1"), out["reach"]["at"])
+        self.assertIn(ref("R", "R2"), out["reach"]["level"])
 
     CHAIN = {
         "R": HEAD.format(id="R") + """\

@@ -155,6 +155,16 @@
     "clause": "V1",
     "index": 4,
     "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 1,
+    "rule": "mini-core"
    }
   ],
   "opponent.pa": [

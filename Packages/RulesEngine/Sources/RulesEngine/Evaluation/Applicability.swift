@@ -10,6 +10,9 @@ struct Applicability: Hashable {
         /// A core rule whose ruleset is not among the fact `rulesets`: its effects go to
         /// `notApplied` with `rulesetOff`.
         case rulesetOff(String)
+        /// A levelled rule whose derived level cannot be computed for want of these facts: it may
+        /// apply, so its effects go to `notApplied(unknownFact)` and the facts are asked (§4.6).
+        case unknownLevel([UnknownFact])
         /// Neither owned, nor for everyone, nor enabled: its effects are not mentioned at all.
         case silent
     }
@@ -54,15 +57,21 @@ extension Evaluation {
     ///
     /// A rule is owned once, at one level: several instances (Begabung for two talents) are a
     /// known gap.
+    ///
+    /// Not memoized when its computation met the depth guard or a cycle through another open
+    /// entry (`settle`).
     func applicability(of id: String, depth: Int) -> Applicability {
+        let key = "applies:" + id
         switch applicabilityMemo[id] {
         case .done(let a): return a
-        case .computing: return .silent
+        case .computing:
+            cycleHits[key, default: 0] += 1
+            return .silent
         case nil: break
         }
         applicabilityMemo[id] = .computing
-        let a = computeApplicability(of: id, depth: depth)
-        applicabilityMemo[id] = .done(a)
+        let (a, final) = settle(key) { computeApplicability(of: id, depth: depth) }
+        applicabilityMemo[id] = final ? .done(a) : nil
         return a
     }
 
@@ -76,12 +85,16 @@ extension Evaluation {
         case .talent where situation.facts["check.talent"]?.value == .string(id): return applies
         default: break
         }
-        if !levelDerives(of: id).isEmpty, let level = baseLevel(of: id, depth: depth).value, level > 0 {
-            return applies
+        var derived: BaseLevel?
+        if !levelDerives(of: id).isEmpty {
+            let level = baseLevel(of: id, depth: depth)
+            if let v = level.value, v > 0 { return applies }
+            derived = level
         }
         if let via = enablingRequire(of: id, depth: depth) {
             return Applicability(status: .applies, via: [via])
         }
+        if let derived, derived.value == nil { return Applicability(status: .unknownLevel(derived.unknown)) }
         if rule.kind == .core, let ruleset = rule.ruleset { return Applicability(status: .rulesetOff(ruleset)) }
         return .silent
     }
@@ -130,8 +143,7 @@ extension Evaluation {
     /// one whose level derives. nil for any other rule (a core rule has no level).
     func ruleLevel(_ id: String, levels: [String: Int], depth: Int) -> Int? {
         if let l = levels[id] { return l }
-        let query = Self.levelQuery(id)
-        let stated = situation.base[query.description] != nil
+        let stated = situation.base[Self.levelQuery(id).description] != nil
         guard situation.owned[id] != nil || stated || !levelDerives(of: id).isEmpty else { return nil }
         return baseLevel(of: id, depth: depth).value
     }
@@ -141,13 +153,16 @@ extension Evaluation {
     /// `hero.levelOf.id`: the base-phase result of `level(rule: id)`, before any useLevel. With no
     /// stated base, no owned level and no derive, it is 0 (the sheet is complete).
     func baseLevel(of id: String, depth: Int) -> BaseLevel {
+        let key = "levelOf:" + id
         switch baseLevelMemo[id] {
         case .done(let l): return l
-        case .computing: return BaseLevel(value: nil, unknown: [])
+        case .computing:
+            cycleHits[key, default: 0] += 1
+            return BaseLevel(value: nil, unknown: [])
         case nil: break
         }
         baseLevelMemo[id] = .computing
-        let b = breakdown(Self.levelQuery(id), depth: depth + 1, through: .base)
+        let (b, final) = settle(key) { breakdown(Self.levelQuery(id), depth: depth + 1, through: .base) }
         let level: BaseLevel
         if let base = b.base {
             level = BaseLevel(value: base.value, unknown: [])
@@ -156,7 +171,7 @@ extension Evaluation {
         } else {
             level = BaseLevel(value: nil, unknown: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) })
         }
-        baseLevelMemo[id] = .done(level)
+        baseLevelMemo[id] = final ? .done(level) : nil
         return level
     }
 
@@ -217,7 +232,7 @@ extension Evaluation {
     func resolve(_ target: TargetRef, depth: Int) -> ResolvedTarget {
         let query = Query(target)
         if let known = operandMemo[query.description] { return known }
-        let b = breakdown(query, depth: depth)
+        let (b, final) = settle(nil) { breakdown(query, depth: depth) }
         var contributors: [ClauseRef] = []
         for line in (b.base?.parts ?? []) + b.lines {
             if let o = line.origin, !contributors.contains(o) { contributors.append(o) }
@@ -226,7 +241,7 @@ extension Evaluation {
         let resolved = ResolvedTarget(value: b.result, contributors: contributors, used: read,
                                       unknown: b.questions.map { UnknownFact(name: $0.fact, owner: $0.owner) },
                                       depthExceeded: b.depthExceeded)
-        if !b.depthExceeded { operandMemo[query.description] = resolved }
+        if final && !b.depthExceeded { operandMemo[query.description] = resolved }
         return resolved
     }
 }

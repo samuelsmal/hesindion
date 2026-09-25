@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R35: one of two alternative derives of a level (ruestung-und-belastung.A1).
+id: pl-armour
+name: Rüstung
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Belastung nach Rüstung.
+    effects:
+      - derive: { to: "level(rule: pl-load)", sum: [{ of: loadout.armour.belastung }] }

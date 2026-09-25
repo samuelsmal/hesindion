@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R34: a useLevel on pl-strain, which hero.levelOf.pl-strain does not see.
+id: pl-lower
+name: Gelassen
+kind: advantage
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: G1
+    text: Anspannung wirkt wie keine.
+    effects:
+      - useLevel: { rule: pl-strain, as: 0 }

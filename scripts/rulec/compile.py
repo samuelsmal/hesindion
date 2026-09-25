@@ -213,7 +213,8 @@ def _reach(rules_sorted):
         changed = False
         for ref, e in late:
             if e["verb"] == "useLevel":
-                k = set(by_rule.get(e["payload"]["rule"], ()))
+                # Also under `level`: the query `level(rule: X)` runs the useLevels on X.
+                k = set(by_rule.get(e["payload"]["rule"], ())) | {"level"}
             else:                                       # replace / suppress
                 sel, k = e["payload"]["line"], set()
                 for i in sel["ids"]:

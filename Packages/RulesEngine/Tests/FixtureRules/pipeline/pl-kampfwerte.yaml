@@ -34,3 +34,7 @@ clauses:
       - add: { to: spell.cost, value: 1, scale: pl.scale }
         when: { choice.erzwingen: true }
       - add: { to: spell.costPerInterval, value: -1, scale: pl.scale }
+  - id: I1
+    text: KaP-Regeneration = KL / 2.
+    effects:
+      - derive: { to: regeneration.kap, sum: [{ of: attr.KL, per: 2 }] }

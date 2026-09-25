@@ -20,8 +20,9 @@ public struct Query: Hashable, Sendable, CustomStringConvertible {
 ///
 /// `value` is always what the line adds to the total, so `Breakdown.total` is the sum of the
 /// lines' values and no number changes without a line. A line that states a value rather than a
-/// step (a `set`, a scale step, a level acting as another) also carries `was` (the value before)
-/// and `now` (the value after); a replaced line (Task 23) carries in `was` the value it would have
+/// step also carries `was` and `now`: for a `set` or a scale step, the query's running value
+/// before and after it; for a `.levelAs` line, the rule's level before and after the useLevel
+/// (not the query's value). A replaced line (Task 23) carries in `was` the value it would have
 /// had.
 public struct Line: Hashable, Sendable {
     public var value: Int

@@ -158,9 +158,54 @@
   ],
   "level": [
    {
+    "clause": "G1",
+    "index": 0,
+    "rule": "SA_41"
+   },
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "pl-armour"
+   },
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "pl-lower"
+   },
+   {
+    "clause": "U10",
+    "index": 0,
+    "rule": "pl-order"
+   },
+   {
+    "clause": "U2",
+    "index": 0,
+    "rule": "pl-order"
+   },
+   {
     "clause": "D1",
     "index": 0,
     "rule": "pl-strain"
+   },
+   {
+    "clause": "Z1",
+    "index": 0,
+    "rule": "pl-tough"
+   },
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "pl-tough"
+   },
+   {
+    "clause": "Z1",
+    "index": 0,
+    "rule": "pl-zones"
+   },
+   {
+    "clause": "Z1",
+    "index": 1,
+    "rule": "pl-zones"
    }
   ],
   "pa": [
@@ -200,7 +245,43 @@
     "rule": "pl-adds"
    }
   ],
+  "regeneration.asp": [
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "pl-load"
+   }
+  ],
+  "regeneration.kap": [
+   {
+    "clause": "I1",
+    "index": 0,
+    "rule": "pl-kampfwerte"
+   },
+   {
+    "clause": "M1",
+    "index": 0,
+    "rule": "pl-mount"
+   },
+   {
+    "clause": "M1",
+    "index": 1,
+    "rule": "pl-mount"
+   }
+  ],
+  "regeneration.le": [
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "pl-c"
+   }
+  ],
   "rs": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "pl-lower"
+   },
    {
     "clause": "R1",
     "index": 0,
@@ -632,6 +713,63 @@
       {
        "because": null,
        "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "pl-armour"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "loadout.armour.belastung"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-load"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "A1",
+     "text": "Belastung nach Rüstung."
+    }
+   ],
+   "id": "pl-armour",
+   "kind": "core",
+   "name": "Rüstung",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "B1",
         "index": 0,
         "rule": "pl-b"
@@ -673,6 +811,64 @@
    "id": "pl-b",
    "kind": "core",
    "name": "Leser",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "pl-c"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "regeneration.le"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "aw"
+           }
+          },
+          "per": {
+           "number": 4
+          },
+          "round": "down",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "LeP-Regeneration + AW / 4."
+    }
+   ],
+   "id": "pl-c",
+   "kind": "core",
+   "name": "Leser von AW",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -1106,11 +1302,97 @@
      ],
      "id": "S2",
      "text": "Kosten eine Stufe hoch, Aufrechterhalten eine tiefer."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "I1",
+        "index": 0,
+        "rule": "pl-kampfwerte"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.KL"
+           },
+           "per": {
+            "number": 2
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "regeneration.kap"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "I1",
+     "text": "KaP-Regeneration = KL / 2."
     }
    ],
    "id": "pl-kampfwerte",
    "kind": "core",
    "name": "Grundwerte",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "pl-load"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "regeneration.asp"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "L1",
+     "text": "AsP-Regeneration −Stufe."
+    }
+   ],
+   "id": "pl-load",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Last",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -1169,6 +1451,128 @@
    "id": "pl-loop",
    "kind": "core",
    "name": "Schleife",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "pl-lower"
+       },
+       "payload": {
+        "as": {
+         "number": 0
+        },
+        "rule": "pl-strain"
+       },
+       "phase": "level",
+       "ruling": [],
+       "verb": "useLevel",
+       "when": null
+      }
+     ],
+     "id": "G1",
+     "text": "Anspannung wirkt wie keine."
+    }
+   ],
+   "id": "pl-lower",
+   "kind": "advantage",
+   "name": "Gelassen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 0,
+        "rule": "pl-mount"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-kampfwerte.I1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 1,
+        "rule": "pl-mount"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "mount.kap"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "regeneration.kap"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "M1",
+     "text": "Beritten gilt der Wert des Reittiers."
+    }
+   ],
+   "id": "pl-mount",
+   "kind": "core",
+   "name": "Beritten",
    "reviewed": null,
    "rulings": [],
    "source": {
@@ -1819,6 +2223,84 @@
      "status": "decided"
     }
    ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z1",
+        "index": 0,
+        "rule": "pl-zones"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "pl-armour.A1"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [],
+       "verb": "suppress",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z1",
+        "index": 1,
+        "rule": "pl-zones"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "gmFact.zoneLoad"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "pl-load"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "Z1",
+     "text": "Belastung nach Zonen statt nach Rüstung."
+    }
+   ],
+   "id": "pl-zones",
+   "kind": "core",
+   "name": "Zonenrüstung",
+   "reviewed": null,
+   "ruleset": "fokus.zones",
+   "rulings": [],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
