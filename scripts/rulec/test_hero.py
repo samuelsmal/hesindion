@@ -1,4 +1,7 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from rulec import hero
 from rulec.vocab import REPO
@@ -18,6 +21,16 @@ class FromOptolithTests(unittest.TestCase):
 
     def test_sid_becomes_option(self):
         self.assertEqual(self.h["owned"]["DISADV_37"], {"level": 1, "option": 2})
+
+    def test_sid2_becomes_option2(self):
+        # SA_9 Fertigkeitsspezialisierung: the talent (`sid`) and its Anwendungsgebiet (`sid2`).
+        d = {"id": "H", "attr": {"values": [{"id": "ATTR_1", "value": 12}]},
+             "activatable": {"SA_9": [{"sid": "TAL_10", "sid2": 2}]}}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "h.json"
+            path.write_text(json.dumps(d), encoding="utf-8")
+            h = hero.from_optolith(path)
+        self.assertEqual(h["owned"]["SA_9"], {"level": 1, "option": "TAL_10", "option2": 2})
 
     def test_attributes_by_name(self):
         self.assertEqual(self.facts["attr.MU"], {"name": "attr.MU", "value": 14, "owner": "sheet"})

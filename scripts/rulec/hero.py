@@ -17,6 +17,8 @@ def from_optolith(path: Path) -> dict:
         owned[rid] = {"level": e.get("tier", 1)}
         if "sid" in e:
             owned[rid]["option"] = e["sid"]
+        if "sid2" in e:                               # a second select option: SA_9's Anwendungsgebiet
+            owned[rid]["option2"] = e["sid2"]
     facts = [{"name": f"attr.{ATTR[a['id']]}", "value": a["value"], "owner": "sheet"}
              for a in d["attr"]["values"]]
     facts += [{"name": f"ktw.{k}", "value": v, "owner": "sheet"} for k, v in sorted(d.get("ct", {}).items())]
