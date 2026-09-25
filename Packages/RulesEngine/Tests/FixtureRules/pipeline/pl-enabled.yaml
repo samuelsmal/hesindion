@@ -1,0 +1,16 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# A rule the hero does not own that enables itself (example 19.3).
+id: pl-enabled
+name: Formation
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: E1
+    text: Gilt, wenn gewählt.
+    effects:
+      - require: { that: { choice.enable: true }, enables: true }
+  - id: E2
+    text: AW +3.
+    effects:
+      - add: { to: aw, value: 3 }

@@ -229,6 +229,8 @@ public struct RuleBook: Sendable {
     public let vocabularySha256: String
 
     private let byOrigin: [EffectOrigin: Effect]
+    /// `effects(reaching:)` for every key of `reach`, merged once when the book is built.
+    private let reaching: [String: [Effect]]
     private let tables: [String: JSONValue]
     private let providersByName: [String: [Provision]]
 
@@ -279,6 +281,9 @@ public struct RuleBook: Sendable {
         self.vocabularyVersion = vocabularyVersion
         self.vocabularySha256 = vocabularySha256
         self.byOrigin = byOrigin
+        self.reaching = Dictionary(uniqueKeysWithValues: reach.keys.map { key in
+            (key, Self.merge(key, reach).compactMap { byOrigin[$0] })
+        })
         self.tables = tables
         self.providersByName = providers
     }
@@ -290,11 +295,14 @@ public struct RuleBook: Sendable {
     /// the compiler's sort key (`compile._ref_key`: rule id, clause id, then int indices before
     /// string ones). That is not clause order within a rule; chaining (R28) uses `Rule.clauses`.
     public func effects(reaching target: String) -> [Effect] {
+        reaching[target] ?? reaching["*"] ?? []
+    }
+
+    private static func merge(_ target: String, _ reach: [String: [EffectOrigin]]) -> [EffectOrigin] {
         var seen = Set<EffectOrigin>()
-        let origins = ((reach[target] ?? []) + (target == "*" ? [] : reach["*"] ?? []))
+        return ((reach[target] ?? []) + (target == "*" ? [] : reach["*"] ?? []))
             .filter { seen.insert($0).inserted }
             .sorted(by: EffectOrigin.compilerOrder)
-        return origins.compactMap { byOrigin[$0] }
     }
 
     /// The value a `provide` gives under `name`. Several rules may provide one name (each

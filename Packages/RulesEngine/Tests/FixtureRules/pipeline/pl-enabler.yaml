@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# A core rule that enables another (reiterkampf.RK2).
+id: pl-enabler
+name: Reiter
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: R1
+    text: Beritten gilt pl-target.
+    effects:
+      - require: { that: { hero.mounted: true }, enables: true, for: { rule: pl-target } }

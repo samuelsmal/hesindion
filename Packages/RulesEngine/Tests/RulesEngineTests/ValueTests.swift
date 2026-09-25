@@ -107,7 +107,8 @@ final class ValueTests: XCTestCase {
         for (fp, qs) in [(0, 1), (3, 1), (4, 2), (11, 4), (15, 5), (16, 6), (22, 6)] {
             let r = eval(.table(name: "fertigkeitsproben.qs", key: "check.fp"), sheet([:]), resolve: targets(["check.fp": fp]))
             XCTAssertEqual(r.value, qs, "FP \(fp)")
-            XCTAssertEqual(r.via, [ClauseRef(rule: "R_check.fp", clause: "C1")])
+            // The key target's contributors (R26), then the providing clause (table provenance).
+            XCTAssertEqual(r.via, [ClauseRef(rule: "R_check.fp", clause: "C1"), ClauseRef(rule: "fernkampf", clause: "P1")])
         }
         XCTAssertNil(eval(.table(name: "fertigkeitsproben.qs", key: "check.fp"), sheet([:]), resolve: targets(["check.fp": -1])).value)
     }

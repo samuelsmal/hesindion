@@ -1,0 +1,39 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Adds with per, a decided and an open ruling, an unknown GM fact, a false when.
+id: pl-adds
+name: Zuschläge
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: decided-q
+    question: Which side?
+    answer: The hero's.
+    decided: { by: "@fixture", date: 2026-09-25 }
+  - id: open-q
+    question: Does it stack?
+clauses:
+  - id: A1
+    text: PA +1.
+    effects:
+      - add: { to: pa, value: 1 }
+        ruling: decided-q
+  - id: A2
+    text: PA +2 je Parade.
+    effects:
+      - add: { to: pa, value: 2, per: round.parries }
+  - id: A3
+    text: Von hinten −2.
+    effects:
+      - add: { to: pa, value: -2 }
+        when: { gmFact.fromBehind: true }
+  - id: A4
+    text: PA +5, vielleicht.
+    effects:
+      - add: { to: pa, value: 5 }
+        ruling: open-q
+  - id: A5
+    text: Beritten +9.
+    effects:
+      - add: { to: pa, value: 9 }
+        when: { hero.mounted: true }

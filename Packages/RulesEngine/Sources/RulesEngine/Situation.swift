@@ -74,6 +74,9 @@ public struct Situation: Codable, Hashable, Sendable {
     public var items: [String: [String: JSONValue]]
     public var clock: [String: Int]
     public var heroId: String?
+    /// Derived facts the evaluator could not compute: unknown, whatever the sheet's fallback
+    /// (`hero.levelOf.X` whose derive lacks a fact). Only the evaluator sets it.
+    var unstated: Set<String> = []
 
     public init(owned: [String: OwnedRule], facts: [Fact], base: [String: Int] = [:], rolls: [Int] = [],
                 pools: [Pool: PoolState] = [:], heroId: String? = nil) {
@@ -130,7 +133,9 @@ extension Situation {
     /// - `option`: the acting `rule`'s owned option.
     /// - a stated fact: its value and owner.
     /// - `hero.levelOf.<rule>`: the Stufe the hero has, `owned[rule].level` before any
-    ///   useLevel, and 0 for a rule the hero does not own (the sheet is complete).
+    ///   useLevel, and 0 for a rule the hero does not own (the sheet is complete). The evaluator
+    ///   states it first from the base phase of `level(rule: X)` (R34), so this is the fallback
+    ///   when there is neither an owned level nor a derive.
     /// - anything else: unknown. The other derived facts (`hero.conditionLevels`, `fw.current`,
     ///   `hit.*`, …) are the evaluator's (Task 22).
     ///
@@ -147,6 +152,7 @@ extension Situation {
             break
         }
         if let f = facts[name] { return FactUse(name: f.name, value: f.value, owner: f.owner) }
+        if unstated.contains(name) { return nil }
         let levelOf = "hero.levelOf."
         if name.hasPrefix(levelOf), name.count > levelOf.count {
             let id = String(name.dropFirst(levelOf.count))

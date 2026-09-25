@@ -1,0 +1,36 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Bases from derives, a table and a scale, as kampfwerte, zaubermodifikationen do.
+id: pl-kampfwerte
+name: Grundwerte
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: D1
+    text: AW = GE / 2 + 1.
+    effects:
+      - derive: { to: aw, sum: [{ of: attr.GE, per: 2 }, 1] }
+  - id: D2
+    text: AT = KtW + (MU − 8) / 3.
+    effects:
+      - derive: { to: at, sum: [{ of: ktw.current }] }
+      - derive: { to: at, sum: [{ of: attr.MU, above: 8, per: 3, round: down }] }
+        when: { not: { loadout.weapon.technique: Peitschen } }
+  - id: T1
+    text: Tabelle.
+    effects:
+      - provide: { name: pl.table, value: { "0-3": 1, "4+": 2 } }
+  - id: T2
+    text: FK nach Tabelle.
+    effects:
+      - add: { to: fk, value: "table(pl.table, attr.KO)" }
+  - id: S1
+    text: Stufen.
+    effects:
+      - provide: { name: pl.scale, value: [1, 2, 4, 8, 16] }
+  - id: S2
+    text: Kosten eine Stufe hoch, Aufrechterhalten eine tiefer.
+    effects:
+      - add: { to: spell.cost, value: 1, scale: pl.scale }
+        when: { choice.erzwingen: true }
+      - add: { to: spell.costPerInterval, value: -1, scale: pl.scale }

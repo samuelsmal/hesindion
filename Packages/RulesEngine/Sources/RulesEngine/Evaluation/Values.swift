@@ -14,8 +14,9 @@ import Foundation
 /// operand's breakdown into the reading line's `via`, and the line's facts include the facts the
 /// operand read. So the resolver hands back, besides the number, exactly what a line needs:
 /// - `value`: the target's result, nil when it cannot be computed;
-/// - `contributors`: the clauses of the lines that make up the target's breakdown (its base
-///   line's and every applied line's origin, plus their own `via`), which join `via`;
+/// - `contributors`: the origins of the lines that make up the target's breakdown, which join
+///   `via`: the clauses that set its base (the base's parts), then the origin of every line after
+///   the base, each once, in that order;
 /// - `used` / `unknown`: the facts the target's evaluation read, and the ones it lacked. An
 ///   unknown here makes the reading value nil and asks the same question;
 /// - `depthExceeded`: the target's evaluation hit the depth guard somewhere below.
@@ -123,8 +124,11 @@ public struct TableResult: Hashable, Sendable {
     public var value: JSONValue?
     public var used: [FactUse]
     public var unknown: [UnknownFact]
+    /// The key target's contributors, then the providing clause.
     public var via: [ClauseRef]
     public var depthExceeded: Bool
+    /// The `provide` the table was read from; nil when no row was found.
+    public var provider: EffectOrigin?
 }
 
 public struct RowResult: Hashable, Sendable {
@@ -144,7 +148,8 @@ public enum Tables {
                               rule: String? = nil, depth: Int = 0, resolve: TargetResolver) -> TableResult {
         var t = Trace(situation: situation, level: level, rule: rule, depth: depth)
         let v = entry(name, key: key, book: book, &t, resolve)
-        return TableResult(value: v, used: t.used, unknown: t.unknown, via: t.via, depthExceeded: t.depthExceeded)
+        return TableResult(value: v, used: t.used, unknown: t.unknown, via: t.via, depthExceeded: t.depthExceeded,
+                           provider: t.provider)
     }
 
     /// The table `name` as `situation` reads it.
@@ -158,28 +163,34 @@ public enum Tables {
     /// nil. A `provide`'s value `provides` is the rule's own `provides` row.
     public static func row(_ name: String, in situation: Situation, book: RuleBook) -> RowResult {
         var t = Trace(situation: situation, level: nil, rule: nil, depth: 0)
-        let row = row(name, book: book, &t)
+        let row = row(name, book: book, &t)?.value
         return RowResult(row: row, used: t.used, unknown: t.unknown)
     }
 
+    /// The entry, with the providing clause joining `via` (table provenance).
     static func entry(_ name: String, key: String, book: RuleBook, _ t: inout Trace,
                       _ resolve: TargetResolver) -> JSONValue? {
         let target = TargetRef(key)
         let keyValue: JSONValue? = Vocabulary.targets.contains(target.name)
             ? t.target(target, resolve).map { .int($0) }
             : t.fact(key)
-        let table = row(name, book: book, &t)
-        guard let keyValue, case .object(let entries)? = table else { return nil }
+        let found = row(name, book: book, &t)
+        if let origin = found?.origin {
+            t.provider = origin
+            if !t.via.contains(origin.clauseRef) { t.via.append(origin.clauseRef) }
+        }
+        guard let keyValue, case .object(let entries)? = found?.value else { return nil }
         if let exact = text(keyValue), let v = entries[exact] { return v }
         guard let n = keyValue.double else { return nil }
         return entries.keys.sorted().first { range($0)?.contains(n) ?? false }.flatMap { entries[$0] }
     }
 
-    private static func row(_ name: String, book: RuleBook, _ t: inout Trace) -> JSONValue? {
+    /// The value read and the `provide` it came from.
+    static func row(_ name: String, book: RuleBook, _ t: inout Trace) -> (value: JSONValue, origin: EffectOrigin)? {
         let providers = book.providers(of: name)
-        func value(_ p: Provision) -> JSONValue? {
-            if p.value == .string("provides") { return book.rules[p.rule].map { .object($0.provides) } }
-            return p.value
+        func value(_ p: Provision) -> (value: JSONValue, origin: EffectOrigin)? {
+            if p.value == .string("provides") { return book.rules[p.rule].map { (.object($0.provides), p.origin) } }
+            return (p.value, p.origin)
         }
         guard providers.contains(where: { book.rules[$0.rule]?.kind == .equipment }) else {
             // Several non-equipment rules under one name: nothing says whose to read.
@@ -226,6 +237,8 @@ struct Trace {
     var unknown: [UnknownFact] = []
     var via: [ClauseRef] = []
     var depthExceeded = false
+    /// The `provide` the last table read came from.
+    var provider: EffectOrigin?
 
     init(situation: Situation, level: Int?, rule: String?, depth: Int) {
         self.situation = situation; self.level = level; self.rule = rule; self.depth = depth

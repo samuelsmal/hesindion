@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R26: A raises an operand B reads.
+id: pl-a
+name: Operand
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Wundschwelle +1.
+    effects:
+      - add: { to: wundschwelle, value: 1 }

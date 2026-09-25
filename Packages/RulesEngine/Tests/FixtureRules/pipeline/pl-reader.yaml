@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R34: reads hero.levelOf of a derived level.
+id: pl-reader
+name: Leser der Stufe
+kind: advantage
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: R1
+    text: Bei Anspannung II RS +5.
+    effects:
+      - add: { to: rs, value: 5 }
+        when: { hero.levelOf.pl-strain: 2 }

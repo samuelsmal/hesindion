@@ -1,0 +1,11 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+id: pl-sword
+name: Schwert
+kind: equipment
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: E1
+    text: AT +1.
+    effects:
+      - add: { to: at, value: 1 }
