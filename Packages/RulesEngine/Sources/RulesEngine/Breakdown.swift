@@ -16,6 +16,16 @@ public struct Query: Hashable, Sendable, CustomStringConvertible {
     public var description: String { target.description }
 }
 
+/// In the log (spec §8) a query is its string, `pa(with: shield)`, as a situation's `expect` keys it.
+extension Query: Codable {
+    public init(from decoder: Decoder) throws { self.init(try decoder.singleValueContainer().decode(String.self)) }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        try c.encode(description)
+    }
+}
+
 /// One step of a value, with where it comes from.
 ///
 /// `value` is always what the line adds to the total (the step), so `Breakdown.total` is the sum
@@ -28,7 +38,7 @@ public struct Query: Hashable, Sendable, CustomStringConvertible {
 /// - `.levelAs`: the rule's level before and after the useLevel (not the query's value);
 /// - `.replaced`: the value the line would have had (nil when that could not be computed) and
 ///   the one it has. It keeps its origin; the replacing clause is in `via`.
-public struct Line: Hashable, Sendable {
+public struct Line: Codable, Hashable, Sendable {
     public var value: Int
     public var kind: LineKind
     /// The clause that gave the line; nil for a value the sheet states.
@@ -71,7 +81,7 @@ public struct Line: Hashable, Sendable {
 }
 
 /// An effect of a rule that reaches the query and did not fire, and why.
-public struct NotApplied: Hashable, Sendable {
+public struct NotApplied: Codable, Hashable, Sendable {
     public var origin: ClauseRef
     public var reason: ReasonCode
     /// The effect's own `because`, or what overrode it (`overridden`: the winning clause).
@@ -96,7 +106,7 @@ public struct NotApplied: Hashable, Sendable {
 }
 
 /// A fact nobody stated whose answer would change the result, and who is asked for it.
-public struct Question: Hashable, Sendable {
+public struct Question: Codable, Hashable, Sendable {
     public var fact: String
     public var owner: Owner?
     /// The clauses that need it, each once.
@@ -111,8 +121,8 @@ public struct Question: Hashable, Sendable {
 
 /// Text the screen shows: a `tell`, an unencoded clause, an open ruling, or a rule that could not
 /// be applied.
-public struct TextLine: Hashable, Sendable {
-    public enum Kind: String, Hashable, Sendable, CaseIterable {
+public struct TextLine: Codable, Hashable, Sendable {
+    public enum Kind: String, Codable, Hashable, Sendable, CaseIterable {
         /// A `tell`, to its audience.
         case tell
         /// An unencoded clause of an applicable rule that reaches the query.
@@ -140,7 +150,7 @@ public struct TextLine: Hashable, Sendable {
 }
 
 /// A choice the query could take (`offer`). Named so, not to shadow the `Offer` payload.
-public struct OfferedChoice: Hashable, Sendable {
+public struct OfferedChoice: Codable, Hashable, Sendable {
     public var choice: String
     public var origin: ClauseRef
     public var options: [JSONValue]?
@@ -177,7 +187,7 @@ public struct OfferedChoice: Hashable, Sendable {
 
 /// An option of an offered choice that may not be taken, and why (a `forbid` of `choice.option`,
 /// a `limit` whose count is reached).
-public struct RefusedOption: Hashable, Sendable {
+public struct RefusedOption: Codable, Hashable, Sendable {
     public var option: JSONValue
     public var reasons: [NotApplied]
 
@@ -188,7 +198,7 @@ public struct RefusedOption: Hashable, Sendable {
 /// firing `forbid` (`forbidden`), unmet `require` (`requirementNotMet`) and reached `limit`
 /// (`forbidden`), in rule-id and clause order. Several may fire at once (reiterkampf.RK13 and
 /// groessenkategorie.GK4 on one parry); all are kept.
-public struct Legality: Hashable, Sendable {
+public struct Legality: Codable, Hashable, Sendable {
     public var allowed: Bool
     public var reasons: [NotApplied]
 
@@ -198,7 +208,7 @@ public struct Legality: Hashable, Sendable {
     public var because: [String] { reasons.map { $0.because ?? $0.origin.description } }
 }
 
-public struct Breakdown: Hashable, Sendable {
+public struct Breakdown: Codable, Hashable, Sendable {
     public var query: Query
     /// The value the rest builds on: the sheet's, or the sum of the base-phase `derive`s (their
     /// terms in `parts`). nil when neither gives one.

@@ -10,7 +10,7 @@ public enum CheckKind: String, Codable, Hashable, Sendable, CaseIterable { case 
 /// What the caller asks to be checked. The engine reads no database: the three attributes of the
 /// Probe are the caller's (rules.db `skill_details` / `spell_details.check_attr_1–3`,
 /// fertigkeitsproben.FP1).
-public struct CheckRequest: Hashable, Sendable {
+public struct CheckRequest: Codable, Hashable, Sendable {
     public var kind: CheckKind
     /// The talent, spell or liturgy: `TAL_10`, `SPELL_21`. A talent's is stated as `check.talent`, a
     /// spell's as `check.spell`; its FW is the fact `fw.<id>`.
@@ -72,7 +72,7 @@ public enum CheckResultKind: String, Codable, Hashable, Sendable, CaseIterable {
 
 /// One reroll taken: the die (0-based), its face before and the new face, the face that counts
 /// after the reroll's `keep`, and the clause whose `reroll` it was.
-public struct RerolledDie: Hashable, Sendable {
+public struct RerolledDie: Codable, Hashable, Sendable {
     public var die: Int
     public var old: Int
     public var new: Int

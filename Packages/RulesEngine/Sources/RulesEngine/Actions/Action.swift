@@ -56,3 +56,96 @@ public enum Action: Hashable, Sendable {
     /// actions run the effects that read what they state.
     case settle
 }
+
+// MARK: - In the log
+
+/// In the log (spec §8) an action is one key, its case, holding its fields by name:
+/// `{"cast": {"spell": "SPELL_21", "modifications": []}}`, `{"pay": {"pool": "asp", "amount": 3}}`,
+/// `{"endRound": {}}`. An absent optional field is left out.
+extension Action: Codable {
+    private enum Case: String, CodingKey {
+        case cast, pay, state, take, check, attack, defend, takeHit, advance, advanceClock, endRound, endFight, settle
+    }
+
+    private enum Field: String, CodingKey {
+        case spell, modifications, pool, amount, rule, levels, choice, request, with, kind, tp, zone, side, failedDefence
+        case process, minutes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let outer = try decoder.container(keyedBy: Case.self)
+        guard outer.allKeys.count == 1, let key = outer.allKeys.first else {
+            throw DecodingError.dataCorrupted(.init(codingPath: outer.codingPath,
+                                                    debugDescription: "an action has exactly one key, its case"))
+        }
+        let c = try outer.nestedContainer(keyedBy: Field.self, forKey: key)
+        switch key {
+        case .cast:
+            self = .cast(spell: try c.decode(String.self, forKey: .spell),
+                         modifications: try c.decodeIfPresent([String].self, forKey: .modifications) ?? [])
+        case .pay: self = .pay(try c.decode(Pool.self, forKey: .pool), try c.decode(Int.self, forKey: .amount))
+        case .state: self = .state(rule: try c.decode(String.self, forKey: .rule), levels: try c.decode(Int.self, forKey: .levels))
+        case .take: self = .take(choice: try c.decode(String.self, forKey: .choice))
+        case .check: self = .check(try c.decode(CheckRequest.self, forKey: .request))
+        case .attack: self = .attack(with: try c.decodeIfPresent(String.self, forKey: .with))
+        case .defend:
+            self = .defend(kind: try c.decode(DefenceKind.self, forKey: .kind), with: try c.decodeIfPresent(String.self, forKey: .with))
+        case .takeHit:
+            self = .takeHit(tp: try c.decodeIfPresent(Int.self, forKey: .tp), zone: try c.decodeIfPresent(String.self, forKey: .zone),
+                            side: try c.decodeIfPresent(String.self, forKey: .side),
+                            failedDefence: try c.decodeIfPresent(Bool.self, forKey: .failedDefence) ?? false)
+        case .advance: self = .advance(process: try c.decode(String.self, forKey: .process))
+        case .advanceClock: self = .advanceClock(minutes: try c.decode(Int.self, forKey: .minutes))
+        case .endRound: self = .endRound
+        case .endFight: self = .endFight
+        case .settle: self = .settle
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var outer = encoder.container(keyedBy: Case.self)
+        func fields(_ key: Case) -> KeyedEncodingContainer<Field> { outer.nestedContainer(keyedBy: Field.self, forKey: key) }
+        switch self {
+        case .cast(let spell, let modifications):
+            var c = fields(.cast)
+            try c.encode(spell, forKey: .spell)
+            try c.encode(modifications, forKey: .modifications)
+        case .pay(let pool, let amount):
+            var c = fields(.pay)
+            try c.encode(pool, forKey: .pool)
+            try c.encode(amount, forKey: .amount)
+        case .state(let rule, let levels):
+            var c = fields(.state)
+            try c.encode(rule, forKey: .rule)
+            try c.encode(levels, forKey: .levels)
+        case .take(let choice):
+            var c = fields(.take)
+            try c.encode(choice, forKey: .choice)
+        case .check(let request):
+            var c = fields(.check)
+            try c.encode(request, forKey: .request)
+        case .attack(let with):
+            var c = fields(.attack)
+            try c.encodeIfPresent(with, forKey: .with)
+        case .defend(let kind, let with):
+            var c = fields(.defend)
+            try c.encode(kind, forKey: .kind)
+            try c.encodeIfPresent(with, forKey: .with)
+        case .takeHit(let tp, let zone, let side, let failedDefence):
+            var c = fields(.takeHit)
+            try c.encodeIfPresent(tp, forKey: .tp)
+            try c.encodeIfPresent(zone, forKey: .zone)
+            try c.encodeIfPresent(side, forKey: .side)
+            try c.encode(failedDefence, forKey: .failedDefence)
+        case .advance(let process):
+            var c = fields(.advance)
+            try c.encode(process, forKey: .process)
+        case .advanceClock(let minutes):
+            var c = fields(.advanceClock)
+            try c.encode(minutes, forKey: .minutes)
+        case .endRound: _ = fields(.endRound)
+        case .endFight: _ = fields(.endFight)
+        case .settle: _ = fields(.settle)
+        }
+    }
+}

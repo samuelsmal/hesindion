@@ -1,0 +1,105 @@
+# Drafted from a log entry (spec §8): the engine's result as `expect`. Correct what was wrong, then move it
+# into a situations file.
+# entry 00000000-0000-0000-0000-000000000029, 2026-09-21T14:13:20Z, query at
+# app fixture, rules.json sha256 c93c8c0d6b2fd58b6040de016e0effca13c8579fcadabe95827f029947c3384e, vocabulary 1, hero none
+# flagged: this looks wrong
+situations:
+  - id: "19.1"
+    name: "In Formation on foot, the formation takes +2 AT"
+    hero:
+      abilities:
+        SA_40: 1
+        SA_41: 2
+        SA_43: 1
+        SA_661: 1
+        SA_67: 1
+        SA_862: 1
+      advantages:
+        ADV_25: 2
+        ADV_44: 2
+        ADV_49: 1
+        ADV_54: 1
+      disadvantages:
+        DISADV_37:
+          level: 1
+          sid: 2
+      attributes:
+        CH: 13
+        FF: 11
+        GE: 14
+        IN: 13
+        KK: 14
+        KL: 12
+        KO: 15
+        MU: 14
+      techniques:
+        CT_10: 10
+        CT_12: 12
+        CT_3: 8
+        CT_5: 14
+        CT_9: 10
+      talents:
+        TAL_10: 9
+        TAL_13: 3
+        TAL_15: 5
+        TAL_17: 8
+        TAL_18: 4
+        TAL_19: 3
+        TAL_20: 8
+        TAL_23: 9
+        TAL_24: 3
+        TAL_27: 5
+        TAL_28: 3
+        TAL_29: 1
+        TAL_3: 3
+        TAL_30: 6
+        TAL_33: 4
+        TAL_34: 7
+        TAL_35: 7
+        TAL_36: 2
+        TAL_38: 4
+        TAL_4: 8
+        TAL_40: 2
+        TAL_41: 2
+        TAL_49: 2
+        TAL_5: 10
+        TAL_50: 3
+        TAL_51: 1
+        TAL_52: 2
+        TAL_55: 2
+        TAL_59: 1
+        TAL_6: 12
+        TAL_8: 9
+        TAL_9: 3
+      values:
+        "at(with: Großschild)": 6
+        "at(with: Langschwert)": 14
+        "at(with: Rabenschnabel)": 16
+        aw: 7
+        "pa(with: Großschild)": 13
+        "pa(with: Langschwert)": 11
+        "pa(with: Rabenschnabel)": 11
+    loadout:
+      armour: "Plattenrüstung"
+      armour.belastung: 3
+      armour.extraPenalty: 0
+      other: shield
+      shield: "Großschild"
+      weapon: Rabenschnabel
+    choose:
+      choice.formation: true
+      choice.formation.bonus: at
+    expect:
+      at:
+        total: -1
+        lines:
+          - from: COND_1.B3
+            value: -3
+          - from: SA_862.F2
+            value: 2
+      pa:
+        total: -3
+        lines:
+          - from: COND_1.B3
+            value: -3
+    appToday: "das war falsch: die Formation gibt +2 AT"

@@ -23,9 +23,7 @@ final class SituationsHarnessTests: XCTestCase {
             XCTFail("RULES_FILES names \(name), which is no situations file")
         }
 
-        let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
-        let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
-        let listed = Conflicts.parse(migration, order: order)
+        let listed = Self.conflicts(all)
         if listed == nil { XCTFail("MIGRATION.md has no section \"\(Conflicts.section)\"") }
         if listed?.isEmpty == true { XCTFail("MIGRATION.md's conflicts section lists no situation") }
         let conflicts = Set(listed ?? [])
@@ -35,57 +33,15 @@ final class SituationsHarnessTests: XCTestCase {
         report.conflictsUnknown = (listed ?? []).filter { !known.contains($0) }.map(\.description)
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
-            // Task 27: a hit on the hero, or the rolls of an attack.
-            if CombatRunner.canRun(s, book: engine.book) {
-                report.combatRun.append(s.id)
-                let combat = CombatRunner.run(s, engine: engine)
-                var run = Matcher.run(s, engine: engine, hit: combat.view)
-                run.hits = (run.hits + Matcher.openRulings(in: combat.breakdowns)).distinct()
-                let mismatches = run.mismatches + combat.mismatches
-                let verdict = Verdict.of(s, mismatches: mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
-                report.add(s, verdict, mismatches, notes: run.notes + combat.notes, conflicts: conflicts)
-                if verdict == .failed { failures.append((s, mismatches)) }
-                continue
+            let judged = Self.judge(s, engine: engine, conflicts: conflicts)
+            switch judged.path {
+            case .combat: report.combatRun.append(s.id)
+            case .state: report.stateRun.append(s.id)
+            case .queriesOnly: report.queriesCompared.append(s.id)
+            case .unsupported, .check: break
             }
-            // Task 28: a sequence of actions, or the action a situation expecting events implies.
-            if !ActionRunner.canRun(s), StateRunner.canRun(s) {
-                report.stateRun.append(s.id)
-                let state = StateRunner.run(s, engine: engine)
-                var run = Matcher.run(s, engine: engine, hit: state.view)
-                run.hits = (run.hits + Matcher.openRulings(in: state.breakdowns)).distinct()
-                let mismatches = run.mismatches + state.mismatches
-                let verdict = Verdict.of(s, mismatches: mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
-                report.add(s, verdict, mismatches, notes: run.notes + state.notes, conflicts: conflicts)
-                if verdict == .failed { failures.append((s, mismatches)) }
-                continue
-            }
-            guard ActionRunner.canRun(s) else {
-                // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
-                let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }
-                // R50: a situation expecting a state gained or cleared is described after its action.
-                if !s.expect.isEmpty && !Self.expectsStateChange(s) {
-                    report.queriesCompared.append(s.id)
-                    let run = Matcher.run(s, engine: engine, onlyQueries: true)
-                    if run.mismatches.contains(where: { $0.kind != .unsupportedShape }) {
-                        let verdict = Verdict.of(s, mismatches: run.mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
-                        report.add(s, verdict, run.mismatches, notes: run.notes, conflicts: conflicts)
-                        if verdict == .failed { failures.append((s, run.mismatches)) }
-                        continue
-                    }
-                    let shapes = run.mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()
-                    report.add(s, .unsupported(needs + shapes), run.mismatches, notes: run.notes, conflicts: conflicts)
-                    continue
-                }
-                report.add(s, .unsupported(needs), [], conflicts: conflicts)
-                continue
-            }
-            let check = ActionRunner.run(s, engine: engine)
-            var run = Matcher.run(s, engine: engine, view: check?.view)
-            run.hits = (run.hits + Matcher.openRulings(in: check?.breakdowns ?? [])).distinct()
-            let mismatches = run.mismatches + (check?.mismatches ?? [])
-            let verdict = Verdict.of(s, mismatches: mismatches, hits: run.hits, book: engine.book, conflicts: conflicts)
-            report.add(s, verdict, mismatches, notes: run.notes + (check?.notes ?? []), conflicts: conflicts)
-            if verdict == .failed { failures.append((s, mismatches)) }
+            report.add(s, judged.verdict, judged.mismatches, notes: judged.notes, conflicts: conflicts)
+            if judged.verdict == .failed { failures.append((s, judged.mismatches)) }
         }
 
         report.stateChangeUnsupported = all.situations.filter { filter.keeps($0.file) && !ActionRunner.canRun($0)
@@ -97,6 +53,73 @@ final class SituationsHarnessTests: XCTestCase {
         for (s, mismatches) in failures {
             XCTFail("situation \(s.id) (\(s.file)):\n" + mismatches.map { "  - \($0)" }.joined(separator: "\n"))
         }
+    }
+
+    /// How a situation was run: as a hit or an attack's rolls (Task 27), as a sequence of actions
+    /// (Task 28), its queries alone while its action part waits, not at all, or as a check.
+    enum Path { case combat, state, queriesOnly, unsupported, check }
+
+    struct Judged {
+        var path: Path
+        var verdict: Verdict
+        var mismatches: [Mismatch]
+        var notes: [String]
+    }
+
+    /// Runs one situation the way the harness does and gives its verdict (the harness test and
+    /// the log round trip, Task 29, both use it).
+    static func judge(_ s: CompiledSituation, engine: Engine, conflicts: Set<ConflictRef>) -> Judged {
+        func verdict(_ mismatches: [Mismatch], _ hits: [OpenHit]) -> Verdict {
+            Verdict.of(s, mismatches: mismatches, hits: hits, book: engine.book, conflicts: conflicts)
+        }
+        // Task 27: a hit on the hero, or the rolls of an attack.
+        if CombatRunner.canRun(s, book: engine.book) {
+            let combat = CombatRunner.run(s, engine: engine)
+            var run = Matcher.run(s, engine: engine, hit: combat.view)
+            run.hits = (run.hits + Matcher.openRulings(in: combat.breakdowns)).distinct()
+            let mismatches = run.mismatches + combat.mismatches
+            return Judged(path: .combat, verdict: verdict(mismatches, run.hits), mismatches: mismatches,
+                          notes: run.notes + combat.notes)
+        }
+        // Task 28: a sequence of actions, or the action a situation expecting events implies.
+        if !ActionRunner.canRun(s), StateRunner.canRun(s) {
+            let state = StateRunner.run(s, engine: engine)
+            var run = Matcher.run(s, engine: engine, hit: state.view)
+            run.hits = (run.hits + Matcher.openRulings(in: state.breakdowns)).distinct()
+            let mismatches = run.mismatches + state.mismatches
+            return Judged(path: .state, verdict: verdict(mismatches, run.hits), mismatches: mismatches,
+                          notes: run.notes + state.notes)
+        }
+        guard ActionRunner.canRun(s) else {
+            // The action part waits (Tasks 27–28); the query expectations run now (Task 26 extra 8).
+            let needs = ActionRunner.needs(s).map { "action: \($0.rawValue)" }
+            // R50: a situation expecting a state gained or cleared is described after its action.
+            if !s.expect.isEmpty && !expectsStateChange(s) {
+                let run = Matcher.run(s, engine: engine, onlyQueries: true)
+                if run.mismatches.contains(where: { $0.kind != .unsupportedShape }) {
+                    return Judged(path: .queriesOnly, verdict: verdict(run.mismatches, run.hits),
+                                  mismatches: run.mismatches, notes: run.notes)
+                }
+                let shapes = run.mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()
+                return Judged(path: .queriesOnly, verdict: .unsupported(needs + shapes), mismatches: run.mismatches,
+                              notes: run.notes)
+            }
+            return Judged(path: .unsupported, verdict: .unsupported(needs), mismatches: [], notes: [])
+        }
+        let check = ActionRunner.run(s, engine: engine)
+        var run = Matcher.run(s, engine: engine, view: check?.view)
+        run.hits = (run.hits + Matcher.openRulings(in: check?.breakdowns ?? [])).distinct()
+        let mismatches = run.mismatches + (check?.mismatches ?? [])
+        return Judged(path: .check, verdict: verdict(mismatches, run.hits), mismatches: mismatches,
+                      notes: run.notes + (check?.notes ?? []))
+    }
+
+    /// MIGRATION.md's conflicts section, parsed against the situations' order; nil when the
+    /// section is missing.
+    static func conflicts(_ all: CompiledSituations) -> [ConflictRef]? {
+        let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
+        let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
+        return Conflicts.parse(migration, order: order)
     }
 
     /// R50: whether `s` expects a `gained` or `cleared` event, at the top or in a step: its query
