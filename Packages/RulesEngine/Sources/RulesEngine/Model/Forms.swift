@@ -323,7 +323,7 @@ public enum SelectorID: Codable, Hashable, Sendable {
 }
 
 /// `{ defence: [pa, aw] }` is `{"kind": "defence", "ids": ["pa", "aw"]}`.
-public struct Selector: Codable, Hashable, Sendable {
+public struct RuleSelector: Codable, Hashable, Sendable {
     public var kind: SelectorKind
     public var ids: [SelectorID]
     /// A check's attributes or a narrowing (`{ talent: X, with: [MU, KL] }`). The JSON holds one
@@ -359,7 +359,7 @@ public struct Selector: Codable, Hashable, Sendable {
     }
 }
 
-/// A clause by its qualified name, `RULE.CLAUSE` (a line selector's id, a ruling's `appliesTo`).
+/// A clause by its qualified name, `RULE.CLAUSE` (a line selector's id).
 public struct ClauseRef: Codable, Hashable, Sendable, CustomStringConvertible {
     public var rule: String
     public var clause: String

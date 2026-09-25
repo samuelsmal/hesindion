@@ -46,12 +46,65 @@ final class RuleBookTests: XCTestCase {
         XCTAssertFalse(TargetRef("at").matches(TargetRef("pa")))
     }
 
-    func testEffectsReachingAreTheIndexedOnesPlusStar() throws {
+    func testEffectsReachingAreTheIndexedOnesPlusStarEachOnce() throws {
         let book = try mini()
         let pa = try XCTUnwrap(book.reach["pa"]), star = try XCTUnwrap(book.reach["*"])
-        XCTAssertEqual(book.effects(reaching: "pa").map(\.origin), pa + star)
+        // The useLevels, the replace and the suppress of mini-levelled (which reaches `pa` and,
+        // through its tell, "*") are listed under both.
+        let both = [0, 1, 2, 3].map { EffectOrigin(rule: "mini-core", clause: "V2", index: .top($0)) }
+        XCTAssertEqual(both.filter(pa.contains), both)
+        XCTAssertEqual(both.filter(star.contains), both)
+
+        let got = book.effects(reaching: "pa").map(\.origin)
+        XCTAssertEqual(got.count, Set(got).count, "an origin twice")
+        XCTAssertEqual(Set(got), Set(pa + star))
+        // Merged in rulec's `_ref_key` order: rule, clause, then index.
+        XCTAssertEqual(got.map(\.description), [
+            "mini-core.A1[0]", "mini-core.A1[1]", "mini-core.A1[2]", "mini-core.A1[3]", "mini-core.A1[4]",
+            "mini-core.A1[5]", "mini-core.A1[6]", "mini-core.A1[7]", "mini-core.A1[8]",
+            "mini-core.G1[0]", "mini-core.G1[2]",
+            "mini-core.P1[0]", "mini-core.P1[1]", "mini-core.P1[2]", "mini-core.P1[3]", "mini-core.P1[4]", "mini-core.P1[5]",
+            "mini-core.V1[0]", "mini-core.V1[8]",
+            "mini-core.V2[0]", "mini-core.V2[1]", "mini-core.V2[2]", "mini-core.V2[3]",
+            "mini-levelled.L1[0]", "mini-levelled.L1[1]",
+        ])
         XCTAssertEqual(book.effects(reaching: "*").map(\.origin), star)
         XCTAssertEqual(book.effects(reaching: "nothing").map(\.origin), star)
+    }
+
+    func testTheCompilerOrderPutsIntIndicesBeforePaths() {
+        let o = { (r: String, c: String, i: EffectIndex) in EffectOrigin(rule: r, clause: c, index: i) }
+        let sorted = [o("b", "A", .top(0)), o("a", "B", .top(0)), o("a", "A", .nested("0.costs.0")),
+                      o("a", "A", .top(10)), o("a", "A", .top(2))].sorted(by: EffectOrigin.compilerOrder)
+        XCTAssertEqual(sorted.map(\.description), ["a.A[2]", "a.A[10]", "a.A[0.costs.0]", "a.B[0]", "b.A[0]"])
+    }
+
+    func testTheRealBookReachesEachEffectOnce() throws {
+        let url = Repo.url("build/rules/rules.json")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "run make rules-json")
+        let book = try RuleBook.load(from: url)
+        for target in book.reach.keys {
+            let got = book.effects(reaching: target).map(\.origin)
+            XCTAssertEqual(got.count, Set(got).count, "\(target) lists an origin twice")
+            XCTAssertEqual(got, got.sorted(by: EffectOrigin.compilerOrder), target)
+            XCTAssertEqual(Set(got), Set((book.reach[target] ?? []) + (book.reach["*"] ?? [])), target)
+        }
+    }
+
+    func testDuplicateIdsAreRefused() throws {
+        let data = try Data(contentsOf: fixtureURL)
+        var obj = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let rules = try XCTUnwrap(obj["rules"] as? [Any]), rulings = try XCTUnwrap(obj["rulings"] as? [Any])
+
+        var twiceRule = obj
+        twiceRule["rules"] = rules + [rules[0]]
+        XCTAssertThrowsError(try RuleBook.decode(JSONSerialization.data(withJSONObject: twiceRule))) {
+            XCTAssertEqual($0 as? RuleBookError, .duplicateRule("mini-core"))
+        }
+        obj["rulings"] = rulings + [rulings[1]]
+        XCTAssertThrowsError(try RuleBook.decode(JSONSerialization.data(withJSONObject: obj))) {
+            XCTAssertEqual($0 as? RuleBookError, .duplicateRuling("mini-levelled.open-question"))
+        }
     }
 
     // MARK: - The real book: every effect is typed and loses nothing
@@ -164,7 +217,7 @@ final class RuleBookTests: XCTestCase {
         XCTAssertEqual(clauses[0].name, "Stufen")
         XCTAssertEqual(clauses[0].page, .object(["book": .string("Regelwerk"), "page": .int(1)]))
         XCTAssertEqual(clauses[0].text, "PA mit Schild +Stufe−1.")
-        XCTAssertEqual(clauses[0].effects.count, 1)
+        XCTAssertEqual(clauses[0].effects.map(\.payload.verb), [.add, .tell])
         XCTAssertEqual(clauses[1].body, .unencoded("not yet in the vocabulary"))
         XCTAssertEqual(clauses[1].effects, [])
         XCTAssertEqual(clauses[2].body, .none("flavour text"))
@@ -250,11 +303,11 @@ final class RuleBookTests: XCTestCase {
         let p = { (c: String, i: Int) in try self.effect(book, "mini-core", c, i).payload }
         XCTAssertEqual(try p("V1", 5), .set(SetValue(to: [TargetRef("ini")], value: .number(5))))
         XCTAssertEqual(try p("V1", 6), .multiply(Multiply(to: [TargetRef("tp")], by: 0.5,
-            line: Selector(kind: .line, ids: [.id("mini-levelled.L1")]), round: .up)))
+            line: RuleSelector(kind: .line, ids: [.id("mini-levelled.L1")]), round: .up)))
         XCTAssertEqual(try p("V1", 7), .cap(Cap(to: [TargetRef("at")],
             max: .proportion(Proportion(of: .target(TargetRef("leCurrent")), per: .number(2), times: 1,
                                         above: .number(0), round: .up, min: nil, max: nil)),
-            min: .number(0), over: Selector(kind: .rule, ids: [.id("mini-levelled")]))))
+            min: .number(0), over: RuleSelector(kind: .rule, ids: [.id("mini-levelled")]))))
         XCTAssertEqual(try p("V1", 8), .floor(Floor(to: [TargetRef("pa")], min: .number(0))))
         XCTAssertEqual(try p("V1", 9), .derive(Derive(to: TargetRef("wundschwelle"), sum: [
             .proportion(Proportion(of: .fact("attr.KO"), per: .number(2), times: 1, above: .number(0),
@@ -262,21 +315,21 @@ final class RuleBookTests: XCTestCase {
             .table(name: "mini.table", key: "attr.KO"), .number(1)])))
         XCTAssertEqual(try p("V2", 0), .useLevel(UseLevel(rule: "mini-levelled", as: .level(times: 1, plus: 0), lowerBy: nil, min: nil)))
         XCTAssertEqual(try p("V2", 1), .useLevel(UseLevel(rule: "mini-levelled", as: nil, lowerBy: .number(1), min: 1)))
-        XCTAssertEqual(try p("V2", 2), .replace(Replace(line: Selector(kind: .line, ids: [.id("mini-levelled.L1")]), with: .number(2))))
-        XCTAssertEqual(try p("V2", 3), .suppress(Suppress(line: Selector(kind: .line, ids: [.id("mini-levelled.L1")]))))
+        XCTAssertEqual(try p("V2", 2), .replace(Replace(line: RuleSelector(kind: .line, ids: [.id("mini-levelled.L1")]), with: .number(2))))
+        XCTAssertEqual(try p("V2", 3), .suppress(Suppress(line: RuleSelector(kind: .line, ids: [.id("mini-levelled.L1")]))))
     }
 
     func testLegalityVerbsSelectorsAndConditions() throws {
         let book = try mini()
         let p = { (i: Int) in try self.effect(book, "mini-core", "G1", i) }
-        XCTAssertEqual(try p(0).payload, .forbid(Forbid(what: Selector(kind: .manoeuvre,
+        XCTAssertEqual(try p(0).payload, .forbid(Forbid(what: RuleSelector(kind: .manoeuvre,
             ids: [.match(["kind": .string("spezialmanoever"), "mountedCombat": .bool(false)])]), together: true)))
-        XCTAssertEqual(try p(1).payload, .forbid(Forbid(what: Selector(kind: .defence,
+        XCTAssertEqual(try p(1).payload, .forbid(Forbid(what: RuleSelector(kind: .defence,
             ids: [.id("opponent.weaponParry"), .id("aw")]), together: nil)))
         XCTAssertEqual(try p(2).payload, .require(Require(that: .fact(name: "hero.mounted", comparison: .is(.bool(true))),
-            enables: true, for: Selector(kind: .defence, ids: [.id("pa")]))))
+            enables: true, for: RuleSelector(kind: .defence, ids: [.id("pa")]))))
         let limit = try p(3)
-        XCTAssertEqual(limit.payload, .limit(Limit(what: Selector(kind: .attack, ids: [.id("at")]), max: .number(1), per: .round)))
+        XCTAssertEqual(limit.payload, .limit(Limit(what: RuleSelector(kind: .attack, ids: [.id("at")]), max: .number(1), per: .round)))
         XCTAssertEqual(limit.when, .all([
             .any([.fact(name: "hero.mounted", comparison: .is(.bool(true))),
                   .fact(name: "hit.zone", comparison: .in([.string("kopf"), .string("arme")]))]),
@@ -312,16 +365,16 @@ final class RuleBookTests: XCTestCase {
         let book = try mini()
         let p = { (i: Int) in try self.effect(book, "mini-core", "A1", i).payload }
         guard case .check(let check) = try p(0) else { return XCTFail("no check") }
-        XCTAssertEqual(check.of, Selector(kind: .talent, ids: [.id("Kriegskunst")], with: ["MU", "KL"]))
+        XCTAssertEqual(check.of, RuleSelector(kind: .talent, ids: [.id("Kriegskunst")], with: ["MU", "KL"]))
         XCTAssertEqual(check.modifier, .proportion(Proportion(of: .fact("attr.MU"), per: .number(2), times: 1,
             above: .number(0), round: .up, min: nil, max: nil)))
         XCTAssertEqual(check.onSuccess.map(\.payload), [.tell(Tell(text: "Gelungen", to: .gm))])
         XCTAssertEqual(check.onFailure.map(\.payload), [
             .cost(Cost(pool: .le, amount: .number(1))),
-            .item(ItemChange(instance: Selector(kind: .loadout, ids: [.id("shield")]), change: ItemDelta(destroyed: true))),
+            .item(ItemChange(instance: RuleSelector(kind: .loadout, ids: [.id("shield")]), change: ItemDelta(destroyed: true))),
         ])
         // A one-string `with` and no branches.
-        XCTAssertEqual(try p(1), .check(Check(of: Selector(kind: .spell, ids: [.id("Ignifaxius")], with: ["KL"]),
+        XCTAssertEqual(try p(1), .check(Check(of: RuleSelector(kind: .spell, ids: [.id("Ignifaxius")], with: ["KL"]),
                                               modifier: nil, onSuccess: [], onFailure: [])))
         XCTAssertEqual(try p(2), .gain(Gain(rule: .id("mini-levelled"), levels: 1, span: .fight)))
         XCTAssertEqual(try p(3), .gain(Gain(rule: .table(name: "mini.wounds", key: "hit.zone"), levels: nil, span: nil)))
@@ -329,21 +382,21 @@ final class RuleBookTests: XCTestCase {
             amount: .proportion(Proportion(of: .sum([.fact("attr.MU"), .number(2)]), per: .number(2), times: 1,
                                            above: .number(0), round: .up, min: nil, max: nil)),
             split: Split(pools: [.asp, .kap], min: [.asp: 1]), fallThrough: [.le], onFailure: 0.5,
-            every: Duration(unit: .minutes, count: .fact("spell.interval")))))
+            every: GameDuration(unit: .minutes, count: .fact("spell.interval")))))
         XCTAssertEqual(try p(5), .cost(Cost(pool: .actions, amount: .number(1),
-                                            every: Duration(unit: .rounds, count: .number(2)))))
+                                            every: GameDuration(unit: .rounds, count: .number(2)))))
         guard case .process(let process) = try p(6) else { return XCTFail("no process") }
         XCTAssertEqual(process.id, "laden")
         XCTAssertEqual(process.steps, .number(3))
-        XCTAssertEqual(process.advancedBy, Selector(kind: .action, ids: [.id("laden")]))
+        XCTAssertEqual(process.advancedBy, RuleSelector(kind: .action, ids: [.id("laden")]))
         XCTAssertEqual(process.breaksOff, .fact(name: "hero.mounted", comparison: .is(.bool(true))))
         XCTAssertEqual(process.completes.map(\.payload),
-                       [.item(ItemChange(instance: Selector(kind: .loadout, ids: [.id("weapon")]), change: ItemDelta(loaded: true)))])
+                       [.item(ItemChange(instance: RuleSelector(kind: .loadout, ids: [.id("weapon")]), change: ItemDelta(loaded: true)))])
         XCTAssertEqual(process.exclusive, true)
         XCTAssertEqual(process.span, .fight)
-        XCTAssertEqual(try p(7), .item(ItemChange(instance: Selector(kind: .loadout, ids: [.id("shield")]),
+        XCTAssertEqual(try p(7), .item(ItemChange(instance: RuleSelector(kind: .loadout, ids: [.id("shield")]),
             change: ItemDelta(structurePoints: .scaled(of: "hit.tp", times: -1)))))
-        XCTAssertEqual(try p(8), .reroll(Reroll(die: Selector(kind: .dice, ids: [.id("check")]), keep: "better", max: 1, per: .fight)))
+        XCTAssertEqual(try p(8), .reroll(Reroll(die: RuleSelector(kind: .dice, ids: [.id("check")]), keep: "better", max: 1, per: .fight)))
     }
 
     // MARK: - Decoding fails loudly

@@ -9,7 +9,7 @@ public enum Payload: Hashable, Sendable {
     case add(Add), set(SetValue), multiply(Multiply), cap(Cap), floor(Floor), useLevel(UseLevel)
     case replace(Replace), suppress(Suppress), forbid(Forbid), require(Require), limit(Limit)
     case offer(Offer), ask(Ask), tell(Tell), provide(Provide), derive(Derive)
-    case check(Check), gain(Gain), cost(Cost), process(Process), item(ItemChange), reroll(Reroll)
+    case check(Check), gain(Gain), cost(Cost), process(ProcessPayload), item(ItemChange), reroll(Reroll)
 
     public var verb: Verb {
         switch self {
@@ -72,7 +72,7 @@ public enum Payload: Hashable, Sendable {
         case .check: return .check(try c.decode(Check.self, forKey: k))
         case .gain: return .gain(try c.decode(Gain.self, forKey: k))
         case .cost: return .cost(try c.decode(Cost.self, forKey: k))
-        case .process: return .process(try c.decode(Process.self, forKey: k))
+        case .process: return .process(try c.decode(ProcessPayload.self, forKey: k))
         case .item: return .item(try c.decode(ItemChange.self, forKey: k))
         case .reroll: return .reroll(try c.decode(Reroll.self, forKey: k))
         }
@@ -127,7 +127,7 @@ public struct SetValue: Codable, Hashable, Sendable {
 public struct Multiply: Codable, Hashable, Sendable {
     public var to: [TargetRef]
     public var by: Double
-    public var line: Selector? = nil
+    public var line: RuleSelector? = nil
     public var round: Rounding? = nil
 }
 
@@ -135,7 +135,7 @@ public struct Cap: Codable, Hashable, Sendable {
     public var to: [TargetRef]
     public var max: ValueExpr? = nil
     public var min: ValueExpr? = nil
-    public var over: Selector? = nil
+    public var over: RuleSelector? = nil
 }
 
 public struct Floor: Codable, Hashable, Sendable {
@@ -145,6 +145,10 @@ public struct Floor: Codable, Hashable, Sendable {
 
 /// Another rule's level takes part in this one's (spec §5.2, phase `level`). Exactly one of
 /// `as` and `lowerBy` is present.
+///
+/// R28: the useLevels on one target chain in rule-id order, then in the order the clauses
+/// appear in the rule (`Rule.clauses`, not the reach index's order). A keep line
+/// (`as: level`) counts in `via`.
 public struct UseLevel: Codable, Hashable, Sendable {
     public var rule: String
     /// `as` binds `level` to the target's effective level after earlier useLevels (R28).
@@ -157,12 +161,12 @@ public struct UseLevel: Codable, Hashable, Sendable {
 /// The replaced effect's `value` is swapped before `per`, and its targets and `when` are kept
 /// (plan Appendix A.3).
 public struct Replace: Codable, Hashable, Sendable {
-    public var line: Selector
+    public var line: RuleSelector
     public var with: ValueExpr
 }
 
 public struct Suppress: Codable, Hashable, Sendable {
-    public var line: Selector
+    public var line: RuleSelector
 }
 
 public struct Derive: Codable, Hashable, Sendable {
@@ -173,18 +177,18 @@ public struct Derive: Codable, Hashable, Sendable {
 // MARK: - Legality verbs
 
 public struct Forbid: Codable, Hashable, Sendable {
-    public var what: Selector
+    public var what: RuleSelector
     public var together: Bool? = nil
 }
 
 public struct Require: Codable, Hashable, Sendable {
     public var that: Condition
     public var enables: Bool? = nil
-    public var `for`: Selector? = nil
+    public var `for`: RuleSelector? = nil
 }
 
 public struct Limit: Codable, Hashable, Sendable {
-    public var what: Selector
+    public var what: RuleSelector
     public var max: ValueExpr
     public var per: Span
 }
@@ -245,20 +249,20 @@ public struct Provide: Codable, Hashable, Sendable {
 // MARK: - Action verbs
 
 public struct Check: Codable, Hashable, Sendable {
-    public var of: Selector
+    public var of: RuleSelector
     public var modifier: ValueExpr? = nil
     public var onSuccess: [Effect] = []
     public var onFailure: [Effect] = []
 
     enum CodingKeys: String, CodingKey { case of, modifier, onSuccess, onFailure }
 
-    public init(of: Selector, modifier: ValueExpr? = nil, onSuccess: [Effect] = [], onFailure: [Effect] = []) {
+    public init(of: RuleSelector, modifier: ValueExpr? = nil, onSuccess: [Effect] = [], onFailure: [Effect] = []) {
         self.of = of; self.modifier = modifier; self.onSuccess = onSuccess; self.onFailure = onFailure
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        of = try c.decode(Selector.self, forKey: .of)
+        of = try c.decode(RuleSelector.self, forKey: .of)
         modifier = try c.decodeIfPresent(ValueExpr.self, forKey: .modifier)
         onSuccess = try c.decodeIfPresent([Effect].self, forKey: .onSuccess) ?? []
         onFailure = try c.decodeIfPresent([Effect].self, forKey: .onFailure) ?? []
@@ -287,12 +291,12 @@ public struct Cost: Codable, Hashable, Sendable {
     public var fallThrough: [Pool] = []
     /// The share paid when the action fails (`0.5`: half).
     public var onFailure: Double? = nil
-    public var every: Duration? = nil
+    public var every: GameDuration? = nil
 
     enum CodingKeys: String, CodingKey { case pool, amount, split, fallThrough, onFailure, every }
 
     public init(pool: Pool, amount: ValueExpr, split: Split? = nil, fallThrough: [Pool] = [],
-                onFailure: Double? = nil, every: Duration? = nil) {
+                onFailure: Double? = nil, every: GameDuration? = nil) {
         self.pool = pool; self.amount = amount; self.split = split
         self.fallThrough = fallThrough; self.onFailure = onFailure; self.every = every
     }
@@ -304,7 +308,7 @@ public struct Cost: Codable, Hashable, Sendable {
         split = try c.decodeIfPresent(Split.self, forKey: .split)
         fallThrough = try c.decodeIfPresent([Pool].self, forKey: .fallThrough) ?? []
         onFailure = try c.decodeIfPresent(Double.self, forKey: .onFailure)
-        every = try c.decodeIfPresent(Duration.self, forKey: .every)
+        every = try c.decodeIfPresent(GameDuration.self, forKey: .every)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -348,7 +352,7 @@ public struct Split: Codable, Hashable, Sendable {
 }
 
 /// `{ minutes: 5 }`, `{ rounds: 1 }`, or a count read from a fact (`{ minutes: spell.interval }`).
-public struct Duration: Codable, Hashable, Sendable {
+public struct GameDuration: Codable, Hashable, Sendable {
     public enum Unit: String, Codable, CaseIterable, Sendable { case minutes, rounds }
     public enum Count: Hashable, Sendable { case number(Int), fact(String) }
     public var unit: Unit
@@ -379,10 +383,10 @@ public struct Duration: Codable, Hashable, Sendable {
     }
 }
 
-public struct Process: Codable, Hashable, Sendable {
+public struct ProcessPayload: Codable, Hashable, Sendable {
     public var id: String
     public var steps: ValueExpr
-    public var advancedBy: Selector
+    public var advancedBy: RuleSelector
     public var breaksOff: Condition? = nil
     /// Run when the last step is done; absent is none.
     public var completes: [Effect] = []
@@ -391,7 +395,7 @@ public struct Process: Codable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey { case id, steps, advancedBy, breaksOff, completes, exclusive, span }
 
-    public init(id: String, steps: ValueExpr, advancedBy: Selector, breaksOff: Condition? = nil,
+    public init(id: String, steps: ValueExpr, advancedBy: RuleSelector, breaksOff: Condition? = nil,
                 completes: [Effect] = [], exclusive: Bool? = nil, span: Span? = nil) {
         self.id = id; self.steps = steps; self.advancedBy = advancedBy; self.breaksOff = breaksOff
         self.completes = completes; self.exclusive = exclusive; self.span = span
@@ -401,7 +405,7 @@ public struct Process: Codable, Hashable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         steps = try c.decode(ValueExpr.self, forKey: .steps)
-        advancedBy = try c.decode(Selector.self, forKey: .advancedBy)
+        advancedBy = try c.decode(RuleSelector.self, forKey: .advancedBy)
         breaksOff = try c.decodeIfPresent(Condition.self, forKey: .breaksOff)
         completes = try c.decodeIfPresent([Effect].self, forKey: .completes) ?? []
         exclusive = try c.decodeIfPresent(Bool.self, forKey: .exclusive)
@@ -422,7 +426,7 @@ public struct Process: Codable, Hashable, Sendable {
 
 /// The `item` verb: a change to an item instance.
 public struct ItemChange: Codable, Hashable, Sendable {
-    public var instance: Selector
+    public var instance: RuleSelector
     public var change: ItemDelta
 }
 
@@ -468,7 +472,7 @@ public enum ItemAmount: Codable, Hashable, Sendable {
 }
 
 public struct Reroll: Codable, Hashable, Sendable {
-    public var die: Selector
+    public var die: RuleSelector
     /// Which result stands: `better`, `second`, …
     public var keep: String
     public var max: Int? = nil

@@ -207,6 +207,10 @@ public struct Rule: Decodable, Hashable, Sendable {
 
 public enum RuleBookError: Error, Equatable {
     case vocabularyMismatch(found: Int, expected: Int)
+    /// Two rules with one id.
+    case duplicateRule(String)
+    /// Two rulings with one qualified id.
+    case duplicateRuling(String)
 }
 
 /// `build/rules/rules.json`, decoded: every rule, ruling and the reach index.
@@ -214,7 +218,10 @@ public struct RuleBook: Sendable {
     public let rules: [String: Rule]
     public let rulings: [String: Ruling]
     /// Target name → the top-level effects that can change it; `"*"` → those every query
-    /// evaluates. Each list is in the compiler's order (rule, clause, index).
+    /// evaluates. Each list is in the compiler's sort key (rule id, then clause id as a string,
+    /// then index): not the order the clauses appear in the rule. An origin can be listed under
+    /// a target and under `"*"` at once (a useLevel, replace or suppress inherits every key of
+    /// what it names). Chaining (R28) goes by `Rule.clauses` order, not by this one.
     public let reach: [String: [EffectOrigin]]
     /// The SHA-256 of the rules.json bytes (hex), for a log entry's `rulesSha256`.
     public let sha256: String
@@ -244,6 +251,8 @@ public struct RuleBook: Sendable {
             throw RuleBookError.vocabularyMismatch(found: found, expected: Vocabulary.version)
         }
         let raw = try decoder.decode(Raw.self, from: data)
+        if let id = firstDuplicate(raw.rules.map(\.id)) { throw RuleBookError.duplicateRule(id) }
+        if let id = firstDuplicate(raw.rulings.map(\.id)) { throw RuleBookError.duplicateRuling(id) }
         return RuleBook(raw.rules, raw.rulings, raw.reach, SHA256.hex(data), raw.vocabularyVersion, raw.vocabularySha256)
     }
 
@@ -258,8 +267,8 @@ public struct RuleBook: Sendable {
         for rule in rules {                            // rules.json lists them sorted by id
             for clause in rule.clauses { clause.effects.forEach(index) }
         }
-        self.rules = Dictionary(rules.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        self.rulings = Dictionary(rulings.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        self.rules = Dictionary(uniqueKeysWithValues: rules.map { ($0.id, $0) })
+        self.rulings = Dictionary(uniqueKeysWithValues: rulings.map { ($0.id, $0) })
         self.reach = reach
         self.sha256 = sha256
         self.vocabularyVersion = vocabularyVersion
@@ -271,14 +280,39 @@ public struct RuleBook: Sendable {
     /// The effect at `origin`, top-level or nested.
     public func effect(at origin: EffectOrigin) -> Effect? { byOrigin[origin] }
 
-    /// The effects the reach index lists under `target`, then those under `"*"`, each in
-    /// index order.
+    /// The effects the reach index lists under `target` or under `"*"`, each once, merged in
+    /// the compiler's sort key (`compile._ref_key`: rule id, clause id, then int indices before
+    /// string ones). That is not clause order within a rule; chaining (R28) uses `Rule.clauses`.
     public func effects(reaching target: String) -> [Effect] {
-        let origins = target == "*" ? (reach["*"] ?? []) : (reach[target] ?? []) + (reach["*"] ?? [])
+        var seen = Set<EffectOrigin>()
+        let origins = ((reach[target] ?? []) + (target == "*" ? [] : reach["*"] ?? []))
+            .filter { seen.insert($0).inserted }
+            .sorted(by: EffectOrigin.compilerOrder)
         return origins.compactMap { byOrigin[$0] }
     }
 
     /// The value a `provide` gives under `name`. Several rules may provide one name (each
     /// weapon its `loadout.weapon` row); this is the first, in rule-id and clause order.
     public func table(_ name: String) -> JSONValue? { tables[name] }
+}
+
+private func firstDuplicate(_ ids: [String]) -> String? {
+    var seen = Set<String>()
+    return ids.first { !seen.insert($0).inserted }
+}
+
+extension EffectOrigin {
+    /// rulec's `_ref_key`: rule, clause, then an int index (by value) before a string one (by
+    /// text). Strings compare by Unicode scalars, as Python compares them.
+    static func compilerOrder(_ a: EffectOrigin, _ b: EffectOrigin) -> Bool {
+        func less(_ x: String, _ y: String) -> Bool { x.unicodeScalars.lexicographicallyPrecedes(y.unicodeScalars) }
+        if a.rule != b.rule { return less(a.rule, b.rule) }
+        if a.clause != b.clause { return less(a.clause, b.clause) }
+        switch (a.index, b.index) {
+        case (.top(let x), .top(let y)): return x < y
+        case (.top, .nested): return true
+        case (.nested, .top): return false
+        case (.nested(let x), .nested(let y)): return less(x, y)
+        }
+    }
 }

@@ -22,6 +22,8 @@ clauses:
     effects:
       - add: { to: "pa(with: shield)", value: level - 1 }
         ruling: open-question
+      # Under "*": so a useLevel of this rule (mini-core.V2) reaches both `pa` and "*".
+      - tell: { to: player, text: Stufe zählt }
   - id: L2
     text: Unencoded text.
     unencoded: not yet in the vocabulary

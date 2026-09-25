@@ -80,6 +80,31 @@
     "clause": "P1",
     "index": 5,
     "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 0,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 1,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 2,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "V2",
+    "index": 3,
+    "rule": "mini-core"
+   },
+   {
+    "clause": "L1",
+    "index": 1,
+    "rule": "mini-levelled"
    }
   ],
   "at": [
@@ -1342,6 +1367,22 @@
         "mini-levelled.open-question"
        ],
        "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 1,
+        "rule": "mini-levelled"
+       },
+       "payload": {
+        "text": "Stufe zählt",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
        "when": null
       }
      ],
