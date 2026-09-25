@@ -48,9 +48,12 @@ final class EventTests: XCTestCase {
 
     // MARK: - gain
 
+    // The standing gains (a Zustand at IV, a choice's consequence) are `.settle`'s (Task 28
+    // extra 5): no action runs them.
+
     func testAGainGivesGainedAndANegativeLevelGivesCleared() {
         let s = situation(owned: ["act-stunned": 4], facts: ["choice.recover": true])
-        let r = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        let r = layer.perform(.settle, in: s)
         XCTAssertEqual(r.events.map(\.kind), [.gained, .cleared])
         XCTAssertEqual(r.events.map(\.rule), ["act-helpless", "act-stunned"])
         XCTAssertEqual(r.events.map(\.levels), [1, 1])
@@ -93,10 +96,10 @@ final class EventTests: XCTestCase {
     }
 
     func testAGainReadsItsRuleFromATable() {
-        let head = layer.perform(.cast(spell: "SPELL_1", modifications: []),
+        let head = layer.perform(.settle,
                                  in: situation(facts: ["gmFact.wound": true, "hit.zone": "kopf"]))
         XCTAssertEqual(head.events.filter { $0.origin == ref("act-zones.Z1") }.map(\.rule), ["act-stunned"])
-        let open = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: situation(facts: ["gmFact.wound": true]))
+        let open = layer.perform(.settle, in: situation(facts: ["gmFact.wound": true]))
         XCTAssertEqual(open.events.filter { $0.origin == ref("act-zones.Z1") }, [])
         XCTAssertTrue(open.questions.contains { $0.fact == "hit.zone" && $0.origins == [ref("act-zones.Z1")] })
     }
@@ -104,7 +107,7 @@ final class EventTests: XCTestCase {
     func testTheSchipSuppressStopsAConditionsGain() {
         // schmerz S9: the Schip's `suppress { ruleKind: condition }` stops Schmerz IV's gain.
         let s = situation(owned: ["act-stunned": 4], facts: ["choice.schipZustand": true])
-        let r = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        let r = layer.perform(.settle, in: s)
         XCTAssertEqual(r.events.filter { $0.kind == .gained }, [])
         let entry = r.notApplied.first { $0.origin == ref("act-stunned.S4") }
         XCTAssertEqual(entry?.reason, .suppressed)
@@ -115,7 +118,7 @@ final class EventTests: XCTestCase {
     func testTwoConditionsGainingOneStateGiveOneGainAndNoneWhenItIsHeld() {
         // COND_1.B4 and COND_2.BT4 both at IV gain STATE_8: one `gained(…, 1)`, not two.
         let s = situation(owned: ["act-stunned": 4, "act-heavy": 4])
-        let r = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        let r = layer.perform(.settle, in: s)
         let gained = r.events.filter { $0.kind == .gained && $0.rule == "act-helpless" }
         XCTAssertEqual(gained.map(\.levels), [1])
         XCTAssertEqual(gained.map(\.origin), [ref("act-heavy.B4")])
@@ -125,7 +128,7 @@ final class EventTests: XCTestCase {
         XCTAssertEqual(s.applying(r.events).owned["act-helpless"]?.level, 1)
         // Held already: no event at all, the entry says why.
         let held = situation(owned: ["act-stunned": 4, "act-helpless": 1])
-        let again = layer.perform(.cast(spell: "SPELL_1", modifications: []), in: held)
+        let again = layer.perform(.settle, in: held)
         XCTAssertEqual(again.events.filter { $0.kind == .gained }, [])
         XCTAssertEqual(again.notApplied.first { $0.origin == ref("act-stunned.S4") }?.reason, .overridden)
     }

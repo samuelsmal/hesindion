@@ -154,6 +154,9 @@ struct HarnessReport: Encodable {
     /// Situations run as a hit on the hero or as the rolls of an attack (Task 27, `CombatRunner`);
     /// their queries follow the before/after rule.
     var combatRun: [String] = []
+    /// Situations run as a sequence of actions or with the action they imply (Task 28,
+    /// `StateRunner`); their queries follow the before/after rule.
+    var stateRun: [String] = []
     /// How often each mismatch kind is the first of a failed situation, and in all of them.
     var firstMismatchKinds: [String: Int] = [:]
     var mismatchKinds: [String: Int] = [:]

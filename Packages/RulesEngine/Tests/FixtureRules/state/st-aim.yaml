@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: fernkampf.FK11's shape without its open ruling: aiming is a process of two steps,
+# advanced by the offered choice, whose progress is the bonus on the shot and which the shot
+# breaks off.
+id: st-aim
+name: Zielen
+kind: core
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Jede zum Zielen genutzte Aktion erleichtert den folgenden Schuss um 2, höchstens um 4.
+    effects:
+      - when: { loadout.weapon.kind: ranged }
+        offer: { choice: zielen, costs: [{ cost: { pool: actions, amount: 1 } }] }
+      - when: { loadout.weapon.kind: ranged }
+        process: { id: zielen, steps: 2, advancedBy: { action: zielen }, breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: ranged } }
+      - when: { process.zielen: { atLeast: 1 } }
+        add: { to: fk, value: 2, per: process.zielen }

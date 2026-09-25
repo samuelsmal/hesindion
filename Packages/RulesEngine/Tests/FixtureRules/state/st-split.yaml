@@ -1,0 +1,16 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: SA_59.SS3's shape as a core rule: the failed defence's TP come off the shield's
+# current StP; at 0 the shield is destroyed.
+id: st-split
+name: Schildspalter
+kind: core
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: S1
+    text: Misslingt die Parade, wird der Schaden von den Strukturpunkten des Schildes abgezogen. Fallen diese auf 0, ist der Schild zerstört.
+    effects:
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure }
+        item: { instance: { loadout: shield }, change: { structurePoints: { of: hit.tp, times: -1 } } }
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure, loadout.shield.structurePoints: { atMost: 0 } }
+        item: { instance: { loadout: shield }, change: { destroyed: true } }

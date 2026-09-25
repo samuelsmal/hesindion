@@ -22,6 +22,8 @@ struct Mismatch: Codable, Hashable, CustomStringConvertible {
         case values, fp, qs, spent, success, checkResult, dice
         // an action's events and the checks it asks for (Task 27)
         case missingEvent, unexpectedEvent
+        /// A process's state after a step (Task 28): its progress, ended, capped.
+        case process
         /// An expectation the engine's output has no field for (`legal.span`, `term`, a
         /// situation-level `legal`, an offer that is no choice, …), or a malformed one.
         case unsupportedShape
@@ -51,7 +53,7 @@ struct Mismatch: Codable, Hashable, CustomStringConvertible {
         switch kind {
         case .missingLine, .wrongValue, .wrongVia, .wrongRuling, .wrongWas, .wrongKind, .wrongSource, .wrongTerm,
              .total, .result, .base, .values, .fp, .qs, .spent, .success, .checkResult, .dice,
-             .missingEvent, .unexpectedEvent: .value
+             .missingEvent, .unexpectedEvent, .process: .value
         case .missingNotApplied, .wrongReason, .wrongBecause, .wrongNotApplied: .notApplied
         case .legal: .legal
         case .missingOffer, .unexpectedOffer, .wrongOffer: .offers

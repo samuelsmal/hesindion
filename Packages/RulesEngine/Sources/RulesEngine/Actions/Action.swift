@@ -1,12 +1,13 @@
 import Foundation
 
-/// What the player (or the table) does, for `ActionLayer.perform` (spec §7). Tasks 26–28 add the
-/// procedure actions (a staged check, the combat roll, processes, the clock).
+/// What the player (or the table) does, for `ActionLayer.perform` (spec §7): a cast, a payment,
+/// a Zustand, a choice taken, the procedures (a staged check, the combat roll, a hit), and the
+/// state over time (a process step, the clock, the end of a round or a fight, settling).
 public enum Action: Hashable, Sendable {
     /// Cast `spell` with the chosen modifications. The cast states `check.kind: spell`,
     /// `check.spell` and `choice.spellModification.<id>: true` (player) for the rules to read, and
-    /// runs every `cost` and `gain` whose `when` then holds: the cast's AsP (ZM12), a split
-    /// (SA_74.VP1), a Zustand's consequence.
+    /// runs every `cost`, `gain` and `item` whose `when` reads what it stated and then holds: the
+    /// cast's AsP (ZM12), a split (SA_74.VP1). A standing consequence is `.settle`'s.
     case cast(spell: String, modifications: [String])
     /// Pay `amount` from a pool directly (no rule's cost): a `paid` event without origin.
     case pay(Pool, Int)
@@ -30,4 +31,23 @@ public enum Action: Hashable, Sendable {
     /// (`ActionResult.checks`). `tp` nil: the situation's `hit.tp`, or its stated SP. Paying LeP
     /// (`.pay(.le, n)`, a `paid(le)` event) is not a hit and never runs the chain.
     case takeHit(tp: Int?, zone: String? = nil, side: String? = nil)
+    /// One step of the process `process` (spec §7), as the action its `advancedBy` names does,
+    /// without paying that action's cost: a running process progresses; else a `process` effect
+    /// with that id whose `when` holds starts one (bound to the weapon in hand). Taking the offered
+    /// choice (`.take(choice: laden)`) pays its cost and advances the same way.
+    case advance(process: String)
+    /// Game time passes (spec §7): the clock's minutes move on, every `cost { every }` that falls
+    /// due on the way is paid, and what lasts only the action or the round ends (minutes are
+    /// longer than a Kampfrunde).
+    case advanceClock(minutes: Int)
+    /// The Kampfrunde ends: the round's facts (`round.*`, `round.previousDefenceCrit` among them)
+    /// and the choices offered for the round or the action are cleared, a Stufe gained or cleared
+    /// for the round or the action is undone, and the clock's round moves on. A process goes on.
+    case endRound
+    /// The fight ends: as `.endRound`, and what lasts the fight ends too.
+    case endFight
+    /// The standing consequences the situation implies, with no action: every `gain` whose `when`
+    /// holds (Belastung IV → Handlungsunfähig, COND_1.B4). Only `settle` runs them; the other
+    /// actions run the effects that read what they state.
+    case settle
 }

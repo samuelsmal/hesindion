@@ -226,7 +226,9 @@ public enum CombatRoll {
                 steps.append(steps[1].state.step(.confirm(situation.rolls[1]), engine: engine))
             }
         }
-        return ActionResult(events: steps.flatMap(\.events), breakdowns: steps.flatMap(\.breakdowns),
+        let events = steps.flatMap(\.events)
+        return ActionResult(events: events, situation: steps[steps.count - 1].situation.applying(events, book: engine.book),
+                            breakdowns: steps.flatMap(\.breakdowns),
                             questions: CheckProcedure.mergeQuestions(steps.flatMap(\.questions)),
                             texts: steps.flatMap(\.texts).uniqued(), notApplied: steps.flatMap(\.notApplied).uniqued())
     }

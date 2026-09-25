@@ -97,7 +97,11 @@ public enum CheckProcedure {
             steps.append(steps[0].state.step(.dice(situation.rolls), engine: engine))
             if case .rolled = steps[1].state { steps.append(steps[1].state.step(.confirm, engine: engine)) }
         }
-        return ActionResult(events: steps.flatMap(\.events), breakdowns: steps.flatMap(\.breakdowns),
+        let last = steps[steps.count - 1].state
+        let events = steps.flatMap(\.events)
+        return ActionResult(events: events,
+                            situation: (last.result?.situation ?? last.stages.situation).applying(events, book: engine.book),
+                            breakdowns: steps.flatMap(\.breakdowns),
                             questions: mergeQuestions(steps.flatMap(\.questions)), texts: steps.flatMap(\.texts).uniqued(),
                             notApplied: steps.flatMap(\.notApplied).uniqued())
     }
@@ -356,7 +360,7 @@ public enum CheckProcedure {
         }
         let nestedActions = consequences.filter {
             switch $0.payload {
-            case .cost, .gain: true
+            case .cost, .gain, .item: true
             default: false
             }
         }
@@ -387,7 +391,7 @@ public enum CheckProcedure {
                 run.pipeline.show(TextLine(kind: .tell, audience: t.to, text: t.text, origin: e.origin.clauseRef))
                 run.events.append(Event(kind: .logged, origin: e.origin.clauseRef, via: via, rulings: evaluation.decided(e),
                                         facts: used, note: t.text))
-            case .cost, .gain:
+            case .cost, .gain, .item:
                 continue                                              // run above
             default:
                 evaluation.fail(e, "\(e.payload.verb.rawValue) nach einer Probe wird nicht ausgeführt", &run.pipeline)

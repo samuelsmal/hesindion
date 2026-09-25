@@ -200,6 +200,7 @@ extension Evaluation {
     /// - `hero.levelOf.X`: the base phase of `level(rule: X)` (R34).
     /// - `fw.current`: the FW of the check's spell (`check.spell`), else of its talent
     ///   (`check.talent`): MIGRATION probe-magie 20.1.
+    /// - `ladezeit.current` (`targetFacts`): the result of the query `item.ladezeit`.
     /// - `check.onOption` / `check.applicationOnOption` (MIGRATION ADV_4.B1, SA_9.FS1; plan Task
     ///   26): read by `rule`, from the instance the hero owns: its `option` against the check's
     ///   `check.spell` / `check.talent`, its `option2` against `check.application`. An unknown
@@ -247,6 +248,15 @@ extension Evaluation {
                 behind["fw.current"] = [UnknownFact(subject.map { "fw.\($0)" } ?? "check.spell")]
             }
         }
+        for (name, target) in Self.targetFacts.sorted(by: { $0.key < $1.key }) where names.contains(name) && s.facts[name] == nil {
+            let r = resolve(TargetRef(target), depth: depth + 1)
+            if let v = r.value {
+                s.facts[name] = Fact(name: name, value: .int(v), owner: .derived)
+            } else {
+                s.unstated.insert(name)
+                behind[name] = r.unknown
+            }
+        }
         for name in names.sorted() where name.hasPrefix(prefix) && name.count > prefix.count && s.facts[name] == nil {
             let level = baseLevel(of: String(name.dropFirst(prefix.count)), depth: depth)
             if let v = level.value {
@@ -258,6 +268,11 @@ extension Evaluation {
         }
         return (s, behind)
     }
+
+    /// The derived facts that are a target's result (MIGRATION probe-fernkampf): `ladezeit.current`
+    /// is the query `item.ladezeit` for the weapon in hand, after every rule (SA_60's −1 or
+    /// halving), for LZ2's `when`. Unknown when the target has no result; its questions are asked.
+    static let targetFacts: [String: String] = ["ladezeit.current": "item.ladezeit"]
 
     /// Whether a rule's option names the check's: two strings or two numbers compare; a number
     /// against a string (an Anwendungsgebiet's id against its name) cannot be told: nil.

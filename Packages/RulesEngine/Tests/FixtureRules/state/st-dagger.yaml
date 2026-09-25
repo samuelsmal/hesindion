@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: an item change on the weapon in hand, after a missed attack (the shape of
+# ladezeiten.LZ2's "the shot empties the weapon").
+id: st-dagger
+name: Bruch
+kind: core
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: D1
+    text: Ein Fehlschlag beschädigt die Waffe.
+    effects:
+      - when: { action.attack: miss }
+        item: { instance: { loadout: weapon }, change: { damaged: true } }

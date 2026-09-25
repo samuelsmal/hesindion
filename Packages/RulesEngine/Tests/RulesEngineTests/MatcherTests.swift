@@ -866,4 +866,88 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(c.mismatches.compactMap(\.shape), ["sheet-wide notApplied"])
         XCTAssertEqual(kinds(c.mismatches), [.unsupportedShape, .missingNotApplied])
     }
+
+    // MARK: - Sequences and implied actions (Task 28)
+
+    /// Which situations run on the `StateRunner`: a sequence of steps it models (actions, the
+    /// clock, statements), or events of the action the situation implies: a cast (any event) or
+    /// settling (only Stufen gained or cleared). Dice and events no implied action gives stay
+    /// with the other runners, or unsupported.
+    func testWhichSituationsRunAsActionsInOrder() throws {
+        XCTAssertTrue(StateRunner.canRun(try situation(#"{"sequence": [{"action": "zielen", "expect": {"process": {"zielen": 1}}}]}"#)))
+        XCTAssertTrue(StateRunner.canRun(try situation(#"{"sequence": [{"advanceClock": {"minutes": 60}}]}"#)))
+        XCTAssertTrue(StateRunner.canRun(try situation(#"{"sequence": [{"choose": {"choice.x": true}, "expect": {"at": {"total": 1}}}]}"#)))
+        XCTAssertTrue(StateRunner.canRun(try situation(#"{"expectSituation": {"events": [{"gained": "STATE_8"}]}}"#)))
+        XCTAssertTrue(StateRunner.canRun(try situation(#"""
+            {"facts": [{"name": "check.kind", "value": "spell", "owner": "player"}, {"name": "check.spell", "value": "SPELL_1", "owner": "player"}],
+             "expectSituation": {"events": [{"paid": {"pool": "asp", "amount": 8}}]}}
+            """#)))
+        XCTAssertFalse(StateRunner.canRun(try situation(#"{"expectSituation": {"events": [{"after": {"leCurrent": 23}}]}}"#)),
+                       "no implied action gives a regeneration's LeP")
+        XCTAssertFalse(StateRunner.canRun(try situation(#"{"sequence": [{"rolls": [{"w20": 3}]}]}"#)))
+        XCTAssertFalse(StateRunner.canRun(try situation(#"{"sequence": [{"event": {"COND_1": 0}}]}"#)))
+        XCTAssertFalse(StateRunner.canRun(try situation(#"{"expect": [{"query": "at", "total": 1}]}"#)))
+    }
+
+    /// A sequence runs its steps as actions in order, each step's `expect` checked against the
+    /// state after it: `process` (progress, `capped`, `ended`) and a query of the shot's own
+    /// breakdown (its die from `rolls: { roll.attack }`). On the fixture book's Zielen (st-aim.A1).
+    func testEachStepIsCheckedAgainstTheStateAfterIt() throws {
+        let engine = Engine(book: ProcessTests.state)
+        let s = try situation(#"""
+            {"facts": [{"name": "loadout.weapon", "value": "Kurzbogen", "owner": "loadout"},
+                       {"name": "loadout.weapon.kind", "value": "ranged", "owner": "loadout"}],
+             "base": {"fk(with: Kurzbogen)": 14},
+             "sequence": [{"action": "zielen", "expect": {"process": {"zielen": 1}}},
+                          {"action": "zielen", "expect": {"process": {"zielen": 2}}},
+                          {"action": "zielen", "expect": {"process": {"zielen": 2, "capped": true}}},
+                          {"action": "shoot", "rolls": {"roll.attack": 3},
+                           "expect": {"fk(with: Kurzbogen)": {"total": 4, "lines": [{"from": "st-aim.A1", "value": 4}]},
+                                                         "process": {"zielen": "ended"}}}]}
+            """#)
+        XCTAssertTrue(StateRunner.canRun(s))
+        XCTAssertEqual(StateRunner.run(s, engine: engine).mismatches, [])
+
+        let wrong = try situation(#"""
+            {"facts": [{"name": "loadout.weapon.kind", "value": "ranged", "owner": "loadout"}],
+             "sequence": [{"action": "zielen", "expect": {"process": {"zielen": 2}}},
+                          {"action": "zielen", "expect": {"process": {"zielen": 2, "capped": true}}}]}
+            """#)
+        let run = StateRunner.run(wrong, engine: engine)
+        XCTAssertEqual(kinds(run.mismatches), [.process, .process])
+        XCTAssertEqual(run.mismatches.map(\.names), [["st-aim.A1"], ["st-aim.A1"]])
+        XCTAssertTrue(run.mismatches[0].detail.hasPrefix("step 1: expected zielen at 2, got 1 of 2"))
+        XCTAssertTrue(run.mismatches[1].detail.hasPrefix("step 2: expected zielen capped"))
+    }
+
+    /// Events the harness reads beyond `CombatRunner.events`: a `paid` of several `pools` (one
+    /// cost's events, in order, summed), `over` some minutes (the step's payments summed), `after`
+    /// (the pools the action leaves), and a `from` list (an event has one origin: never met).
+    func testPaymentsInSeveralPoolsOverTimeAndAfter() {
+        let vp3 = ref("SA_74.VP3"), zm5 = ref("zaubermodifikationen.ZM5")
+        var after = Situation(owned: [:], facts: [])
+        after.pools = [.asp: PoolState(current: 0, max: 30), .le: PoolState(current: 28, max: 29)]
+        after.clock.minutes = 180
+        let r = ActionResult(events: [Event(kind: .paid, origin: vp3, pool: .asp, amount: 3), Event(kind: .paid, origin: vp3, pool: .le, amount: 1),
+                                      Event(kind: .paid, origin: zm5, pool: .asp, amount: 1), Event(kind: .paid, origin: zm5, pool: .asp, amount: 1),
+                                      Event(kind: .paid, origin: zm5, pool: .asp, amount: 1)],
+                             situation: after)
+        let book = ProcessTests.state, engine = Engine(book: book)
+        let before = Situation(owned: [:], facts: [])
+        func json(_ text: String) -> [JSONValue] { try! JSONDecoder().decode([JSONValue].self, from: Data(text.utf8)) }
+        XCTAssertEqual(StateRunner.events(json(#"""
+            [{"paid": {"amount": 4, "pools": [{"asp": 3}, {"le": 1}]}, "from": "SA_74.VP3"},
+             {"paid": {"pool": "asp", "amount": 3}, "over": {"minutes": 180}, "from": "zaubermodifikationen.ZM5"},
+             {"after": {"aspCurrent": 0, "leCurrent": 28, "conditions": {}}}]
+            """#), r, before: before, engine: engine), [])
+        let wrong = StateRunner.events(json(#"""
+            [{"paid": {"amount": 4, "pools": [{"le": 1}, {"asp": 3}]}, "from": "SA_74.VP3"},
+             {"paid": {"pool": "asp", "amount": 3}, "over": {"minutes": 60}, "from": "zaubermodifikationen.ZM5"},
+             {"after": {"leCurrent": 24}},
+             {"paid": {"pool": "asp", "amount": 3}, "from": ["SA_74.VP3", "zaubermodifikationen.ZM12"]}]
+            """#), r, before: before, engine: engine)
+        XCTAssertEqual(kinds(wrong), [.missingEvent, .missingEvent, .missingEvent, .missingEvent])
+        XCTAssertTrue(wrong[1].detail.contains("expected 60 minutes to pass, 180 passed"))
+        XCTAssertTrue(wrong[3].detail.contains("an event has one origin"))
+    }
 }

@@ -1,0 +1,24 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: recurring costs on the game clock: "2 AsP pro 5 Minuten", an interval read from a fact
+# (zaubermodifikationen.ZM5's `every: { minutes: spell.interval }`), and one every two rounds.
+id: st-upkeep
+name: Aufrechterhalten
+kind: core
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: U1
+    text: 2 AsP pro 5 Minuten.
+    effects:
+      - when: { choice.upkeep: true }
+        cost: { pool: asp, amount: 2, every: { minutes: 5 } }
+  - id: U2
+    text: 1 AsP pro Intervall des Zaubers.
+    effects:
+      - when: { spell.maintained: true }
+        cost: { pool: asp, amount: 1, every: { minutes: spell.interval } }
+  - id: U3
+    text: 1 KaP alle zwei Kampfrunden.
+    effects:
+      - when: { choice.prayer: true }
+        cost: { pool: kap, amount: 1, every: { rounds: 2 } }

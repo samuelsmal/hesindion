@@ -293,8 +293,16 @@
        "ruling": [],
        "verb": "cost",
        "when": {
-        "fact": "choice.share",
-        "is": true
+        "all": [
+         {
+          "fact": "check.kind",
+          "is": "spell"
+         },
+         {
+          "fact": "choice.share",
+          "is": true
+         }
+        ]
        }
       }
      ],
@@ -1104,6 +1112,6 @@
   }
  ],
  "rulings": [],
- "vocabularySha256": "e251f7f39bc426f0db9e4a805585e9892db68241a48092570ce888ebae9cbc74",
+ "vocabularySha256": "da86ef35181962723d982b2157442ad239ecb37b6ac8ee305f036716422ed384",
  "vocabularyVersion": 1
 }

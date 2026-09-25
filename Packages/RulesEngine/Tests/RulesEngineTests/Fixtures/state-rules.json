@@ -1,0 +1,810 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "st-aim"
+   },
+   {
+    "clause": "A1",
+    "index": 1,
+    "rule": "st-aim"
+   },
+   {
+    "clause": "D1",
+    "index": 0,
+    "rule": "st-dagger"
+   },
+   {
+    "clause": "P1",
+    "index": 0,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P1",
+    "index": 1,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P1",
+    "index": 2,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P1",
+    "index": 3,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P2",
+    "index": 0,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P2",
+    "index": 1,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P2",
+    "index": 2,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "P2",
+    "index": 3,
+    "rule": "st-spans"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "st-split"
+   },
+   {
+    "clause": "S1",
+    "index": 1,
+    "rule": "st-split"
+   },
+   {
+    "clause": "U1",
+    "index": 0,
+    "rule": "st-upkeep"
+   },
+   {
+    "clause": "U2",
+    "index": 0,
+    "rule": "st-upkeep"
+   },
+   {
+    "clause": "U3",
+    "index": 0,
+    "rule": "st-upkeep"
+   }
+  ],
+  "at": [
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "st-braced"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "st-cursed"
+   },
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "st-heated"
+   }
+  ],
+  "fk": [
+   {
+    "clause": "A1",
+    "index": 2,
+    "rule": "st-aim"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "st-aim"
+       },
+       "payload": {
+        "choice": "zielen",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "A1",
+           "index": "0.costs.0",
+           "rule": "st-aim"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "actions"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "loadout.weapon.kind",
+        "is": "ranged"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 1,
+        "rule": "st-aim"
+       },
+       "payload": {
+        "advancedBy": {
+         "ids": [
+          "zielen"
+         ],
+         "kind": "action"
+        },
+        "breaksOff": {
+         "all": [
+          {
+           "fact": "action.attack",
+           "in": [
+            "hit",
+            "miss"
+           ]
+          },
+          {
+           "fact": "loadout.weapon.kind",
+           "is": "ranged"
+          }
+         ]
+        },
+        "id": "zielen",
+        "steps": {
+         "number": 2
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "process",
+       "when": {
+        "fact": "loadout.weapon.kind",
+        "is": "ranged"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 2,
+        "rule": "st-aim"
+       },
+       "payload": {
+        "per": "process.zielen",
+        "to": [
+         {
+          "name": "fk"
+         }
+        ],
+        "value": {
+         "number": 2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "atLeast": 1,
+        "fact": "process.zielen"
+       }
+      }
+     ],
+     "id": "A1",
+     "text": "Jede zum Zielen genutzte Aktion erleichtert den folgenden Schuss um 2, höchstens um 4."
+    }
+   ],
+   "id": "st-aim",
+   "kind": "core",
+   "name": "Zielen",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "st-braced"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT −Stufe."
+    }
+   ],
+   "id": "st-braced",
+   "kind": "condition",
+   "levels": 4,
+   "name": "braced",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "st-cursed"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT −Stufe."
+    }
+   ],
+   "id": "st-cursed",
+   "kind": "condition",
+   "levels": 4,
+   "name": "cursed",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "D1",
+        "index": 0,
+        "rule": "st-dagger"
+       },
+       "payload": {
+        "change": {
+         "damaged": true
+        },
+        "instance": {
+         "ids": [
+          "weapon"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "item",
+       "when": {
+        "fact": "action.attack",
+        "is": "miss"
+       }
+      }
+     ],
+     "id": "D1",
+     "text": "Ein Fehlschlag beschädigt die Waffe."
+    }
+   ],
+   "id": "st-dagger",
+   "kind": "core",
+   "name": "Bruch",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "st-heated"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "level": {
+          "plus": 0,
+          "times": -1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "AT −Stufe."
+    }
+   ],
+   "id": "st-heated",
+   "kind": "condition",
+   "levels": 4,
+   "name": "heated",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 0,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "choice": "vorstoss",
+        "span": "round"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 1,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "choice": "wut",
+        "span": "fight"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 2,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "choice": "formation",
+        "span": "whileFormed"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 3,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "choice": "finte",
+        "span": "action"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "P1",
+     "text": "Ansagen für die Runde, den Kampf, die Formation, die Aktion."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P2",
+        "index": 0,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "st-braced",
+        "span": "round"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "choice.brace",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P2",
+        "index": 1,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "st-heated",
+        "span": "fight"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "choice.heat",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P2",
+        "index": 2,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "st-cursed",
+        "span": "untilCleared"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "choice.curse",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "P2",
+        "index": 3,
+        "rule": "st-spans"
+       },
+       "payload": {
+        "levels": -1,
+        "rule": "st-heated",
+        "span": "action"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "fact": "choice.calm",
+        "is": true
+       }
+      }
+     ],
+     "id": "P2",
+     "text": "Gestärkt für die Runde, erhitzt für den Kampf, verflucht bis zur Aufhebung, gefasst für die Aktion."
+    }
+   ],
+   "id": "st-spans",
+   "kind": "core",
+   "name": "Spannen der Zeit",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "st-split"
+       },
+       "payload": {
+        "change": {
+         "structurePoints": {
+          "of": "hit.tp",
+          "times": -1
+         }
+        },
+        "instance": {
+         "ids": [
+          "shield"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "item",
+       "when": {
+        "all": [
+         {
+          "fact": "opponent.manoeuvre",
+          "is": "schildspalter"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 1,
+        "rule": "st-split"
+       },
+       "payload": {
+        "change": {
+         "destroyed": true
+        },
+        "instance": {
+         "ids": [
+          "shield"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "item",
+       "when": {
+        "all": [
+         {
+          "fact": "opponent.manoeuvre",
+          "is": "schildspalter"
+         },
+         {
+          "fact": "check.result",
+          "is": "failure"
+         },
+         {
+          "atMost": 0,
+          "fact": "loadout.shield.structurePoints"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "S1",
+     "text": "Misslingt die Parade, wird der Schaden von den Strukturpunkten des Schildes abgezogen. Fallen diese auf 0, ist der Schild zerstört."
+    }
+   ],
+   "id": "st-split",
+   "kind": "core",
+   "name": "Schildspalter",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "U1",
+        "index": 0,
+        "rule": "st-upkeep"
+       },
+       "payload": {
+        "amount": {
+         "number": 2
+        },
+        "every": {
+         "minutes": 5
+        },
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "fact": "choice.upkeep",
+        "is": true
+       }
+      }
+     ],
+     "id": "U1",
+     "text": "2 AsP pro 5 Minuten."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "U2",
+        "index": 0,
+        "rule": "st-upkeep"
+       },
+       "payload": {
+        "amount": {
+         "number": 1
+        },
+        "every": {
+         "minutes": "spell.interval"
+        },
+        "pool": "asp"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "fact": "spell.maintained",
+        "is": true
+       }
+      }
+     ],
+     "id": "U2",
+     "text": "1 AsP pro Intervall des Zaubers."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "U3",
+        "index": 0,
+        "rule": "st-upkeep"
+       },
+       "payload": {
+        "amount": {
+         "number": 1
+        },
+        "every": {
+         "rounds": 2
+        },
+        "pool": "kap"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "fact": "choice.prayer",
+        "is": true
+       }
+      }
+     ],
+     "id": "U3",
+     "text": "1 KaP alle zwei Kampfrunden."
+    }
+   ],
+   "id": "st-upkeep",
+   "kind": "core",
+   "name": "Aufrechterhalten",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/state"
+   }
+  }
+ ],
+ "rulings": [],
+ "vocabularySha256": "da86ef35181962723d982b2157442ad239ecb37b6ac8ee305f036716422ed384",
+ "vocabularyVersion": 1
+}

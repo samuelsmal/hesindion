@@ -181,7 +181,8 @@ final class ConditionTests: XCTestCase {
         XCTAssertEqual(s.base, ["at": 14, "pa(with: shield)": 9])
         XCTAssertEqual(s.rolls, [3, 17])
         XCTAssertEqual(s.pools, [:])
-        XCTAssertTrue(s.processes.isEmpty && s.items.isEmpty && s.clock.isEmpty)
+        XCTAssertTrue(s.processes.isEmpty && s.items.isEmpty && s.timed.isEmpty)
+        XCTAssertEqual(s.clock, Clock(round: 1, minutes: 0))
         XCTAssertNil(s.heroId)
 
         let again = try JSONDecoder().decode(Situation.self, from: JSONEncoder().encode(s))

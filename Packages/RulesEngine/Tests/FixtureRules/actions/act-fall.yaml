@@ -14,5 +14,5 @@ clauses:
   - id: F2
     text: Geteilt zwischen AsP und KaP, mindestens 2 AsP.
     effects:
-      - when: { choice.share: true }
+      - when: { check.kind: spell, choice.share: true }
         cost: { pool: asp, amount: 6, split: { pools: [asp, kap], min: { asp: 2 } } }

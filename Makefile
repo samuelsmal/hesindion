@@ -195,8 +195,8 @@ test-rules-engine: rules-json
 	RULES_FILES=$(RULES_FILES) swift test --package-path Packages/RulesEngine
 
 # The engine tests' hand-made books: the rule files in Packages/RulesEngine/Tests/FixtureRules/mini
-# .../pipeline, .../actions and .../checks, compiled by rulec into Tests/RulesEngineTests/Fixtures/mini-rules.json,
-# pipeline-rules.json, actions-rules.json and checks-rules.json. Rerun after a change to those files or to rulec's output
+# .../pipeline, .../actions, .../checks and .../state, compiled by rulec into Tests/RulesEngineTests/Fixtures/mini-rules.json,
+# pipeline-rules.json, actions-rules.json, checks-rules.json and state-rules.json. Rerun after a change to those files or to rulec's output
 # shape, and commit the JSON.
 RULES_ENGINE_FIXTURE = Packages/RulesEngine/Tests/RulesEngineTests/Fixtures
 rules-engine-fixture:
@@ -209,6 +209,8 @@ rules-engine-fixture:
 	cp build/rules-engine-fixture/actions/rules.json $(RULES_ENGINE_FIXTURE)/actions-rules.json
 	$(RULEC) build --rules ../Packages/RulesEngine/Tests/FixtureRules/checks --out ../build/rules-engine-fixture/checks
 	cp build/rules-engine-fixture/checks/rules.json $(RULES_ENGINE_FIXTURE)/checks-rules.json
+	$(RULEC) build --rules ../Packages/RulesEngine/Tests/FixtureRules/state --out ../build/rules-engine-fixture/state
+	cp build/rules-engine-fixture/state/rules.json $(RULES_ENGINE_FIXTURE)/state-rules.json
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 

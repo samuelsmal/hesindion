@@ -41,8 +41,17 @@ extension Situation {
     /// - `damaged` (R53) lowers the pool the same way. It is the damage a hit did; applying it
     ///   runs no chain again (the chain gave it).
     /// - `gained` adds `levels` (1 when absent) to `owned[rule].level`; `cleared` removes `levels`
-    ///   (all when absent). A rule whose level reaches 0 is no longer owned.
-    /// - The other kinds are Tasks 26–28's and change nothing yet.
+    ///   (all when absent). A rule whose level reaches 0 is no longer owned. With a `span`, the
+    ///   change is recorded in `timed` (the inverse event, with the same span, takes it out
+    ///   again); a `cleared` without a span ends every Stufe gained for a span of that rule
+    ///   (`untilCleared` lasts until then).
+    /// - `progressed` starts (the first) or advances the process `process`: its progress, its
+    ///   steps, the instance it is bound to, the round it started in. `completed` and `brokenOff`
+    ///   end it.
+    /// - `itemChanged` sets each field of `change` on the instance `item`. A destroyed item leaves
+    ///   the loadout: the slot holding it is stated empty (`loadout.<slot>: null`) and its
+    ///   `loadout.<slot>.*` facts go.
+    /// - `logged` changes nothing.
     ///
     /// Arithmetic saturates: an event decoded with an extreme amount or count never traps.
     /// This form trusts a `gained`'s `levels` (the action layer bounds them); `applying(_:book:)`
@@ -70,11 +79,59 @@ extension Situation {
         case .gained:
             guard let rule = e.rule else { return }
             changeLevel(of: rule, by: e.levels ?? 1, most: book?.rules[rule]?.most)
+            if let span = e.span { time(rule, (e.levels ?? 1), span, e.origin) }
         case .cleared:
             guard let rule = e.rule else { return }
+            let before = owned[rule]?.level ?? 0
             if let n = e.levels { changeLevel(of: rule, by: n == .min ? .min : -abs(n)) } else { owned[rule] = nil }
-        case .progressed, .completed, .brokenOff, .itemChanged, .logged:
+            if let span = e.span {
+                time(rule, -(before - (owned[rule]?.level ?? 0)), span, e.origin)
+            } else {
+                timed.removeAll { $0.rule == rule && $0.levels > 0 }
+            }
+        case .progressed:
+            guard let id = e.process else { return }
+            if var p = processes[id] {
+                p.progress = e.progress ?? p.progress.addingSaturating(1)
+                p.steps = e.steps ?? p.steps
+                processes[id] = p
+            } else if let origin = e.origin {
+                let effect = EffectOrigin(rule: origin.rule, clause: origin.clause, index: e.index ?? .top(0))
+                processes[id] = ProcessState(id: id, rule: origin.rule, origin: effect, progress: e.progress ?? 1,
+                                             steps: e.steps ?? 1, startedRound: clock.round, instance: e.item)
+            }
+        case .completed, .brokenOff:
+            guard let id = e.process else { return }
+            processes[id] = nil
+        case .itemChanged:
+            guard let instance = e.item else { return }
+            var item = items[instance] ?? ItemState()
+            for (field, value) in e.change ?? [:] { item.set(field, value) }
+            items[instance] = item
+            if item.destroyed == true { leaveLoadout(instance) }
+        case .logged:
             break
+        }
+    }
+
+    /// A Stufe change for a span: the inverse of a recorded one (same rule and span) takes that
+    /// one out; any other is recorded.
+    private mutating func time(_ rule: String, _ levels: Int, _ span: Span, _ origin: ClauseRef?) {
+        if let i = timed.firstIndex(where: { $0.rule == rule && $0.span == span && $0.levels == -levels }) {
+            timed.remove(at: i)
+        } else {
+            timed.append(TimedChange(rule: rule, levels: levels, span: span, origin: origin))
+        }
+    }
+
+    /// Every slot holding `instance` is stated empty, and its facts go.
+    private mutating func leaveLoadout(_ instance: String) {
+        let slots = facts.values.filter { $0.name.hasPrefix("loadout.") && $0.name.hasSuffix(".instance") && $0.value == .string(instance) }
+            .map { String($0.name.dropFirst("loadout.".count).dropLast(".instance".count)) }
+        for slot in slots {
+            let name = "loadout.\(slot)"
+            for key in facts.keys where key.hasPrefix(name + ".") { facts[key] = nil }
+            facts[name] = Fact(name: name, value: .null, owner: .loadout)
         }
     }
 

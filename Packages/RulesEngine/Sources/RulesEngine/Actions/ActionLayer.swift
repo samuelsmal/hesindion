@@ -1,15 +1,15 @@
 import Foundation
 
 /// The action layer: `(Action, Situation) → [Event]` (spec §7). Pure: it computes events and
-/// never applies them; `Situation.applying` does. Never throws: what cannot be computed is a
-/// question or a §11 text.
+/// the situation they leave (`ActionResult.situation`, `applying(_:book:)`), never changing the
+/// one it was given. Never throws: what cannot be computed is a question or a §11 text.
 public struct ActionLayer: Sendable {
     public let engine: Engine
 
     public init(engine: Engine) { self.engine = engine }
     public init(book: RuleBook) { self.init(engine: Engine(book: book)) }
 
-    /// The action's costs and gains as events, in rule-id and clause order.
+    /// The action's events, in rule-id and clause order within each part.
     ///
     /// Each rule effect is read as the pipeline reads one: its rule must apply, a firing
     /// `suppress` naming it (its clause, rule or rule kind) stops it and records it as
@@ -21,28 +21,56 @@ public struct ActionLayer: Sendable {
     ///   other pool from `choice.split.<pool>`, the rest from `pool`, and checks each minimum. A
     ///   pool that cannot pay passes the rest down `fallThrough`; with none left it pays nothing
     ///   and says so (LE excepted: LeP may be paid into the negative). An untracked pool is paid
-    ///   without a check. A cost with `every` is the clock's (Task 28).
-    /// - `gain { rule, levels }` gives `gained(rule, levels)` within the rule's Stufen (a state:
-    ///   one), a negative `levels` gives `cleared`.
+    ///   without a check. A cost with `every` is the clock's (`.advanceClock`, `.endRound`).
+    /// - `gain { rule, levels, span }` gives `gained(rule, levels)` within the rule's Stufen (a
+    ///   state: one), a negative `levels` gives `cleared`; a `span` rides on the event.
+    /// - `item { instance, change }` gives `itemChanged` on the instance in the slot (or the
+    ///   instance a process is bound to).
+    ///
+    /// Which effects an action runs: the top-level `cost`, `gain` and `item` effects whose `when`
+    /// or amount reads a fact the action states (a cast's `check.kind`, a roll's `action.attack`,
+    /// a hit's `hit.*`), and in turn those that read an item field an `itemChanged` of this action
+    /// changed (SA_59.SS3: the StP fall, then "at 0 destroyed"). Only `.settle` runs the standing
+    /// gains. After every action, a running process whose `breaksOff` turned yes gives
+    /// `brokenOff`.
     public func perform(_ action: Action, in situation: Situation) -> ActionResult {
+        var out: ActionResult
+        var start = situation                       // where `breaksOff` is read before the action
         switch action {
-        case .check(let request): return CheckProcedure.perform(request, in: situation, engine: engine)
-        case .attack(let with): return CombatRoll.perform(.attack(with: with), in: situation, engine: engine)
-        case .defend(let kind, let with): return CombatRoll.perform(.defend(kind: kind, with: with), in: situation, engine: engine)
+        case .check(let request):
+            out = CheckProcedure.perform(request, in: situation, engine: engine)
+        case .attack(let with):
+            let begun = CombatRoll.start(.attack(with: with), in: situation, engine: engine)
+            start = begun.situation
+            out = CombatRoll.perform(.attack(with: with), in: situation, engine: engine)
+            out = following(out, stated: changedFacts(from: start, to: out.situation))
+        case .defend(let kind, let with):
+            let begun = CombatRoll.start(.defend(kind: kind, with: with), in: situation, engine: engine)
+            start = begun.situation
+            out = CombatRoll.perform(.defend(kind: kind, with: with), in: situation, engine: engine)
+            out = following(out, stated: changedFacts(from: start, to: out.situation))
         case .takeHit(let tp, let zone, let side):
             let r = DamageChain.run(hit: tp, zone: zone, side: side, in: situation, engine: engine)
-            return ActionResult(events: r.events, breakdowns: r.breakdowns, questions: r.questions, texts: r.texts, notApplied: r.notApplied,
-                                checks: r.checks)
-        default: break
+            out = ActionResult(events: r.events, situation: r.situation.applying(r.events, book: engine.book),
+                               breakdowns: r.breakdowns, questions: r.questions, texts: r.texts,
+                               notApplied: r.notApplied, checks: r.checks)
+            out = following(out, stated: Set(r.situation.facts.keys.filter { $0.hasPrefix("hit.") }))
+        default:
+            out = local(action, in: situation)
         }
-        let stated = Self.stated(action, in: situation)
+        return breakingOff(out, from: start)
+    }
+
+    /// The actions the layer itself runs (no procedure).
+    private func local(_ action: Action, in situation: Situation) -> ActionResult {
+        let stated = Self.stated(action, in: situation, book: engine.book)
         let evaluation = engine.evaluation(stated)
         var run: ActionRun
         switch action {
-        case .cast:
-            let effects = evaluation.actionEffects()
-            run = evaluation.actionRun(controlling: effects)
-            evaluation.run(effects, &run)
+        case .cast(_, let modifications):                           // the spell is stated by `stated`
+            run = evaluation.actionRun(controlling: evaluation.actionEffects())
+            consequences(reading: Set(["check.kind", "check.spell"] + modifications.map { "choice.spellModification.\($0)" }),
+                         &run)
         case .pay(let pool, let amount):
             run = evaluation.actionRun(controlling: [])
             guard amount > 0 else {
@@ -54,10 +82,9 @@ public struct ActionLayer: Sendable {
                               facts: [], via: [], &run)
         case .state(let rule, let levels):
             run = evaluation.actionRun(controlling: [])
-            evaluation.gain(rule, levels: levels, effect: nil, facts: [], via: [], &run)
+            evaluation.gain(rule, levels: levels, span: nil, effect: nil, facts: [], via: [], &run)
         case .check, .attack, .defend, .takeHit:
-            run = evaluation.actionRun(controlling: [])                // handled above
-
+            run = evaluation.actionRun(controlling: [])                // handled by `perform`
         case .take(let choice):
             let offers = evaluation.allOffers().filter { $0.choice == choice }
             guard let offer = offers.first(where: \.legal) ?? offers.first else {
@@ -71,45 +98,287 @@ public struct ActionLayer: Sendable {
                 offer.reasons.forEach { run.pipeline.record($0) }
                 break
             }
+            let (texts, entries) = (run.pipeline.texts.count, run.pipeline.notApplied.count)
             evaluation.run(offer.costs, &run)
+            // An action that could not be paid is not taken: no process advances.
+            let costs = Set(offer.costs.map(\.origin.clauseRef))
+            let unpaid = run.pipeline.texts.dropFirst(texts).contains { $0.kind == .notApplicable && $0.origin.map(costs.contains) ?? true }
+                || run.pipeline.notApplied.dropFirst(entries).contains { $0.reason == .unknownFact && costs.contains($0.origin) }
+            let advances = evaluation.processEffects().contains {
+                if case .process(let p) = $0.payload { p.advancedBy.kind == .action && p.advancedBy.ids.contains { $0.id == choice } } else { false }
+            }
+            if unpaid {
+                if advances {
+                    run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: \(choice) ist nicht bezahlt, kein Vorgang geht weiter"))
+                }
+            } else {
+                advance(.action(choice), &run)
+            }
+        case .advance(let process):
+            run = evaluation.actionRun(controlling: [])
+            advance(.process(process), &run)
+        case .advanceClock(let minutes):
+            run = evaluation.actionRun(controlling: evaluation.recurringCosts())
+            guard minutes > 0, !situation.clock.minutes.addingReportingOverflow(minutes).overflow else {
+                run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: die Uhr geht um \(minutes) Minuten nicht vor"))
+                break
+            }
+            ending(Span.round.ending, of: situation, &run)
+            evaluation.recurring(.minutes, from: situation.clock.minutes, to: stated.clock.minutes, &run)
+        case .endRound:
+            run = evaluation.actionRun(controlling: evaluation.recurringCosts())
+            ending(Span.round.ending, of: situation, &run)
+            evaluation.recurring(.rounds, from: situation.clock.round, to: stated.clock.round, &run)
+        case .endFight:
+            run = evaluation.actionRun(controlling: evaluation.recurringCosts())
+            ending(Span.fight.ending, of: situation, &run)
+            evaluation.recurring(.rounds, from: situation.clock.round, to: stated.clock.round, &run)
+        case .settle:
+            let gains = evaluation.actionEffects().filter { if case .gain = $0.payload { true } else { false } }
+            run = evaluation.actionRun(controlling: gains)
+            evaluation.run(gains, &run)
         }
         let breakdowns = run.read.uniqued().map { engine.evaluate(Query($0), in: stated) }
-        return ActionResult(events: run.events, breakdowns: breakdowns, questions: run.pipeline.questions,
+        return ActionResult(events: run.events, situation: stated.applying(run.events, book: engine.book),
+                            breakdowns: breakdowns, questions: run.pipeline.questions,
                             texts: run.pipeline.texts, notApplied: run.pipeline.notApplied)
     }
 
-    /// The situation as the action states it: a cast states `check.kind: spell`, `check.spell`
-    /// and `choice.spellModification.<id>: true`, each the player's.
-    static func stated(_ action: Action, in situation: Situation) -> Situation {
-        guard case .cast(let spell, let modifications) = action else { return situation }
+    /// The situation as the action states it, before its events:
+    /// - a cast states `check.kind: spell`, `check.spell` and `choice.spellModification.<id>: true`,
+    ///   each the player's;
+    /// - `.advanceClock(minutes:)` moves the clock's minutes on; `.endRound` and `.endFight` its
+    ///   round;
+    /// - a span that ends (`.endRound`, `.advanceClock`: the round and the action; `.endFight`: the
+    ///   fight too) clears the facts that last that long: the round's (`round.*`) and the choices
+    ///   offered with that span (`choice.<id>`, `choice.<id>.*`).
+    static func stated(_ action: Action, in situation: Situation, book: RuleBook? = nil) -> Situation {
         var s = situation
-        let facts = [("check.kind", JSONValue.string("spell")), ("check.spell", .string(spell))]
-            + modifications.map { ("choice.spellModification.\($0)", JSONValue.bool(true)) }
-        for (name, value) in facts { s.facts[name] = Fact(name: name, value: value, owner: .player) }
+        switch action {
+        case .cast(let spell, let modifications):
+            let facts = [("check.kind", JSONValue.string("spell")), ("check.spell", .string(spell))]
+                + modifications.map { ("choice.spellModification.\($0)", JSONValue.bool(true)) }
+            for (name, value) in facts { s.facts[name] = Fact(name: name, value: value, owner: .player) }
+        case .advanceClock(let minutes):
+            guard minutes > 0 else { break }
+            s.clock.minutes = s.clock.minutes.addingSaturating(minutes)
+            s.end(Span.round.ending, book: book)
+        case .endRound:
+            s.clock.round = s.clock.round.addingSaturating(1)
+            s.end(Span.round.ending, book: book)
+        case .endFight:
+            s.clock.round = s.clock.round.addingSaturating(1)
+            s.end(Span.fight.ending, book: book)
+        default:
+            break
+        }
         return s
+    }
+
+    /// The facts that changed from `a` to `b`: stated anew, or with another value.
+    private func changedFacts(from a: Situation, to b: Situation) -> Set<String> {
+        Set(b.facts.values.filter { a.facts[$0.name] != $0 }.map(\.name))
+    }
+
+    /// A procedure's result with the consequences that read what it stated run after it, in the
+    /// situation it left.
+    private func following(_ result: ActionResult, stated: Set<String>) -> ActionResult {
+        guard !stated.isEmpty else { return result }
+        let before = result.situation
+        let evaluation = engine.evaluation(before)
+        var run = evaluation.actionRun(controlling: evaluation.actionEffects())
+        consequences(reading: stated, &run)
+        guard !run.events.isEmpty || !run.pipeline.notApplied.isEmpty || !run.pipeline.texts.isEmpty
+                || !run.pipeline.questions.isEmpty else { return result }
+        var out = result
+        out.events += run.events
+        out.situation = before.applying(run.events, book: engine.book)
+        out.questions = CheckProcedure.mergeQuestions(out.questions + run.pipeline.questions)
+        out.texts = (out.texts + run.pipeline.texts).uniqued()
+        out.notApplied = (out.notApplied + run.pipeline.notApplied).uniqued()
+        return out
+    }
+
+    /// Runs the top-level `cost`, `gain` and `item` effects that read a fact of `stated`, then
+    /// those that read an item field their `itemChanged` events changed, until nothing more
+    /// changes. Each round reads the situation the events so far leave.
+    func consequences(reading stated: Set<String>, _ run: inout ActionRun) {
+        var done = Set<EffectOrigin>()
+        var reading = stated
+        while !reading.isEmpty {
+            let now = run.base.applying(run.events, book: engine.book)
+            let evaluation = engine.evaluation(now)
+            let next = evaluation.actionEffects().filter { !done.contains($0.origin) && !$0.reads.isDisjoint(with: reading) }
+            guard !next.isEmpty else { return }
+            next.forEach { done.insert($0.origin) }
+            let before = run.changed
+            evaluation.run(next, &run)
+            reading = run.changed.subtracting(before)
+        }
+    }
+
+    // MARK: - Processes
+
+    enum Advance {
+        /// The action a process's `advancedBy` names (`laden`, `zielen`).
+        case action(String)
+        /// The process by its id.
+        case process(String)
+    }
+
+    /// One step of every process `by` names (spec §7): a running one progresses (at its `steps`
+    /// it completes, running its `completes`; a process with nothing to complete stays at its
+    /// cap and a further step changes nothing); otherwise the first `process` effect of that id,
+    /// in rule-id and clause order, whose rule applies, that is not suppressed and whose `when`
+    /// holds starts one: `steps` read now, bound to the instance in the slot its `completes`
+    /// names. An effect resting on an open ruling starts nothing and shows its text.
+    func advance(_ by: Advance, _ run: inout ActionRun) {
+        let now = run.base.applying(run.events, book: engine.book)
+        let evaluation = engine.evaluation(now)
+        func named(_ p: ProcessPayload) -> Bool {
+            switch by {
+            case .action(let a): p.advancedBy.kind == .action && p.advancedBy.ids.contains { $0.id == a }
+            case .process(let id): p.id == id
+            }
+        }
+        var stepped: Set<String> = []
+        for (id, process) in now.processes.sorted(by: { $0.key < $1.key }) {
+            guard let e = engine.book.effect(at: process.origin), case .process(let p) = e.payload, named(p) else { continue }
+            stepped.insert(id)
+            evaluation.step(process, p, e, &run)
+        }
+        for e in evaluation.processEffects() {
+            guard case .process(let p) = e.payload, named(p), !stepped.contains(p.id) else { continue }
+            if evaluation.start(p, e, &run) { stepped.insert(p.id) }
+        }
+        if stepped.isEmpty, case .process(let id) = by {
+            run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: kein Vorgang \(id) läuft oder beginnt"))
+        }
+    }
+
+    /// `brokenOff` for every process still running after the action whose `breaksOff` is yes there
+    /// and was not yes where the action began (`start`).
+    private func breakingOff(_ result: ActionResult, from start: Situation) -> ActionResult {
+        var out = result
+        let after = engine.evaluation(result.situation)
+        let before = engine.evaluation(start)
+        var events: [Event] = []
+        for (id, process) in result.situation.processes.sorted(by: { $0.key < $1.key }) {
+            guard let e = engine.book.effect(at: process.origin), case .process(let p) = e.payload,
+                  let breaks = p.breaksOff else { continue }
+            let now = after.condition(breaks, level: nil, rule: process.rule, depth: 0)
+            guard now.truth == .yes,
+                  before.condition(breaks, level: nil, rule: process.rule, depth: 0).truth != .yes else { continue }
+            events.append(Event(kind: .brokenOff, origin: e.origin.clauseRef, process: id, item: process.instance,
+                                rulings: after.decided(e), facts: now.used))
+        }
+        guard !events.isEmpty else { return out }
+        out.events += events
+        out.situation = result.situation.applying(events, book: engine.book)
+        return out
+    }
+
+    // MARK: - Spans
+
+    /// Undoes every Stufe change of `situation` that lasts one of `spans`: the inverse event, with
+    /// the same span and origin.
+    private func ending(_ spans: Set<Span>, of situation: Situation, _ run: inout ActionRun) {
+        for t in situation.timed where spans.contains(t.span) {
+            guard t.levels != 0, t.levels != .min else { continue }
+            run.events.append(Event(kind: t.levels > 0 ? .cleared : .gained, origin: t.origin, rule: t.rule,
+                                    levels: abs(t.levels), span: t.span, note: "Ende: \(t.span.rawValue)"))
+        }
     }
 }
 
-/// What one action builds up: the pipeline state its effects are read in (phase 4's control,
-/// the records, questions and texts), the pools as the events so far leave them, the events and
-/// the targets their amounts read.
+extension Situation {
+    /// Clears what lasts only `spans`: the round's facts (`round.*`) when the round ends, and the
+    /// choices the book offers with one of `spans` (`choice.<id>` and its options
+    /// `choice.<id>.*`). A choice offered `whileFormed` stays until it is cleared.
+    mutating func end(_ spans: Set<Span>, book: RuleBook?) {
+        if spans.contains(.round) {
+            for name in facts.keys where name.hasPrefix("round.") { facts[name] = nil }
+        }
+        guard let book else { return }
+        var choices: Set<String> = []
+        for rule in book.rules.values {
+            for clause in rule.clauses {
+                for e in clause.effects {
+                    if case .offer(let o) = e.payload, let span = o.span, spans.contains(span) { choices.insert(o.choice) }
+                }
+            }
+        }
+        for name in facts.keys {
+            let choice = "choice."
+            guard name.hasPrefix(choice) else { continue }
+            let rest = name.dropFirst(choice.count)
+            if choices.contains(where: { rest == $0 || rest.hasPrefix($0 + ".") }) { facts[name] = nil }
+        }
+    }
+}
+
+/// What one action builds up: the situation it starts from (`base`: what the action stated),
+/// the pipeline state its effects are read in (phase 4's control, the records, questions and
+/// texts), the pools as the events so far leave them, the events, the targets their amounts read,
+/// the facts its item changes changed, and the instance a running process binds its `completes` to.
 struct ActionRun {
+    var base: Situation
     var pipeline: PipelineState
     var pools: [Pool: PoolState]
     /// Rule id → the Stufe the hero has as the events so far leave it (a gain's bound).
     var owned: [String: Int]
     var events: [Event] = []
     var read: [TargetRef] = []
+    /// The facts the run's `itemChanged` events changed (`item.<instance>.<field>` and
+    /// `loadout.<slot>.<field>`): the effects that read them run next (`consequences`).
+    var changed: Set<String> = []
+    /// While a process's `completes` run: the instance it is bound to, which `{ loadout: … }` names.
+    var bound: String?
+}
+
+extension Effect {
+    /// Every fact the effect reads: its `when`, and its payload's values (a cost's amount, a
+    /// gain's table key, an item change's `of`).
+    var reads: Set<String> {
+        var out = when?.factNames ?? []
+        switch payload {
+        case .cost(let c):
+            out.formUnion(c.amount.factNames)
+            if case .fact(let f) = c.every?.count { out.insert(f) }
+        case .gain(let g):
+            if case .table(_, let key) = g.rule { out.insert(key) }
+        case .item(let i):
+            if case .scaled(let of, _) = i.change.structurePoints { out.insert(of) }
+        default: break
+        }
+        return out
+    }
 }
 
 extension Evaluation {
-    /// Every top-level `cost` and `gain` in the book, in rule-id and clause order: what a cast runs.
+    /// Every top-level `cost` (but a recurring one), `gain` and `item` in the book, in rule-id and
+    /// clause order: what an action may run.
     func actionEffects() -> [Effect] {
         book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }.filter {
             switch $0.payload {
-            case .cost, .gain: true
+            case .cost(let c): c.every == nil
+            case .gain, .item: true
             default: false
             }
+        }
+    }
+
+    /// Every top-level `cost { every }` in the book, in rule-id and clause order: the clock's.
+    func recurringCosts() -> [Effect] {
+        book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }.filter {
+            if case .cost(let c) = $0.payload { c.every != nil } else { false }
+        }
+    }
+
+    /// Every top-level `process` in the book, in rule-id and clause order.
+    func processEffects() -> [Effect] {
+        book.rules.keys.sorted(by: Self.idOrder).flatMap { book.rules[$0]!.clauses.flatMap(\.effects) }.filter {
+            if case .process = $0.payload { true } else { false }
         }
     }
 
@@ -123,29 +392,206 @@ extension Evaluation {
         var pipeline = PipelineState(query: Query("action"), depth: 0, candidates: controls)
         pipeline.local = [:]
         control(effects, &pipeline)
-        return ActionRun(pipeline: pipeline, pools: situation.pools, owned: situation.owned.mapValues(\.level))
+        return ActionRun(base: situation, pipeline: pipeline, pools: situation.pools, owned: situation.owned.mapValues(\.level))
     }
 
     /// Reads each effect as the pipeline does (applies, not suppressed, `when` yes) and runs it.
+    /// A recurring cost is the clock's (`recurring`).
     func run(_ effects: [Effect], _ run: inout ActionRun) {
         for e in effects {
-            if case .cost(let c) = e.payload, c.every != nil { continue }       // the clock's (Task 28)
-            guard applies(e, &run.pipeline), !isSuppressed(e, &run.pipeline) else { continue }
-            let rule = e.origin.rule
-            let level = ruleLevel(rule, levels: [:], depth: 0)
-            let via = ruleVia(rule, run.pipeline)
-            guard let used = gate(e, level: level, via: via, &run.pipeline) else { continue }
+            if case .cost(let c) = e.payload, c.every != nil { continue }
+            guard let (level, used, via) = admitted(e, &run) else { continue }
             switch e.payload {
             case .cost(let c): cost(c, e, level: level, used: used, via: via, &run)
             case .gain(let g): gain(g, e, level: level, used: used, via: via, &run)
+            case .item(let i): item(i, e, level: level, used: used, via: via, &run)
             default: continue
             }
         }
     }
 
+    /// Whether `e` acts, read as the pipeline reads it: its rule applies, it is not suppressed,
+    /// and its `when` is yes. Its level, the facts its `when` read and its `via` when it does.
+    private func admitted(_ e: Effect, _ run: inout ActionRun) -> (level: Int?, used: [FactUse], via: [ClauseRef])? {
+        guard applies(e, &run.pipeline), !isSuppressed(e, &run.pipeline) else { return nil }
+        let rule = e.origin.rule
+        let level = ruleLevel(rule, levels: [:], depth: 0)
+        let via = ruleVia(rule, run.pipeline)
+        guard let used = gate(e, level: level, via: via, &run.pipeline) else { return nil }
+        return (level, used, via)
+    }
+
+    // MARK: - The clock's costs
+
+    /// Every `cost { every }` that falls due while the clock goes from `from` to `to` (in the
+    /// cost's unit): one payment per multiple of its interval passed (2 AsP every 5 minutes, 0 →
+    /// 12: two payments of 2). The interval is a number or a fact (`spell.interval`). A cost in the
+    /// other unit does not fall due.
+    func recurring(_ unit: GameDuration.Unit, from: Int, to: Int, _ run: inout ActionRun) {
+        for e in recurringCosts() {
+            guard case .cost(let c) = e.payload, let every = c.every, every.unit == unit,
+                  let (level, used, via) = admitted(e, &run) else { continue }
+            let rule = e.origin.rule
+            var facts = used
+            let interval: Int
+            switch every.count {
+            case .number(let n): interval = n
+            case .fact(let name):
+                let f = fact(name, level: level, rule: rule, depth: 0)
+                guard let use = f.use else {
+                    unknown(e, f.unknown, facts: facts, via: via, &run)
+                    continue
+                }
+                guard let n = use.value.int else {
+                    fail(e, "\(name) ist keine Anzahl (\(use.value))", &run.pipeline)
+                    continue
+                }
+                facts = (facts + [use]).uniqued()
+                interval = n
+            }
+            guard interval > 0 else {
+                fail(e, "das Intervall \(interval) ist nicht positiv", &run.pipeline)
+                continue
+            }
+            let due = Clock.due(every: interval, from: from, to: to)
+            guard due > 0 else { continue }
+            for _ in 0..<due { cost(c, e, level: level, used: facts, via: via, &run) }
+        }
+    }
+
+    // MARK: - Processes
+
+    /// One step of a running process: its progress + 1 (`progressed`); at its `steps`, a process
+    /// with `completes` completes (`completed`, then its `completes` on the bound instance). A
+    /// process at its cap with nothing to complete changes nothing (a text says so).
+    func step(_ process: ProcessState, _ p: ProcessPayload, _ e: Effect, _ run: inout ActionRun) {
+        guard process.progress < process.steps else {
+            run.pipeline.show(TextLine(kind: .notApplicable,
+                                       text: "Nichts geändert: \(process.id) hat alle \(process.steps) Schritte", origin: e.origin.clauseRef))
+            return
+        }
+        progress(process.id, to: process.progress + 1, of: process.steps, p, e, instance: process.instance, used: [],
+                 via: [], &run)
+    }
+
+    /// Starts the process of `e` when its rule applies, it is not suppressed and its `when` holds:
+    /// its `steps` read now (at least 1), bound to the instance in the slot its `completes` name.
+    /// Whether it started.
+    func start(_ p: ProcessPayload, _ e: Effect, _ run: inout ActionRun) -> Bool {
+        guard let (level, used, via) = admitted(e, &run) else { return false }
+        let rule = e.origin.rule
+        run.read += p.steps.targets
+        let r = value(p.steps, level: level, rule: rule, depth: 0)
+        guard computed([r], of: e, used: used, via: via, &run.pipeline, [p.steps]), let steps = r.value else { return false }
+        guard steps >= 1 else {
+            fail(e, "\(p.id) hat \(steps) Schritte", &run.pipeline)
+            return false
+        }
+        let slot = p.completes.lazy.compactMap { c -> String? in
+            guard case .item(let i) = c.payload, i.instance.kind == .loadout else { return nil }
+            return i.instance.ids.first?.id
+        }.first
+        let instance = slot.flatMap { situation.instance(in: $0) }
+        progress(p.id, to: 1, of: steps, p, e, instance: instance, used: (used + r.used).uniqued(), via: (via + r.via).uniqued(), &run)
+        return true
+    }
+
+    private func progress(_ id: String, to progress: Int, of steps: Int, _ p: ProcessPayload, _ e: Effect, instance: String?,
+                          used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+        run.events.append(Event(kind: .progressed, origin: e.origin.clauseRef, process: id, item: instance, progress: progress,
+                                steps: steps, index: e.origin.index, via: via, rulings: decided(e), facts: used))
+        guard progress >= steps, !p.completes.isEmpty else { return }
+        run.events.append(Event(kind: .completed, origin: e.origin.clauseRef, process: id, item: instance, via: via,
+                                rulings: decided(e)))
+        let outer = run.bound
+        run.bound = instance
+        self.run(p.completes, &run)
+        run.bound = outer
+    }
+
+    // MARK: - item
+
+    /// `itemChanged` on the instance the effect names (`{ loadout: weapon }`: the instance in that
+    /// slot, or the one a process is bound to while its `completes` run). A flag is set to its
+    /// value. `structurePoints` is a change (`{ of: hit.tp, times: -1 }`: lower by the TP, rounded
+    /// up in magnitude; a number: that many more), counted from the instance's current StP (its
+    /// state, else the slot's stated `loadout.<slot>.structurePoints`); the event carries the value
+    /// after (`change`) and the change (`amount`). An unknown instance, amount or current StP is
+    /// asked.
+    private func item(_ i: ItemChange, _ e: Effect, level: Int?, used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+        let rule = e.origin.rule
+        guard i.instance.kind == .loadout, let slot = i.instance.ids.first?.id, i.instance.ids.count == 1 else {
+            fail(e, "\(i.instance.kind.rawValue) nennt keinen Platz der Ausrüstung", &run.pipeline)
+            return
+        }
+        let now = run.base.applying(run.events)
+        let instanceFact = "loadout.\(slot).instance"
+        guard let instance = run.bound ?? now.instance(in: slot) else {
+            unknown(e, [UnknownFact(instanceFact)], facts: used, via: via, &run)
+            return
+        }
+        var facts = used
+        if run.bound == nil, let f = now.facts[instanceFact] { facts.append(FactUse(name: f.name, value: f.value, owner: f.owner)) }
+        let d = i.change
+        var change: [String: JSONValue] = [:]
+        for (field, flag) in [("loaded", d.loaded), ("strung", d.strung), ("damaged", d.damaged), ("destroyed", d.destroyed),
+                              ("ridden", d.ridden), ("held", d.held)] {
+            if let flag { change[field] = .bool(flag) }
+        }
+        var amount: Int?
+        if let sp = d.structurePoints {
+            let delta: Int
+            switch sp {
+            case .number(let n):
+                guard let k = Values.int(n), Double(k) == n else {
+                    fail(e, "\(n) Strukturpunkte sind keine Anzahl", &run.pipeline)
+                    return
+                }
+                delta = k
+            case .scaled(let of, let times):
+                let f = fact(of, level: level, rule: rule, depth: 0)
+                guard let use = f.use else {
+                    unknown(e, f.unknown, facts: facts, via: via, &run)
+                    return
+                }
+                guard let x = use.value.double, let k = Values.int(Values.round(x * times, .up)) else {
+                    fail(e, "\(of) × \(times) ist keine Anzahl", &run.pipeline)
+                    return
+                }
+                facts.append(use)
+                delta = k
+            }
+            let currentName = "loadout.\(slot).structurePoints"
+            guard let current = now.items[instance]?.structurePoints
+                    ?? (run.bound == nil ? now.fact(currentName)?.value.int : now.fact("item.\(instance).structurePoints")?.value.int) else {
+                unknown(e, [UnknownFact(run.bound == nil ? currentName : "item.\(instance).structurePoints")], facts: facts, via: via, &run)
+                return
+            }
+            let (after, overflow) = current.addingReportingOverflow(delta)
+            guard !overflow else {
+                fail(e, "\(current) + \(delta) Strukturpunkte liegen außerhalb des Zahlenbereichs", &run.pipeline)
+                return
+            }
+            change["structurePoints"] = .int(after)
+            amount = delta
+        }
+        guard !change.isEmpty else {
+            fail(e, "die Änderung nennt kein Feld", &run.pipeline)
+            return
+        }
+        run.events.append(Event(kind: .itemChanged, origin: e.origin.clauseRef, amount: amount, item: instance, change: change,
+                                via: via, rulings: decided(e), facts: facts.uniqued()))
+        let slots = now.facts.values.filter { $0.name.hasPrefix("loadout.") && $0.name.hasSuffix(".instance") && $0.value == .string(instance) }
+            .map { String($0.name.dropFirst("loadout.".count).dropLast(".instance".count)) }
+        for field in change.keys {
+            run.changed.insert("item.\(instance).\(field)")
+            for s in slots { run.changed.insert("loadout.\(s).\(field)") }
+        }
+    }
+
     // MARK: - cost
 
-    private func cost(_ c: Cost, _ e: Effect, level: Int?, used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+    func cost(_ c: Cost, _ e: Effect, level: Int?, used: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
         let rule = e.origin.rule
         run.read += c.amount.targets
         let r = value(c.amount, level: level, rule: rule, depth: 0)
@@ -291,7 +737,7 @@ extension Evaluation {
         }
     }
 
-    private func unknown(_ e: Effect, _ facts: [UnknownFact], facts used: [FactUse], via: [ClauseRef],
+    func unknown(_ e: Effect, _ facts: [UnknownFact], facts used: [FactUse], via: [ClauseRef],
                          _ run: inout ActionRun) {
         run.pipeline.record(NotApplied(origin: e.origin.clauseRef, reason: .unknownFact, because: e.because,
                                        rulings: e.ruling, facts: used, via: via))
@@ -304,7 +750,7 @@ extension Evaluation {
         let rule = e.origin.rule
         switch g.rule {
         case .id(let id):
-            gain(id, levels: g.levels ?? 1, effect: e, facts: used, via: via, &run)
+            gain(id, levels: g.levels ?? 1, span: g.span, effect: e, facts: used, via: via, &run)
         case .table(let name, let key):
             let (s, behind) = prepared([key], depth: 0)
             let t = Tables.lookup(name, key: key, level: level, in: s, book: book, rule: rule, depth: 0) { [unowned self] target, d in
@@ -324,7 +770,7 @@ extension Evaluation {
                 fail(e, "die Tabelle \(name) nennt keine Regel", &run.pipeline)
                 return
             }
-            gain(id, levels: g.levels ?? 1, effect: e, facts: facts, via: (via + t.via).uniqued(), &run)
+            gain(id, levels: g.levels ?? 1, span: g.span, effect: e, facts: facts, via: (via + t.via).uniqued(), &run)
         }
     }
 
@@ -333,7 +779,8 @@ extension Evaluation {
     /// `gained(…, 1)`. Nothing left to gain gives no event: the effect is recorded `overridden`
     /// with the reason (the player's own `.state`: a text). A note says when fewer are gained
     /// than asked. A negative count gives `cleared`; a count of 0, or one beyond `Int`, a text.
-    func gain(_ id: String, levels: Int, effect e: Effect?, facts: [FactUse], via: [ClauseRef], _ run: inout ActionRun) {
+    func gain(_ id: String, levels: Int, span: Span?, effect e: Effect?, facts: [FactUse], via: [ClauseRef],
+              _ run: inout ActionRun) {
         func nothing(_ reason: String) {
             if let e { fail(e, reason, &run.pipeline) } else {
                 run.pipeline.show(TextLine(kind: .notApplicable, text: "Nichts geändert: \(reason)"))
@@ -360,8 +807,8 @@ extension Evaluation {
         let origin = e?.origin.clauseRef, rulings = e.map(decided) ?? []
         let have = run.owned[id] ?? 0
         if levels < 0 {
-            run.events.append(Event(kind: .cleared, origin: origin, rule: id, levels: -levels, via: via, rulings: rulings,
-                                    facts: facts))
+            run.events.append(Event(kind: .cleared, origin: origin, rule: id, levels: -levels, span: span, via: via,
+                                    rulings: rulings, facts: facts))
             run.owned[id] = max(0, have.subtractingSaturating(-levels))
             return
         }
@@ -380,8 +827,8 @@ extension Evaluation {
             }
             if granted < levels { note = "höchstens Stufe \(most)" }
         }
-        run.events.append(Event(kind: .gained, origin: origin, rule: id, levels: granted, via: via, rulings: rulings,
-                                facts: facts, note: note))
+        run.events.append(Event(kind: .gained, origin: origin, rule: id, levels: granted, span: span, via: via,
+                                rulings: rulings, facts: facts, note: note))
         run.owned[id] = have.addingSaturating(granted)
     }
 }
