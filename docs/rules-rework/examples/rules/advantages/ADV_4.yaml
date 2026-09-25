@@ -22,30 +22,25 @@ clauses:
       Ein begabter Abenteurer kann bei jeder Probe auf eine bestimmte Fertigkeit einen W20 neu
       würfeln.
     effects:
-      - offer:
-          reroll: { dice: 1, of: check.rolls }
-          when: { check: { skill: option.sid } }
-          once_per: check
-          after: rolled          # B2: the player sees all three dice first
-          before: result
-        # FORMAT: an effect on the *dice* of a check, not on a value: it acts after the roll and
-        # before the result is computed, and the result is then recomputed from the new dice.
-        # Nothing in rules/ does this; the closest are passierschlag.PS4 (conditions on a die's
-        # face: `roll: 1`, `forbid: { roll: [kritischerErfolg, patzer] }`) and kampfwerte's INI
-        # roll (`keep: rolled.w6`), which read dice but never replace one.
+      - when: { check.onOption: true }
+        reroll: { die: { dice: any }, keep: better, max: 1, per: action }
+        # Plan Appendix A.4. An effect on the dice stage (`check.dice`), not on a value: the
+        # procedure offers it once the three dice are in and before the result is confirmed
+        # (the old `after: rolled`, `before: result`), the player picks the die (B2: `dice: any`,
+        # after seeing all three), and the result is then recomputed from the new dice. Once per
+        # check (`max: 1, per: action`; the old `once_per: check`). `keep: better` is B2's.
+        # `check.onOption` is the per-option gate (the old `check: { skill: option.sid }`): the
+        # check is on the Fertigkeit this instance's `sid` names.
 
   - id: B2
     text: >
       Der Spieler kann zunächst die 3W20 würfeln und sich eines der drei Ergebnisse aussuchen,
       dass er neu würfeln kann. Es gilt das bessere Ergebnis beider Würfe.
-    effects:
-      - choose: { die: player, from: check.rolls }
-        keep: better
-        # "Better" per die: on a Teilprobe a lower number is never worse (fertigkeitsproben.FP2),
-        # so `better` = min(old, new). A rerolled 20 therefore never counts, and a reroll can
-        # never create a Doppel-20 (situation 22.5). Both dice are logged.
-        # FORMAT: a value chosen from two rolls (`keep: better`) — the log and the breakdown must
-        # show both and which one counted.
+    none: "carried by B1's reroll: the player's die (`dice: any`), the better result kept (`keep: better`)"
+    # "Better" per die: on a Teilprobe a lower number is never worse (fertigkeitsproben.FP2),
+    # so `better` = min(old, new). A rerolled 20 therefore never counts, and a reroll can
+    # never create a Doppel-20 (situation 22.5). Both dice are logged (a line of kind
+    # `rerolled`). The old `choose: { die: player, from: check.rolls }` + `keep: better`.
 
   - id: B3
     text: >
@@ -65,9 +60,11 @@ clauses:
   - id: B5
     text: Fällt eine Doppel-20 oder Dreifach-20 kann man diesen Vorteil nicht nutzen.
     effects:
-      - forbid: { offer: B1, when: { check.result: [patzer] } }
+      - when: { check.twenties: { atLeast: 2 } }
+        forbid: { what: { line: ADV_4.B1 } }
         because: "Doppel-20: Begabung nicht erlaubt"
-        # Read on the first roll: a Patzer cannot be undone by this advantage (22.6).
+        # Read on the first roll: a Patzer cannot be undone by this advantage (22.6). B1's reroll
+        # is forbidden when two or three dice show 20 (the old `check.result: [patzer]`).
 
   - id: B6
     text: >
@@ -80,12 +77,12 @@ clauses:
       Ein Einsatz von Schicksalspunkten ist vor oder nach dem Einsatz einer Begabung erlaubt
       (siehe Seite 29). Dadurch ist es möglich, mehrfach neu zu würfeln oder eine andere Wirkung
       der Schicksalspunkte mit der Begabung zu kombinieren.
-    effects:
-      - allow: { together: [B1, schicksalspunkte.neuer-wurf], order: any }
-        # FORMAT: two effects on the same dice, in an order the player chooses — the second sees
-        # the dice the first left. Variation of the `before:` ordering in ADV_44 / regeneration
-        # (a fixed order between two effects), but here the order is the player's, per check.
-        # schicksalspunkte.neuer-wurf is not written yet (the file says so in its header).
+    none: allowed is the default (plan Appendix A.8); the check procedure offers every open reroll in either order until used
+    # The old `allow: { together: [B1, schicksalspunkte.neuer-wurf], order: any }`. Two rerolls
+    # on the same dice, in an order the player chooses — the second sees the dice the first
+    # left (spec §6 step 2: "Begabung and a Schip in either order, the player's, until
+    # confirmed"). schicksalspunkte's Neuer Wurf is not written yet (that file says so in its
+    # header).
 
   - id: B8
     text: >

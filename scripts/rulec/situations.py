@@ -6,7 +6,7 @@ A situations file is `{heroFile?, hero?, rulesets?, situations: [...]}`. Each si
   `hero`. The rule-owning maps (`abilities`, `advantages`, `disadvantages`, `conditions`,
   `states`, and `creatures`: a mount's profile, kind `creature`) are replaced whole by a later
   layer; `values` (query string → base value), `attributes`, `techniques` and `talents` are merged key by key. An owned entry is a level
-  (int), `{sid: n}` (→ `option`, level 1) or `true` (level 1).
+  (int), `{sid: n}` (→ `option`, level 1; with `sid2: m` also → `option2`) or `true` (level 1).
 - facts, each in the section of its owner (`SECTIONS`); a prefixed section names the fact with
   its prefix (`round: { parries: 1 }` is `round.parries`). `rolls` is either dice (a list, passed
   through) or roll facts (a mapping). `rulesets` is the gm fact of that name.
@@ -451,7 +451,10 @@ def _owned_entry(raw):
         return {"level": 1}
     if _is_int(raw):
         return {"level": raw}
-    if isinstance(raw, dict) and "sid" in raw and set(raw) <= {"sid", "level"} \
+    if isinstance(raw, dict) and "sid" in raw and set(raw) <= {"sid", "sid2", "level"} \
             and (_is_int(raw.get("level", 1))):
-        return {"level": raw.get("level", 1), "option": raw["sid"]}
+        out = {"level": raw.get("level", 1), "option": raw["sid"]}
+        if "sid2" in raw:                           # a second select option: SA_9's Anwendungsgebiet
+            out["option2"] = raw["sid2"]
+        return out
     return None

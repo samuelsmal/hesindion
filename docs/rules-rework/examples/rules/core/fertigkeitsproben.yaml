@@ -9,8 +9,11 @@
 # dice, three effective attributes and a pool combine into a result with a quality (QS). Rules
 # then hook into different stages of it: the attributes (FM1: every Erschwernis), the pool
 # (SA_9.FS1), the dice (ADV_4.B1, Schips), the result (FP-QS table, Kritisch/Patzer, the
-# talents' own "FP = doppelter FW" on a Doppel-1). Nothing in rules/ has stages; the design has
-# to give the check named stages that effects attach to.
+# talents' own "FP = doppelter FW" on a Doppel-1). Spec §6 gives the check those stages as
+# targets (`check.attribute`, `check.modifier`, `check.fw`, `check.dice`, `check.fp`,
+# `check.qs`); the procedure itself (FP1, FM1, the spend, success, Doppel-1/-20 counted from the
+# faces) is the action layer's, and the clauses here hook into it with the ordinary verbs
+# (plan Appendix A.4, Group 6 hand migration).
 id: fertigkeitsproben
 name: Fertigkeitsproben
 kind: core
@@ -33,14 +36,14 @@ clauses:
       auf diese drei Eigenschaften würfeln. Die Reihenfolge, in der du auf die bei der Probe
       beteiligten Eigenschaften würfelst, ist dir überlassen. Wichtig ist nur, dass vor dem Wurf
       der Würfel einer Eigenschaft zugeordnet ist.
-    effects:
-      - defines:
-          check: skill
-          dice: 3W20
-          against: skill.attributes          # the three from the talent / spell / liturgy
-          stages: [attributes, pool, roll, reroll, result, quality]
-        # The order of Teilproben is free but fixed before rolling; an app rolling all three at
-        # once and pairing them in the listed order satisfies it.
+    none: the procedure itself (spec §6), built into the check procedure
+    # The old `defines: { check: skill, dice: 3W20, against: skill.attributes, stages: [attributes,
+    # pool, roll, reroll, result, quality] }` (plan Appendix A.4): the 3W20 check is the action
+    # layer's procedure (start → dice → reroll → confirm), whose stages are the targets
+    # `check.attribute`, `check.fw`, `check.dice`, `check.fp` and `check.qs`; the three attributes
+    # are the talent's / spell's / liturgy's Probe (rules.db skill_details.check_attr_1–3).
+    # The order of Teilproben is free but fixed before rolling; an app rolling all three at
+    # once and pairing them in the listed order satisfies it.
 
   - id: FP2
     text: >
@@ -49,11 +52,13 @@ clauses:
       übersteigen. Sollte der EEW einer Teilprobe auf 0 oder darunter sinken, kann der Held keine
       Probe auf die Fertigkeit ablegen.
     effects:
-      - forbid: { check: skill, when: { any: "stage.attributes[i] <= 0" } }
+      - when: { query.target: check.attribute, query.result: { atMost: 0 } }
+        forbid: { what: { check: [talent, spell, liturgy] } }
         because: "effektiver Eigenschaftswert 0 oder weniger: keine Probe möglich"
-        # FORMAT: a legality rule over a stage's intermediate values (each EEW), not over the
-        # final result — a variation of mehrfache-verteidigung's "value after all modifiers
-        # ≤ 0 blocks the defence", but per Teilprobe.
+        # A legality rule over the attributes stage: each Teilprobe's value (the query
+        # `check.attribute(index: i)`, the EEW) at 0 or below blocks the whole check, as
+        # mehrfache-verteidigung.MV3 blocks a defence at 0 (the old `any: stage.attributes[i]
+        # <= 0`). The selector's ids are the 3W20 check kinds (`check.kind`).
 
   - id: FP3
     text: >
@@ -63,7 +68,12 @@ clauses:
       14 bei einer Teilprobe, so müssen 2 Punkte des Fertigkeitswerts eingesetzt werden, um den
       Wurf auszugleichen.
     effects:
-      - defines: { stage: pool, start: skill.fw, spend_per_die: "max(0, roll[i] - stage.attributes[i])" }
+      - derive: { to: check.fw, sum: [{ of: fw.current }] }
+        # The pool stage's base: the FW of the talent, spell or liturgy the check is on
+        # (`fw.current`, derived from `check.talent` and the sheet). Rules add to it as lines of
+        # their own (SA_9.FS1). The spend per die, max(0, die − EEW), is the procedure's
+        # (spec §6), summed in `check.spent`; the old `defines: { stage: pool, start: skill.fw,
+        # spend_per_die: … }`.
 
   - id: FP4
     text: >
@@ -86,7 +96,11 @@ clauses:
       du behalten hast, umso besser ist die Probe ausgegangen. Auch eine Probe, bei der du keine
       Punkte mehr übrighast, gilt als gelungen.
     effects:
-      - defines: { stage: result, success: "stage.pool >= 0", fp: "stage.pool" }
+      - derive: { to: check.fp, sum: [{ of: check.fw }, { of: check.spent, times: -1 }] }
+        # The result stage's FP: what is left of the pool after the spend (negative when the
+        # pool ran out). Success is FP ≥ 0, which the procedure states as `check.result`
+        # (spec §6: the result stage counts FP left, success and Doppel-1 / Doppel-20); the old
+        # `defines: { stage: result, success: "stage.pool >= 0", fp: "stage.pool" }`.
 
   - id: FP8
     name: Anwendungsgebiete
@@ -95,10 +109,16 @@ clauses:
       eines Talents. Bei Fertigkeitsproben auf Talente wird immer das Anwendungsgebiet angegeben.
       Die Schreibweise ist Talent (Anwendungsgebiet), also z. B. Sinnesschärfe (Wahrnehmen).
     effects:
-      - defines: { check.application: { of: talent, list: optolith.skills.applications, required: true } }
+      - when: { check.kind: talent }
+        ask: { fact: check.application, who: player }
         ruling: SA_9.spezialisierung-when
-        # Talents only; a spell or liturgy check has none. The field is already used by SA_40,
-        # DISADV_57, COND_6, reiterkampf and trefferzonen; this is where it is defined.
+        # The old `defines: { check.application: { of: talent, list: optolith.skills.applications,
+        # required: true } }`: the fact `check.application` is the vocabulary's (player); what
+        # this clause adds is that a talent check always names one, so it is asked when unknown.
+        # Its options are the talent's own list (Optolith de-DE/Skills.yaml `applications`),
+        # which the check screen reads; a rule that opens the check states it (COND_6.SZ2,
+        # trefferzonen.TZ8). Talents only; a spell or liturgy check has none. The field is
+        # already used by SA_40, DISADV_57, COND_6, reiterkampf and trefferzonen.
 
   - id: FP9
     text: >
@@ -119,7 +139,12 @@ clauses:
       13-15 | 5
       16+ | 6
     effects:
-      - table: { stage: quality, from: stage.result.fp, rows: { "0-3": 1, "4-6": 2, "7-9": 3, "10-12": 4, "13-15": 5, "16+": 6 } }
+      - provide: { name: fertigkeitsproben.qs, value: { "0-3": 1, "4-6": 2, "7-9": 3, "10-12": 4, "13-15": 5, "16+": 6 } }
+      - when: { check.result: success }
+        derive: { to: check.qs, sum: ["table(fertigkeitsproben.qs, check.fp)"] }
+        # The quality stage: the QS is the table's row for the FP left (`check.fp`, after
+        # QS2's floor). A range such as "4-6" is a key, as in trefferzonen's tables. A failed
+        # check has no QS.
 
   - id: QS2
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitspunkte.html", book: Kodex des Schwertes, page: 17 }
@@ -128,7 +153,13 @@ clauses:
       er sie alle zum Ausgleich von Würfen benutzen musste oder nur einen FW von 0 besitzt. In
       diesem Fall zählt die Probe immer als mit 1 FP bestanden (und damit als eine QS von 1).
     effects:
-      - set: { stage: result.fp, value: 1, when: { success: true, fp: 0 } }
+      - when: { check.result: success }
+        floor: { to: check.fp, min: 1 }
+        # The old `set: { stage: result.fp, value: 1, when: { success: true, fp: 0 } }`: on a
+        # passed check the FP are at least 1, so 0 FP count as 1 (QS 1). The floor also lifts
+        # the negative FP of a Doppel-1 on a check that would have failed to 1, which is what
+        # fertigkeitsproben.crit-qs options a and b say ("at least 1 (QS2)"). `check.result`
+        # is the procedure's (FP ≥ 0 before this floor, or a Doppel-1).
 
   - id: FM1
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitsmodifikatoren.html", book: Kodex des Schwertes, page: 17 }
@@ -139,10 +170,13 @@ clauses:
       Erschwernis sinken alle um die entsprechende Zahl. Fällt eine Eigenschaft durch
       Erschwernisse auf 0 oder weniger, kann man keine Probe ablegen. Die Anwendung von
       Fertigkeitsmodifikatoren kann alle Arten von Fertigkeiten betreffen.
-    effects:
-      - defines: { target: check, applies_to: stage.attributes, spread: all_three }
-        # What every `add: { to: check }` in rules/ means for a 3W20 check: the same value on
-        # each of the three attributes. ("biner" is the page's typo for "einer", kept verbatim.)
+    none: the procedure itself (spec §6), built into the check procedure
+    # The old `defines: { target: check, applies_to: stage.attributes, spread: all_three }`
+    # (plan Appendix A.4): each Teilprobe's value `check.attribute(index: i)` is its attribute
+    # plus the one shared `check.modifier` breakdown, whose lines (every Erschwernis, FM2's GM
+    # modifier) it shows. Every `add: { to: check.modifier }` in rules/ is that value on each of
+    # the three attributes. The attribute at 0 or below is FP2's forbid. ("biner" is the page's
+    # typo for "einer", kept verbatim.)
 
   - id: FM2
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/fertigkeitsmodifikatoren.html", book: Kodex des Schwertes, page: 18 }
@@ -155,8 +189,18 @@ clauses:
       -3 | sehr schwierige Probe
       -5 | extrem schwierige Probe
     effects:
-      - offer: { gm.modifier: { on: check, presets: FM2 } }
-        # The GM's modifier as a line of its own, with these names as presets.
+      - when: { check.kind: [talent, spell, liturgy] }
+        ask: { fact: gmFact.checkModifier, who: gm, options: [5, 3, 1, 0, -1, -3, -5] }
+        # The GM's modifier, with the table's rows as presets (extrem leicht +5 … extrem
+        # schwierig −5); any other number may be stated (probe-fertigkeiten 22.9: −12).
+      - when: { gmFact.checkModifier: { above: 0 } }
+        add: { to: check.modifier, value: { of: gmFact.checkModifier } }
+      - when: { gmFact.checkModifier: { below: 0 } }
+        add: { to: check.modifier, value: { of: 0, above: gmFact.checkModifier, times: -1 } }
+        # The GM's modifier as a line of its own (owner gm). Two effects because a proportion
+        # is max(0, of − above) × times: an Erleichterung is `of` the fact, an Erschwernis is
+        # `0 above` it, negated (−1 → max(0, 0 − (−1)) × −1 = −1). The old
+        # `offer: { gm.modifier: { on: check, presets: FM2 } }`.
 
   - id: KR1
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
@@ -166,17 +210,17 @@ clauses:
       Wurf Doppel-1. […] Die Probe ist zudem besser gelungen als üblich, und je nach Probenart
       kann es zu unterschiedlichen Effekten kommen. Was genau geschieht, entscheidet der Meister.
     effects:
-      - when: { stage.roll: { count_of: 1, min: 2 } }
-        set: { stage: result, success: true, kind: kritischerErfolg }
-      - when: { stage.result.kind: kritischerErfolg }
-        provide: { name: text, value: "skill.critical" }
-        ruling: crit-qs
-        # The talent's own entry says what "besser gelungen" means (Optolith de-DE/Skills.yaml
-        # `critical`): for 11 of 59 talents "Für Qualitätsstufen, Vergleichs- und Sammelproben
-        # gilt: FP = doppelter FW"; for others an extra action (Reiten, Körperbeherrschung,
-        # Fliegen) or a narrative effect.
-        # FORMAT: an effect that lives in a *talent's* entry, not in a rule file — talents would
-        # need files (or a data source) of their own, as equipment has ITEMTPL_*.
+      - when: { check.ones: { atLeast: 2 } }
+        tell: { to: gm, text: "Doppel-1: die Probe ist besser gelungen als üblich; was genau geschieht, entscheidet der Meister" }
+        # The automatic success is the procedure's (spec §6: the result stage counts Doppel-1
+        # and Doppel-20 from the faces, `check.ones`): with two 1s the check is a success of
+        # kind kritischerErfolg, whatever FP are left (the old `set: { stage: result, success:
+        # true, kind: kritischerErfolg }`). "Besser gelungen" is the talent's own entry (Optolith
+        # de-DE/Skills.yaml `critical`): for 11 of 59 talents "Für Qualitätsstufen, Vergleichs-
+        # und Sammelproben gilt: FP = doppelter FW"; for others an extra action (Reiten,
+        # Körperbeherrschung, Fliegen) or a narrative effect. It lives in the talent's rule file
+        # (TAL_7.critical, Schwimmen), which carries ruling crit-qs on its FP (the old
+        # `provide: { name: text, value: skill.critical }` with `ruling: crit-qs`).
 
   - id: KR2
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
@@ -184,9 +228,11 @@ clauses:
       Eine gewürfelte Dreifach-1 bedeutet ebenfalls einen automatischen Erfolg, aber die
       Auswirkungen sollten noch deutlich spektakulärer sein.
     effects:
-      - when: { stage.roll: { count_of: 1, min: 3 } }
-        set: { stage: result, kind: dreifach1 }
-        # Shown as its own result ("Dreifach-1"), GM's to narrate.
+      - when: { check.ones: { atLeast: 3 } }
+        tell: { to: gm, text: "Dreifach-1: die Auswirkungen sollten noch deutlich spektakulärer sein" }
+        # Shown as its own result ("Dreifach-1"), GM's to narrate. The result kind dreifach1 is
+        # the procedure's, counted from the faces (the old `set: { stage: result, kind:
+        # dreifach1 }`).
 
   - id: KR3
     page: { url: "https://dsa.ulisses-regelwiki.de/GR_Proben/fertigkeitsproben/kritische-erfolge-fertigkeitsprobe.html", book: Kodex des Schwertes, page: 18 }
@@ -202,12 +248,13 @@ clauses:
       zum Ausgleich übrig sind. […] Eine Dreifach-20 ist ein schreckliches Missgeschick, das den
       Helden in eine schwierige Situation oder eine gefährliche Lage bringen sollte.
     effects:
-      - when: { stage.roll: { count_of: 20, min: 2 } }
-        set: { stage: result, success: false, kind: patzer }
-      - when: { stage.roll: { count_of: 20, min: 3 } }
-        set: { stage: result, kind: dreifach20 }
-      - when: { stage.result.kind: [patzer, dreifach20] }
-        provide: { name: text, value: "skill.botch" }
+      - when: { check.twenties: { atLeast: 3 } }
+        tell: { to: gm, text: "Dreifach-20: ein schreckliches Missgeschick, das den Helden in eine schwierige Situation oder eine gefährliche Lage bringen sollte" }
+        # The automatic failure is the procedure's (spec §6, `check.twenties`): with two 20s the
+        # check fails, kind patzer, and with three dreifach20, whatever FP are left (the old
+        # `set: { stage: result, success: false, kind: patzer | dreifach20 }`). What a Patzer
+        # does is the talent's own entry (Optolith `botch`), in its rule file (TAL_7.patzer; the
+        # old `provide: { name: text, value: skill.botch }`).
 
 rulings:
   - id: crit-qs

@@ -160,7 +160,7 @@ ticked. Line numbers are those of the migrated file.
 
 ## rules/abilities/SA_9.yaml
 
-- [ ] L24 clauses[FS1].effects[0].when.check: check — not a fact in the vocabulary
+- [x] L24 clauses[FS1].effects[0].when.check: check — not a fact in the vocabulary
 
 ## rules/abilities/SA_923.yaml
 
@@ -173,16 +173,16 @@ No residue.
 
 ## rules/advantages/ADV_4.yaml
 
-- [ ] L26 clauses[B1].effects[0].offer.reroll: reroll — not a field of `offer`
-- [ ] L27 clauses[B1].effects[0].offer.when: when — not a field of `offer`
-- [ ] L28 clauses[B1].effects[0].offer.once_per: once_per — not a field of `offer`
-- [ ] L29 clauses[B1].effects[0].offer.after: after — not a field of `offer`
-- [ ] L30 clauses[B1].effects[0].offer.before: before — not a field of `offer`
-- [ ] L42 clauses[B2].effects[0].choose: choose — no one-to-one verb
-- [ ] L43 clauses[B2].effects[0].keep: keep — no one-to-one verb
-- [ ] L68 clauses[B5].effects[0].forbid.offer: offer — not a field of `forbid`
-- [ ] L68 clauses[B5].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L84 clauses[B7].effects[0].allow: allow — no one-to-one verb
+- [x] L26 clauses[B1].effects[0].offer.reroll: reroll — not a field of `offer`
+- [x] L27 clauses[B1].effects[0].offer.when: when — not a field of `offer`
+- [x] L28 clauses[B1].effects[0].offer.once_per: once_per — not a field of `offer`
+- [x] L29 clauses[B1].effects[0].offer.after: after — not a field of `offer`
+- [x] L30 clauses[B1].effects[0].offer.before: before — not a field of `offer`
+- [x] L42 clauses[B2].effects[0].choose: choose — no one-to-one verb
+- [x] L43 clauses[B2].effects[0].keep: keep — no one-to-one verb
+- [x] L68 clauses[B5].effects[0].forbid.offer: offer — not a field of `forbid`
+- [x] L68 clauses[B5].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L84 clauses[B7].effects[0].allow: allow — no one-to-one verb
 
 ## rules/advantages/ADV_44.yaml
 
@@ -365,33 +365,33 @@ No residue.
 
 ## rules/core/fertigkeitsproben.yaml
 
-- [ ] L37 clauses[FP1].effects[0].defines: defines — no one-to-one verb
-- [ ] L52 clauses[FP2].effects[0].forbid.check: check — not a field of `forbid`
-- [ ] L52 clauses[FP2].effects[0].forbid.when: when — not a field of `forbid`
-- [ ] L66 clauses[FP3].effects[0].defines: defines — no one-to-one verb
-- [ ] L66 clauses[FP3].effects[0].defines.spend_per_die: spend_per_die — snake_case key, no mapping
-- [ ] L89 clauses[FP5].effects[0].defines: defines — no one-to-one verb
-- [ ] L98 clauses[FP8].effects[0].defines: defines — no one-to-one verb
-- [ ] L122 clauses[QS1].effects[0].table: table — no one-to-one verb
-- [ ] L131 clauses[QS2].effects[0].set.stage: stage — not a field of `set`
-- [ ] L131 clauses[QS2].effects[0].set.when: when — not a field of `set`
-- [ ] L143 clauses[FM1].effects[0].defines: defines — no one-to-one verb
-- [ ] L143 clauses[FM1].effects[0].defines.applies_to: applies_to — snake_case key, no mapping
-- [ ] L158 clauses[FM2].effects[0].offer.gm.modifier: gm.modifier — not a field of `offer`
-- [ ] L169 clauses[KR1].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
-- [ ] L170 clauses[KR1].effects[0].set.stage: stage — not a field of `set`
-- [ ] L170 clauses[KR1].effects[0].set.success: success — not a field of `set`
-- [ ] L170 clauses[KR1].effects[0].set.kind: kind — not a field of `set`
-- [ ] L187 clauses[KR2].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
-- [ ] L188 clauses[KR2].effects[0].set.stage: stage — not a field of `set`
-- [ ] L188 clauses[KR2].effects[0].set.kind: kind — not a field of `set`
-- [ ] L205 clauses[PZ1].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
-- [ ] L206 clauses[PZ1].effects[0].set.stage: stage — not a field of `set`
-- [ ] L206 clauses[PZ1].effects[0].set.success: success — not a field of `set`
-- [ ] L206 clauses[PZ1].effects[0].set.kind: kind — not a field of `set`
-- [ ] L207 clauses[PZ1].effects[1].when.stage.roll.count_of: count_of — snake_case key, no mapping
-- [ ] L208 clauses[PZ1].effects[1].set.stage: stage — not a field of `set`
-- [ ] L208 clauses[PZ1].effects[1].set.kind: kind — not a field of `set`
+- [x] L37 clauses[FP1].effects[0].defines: defines — no one-to-one verb
+- [x] L52 clauses[FP2].effects[0].forbid.check: check — not a field of `forbid`
+- [x] L52 clauses[FP2].effects[0].forbid.when: when — not a field of `forbid`
+- [x] L66 clauses[FP3].effects[0].defines: defines — no one-to-one verb
+- [x] L66 clauses[FP3].effects[0].defines.spend_per_die: spend_per_die — snake_case key, no mapping
+- [x] L89 clauses[FP5].effects[0].defines: defines — no one-to-one verb
+- [x] L98 clauses[FP8].effects[0].defines: defines — no one-to-one verb
+- [x] L122 clauses[QS1].effects[0].table: table — no one-to-one verb
+- [x] L131 clauses[QS2].effects[0].set.stage: stage — not a field of `set`
+- [x] L131 clauses[QS2].effects[0].set.when: when — not a field of `set`
+- [x] L143 clauses[FM1].effects[0].defines: defines — no one-to-one verb
+- [x] L143 clauses[FM1].effects[0].defines.applies_to: applies_to — snake_case key, no mapping
+- [x] L158 clauses[FM2].effects[0].offer.gm.modifier: gm.modifier — not a field of `offer`
+- [x] L169 clauses[KR1].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
+- [x] L170 clauses[KR1].effects[0].set.stage: stage — not a field of `set`
+- [x] L170 clauses[KR1].effects[0].set.success: success — not a field of `set`
+- [x] L170 clauses[KR1].effects[0].set.kind: kind — not a field of `set`
+- [x] L187 clauses[KR2].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
+- [x] L188 clauses[KR2].effects[0].set.stage: stage — not a field of `set`
+- [x] L188 clauses[KR2].effects[0].set.kind: kind — not a field of `set`
+- [x] L205 clauses[PZ1].effects[0].when.stage.roll.count_of: count_of — snake_case key, no mapping
+- [x] L206 clauses[PZ1].effects[0].set.stage: stage — not a field of `set`
+- [x] L206 clauses[PZ1].effects[0].set.success: success — not a field of `set`
+- [x] L206 clauses[PZ1].effects[0].set.kind: kind — not a field of `set`
+- [x] L207 clauses[PZ1].effects[1].when.stage.roll.count_of: count_of — snake_case key, no mapping
+- [x] L208 clauses[PZ1].effects[1].set.stage: stage — not a field of `set`
+- [x] L208 clauses[PZ1].effects[1].set.kind: kind — not a field of `set`
 
 ## rules/core/groessenkategorie.yaml
 
@@ -1120,39 +1120,39 @@ No residue.
 
 ## situations/probe-fertigkeiten.yaml
 
-- [ ] L26 situations["22.1"].check: check — not a situation key in the vocabulary
-- [ ] L29 situations["22.1"].expect.eew: eew — neither an expect key nor a query
-- [ ] L30 situations["22.1"].expect.fw: fw — neither an expect key nor a query
-- [ ] L42 situations["22.2"].check: check — not a situation key in the vocabulary
-- [ ] L45 situations["22.2"].expect.fw: fw — neither an expect key nor a query
-- [ ] L53 situations["22.3"].check: check — not a situation key in the vocabulary
-- [ ] L57 situations["22.3"].expect.eew: eew — neither an expect key nor a query
-- [ ] L58 situations["22.3"].expect.fw: fw — neither an expect key nor a query
-- [ ] L70 situations["22.4"].check: check — not a situation key in the vocabulary
-- [ ] L72 situations["22.4"].choose.reroll: reroll — not a fact in the vocabulary
-- [ ] L72 situations["22.4"].choose.result: result — not a fact in the vocabulary
-- [ ] L74 situations["22.4"].expect.before_reroll: before_reroll — neither an expect key nor a query
-- [ ] L75 situations["22.4"].expect.dice: dice — neither an expect key nor a query
-- [ ] L85 situations["22.5"].check: check — not a situation key in the vocabulary
-- [ ] L87 situations["22.5"].choose.reroll: reroll — not a fact in the vocabulary
-- [ ] L87 situations["22.5"].choose.result: result — not a fact in the vocabulary
-- [ ] L89 situations["22.5"].expect.dice: dice — neither an expect key nor a query
-- [ ] L92 situations["22.5"].expect.result: result — neither an expect key nor a query
-- [ ] L97 situations["22.6"].check: check — not a situation key in the vocabulary
-- [ ] L100 situations["22.6"].expect.result: result — neither an expect key nor a query
-- [ ] L106 situations["22.7"].check: check — not a situation key in the vocabulary
-- [ ] L108 situations["22.7"].choose.reroll: reroll — not a fact in the vocabulary
-- [ ] L108 situations["22.7"].choose.result: result — not a fact in the vocabulary
-- [ ] L110 situations["22.7"].expect.before_reroll: before_reroll — neither an expect key nor a query
-- [ ] L111 situations["22.7"].expect.dice: dice — neither an expect key nor a query
-- [ ] L115 situations["22.7"].expect.offered[0].together_with: together_with — snake_case key, no mapping
-- [ ] L122 situations["22.8"].check: check — not a situation key in the vocabulary
-- [ ] L125 situations["22.8"].expect.eew: eew — neither an expect key nor a query
-- [ ] L127 situations["22.8"].expect.result: result — neither an expect key nor a query
-- [ ] L130 situations["22.8"].expect.text: text — neither an expect key nor a query
-- [ ] L135 situations["22.9"].check: check — not a situation key in the vocabulary
-- [ ] L138 situations["22.9"].expect.eew: eew — neither an expect key nor a query
-- [ ] L139 situations["22.9"].expect.forbidden: forbidden — neither an expect key nor a query
+- [x] L26 situations["22.1"].check: check — not a situation key in the vocabulary
+- [x] L29 situations["22.1"].expect.eew: eew — neither an expect key nor a query
+- [x] L30 situations["22.1"].expect.fw: fw — neither an expect key nor a query
+- [x] L42 situations["22.2"].check: check — not a situation key in the vocabulary
+- [x] L45 situations["22.2"].expect.fw: fw — neither an expect key nor a query
+- [x] L53 situations["22.3"].check: check — not a situation key in the vocabulary
+- [x] L57 situations["22.3"].expect.eew: eew — neither an expect key nor a query
+- [x] L58 situations["22.3"].expect.fw: fw — neither an expect key nor a query
+- [x] L70 situations["22.4"].check: check — not a situation key in the vocabulary
+- [x] L72 situations["22.4"].choose.reroll: reroll — not a fact in the vocabulary
+- [x] L72 situations["22.4"].choose.result: result — not a fact in the vocabulary
+- [x] L74 situations["22.4"].expect.before_reroll: before_reroll — neither an expect key nor a query
+- [x] L75 situations["22.4"].expect.dice: dice — neither an expect key nor a query
+- [x] L85 situations["22.5"].check: check — not a situation key in the vocabulary
+- [x] L87 situations["22.5"].choose.reroll: reroll — not a fact in the vocabulary
+- [x] L87 situations["22.5"].choose.result: result — not a fact in the vocabulary
+- [x] L89 situations["22.5"].expect.dice: dice — neither an expect key nor a query
+- [x] L92 situations["22.5"].expect.result: result — neither an expect key nor a query
+- [x] L97 situations["22.6"].check: check — not a situation key in the vocabulary
+- [x] L100 situations["22.6"].expect.result: result — neither an expect key nor a query
+- [x] L106 situations["22.7"].check: check — not a situation key in the vocabulary
+- [x] L108 situations["22.7"].choose.reroll: reroll — not a fact in the vocabulary
+- [x] L108 situations["22.7"].choose.result: result — not a fact in the vocabulary
+- [x] L110 situations["22.7"].expect.before_reroll: before_reroll — neither an expect key nor a query
+- [x] L111 situations["22.7"].expect.dice: dice — neither an expect key nor a query
+- [x] L115 situations["22.7"].expect.offered[0].together_with: together_with — snake_case key, no mapping
+- [x] L122 situations["22.8"].check: check — not a situation key in the vocabulary
+- [x] L125 situations["22.8"].expect.eew: eew — neither an expect key nor a query
+- [x] L127 situations["22.8"].expect.result: result — neither an expect key nor a query
+- [x] L130 situations["22.8"].expect.text: text — neither an expect key nor a query
+- [x] L135 situations["22.9"].check: check — not a situation key in the vocabulary
+- [x] L138 situations["22.9"].expect.eew: eew — neither an expect key nor a query
+- [x] L139 situations["22.9"].expect.forbidden: forbidden — neither an expect key nor a query
 
 ## situations/probe-magie.yaml
 
@@ -1404,6 +1404,10 @@ No residue.
 - situations/kampfwerte.yaml 16.20: expects `events: [{ gained: imSterben, from: schaden.S8 }]`. There is no rule `imSterben` and the Regel-Wiki has no page to draft one from; schaden.S8 now `tell`s the hero "Ab 0 Lebenspunkten liegt ein Held im Sterben."
 - situations/lebensenergie.yaml 15.4–15.8: the `base` line of `level(rule: COND_6)` expects `ruling: ADV_49.zaeher-hund-counts`. That base line is COND_6.SZ3's derive, which rests on COND_6.schmerz-thresholds; zaeher-hund-counts sits on ADV_49's `useLevel` (the `levelAs` line), and SZ3 has no reason to cite an advantage's ruling.
 - situations/lebensenergie.yaml 15.16: (a) expects the Körperbeherrschung check itself offered (`optional: true`, with FW and attributes) before any choice. `offer` offers choices only: STATE_10.L4 offers `choice.passierschlagVermeiden` beside the stand-up, and its `check` runs once the hero stands up with it chosen, so no check is offered. (b) expects ADV_75 not applied `because: "betrifft nur Betäubung und Berauscht"`, while 15.19 expects `because: "nur durch Alkohol verursacht"` for the same effects. An effect has one `because`; SW1's tells carry the alcohol one (15.19), and the hero without Betäubung or Berauscht fails the same `when` (`hero.has: COND_2 | COND_9`).
+- situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from: ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per: action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{ reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's origin is ADV_4.B1. One effect cannot come from two clauses, so either these three or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the reroll.
+- situations/probe-fertigkeiten.yaml 22.7 (plan-mandated: A.8 turns `allow` into nothing): expects the Schip reroll offered `from: ADV_4.B7`, `togetherWith: ADV_4.B1`. B7 is `none` (allowed is the default; the procedure offers every open reroll in either order, spec §6), and schicksalspunkte's Neuer Wurf is not written (its file says so), so no effect offers it. The entry keeps its own `open:` note.
+- situations/probe-fertigkeiten.yaml 22.5, 22.6, 22.8: `result: { success?, kind, from }` (Doppel-1, Doppel-20, a regular result) is kept under the new situation-level expect key `result` (the result stage, spec §6). Its `kind` and `from` (fertigkeitsproben.KR1 / PZ1) are the procedure's, which counts Doppel-1 and Doppel-20 from the faces (spec §6, plan Task 26): KR1 and PZ1 hold `tell`s to the GM, not the classification. The harness (Task 26) must read the key and match `from` against the clause the procedure names.
+- situations/probe-fertigkeiten.yaml 22.3: expects the GM's −1 as a line of `check.attribute` (`{ value: -1, from: fertigkeitsproben.FM2, source: gm }`). FM2's line is on `check.modifier`; `check.attribute` is the attribute plus the `check.modifier` breakdown (FM1, a procedure clause; plan Task 26: "Each is the attribute plus one shared `check.modifier` breakdown"). It holds only if the procedure shows the modifier's lines in each attribute's breakdown, as Task 26 says.
 
 ## Reviews reset by hand edits
 
@@ -1519,8 +1523,29 @@ No residue.
 - STATE_10.L4: the offer `{ action: aufstehen, costs: action, then: remove_state, if_opponent_in_reach: optional_check … }` is `offer: { choice: aufstehen, costs: [1 action] }`, a `gain: { rule: STATE_10, levels: -1 }` on `choice.aufstehen`, and with `opponent.inReach` an `offer: { choice: passierschlagVermeiden }` beside it; standing up with it chosen runs a `check` of Körperbeherrschung (TAL_4, Kampfmanöver) whose `onFailure` tells the opponent `passierschlag`, and standing up without it tells it as well
 - STATE_8.H3: was `none`; now `ask: { fact: choice.liegend, who: player }` and, on "ja", `gain: { rule: STATE_10 }`, both on ruling STATE_10.handlungsunfaehig-liegend (liegend 7.4, 7.5 expect the question)
 
+- fertigkeitsproben.FP1: `defines: { check: skill, dice: 3W20, against, stages }` is `none` (the procedure itself, spec §6; plan A.4)
+- fertigkeitsproben.FP2: `forbid: { check: skill, when: { any: "stage.attributes[i] <= 0" } }` is `forbid: { what: { check: [talent, spell, liturgy] } }` when `query.target: check.attribute, query.result: { atMost: 0 }` (each Teilprobe's value at 0 or below)
+- fertigkeitsproben.FP3: `defines: { stage: pool, start: skill.fw, spend_per_die }` is `derive: { to: check.fw, sum: [{ of: fw.current }] }` (the pool's base, new derived fact `fw.current`); the spend per die is the procedure's (summed in the new derived fact `check.spent`)
+- fertigkeitsproben.FP5: `defines: { stage: result, success: "stage.pool >= 0", fp: "stage.pool" }` is `derive: { to: check.fp, sum: [check.fw, −check.spent] }`; success (FP ≥ 0) is the procedure's `check.result`
+- fertigkeitsproben.FP8: `defines: { check.application: { of: talent, list, required: true } }` is `ask: { fact: check.application, who: player }` on a talent check (`check.kind: talent`), ruling SA_9.spezialisierung-when kept; the option list is a comment (the talent's Optolith `applications`)
+- fertigkeitsproben.QS1: `table: { stage: quality, from: stage.result.fp, rows }` is `provide: { name: fertigkeitsproben.qs, value: rows }` and `derive: { to: check.qs, sum: ["table(fertigkeitsproben.qs, check.fp)"] }` when `check.result: success` (no QS on a failure)
+- fertigkeitsproben.QS2: `set: { stage: result.fp, value: 1, when: { success: true, fp: 0 } }` is `floor: { to: check.fp, min: 1 }` when `check.result: success`; it also lifts a Doppel-1's negative FP to 1 (crit-qs options a and b)
+- fertigkeitsproben.FM1: `defines: { target: check, applies_to: stage.attributes, spread: all_three }` is `none` (the procedure itself: each `check.attribute(index: i)` is the attribute plus the one `check.modifier` breakdown; plan A.4)
+- fertigkeitsproben.FM2: `offer: { gm.modifier: { on: check, presets: FM2 } }` is `ask: { fact: gmFact.checkModifier, who: gm, options: [5, 3, 1, 0, -1, -3, -5] }` on a 3W20 check and two `add`s to `check.modifier` (above 0: `of` the fact; below 0: `of: 0, above: <fact>, times: -1`, since a proportion clamps at 0)
+- fertigkeitsproben.KR1: the `set: { stage: result, success: true, kind: kritischerErfolg }` is dropped (the procedure counts Doppel-1 from the faces, spec §6); the `provide: { name: text, value: skill.critical }` with ruling crit-qs moved to the talent's rule (TAL_7.critical, which carries crit-qs on its FP); new `tell` to the GM ("Doppel-1 … entscheidet der Meister") on `check.ones: { atLeast: 2 }`
+- fertigkeitsproben.KR2: the `set: { stage: result, kind: dreifach1 }` is dropped (the procedure's); new `tell` to the GM on `check.ones: { atLeast: 3 }`
+- fertigkeitsproben.PZ1: the two `set`s of the result (patzer, dreifach20) are dropped (the procedure's, `check.twenties`); the `provide: { name: text, value: skill.botch }` moved to the talent's rule (TAL_7.patzer); new `tell` to the GM on `check.twenties: { atLeast: 3 }` (Dreifach-20)
+- ADV_4.B1: `offer: { reroll: { dice: 1, of: check.rolls }, when: { check: { skill: option.sid } }, once_per: check, after: rolled, before: result }` is `reroll: { die: { dice: any }, keep: better, max: 1, per: action }` (plan A.4) when the new derived fact `check.onOption` (the check is on the instance's `sid`); `after`/`before` are the procedure's dice stage
+- ADV_4.B2: `choose: { die: player, from: check.rolls }` + `keep: better` is `none`, carried by B1's reroll (`dice: any`, `keep: better`)
+- ADV_4.B5: `forbid: { offer: B1, when: { check.result: [patzer] } }` is `forbid: { what: { line: ADV_4.B1 } }` when the new roll fact `check.twenties: { atLeast: 2 }` (Doppel-20 or Dreifach-20)
+- ADV_4.B7: `allow: { together: [B1, schicksalspunkte.neuer-wurf], order: any }` is `none` (plan A.8: allowed is the default; the procedure offers every open reroll in either order)
+- SA_9.FS1: `add: { to: fw }` is `add: { to: check.fw }` (plan A.4); the gate `check: { talent: option.sid, application: option.sid2 }` is the new derived facts `check.onOption` and `check.applicationOnOption` (the check's Anwendungsgebiet is the instance's `sid2`)
+
 ## Open questions
 
 - trefferzonen.TZ11 / TZ8, Torso: "Zusätzlich 1W3+1 SP" needs a dice value form, which the vocabulary does not have (A.4). Until one exists TZ8's failed Wundeffekt check on the torso `tell`s the player to roll it; the SP are not applied by the engine. The same gap holds for core/sturzschaden.
 - zustaende.Z5 / SA_41: `hero.conditionLevels` counts each Zustand's Stufe before any `useLevel`, so Zäher Hund does not lower the count (ruling ADV_49.zaeher-hund-counts). The same definition counts Belastung before Belastungsgewöhnung (SA_41.G1's `useLevel`): Boronmir in Plattenrüstung counts Belastung III, not I. lebensenergie 15.8's comment counts I (1 + 3 + 3 + 1 = 8; 10 by this definition). Its expected result (Handlungsunfähig) holds either way. Does Belastungsgewöhnung lower the Stufe the hero has, or only its effects?
 - COND_6.SZ3: the Stufe from the LP thresholds is a `derive` (the base of `level(rule: COND_6)`); a Stufe stated on the sheet (a Patzer, a wound effect) is the rule's owned level. The engine plan takes a stated base before a derive, so LP Stufen and stated Stufen do not add up today (zustaende.Z1 says they should: "Die einzelnen Zustände addieren sich auf").
+- fertigkeitsproben.QS1: the QS derive reads `table(fertigkeitsproben.qs, check.fp)` (plan A.4, verbatim). `check.fp` is a stage target, not a fact, and the table's keys are ranges ("0-3", "16+"). The engine's `table(name, key)` (plan Task 22) looks up a fact's value by exact key; it must resolve a key that names a target through the target's value, and match a number against range keys (trefferzonen's tables need the same).
+- ADV_4 / SA_9: a hero may own several instances of one rule (Begabung up to three Fertigkeiten, Fertigkeitsspezialisierung up to three Anwendungsgebiete per talent). A situation's owned entry and the Optolith import (`hero.py`, `entries[0]`) hold one instance, and `check.onOption` / `check.applicationOnOption` are defined per instance. How the engine evaluates a rule once per instance is open.
+- TAL_7 (kind `talent`): a talent rule is not owned (the sheet has its FW, `fw.TAL_7`) and not core. Its effects are gated on `check.talent: TAL_7`; the engine must apply a talent rule to a check on that talent (situations `pending` counts only owned and core rules).

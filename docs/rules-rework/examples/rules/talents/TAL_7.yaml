@@ -1,0 +1,87 @@
+# DRAFT FORMAT — see ../../README.md.
+# Drafted in the Group 6 hand migration (plan Task 13): situation probe-fertigkeiten 22.8 cites
+# the talent's Kritischer Erfolg ("TAL_7.critical (FP = doppelter FW)") and expects its text.
+# One clause per entry of the talent page. A talent rule applies to a check on that talent: every
+# effect is gated on `check.talent: TAL_7`. The Probe (GE/KO/KK) and the Belastung flag are data
+# the app already reads from rules.db (skill_details), not effects.
+id: TAL_7
+name: Schwimmen
+kind: talent
+source:
+  url: https://dsa.ulisses-regelwiki.de/talent.html?talent=Schwimmen
+  book: Regelwerk
+  page: 188
+  checked: 2026-09-25
+  hash: null
+reviewed: null
+
+clauses:
+  - id: kategorie
+    name: Talentkategorie
+    text: Körpertalente
+    none: the talent's group; data (rules.db skill_details.group_id)
+
+  - id: probe
+    name: Probe
+    text: GE/KO/KK
+    none: >
+      the three attributes of the check (fertigkeitsproben.FP1), data the check procedure reads
+      from rules.db (skill_details.check_attr_1–3)
+
+  - id: anwendungsgebiet
+    name: Anwendungsgebiet
+    text: Kampfmanöver, Langstreckenschwimmen, Tauchen, Verfolgungsjagden, Wassertreten
+    none: >
+      the list `check.application` is picked from (fertigkeitsproben.FP8); data (Optolith
+      de-DE/Skills.yaml `applications`)
+
+  - id: belastung
+    name: Belastung
+    text: ja
+    none: >
+      data: read as `check.hinderedByBelastung` (rules.db skill_details.encumbrance), which
+      COND_1.B3 reads
+
+  - id: qualitaet
+    name: Qualität
+    text: Der Held ist schneller an seinem Ziel.
+    unencoded: what a higher QS means is narrative; the player sees the text
+
+  - id: misslungen
+    name: Misslungene Probe
+    text: >
+      Der Held traut sich nicht zu schwimmen oder kommt nicht sonderlich weit – auf jeden Fall
+      nicht bis dahin, wohin er wollte.
+    unencoded: narrative, the GM's to apply; the player sees the text
+
+  - id: critical
+    name: Kritischer Erfolg
+    text: >
+      Der Held schwimmt die Strecke in Bestzeit. Für Qualitätsstufen, Vergleichs- und
+      Sammelproben gilt: FP = doppelter FW.
+    effects:
+      - when: { check.talent: TAL_7, check.ones: { atLeast: 2 } }
+        tell: { to: player, text: "Der Held schwimmt die Strecke in Bestzeit." }
+        # Every reading of fertigkeitsproben.crit-qs shows the talent's text, so it does not
+        # rest on the ruling.
+      - when: { check.talent: TAL_7, check.ones: { atLeast: 2 } }
+        set: { to: check.fp, value: { of: fw.current, times: 2 } }
+        ruling: fertigkeitsproben.crit-qs
+        # "FP = doppelter FW" for the QS (fertigkeitsproben.QS1 reads `check.fp`); option a of
+        # the open ruling crit-qs, which applies nothing until it is answered. Vergleichs- and
+        # Sammelproben are not written.
+
+  - id: patzer
+    name: Patzer
+    text: >
+      Der Held geht unter (siehe Seite 340ff., Erstickungsschaden). Grund dafür könnte ein
+      Wadenkrampf sein.
+    effects:
+      - when: { check.talent: TAL_7, check.twenties: { atLeast: 2 } }
+        tell: { to: gm, text: "Der Held geht unter (siehe Seite 340ff., Erstickungsschaden)." }
+        # The Erstickungsschaden page is not written; the GM applies it.
+
+  - id: steigerung
+    name: Steigerungsfaktor
+    text: B
+    none: cost

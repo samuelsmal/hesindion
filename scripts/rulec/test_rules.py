@@ -405,6 +405,58 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(effects[4]["payload"]["over"], {"kind": "ruleKind", "ids": ["condition"]})
         self.assertEqual(effects[4]["phase"], "cap")
 
+    # --- vocabulary added by the Group 6 hand migration (plan Task 13) -------------------------
+    def test_group_6_vocabulary(self):
+        v = vocab.load()
+        expected = {"fw.current": "derived", "check.spent": "derived", "check.ones": "roll",
+                    "check.twenties": "roll", "check.onOption": "derived",
+                    "check.applicationOnOption": "derived"}
+        self.assertEqual({f: v.fact_owner(f) for f in expected}, expected)
+        self.assertEqual(v.fact_owner("fw.TAL_7"), "sheet")                   # the family is untouched
+        self.assertIn("result", v.raw["expectKeys"])
+
+    def test_the_group_6_encodings(self):
+        # fertigkeitsproben FP2 (forbid on an EEW ≤ 0), FP3/FP5 (the pool and FP derives), QS1 (the
+        # provided table read by a derive), QS2 (the floor), FM2 (a signed GM modifier), ADV_4 B1/B5
+        # (Begabung's reroll and its forbid), SA_9.FS1 (+2 on check.fw), TAL_7.critical.
+        body = textwrap.dedent("""\
+            - when: { query.target: check.attribute, query.result: { atMost: 0 } }
+              forbid: { what: { check: [talent, spell, liturgy] } }
+            - derive: { to: check.fw, sum: [{ of: fw.current }] }
+            - derive: { to: check.fp, sum: [{ of: check.fw }, { of: check.spent, times: -1 }] }
+            - provide: { name: SA_1.qs, value: { "0-3": 1, "4-6": 2, "16+": 6 } }
+            - when: { check.result: success }
+              derive: { to: check.qs, sum: ["table(SA_1.qs, check.fp)"] }
+            - when: { check.result: success }
+              floor: { to: check.fp, min: 1 }
+            - when: { gmFact.checkModifier: { below: 0 } }
+              add: { to: check.modifier, value: { of: 0, above: gmFact.checkModifier, times: -1 } }
+            - when: { check.onOption: true }
+              reroll: { die: { dice: any }, keep: better, max: 1, per: action }
+            - when: { check.twenties: { atLeast: 2 } }
+              forbid: { what: { line: SA_1.T1 } }
+            - when: { check.onOption: true, check.applicationOnOption: true }
+              add: { to: check.fw, value: 2 }
+            - when: { check.talent: TAL_7, check.ones: { atLeast: 2 } }
+              set: { to: check.fp, value: { of: fw.current, times: 2 } }
+            """)
+        book, errors = check(VALID.replace(EFFECT + "\n        when: { hero.mounted: true }\n",
+                                           textwrap.indent(body, "      ")))
+        self.assertEqual(errors, [])
+        effects = book["SA_1"]["clauses"][0]["effects"]
+        self.assertEqual(effects[0]["payload"]["what"], {"kind": "check", "ids": ["talent", "spell", "liturgy"]})
+        self.assertEqual(effects[2]["payload"]["sum"][1]["proportion"]["of"], {"fact": "check.spent"})
+        self.assertEqual(effects[2]["payload"]["sum"][0]["proportion"]["of"], {"target": {"name": "check.fw"}})
+        self.assertEqual(effects[4]["payload"]["sum"], [{"table": {"name": "SA_1.qs", "key": "check.fp"}}])
+        self.assertEqual(effects[5]["phase"], "cap")
+        neg = effects[6]["payload"]["value"]["proportion"]
+        self.assertEqual((neg["of"], neg["above"], neg["times"]),
+                         ({"number": 0}, {"fact": "gmFact.checkModifier"}, -1))
+        self.assertEqual(effects[7]["payload"]["die"], {"kind": "dice", "ids": ["any"]})
+        self.assertEqual(effects[7]["phase"], "action")
+        self.assertEqual(effects[9]["payload"]["to"], [{"name": "check.fw"}])
+        self.assertEqual(effects[10]["payload"]["value"]["proportion"]["times"], 2)
+
     # --- normalization ------------------------------------------------------------------------
     def test_rulings_are_qualified_and_get_a_status(self):
         text = VALID.replace(

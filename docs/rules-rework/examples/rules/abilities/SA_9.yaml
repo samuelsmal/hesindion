@@ -21,14 +21,20 @@ clauses:
       Ein Held erhält einen Bonus von 2 auf seinen Fertigkeitswert, wenn das entsprechende
       Anwendungsgebiet eine Rolle bei der Probe spielt.
     effects:
-      - when: { check: { talent: option.sid, application: option.sid2 } }
-        add: { to: fw, value: 2 }
+      - when: { check.onOption: true, check.applicationOnOption: true }
+        add: { to: check.fw, value: 2 }
         ruling: spezialisierung-when
-        # FORMAT: a new target, the check's FW (the pool spent on the Teilproben), distinct from
-        # `to: check`, which fertigkeitsproben.FM1 spreads over the three attributes. The two
-        # are not interchangeable: +2 FW and a +2 Erleichterung give different results on the
-        # same dice (situation 22.3). Every existing `to: check` (SA_40, DISADV_57,
-        # ruhiges-temperament, COND_1 on talents) means the attribute modifier.
+        # Plan Appendix A.4: the pool stage's target `check.fw` (the FW spent on the Teilproben),
+        # distinct from `check.modifier`, which fertigkeitsproben.FM1 spreads over the three
+        # attributes. The two are not interchangeable: +2 FW and a +2 Erleichterung give
+        # different results on the same dice (situation 22.3). Every `to: check.modifier` (SA_40,
+        # DISADV_57, ruhiges-temperament, COND_1 on talents) is the attribute modifier.
+        # The gate (the old `check: { talent: option.sid, application: option.sid2 }`) is on
+        # the check's `check.application`, compared with this instance's Anwendungsgebiet
+        # (`sid2`): `check.onOption` (the check's talent is `sid`) and
+        # `check.applicationOnOption` (its Anwendungsgebiet is `sid2`, an id from the talent's
+        # Optolith `applications` or the player's own words). A `when` compares a fact with a
+        # constant, and `sid`/`sid2` differ per instance, so both are derived facts.
 
   - id: FS2
     text: >

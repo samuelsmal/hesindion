@@ -54,7 +54,8 @@
     "fp",
     "qs",
     "spent",
-    "success"
+    "success",
+    "result"
   ],
   "expectQueryKeys": [
     "total",
@@ -176,6 +177,10 @@
       "owner": "player",
       "type": "string"
     },
+    "check.applicationOnOption": {
+      "owner": "derived",
+      "type": "bool"
+    },
     "check.hinderedByBelastung": {
       "owner": "derived",
       "type": "any"
@@ -184,16 +189,36 @@
       "owner": "player",
       "type": "string"
     },
+    "check.onOption": {
+      "owner": "derived",
+      "type": "bool"
+    },
+    "check.ones": {
+      "owner": "roll",
+      "type": "int"
+    },
     "check.result": {
       "owner": "roll",
       "type": "string"
+    },
+    "check.spent": {
+      "owner": "derived",
+      "type": "int"
     },
     "check.talent": {
       "owner": "player",
       "type": "string"
     },
+    "check.twenties": {
+      "owner": "roll",
+      "type": "int"
+    },
     "clock.minutes": {
       "owner": "round",
+      "type": "int"
+    },
+    "fw.current": {
+      "owner": "derived",
       "type": "int"
     },
     "hero.conditionLevels": {

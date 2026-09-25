@@ -265,6 +265,11 @@ class HeroTests(unittest.TestCase):
         self.assertEqual(f1["fw.TAL_2"], (3, "sheet"))
         self.assertNotIn("fw.TAL_2", f2)
 
+    def test_a_second_select_option_is_option2(self):
+        # SA_9 (Group 6): the talent (`sid`) and its Anwendungsgebiet (`sid2`).
+        s = one("    hero: { abilities: { SA_1: { sid: TAL_10, sid2: 2 } } }\n")
+        self.assertEqual(s["owned"], {"SA_1": {"level": 1, "option": "TAL_10", "option2": 2}})
+
     def test_without_hero_file(self):
         s = one("    hero: { abilities: { SA_1: 3 }, attributes: { MU: 11 } }\n")
         self.assertEqual(s["owned"], {"SA_1": {"level": 3}})
