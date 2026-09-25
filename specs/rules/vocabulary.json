@@ -1,0 +1,793 @@
+{
+  "audiences": [
+    "player",
+    "gm",
+    "opponent"
+  ],
+  "clauseKeys": {
+    "oneOf": [
+      "effects",
+      "unencoded",
+      "none"
+    ],
+    "optional": [
+      "name",
+      "page"
+    ],
+    "required": [
+      "id",
+      "text"
+    ]
+  },
+  "comparisons": [
+    "is",
+    "in",
+    "atLeast",
+    "atMost",
+    "above",
+    "below"
+  ],
+  "effectKeys": [
+    "when",
+    "ruling",
+    "because",
+    "phase"
+  ],
+  "events": [
+    "paid",
+    "progressed",
+    "completed",
+    "brokenOff",
+    "itemChanged",
+    "gained",
+    "cleared",
+    "logged"
+  ],
+  "expectKeys": [
+    "offered",
+    "notOffered",
+    "notApplied",
+    "questions",
+    "legal",
+    "events",
+    "texts",
+    "fp",
+    "qs",
+    "spent",
+    "success"
+  ],
+  "expectQueryKeys": [
+    "total",
+    "result",
+    "values",
+    "lines",
+    "notApplied",
+    "legal"
+  ],
+  "factFamilies": {
+    "attr.": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "choice.": {
+      "owner": "player",
+      "type": "any"
+    },
+    "creature.": {
+      "owner": "sheet",
+      "type": "any"
+    },
+    "fw.": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "gmFact.": {
+      "owner": "gm",
+      "type": "any"
+    },
+    "item.": {
+      "owner": "loadout",
+      "type": "any"
+    },
+    "ktw.": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "mount.": {
+      "owner": "sheet",
+      "type": "any"
+    },
+    "opponent.": {
+      "owner": "gm",
+      "type": "any"
+    },
+    "roll.": {
+      "owner": "roll",
+      "type": "any"
+    },
+    "spell.": {
+      "owner": "player",
+      "type": "any"
+    },
+    "stage.": {
+      "owner": "roll",
+      "type": "any"
+    },
+    "target.": {
+      "owner": "gm",
+      "type": "any"
+    }
+  },
+  "factTypes": [
+    "int",
+    "bool",
+    "string",
+    "list",
+    "ruleId",
+    "any"
+  ],
+  "facts": {
+    "action.attack": {
+      "owner": "player",
+      "type": "string"
+    },
+    "action.defence": {
+      "owner": "player",
+      "type": "string"
+    },
+    "action.manoeuvre": {
+      "owner": "player",
+      "type": "string"
+    },
+    "action.with": {
+      "owner": "player",
+      "type": "string"
+    },
+    "ally.has": {
+      "owner": "player",
+      "type": "ruleId"
+    },
+    "check.application": {
+      "owner": "player",
+      "type": "string"
+    },
+    "check.result": {
+      "owner": "roll",
+      "type": "string"
+    },
+    "check.talent": {
+      "owner": "player",
+      "type": "string"
+    },
+    "clock.minutes": {
+      "owner": "round",
+      "type": "int"
+    },
+    "hero.has": {
+      "owner": "sheet",
+      "type": "ruleId"
+    },
+    "hero.mounted": {
+      "owner": "loadout",
+      "type": "bool"
+    },
+    "hit.sp": {
+      "owner": "derived",
+      "type": "int"
+    },
+    "hit.tp": {
+      "owner": "roll",
+      "type": "int"
+    },
+    "hit.zone": {
+      "owner": "roll",
+      "type": "string"
+    },
+    "level": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "loadout.armour": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.reach": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.shield": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.shield.size": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.weapon": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.weapon.kind": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "loadout.weapon.technique": {
+      "owner": "loadout",
+      "type": "string"
+    },
+    "opponent.has": {
+      "owner": "gm",
+      "type": "ruleId"
+    },
+    "option": {
+      "owner": "sheet",
+      "type": "int"
+    },
+    "round.defencesMade": {
+      "owner": "round",
+      "type": "int"
+    },
+    "round.dodges": {
+      "owner": "round",
+      "type": "int"
+    },
+    "round.doubleAttack": {
+      "owner": "round",
+      "type": "bool"
+    },
+    "round.number": {
+      "owner": "round",
+      "type": "int"
+    },
+    "round.parries": {
+      "owner": "round",
+      "type": "int"
+    },
+    "rulesets": {
+      "owner": "gm",
+      "type": "list"
+    }
+  },
+  "fieldTypes": [
+    "target",
+    "targets",
+    "value",
+    "values",
+    "fact",
+    "condition",
+    "effects",
+    "rule",
+    "selector",
+    "int",
+    "number",
+    "string",
+    "bool",
+    "name",
+    "span",
+    "pool",
+    "pools",
+    "audience",
+    "owner",
+    "rounding",
+    "list",
+    "itemChange",
+    "split",
+    "duration",
+    "data"
+  ],
+  "itemFields": [
+    "loaded",
+    "strung",
+    "structurePoints",
+    "damaged"
+  ],
+  "kinds": [
+    "specialAbility",
+    "advantage",
+    "disadvantage",
+    "condition",
+    "state",
+    "core",
+    "equipment",
+    "creature",
+    "talent"
+  ],
+  "lineKeys": [
+    "value",
+    "from",
+    "via",
+    "ruling",
+    "source",
+    "kind"
+  ],
+  "lineKinds": [
+    "base",
+    "add",
+    "set",
+    "levelAs",
+    "replaced",
+    "multiplied",
+    "capped",
+    "floored",
+    "rerolled",
+    "free"
+  ],
+  "owners": [
+    "sheet",
+    "loadout",
+    "player",
+    "gm",
+    "round",
+    "roll",
+    "derived"
+  ],
+  "phases": [
+    "base",
+    "level",
+    "add",
+    "lines",
+    "multiply",
+    "cap",
+    "legality"
+  ],
+  "pools": [
+    "le",
+    "asp",
+    "kap",
+    "schips",
+    "ammunition"
+  ],
+  "reasons": [
+    "conditionFalse",
+    "unknownFact",
+    "openRuling",
+    "requirementNotMet",
+    "forbidden",
+    "suppressed",
+    "replaced",
+    "overridden",
+    "rulesetOff",
+    "outOfContext"
+  ],
+  "rounding": [
+    "up",
+    "down"
+  ],
+  "ruleKeys": {
+    "optional": [
+      "group",
+      "ruleset",
+      "levels",
+      "options",
+      "provides",
+      "rulings",
+      "agentPass",
+      "catalogId",
+      "passive",
+      "manoeuvre",
+      "techniques"
+    ],
+    "required": [
+      "id",
+      "name",
+      "kind",
+      "source",
+      "reviewed",
+      "clauses"
+    ]
+  },
+  "rulingKeys": [
+    "id",
+    "status",
+    "question",
+    "context",
+    "situations",
+    "options",
+    "recommended",
+    "whyRecommended",
+    "answer",
+    "decided",
+    "appliesTo",
+    "notes"
+  ],
+  "selectorKinds": [
+    "action",
+    "attack",
+    "defence",
+    "manoeuvre",
+    "choice",
+    "check",
+    "talent",
+    "spell",
+    "loadout",
+    "line",
+    "rule",
+    "lineKind",
+    "dice",
+    "target"
+  ],
+  "situationFileKeys": [
+    "heroFile",
+    "hero",
+    "rulesets",
+    "situations"
+  ],
+  "situationKeys": [
+    "id",
+    "name",
+    "hero",
+    "loadout",
+    "choose",
+    "gm",
+    "opponent",
+    "ally",
+    "rulesets",
+    "round",
+    "rolls",
+    "sequence",
+    "expect",
+    "appToday",
+    "note"
+  ],
+  "spans": [
+    "action",
+    "round",
+    "fight",
+    "whileFormed",
+    "untilCleared"
+  ],
+  "targetPrefixes": [
+    "opponent.",
+    "mount.",
+    "ally."
+  ],
+  "targets": {
+    "aspMax": {
+      "contexts": []
+    },
+    "at": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "aw": {
+      "contexts": []
+    },
+    "belastung": {
+      "contexts": []
+    },
+    "check.attribute": {
+      "contexts": [
+        "index"
+      ]
+    },
+    "check.dice": {
+      "contexts": []
+    },
+    "check.fp": {
+      "contexts": []
+    },
+    "check.fw": {
+      "contexts": [
+        "talent",
+        "spell"
+      ]
+    },
+    "check.modifier": {
+      "contexts": [
+        "talent",
+        "spell"
+      ]
+    },
+    "check.qs": {
+      "contexts": []
+    },
+    "fk": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "gs": {
+      "contexts": []
+    },
+    "ini": {
+      "contexts": []
+    },
+    "iniBase": {
+      "contexts": []
+    },
+    "item.ladezeit": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "item.structurePoints": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "kapMax": {
+      "contexts": []
+    },
+    "leCurrent": {
+      "contexts": []
+    },
+    "leMax": {
+      "contexts": []
+    },
+    "pa": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "regeneration.asp": {
+      "contexts": []
+    },
+    "regeneration.kap": {
+      "contexts": []
+    },
+    "regeneration.le": {
+      "contexts": []
+    },
+    "rs": {
+      "contexts": [
+        "zone"
+      ]
+    },
+    "schips": {
+      "contexts": []
+    },
+    "sp": {
+      "contexts": []
+    },
+    "spell.castingTime": {
+      "contexts": [],
+      "scale": true
+    },
+    "spell.cost": {
+      "contexts": [],
+      "scale": true
+    },
+    "spell.duration": {
+      "contexts": [],
+      "scale": true
+    },
+    "spell.range": {
+      "contexts": [],
+      "scale": true
+    },
+    "tp": {
+      "contexts": [
+        "with"
+      ]
+    },
+    "wundschwelle": {
+      "contexts": []
+    }
+  },
+  "valueForms": [
+    "number",
+    "level",
+    "proportion",
+    "table"
+  ],
+  "verbs": {
+    "add": {
+      "fields": {
+        "to": "targets",
+        "value": "value"
+      },
+      "optional": {
+        "per": "fact",
+        "scale": "name"
+      },
+      "phase": "add"
+    },
+    "ask": {
+      "fields": {
+        "fact": "fact",
+        "who": "owner"
+      },
+      "optional": {
+        "options": "list"
+      },
+      "phase": "player"
+    },
+    "cap": {
+      "fields": {
+        "to": "targets"
+      },
+      "optional": {
+        "max": "value",
+        "min": "value",
+        "over": "selector"
+      },
+      "phase": "cap"
+    },
+    "check": {
+      "fields": {
+        "of": "selector"
+      },
+      "optional": {
+        "modifier": "value",
+        "onFailure": "effects",
+        "onSuccess": "effects"
+      },
+      "phase": "action"
+    },
+    "cost": {
+      "fields": {
+        "amount": "value",
+        "pool": "pool"
+      },
+      "optional": {
+        "every": "duration",
+        "fallThrough": "pools",
+        "onFailure": "number",
+        "split": "split"
+      },
+      "phase": "action"
+    },
+    "derive": {
+      "fields": {
+        "sum": "values",
+        "to": "target"
+      },
+      "optional": {},
+      "phase": "base"
+    },
+    "floor": {
+      "fields": {
+        "min": "value",
+        "to": "targets"
+      },
+      "optional": {},
+      "phase": "cap"
+    },
+    "forbid": {
+      "fields": {
+        "what": "selector"
+      },
+      "optional": {
+        "together": "bool"
+      },
+      "phase": "legality"
+    },
+    "gain": {
+      "fields": {
+        "rule": "rule"
+      },
+      "optional": {
+        "levels": "int",
+        "span": "span"
+      },
+      "phase": "action"
+    },
+    "item": {
+      "fields": {
+        "change": "itemChange",
+        "instance": "selector"
+      },
+      "optional": {},
+      "phase": "action"
+    },
+    "limit": {
+      "fields": {
+        "max": "int",
+        "per": "span",
+        "what": "selector"
+      },
+      "optional": {},
+      "phase": "legality"
+    },
+    "multiply": {
+      "fields": {
+        "by": "number",
+        "to": "targets"
+      },
+      "optional": {
+        "line": "selector",
+        "round": "rounding"
+      },
+      "phase": "multiply"
+    },
+    "offer": {
+      "fields": {
+        "choice": "name"
+      },
+      "optional": {
+        "costs": "effects",
+        "default": "string",
+        "options": "list",
+        "span": "span"
+      },
+      "phase": "player"
+    },
+    "process": {
+      "fields": {
+        "advancedBy": "selector",
+        "id": "name",
+        "steps": "value"
+      },
+      "optional": {
+        "breaksOff": "condition",
+        "completes": "effects",
+        "exclusive": "bool",
+        "span": "span"
+      },
+      "phase": "action"
+    },
+    "provide": {
+      "fields": {
+        "name": "name",
+        "value": "data"
+      },
+      "optional": {},
+      "phase": "data"
+    },
+    "replace": {
+      "fields": {
+        "line": "selector",
+        "with": "value"
+      },
+      "optional": {},
+      "phase": "lines"
+    },
+    "require": {
+      "fields": {
+        "that": "condition"
+      },
+      "optional": {
+        "enables": "bool",
+        "for": "selector"
+      },
+      "phase": "legality"
+    },
+    "reroll": {
+      "fields": {
+        "die": "selector",
+        "keep": "name"
+      },
+      "optional": {
+        "max": "int",
+        "per": "span"
+      },
+      "phase": "action"
+    },
+    "set": {
+      "fields": {
+        "to": "targets",
+        "value": "value"
+      },
+      "optional": {},
+      "phase": "add"
+    },
+    "suppress": {
+      "fields": {
+        "line": "selector"
+      },
+      "optional": {},
+      "phase": "lines"
+    },
+    "tell": {
+      "fields": {
+        "text": "string",
+        "to": "audience"
+      },
+      "optional": {},
+      "phase": "player"
+    },
+    "useLevel": {
+      "fields": {
+        "rule": "rule"
+      },
+      "optional": {
+        "as": "value",
+        "lowerBy": "value",
+        "min": "int"
+      },
+      "phase": "level"
+    }
+  },
+  "version": 1
+}
