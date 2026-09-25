@@ -6,6 +6,30 @@ ticked. Line numbers are those of the migrated file.
 
 `- [ ] L<line> <path in the doc>: <old key> — <why not mechanical>`
 
+## Counts (Task 16, after the hand migration)
+
+Every item below is ticked. `make rules-check`:
+`ok: 76 rules, 483 clauses, 465 effects, 309 situations (283 pending)`; `make rules-json` writes
+both files (`309 situations, 283 pending`). Pending counts an open ruling on a `"*"` entry only for
+situations that expect situation-level results or have `sequence`/`rolls` (ruling R30); the
+pending rulings are mostly fernkampf.range-input (on every `at`/`fk` query through FK2's
+`forbid … attack`), zaubermodifikationen.omit-counts, fernkampf.cover-as-size,
+SA_9.spezialisierung-when, fernkampf.zielen-interrupted and ladezeiten.laengere-handlungen.
+
+Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
+
+| Group | Added |
+|---|---|
+| 1 (Task 8) | facts belastung.source, check.hinderedByBelastung, check.kind, hero.purchased.le, ktw.current, loadout.armour.belastung, loadout.armour.extraPenalty, loadout.other, loadout.other.paMod, species.le, technique.leit; target level; selector kind ruleKind; expect query key base; ruling key see |
+| 2 (Task 9) | facts action.runUp, hero.gs, loadout.other.technique, loadout.shield.structurePoints, loadout.twoHanded, query.result, round.defendedThisAttack, round.phase; target gsNatural; item field destroyed |
+| 3 (Task 10) | facts action.gait, action.gaitChange, query.target, reach.gap; target carryingCapacity; pools actions, freeActions; item field ridden; line key was |
+| 4 (Task 11) | facts hero.leCurrent, hit.heldInHand, hit.mountSp, hit.overWundschwelle, hit.side, hit.zoneRs, loadout.weapon.leit, loadout.weapon.ownLeit, loadout.weapon.schadensschwelle, loadout.weaponHand; fact family loadout.armourPiece.; target armourScore; item field held |
+| 5 (Task 12) | fact hero.conditionLevels; fact family hero.levelOf. |
+| 6 (Task 13) | facts check.applicationOnOption, check.onOption, check.ones, check.spent, check.twenties, fw.current; expect key result |
+| 7 (Task 14) | facts check.spell, hero.aspCurrent; targets aspCurrent, spell.costPerInterval; line key term |
+| 8 (Task 15) | facts hero.inMelee, hero.lastMovement, ladezeit.current, loadout.quiver, loadout.weapon.closeRange, loadout.weapon.farRange, loadout.weapon.instance, loadout.weapon.ladezeit, loadout.weapon.loaded, loadout.weapon.mediumRange, loadout.weapon.strung, round.previousDefenceCrit; fact family process. |
+| Task 16 | `provide.readBy` (field type reader, list readers: display, loadout, roll); the unused target belastung removed (ruling R18) |
+
 ## rules/abilities/SA_152.yaml
 
 - [x] L26 clauses[AD1].effects[0].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
