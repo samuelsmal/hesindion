@@ -553,6 +553,14 @@
     "was",
     "term"
   ],
+  "notAppliedKeys": [
+    "rule",
+    "clause",
+    "reason",
+    "because",
+    "ruling",
+    "value"
+  ],
   "lineKinds": [
     "base",
     "add",

@@ -696,6 +696,14 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(Set(queryKeys).subtracting(QueryExpectation.CodingKeys.allCases.map(\.rawValue)), [])
         XCTAssertEqual(Set(lineKeys).subtracting(ExpectedLine.CodingKeys.allCases.map(\.rawValue)), [])
         XCTAssertEqual(Set(situationKeys).subtracting(Matcher.situationKeys.union(Matcher.actionKeys)), [])
+        // A notApplied entry's keys (rulec checks them; a step's entries, passed through, are
+        // checked here): the decoder reads exactly the vocabulary's, and an unknown key is malformed.
+        let notAppliedKeys = try XCTUnwrap(v["notAppliedKeys"] as? [String])
+        XCTAssertEqual(Set(notAppliedKeys), Set(ExpectedNotApplied.CodingKeys.allCases.map(\.rawValue)))
+        XCTAssertNotNil(ExpectedNotApplied(.object(["rule": .string("x"), "because": .string("y")])))
+        XCTAssertNil(ExpectedNotApplied(.object(["rule": .string("x"), "becuase": .string("y")])))
+        let s = try situation(#"{"expect": [{"query": "at", "total": 0}], "expectSituation": {"notApplied": [{"rule": "x", "colour": "red"}]}}"#)
+        XCTAssertEqual(compare(s, breakdowns: [Breakdown(query: Query("at"))], offers: []).map(\.shape), ["malformed notApplied"])
     }
 
     /// U1 (Task 26): the action layer runs a 3W20 check. `rolls`, `fp`, `qs`, `spent`, `success`,

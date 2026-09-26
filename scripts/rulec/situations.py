@@ -471,6 +471,9 @@ class _File:
 
     def not_applied(self, e, line, cited):
         out = _plain(e)
+        for k in e:
+            if k not in self.v.raw["notAppliedKeys"]:
+                self.err(f"unknown key {k}", _line(e, k, line))
         rule = e.get("rule")
         if rule not in self.ctx.book:
             self.err(f"unknown rule in expect {rule}", _line(e, "rule", line))

@@ -743,7 +743,7 @@ enum Matcher {
             // none of them touches is about the hero sheet, which the engine has no breakdown of.
             let touched = Set(breakdowns.flatMap { $0.shownLines.compactMap(\.origin?.rule) + $0.notApplied.map(\.origin.rule) })
             for raw in list("notApplied") ?? [] {
-                guard let e = ExpectedNotApplied(raw) else { shape("malformed notApplied", "notApplied entry \(raw) has no rule"); continue }
+                guard let e = ExpectedNotApplied(raw) else { shape("malformed notApplied", "notApplied entry \(raw) has no rule or a key outside notAppliedKeys"); continue }
                 if hit != nil, queried.isEmpty, !touched.contains(e.rule) {
                     guard let sheet else {
                         shape("sheet-wide notApplied", "notApplied \(e.rule): no stage of the hit evaluates the rule, and no sheet was read")

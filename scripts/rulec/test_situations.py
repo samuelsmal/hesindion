@@ -452,6 +452,15 @@ class ErrorTests(unittest.TestCase):
         self.assertEqual(errors_of("    expect: { notApplied: [{ rule: NOPE, reason: notOwned }] }\n"),
                          ["unknown rule in expect NOPE"])
 
+    def test_unknown_key_in_not_applied(self):
+        # vocabulary notAppliedKeys: a key the matcher does not read is an error, never dropped.
+        self.assertEqual(errors_of("    expect: { notApplied: [{ rule: SA_2, reason: notOwned, colour: red }] }\n"),
+                         ["unknown key colour"])
+        self.assertEqual(errors_of("    expect: { aw: { notApplied: [{ rule: SA_2, clause: X1, becuase: x }] } }\n"),
+                         ["unknown key becuase"])
+        self.assertEqual(errors_of("    expect: { notApplied: [{ rule: SA_2, clause: X1, reason: notOwned, because: x, "
+                                   "ruling: r2, value: 1 }] }\n"), [])
+
     def test_unknown_ruling_in_expect(self):
         self.assertEqual(errors_of("    expect: { at: { lines: [{ value: 1, from: SA_1.T1, ruling: nope }] } }\n"),
                          ["unknown ruling in expect nope"])

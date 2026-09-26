@@ -125,6 +125,11 @@ struct ExpectedLine: Decodable {
 /// An expected `notApplied` entry: `rule`, and when given `clause`, `reason` (a reason code, a
 /// clause ref, or prose), `because`, `ruling` (qualified by rulec) and `value`.
 struct ExpectedNotApplied: Decodable {
+    /// Every key the decoder reads; the vocabulary's `notAppliedKeys` (a test holds the two equal).
+    /// rulec rejects any other key in a query's or the situation's entries; a `sequence` step's
+    /// entries, passed through, are malformed with one (`init?(_:)`).
+    enum CodingKeys: String, CodingKey, CaseIterable { case rule, clause, reason, because, ruling, value }
+
     var rule: String
     var clause: String?
     var reason: String?
@@ -139,9 +144,10 @@ struct ExpectedNotApplied: Decodable {
     }
 
     /// From a situation-level entry, which rulec passes through unqualified: a `ruling` may be
-    /// a string or a list.
+    /// a string or a list. nil without a `rule` or with a key outside `notAppliedKeys`.
     init?(_ json: JSONValue) {
-        guard case .object(let o) = json, let rule = o["rule"]?.string else { return nil }
+        guard case .object(let o) = json, let rule = o["rule"]?.string,
+              o.keys.allSatisfy({ CodingKeys(rawValue: $0) != nil }) else { return nil }
         self.init(rule: rule, clause: o["clause"]?.string, reason: o["reason"]?.string, because: o["because"]?.string,
                   ruling: o["ruling"].map(strings), value: o["value"]?.int)
     }
