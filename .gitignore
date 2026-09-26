@@ -3,6 +3,7 @@ scripts/build_rules_db/rules.db
 scripts/build_rules_db/rules.db-shm
 scripts/build_rules_db/rules.db-wal
 Hesindion/Resources/*.tmp
+Hesindion/Resources/rules.db
 
 # Claude Code local settings
 .claude/settings.local.json

@@ -25,9 +25,18 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db
 
-build:
+# rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
+# that ships or tests the app depends on this and refuses to run without it; make rules-db
+# builds it. test-rules-engine does NOT depend on this: Packages/RulesEngine reads no rules.db.
+require-rules-db:
+	@if [ ! -f '$(RULES_DB)' ]; then \
+		echo "rules.db missing: run make rules-db (needs DSA_DATA=…/dsa_companion_data/Data)"; \
+		exit 1; \
+	fi
+
+build: require-rules-db
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -49,7 +58,7 @@ launch:
 
 run: install launch
 
-build-iphone:
+build-iphone: require-rules-db
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -93,7 +102,7 @@ share-heros-iphone: boot-iphone
 	cp "$(SAMPLE_HEROS)/"*.json "$(APP_DATA)/Documents/"
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
-deploy:
+deploy: require-rules-db
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -106,7 +115,7 @@ deploy:
 
 deploy-ipad: deploy-kombucha
 
-deploy-kombucha:
+deploy-kombucha: require-rules-db
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -227,7 +236,7 @@ rules-engine-fixture:
 # simulators on the boot screen at once). NO clones, NO extra boots.
 NO_CLONE = -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1
 
-test: boot
+test: require-rules-db boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -238,7 +247,7 @@ test: boot
 		$(NO_CLONE) \
 		test
 
-test-ui: boot
+test-ui: require-rules-db boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
