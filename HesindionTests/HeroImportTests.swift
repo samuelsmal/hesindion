@@ -35,7 +35,7 @@ struct HeroImportTests {
         let hero = try #require(heroes.first)
 
         // Identity
-        #expect(hero.name == "Boronmir Siebenfeld von Greifenfurt")
+        #expect(hero.name == "Boronmir Siebenfeld von Greifenfurt (2026-09-24)")
         #expect(hero.avatar != nil)
 
         // Attributes
@@ -43,15 +43,15 @@ struct HeroImportTests {
         #expect(attr.mu == 14)
         #expect(attr.kl == 12)
         #expect(attr.inValue == 13)
-        #expect(attr.ko == 13)
-        #expect(attr.kk == 15)
+        #expect(attr.ko == 15)
+        #expect(attr.kk == 14)
 
-        // Carrying capacity: KK * 2 = 30
-        #expect(hero.carryingCapacity == 30)
+        // Carrying capacity: KK * 2 = 28
+        #expect(hero.carryingCapacity == 28)
 
-        // Advantages (ADV_ entries from activatable: ADV_36, ADV_49, ADV_44, ADV_75, ADV_25, ADV_5)
-        #expect(hero.advantages.count == 6)
-        #expect(hero.advantages.contains { $0.ruleId == "ADV_5" })
+        // Advantages (ADV_ entries from activatable: ADV_36, ADV_49, ADV_44, ADV_25, ADV_54)
+        #expect(hero.advantages.count == 5)
+        #expect(hero.advantages.contains { $0.ruleId == "ADV_54" })
         #expect(hero.advantages.contains { $0.ruleId == "ADV_44" && $0.tier == 2 })
 
         // Disadvantages (DISADV_ entries, some with multiple instances)
@@ -61,7 +61,7 @@ struct HeroImportTests {
         // Special abilities (SA_ entries, excluding SA_29 languages and SA_27 scripts)
         #expect(!hero.generalSpecialAbilities.isEmpty || !hero.combatSpecialAbilities.isEmpty)
         let allSAs = hero.generalSpecialAbilities + hero.combatSpecialAbilities
-        #expect(allSAs.count >= 8)
+        #expect(allSAs.count >= 6)
 
         // Languages (from SA_29)
         #expect(hero.languages.count == 3)
@@ -114,7 +114,7 @@ struct HeroImportTests {
         #expect(dv.lebensenergie.max > 0)
         #expect(dv.lebensenergie.current == dv.lebensenergie.max)
         #expect(dv.seelenkraft.max == 2)
-        #expect(dv.zaehigkeit.max == 2)
+        #expect(dv.zaehigkeit.max == 3)
         #expect(dv.schicksalspunkte.max == 3)
         #expect(dv.schicksalspunkte.current == 3)
 
@@ -125,7 +125,7 @@ struct HeroImportTests {
 
         // Experience
         let exp = try #require(hero.experience)
-        #expect(exp.totalAP == 1200)
+        #expect(exp.totalAP == 1245)
         #expect(exp.level == "Erfahren")
     }
 

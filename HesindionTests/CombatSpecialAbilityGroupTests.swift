@@ -36,7 +36,9 @@ final class CombatSpecialAbilityGroupTests: XCTestCase {
     }
 
     /// Plänkler-Formation (SA_884) is the ability that hid: no effects row, so
-    /// it went to the general list. Boronmir carries it.
+    /// it went to the general list. Boronmir's 2026-09-24 sheet no longer
+    /// carries it, so this test no longer covers that case; Formation (SA_862,
+    /// Kampfstilsonderfertigkeit) is the one he carries now.
     func testTheImporterFilesEveryCombatGroupAbilityAsCombat() throws {
         try requireDatabase()
         let hero = try TestData.importBoronmir(into: TestData.makeContainer())
@@ -46,7 +48,7 @@ final class CombatSpecialAbilityGroupTests: XCTestCase {
 
         XCTAssertEqual(
             Set(hero.combatSpecialAbilities.map(\.ruleId)),
-            ["SA_40", "SA_41", "SA_43", "SA_48", "SA_59", "SA_66", "SA_67", "SA_661", "SA_884"]
+            ["SA_40", "SA_41", "SA_43", "SA_67", "SA_661", "SA_862"]
         )
 
         // Boronmir has no general SAs of his own — SA_27 and SA_29 become
