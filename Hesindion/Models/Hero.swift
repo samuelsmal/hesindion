@@ -39,6 +39,10 @@ final class Hero {
     var notes: String = ""
     var colorSchemeId: String?
 
+    /// When an Optolith import last created or replaced this hero. `nil` for a
+    /// hero imported before the app recorded it; the settings screen says so.
+    var lastImportedAt: Date?
+
     // MARK: - Fokus-Regeln
 
     /// Ids of the optional DSA 5 Fokus-Regeln this hero plays with (see `FokusRule`).

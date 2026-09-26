@@ -97,6 +97,9 @@ struct HeroSettingsView: View {
                     indestructibleItemsSection
                         .padding(.bottom, 32)
                 }
+
+                importSection
+                    .padding(.bottom, 32)
             }
         }
         .background(Color(UIColor.systemBackground))
@@ -200,6 +203,31 @@ struct HeroSettingsView: View {
         .padding(.horizontal, 16)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("heroSettings.consecratedWeapons")
+    }
+
+    /// When the Optolith export last replaced this hero, so the player can
+    /// tell whether a re-import took.
+    private var importSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("import.section"))
+                .font(.dsaHeading(.title3))
+            Text(lastImportedText)
+                .font(.dsaBody(.body))
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("heroSettings.lastImported")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+    }
+
+    private var lastImportedText: String {
+        guard let date = hero.lastImportedAt else {
+            return L("import.lastImportedUnknown")
+        }
+        return String(
+            format: L("import.lastImported"),
+            date.formatted(date: .abbreviated, time: .shortened)
+        )
     }
 
     /// Everything a Patzertabelle result "beschädigt" marked, with the one

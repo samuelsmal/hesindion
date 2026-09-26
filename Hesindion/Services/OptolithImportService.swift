@@ -20,6 +20,15 @@ enum OptolithImportError: LocalizedError {
     }
 }
 
+// MARK: - Result
+
+/// What an import did: added a new hero, or replaced the data of the hero
+/// with the same name (a re-import).
+enum HeroImportResult: Equatable {
+    case created(heroName: String)
+    case updated(heroName: String)
+}
+
 // MARK: - Service
 
 struct OptolithImportService {
@@ -32,7 +41,8 @@ struct OptolithImportService {
 
     // MARK: - Public API
 
-    func importHero(from url: URL, context: ModelContext) throws {
+    @discardableResult
+    func importHero(from url: URL, context: ModelContext) throws -> HeroImportResult {
         let didStart = url.startAccessingSecurityScopedResource()
         defer { if didStart { url.stopAccessingSecurityScopedResource() } }
 
@@ -43,10 +53,11 @@ struct OptolithImportService {
             throw OptolithImportError.fileReadFailed
         }
 
-        try importHero(from: data, context: context)
+        return try importHero(from: data, context: context)
     }
 
-    func importHero(from data: Data, context: ModelContext) throws {
+    @discardableResult
+    func importHero(from data: Data, context: ModelContext) throws -> HeroImportResult {
         let root: [String: Any]
         do {
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -148,6 +159,7 @@ struct OptolithImportService {
         // Upsert: check for existing hero by name
         let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
         let existing = try context.fetch(descriptor)
+        let result: HeroImportResult
 
         if let hero = existing.first {
             replaceHeroData(
@@ -169,6 +181,8 @@ struct OptolithImportService {
                 liturgies: liturgies,
                 context: context
             )
+            hero.lastImportedAt = .now
+            result = .updated(heroName: heroName)
         } else {
             let hero = Hero(
                 name: heroName,
@@ -197,7 +211,9 @@ struct OptolithImportService {
             hero.languages = activatables.languages
             hero.spells = spells
             hero.liturgies = liturgies
+            hero.lastImportedAt = .now
             context.insert(hero)
+            result = .created(heroName: heroName)
         }
 
         do {
@@ -205,6 +221,7 @@ struct OptolithImportService {
         } catch {
             throw OptolithImportError.saveFailed(error.localizedDescription)
         }
+        return result
     }
 
     // MARK: - Upsert

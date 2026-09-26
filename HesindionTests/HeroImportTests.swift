@@ -141,6 +141,36 @@ struct HeroImportTests {
         #expect(heroes.count == 1)
     }
 
+    @Test func importReportsCreatedThenUpdated() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let first = try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        let name = try #require(try context.fetch(FetchDescriptor<Hero>()).first).name
+        #expect(first == .created(heroName: name))
+
+        let second = try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        #expect(second == .updated(heroName: name))
+    }
+
+    @Test func importStampsLastImportedAt() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        let before = Date.now
+        try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        let hero = try #require(try context.fetch(FetchDescriptor<Hero>()).first)
+        let firstStamp = try #require(hero.lastImportedAt)
+        #expect(firstStamp >= before)
+
+        try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        let secondStamp = try #require(hero.lastImportedAt)
+        #expect(secondStamp >= firstStamp)
+    }
+
+    @Test func lastImportedAtDefaultsToNil() {
+        #expect(Hero(name: "Alrik").lastImportedAt == nil)
+    }
+
     @Test func importPersistsRaceId() throws {
         let container = try makeContainer()
         let context = ModelContext(container)

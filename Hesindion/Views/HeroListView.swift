@@ -21,6 +21,7 @@ struct HeroListView: View {
     @State private var isShowingFilePicker = false
     @State private var importError: String?
     @State private var isShowingError = false
+    @State private var importResult: HeroImportResult?
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
 
@@ -66,6 +67,17 @@ struct HeroListView: View {
             Button(L("ok"), role: .cancel) {}
         } message: {
             Text(importError ?? L("unknownError"))
+        }
+        .alert(
+            importResultTitle,
+            isPresented: Binding(
+                get: { importResult != nil },
+                set: { if !$0 { importResult = nil } }
+            )
+        ) {
+            Button(L("ok"), role: .cancel) {}
+        } message: {
+            Text(importResultMessage)
         }
         .sheet(isPresented: $isShowingAdventureCreation) {
             NavigationStack {
@@ -300,9 +312,26 @@ struct HeroListView: View {
 
     private func handleURL(_ url: URL) {
         do {
-            try OptolithImportService().importHero(from: url, context: modelContext)
+            importResult = try OptolithImportService().importHero(from: url, context: modelContext)
         } catch {
             showError(error.localizedDescription)
+        }
+    }
+
+    /// A re-import replaces the hero with the same name in place, so without
+    /// this the player could not tell it from adding a second hero.
+    private var importResultTitle: String {
+        switch importResult {
+        case .updated: L("import.updated.title")
+        case .created, nil: L("import.created.title")
+        }
+    }
+
+    private var importResultMessage: String {
+        switch importResult {
+        case .updated(let name): String(format: L("import.updated.message"), name)
+        case .created(let name): String(format: L("import.created.message"), name)
+        case nil: ""
         }
     }
 

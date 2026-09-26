@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **An import says whether it added a hero or replaced one.** Importing an Optolith file for a hero who is already in the app replaces that hero's data in place, and until now a re-import looked exactly like nothing had happened. A message now says "Held importiert" or "Held aktualisiert", and the hero settings show when the hero was last imported ("unbekannt" for a hero imported before this version).
+
 ## [0.5.0-rc.1] - 2026-09-26
 
 ### Added
