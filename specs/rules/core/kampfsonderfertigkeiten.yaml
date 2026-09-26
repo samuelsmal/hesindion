@@ -1,6 +1,6 @@
 # DRAFT FORMAT — see ../../README.md.
 # The general rule every manoeuvre file leans on: how many Kampfsonderfertigkeiten one action
-# may use. Settles the shared ruling manoeuvre-combination (rules/rulings.yaml).
+# may use. Settles the shared ruling manoeuvre-combination (rulings.yaml).
 id: kampfsonderfertigkeiten
 name: Passive, Basis- und Spezialmanöver
 kind: core

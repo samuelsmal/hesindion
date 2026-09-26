@@ -1,7 +1,7 @@
 """Collect every ruling from the draft rule files and write RULINGS.md.
 
-    python3 docs/rules-rework/examples/rulings.py          # rewrite RULINGS.md
-    python3 docs/rules-rework/examples/rulings.py --check  # fail if RULINGS.md is stale or a ruling is malformed
+    python3 scripts/rules_review/rulings.py          # rewrite specs/rules/RULINGS.md
+    python3 scripts/rules_review/rulings.py --check  # fail if RULINGS.md is stale or a ruling is malformed
 
 A ruling is open until its `answer` is filled in. Answering one is an edit to the rule file:
 write an option letter or your own words into `answer:`. The next pass sets `status: decided`
@@ -11,22 +11,22 @@ effects and situations to match.
 
 import re
 import sys
-from pathlib import Path
 
 import yaml
 
-HERE = Path(__file__).resolve().parent
-RULES = HERE / "rules"
-OUT = HERE / "RULINGS.md"
+import rulefiles as rf
+
+ROOT = rf.ROOT
+OUT = ROOT / "RULINGS.md"
 
 
 def rule_files():
-    return sorted(RULES.rglob("*.yaml"))
+    return rf.rule_paths()
 
 
 def rulings_in(path):
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if isinstance(data, list):              # rules/rulings.yaml: the shared ones
+    if isinstance(data, list):              # rulings.yaml: the shared ones
         return "shared", data
     return data["id"], data.get("rulings") or []
 
@@ -54,7 +54,7 @@ def collect():
     for path in rule_files():
         owner, rulings = rulings_in(path)
         for r in rulings:
-            rel = path.relative_to(HERE)
+            rel = path.relative_to(ROOT)
             items.append({
                 "owner": owner, "path": rel, "line": line_of(path, r["id"]), **r,
                 "answered": r.get("status") == "open" and r.get("answer") not in (None, ""),
@@ -121,7 +121,7 @@ def main():
     for e in errors:
         print(e, file=sys.stderr)
     OUT.write_text(text, encoding="utf-8")
-    print(f"wrote {OUT.relative_to(HERE.parent.parent.parent)}")
+    print(f"wrote {OUT.relative_to(ROOT.parents[1])}")
 
 
 if __name__ == "__main__":

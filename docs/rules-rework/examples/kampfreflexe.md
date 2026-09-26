@@ -1,6 +1,6 @@
 # Example 12 — Kampfreflexe
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -22,8 +22,8 @@ the INI Basiswert's own breakdown on the hero sheet — the way Eisern belongs i
 
 ## Situations
 
-In [`situations/kampfreflexe.yaml`](./situations/kampfreflexe.yaml), 12.1–12.5. The rule as draft
-YAML: [`SA_51`](./rules/abilities/SA_51.yaml).
+In [`situations/kampfreflexe.yaml`](../../../specs/rules/situations/kampfreflexe.yaml), 12.1–12.5. The rule as draft
+YAML: [`SA_51`](../../../specs/rules/abilities/SA_51.yaml).
 
 Where the app is wrong: Kampfreflexe is ignored everywhere. The import computes INI as (MU+GE)/2
 with a bonus of 0 (`OptolithImportService`, `DerivedValueFormulas.initiative`), the catalog has
@@ -33,7 +33,7 @@ armour's extra INI penalty already combine correctly with the base; they only ne
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_51`.
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for `SA_51`.
 `SA_51.kampfreflexe-mounted` is decided: mounted, Kampfreflexe adds to the mount's INI base (12.5).
 `reiterkampf.rider-ini` is decided the other way for the rider's Belastung: it does not come off
 the mount's base (12.5 has no Belastung line).

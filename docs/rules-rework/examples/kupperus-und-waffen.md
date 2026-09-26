@@ -1,6 +1,6 @@
 # Example 18 — Kupperus und Boronmirs Waffen
 
-**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 Boronmir's horse, and the three things he fights with. The horse's rules sit on the other side
 of [Reiterkampf](./reiterkampf.md): that page says what a rider does with the mount's INI, GS and
@@ -20,10 +20,10 @@ first **creature** rules.
 | ITEMTPL_29 | Großschild (table properties only) | <https://dsa.ulisses-regelwiki.de/grossschild.html> | Regelwerk p. 367; Aventurische Rüstkammer p. 67 |
 | waffeneigenschaften | Waffeneigenschaften (Fokusregel, Ausrüstung I) | <https://dsa.ulisses-regelwiki.de/Waffeneigenschaften.html> | Aventurische Rüstkammer p. 56 |
 
-Referenced, not written here: [`reiterkampf`](./rules/core/reiterkampf.yaml) RK1, RK7, RK12–RK14;
-[`SA_661`](./rules/abilities/SA_661.yaml) GS1–GS3; `schilde` (the shield rules), [`schaden`](./rules/core/schaden.yaml) S3 (the Schadensbonus, from
+Referenced, not written here: [`reiterkampf`](../../../specs/rules/core/reiterkampf.yaml) RK1, RK7, RK12–RK14;
+[`SA_661`](../../../specs/rules/abilities/SA_661.yaml) GS1–GS3; `schilde` (the shield rules), [`schaden`](../../../specs/rules/core/schaden.yaml) S3 (the Schadensbonus, from
 the [Kampftechniken](https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html)
-page) and [`groessenkategorie`](./rules/core/groessenkategorie.yaml) GK4 — other agents' files.
+page) and [`groessenkategorie`](../../../specs/rules/core/groessenkategorie.yaml) GK4 — other agents' files.
 
 **There is no creature ability "Niederreiten".** The wiki's search finds only the Reiterkampf
 order, Berittener Kampf, Frontalangriff and profiles with a Niederreiten attack. On a horse it is
@@ -72,17 +72,17 @@ Waffenvorteil and -nachteil applies only when the group plays it.
 
 ## Situations
 
-In [`situations/kupperus-und-waffen.yaml`](./situations/kupperus-und-waffen.yaml), 18.1–18.17,
+In [`situations/kupperus-und-waffen.yaml`](../../../specs/rules/situations/kupperus-und-waffen.yaml), 18.1–18.17,
 with Boronmir's values from the 2026-09-24 export: Rabenschnabel AT 16, Langschwert AT 14, KK 14,
 Reiten 12, Belastung I in plate. On horseback, RK7 takes that Belastung to 0. The derivation is
 in the file's header. At KK 14 neither weapon gets a Schadensbonus, so 18.17 gives the hero KK
 15 to keep the case where the app is wrong. The rules as draft YAML:
-[`svellttaler-kaltblut`](./rules/creatures/svellttaler-kaltblut.yaml),
-[`maechtiger-schlag`](./rules/creatures/maechtiger-schlag.yaml),
-[`ruhiges-temperament`](./rules/creatures/ruhiges-temperament.yaml),
-[`ITEMTPL_19`](./rules/equipment/ITEMTPL_19.yaml), [`ITEMTPL_35`](./rules/equipment/ITEMTPL_35.yaml),
-[`ITEMTPL_29`](./rules/equipment/ITEMTPL_29.yaml),
-[`waffeneigenschaften`](./rules/core/waffeneigenschaften.yaml).
+[`svellttaler-kaltblut`](../../../specs/rules/creatures/svellttaler-kaltblut.yaml),
+[`maechtiger-schlag`](../../../specs/rules/creatures/maechtiger-schlag.yaml),
+[`ruhiges-temperament`](../../../specs/rules/creatures/ruhiges-temperament.yaml),
+[`ITEMTPL_19`](../../../specs/rules/equipment/ITEMTPL_19.yaml), [`ITEMTPL_35`](../../../specs/rules/equipment/ITEMTPL_35.yaml),
+[`ITEMTPL_29`](../../../specs/rules/equipment/ITEMTPL_29.yaml),
+[`waffeneigenschaften`](../../../specs/rules/core/waffeneigenschaften.yaml).
 
 The three asked for:
 
@@ -132,7 +132,7 @@ in Optolith, the hero file and the app match the pages for all three items; the 
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). New here, all decided
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md). New here, all decided
 (@samuelsmal, 2026-09-24):
 
 - `svellttaler-kaltblut.mount-profile-data` (c) — a table of Bestiarium profiles keyed by the pet's

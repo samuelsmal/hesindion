@@ -844,7 +844,7 @@ class Review(App):
         else:
             return
         with self.suspend():
-            subprocess.run(editor_command(rf.HERE / path, line))
+            subprocess.run(editor_command(rf.ROOT / path, line))
         self.after_write("reloaded after the edit")
 
     def action_open_page(self):

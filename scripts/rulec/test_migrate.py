@@ -8,7 +8,7 @@ from pathlib import Path
 
 from rulec import migrate
 
-EXAMPLES = Path(__file__).resolve().parents[2] / "docs" / "rules-rework" / "examples"
+ROOT = Path(__file__).resolve().parents[2] / "specs" / "rules"
 
 
 def clause(effects: str) -> str:
@@ -427,8 +427,8 @@ class TreeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.tmp.name)
-        for sub in ("rules", "situations"):
-            shutil.copytree(EXAMPLES / sub, cls.root / sub, ignore=shutil.ignore_patterns("__pycache__"))
+        shutil.copytree(ROOT, cls.root, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__"))
+        (cls.root / "MIGRATION.md").unlink()
         cls.before = {p: p.read_text(encoding="utf-8") for p in cls.files(cls.root)}
         migrate.migrate_tree(cls.root)
         cls.after = {p: p.read_text(encoding="utf-8") for p in cls.files(cls.root)}
@@ -439,7 +439,7 @@ class TreeTests(unittest.TestCase):
 
     @staticmethod
     def files(root):
-        return sorted((root / "rules").rglob("*.yaml")) + sorted((root / "situations").glob("*.yaml"))
+        return [p for p, _ in migrate._files(root)]
 
     @staticmethod
     def reviewed(text):

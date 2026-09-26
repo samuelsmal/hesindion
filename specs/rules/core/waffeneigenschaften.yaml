@@ -1,6 +1,6 @@
 # DRAFT FORMAT — see ../../README.md.
 # The Fokusregel that switches every weapon's Waffenvorteil and Waffennachteil on. Written
-# because the weapon files (rules/equipment/) gate those clauses on it.
+# because the weapon files (equipment/) gate those clauses on it.
 id: waffeneigenschaften
 name: Waffeneigenschaften
 kind: core
@@ -35,7 +35,7 @@ clauses:
       und Nachteile für Waffen, die nur zum Tragen kommen, wenn du mit der Fokusregel spielst.
     none: >
       the gate is a `when: { rulesets: fokus.waffeneigenschaften }` on each Waffenvorteil and
-      Waffennachteil effect in rules/equipment/, each resting on the ruling
+      Waffennachteil effect in equipment/, each resting on the ruling
       ITEMTPL_19.rabenschnabel-waffeneigenschaft
     # The weapon's table row and its Anmerkung (e.g. the Großschild's "zusätzlich -1 AT auf
         # die Hauptwaffe") are Regelwerk values and stay on without the Fokusregel.

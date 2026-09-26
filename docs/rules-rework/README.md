@@ -48,11 +48,12 @@ were not brought over. Paths in these documents that point there resolve in the 
 - **Worked examples before any design.** A set of core rules and special abilities is
   written up with concrete situations and the numbers the app must show, independent
   of any encoding. They are the acceptance cases every design is checked against, and
-  the place surprises are meant to show up early. See [`examples/`](./examples/).
+  the place surprises are meant to show up early. See [`examples/`](./examples/); their rule files and situations are in
+  [`specs/rules/`](../../specs/rules/).
 - **Rulings are data, answered in the files, not in chat.** Each lives in the rule file it
   interprets, with lettered options and a recommendation; the owner answers by editing
-  `answer:`; decisions are signed with a GitHub handle; `examples/RULINGS.md` is the generated
-  index. See [`examples/README.md`](./examples/README.md#how-rulings-are-kept).
+  `answer:`; decisions are signed with a GitHub handle; `specs/rules/RULINGS.md` is the generated
+  index. See [`specs/rules/README.md`](../../specs/rules/README.md#how-rulings-are-kept).
 
 ## What the pipeline's error rate was
 

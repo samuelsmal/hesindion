@@ -4,9 +4,9 @@
 # His own special abilities, advantages, disadvantages and items come from the hero file; `skip`
 # takes out those with nothing for the app to apply. `rules` adds the core rules, conditions and
 # the like that reach him without being on his sheet, each with why. The shared rulings
-# (rules/rulings.yaml) are always in.
+# (rulings.yaml) are always in.
 name: Boronmir
-hero: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+hero: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 
 skip:
   SA_27: Schrift — no roll or value the app computes

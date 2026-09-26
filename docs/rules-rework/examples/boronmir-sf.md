@@ -1,6 +1,6 @@
 # Example 14 — Boronmir's Kampfsonderfertigkeiten
 
-**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 Four combat abilities of Boronmir's that no earlier example covered: two Spezialmanöver he
 announces himself, a passive bonus on a talent check, and a formation that also helps the
@@ -80,12 +80,12 @@ or Schildspalter with Wuchtschlag.
 
 ## Situations
 
-[`situations/boronmir-sf.yaml`](./situations/boronmir-sf.yaml), 14.1–14.21, all with Boronmir's
+[`situations/boronmir-sf.yaml`](../../../specs/rules/situations/boronmir-sf.yaml), 14.1–14.21, all with Boronmir's
 values as of 2026-09-24, plus the three SFs: Rabenschnabel 16/11, Langschwert 14/11 and
 Großschild 6/13 (StP 30), all with the shield's passive bonus; AW 7; Belastung I in plate with
-Belastungsgewöhnung II. The derivation is in the file's header. Rule files: [`SA_66`](./rules/abilities/SA_66.yaml),
-[`SA_59`](./rules/abilities/SA_59.yaml), [`SA_40`](./rules/abilities/SA_40.yaml),
-[`SA_884`](./rules/abilities/SA_884.yaml).
+Belastungsgewöhnung II. The derivation is in the file's header. Rule files: [`SA_66`](../../../specs/rules/abilities/SA_66.yaml),
+[`SA_59`](../../../specs/rules/abilities/SA_59.yaml), [`SA_40`](../../../specs/rules/abilities/SA_40.yaml),
+[`SA_884`](../../../specs/rules/abilities/SA_884.yaml).
 
 ## What the app gets wrong
 

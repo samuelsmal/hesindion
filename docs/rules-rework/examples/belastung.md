@@ -1,6 +1,6 @@
 # Example 1 — Belastung, Belastungsgewöhnung and the mounted relief
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -55,11 +55,11 @@
 
 ## Situations
 
-In [`situations/belastung.yaml`](./situations/belastung.yaml): armour alone (1.x), Belastungsgewöhnung
+In [`situations/belastung.yaml`](../../../specs/rules/situations/belastung.yaml): armour alone (1.x), Belastungsgewöhnung
 (2.x), mounted (3.x), and which checks Belastung reaches (4.x), each with the rule and clause
-behind every line and what the app does today. The rules as draft YAML: [`COND_1`](./rules/conditions/COND_1.yaml),
-[`ruestung-und-belastung`](./rules/core/ruestung-und-belastung.yaml), [`SA_41`](./rules/abilities/SA_41.yaml),
-[`reiterkampf` RK7](./rules/core/reiterkampf.yaml).
+behind every line and what the app does today. The rules as draft YAML: [`COND_1`](../../../specs/rules/conditions/COND_1.yaml),
+[`ruestung-und-belastung`](../../../specs/rules/core/ruestung-und-belastung.yaml), [`SA_41`](../../../specs/rules/abilities/SA_41.yaml),
+[`reiterkampf` RK7](../../../specs/rules/core/reiterkampf.yaml).
 
 Where the app is wrong, per the rulings below: talents are never hindered (4.1), and the seven
 talents the book marks "evtl." have no "Belastung zählt" toggle (4.5); Belastung IV and beyond
@@ -73,7 +73,7 @@ ignorieren" suppresses Belastung with every other Zustand (`schicksalspunkte.sch
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md), generated from the rule
 files — look for `COND_1`, `ruestung-und-belastung`, `SA_41` and `reiterkampf`.
 
 **Provenance gap, today:** the INI and GS penalties are computed in `Hero.totalIniPenalty` and

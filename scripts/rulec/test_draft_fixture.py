@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from rulec import compile, rules, situations, vocab
-from rulec.__main__ import EXAMPLES
+from rulec.__main__ import ROOT
 
 FIXTURE = Path(__file__).parent / "fixtures" / "draft-from-log.yaml"
 # Written by the engine's round trip (`LogTests.testEveryPassingSituationRoundTrips`, run by
@@ -21,8 +21,8 @@ DRAFTS = Path(__file__).resolve().parents[2] / "build" / "rules" / "drafts"
 class TheDraftFromTheLogCompiles(unittest.TestCase):
     def compile(self, directory=None):
         v = vocab.load()
-        shared = rules.shared_rulings(EXAMPLES / "rules")
-        book, errors = rules.check(EXAMPLES / "rules", v)
+        shared = rules.shared_rulings(ROOT)
+        book, errors = rules.check(ROOT, v)
         self.assertEqual([str(e) for e in errors], [])
         out = compile.build_rules(book, v, shared)
         if directory is not None:
@@ -52,7 +52,7 @@ class TheDraftFromTheLogCompiles(unittest.TestCase):
         # The engine ran 19.1 as rulec compiles it from the examples; its draft, compiled
         # again, states the same hero, facts, base values and dice.
         (draft,), _ = self.compile()
-        examples, _ = self.compile(EXAMPLES / "situations")
+        examples, _ = self.compile(ROOT / "situations")
         original = next(s for s in examples if s["id"] == "19.1")
         for key in ("owned", "facts", "base", "rolls"):
             self.assertEqual(draft[key], original[key], key)
@@ -68,8 +68,8 @@ class EveryDraftReimports(unittest.TestCase):
         if not yamls:
             self.skipTest(f"no drafts in {DRAFTS}: run `make test-rules-engine` first")
         v = vocab.load()
-        shared = rules.shared_rulings(EXAMPLES / "rules")
-        book, errors = rules.check(EXAMPLES / "rules", v)
+        shared = rules.shared_rulings(ROOT)
+        book, errors = rules.check(ROOT, v)
         self.assertEqual([str(e) for e in errors], [])
         out = compile.build_rules(book, v, shared)
         sits, errors = situations.check(DRAFTS, book, out["reach"], v, shared)

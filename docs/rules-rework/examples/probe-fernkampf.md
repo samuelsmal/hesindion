@@ -1,6 +1,6 @@
 # Example 21 (probe) — Fernkampf, Ladezeiten, Schnellladen
 
-**Status: probe, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: probe, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 This is a probe, not part of Boronmir's set. The question is whether rules outside melee need
 engine concepts the drafts so far lack. It covers the core ranged attack and one ranged SF, with
@@ -62,9 +62,9 @@ half GS.
 
 ## Situations
 
-[`situations/probe-fernkampf.yaml`](./situations/probe-fernkampf.yaml), 21.1–21.8. Rule files:
-[`fernkampf`](./rules/core/fernkampf.yaml), [`ladezeiten`](./rules/core/ladezeiten.yaml),
-[`SA_60`](./rules/abilities/SA_60.yaml).
+[`situations/probe-fernkampf.yaml`](../../../specs/rules/situations/probe-fernkampf.yaml), 21.1–21.8. Rule files:
+[`fernkampf`](../../../specs/rules/core/fernkampf.yaml), [`ladezeiten`](../../../specs/rules/core/ladezeiten.yaml),
+[`SA_60`](../../../specs/rules/abilities/SA_60.yaml).
 
 ## What the app gets wrong
 

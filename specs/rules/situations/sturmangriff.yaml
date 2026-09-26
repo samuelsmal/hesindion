@@ -5,7 +5,7 @@
 #   5.12 the plain case (GS 8: AT −2, TP +6)   5.13 rounding (GS 7: TP +6)
 #   5.14 in Platte (current GS 5: TP +5)       5.15 GS 3: not offered
 #   5.9  not offered on horseback (reiterkampf.RK3)
-# Open rulings named without a prefix live in ../rules/rulings.yaml once added.
+# Open rulings named without a prefix live in ../rulings.yaml once added.
 # The announced Sturmangriff is `choice.sturmangriff` (the old `manoeuvre: sturmangriff`), the
 # run-up in Schritt `action.runUp` (the old `runUp`). "On a hit" / "on a miss" is
 # `action.attack: hit` / `miss`. GS: `gs` is the current GS, `gsNatural` the natural one (the old

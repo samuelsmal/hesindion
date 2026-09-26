@@ -115,7 +115,7 @@ situations:
 
 def tree(situation_files, rule_files=None, hero=HERO):
     d = Path(tempfile.mkdtemp())
-    rules_dir = d / "rules"
+    rules_dir = d
     (rules_dir / "abilities").mkdir(parents=True)
     for rid, body in (rule_files or {"SA_1": SA_1, "SA_2": SA_2, "SA_3": SA_3,
                                      "SA_4": SA_4, "CORE": CORE}).items():
@@ -130,7 +130,7 @@ def tree(situation_files, rule_files=None, hero=HERO):
 def run(situation_files, **kw):
     d = tree(situation_files, **kw)
     v = vocab.load()
-    book, errors = rules.check(d / "rules", v)
+    book, errors = rules.check(d, v)
     assert errors == [], [str(e) for e in errors]
     reach = compile.build_rules(book, v)["reach"]
     return situations.check(d / "situations", book, reach, v)
@@ -590,7 +590,7 @@ class CommandTests(unittest.TestCase):
     def test_build_writes_situations_json(self):
         d = tree({"main.yaml": MAIN})
         out = d / "build"
-        code, text = self.run_main(["build", "--rules", str(d / "rules"),
+        code, text = self.run_main(["build", "--rules", str(d),
                                     "--situations", str(d / "situations"), "--out", str(out)])
         self.assertEqual(code, 0, text)
         self.assertEqual(text.splitlines(), [f"wrote {out / 'rules.json'} (5 rules)",
@@ -600,15 +600,15 @@ class CommandTests(unittest.TestCase):
         self.assertEqual([(s["id"], s["pending"]) for s in obj["situations"]],
                          [("1.2", ["SA_1.r1"]), ("1.10", [])])
 
-    def test_situations_default_to_the_sibling_of_the_rules(self):
+    def test_situations_default_to_the_situations_folder_of_the_root(self):
         d = tree({"main.yaml": MAIN})
-        code, text = self.run_main(["check", "--rules", str(d / "rules")])
+        code, text = self.run_main(["check", "--rules", str(d)])
         self.assertEqual(code, 0, text)
         self.assertTrue(text.endswith(", 2 situations (1 pending)\n"), text)
 
     def test_check_reports_situation_errors(self):
         d = tree({"a.yaml": "situations:\n  - id: S\n    choose: { gmFact.behind: true }\n"})
-        code, text = self.run_main(["check", "--rules", str(d / "rules"),
+        code, text = self.run_main(["check", "--rules", str(d),
                                     "--situations", str(d / "situations")])
         self.assertEqual(code, 1)
         self.assertEqual(text.splitlines(),
@@ -618,17 +618,17 @@ class CommandTests(unittest.TestCase):
     def test_only_filters_situation_errors(self):
         d = tree({"a.yaml": "situations:\n  - id: S\n    choose: { gmFact.behind: true }\n",
                   "b.yaml": "situations:\n  - id: T\n"})
-        code, text = self.run_main(["check", "--rules", str(d / "rules"),
+        code, text = self.run_main(["check", "--rules", str(d),
                                     "--situations", str(d / "situations"), "--only", "b.yaml"])
         self.assertEqual(code, 0, text)
-        code, text = self.run_main(["check", "--rules", str(d / "rules"),
+        code, text = self.run_main(["check", "--rules", str(d),
                                     "--situations", str(d / "situations"), "--only", "a.yaml"])
         self.assertEqual(code, 1, text)
 
     def test_build_fails_on_situation_errors(self):
         d = tree({"a.yaml": "situations:\n  - id: S\n    expect: { nope: 1 }\n"})
         out = d / "build"
-        code, text = self.run_main(["build", "--rules", str(d / "rules"),
+        code, text = self.run_main(["build", "--rules", str(d),
                                     "--situations", str(d / "situations"), "--out", str(out)])
         self.assertEqual(code, 1)
         self.assertIn("unknown expect key nope", text)

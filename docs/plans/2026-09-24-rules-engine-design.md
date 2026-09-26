@@ -5,7 +5,8 @@
 `specs/data/rules-catalog.yaml` and `RuleVocabulary` (removed domain by domain, see §9).
 **Inputs:** the 2026-09-23 decisions in [`docs/rules-rework/README.md`](../rules-rework/README.md);
 the worked examples 1–22 in [`docs/rules-rework/examples/`](../rules-rework/examples/) — their
-rule files, situations and `# FORMAT:` notes; the probe beyond melee (examples 20–22).
+rule files, situations and `# FORMAT:` notes (the rule files and situations are in
+[`specs/rules/`](../../specs/rules/) since 2026-09-26, see ADR-0015); the probe beyond melee (examples 20–22).
 
 ## 1. The requirement
 

@@ -1,30 +1,30 @@
 """rulec's command line: `check` validates the rule and situations files, `build` compiles them to
 `rules.json` and `situations.json`.
 
-The situations default to the `situations` directory next to the rules directory and are skipped
-when that does not exist; a `--situations` directory given explicitly must exist. The Probe table
-(`checks.yaml` next to the rules directory, `--checks`; Task 34) is checked when it exists and goes
-into situations.json as `checks`."""
+`--rules` is the root of the rules (`specs/rules/`, see `layout`). The situations default to its
+`situations` directory and are skipped when that does not exist; a `--situations` directory given
+explicitly must exist. The Probe table (the root's `checks.yaml`, `--checks`; Task 34) is checked
+when it exists and goes into situations.json as `checks`."""
 import argparse
 import sys
 from pathlib import Path
 
-from . import checks, compile, rules, situations, vocab
+from . import checks, compile, layout, rules, situations, vocab
 from .errors import RulecError
 
-EXAMPLES = Path(__file__).resolve().parents[2] / "docs" / "rules-rework" / "examples"
+ROOT = layout.ROOT
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="rulec")
     sub = p.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check")
-    c.add_argument("--rules", type=Path, default=EXAMPLES / "rules")
+    c.add_argument("--rules", type=Path, default=ROOT)
     c.add_argument("--situations", type=Path, default=None)
     c.add_argument("--checks", type=Path, default=None)
     c.add_argument("--only", nargs="*", default=None, help="report errors only for these files")
     b = sub.add_parser("build")
-    b.add_argument("--rules", type=Path, default=EXAMPLES / "rules")
+    b.add_argument("--rules", type=Path, default=ROOT)
     b.add_argument("--situations", type=Path, default=None)
     b.add_argument("--checks", type=Path, default=None)
     b.add_argument("--out", type=Path, required=True)
@@ -33,7 +33,7 @@ def main(argv=None):
     book, errors = rules.check(a.rules, v)
     shared = rules.shared_rulings(a.rules)
 
-    checks_path = a.checks if a.checks is not None else Path(a.rules).parent / "checks.yaml"
+    checks_path = a.checks if a.checks is not None else Path(a.rules) / layout.CHECKS
     table = {}
     if a.checks is not None and not checks_path.is_file():
         errors.append(RulecError(f"no checks table {checks_path}", str(checks_path)))
@@ -41,7 +41,7 @@ def main(argv=None):
         table, check_errors = checks.load(checks_path)
         errors += check_errors
 
-    sit_dir = a.situations if a.situations is not None else Path(a.rules).parent / "situations"
+    sit_dir = a.situations if a.situations is not None else Path(a.rules) / layout.SITUATIONS
     compiled = None
     if a.situations is not None and not sit_dir.is_dir():
         errors.append(RulecError(f"no situations directory {sit_dir}", str(sit_dir)))

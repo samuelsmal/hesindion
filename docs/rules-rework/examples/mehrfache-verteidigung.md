@@ -1,6 +1,6 @@
 # Example 3 — Mehrfache Verteidigung, Vinsalt-Stil and Verteidigungshaltung
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -49,10 +49,10 @@
 
 ## Situations
 
-In [`situations/mehrfache-verteidigung.yaml`](./situations/mehrfache-verteidigung.yaml), V1–V13.
-The rules as draft YAML: [`mehrfache-verteidigung`](./rules/core/mehrfache-verteidigung.yaml),
-[`SA_923`](./rules/abilities/SA_923.yaml), [`SA_65`](./rules/abilities/SA_65.yaml),
-[`schicksalspunkte`](./rules/core/schicksalspunkte.yaml).
+In [`situations/mehrfache-verteidigung.yaml`](../../../specs/rules/situations/mehrfache-verteidigung.yaml), V1–V13.
+The rules as draft YAML: [`mehrfache-verteidigung`](../../../specs/rules/core/mehrfache-verteidigung.yaml),
+[`SA_923`](../../../specs/rules/abilities/SA_923.yaml), [`SA_65`](../../../specs/rules/abilities/SA_65.yaml),
+[`schicksalspunkte`](../../../specs/rules/core/schicksalspunkte.yaml).
 
 Where the app is wrong, independent of the open rulings:
 
@@ -69,7 +69,7 @@ Where the app is wrong, independent of the open rulings:
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for
 `mehrfache-verteidigung`, `SA_65`, and the shared `kampfstil-techniques`: Vinsalt-Stil applies
 only with a weapon of its list (Armbrüste, Fechtwaffen, Zweihandschwerter), so with a Schwert the
 steps stay −3 (V8), as the app already does.

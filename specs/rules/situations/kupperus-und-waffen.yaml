@@ -1,9 +1,9 @@
 # Example 18 — Kupperus and Boronmir's weapons. Same conventions as belastung.yaml.
 # DRAFT FORMAT — see ../README.md.
-# Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
+# Open rulings named without a prefix live in ../rulings.yaml or in the rule's own file.
 #
-# The hero is Boronmir as of the 2026-09-24 export (docs/sample_heros/Boronmir Siebenfeld von
-# Greifenfurt (2026-09-24).json), in his Plattenrüstung, with the values derived as
+# The hero is Boronmir as of the 2026-09-24 export (specs/heroes/Boronmir Siebenfeld von
+# Greifenfurt.json), in his Plattenrüstung, with the values derived as
 # boronmir-neu.yaml derives them:
 #   MU 14, GE 14, KK 14; Hiebwaffen 14, Schwerter 12, Schilde 10; Reiten (TAL_6) FW 12.
 #   Rabenschnabel AT 16 (KtW 14 + (MU 14 − 8)/3 = 2), Langschwert AT 14 (12 + 2), before any
@@ -14,7 +14,7 @@
 #   no Belastung line on horseback.
 # Schadensbonus (L+S): +1 TP per point of the Leiteigenschaft above the weapon's threshold, from
 #   the Kampftechniken page (https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html).
-#   It is schaden.S3 (rules/core/schaden.yaml).
+#   It is schaden.S3 (core/schaden.yaml).
 #   Rabenschnabel KK 14 → KK 14: +0. Langschwert GE/KK 15 → max(14, 14) = 14: +0. So neither
 #   of his weapons gets a Schadensbonus now; 18.17 keeps the case for a hero above the
 #   threshold (KK 15, Boronmir's value before 2026-09-24), where the app is still wrong.
@@ -39,7 +39,7 @@
 #   told `texts`. "On a hit" is `action.attack: hit`; a TP formula is a comment. `formula` in a
 #   line is a comment.
 
-heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 hero:
   abilities: { SA_41: 2, SA_43: 1, SA_661: 1 }
   creatures: { svellttaler-kaltblut: true }

@@ -9,7 +9,7 @@ the file at the line given and write an option letter or your own words into `an
 
 ### `SA_74` · vp-sequence
 
-Answer in [`rules/abilities/SA_74.yaml:106`](./rules/abilities/SA_74.yaml#L106)
+Answer in [`abilities/SA_74.yaml:106`](./abilities/SA_74.yaml#L106)
 
 **When is the Selbstbeherrschung check rolled — before the spell check, or after it, when the LeP are paid? And does a caster whose spell check failed need it to pay part of the half cost with LeP?**
 
@@ -24,7 +24,7 @@ Why b: the caster commits to the LeP before casting, and "misslingt auch der Zau
 
 ### `SA_862` · formation-mounted
 
-Answer in [`rules/abilities/SA_862.yaml:85`](./rules/abilities/SA_862.yaml#L85)
+Answer in [`abilities/SA_862.yaml:85`](./abilities/SA_862.yaml#L85)
 
 **Can riders form a Formation — may Boronmir take its +2 while fighting from Kupperus?**
 
@@ -40,7 +40,7 @@ Why a: the spacing is the same as Plänkler-Formation's, and deciding the two th
 
 ### `SA_862` · formation-and-plaenkler
 
-Answer in [`rules/abilities/SA_862.yaml:107`](./rules/abilities/SA_862.yaml#L107)
+Answer in [`abilities/SA_862.yaml:107`](./abilities/SA_862.yaml#L107)
 
 **Can one fighter stand in a Formation and a Plänkler-Formation at once, and take both bonuses (+2 and +1)?**
 
@@ -55,7 +55,7 @@ Why a: both SFs describe one line or block of fighters around one holder; a figh
 
 ### `SA_9` · spezialisierung-when
 
-Answer in [`rules/abilities/SA_9.yaml:66`](./rules/abilities/SA_9.yaml#L66)
+Answer in [`abilities/SA_9.yaml:66`](./abilities/SA_9.yaml#L66)
 
 **"Wenn das entsprechende Anwendungsgebiet eine Rolle bei der Probe spielt": how does the check know its Anwendungsgebiet, so that the +2 is applied or not?**
 
@@ -71,7 +71,7 @@ Why a: the page makes the application part of every talent check, and three othe
 
 ### `ADV_54` · eisern-scope
 
-Answer in [`rules/advantages/ADV_54.yaml:37`](./rules/advantages/ADV_54.yaml#L37)
+Answer in [`advantages/ADV_54.yaml:37`](./advantages/ADV_54.yaml#L37)
 
 **The Wundschwelle is part of the Trefferzonen Fokusregel. With that Fokusregel off, does Eisern do anything — and what does the hero sheet say about it?**
 
@@ -87,7 +87,7 @@ Why a: it reads the page the way verweichlicht-scope already read Verweichlicht'
 
 ### `fernkampf` · range-input
 
-Answer in [`rules/core/fernkampf.yaml:408`](./rules/core/fernkampf.yaml#L408)
+Answer in [`core/fernkampf.yaml:408`](./core/fernkampf.yaml#L408)
 
 **How does the app learn the range band (nah / mittel / weit / beyond)? By the player naming the band, or by the distance in Schritt, which the app turns into the band from the weapon?**
 
@@ -102,7 +102,7 @@ Why b: the GM usually says "about 40 Schritt" and the player knows their bow; sh
 
 ### `fernkampf` · cover-as-size
 
-Answer in [`rules/core/fernkampf.yaml:429`](./rules/core/fernkampf.yaml#L429)
+Answer in [`core/fernkampf.yaml:429`](./core/fernkampf.yaml#L429)
 
 **FK8: a target in cover "gilt als" a smaller size. Does cover replace the target's size (the part that is visible decides: chest-high wall → klein, whoever stands behind it), or step the target's own size down (an Oger, groß, behind the same wall → mittel)?**
 
@@ -117,7 +117,7 @@ Why a: it reproduces both of the page's examples for a human (bis zur Brust → 
 
 ### `fernkampf` · zielen-interrupted
 
-Answer in [`rules/core/fernkampf.yaml:450`](./rules/core/fernkampf.yaml#L450)
+Answer in [`core/fernkampf.yaml:450`](./core/fernkampf.yaml#L450)
 
 **FK11: aiming is "eine länger dauernde Handlung bis zum eigentlichen Angriff". What ends it without a shot — a defence, taking damage, the target moving out of sight — and does it carry over into the next Kampfrunde?**
 
@@ -133,7 +133,7 @@ Why a: it makes the cost visible (the actions are spent) without guessing furthe
 
 ### `fertigkeitsproben` · crit-qs
 
-Answer in [`rules/core/fertigkeitsproben.yaml:260`](./rules/core/fertigkeitsproben.yaml#L260)
+Answer in [`core/fertigkeitsproben.yaml:260`](./core/fertigkeitsproben.yaml#L260)
 
 **A Doppel-1 is "automatisch gelungen" and "besser gelungen als üblich". What QS does it have?**
 
@@ -149,7 +149,7 @@ Why a: it follows the talents' own text where there is one and the core page whe
 
 ### `ladezeiten` · laengere-handlungen
 
-Answer in [`rules/core/ladezeiten.yaml:154`](./rules/core/ladezeiten.yaml#L154)
+Answer in [`core/ladezeiten.yaml:154`](./core/ladezeiten.yaml#L154)
 
 **Which actions besides Zielen (fernkampf.FK11), Laden (LZ2, LZ4), Bogen spannen (LZ5) and Armbrüste bespannen (LZ6) are länger dauernde Handlungen that continue across Kampfrunden, and what breaks such an action off?**
 
@@ -164,7 +164,7 @@ Why a: it reads nothing into the missing page: the pages that exist name these f
 
 ### `reiterkampf` · mounted-attack-side
 
-Answer in [`rules/core/reiterkampf.yaml:418`](./rules/core/reiterkampf.yaml#L418)
+Answer in [`core/reiterkampf.yaml:418`](./core/reiterkampf.yaml#L418)
 
 **RK5: mounted, a shield blocks only attacks from the front and the shield-arm side; an attack from the weapon-arm side can only be parried with the weapon or dodged. How does the app learn which side an attack on a mounted hero comes from?**
 
@@ -180,7 +180,7 @@ Why a: the four sides are one fact with four values, and a picker asks it once a
 
 ### `zaubermodifikationen` · omit-counts
 
-Answer in [`rules/core/zaubermodifikationen.yaml:315`](./rules/core/zaubermodifikationen.yaml#L315)
+Answer in [`core/zaubermodifikationen.yaml:315`](./core/zaubermodifikationen.yaml#L315)
 
 **Does leaving out a Geste or a Formel count against the FW/4 number of modifications (ZM1)?**
 
@@ -196,7 +196,7 @@ Why a: the page lists it among the Modifikationen in the same breath as the othe
 
 ### `zaubermodifikationen` · cost-off-table
 
-Answer in [`rules/core/zaubermodifikationen.yaml:339`](./rules/core/zaubermodifikationen.yaml#L339)
+Answer in [`core/zaubermodifikationen.yaml:339`](./core/zaubermodifikationen.yaml#L339)
 
 **Erzwingen and Kosten senken move the cost "um eine Stufe" on ZM8's table (1, 2, 4, … 32 AsP). What do they do to a cost that is not on the table, or not one number?**
 
@@ -212,7 +212,7 @@ Why a: the table is powers of two, so "one Stufe" and "×2 / ÷2" agree wherever
 
 ### `DISADV_37` · schlechte-eigenschaft-check
 
-Answer in [`rules/disadvantages/DISADV_37.yaml:128`](./rules/disadvantages/DISADV_37.yaml#L128)
+Answer in [`disadvantages/DISADV_37.yaml:128`](./disadvantages/DISADV_37.yaml#L128)
 
 **The GM says a trigger is present (for Boronmir: a superior's order that makes no sense). What does the app offer for the Willenskraft check SE1 calls for?**
 

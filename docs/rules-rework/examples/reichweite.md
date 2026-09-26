@@ -1,6 +1,6 @@
 # Example 5 — Reichweite and Unterlaufen
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -42,9 +42,9 @@
 
 ## Situations
 
-In [`situations/reichweite.yaml`](./situations/reichweite.yaml), RW.1–RW.16. The rules as draft
-YAML: [`reichweite`](./rules/core/reichweite.yaml), [`SA_172`](./rules/abilities/SA_172.yaml),
-[`SA_173`](./rules/abilities/SA_173.yaml), [`SA_152`](./rules/abilities/SA_152.yaml).
+In [`situations/reichweite.yaml`](../../../specs/rules/situations/reichweite.yaml), RW.1–RW.16. The rules as draft
+YAML: [`reichweite`](../../../specs/rules/core/reichweite.yaml), [`SA_172`](../../../specs/rules/abilities/SA_172.yaml),
+[`SA_173`](../../../specs/rules/abilities/SA_173.yaml), [`SA_152`](../../../specs/rules/abilities/SA_152.yaml).
 
 Where the app is wrong: the reach matrix is right (`GRW_reichweite` in the catalog,
 `WeaponReach.atPenaltyAgainst` for the chips), but **Unterlaufen and Verbessertes Unterlaufen do
@@ -57,5 +57,5 @@ number (U1), and a `was:` on a lowered line so the breakdown can show what the a
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md), generated from the rule
 files — look for `SA_172` and the shared `sf-technique-lists` and `manoeuvre-combination`.

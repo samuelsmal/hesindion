@@ -147,10 +147,10 @@ struct ConflictFingerprint: Codable, Hashable, Comparable, CustomStringConvertib
 }
 
 /// Ruling R78: the committed snapshot of every listed conflict's fingerprints
-/// (`docs/rules-rework/examples/conflict-fingerprints.json`, keyed `"<file> <id>"`). The harness
+/// (`specs/rules/conflict-fingerprints.json`, keyed `"<file> <id>"`). The harness
 /// checks each listed conflict against it; `RECORD_CONFLICT_FINGERPRINTS=1` rewrites it from the run.
 struct ConflictSnapshot: Codable, Equatable {
-    static let path = "docs/rules-rework/examples/conflict-fingerprints.json"
+    static let path = "specs/rules/conflict-fingerprints.json"
 
     var conflicts: [String: [ConflictFingerprint]] = [:]
 

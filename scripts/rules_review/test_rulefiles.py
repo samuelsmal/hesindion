@@ -6,7 +6,6 @@
 import datetime
 import difflib
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,11 +14,7 @@ import yaml
 
 import rulefiles as rf
 
-# `rulec` lives in scripts/rulec (docs/rules-rework/examples/../../../scripts): put it on the
-# path so the compile-check test below can `import rulec`.
-SCRIPTS = rf.HERE.parents[2] / "scripts"
-if str(SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS))
+# rulefiles put scripts/ on the path, so the compile-check test below can `import rulec`.
 
 from rulec import rules as rulec_rules   # noqa: E402
 from rulec import vocab                 # noqa: E402
@@ -173,7 +168,7 @@ class ModelTests(unittest.TestCase):
     def test_every_example_file_loads_with_its_lines(self):
         for rule in rf.load():
             self.assertIsNone(rule.error, rule.path)
-            lines = (rf.HERE / rule.path).read_text(encoding="utf-8").splitlines()
+            lines = (rf.ROOT / rule.path).read_text(encoding="utf-8").splitlines()
             for item in rule.clauses + rule.rulings:
                 self.assertIn(f"id: {item.id}", lines[item.line - 1], f"{rule.path}:{item.line}")
 

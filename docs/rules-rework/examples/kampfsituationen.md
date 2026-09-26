@@ -1,6 +1,6 @@
 # Example 17 — Passierschlag, Angriff von hinten, Beengte Umgebung, Größenkategorie
 
-**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 Four short core rules the app's catalog marks `implemented`. The point of drafting them is what
 the app leaves out or gets wrong. The hero is Boronmir as of the 2026-09-24 export: Rabenschnabel
@@ -49,12 +49,12 @@ Kaltblut, groß).
 
 ## Situations
 
-In [`situations/kampfsituationen.yaml`](./situations/kampfsituationen.yaml), 17.1–17.24, with
+In [`situations/kampfsituationen.yaml`](../../../specs/rules/situations/kampfsituationen.yaml), 17.1–17.24, with
 Boronmir's real values (the derivation is at the top of the file). The rules as draft YAML:
-[`passierschlag`](./rules/core/passierschlag.yaml),
-[`angriff-von-hinten`](./rules/core/angriff-von-hinten.yaml),
-[`beengte-umgebung`](./rules/core/beengte-umgebung.yaml),
-[`groessenkategorie`](./rules/core/groessenkategorie.yaml). Cross-references, unchanged:
+[`passierschlag`](../../../specs/rules/core/passierschlag.yaml),
+[`angriff-von-hinten`](../../../specs/rules/core/angriff-von-hinten.yaml),
+[`beengte-umgebung`](../../../specs/rules/core/beengte-umgebung.yaml),
+[`groessenkategorie`](../../../specs/rules/core/groessenkategorie.yaml). Cross-references, unchanged:
 reiterkampf RK2/RK5/RK6/RK11/RK15 (RK11 now through the decided `reiterkampf.passierschlag-on-mount`), SA_62.ST3,
 STATE_10.L4, reichweite.RW2, and trefferzonen.TZ5 (the zone penalty replaces GK3; TZ.7).
 

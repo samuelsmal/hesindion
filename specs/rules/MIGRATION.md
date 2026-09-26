@@ -43,7 +43,7 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 | 8 (Task 15) | facts hero.inMelee, hero.lastMovement, ladezeit.current, loadout.quiver, loadout.weapon.closeRange, loadout.weapon.farRange, loadout.weapon.instance, loadout.weapon.ladezeit, loadout.weapon.loaded, loadout.weapon.mediumRange, loadout.weapon.strung, round.previousDefenceCrit; fact family process. |
 | Task 16 | `provide.readBy` (field type reader, list readers: display, loadout, roll); the unused target belastung removed (ruling R18) |
 
-## rules/abilities/SA_152.yaml
+## abilities/SA_152.yaml
 
 - [x] L26 clauses[AD1].effects[0].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
 - [x] L26 clauses[AD1].effects[0].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
@@ -57,21 +57,21 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L50 clauses[AD2].effects[2].when.announced: announced — not a fact in the vocabulary
 - [x] L50 clauses[AD2].effects[2].when.loadout.reach.not_longer_than: not_longer_than — snake_case key, no mapping
 
-## rules/abilities/SA_160.yaml
+## abilities/SA_160.yaml
 
 - [x] L26 clauses[GA1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L27 clauses[GA1].effects[0].offer.on: on — not a field of `offer`
 - [x] L28 clauses[GA1].effects[0].offer.requires: requires — not a field of `offer`
 - [x] L29 clauses[GA1].effects[0].offer.ruling: ruling — not a field of `offer`
 
-## rules/abilities/SA_161.yaml
+## abilities/SA_161.yaml
 
 - [x] L25 clauses[GS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L26 clauses[GS1].effects[0].offer.on: on — not a field of `offer`
 - [x] L27 clauses[GS1].effects[0].offer.requires: requires — not a field of `offer`
 - [x] L28 clauses[GS1].effects[0].offer.ruling: ruling — not a field of `offer`
 
-## rules/abilities/SA_172.yaml
+## abilities/SA_172.yaml
 
 - [x] L28 clauses[U1].effects[0].lower: lower — no one-to-one verb
 - [x] L28 clauses[U1].effects[0].lower.by_steps: by_steps — snake_case key, no mapping
@@ -82,41 +82,41 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L44 clauses[U2].effects[0].offer.ruling: ruling — not a field of `offer`
 - [x] L64 clauses[U4].ruling: ruling — not a clause key in the vocabulary
 
-## rules/abilities/SA_173.yaml
+## abilities/SA_173.yaml
 
 - [x] L22 clauses[VU1].lifts: lifts — not a clause key in the vocabulary
 
-## rules/abilities/SA_40.yaml
+## abilities/SA_40.yaml
 
 - [x] L22 clauses[A1].effects[0].when.check: check — not a fact in the vocabulary
 - [x] L22 clauses[A1].effects[0].when.situation: situation — not a fact in the vocabulary
 
-## rules/abilities/SA_41.yaml
+## abilities/SA_41.yaml
 
 - [x] L25 clauses[G1].effects[0].lower: lower — no one-to-one verb
 
-## rules/abilities/SA_42.yaml
+## abilities/SA_42.yaml
 
 - [x] L22 clauses[BH1].effects[0].raise: raise — no one-to-one verb
 - [x] L22 clauses[BH1].effects[0].raise.max_total: max_total — snake_case key, no mapping
 - [x] L31 clauses[BH2].effects[0].requires: requires — a key that is not a fact: loadout.mainHand.technique, loadout.offHand.technique
 
-## rules/abilities/SA_43.yaml
+## abilities/SA_43.yaml
 
 - [x] L23 clauses[BK1].enables: enables — not a clause key in the vocabulary
 
-## rules/abilities/SA_48.yaml
+## abilities/SA_48.yaml
 
 - [x] L24 clauses[F1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L25 clauses[F1].effects[0].offer.tiers: tiers — not a field of `offer`
 - [x] L26 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
 - [x] L30 clauses[F1].effects[2].opponent_add: opponent_add — keys outside the row: per
 
-## rules/abilities/SA_51.yaml
+## abilities/SA_51.yaml
 
 - [x] L19 clauses[KR1].effects[0].add.after: after — not a field of `add`
 
-## rules/abilities/SA_59.yaml
+## abilities/SA_59.yaml
 
 - [x] L28 clauses[SS1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L29 clauses[SS1].effects[0].offer.opponent_may_only: opponent_may_only — not a field of `offer`
@@ -125,7 +125,7 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L61 clauses[SS3].effects[1].damage: damage — no one-to-one verb
 - [x] L62 clauses[SS3].effects[1].then: then — no one-to-one verb
 
-## rules/abilities/SA_60.yaml
+## abilities/SA_60.yaml
 
 - [x] L28 clauses[SL1].effects[0].when.hero.has.SA_60.option_for: option_for — snake_case key, no mapping
 - [x] L29 clauses[SL1].effects[0].add.floor: floor — not a field of `add`
@@ -134,39 +134,39 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L74 clauses[SL7].effects[0].requires.any_of: any_of — snake_case key, no mapping
 - [x] L74 clauses[SL7].effects[0].requires.any_of[0].hero.has_item: hero.has_item — snake_case key, no mapping
 
-## rules/abilities/SA_62.yaml
+## abilities/SA_62.yaml
 
 - [x] L25 clauses[ST1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L26 clauses[ST1].effects[0].offer.requires: requires — not a field of `offer`
 - [x] L27 clauses[ST1].effects[0].offer.ruling: ruling — not a field of `offer`
 
-## rules/abilities/SA_65.yaml
+## abilities/SA_65.yaml
 
 - [x] L26 clauses[VH1].effects[0].offer.when: when — not a field of `offer`
 - [x] L36 clauses[VH1].effects[2].forbid.action: action — not a field of `forbid`
 - [x] L45 clauses[VH2].effects[0].requires: requires — a key that is not a fact: loadout.any.technique
 
-## rules/abilities/SA_66.yaml
+## abilities/SA_66.yaml
 
 - [x] L38 clauses[V2].effects[0].forbid.defence: defence — not a field of `forbid`
 - [x] L38 clauses[V2].effects[0].forbid.span: span — not a field of `forbid`
 - [x] L47 clauses[V3].effects[0].offer.when: when — not a field of `offer`
 - [x] L56 clauses[V4].effects[0].requires: requires — a key that is not a fact: hero.state
 
-## rules/abilities/SA_661.yaml
+## abilities/SA_661.yaml
 
 - [x] L24 clauses[GS1].effects[0].when.loadout: loadout — not a fact in the vocabulary
 - [x] L25 clauses[GS1].effects[0].raise: raise — no one-to-one verb
 - [x] L35 clauses[GS2].effects[0].when.loadout: loadout — not a fact in the vocabulary
 - [x] L44 clauses[GS3].effects[0].define: define — no one-to-one verb
 
-## rules/abilities/SA_67.yaml
+## abilities/SA_67.yaml
 
 - [x] L23 clauses[W1].effects[0].offer.manoeuvre: manoeuvre — not a field of `offer`
 - [x] L24 clauses[W1].effects[0].offer.tiers: tiers — not a field of `offer`
 - [x] L25 clauses[W1].effects[0].offer.ruling: ruling — not a field of `offer`
 
-## rules/abilities/SA_74.yaml
+## abilities/SA_74.yaml
 
 - [x] L35 clauses[VP1].effects[0].offer.amount: amount — not a field of `offer`
 - [x] L36 clauses[VP1].effects[0].offer.when: when — not a field of `offer`
@@ -180,7 +180,7 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L67 clauses[VP3].effects[0].when.check_failed: check_failed — not a fact in the vocabulary
 - [x] L68 clauses[VP3].effects[0].charge: charge — keys outside the row: round, pools, ruling; missing pool
 
-## rules/abilities/SA_862.yaml
+## abilities/SA_862.yaml
 
 - [x] L31 clauses[F1].effects[0].offer.ruling: ruling — not a field of `offer`
 - [x] L35 clauses[F1].effects[1].forbid.choice: choice — not a field of `forbid`
@@ -188,27 +188,27 @@ Vocabulary additions per group (`specs/rules/vocabulary.json`, names added):
 - [x] L38 clauses[F1].effects[2].forbid.choice: choice — not a field of `forbid`
 - [x] L58 clauses[F3].effects[0].offer.when: when — not a field of `offer`
 
-## rules/abilities/SA_884.yaml
+## abilities/SA_884.yaml
 
 - [x] L28 clauses[P1].effects[0].offer.ruling: ruling — not a field of `offer`
 - [x] L33 clauses[P1].effects[1].forbid.choice: choice — not a field of `forbid`
 - [x] L33 clauses[P1].effects[1].forbid.when: when — not a field of `forbid`
 - [x] L58 clauses[P3].effects[0].offer.when: when — not a field of `offer`
 
-## rules/abilities/SA_9.yaml
+## abilities/SA_9.yaml
 
 - [x] L24 clauses[FS1].effects[0].when.check: check — not a fact in the vocabulary
 
-## rules/abilities/SA_923.yaml
+## abilities/SA_923.yaml
 
 - [x] L22 clauses[VS1].effects[0].change: change — no one-to-one verb
 - [x] L34 clauses[VS2].ruling: ruling — not a clause key in the vocabulary
 
-## rules/advantages/ADV_25.yaml
+## advantages/ADV_25.yaml
 
 No residue.
 
-## rules/advantages/ADV_4.yaml
+## advantages/ADV_4.yaml
 
 - [x] L26 clauses[B1].effects[0].offer.reroll: reroll — not a field of `offer`
 - [x] L27 clauses[B1].effects[0].offer.when: when — not a field of `offer`
@@ -221,14 +221,14 @@ No residue.
 - [x] L68 clauses[B5].effects[0].forbid.when: when — not a field of `forbid`
 - [x] L84 clauses[B7].effects[0].allow: allow — no one-to-one verb
 
-## rules/advantages/ADV_44.yaml
+## advantages/ADV_44.yaml
 
 - [x] L20 clauses[VR1].effects[0].when.event: event — not a fact in the vocabulary
 - [x] L20 clauses[VR1].effects[0].when.energy: energy — not a fact in the vocabulary
 - [x] L20 clauses[VR1].effects[0].when.regenerates: regenerates — not a fact in the vocabulary
 - [x] L21 clauses[VR1].effects[0].add.before: before — not a field of `add`
 
-## rules/advantages/ADV_49.yaml
+## advantages/ADV_49.yaml
 
 - [x] L25 clauses[ZH1].effects[0].when.condition: condition — not a fact in the vocabulary
 - [x] L27 clauses[ZH1].effects[0].keeps: keeps — no one-to-one verb
@@ -239,16 +239,16 @@ No residue.
 - [x] L44 clauses[ZH3].effects[1].when.check_passed: check_passed — not a fact in the vocabulary
 - [x] L51 clauses[ZH4].effects[0].when.condition: condition — not a fact in the vocabulary
 
-## rules/advantages/ADV_5.yaml
+## advantages/ADV_5.yaml
 
 - [x] L18 clauses[V1].status: status — not a clause key in the vocabulary
 - [x] L19 clauses[V1].why: why — `why` without `effects: none`: the clause has no body to carry it
 
-## rules/advantages/ADV_54.yaml
+## advantages/ADV_54.yaml
 
 No residue.
 
-## rules/advantages/ADV_75.yaml
+## advantages/ADV_75.yaml
 
 - [x] L24 clauses[SW1].effects[0].when.condition: condition — not a fact in the vocabulary
 - [x] L24 clauses[SW1].effects[0].when.cause: cause — not a fact in the vocabulary
@@ -257,7 +257,7 @@ No residue.
 - [x] L27 clauses[SW1].effects[1].when.cause: cause — not a fact in the vocabulary
 - [x] L28 clauses[SW1].effects[1].scale: scale — no one-to-one verb
 
-## rules/conditions/COND_1.yaml
+## conditions/COND_1.yaml
 
 - [x] L18 level: level — not a rule key in the vocabulary
 - [x] L22 level.lowered_by: lowered_by — snake_case key, no mapping
@@ -270,7 +270,7 @@ No residue.
 - [x] L61 clauses[B3].effects[5].when.check: check — not a fact in the vocabulary
 - [x] L69 clauses[B4].effects[0].gain: gain — gain: keys outside the row: until
 
-## rules/conditions/COND_6.yaml
+## conditions/COND_6.yaml
 
 - [x] L16 level: level — not a rule key in the vocabulary
 - [x] L19 level.from[1].set_by: set_by — snake_case key, no mapping
@@ -286,7 +286,7 @@ No residue.
 - [x] L78 clauses[SZ5].effects[1].unless.check_passed: check_passed — snake_case key, no mapping
 - [x] L79 clauses[SZ5].effects[2].when.check_passed: check_passed — not a fact in the vocabulary
 
-## rules/conditions/STATE_10.yaml
+## conditions/STATE_10.yaml
 
 - [x] L17 applies_to_side: applies_to_side — not a rule key in the vocabulary
 - [x] L29 clauses[L2].effects[0].when.side: side — not a fact in the vocabulary
@@ -303,14 +303,14 @@ No residue.
 - [x] L65 clauses[L4].effects[0].offer.if_opponent_in_reach.optional_check: optional_check — snake_case key, no mapping
 - [x] L66 clauses[L4].effects[0].offer.if_opponent_in_reach.on_check_failed_or_skipped: on_check_failed_or_skipped — snake_case key, no mapping
 
-## rules/conditions/STATE_13.yaml
+## conditions/STATE_13.yaml
 
 - [x] L22 clauses[UE1].effects[0].when.check: check — not a fact in the vocabulary
 - [x] L25 clauses[UE1].effects[1].when.hero.state: hero.state — not a fact in the vocabulary
 - [x] L26 clauses[UE1].effects[1].forbid.defence: defence — not a field of `forbid`
 - [x] L26 clauses[UE1].effects[1].forbid.until: until — not a field of `forbid`
 
-## rules/core/angriff-von-hinten.yaml
+## core/angriff-von-hinten.yaml
 
 - [x] L24 clauses[AH1].effects[0].when.side: side — not a fact in the vocabulary
 - [x] L24 clauses[AH1].effects[0].when.attack.kind: attack.kind — not a fact in the vocabulary
@@ -327,19 +327,19 @@ No residue.
 - [x] L40 clauses[AH1].effects[3].exempt: exempt — no one-to-one verb
 - [x] L41 clauses[AH1].effects[3].from: from — no one-to-one verb
 
-## rules/core/at-pa-modifikatoren.yaml
+## core/at-pa-modifikatoren.yaml
 
 - [x] L23 clauses[M1].effects[0].when.attack.with: attack.with — not a fact in the vocabulary
 - [x] L24 clauses[M1].effects[0].add.after: after — not a field of `add`
 - [x] L25 clauses[M1].effects[1].when.with: with — not a fact in the vocabulary
 - [x] L26 clauses[M1].effects[1].add.after: after — not a field of `add`
 
-## rules/core/beengte-umgebung.yaml
+## core/beengte-umgebung.yaml
 
 - [x] L19 applies_when: applies_when — not a rule key in the vocabulary
 - [x] L62 clauses[BU3].ruling: ruling — not a clause key in the vocabulary
 
-## rules/core/beidhaendiger-kampf.yaml
+## core/beidhaendiger-kampf.yaml
 
 - [x] L29 clauses[ZW1].effects[0].forbid.loadout: loadout — not a field of `forbid`
 - [x] L30 clauses[ZW1].effects[1].forbid.loadout: loadout — not a field of `forbid`
@@ -357,7 +357,7 @@ No residue.
 - [x] L107 clauses[ZW8].effects[0].when.result: result — not a fact in the vocabulary
 - [x] L108 clauses[ZW8].effects[0].cancel: cancel — no one-to-one verb
 
-## rules/core/fernkampf.yaml
+## core/fernkampf.yaml
 
 - [x] L36 clauses[FK2].effects[0].forbid.attack: attack — not a field of `forbid`
 - [x] L36 clauses[FK2].effects[0].forbid.when: when — not a field of `forbid`
@@ -400,7 +400,7 @@ No residue.
 - [x] L291 clauses[FK18].effects[0].requires_check: requires_check — no one-to-one verb
 - [x] L292 clauses[FK18].effects[0].on_failure: on_failure — no one-to-one verb
 
-## rules/core/fertigkeitsproben.yaml
+## core/fertigkeitsproben.yaml
 
 - [x] L37 clauses[FP1].effects[0].defines: defines — no one-to-one verb
 - [x] L52 clauses[FP2].effects[0].forbid.check: check — not a field of `forbid`
@@ -430,7 +430,7 @@ No residue.
 - [x] L208 clauses[PZ1].effects[1].set.stage: stage — not a field of `set`
 - [x] L208 clauses[PZ1].effects[1].set.kind: kind — not a field of `set`
 
-## rules/core/groessenkategorie.yaml
+## core/groessenkategorie.yaml
 
 - [x] L18 scale: scale — not a rule key in the vocabulary
 - [x] L39 clauses[GK2].ruling: ruling — not a clause key in the vocabulary
@@ -441,7 +441,7 @@ No residue.
 - [x] L59 clauses[GK4].effects[1].when.side: side — not a fact in the vocabulary
 - [x] L60 clauses[GK4].effects[1].forbid.defence: defence — not a field of `forbid`
 
-## rules/core/kampfsonderfertigkeiten.yaml
+## core/kampfsonderfertigkeiten.yaml
 
 - [x] L30 clauses[KS2].effects[0].when.ability: ability — not a fact in the vocabulary
 - [x] L31 clauses[KS2].effects[0].apply: apply — no one-to-one verb
@@ -456,7 +456,7 @@ No residue.
 - [x] L70 clauses[KS5].effects[2].forbid.combination: combination — not a field of `forbid`
 - [x] L90 clauses[KS6].ruling: ruling — not a clause key in the vocabulary
 
-## rules/core/kampfwerte.yaml
+## core/kampfwerte.yaml
 
 - [x] L225 clauses[KW21].effects[0].defines: defines — no one-to-one verb
 - [x] L248 clauses[KW6].effects[0].when.technique: technique — not a fact in the vocabulary
@@ -468,7 +468,7 @@ No residue.
 - [x] L423 clauses[KW11].effects[0].when.event: event — not a fact in the vocabulary
 - [x] L424 clauses[KW11].effects[0].recompute: recompute — no one-to-one verb
 
-## rules/core/ladezeiten.yaml
+## core/ladezeiten.yaml
 
 - [x] L30 clauses[LZ1].effects[0].provides: provides — `from` is a pointer, not a named value
 - [x] L43 clauses[LZ2].effects[0].process.of: of — not a field of `process`
@@ -482,11 +482,11 @@ No residue.
 - [x] L84 clauses[LZ5].effects[0].process.step: step — not a field of `process`
 - [x] L99 clauses[LZ7].effects[0].after: after — no one-to-one verb
 
-## rules/core/lebensenergie.yaml
+## core/lebensenergie.yaml
 
 No residue.
 
-## rules/core/mehrfache-verteidigung.yaml
+## core/mehrfache-verteidigung.yaml
 
 - [x] L27 clauses[MV1].effects[MV1.step].when.check: check — not a fact in the vocabulary
 - [x] L29 clauses[MV1].effects[MV1.step].id: id — no one-to-one verb
@@ -495,7 +495,7 @@ No residue.
 - [x] L46 clauses[MV3].effects[0].when.value.after: value.after — not a fact in the vocabulary
 - [x] L47 clauses[MV3].effects[0].forbid.defence: defence — not a field of `forbid`
 
-## rules/core/passierschlag.yaml
+## core/passierschlag.yaml
 
 - [x] L25 clauses[PS1].effects[0].when.event: event — not a fact in the vocabulary
 - [x] L25 clauses[PS1].effects[0].when.of: of — not a fact in the vocabulary
@@ -516,7 +516,7 @@ No residue.
 - [x] L84 clauses[PS4].effects[2].result: result — no one-to-one verb
 - [x] L94 clauses[PS5].effects[0].limit.attack: attack — not a field of `limit`
 
-## rules/core/regeneration.yaml
+## core/regeneration.yaml
 
 - [x] L25 clauses[R2].effects[0].offer.action: action — not a field of `offer`
 - [x] L25 clauses[R2].effects[0].offer.outside: outside — not a field of `offer`
@@ -535,14 +535,14 @@ No residue.
 - [x] L96 clauses[T1].effects[0].ask.multi: multi — not a field of `ask`
 - [x] L97 clauses[T1].effects[0].lines: lines — no one-to-one verb
 
-## rules/core/reichweite.yaml
+## core/reichweite.yaml
 
 - [x] L17 scale: scale — not a rule key in the vocabulary
 - [x] L46 clauses[RW3].effects[RW3.at].when.check: check — `check: at` names the kind of check, not a talent: `check.talent` would change the meaning
 - [x] L46 clauses[RW3].effects[RW3.at].when.opponent.reach.longer_than: longer_than — snake_case key, no mapping
 - [x] L48 clauses[RW3].effects[RW3.at].id: id — no one-to-one verb
 
-## rules/core/reiterkampf.yaml
+## core/reiterkampf.yaml
 
 - [x] L16 applies_when: applies_when — not a rule key in the vocabulary
 - [x] L37 clauses[RK1].effects[0].replace.value: value — not a field of `replace`
@@ -585,11 +585,11 @@ No residue.
 - [x] L208 clauses[RK15].effects[0].offer.requires_check: requires_check — not a field of `offer`
 - [x] L209 clauses[RK15].effects[0].offer.on_success: on_success — not a field of `offer`
 
-## rules/core/ruestung-und-belastung.yaml
+## core/ruestung-und-belastung.yaml
 
 - [x] L30 clauses[A1].effects[0].sets: sets — no one-to-one verb
 
-## rules/core/schaden.yaml
+## core/schaden.yaml
 
 - [x] L31 clauses[S1].effects[0].roll: roll — no one-to-one verb
 - [x] L34 clauses[S1].effects[1].when.event: event — not a fact in the vocabulary
@@ -600,13 +600,13 @@ No residue.
 - [x] L129 clauses[S5].effects[0].offer.then: then — not a field of `offer`
 - [x] L158 clauses[S8].effects[0].when.le.current: le.current — not a fact in the vocabulary
 
-## rules/core/schicksalspunkte.yaml
+## core/schicksalspunkte.yaml
 
 - [x] L36 clauses[SP-verteidigung].effects[0].offer.before: before — not a field of `offer`
 - [x] L48 clauses[SP-zustand].effects[1].suppress.kind: kind — not a field of `suppress`
 - [x] L79 rulings[schip-lifts-incapacity].source: source — not a ruling key in the vocabulary
 
-## rules/core/schilde.yaml
+## core/schilde.yaml
 
 - [x] L28 clauses[SCH1].effects[0].when.with: with — not a fact in the vocabulary
 - [x] L28 clauses[SCH1].effects[0].when.loadout.other: loadout.other — not a fact in the vocabulary
@@ -623,7 +623,7 @@ No residue.
 - [x] L111 clauses[SCH8].effects[0].when.attack.kind: attack.kind — not a fact in the vocabulary
 - [x] L112 clauses[SCH8].effects[0].forbid.defence: defence — not a field of `forbid`
 
-## rules/core/trefferzonen-ruestungsschutz.yaml
+## core/trefferzonen-ruestungsschutz.yaml
 
 - [x] L6 fokus: fokus — not a rule key in the vocabulary
 - [x] L7 requires_ruleset: requires_ruleset — not a rule key in the vocabulary
@@ -632,7 +632,7 @@ No residue.
 - [x] L59 clauses[RS3].effects[0].forbid.loadout: loadout — not a field of `forbid`
 - [x] L95 clauses[RS4].effects[0].sets: sets — no one-to-one verb
 
-## rules/core/trefferzonen.yaml
+## core/trefferzonen.yaml
 
 - [x] L13 fokus: fokus — not a rule key in the vocabulary
 - [x] L42 clauses[TZ2].effects[0].when.event: event — not a fact in the vocabulary
@@ -657,7 +657,7 @@ No residue.
 - [x] L300 clauses[TZ11].effects[0].table: table — no one-to-one verb
 - [x] L303 clauses[TZ11].effects[0].table.arme.drop.ask_if: ask_if — snake_case key, no mapping
 
-## rules/core/vorteilhafte-position.yaml
+## core/vorteilhafte-position.yaml
 
 - [x] L15 applies_when: applies_when — not a rule key in the vocabulary
 - [x] L18 applies_when.any[1].granted_by: granted_by — snake_case key, no mapping
@@ -667,13 +667,13 @@ No residue.
 - [x] L49 clauses[VP3].status: status — not a clause key in the vocabulary
 - [x] L50 clauses[VP3].why: why — `why` without `effects: none`: the clause has no body to carry it
 
-## rules/core/waffeneigenschaften.yaml
+## core/waffeneigenschaften.yaml
 
 - [x] L8 fokus: fokus — not a rule key in the vocabulary
 - [x] L25 clauses[WE1].effects[0].defines: defines — no one-to-one verb
 - [x] L36 clauses[WE2].effects[0].gates: gates — no one-to-one verb
 
-## rules/core/zaubermodifikationen.yaml
+## core/zaubermodifikationen.yaml
 
 - [x] L40 clauses[ZM1].effects[0].offer.pickers: pickers — not a field of `offer`
 - [x] L40 clauses[ZM1].effects[0].offer.per: per — not a field of `offer`
@@ -705,7 +705,7 @@ No residue.
 - [x] L205 clauses[ZM12].effects[0].on_success: on_success — no one-to-one verb
 - [x] L206 clauses[ZM12].effects[1].on_failure: on_failure — no one-to-one verb
 
-## rules/core/zustaende.yaml
+## core/zustaende.yaml
 
 - [x] L35 clauses[Z3].effects[0].cap.lines: lines — not a field of `cap`
 - [x] L35 clauses[Z3].effects[0].cap.on: on — not a field of `cap`
@@ -715,7 +715,7 @@ No residue.
 - [x] L63 clauses[Z5].effects[0].when.sum.condition_levels: condition_levels — snake_case key, no mapping
 - [x] L63 clauses[Z5].effects[0].when.min: min — not a fact in the vocabulary
 
-## rules/creatures/maechtiger-schlag.yaml
+## creatures/maechtiger-schlag.yaml
 
 - [x] L36 clauses[MS1].effects[0].tell: tell — tell: the text is a structure, not a text
 - [x] L36 clauses[MS1].effects[0].tell.opponent.on_failure: on_failure — snake_case key, no mapping
@@ -725,11 +725,11 @@ No residue.
 - [x] L63 clauses[MS3].effects[1].tell.opponent.on_failure: on_failure — snake_case key, no mapping
 - [x] L63 clauses[MS3].effects[1].tell.opponent.whatever_the_parry: whatever_the_parry — snake_case key, no mapping
 
-## rules/creatures/ruhiges-temperament.yaml
+## creatures/ruhiges-temperament.yaml
 
 - [x] L24 clauses[RT1].effects[0].when.check: check — not a fact in the vocabulary
 
-## rules/creatures/svellttaler-kaltblut.yaml
+## creatures/svellttaler-kaltblut.yaml
 
 - [x] L26 profile: profile — not a rule key in the vocabulary
 - [x] L88 clauses[SK3].effects[1].offer.order: order — not a field of `offer`
@@ -738,7 +738,7 @@ No residue.
 - [x] L112 clauses[SK5].effects[0].grants: grants — no one-to-one verb
 - [x] L159 clauses[SK10].effects[0].when.mount.lep.at_most: at_most — snake_case key, no mapping
 
-## rules/disadvantages/DISADV_37.yaml
+## disadvantages/DISADV_37.yaml
 
 - [x] L33 clauses[SE1].effects[0].offer.check: check — not a field of `offer`
 - [x] L34 clauses[SE1].effects[0].offer.cause: cause — not a field of `offer`
@@ -749,12 +749,12 @@ No residue.
 - [x] L90 clauses[SE6].effects[0].provides: provides — a snake_case name, or not a mapping of names
 - [x] L90 clauses[SE6].effects[0].provides.text_by_option: text_by_option — snake_case key, no mapping
 
-## rules/disadvantages/DISADV_57.yaml
+## disadvantages/DISADV_57.yaml
 
 - [x] L20 clauses[VW1].effects[0].when.check: check — not a fact in the vocabulary
 - [x] L21 clauses[VW1].effects[0].when.cause: cause — not a fact in the vocabulary
 
-## rules/equipment/ITEMTPL_19.yaml
+## equipment/ITEMTPL_19.yaml
 
 - [x] L22 stats: stats — not a rule key in the vocabulary
 - [x] L26 stats.at_mod: at_mod — snake_case key, no mapping
@@ -762,7 +762,7 @@ No residue.
 - [x] L62 clauses[RS2].effects[0].offer.on: on — not a field of `offer`
 - [x] L90 clauses[RS4].effects[0].raise: raise — no one-to-one verb
 
-## rules/equipment/ITEMTPL_29.yaml
+## equipment/ITEMTPL_29.yaml
 
 - [x] L21 stats: stats — not a rule key in the vocabulary
 - [x] L25 stats.at_mod: at_mod — snake_case key, no mapping
@@ -775,13 +775,13 @@ No residue.
 - [x] L72 clauses[GR3].effects[0].when.ini.tie: ini.tie — not a fact in the vocabulary
 - [x] L73 clauses[GR3].effects[0].tell.order: order — not a field of `tell`
 
-## rules/equipment/ITEMTPL_35.yaml
+## equipment/ITEMTPL_35.yaml
 
 - [x] L16 stats: stats — not a rule key in the vocabulary
 - [x] L20 stats.at_mod: at_mod — snake_case key, no mapping
 - [x] L21 stats.pa_mod: pa_mod — snake_case key, no mapping
 
-## rules/rulings.yaml
+## rulings.yaml
 
 - [x] L13 [round-up].see: see — not a ruling key in the vocabulary
 - [x] L61 [manoeuvre-combination].see: see — not a ruling key in the vocabulary

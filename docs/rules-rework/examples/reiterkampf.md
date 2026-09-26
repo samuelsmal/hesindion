@@ -1,6 +1,6 @@
 # Example 2 — Reiterkampf, and the rules that lean on it
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -72,10 +72,10 @@
 
 ## Situations
 
-In [`situations/reiterkampf.yaml`](./situations/reiterkampf.yaml), 5.1–5.17. The rules as draft YAML:
-[`reiterkampf`](./rules/core/reiterkampf.yaml), [`vorteilhafte-position`](./rules/core/vorteilhafte-position.yaml),
-[`SA_43`](./rules/abilities/SA_43.yaml), [`SA_661`](./rules/abilities/SA_661.yaml),
-[`SA_62`](./rules/abilities/SA_62.yaml).
+In [`situations/reiterkampf.yaml`](../../../specs/rules/situations/reiterkampf.yaml), 5.1–5.17. The rules as draft YAML:
+[`reiterkampf`](../../../specs/rules/core/reiterkampf.yaml), [`vorteilhafte-position`](../../../specs/rules/core/vorteilhafte-position.yaml),
+[`SA_43`](../../../specs/rules/abilities/SA_43.yaml), [`SA_661`](../../../specs/rules/abilities/SA_661.yaml),
+[`SA_62`](../../../specs/rules/abilities/SA_62.yaml).
 
 Where the app is wrong, per the rulings below: Vorstoß and Schildspalter are offered on horseback
 (5.9); SA_62 is never offered on foot (5.12); the mount's GS/2 is rounded down (5.11); the mounted
@@ -85,5 +85,5 @@ with none of the rider's Belastung (ruling `rider-ini`, 5.17).
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md), generated from the rule
 files — look for `reiterkampf`, `SA_62`, `SA_661` and the shared ones.

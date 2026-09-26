@@ -11,7 +11,7 @@ top-level list, aligned values). So the file is written line by line: a line who
 did not change is copied from the input as it was; a changed line keeps the input's whitespace
 around the tokens that stayed; only new lines are ruamel's.
 
-    cd scripts && uv run --with pyyaml --with ruamel.yaml python -m rulec.migrate ../docs/rules-rework/examples
+    cd scripts && uv run --with pyyaml --with ruamel.yaml python -m rulec.migrate ../specs/rules
 """
 import copy
 import io
@@ -25,6 +25,7 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 
+from . import layout
 from . import vocab as vocab_mod
 from .errors import RulecError
 from .forms import Forms
@@ -79,7 +80,7 @@ def _yaml(top_level_list=False):
     y.preserve_quotes = True
     # 4096, not 100: at 100 ruamel re-wraps the long flow lines of a changed line.
     y.width = 4096
-    # The rule files indent a list under its key by 4 with the dash at 2; rules/rulings.yaml, a
+    # The rule files indent a list under its key by 4 with the dash at 2; the root's rulings.yaml, a
     # list at the top, has its dashes at column 0.
     y.indent(mapping=2, sequence=2 if top_level_list else 4, offset=0 if top_level_list else 2)
     y.brace_single_entry_mapping_in_flow_sequence = True     # `[{ a: 1 }]`, not `[a: 1]`
@@ -361,7 +362,7 @@ def _ruling(r):
 
 
 def migrate_rule_doc(doc):
-    if isinstance(doc, CommentedSeq):                # rules/rulings.yaml: a list of rulings
+    if isinstance(doc, CommentedSeq):                # rulings.yaml: a list of rulings
         for r in doc:
             _ruling(r)
         return
@@ -836,8 +837,9 @@ def snake_keys_in_text(text):
 
 
 def _files(root):
-    rules = sorted((root / "rules").rglob("*.yaml"))
-    sits = sorted((root / "situations").glob("*.yaml"))
+    shared = root / layout.SHARED_RULINGS
+    rules = sorted(layout.rule_files(root) + ([shared] if shared.exists() else []))
+    sits = sorted((root / layout.SITUATIONS).glob("*.yaml"))
     return [(p, "rule") for p in rules] + [(p, "situations") for p in sits]
 
 
@@ -876,7 +878,7 @@ def render(root, residue_by_file, ticked=frozenset(), reviews=""):
 
 
 def migrate_tree(root):
-    """Migrate every rule and situations file under `root` (the examples directory) in place and
+    """Migrate every rule and situations file under `root` (`specs/rules/`) in place and
     write `root/MIGRATION.md`. Returns `[(path, [Residue])]`."""
     root = Path(root)
     result = []
@@ -895,7 +897,7 @@ def migrate_tree(root):
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if len(argv) != 1:
-        print("usage: python -m rulec.migrate <examples dir>", file=sys.stderr)
+        print("usage: python -m rulec.migrate <rules root>", file=sys.stderr)
         return 2
     result = migrate_tree(argv[0])
     n = sum(len(r) for _, r in result)

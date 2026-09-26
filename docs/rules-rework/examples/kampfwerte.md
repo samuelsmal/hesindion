@@ -1,6 +1,6 @@
 # Example 16 — Kampfwerte, Schaden und Schilde
 
-**Status: draft.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 How Boronmir's AT, PA, AW and INI come about (from his 2026-09-24 sheet), what his weapons hit for, and how his Großschild
 parries. These rules sit under every other example: each one's `base_hero` numbers come from here.
@@ -16,7 +16,7 @@ parries. These rules sit under every other example: each one's `base_hero` numbe
 
 The weapons themselves (Rabenschnabel, Langschwert, Großschild — their table rows, the Großschild's
 −1 AT on the main weapon, its Waffenvorteil and -nachteil) are `rules/equipment/` and
-[example 18](./kupperus-und-waffen.yaml). Each of the three core rules is assembled from several
+[example 18](../../../specs/rules/situations/kupperus-und-waffen.yaml). Each of the three core rules is assembled from several
 pages; each clause from another page names it (`page:`). That is a format question in itself
 (the `# FORMAT:` note at the top of `kampfwerte.yaml`).
 
@@ -87,9 +87,9 @@ thresholds. The rule is kept with a hero who is (16.22).
 
 ## Situations
 
-In [`situations/kampfwerte.yaml`](./situations/kampfwerte.yaml), 16.1–16.22. The rules as draft YAML:
-[`kampfwerte`](./rules/core/kampfwerte.yaml), [`schaden`](./rules/core/schaden.yaml),
-[`schilde`](./rules/core/schilde.yaml), [`at-pa-modifikatoren`](./rules/core/at-pa-modifikatoren.yaml).
+In [`situations/kampfwerte.yaml`](../../../specs/rules/situations/kampfwerte.yaml), 16.1–16.22. The rules as draft YAML:
+[`kampfwerte`](../../../specs/rules/core/kampfwerte.yaml), [`schaden`](../../../specs/rules/core/schaden.yaml),
+[`schilde`](../../../specs/rules/core/schilde.yaml), [`at-pa-modifikatoren`](../../../specs/rules/core/at-pa-modifikatoren.yaml).
 
 ## What the app gets wrong
 

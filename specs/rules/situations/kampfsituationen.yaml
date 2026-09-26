@@ -2,7 +2,7 @@
 # Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 #
 # The hero is Boronmir as of the 2026-09-24 export
-# (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json):
+# (specs/heroes/Boronmir Siebenfeld von Greifenfurt.json):
 #   MU 14, GE 14, KK 14. Hiebwaffen 14, Schwerter 12, Schilde 10, Raufen 10.
 #   AT = KtW + (MU−8)/3 (AT mod 0 for both weapons):
 #     Rabenschnabel (Hiebwaffen 14)     14 + 2 = 16

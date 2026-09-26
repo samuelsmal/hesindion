@@ -917,7 +917,7 @@ final class MatcherTests: XCTestCase {
     /// R77: MIGRATION.md's conflicts section has the three category subsections, each listing
     /// situations, and every listed conflict is under one of them.
     func testMIGRATIONsConflictsAreInTheThreeCategories() throws {
-        let md = try String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)
+        let md = try String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)
         let categories = Conflicts.categories(md)
         XCTAssertEqual(categories.map { String($0.heading.prefix(3)) }, ["(a)", "(b)", "(c)"])
         let all = try XCTUnwrap(Conflicts.parse(md, order: [:]))

@@ -1,6 +1,6 @@
 # Example 8 — Finte
 
-**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -22,8 +22,8 @@ Excluded by Sturmangriff (SA_62.ST4).
 
 ## Situations
 
-In [`situations/finte.yaml`](./situations/finte.yaml), 8.1–8.10. The rule as draft YAML:
-[`SA_48`](./rules/abilities/SA_48.yaml).
+In [`situations/finte.yaml`](../../../specs/rules/situations/finte.yaml), 8.1–8.10. The rule as draft YAML:
+[`SA_48`](../../../specs/rules/abilities/SA_48.yaml).
 
 Where the app is wrong: only the highest Stufe is offered (`CombatAttackViews.availableManeuvers`
 offers `hero.finteTier`), while Wuchtschlag offers every Stufe — the two tiered Basismanöver are
@@ -39,7 +39,7 @@ only on a hit.
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). This example rests on three
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md). This example rests on three
 cross-cutting ones, all decided: any Stufe up to the owned one may be announced
 (`tiered-manoeuvre-stufe`), a manoeuvre needs a listed technique (`sf-technique-lists`), and one
 Basismanöver and one Spezialmanöver combine on one attack (`manoeuvre-combination`).

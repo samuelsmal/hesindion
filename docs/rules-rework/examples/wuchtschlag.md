@@ -1,6 +1,6 @@
 # Example 9 — Wuchtschlag
 
-**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -18,8 +18,8 @@
 
 ## Situations
 
-In [`situations/wuchtschlag.yaml`](./situations/wuchtschlag.yaml), 9.1–9.8. The rule as draft
-YAML: [`SA_67`](./rules/abilities/SA_67.yaml).
+In [`situations/wuchtschlag.yaml`](../../../specs/rules/situations/wuchtschlag.yaml), 9.1–9.8. The rule as draft
+YAML: [`SA_67`](../../../specs/rules/abilities/SA_67.yaml).
 
 Where the app is wrong: Wuchtschlag is offered with any weapon, including a Dolch (9.5) — on
 purpose, per the catalog's note on SA_67, until the loadout can name Raufen (issue #14); the decided
@@ -29,5 +29,5 @@ Stufe can be chosen (9.3), as the decided ruling `tiered-manoeuvre-stufe` has it
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md). This example rests on the same
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md). This example rests on the same
 three cross-cutting ones as Finte, all decided.

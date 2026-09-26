@@ -2,6 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Paths moved on 2026-09-26 (ADR-0015, "Where the rules live").** The steps below keep the paths
+> they were written with. Read them as: `docs/rules-rework/examples/rules/<x>` → `specs/rules/<x>`;
+> `docs/rules-rework/examples/{situations,sweeps,checks.yaml,RULINGS.md,MIGRATION.md,conflict-fingerprints.json,README.md}`
+> → `specs/rules/…`; `docs/rules-rework/examples/{review,rulefiles,rulings,test_rulefiles}.py` →
+> `scripts/rules_review/…`; `docs/sample_heros/` → `specs/heroes/`. The write-ups (`<example>.md`) stay
+> in `docs/rules-rework/examples/`. A rule path in `MIGRATION.md` or `RULINGS.md` no longer starts
+> with `rules/`.
+
 **Goal:** Build the new rules engine beside the old one: a closed rule vocabulary, the `rulec`
 compiler from YAML to JSON, every draft rule and situation moved into that vocabulary, and a
 pure Swift engine (evaluator, checks as staged procedures, state over time, the log and its

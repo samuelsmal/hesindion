@@ -1,6 +1,6 @@
 # Example 11 — Beidhändiger Kampf, the SF and the advantage
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -44,9 +44,9 @@ lowers one of its penalties.
 
 ## Situations
 
-In [`situations/beidhaendiger-kampf.yaml`](./situations/beidhaendiger-kampf.yaml), 11.1–11.12. The
-rules as draft YAML: [`beidhaendiger-kampf`](./rules/core/beidhaendiger-kampf.yaml),
-[`SA_42`](./rules/abilities/SA_42.yaml), [`ADV_5`](./rules/advantages/ADV_5.yaml).
+In [`situations/beidhaendiger-kampf.yaml`](../../../specs/rules/situations/beidhaendiger-kampf.yaml), 11.1–11.12. The
+rules as draft YAML: [`beidhaendiger-kampf`](../../../specs/rules/core/beidhaendiger-kampf.yaml),
+[`SA_42`](../../../specs/rules/abilities/SA_42.yaml), [`ADV_5`](../../../specs/rules/advantages/ADV_5.yaml).
 
 Where the app is wrong: the off-hand weapon is chosen by alphabetical order of the names, not by
 the player — Schwert and Dolch make the Dolch the main hand (11.12, `CombatLoadoutPicker.apply`);
@@ -66,6 +66,6 @@ hero without the SF is told the wrong thing.
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for
 `beidhaendiger-kampf`, `SA_42` and the shared `sf-technique-lists` (SA_42 lowers the penalty only
 when both pieces are of a technique on its list).

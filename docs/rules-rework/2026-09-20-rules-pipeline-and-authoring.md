@@ -129,7 +129,7 @@ import classification stops depending on hand-authored effects.
 - [x] `make rules-db` rebuilds the database from the pinned source; `make rules-db-verify` exits 0.
 - [x] `make rules-db` fails with a named message when the source directory is missing or its
       checksums do not match `SOURCES.yaml`.
-- [x] Importing `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json` puts `SA_884` and
+- [x] Importing `specs/heroes/Boronmir Siebenfeld von Greifenfurt.json` puts `SA_884` and
       `SA_661` in `combatSpecialAbilities`, not `generalSpecialAbilities`.
 - [x] `hero.hasPlaenklerFormation == true` for that hero.
 

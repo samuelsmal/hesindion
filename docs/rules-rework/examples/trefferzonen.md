@@ -1,6 +1,6 @@
 # Example 6 — Trefferzonen, an optional rule set
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -72,12 +72,12 @@ combat-setup screen and cleared when the INI roll starts the regular round (`her
 
 ## Situations
 
-In [`situations/trefferzonen.yaml`](./situations/trefferzonen.yaml), TZ.1–TZ.27, each with one
+In [`situations/trefferzonen.yaml`](../../../specs/rules/situations/trefferzonen.yaml), TZ.1–TZ.27, each with one
 result. The rules as draft
-YAML: [`trefferzonen`](./rules/core/trefferzonen.yaml),
-[`trefferzonen-ruestungsschutz`](./rules/core/trefferzonen-ruestungsschutz.yaml),
-[`SA_160`](./rules/abilities/SA_160.yaml), [`SA_161`](./rules/abilities/SA_161.yaml),
-[`STATE_13`](./rules/conditions/STATE_13.yaml).
+YAML: [`trefferzonen`](../../../specs/rules/core/trefferzonen.yaml),
+[`trefferzonen-ruestungsschutz`](../../../specs/rules/core/trefferzonen-ruestungsschutz.yaml),
+[`SA_160`](../../../specs/rules/abilities/SA_160.yaml), [`SA_161`](../../../specs/rules/abilities/SA_161.yaml),
+[`STATE_13`](../../../specs/rules/conditions/STATE_13.yaml).
 
 Where the app is wrong, on what the pages state outright:
 
@@ -124,5 +124,5 @@ And per decided ruling:
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md), generated from the rule
 files — look for `trefferzonen`, `trefferzonen-ruestungsschutz`, `SA_160` and `STATE_13`.

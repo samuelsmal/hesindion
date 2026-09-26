@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from rulec import checks, compile, rules, situations, vocab
-from rulec.__main__ import EXAMPLES, main
+from rulec.__main__ import ROOT, main
 from rulec.test_situations import MAIN, tree
 
 TABLE = """\
@@ -58,7 +58,7 @@ class ApplicationTests(unittest.TestCase):
     def compile(self, body, table):
         d = tree({"a.yaml": "situations:\n  - id: S\n" + body})
         v = vocab.load()
-        book, _ = rules.check(d / "rules", v)
+        book, _ = rules.check(d, v)
         out, errors = situations.check(d / "situations", book, compile.build_rules(book, v)["reach"], v,
                                        checks=table)
         self.assertEqual([str(e) for e in errors], [])
@@ -86,7 +86,7 @@ class CommandTests(unittest.TestCase):
         out = d / "build"
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = main(["build", "--rules", str(d / "rules"), "--out", str(out)])
+            code = main(["build", "--rules", str(d), "--out", str(out)])
         self.assertEqual(code, 0, buf.getvalue())
         obj = json.loads((out / "situations.json").read_text())
         self.assertEqual(obj["checks"]["TAL_10"]["attributes"], ["KL", "IN", "IN"])
@@ -97,21 +97,21 @@ class CommandTests(unittest.TestCase):
         (d / "checks.yaml").write_text("TAL_1: { attributes: [MU] }\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = main(["check", "--rules", str(d / "rules")])
+            code = main(["check", "--rules", str(d)])
         self.assertEqual(code, 1)
         self.assertIn("TAL_1: attributes are three", buf.getvalue())
 
     def test_the_examples_table_names_every_check_the_situations_state(self):
         # The harness runs a stated check with the Probe from this table (no rules.db).
-        table, errors = checks.load(EXAMPLES / "checks.yaml")
+        table, errors = checks.load(ROOT / "checks.yaml")
         self.assertEqual([str(e) for e in errors], [])
         self.assertEqual(table["TAL_10"]["attributes"], ["KL", "IN", "IN"])
         self.assertEqual(table["TAL_10"]["applications"]["2"], "Suchen")
         v = vocab.load()
-        book, _ = rules.check(EXAMPLES / "rules", v)
-        out = compile.build_rules(book, v, rules.shared_rulings(EXAMPLES / "rules"))
-        sits, _ = situations.check(EXAMPLES / "situations", book, out["reach"], v,
-                                   rules.shared_rulings(EXAMPLES / "rules"), checks=table)
+        book, _ = rules.check(ROOT, v)
+        out = compile.build_rules(book, v, rules.shared_rulings(ROOT))
+        sits, _ = situations.check(ROOT / "situations", book, out["reach"], v,
+                                   rules.shared_rulings(ROOT), checks=table)
         stated = {f["value"] for s in sits for f in s["facts"] if f["name"] in ("check.talent", "check.spell")}
         self.assertTrue(stated)
         self.assertEqual(sorted(stated - set(table)), [])

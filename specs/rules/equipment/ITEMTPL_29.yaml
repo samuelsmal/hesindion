@@ -1,6 +1,6 @@
 # DRAFT FORMAT — see ../../README.md.
 # The Großschild's weapon-table properties only. How a shield parries, attacks and breaks is the
-# core shield rule (schilde — another agent's file, rules/core/schilde.yaml). Format: see
+# core shield rule (schilde — another agent's file, core/schilde.yaml). Format: see
 # ITEMTPL_19.yaml.
 id: ITEMTPL_29
 name: Großschild

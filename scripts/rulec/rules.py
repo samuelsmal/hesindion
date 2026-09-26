@@ -4,7 +4,7 @@ Nothing here knows a rule by name: every check is driven by `specs/rules/vocabul
 """
 from pathlib import Path
 
-from . import yamlload
+from . import layout, yamlload
 from .errors import RulecError
 from .forms import _TABLE, Forms
 
@@ -88,7 +88,7 @@ def _load_shared(rules_dir: Path, errors, v=None):
 
 
 def shared_rulings(rules_dir: Path) -> list:
-    """The normalized rulings of `rules/rulings.yaml` (qualified `shared.<id>`, with `status`)."""
+    """The normalized rulings of the root's `rulings.yaml` (qualified `shared.<id>`, with `status`)."""
     return _load_shared(Path(rules_dir), [])
 
 
@@ -115,7 +115,7 @@ def check(rules_dir: Path, v):
     rules_dir = Path(rules_dir)
     errors: list[RulecError] = []
     raw = {}
-    for path in sorted(rules_dir.rglob("*.yaml")):
+    for path in layout.rule_files(rules_dir):
         if path.name == "rulings.yaml":
             continue
         try:

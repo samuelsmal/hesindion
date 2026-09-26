@@ -11,7 +11,7 @@ Each example comes in three parts:
 | Part | Where | What it is |
 |---|---|---|
 | The write-up | `<example>.md` | Clauses in plain words, and what the app gets wrong |
-| The rule files | [`rules/`](./rules/) | A **draft** of the one-file-per-rule YAML, written for these rules |
+| The rule files | [`rules/`](./) | A **draft** of the one-file-per-rule YAML, written for these rules |
 | The situations | [`situations/`](./situations/) | Hero + situation → expected values and the rule and clause behind every line, as YAML, so a test can run them against any engine |
 
 The YAML format is a sketch to find out what the rules need, not a decision. Where writing a rule
@@ -36,9 +36,9 @@ sweeps/          the rules that affect one hero, for the review TUI
 ```
 
 Every `<file>.yaml` under `rules/` is written in the engine's rule format
-([design §4](../../plans/2026-09-24-rules-engine-design.md#4-the-rule-format)), the same format the compiler
+([design §4](../../docs/plans/2026-09-24-rules-engine-design.md#4-the-rule-format)), the same format the compiler
 (`scripts/rulec`) reads. **The vocabulary is closed**: an id, verb, target, fact, owner or value
-form outside [`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) is a compile
+form outside [`specs/rules/vocabulary.json`](vocabulary.json) is a compile
 error, not a warning. `make rules-check` runs the compiler over every rule file; run it after
 every edit. This section is what it checks against — the rest of the vocabulary (`kinds`,
 `comparisons`, `selectorKinds`, item fields, …) is in the JSON itself.
@@ -61,7 +61,7 @@ rulings: [ ... ]
 agentPass: null                   # the review queue's flag; see "What waits for an agent"
 ```
 
-(from `rules/core/waffeneigenschaften.yaml`, trimmed). The `# DRAFT FORMAT — see ../../README.md.`
+(from `core/waffeneigenschaften.yaml`, trimmed). The `# DRAFT FORMAT — see ../../README.md.`
 comment (`../README.md.` for `rulings.yaml`) at the top of every file points back here.
 
 ### Clauses (design §4.2)
@@ -171,10 +171,10 @@ directly: `sheet` — attributes, owned rules, talents, `hero.has` — and `deri
 query computed.) A fact nobody has stated is **unknown**, not false; an effect whose `when` depends
 on an unknown fact produces a question, not a guess.
 
-See [`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) for the full, closed
+See [`specs/rules/vocabulary.json`](vocabulary.json) for the full, closed
 lists this section only samples (all facts, targets, verbs, comparisons, `selectorKinds`, item
 fields, …), and
-[the design](../../plans/2026-09-24-rules-engine-design.md#4-the-rule-format) for the reasoning
+[the design](../../docs/plans/2026-09-24-rules-engine-design.md#4-the-rule-format) for the reasoning
 behind the format. [`MIGRATION.md`](./MIGRATION.md) has the file-by-file record of the 2026-09
 migration into this format — its "Expectation conflicts for the owner", "Open questions" and
 "Notes for the engine tasks" sections are what is still unresolved.
@@ -186,7 +186,7 @@ data, kept beside the rule it interprets, and answered there — not in chat.
 
 - **Where.** A ruling about one rule lives in that rule's file, under `rulings:`. A ruling that
   applies to many rules (rounding, what a Kampfstil's technique list means) lives in
-  [`rules/rulings.yaml`](./rules/rulings.yaml).
+  [`rulings.yaml`](./rulings.yaml).
 - **An open ruling is written to be answered cold:** the question, the `context` (what the page
   says, what the app does now), the `situations` it decides, lettered `options` each with what
   it would mean for the app, and a `recommended` option with the reason.
@@ -264,7 +264,7 @@ watch and steer; it does not commit). Two kinds:
 
 Whatever you change, keep it inside the closed vocabulary ("Layout of the draft rule files" above)
 and run `make rules-check` after every edit — it compiles every rule file against
-[`specs/rules/vocabulary.json`](../../../specs/rules/vocabulary.json) and catches an unknown verb,
+[`specs/rules/vocabulary.json`](vocabulary.json) and catches an unknown verb,
 target, fact or value form before it reaches `make test-rules-review`.
 
 ## The set
@@ -279,28 +279,28 @@ concepts the rest of the set does not need; each write-up ends with what it foun
 
 | # | Example | Rules | What it exercises | Status |
 |---|---|---|---|---|
-| 1 | [Belastung](./belastung.md) | COND_1, Rüstung und Belastung, SA_41, Reiterkampf RK7 | leveled Zustand; which checks a Zustand reaches; a Stufe that makes a hero incapacitated; stacking with a situational relief | **draft, rulings given** |
-| 2 | [Reiterkampf](./reiterkampf.md) | Reiterkampf, Vorteilhafte Position, SA_43, SA_661, SA_62 | a core rule without an Optolith id; legality; a rule raising another rule's bonus; an order replacing an action; two rules with one name | **draft, rulings given** |
-| 3 | [Mehrfache Verteidigung](./mehrfache-verteidigung.md) | GRW_mehrfacheVerteidigung, SA_923 Vinsalt-Stil, SA_65 Verteidigungshaltung | a counter over the round; a style changing a core constant | **draft, for review** |
-| 4 | [Schmerz and the Zustand cap](./schmerz.md) | COND_6, the Zustand cap, Schicksalspunkte (Verteidigung, Zustand ignorieren) | several Zustände at once; a cap; what a Schip removes and what it cannot | **draft, for review** |
-| 5 | [Reichweite](./reichweite.md) | GRW_reichweite, SA_172/SA_173 Unterlaufen | a matrix of constants; a per-Stufe shift of that matrix | **draft, for review** |
-| 6 | [Trefferzonen](./trefferzonen.md) | GRW_zonenaufschlag, SA_160, SA_161, STATE_13, Fokusregel Trefferzonen-RS | an optional rule set (Fokusregel); one rule halving another | **draft, for review** |
-| 7 | [Liegend](./liegend.md) | STATE_10 | penalties on the other side of the table; a value set rather than modified (GS 1) | **draft, for review** |
-| 8 | [Finte](./finte.md) | SA_48 | per-Stufe cost and effect split between hero and opponent; Basismanöver; mutual exclusion | **draft, for review** |
-| 9 | [Wuchtschlag](./wuchtschlag.md) | SA_67 | per-Stufe trade of AT for TP; choosing a lower Stufe | **draft, for review** |
-| 10 | [Sturmangriff](./sturmangriff.md) | SA_62 | a precondition (run-up); a damage formula using GS; a consequence for the opponent on failure | **draft, for review** |
-| 11 | [Beidhändiger Kampf](./beidhaendiger-kampf.md) | the core two-weapon rule, SA_42, ADV_5 Beidhändig | action economy; off-hand penalties; an advantage and an SF together | **draft, for review** |
-| 12 | [Kampfreflexe](./kampfreflexe.md) | SA_51 | a value outside any check (INI) | **draft, for review** |
-| 13 | [Verweichlicht](./verweichlicht.md) | DISADV_57 | a disadvantage; a talent check, not combat | **draft, for review** |
-| 14 | [Boronmirs Kampfsonderfertigkeiten](./boronmir-sf.md) | SA_66 Vorstoß, SA_59 Schildspalter, SA_40 Aufmerksamkeit, SA_884 Plänkler-Formation | a whole-round manoeuvre announced at round start; a manoeuvre written from both sides of the table (damage to an item's StP); a bonus on one talent application; a bonus an ally's SF grants | **draft, for review** |
-| 15 | [Lebensenergie](./lebensenergie.md) | ADV_25, ADV_49, ADV_44, ADV_75, Lebensenergie (Basiswert), Regeneration | a derived value's breakdown; an advantage choosing which Stufe of another rule's table applies; a rolled resource gain with situational lines, halving, floor and cap; an effect on a Zustand's duration and cause | **draft, for review** |
-| 16 | [Kampfwerte, Schaden und Schilde](./kampfwerte.md) | kampfwerte, schaden, schilde, at-pa-modifikatoren | derived values and their breakdown (AT/PA/AW/INI, rounding, the higher Leiteigenschaft); a weapon value above a threshold (Schadensbonus); a passive vs an active choice per defence (shield bonus single or doubled); a defence forbidden by the kind of attack; a rolled value whose modifiers stay live (INI) | **draft, for review** |
-| 17 | [Kampfsituationen](./kampfsituationen.md) | GRW_passierschlag, GRW_angriffVonHinten, GRW_beengteUmgebung, GRW_groessenkategorie | a free attack with no defence and no crits; a GM fact that also unlocks another rule's clause (RK5); a penalty table keyed on the piece in hand (reach or shield size); a defence restriction by opponent size | **draft, for review** |
-| 18 | [Kupperus und Boronmirs Waffen](./kupperus-und-waffen.md) | svellttaler-kaltblut, maechtiger-schlag, ruhiges-temperament, ITEMTPL_19, ITEMTPL_35, ITEMTPL_29, waffeneigenschaften | creature rules (a profile read by another rule, an animal's advantage landing on the rider's check); weapon data; a Fokusregel that covers only some clauses of a file | **draft, for review** |
-| 19 | [Boronmirs neue Fähigkeiten](./boronmir-neu.md) | SA_862 Formation, ADV_54 Eisern, DISADV_37 Schlechte Eigenschaft | one SF written as a larger copy of another, and the two meeting; an advantage on a value defined by a Fokusregel; a disadvantage whose only effect is a check it offers, with a GM modifier and a select option (`sid`) naming which one | **draft, for review** |
-| 20 | [Probe: Zaubermodifikationen](./probe-magie.md) | zaubermodifikationen, SA_74 Verbotene Pforten | a rule moving the parameters of the action being taken (cost, casting time, range) along ordered scales; costs paid into named pools, split and falling through (AsP, then LeP); a cost that recurs over game time | **probe, draft** |
-| 21 | [Probe: Fernkampf](./probe-fernkampf.md) | fernkampf, ladezeiten, SA_60 Schnellladen | a process that runs over several actions (Zielen, Laden); item state that changes in a fight and gates actions (loaded, strung); a weapon value changed by another rule | **probe, draft** |
-| 22 | [Probe: Fertigkeitsproben](./probe-fertigkeiten.md) | fertigkeitsproben, ADV_4 Begabung, SA_9 Fertigkeitsspezialisierung | a check as a staged procedure (attributes, pool, dice, result, QS) with rules hooking into each stage; an effect replacing a die after the roll | **probe, draft** |
+| 1 | [Belastung](../../docs/rules-rework/examples/belastung.md) | COND_1, Rüstung und Belastung, SA_41, Reiterkampf RK7 | leveled Zustand; which checks a Zustand reaches; a Stufe that makes a hero incapacitated; stacking with a situational relief | **draft, rulings given** |
+| 2 | [Reiterkampf](../../docs/rules-rework/examples/reiterkampf.md) | Reiterkampf, Vorteilhafte Position, SA_43, SA_661, SA_62 | a core rule without an Optolith id; legality; a rule raising another rule's bonus; an order replacing an action; two rules with one name | **draft, rulings given** |
+| 3 | [Mehrfache Verteidigung](../../docs/rules-rework/examples/mehrfache-verteidigung.md) | GRW_mehrfacheVerteidigung, SA_923 Vinsalt-Stil, SA_65 Verteidigungshaltung | a counter over the round; a style changing a core constant | **draft, for review** |
+| 4 | [Schmerz and the Zustand cap](../../docs/rules-rework/examples/schmerz.md) | COND_6, the Zustand cap, Schicksalspunkte (Verteidigung, Zustand ignorieren) | several Zustände at once; a cap; what a Schip removes and what it cannot | **draft, for review** |
+| 5 | [Reichweite](../../docs/rules-rework/examples/reichweite.md) | GRW_reichweite, SA_172/SA_173 Unterlaufen | a matrix of constants; a per-Stufe shift of that matrix | **draft, for review** |
+| 6 | [Trefferzonen](../../docs/rules-rework/examples/trefferzonen.md) | GRW_zonenaufschlag, SA_160, SA_161, STATE_13, Fokusregel Trefferzonen-RS | an optional rule set (Fokusregel); one rule halving another | **draft, for review** |
+| 7 | [Liegend](../../docs/rules-rework/examples/liegend.md) | STATE_10 | penalties on the other side of the table; a value set rather than modified (GS 1) | **draft, for review** |
+| 8 | [Finte](../../docs/rules-rework/examples/finte.md) | SA_48 | per-Stufe cost and effect split between hero and opponent; Basismanöver; mutual exclusion | **draft, for review** |
+| 9 | [Wuchtschlag](../../docs/rules-rework/examples/wuchtschlag.md) | SA_67 | per-Stufe trade of AT for TP; choosing a lower Stufe | **draft, for review** |
+| 10 | [Sturmangriff](../../docs/rules-rework/examples/sturmangriff.md) | SA_62 | a precondition (run-up); a damage formula using GS; a consequence for the opponent on failure | **draft, for review** |
+| 11 | [Beidhändiger Kampf](../../docs/rules-rework/examples/beidhaendiger-kampf.md) | the core two-weapon rule, SA_42, ADV_5 Beidhändig | action economy; off-hand penalties; an advantage and an SF together | **draft, for review** |
+| 12 | [Kampfreflexe](../../docs/rules-rework/examples/kampfreflexe.md) | SA_51 | a value outside any check (INI) | **draft, for review** |
+| 13 | [Verweichlicht](../../docs/rules-rework/examples/verweichlicht.md) | DISADV_57 | a disadvantage; a talent check, not combat | **draft, for review** |
+| 14 | [Boronmirs Kampfsonderfertigkeiten](../../docs/rules-rework/examples/boronmir-sf.md) | SA_66 Vorstoß, SA_59 Schildspalter, SA_40 Aufmerksamkeit, SA_884 Plänkler-Formation | a whole-round manoeuvre announced at round start; a manoeuvre written from both sides of the table (damage to an item's StP); a bonus on one talent application; a bonus an ally's SF grants | **draft, for review** |
+| 15 | [Lebensenergie](../../docs/rules-rework/examples/lebensenergie.md) | ADV_25, ADV_49, ADV_44, ADV_75, Lebensenergie (Basiswert), Regeneration | a derived value's breakdown; an advantage choosing which Stufe of another rule's table applies; a rolled resource gain with situational lines, halving, floor and cap; an effect on a Zustand's duration and cause | **draft, for review** |
+| 16 | [Kampfwerte, Schaden und Schilde](../../docs/rules-rework/examples/kampfwerte.md) | kampfwerte, schaden, schilde, at-pa-modifikatoren | derived values and their breakdown (AT/PA/AW/INI, rounding, the higher Leiteigenschaft); a weapon value above a threshold (Schadensbonus); a passive vs an active choice per defence (shield bonus single or doubled); a defence forbidden by the kind of attack; a rolled value whose modifiers stay live (INI) | **draft, for review** |
+| 17 | [Kampfsituationen](../../docs/rules-rework/examples/kampfsituationen.md) | GRW_passierschlag, GRW_angriffVonHinten, GRW_beengteUmgebung, GRW_groessenkategorie | a free attack with no defence and no crits; a GM fact that also unlocks another rule's clause (RK5); a penalty table keyed on the piece in hand (reach or shield size); a defence restriction by opponent size | **draft, for review** |
+| 18 | [Kupperus und Boronmirs Waffen](../../docs/rules-rework/examples/kupperus-und-waffen.md) | svellttaler-kaltblut, maechtiger-schlag, ruhiges-temperament, ITEMTPL_19, ITEMTPL_35, ITEMTPL_29, waffeneigenschaften | creature rules (a profile read by another rule, an animal's advantage landing on the rider's check); weapon data; a Fokusregel that covers only some clauses of a file | **draft, for review** |
+| 19 | [Boronmirs neue Fähigkeiten](../../docs/rules-rework/examples/boronmir-neu.md) | SA_862 Formation, ADV_54 Eisern, DISADV_37 Schlechte Eigenschaft | one SF written as a larger copy of another, and the two meeting; an advantage on a value defined by a Fokusregel; a disadvantage whose only effect is a check it offers, with a GM modifier and a select option (`sid`) naming which one | **draft, for review** |
+| 20 | [Probe: Zaubermodifikationen](../../docs/rules-rework/examples/probe-magie.md) | zaubermodifikationen, SA_74 Verbotene Pforten | a rule moving the parameters of the action being taken (cost, casting time, range) along ordered scales; costs paid into named pools, split and falling through (AsP, then LeP); a cost that recurs over game time | **probe, draft** |
+| 21 | [Probe: Fernkampf](../../docs/rules-rework/examples/probe-fernkampf.md) | fernkampf, ladezeiten, SA_60 Schnellladen | a process that runs over several actions (Zielen, Laden); item state that changes in a fight and gates actions (loaded, strung); a weapon value changed by another rule | **probe, draft** |
+| 22 | [Probe: Fertigkeitsproben](../../docs/rules-rework/examples/probe-fertigkeiten.md) | fertigkeitsproben, ADV_4 Begabung, SA_9 Fertigkeitsspezialisierung | a check as a staged procedure (attributes, pool, dice, result, QS) with rules hooking into each stage; an effect replacing a die after the roll | **probe, draft** |
 
 ## What the app gets wrong
 

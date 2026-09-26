@@ -7,7 +7,7 @@ IPAD_NAME = iPad Pro 11-inch (M5)
 DERIVED_DATA = .build
 BUNDLE_ID = org.savoba.Hesindion
 
-SAMPLE_HEROS = docs/sample_heros
+SAMPLE_HEROES = specs/heroes
 
 # Optolith source data the rules database is built from (not in this repo).
 DSA_DATA ?= ../../dsa_companion_data/Data
@@ -28,8 +28,9 @@ IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID)
 .PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
-# that ships or tests the app depends on this and refuses to run without it; make rules-db
-# builds it. test-rules-engine does NOT depend on this: Packages/RulesEngine reads no rules.db.
+# that ships the app depends on this and refuses to run without it; make rules-db builds it.
+# The app's test targets depend on rules-db instead, so a test never runs against a stale
+# database. test-rules-engine depends on neither: Packages/RulesEngine reads no rules.db.
 require-rules-db:
 	@if [ ! -f '$(RULES_DB)' ]; then \
 		echo "rules.db missing: run make rules-db (needs DSA_DATA=…/dsa_companion_data/Data)"; \
@@ -90,7 +91,7 @@ share-heros: boot
 		exit 1; \
 	fi
 	@mkdir -p "$(IPAD_APP_DATA)/Documents"
-	cp "$(SAMPLE_HEROS)/"*.json "$(IPAD_APP_DATA)/Documents/"
+	cp "$(SAMPLE_HEROES)/"*.json "$(IPAD_APP_DATA)/Documents/"
 	@echo "Copied sample heros to $(IPAD_APP_DATA)/Documents/"
 
 share-heros-iphone: boot-iphone
@@ -99,7 +100,7 @@ share-heros-iphone: boot-iphone
 		exit 1; \
 	fi
 	@mkdir -p "$(APP_DATA)/Documents"
-	cp "$(SAMPLE_HEROS)/"*.json "$(APP_DATA)/Documents/"
+	cp "$(SAMPLE_HEROES)/"*.json "$(APP_DATA)/Documents/"
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
 deploy: require-rules-db
@@ -141,6 +142,10 @@ test-rules-db:
 # rewrites the snapshot. The script builds to a temp file and renames on
 # success, so a failed build leaves the old database in place.
 rules-db: test-rules-db
+	@if [ ! -d '$(DSA_DATA)' ]; then \
+		echo "DSA_DATA not found: $(DSA_DATA) (the Optolith data rules.db is built from; set DSA_DATA=…/dsa_companion_data/Data)"; \
+		exit 1; \
+	fi
 	python3 scripts/build_rules_db/build_db.py \
 		--source '$(DSA_DATA)' \
 		--catalog specs/data/rules-catalog.yaml \
@@ -150,35 +155,36 @@ rules-db: test-rules-db
 		$(if $(UPDATE_SNAPSHOT),--update-snapshot,) \
 		--output '$(RULES_DB)'
 
-# The rules rework's draft rule files (docs/rules-rework/examples/). uv installs
+# The rule files (specs/rules/) and their review tools (scripts/rules_review/). uv installs
 # the scripts' own dependencies (Textual, PyYAML) from their inline metadata.
-RULES_EXAMPLES = docs/rules-rework/examples
+RULES_DIR = specs/rules
+RULES_REVIEW = scripts/rules_review
 
 # Review TUI: answer rulings, mark rules reviewed, send them back to the agent.
 # Signs with your gh login; BY=@handle signs as someone else. SWEEP=boronmir shows only the
-# rules that affect one hero ($(RULES_EXAMPLES)/sweeps/).
+# rules that affect one hero ($(RULES_DIR)/sweeps/).
 rules-review:
-	uv run $(RULES_EXAMPLES)/review.py $(if $(BY),--by $(BY),) $(if $(SWEEP),--sweep $(SWEEP),)
+	uv run $(RULES_REVIEW)/review.py $(if $(BY),--by $(BY),) $(if $(SWEEP),--sweep $(SWEEP),)
 
 # A sweep's rules and what each still needs, as text: make rules-sweep SWEEP=boronmir
 rules-sweep:
-	uv run $(RULES_EXAMPLES)/review.py --sweep $(SWEEP) --list
+	uv run $(RULES_REVIEW)/review.py --sweep $(SWEEP) --list
 
 # What waits for an agent: flagged rules and answered rulings to process.
 rules-queue:
-	uv run $(RULES_EXAMPLES)/review.py --queue
+	uv run $(RULES_REVIEW)/review.py --queue
 
 # Start Claude Code on that queue. Interactive, so you can watch and steer; it
 # does not commit.
 rules-agent:
 	claude "Do the agent pass on the draft rule files: run \`make rules-queue\` and work \
-	through every item as $(RULES_EXAMPLES)/README.md, section 'What waits for an agent', \
+	through every item as $(RULES_DIR)/README.md, section 'What waits for an agent', \
 	says. Finish with \`make test-rules-review\`. Do not commit."
 
 # The review tool's file edits, and RULINGS.md current with the rule files.
 test-rules-review:
-	uv run --with pyyaml python -m unittest discover -s $(RULES_EXAMPLES) -p 'test_*.py' -v
-	uv run --with pyyaml python $(RULES_EXAMPLES)/rulings.py --check
+	uv run --with pyyaml python -m unittest discover -s $(RULES_REVIEW) -p 'test_*.py' -v
+	uv run --with pyyaml python $(RULES_REVIEW)/rulings.py --check
 
 # The new rule format's compiler (docs/plans/2026-09-24-rules-engine-design.md). Validates the
 # rule and situation files against specs/rules/vocabulary.json and compiles them to JSON for
@@ -203,7 +209,7 @@ rules-json:
 # `RULES_FILES=all` runs every file, `RULES_FILES=none` skips it. It writes
 # build/rules/harness-report.json.
 # A situation listed in MIGRATION.md's "Expectation conflicts for the owner" is checked against its
-# fingerprints in docs/rules-rework/examples/conflict-fingerprints.json (query, step, mismatch kind;
+# fingerprints in specs/rules/conflict-fingerprints.json (query, step, mismatch kind;
 # ruling R78): a mismatch outside them fails, fingerprints that no longer occur are printed.
 # `make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1` re-records the snapshot from the run (only
 # the RULES_FILES run; other files' entries are kept); review its diff and commit it.
@@ -241,7 +247,7 @@ rules-engine-fixture:
 # simulators on the boot screen at once). NO clones, NO extra boots.
 NO_CLONE = -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1
 
-test: require-rules-db boot
+test: rules-db boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -252,7 +258,7 @@ test: require-rules-db boot
 		$(NO_CLONE) \
 		test
 
-test-ui: require-rules-db boot
+test-ui: rules-db boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -268,7 +274,7 @@ test-ui: require-rules-db boot
 # injected with the TEST_RUNNER_ prefix (xcodebuild strips it before launch);
 # a plain host env var never reaches the simulator process. Valid values are
 # all/failed/missing/never — "all" force-records every snapshot.
-test-ui-record: boot
+test-ui-record: rules-db boot
 	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -282,7 +288,7 @@ test-ui-record: boot
 # Re-record only a specific test (class or method) — narrows the blast radius of
 # a re-record so unrelated baselines aren't rewritten.
 #   make test-ui-record-only ONLY=HesindionTests/SomeSnapshotTests
-test-ui-record-only: boot
+test-ui-record-only: rules-db boot
 	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \

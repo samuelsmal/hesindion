@@ -1,9 +1,9 @@
 # Example 16 — Kampfwerte, Schaden und Schilde. Same conventions as belastung.yaml.
 # DRAFT FORMAT — see ../README.md.
-# Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
+# Open rulings named without a prefix live in ../rulings.yaml or in the rule's own file.
 #
-# The hero is Boronmir as of his 2026-09-24 export (docs/sample_heros/Boronmir Siebenfeld von
-# Greifenfurt (2026-09-24).json). The UI-test copy Hesindion/Resources/UITestHero.json is still
+# The hero is Boronmir as of his 2026-09-24 export (specs/heroes/Boronmir Siebenfeld von
+# Greifenfurt.json). The UI-test copy Hesindion/Resources/UITestHero.json is still
 # the earlier sheet (KO 13, KK 15, Hiebwaffen 12, Schilde 9). From `attr.values`:
 #   ATTR_1 MU 14, ATTR_2 KL 12, ATTR_3 IN 13, ATTR_4 CH 13, ATTR_5 FF 11, ATTR_6 GE 14,
 #   ATTR_7 KO 15, ATTR_8 KK 14.
@@ -11,7 +11,7 @@
 #   CT_3 Dolche 8.
 # Attribute bonuses (kampfwerte.KW1/KW2: "jeweils 3 volle Punkte über 8"):
 #   MU 14 → +2, GE 14 → +2, KK 14 → +2, FF 11 → +1.
-# Weapons (rules/equipment/): Rabenschnabel ITEMTPL_19 (Hiebwaffen, 1W6+4, KK 14, 0/−1),
+# Weapons (equipment/): Rabenschnabel ITEMTPL_19 (Hiebwaffen, 1W6+4, KK 14, 0/−1),
 #   Langschwert ITEMTPL_35 (Schwerter, 1W6+4, GE/KK 15, 0/0), Großschild ITEMTPL_29 (Schilde,
 #   1W6+1, KK 16, −6/+3, and −1 AT on the main weapon, GR1).
 # Plattenrüstung RS 6, Belastung III; Belastungsgewöhnung II (SA_41) → Belastung I (belastung,
@@ -26,7 +26,7 @@
 # `pa(with: weapon)` is the weapon parry (with the passive shield bonus), `pa(with: shield)` the
 # active shield parry. A line's label (the old `term`, `formula`, `item`) is a comment beside it.
 
-heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 hero:
   attributes: { MU: 14, KL: 12, IN: 13, CH: 13, FF: 11, GE: 14, KO: 15, KK: 14 }
   techniques: { Hiebwaffen: 14, Schwerter: 12, Schilde: 10, Raufen: 10, Dolche: 8 }

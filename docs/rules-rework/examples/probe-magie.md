@@ -1,6 +1,6 @@
 # Example 20 — Probe: Zaubermodifikationen and Verbotene Pforten
 
-**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 A probe, not part of Boronmir's sweep. The examples so far are melee; this one drafts the core
 rule every spell cast runs through, and one SF that changes how a cast is paid for. The question
@@ -64,10 +64,10 @@ Reused: `round-up`, for the half cost.
 
 ## Situations
 
-[`situations/probe-magie.yaml`](./situations/probe-magie.yaml), 20.1–20.8, with a generic
+[`situations/probe-magie.yaml`](../../../specs/rules/situations/probe-magie.yaml), 20.1–20.8, with a generic
 Gildenmagierin (LE 29, AsP 30, Ignifaxius FW 9, Flim Flam and Armatrutz FW 8). Rule files:
-[`zaubermodifikationen`](./rules/core/zaubermodifikationen.yaml),
-[`SA_74`](./rules/abilities/SA_74.yaml).
+[`zaubermodifikationen`](../../../specs/rules/core/zaubermodifikationen.yaml),
+[`SA_74`](../../../specs/rules/abilities/SA_74.yaml).
 
 ## What the app gets wrong
 

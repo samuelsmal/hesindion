@@ -31,7 +31,7 @@
 # `checks_first`: none asked is `events: []`. The GM's trigger and modifier are `gmFact.trigger`
 # and `gmFact.triggerModifier` (the old `gm: { fact: { trigger }, modifier }`).
 
-heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 hero:
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1 }
   advantages: { ADV_25: 2, ADV_44: 2, ADV_49: 1, ADV_54: 1 }

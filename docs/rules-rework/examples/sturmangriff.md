@@ -1,6 +1,6 @@
 # Example 10 — Sturmangriff (on foot)
 
-**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Page read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 Not the mounted "Sturmangriff zu Pferd", which is an order in Reiterkampf (RK14) — see
 [Example 2](./reiterkampf.md) and the decided ruling `two-sturmangriffe`.
@@ -23,11 +23,11 @@ Not the mounted "Sturmangriff zu Pferd", which is an order in Reiterkampf (RK14)
 
 ## Situations
 
-In [`situations/sturmangriff.yaml`](./situations/sturmangriff.yaml), 10.1–10.8: run-up (10.1),
+In [`situations/sturmangriff.yaml`](../../../specs/rules/situations/sturmangriff.yaml), 10.1–10.8: run-up (10.1),
 technique (10.2), Finte (10.3), a miss (10.4), both caps (10.5, 10.6), with Wuchtschlag (10.7),
 unarmed (10.8). The plain case, rounding, plate and the mounted ban are
-[`reiterkampf.yaml`](./situations/reiterkampf.yaml) 5.9 and 5.12–5.15, not repeated. The rule as
-draft YAML: [`SA_62`](./rules/abilities/SA_62.yaml), now with ST5 and ST6.
+[`reiterkampf.yaml`](../../../specs/rules/situations/reiterkampf.yaml) 5.9 and 5.12–5.15, not repeated. The rule as
+draft YAML: [`SA_62`](../../../specs/rules/abilities/SA_62.yaml), now with ST5 and ST6.
 
 Where the app is wrong: SA_62 is never offered on foot at all; the one `CombatManeuver.sturmangriff`
 is the mounted order (`CombatAttackViews.availableManeuvers` gates it on `mountedActive &&
@@ -39,7 +39,7 @@ real — a speed spell or elixir reaches them (10.5, 10.6).
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `SA_62`. Decided:
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for `SA_62`. Decided:
 `sturmangriff-cap-scope` — "+10 insgesamt" caps Sturmangriff's own bonus only; other TP bonuses on
 the same attack add on top. The cross-cutting ones decide 10.2 (`sf-technique-lists`: not with a
 Dolch) and 10.7 (`manoeuvre-combination`: with Wuchtschlag).

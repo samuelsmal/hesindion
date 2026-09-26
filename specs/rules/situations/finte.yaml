@@ -8,7 +8,7 @@
 # `manoeuvre: finte, tier: n`); a line's old `tier` is that value, now a comment.
 # Whether two manoeuvres combine is the situation's `legal.combinations` (the old
 # `not_combinable`); what the player is told is `texts` (the old `told`).
-# Rulings named here without a prefix live in ../rules/rulings.yaml
+# Rulings named here without a prefix live in ../rulings.yaml
 # (sf-technique-lists, manoeuvre-combination, tiered-manoeuvre-stufe).
 
 hero: { values: { at: 14, pa: 8, aw: 7 } }

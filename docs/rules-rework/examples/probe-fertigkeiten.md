@@ -50,7 +50,7 @@ New, both open:
 
 ## Situations
 
-[`situations/probe-fertigkeiten.yaml`](./situations/probe-fertigkeiten.yaml), 22.1–22.9.
+[`situations/probe-fertigkeiten.yaml`](../../../specs/rules/situations/probe-fertigkeiten.yaml), 22.1–22.9.
 
 ## What the app gets wrong
 

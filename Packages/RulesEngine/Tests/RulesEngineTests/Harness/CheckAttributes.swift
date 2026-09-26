@@ -2,7 +2,7 @@ import Foundation
 @testable import RulesEngine
 
 /// The three attributes of every talent's and spell's Probe, and a talent's Belastung flag: the
-/// Probe table rulec compiles from `docs/rules-rework/examples/checks.yaml` into
+/// Probe table rulec compiles from `specs/rules/checks.yaml` into
 /// `build/rules/situations.json`'s `checks` (Task 34; before, rules.db's `skill_details` /
 /// `spell_details`). The engine reads no such table; the harness, like the app, is the check
 /// procedure's caller and hands them in (`CheckRequest.attributes`, `check.hinderedByBelastung`).

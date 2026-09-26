@@ -1,9 +1,9 @@
 # Example 19 — What Boronmir took on 2026-09-24
 
-**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft, for review.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 The 2026-09-24 export of Boronmir
-([`Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`](../../sample_heros/Boronmir%20Siebenfeld%20von%20Greifenfurt%20(2026-09-24).json))
+([`Boronmir Siebenfeld von Greifenfurt.json`](../../../specs/heroes/Boronmir%20Siebenfeld%20von%20Greifenfurt.json))
 has three rules no earlier example covered: a formation that replaces his Plänkler-Formation, an
 advantage on a value that belongs to a Fokusregel, and a disadvantage whose only mechanical part
 is a check the GM calls for. His fourth new entry, Belastungsgewöhnung II, is already covered by
@@ -79,11 +79,11 @@ on the Schmerz line.
 
 ## Situations
 
-[`situations/boronmir-neu.yaml`](./situations/boronmir-neu.yaml), 19.1–19.12, with Boronmir's
+[`situations/boronmir-neu.yaml`](../../../specs/rules/situations/boronmir-neu.yaml), 19.1–19.12, with Boronmir's
 new values: Rabenschnabel 16/11, Langschwert 14/11, Großschild 6/13, AW 7, Belastung I in plate,
 LE 37, Wundschwelle 9. The derivation is in the file's header. Rule files:
-[`SA_862`](./rules/abilities/SA_862.yaml), [`ADV_54`](./rules/advantages/ADV_54.yaml),
-[`DISADV_37`](./rules/disadvantages/DISADV_37.yaml).
+[`SA_862`](../../../specs/rules/abilities/SA_862.yaml), [`ADV_54`](../../../specs/rules/advantages/ADV_54.yaml),
+[`DISADV_37`](../../../specs/rules/disadvantages/DISADV_37.yaml).
 
 ## What the app gets wrong
 

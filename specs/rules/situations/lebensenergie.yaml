@@ -2,7 +2,7 @@
 # DRAFT FORMAT — see ../README.md.
 #
 # The hero is Boronmir as of the 2026-09-24 export
-# (docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json) unless a situation
+# (specs/heroes/Boronmir Siebenfeld von Greifenfurt.json) unless a situation
 # says otherwise:
 #   species R_1 Mensch               → LE-Grundwert 5 (Spez_Menschen)
 #   KO (ATTR_7) 15                   → 2 × KO = 30
@@ -16,7 +16,7 @@
 # carries Belastung I (belastung, SA_41: 2). He dropped ADV_75 Schnell wieder auf den Beinen on
 # 2026-09-24; the situations about it (15.16–15.19) give it back to him, and say so.
 # No armour unless stated, so the Schmerz lines stand alone.
-heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 #
 # `leCurrent` is the current LP. `level(rule: COND_6)` is the Stufe whose effects apply (Zäher
 # Hund: its `levelAs` line); its `base` line the Stufe the hero *has*. `regeneration.le` is the

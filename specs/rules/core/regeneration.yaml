@@ -70,7 +70,7 @@ clauses:
       - when: { choice.environment: "unruhig, nass oder kalt" }
         multiply: { to: regeneration.le, by: 0.5, round: up }
         ruling: [round-up, ADV_44.vr-halving]
-        # round-up (rules/rulings.yaml) is decided for every halving the rules do not settle.
+        # round-up (rulings.yaml) is decided for every halving the rules do not settle.
       - when: { choice.environment: "Sturm, auf ein Pferd gebunden" }
         set: { to: regeneration.le, value: 0 }
         # No roll, and no bonus: the hero does not regenerate (ADV_44.VR1 "wenn er regeneriert").

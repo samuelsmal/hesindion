@@ -1,6 +1,6 @@
 # Example 9 — Wuchtschlag. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
 # Weapons: Schwert (Schwerter, CT_12, 1W6+4), Dolch (Dolche, CT_3, 1W6+1).
-# Open rulings named without a prefix live in ../rules/rulings.yaml once added.
+# Open rulings named without a prefix live in ../rulings.yaml once added.
 # The announced Wuchtschlag is `choice.wuchtschlag`, its value the Stufe announced (the old
 # `manoeuvre: wuchtschlag, tier: n`); a line's old `tier` is that value, now a comment. "On a
 # hit" / "on a miss" is `action.attack: hit` / `miss`; the TP formula is a comment.

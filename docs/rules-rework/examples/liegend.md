@@ -1,6 +1,6 @@
 # Example 7 — Liegend
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -29,10 +29,10 @@ It does not name Liegend itself; that comes through Handlungsunfähig.
 
 ## Situations
 
-In [`situations/liegend.yaml`](./situations/liegend.yaml), 7.1–7.8: the hero lying (7.1), shooting
+In [`situations/liegend.yaml`](../../../specs/rules/situations/liegend.yaml), 7.1–7.8: the hero lying (7.1), shooting
 from the ground (7.2), attacking a prone opponent (7.3), Bewusstlos and Handlungsunfähig (7.4, 7.5),
 standing up (7.6, 7.7), and Liegend beside capped Zustände (7.8). The rule as draft YAML:
-[`STATE_10`](./rules/conditions/STATE_10.yaml).
+[`STATE_10`](../../../specs/rules/conditions/STATE_10.yaml).
 
 Where the app is wrong: a prone hero shoots at no penalty; the catalog's −4 reaches melee attacks
 only (7.2); a Handlungsunfähig hero moves at GS 1 instead of 0, because
@@ -50,5 +50,5 @@ that competes with another `set` (Handlungsunfähig's GS 0).
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md), generated from the rule
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md), generated from the rule
 files — look for `STATE_10`.

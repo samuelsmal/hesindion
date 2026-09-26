@@ -1,6 +1,6 @@
 # Example 15 — Lebensenergie, Regeneration and Wieder-Aufstehen
 
-**Status: draft.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-24. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -73,15 +73,15 @@ him.
 
 ## Situations
 
-In [`situations/lebensenergie.yaml`](./situations/lebensenergie.yaml), 15.1–15.19, all Boronmir
+In [`situations/lebensenergie.yaml`](../../../specs/rules/situations/lebensenergie.yaml), 15.1–15.19, all Boronmir
 as of the 2026-09-24 export unless stated: his LE (15.1: 5 + 2 × 15 + 2 = 37), a disadvantage the
 import drops (15.2), his Schmerz thresholds with Zäher Hund (15.3–15.8: LP 27/18/9/5 start Stufen
 I/II/III/IV), a night's regeneration in six settings (15.9–15.15), and standing up, alcohol and
 Betäubung with Schnell wieder auf den Beinen given back to him (15.16–15.19).
-The rules as draft YAML: [`ADV_25`](./rules/advantages/ADV_25.yaml),
-[`ADV_49`](./rules/advantages/ADV_49.yaml), [`ADV_44`](./rules/advantages/ADV_44.yaml),
-[`ADV_75`](./rules/advantages/ADV_75.yaml), [`lebensenergie`](./rules/core/lebensenergie.yaml),
-[`regeneration`](./rules/core/regeneration.yaml).
+The rules as draft YAML: [`ADV_25`](../../../specs/rules/advantages/ADV_25.yaml),
+[`ADV_49`](../../../specs/rules/advantages/ADV_49.yaml), [`ADV_44`](../../../specs/rules/advantages/ADV_44.yaml),
+[`ADV_75`](../../../specs/rules/advantages/ADV_75.yaml), [`lebensenergie`](../../../specs/rules/core/lebensenergie.yaml),
+[`regeneration`](../../../specs/rules/core/regeneration.yaml).
 
 ## What the app gets wrong
 
@@ -124,7 +124,7 @@ Stufe II, and only on the regeneration sheet, not on healing (ruling `ADV_44.vr-
 
 ## Rulings
 
-All rulings are in [`RULINGS.md`](./RULINGS.md). Decided 2026-09-24: `ADV_49.zaeher-hund-counts`
+All rulings are in [`RULINGS.md`](../../../specs/rules/RULINGS.md). Decided 2026-09-24: `ADV_49.zaeher-hund-counts`
 (effects only; the hero keeps his Stufe, at most IV), `ADV_49.zaeher-hund-iv` (Stufe III's effects
 after a passed check), `ADV_44.vr-scope` (only in a Regenerationsphase), `ADV_44.vr-halving` (the
 bonus is halved with the roll) and `ADV_75.alcohol-scope` (both Zustände only from alcohol). The

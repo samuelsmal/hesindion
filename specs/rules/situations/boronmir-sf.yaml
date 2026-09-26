@@ -1,9 +1,9 @@
 # Example 14 — Boronmir's Kampfsonderfertigkeiten: Vorstoß, Schildspalter, Aufmerksamkeit,
 # Plänkler-Formation. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
-# Open rulings named without a prefix live in ../rules/rulings.yaml or in the rule's own file.
+# Open rulings named without a prefix live in ../rulings.yaml or in the rule's own file.
 #
-# The hero is Boronmir with his values as of 2026-09-24 (docs/sample_heros/Boronmir Siebenfeld von
-# Greifenfurt (2026-09-24).json), always in his Plattenrüstung. He dropped Finte, Schildspalter,
+# The hero is Boronmir with his values as of 2026-09-24 (specs/heroes/Boronmir Siebenfeld von
+# Greifenfurt.json), always in his Plattenrüstung. He dropped Finte, Schildspalter,
 # Vorstoß and Plänkler-Formation that day (he took Formation instead, example 19), so this example
 # adds SA_48, SA_59, SA_66 and SA_884 back; their prerequisites (GE 13, KK 13, Wuchtschlag I) he
 # still meets. His values, derived as the app derives them (OptolithImportService:
@@ -30,7 +30,7 @@
 # (the old `not_allowed`), whether manoeuvres combine the situation's `legal.combinations`, what
 # the player or opponent is told `texts`.
 
-heroFile: "../../../sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
 hero:
   # SA_48, SA_59, SA_66, SA_884: added for this example, dropped on 2026-09-24
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1, SA_48: 1, SA_59: 1, SA_66: 1, SA_884: 1 }

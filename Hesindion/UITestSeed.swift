@@ -203,7 +203,7 @@ enum UITestSeed {
         }
     }
 
-    /// Imports `Hesindion/Resources/UITestHero.json` — the `docs/sample_heros`
+    /// Imports `Hesindion/Resources/UITestHero.json` — the `specs/heroes`
     /// Boronmir export the snapshot tests use, with the base64 avatar images stripped
     /// (3.1 MB → 8 KB, because the resource ships in Release builds too and nothing
     /// here looks at the portrait). To refresh it after the sample hero changes:

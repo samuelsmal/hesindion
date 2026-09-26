@@ -21,7 +21,7 @@ struct HeroImportTests {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()          // HesindionTests/
             .deletingLastPathComponent()          // project root
-            .appendingPathComponent("docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json")
+            .appendingPathComponent("specs/heroes/Boronmir Siebenfeld von Greifenfurt.json")
     }
 
     @Test func importBoronmirFromOptolith() throws {

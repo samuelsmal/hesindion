@@ -54,6 +54,7 @@ not restated:
 | Question | Decision |
 |---|---|
 | How rules reach the app | Python (`rulec`: `make rules-check` validates the YAML, `make rules-json` compiles rules and situations to JSON; the design's table says `make rules-db`, which stays the old engine's target); Swift reads JSON. No YAML parser in the app |
+| Where the rules live | `specs/rules/`, beside `vocabulary.json`: the rule folders (`abilities/`, `core/`, …) and `rulings.yaml` directly in it, with `situations/`, `sweeps/`, `checks.yaml`, `RULINGS.md`, `MIGRATION.md` and `conflict-fingerprints.json`. `scripts/rulec/layout.py` owns this layout; `rulec` and the review tools (`scripts/rules_review/`) read it from there. The sample heroes the situations name are in `specs/heroes/`. The plain-words write-ups of examples 1–22 stay in `docs/rules-rework/examples/`. Moved there from `docs/rules-rework/examples/` on 2026-09-26: the rules are what the engine runs, not a worked example |
 | When the engine is done | Every situation in examples 1–22 passes, except those resting on an open ruling: those run and are reported *pending*. `appToday` is never tested |
 | How it replaces the old engine | Built and tested beside it, not wired in; screens switch one domain at a time, each switch deleting that domain's old code. Never a union of two engines |
 | Encoding | Declarative: a closed vocabulary of effect verbs on a fixed phase pipeline. A mechanic that does not fit becomes a new verb with an interpreter and a test, never per-rule code |
@@ -71,7 +72,7 @@ with who stated it (§5.5) — as a first-class field of the evaluator's own out
 afterthought on a modifier line. Checks (talent/spell/liturgy 3W20, the combat 1W20 roll) are
 staged procedures over the same targets (§6); pools, processes, item state and the game clock are
 data in a `Situation`, changed only by events (§7). The talent/spell → attribute table that used
-to come from `rules.db` at runtime now lives in `docs/rules-rework/examples/checks.yaml`,
+to come from `rules.db` at runtime now lives in `specs/rules/checks.yaml`,
 compiled into `build/rules/situations.json` — the engine package and its tests read no `rules.db`
 at all.
 
@@ -88,7 +89,7 @@ at all.
   snapshot and `RuleVocabulary` are deleted outright.
 - **The current state, measured.** `make test-rules-engine` (all situations files) reports
   `harness: 223 passed, 0 failed, 15 pending, 71 conflict, 0 unsupported` over 309 situations
-  (`docs/rules-rework/examples/MIGRATION.md`). The design's done criterion (every situation
+  (`specs/rules/MIGRATION.md`). The design's done criterion (every situation
   passes, except those resting on an open ruling, which are reported pending) holds except for
   the 71 conflicts, which wait on the owner's decisions (ruling R60): situations whose expectation
   the engine, following the rule text, does not meet, each recorded with its reasoning under that

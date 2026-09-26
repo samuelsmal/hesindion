@@ -14,7 +14,7 @@ reviewed: null
 # FORMAT: the rule is instanced per select option, and every effect is gated on "the check is on
 # the chosen Fertigkeit" (`option.sid`). DISADV_37 (example 19) needs the same per-option
 # instancing for its text; here the option gates the effect itself.
-# The Fertigkeitsprobe this acts on is rules/core/fertigkeitsproben.yaml.
+# The Fertigkeitsprobe this acts on is core/fertigkeitsproben.yaml.
 
 clauses:
   - id: B1

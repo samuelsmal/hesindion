@@ -1,6 +1,6 @@
 # Example 4 — Schmerz, the Zustand cap and "Zustand ignorieren"
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -9,7 +9,7 @@
 | COND_6 | Schmerz (Zustand) | <https://dsa.ulisses-regelwiki.de/Sta_Schmerz.html> | Regelwerk p. 34 |
 | GRW_zustandsbegrenzung | Zustände — adding up, the −5 cap, eight Stufen (core rule) | <https://dsa.ulisses-regelwiki.de/GR_Zustand.html> | Regelwerk p. 31f |
 | — | Schicksalspunkte, the use "Zustand ignorieren" | <https://dsa.ulisses-regelwiki.de/GR_Schicksalspunkte.html> | Regelwerk p. 29ff |
-| COND_1 | Belastung — as the second Zustand in the mix | [`rules/conditions/COND_1.yaml`](./rules/conditions/COND_1.yaml) | Example 1 |
+| COND_1 | Belastung — as the second Zustand in the mix | [`rules/conditions/COND_1.yaml`](../../../specs/rules/conditions/COND_1.yaml) | Example 1 |
 
 ## Clauses
 
@@ -40,9 +40,9 @@
 
 ## Situations
 
-In [`situations/schmerz.yaml`](./situations/schmerz.yaml), S1–S12. The rules as draft YAML:
-[`COND_6`](./rules/conditions/COND_6.yaml), [`zustaende`](./rules/core/zustaende.yaml),
-[`schicksalspunkte`](./rules/core/schicksalspunkte.yaml).
+In [`situations/schmerz.yaml`](../../../specs/rules/situations/schmerz.yaml), S1–S12. The rules as draft YAML:
+[`COND_6`](../../../specs/rules/conditions/COND_6.yaml), [`zustaende`](../../../specs/rules/core/zustaende.yaml),
+[`schicksalspunkte`](../../../specs/rules/core/schicksalspunkte.yaml).
 
 Where the app is wrong:
 
@@ -68,6 +68,6 @@ gives back a round at Stufe IV but not from Bewusstlos (S9, S10).
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `COND_6`,
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for `COND_6`,
 `zustaende` and `schicksalspunkte`. The one ruling found already decided in the code
 (`schip-lifts-incapacity`, 2026-09-20) is recorded in `schicksalspunkte` with its source.

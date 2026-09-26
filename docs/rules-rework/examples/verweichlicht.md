@@ -1,6 +1,6 @@
 # Example 13 — Verweichlicht
 
-**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](./RULINGS.md).
+**Status: draft.** Pages read 2026-09-23. Rulings: see [`RULINGS.md`](../../../specs/rules/RULINGS.md).
 
 ## Rules covered
 
@@ -29,8 +29,8 @@ Belastung does not reach Selbstbeherrschung: the book flags it "no", which agree
 
 ## Situations
 
-In [`situations/verweichlicht.yaml`](./situations/verweichlicht.yaml), 13.1–13.5. The rule as draft
-YAML: [`DISADV_57`](./rules/disadvantages/DISADV_57.yaml).
+In [`situations/verweichlicht.yaml`](../../../specs/rules/situations/verweichlicht.yaml), 13.1–13.5. The rule as draft
+YAML: [`DISADV_57`](../../../specs/rules/disadvantages/DISADV_57.yaml).
 
 The app is right on the check itself (13.1–13.3: catalog `DISADV_57`, `Situation.woundEffectProbe`).
 What it lacks is saying *why* the rule did not apply: with Trefferzonen off the disadvantage is
@@ -41,4 +41,4 @@ says the disadvantage needs it.
 
 ## Rulings
 
-All rulings, open and decided, are in [`RULINGS.md`](./RULINGS.md) — look for `DISADV_57`.
+All rulings, open and decided, are in [`RULINGS.md`](../../../specs/rules/RULINGS.md) — look for `DISADV_57`.

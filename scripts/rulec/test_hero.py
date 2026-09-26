@@ -6,7 +6,7 @@ from pathlib import Path
 from rulec import hero
 from rulec.vocab import REPO
 
-BORONMIR = REPO / "docs" / "sample_heros" / "Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+BORONMIR = REPO / "specs" / "heroes" / "Boronmir Siebenfeld von Greifenfurt.json"
 
 
 class FromOptolithTests(unittest.TestCase):

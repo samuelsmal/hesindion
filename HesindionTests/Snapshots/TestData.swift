@@ -22,7 +22,7 @@ enum TestData {
             .deletingLastPathComponent()    // TestData.swift → Snapshots/
             .deletingLastPathComponent()    // Snapshots/ → HesindionTests/
             .deletingLastPathComponent()    // HesindionTests/ → project root
-            .appendingPathComponent("docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json")
+            .appendingPathComponent("specs/heroes/Boronmir Siebenfeld von Greifenfurt.json")
     }
 
     static func importBoronmir(into container: ModelContainer) throws -> Hero {

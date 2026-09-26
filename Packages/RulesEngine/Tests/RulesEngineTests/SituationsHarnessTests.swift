@@ -163,14 +163,14 @@ final class SituationsHarnessTests: XCTestCase {
     /// section is missing.
     static func conflicts(_ all: CompiledSituations) -> [ConflictRef]? {
         let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
-        let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
+        let migration = (try? String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)) ?? ""
         return Conflicts.parse(migration, order: order)
     }
 
     /// R73: the listed conflicts whose listed reason is that the expectation is missing.
     static func expectationMissing(_ all: CompiledSituations) -> Set<ConflictRef> {
         let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
-        let migration = (try? String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)) ?? ""
+        let migration = (try? String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)) ?? ""
         return Conflicts.expectationMissing(migration, order: order)
     }
 

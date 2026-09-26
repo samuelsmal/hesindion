@@ -111,7 +111,7 @@ rulings:
       Stufe I); the Dornenspitze, the +1 TP mounted and the Betäubung apply only while it is on,
       and so do the Großschild's lines. The app today has no such Fokusregel and applies all three
       always (catalog ITEMTPL_19, WeaponFumbleExtras). The answer covers every weapon, so the
-      ruling could move to rules/rulings.yaml; it stays here, where the other files cite it.
+      ruling could move to rulings.yaml; it stays here, where the other files cite it.
 
   - id: dornenspitze-rs
     status: decided

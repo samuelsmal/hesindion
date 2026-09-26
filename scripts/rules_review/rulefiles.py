@@ -8,17 +8,29 @@ edit re-parses the result and refuses to write unless exactly the intended value
 import datetime
 import json
 import re
+import sys
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
-HERE = Path(__file__).resolve().parent
-RULES = HERE / "rules"
-SITUATIONS = HERE / "situations"
-SHARED = RULES / "rulings.yaml"
-SWEEPS = HERE / "sweeps"
+# `rulec` (scripts/rulec) owns the layout of specs/rules; put scripts/ on the path to read it.
+SCRIPTS = Path(__file__).resolve().parents[1]
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from rulec import layout  # noqa: E402
+
+ROOT = layout.ROOT
+SITUATIONS = ROOT / layout.SITUATIONS
+SHARED = ROOT / layout.SHARED_RULINGS
+SWEEPS = ROOT / layout.SWEEPS
+
+
+def rule_paths():
+    """Every rule file and the shared rulings, sorted."""
+    return sorted(layout.rule_files(ROOT) + ([SHARED] if SHARED.exists() else []))
 
 
 # --- model ------------------------------------------------------------------------------------
@@ -124,7 +136,7 @@ class Rule:
 
 def load():
     rules = []
-    for path in sorted(RULES.rglob("*.yaml")):
+    for path in rule_paths():
         rules.append(_load_rule(path))
     situations = _load_situations()
     for s in situations:
@@ -156,7 +168,7 @@ def load_sweep(name):
     path = SWEEPS / f"{name}.yaml"
     if not path.exists():
         known = ", ".join(sorted(p.stem for p in SWEEPS.glob("*.yaml"))) or "none"
-        raise FileNotFoundError(f"no sweep {name!r} in {SWEEPS.relative_to(HERE)} (known: {known})")
+        raise FileNotFoundError(f"no sweep {name!r} in {SWEEPS.relative_to(ROOT)} (known: {known})")
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     skipped = {str(k): str(v) for k, v in (data.get("skip") or {}).items()}
     wanted = {}
@@ -184,12 +196,12 @@ def _hero_rule_ids(hero):
 def _load_rule(path):
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
-    rel = path.relative_to(HERE)
+    rel = path.relative_to(ROOT)
     try:
         data = yaml.safe_load(text)
     except yaml.YAMLError as e:
         return Rule(id=path.stem, name="(does not parse)", kind="error", path=rel, error=str(e))
-    if isinstance(data, list):                       # rules/rulings.yaml
+    if isinstance(data, list):                       # rulings.yaml
         rule = Rule(id="shared", name="Rulings across rules", kind="shared", path=rel)
         items = data
     else:
@@ -354,12 +366,12 @@ def _write_checked(path, lines, new_lines, expect):
 
 
 def _read(path):
-    return (HERE / path).read_text(encoding="utf-8").splitlines()
+    return (ROOT / path).read_text(encoding="utf-8").splitlines()
 
 
 def set_answer(path, ruling_id, answer):
     """Write an answer (an option letter or free text) into a ruling; empty clears it."""
-    path = HERE / path
+    path = ROOT / path
     lines = _read(path)
     shared = path == SHARED
     section = (0, len(lines)) if shared else key_range(lines, "rulings")
@@ -383,7 +395,7 @@ def set_answer(path, ruling_id, answer):
 
 
 def _set_top_level(path, key, new_value_lines, value, after="reviewed"):
-    path = HERE / path
+    path = ROOT / path
     lines = _read(path)
     rng = key_range(lines, key)
     if rng is None and not new_value_lines:
