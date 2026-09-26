@@ -13,9 +13,10 @@ SITUATIONS = "situations"
 SWEEPS = "sweeps"
 CHECKS = "checks.yaml"
 SHARED_RULINGS = "rulings.yaml"
+PAGES = "pages.yaml"
 
 # Entries of the root that are not rule files.
-NOT_RULES = {SITUATIONS, SWEEPS, CHECKS, SHARED_RULINGS}
+NOT_RULES = {SITUATIONS, SWEEPS, CHECKS, SHARED_RULINGS, PAGES}
 
 
 def rule_files(root: Path) -> list:

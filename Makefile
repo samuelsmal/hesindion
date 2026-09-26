@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db companions test-companions
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync test-rules-engine rules-engine-fixture require-rules-db companions test-companions
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -213,6 +213,12 @@ rules-check:
 
 rules-json:
 	$(RULEC) build --out ../build/rules
+
+# Rule-website page tracking (docs/plans/2026-09-26-rules-page-tracking-plan.md).
+RULES_SYNC = cd scripts && uv run --with requests --with beautifulsoup4 --with pyyaml python
+
+test-rules-sync:
+	$(RULES_SYNC) -m unittest discover -s rules_sync -t . -p 'test_*.py' -v
 
 # The new rules engine (Packages/RulesEngine): pure Swift, runs on macOS without a simulator.
 # The situations harness (SituationsHarnessTests) runs the situations files RULES_FILES names:

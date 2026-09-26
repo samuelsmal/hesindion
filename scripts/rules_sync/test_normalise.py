@@ -1,0 +1,286 @@
+"""Tests for scripts/rules_sync/normalise.py.
+
+The fixtures are invented placeholder markup, not captures of real DSA rule
+pages (Data Policy, AGENTS.md).
+
+`rule_a.html`/`rule_b.html` carry the same made-up "Platzhalter-Regel" text
+but differ in every markup dimension the normaliser needs to be stable
+across: `<br>` vs `<br/>`, `&nbsp;` vs the `&#160;` numeric entity, whitespace
+runs from re-indentation, an extra wrapping `<span>` around inline text, and
+entirely different `<head>`/`<style>`/`<script>`/`<nav>`/`<footer>` chrome
+around the same content. `rule_c_different.html` carries genuinely different
+placeholder text, to prove the hash isn't constant.
+
+`rule_d_dynamic1.html`/`rule_d_dynamic2.html` (fix round 1, ruling 3) are a
+regression guard modelled on the real bug this round fixed: they reproduce
+dsa.ulisses-regelwiki.de's actual DOM shape (`#main` > `.mod_article` >
+`.ce_text`, verified by fetching 6 real pages -- see task-5-report.md) with a
+`.t4c_quickcontact_form`/`.captcha_text` CAPTCHA widget carrying *different*
+per-render challenge text in each fixture, once outside `#main` and once
+(deliberately) inside it. Same rule text, different dynamic noise -- this is
+the cheap, fixture-only check that would have caught the original bug
+without a live fetch.
+"""
+import hashlib
+import pathlib
+import unittest
+
+from rules_sync.normalise import (
+    ContentContainerEmpty,
+    ContentContainerError,
+    ContentContainerNotFound,
+    hash_html,
+    normalise_html,
+)
+
+FIXTURES = pathlib.Path(__file__).parent / "fixtures"
+
+
+def _read(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+class NormaliseTests(unittest.TestCase):
+    def test_differently_marked_up_captures_normalise_to_the_same_text(self):
+        self.assertEqual(normalise_html(_read("rule_a.html")), normalise_html(_read("rule_b.html")))
+
+    def test_differently_marked_up_captures_hash_identically(self):
+        self.assertEqual(hash_html(_read("rule_a.html")), hash_html(_read("rule_b.html")))
+
+    def test_hash_has_the_sha256_prefix_form(self):
+        h = hash_html(_read("rule_a.html"))
+        self.assertTrue(h.startswith("sha256:"))
+        self.assertEqual(len(h), len("sha256:") + 64)
+
+    def test_genuinely_different_text_hashes_differently(self):
+        self.assertNotEqual(hash_html(_read("rule_a.html")), hash_html(_read("rule_c_different.html")))
+
+    def test_normalised_text_excludes_style_and_script_content(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertNotIn("color: #123456", text)
+        self.assertNotIn("console.log", text)
+
+    def test_normalised_text_excludes_chrome_outside_main(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertNotIn("Platzhalter Verlag", text)  # footer
+        self.assertNotIn("Start", text.split())  # nav link text, as a whole word
+
+    def test_br_becomes_a_word_boundary_not_glued_text(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertIn("Spielmechanik. Zweite Zeile", text)
+
+    def test_non_breaking_space_becomes_a_regular_space(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertNotIn("\xa0", text)
+        self.assertIn("Wert: 3 Punkte", text)
+
+    def test_whitespace_runs_collapse_to_a_single_space(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertNotIn("  ", text)
+
+    def test_result_is_stripped_of_leading_and_trailing_whitespace(self):
+        text = normalise_html(_read("rule_a.html"))
+        self.assertEqual(text, text.strip())
+
+    def test_nfc_normalises_combining_characters(self):
+        # "ö" as one precomposed codepoint (U+00F6) vs "o" + combining diaeresis
+        # (U+006F U+0308) must normalise -- and therefore hash -- identically.
+        precomposed = "<main><p>Prüfung</p></main>"
+        decomposed = "<main><p>Prüfung</p></main>"
+        self.assertEqual(hash_html(precomposed), hash_html(decomposed))
+
+    def test_normalise_never_raises_on_the_fixtures(self):
+        for name in ["rule_a.html", "rule_b.html", "rule_c_different.html"]:
+            with self.subTest(case=name):
+                normalise_html(_read(name))
+
+    # --- Fix round 1: real DOM shape, per-render-random CAPTCHA widget ----
+
+    def test_table_cells_with_no_separating_whitespace_do_not_glue_together(self):
+        # <td>A</td><td>B</td> with nothing between the tags must not become "AB".
+        html = "<main><table><tr><td>Erste Spalte</td><td>Zweite Spalte</td></tr></table></main>"
+        text = normalise_html(html)
+        self.assertNotIn("Erste SpalteZweite Spalte", text)
+        self.assertIn("Erste Spalte Zweite Spalte", text)
+
+    def test_dynamic_captcha_widget_outside_main_does_not_affect_the_hash(self):
+        text = normalise_html(_read("rule_d_dynamic1.html"))
+        self.assertNotIn("addieren", text)
+        self.assertNotIn("captcha", text.lower())
+
+    def test_dynamic_captcha_widget_inside_main_is_still_stripped(self):
+        # rule_d_dynamic2.html deliberately puts the widget *inside* #main --
+        # the explicit selector strip must catch it there too, not just rely on
+        # #main scoping to exclude it structurally.
+        text = normalise_html(_read("rule_d_dynamic2.html"))
+        self.assertNotIn("Summe", text)
+        self.assertNotIn("captcha", text.lower())
+
+    def test_same_rule_text_with_different_dynamic_widget_content_hashes_identically(self):
+        self.assertEqual(hash_html(_read("rule_d_dynamic1.html")), hash_html(_read("rule_d_dynamic2.html")))
+
+    # --- Fix round 2: block boundary vs. inline mid-word, structure-changed
+    #
+    # `get_text(" ")` (fix round 1's fix for table-cell gluing) turned out to
+    # insert a separator between *every* node, including an inline tag placed
+    # mid-word with no surrounding whitespace -- a false-drift source in the same
+    # category fix round 1 existed to eliminate, just triggered by a different
+    # markup edit (reviewer repro: `Der <b>Wucht</b>schlag` -> "Der Wucht schlag").
+    # Fixed by inserting a boundary only around block-level tags
+    # (`_BLOCK_BOUNDARY_TAGS`) and letting inline tags concatenate with no
+    # separator, matching how a browser renders them. Both fixtures below use the
+    # same `id="main"` shape fix round 1 verified against the real site.
+
+    def test_block_boundary_tags_insert_a_word_boundary_even_with_no_source_whitespace(self):
+        text = normalise_html(_read("rule_e_block_boundary.html"))
+        self.assertEqual(text, "Erste Spalte Zweite Spalte Zeile eins. Zeile zwei.")
+
+    def test_inline_tags_do_not_insert_a_boundary_mid_word(self):
+        text = normalise_html(_read("rule_f_inline_midword.html"))
+        self.assertNotIn("Platzhalter begriff", text)
+        self.assertIn("Platzhalterbegriff", text)
+        self.assertNotIn("Zwischen ablauf", text)
+        self.assertIn("Zwischenablaufverhalten", text)
+
+    def test_reviewer_repro_inline_tag_mid_word_is_not_split(self):
+        # The exact two snippets from the fix round 2 review.
+        self.assertEqual(
+            normalise_html("<main><p>Der <b>Wucht</b>schlag ist eine Sonderfertigkeit.</p></main>"),
+            "Der Wuchtschlag ist eine Sonderfertigkeit.",
+        )
+        self.assertEqual(normalise_html("<main><p>Ein<i>fach</i>er Test.</p></main>"), "Einfacher Test.")
+
+    def test_missing_container_raises_content_container_not_found(self):
+        with self.assertRaises(ContentContainerNotFound):
+            normalise_html("<html><body><p>Kein main und kein #main hier.</p></body></html>")
+
+    # --- Fix round 3: dl/dt/dd/blockquote/pre were missing from the block list
+    #
+    # The round-2 ruling's block-tag list, written from memory, omitted five
+    # genuinely block-level, text-bearing tags -- a definition list is exactly
+    # the shape a stat block takes on a rules wiki
+    # ("<dl><dt>LE</dt><dd>30</dd>...") and was gluing without them, a
+    # regression against round 1's blanket separator (which *did* separate
+    # these). `rule_g_dl_blockquote_pre.html` exercises all five with zero
+    # whitespace between adjacent tags of each kind.
+
+    def test_definition_list_terms_and_descriptions_do_not_glue_together(self):
+        text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+        self.assertNotIn("LE30", text)
+        self.assertNotIn("30AE", text)
+        self.assertIn("LE 30 AE 20", text)
+
+    def test_adjacent_blockquotes_do_not_glue_together(self):
+        text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+        self.assertNotIn("Erstes Zitat.Zweites", text)
+        self.assertIn("Erstes Zitat. Zweites Zitat.", text)
+
+    def test_adjacent_pre_blocks_do_not_glue_together(self):
+        text = normalise_html(_read("rule_g_dl_blockquote_pre.html"))
+        self.assertNotIn("ZeileZweite", text)
+        self.assertIn("Erste Zeile Zweite Zeile", text)
+
+    def test_reviewer_repro_dl_and_blockquote_are_not_glued(self):
+        # The exact two snippets from the fix round 3 review.
+        self.assertEqual(
+            normalise_html("<main><dl><dt>LE</dt><dd>30</dd><dt>AE</dt><dd>20</dd></dl></main>"),
+            "LE 30 AE 20",
+        )
+        self.assertEqual(
+            normalise_html("<main><blockquote>Eins</blockquote><blockquote>Zwei</blockquote></main>"),
+            "Eins Zwei",
+        )
+
+    def test_body_fallback_no_longer_silently_used(self):
+        # Fix round 1's chain fell back to <body> (and then the whole document);
+        # fix round 2 drops both rungs -- only #main or a real <main> tag count.
+        with self.assertRaises(ContentContainerNotFound):
+            normalise_html("<html><body><div id='not-main'><p>Text</p></div></body></html>")
+
+    # --- Fix round 4: an *empty* container was as silent as a missing one -
+
+    # `ContentContainerNotFound` only fired when `#main`/`<main>` was absent. Five
+    # real pages on the live site (sf_kampfsonderfertigkeiten.html,
+    # Best_Tiere.html, ruestkammer.html, RS_Waffen.html, RS_Ruestung.html) have a
+    # *present but empty* `#main` -- their content is rendered client-side or sits
+    # outside the container in the raw HTML. Those normalised to `""` and hashed
+    # to the SHA-256 of the empty string, so every such page carried the same
+    # plausible-looking hash and would have compared `ok` forever once recorded as
+    # a rule's provenance. Same failure class as a missing container, so it raises
+    # too -- but with its own type and message, because the remedies differ (the
+    # site's markup changed vs. the content is not in the fetched HTML at all).
+
+    def test_empty_container_raises_content_container_empty(self):
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html('<html><body><div id="main"></div><p>Inhalt ausserhalb</p></body></html>')
+
+    def test_whitespace_only_container_raises_content_container_empty(self):
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html('<html><body><div id="main">\n\t   \n</div></body></html>')
+
+    def test_container_holding_only_nbsp_raises_content_container_empty(self):
+        # &nbsp; is whitespace after step 7, so this is still an empty extraction.
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html('<html><body><div id="main">&nbsp;&#160;</div></body></html>')
+
+    def test_container_holding_only_a_script_raises_content_container_empty(self):
+        # The container looks non-empty in the source, but everything in it is
+        # stripped before extraction -- exactly the client-side-rendered index
+        # page shape. Must not hash as "".
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html(
+                '<html><body><div id="main">'
+                '<script>document.write("Platzhalter");</script>'
+                "</div></body></html>"
+            )
+
+    def test_container_holding_only_the_captcha_widget_raises_content_container_empty(self):
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html(
+                '<html><body><div id="main">'
+                '<div class="t4c_quickcontact_form">'
+                '<span id="captcha_text_107" class="captcha_text">Bitte addieren Sie 2 und 3.</span>'
+                "</div></div></body></html>"
+            )
+
+    def test_empty_container_fixture_raises_instead_of_hashing_the_empty_string(self):
+        # rule_h_empty_container.html models the live site's index-page shape:
+        # #main present but empty, real content outside it under #sub_header.
+        html = _read("rule_h_empty_container.html")
+        with self.assertRaises(ContentContainerEmpty):
+            normalise_html(html)
+        with self.assertRaises(ContentContainerEmpty):
+            hash_html(html)
+
+    def test_empty_and_missing_container_are_the_same_failure_class_but_distinguishable(self):
+        # Both must be catchable as one class (check.py reports one state for
+        # both) while naming different remedies in their messages.
+        self.assertTrue(issubclass(ContentContainerEmpty, ContentContainerError))
+        self.assertTrue(issubclass(ContentContainerNotFound, ContentContainerError))
+        self.assertFalse(issubclass(ContentContainerEmpty, ContentContainerNotFound))
+
+        with self.assertRaises(ContentContainerError) as missing:
+            normalise_html("<html><body><p>Kein Container.</p></body></html>")
+        with self.assertRaises(ContentContainerError) as empty:
+            normalise_html('<html><body><div id="main"></div></body></html>')
+
+        self.assertIn("no content container", str(missing.exception))
+        self.assertIn("empty", str(empty.exception))
+        self.assertNotEqual(str(missing.exception), str(empty.exception))
+
+    def test_an_empty_extraction_never_reaches_the_empty_string_hash(self):
+        # The concrete bug: sha256("") == e3b0c442...b855, recorded as a rule's
+        # verified provenance, compares ok forever.
+        empty_string_hash = "sha256:" + hashlib.sha256(b"").hexdigest()
+        for html in (
+            '<html><body><div id="main"></div></body></html>',
+            "<html><body><main>   </main></body></html>",
+            '<html><body><div id="main"><script>x=1;</script></div></body></html>',
+        ):
+            with self.subTest(html=html):
+                with self.assertRaises(ContentContainerError):
+                    self.assertNotEqual(hash_html(html), empty_string_hash)
+
+
+if __name__ == "__main__":
+    unittest.main()
