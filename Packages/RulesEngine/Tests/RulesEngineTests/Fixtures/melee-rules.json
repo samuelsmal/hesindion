@@ -87,6 +87,31 @@
     "rule": "me-line"
    },
    {
+    "clause": "L1",
+    "index": 0,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 0,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 1,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 2,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 3,
+    "rule": "me-prone"
+   },
+   {
     "clause": "R12",
     "index": 0,
     "rule": "me-rider"
@@ -1100,6 +1125,191 @@
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "text": "liegt",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      }
+     ],
+     "id": "L1",
+     "text": "Man liegt."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 0,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "choice": "aufstehen",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "L4",
+           "index": "0.costs.0",
+           "rule": "me-prone"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "actions"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 1,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "levels": -1,
+        "rule": "me-prone"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.has",
+          "is": "me-prone"
+         },
+         {
+          "fact": "choice.aufstehen",
+          "is": true
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 2,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "choice": "passierschlagVermeiden",
+        "default": false
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 3,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "TAL_4"
+         ],
+         "kind": "talent",
+         "with": "Kampfmanöver"
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "L4",
+           "index": "3.onFailure.0",
+           "rule": "me-prone"
+          },
+          "payload": {
+           "text": "passierschlag",
+           "to": "opponent"
+          },
+          "phase": "player",
+          "ruling": [],
+          "verb": "tell",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.has",
+          "is": "me-prone"
+         },
+         {
+          "fact": "choice.aufstehen",
+          "is": true
+         },
+         {
+          "fact": "choice.passierschlagVermeiden",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "L4",
+     "text": "Aufstehen kostet 1 Aktion; eine Probe vermeidet den Passierschlag."
+    }
+   ],
+   "id": "me-prone",
+   "kind": "state",
+   "name": "Liegend",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
     "hash": null,
     "page": 1,
     "url": "https://example.invalid/me"

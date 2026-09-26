@@ -52,6 +52,11 @@
     "rule": "act-moves"
    },
    {
+    "clause": "O1",
+    "index": 0,
+    "rule": "act-out"
+   },
+   {
     "clause": "P1",
     "index": 0,
     "rule": "act-pforten"
@@ -676,6 +681,43 @@
       {
        "because": null,
        "origin": {
+        "clause": "O1",
+        "index": 0,
+        "rule": "act-out"
+       },
+       "payload": {
+        "rule": "act-helpless"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": null
+      }
+     ],
+     "id": "O1",
+     "text": "Dazu handlungsunfähig."
+    }
+   ],
+   "id": "act-out",
+   "kind": "state",
+   "name": "Ohnmächtig",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/act"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
         "clause": "P1",
         "index": 0,
         "rule": "act-pforten"
@@ -924,7 +966,9 @@
         }
        },
        "phase": "lines",
-       "ruling": [],
+       "ruling": [
+        "act-schip.lifts"
+       ],
        "verb": "suppress",
        "when": {
         "fact": "choice.schipZustand",
@@ -940,7 +984,18 @@
    "kind": "core",
    "name": "Schip",
    "reviewed": null,
-   "rulings": [],
+   "rulings": [
+    {
+     "answer": "Nur die eines Zustands.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-26"
+     },
+     "id": "act-schip.lifts",
+     "question": "Hebt der Schip auch die Handlungsunfähigkeit eines Status auf?",
+     "status": "decided"
+    }
+   ],
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
@@ -1111,7 +1166,18 @@
    }
   }
  ],
- "rulings": [],
+ "rulings": [
+  {
+   "answer": "Nur die eines Zustands.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-26"
+   },
+   "id": "act-schip.lifts",
+   "question": "Hebt der Schip auch die Handlungsunfähigkeit eines Status auf?",
+   "status": "decided"
+  }
+ ],
  "vocabularySha256": "de8998ec4ad55d76fea842a1b6092e47fcba5f07df928989c4dd6a340ea838a4",
  "vocabularyVersion": 1
 }

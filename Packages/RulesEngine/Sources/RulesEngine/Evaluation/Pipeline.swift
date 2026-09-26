@@ -491,8 +491,8 @@ extension Evaluation {
     }
 
     /// Phase 4, line control: which clauses the firing `suppress`es and `replace`s of this query
-    /// act on. Decided before phase 3 computes a line (see `breakdown`), and applied there: a
-    /// suppressed `add`, `set` or `tell` gives no line or text and goes to
+    /// act on. Decided before phase 3 computes a line (see `breakdown`), and applied there (and in
+    /// phase 6): a suppressed `add`, `set`, `cap`, `floor` or `tell` gives no line or text and goes to
     /// `notApplied(suppressed)`; a replaced `add` or `set` computes the replacer's `with` in
     /// place of its `value`, before its `per`, keeping its targets and `when` (plan A.3).
     ///
@@ -504,7 +504,7 @@ extension Evaluation {
         // A tell, ask, offer and legality effect acts at depth 0 only (phase 7, `playerParts`).
         let controllable = state.candidates.filter { e in
             switch e.payload {
-            case .add, .set: return true
+            case .add, .set, .cap, .floor: return true
             case .tell, .ask, .offer, .forbid, .require, .limit: return state.depth == 0
             default: return false
             }
@@ -847,6 +847,8 @@ extension Evaluation {
     ///   (`ruleKind: condition`: the −5 Zustand cap, zustaende.Z3). A `set` line is never summed
     ///   (Schmerz IV's GS 0).
     /// - A `cap` without `over`, and a `floor`, bound the value so far.
+    ///
+    /// A suppressed `cap` or `floor` bounds nothing (Task 33).
     private func capPhase(_ state: inout PipelineState) {
         for e in state.candidates where e.phase == .cap {
             let low: ValueExpr?, high: ValueExpr?, over: RuleSelector?, kind: LineKind
@@ -855,7 +857,9 @@ extension Evaluation {
             case .floor(let f): (low, high, over, kind) = (f.min, nil, nil, .floored)
             default: continue
             }
-            guard applies(e, &state) else { continue }
+            // Task 33: a bound is a line too, so a suppress of its clause lifts it (the Schip over
+            // COND_6.SZ5's Schmerz IV GS 0).
+            guard applies(e, &state), !isSuppressed(e, &state) else { continue }
             let rule = e.origin.rule
             let level = ruleLevel(rule, levels: state.levels, depth: state.depth)
             let via = ruleVia(rule, state)

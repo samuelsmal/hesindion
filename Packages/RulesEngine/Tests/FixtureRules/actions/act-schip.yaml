@@ -1,6 +1,7 @@
 # The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
 # Task 25: schicksalspunkte.SP-zustand's shape: a Schip, paid when the choice is taken, and the
-# suppress of every condition's effects (their gains included).
+# suppress of every condition's effects (their gains included). Task 33: the suppress cites a
+# decided ruling (schicksalspunkte.schip-lifts-incapacity's shape).
 id: act-schip
 name: Schip
 kind: core
@@ -14,3 +15,9 @@ clauses:
       - when: { choice.schipZustand: true }
         suppress: { line: { ruleKind: condition } }
         because: Schip, Zustand ignorieren
+        ruling: lifts
+rulings:
+  - id: lifts
+    question: Hebt der Schip auch die Handlungsunfähigkeit eines Status auf?
+    answer: Nur die eines Zustands.
+    decided: { by: "@fixture", date: 2026-09-26 }

@@ -97,17 +97,35 @@ enum StateRunner {
         // Fix round 1: an event from a clause gated on a taken choice names the action; the other
         // expected events are compared against what it gives.
         var choices: Set<String> = []
-        for from in froms {
+        for (event, from) in zip(events, froms) {
             let effects = book.rules[from.rule]?.clauses.first { $0.id == from.clause }?.effects ?? []
+            // Task 33: the effect of the event's own kind, when the event says it (a `cleared` is a
+            // `gain`'s): STATE_10.L4's stand-up clears on `aufstehen` alone, while the clause's
+            // check reads `passierschlagVermeiden` too.
+            let kind = gives(event)
             let gating = effects.filter { e in
                 switch e.payload {
-                case .item, .cost, .gain, .check: true
+                case .item: kind == nil || kind == "item"
+                case .cost: kind == nil || kind == "cost"
+                case .gain: kind == nil || kind == "gain"
+                case .check: kind == nil || kind == "check"
                 default: false
                 }
             }.flatMap { e in taken.filter { (e.when?.factNames ?? []).contains("choice.\($0)") } }
             choices.formUnion(gating)
         }
         return choices.count == 1 ? .take(choice: choices.first!) : nil
+    }
+
+    /// The verb whose effect gives an expected event: `gain` for `gained` / `cleared`, `cost` for
+    /// `paid`, `item` for `itemChanged`, `check` for a check asked; nil for any other.
+    static func gives(_ event: JSONValue) -> String? {
+        guard let o = event.objectValue else { return nil }
+        if o["gained"] != nil || o["cleared"] != nil { return "gain" }
+        if o["paid"] != nil { return "cost" }
+        if o["itemChanged"] != nil { return "item" }
+        if o["check"] != nil { return "check" }
+        return nil
     }
 
     /// Whether the situation, or a step of it, states a spell check (its implied action is a cast).
@@ -158,8 +176,29 @@ enum StateRunner {
         let topAction = (s.expectSituation["events"] != nil || s.sequence.isEmpty)
             ? (implied(s, book: engine.book) ?? implied(start, events: events)) : nil
         if let action = topAction {
-            let r = layer.perform(action, in: start)
+            var r = layer.perform(action, in: start)
             pending = r.checks
+            // Task 33: the situation states the result of the check its action asks (liegend 7.6's
+            // Körperbeherrschung against the Passierschlag), as a step may: the outcome is entered,
+            // and its events and its own effects' texts (an `onFailure` tell) are the action's.
+            if let stated = start.facts["check.result"]?.value.string, s.sequence.isEmpty,
+               let check = pending.first(where: { c in start.facts["check.talent"].map { $0.value == .string(c.id) } ?? true }),
+               let probe = attributes[check.id] {
+                // In the situation the check was asked in: the stand-up has cleared the status whose
+                // clause holds the check's `onFailure`.
+                let begun = CheckProcedure.start(check.request(attributes: probe), in: check.situation, engine: engine)
+                let out = begun.state.step(.outcome(success: stated == "success"), engine: engine)
+                all += begun.breakdowns + out.breakdowns
+                pending = []
+                // The outcome's own effects' texts and entries: its stages' breakdowns (a `*` tell
+                // such as kampfsonderfertigkeiten.KS2's) are the check's display, not the action's.
+                let own = Set((check.onSuccess + check.onFailure).map(\.origin.clauseRef))
+                r.events += out.events
+                r.texts += out.texts.filter { $0.origin.map(own.contains) ?? false }
+                r.notApplied += out.notApplied.filter { own.contains($0.origin) }
+                r.questions += out.questions.filter { !Set($0.origins).isDisjoint(with: own) }
+                r.situation = r.situation.applying(out.events, book: engine.book)
+            }
             all += r.breakdowns + [record(r)]
             viewBreakdowns += r.breakdowns + [record(r)]
             if let raw = s.expectSituation["events"] {
@@ -179,7 +218,11 @@ enum StateRunner {
             for q in s.expect { queries[q.query] = engine.evaluate(Query(q.query), in: start) }
         }
         if s.expect.isEmpty, s.expectSituation["offered"] != nil || s.expectSituation["notOffered"] != nil {
-            viewBreakdowns.append(engine.evaluate(Query("offers"), in: current))
+            // Task 33: the choice a take chose was offered before it (liegend 7.6's `aufstehen`,
+            // which clears the status that offers it).
+            let taken: Bool
+            if case .take? = topAction { taken = true } else { taken = false }
+            viewBreakdowns.append(engine.evaluate(Query("offers"), in: taken ? start : current))
         }
 
         for (n, raw) in s.sequence.enumerated() {

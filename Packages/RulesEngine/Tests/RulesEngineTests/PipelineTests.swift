@@ -597,6 +597,20 @@ extension PipelineTests {
         XCTAssertEqual(lines(under, from: "pl-cap.Z3"), [], "−4 is within the cap")
     }
 
+    func testASuppressOfAConditionsLinesLiftsItsCapToo() throws {
+        // Task 33 (COND_6.SZ5, schmerz S12): Stufe IV holds GS at 0 over Belastung's −2.
+        let held = engine.evaluate(Query("gs"), in: situation(owned: ["pl-fallen": 4, "pl-tired": 2], base: ["gs": 8]))
+        XCTAssertEqual(held.result, 0)
+        let bound = try XCTUnwrap(lines(held, from: "pl-fallen.F4").first { $0.kind == .capped })
+        XCTAssertEqual([bound.value, bound.was, bound.now], [2, -2, 0])
+        // The Schip suppresses every condition's lines: the set, the add and the bound alike.
+        let schip = engine.evaluate(Query("gs"), in: situation(owned: ["pl-fallen": 4, "pl-tired": 2, "pl-quiet": 1],
+                                                               facts: ["choice.schip": true], base: ["gs": 8]))
+        XCTAssertEqual(lines(schip, from: "pl-fallen.F4"), [])
+        XCTAssertEqual(notApplied(schip, "pl-fallen.F4").map(\.reason), [.suppressed])
+        XCTAssertEqual(schip.result, 8)
+    }
+
     func testACapWithAMaxAndAFloorBoundTheResult() throws {
         let fk = engine.evaluate(Query("fk"), in: situation(owned: ["pl-cap": 1], facts: ["gmFact.sicht": 4],
                                                            base: ["fk": 5]))

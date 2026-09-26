@@ -890,6 +890,7 @@ extension Evaluation {
             run.owned[id] = max(0, have.subtractingSaturating(-levels))
             return
         }
+        let passed = e.map { passedSuppressRulings($0, gaining: id) } ?? []
         var granted = levels, note: String?
         if let most = target.most {
             granted = max(0, min(levels, most.subtractingSaturating(have)))
@@ -906,8 +907,38 @@ extension Evaluation {
             if granted < levels { note = "höchstens Stufe \(most)" }
         }
         run.events.append(Event(kind: .gained, origin: origin, rule: id, levels: granted, span: span, via: via,
-                                rulings: rulings, facts: facts, note: note))
+                                rulings: (rulings + passed).uniqued(), facts: facts, note: note))
         run.owned[id] = have.addingSaturating(granted)
+    }
+}
+
+extension Evaluation {
+    /// Task 33: a `gain` of `id` that a firing `suppress` lets pass carries the suppress's decided
+    /// rulings, when the suppress names another `gain` of `id` in the book but not this one. The
+    /// Schip's suppress of every Zustand's effects stops Schmerz IV's Handlungsunfähig, not the one
+    /// Bewusstlos carries, and that it stands rests on schicksalspunkte.schip-lifts-incapacity
+    /// (schmerz S10). As Task 31's `passedRulings` for the offers a manoeuvre forbid passes. A
+    /// suppress fires when its rule applies and its `when` is yes; it needs no target that applies.
+    func passedSuppressRulings(_ e: Effect, gaining id: String) -> [String] {
+        let others = actionEffects().filter { o in
+            guard case .gain(let g) = o.payload, case .id(id) = g.rule else { return false }
+            return o.origin != e.origin
+        }
+        guard !others.isEmpty else { return [] }
+        var out: [String] = []
+        for rule in book.rules.keys.sorted(by: Self.idOrder) {
+            for c in book.rules[rule]!.clauses.flatMap(\.effects) {
+                guard case .suppress(let s) = c.payload, !selects(s.line, effect: e),
+                      others.contains(where: { selects(s.line, effect: $0) }),
+                      applicability(of: rule, depth: 0).applies else { continue }
+                if let when = c.when {
+                    let level = ruleLevel(rule, levels: [:], depth: 0)
+                    guard condition(when, level: level, rule: rule, depth: 0).truth == .yes else { continue }
+                }
+                out += decided(c)
+            }
+        }
+        return out.uniqued()
     }
 }
 

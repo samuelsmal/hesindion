@@ -1,0 +1,29 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# Task 33: standing up (STATE_10.L4): the stand-up costs an Aktion and clears the status; the
+# check against the Passierschlag is a second choice, and its failure tells the opponent.
+id: me-prone
+name: Liegend
+kind: state
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: L1
+    text: Man liegt.
+    effects:
+      - when: { hero.has: me-prone }
+        tell: { to: player, text: liegt }
+        # A tell on every query (kampfsonderfertigkeiten.KS2's shape): the check's stages show it.
+  - id: L4
+    text: Aufstehen kostet 1 Aktion; eine Probe vermeidet den Passierschlag.
+    effects:
+      - when: { hero.has: me-prone }
+        offer: { choice: aufstehen, costs: [{ cost: { pool: actions, amount: 1 } }] }
+      - when: { hero.has: me-prone, choice.aufstehen: true }
+        gain: { rule: me-prone, levels: -1 }
+      - when: { hero.has: me-prone }
+        offer: { choice: passierschlagVermeiden, default: false }
+      - when: { hero.has: me-prone, choice.aufstehen: true, choice.passierschlagVermeiden: true }
+        check:
+          of: { talent: TAL_4, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: opponent, text: passierschlag }

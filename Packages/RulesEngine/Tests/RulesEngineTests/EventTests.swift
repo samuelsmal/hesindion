@@ -115,6 +115,19 @@ final class EventTests: XCTestCase {
         XCTAssertEqual(entry?.because, "Schip, Zustand ignorieren")
     }
 
+    func testAGainTheSchipSuppressLetsPassCarriesItsRulings() {
+        // schmerz S10 (Task 33): the Schip stops a condition's gain of act-helpless, not a
+        // state's; the state's gain carries the ruling that decided so, and nothing else does.
+        let s = situation(owned: ["act-out": 1], facts: ["choice.schipZustand": true])
+        let r = layer.perform(.settle, in: s)
+        let gained = r.events.filter { $0.kind == .gained }
+        XCTAssertEqual(gained.map(\.origin), [ref("act-out.O1")])
+        XCTAssertEqual(gained.map(\.rulings), [["act-schip.lifts"]])
+        // Without the Schip, no ruling.
+        let plain = layer.perform(.settle, in: situation(owned: ["act-out": 1]))
+        XCTAssertEqual(plain.events.filter { $0.kind == .gained }.map(\.rulings), [[]])
+    }
+
     func testTwoConditionsGainingOneStateGiveOneGainAndNoneWhenItIsHeld() {
         // COND_1.B4 and COND_2.BT4 both at IV gain STATE_8: one `gained(…, 1)`, not two.
         let s = situation(owned: ["act-stunned": 4, "act-heavy": 4])

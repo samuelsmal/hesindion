@@ -348,6 +348,16 @@
     "rule": "pl-dazed"
    },
    {
+    "clause": "F4",
+    "index": 0,
+    "rule": "pl-fallen"
+   },
+   {
+    "clause": "F4",
+    "index": 1,
+    "rule": "pl-fallen"
+   },
+   {
     "clause": "C1",
     "index": 0,
     "rule": "pl-hurt"
@@ -2274,6 +2284,82 @@
    "id": "pl-enabler",
    "kind": "core",
    "name": "Reiter",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F4",
+        "index": 0,
+        "rule": "pl-fallen"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "number": 0
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "set",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "F4",
+        "index": 1,
+        "rule": "pl-fallen"
+       },
+       "payload": {
+        "max": {
+         "number": 0
+        },
+        "min": {
+         "number": 0
+        },
+        "to": [
+         {
+          "name": "gs"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "F4",
+     "text": "Ab Stufe IV GS 0."
+    }
+   ],
+   "id": "pl-fallen",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Gestürzt",
    "reviewed": null,
    "rulings": [],
    "source": {
