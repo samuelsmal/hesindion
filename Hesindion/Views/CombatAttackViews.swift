@@ -180,7 +180,7 @@ struct CombatAttackChoiceView: View {
             // Regular mount attacks (Hufschlag, Tritt, etc.) — exclude Niederreiten (has dedicated button below)
             ForEach(mount.attacks.filter { $0.name != "Niederreiten" }, id: \.name) { attack in
                 let mightyBlowNote: String? = {
-                    guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
+                    guard mount.hasMightyBlow else { return nil }
                     let kk = mount.attributes.kk
                     let penalty = (kk - 20) / 2
                     if penalty > 0 {
@@ -228,7 +228,7 @@ struct CombatAttackChoiceView: View {
         let niederreitenDamage = niederreitenAttack?.damage ?? mount.damage
 
         let mightyBlowNote: String? = {
-            guard mount.specialSkills.contains("Mächtiger Schlag") else { return nil }
+            guard mount.hasMightyBlow else { return nil }
             let kk = mount.attributes.kk
             let penalty = (kk - 20) / 2
             if penalty > 0 {
