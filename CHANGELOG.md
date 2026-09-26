@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- A new rules engine, built beside the old one and not yet used by any screen, reading the rules from authored files instead of a single big catalog — every number will say which rule it came from, and every rule that doesn't apply will say why. It isn't hooked up to anything you'll see in the app yet (ADR-0015).
 - Rules evaluator (issue #27, step 2): `implemented` catalog entries drive the roll through `RuleEvaluator`; the calculation lists every owned rule that did not apply and why, offers manoeuvres and choices from the catalog, and asks the GM for facts a rule needs (rendered in step 3). Fifteen entries are implemented: Mehrfache Verteidigung, Reichweite, Beengte Umgebung, Vorteilhafte Position, Zonenaufschlag, Karmale Objekte, Gezielter Angriff, Gezielter Schuss, Wuchtschlag, Plänkler-Formation, Golgariten-Stil, Vinsalt-Stil, Verweichlicht, Liegend, Überrascht.
 - `specs/data/rule-vocabulary.json`: the closed clause vocabulary, exported from Swift and enforced by `make rules-db`.
 - The announcement's opponent section asks, when the hero is mounted, whether the opponent fights on foot; Vorteilhafte Position and Golgariten-Stil read the answer.

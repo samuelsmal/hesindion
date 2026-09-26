@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed — under review. Accepted as ADR-0007 on `feat/rules-data-pipeline` (2026-09-21); imported for the rules rework, which reviews it before anything is built on it. Paths under `specs/rules/`, `scripts/rules_*` and `tests/rules/` live in the tag `archive/rules-data-pipeline`, not on this branch.
+Superseded by ADR-0015. Accepted as ADR-0007 on `feat/rules-data-pipeline` (2026-09-21); imported for the rules rework, which reviewed it before anything was built on it. Paths under `specs/rules/`, `scripts/rules_*` and `tests/rules/` live in the tag `archive/rules-data-pipeline`, not on this branch.
 
 ## Context
 
