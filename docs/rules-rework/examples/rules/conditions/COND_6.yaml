@@ -99,6 +99,12 @@ clauses:
         # Passed check or not, the hero cannot move at Stufe IV; speaking stays possible.
         # A value set, not a modifier (like STATE_10's GS 1), so the Zustand cap
         # (zustaende.Z3) does not reach it.
+      - when: { level: { atLeast: 4 } }
+        cap: { to: gs, min: 0, max: 0 }
+        ruling: schmerz-iv-gs
+        # Task 33: "cannot move" is GS 0 after every other line. A `set` applies before the
+        # phase's `add`s (plan Task 22), so Belastung's GS −3 in Platte would still count
+        # (schmerz S12: GS −3); this bound holds the value at 0 whatever else reaches GS.
 
 rulings:
   - id: schmerz-thresholds

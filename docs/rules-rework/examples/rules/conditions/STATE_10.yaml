@@ -38,6 +38,10 @@ clauses:
   - id: L3
     text: Ihre Verteidigung ist um 2 erschwert, ihre Angriffe um 4.
     effects:
+      - require: { that: { opponent.has: STATE_10 }, enables: true }
+        # Task 33: the opponent's Liegend acts on the hero's screens, though the hero does not
+        # have it (as STATE_13.UE1): the opponent's lines and texts below (and L2's) reach the
+        # hero's attack (liegend 7.3). The hero's own effects stay gated on `hero.has: STATE_10`.
       - when: { hero.has: STATE_10 }
         add: { to: [pa, aw], value: -2 }
       - when: { hero.has: STATE_10 }
