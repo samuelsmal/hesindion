@@ -155,6 +155,20 @@ class RetryTests(unittest.TestCase):
                 self.assertEqual(len(session.calls), 1)
                 self.assertTrue(issubclass(check.PageMissing, requests.HTTPError))
 
+    def test_the_timeout_outlasts_the_sites_slowest_search(self):
+        # An unknown detail URL is redirected to the site's search for its name; with a
+        # paragraph-long name that search took 29 s on 2026-09-27, three times over the old 15 s.
+        seen = []
+
+        class Session(ScriptedSession):
+            def get(self, url, headers=None, timeout=None):
+                seen.append(timeout)
+                return super().get(url, headers, timeout)
+
+        check.Fetcher(self.dir, Session(200)).get("https://x/a.html")
+        self.assertEqual(seen, [check.TIMEOUT])
+        self.assertGreaterEqual(check.TIMEOUT, 60)
+
     def test_another_4xx_fails_at_once(self):
         f, session = self.fetch(403)
         with self.assertRaises(requests.HTTPError) as ctx:
