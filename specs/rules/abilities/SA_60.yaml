@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Schnellladen.html
   book: Regelwerk
   page: 249
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:29ecf4c1eed2fd2a2dde65662b4fa2a6794e5cec3ea164c0e26c66fd82e1663d
 reviewed: null
 # Also Aventurisches Kompendium p. 155 (Schleudern), Aventurische Rüstkammer p. 123 (Blasrohre,
 # Diskusse, Schleudern), Kodex des Schwertes p. 303 (Feuerspeien).

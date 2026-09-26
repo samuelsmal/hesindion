@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/SF_Kampfstilsonderfertigkeiten/bewaffnete-kampfstile/golgariten-stil.html
   book: Aventurisches Götterwirken I
   page: 229
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:cca1a7e9bad5018cdf7ca194abec24fa84de6593a6a35515c577e99002af1995
 reviewed: null
 # Optolith's text for this ability says TP where the page says PA: "einen Bonus von +1 TP bei
 # Nahkampfangriffen, wenn er sich auf dem Rücken eines Reittiers befindet". The page (and its

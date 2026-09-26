@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Plaenkler_Formation.html
   book: Aventurisches Kompendium II
   page: 129
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:422ae5059ec3ea3aa26f38db562b9abf2ec374c0948b3febb3105c5a20129d20
 reviewed: null
 # The wiki also lists Kodex des Schwertes pp. 301–302. Optolith's text matches the page.
 # Boronmir gave it up on 2026-09-24 for Formation (SA_862, example 19), its larger sibling:

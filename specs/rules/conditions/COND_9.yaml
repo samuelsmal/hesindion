@@ -8,10 +8,10 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Berauscht.html
   book: DSA5-Meisterschirm
   page: 13
-  checked: 2026-09-25
+  checked: 2026-09-26
   also:
     - { book: Aventurisches Götterwirken II, page: 211 }
-  hash: null
+  hash: sha256:ba432c4bbae9247eb018513a80edbef65778ab274e40738b9c1bb30f5109e9db
 reviewed: null
 
 clauses:

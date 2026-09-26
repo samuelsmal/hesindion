@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Kampfreflexe.html
   book: Regelwerk
   page: 248
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:b68f0e3d08a5d5f9ae300f683a2883ea8ddd4fc9c37fabdd4d802b58b7287f7b
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:

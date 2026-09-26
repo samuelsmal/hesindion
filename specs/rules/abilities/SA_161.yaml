@@ -10,8 +10,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_GezielterSchuss.html
   book: Aventurisches Kompendium
   page: 153
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:09876827f55d435dfd714243307d0401ae976bb353a35899e30c9c0dd7f68d3d
 reviewed: null
 
 clauses:

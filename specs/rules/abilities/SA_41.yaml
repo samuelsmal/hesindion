@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html
   book: Regelwerk
   page: 246
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:271a9935c020ef5d042872ab9bac15d0d52afe153133fa680e8d2c6d4cd3f424
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:

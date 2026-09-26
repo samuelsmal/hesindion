@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/SF_FertigkeitsspezialisierungTalente.html
   book: Regelwerk
   page: 216
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:c55452e406ad7ebc101aad05e0b071d72b4cb27a59f285df15c430a4447d954f
 reviewed: null
 # Probe example 22. Optolith: selectOptionCategories SKILLS; an instance has `sid` (the talent,
 # e.g. "TAL_10") and `sid2` (the Anwendungsgebiet: an id from the talent's `applications` in

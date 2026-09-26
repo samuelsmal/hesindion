@@ -10,8 +10,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Verteidigungshaltung.html
   book: Regelwerk
   page: 250
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:87ea00a9fdefa59c6bc6ffaed0d98c446015aa5a9b2a7ea4809cb8d01efe7a7d
 reviewed: null
 
 clauses:
