@@ -171,34 +171,57 @@ and logged, as it would be if the block were missing. It is not an import error.
 **Mächtiger Schlag.** `CombatAttackViews` checks `abilities` first and falls back to
 `specialSkills.contains`.
 
-**Display.** `HeroDetailView.petsSection` shows VW/RS when set, and advantages, abilities,
-training and tricks as chips. A companion's AP line reads "336 / 336 AP".
+**Display.** `HeroDetailView.petsSection` shows VW, RS and BE when set in an `HStack`, followed
+by "spent / total AP", then advantages, abilities, training and tricks as `FieldRow`s — the same
+row type the rest of the hero sheet uses, not as chips.
 
 ## 7. Re-import
 
-**Two steps in `OptolithImportService`:**
+**Two entry points on `OptolithImportService`, no `PendingImport` object:**
 
-- `prepareImport(from:context:) -> PendingImport` parses everything and finds the existing hero
-  by the same lookup `importHero` uses today.
-- `PendingImport.companionConflicts: [CompanionConflict]` lists every stored pet with
-  `hasCompanionData` whose name-matched pet in the new file has no block.
-- `applyImport(_:keeping: Set<String>, context:)` writes. For a pet name in `keeping`, it copies
-  `defense`, `armor`, `encumbrance`, `advantages`, `abilities`, `training`, `tricks`,
-  `purchases`, `apTotal`, `apSpent` and the structured attacks from the old pet onto the new one
-  before the old one is deleted.
-- `importHero(from:context:)` stays, as prepare + apply keeping all. The UI test seed and
-  existing tests keep working.
+- `companionConflicts(in: Data, context:) -> [String]` parses the export enough to find the
+  existing hero by the same lookup `importHero` uses today, and lists every stored pet with
+  `hasCompanionData` whose name-matched pet in the new file has no `hesindion` block — in
+  `petsInOrder` order. It returns `[]` for a new hero, a malformed file, or a pet missing from
+  the new file entirely.
+- `importHero(from: Data, context:, keepingCompanionDataFor: Set<String> = [])` does the import.
+  For a pet name in the set, it copies `defense`, `armor`, `encumbrance`, `advantages`,
+  `abilities`, `training`, `tricks`, `purchases`, `apTotal`, `apSpent` and the structured attacks
+  from the old pet onto the new one before the old one is deleted. The default keeps nothing, so
+  existing callers and the UI-test seed are unchanged. `readData(from: URL) -> Data` does the
+  security-scoped file read and feeds both; a `URL`-taking `importHero` overload calls it then
+  the `Data` one.
 
-**`HeroListView`.** After `prepareImport`, if there are conflicts it shows one `DSAModal`, a
-sibling in the root ZStack per AGENTS.md:
+There is no `PendingImport` holding a parsed-but-unsaved hero between the conflict check and the
+modal's answer: an unsaved SwiftData model should not sit in memory waiting on a UI decision, so
+`companionConflicts` and `importHero` each parse the export data themselves and the caller re-runs
+`importHero` once it knows which names to keep.
+
+**`HeroListView`.** After `companionConflicts`, if the list is non-empty it shows one `DSAModal`
+per name, a sibling in the root ZStack per AGENTS.md:
 
 > **Kupperus: companion data missing**
 > This export has no Hesindion companion data (VW, attacks, advantages, training, tricks).
 > The last import had it. Keep the previous values?
-> [Keep previous] [Use export only]
+> [Keep previous]  ── or ──  [Use export only]
+> [Cancel import]
 
-With several pets, it asks once per pet, in `petsInOrder` order. Cancelling the modal cancels
-the import. All strings go into `Strings.swift` (de + en).
+"Keep previous" and "Use export only" are equal-weight filled buttons separated by a
+`DSAOrDivider`, per AGENTS.md's either/or rule; "Cancel import" is unfilled, below them, and
+aborts the whole import rather than choosing per pet. The modal carries
+`.accessibilityElement(children: .contain)` and the identifier `companion.reimport.modal` on the
+container — a bare container identifier otherwise propagates onto the buttons and UI tests can no
+longer address them individually. With several pets, it asks once per pet, in `petsInOrder`
+order, and only then calls `importHero(…, keepingCompanionDataFor:)` with the accumulated names.
+All strings go into `Strings.swift` (de + en).
+
+**Debug hooks for UI tests:** `-uitest-seed-fixture <name>` seeds from a named bundled JSON
+instead of the default `UITestHero`, and `-uitest-reimport <name>` makes `HeroListView` import a
+named bundled JSON on appear, through the same path as the file picker, so the re-import
+question can be driven without the system document browser. The companion re-import test seeds
+`UITestHeroCompanions` (a `hesindion` block on the pet) and reimports `UITestHero` (the same hero
+without one, per the fixture note above) — `Hesindion/Resources/UITestHeroCompanions.json` is the
+new fixture this feature adds.
 
 **Tests:**
 - Unit: conflict detection (block present / absent / new hero / pet renamed). Keep restores
@@ -232,7 +255,7 @@ costs nothing.
 
 - **CHANGELOG `[Unreleased]`:** Added (companion data, tool, re-import question) and Fixed
   (attacks lost to a `notes` typo, once the block is present).
-- **ADR 0015:** companion data rides in the Optolith export under `hesindion`.
+- **ADR 0016:** companion data rides in the Optolith export under `hesindion`.
 - **AGENTS.md:** the `make companions` / `make test-companions` targets.
 
 ## 10. Out of scope

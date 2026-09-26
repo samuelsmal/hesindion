@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **An import says whether it added a hero or replaced one.** Importing an Optolith file for a hero who is already in the app replaces that hero's data in place, and until now a re-import looked exactly like nothing had happened. A message now says "Held importiert" or "Held aktualisiert", and the hero settings show when the hero was last imported ("unbekannt" for a hero imported before this version).
+- Companion data: `make companions HERO=<export>` checks a hand-written `<export>.companions.yaml` (a companion's purchases priced in Kat C, AP sum, the export's own fields) and writes a `hesindion` block into the Optolith export; the import reads VW/RS/BE, advantages, abilities, training, tricks, purchases and AP from it and shows them on the hero's pets.
+- Re-importing a plain Optolith export over a companion that had Hesindion companion data asks whether to keep the previous values (only the data the block adds; everything Optolith exports comes from the new file).
 
 ## [0.5.0-rc.1] - 2026-09-26
 
@@ -87,6 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- A companion's attacks come from the `hesindion` block when present, so a typo in the Optolith notes (`AT 156TP`) no longer drops an attack.
 - **Belastungsgewöhnung (`SA_41`) took 2 BE per Stufe instead of 1.** The rule's worked example (Regelwerk 246): Plattenrüstung (BE 3) behaves as Kettenrüstung (BE 2) at Stufe I. Every hero with the ability had double the relief, which flows into AT, PA, AW, INI and GS — those values come out one to two points lower now for an encumbered hero.
 - **Riding eased Zauber- and Liturgieproben.** The −1 Belastung while mounted is a Reiterkampf rule and eases Kampfproben only; a mounted caster now keeps the full Belastung. The unmounted penalty is unchanged.
 - **Every hero got the human GS.** The import wrote a flat GS 8; GS is a species value, and Zwerge have 6 (Menschen, Elfen, Halbelfen 8, per the Optolith source). Every dwarf was two Schritt too fast — on hero detail and in the Flucht figures. Stored heroes are corrected at launch where their species is known; a hero imported before the species was stored is left alone rather than assumed human.
