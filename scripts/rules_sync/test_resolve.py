@@ -22,7 +22,7 @@ import unittest
 import requests
 
 from rules_sync import resolve
-from rules_sync.normalise import normalise_html
+from rules_sync.normalise import hash_html, normalise_html
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 
@@ -172,15 +172,45 @@ class CrawlTests(unittest.TestCase):
         }
 
     def test_every_page_with_kind_trail_and_hash(self):
-        got = resolve.crawl(FakeFetcher(self.site()))
+        site = self.site()
+        got = resolve.crawl(FakeFetcher(site))
         a = got.pages[BASE + "a.html"]
         self.assertEqual((a.kind, a.title, a.trail), ("rule", "Regel A", ("Kategorie Eins", "Regel A")))
-        self.assertTrue(a.hash.startswith("sha256:"))
+        self.assertEqual(a.hash, hash_html(site[BASE + "a.html"]))
         self.assertEqual(got.pages[BASE + "b.html"].trail, ("Kategorie Eins", "Unter", "Regel B"))
         self.assertEqual(got.pages[BASE + "kat_eins.html"].kind, "index")
         self.assertIsNone(got.pages[BASE + "kat_eins.html"].hash)
-        self.assertEqual(got.pages[BASE + "leer.html"].kind, "broken")
+        leer = got.pages[BASE + "leer.html"]
+        self.assertEqual(leer.kind, "broken")
+        self.assertEqual(leer.detail, resolve.classify_page(site[BASE + "leer.html"])[1])
+        self.assertNotIn(BASE, got.pages, "the root is the entry point, not a stored page")
         self.assertFalse([p for p in got.problems if p.fatal])
+
+    def test_max_depth_zero_stops_at_the_top_categories(self):
+        got = resolve.crawl(FakeFetcher(self.site()), max_depth=0)
+        self.assertTrue(any(p.fatal and "kat_eins.html" in p.detail for p in got.problems))
+
+    def test_a_link_back_to_the_root_is_never_refetched(self):
+        # The root's own home link, echoed on every index page, must not send
+        # the crawl back to the entry point -- it is never fetched a second
+        # time and never recorded in `pages`.
+        class CountingFetcher(FakeFetcher):
+            def __init__(self, pages):
+                super().__init__(pages)
+                self.calls = []
+
+            def get(self, url):
+                self.calls.append(url)
+                return super().get(url)
+
+        site = self.site()
+        site[BASE + "kat_eins.html"] = _index(
+            [("Home", BASE), ("Unter", "unter.html"), ("Regel A", "a.html")]
+        )
+        fetcher = CountingFetcher(site)
+        got = resolve.crawl(fetcher)
+        self.assertNotIn(BASE, got.pages)
+        self.assertEqual(fetcher.calls.count(BASE), 1)
 
     def test_a_missing_page_is_fatal(self):
         site = self.site()

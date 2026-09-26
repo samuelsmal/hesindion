@@ -280,11 +280,17 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
         result.problems.append(Problem(True, f"{root_url}: fetch failed: {exc}"))
         return result
     try:
-        queue = [(url, 0, (text,)) for text, url in root_categories(root_html, root_url)]
+        categories = root_categories(root_html, root_url)
     except LookupError as exc:
         result.problems.append(Problem(True, str(exc)))
         return result
-    seen = {url for url, _, _ in queue}
+    # The root itself is never a category page (it is the entry point, not
+    # something `pages` records), and an index whose link list loops back to
+    # it -- the home link every page carries -- must not re-fetch or re-store
+    # it either.
+    seen = {canonical_url(root_url)}
+    queue = [(url, 0, (text,)) for text, url in categories]
+    seen.update(url for url, _, _ in queue)
     while queue:
         url, depth, trail = queue.pop(0)
         if len(result.pages) >= max_pages:
@@ -293,10 +299,18 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
         try:
             html = fetcher.get(url)
         except requests.RequestException as exc:
+            # Fatal: a page that could not be fetched may have been an index,
+            # and everything behind it is missing from the crawl with no sign
+            # in any single page's result. A retry costs nothing -- the pages
+            # that did arrive are on disk.
             result.problems.append(Problem(True, f"{url}: fetch failed: {exc}"))
             continue
         kind, detail = classify_page(html)
         if kind == "broken":
+            # Not fatal: a page that carries no rule text and no anchors is a
+            # property of this site (Task 5 fix round 4 found five of them),
+            # not a failure of the crawl. It simply yields no further pages
+            # beyond itself.
             result.problems.append(Problem(False, f"{url}: {detail}"))
             result.pages[url] = CrawledPage(url, "broken", page_title(html), None, trail, detail)
             continue
@@ -305,6 +319,8 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
             continue
         result.pages[url] = CrawledPage(url, "index", page_title(html), None, trail)
         if depth >= max_depth:
+            # Fatal: the subtree below this page is missing from the crawl --
+            # not something any single page's absence would otherwise reveal.
             result.problems.append(Problem(True, f"{url}: max depth {max_depth} reached, not descending"))
             continue
         base = page_base(html, url)
