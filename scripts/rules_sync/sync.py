@@ -13,43 +13,28 @@ import datetime
 import sys
 from pathlib import Path
 
-import yaml
-
 from rulec import layout
 from rules_review import rulefiles
 from rules_sync import check, pages, resolve
 
 
-def _primary_source_url(path) -> "str | None":
-    """The file's own `source.url`, canonicalised -- `None` when it has none.
-
-    `check.rule_sources` yields `source.url` first and only falls back to `also[].url` entries
-    when there is no `source.url` at all (`filter(None, urls)` drops the missing primary). That
-    makes the *first* `RuleSource` for a rule id indistinguishable from an `also` entry by shape
-    alone, so `adopt` re-reads the file's own `source.url` here and compares it against the
-    candidate's URL rather than trust the URL is the primary one.
-    """
-    doc = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    if not isinstance(doc, dict):
-        return None
-    url = (doc.get("source") or {}).get("url")
-    return check.canonical_url(str(url)) if url else None
-
-
 def adopt(reg, sources, ids, all_null, today) -> int:
     status = 0
-    firsts = {}
+    named = set()
+    primary = {}
     for s in sources:
-        firsts.setdefault(s.rule_id, s)          # source.url comes before also[] in rule_sources
-    for rule_id, s in sorted(firsts.items()):
-        if not (all_null and s.hash is None) and rule_id not in ids:
-            continue
-        if _primary_source_url(s.path) != s.url:
-            # No `source.url` on this rule -- the candidate above is an `also[].url` entry
-            # standing in for it, and must never be written into `source.hash`.
+        named.add(s.rule_id)
+        if s.primary:
+            primary[s.rule_id] = s
+    for rule_id in sorted(named):
+        s = primary.get(rule_id)
+        if s is None:
+            # Only `also[].url` entries: an also page's hash must never land in `source.hash`.
             if rule_id in ids:
                 print(f"cannot adopt {rule_id}: no source.url")
                 status = 1
+            continue
+        if not (all_null and s.hash is None) and rule_id not in ids:
             continue
         page = reg.pages.get(pages.key_of(s.url))
         if not page or page.get("kind") != "rule" or page.get("gone"):
@@ -68,7 +53,7 @@ def adopt(reg, sources, ids, all_null, today) -> int:
             status = 1
             continue
         print(f"adopted {rule_id} ← {pages.key_of(s.url)}")
-    for missing in sorted(set(ids) - set(firsts)):
+    for missing in sorted(set(ids) - named):
         print(f"cannot adopt {missing}: no rule file with a source url")
         status = 1
     return status
@@ -79,8 +64,12 @@ def report(crawl, old, new) -> None:
     for top in sorted({t for t, _ in counts}):
         print(f"{top:<45} {counts[top, 'rule']:>5} rule  {counts[top, 'index']:>4} index  "
               f"{counts[top, 'broken']:>3} broken")
+    broken = {url for url, p in crawl.pages.items() if p.kind == "broken"}
+    if broken:
+        print(f"{len(broken)} page(s) with no text (broken)")
     for p in crawl.problems:
-        print(p)
+        if p.fatal or p.detail.partition(": ")[0] not in broken:
+            print(p)
     if old.synced is None:
         print("\nfirst sync")
         return
@@ -98,6 +87,7 @@ def run(fetcher, pages_path=pages.PATH, rules_root=layout.ROOT, *, adopt_all=Fal
         new = pages.merge(old, crawl, today)
     except ValueError as exc:
         print(exc)
+        print(f"{fetcher.network_calls} network call(s) made")
         return 1
     pages.write(new, pages_path)
     report(crawl, old, new)

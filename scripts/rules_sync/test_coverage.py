@@ -10,8 +10,12 @@ from rules_sync.pages import Registry
 B = "https://dsa.ulisses-regelwiki.de/"
 
 
-def src(rule_id, url, h, reviewed=False, path=Path("dummy.yaml")):
-    return RuleSource(rule_id, path, B + url, h, reviewed)
+def src(rule_id, url, h, reviewed=False, path=Path("dummy.yaml"), primary=True):
+    return RuleSource(rule_id, path, B + url, h, reviewed, primary)
+
+
+def also(rule_id, url, reviewed=False):
+    return RuleSource(rule_id, Path("dummy.yaml"), B + url, None, reviewed, False)
 
 
 def reg_with(pages_by_key):
@@ -65,12 +69,75 @@ class StatusesTests(unittest.TestCase):
         self.assertEqual(st, {})
 
 
+class AlsoPageTests(unittest.TestCase):
+    """An `also` page is named but carries no hash of its own: it is never `changed` or
+    `unhashed` through it."""
+
+    def test_an_also_page_is_drafted_not_changed(self):
+        reg = reg_with({
+            "primary.html": {"in": "A / x", "kind": "rule", "hash": "h1"},
+            "also.html": {"in": "A / x", "kind": "rule", "hash": "h2"},
+        })
+        sources = [src("R1", "primary.html", "h1"), also("R1", "also.html")]
+        st = coverage.statuses(reg, sources)
+        self.assertEqual(st["primary.html"], "drafted")
+        self.assertEqual(st["also.html"], "drafted")
+
+    def test_an_also_page_of_reviewed_rules_is_reviewed(self):
+        reg = reg_with({"also.html": {"in": "A / x", "kind": "rule", "hash": "h2"}})
+        st = coverage.statuses(reg, [also("R1", "also.html", reviewed=True),
+                                     also("R2", "also.html", reviewed=True)])
+        self.assertEqual(st["also.html"], "reviewed")
+
+    def test_a_page_named_as_primary_and_as_also_follows_the_primary_hash(self):
+        reg = reg_with({"p.html": {"in": "A / x", "kind": "rule", "hash": "h"}})
+        self.assertEqual(coverage.statuses(reg, [src("R1", "p.html", "h_old"), also("R2", "p.html")])["p.html"],
+                         "changed")
+        self.assertEqual(coverage.statuses(reg, [src("R1", "p.html", None), also("R2", "p.html")])["p.html"],
+                         "unhashed")
+        self.assertEqual(coverage.statuses(reg, [src("R1", "p.html", "h", reviewed=True),
+                                                 also("R2", "p.html", reviewed=False)])["p.html"],
+                         "drafted")
+
+    def test_the_changed_section_names_only_primary_sources(self):
+        reg = reg_with({"p.html": {"in": "A / x", "kind": "rule", "hash": "h"}})
+        sources = [src("R1", "p.html", "h_old"), also("R2", "p.html")]
+        out = coverage.render(reg, sources, coverage.statuses(reg, sources))
+        self.assertIn("  p.html: R1\n", out)
+
+
 class UnknownTests(unittest.TestCase):
     def test_a_rule_naming_a_page_not_in_the_registry_is_unknown(self):
         reg = reg_with({"known.html": {"in": "A / x", "kind": "rule", "hash": "h"}})
         sources = [src("R1", "known.html", "h"), src("R2", "missing.html", "h")]
         unk = coverage.unknown(reg, sources)
         self.assertEqual([s.rule_id for s in unk], ["R2"])
+
+
+class NonRulePageTests(unittest.TestCase):
+    """Important 3: a rule whose page is an index, broken or gone is listed, and --check fails."""
+
+    def reg(self):
+        return reg_with({
+            "i.html": {"in": "A", "kind": "index"},
+            "b.html": {"in": "A / y", "kind": "broken"},
+            "g.html": {"in": "A / z", "kind": "rule", "hash": "h", "gone": "2026-10-01"},
+            "ok.html": {"in": "A / x", "kind": "rule", "hash": "h"},
+        })
+
+    def test_lists_rule_id_page_and_kind(self):
+        sources = [src("R1", "i.html", None), src("R2", "b.html", None), src("R3", "g.html", "h"),
+                   src("R4", "ok.html", "h"), src("R5", "missing.html", None)]
+        self.assertEqual(coverage.on_non_rule_page(self.reg(), sources),
+                         [("R1", "i.html", "index"), ("R2", "b.html", "broken"), ("R3", "g.html", "gone")])
+        out = coverage.render(self.reg(), sources, coverage.statuses(self.reg(), sources))
+        self.assertIn("rules on a non-rule page:\n  R1 i.html (index)\n  R2 b.html (broken)\n"
+                      "  R3 g.html (gone)\n", out)
+
+    def test_nothing_to_list_means_no_section(self):
+        sources = [src("R4", "ok.html", "h")]
+        out = coverage.render(self.reg(), sources, coverage.statuses(self.reg(), sources))
+        self.assertNotIn("non-rule page", out)
 
 
 class RunCheckTests(unittest.TestCase):
@@ -118,6 +185,15 @@ class RunCheckTests(unittest.TestCase):
         rules_root = self._write_rule("r1.yaml", "R1", B + "missing.html")
         status = coverage.run(pages_path, rules_root, check=True)
         self.assertEqual(status, 1)
+
+    def test_check_returns_1_when_a_rule_is_on_an_index_page(self):
+        pages_path = self._write_pages(
+            "synced: 2026-09-26\nskip: {}\npages:\n"
+            "  i.html: {title: X, in: 'A', kind: index}\n"
+        )
+        rules_root = self._write_rule("r1.yaml", "R1", B + "i.html")
+        self.assertEqual(coverage.run(pages_path, rules_root, check=True), 1)
+        self.assertEqual(coverage.run(pages_path, rules_root, check=False), 0)
 
     def test_missing_pages_yaml_prints_message_and_exits_0_or_1(self):
         pages_path = self.root / "nope.yaml"

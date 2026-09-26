@@ -406,6 +406,116 @@ class AdoptFromSourceUrlOnlyTests(unittest.TestCase):
         self.assertNotIn(f"hash: {a_hash}", got)
 
 
+class AlsoPageAfterAdoptTests(unittest.TestCase):
+    """After ADOPT, a rule's `also` page must not show `changed` for ever: it has no hash of its
+    own to compare (Important 2)."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_30.yaml").write_text(SA_30_MULTI_SOURCE, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+        patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_the_also_page_is_drafted_after_adopt(self):
+        from rules_sync import check, coverage
+        self.assertEqual(sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                                  adopt_all=True, today=D1), 0)
+        st = coverage.statuses(pages.read(self.pages_path), check.rule_sources(self.rules_root))
+        self.assertEqual(st["c.html"], "drafted")
+        self.assertEqual(st["a.html"], "drafted")
+
+
+class ReprocessLoopTests(unittest.TestCase):
+    """Important 5, end to end: adopt, the page changes, coverage names the rule, re-adopt."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_10.yaml").write_text(SA_10, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+        patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def status_and_render(self):
+        from rules_sync import check, coverage
+        reg, sources = pages.read(self.pages_path), check.rule_sources(self.rules_root)
+        st = coverage.statuses(reg, sources)
+        return st, coverage.render(reg, sources, st)
+
+    def test_changed_then_readopted(self):
+        quiet = contextlib.redirect_stdout(io.StringIO())
+        with quiet:
+            self.assertEqual(sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                                      adopt_all=True, today=D1), 0)
+        st, _ = self.status_and_render()
+        self.assertEqual(st["a.html"], "drafted")
+
+        day2 = site()
+        day2[BASE + "a.html"] = _rule("Regel A", "Text A, jetzt anders")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(sync.run(FakeFetcher(day2), self.pages_path, self.rules_root, today=D2), 0)
+        self.assertIn("1 page(s) changed since 2026-09-26", out.getvalue())
+        st, text = self.status_and_render()
+        self.assertEqual(st["a.html"], "changed")
+        self.assertIn("changed:\n  a.html: SA_10\n", text)
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(sync.run(FakeFetcher(day2), self.pages_path, self.rules_root,
+                                      adopt_ids=["SA_10"], today=D2), 0)
+        st, _ = self.status_and_render()
+        self.assertEqual(st["a.html"], "drafted")
+
+
+class RunOutputTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.pages_path = self.dir / "pages.yaml"
+        self.rules_root = self.dir / "rules"
+        self.rules_root.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_a_fatal_crawl_still_prints_the_network_calls(self):
+        fetcher = FakeFetcher(site(with_kat_eins=False))
+        fetcher.network_calls = 7
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(sync.run(fetcher, self.pages_path, self.rules_root, today=D1), 1)
+        self.assertIn("7 network call(s) made", out.getvalue())
+
+    def test_broken_pages_are_one_count_line_fatal_problems_in_full(self):
+        from rules_sync.resolve import CrawledPage, Problem, SiteCrawl
+        crawl = SiteCrawl()
+        crawl.pages[BASE + "x.html"] = CrawledPage(BASE + "x.html", "broken", "X", None, ("K", "X"), "empty")
+        crawl.pages[BASE + "y.html"] = CrawledPage(BASE + "y.html", "broken", "Y", None, ("K", "Y"), "empty")
+        crawl.problems += [Problem(False, BASE + "x.html: empty content container"),
+                           Problem(False, BASE + "y.html: empty content container"),
+                           Problem(False, BASE + "z.html: 404 page missing"),
+                           Problem(True, BASE + "w.html: fetch failed: boom")]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            sync.report(crawl, pages.Registry(), pages.Registry())
+        text = out.getvalue()
+        self.assertIn("2 page(s) with no text (broken)", text)
+        self.assertNotIn("x.html: empty", text)
+        self.assertIn("z.html: 404 page missing", text)
+        self.assertIn("FATAL  " + BASE + "w.html: fetch failed: boom", text)
+
+
 class ReportTests(unittest.TestCase):
     def test_report_does_not_crash_on_an_empty_crawl(self):
         from rules_sync.resolve import SiteCrawl

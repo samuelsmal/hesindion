@@ -7,15 +7,19 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import requests
+
 from rules_sync import check
 
 
 class FakeResponse:
-    def __init__(self, text):
+    def __init__(self, text, status_code=200):
         self.text = text
+        self.status_code = status_code
 
     def raise_for_status(self):
-        pass
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"{self.status_code} error", response=self)
 
 
 class FakeSession:
@@ -77,6 +81,88 @@ class FetcherTests(unittest.TestCase):
         self.assertEqual(f.network_calls, 1)
 
 
+class ScriptedSession:
+    """Answers each GET with the next scripted outcome: an exception instance to raise, or an
+    HTTP status code (200 answers with a page)."""
+
+    def __init__(self, *outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = []
+
+    def get(self, url, headers=None, timeout=None):
+        self.calls.append(url)
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return FakeResponse(f"<html>{url}</html>", status_code=outcome)
+
+
+class RetryTests(unittest.TestCase):
+    """Controller ruling R5: a transient failure is retried, up to three attempts in all, with a
+    growing pause; a page the site says is not there is its own exception; anything else fails."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        patcher = mock.patch.object(check.time, "sleep")
+        self.sleep = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def fetch(self, *outcomes):
+        session = ScriptedSession(*outcomes)
+        fetcher = check.Fetcher(self.dir, session)
+        return fetcher, session
+
+    def test_a_timeout_then_a_page_is_one_network_call(self):
+        f, session = self.fetch(requests.Timeout("slow"), 200)
+        self.assertEqual(f.get("https://x/a.html"), "<html>https://x/a.html</html>")
+        self.assertEqual(len(session.calls), 2)
+        self.assertEqual(f.network_calls, 1, "only a successful fetch counts")
+
+    def test_the_pause_grows_with_the_attempt(self):
+        f, _ = self.fetch(requests.ConnectionError("reset"), 503, 200)
+        f.get("https://x/a.html")
+        self.assertEqual([c.args[0] for c in self.sleep.call_args_list],
+                          [check.DELAY * 1, check.DELAY * 2, check.DELAY * 3])
+
+    def test_5xx_and_429_are_retried(self):
+        for status in (500, 502, 503, 429):
+            with self.subTest(status=status):
+                f, session = self.fetch(status, 200)
+                f.get(f"https://x/{status}.html")
+                self.assertEqual(len(session.calls), 2)
+
+    def test_three_failures_raise_the_last_error_and_count_nothing(self):
+        f, session = self.fetch(requests.Timeout("1"), requests.Timeout("2"), requests.Timeout("3"))
+        with self.assertRaises(requests.Timeout):
+            f.get("https://x/a.html")
+        self.assertEqual(len(session.calls), 3)
+        self.assertEqual(f.network_calls, 0)
+        self.assertFalse(f._cache_path("https://x/a.html").exists())
+
+    def test_three_5xx_raise_an_http_error(self):
+        f, session = self.fetch(503, 503, 503)
+        with self.assertRaises(requests.HTTPError) as ctx:
+            f.get("https://x/a.html")
+        self.assertNotIsInstance(ctx.exception, check.PageMissing)
+        self.assertEqual(len(session.calls), 3)
+
+    def test_404_and_410_are_page_missing_and_not_retried(self):
+        for status in (404, 410):
+            with self.subTest(status=status):
+                f, session = self.fetch(status)
+                with self.assertRaises(check.PageMissing):
+                    f.get(f"https://x/{status}.html")
+                self.assertEqual(len(session.calls), 1)
+                self.assertTrue(issubclass(check.PageMissing, requests.HTTPError))
+
+    def test_another_4xx_fails_at_once(self):
+        f, session = self.fetch(403)
+        with self.assertRaises(requests.HTTPError) as ctx:
+            f.get("https://x/a.html")
+        self.assertNotIsInstance(ctx.exception, check.PageMissing)
+        self.assertEqual(len(session.calls), 1)
+
+
 RULE = """\
 id: SA_1
 name: Beispiel
@@ -100,11 +186,26 @@ class RuleSourceTests(unittest.TestCase):
         (root / "abilities" / "SA_1.yaml").write_text(RULE, encoding="utf-8")
         (root / "abilities" / "SA_2.yaml").write_text("id: SA_2\nclauses: []\n", encoding="utf-8")
         got = check.rule_sources(root)
-        self.assertEqual([(s.rule_id, s.url, s.hash) for s in got], [
-            ("SA_1", "https://dsa.ulisses-regelwiki.de/KSF_Beispiel.html", "sha256:abc"),
-            ("SA_1", "https://dsa.ulisses-regelwiki.de/KSF_Zweit.html", "sha256:abc"),
+        self.assertEqual([(s.rule_id, s.url, s.hash, s.primary) for s in got], [
+            ("SA_1", "https://dsa.ulisses-regelwiki.de/KSF_Beispiel.html", "sha256:abc", True),
+            # An `also` page has no hash of its own: `source.hash` is the primary page's.
+            ("SA_1", "https://dsa.ulisses-regelwiki.de/KSF_Zweit.html", None, False),
         ])
         self.assertTrue(got[0].reviewed)
+        self.assertTrue(got[1].reviewed)
+
+    def test_a_rule_with_only_also_urls_has_no_primary_source(self):
+        root = Path(tempfile.mkdtemp())
+        (root / "abilities").mkdir()
+        (root / "abilities" / "SA_3.yaml").write_text(
+            "id: SA_3\nsource:\n  hash: null\n  also:\n    - { url: https://dsa.ulisses-regelwiki.de/A.html }\n"
+            "clauses: []\n", encoding="utf-8")
+        got = check.rule_sources(root)
+        self.assertEqual([(s.url, s.primary) for s in got],
+                          [("https://dsa.ulisses-regelwiki.de/A.html", False)])
+
+    def test_primary_defaults_to_true_for_existing_callers(self):
+        self.assertTrue(check.RuleSource("R", Path("r.yaml"), "u", None, False).primary)
 
     def test_canonical_url_joins_and_drops_the_fragment(self):
         self.assertEqual(check.canonical_url("KSF_Vorsto%C3%9F.html#x"),

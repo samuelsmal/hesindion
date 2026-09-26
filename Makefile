@@ -222,13 +222,15 @@ test-rules-sync:
 
 # Crawl every page of the rule website into specs/rules/pages.yaml (about one page a second; a
 # first run takes long, a re-run the same day resumes from .cache/). MAX_AGE=0 refetches all.
-# ADOPT=1 writes the page hash into every rule file that has none; ADOPT=SA_40,ADV_4 into those.
+# ADOPT=1 writes the page hash into every rule file that has none; ADOPT=SA_40,ADV_4 into those;
+# ADOPT=0 (or unset) adopts nothing.
 rules-sync:
 	$(RULES_SYNC) -m rules_sync sync $(if $(MAX_AGE),--max-age-hours $(MAX_AGE),) \
-		$(if $(filter 1,$(ADOPT)),--adopt,$(if $(ADOPT),--adopt-ids $(ADOPT),))
+		$(if $(filter 1,$(ADOPT)),--adopt,$(if $(filter-out 0,$(ADOPT)),--adopt-ids $(ADOPT),))
 
 # How many rule-website pages are processed, per category; which rules to reprocess. Offline.
-# LIST=new (or skipped, drafted, …) lists one status's pages; CHECK=1 fails on changed pages.
+# LIST=new (or skipped, drafted, …) lists one status's pages; CHECK=1 fails on changed pages,
+# rules whose page is unknown, and rules on a non-rule page (index, broken or gone).
 rules-coverage:
 	$(RULES_SYNC) -m rules_sync coverage $(if $(LIST),--list $(LIST),) $(if $(CHECK),--check,)
 

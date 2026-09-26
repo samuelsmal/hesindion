@@ -5,7 +5,8 @@ Offline: reads `pages.yaml` and the rule files only, no network access.
 
     make rules-coverage                # the table and the sections
     make rules-coverage LIST=new       # the page keys and titles of one status
-    make rules-coverage CHECK=1        # exit 1 when a page is changed or a rule's page is unknown
+    make rules-coverage CHECK=1        # exit 1 on a changed page, a rule whose page is unknown,
+                                       # or a rule on a non-rule page (index, broken, gone)
 """
 from __future__ import annotations
 
@@ -37,9 +38,11 @@ def status(reg, key, named) -> str:
         return "skipped"
     if not named:
         return "new"
-    if any(s.hash and s.hash != page.get("hash") for s in named):
+    # Only a rule's `source.url` carries a hash; an `also` page is named, never compared.
+    primaries = [s for s in named if s.primary]
+    if any(s.hash and s.hash != page.get("hash") for s in primaries):
         return "changed"
-    if any(s.hash is None for s in named):
+    if any(s.hash is None for s in primaries):
         return "unhashed"
     return "reviewed" if all(s.reviewed for s in named) else "drafted"
 
@@ -64,6 +67,21 @@ def statuses(reg, sources) -> dict:
 def unknown(reg, sources) -> list:
     """The rule sources whose URL key names no page in `reg` at all."""
     return [s for s in sources if pages.key_of(s.url) not in reg.pages]
+
+
+def on_non_rule_page(reg, sources) -> list:
+    """`(rule id, page key, kind)` for every rule source whose page is known but is not a
+    current rule page: `index`, `broken`, or `gone`. Sorted, one line per rule and page."""
+    out = set()
+    for s in sources:
+        key = pages.key_of(s.url)
+        page = reg.pages.get(key)
+        if page is None:
+            continue
+        kind = "gone" if page.get("gone") else page.get("kind")
+        if kind != "rule":
+            out.add((s.rule_id, key, kind))
+    return sorted(out)
 
 
 def _rule_name(source, cache: dict) -> str:
@@ -106,7 +124,8 @@ def render(reg, sources, st: dict) -> str:
         lines.append("\nchanged:")
         for key in changed_keys:
             page = reg.pages[key]
-            ids = sorted({s.rule_id for s in by_key.get(key, []) if s.hash and s.hash != page.get("hash")})
+            ids = sorted({s.rule_id for s in by_key.get(key, [])
+                          if s.primary and s.hash and s.hash != page.get("hash")})
             lines.append(f"  {key}: {', '.join(ids)}")
 
     skipped_with_rules = sorted(k for k, s in st.items() if s == "skipped" and by_key.get(k))
@@ -115,6 +134,12 @@ def render(reg, sources, st: dict) -> str:
         for key in skipped_with_rules:
             ids = sorted({s.rule_id for s in by_key.get(key, [])})
             lines.append(f"  {key}: {', '.join(ids)}")
+
+    wrong_kind = on_non_rule_page(reg, sources)
+    if wrong_kind:
+        lines.append("\nrules on a non-rule page:")
+        for rule_id, key, kind in wrong_kind:
+            lines.append(f"  {rule_id} {key} ({kind})")
 
     unk = unknown(reg, sources)
     if unk:
@@ -148,7 +173,8 @@ def run(pages_path: Path = pages.PATH, rules_root: Path = layout.ROOT, *,
         return 0
 
     print(render(reg, sources, st))
-    if check and (any(s == "changed" for s in st.values()) or unknown(reg, sources)):
+    if check and (any(s == "changed" for s in st.values()) or unknown(reg, sources)
+                  or on_non_rule_page(reg, sources)):
         return 1
     return 0
 
