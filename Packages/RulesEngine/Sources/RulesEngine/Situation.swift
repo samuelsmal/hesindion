@@ -64,6 +64,15 @@ public struct Situation: Codable, Hashable, Sendable {
     /// Fact name → the stated fact.
     public var facts: [String: Fact]
     /// Query string (`at`, `pa(with: shield)`) → the value the sheet states.
+    ///
+    /// The base contract (ADR-0015, ruling R66): a sheet base is the *unfolded* base, the
+    /// technique or sheet value without the item's and the shield's modifiers. The engine adds
+    /// those as lines after the base (at-pa-modifikatoren.M1: "erst nach der Ermittlung der
+    /// Basiswerte"; schilde.SCH1, SCH3; ITEMTPL_29.GR1), so a base with them folded in counts them
+    /// twice. A key `q(with: X)` is the base for `q` while X is the item in hand. The app's sheet
+    /// values today are folded (OptolithImportService adds a weapon's AT/PA-Mod and a shield's
+    /// doubled PA bonus into its AT and PA): a domain that switches to this engine unfolds them
+    /// before handing them in.
     public var base: [String: Int]
     /// The dice, in the order they were rolled.
     public var rolls: [Int]

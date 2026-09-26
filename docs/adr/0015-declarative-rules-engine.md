@@ -53,7 +53,7 @@ not restated:
 
 | Question | Decision |
 |---|---|
-| How rules reach the app | Python (`make rules-db`) validates the YAML and compiles rules and situations to JSON; Swift reads JSON. No YAML parser in the app |
+| How rules reach the app | Python (`rulec`: `make rules-check` validates the YAML, `make rules-json` compiles rules and situations to JSON; the design's table says `make rules-db`, which stays the old engine's target); Swift reads JSON. No YAML parser in the app |
 | When the engine is done | Every situation in examples 1–22 passes, except those resting on an open ruling: those run and are reported *pending*. `appToday` is never tested |
 | How it replaces the old engine | Built and tested beside it, not wired in; screens switch one domain at a time, each switch deleting that domain's old code. Never a union of two engines |
 | Encoding | Declarative: a closed vocabulary of effect verbs on a fixed phase pipeline. A mechanic that does not fit becomes a new verb with an interpreter and a test, never per-rule code |
@@ -88,11 +88,24 @@ at all.
   snapshot and `RuleVocabulary` are deleted outright.
 - **The current state, measured.** `make test-rules-engine` (all situations files) reports
   `harness: 223 passed, 0 failed, 15 pending, 71 conflict, 0 unsupported` over 309 situations
-  (`docs/rules-rework/examples/MIGRATION.md`). The design's done criterion (0 failed, 0
-  unsupported) holds; every pending situation is explained by an open ruling on its path, and
-  every conflict is recorded under that file's "Expectation conflicts for the owner" section for
-  the maintainer to resolve. No domain has switched yet — this is the engine passing its own
-  acceptance suite, not the app's behaviour changing.
+  (`docs/rules-rework/examples/MIGRATION.md`). The design's done criterion (every situation
+  passes, except those resting on an open ruling, which are reported pending) holds except for
+  the 71 conflicts, which wait on the owner's decisions (ruling R60): situations whose expectation
+  the engine, following the rule text, does not meet, each recorded with its reasoning under that
+  file's "Expectation conflicts for the owner" section in three categories (ruling R77): (a) the
+  expectation is wrong per the rule text, 52; (b) an input convention, a sheet base with the item
+  and shield modifiers folded in (R66, see the base contract below), 16; (c) rule data not
+  written, 3. Nothing fails and nothing is unsupported; every pending situation is explained by an
+  open ruling on its path. Each conflict's mismatches are recorded as fingerprints
+  (`conflict-fingerprints.json`, ruling R78), so a new mismatch inside a listed situation still
+  fails. No domain has switched yet — this is the engine passing its own acceptance suite, not the
+  app's behaviour changing.
+- **The base contract.** A sheet base handed to the engine (`Situation.base`) is the unfolded
+  base: the technique or sheet value without the item's and the shield's modifiers, which the
+  engine adds as lines after it (ruling R66; at-pa-modifikatoren.M1: "erst nach der Ermittlung der
+  Basiswerte"). The app's current sheet values are folded (`OptolithImportService` adds a weapon's
+  AT/PA-Mod and a shield's doubled PA bonus into the AT and PA it stores), so a domain that
+  switches must hand the engine the unfolded values, not the ones the sheet shows today.
 - **The vocabulary is closed, not merely reviewed.** A new verb, target, fact, payload field or
   reason code is added in one change to `specs/rules/vocabulary.json` **and**
   `Packages/RulesEngine/Sources/RulesEngine/Vocabulary.swift`, with a `rulec` test and (for a verb)
