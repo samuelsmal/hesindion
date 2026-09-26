@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-Passierschlag.html
   book: Regelwerk
   page: 237
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:0c6fe27eff2f7b6cfe599521974b0483ec10570ba216ef5c23bbe68f77f6bf29
 reviewed: null
 # Also Kodex des Schwertes p. 74. The Passierschlag is struck by whoever is *given* one; the
 # hero strikes one (an attack of ours) or suffers one (damage on our side, no defence).

@@ -13,8 +13,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Nahkampf/parierwaffen-und-schilde.html
   book: Regelwerk (4. Auflage)
   page: 231
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:d57f6601200c9a6a3b93e868559b80c2dcd65134066f1cd35e94789741d090ce
 reviewed: null
 
 clauses:

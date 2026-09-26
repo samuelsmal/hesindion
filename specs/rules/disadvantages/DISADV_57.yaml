@@ -6,8 +6,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/nachteil.html?nachteil=Verweichlicht
   book: Aventurisches Kompendium
   page: 133
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:f0c75fc9ded92a5e5d621484ecb27e2003225c72439dc10d63e3f35ee3ceb2eb
 reviewed: null
 
 clauses:

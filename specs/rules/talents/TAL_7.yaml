@@ -11,8 +11,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/talent.html?talent=Schwimmen
   book: Regelwerk
   page: 188
-  checked: 2026-09-25
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:cfa08303c95d79bde744dd044cf6cb35209a24e7ff6a6349a715b6b522bc7070
 reviewed: null
 
 clauses:

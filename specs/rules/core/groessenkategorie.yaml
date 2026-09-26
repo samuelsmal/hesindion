@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/groessenkategorie.html
   book: Regelwerk
   page: 239
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:237ef9b12535fae5699e27e64568d59da9fb9e0ab6bc8488f518fd4cb5c481e4
 reviewed: null
 # Also Kodex des Schwertes p. 76. A melee rule. The ranged target-size modifier is a separate
 # rule (fernkampf.zielgroesse — not drafted; RangedModifiers.groesse in the app); the
