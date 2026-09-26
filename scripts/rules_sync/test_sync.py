@@ -3,7 +3,10 @@
 Reuses `FakeFetcher`, `BASE`, `_index` and `_rule` from `test_resolve.py` rather than building a
 fake site from scratch.
 """
+import contextlib
 import datetime
+import io
+import os
 import shutil
 import tempfile
 import unittest
@@ -60,6 +63,31 @@ source:
 clauses: []
 """
 
+# No `source.url` at all -- only an `also[].url`. `check.rule_sources` still yields one
+# `RuleSource` for this rule (the `also` entry), which must never be mistaken for a primary
+# source and adopted into `source.hash`.
+SA_40_NO_PRIMARY = """\
+id: SA_40
+name: Platzhalter Vierzig
+kind: specialAbility
+source:
+  hash: null
+  also:
+    - { url: https://dsa.ulisses-regelwiki.de/a.html }
+clauses: []
+"""
+
+# source.url points at an index page, not a rule page.
+SA_50_INDEX_SOURCE = """\
+id: SA_50
+name: Platzhalter Fünfzig
+kind: specialAbility
+source:
+  url: https://dsa.ulisses-regelwiki.de/kat_eins.html
+  hash: null
+clauses: []
+"""
+
 
 def site(with_kat_eins=True):
     out = {
@@ -111,6 +139,19 @@ class SyncTests(unittest.TestCase):
         after = (self.rules_root / "abilities" / "SA_1.yaml").read_text(encoding="utf-8")
         self.assertEqual(before, after)
 
+    def test_adopt_ids_readopts_a_rule_that_already_has_a_hash(self):
+        status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                           adopt_ids=["SA_1"], today=D1)
+        self.assertEqual(status, 0)
+        reg = pages.read(self.pages_path)
+        b_hash = reg.pages["b.html"]["hash"]
+        self.assertNotEqual(b_hash, "sha256:existing")
+        got = (self.rules_root / "abilities" / "SA_1.yaml").read_text(encoding="utf-8")
+        self.assertIn(f"hash: {b_hash}", got)
+        self.assertNotIn("sha256:existing", got)
+        self.assertIn("checked: 2026-09-26", got)
+        self.assertNotIn("checked: 2026-01-01", got)
+
     def test_adopt_ids_for_an_unknown_id_returns_1_and_adopts_nothing(self):
         status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
                            adopt_ids=["SA_9"], today=D1)
@@ -135,6 +176,7 @@ class AdoptRefusesAnUneditableSourceTests(unittest.TestCase):
         self.rules_root = self.dir / "rules"
         (self.rules_root / "abilities").mkdir(parents=True)
         (self.rules_root / "abilities" / "SA_20.yaml").write_text(SA_20_FLOW, encoding="utf-8")
+        (self.rules_root / "abilities" / "SA_10.yaml").write_text(SA_10, encoding="utf-8")
         self.pages_path = self.dir / "pages.yaml"
         patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
         patcher.start()
@@ -143,12 +185,114 @@ class AdoptRefusesAnUneditableSourceTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)
 
-    def test_a_flow_style_source_is_refused_reported_and_does_not_stop_the_run(self):
+    def test_a_flow_style_source_is_refused_but_a_good_rule_in_the_same_run_still_adopts(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                               adopt_all=True, today=D1)
+        self.assertEqual(status, 1)
+        text = out.getvalue()
+        self.assertIn("cannot adopt SA_20:", text)
+        self.assertEqual(text.count("adopted SA_10 ← a.html"), 1)
+        got20 = (self.rules_root / "abilities" / "SA_20.yaml").read_text(encoding="utf-8")
+        self.assertEqual(got20, SA_20_FLOW, "the unwritable file is left exactly as it was")
+        got10 = (self.rules_root / "abilities" / "SA_10.yaml").read_text(encoding="utf-8")
+        self.assertNotIn("hash: null", got10)
+
+
+class AdoptWithoutPatchingRulefilesRootTests(unittest.TestCase):
+    """Regression: `set_source_hash(s.path.relative_to(rulefiles.ROOT), ...)` raised `ValueError`
+    whenever `rules_root` did not equal `rulefiles.ROOT` -- including the ordinary case where
+    nothing patches `rulefiles.ROOT` away from the real `specs/rules`, or `--rules-root` names the
+    same directory but spelled relatively. `s.path.resolve()` sidesteps both: an absolute path on
+    the right of `ROOT / path` wins outright."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_10.yaml").write_text(SA_10, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_adopt_works_with_an_unpatched_rulefiles_root(self):
+        self.assertNotEqual(rulefiles.ROOT, self.rules_root,
+                             "this test is only meaningful when ROOT is left unpatched")
         status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
                            adopt_all=True, today=D1)
+        self.assertEqual(status, 0)
+        got = (self.rules_root / "abilities" / "SA_10.yaml").read_text(encoding="utf-8")
+        self.assertNotIn("hash: null", got)
+
+    def test_adopt_works_with_a_relative_rules_root(self):
+        rel = Path(os.path.relpath(self.rules_root, Path.cwd()))
+        status = sync.run(FakeFetcher(site()), self.pages_path, rel, adopt_all=True, today=D1)
+        self.assertEqual(status, 0)
+        got = (self.rules_root / "abilities" / "SA_10.yaml").read_text(encoding="utf-8")
+        self.assertNotIn("hash: null", got)
+
+
+class AdoptSkipsARuleWithNoPrimarySourceTests(unittest.TestCase):
+    """A rule file with no `source.url` -- only `also[].url` -- must never have an also-page's
+    hash written into `source.hash`: `--adopt` skips it silently, `--adopt-ids` reports it and
+    fails the run."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_40.yaml").write_text(SA_40_NO_PRIMARY, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+        patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_adopt_all_skips_it_silently(self):
+        status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                           adopt_all=True, today=D1)
+        self.assertEqual(status, 0)
+        got = (self.rules_root / "abilities" / "SA_40.yaml").read_text(encoding="utf-8")
+        self.assertEqual(got, SA_40_NO_PRIMARY)
+
+    def test_adopt_ids_reports_it_and_writes_nothing(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                               adopt_ids=["SA_40"], today=D1)
         self.assertEqual(status, 1)
-        got = (self.rules_root / "abilities" / "SA_20.yaml").read_text(encoding="utf-8")
-        self.assertEqual(got, SA_20_FLOW, "the unwritable file is left exactly as it was")
+        self.assertIn("cannot adopt SA_40: no source.url", out.getvalue())
+        got = (self.rules_root / "abilities" / "SA_40.yaml").read_text(encoding="utf-8")
+        self.assertEqual(got, SA_40_NO_PRIMARY)
+
+
+class AdoptIdsWhosePageIsNotARuleTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_50.yaml").write_text(SA_50_INDEX_SOURCE, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+        patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_a_named_id_whose_page_is_an_index_returns_1_and_writes_nothing(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                               adopt_ids=["SA_50"], today=D1)
+        self.assertEqual(status, 1)
+        self.assertIn("is not a current rule page", out.getvalue())
+        got = (self.rules_root / "abilities" / "SA_50.yaml").read_text(encoding="utf-8")
+        self.assertEqual(got, SA_50_INDEX_SOURCE)
 
 
 class AdoptFromSourceUrlOnlyTests(unittest.TestCase):
@@ -184,6 +328,15 @@ class ReportTests(unittest.TestCase):
     def test_report_does_not_crash_on_an_empty_crawl(self):
         from rules_sync.resolve import SiteCrawl
         sync.report(SiteCrawl(), pages.Registry(), pages.Registry())
+
+    def test_a_first_sync_says_so_instead_of_since_none(self):
+        from rules_sync.resolve import SiteCrawl
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            sync.report(SiteCrawl(), pages.Registry(synced=None), pages.Registry())
+        text = out.getvalue()
+        self.assertIn("first sync", text)
+        self.assertNotIn("since None", text)
 
 
 if __name__ == "__main__":

@@ -13,9 +13,27 @@ import datetime
 import sys
 from pathlib import Path
 
+import yaml
+
 from rulec import layout
 from rules_review import rulefiles
 from rules_sync import check, pages, resolve
+
+
+def _primary_source_url(path) -> "str | None":
+    """The file's own `source.url`, canonicalised -- `None` when it has none.
+
+    `check.rule_sources` yields `source.url` first and only falls back to `also[].url` entries
+    when there is no `source.url` at all (`filter(None, urls)` drops the missing primary). That
+    makes the *first* `RuleSource` for a rule id indistinguishable from an `also` entry by shape
+    alone, so `adopt` re-reads the file's own `source.url` here and compares it against the
+    candidate's URL rather than trust the URL is the primary one.
+    """
+    doc = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    if not isinstance(doc, dict):
+        return None
+    url = (doc.get("source") or {}).get("url")
+    return check.canonical_url(str(url)) if url else None
 
 
 def adopt(reg, sources, ids, all_null, today) -> int:
@@ -26,6 +44,13 @@ def adopt(reg, sources, ids, all_null, today) -> int:
     for rule_id, s in sorted(firsts.items()):
         if not (all_null and s.hash is None) and rule_id not in ids:
             continue
+        if _primary_source_url(s.path) != s.url:
+            # No `source.url` on this rule -- the candidate above is an `also[].url` entry
+            # standing in for it, and must never be written into `source.hash`.
+            if rule_id in ids:
+                print(f"cannot adopt {rule_id}: no source.url")
+                status = 1
+            continue
         page = reg.pages.get(pages.key_of(s.url))
         if not page or page.get("kind") != "rule" or page.get("gone"):
             if rule_id in ids:
@@ -33,7 +58,11 @@ def adopt(reg, sources, ids, all_null, today) -> int:
                 status = 1
             continue
         try:
-            rulefiles.set_source_hash(s.path.relative_to(rulefiles.ROOT), page["hash"], today)
+            # An absolute, resolved path: `set_source_hash` does `ROOT / path`, and an absolute
+            # right-hand side wins outright, so this is correct whether or not `rulefiles.ROOT`
+            # happens to equal `rules_root` -- `s.path.relative_to(rulefiles.ROOT)` raised
+            # `ValueError` whenever `--rules-root` pointed elsewhere.
+            rulefiles.set_source_hash(s.path.resolve(), page["hash"], today)
         except rulefiles.EditRefused as exc:
             print(f"cannot adopt {rule_id}: {exc}")
             status = 1
@@ -52,6 +81,9 @@ def report(crawl, old, new) -> None:
               f"{counts[top, 'broken']:>3} broken")
     for p in crawl.problems:
         print(p)
+    if old.synced is None:
+        print("\nfirst sync")
+        return
     changed = [k for k, e in new.pages.items()
                if e.get("hash") and old.pages.get(k, {}).get("hash") not in (None, e["hash"])]
     print(f"\n{len(changed)} page(s) changed since {old.synced}")
