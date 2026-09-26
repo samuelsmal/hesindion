@@ -2,13 +2,16 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Paths moved on 2026-09-26 (ADR-0015, "Where the rules live").** The steps below keep the paths
-> they were written with. Read them as: `docs/rules-rework/examples/rules/<x>` → `specs/rules/<x>`;
-> `docs/rules-rework/examples/{situations,sweeps,checks.yaml,RULINGS.md,MIGRATION.md,conflict-fingerprints.json,README.md}`
-> → `specs/rules/…`; `docs/rules-rework/examples/{review,rulefiles,rulings,test_rulefiles}.py` →
-> `scripts/rules_review/…`; `docs/sample_heros/` → `specs/heroes/`. The write-ups (`<example>.md`) stay
-> in `docs/rules-rework/examples/`. A rule path in `MIGRATION.md` or `RULINGS.md` no longer starts
-> with `rules/`.
+> **Paths moved on 2026-09-26 (ADR-0015, "Where the rules live").** The paths in this plan and in
+> its `.tasks.json` are updated to the new layout: the rule folders and `rulings.yaml` sit directly in
+> `specs/rules/`, beside `situations/`, `sweeps/`, `checks.yaml`, `RULINGS.md`, `MIGRATION.md`,
+> `conflict-fingerprints.json` and `README.md`; the review tools are in `scripts/rules_review/`; the
+> sample heroes are in `specs/heroes/`. So a glob `specs/rules/**/*.yaml` now also matches the
+> situations: `scripts/rulec/layout.py`'s `rule_files()` is the list of rule files. A rule path in
+> `MIGRATION.md` or `RULINGS.md` no longer starts with `rules/`. The plain-words write-ups
+> (`<example>.md`) stay in `docs/rules-rework/examples/`. The dated sheet
+> `Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` that early tasks name is now the default
+> `specs/heroes/Boronmir Siebenfeld von Greifenfurt.json`. All tasks of this plan are done.
 
 **Goal:** Build the new rules engine beside the old one: a closed rule vocabulary, the `rulec`
 compiler from YAML to JSON, every draft rule and situation moved into that vocabulary, and a
@@ -16,7 +19,7 @@ pure Swift engine (evaluator, checks as staged procedures, state over time, the 
 export) that passes every decided situation of examples 1–22.
 
 **Architecture:** `specs/rules/vocabulary.json` is the one contract. `scripts/rulec/` (Python)
-validates `docs/rules-rework/examples/rules/**` and `situations/*.yaml` against it and writes
+validates `specs/rules/**` and `situations/*.yaml` against it and writes
 `build/rules/rules.json` and `build/rules/situations.json`. A local Swift package
 `Packages/RulesEngine` (no SwiftData, no UIKit) decodes them and answers
 `(Query, Situation) → Breakdown` and `(Action, Situation) → [Event]`; its XCTest harness runs
@@ -27,7 +30,7 @@ every compiled situation. Nothing in the app target changes: wiring a domain in 
 migration), Swift 6.3 Swift Package (`swift test` on macOS, XCTest), Make.
 
 **Spec:** `docs/plans/2026-09-24-rules-engine-design.md` (§ numbers below refer to it). The
-worked examples in `docs/rules-rework/examples/` and their `README.md` are the acceptance data.
+worked examples in `specs/rules/` and their `README.md` are the acceptance data.
 
 ## Global Constraints
 
@@ -49,7 +52,7 @@ worked examples in `docs/rules-rework/examples/` and their `README.md` are the a
   is a pure re-keying that §10.1 prescribes (e.g. `pa_shield` → `pa(with: shield)`).
 - **`reviewed`.** A mechanical re-encoding keeps a rule's `reviewed`. A hand edit that changes
   what a clause *does* (another number, target, condition, or an effect dropped or added) sets
-  that rule's `reviewed: null` and adds a line to `docs/rules-rework/examples/MIGRATION.md`.
+  that rule's `reviewed: null` and adds a line to `specs/rules/MIGRATION.md`.
 - **Open rulings apply nothing (§4.7).** Never encode an open ruling's recommended option as if
   it were decided. The 13 open rulings stay open.
 - Python runs through `uv`: `uv run --with pyyaml --with ruamel.yaml python …`. The rulec
@@ -105,16 +108,16 @@ worked examples in `docs/rules-rework/examples/` and their `README.md` are the a
 migration's diff shows only the migration.
 
 **Files:**
-- Commit (already on disk): everything under `docs/rules-rework/examples/` that `git status` shows as modified or untracked
-- Commit: `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` (untracked; the situations' hero file)
-- Do **not** commit: `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json` (the user's own edit, not ours)
+- Commit (already on disk): everything under `specs/rules/` that `git status` shows as modified or untracked
+- Commit: `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` (untracked; the situations' hero file)
+- Do **not** commit: `specs/heroes/Boronmir Siebenfeld von Greifenfurt.json` (the user's own edit, not ours)
 
 **Acceptance Criteria:**
 - [ ] `make test-rules-review` passes: the unit tests pass and `rulings.py --check` reports RULINGS.md current.
-- [ ] `git status --porcelain docs/rules-rework/examples` prints nothing.
+- [ ] `git status --porcelain specs/rules` prints nothing.
 - [ ] The undated Boronmir file is still modified and uncommitted.
 
-**Verify:** `make test-rules-review && git status --porcelain docs/rules-rework/examples | wc -l` → tests OK, `0`
+**Verify:** `make test-rules-review && git status --porcelain specs/rules | wc -l` → tests OK, `0`
 
 **Steps:**
 
@@ -122,14 +125,14 @@ migration's diff shows only the migration.
 
 Run: `make test-rules-review`
 Expected: `OK` from unittest, then no output from `rulings.py --check` (exit 0). If `--check`
-fails because RULINGS.md is stale, run `uv run --with pyyaml python docs/rules-rework/examples/rulings.py`
+fails because RULINGS.md is stale, run `uv run --with pyyaml python scripts/rules_review/rulings.py`
 and re-run.
 
 - [ ] **Step 2: Commit**
 
 ```bash
-git add docs/rules-rework/examples "docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
-git commit docs/rules-rework/examples "docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json" -m "docs(rules): examples 19–22 and examples 14–18 on Boronmir's 2026-09-24 values
+git add specs/rules "specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+git commit specs/rules "specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json" -m "docs(rules): examples 19–22 and examples 14–18 on Boronmir's 2026-09-24 values
 
 Example 19 covers Formation, Eisern and Schlechte Eigenschaft. Examples 20–22 probe magic,
 ranged combat and talent checks. Examples 14–18 move to his new sheet.
@@ -1093,8 +1096,8 @@ is committed on its own, so that the diff is the mechanical part only.
 
 **Files:**
 - Create: `scripts/rulec/migrate.py`, `scripts/rulec/test_migrate.py`
-- Create (generated): `docs/rules-rework/examples/MIGRATION.md`
-- Modify (generated): every `docs/rules-rework/examples/rules/**/*.yaml` and `situations/*.yaml`
+- Create (generated): `specs/rules/MIGRATION.md`
+- Modify (generated): every `specs/rules/**/*.yaml` and `situations/*.yaml`
 
 **Acceptance Criteria:**
 - [ ] The script uses ruamel.yaml in round-trip mode (`typ="rt"`, `preserve_quotes=True`, `width=100`, mapping indent 2, sequence indent 4, offset 2), so comments survive. A test migrates a snippet with a `# FORMAT:` comment on an effect and finds the comment in the output.
@@ -1104,7 +1107,7 @@ is committed on its own, so that the diff is the mechanical part only.
 - [ ] The script is idempotent: running it twice leaves the files unchanged the second time. A test checks this.
 - [ ] Every rule's `reviewed` value is byte-identical before and after. A test checks this over the real files, using a copy in a temp dir.
 
-**Verify:** `uv run --with pyyaml --with ruamel.yaml python -m unittest discover -s scripts/rulec -t scripts -p 'test_migrate.py' -v` → OK; then `git diff --stat docs/rules-rework/examples | tail -1` shows ~90 files changed
+**Verify:** `uv run --with pyyaml --with ruamel.yaml python -m unittest discover -s scripts/rulec -t scripts -p 'test_migrate.py' -v` → OK; then `git diff --stat specs/rules | tail -1` shows ~90 files changed
 
 **Mechanical map** (the right-hand column of spec §4.3 where the payload maps one to one; everything else is residue):
 
@@ -1178,15 +1181,15 @@ is committed on its own, so that the diff is the mechanical part only.
 - [ ] **Step 5: Run it on the examples and look at the result**
 
 ```bash
-cd scripts && uv run --with pyyaml --with ruamel.yaml python -m rulec.migrate ../docs/rules-rework/examples
-git diff --stat ../docs/rules-rework/examples | tail -1
-grep -c '^- \[ \]' ../docs/rules-rework/examples/MIGRATION.md
+cd scripts && uv run --with pyyaml --with ruamel.yaml python -m rulec.migrate ../specs/rules
+git diff --stat ../specs/rules | tail -1
+grep -c '^- \[ \]' ../specs/rules/MIGRATION.md
 ```
 
 Read `git diff` for three files: `SA_862.yaml`, `kampfwerte.yaml` and `situations/boronmir-neu.yaml`.
 Check that the comments and the folded `text: >` blocks are unchanged, and that only mapped keys
 moved. If ruamel reflowed a folded block, set `yaml.width = 4096` and re-run from a clean
-checkout (`git checkout -- docs/rules-rework/examples`).
+checkout (`git checkout -- specs/rules`).
 
 - [ ] **Step 6: Commit the tool, then the rewrite, as two commits**
 
@@ -1195,8 +1198,8 @@ git add scripts/rulec/migrate.py scripts/rulec/test_migrate.py
 git commit scripts/rulec/migrate.py scripts/rulec/test_migrate.py -m "feat(rulec): migrate.py, the old→new key table
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
-git add docs/rules-rework/examples
-git commit docs/rules-rework/examples -m "docs(rules): mechanical move of the draft files to the engine's vocabulary
+git add specs/rules
+git commit specs/rules -m "docs(rules): mechanical move of the draft files to the engine's vocabulary
 
 Generated by scripts/rulec/migrate.py. MIGRATION.md lists what is left for hand edits.
 
@@ -1208,8 +1211,8 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ### Tasks 8–15: the hand edits, one domain group each
 
 Each of these eight tasks has the same shape. They differ only in their files, listed per
-task below. Rule paths are relative to `docs/rules-rework/examples/rules/` and situations to
-`docs/rules-rework/examples/situations/`, all with the `.yaml` extension. Before starting one, read **Appendix A: Residue guide** at the end of this plan.
+task below. Rule paths are relative to `specs/rules/` and situations to
+`specs/rules/situations/`, all with the `.yaml` extension. Before starting one, read **Appendix A: Residue guide** at the end of this plan.
 
 **Goal (each task):** Every residue item in `MIGRATION.md` for the group's files is resolved.
 `make rules-check` reports no error in those files, and every clause keeps its verbatim text.
@@ -1230,14 +1233,14 @@ task below. Rule paths are relative to `docs/rules-rework/examples/rules/` and s
 
 **Steps (each task):**
 
-- [ ] **Step 1:** List the group's residue: `grep -n -A200 '^## <file>' docs/rules-rework/examples/MIGRATION.md`, one file at a time.
+- [ ] **Step 1:** List the group's residue: `grep -n -A200 '^## <file>' specs/rules/MIGRATION.md`, one file at a time.
 - [ ] **Step 2:** For each item, find its pattern in Appendix A and re-encode it. When no pattern fits, add a vocabulary entry: a new target, fact, payload field or selector kind is allowed. **A new verb is not allowed**: the verb list is fixed (spec §4.3). If an item truly fits no verb, stop and report it.
 - [ ] **Step 3:** Run `rulec check --only …` and fix until `ok`.
 - [ ] **Step 4:** Walk each situation of the group and compare it with its old version (`git show HEAD~N:<path>`): same queries, same numbers, same cited clauses.
 - [ ] **Step 5:** Commit the group's files, `MIGRATION.md`, and the vocabulary and tests if they changed:
 
 ```bash
-git commit docs/rules-rework/examples specs/rules scripts/rulec -m "docs(rules): hand-migrate <group>
+git commit specs/rules specs/rules scripts/rulec -m "docs(rules): hand-migrate <group>
 
 Vocabulary: <additions or 'none'>. Reviews reset: <RULE.CLAUSE list or 'none'>.
 Newly drafted: <rule files or 'none'>.
@@ -1322,14 +1325,14 @@ across rounds.
 all 22 examples (spec §10.3 step 2).
 
 **Files:**
-- Modify: `docs/rules-rework/examples/MIGRATION.md` (final counts)
+- Modify: `specs/rules/MIGRATION.md` (final counts)
 
 **Acceptance Criteria:**
 - [ ] `make rules-check` prints `ok: R rules, C clauses, E effects` and exits 0.
 - [ ] `make rules-json` writes both files. `situations.json` holds 303 or more situations, and the number of pending ones is printed.
-- [ ] `grep -c '^- \[ \]' docs/rules-rework/examples/MIGRATION.md` → `0`.
+- [ ] `grep -c '^- \[ \]' specs/rules/MIGRATION.md` → `0`.
 - [ ] A new test, `test_examples.py`, runs `rules.check` and `situations.check` over the real examples and asserts no errors. From here on, `make test-rulec` guards the migrated files.
-- [ ] `grep -rnE '^\s*[a-z]+_[a-z_]+:' docs/rules-rework/examples/rules docs/rules-rework/examples/situations` finds no key, only prose.
+- [ ] `grep -rnE '^\s*[a-z]+_[a-z_]+:' specs/rules specs/rules/situations` finds no key, only prose.
 
 **Verify:** `make test-rulec && make rules-json` → OK, `wrote … (S situations, P pending)`
 
@@ -1359,7 +1362,7 @@ class TheExamplesCompile(unittest.TestCase):
 
 ```bash
 git add scripts/rulec/test_examples.py
-git commit scripts/rulec/test_examples.py docs/rules-rework/examples/MIGRATION.md -m "test(rulec): every example rule and situation compiles
+git commit scripts/rulec/test_examples.py specs/rules/MIGRATION.md -m "test(rulec): every example rule and situation compiles
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
@@ -1373,15 +1376,15 @@ migrated files. The three edits the tool makes (`reviewed`, `answer`, `agentPass
 one-hunk diffs.
 
 **Files:**
-- Modify: `docs/rules-rework/examples/rulefiles.py`: `agent_pass` → `agentPass` (the key read at l.88 and written at l.424/431/435), `app_today` → `appToday` (l.61, 66, 225, 234). A clause now counts as encoded when it has `effects`, and as "nothing to do" when it has `none` or `unencoded`, where before it had `effects: none`. See `Clause.encoded` at l.34.
-- Modify: `docs/rules-rework/examples/review.py`: `why_recommended` → `whyRecommended` (l.202–203, 299–300); `app_today` → `appToday` (l.217); clause display shows `none:` and `unencoded:` reasons
-- Modify: `docs/rules-rework/examples/rulings.py`: `why_recommended` → `whyRecommended` (l.95–96)
-- Modify: `docs/rules-rework/examples/test_rulefiles.py`: fixtures in the new format
-- Modify: `docs/rules-rework/examples/sweeps/boronmir.yaml`: only if a key in it changed; the sweep keys `skip`, `rules`, `hero` stay
+- Modify: `scripts/rules_review/rulefiles.py`: `agent_pass` → `agentPass` (the key read at l.88 and written at l.424/431/435), `app_today` → `appToday` (l.61, 66, 225, 234). A clause now counts as encoded when it has `effects`, and as "nothing to do" when it has `none` or `unencoded`, where before it had `effects: none`. See `Clause.encoded` at l.34.
+- Modify: `scripts/rules_review/review.py`: `why_recommended` → `whyRecommended` (l.202–203, 299–300); `app_today` → `appToday` (l.217); clause display shows `none:` and `unencoded:` reasons
+- Modify: `scripts/rules_review/rulings.py`: `why_recommended` → `whyRecommended` (l.95–96)
+- Modify: `scripts/rules_review/test_rulefiles.py`: fixtures in the new format
+- Modify: `specs/rules/sweeps/boronmir.yaml`: only if a key in it changed; the sweep keys `skip`, `rules`, `hero` stay
 
 **Acceptance Criteria:**
 - [ ] `make test-rules-review` passes.
-- [ ] `make rules-sweep SWEEP=boronmir` lists the same rules, with 0 not drafted, as it did before the migration. For the baseline, unpack the examples at Task 7's parent commit into the scratchpad (`git archive <sha> docs/rules-rework/examples | tar -x -C <scratchpad>/before`) and run its `review.py --sweep boronmir --list` there. Diff the two rule lists.
+- [ ] `make rules-sweep SWEEP=boronmir` lists the same rules, with 0 not drafted, as it did before the migration. For the baseline, unpack the examples at Task 7's parent commit into the scratchpad (`git archive <sha> docs/rules-rework/examples | tar -x -C <scratchpad>/before`) — the old path on purpose: that commit is from before the 2026-09-26 move — and run its `review.py --sweep boronmir --list` there. Diff the two rule lists.
 - [ ] A test marks a rule reviewed, answers a ruling and sets `agentPass` on a migrated fixture. Each edit gives a one-hunk diff, and the file still passes `rulec check`.
 
 **Verify:** `make test-rules-review && make rules-sweep SWEEP=boronmir | tail -3` → OK, and the same summary line as before
@@ -1393,7 +1396,7 @@ one-hunk diffs.
 - [ ] **Step 4: Commit**
 
 ```bash
-git commit docs/rules-rework/examples/rulefiles.py docs/rules-rework/examples/review.py docs/rules-rework/examples/rulings.py docs/rules-rework/examples/test_rulefiles.py docs/rules-rework/examples/sweeps -m "feat(rules-review): read and write the engine's vocabulary
+git commit scripts/rules_review/rulefiles.py scripts/rules_review/review.py scripts/rules_review/rulings.py scripts/rules_review/test_rulefiles.py specs/rules/sweeps -m "feat(rules-review): read and write the engine's vocabulary
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
@@ -1406,8 +1409,8 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 new rules in it. RULINGS.md is regenerated.
 
 **Files:**
-- Modify: `docs/rules-rework/examples/README.md`: section "Layout of the draft rule files" (l.21–41) rewritten; "What waits for an agent" (l.109–124) says to run `make rules-check` after every edit
-- Modify (generated): `docs/rules-rework/examples/RULINGS.md`
+- Modify: `specs/rules/README.md`: section "Layout of the draft rule files" (l.21–41) rewritten; "What waits for an agent" (l.109–124) says to run `make rules-check` after every edit
+- Modify (generated): `specs/rules/RULINGS.md`
 
 **Acceptance Criteria:**
 - [ ] The layout section shows spec §4.1's file header, and the rule that a clause has exactly one of `effects` / `unencoded` / `none`. It gives the verb table of §4.3 with one example each, taken from a real migrated clause (e.g. `SA_862.F2` for `add`, `COND_6` for `useLevel`). It covers the four value forms, facts and their owners, and the rule that the vocabulary is closed. It links `specs/rules/vocabulary.json` and the design.
@@ -1417,12 +1420,12 @@ new rules in it. RULINGS.md is regenerated.
 **Verify:** `make test-rules-review` → OK
 
 **Steps:**
-- [ ] **Step 1:** Rewrite the two sections, then regenerate RULINGS.md: `uv run --with pyyaml python docs/rules-rework/examples/rulings.py`.
+- [ ] **Step 1:** Rewrite the two sections, then regenerate RULINGS.md: `uv run --with pyyaml python scripts/rules_review/rulings.py`.
 - [ ] **Step 2:** Run `make test-rules-review`.
 - [ ] **Step 3: Commit**
 
 ```bash
-git commit docs/rules-rework/examples/README.md docs/rules-rework/examples/RULINGS.md -m "docs(rules): the examples README describes the engine's rule format
+git commit specs/rules/README.md specs/rules/RULINGS.md -m "docs(rules): the examples README describes the engine's rule format
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
@@ -2304,7 +2307,7 @@ rulings passes. The pending ones are listed with their rulings, and none is unsu
 - [ ] **Step 5:** Commit with the summaries in the message:
 
 ```bash
-git commit Packages/RulesEngine specs/rules scripts/rulec docs/rules-rework/examples -m "feat(engine): <domain> situations pass
+git commit Packages/RulesEngine specs/rules scripts/rulec specs/rules -m "feat(engine): <domain> situations pass
 
 Before: harness: … After: harness: … Pending: <id (ruling), …>
 
@@ -2340,7 +2343,7 @@ engine package.
 **Files:**
 - Create: `docs/adr/0015-declarative-rules-engine.md` (format of `docs/adr/0000-template.md`)
 - Modify: `docs/adr/0012-rule-website-as-single-rule-source.md`, `0013-rules-as-data-combat-engine.md`, `0014-rule-provenance-and-rule-sets.md` (status line → "Superseded by ADR-0015")
-- Modify: `AGENTS.md`: the commands block (l.22–23: add `make rules-check`, `make rules-json`, `make test-rulec`, `make test-rules-engine`), and the rules-catalog paragraph (l.103). That paragraph gets a new first sentence: the new engine is `Packages/RulesEngine` fed by `rulec` from `docs/rules-rework/examples/`; domains switch over per the design's §9; until a domain has switched, the catalog paragraph that follows still describes it.
+- Modify: `AGENTS.md`: the commands block (l.22–23: add `make rules-check`, `make rules-json`, `make test-rulec`, `make test-rules-engine`), and the rules-catalog paragraph (l.103). That paragraph gets a new first sentence: the new engine is `Packages/RulesEngine` fed by `rulec` from `specs/rules/`; domains switch over per the design's §9; until a domain has switched, the catalog paragraph that follows still describes it.
 - Modify: `CHANGELOG.md` `[Unreleased]` → `Added`: "A new rules engine, built beside the old one and not yet used by any screen, …"
 
 **Acceptance Criteria:**
