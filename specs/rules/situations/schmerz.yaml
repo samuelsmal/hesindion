@@ -60,6 +60,25 @@ situations:
         expect:
           events: [{ gained: STATE_8, from: COND_6.SZ5 }]   # Handlungsunfähig
     appToday: Handlungsunfähig outright, no check offered; GS 8 — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/schmerz.yaml S3 (Task 33): expects COND_6.SZ2's Selbstbeherrschung check
+        `offered` (`{ check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit
+        bewahren }, before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check
+        }`, the old `requires_check`). The page (Regelwerk p. 34, Schmerz) says "Um trotz
+        immenser Schmerzen (Stufe IV) handlungsfähig zu bleiben, ist eine Probe auf
+        Selbstbeherrschung (Handlungsfähigkeit bewahren) nötig", and the decided ruling
+        schmerz-iv-check has it rolled "before each action the hero wants to take": the
+        check is required, not something the player may take or leave. The rules ask it
+        (SZ2's `check` effect at Stufe IV); an `offer` offers choices, and SZ2 offers none,
+        so no `offered` entry can come from it (as lebensenergie 15.7, which expects the
+        same check, and 15.16, boronmir-neu 19.10). This is the one remaining mismatch:
+        `level(rule: COND_6)` 4 (LeP 5 of 30: three quarters lost and "5 oder weniger"),
+        `gs` 0 set by SZ5 with ruling schmerz-iv-gs, and the step's `gained` STATE_8 from
+        SZ5 on the failed check match. Beside the shape: no action of the engine asks SZ2's
+        check before it yet (the step states the check and its result), so an expectation
+        rewritten as a check an action asks would need that timing in the action layer.
 
   - id: S4
     name: LP 23 of 30 — just above three quarters

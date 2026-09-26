@@ -162,9 +162,76 @@ class RulecCheckTests(unittest.TestCase):
         after = self.path.read_text(encoding="utf-8").splitlines()
         self.assert_one_hunk(before, after)
         self.assert_compiles()
+SITUATIONS = """\
+# a file comment
+situations:
+  - id: "1.1"
+    name: no conflict
+    expect: { at: { total: 1 } }
+
+  - id: "1.2"
+    name: a conflict
+    expect: { at: { total: 1 } }   # the expectation
+    conflict:
+      category: a
+      reason: >-
+        The base comes from KW2, not from SCH3.
+
+  # the next situation
+  - id: "1.3"
+    name: after
+"""
+
+
+class ConflictEditTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "a.yaml"
+        self.path.write_text(SITUATIONS, encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def conflict(self):
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        return next(s for s in data["situations"] if s["id"] == "1.2")["conflict"]
+
+    def test_a_verdict_is_added_under_the_conflict_and_nothing_else_moves(self):
+        rf.set_conflict_review(self.path, "1.2", "agreed", "@someone", date=DAY)
+        self.assertEqual(self.conflict()["review"], {"verdict": "agreed", "by": "@someone", "date": DAY})
+        new = self.path.read_text(encoding="utf-8").splitlines()
+        diff = [l for l in difflib.ndiff(SITUATIONS.splitlines(), new) if l[:1] in "+-"]
+        self.assertEqual(diff, ["+       review:", "+         verdict: agreed", '+         by: "@someone"',
+                                "+         date: 2026-09-23"])
+
+    def test_a_note_goes_with_back_to_agent_and_a_new_verdict_replaces_the_old(self):
+        rf.set_conflict_review(self.path, "1.2", "backToAgent", "@someone", "the reason misreads SCH3: " * 5, DAY)
+        self.assertTrue(self.conflict()["review"]["note"].startswith("the reason misreads SCH3:"))
+        rf.set_conflict_review(self.path, "1.2", "resolved", "@agent", date=DAY)
+        self.assertEqual(self.conflict()["review"], {"verdict": "resolved", "by": "@agent", "date": DAY})
+
+    def test_no_verdict_takes_the_review_off(self):
+        rf.set_conflict_review(self.path, "1.2", "agreed", "@someone", date=DAY)
+        rf.set_conflict_review(self.path, "1.2", None, "@someone")
+        self.assertEqual(self.path.read_text(encoding="utf-8"), SITUATIONS)
+
+    def test_a_situation_without_a_conflict_is_refused(self):
+        with self.assertRaises(rf.EditRefused):
+            rf.set_conflict_review(self.path, "1.1", "agreed", "@someone", date=DAY)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), SITUATIONS)
 
 
 class ModelTests(unittest.TestCase):
+    def test_every_conflict_loads_with_its_state_and_does_not_link_rules_by_its_reason(self):
+        situations = rf._load_situations()
+        conflicts = [s for s in situations if s.conflict]
+        self.assertTrue(conflicts)
+        for s in conflicts:
+            self.assertIn(s.conflict_state, ("owner", "backToAgent", "agreed", "resolved"))
+        s = next(s for s in situations if (s.file, s.id) == ("kampfwerte", "16.5"))
+        self.assertNotIn("derive", s.refs)             # a word of its reason only
+        self.assertIn("kampfwerte", s.refs)
+
     def test_every_example_file_loads_with_its_lines(self):
         for rule in rf.load():
             self.assertIsNone(rule.error, rule.path)

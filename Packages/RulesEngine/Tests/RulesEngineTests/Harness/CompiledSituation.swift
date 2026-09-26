@@ -2,7 +2,8 @@ import Foundation
 @testable import RulesEngine
 
 // One entry of `build/rules/situations.json`, as `scripts/rulec/situations.py` writes it:
-// `{id, file, name, owned, facts, base, rolls, sequence, expect: [{query, …}], expectSituation, pending}`.
+// `{id, file, name, owned, facts, base, rolls, sequence, expect: [{query, …}], expectSituation, pending,
+// conflict}`.
 // The engine reads the hero and the facts (`Situation`); the harness reads the rest.
 
 /// The compiled situations file: `{vocabularyVersion, situations: [...]}`.
@@ -30,8 +31,10 @@ struct CompiledSituation: Decodable {
     /// rulec's static pending list (§10.2): the open rulings on the situation's path. An upper
     /// bound: the harness counts a mismatch as pending only when the run hit one of them (R32).
     var pending: [String]
+    /// The situation's `conflict` field, compiled (R60, R77): nil when it has none.
+    var conflict: SituationConflict?
 
-    private enum CodingKeys: String, CodingKey { case id, file, name, rolls, sequence, expect, expectSituation, pending }
+    private enum CodingKeys: String, CodingKey { case id, file, name, rolls, sequence, expect, expectSituation, pending, conflict }
 
     /// The situation the engine runs on. Situations state the current LE and AsP as `base`
     /// values (`leCurrent`, `aspCurrent`), not as `pools`; the pools are filled from them, the
@@ -66,7 +69,22 @@ struct CompiledSituation: Decodable {
         expect = try c.decodeIfPresent([QueryExpectation].self, forKey: .expect) ?? []
         expectSituation = try c.decodeIfPresent([String: JSONValue].self, forKey: .expectSituation) ?? [:]
         pending = try c.decodeIfPresent([String].self, forKey: .pending) ?? []
+        conflict = try c.decodeIfPresent(SituationConflict.self, forKey: .conflict)
     }
+}
+
+/// A situation's `conflict` as rulec compiles it: the category (R77: `a` the expectation is wrong
+/// per the rule text, `b` the input convention of R66, `c` rule data not written), whether its
+/// reason is that the expectation is missing (R73), and the owner's verdict (nil until reviewed:
+/// `backToAgent`, `agreed`, `resolved`). The reasoning stays in the YAML.
+struct SituationConflict: Decodable, Equatable {
+    var category: String
+    var expectationMissing: Bool
+    var verdict: String?
+
+    /// Listed as a conflict until it is resolved: a resolved conflict passes or fails like any
+    /// other situation.
+    var isListed: Bool { verdict != "resolved" }
 }
 
 /// What one query should give (`expectQueryKeys`: total, result, values, lines, notApplied,

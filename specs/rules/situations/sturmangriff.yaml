@@ -85,6 +85,15 @@ situations:
       # Sturmangriff alone is +10 and Wuchtschlag III's +6 adds on top: +16 (ruling
       # SA_62.sturmangriff-cap-scope — the cap is on ST2's line only).
     appToday: one manoeuvre per attack; SA_62 not offered on foot
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.7, 14.12, situations/sturmangriff.yaml 10.7,
+        situations/wuchtschlag.yaml 9.8 (Task 31): expect the combination `allowed: true,
+        from: kampfsonderfertigkeiten.KS5`. KS5 is a `none` clause (the sum of KS3's and
+        KS4's limits); an allowed combination has no refusing entry and no effect comes from
+        KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
+        Spezialmanöver pass KS3 and KS4).
 
   - id: "10.8"
     name: Unarmed (Raufen — on the list)

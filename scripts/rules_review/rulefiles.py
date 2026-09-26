@@ -72,10 +72,19 @@ class Situation:
     line: int
     appToday: str | None
     refs: set
+    conflict: dict | None = None   # the engine does not meet it (R60): category, reason, review
 
     @property
     def diverges(self):
         return self.appToday is not None and not str(self.appToday).startswith("same")
+
+    @property
+    def conflict_state(self):
+        """None without a conflict; `owner` until the owner gives a verdict; else the verdict:
+        `backToAgent` and `agreed` wait for the agent, `resolved` is done."""
+        if not self.conflict:
+            return None
+        return (self.conflict.get("review") or {}).get("verdict") or "owner"
 
 
 @dataclass
@@ -112,6 +121,9 @@ class Rule:
         """Open rulings, less those sent back to the agent: their options are being redone."""
         return [r for r in self.rulings_in("open") if not self.flagged(r.id)]
 
+    def conflicts_in(self, *states):
+        return [s for s in self.situations if s.conflict_state in states]
+
     @property
     def needs_you(self):
         """What the owner has to do here, most urgent first."""
@@ -120,6 +132,8 @@ class Rule:
             out.append("fix the YAML")
         if n := len(self.to_answer):
             out.append(f"answer {n} ruling{'s' * (n > 1)}")
+        if n := len(self.conflicts_in("owner")):
+            out.append(f"decide {n} conflict{'s' * (n > 1)}")
         if not self.reviewed and self.kind != "shared" and not self.error:
             out.append("review")
         return out
@@ -131,6 +145,8 @@ class Rule:
             out.append(f"process {n} answer{'s' * (n > 1)}")
         if self.agent_pass:
             out.append("flagged")
+        if n := len(self.conflicts_in("backToAgent", "agreed")):
+            out.append(f"{n} conflict{'s' * (n > 1)}")
         return out
 
 
@@ -234,7 +250,8 @@ def _load_situations():
         for s in data.get("situations") or []:
             n = item_line(lines, str(s["id"]), (0, len(lines)))
             out.append(Situation(file=path.stem, id=str(s["id"]), name=s.get("name", ""),
-                                 line=n + 1, appToday=s.get("appToday"), refs=_refs(s)))
+                                 line=n + 1, appToday=s.get("appToday"), refs=_refs(s),
+                                 conflict=s.get("conflict")))
     return out
 
 
@@ -243,7 +260,7 @@ def _refs(node):
     out = set()
     if isinstance(node, dict):
         for k, v in node.items():
-            if k not in ("name", "appToday"):          # prose, not references
+            if k not in ("name", "appToday", "conflict"):   # prose, not references
                 out |= _refs(k) | _refs(v)
     elif isinstance(node, list):
         for v in node:
@@ -445,3 +462,45 @@ def set_agent_pass(path, by, note, about=(), date=None):
 
 def clear_agent_pass(path):
     _set_top_level(path, "agentPass", [], None)
+
+
+def set_conflict_review(path, situation_id, verdict, by, note=None, date=None):
+    """The owner's verdict on a situation's conflict (`backToAgent` with a note, `agreed`,
+    `resolved`), signed; `verdict=None` takes the review off. Only the `review` key under the
+    situation's `conflict` changes."""
+    path = ROOT / path
+    lines = _read(path)
+    n = item_line(lines, situation_id, (0, len(lines)))
+    start, end = item_range(lines, n)
+    key_indent = indent(lines[n]) + 2
+    at = next((i for i in range(start + 1, end)
+               if indent(lines[i]) == key_indent and lines[i].strip().startswith("conflict:")), None)
+    if at is None:
+        raise EditRefused(f"{situation_id} has no conflict")
+    c_end = block_end(lines, at, key_indent)
+    sub = key_indent + 2
+    old = next((i for i in range(at + 1, c_end)
+                if indent(lines[i]) == sub and lines[i].strip().startswith("review:")), None)
+    date = date or datetime.date.today()
+    new, value = [], None
+    if verdict is not None:
+        pad = " " * (sub + 2)
+        new = [" " * sub + "review:", f"{pad}verdict: {verdict}", f'{pad}by: "{by}"',
+               f"{pad}date: {date.isoformat()}"]
+        value = {"verdict": verdict, "by": by, "date": date}
+        if note and note.strip():
+            new += _scalar("note", note.strip(), sub + 2)
+            value["note"] = note.strip()
+    if old is None:
+        new_lines = lines[:c_end] + new + lines[c_end:]
+    else:
+        new_lines = lines[:old] + new + lines[block_end(lines, old, sub):]
+
+    def expect(data):
+        s = next(s for s in data["situations"] if str(s["id"]) == situation_id)
+        if value is None:
+            s["conflict"].pop("review", None)
+        else:
+            s["conflict"]["review"] = value
+
+    _write_checked(path, lines, new_lines, expect)

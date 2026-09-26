@@ -108,6 +108,18 @@ situations:
     appToday: >
       no Begabung at all (catalog ADV_4 todo); QS 1. The only reroll is the Schip, offered on a
       failure only (SkillCheckModal.isRerollEligible), so nothing is offered on this success
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
 
   - id: "22.5"
     name: Begabung — the reroll is worse, the old die stays
@@ -122,6 +134,18 @@ situations:
           qs: 1
           result: { kind: regular }       # the rerolled 20 does not count, so no second 20
     appToday: not offered
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
 
   - id: "22.6"
     name: Doppel-20 — no Begabung
@@ -152,6 +176,40 @@ situations:
     appToday: >
       a failure; the Schip reroll is offered (it would be, before or after a Begabung, B7), the
       Begabung is not
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
+
+        situations/probe-fertigkeiten.yaml 22.7: expects the Schip reroll offered `from:
+        ADV_4.B7`, `togetherWith: ADV_4.B1`. Real: B7 grants no reroll of its own (it only
+        allows a Schip before or after the Begabung), and the Schip's Neuer Wurf is not
+        written (schicksalspunkte says so in its header), so no effect offers it. Also
+        plan-mandated by A.8 (`allow` → nothing), so B7 is `none`. The entry keeps its own
+        `open:` note.
+
+        situations/probe-fertigkeiten.yaml 22.7 (Task 34: every remaining mismatch; the two
+        entries above name the first two): (a) the dice `from: ADV_4.B2` (the reroll is
+        B1's); (b) the Schip reroll `offered … from: ADV_4.B7`, which nothing offers; (c)
+        that expected offer's `togetherWith: ADV_4.B1` and `open: …` fields, which no offer
+        models and which cannot be compared while the offer itself is missing (reported as
+        unsupported shapes; R69 makes the verdict rest on (a), (b) and (d)); (d) the step's
+        `check.fp` line `{ value: 0, from: fertigkeitsproben.FP5 }`. FP5 (Kodex des
+        Schwertes p. 15, "Hast du Punkte übrig …") is the derive `check.fp = check.fw −
+        check.spent`, and the engine shows a derive's `sum` terms as the base's parts: FW 8
+        (via FP3) and −8 (spent 0 + 5 + 3 after the reroll to 3). Their sum 0 and the step's
+        total 1 (QS2's floor from 0 to 1, which matches) are right; one FP5 line of 0 is the
+        shape lebensenergie 15.2 expects for LE3 (35), which is listed above against 15.1's
+        per-term lines. 22.8's run shows FP5 the same way (4 and −5). The step's `dice`
+        counts, `spent` [0, 5, 3] and `qs` 1 match.
 
   - id: "22.8"
     name: Schwimmen FW 4, Doppel-1 — the check would have failed

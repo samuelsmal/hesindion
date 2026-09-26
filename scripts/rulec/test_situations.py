@@ -418,7 +418,7 @@ class SectionTests(unittest.TestCase):
             "rolls": [], "sequence": [],
             "expect": [{"query": "at", "total": 1, "result": 15, "legal": True}],
             "expectSituation": {"offered": [{"choice": "formation", "from": "SA_1.T1"}], "fp": 3},
-            "pending": [],
+            "pending": [], "conflict": None,
         })
 
 
@@ -569,6 +569,41 @@ class ErrorTests(unittest.TestCase):
         _, errors = run({"a.yaml": "situations:\n  - id: S\n    choose: { gmFact.behind: true }\n"})
         self.assertTrue(errors[0].file.endswith("a.yaml"))
         self.assertEqual(errors[0].line, 3)
+
+
+class ConflictTests(unittest.TestCase):
+    """A situation the engine does not meet carries its conflict: the category (R77), the
+    reasoning, and the owner's review of it. Only category, expectationMissing and the verdict
+    reach situations.json; the harness reads them there."""
+
+    def test_an_unreviewed_conflict_compiles_open(self):
+        s = one("    conflict: { category: a, reason: the base comes from KW2 }\n")
+        self.assertEqual(s["conflict"], {"category": "a", "expectationMissing": False, "verdict": None})
+
+    def test_the_verdict_and_expectation_missing_compile(self):
+        s = one("    conflict:\n      category: a\n      expectationMissing: true\n"
+                "      reason: r\n      review: { verdict: agreed, by: \"@x\", date: 2026-09-26 }\n")
+        self.assertEqual(s["conflict"], {"category": "a", "expectationMissing": True, "verdict": "agreed"})
+
+    def test_no_conflict_compiles_none(self):
+        self.assertIsNone(one("    name: n\n")["conflict"])
+
+    def test_a_conflict_needs_a_known_category_and_a_reason(self):
+        self.assertEqual(errors_of("    conflict: { category: d, reason: r }\n"),
+                         ["conflict category d is none of a, b, c"])
+        self.assertEqual(errors_of("    conflict: { category: a }\n"), ["a conflict needs a reason"])
+        self.assertEqual(errors_of("    conflict: { category: a, reason: r, colour: red }\n"),
+                         ["unknown conflict key colour"])
+
+    def test_a_review_needs_a_known_verdict_a_signature_and_a_note_when_sent_back(self):
+        base = "    conflict:\n      category: a\n      reason: r\n      review: "
+        self.assertEqual(errors_of(base + "{ verdict: maybe, by: \"@x\", date: 2026-09-26 }\n"),
+                         ["conflict verdict maybe is none of backToAgent, agreed, resolved"])
+        self.assertEqual(errors_of(base + "{ verdict: agreed }\n"), ["a conflict review needs by and date"])
+        self.assertEqual(errors_of(base + "{ verdict: backToAgent, by: \"@x\", date: 2026-09-26 }\n"),
+                         ["a conflict sent back to the agent needs a note"])
+        self.assertEqual(errors_of(base + "{ verdict: agreed, by: \"@x\", date: 2026-09-26, why: y }\n"),
+                         ["unknown conflict review key why"])
 
 
 class OrderTests(unittest.TestCase):

@@ -95,6 +95,43 @@ situations:
       anyway, but Ruhiges Temperament is missing: total 0 instead of +1 — wrong. The export's
       `skills` names it, and the app shows it only as the ⓘ text on the attack screen. Offered
       without checking SA_43 (Boronmir has it) and without asking the run-up.
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.1: expects the mount's Niederreiten attack
+        (AT 15, TP 2W6+6) `from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13]`, now an
+        `events` entry. The rules make it RK13's `check` of the mount's Niederreiten line,
+        whose values are SK3's provided data, so the event comes from RK13; the AT and TP
+        are data, not lines.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.1: every `formula:` (a TP formula or a
+        computation, e.g. "2 + 12/2", "1W6+4 +9", "−⌈(25 − 20)/2⌉") is a comment: no line or
+        query key holds a formula. (Task 32: the two situations this entry named beside 18.1
+        pass: schaden.S3 with nothing above the Schadensschwelle gives no line and is
+        `conditionFalse`, and the opponent's stated RS is the base of `opponent.rs`.)
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3 (Task 31 fix round 2: every remaining
+        mismatch). Since fix round 2 the Reiten check's ruling (R71), the Kraftakt −3
+        (maechtiger-schlag.MS2 reads `mount.kk`), GK4's `via` SK7, the mount's Tritt (R72)
+        and RK12's failure text match. What remains: (a) the Niederreiten attack is expected
+        `from: SK3, via: [RK13]`; the engine's is RK13's check, via SK3's profile row (the
+        18.1 entry above); (b) 18.3's order is expected `via: [RK12]`, while SK3's own offer
+        carries it (the 18.3 entry above); (c) the structured texts (RK13's `mount`, MS1's
+        `opponent: { check, … }`, RK12's `order: not carried out`) against the rules' plain
+        tells (the 18.1, 18.3, 18.4 entry above): RK12's tell "Der Befehl wird nicht
+        ausgeführt; weitere Folgen hat das nicht." is now shown on the failed check; (d)
+        unmodelled fields, which are comments: 18.1's `offered.requires: [SA_43.BK1]`
+        (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
+        rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
+        pool, `actions`, is the hero's; no event field says what it replaces).
 
   - id: "18.2"
     name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
@@ -107,6 +144,13 @@ situations:
     expect:
       events: [{ check: { attack: Niederreiten, by: mount, at: 15, tp: 2W6+4 }, from: reiterkampf.RK13 }]   # the old `attack` and `on_hit`
     appToday: AT 16 — wrong (CombatAttackViews.niederreitenButton takes `mount.attacks.first?.at`); TP 2W6+4 same
+    conflict:
+      category: c
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.2: expects Niederreiten with an Elenviner
+        Vollblut's AT 15 and TP 2W6+4. There is no profile file for that horse, so nothing
+        states its attack lines (`mount.hasAttack`) or values; RK13's offer is unknown and
+        the numbers cannot come from the rules.
 
   - id: "18.3"
     name: Kupperus kicks (Tritt) while Boronmir rides
@@ -140,6 +184,42 @@ situations:
       offered beside the hero's own attack, straight to the roll: no Reiten check (so no +1 from
       Ruhiges Temperament either), no action named, and Boronmir may still attack — wrong. AT 15, TP 1W6+7 same; the Mächtiger Schlag
       note says −2 — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.3: expects `not_asked: [{ gait: galopp,
+        runUp: 4 }]` (a mount attack does not ask for gait or run-up). No expect key says
+        "not asked" (`questions: []` would assert that nothing at all is asked); it is a
+        comment.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.3: expects the mount-attack order offered
+        `from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK12]`. SK3's own offer carries
+        it; the profile is owned (`creatures`), so no enabling `require` in RK12 could add a
+        `via` (enabling only applies to a rule that does not apply otherwise). RK12 supplies
+        the order's Aktion and Reiten check, which the offered entry does not show.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3 (Task 31 fix round 2: every remaining
+        mismatch). Since fix round 2 the Reiten check's ruling (R71), the Kraftakt −3
+        (maechtiger-schlag.MS2 reads `mount.kk`), GK4's `via` SK7, the mount's Tritt (R72)
+        and RK12's failure text match. What remains: (a) the Niederreiten attack is expected
+        `from: SK3, via: [RK13]`; the engine's is RK13's check, via SK3's profile row (the
+        18.1 entry above); (b) 18.3's order is expected `via: [RK12]`, while SK3's own offer
+        carries it (the 18.3 entry above); (c) the structured texts (RK13's `mount`, MS1's
+        `opponent: { check, … }`, RK12's `order: not carried out`) against the rules' plain
+        tells (the 18.1, 18.3, 18.4 entry above): RK12's tell "Der Befehl wird nicht
+        ausgeführt; weitere Folgen hat das nicht." is now shown on the failed check; (d)
+        unmodelled fields, which are comments: 18.1's `offered.requires: [SA_43.BK1]`
+        (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
+        rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
+        pool, `actions`, is the hero's; no event field says what it replaces).
 
   - id: "18.4"
     name: The foot soldier parries Kupperus's Tritt with a shield, successfully
@@ -152,6 +232,19 @@ situations:
       texts:
         - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS3, ruling: round-up }
     appToday: the note says a parry does not help — same, with −2 — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.4: expects `on_hit: { tp: none }` (the
+        parried Tritt rolls no damage). No expect key says "no roll"; it is a comment.
 
   # --- Rabenschnabel -------------------------------------------------------------------------
 
@@ -303,6 +396,13 @@ situations:
     expect:
       texts: [{ order: opponent acts first, from: ITEMTPL_29.GR3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }]
     appToday: not modelled
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.13 (Task 31): expects `texts: [{ order:
+        opponent acts first, from: ITEMTPL_29.GR3 }]`. GR3's `tell` is plain text to the GM
+        ("Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu."); `order` is no
+        audience, as the structured tells of 18.1, 18.3 and 18.4.
 
   - id: "18.14"
     name: Großschild parry against an arrow, and against a thrown spear

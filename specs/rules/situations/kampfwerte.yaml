@@ -128,6 +128,15 @@ situations:
       11 and 13 — same numbers, but neither shows where it comes from: the passive +3 is added
       to the base (CombatAttackViews weapon list, w.pa + hero.passiveShieldPABonus) and the
       doubled +6 is baked into Shield.pa at import (basePA + 2 * paMod)
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfwerte.yaml 16.5 (Task 30): expects the shield parry's base `from:
+        schilde.SCH3, via: [kampfwerte.KW2]` (value 7). The rules give that base as KW2's
+        derive for the Schilde technique (`ktw.current` of the shield: 10 / 2 = 5, KK 14 →
+        +2), from KW2; SCH3 offers the choice and adds the doubled bonus (+6) as its own
+        line, which the entry expects too. A base from SCH3 would be a clause that computes
+        no base. The result 13 and the weapon parry (11: base 8 from KW2, SCH1 +3) match.
 
   - id: "16.6"
     name: Langschwert and Großschild — attacking with the Langschwert
@@ -175,6 +184,14 @@ situations:
       never asks whether the attack is a ranged one (CombatDefenseSetupView, OpponentProfile has
       no such fact), so SCH8 cannot apply. Without a shield the hero can parry an arrow with his
       sword, which SCH9 rules out too
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfwerte.yaml 16.9 (Task 30): expects the shield parry against an arrow
+        offered `from: schilde.SCH6`. SCH6 is a `none` clause since Task 16 (its `allow` is
+        the default; "Reviews reset by hand edits": schilde.SCH6); the shield parry is
+        offered by SCH3 (`choice: shieldParry`), with the result 13. The dodge (7) and the
+        weapon parry refused by SCH8 match.
 
   # --- In armour -----------------------------------------------------------------------------
 
@@ -220,6 +237,15 @@ situations:
       - event: { COND_1: 0 }                               # the plate taken off
         expect: { ini: { result: 18, from: kampfwerte.KW11, kept: { w6: 4 } } }
     appToday: stays 17 — wrong (Hero.activeCombatInitiative stores the total, not its parts)
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfwerte.yaml 16.12 (Task 30): the second step expects `ini: { result:
+        18, from: kampfwerte.KW11, kept: { w6: 4 } }`. The result matches (the step's
+        `event: { COND_1: 0 }` is Belastung 0: 14 + 4). `from` and `kept` are no query keys:
+        KW11 is a `none` clause ("built into KW10's encoding": the W6 is the stored
+        `roll.ini` KW10's derive reads), so no line or base comes from it, and "the W6 is
+        kept" is the fact `roll.ini` staying 4, which no expect key says.
 
   # --- The page's own example (Carolan and Arbosch), not Boronmir ------------------------------
 
@@ -307,6 +333,19 @@ situations:
       leCurrent: { result: -2 }           # or 0 — the Sterben rule's question
       events: [{ gained: imSterben, from: schaden.S8 }]
     appToday: LE clamped at 0 (CombatDamageViews); no "im Sterben" state
+    conflict:
+      category: c
+      reason: >-
+        situations/kampfwerte.yaml 16.20: expects `events: [{ gained: imSterben, from:
+        schaden.S8 }]`. There is no rule `imSterben` and the Regel-Wiki has no page to draft
+        one from; schaden.S8 now `tell`s the hero "Ab 0 Lebenspunkten liegt ein Held im
+        Sterben." The harness also records `leCurrent: { result: -2 }`, got 4 (final
+        review): −2 is 4 − 6, the hit's TP 6 taken whole as SP, which needs an RS of 0. The
+        situation states no armour (no `loadout.armour`, no RS), so the hit's `rs` and `sp`
+        stages ask for `loadout.armour` and stay unknown, and LE stays at its sheet value 4.
+        No source states that the hero wears none, so the input is not filled in (R61: an
+        unstated input is an expectation conflict). The comment's "or 0" is the question the
+        missing Sterben rule would answer.
 
   # --- Not Boronmir: the one technique whose AT is not MU ------------------------------------
 
@@ -318,6 +357,14 @@ situations:
       "at(with: Peitschen)": { result: 11, lines: [{ value: 10, from: kampfwerte.KW1 }, { value: 1, from: kampfwerte.KW6 }] }   # FF 11
       "pa(with: Peitschen)": { legal: false }                            # none
     appToday: AT 12 — wrong (OptolithImportService takes MU for every technique's AT)
+    conflict:
+      category: c
+      reason: >-
+        situations/kampfwerte.yaml 16.21 (Task 30): expects `pa(with: Peitschen)` `legal:
+        false`. That Peitschen have no parry is out of scope in the rules (kampfwerte's
+        header: "a `forbid: { defence: weaponParry }` for a Peitschen technique or equipment
+        file, not written"; the Regelwerk's Peitschen page is not drafted), so nothing
+        forbids the parry. The AT (KtW 10 from KW1, FF 11 → +1 from KW6) matches.
 
   # --- Not Boronmir: a Schadensbonus ---------------------------------------------------------
 

@@ -94,8 +94,8 @@ final class DamageHarnessTests: XCTestCase {
     // MARK: - No expectation
 
     /// Ruling R73: a situation with no expectation at all (TZ.9–TZ.11: dice and nothing expected)
-    /// is the shape "no expectation", never a pass. Listed as a conflict whose reason is
-    /// "expectation missing", it counts as conflict on that shape; listed otherwise, it stays
+    /// is the shape "no expectation", never a pass. Listed as a conflict with `expectationMissing`,
+    /// it counts as conflict on that shape; listed otherwise, it stays
     /// unsupported (R69).
     func testASituationWithNoExpectationIsTheShapeNoExpectation() throws {
         let s = try situation(#"{"rolls": [2, 13]}"#)
@@ -105,8 +105,6 @@ final class DamageHarnessTests: XCTestCase {
         XCTAssertEqual(judged.verdict, .unsupported(["shape: no expectation"]))
         XCTAssertEqual(SituationsHarnessTests.judge(s, engine: engine, conflicts: [ref]).verdict, .unsupported(["shape: no expectation"]))
         XCTAssertEqual(SituationsHarnessTests.judge(s, engine: engine, conflicts: [ref], expectationMissing: [ref]).verdict, .conflict)
-        let markdown = "## Expectation conflicts for the owner\n\n- situations/test.yaml T.1: the expectation missing: …\n- situations/test.yaml T.2: other\n\n## Next\n"
-        XCTAssertEqual(Conflicts.expectationMissing(markdown, order: ["test.yaml": ["T.1", "T.2"]]), [ref])
     }
 
     // MARK: - A scaled line's was

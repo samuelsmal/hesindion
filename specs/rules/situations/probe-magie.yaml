@@ -205,6 +205,29 @@ situations:
     appToday: >
       Verbotene Pforten does not exist (catalog SA_74 todo). The cast is offered at 3 AsP
       although it costs 8, and nothing is charged at all — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-magie.yaml 20.7 (plan-mandated: A.6 puts the split on SA_74's
+        `cost`, so the payment's origin is VP1): expects the 3 AsP `from:
+        [zaubermodifikationen.ZM12, SA_74.VP1]`. One `paid` event has one origin. With LeP
+        chosen, SA_74.VP1 suppresses ZM12's AsP-only cost and pays the whole cost with its
+        own `split` cost, so the AsP come from VP1 and ZM12 is in `notApplied` (suppressed).
+        The owner decides whether the expectation names VP1 alone, or whether a split cost
+        should keep ZM12 as its origin (with VP1 in `via`), which no verb expresses.
+
+        situations/probe-magie.yaml 20.7 (Task 35: every remaining mismatch; the entry above
+        names (b)): (a) `offered: [{ choice: split.le, max: 7, from: SA_74.VP1 }]`: VP1's
+        offer rests on the open ruling SA_74.vp-sequence (the original draft put it there,
+        `offer.ruling`), so it applies nothing and shows its clause and question; the offer
+        is missing while the ruling is open (see Open questions, Task 35). (b) the 3 AsP
+        `from: [zaubermodifikationen.ZM12, SA_74.VP1]`, one event with one origin (above).
+        (c) the event `{ check: { talent: TAL_8, with: null }, from: SA_74.VP2, ruling:
+        SA_74.vp-sequence }`: since Task 35 a cast asks the talent checks gated on what it
+        states, but VP2's check rests on vp-sequence (open) and is not asked. The payments
+        (3 AsP and 5 LeP, from VP1), the `after` (AsP 0, LE 24, no Zustand) and TZ8's
+        `notApplied` match. In a throwaway run with vp-sequence and cost-off-table taken as
+        decided, (a) and (c) match and only (b) remains.
 
   - id: "20.8"
     name: The same, Selbstbeherrschung fails
@@ -222,3 +245,26 @@ situations:
               ruling: round-up
             - { after: { aspCurrent: 0, leCurrent: 28 } }
     appToday: not offered; nothing charged
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-magie.yaml 20.8: expects the half cost `from: [SA_74.VP3,
+        zaubermodifikationen.ZM12]`. VP3's `cost` ("wie sonst die Hälfte") is its own
+        effect, and ZM12 is suppressed by VP1 once LeP are chosen, so the payments come from
+        VP3 alone; ZM12 is the clause VP3's text points at, not an origin. A third option:
+        ZM12 derives its failure-cost basis (half of the cost plus the first interval) into
+        a target that VP3's `cost` reads, so that ZM12 joins the payment's `via` by ruling
+        R26 (a value that reads a target operand carries the rules whose lines changed it);
+        that would also close VP3's gap of paying half of `spell.cost` only.
+
+        situations/probe-magie.yaml 20.8 (Task 35: every remaining mismatch; the entry above
+        names (a)): (a) the half cost `from: [SA_74.VP3, zaubermodifikationen.ZM12]`
+        (above). (b) the `after` AsP 0 and LE 28: got 3 and 29, nothing is paid: VP3's cost
+        rests on the open ruling vp-sequence (whether a spell check that failed on its own
+        pays this way), and ZM12's cost is suppressed by VP1 once LeP are chosen. (c)
+        `result: { success: false, from: SA_74.VP2, ruling: SA_74.vp-sequence }`, compared
+        since Task 35 (the cast's spell check, run as the step's roll states it): the cast
+        fails, but no clause names the failure, since VP2's check is not asked while
+        vp-sequence is open. In the throwaway run with the rulings decided, (b) and (c)
+        match (the failed Selbstbeherrschung forbids the cast from VP2, resting on
+        vp-sequence; VP3 pays 3 AsP and 1 LeP) and only (a) remains.

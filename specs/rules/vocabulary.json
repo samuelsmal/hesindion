@@ -27,6 +27,28 @@
     "above",
     "below"
   ],
+  "conflictCategories": [
+    "a",
+    "b",
+    "c"
+  ],
+  "conflictKeys": [
+    "category",
+    "expectationMissing",
+    "reason",
+    "review"
+  ],
+  "conflictReviewKeys": [
+    "verdict",
+    "by",
+    "date",
+    "note"
+  ],
+  "conflictVerdicts": [
+    "backToAgent",
+    "agreed",
+    "resolved"
+  ],
   "effectKeys": [
     "when",
     "ruling",
@@ -697,7 +719,8 @@
     "sequence",
     "expect",
     "appToday",
-    "note"
+    "note",
+    "conflict"
   ],
   "spans": [
     "action",

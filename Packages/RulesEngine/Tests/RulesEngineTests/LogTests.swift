@@ -373,7 +373,7 @@ final class LogTests: XCTestCase {
         try FileManager.default.createDirectory(at: drafts, withIntermediateDirectories: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
-        let conflicts = Set(SituationsHarnessTests.conflicts(all) ?? [])
+        let conflicts = Set(SituationsHarnessTests.conflicts(all))
         var passing = 0, withQueries = 0
         for s in all.situations {
             guard SituationsHarnessTests.judge(s, engine: engine, conflicts: conflicts).verdict == .passed else { continue }

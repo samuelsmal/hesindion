@@ -61,6 +61,18 @@ situations:
         total: -1      # −4 + 2 = −2, / 2 = −1
         lines: [{ value: -1, was: -4, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
     appToday: 0 (halves first, then eases) — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.4, TZ.5, TZ.6: expect the eased aiming line `via:
+        [STATE_13, …]`. The easing is trefferzonen.TZ5's own `replace` (the clause whose
+        text says it), conditioned on `opponent.has: STATE_13`; a replaced line's `via` is
+        the replacer, trefferzonen.TZ5, so STATE_13 appears as the fact the replace read,
+        not as a rule in `via`. `via` names clauses; `STATE_13` is a rule. Task 32: this is
+        the one remaining mismatch of the three. TZ.5's `texts` entry now matches
+        (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
+        attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
+        a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
 
   - id: "TZ.5"
     name: Head, Gezielter Angriff, the opponent überrascht
@@ -74,6 +86,18 @@ situations:
         lines: [{ value: -4, was: -10, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
       texts: [{ opponent: noDefence, from: STATE_13.UE1 }]
     appToday: −3 (halves first, then eases) — wrong; no "no defence" note
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.4, TZ.5, TZ.6: expect the eased aiming line `via:
+        [STATE_13, …]`. The easing is trefferzonen.TZ5's own `replace` (the clause whose
+        text says it), conditioned on `opponent.has: STATE_13`; a replaced line's `via` is
+        the replacer, trefferzonen.TZ5, so STATE_13 appears as the fact the replace read,
+        not as a rule in `via`. `via` names clauses; `STATE_13` is a rule. Task 32: this is
+        the one remaining mismatch of the three. TZ.5's `texts` entry now matches
+        (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
+        attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
+        a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
 
   - id: "TZ.6"
     name: Arms, no SF, the opponent überrascht — no halving, no order question
@@ -85,6 +109,18 @@ situations:
         total: -6
         lines: [{ value: -6, was: -8, from: trefferzonen.TZ5, via: [STATE_13] }]
     appToday: same
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.4, TZ.5, TZ.6: expect the eased aiming line `via:
+        [STATE_13, …]`. The easing is trefferzonen.TZ5's own `replace` (the clause whose
+        text says it), conditioned on `opponent.has: STATE_13`; a replaced line's `via` is
+        the replacer, trefferzonen.TZ5, so STATE_13 appears as the fact the replace read,
+        not as a rule in `via`. `via` names clauses; `STATE_13` is a rule. Task 32: this is
+        the one remaining mismatch of the three. TZ.5's `texts` entry now matches
+        (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
+        attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
+        a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
 
   - id: "TZ.7"
     name: Torso of a winzig opponent — the aiming penalty replaces the size modifier
@@ -119,6 +155,23 @@ situations:
     #   zone: [{ roll: 2, zone: kopf }, { roll: 13, zone: arme, side: left }]
     #   table: humanoid.mittel
     appToday: same
+    conflict:
+      category: a
+      expectationMissing: true
+      reason: >-
+        situations/trefferzonen.yaml TZ.9, TZ.10, TZ.11 (reasoned anew in Task 32 fix round
+        1, ruling R73): the expectation missing. The migration left no expect key for the
+        zone and side a die gives (the old `zone: [{ roll, zone, side }]` and `table:` are
+        comments), so each situation states dice and expects nothing; the harness gives it
+        the shape "no expectation", never a pass. By the rule text (TZ3's table by the size
+        gap, attacker against target, ruling relative-size-table; TZ4–TZ4b's rows; TZ4c's
+        parity) each should give: TZ.9, a mittel hero against a mittel human, table
+        humanoid.mittel (TZ4a): die 2 → kopf, die 13 → arme, links (odd); TZ.10, a klein
+        goblin against the mittel hero, one size smaller, so the groß table (TZ4b): die 8 →
+        arme, rechts (even); TZ.11, a klein goblin against a Zwerg (klein), equal sizes, so
+        the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
+        key for the zone and side a stated die gives). The engine does not resolve a zone
+        from a die either (see "Open questions").
 
   - id: "TZ.10"
     name: A goblin (klein) hits the medium hero — the page's own case
@@ -130,6 +183,23 @@ situations:
     #   table: { use: humanoid.gross, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }
     #   zone: [{ roll: 8, zone: arme, side: right }]
     appToday: rolls on the hero's own table (humanoid.mittel) → Torso — wrong
+    conflict:
+      category: a
+      expectationMissing: true
+      reason: >-
+        situations/trefferzonen.yaml TZ.9, TZ.10, TZ.11 (reasoned anew in Task 32 fix round
+        1, ruling R73): the expectation missing. The migration left no expect key for the
+        zone and side a die gives (the old `zone: [{ roll, zone, side }]` and `table:` are
+        comments), so each situation states dice and expects nothing; the harness gives it
+        the shape "no expectation", never a pass. By the rule text (TZ3's table by the size
+        gap, attacker against target, ruling relative-size-table; TZ4–TZ4b's rows; TZ4c's
+        parity) each should give: TZ.9, a mittel hero against a mittel human, table
+        humanoid.mittel (TZ4a): die 2 → kopf, die 13 → arme, links (odd); TZ.10, a klein
+        goblin against the mittel hero, one size smaller, so the groß table (TZ4b): die 8 →
+        arme, rechts (even); TZ.11, a klein goblin against a Zwerg (klein), equal sizes, so
+        the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
+        key for the zone and side a stated die gives). The engine does not resolve a zone
+        from a die either (see "Open questions").
 
   - id: "TZ.11"
     name: A goblin (klein) hits a Zwerg hero (klein in the app)
@@ -141,6 +211,23 @@ situations:
     #   table: { use: humanoid.mittel, from: trefferzonen.TZ3, ruling: trefferzonen.relative-size-table }   # equal sizes
     #   zone: [{ roll: 4, zone: torso }]
     appToday: klein table (the hero's own size) → Kopf — wrong
+    conflict:
+      category: a
+      expectationMissing: true
+      reason: >-
+        situations/trefferzonen.yaml TZ.9, TZ.10, TZ.11 (reasoned anew in Task 32 fix round
+        1, ruling R73): the expectation missing. The migration left no expect key for the
+        zone and side a die gives (the old `zone: [{ roll, zone, side }]` and `table:` are
+        comments), so each situation states dice and expects nothing; the harness gives it
+        the shape "no expectation", never a pass. By the rule text (TZ3's table by the size
+        gap, attacker against target, ruling relative-size-table; TZ4–TZ4b's rows; TZ4c's
+        parity) each should give: TZ.9, a mittel hero against a mittel human, table
+        humanoid.mittel (TZ4a): die 2 → kopf, die 13 → arme, links (odd); TZ.10, a klein
+        goblin against the mittel hero, one size smaller, so the groß table (TZ4b): die 8 →
+        arme, rechts (even); TZ.11, a klein goblin against a Zwerg (klein), equal sizes, so
+        the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
+        key for the zone and side a stated die gives). The engine does not resolve a zone
+        from a die either (see "Open questions").
 
   # --- Wundeffekte (TZ8–TZ11) ---------------------------------------------------------------
 
@@ -159,6 +246,36 @@ situations:
         expect:
           events: [{ damage: { formula: 1W3+1 }, from: trefferzonen.TZ11 }]
     appToday: same
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.12, TZ.13, TZ.14, boronmir-neu.yaml 19.8
+        (plan-mandated: A.4 puts the gain in TZ8's `onFailure`; the owner decides whether
+        TZ8 or TZ11 is the origin): expect the Wundeffekt `from: trefferzonen.TZ11` (a
+        `gained` STATE_10, an item let go, the 1W3+1 SP). Under A.4 the gain, the item
+        change and the torso `tell` run in trefferzonen.TZ8's `check.onFailure`, reading
+        TZ11's provided tables; their origin is TZ8. The 1W3+1 SP (TZ.12, 19.8: `damage: {
+        formula: 1W3+1 }`) has no dice value form and is a `tell` to the player, not a
+        damage event (see "Open questions"). Task 32 (R62) compares these events; every
+        remaining mismatch: TZ.12: the `damage` event is missing (the engine logs TZ8's tell
+        "Wundeffekt Torso: zusätzlich 1W3+1 SP."); the check and its −2 match. TZ.13: the
+        `gained` STATE_10 comes from TZ8, the one mismatch. TZ.14: (a) the `itemChanged` is
+        missing: TZ8's `item: { instance: { loadout: weapon } }` changes the instance in the
+        weapon slot, and the file states the Schwert there but no instance of it, so the
+        engine asks for `loadout.weapon.instance` and changes nothing (as reiterkampf 5.5);
+        `hit.heldInHand` (`weapon`, from `loadout.weaponHand: rechts` and `hit.side:
+        rechts`) and the one-handed Schwert (R61) are no longer the reason; (b) `questions:
+        []` (the old `asked: []`, which meant that the hand is not asked; it is not) asserts
+        that nothing at all is asked, but the hero states neither MU nor
+        Selbstbeherrschung's FW, which the Wundeffekt check's Probe needs (`attr.MU`,
+        `fw.TAL_8`), nor an armour, the LE basis or the mount, so the hit's stages and the
+        check ask for them (`loadout.armour`, `species.le`, `hero.purchased.le`,
+        `hero.mounted`, `gmFact.mountTakesSP`, `gmFact.checkModifier`; fix round 1 gated the
+        `ask`s of regeneration R6/T1, fernkampf.FK8 and zaubermodifikationen.ZM11's check
+        modifiers, which asked on every query); (c) the origin, as above. 19.8: besides the
+        origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
+        expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
+        ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
 
   - id: "TZ.13"
     name: 5 SP on a leg — below the Wundschwelle; then 6 SP
@@ -175,6 +292,36 @@ situations:
         expect:
           events: [{ gained: STATE_10, from: trefferzonen.TZ11 }]
     appToday: same
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.12, TZ.13, TZ.14, boronmir-neu.yaml 19.8
+        (plan-mandated: A.4 puts the gain in TZ8's `onFailure`; the owner decides whether
+        TZ8 or TZ11 is the origin): expect the Wundeffekt `from: trefferzonen.TZ11` (a
+        `gained` STATE_10, an item let go, the 1W3+1 SP). Under A.4 the gain, the item
+        change and the torso `tell` run in trefferzonen.TZ8's `check.onFailure`, reading
+        TZ11's provided tables; their origin is TZ8. The 1W3+1 SP (TZ.12, 19.8: `damage: {
+        formula: 1W3+1 }`) has no dice value form and is a `tell` to the player, not a
+        damage event (see "Open questions"). Task 32 (R62) compares these events; every
+        remaining mismatch: TZ.12: the `damage` event is missing (the engine logs TZ8's tell
+        "Wundeffekt Torso: zusätzlich 1W3+1 SP."); the check and its −2 match. TZ.13: the
+        `gained` STATE_10 comes from TZ8, the one mismatch. TZ.14: (a) the `itemChanged` is
+        missing: TZ8's `item: { instance: { loadout: weapon } }` changes the instance in the
+        weapon slot, and the file states the Schwert there but no instance of it, so the
+        engine asks for `loadout.weapon.instance` and changes nothing (as reiterkampf 5.5);
+        `hit.heldInHand` (`weapon`, from `loadout.weaponHand: rechts` and `hit.side:
+        rechts`) and the one-handed Schwert (R61) are no longer the reason; (b) `questions:
+        []` (the old `asked: []`, which meant that the hand is not asked; it is not) asserts
+        that nothing at all is asked, but the hero states neither MU nor
+        Selbstbeherrschung's FW, which the Wundeffekt check's Probe needs (`attr.MU`,
+        `fw.TAL_8`), nor an armour, the LE basis or the mount, so the hit's stages and the
+        check ask for them (`loadout.armour`, `species.le`, `hero.purchased.le`,
+        `hero.mounted`, `gmFact.mountTakesSP`, `gmFact.checkModifier`; fix round 1 gated the
+        `ask`s of regeneration R6/T1, fernkampf.FK8 and zaubermodifikationen.ZM11's check
+        modifiers, which asked on every query); (c) the origin, as above. 19.8: besides the
+        origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
+        expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
+        ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
 
   - id: "TZ.14"
     name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
@@ -191,6 +338,36 @@ situations:
           # the old `loadout: { right: null, left: Schild }` and `log: "Schwert fallen gelassen"`
           events: [{ itemChanged: { weapon: Schwert, held: false }, from: trefferzonen.TZ11, ruling: trefferzonen.wundeffekt-arm-drop }]
     appToday: a reminder; the Schwert stays in hand
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.12, TZ.13, TZ.14, boronmir-neu.yaml 19.8
+        (plan-mandated: A.4 puts the gain in TZ8's `onFailure`; the owner decides whether
+        TZ8 or TZ11 is the origin): expect the Wundeffekt `from: trefferzonen.TZ11` (a
+        `gained` STATE_10, an item let go, the 1W3+1 SP). Under A.4 the gain, the item
+        change and the torso `tell` run in trefferzonen.TZ8's `check.onFailure`, reading
+        TZ11's provided tables; their origin is TZ8. The 1W3+1 SP (TZ.12, 19.8: `damage: {
+        formula: 1W3+1 }`) has no dice value form and is a `tell` to the player, not a
+        damage event (see "Open questions"). Task 32 (R62) compares these events; every
+        remaining mismatch: TZ.12: the `damage` event is missing (the engine logs TZ8's tell
+        "Wundeffekt Torso: zusätzlich 1W3+1 SP."); the check and its −2 match. TZ.13: the
+        `gained` STATE_10 comes from TZ8, the one mismatch. TZ.14: (a) the `itemChanged` is
+        missing: TZ8's `item: { instance: { loadout: weapon } }` changes the instance in the
+        weapon slot, and the file states the Schwert there but no instance of it, so the
+        engine asks for `loadout.weapon.instance` and changes nothing (as reiterkampf 5.5);
+        `hit.heldInHand` (`weapon`, from `loadout.weaponHand: rechts` and `hit.side:
+        rechts`) and the one-handed Schwert (R61) are no longer the reason; (b) `questions:
+        []` (the old `asked: []`, which meant that the hand is not asked; it is not) asserts
+        that nothing at all is asked, but the hero states neither MU nor
+        Selbstbeherrschung's FW, which the Wundeffekt check's Probe needs (`attr.MU`,
+        `fw.TAL_8`), nor an armour, the LE basis or the mount, so the hit's stages and the
+        check ask for them (`loadout.armour`, `species.le`, `hero.purchased.le`,
+        `hero.mounted`, `gmFact.mountTakesSP`, `gmFact.checkModifier`; fix round 1 gated the
+        `ask`s of regeneration R6/T1, fernkampf.FK8 and zaubermodifikationen.ZM11's check
+        modifiers, which asked on every query); (c) the origin, as above. 19.8: besides the
+        origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
+        expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
+        ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
 
   - id: "TZ.15"
     name: The hero is Überrascht — defending against the surprise action

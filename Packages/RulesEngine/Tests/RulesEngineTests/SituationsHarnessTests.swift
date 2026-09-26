@@ -29,9 +29,7 @@ final class SituationsHarnessTests: XCTestCase {
         }
 
         let listed = Self.conflicts(all)
-        if listed == nil { XCTFail("MIGRATION.md has no section \"\(Conflicts.section)\"") }
-        if listed?.isEmpty == true { XCTFail("MIGRATION.md's conflicts section lists no situation") }
-        let conflicts = Set(listed ?? [])
+        let conflicts = Set(listed)
         let missing = Self.expectationMissing(all)
         let recording = !(ProcessInfo.processInfo.environment["RECORD_CONFLICT_FINGERPRINTS"] ?? "").isEmpty
         let snapshotURL = Repo.url(ConflictSnapshot.path)
@@ -44,8 +42,6 @@ final class SituationsHarnessTests: XCTestCase {
         let runFiles = Set(all.situations.map(\.file).filter(filter.keeps))
 
         var report = HarnessReport()
-        let known = Set(all.situations.map { ConflictRef(file: $0.file, id: $0.id) })
-        report.conflictsUnknown = (listed ?? []).filter { !known.contains($0) }.map(\.description)
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
             let judged = Self.judge(s, engine: engine, conflicts: conflicts, expectationMissing: missing, snapshot: snapshot)
@@ -80,6 +76,9 @@ final class SituationsHarnessTests: XCTestCase {
         report.fileLines.forEach { print($0) }
         for (ref, gone) in report.conflictsShrunk.sorted(by: { $0.key < $1.key }) {
             print("conflict fingerprints no longer occurring: \(ref): \(gone.joined(separator: "; ")) (re-record: RECORD_CONFLICT_FINGERPRINTS=1)")
+        }
+        for id in report.conflictsPassing {
+            print("listed conflict passes: \(id) (set its conflict's review to resolved)")
         }
         for key in report.fingerprintsUnlisted {
             print("conflict fingerprints of a situation no longer listed: \(key) (re-record: RECORD_CONFLICT_FINGERPRINTS=1)")
@@ -159,19 +158,14 @@ final class SituationsHarnessTests: XCTestCase {
                       notes: run.notes + (check?.notes ?? []))
     }
 
-    /// MIGRATION.md's conflicts section, parsed against the situations' order; nil when the
-    /// section is missing.
-    static func conflicts(_ all: CompiledSituations) -> [ConflictRef]? {
-        let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
-        let migration = (try? String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)) ?? ""
-        return Conflicts.parse(migration, order: order)
+    /// The listed conflicts: the situations whose `conflict` field is not resolved.
+    static func conflicts(_ all: CompiledSituations) -> [ConflictRef] {
+        Conflicts.listed(all.situations)
     }
 
-    /// R73: the listed conflicts whose listed reason is that the expectation is missing.
+    /// R73: the listed conflicts whose reason is that the expectation is missing.
     static func expectationMissing(_ all: CompiledSituations) -> Set<ConflictRef> {
-        let order = Dictionary(grouping: all.situations, by: \.file).mapValues { $0.map(\.id) }
-        let migration = (try? String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)) ?? ""
-        return Conflicts.expectationMissing(migration, order: order)
+        Conflicts.expectationMissing(all.situations)
     }
 
     /// R50: whether `s` expects a `gained` or `cleared` event, at the top or in a step: its query

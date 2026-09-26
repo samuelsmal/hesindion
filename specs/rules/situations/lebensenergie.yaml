@@ -57,6 +57,16 @@ situations:
           - { value: 35, from: lebensenergie.LE3 }         # 5 + 2 × 15
           - { value: -2, from: DISADV_28.NL1, via: [lebensenergie.LE3] }   # "−1 pro Stufe"
     appToday: 35 — Niedrige Lebenskraft is ignored (computeDerivedValues reads only ADV_25; catalog DISADV_28 todo) — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/lebensenergie.yaml 15.2 (Task 30): expects `leMax` with one line `{
+        value: 35, from: lebensenergie.LE3 }` (5 + 2 × 15), and DISADV_28.NL1's −2 `via:
+        [lebensenergie.LE3]`. 15.1 expects the same derive as two lines (5 and 30, one per
+        `sum` term), which is how the engine shows a derive's parts; one line of 35
+        contradicts it. NL1 is an `add` to `leMax` that reads no target (as ADV_25.HL1,
+        which 15.1 expects without a `via`), so nothing puts LE3 in its `via`. The total 33
+        matches.
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
 
@@ -131,6 +141,20 @@ situations:
           at: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
           gs: { total: -3, lines: [{ value: -3, from: COND_6.SZ5, via: [ADV_49.ZH1, ADV_49.ZH3], ruling: ADV_49.zaeher-hund-iv }] }
     appToday: Handlungsunfähig outright, no Selbstbeherrschung check (StateCatalog schmerz handlungsunfaehigAtLevel 4; Hero.effectiveSchmerzLevel skips Zäher Hund at IV) — wrong for the check (example 4)
+    conflict:
+      category: a
+      reason: >-
+        situations/lebensenergie.yaml 15.7 (Task 30; 15.4–15.6 and 15.8 now pass: a line of
+        a rule whose level a useLevel changed carries that useLevel's rulings, the base line
+        of `level(rule: COND_6)` included, and `hero.conditionLevels` is derived): expects
+        COND_6.SZ2's Selbstbeherrschung check `offered` (`check`, `before: each_action`, no
+        `choice`). An `offer` offers choices; SZ2's check is asked by the rules, not
+        offered, and no expect key holds a check the player may make. The step after the
+        passed check also expects `at` and `gs` at −3 while the hero keeps the
+        Handlungsunfähig the top-level settle gained (gs 0, total −8: STATE_8.H2's set and,
+        since Task 33 fix round 1, its bound; −11 before): that is the engine gap in "Open
+        questions" (a gain is not withdrawn when its `when` stops holding), not this
+        entry's.
 
   - id: "15.8"
     name: In Plattenrüstung, LP 9, Betäubung III from a blow and Furcht I — eight Stufen?
@@ -259,6 +283,18 @@ situations:
             from: STATE_10.L4, optional: true }
       notApplied: [{ rule: ADV_75, because: "betrifft nur Betäubung und Berauscht (ADV_75.SW1)" }]
     appToday: no stand-up action; the player removes Liegend by hand (liegend 7.6). Not wrong about ADV_75, which the app ignores (catalog todo)
+    conflict:
+      category: a
+      reason: >-
+        situations/lebensenergie.yaml 15.16: (a) expects the Körperbeherrschung check itself
+        offered (`optional: true`, with FW and attributes) before any choice. `offer` offers
+        choices only: STATE_10.L4 offers `choice.passierschlagVermeiden` beside the
+        stand-up, and its `check` runs once the hero stands up with it chosen, so no check
+        is offered. (b) expects ADV_75 not applied `because: "betrifft nur Betäubung und
+        Berauscht"`, while 15.19 expects `because: "nur durch Alkohol verursacht"` for the
+        same effects. An effect has one `because`; SW1's tells carry the alcohol one
+        (15.19), and the hero without Betäubung or Berauscht fails the same `when`
+        (`hero.has: COND_2 | COND_9`).
 
   - id: "15.17"
     name: Betäubung II after a night of Premer Feuer, with Schnell wieder auf den Beinen

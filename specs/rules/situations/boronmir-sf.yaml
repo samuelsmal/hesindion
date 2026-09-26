@@ -64,6 +64,24 @@ situations:
       pa: { legal: { allowed: false, span: round, because: SA_66.V2 } }    # until the round ends
       aw: { legal: { allowed: false, span: round, because: SA_66.V2 } }
     appToday: same, when the attack is the hero's first act of the round
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
 
   - id: "14.2"
     name: Vorstoß after Boronmir has already parried this round
@@ -115,6 +133,24 @@ situations:
       # Vorstoß is a manoeuvre, excluded from a Passierschlag (ruling passierschlag.passierschlag-sf).
       # The defences stay gone for the round (SA_66.V2).
     appToday: same (PassierschlagRoll sets maneuver .passierschlag)
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
 
   - id: "14.7"
     name: Vorstoß and Wuchtschlag I on the same attack
@@ -125,6 +161,15 @@ situations:
       legal: { combinations: [{ choices: [vorstoss, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
       # AT +2 −2 −1 = −1 (result 15), TP 1W6+4 +2
     appToday: one manoeuvre per attack — Vorstoß or Wuchtschlag
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.7, 14.12, situations/sturmangriff.yaml 10.7,
+        situations/wuchtschlag.yaml 9.8 (Task 31): expect the combination `allowed: true,
+        from: kampfsonderfertigkeiten.KS5`. KS5 is a `none` clause (the sum of KS3's and
+        KS4's limits); an allowed combination has no refusing entry and no effect comes from
+        KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
+        Spezialmanöver pass KS3 and KS4).
 
   # --- Schildspalter (SA_59) -----------------------------------------------------------------
 
@@ -148,6 +193,24 @@ situations:
     appToday: >
       offered, AT unchanged; the note says only "Schaden gegen Schild-SP" — the limits on the
       opponent's defence are not told (CombatManeuver.infoText)
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
 
   - id: "14.9"
     name: Schildspalter against a fighter without a shield
@@ -183,6 +246,15 @@ situations:
       legal: { combinations: [{ choices: [schildspalter, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
       # AT −2 (SA_67.W1) −1 (Belastung) = −3, result 13; 1W6+4 +2 TP to the shield's StP
     appToday: one manoeuvre per attack
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.7, 14.12, situations/sturmangriff.yaml 10.7,
+        situations/wuchtschlag.yaml 9.8 (Task 31): expect the combination `allowed: true,
+        from: kampfsonderfertigkeiten.KS5`. KS5 is a `none` clause (the sum of KS3's and
+        KS4's limits); an allowed combination has no refusing entry and no effect comes from
+        KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
+        Spezialmanöver pass KS3 and KS4).
 
   - id: "14.13"
     name: An opponent's Schildspalter at Boronmir's Großschild, on foot
@@ -206,6 +278,15 @@ situations:
     appToday: >
       the app cannot be told: weapon parry 11 − 1 and the full shield parry 13 − 1 are offered,
       and the damage goes to Boronmir's LeP. The shield's StP are never reduced.
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.13: expects `pa(with: shield)` total −7, result 6,
+        with a −6 line from SA_59.SS2 ("removes schilde.SCH3"). The base 13 (`pa(with:
+        Großschild)`) folds in SCH3's doubled bonus; the rules give the shield parry as
+        KW2's Schilde PA 7 plus SCH3's +6 line, and SS2 is a `suppress` of that line, which
+        lands in notApplied (reason suppressed), not as a −6 line. Faithful to the rules:
+        base 7, no SCH3 line, total −1, result 6.
 
   # --- Aufmerksamkeit (SA_40) ----------------------------------------------------------------
 
@@ -249,6 +330,34 @@ situations:
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
       pa: { total: -1, result: 10 }
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
+
+        situations/boronmir-sf.yaml 14.16, 14.20, situations/boronmir-neu.yaml 19.1 (Task
+        31): expect `pa` total −1, result 10, from the base 11 (`pa(with: Rabenschnabel)`).
+        The header derives 11 as "PA 8, with the Großschild's passive +3: 11", folding the
+        Rabenschnabel's PA-Mod −1 into 8 and the passive shield bonus into 11. The rules
+        give both as lines of their own after the base ("die Modifikatoren werden erst nach
+        der Ermittlung der Basiswerte verrechnet", at-pa-modifikatoren.M1; schilde.SCH1's
+        "+3"), and ruling R66 reads a base keyed by the item in hand as that base, with the
+        weapon's lines on top: 11 − 1 + 3 − 1 (Belastung) = 12, total +1. The same fold as
+        the listed 14.17 and 19.2.
 
   - id: "14.17"
     name: In a Plänkler-Formation on foot, the line takes +1 VW — weapon parry, shield parry, dodge
@@ -260,6 +369,29 @@ situations:
       aw:            { total: 0, result: 7,  lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       at:            { total: -1, result: 15 }
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
+
+        situations/boronmir-sf.yaml 14.17: expects `pa` result 11 and `pa(with: shield)`
+        result 13 with only the P2 and B3 lines (total 0). The bases 11 and 13 fold in
+        SCH1's +3 and SCH3's +6; the rules add those as lines (schilde.SCH1, schilde.SCH3),
+        so the totals would be +3 and +6, with the same results.
 
   - id: "14.18"
     name: A companion without the SF, standing in Boronmir's line (Formation, its larger sibling, in 19.3)
@@ -288,6 +420,24 @@ situations:
         # toggle is off with the reason. Formation mounted: 19.4
         notApplied: [{ rule: SA_884, reason: "not while mounted (SA_884.P1, ruling plaenkler-mounted)" }]
     appToday: +1 AT on top, 21 (the bonus ignores whether the hero is mounted) — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
 
   - id: "14.20"
     name: The line breaks up mid-fight
@@ -300,6 +450,18 @@ situations:
     appToday: >
       cannot be turned off: the formation is chosen once, at combat setup (CombatSetupView), and
       the combat screens receive it read-only (CombatRootView.plaenklerActive)
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.16, 14.20, situations/boronmir-neu.yaml 19.1 (Task
+        31): expect `pa` total −1, result 10, from the base 11 (`pa(with: Rabenschnabel)`).
+        The header derives 11 as "PA 8, with the Großschild's passive +3: 11", folding the
+        Rabenschnabel's PA-Mod −1 into 8 and the passive shield bonus into 11. The rules
+        give both as lines of their own after the base ("die Modifikatoren werden erst nach
+        der Ermittlung der Basiswerte verrechnet", at-pa-modifikatoren.M1; schilde.SCH1's
+        "+3"), and ruling R66 reads a base keyed by the item in hand as that base, with the
+        weapon's lines on top: 11 − 1 + 3 − 1 (Belastung) = 12, total +1. The same fold as
+        the listed 14.17 and 19.2.
 
   - id: "14.21"
     name: Vorstoß inside a Plänkler-Formation (+1 AT)
@@ -315,3 +477,21 @@ situations:
           - { value: 1, from: SA_884.P2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
     appToday: same, when the attack is the hero's first act of the round
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.

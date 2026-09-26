@@ -204,6 +204,25 @@ situations:
     appToday: shield parry offered at 12, weapon parry 10 — wrong; AW 3 right
     # From the weapon-arm side instead (not behind): no −4, and the shield parry is still not
     # offered (RK5) — how the app learns the side is the open reiterkampf.mounted-attack-side.
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.11"
     name: On foot, Langschwert and Großschild, attacked from behind
@@ -214,6 +233,25 @@ situations:
       "pa(with: weapon)": { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 11 → 7
       aw: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }          # 7 → 3
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.12"
     name: Boronmir attacks a human from behind
@@ -247,6 +285,41 @@ situations:
       at: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }            # 14 → 10
       "pa(with: weapon)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }     # 11 → 7
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
+
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.15"
     name: The same corridor, parrying with the Großschild
@@ -256,6 +329,25 @@ situations:
     expect:
       "pa(with: shield)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
     appToday: −4, but from the Langschwert's reach (mittel), not the shield's row — right by coincidence
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.16"
     name: The Langschwert dropped; Raufen and the Großschild, parrying with the shield
@@ -265,6 +357,25 @@ situations:
     expect:
       "pa(with: shield)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
     appToday: 0 — wrong (the main piece is bare hands, kurz; Situation.loadoutReach)
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.17"
     name: A shield bash with the Großschild in the corridor
@@ -277,6 +388,25 @@ situations:
       no shield attack is offered (beidhaendiger-kampf); where the app does roll AT with the
       shield (a Passierschlag named for it, PassierschlagRoll) the shield's reach is kurz and
       Beengte Umgebung gives 0 — wrong
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.18"
     name: The corridor with the Rabenschnabel alone; and dodging
@@ -288,6 +418,25 @@ situations:
       pa: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }             # 8 → 4
       aw: { total: 0 }                                                                  # 7
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   # --- Größenkategorie ----------------------------------------------------------------------
 
@@ -309,6 +458,25 @@ situations:
       notOffered: [{ defence: weaponParry, because: groessenkategorie.GK4 }]
       "pa(with: shield)": { total: 0 }                                                           # 13
     appToday: same (SizeCategoryRules.allowedDefenses; the weapon list shows only the shield)
+    conflict:
+      category: b
+      reason: >-
+        situations/kampfsituationen.yaml 17.10, 17.11, 17.14, 17.15, 17.16, 17.17, 17.18,
+        17.20 (Task 31): the file's sheet bases fold in what the rules add as lines. The
+        header gives "shield parry ⌈10/2⌉ + 2 + 2×3 = 13" (`pa(with: Großschild)`: SCH3's
+        doubled +6 folded), "Rabenschnabel … 7 + 2 − 1 = 8" (`pa(with: Rabenschnabel)`: M1's
+        PA −1 folded), "shield AT 10 + 2 − 6 = 6" (`at(with: Großschild)`: M1's AT −6
+        folded), and states the Langschwert's weapon parry as 8 while its comments count
+        from 11 (SCH1's +3 folded, "11 → 7"). The rules add schilde.SCH3 (+6), schilde.SCH1
+        (+3) and at-pa-modifikatoren.M1 (−1, −6) as lines after the base (M1: "erst nach der
+        Ermittlung der Basiswerte"; ruling R66). So: 17.11 `pa(with: shield)` total +2
+        (expected −4), `pa(with: weapon)` −1 (−4); 17.14 `pa(with: weapon)` −1 (−4); 17.15
+        and 17.16 `pa(with: shield)` +2 (−4); 17.17 `at` −12 (−6); 17.18 `pa` −5 (−4); 17.20
+        `pa(with: shield)` +6 (0); 17.10 `pa(with: weapon)` −2 (−1). The results the
+        comments give (17.11: 9 and 7; 17.17: 0; …) are the engine's too. Before Task 31
+        these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
+        live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
+        explains none of these numbers.
 
   - id: "17.21"
     name: An Oger attacks; the Rabenschnabel alone
@@ -332,6 +500,14 @@ situations:
           - { value: 2, from: SA_661.GS1 }                                    # raises vorteilhafte-position.VP1
       texts: []          # no defence restriction: Boronmir is mittel (ruling groessenkategorie.mounted-size)
     appToday: same (AT 20; nothing said about the opponent's defence)
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfsituationen.yaml 17.22 (Task 31, was listed for the `raises` key,
+        which is a comment): expects `texts: []` ("no defence restriction"). `[]` asserts
+        that no `tell` is shown, but every query shows the `*` tell that holds:
+        kampfsonderfertigkeiten.KS2's "passiv — wirkt immer" (regeneration.R7's tell is
+        gated on the Regenerationsphase since fix round 1). The lines and total match.
 
   - id: "17.23"
     name: On foot, a mounted knight attacks Boronmir (Langschwert and Großschild)

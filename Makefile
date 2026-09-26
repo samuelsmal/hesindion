@@ -219,7 +219,8 @@ rules-json:
 # `make test-rules-engine RULES_FILES=kampfwerte,lebensenergie`; unset (the default) or
 # `RULES_FILES=all` runs every file, `RULES_FILES=none` skips it. It writes
 # build/rules/harness-report.json.
-# A situation listed in MIGRATION.md's "Expectation conflicts for the owner" is checked against its
+# A situation with a `conflict` field that is not resolved (specs/rules/README.md, "How conflicts
+# are kept") is a listed conflict, checked against its
 # fingerprints in specs/rules/conflict-fingerprints.json (query, step, mismatch kind;
 # ruling R78): a mismatch outside them fails, fingerprints that no longer occur are printed.
 # `make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1` re-records the snapshot from the run (only

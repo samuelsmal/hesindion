@@ -80,6 +80,18 @@ situations:
       legal: { combinations: [{ choices: [finte, sturmangriff], allowed: false, because: SA_62.ST4 }] }
       texts: [{ player: "Sturmangriff lässt sich nicht mit Finte kombinieren (Sturmangriff)" }]
     appToday: moot — one manoeuvre per attack, and SA_62 is not offered on foot
+    conflict:
+      category: a
+      reason: >-
+        situations/finte.yaml 8.7, 8.8, situations/reichweite.yaml RW.15 (Task 31): expect
+        `texts` entries such as "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur
+        ein Basismanöver pro Handlung". No rule tells this: it is the message the UI
+        composes from the refusing entry's `because` and source
+        (kampfsonderfertigkeiten.KS5's note and ruling manoeuvre-combination: "an excluded
+        one stays visible, disabled, with that `because` and its source"), which each
+        situation's `legal.combinations` already checks (and which passes: SA_62.ST4, KS3).
+        Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
+        tell explained any missing text.
 
   - id: "8.8"
     name: Finte together with Wuchtschlag
@@ -89,6 +101,18 @@ situations:
       legal: { combinations: [{ choices: [finte, wuchtschlag], allowed: false, because: kampfsonderfertigkeiten.KS3 }] }
       texts: [{ player: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung" }]
     appToday: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
+    conflict:
+      category: a
+      reason: >-
+        situations/finte.yaml 8.7, 8.8, situations/reichweite.yaml RW.15 (Task 31): expect
+        `texts` entries such as "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur
+        ein Basismanöver pro Handlung". No rule tells this: it is the message the UI
+        composes from the refusing entry's `because` and source
+        (kampfsonderfertigkeiten.KS5's note and ruling manoeuvre-combination: "an excluded
+        one stays visible, disabled, with that `because` and its source"), which each
+        situation's `legal.combinations` already checks (and which passes: SA_62.ST4, KS3).
+        Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
+        tell explained any missing text.
 
   - id: "8.9"
     name: Finte on horseback

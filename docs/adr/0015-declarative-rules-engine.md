@@ -101,6 +101,10 @@ at all.
   (`conflict-fingerprints.json`, ruling R78), so a new mismatch inside a listed situation still
   fails. No domain has switched yet — this is the engine passing its own acceptance suite, not the
   app's behaviour changing.
+  *Amended 2026-09-26:* the reasoning of each conflict moved out of MIGRATION.md into its
+  situation's `conflict` field, beside a review the owner signs (`agreed`, `backToAgent`,
+  `resolved`), and the harness lists the unresolved ones from there (`specs/rules/README.md`,
+  "How conflicts are kept"). The counts above are unchanged.
 - **The base contract.** A sheet base handed to the engine (`Situation.base`) is the unfolded
   base: the technique or sheet value without the item's and the shield's modifiers, which the
   engine adds as lines after it (ruling R66; at-pa-modifikatoren.M1: "erst nach der Ermittlung der

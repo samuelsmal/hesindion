@@ -35,6 +35,13 @@ situations:
     expect:
       aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
     appToday: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
+    conflict:
+      category: a
+      reason: >-
+        situations/mehrfache-verteidigung.yaml V4, V5 (Task 31): expect MV1's −3 `via:
+        [mehrfache-verteidigung.MV4]`. MV4 is a `none` clause ("says what round.defencesMade
+        counts"); no effect comes from it, so no line can carry it in `via` (as kampfwerte
+        16.12's KW11). The −3 matches.
 
   - id: V5
     name: A parry after dodging an arrow — ranged defences count too
@@ -43,6 +50,13 @@ situations:
     expect:
       pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
     appToday: 0 — wrong (counted per kind)
+    conflict:
+      category: a
+      reason: >-
+        situations/mehrfache-verteidigung.yaml V4, V5 (Task 31): expect MV1's −3 `via:
+        [mehrfache-verteidigung.MV4]`. MV4 is a `none` clause ("says what round.defencesMade
+        counts"); no effect comes from it, so no line can carry it in `via` (as kampfwerte
+        16.12's KW11). The −3 matches.
 
   - id: V6
     name: The next Kampfrunde

@@ -176,8 +176,9 @@ lists this section only samples (all facts, targets, verbs, comparisons, `select
 fields, …), and
 [the design](../../docs/plans/2026-09-24-rules-engine-design.md#4-the-rule-format) for the reasoning
 behind the format. [`MIGRATION.md`](./MIGRATION.md) has the file-by-file record of the 2026-09
-migration into this format — its "Expectation conflicts for the owner", "Open questions" and
-"Notes for the engine tasks" sections are what is still unresolved.
+migration into this format — its "Open questions" and "Notes for the engine tasks" sections are
+what is still unresolved. The expectation conflicts it listed are now each situation's `conflict`
+field ([How conflicts are kept](#how-conflicts-are-kept)).
 
 ## How rulings are kept
 
@@ -207,29 +208,71 @@ data, kept beside the rule it interprets, and answered there — not in chat.
   house rules may lower it") are not rulings: they are inputs the design has to provide, shown as
   their own lines.
 
+## How conflicts are kept
+
+A **conflict** is a situation the engine, following the rule text, does not meet (ruling R60). It
+stays in the situations file as it is — its `expect` is acceptance data, not something to fit — and
+gets a `conflict` field beside it with the reasoning and the owner's verdict:
+
+```yaml
+  - id: "16.5"
+    …
+    conflict:
+      category: a              # R77: a the expectation is wrong per the rule text,
+                               #      b the input convention of R66 (a folded sheet base),
+                               #      c rule data not written
+      expectationMissing: true # R73, only when the reason is that nothing is expected
+      reason: >-
+        The rules give that base as KW2's derive …
+      review:                  # absent until the owner decides
+        verdict: agreed        # agreed | backToAgent | resolved
+        by: "@handle"
+        date: 2026-09-26
+        note: >                # required for backToAgent: what is wrong
+          …
+```
+
+- **No `review`**: it waits for the owner (`≠ n` in the TUI, `decide n conflicts` in
+  `make rules-sweep`).
+- **`agreed`**: the owner agrees with the reasoning. The agent changes what the reason names — the
+  expectation, the sheet base or the rule data — which this verdict authorises, and then sets
+  `resolved`.
+- **`backToAgent`**: the reasoning is wrong or incomplete; the note says why. The agent re-reads
+  the page, fixes the encoding or rewrites the reason, and takes the `review` off, so it waits for
+  the owner again.
+- **`resolved`**: done. The harness no longer lists it: it passes or fails like any situation.
+
+The harness lists every situation whose conflict is not `resolved` (rulec compiles `category`,
+`expectationMissing` and the verdict into `situations.json`), and checks each against its
+fingerprints in [`conflict-fingerprints.json`](conflict-fingerprints.json) (R78): a mismatch
+outside them fails. The listed conflicts and the fingerprinted ones must be the same set. After a
+conflict changes, re-record with `make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1` and read
+the diff; a listed conflict that passes is printed so it can be set `resolved`.
+
 ## Reviewing with the TUI
 
 ```
 make rules-review
 ```
 
-It lists every rule file with what it needs: `? n` open rulings, `· review` not yet read against its
-page, `⟳ agent` waiting for an agent, `✓` reviewed. The right side shows the selected rule: its
+It lists every rule file with what it needs: `? n` open rulings, `≠ n` conflicts to decide,
+`· review` not yet read against its page, `⟳ agent` waiting for an agent, `✓` reviewed. The right side shows the selected rule: its
 source, the rulings (open first, with options and the recommendation), each clause's page text next
 to its effects (comments and `# FORMAT:` notes included), and the situations that name the rule,
-with what the app does today where it differs. It opens on a short help with the flow and these
+with what the app does today where it differs; conflicts come first, with their reasoning. A
+conflict shows under every rule its situation names. It opens on a short help with the flow and these
 keys; `?` shows it again.
 
 | Key | Does |
 |---|---|
-| `n` | the next thing that needs you: each open ruling in turn, then rules to review. Leaving a rule with rulings still open asks first: `y` moves on, `n` stays |
+| `n` | the next thing that needs you: each open ruling in turn, then each conflict to decide, then rules to review. Leaving a rule with rulings still open asks first: `y` moves on, `n` stays |
 | `p` | back to where `n` came from, one jump at a time, including rulings you have answered since |
-| `enter` | on a ruling: choose its answer from the options (or press the option's letter). The last choices write your own answer instead, send the ruling back to the agent, or clear your answer. On a clause or situation: open it in the editor |
+| `enter` | on a ruling: choose its answer from the options (or press the option's letter). The last choices write your own answer instead, send the ruling back to the agent, or clear your answer. On a conflict: agree, send it back to the agent (with a note), mark it resolved, or take your verdict off. On a clause or other situation: open it in the editor |
 | `r` | mark the rule reviewed (`reviewed: { by, date }`); again to withdraw |
-| `a` | send it back to the agent: a note on what is wrong, about the focused ruling or clause (or the whole rule). For a ruling whose question or options are wrong. It stays open but leaves the `n` list until the agent has redone it. An empty note removes the flag |
+| `a` | send it back to the agent: a note on what is wrong, about the focused ruling, clause or conflict (or the whole rule). For a ruling whose question or options are wrong. It stays open but leaves the `n` list until the agent has redone it. An empty note removes the flag |
 | `e` | open `$VISUAL`/`$EDITOR` at the focused clause, ruling or situation; the tool reloads after |
 | `o` | open the rule's page in the browser |
-| `f` / `/` | filter: needs you, all, agent queue, reviewed / search by id, name, kind |
+| `f` / `/` | filter: needs you, conflicts, all, agent queue, reviewed / search by id, name, kind |
 | `j` / `k` | move between the cards on the right |
 | `?` | the help shown at start |
 
@@ -249,7 +292,7 @@ regenerated after it, so `git diff` is the record of the session. The edits are 
 ## What waits for an agent
 
 `make rules-queue` prints it; `make rules-agent` starts Claude Code on it (interactive, so you can
-watch and steer; it does not commit). Two kinds:
+watch and steer; it does not commit). Three kinds:
 
 - **An answered ruling.** Turn it into `status: decided` with `decided: { by, date }` (the person
   who answered, and the day), and update the effects and situations that rest on it.
@@ -261,6 +304,14 @@ watch and steer; it does not commit). Two kinds:
   If you disagree with the note, say why in the ruling's `context` rather than ignoring it. Then
   delete the `agentPass` block. If the pass changed a clause's effects, withdraw the rule's
   `reviewed` (set it to `null`): the review was of the old version.
+- **A conflict with a verdict** ([How conflicts are kept](#how-conflicts-are-kept)). `agreed`:
+  change what the reason names — the `expect`, the sheet base, or write the missing rule data;
+  the owner's verdict is what allows a change to `expect`, and nothing else does. `backToAgent`:
+  re-read the page and act on the note — fix the encoding if the note is right, or rewrite the
+  `reason` to answer it — then delete the `review`, so the owner decides again. Either way, run
+  `make test-rules-engine`: a conflict the engine now meets is printed as passing; set its
+  verdict to `resolved` (`by` the agent, today) and re-record the fingerprints with
+  `RECORD_CONFLICT_FINGERPRINTS=1`. One that still mismatches keeps its verdict for the owner.
 
 Whatever you change, keep it inside the closed vocabulary ("Layout of the draft rule files" above)
 and run `make rules-check` after every edit — it compiles every rule file against

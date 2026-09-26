@@ -63,6 +63,17 @@ situations:
       aw: { total: 0 }
       events: [{ itemChanged: loadout.mount, change: { ridden: false }, from: reiterkampf.RK6 }]   # the old `after: { hero.mounted: false }`
     appToday: not offered
+    conflict:
+      category: a
+      reason: >-
+        situations/reiterkampf.yaml 5.5 (Task 31, reasoned anew in fix round 1): expects
+        `itemChanged: loadout.mount, change: { ridden: false }` from reiterkampf.RK6. Taking
+        the jump off runs RK6's `item: { instance: { loadout: mount } }`, which changes the
+        instance in the slot `mount`; the slot is now a vocabulary fact (`loadout.mount`,
+        `loadout.mount.instance`), but the file states neither a mount in the loadout nor
+        its instance (only `hero.mounted`; the header's "Kriegspferd" is the mount's kind),
+        and a slot without a stated instance cannot be changed: the engine asks for
+        `loadout.mount.instance` (ItemStateTests, Task 28). The offer and AW 0 match.
 
   - id: "5.6"
     name: Golgarite with a Rabenschnabel, mounted against a fighter on foot
@@ -86,6 +97,14 @@ situations:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: -2, from: reiterkampf.RK6 }
     appToday: same totals
+    conflict:
+      category: b
+      reason: >-
+        situations/reiterkampf.yaml 5.6, 5.8 (Task 31): expect `pa` totals 3 and 0 with the
+        Rabenschnabel in hand, from the file's generic `pa: 8`. The Rabenschnabel's PA-Mod
+        −1 (its row, ITEMTPL_19.RS0) is at-pa-modifikatoren.M1's line after the base, so the
+        totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
+        Rabenschnabel's parry with its Mod folded in.
 
   - id: "5.7"
     name: Golgarite with a Schwert, mounted against a fighter on foot
@@ -110,6 +129,14 @@ situations:
       notApplied:
         - { rule: SA_661, reason: not mounted }
     appToday: same
+    conflict:
+      category: b
+      reason: >-
+        situations/reiterkampf.yaml 5.6, 5.8 (Task 31): expect `pa` totals 3 and 0 with the
+        Rabenschnabel in hand, from the file's generic `pa: 8`. The Rabenschnabel's PA-Mod
+        −1 (its row, ITEMTPL_19.RS0) is at-pa-modifikatoren.M1's line after the base, so the
+        totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
+        Rabenschnabel's parry with its Mod folded in.
 
   - id: "5.9"
     name: What a rider may do

@@ -356,7 +356,48 @@ class _File:
             "expect": expect,
             "expectSituation": expect_situation,
             "pending": sorted(pending),
+            "conflict": self.conflict(s.get("conflict"), _line(s, "conflict")),
         }
+
+    # --- conflict -----------------------------------------------------------------------------
+    def conflict(self, c, line):
+        """A situation the engine does not meet (R60): its category (R77), its reasoning and the
+        owner's review. None without one. Only what the harness reads is compiled: the category,
+        `expectationMissing` (R73) and the verdict (None until reviewed; `resolved` takes the
+        situation off the listed conflicts)."""
+        if c is None:
+            return None
+        if not isinstance(c, dict):
+            self.err("a conflict is a mapping", line)
+            return None
+        v = self.v.raw
+        for k in c:
+            if k not in v["conflictKeys"]:
+                self.err(f"unknown conflict key {k}", _line(c, k, line))
+        category = c.get("category")
+        if category not in v["conflictCategories"]:
+            self.err(f"conflict category {category} is none of {', '.join(v['conflictCategories'])}",
+                     _line(c, "category", line))
+        if not isinstance(c.get("reason"), str) or not c["reason"].strip():
+            self.err("a conflict needs a reason", line)
+        verdict = None
+        if (review := c.get("review")) is not None:
+            rline = _line(c, "review", line)
+            if not isinstance(review, dict):
+                self.err("a conflict review is a mapping", rline)
+            else:
+                for k in review:
+                    if k not in v["conflictReviewKeys"]:
+                        self.err(f"unknown conflict review key {k}", _line(review, k, rline))
+                verdict = review.get("verdict")
+                if verdict not in v["conflictVerdicts"]:
+                    self.err(f"conflict verdict {verdict} is none of {', '.join(v['conflictVerdicts'])}", rline)
+                if not review.get("by") or not review.get("date"):
+                    self.err("a conflict review needs by and date", rline)
+                if verdict == "backToAgent" and not review.get("note"):
+                    self.err("a conflict sent back to the agent needs a note", rline)
+        return {"category": category, "expectationMissing": c.get("expectationMissing") is True,
+                "verdict": verdict}
 
     # --- expect -------------------------------------------------------------------------------
     def sequence_citations(self, steps, cited, from_clauses):

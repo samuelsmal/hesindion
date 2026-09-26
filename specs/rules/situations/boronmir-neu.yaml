@@ -68,6 +68,34 @@ situations:
       no formation toggle at all: Formation is unknown to the app (catalog SA_862 todo; no case in
       CombatAbility), and the setup offers Plänkler-Formation only to its holder
       (CombatSetupView, hero.hasPlaenklerFormation), which Boronmir no longer is. AT 15 — wrong
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
+
+        situations/boronmir-sf.yaml 14.16, 14.20, situations/boronmir-neu.yaml 19.1 (Task
+        31): expect `pa` total −1, result 10, from the base 11 (`pa(with: Rabenschnabel)`).
+        The header derives 11 as "PA 8, with the Großschild's passive +3: 11", folding the
+        Rabenschnabel's PA-Mod −1 into 8 and the passive shield bonus into 11. The rules
+        give both as lines of their own after the base ("die Modifikatoren werden erst nach
+        der Ermittlung der Basiswerte verrechnet", at-pa-modifikatoren.M1; schilde.SCH1's
+        "+3"), and ruling R66 reads a base keyed by the item in hand as that base, with the
+        weapon's lines on top: 11 − 1 + 3 − 1 (Belastung) = 12, total +1. The same fold as
+        the listed 14.17 and 19.2.
 
   - id: "19.2"
     name: In Formation on foot, the formation takes +2 VW — weapon parry, shield parry, dodge
@@ -79,6 +107,28 @@ situations:
       aw:            { total: 1, result: 8,  lines: [{ value: 2, from: SA_862.F2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
       at:            { total: -1, result: 15 }
     appToday: not offered (19.1); PA 10, shield parry 12, AW 6 — wrong
+    conflict:
+      category: b
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
+
+        situations/boronmir-neu.yaml 19.2: the same as 14.17 for Formation's +2 VW: `pa`
+        result 12 and `pa(with: shield)` result 14 with totals 1 come from folded bases 11 /
+        13; the rules give SCH1's +3 and SCH3's +6 as lines of their own.
 
   - id: "19.3"
     name: A companion without the SF, standing in Boronmir's formation
@@ -108,6 +158,24 @@ situations:
           - { rule: COND_1, clause: B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }
           - { rule: SA_862, reason: "not while mounted (SA_862.F1, ruling formation-mounted)" }
     appToday: AT 20 — right, but only because the app has no Formation to offer; nothing says why
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.1, 14.6, 14.8, 14.16, 14.17, 14.19, 14.21,
+        situations/boronmir-neu.yaml 19.1, 19.2, 19.4, situations/kampfsituationen.yaml
+        17.14 (Task 31): the `at` totals leave out the Großschild's "zusätzlich -1 AT auf
+        die Hauptwaffe" (ITEMTPL_29.GR1, the Regelwerk's weapon table, p. 367). Boronmir
+        carries the Großschild in every one of them, and GR1 is a core line of the item, on
+        without any Fokusregel; kampfwerte 16.6, 16.7, 16.10 and kupperus-und-waffen 18.5,
+        18.9, 18.11 expect it. The files' headers derive the AT without it (boronmir-sf,
+        boronmir-neu: "Rabenschnabel … AT 16"; kampfsituationen says it is "left out"). So
+        each total is 1 lower than expected, and each result too: 14.1 0 (expected 1), 17 →
+        16; 14.6 −6 (−5); 14.8 −2 (−1); 14.16 −1 (0); 14.19 3 (4); 14.21 1 (2); 19.1 0 (1);
+        19.4 5 (4, see below); 14.17 and 19.2 −2 (−1); 17.14 −5 (−4). 19.4 also expects no
+        SA_862.F2 line mounted: that rests on the open ruling formation-mounted (F1's forbid
+        of the choice while mounted applies nothing, so the chosen formation's +2 stands),
+        as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
+        (F1's offer) rests on it too.
 
   - id: "19.5"
     name: A companion holds Plänkler-Formation, Boronmir holds Formation — one line, not two
@@ -176,6 +244,36 @@ situations:
         expect:
           events: [{ damage: { formula: 1W3+1 }, from: trefferzonen.TZ11 }]
     appToday: same (−1, from `wundschwelle.max`); the line does not say Eisern made it −1 rather than −2
+    conflict:
+      category: a
+      reason: >-
+        situations/trefferzonen.yaml TZ.12, TZ.13, TZ.14, boronmir-neu.yaml 19.8
+        (plan-mandated: A.4 puts the gain in TZ8's `onFailure`; the owner decides whether
+        TZ8 or TZ11 is the origin): expect the Wundeffekt `from: trefferzonen.TZ11` (a
+        `gained` STATE_10, an item let go, the 1W3+1 SP). Under A.4 the gain, the item
+        change and the torso `tell` run in trefferzonen.TZ8's `check.onFailure`, reading
+        TZ11's provided tables; their origin is TZ8. The 1W3+1 SP (TZ.12, 19.8: `damage: {
+        formula: 1W3+1 }`) has no dice value form and is a `tell` to the player, not a
+        damage event (see "Open questions"). Task 32 (R62) compares these events; every
+        remaining mismatch: TZ.12: the `damage` event is missing (the engine logs TZ8's tell
+        "Wundeffekt Torso: zusätzlich 1W3+1 SP."); the check and its −2 match. TZ.13: the
+        `gained` STATE_10 comes from TZ8, the one mismatch. TZ.14: (a) the `itemChanged` is
+        missing: TZ8's `item: { instance: { loadout: weapon } }` changes the instance in the
+        weapon slot, and the file states the Schwert there but no instance of it, so the
+        engine asks for `loadout.weapon.instance` and changes nothing (as reiterkampf 5.5);
+        `hit.heldInHand` (`weapon`, from `loadout.weaponHand: rechts` and `hit.side:
+        rechts`) and the one-handed Schwert (R61) are no longer the reason; (b) `questions:
+        []` (the old `asked: []`, which meant that the hand is not asked; it is not) asserts
+        that nothing at all is asked, but the hero states neither MU nor
+        Selbstbeherrschung's FW, which the Wundeffekt check's Probe needs (`attr.MU`,
+        `fw.TAL_8`), nor an armour, the LE basis or the mount, so the hit's stages and the
+        check ask for them (`loadout.armour`, `species.le`, `hero.purchased.le`,
+        `hero.mounted`, `gmFact.mountTakesSP`, `gmFact.checkModifier`; fix round 1 gated the
+        `ask`s of regeneration R6/T1, fernkampf.FK8 and zaubermodifikationen.ZM11's check
+        modifiers, which asked on every query); (c) the origin, as above. 19.8: besides the
+        origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
+        expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
+        ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
 
   - id: "19.9"
     name: Trefferzonen not played — 12 SP
@@ -191,6 +289,21 @@ situations:
       the take-damage screen says "Wundschwelle erreicht" and "Wundeffekte gibt es nur mit der
       Fokusregel Trefferzonen" (CombatWundschwelleRow); no check, which is right. The sheet shows
       Wundschwelle 9 with no note. What else is right waits on ruling eisern-scope
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-neu.yaml 19.9: expects `wundschwelle` total 9 with `rulesets:
+        []`. The Wundschwelle's derive (⌈KO/2⌉) is trefferzonen.TZ8's, and the whole file is
+        `ruleset: fokus.trefferzonen`, so with the Fokusregel off only ADV_54's +1 remains.
+        Pending on ADV_54's open ruling eisern-scope, which asks exactly this. Every
+        mismatch the harness records (final review): (a) `wundschwelle` total 9, got 0 with
+        no lines: with `rulesets: []` TZ8's derive is off, and ADV_54.E1's +1 rests on the
+        open ruling eisern-scope, so it applies nothing (§4.7); (b) the expected line
+        carrying `ruling: ADV_54.eisern-scope`: no line carries it, for the same reason; E1
+        shows its open-ruling text instead ("Die Wundschwelle des Helden steigt durch den
+        Vorteil um 1."); (c) the text `{ player: "wirkt nur mit Fokusregel Trefferzonen",
+        ruling: ADV_54.eisern-scope }`: no clause tells this; it is the answer the open
+        ruling would give, and the text shown for that ruling is E1's own.
 
   # --- Schlechte Eigenschaft: Autoritätsglaube (DISADV_37, sid 2) -------------------------------
 
@@ -213,6 +326,15 @@ situations:
       page behind a swipe (HeroDetailView.disadvantagesSection); a Willenskraft check opened from
       the talent list does not mention it (TalentProbeModal.hints). The not-applied Belastung is
       not listed either (as verweichlicht 13.2)
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-neu.yaml 19.10 (Task 31): expects the Willenskraft check
+        `offered` with its cause and text. DISADV_37.SE1's check is asked by the rules, not
+        offered (an `offer` offers choices; no expect key holds a check the player may make,
+        as lebensenergie 15.7 and 15.16), and it rests on the open ruling
+        schlechte-eigenschaft-check, so it is not asked either. The queries (`check.fw` 9,
+        `check.modifier` 0, COND_1.B3 not applied) match.
 
   - id: "19.11"
     name: The order comes from his Komtur — the GM makes it 2 harder — and Boronmir has Schmerz II
@@ -242,3 +364,18 @@ situations:
       # trigger lasts, which is the GM's to end
       events: [{ logged: "Autoritätsglaube: gibt der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }]
     appToday: a plain Willenskraft failure in the log, if it was rolled at all
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-neu.yaml 19.12: expects no state gained on the failed check
+        (`states: []`) beside the log entry. No expect key says "no event of this kind";
+        `events: [{ logged: … }]` checks the log only, so "no state" is a comment.
+
+        situations/boronmir-neu.yaml 19.12 (reasoned anew in Task 31 fix round 1: the check
+        now runs as its stated outcome): expects `events: [{ logged: "Autoritätsglaube: gibt
+        der Schlechten Eigenschaft nach", from: DISADV_37.SE2 }]`. On the failed
+        Willenskraft check the procedure logs SE2's `tell` at the confirm, "gibt der
+        Schlechten Eigenschaft nach", from DISADV_37.SE2. The expected entry prefixes the
+        Schlechte Eigenschaft's name ("Autoritätsglaube: "), which no rule composes: the
+        names are SE6's display table (`readBy: display`), and SE2's text names none. The
+        origin and the logged event match.

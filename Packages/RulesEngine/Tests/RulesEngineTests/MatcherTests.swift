@@ -547,7 +547,7 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(try verdict("true", named), .pending(["pl-adds.open-q"]))
     }
 
-    /// R43: a mismatching situation listed in MIGRATION's conflicts is `conflict` before any
+    /// R43: a mismatching listed conflict is `conflict` before any
     /// pending check, matched by file and id.
     func testAListedConflictIsItsOwnBucketBeforePending() throws {
         let s = try situation(#"{"pending": ["a.open"]}"#)
@@ -862,72 +862,33 @@ final class MatcherTests: XCTestCase {
 
     // MARK: - The conflicts list and the file filter
 
-    /// The ids after each `<file>.yaml` in MIGRATION's conflicts section, ranges expanded in the
-    /// file's order, several files in one bullet.
-    func testTheConflictsSectionIsParsedIntoSituationIds() {
-        let md = """
-        ## Something before
-        - situations/a.yaml 9.9: not a conflict.
-        ## Expectation conflicts for the owner
-
-        - situations/a.yaml 1.2: expects something.
-        - situations/b.yaml 5.6, c.yaml 17.3, 17.22, TZ.4: the `raises` key (x.yaml 3.3 in prose too).
-        - situations/a.yaml 1.4–1.6: a range; lebensenergie 15.8's comment is prose.
-        ## Reviews reset by hand edits
-        - situations/a.yaml 1.3: not a conflict.
-        """
-        let order = ["a.yaml": ["1.1", "1.2", "1.3", "1.4", "1.4b", "1.5", "1.6", "1.7"]]
-        XCTAssertEqual(Conflicts.parse(md, order: order)?.map(\.description),
-                       ["a.yaml 1.2", "b.yaml 5.6", "c.yaml 17.3", "c.yaml 17.22", "c.yaml TZ.4", "x.yaml 3.3",
-                        "a.yaml 1.4", "a.yaml 1.4b", "a.yaml 1.5", "a.yaml 1.6"])
-        XCTAssertNil(Conflicts.parse("## Other\n- situations/a.yaml 1.2", order: order))
-    }
-
-    /// R77: the section is split into `###` category subsections; every id under any of them is
-    /// listed, none from the section before or after, and a subsection's intro adds none.
-    func testTheConflictsSubsectionsAreAllRead() {
-        let md = """
-        ## Something before
-        - situations/a.yaml 9.9: not a conflict.
-        ## Expectation conflicts for the owner
-
-        Three categories (R77); the fingerprints are in conflict-fingerprints.json.
-
-        ### (a) The expectation is wrong per the rule text
-
-        - situations/a.yaml 1.2: expects something.
-
-        ### (b) Input convention
-
-        The owner restates the bases.
-
-        - situations/b.yaml 5.6, c.yaml 17.3: folded bases.
-
-        ### (c) Rule data not written
-
-        - situations/a.yaml 1.4: no rule.
-        ## Reviews reset by hand edits
-        - situations/a.yaml 1.3: not a conflict.
-        """
-        XCTAssertEqual(Conflicts.parse(md, order: [:])?.map(\.description), ["a.yaml 1.2", "b.yaml 5.6", "c.yaml 17.3", "a.yaml 1.4"])
-        XCTAssertEqual(Conflicts.categories(md).map(\.heading),
-                       ["(a) The expectation is wrong per the rule text", "(b) Input convention", "(c) Rule data not written"])
-    }
-
-    /// R77: MIGRATION.md's conflicts section has the three category subsections, each listing
-    /// situations, and every listed conflict is under one of them.
-    func testMIGRATIONsConflictsAreInTheThreeCategories() throws {
-        let md = try String(contentsOf: Repo.url("specs/rules/MIGRATION.md"), encoding: .utf8)
-        let categories = Conflicts.categories(md)
-        XCTAssertEqual(categories.map { String($0.heading.prefix(3)) }, ["(a)", "(b)", "(c)"])
-        let all = try XCTUnwrap(Conflicts.parse(md, order: [:]))
-        var inCategories: [ConflictRef] = []
-        for c in categories {
-            let ids = Conflicts.parse(Conflicts.section + "\n" + c.body, order: [:]) ?? []
-            XCTAssertFalse(ids.isEmpty, c.heading)
-            inCategories += ids
+    /// A situation is a listed conflict while its `conflict` field is not resolved: unreviewed,
+    /// sent back to the agent or agreed. R73's `expectationMissing` counts only while listed.
+    func testAConflictIsListedUntilResolved() throws {
+        func s(_ id: String, _ conflict: String?) throws -> CompiledSituation {
+            var fields = #"{"id": "\#(id)""#
+            if let conflict { fields += #", "conflict": \#(conflict)"# }
+            return try situation(fields + "}")
         }
-        XCTAssertEqual(Set(all), Set(inCategories))
+        let all = [
+            try s("T.1", nil),
+            try s("T.2", #"{"category": "a", "expectationMissing": false, "verdict": null}"#),
+            try s("T.3", #"{"category": "b", "expectationMissing": false, "verdict": "backToAgent"}"#),
+            try s("T.4", #"{"category": "a", "expectationMissing": true, "verdict": "agreed"}"#),
+            try s("T.5", #"{"category": "c", "expectationMissing": true, "verdict": "resolved"}"#),
+        ]
+        XCTAssertEqual(Conflicts.listed(all).map(\.id), ["T.2", "T.3", "T.4"])
+        XCTAssertEqual(Conflicts.expectationMissing(all).map(\.id), ["T.4"])
+    }
+
+    /// R78: every recorded fingerprint belongs to a listed conflict of the compiled situations, and
+    /// every listed conflict has fingerprints: a conflict the engine meets is resolved, not listed.
+    func testTheFingerprintsAreTheListedConflicts() throws {
+        let url = Repo.url("build/rules/situations.json")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "run make rules-json")
+        let all = try XCTUnwrap(try CompiledSituations.load(from: url))
+        let snapshot = try XCTUnwrap(try ConflictSnapshot.load(from: Repo.url(ConflictSnapshot.path)))
+        XCTAssertEqual(Set(snapshot.conflicts.keys), Set(Conflicts.listed(all.situations).map(\.description)))
     }
 
     /// `RULES_FILES=kampfwerte,lebensenergie` keeps those files; unset, empty or `all` keeps all.

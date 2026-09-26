@@ -1,7 +1,7 @@
 import Foundation
 @testable import RulesEngine
 
-// What the harness makes of each situation, the MIGRATION conflicts list, the `RULES_FILES`
+// What the harness makes of each situation, the listed conflicts, the `RULES_FILES`
 // filter, and `build/rules/harness-report.json`.
 
 /// One situation's outcome. Only `failed` fails the test.
@@ -11,7 +11,7 @@ enum Verdict: Equatable {
     /// It mismatched, and every mismatch is explained by these open rulings of its static
     /// `pending` list, met by its run, on live effects (R41, R46).
     case pending([String])
-    /// It mismatched and is listed in MIGRATION's "Expectation conflicts for the owner" (R43),
+    /// It mismatched and is a listed conflict: its `conflict` field is not resolved (R43),
     /// and (when a snapshot is checked) every mismatch is one of its recorded fingerprints (R78).
     case conflict
     /// It needs the action layer (`action: <need>`), or its only mismatches are unsupported
@@ -46,75 +46,25 @@ enum Verdict: Equatable {
     }
 }
 
-/// A situation named in MIGRATION's conflicts section: its file and id.
+/// A listed conflict: a situation's file and id.
 struct ConflictRef: Hashable, Encodable, CustomStringConvertible {
     var file: String
     var id: String
     var description: String { "\(file) \(id)" }
 }
 
-/// The situations MIGRATION.md's "Expectation conflicts for the owner" lists (in any of its `###`
-/// category subsections, R77): every id after a `<file>.yaml` (`situations/boronmir-sf.yaml 14.13`, `kampfsituationen.yaml 17.3, 17.22`),
-/// ranges (`15.4–15.8`) expanded in the file's order.
+/// The listed conflicts: every situation whose `conflict` field is not resolved (R60, R77). The
+/// field, with its reasoning and the owner's review, is in the situations file; rulec compiles
+/// the category, `expectationMissing` and the verdict into situations.json.
 enum Conflicts {
-    static let section = "## Expectation conflicts for the owner"
-
-    /// Ruling R73: the situations named by an entry of the section whose reason says that the
-    /// expectation is missing (the phrase "expectation missing").
-    static func expectationMissing(_ markdown: String, order: [String: [String]]) -> Set<ConflictRef> {
-        guard let start = markdown.range(of: section) else { return [] }
-        let rest = markdown[start.upperBound...]
-        let body = rest.range(of: "\n## ").map { rest[..<$0.lowerBound] } ?? rest
-        var out: Set<ConflictRef> = []
-        for entry in body.components(separatedBy: "\n- ") where entry.contains("expectation missing") {
-            out.formUnion(parse(section + "\n- " + entry, order: order) ?? [])
-        }
-        return out
+    static func listed(_ situations: [CompiledSituation]) -> [ConflictRef] {
+        situations.filter { $0.conflict?.isListed == true }.map { ConflictRef(file: $0.file, id: $0.id) }
     }
 
-    /// Ruling R77: the section's `###` subsections (the three categories: the expectation wrong
-    /// per the rule text, the input convention of R66, rule data not written), each heading with
-    /// its text up to the next subsection. `parse` reads every id of the section, whatever
-    /// subsection it is in.
-    static func categories(_ markdown: String) -> [(heading: String, body: String)] {
-        guard let start = markdown.range(of: section) else { return [] }
-        let rest = markdown[start.upperBound...]
-        let body = String(rest.range(of: "\n## ").map { rest[..<$0.lowerBound] } ?? rest)
-        return body.components(separatedBy: "\n### ").dropFirst().map { part in
-            let heading = part.prefix { $0 != "\n" }
-            return (String(heading).trimmingCharacters(in: .whitespaces), String(part.dropFirst(heading.count)))
-        }
-    }
-
-    /// nil when the section is missing.
-    static func parse(_ markdown: String, order: [String: [String]]) -> [ConflictRef]? {
-        guard let start = markdown.range(of: section) else { return nil }
-        let rest = markdown[start.upperBound...]
-        let body = rest.range(of: "\n## ").map { rest[..<$0.lowerBound] } ?? rest
-        let id = #"(?:[A-Z]+\.?)?\d+(?:\.\d+)*[a-z]?"#
-        let list = try! NSRegularExpression(pattern: #"([A-Za-z0-9_-]+\.yaml)((?:\s*,?\s*"# + id + "(?:[–-]" + id + ")?)+)")
-        let one = try! NSRegularExpression(pattern: "(" + id + ")(?:[–-](" + id + "))?")
-        let text = String(body)
-        var out: [ConflictRef] = []
-        func add(_ file: String, _ x: String) {
-            let ref = ConflictRef(file: file, id: x)
-            if !out.contains(ref) { out.append(ref) }
-        }
-        for m in list.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let file = String(text[Range(m.range(at: 1), in: text)!])
-            let ids = String(text[Range(m.range(at: 2), in: text)!])
-            for r in one.matches(in: ids, range: NSRange(ids.startIndex..., in: ids)) {
-                let first = String(ids[Range(r.range(at: 1), in: ids)!])
-                guard let lastRange = Range(r.range(at: 2), in: ids) else { add(file, first); continue }
-                let last = String(ids[lastRange])
-                if let ids = order[file], let a = ids.firstIndex(of: first), let b = ids.firstIndex(of: last), a <= b {
-                    ids[a...b].forEach { add(file, $0) }
-                } else {
-                    add(file, first); add(file, last)
-                }
-            }
-        }
-        return out
+    /// Ruling R73: the listed conflicts whose reason is that the expectation is missing.
+    static func expectationMissing(_ situations: [CompiledSituation]) -> Set<ConflictRef> {
+        Set(situations.filter { $0.conflict?.isListed == true && $0.conflict?.expectationMissing == true }
+            .map { ConflictRef(file: $0.file, id: $0.id) })
     }
 }
 
@@ -266,8 +216,6 @@ struct HarnessReport: Encodable {
     var passesWithRulingOpen: [Open] = []
     /// Listed conflicts that pass.
     var conflictsPassing: [String] = []
-    /// Listed conflicts that are no compiled situation (`file id`).
-    var conflictsUnknown: [String] = []
     /// R78: listed conflicts with mismatches outside their snapshot (failed), by `file id`.
     var conflictsGrown: [String: [String]] = [:]
     /// R78: listed conflicts whose snapshot names fingerprints that no longer occur (reported:

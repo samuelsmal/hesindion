@@ -2,8 +2,8 @@
 # requires-python = ">=3.11"
 # dependencies = ["textual>=1.0", "pyyaml>=6"]
 # ///
-"""Review the draft rule files: find what needs attention, answer rulings, mark rules reviewed,
-flag a rule for another agent pass, or open the file in your editor.
+"""Review the draft rule files: find what needs attention, answer rulings, decide conflicts,
+mark rules reviewed, flag a rule for another agent pass, or open the file in your editor.
 
     make rules-review              # the TUI
     make rules-review BY=@handle   # sign as someone else
@@ -36,7 +36,7 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Footer, Header, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
-FILTERS = ["needs you", "all", "agent queue", "reviewed"]
+FILTERS = ["needs you", "conflicts", "all", "agent queue", "reviewed"]
 
 
 # --- signing ----------------------------------------------------------------------------------
@@ -88,6 +88,8 @@ def status_cell(rule):
         return Text("✗ yaml", style="bold red")
     if rule.to_answer:
         return Text(f"? {len(rule.to_answer)}", style="bold yellow")
+    if n := len(rule.conflicts_in("owner")):
+        return Text(f"≠ {n}", style="bold magenta")
     if rule.needs_agent:
         return Text("⟳ agent", style="cyan")
     if rule.reviewed:
@@ -209,12 +211,42 @@ def ruling_card(rule, r):
     return Card(t, kind="ruling", target=r, path=r.path, line=r.line)
 
 
+CONFLICT_STYLE = {"owner": ("CONFLICT · decide", "bold black on magenta"),
+                  "backToAgent": ("CONFLICT · sent back to the agent", "bold black on cyan"),
+                  "agreed": ("CONFLICT · agreed, for the agent", "bold black on cyan"),
+                  "resolved": ("CONFLICT · resolved", "bold black on green")}
+CATEGORY = {"a": "the expectation is wrong per the rule text",
+            "b": "the input convention of R66: a folded sheet base",
+            "c": "rule data not written"}
+VERDICTS = {"agreed": "The reasoning is right: the agent changes what it names (the expectation, "
+                      "the base or the rule data), then marks it resolved",
+            "backToAgent": "The reasoning is wrong or incomplete: send it back to the agent, with "
+                           "what is wrong",
+            "resolved": "It is fixed already (by hand, or the engine now meets it)"}
+
+
 def situation_card(s):
     t = Text()
+    if state := s.conflict_state:
+        label, style = CONFLICT_STYLE[state]
+        t.append(f" {label} ", style=style)
+        cat = s.conflict.get("category")
+        t.append(f"  ({cat}) {CATEGORY.get(cat, '')}\n", style="magenta")
     t.append(f"{s.file} {s.id} · ", style="bold")
     t.append(s.name)
     if s.diverges:
         t.append(f"\n  app today: {s.appToday}", style="red" if "wrong" in str(s.appToday) else "yellow")
+    if s.conflict and state != "resolved":
+        for para in str(s.conflict.get("reason", "")).split("\n"):
+            if para.strip():
+                t.append(f"\n{one_line(para)}", style="dim")
+    if review := (s.conflict or {}).get("review"):
+        t.append(f"\n{review.get('verdict')} — {review.get('by')}, {review.get('date')}", style="cyan")
+        if review.get("note"):
+            t.append(f": {one_line(review['note'])}", style="cyan")
+    if state == "owner":
+        t.append("\nenter to give your verdict · a to send it back to the agent · e to edit",
+                 style="yellow")
     return Card(t, kind="situation", target=s, path=Path("situations") / f"{s.file}.yaml",
                 line=s.line)
 
@@ -355,6 +387,43 @@ class Choose(ModalScreen):
             self.dismiss(None)
 
 
+class VerdictChoice(ModalScreen):
+    """Give a verdict on a conflict. Dismisses with a verdict, "" (take the verdict off) or None
+    on escape."""
+
+    DEFAULT_CSS = """
+    VerdictChoice { align: center middle; }
+    VerdictChoice > Vertical { width: 90%; max-width: 110; height: auto; max-height: 90%;
+                               border: thick $accent; background: $surface; padding: 1 2; }
+    VerdictChoice #reason { height: auto; max-height: 20; }
+    VerdictChoice OptionList { height: auto; margin-top: 1; }
+    """
+    BINDINGS = [Binding("escape", "cancel", "Cancel")]
+    AUTO_FOCUS = "OptionList"
+
+    def __init__(self, s):
+        super().__init__()
+        self.s = s
+
+    def compose(self) -> ComposeResult:
+        c = self.s.conflict
+        with Vertical():
+            yield Static(Text(f"{self.s.file} {self.s.id} · {self.s.name}", style="bold"))
+            with VerticalScroll(id="reason"):
+                yield Static(Text(str(c.get("reason", "")).strip(), style="dim"))
+            choices = [Option(Text(what), id=v) for v, what in VERDICTS.items()]
+            if c.get("review"):
+                choices.append(Option(Text("Take my verdict off: it waits for me again",
+                                           style="italic"), id="clear"))
+            yield OptionList(*choices)
+
+    def on_option_list_option_selected(self, event):
+        self.dismiss("" if event.option.id == "clear" else event.option.id)
+
+    def action_cancel(self):
+        self.dismiss(None)
+
+
 class Confirm(ModalScreen):
     DEFAULT_CSS = """
     Confirm { align: center middle; }
@@ -377,7 +446,7 @@ class Confirm(ModalScreen):
         self.dismiss(False)
 
 
-def welcome_text(by, you, unrev, agent, sweep=None, missing=()):
+def welcome_text(by, you, unrev, agent, sweep=None, missing=(), conflicts=0):
     t = Text()
     t.append("Rule review\n\n", style="bold")
     if sweep:
@@ -386,11 +455,16 @@ def welcome_text(by, you, unrev, agent, sweep=None, missing=()):
             t.append(f"Not drafted yet, so not in the list: {', '.join(i for i, _ in missing)}.")
         t.append("\n\n")
     t.append(f"Signing as {by}. Right now: {you} open ruling{'s' * (you != 1)} for you, "
+             f"{conflicts} conflict{'s' * (conflicts != 1)} to decide, "
              f"{unrev} rule{'s' * (unrev != 1)} not reviewed, {agent} for the agent.\n\n")
     t.append("How a review goes\n", style="bold")
     for step in (
-        "Press n. It jumps to the next thing that needs you: an open ruling first, then a rule "
-        "nobody has reviewed yet. If n would leave a rule with rulings still open, it asks first.",
+        "Press n. It jumps to the next thing that needs you: an open ruling first, then a "
+        "conflict to decide, then a rule nobody has reviewed yet. If n would leave a rule with "
+        "rulings still open, it asks first.",
+        "A conflict is a situation the engine does not meet: the card says why, from the rule "
+        "text. Press enter: agree (the agent then changes what the reason names and marks it "
+        "resolved), send it back to the agent with what is wrong, or mark it resolved.",
         "On a ruling, press enter and pick one of its options, or type its letter. If none "
         "fits, the last choices let you write your own answer instead. The answer goes into the "
         "rule file; the next agent pass acts on it.",
@@ -410,19 +484,19 @@ def welcome_text(by, you, unrev, agent, sweep=None, missing=()):
         ("p", "back to where n came from"),
         ("j / k, tab", "next / previous card (ruling, clause, situation)"),
         ("↑ / ↓", "move between rules in the list"),
-        ("enter", "choose an answer for the focused ruling; on anything else, open the editor"),
+        ("enter", "answer the focused ruling or decide the focused conflict; else open the editor"),
         ("r", "mark the rule reviewed (again to withdraw)"),
-        ("a", "send the rule, or the focused clause or ruling, back to the agent"),
+        ("a", "send the rule, or the focused clause, ruling or conflict, back to the agent"),
         ("e", "open the file in $VISUAL / $EDITOR at the focused line"),
         ("o", "open the rule's page in the browser"),
-        ("f", "filter: needs you → all → agent queue → reviewed"),
+        ("f", "filter: needs you → conflicts → all → agent queue → reviewed"),
         ("/", "search by id, name or kind"),
         ("?", "this help"),
         ("q", "quit"),
     ):
         t.append(f"  {key:<12}", style="bold yellow")
         t.append(what + "\n")
-    t.append("\nIn the list: ? n open rulings · ⟳ waits for the agent · ✓ reviewed · "
+    t.append("\nIn the list: ? n open rulings · ≠ n conflicts to decide · ⟳ waits for the agent · ✓ reviewed · "
              "· review not yet reviewed.\n", style="dim")
     t.append("\nEnter or escape to start.", style="dim")
     return t
@@ -510,7 +584,12 @@ class Review(App):
         you = sum(len(r.to_answer) for r in self.rules)
         unrev = sum(1 for r in self.rules if not r.reviewed and r.kind != "shared")
         agent = sum(bool(r.needs_agent) for r in self.rules)
-        self.push_screen(Welcome(welcome_text(self.by, you, unrev, agent, self.sweep, self.missing)))
+        self.push_screen(Welcome(welcome_text(self.by, you, unrev, agent, self.sweep, self.missing,
+                                              self.conflicts_to_decide())))
+
+    def conflicts_to_decide(self):
+        """Situations, not rules: a conflict shows under every rule its situation names."""
+        return len({(s.file, s.id) for r in self.rules for s in r.conflicts_in("owner")})
 
     # data
 
@@ -530,6 +609,8 @@ class Review(App):
                 out.append(r)
                 continue
             if f == "needs you" and not r.needs_you:
+                continue
+            if f == "conflicts" and not r.conflicts_in("owner", "backToAgent", "agreed"):
                 continue
             if f == "agent queue" and not r.needs_agent:
                 continue
@@ -552,7 +633,8 @@ class Review(App):
         scope = f"{self.sweep.name}'s rules · " if self.sweep else ""
         if self.missing:
             scope += f"{len(self.missing)} not drafted · "
-        self.sub_title = (f"{scope}{FILTERS[self.filter]} · {you} open rulings · {unrev} unreviewed · "
+        self.sub_title = (f"{scope}{FILTERS[self.filter]} · {you} open rulings · "
+                          f"{self.conflicts_to_decide()} conflicts · {unrev} unreviewed · "
                           f"{agent} for the agent · signing as {self.by}")
         ids = [r.id for r in rows]
         if keep in ids:
@@ -578,9 +660,12 @@ class Review(App):
             widgets += [clause_card(rule, c) for c in rule.clauses]
         if rule.situations:
             wrong = sum(s.diverges for s in rule.situations)
+            open_ = len(rule.conflicts_in("owner", "backToAgent", "agreed"))
             widgets.append(Static(f"SITUATIONS ({len(rule.situations)}, {wrong} where the app "
-                                  f"differs)", classes="section"))
-            widgets += [situation_card(s) for s in rule.situations]
+                                  f"differs, {open_} conflicts)", classes="section"))
+            order = {"owner": 0, "backToAgent": 1, "agreed": 1}
+            widgets += [situation_card(s) for s in
+                        sorted(rule.situations, key=lambda s: order.get(s.conflict_state, 2))]
         self.pending_focus = focus
         detail.mount_all(widgets)
         detail.scroll_home(animate=False)
@@ -654,6 +739,16 @@ class Review(App):
             elif not (card and card.kind == "ruling"):
                 self._focus_card(lambda c: c.target is opens[0])
                 return
+        # then on its conflicts to decide
+        if self.current and (conflicts := self.current.conflicts_in("owner")):
+            if card and card.kind == "situation" and card.target in conflicts:
+                later = conflicts[conflicts.index(card.target) + 1:]
+                if later:
+                    self._focus_card(lambda c: c.target is later[0])
+                    return
+            elif not self.current.to_answer:
+                self._focus_card(lambda c: c.target is conflicts[0])
+                return
         rule = todo[(at + 1) % len(todo)]
         left = self.current.to_answer if self.current and rule is not self.current else []
         if not left:
@@ -678,11 +773,11 @@ class Review(App):
         self.push_screen(Confirm(text), done)
 
     def _jump(self, rule):
-        if FILTERS[self.filter] not in ("needs you", "all") or rule not in self.visible():
+        if FILTERS[self.filter] not in ("needs you", "conflicts", "all") or rule not in self.visible():
             self.filter, self.query_text = 0, ""
             self.query_one("#search", Input).value = ""
         self.refresh_table(rule.id)
-        opens = rule.to_answer
+        opens = rule.to_answer or rule.conflicts_in("owner")
         self._focus_after(lambda c: c.target is opens[0] if opens else c.kind == "clause")
 
     def action_back(self):
@@ -734,8 +829,39 @@ class Review(App):
             return
         if card.kind == "ruling" and card.target.state != "decided":
             self.answer(card.target)
+        elif card.kind == "situation" and card.target.conflict:
+            self.decide(card.target)
         else:
             self.action_edit()
+
+    def decide(self, s):
+        """The owner's verdict on a conflict; backToAgent asks what is wrong."""
+        def done(verdict):
+            if verdict is None:
+                return
+            if verdict == "backToAgent":
+                return self.send_back(s)
+            self.save(lambda: rf.set_conflict_review(Path("situations") / f"{s.file}.yaml", s.id,
+                                                     verdict or None, self.by),
+                      f"{s.id}: {verdict or 'verdict taken off'}",
+                      focus=lambda c: c.kind == "situation" and c.target.id == s.id)
+        self.push_screen(VerdictChoice(s), done)
+
+    def send_back(self, s):
+        body = Text("What is wrong with the reasoning, and what should the agent do? E.g. \"SCH3 "
+                    "does give the base: the page says …; fix the encoding\". Empty cancels.",
+                    style="dim")
+        old = ((s.conflict or {}).get("review") or {}).get("note") or ""
+
+        def done(values):
+            if values is None or not values[0].strip():
+                return
+            self.save(lambda: rf.set_conflict_review(Path("situations") / f"{s.file}.yaml", s.id,
+                                                     "backToAgent", self.by, values[0]),
+                      f"{s.id}: sent back to the agent — `make rules-agent` starts the pass",
+                      focus=lambda c: c.kind == "situation" and c.target.id == s.id)
+        self.push_screen(Ask(f"Send conflict {s.file} {s.id} back to the agent", body,
+                             [("what is wrong / what to do", one_line(old))]), done)
 
     def answer(self, r):
         def done(result):
@@ -790,6 +916,8 @@ class Review(App):
 
     def action_flag(self):
         card = self.focused_card()
+        if card and card.kind == "situation" and card.target.conflict:
+            return self.send_back(card.target)
         self.flag(self.current, card.target if card and card.kind in ("clause", "ruling") else None)
 
     def flag(self, rule, item=None):
@@ -879,8 +1007,9 @@ def print_queue():
     rules = rf.load()
     flagged = [r for r in rules if r.agent_pass]
     answered = [x for r in rules for x in r.rulings_in("answered")]
+    conflicts = {(s.file, s.id): s for r in rules for s in r.conflicts_in("backToAgent", "agreed")}
     print(f"Agent queue: {len(flagged)} rule(s) flagged, {len(answered)} answered ruling(s) to "
-          f"process.\n")
+          f"process, {len(conflicts)} conflict(s).\n")
     for r in flagged:
         ap = r.agent_pass
         req = ap.get("requested") or {}
@@ -889,7 +1018,13 @@ def print_queue():
         print(f"           {one_line(ap.get('note', ''))}")
     for x in answered:
         print(f"- answered {x.path}:{x.line}  {x.owner} · {x.id} — {one_line(x.data['answer'])}")
-    if not flagged and not answered:
+    for (file, sid), s in sorted(conflicts.items()):
+        review = s.conflict["review"]
+        print(f"- conflict situations/{file}.yaml:{s.line}  {sid} ({s.conflict.get('category')}) "
+              f"{review['verdict']} — {review.get('by')}, {review.get('date')}")
+        if review.get("note"):
+            print(f"           {one_line(review['note'])}")
+    if not flagged and not answered and not conflicts:
         print("Nothing to do.")
 
 
