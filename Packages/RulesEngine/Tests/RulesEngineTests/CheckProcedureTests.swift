@@ -435,6 +435,8 @@ final class CheckProcedureTests: XCTestCase {
         let failed = rolled(selbstbeherrschung, s, [19, 20, 19], fixture).state.step(.confirm, engine: fixture)
         XCTAssertEqual(failed.forbidden.map(\.origin), [ref("chk-pforte.VP2")])
         XCTAssertEqual(failed.forbidden.map(\.because), ["Selbstbeherrschung misslungen: der Zauber misslingt"])
+        // Task 35: the forbid rests on the decided rulings of the check that asked it.
+        XCTAssertEqual(failed.forbidden.map(\.rulings), [["chk-pforte.sequence"]])
 
         let spell = CheckRequest(kind: .spell, id: "SPELL_1", attributes: ["KL", "IN", "CH"])
         let cast = CheckProcedure.start(spell, in: outer, engine: fixture).state.step(.forbidden(failed.forbidden), engine: fixture)
@@ -446,6 +448,20 @@ final class CheckProcedureTests: XCTestCase {
 
         let passed = rolled(selbstbeherrschung, s, [3, 3, 3], fixture).state.step(.confirm, engine: fixture)
         XCTAssertEqual(passed.forbidden, [])
+    }
+
+    /// Task 35 (MIGRATION probe-magie 20.7/20.8): a cast asks the talent checks whose `when` reads
+    /// what the cast states (SA_74.VP2's Selbstbeherrschung on `check.kind: spell`), the caller's
+    /// to run, as taking a choice asks those gated on it; without the rule nothing is asked.
+    func testACastAsksTheChecksItsOwnFactsGate() throws {
+        let s = hero(["spell.cost": 8], owned: ["chk-pforte": OwnedRule()],
+                     pools: [.asp: PoolState(current: 20, max: 30)])
+        let cast = ActionLayer(engine: fixture).perform(.cast(spell: "SPELL_1", modifications: []), in: s)
+        XCTAssertEqual(cast.checks.map(\.id), ["TAL_8"])
+        XCTAssertEqual(cast.checks.map(\.origin), [ref("chk-pforte.VP2")])
+        XCTAssertEqual(cast.checks.first?.onFailure.count, 1)
+        let plain = ActionLayer(engine: fixture).perform(.cast(spell: "SPELL_1", modifications: []), in: hero())
+        XCTAssertEqual(plain.checks, [])
     }
 
     // MARK: - The procedure as a value

@@ -788,6 +788,19 @@ extension PipelineTests {
         XCTAssertEqual(lines(b, from: "pl-spell.S3").map(\.value), [2], "c is beyond the limit: no +1")
     }
 
+    func testALineReadingOneLabelledOptionIsThatOptionsTerm() throws {
+        // Task 35: zaubermodifikationen.ZM11's line per modification names it ("Erzwingen"), from
+        // ZM1's offer labels; an option chosen as `choice.X.Y: true` or as `choice.X: Y`.
+        let s = situation(owned: ["pl-spell": 1], facts: ["check.spell": "SPELL_1", "fw.SPELL_1": 8,
+                                                          "choice.mod.a": true, "choice.art": "heiss"])
+        let b = engine.evaluate(Query("check.modifier"), in: s)
+        XCTAssertEqual(lines(b, from: "pl-spell.S3").map(\.term), ["Eins"])
+        XCTAssertEqual(lines(b, from: "pl-spell.S4").map(\.term), ["Heiß"])
+        // An option without a label names no term.
+        let unlabelled = engine.evaluate(Query("check.modifier"), in: situation(owned: ["pl-spell": 1], facts: ["choice.art": "kalt"]))
+        XCTAssertEqual(unlabelled.lines.compactMap(\.term), [])
+    }
+
     // MARK: Texts, questions, free lines
 
     func testTellsAsksAndUnencodedClausesFillTheTextsAndQuestions() throws {

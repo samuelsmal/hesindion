@@ -38,7 +38,8 @@ clauses:
         # (plan Task 25: `split` reads `choice.split.<pool>`), how many of the cost's points are
         # LeP. Its bounds are the cost's `split` below: 0 up to the cost less VP1's 1 AsP.
         # One LeP for one AsP (the page gives no rate). The rest of the cost, at least 1, is
-        # AsP (zaubermodifikationen.ZM12). With 0 AsP left, the SF cannot be used.
+        # AsP, paid by the `split` cost below (zaubermodifikationen.ZM12's AsP-only cost is
+        # suppressed once LeP are chosen). With 0 AsP left, the SF cannot be used.
       - when: { hero.aspCurrent: 0 }
         forbid: { what: { choice: split.le } }
         because: "mindestens 1 AsP pro Zauber"

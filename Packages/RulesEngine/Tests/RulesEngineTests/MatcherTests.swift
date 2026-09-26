@@ -114,6 +114,21 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(compare(s, breakdowns: [two], offers: []), [])
     }
 
+    /// Task 35: a line's `term` is one of the fields it is matched by: two lines of one clause and
+    /// one value (zaubermodifikationen.ZM11's +1 for Erzwingen and for Zauberdauer erhöhen, 20.2)
+    /// pair by their terms, whatever their order; a term that no line carries is `wrongTerm`.
+    func testLinesOfOneClauseAndValuePairByTheirTerms() throws {
+        let s = try situation(#"{"expect": [{"query": "check.modifier", "lines": [{"from": "z.ZM11", "value": 1, "term": "Erzwingen"}, {"from": "z.ZM11", "value": 1, "term": "Zauberdauer erhöhen"}]}]}"#)
+        var dauer = line(1, "z.ZM11"); dauer.term = "Zauberdauer erhöhen"
+        var erzwingen = line(1, "z.ZM11"); erzwingen.term = "Erzwingen"
+        for order in [[dauer, erzwingen], [erzwingen, dauer]] {
+            XCTAssertEqual(compare(s, breakdowns: [Breakdown(query: Query("check.modifier"), lines: order)], offers: []), [])
+        }
+        var other = erzwingen; other.term = "Kosten senken"
+        XCTAssertEqual(kinds(compare(s, breakdowns: [Breakdown(query: Query("check.modifier"), lines: [dauer, other])], offers: [])),
+                       [.wrongTerm])
+    }
+
     /// `ruling`, `source` (the line's owner), `was` and `kind` compare when given.
     func testRulingSourceWasAndKindCompareWhenGiven() throws {
         let s = try situation(#"{"expect": [{"query": "check.modifier", "lines": [{"from": "a.A1", "value": -1, "ruling": ["a.r"], "source": "gm", "was": -2, "kind": "replaced"}]}]}"#)
@@ -1127,6 +1142,31 @@ final class MatcherTests: XCTestCase {
             {"sequence": [{"expect": {"offered": [{"choice": "nothingOffersThis"}]}}]}
             """#)
         XCTAssertEqual(kinds(StateRunner.run(s, engine: engine).mismatches), [.missingOffer])
+    }
+
+    /// Task 35 (R62, MIGRATION probe-magie 20.8): a cast step's `result {success, from, ruling}` is
+    /// the spell check's result as the step states it: a failed roll fails the checks the cast
+    /// asked (chk-pforte.VP2's Selbstbeherrschung), whose forbid fails the cast, named by it.
+    func testACastStepsResultIsItsSpellCheck() throws {
+        let engine = CheckProcedureTests.fixture
+        let attributes = ["SPELL_1": ["KL", "IN", "CH"], "TAL_8": ["MU", "MU", "KO"]]
+        func cast(_ owned: String, _ result: String) throws -> CompiledSituation {
+            let facts = [("attr.KL", "12"), ("attr.IN", "14"), ("attr.CH", "11"), ("attr.MU", "13"), ("attr.KO", "13"),
+                         ("fw.SPELL_1", "7"), ("fw.TAL_8", "5")].map { #"{"name": "\#($0.0)", "value": \#($0.1), "owner": "sheet"}"# }
+                + [#"{"name": "check.kind", "value": "spell", "owner": "player"}"#,
+                   #"{"name": "check.spell", "value": "SPELL_1", "owner": "player"}"#]
+            return try situation(#"{"owned": {\#(owned)}, "base": {"spell.cost": 8}, "facts": [\#(facts.joined(separator: ", "))], "#
+                + #""sequence": [{"rolls": {"check.result": "failure"}, "expect": {"result": \#(result)}}]}"#)
+        }
+        let pforte = #""chk-pforte": {"level": 1}"#
+        XCTAssertEqual(StateRunner.run(try cast(pforte, #"{"success": false, "from": "chk-pforte.VP2", "ruling": "chk-pforte.sequence"}"#),
+                                       engine: engine, attributes: attributes).mismatches, [])
+        // Without the rule the roll alone fails the cast: no clause names the failure.
+        let alone = StateRunner.run(try cast("", #"{"success": false, "from": "chk-pforte.VP2", "ruling": "chk-pforte.open"}"#),
+                                    engine: engine, attributes: attributes).mismatches
+        XCTAssertEqual(kinds(alone), [.checkResult])
+        XCTAssertEqual(alone.first?.names, ["chk-pforte.VP2", "chk-pforte.open"])
+        XCTAssertEqual(StateRunner.run(try cast("", #"{"success": false}"#), engine: engine, attributes: attributes).mismatches, [])
     }
 
     /// Ruling R64 (Task 30): a situation expecting `after` whose queries read what a `restore`

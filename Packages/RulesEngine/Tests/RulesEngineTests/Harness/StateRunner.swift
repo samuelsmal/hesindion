@@ -282,7 +282,7 @@ enum StateRunner {
             }
             let after = r?.situation ?? stated
             compare(expect, label: label, action: action, result: r, before: before, stated: stated, after: after,
-                    engine: engine, &c, &all)
+                    engine: engine, attributes: attributes, &c, &all)
             current = after
         }
         let view = HitView(queries: queries, breakdowns: viewBreakdowns, situation: current)
@@ -340,7 +340,8 @@ enum StateRunner {
     // MARK: - A step's expectations
 
     static func compare(_ expect: [String: JSONValue], label: String, action: Action?, result r: ActionResult?, before: Situation,
-                        stated: Situation, after: Situation, engine: Engine, _ c: inout MatchResult, _ all: inout [Breakdown]) {
+                        stated: Situation, after: Situation, engine: Engine, attributes: [String: [String]] = CheckAttributes.all,
+                        _ c: inout MatchResult, _ all: inout [Breakdown]) {
         let special: Set<String> = ["events", "process", "success", "texts", "notApplied", "questions", "result", "offered", "notOffered",
                                     "legal"]
         // The step's queries first: its `notApplied`, `texts` and `questions` are looked up in them too.
@@ -412,7 +413,13 @@ enum StateRunner {
                 all += view.map { $0.actions + $0.defences } ?? []
                 c.mismatches += Matcher.situationLegal(raw, view).map { $0.at(label) }
             case "result":
-                c.mismatches.append(.shape("step result", "\(label): the result of a cast is not modelled (no check procedure runs)"))
+                // Task 35 (R62): a cast's result is its spell check's (MIGRATION probe-magie 20.8).
+                guard case .cast(let spell, _)? = action, let r, let view = castResult(spell, r, stated: stated, engine: engine,
+                                                                                       attributes: attributes) else {
+                    c.mismatches.append(.shape("step result", "\(label): the result of an action that is no cast is not modelled"))
+                    continue
+                }
+                ActionRunner.compareResult(["result": raw], view, step: label, &c)
             default:
                 let b = queried[key]!
                 all.append(b)
@@ -420,6 +427,27 @@ enum StateRunner {
                                      success: nil, successQuery: nil, breakdown: { _ in b }, &c)
             }
         }
+    }
+
+    /// Task 35: the result of a cast's spell check, as the step states it (`rolls: { check.result }`,
+    /// one roll for every check, MIGRATION probe-magie 20.7): a failure fails the talent checks the
+    /// cast asked (SA_74.VP2's Selbstbeherrschung), and what their failure forbids fails the cast,
+    /// named by the forbid (`.forbidden`); otherwise the spell check has the stated outcome. nil
+    /// without the spell's Probe or a stated result.
+    static func castResult(_ spell: String, _ r: ActionResult, stated: Situation, engine: Engine,
+                           attributes: [String: [String]]) -> ProcedureView? {
+        guard let probe = attributes[spell], let roll = stated.facts["check.result"]?.value.string else { return nil }
+        var forbidden: [NotApplied] = []
+        if roll == "failure" {
+            for check in r.checks {
+                guard let p = attributes[check.id] else { continue }
+                let begun = CheckProcedure.start(check.request(attributes: p), in: check.situation, engine: engine)
+                forbidden += begun.state.step(.outcome(success: false), engine: engine).forbidden
+            }
+        }
+        let begun = CheckProcedure.start(CheckRequest(kind: .spell, id: spell, attributes: probe), in: stated, engine: engine)
+        let out = begun.state.step(forbidden.isEmpty ? .outcome(success: roll == "success") : .forbidden(forbidden), engine: engine)
+        return ProcedureView(stages: out.state.stages, result: out.state.result, offers: out.offers, notApplied: out.notApplied)
     }
 
     /// `process: { <id>: n | ended, capped: true }` after a step.

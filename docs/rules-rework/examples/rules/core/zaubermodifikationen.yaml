@@ -41,9 +41,20 @@ clauses:
         offer:
           choice: spellModification
           options: [erzwingen, kostenSenken, reichweiteErhoehen, zauberdauerErhoehen, zauberdauerSenken, gesteWeglassen, formelWeglassen]
+          labels:
+            erzwingen: Erzwingen
+            kostenSenken: Kosten senken
+            reichweiteErhoehen: Reichweite erhöhen
+            zauberdauerErhoehen: Zauberdauer erhöhen
+            zauberdauerSenken: Zauberdauer senken
+            gesteWeglassen: Geste weglassen
+            formelWeglassen: Formel weglassen
         # The old `per: cast, before: check`: the offer belongs to the spell check's start
         # breakdown (spec §6), before the dice. Each option picked is the player fact
         # `choice.spellModification.<option>: true`.
+        # The labels are ZM11's names ("Geste oder Formel weglassen" is one line there, two
+        # options here, as the app's two toggles); each ZM11 line that reads one option carries
+        # its label as the line's `term` (Task 35).
       - limit:
           what: { choice: [spellModification.erzwingen, spellModification.kostenSenken, spellModification.reichweiteErhoehen, spellModification.zauberdauerErhoehen, spellModification.zauberdauerSenken] }
           max: { of: fw.current, per: 4, round: down }
@@ -278,13 +289,18 @@ clauses:
         cost: { pool: asp, amount: { of: spell.cost } }
         # The old `on_success: { charge: … spell.cost.effective }`: the target `spell.cost` is the
         # cost after the modifications (ZM11).
-      - when: { check.kind: spell, check.result: failure }
+      - when: { check.kind: spell, check.result: failure, spell.duration: aufrechterhaltend }
         cost: { pool: asp, amount: { of: [spell.cost, spell.costPerInterval] }, onFailure: 0.5 }
+        ruling: round-up
+      - when: { check.kind: spell, check.result: failure, not: { spell.duration: aufrechterhaltend } }
+        cost: { pool: asp, amount: { of: spell.cost }, onFailure: 0.5 }
         ruling: round-up
         # The old `on_failure: { charge: "half(spell.cost.base + spell.cost.perInterval)", round:
         # up }`: `onFailure: 0.5` halves the amount, rounded up, on a failed check (plan Task 25).
-        # `spell.costPerInterval` is ZM5's upkeep; for a spell that is not aufrechterhaltend
-        # nothing derives it, so it adds nothing.
+        # `spell.costPerInterval` is ZM5's upkeep, "die Kosten für die erste Zeiteinheit"; only a
+        # spell that is aufrechterhaltend has one (ZM5 derives it), so for any other spell the
+        # half is of the cost alone (Task 35: one amount read `spell.costPerInterval` for every
+        # spell, and a sofort spell's failed cast paid nothing, probe-magie 20.3).
         # "Die Hälfte der so berechneten": after the modifications. Rounded up per the shared
         # round-up ruling (ADR-0006) — the app's `(cost + 1) / 2` agrees.
         # FORMAT: a resource charge whose amount depends on the check's outcome (success, failure,

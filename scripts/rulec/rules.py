@@ -380,6 +380,12 @@ class _Rule:
                     self.err(f"{t['name']} is not on a scale", _key_line(raw, "to", vline))
                     ok = False
             self.pending.append(("scale", out["scale"], self.file, _key_line(raw, "scale", vline)))
+        if verb == "offer" and ok and "labels" in out:
+            options = [str(o) for o in out.get("options") or []]
+            for k in out["labels"]:
+                if k not in options:
+                    self.err(f"label {k} is no option of {out['choice']}", _key_line(raw, "labels", vline))
+                    ok = False
         if verb == "useLevel" and ok and ("as" in raw) == ("lowerBy" in raw):
             self.err("useLevel needs exactly one of as, lowerBy", vline)
             ok = False
@@ -470,6 +476,13 @@ class _Rule:
                 if p not in self.v.raw["pools"]:
                     return self._bad(f"unknown pool {p}", line)
             return {"pools": list(val["pools"]), "min": dict(val.get("min", {}))}
+        if ftype == "labels":
+            # An offer's option → the picker's label, the `term` of the lines that read the
+            # option (zaubermodifikationen.ZM1, Task 35). Checked against `options` below.
+            if (not isinstance(val, dict) or not val
+                    or not all(isinstance(t, str) and t for t in val.values())):
+                return wrong()
+            return {str(k): str(t) for k, t in val.items()}
         if ftype == "duration":
             # `{ minutes: 5 }`, `{ rounds: 1 }`, or the count read from a fact: the interval a
             # spell's own data states (`{ minutes: spell.interval }`, zaubermodifikationen.ZM5).

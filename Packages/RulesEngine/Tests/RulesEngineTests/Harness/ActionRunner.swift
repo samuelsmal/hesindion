@@ -208,7 +208,7 @@ enum ActionRunner {
         }
     }
 
-    /// `fp`, `qs`, `spent`, `success`, `result {success, kind, from}` and `dice [{die, rolled,
+    /// `fp`, `qs`, `spent`, `success`, `result {success, kind, from, ruling}` and `dice [{die, rolled,
     /// counts, from}]` against the procedure's result.
     static func compareResult(_ expect: [String: JSONValue], _ view: ProcedureView, step: String?, _ c: inout MatchResult) {
         func add(_ kind: Mismatch.Kind, _ query: String, _ detail: String, names: [String] = []) {
@@ -250,12 +250,16 @@ enum ActionRunner {
             }
             if let k = o["kind"], k.string != r?.kind.rawValue { wrong.append("kind \(k)") }
             if let f = o["from"], f.string != r?.from?.description { wrong.append("from \(f)") }
+            // Task 35: the rulings a forbid-failed cast rests on are its forbid's (probe-magie 20.8).
+            let rulings = (o["ruling"]?.arrayValue ?? [o["ruling"]].compactMap { $0 }).compactMap(\.string)
+            let resting = view.notApplied.filter { $0.reason == .forbidden && $0.origin == r?.from }.flatMap(\.rulings)
+            if !rulings.allSatisfy({ Matcher.rulingMatches($0, resting) }) { wrong.append("ruling \(rulings)") }
             if !wrong.isEmpty {
                 add(.checkResult, "check.fp", "expected result \(wrong.joined(separator: ", ")), got success "
                     + "\(r?.success.map(String.init) ?? "none"), kind \(r?.kind.rawValue ?? "none"), from \(r?.from?.description ?? "none")",
-                    names: [o["from"]?.string].compactMap { $0 })
+                    names: [o["from"]?.string].compactMap { $0 } + rulings)
             }
-            for key in o.keys.sorted() where !["success", "kind", "from"].contains(key) {
+            for key in o.keys.sorted() where !["success", "kind", "from", "ruling"].contains(key) {
                 c.mismatches.append(.shape("result field \(key)", "result.\(key) is not modelled"))
             }
         }
@@ -288,6 +292,8 @@ struct ProcedureView {
     var stages: Stages
     var result: CheckResult?
     var offers: [RerollOffer]
+    /// The step's entries: a failed cast's forbid, whose rulings the result rests on (Task 35).
+    var notApplied: [NotApplied] = []
 
     /// The targets of the check's stages (spec §6).
     static let stageTargets: Set<String> = ["check.attribute", "check.modifier", "check.fw", "check.dice", "check.fp", "check.qs"]

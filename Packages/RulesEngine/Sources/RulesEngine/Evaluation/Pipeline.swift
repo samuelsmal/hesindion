@@ -620,7 +620,8 @@ extension Evaluation {
                                     via: (winner.via + winner.value.via + replacer).uniqued(),
                                     rulings: (decided(winner.effect) + (winner.by.map { decided($0.effect) } ?? [])
                                               + offerRulings(reading: winner.effect, state)).uniqued(),
-                                    facts: (winner.used + winner.value.used).uniqued(), was: before, now: now))
+                                    facts: (winner.used + winner.value.used).uniqued(), was: before, now: now,
+                                    term: term(reading: winner.effect)))
         }
         for e in effects {
             guard case .add(let a) = e.payload, applies(e, &state), !isSuppressed(e, &state) else { continue }
@@ -717,7 +718,7 @@ extension Evaluation {
             state.lines.append(Line(value: amount, kind: .replaced, origin: e.origin.clauseRef,
                                     via: (via + r.via + perVia + [by.ref]).uniqued(),
                                     rulings: (decided(e) + decided(by.effect) + offerRulings(reading: e, state)).uniqued(), facts: facts,
-                                    was: was, now: amount))
+                                    was: was, now: amount, term: term(reading: e)))
         } else if let scale = a.scale {
             step(e, along: scale, by: amount, via: (via + r.via + perVia).uniqued(), facts: facts, &state)
         } else if case .proportion(let p) = a.value, p.above != .number(0), nothingAbove(p, e, level: level, state) {
@@ -731,7 +732,7 @@ extension Evaluation {
         } else {
             state.lines.append(Line(value: amount, kind: .add, origin: e.origin.clauseRef,
                                     via: (via + r.via + perVia).uniqued(), rulings: (decided(e) + offerRulings(reading: e, state)).uniqued(),
-                                    facts: facts, owner: gmNumber(a.value, r) ? .gm : nil))
+                                    facts: facts, owner: gmNumber(a.value, r) ? .gm : nil, term: term(reading: e)))
         }
     }
 
@@ -918,7 +919,7 @@ extension Evaluation {
         }
         state.lines.append(Line(value: now - before, kind: .add, origin: e.origin.clauseRef,
                                 via: (via + [providers[0].origin.clauseRef]).uniqued(), rulings: decided(e), facts: facts,
-                                was: before, now: now))
+                                was: before, now: now, term: term(reading: e)))
     }
 }
 

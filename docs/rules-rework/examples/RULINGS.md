@@ -9,7 +9,7 @@ the file at the line given and write an option letter or your own words into `an
 
 ### `SA_74` · vp-sequence
 
-Answer in [`rules/abilities/SA_74.yaml:105`](./rules/abilities/SA_74.yaml#L105)
+Answer in [`rules/abilities/SA_74.yaml:106`](./rules/abilities/SA_74.yaml#L106)
 
 **When is the Selbstbeherrschung check rolled — before the spell check, or after it, when the LeP are paid? And does a caster whose spell check failed need it to pay part of the half cost with LeP?**
 
@@ -180,7 +180,7 @@ Why a: the four sides are one fact with four values, and a picker asks it once a
 
 ### `zaubermodifikationen` · omit-counts
 
-Answer in [`rules/core/zaubermodifikationen.yaml:299`](./rules/core/zaubermodifikationen.yaml#L299)
+Answer in [`rules/core/zaubermodifikationen.yaml:315`](./rules/core/zaubermodifikationen.yaml#L315)
 
 **Does leaving out a Geste or a Formel count against the FW/4 number of modifications (ZM1)?**
 
@@ -196,7 +196,7 @@ Why a: the page lists it among the Modifikationen in the same breath as the othe
 
 ### `zaubermodifikationen` · cost-off-table
 
-Answer in [`rules/core/zaubermodifikationen.yaml:323`](./rules/core/zaubermodifikationen.yaml#L323)
+Answer in [`rules/core/zaubermodifikationen.yaml:339`](./rules/core/zaubermodifikationen.yaml#L339)
 
 **Erzwingen and Kosten senken move the cost "um eine Stufe" on ZM8's table (1, 2, 4, … 32 AsP). What do they do to a cost that is not on the table, or not one number?**
 

@@ -205,12 +205,17 @@ public struct Offer: Codable, Hashable, Sendable {
     public var costs: [Effect] = []
     public var `default`: JSONValue? = nil
     public var options: [JSONValue]? = nil
+    /// The picker's label of an option (Task 35: `erzwingen` → "Erzwingen"); a line whose `when`
+    /// reads that one option carries it as its `term` (zaubermodifikationen.ZM11).
+    public var labels: [String: String]? = nil
     public var span: Span? = nil
 
-    enum CodingKeys: String, CodingKey { case choice, costs, `default`, options, span }
+    enum CodingKeys: String, CodingKey { case choice, costs, `default`, options, labels, span }
 
-    public init(choice: String, costs: [Effect] = [], default: JSONValue? = nil, options: [JSONValue]? = nil, span: Span? = nil) {
-        self.choice = choice; self.costs = costs; self.default = `default`; self.options = options; self.span = span
+    public init(choice: String, costs: [Effect] = [], default: JSONValue? = nil, options: [JSONValue]? = nil,
+                labels: [String: String]? = nil, span: Span? = nil) {
+        self.choice = choice; self.costs = costs; self.default = `default`; self.options = options; self.labels = labels
+        self.span = span
     }
 
     public init(from decoder: Decoder) throws {
@@ -219,6 +224,7 @@ public struct Offer: Codable, Hashable, Sendable {
         costs = try c.decodeIfPresent([Effect].self, forKey: .costs) ?? []
         `default` = try c.decodeIfPresent(JSONValue.self, forKey: .default)
         options = try c.decodeIfPresent([JSONValue].self, forKey: .options)
+        labels = try c.decodeIfPresent([String: String].self, forKey: .labels)
         span = try c.decodeIfPresent(Span.self, forKey: .span)
     }
 
@@ -228,6 +234,7 @@ public struct Offer: Codable, Hashable, Sendable {
         if !costs.isEmpty { try c.encode(costs, forKey: .costs) }
         try c.encodeIfPresent(`default`, forKey: .default)
         try c.encodeIfPresent(options, forKey: .options)
+        try c.encodeIfPresent(labels, forKey: .labels)
         try c.encodeIfPresent(span, forKey: .span)
     }
 }

@@ -61,7 +61,7 @@ public struct Line: Codable, Hashable, Sendable {
     public var was: Int?
     public var now: Int?
     /// The name of the option a line belongs to when one clause gives several lines (MIGRATION
-    /// "term"); not filled in yet.
+    /// "term"): the label of the offered option its `when` reads (Task 35, `Offer.labels`).
     public var term: String?
     /// A base's terms: one line per `sum` term of each `derive` that made it (KW1's KtW and its
     /// MU bonus). Empty for any other line. A `suppress` of a derive drops its parts; a `replace`

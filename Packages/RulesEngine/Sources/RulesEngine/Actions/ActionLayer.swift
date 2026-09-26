@@ -31,8 +31,8 @@ public struct ActionLayer: Sendable {
     /// or amount reads a fact the action states (a cast's `check.kind`, a roll's `action.attack`,
     /// a hit's `hit.*`), and in turn those that read an item field an `itemChanged` of this action
     /// changed (SA_59.SS3: the StP fall, then "at 0 destroyed"). Only `.settle` runs the standing
-    /// gains. After every action, a running process whose `breaksOff` turned yes gives
-    /// `brokenOff`.
+    /// gains. A cast, like a taken choice, asks the talent checks gated on what it states. After
+    /// every action, a running process whose `breaksOff` turned yes gives `brokenOff`.
     public func perform(_ action: Action, in situation: Situation) -> ActionResult {
         var out: ActionResult
         var start = situation                       // where `breaksOff` is read before the action
@@ -107,9 +107,14 @@ public struct ActionLayer: Sendable {
         switch action {
         case .cast(_, let modifications):                           // the spell is stated by `stated`
             run = evaluation.actionRun(controlling: evaluation.actionEffects())
-            consequences(reading: Set(["check.kind", "check.spell"] + modifications.map { "choice.spellModification.\($0)" }),
-                         &run)
+            let cast = Set(["check.kind", "check.spell"] + modifications.map { "choice.spellModification.\($0)" })
+            consequences(reading: cast, &run)
             evaluation.startRecurring(&run)
+            // Task 35: the talent checks gated on what the cast states (SA_74.VP2's
+            // Selbstbeherrschung), the caller's to run, as a taken choice asks those gated on it.
+            checks = DamageChain.checksCalledFor(in: stated, engine: engine, &run.pipeline) {
+                !($0.when?.factNames ?? []).isDisjoint(with: cast)
+            }
         case .pay(let pool, let amount):
             run = evaluation.actionRun(controlling: [])
             guard amount > 0 else {

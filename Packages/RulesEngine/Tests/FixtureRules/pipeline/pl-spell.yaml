@@ -1,6 +1,8 @@
 # The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
 # Task 23: limits over a choice's options (zaubermodifikationen.ZM1, ZM2): the offer's max,
 # the refused options, and a chosen option beyond the limit that no line reads.
+# Task 35: the offer's `labels` name the options; a line whose `when` reads one option is that
+# option's `term` (ZM11's lines per modification, probe-magie 20.2).
 id: pl-spell
 name: Modifikationen
 kind: specialAbility
@@ -10,7 +12,7 @@ clauses:
   - id: S1
     text: Modifikationen, höchstens FW/4.
     effects:
-      - offer: { choice: mod, options: [a, b, c] }
+      - offer: { choice: mod, options: [a, b, c], labels: { a: Eins, c: Drei } }
       - limit: { what: { choice: [mod.a, mod.b, mod.c] }, max: { of: fw.current, per: 4, round: down }, per: action }
   - id: S2
     text: Höchstens eine aus a und b.
@@ -24,3 +26,9 @@ clauses:
         when: { choice.mod.a: true }
       - add: { to: check.modifier, value: 1 }
         when: { choice.mod.c: true }
+  - id: S4
+    text: Heiß gezaubert ist es um 1 schwerer.
+    effects:
+      - offer: { choice: art, options: [kalt, heiss], labels: { heiss: Heiß } }
+      - add: { to: check.modifier, value: -1 }
+        when: { choice.art: heiss }

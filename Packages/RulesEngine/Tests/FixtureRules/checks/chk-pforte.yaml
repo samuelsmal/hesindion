@@ -1,6 +1,7 @@
 # The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
 # Task 26: SA_74.VP2's shape, its ruling decided: a failed Selbstbeherrschung forbids the spell
-# check, which reads as a failed cast.
+# check, which reads as a failed cast. Task 35: the check rests on the decided ruling `sequence`,
+# so the failed cast does too.
 id: chk-pforte
 name: Verbotene Pforten
 kind: specialAbility
@@ -11,8 +12,14 @@ clauses:
     text: Misslingt die Selbstbeherrschung, misslingt der Zauber.
     effects:
       - when: { check.kind: spell }
+        ruling: sequence
         check:
           of: { talent: [TAL_8] }
           onFailure:
             - forbid: { what: { check: [spell] } }
               because: "Selbstbeherrschung misslungen: der Zauber misslingt"
+rulings:
+  - id: sequence
+    question: Vor oder nach dem Zauber?
+    answer: Danach.
+    decided: { by: "@fixture", date: 2026-09-26 }

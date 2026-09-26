@@ -435,13 +435,8 @@ enum Matcher {
                 out.append(diagnose(e, shown, failures: { failures(e, $0) }, used: Set(assigned.compactMap { $0 }), query: query))
                 continue
             }
-            guard let term = e.term else { continue }
-            if let actual = shown[j].term {
-                if actual != term {
-                    out.append(Mismatch(kind: .wrongTerm, query: query, detail: "expected term \"\(term)\", got \"\(actual)\"",
-                                        names: names(e)))
-                }
-            } else {
+            // A term the matched line carries matched in `failures` (Task 35); one it lacks is a shape.
+            if let term = e.term, shown[j].term == nil {
                 out.append(.shape("term", "term \"\(term)\" on \(e.from ?? "a line"): the engine does not name a line's term",
                                   query: query))
             }
@@ -460,6 +455,8 @@ enum Matcher {
         if let was = e.was, a.was != was { out.append(.wrongWas) }
         if let k = e.kind, a.kind.rawValue != k { out.append(.wrongKind) }
         if let s = e.source, a.owner?.rawValue != s { out.append(.wrongSource) }
+        // Task 35: two lines of one clause and value (ZM11's per modification) pair by their terms.
+        if let t = e.term, let actual = a.term, actual != t { out.append(.wrongTerm) }
         return out
     }
 
@@ -1246,6 +1243,7 @@ enum Matcher {
             if let was = l.was, let now = l.now { s += " (\(was)→\(now))" }
             if !l.via.isEmpty { s += " via \(l.via.map(\.description))" }
             if !l.rulings.isEmpty { s += " rulings \(l.rulings)" }
+            if let t = l.term { s += " term \(t)" }
             return s
         }.joined(separator: ", ") + "]"
     }
@@ -1259,6 +1257,7 @@ enum Matcher {
         if let v = e.via { parts.append("via \(v)") }
         if let r = e.ruling { parts.append("ruling \(r)") }
         if let s = e.source { parts.append("source \(s)") }
+        if let t = e.term { parts.append("term \(t)") }
         return "{" + parts.joined(separator: ", ") + "}"
     }
 

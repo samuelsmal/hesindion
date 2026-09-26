@@ -475,6 +475,32 @@ extension Evaluation {
         return out.uniqued()
     }
 
+    /// Task 35: the term of a line (MIGRATION "term"): the label of the one offered option its
+    /// effect's `when` reads, as `choice.X.Y` (a pick among several, `choice.spellModification.
+    /// erzwingen: true`) or as `choice.X` compared with `Y` by `is` / `in`. zaubermodifikationen.
+    /// ZM11 gives one line per modification, each named by ZM1's `labels`. nil when the `when`
+    /// reads no labelled option, or more than one.
+    func term(reading e: Effect) -> String? {
+        guard let when = e.when else { return nil }
+        let names = when.factNames.filter { $0.hasPrefix("choice.") }
+        guard !names.isEmpty else { return nil }
+        let compared = Self.comparedValues(when)
+        var terms: [String] = []
+        for o in offers {
+            guard let labels = o.offer.labels else { continue }
+            let prefix = "choice.\(o.offer.choice)"
+            for name in names {
+                if name.hasPrefix(prefix + "."), let label = labels[String(name.dropFirst(prefix.count + 1))] {
+                    terms.append(label)
+                } else if name == prefix {
+                    terms += (compared[name] ?? []).compactMap { $0.string.flatMap { labels[$0] } }
+                }
+            }
+        }
+        let distinct = terms.uniqued()
+        return distinct.count == 1 ? distinct[0] : nil
+    }
+
     /// The values a condition compares each fact with by `is` / `in`, outside a `not`.
     static func comparedValues(_ c: Condition) -> [String: [JSONValue]] {
         switch c {

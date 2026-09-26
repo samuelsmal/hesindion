@@ -259,6 +259,21 @@ class RuleValidationTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertIs(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["default"], False)
 
+    def test_an_offer_names_its_options_with_labels(self):
+        # Task 35: the picker's labels, the `term` of a line that reads an option
+        # (zaubermodifikationen.ZM1, probe-magie 20.2).
+        book, errors = check(VALID.replace(EFFECT, "      - offer: { choice: mod, options: [a, b], labels: { a: Erzwingen } }"))
+        self.assertEqual(errors, [])
+        self.assertEqual(book["SA_1"]["clauses"][0]["effects"][0]["payload"]["labels"], {"a": "Erzwingen"})
+
+    def test_an_offers_labels_name_its_options_with_text(self):
+        for labels, prefix in [("{ c: Drei }", "label c is no option"), ("{ a: 1 }", "wrong type for field labels"),
+                               ("[a]", "wrong type for field labels"), ("{ a: '' }", "wrong type for field labels")]:
+            _, errors = check(VALID.replace(EFFECT, f"      - offer: {{ choice: mod, options: [a, b], labels: {labels} }}"))
+            self.one_error(errors, prefix, 11)
+        _, errors = check(VALID.replace(EFFECT, "      - offer: { choice: mod, labels: { a: Eins } }"))
+        self.one_error(errors, "label a is no option", 11)
+
     # --- vocabulary added by the Group 2 hand migration (plan Task 9) -------------------------
     def test_group_2_facts_have_their_owners(self):
         v = vocab.load()

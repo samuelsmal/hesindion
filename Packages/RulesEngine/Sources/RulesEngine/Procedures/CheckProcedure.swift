@@ -349,6 +349,9 @@ public enum CheckProcedure {
         var asked = PipelineState(query: Query("check"), depth: 0, candidates: [])
         asked.local = [:]
         var consequences: [Effect] = []
+        // Task 35: the decided rulings of the check each consequence came from (SA_74.VP2's forbid
+        // rests on the check's vp-sequence), as a suppressed entry carries its suppressor's (R68).
+        var askedRulings: [EffectOrigin: [String]] = [:]
         for e in all {
             guard case .check(let c) = e.payload, names(c.of, request, stated, rule: e.origin.rule),
                   outer.applies(e, &asked) else { continue }
@@ -356,7 +359,9 @@ public enum CheckProcedure {
             let level = outer.ruleLevel(rule, levels: [:], depth: 0)
             guard outer.gate(e, level: level, via: outer.ruleVia(rule, asked), &asked) != nil,
                   let success = result.success else { continue }
-            consequences += success ? c.onSuccess : c.onFailure
+            let own = success ? c.onSuccess : c.onFailure
+            consequences += own
+            for x in own { askedRulings[x.origin, default: []] += outer.decided(e) }
         }
         let nestedActions = consequences.filter {
             switch $0.payload {
@@ -380,8 +385,8 @@ public enum CheckProcedure {
                 let via = evaluation.ruleVia(rule, run.pipeline)
                 guard let used = evaluation.gate(e, level: evaluation.ruleLevel(rule, levels: [:], depth: 0), via: via,
                                                  &run.pipeline) else { continue }
-                forbidden.append(NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because, rulings: e.ruling,
-                                            facts: used, via: via))
+                forbidden.append(NotApplied(origin: e.origin.clauseRef, reason: .forbidden, because: e.because,
+                                            rulings: (e.ruling + (askedRulings[e.origin] ?? [])).uniqued(), facts: used, via: via))
             case .tell(let t):
                 guard evaluation.applies(e, &run.pipeline), !evaluation.isSuppressed(e, &run.pipeline) else { continue }
                 let rule = e.origin.rule

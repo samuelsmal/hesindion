@@ -520,7 +520,8 @@
     "split",
     "duration",
     "data",
-    "reader"
+    "reader",
+    "labels"
   ],
   "itemFields": [
     "loaded",
@@ -977,6 +978,7 @@
       "optional": {
         "costs": "effects",
         "default": "data",
+        "labels": "labels",
         "options": "list",
         "span": "span"
       },
