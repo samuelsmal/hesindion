@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # Drafted for reiterkampf.RK10 ("ansonsten stürzt der Reiter (siehe auch Sturzschaden)"), whose
 # old encoding cited it (`on_failure: { rule: sturzschaden }`) before it had a rule file.
 # The table rows were read off the page's table; check the column layout on review.

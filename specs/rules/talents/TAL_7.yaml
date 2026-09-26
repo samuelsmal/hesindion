@@ -1,9 +1,9 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # Drafted in the Group 6 hand migration (plan Task 13): situation probe-fertigkeiten 22.8 cites
 # the talent's Kritischer Erfolg ("TAL_7.critical (FP = doppelter FW)") and expects its text.
 # One clause per entry of the talent page. A talent rule applies to a check on that talent: every
 # effect is gated on `check.talent: TAL_7`. The Probe (GE/KO/KK), the Anwendungsgebiete and the
-# Belastung flag are the caller's data (the Probe table, ../../checks.yaml; Task 34), not effects.
+# Belastung flag are the caller's data (the Probe table, ../checks.yaml; Task 34), not effects.
 id: TAL_7
 name: Schwimmen
 kind: talent

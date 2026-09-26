@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 id: STATE_10
 name: Liegend
 kind: state                # a Status, not a Zustand: no Stufen, outside the −5 Zustand cap (the old `kind: status`)

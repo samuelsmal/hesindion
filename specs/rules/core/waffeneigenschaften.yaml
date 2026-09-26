@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # The Fokusregel that switches every weapon's Waffenvorteil and Waffennachteil on. Written
 # because the weapon files (equipment/) gate those clauses on it.
 id: waffeneigenschaften

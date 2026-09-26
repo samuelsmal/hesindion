@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 id: ruestung-und-belastung
 name: Rüstung und Belastung
 kind: core
@@ -82,7 +82,7 @@ clauses:
         # no equipment rule describes the item and the situation states none (Task 32, R61: a
         # default the rules state): A1's `loadout.armour.belastung`, trefferzonen-ruestungsschutz.RS2's
         # `loadout.armourPiece.<zone>.rs`. An equipment row or a stated value wins. The rows are
-        # also listed in ../../belastung.md. Turnierrüstung's Belastung 5 is above the page's
+        # also listed in ../../../docs/rules-rework/examples/belastung.md. Turnierrüstung's Belastung 5 is above the page's
         # Stufe IV (COND_1.B4).
 
   - id: A3

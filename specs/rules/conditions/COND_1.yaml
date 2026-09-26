@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 id: COND_1
 name: Belastung
 kind: condition            # a Zustand with Stufen

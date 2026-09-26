@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # FORMAT: kind `equipment`. The table row is data every other rule reads (the Kampftechnik,
 # TP, the Schadensschwelle, AT/PA-Mod, reach), kept under `provides`; the Anmerkung, Waffenvorteil
 # and Waffennachteil are clauses. The first is core, the other two belong to the Fokusregel

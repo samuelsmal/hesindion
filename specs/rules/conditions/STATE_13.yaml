@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 id: STATE_13
 name: Überrascht
 kind: state                # a Status: binary, no Stufen (the old `kind: status`)

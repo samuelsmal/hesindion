@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # Probe example 22. The Fertigkeitsprobe (3W20 against three attributes, the FW as a pool), its
 # Qualitätsstufen, modifiers, Kritische Erfolge and Patzer. Assembled from five pages (as
 # kampfwerte.yaml is); a clause from another page carries `page:`. Not here: the optional rules
@@ -41,7 +41,7 @@ clauses:
     # pool, roll, reroll, result, quality] }` (plan Appendix A.4): the 3W20 check is the action
     # layer's procedure (start → dice → reroll → confirm), whose stages are the targets
     # `check.attribute`, `check.fw`, `check.dice`, `check.fp` and `check.qs`; the three attributes
-    # are the talent's / spell's / liturgy's Probe (the Probe table ../../checks.yaml).
+    # are the talent's / spell's / liturgy's Probe (the Probe table ../checks.yaml).
     # The order of Teilproben is free but fixed before rolling; an app rolling all three at
     # once and pairing them in the listed order satisfies it.
 

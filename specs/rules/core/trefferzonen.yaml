@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # One file for the Fokusregel page, one clause per rule it states (as reiterkampf.yaml).
 id: trefferzonen
 name: Trefferzonen-Regeln

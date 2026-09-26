@@ -1,6 +1,6 @@
 # Rulings that apply to more than one rule. A ruling about a single rule lives in that
 # rule's file instead. Effects that rest on a ruling name it: `ruling: <id>`.
-# DRAFT FORMAT — see ../README.md.
+# DRAFT FORMAT — see ./README.md.
 
 - id: round-up
   status: decided

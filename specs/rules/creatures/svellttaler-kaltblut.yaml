@@ -1,4 +1,4 @@
-# DRAFT FORMAT — see ../../README.md.
+# DRAFT FORMAT — see ../README.md.
 # A Bestiarium stat block, kind `creature` (the draft's `creatureProfile`). Unlike a rule it is
 # mostly data other rules read: Reiterkampf needs the mount's INI base (RK1), GS (RK14, RK15), its
 # Niederreiten line (RK13) and its LeP (RK10). The stat block's lines are clauses as usual; the

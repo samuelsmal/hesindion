@@ -1,5 +1,5 @@
 # Example 1 — Belastung. Hero + situation → the values that change, and the rule and clause
-# behind every line. Ids follow ../belastung.md. DRAFT FORMAT — see ../README.md.
+# behind every line. Ids follow ../../../docs/rules-rework/examples/belastung.md. DRAFT FORMAT — see ../README.md.
 #
 # A line is { value, from: <rule>.<clause> }, plus
 #   via:    rules that changed the line without being its source (SA_41 lowers Belastung;
