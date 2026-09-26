@@ -27,6 +27,7 @@ situation with query expectations only counts its queried targets' entries.
 import re
 from pathlib import Path
 
+from . import checks as checks_mod
 from . import hero as hero_mod
 from . import yamlload
 from .errors import RulecError
@@ -105,14 +106,16 @@ def _value_targets(node):
     return out
 
 
-def check(situations_dir: Path, book: dict, reach: dict, v, shared_rulings=()):
+def check(situations_dir: Path, book: dict, reach: dict, v, shared_rulings=(), checks=None):
     """Validate and compile every `*.yaml` under `situations_dir` against the checked `book`, its
-    `reach` index and the vocabulary. `shared_rulings` is `rules.shared_rulings(rules_dir)`.
-    Returns `(situations, errors)`; `situations` is sorted by file, then by the id's numbers."""
+    `reach` index and the vocabulary. `shared_rulings` is `rules.shared_rulings(rules_dir)`;
+    `checks` is the Probe table (`checks.load`), which resolves an owned numeric `sid2`. Returns
+    `(situations, errors)`; `situations` is sorted by file, then by the id's numbers."""
     situations_dir = Path(situations_dir)
     rulings = {r["id"]: r["status"] for r in shared_rulings}
     rulings.update({r["id"]: r["status"] for rule in book.values() for r in rule.get("rulings", [])})
     ctx = _Context(book, reach, v, rulings)
+    ctx.checks = checks or {}
     out, errors, seen = [], [], set()
     for path in sorted(situations_dir.rglob("*.yaml")):
         _File(path, path.relative_to(situations_dir).as_posix(), ctx, errors, seen).compile(out)
@@ -269,6 +272,10 @@ class _File:
 
         layer = _merge(base, self.hero(s["hero"], _line(s, "hero"))) if "hero" in s else base
         owned = {rid: e for m in layer["owned"].values() for rid, e in m.items()}
+        # Task 34: a numeric `sid2` is an Anwendungsgebiet's Optolith id; the check compares its
+        # name (`check.application`), so the id becomes the name the Probe table gives it.
+        owned = {rid: ({**e, "option2": checks_mod.application_name(self.ctx.checks, e.get("option"), e["option2"])}
+                       if "option2" in e else e) for rid, e in owned.items()}
         facts = {}
         for key, prefix in FACT_MAPS.items():
             for name, n in layer[key].items():

@@ -6,7 +6,7 @@ import Foundation
 /// still compared, `Matcher.run(onlyQueries:)`).
 ///
 /// Task 26 runs the 3W20 check (`CheckProcedure`): a situation that states a talent or spell
-/// check (`check.kind` and `check.talent` / `check.spell`, the Probe's attributes from rules.db)
+/// check (`check.kind` and `check.talent` / `check.spell`, the Probe's attributes from the Probe table)
 /// runs `start`, then `dice(rolls)`, then each `sequence` step that takes a reroll
 /// (`choose: { choice.reroll: RULE, choice.rerollDie: n }`, `rolls: { roll.reroll: face }`) as
 /// `.reroll`, then `.confirm`. The top-level `fp`, `qs`, `spent`, `success`, `result` and the stage
@@ -45,7 +45,7 @@ enum ActionRunner {
     /// every need is supported, with one die per attribute when its result is expected, and only
     /// reroll steps in its sequence.
     ///
-    /// A check whose Probe rules.db does not know still runs: its missing row is a mismatch
+    /// A check whose Probe the Probe table does not know still runs: its missing row is a mismatch
     /// (`run`), never a silent `unsupported`.
     static func canRun(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> Bool {
         let n = Set(needs(s))
@@ -82,7 +82,7 @@ enum ActionRunner {
         return id.map { (kind, $0) }
     }
 
-    /// The check `s` states, with its Probe's attributes from rules.db; nil without a check or a row.
+    /// The check `s` states, with its Probe's attributes from the Probe table; nil without a check or a row.
     static func request(_ s: CompiledSituation, attributes: [String: [String]] = CheckAttributes.all) -> CheckRequest? {
         guard let stated = checkStated(s), let probe = attributes[stated.id] else { return nil }
         return CheckRequest(kind: stated.kind, id: stated.id, attributes: probe)
@@ -123,7 +123,7 @@ enum ActionRunner {
         guard let stated = checkStated(s),
               !s.rolls.isEmpty || !needs(s).isEmpty || s.expect.contains(where: { ProcedureView.isStage($0.query) }) else { return nil }
         guard let request = request(s, attributes: attributes) else {
-            let m = Mismatch(kind: .checkResult, detail: "rules.db has no Probe row for \(stated.id): the check cannot run (make rules-db)")
+            let m = Mismatch(kind: .checkResult, detail: "the Probe table (checks.yaml) has no row for \(stated.id): the check cannot run")
             return CheckRun(view: nil, mismatches: [m], notes: [], breakdowns: [])
         }
         let start = CheckProcedure.start(request, in: s.engineSituation, engine: engine)

@@ -1,70 +1,35 @@
 import Foundation
-import SQLite3
 @testable import RulesEngine
 
-/// The three attributes of every talent's and spell's Probe, as the app reads them: rules.db
-/// `skill_details` / `spell_details`, `check_attr_1–3` (fertigkeitsproben.FP1, TAL_7.probe). The
-/// engine reads no database; the harness, like the app, is the check procedure's caller and hands
-/// them in (`CheckRequest.attributes`).
+/// The three attributes of every talent's and spell's Probe, and a talent's Belastung flag: the
+/// Probe table rulec compiles from `docs/rules-rework/examples/checks.yaml` into
+/// `build/rules/situations.json`'s `checks` (Task 34; before, rules.db's `skill_details` /
+/// `spell_details`). The engine reads no such table; the harness, like the app, is the check
+/// procedure's caller and hands them in (`CheckRequest.attributes`, `check.hinderedByBelastung`).
 enum CheckAttributes {
-    /// Optolith's attribute ids → the sheet's names, as rulec's hero import maps them
-    /// (`scripts/rulec/hero.py` `ATTR`): the facts `attr.<name>`.
-    static let names = ["ATTR_1": "MU", "ATTR_2": "KL", "ATTR_3": "IN", "ATTR_4": "CH",
-                        "ATTR_5": "FF", "ATTR_6": "GE", "ATTR_7": "KO", "ATTR_8": "KK"]
-
-    /// Talent or spell id → its three attributes. Empty when rules.db is missing.
-    static let all: [String: [String]] = load(Repo.url("Hesindion/Resources/rules.db"))
-
-    /// Talent id → its Belastung flag (`skill_details.encumbrance`: `true`, `false` or `"maybe"`),
-    /// the fact `check.hinderedByBelastung` of a check on it (COND_1.belastung-reach). The app
-    /// hands it in as it hands in the attributes (Task 30). Empty when rules.db is missing.
-    static let hinderedByBelastung: [String: JSONValue] = loadBelastung(Repo.url("Hesindion/Resources/rules.db"))
-
-    static func loadBelastung(_ url: URL) -> [String: JSONValue] {
-        var db: OpaquePointer?
-        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
-            sqlite3_close(db)
-            return [:]
-        }
-        defer { sqlite3_close(db) }
-        var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(db, "SELECT rule_id, encumbrance FROM skill_details", -1, &statement, nil) == SQLITE_OK else {
-            return [:]
-        }
-        defer { sqlite3_finalize(statement) }
-        var out: [String: JSONValue] = [:]
-        while sqlite3_step(statement) == SQLITE_ROW {
-            guard let id = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
-                  let flag = sqlite3_column_text(statement, 1).map({ String(cString: $0) }) else { continue }
-            switch flag {
-            case "true": out[id] = .bool(true)
-            case "false": out[id] = .bool(false)
-            default: out[id] = .string(flag)
-            }
-        }
-        return out
+    struct Table: Equatable {
+        /// Talent or spell id → its three attributes, by the sheet's names (the facts `attr.<name>`).
+        var attributes: [String: [String]] = [:]
+        /// Talent id → its Belastung flag (`true`, `false` or `"maybe"`), the fact
+        /// `check.hinderedByBelastung` of a check on it (COND_1.belastung-reach; Task 30).
+        var hinderedByBelastung: [String: JSONValue] = [:]
     }
 
-    static func load(_ url: URL) -> [String: [String]] {
-        var db: OpaquePointer?
-        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
-            sqlite3_close(db)
-            return [:]
-        }
-        defer { sqlite3_close(db) }
-        var out: [String: [String]] = [:]
-        for table in ["skill_details", "spell_details"] {
-            var statement: OpaquePointer?
-            let sql = "SELECT rule_id, check_attr_1, check_attr_2, check_attr_3 FROM \(table)"
-            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { continue }
-            defer { sqlite3_finalize(statement) }
-            while sqlite3_step(statement) == SQLITE_ROW {
-                let columns = (0..<4).map { i in sqlite3_column_text(statement, Int32(i)).map { String(cString: $0) } }
-                guard let id = columns[0] else { continue }
-                let attributes = columns.dropFirst().compactMap { $0.flatMap { names[$0] } }
-                if attributes.count == 3 { out[id] = attributes }
-            }
-        }
-        return out
+    static let shared: Table = table(from: Repo.url("build/rules/situations.json"))
+
+    /// Talent or spell id → its three attributes. Empty when situations.json is missing.
+    static var all: [String: [String]] { shared.attributes }
+
+    /// Talent id → its Belastung flag. Empty when situations.json is missing.
+    static var hinderedByBelastung: [String: JSONValue] { shared.hinderedByBelastung }
+
+    /// The `checks` of a compiled situations file; an empty table when it cannot be read.
+    static func table(from url: URL) -> Table {
+        struct Row: Decodable { var attributes: [String]; var hinderedByBelastung: JSONValue? }
+        struct File: Decodable { var checks: [String: Row]? }
+        guard let data = try? Data(contentsOf: url),
+              let rows = (try? JSONDecoder().decode(File.self, from: data))?.checks else { return Table() }
+        return Table(attributes: rows.mapValues(\.attributes),
+                     hinderedByBelastung: rows.compactMapValues(\.hinderedByBelastung))
     }
 }

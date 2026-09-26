@@ -2,8 +2,8 @@
 # Drafted in the Group 6 hand migration (plan Task 13): situation probe-fertigkeiten 22.8 cites
 # the talent's Kritischer Erfolg ("TAL_7.critical (FP = doppelter FW)") and expects its text.
 # One clause per entry of the talent page. A talent rule applies to a check on that talent: every
-# effect is gated on `check.talent: TAL_7`. The Probe (GE/KO/KK) and the Belastung flag are data
-# the app already reads from rules.db (skill_details), not effects.
+# effect is gated on `check.talent: TAL_7`. The Probe (GE/KO/KK), the Anwendungsgebiete and the
+# Belastung flag are the caller's data (the Probe table, ../../checks.yaml; Task 34), not effects.
 id: TAL_7
 name: Schwimmen
 kind: talent
@@ -19,28 +19,28 @@ clauses:
   - id: kategorie
     name: Talentkategorie
     text: Körpertalente
-    none: the talent's group; data (rules.db skill_details.group_id)
+    none: the talent's group; data (Optolith's univ/Skills.yaml `gr`)
 
   - id: probe
     name: Probe
     text: GE/KO/KK
     none: >
-      the three attributes of the check (fertigkeitsproben.FP1), data the check procedure reads
-      from rules.db (skill_details.check_attr_1–3)
+      the three attributes of the check (fertigkeitsproben.FP1), data the check procedure's caller
+      hands in (the Probe table checks.yaml, `attributes`)
 
   - id: anwendungsgebiet
     name: Anwendungsgebiet
     text: Kampfmanöver, Langstreckenschwimmen, Tauchen, Verfolgungsjagden, Wassertreten
     none: >
-      the list `check.application` is picked from (fertigkeitsproben.FP8); data (Optolith
-      de-DE/Skills.yaml `applications`)
+      the list `check.application` is picked from (fertigkeitsproben.FP8); data (the Probe table
+      checks.yaml, `applications`, from Optolith's de-DE/Skills.yaml)
 
   - id: belastung
     name: Belastung
     text: ja
     none: >
-      data: read as `check.hinderedByBelastung` (rules.db skill_details.encumbrance), which
-      COND_1.B3 reads
+      data: read as `check.hinderedByBelastung` (the Probe table checks.yaml), which COND_1.B3
+      reads
 
   - id: qualitaet
     name: Qualität

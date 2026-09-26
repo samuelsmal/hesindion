@@ -39,7 +39,7 @@ struct CompiledSituation: Decodable {
     /// `hero.leCurrent` and payments read them (R39). A pool the situation states is kept.
     ///
     /// A talent check (`check.talent` stated) gets its talent's Belastung flag,
-    /// `check.hinderedByBelastung`, from rules.db as the app hands it in (`CheckAttributes`), unless
+    /// `check.hinderedByBelastung`, from the Probe table as the app hands it in (`CheckAttributes`), unless
     /// the situation states it (Task 30).
     var engineSituation: Situation {
         var out = situation

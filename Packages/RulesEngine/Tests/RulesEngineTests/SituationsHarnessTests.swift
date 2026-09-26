@@ -18,7 +18,7 @@ final class SituationsHarnessTests: XCTestCase {
         let all = try XCTUnwrap(try CompiledSituations.load(from: situationsURL), "run make rules-json")
         let engine = Engine(book: try RuleBook.load(from: rulesURL))
 
-        if CheckAttributes.all.isEmpty { XCTFail("rules.db missing: run make rules-db") }
+        if CheckAttributes.all.isEmpty { XCTFail("situations.json has no Probe table (checks): run make rules-json") }
         for name in filter.unknown(among: all.situations.map(\.file)) {
             XCTFail("RULES_FILES names \(name), which is no situations file")
         }

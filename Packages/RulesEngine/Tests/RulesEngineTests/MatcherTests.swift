@@ -540,11 +540,30 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(Matcher.openRulings(in: [o]), [hit("r.open", "r.R2"), hit("r.other", "r.R3")])
     }
 
+    /// Task 34: the Probe table is rulec's (`checks.yaml` → situations.json's `checks`), not
+    /// rules.db: each row's three attributes and a talent's Belastung flag.
+    func testTheProbeTableIsReadFromSituationsJSON() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "checks-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(#"""
+            {"vocabularyVersion": 1, "situations": [],
+             "checks": {"TAL_10": {"attributes": ["KL", "IN", "IN"], "hinderedByBelastung": "maybe",
+                                   "applications": {"2": "Suchen"}},
+                        "TAL_3": {"attributes": ["MU", "GE", "KK"], "hinderedByBelastung": true},
+                        "SPELL_21": {"attributes": ["MU", "KL", "CH"]}}}
+            """#.utf8).write(to: url)
+        let table = CheckAttributes.table(from: url)
+        XCTAssertEqual(table.attributes, ["TAL_10": ["KL", "IN", "IN"], "TAL_3": ["MU", "GE", "KK"],
+                                          "SPELL_21": ["MU", "KL", "CH"]])
+        XCTAssertEqual(table.hinderedByBelastung, ["TAL_10": "maybe", "TAL_3": true])
+        XCTAssertEqual(CheckAttributes.table(from: Repo.url("build/rules/no-such.json")).attributes, [:])
+    }
+
     /// Task 30: a talent check's `check.hinderedByBelastung` is the talent's own Belastung flag,
-    /// which the harness, as the app, hands in from rules.db (`skill_details.encumbrance`), as it
-    /// hands in the Probe's attributes; a stated one is kept.
+    /// which the harness, as the app, hands in from the Probe table (`checks.yaml`), as it hands
+    /// in the Probe's attributes; a stated one is kept.
     func testATalentChecksBelastungFlagIsHandedIn() throws {
-        try XCTSkipIf(CheckAttributes.all.isEmpty, "rules.db missing")
+        try XCTSkipIf(CheckAttributes.all.isEmpty, "run make rules-json")
         let climb = try situation(#"{"facts": [{"name": "check.talent", "value": "TAL_3", "owner": "player"}]}"#)
         XCTAssertEqual(climb.engineSituation.facts["check.hinderedByBelastung"],
                        Fact(name: "check.hinderedByBelastung", value: true, owner: .derived))
@@ -585,12 +604,12 @@ final class MatcherTests: XCTestCase {
 
     /// U1 (Task 26): the action layer runs a 3W20 check. `rolls`, `fp`, `qs`, `spent`, `success`,
     /// `result` and a `sequence` of reroll steps run when the situation states a talent or spell
-    /// check whose Probe rules.db knows, with one die per attribute; `events`, dice without a
+    /// check whose Probe the Probe table knows, with one die per attribute; `events`, dice without a
     /// check and any other step stay unsupported.
     func testOnlyA3W20CheckRunsOnTheActionLayer() throws {
         let check = #""facts": [{"name": "check.kind", "value": "talent", "owner": "player"}, {"name": "check.talent", "value": "TAL_10", "owner": "player"}]"#
         let reroll = #"{"choose": {"choice.reroll": "ADV_4", "choice.rerollDie": 2}, "rolls": {"roll.reroll": 11}, "expect": {"fp": 8}}"#
-        try XCTSkipIf(CheckAttributes.all["TAL_10"] == nil, "rules.db has no skill_details")
+        try XCTSkipIf(CheckAttributes.all["TAL_10"] == nil, "run make rules-json")
         XCTAssertEqual(CheckAttributes.all["TAL_10"], ["KL", "IN", "IN"])
         XCTAssertTrue(ActionRunner.canRun(try situation(#"{"expect": [{"query": "at"}]}"#)))
         XCTAssertFalse(ActionRunner.canRun(try situation(#"{"rolls": [3, 4, 5]}"#)))
@@ -695,7 +714,7 @@ final class MatcherTests: XCTestCase {
         XCTAssertFalse(Explainer.explains(hit, Mismatch(kind: .checkResult, detail: ""), book: book, situation: s))
     }
 
-    /// A stated check whose Probe rules.db lacks runs and mismatches; it is not unsupported.
+    /// A stated check whose Probe the Probe table lacks runs and mismatches; it is not unsupported.
     /// A reroll step naming a rule that offers none stops the sequence with one mismatch.
     func testAMissingProbeRowOrRerollIsAMismatch() throws {
         let engine = try XCTUnwrap(CheckProcedureTests.real, "run make rules-json")

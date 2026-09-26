@@ -8,7 +8,7 @@ import Foundation
 public enum CheckKind: String, Codable, Hashable, Sendable, CaseIterable { case talent, spell, liturgy }
 
 /// What the caller asks to be checked. The engine reads no database: the three attributes of the
-/// Probe are the caller's (rules.db `skill_details` / `spell_details.check_attr_1–3`,
+/// Probe are the caller's (the harness reads them from rulec's Probe table, `checks.yaml`;
 /// fertigkeitsproben.FP1).
 public struct CheckRequest: Codable, Hashable, Sendable {
     public var kind: CheckKind

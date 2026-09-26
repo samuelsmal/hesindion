@@ -247,13 +247,13 @@ enum CombatRunner {
 
     /// The check the situation states (`check.kind` with `check.talent` / `check.spell`), started
     /// where the chain asked for it (a pending check of that talent: its situation), else in the
-    /// hit's situation; with the situation's dice, rolled. The Probe's attributes come from rules.db.
+    /// hit's situation; with the situation's dice, rolled. The Probe's attributes come from the Probe table.
     private static func startCheck(in chain: DamageResult, stated: (kind: CheckKind, id: String)?, rolls: [Int], engine: Engine,
                                    attributes: [String: [String]], _ c: inout MatchResult)
     -> (state: ProcedureState, view: ProcedureView, situation: Situation)? {
         guard let stated else { return nil }
         guard let probe = attributes[stated.id] else {
-            c.mismatches.append(Mismatch(kind: .checkResult, detail: "rules.db has no Probe row for \(stated.id): the check cannot run (make rules-db)"))
+            c.mismatches.append(Mismatch(kind: .checkResult, detail: "the Probe table (checks.yaml) has no row for \(stated.id): the check cannot run"))
             return nil
         }
         let pending = chain.checks.first { $0.kind == stated.kind && $0.id == stated.id }
