@@ -382,6 +382,29 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(compare(kind, breakdowns: [], offers: [offer]).map(\.shape), ["offered field kind", nil])
         let extra = try situation(#"{"expectSituation": {"notOffered": [{"choice": "other", "reason": "x"}]}}"#)
         XCTAssertEqual(compare(extra, breakdowns: [], offers: [offer]).map(\.shape), ["notOffered field reason"])
+        // R47: a malformed `costs` never passes, whether the entry comes through the matcher (a
+        // "malformed offer" shape) or straight to offerFailures (a failure naming it).
+        let malformed = try situation(#"{"expectSituation": {"offered": [{"choice": "laden", "costs": {"nonsense": 1}}]}}"#)
+        XCTAssertEqual(compare(malformed, breakdowns: [], offers: [offer]).map(\.shape), ["malformed offer"])
+        XCTAssertEqual(Matcher.offerFailures(["costs": .object(["nonsense": .int(1)])], offer).count, 1)
+        XCTAssertEqual(Matcher.offerFailures(["costs": .string("action")], offer).count, 1)
+        XCTAssertEqual(Matcher.offerFailures(["costs": .object(["freeAction": .int(1)])], offer), [])
+    }
+
+    /// R41: a ruling the expectation names by its short id (as a situation writes a shared
+    /// ruling, `round-up`) is the shared ruling or one of the rule the hit's clause sits on, never
+    /// another rule's ruling of the same short name.
+    func testAShortRulingNameExplainsOnlyTheSharedOrItsOwnRulesRuling() {
+        let s = Situation(owned: [:], facts: [])
+        func explains(_ ruling: String, _ origin: String, _ names: [String]) -> Bool {
+            Explainer.explains(hit(ruling, origin), Mismatch(kind: .missingLine, query: "at", detail: "", names: names),
+                               book: nil, situation: s)
+        }
+        XCTAssertTrue(explains("shared.round-up", "x.X1", ["round-up"]))
+        XCTAssertTrue(explains("SA_41.table-shift", "SA_41.G1", ["table-shift"]))
+        XCTAssertTrue(explains("other.open", "a.A2", ["other.open"]))
+        XCTAssertFalse(explains("other.open", "a.A2", ["open"]))
+        XCTAssertFalse(explains("b.round-up", "x.X1", ["round-up"]))
     }
 
     /// An offer entry without a `choice` (a defence, an attack, a reroll, a check) is the action

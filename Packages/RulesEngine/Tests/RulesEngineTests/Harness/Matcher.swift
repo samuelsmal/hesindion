@@ -1023,7 +1023,12 @@ enum Matcher {
                 if case .number(let n) = k.amount { return (k.pool, Int(exactly: n)) }
                 return (k.pool, nil)
             }
-            let want = costs(raw) ?? []
+            // R47: a malformed `costs` never passes (offerFindings reports it as the shape
+            // "malformed offer" before it gets here).
+            guard let want = costs(raw) else {
+                out.append("costs \(raw) is no pool and amount (malformed)")
+                return out
+            }
             if !want.allSatisfy({ w in have.contains { $0.0 == w.0 && $0.1 == w.1 } }) {
                 out.append("costs \(raw) (offer costs \(have.map { "\($0.0.rawValue) \($0.1.map(String.init) ?? "?")" }))")
             }
@@ -1294,11 +1299,19 @@ enum Explainer {
     /// nested effect, the nested effect's) is not `no` in `situation`, read with `Conditions`.
     /// `*`-indexed open-ruling texts alone never explain a value mismatch. An unsupported shape
     /// is explained by nothing.
+    /// Whether an expectation's `name` names the open ruling `ruling` met on a clause of `rule`:
+    /// the qualified id, or a short id (no dot) that is the shared ruling's or `rule`'s own.
+    static func names(_ name: String, ruling: String, rule: String) -> Bool {
+        name == ruling || (!name.contains(".") && (ruling == "shared.\(name)" || ruling == "\(rule).\(name)"))
+    }
+
     static func explains(_ hit: OpenHit, _ m: Mismatch, book: RuleBook?, situation: Situation) -> Bool {
         guard m.area != .shape else { return false }
         guard let o = hit.origin else { return m.names.contains(hit.ruling) }
-        // A ruling as a situation writes it: qualified, or by its own name (Task 31).
-        let named = m.names.contains { $0 == hit.ruling || hit.ruling.hasSuffix("." + $0) } || m.names.contains(o.description)
+        // A ruling as a situation writes it: qualified, or by its short id (Task 31) — a shared
+        // ruling (`round-up` is `shared.round-up`) or one of the rule the hit's clause sits on,
+        // never another rule's ruling of the same short id.
+        let named = m.names.contains { names($0, ruling: hit.ruling, rule: o.rule) } || m.names.contains(o.description)
             || m.names.contains(o.rule)
         guard let book else { return named }
         // The top-level effects of the clause that rest on the ruling and are live.
