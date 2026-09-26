@@ -149,7 +149,7 @@ Why a: it follows the talents' own text where there is one and the core page whe
 
 ### `ladezeiten` · laengere-handlungen
 
-Answer in [`rules/core/ladezeiten.yaml:152`](./rules/core/ladezeiten.yaml#L152)
+Answer in [`rules/core/ladezeiten.yaml:154`](./rules/core/ladezeiten.yaml#L154)
 
 **Which actions besides Zielen (fernkampf.FK11), Laden (LZ2, LZ4), Bogen spannen (LZ5) and Armbrüste bespannen (LZ6) are länger dauernde Handlungen that continue across Kampfrunden, and what breaks such an action off?**
 

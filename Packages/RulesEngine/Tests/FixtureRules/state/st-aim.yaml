@@ -14,6 +14,6 @@ clauses:
       - when: { loadout.weapon.kind: ranged }
         offer: { choice: zielen, costs: [{ cost: { pool: actions, amount: 1 } }] }
       - when: { loadout.weapon.kind: ranged }
-        process: { id: zielen, steps: 2, advancedBy: { action: zielen }, breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: ranged } }
+        process: { id: zielen, steps: 2, advancedBy: { action: zielen }, breaksOff: { action.attack: [hit, miss, confirmedFumble], loadout.weapon.kind: ranged } }
       - when: { process.zielen: { atLeast: 1 } }
         add: { to: fk, value: 2, per: process.zielen }

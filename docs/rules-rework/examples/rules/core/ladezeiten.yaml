@@ -23,7 +23,8 @@ reviewed: null
 # Item state is kept per item instance (`item.<instance>.loaded`, `.strung`; spec §7); the rules
 # read it for the weapon in hand as `loadout.weapon.loaded` / `loadout.weapon.strung`, resolved
 # through `loadout.weapon.instance`, and change it through `item: { instance: { loadout: weapon } }`.
-# "The hero shoots" is the hero's attack with a ranged weapon: `action.attack: [hit, miss]` with
+# "The hero shoots" is the hero's attack with a ranged weapon: `action.attack: [hit, miss,
+# confirmedFumble]` (a confirmed Patzer is a failed attack that was made, ruling R74) with
 # `loadout.weapon.kind: ranged`.
 #
 # Länger dauernde Handlungen (LZ3, LZ4, LZ6): the page LZ4 links was not found on 2026-09-24,
@@ -56,14 +57,15 @@ clauses:
         # Each action of the Ladezeit is an Aktion (the old `step: { costs: { action: 1 } }`),
         # offered as liegend's standing up is (STATE_10.L4).
       - when: { loadout.weapon.loaded: false, ladezeit.current: { atLeast: 1 } }
-        process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: melee } }
+        process: { id: laden, steps: { of: item.ladezeit }, advancedBy: { action: laden }, completes: [ { item: { instance: { loadout: weapon }, change: { loaded: true } } } ], breaksOff: { action.attack: [hit, miss, confirmedFumble], loadout.weapon.kind: melee } }
         # FORMAT: the same process shape as fernkampf.FK11 (Zielen), bound to the weapon (the
         # old `of: item`: `completes` changes the instance in the weapon slot) and counted in the
         # weapon's own (modifiable) number of actions: `{ of: item.ladezeit }` reads the target,
         # after SA_60's lines. The process payload is plan A.7's, except `breaksOff`: A.7's
         # `action.attack: melee` is never stated (`action.attack` is the attack's outcome, hit /
-        # miss), so a melee attack is `action.attack: [hit, miss]` with a melee weapon in hand,
-        # as schaden.S3 reads it. What else breaks Laden off is ruling laengere-handlungen (open),
+        # miss, confirmedFumble), so a melee attack is `action.attack: [hit, miss, confirmedFumble]`
+        # with a melee weapon in hand (R74: a confirmed Patzer is an attack made), as schaden.S3
+        # reads the weapon kind. What else breaks Laden off is ruling laengere-handlungen (open),
         # cited on the `tell` below, not on the process, so Laden applies while it is open.
       - when: { loadout.weapon.loaded: false, ladezeit.current: 0 }
         offer: { choice: laden, costs: [{ cost: { pool: freeActions, amount: 1 } }] }
@@ -80,7 +82,7 @@ clauses:
       - when: { loadout.weapon.loaded: false }
         forbid: { what: { attack: ranged } }
         because: "die Waffe ist nicht geladen"
-      - when: { action.attack: [hit, miss], loadout.weapon.kind: ranged }
+      - when: { action.attack: [hit, miss, confirmedFumble], loadout.weapon.kind: ranged }
         item: { instance: { loadout: weapon }, change: { loaded: false } }
         # The shot empties the weapon (the old `after: { attack: ranged, set: … }`); a crossbow
         # carried loaded stays loaded until it shoots (LZ3).
@@ -137,7 +139,7 @@ clauses:
       aber als unbrauchbar für eine weitere Benutzung. Wurfgeschosse können hingegen eingesammelt
       und wiederverwendet werden.
     effects:
-      - when: { action.attack: [hit, miss], loadout.weapon.technique: [CT_1, CT_2, CT_11] }
+      - when: { action.attack: [hit, miss, confirmedFumble], loadout.weapon.technique: [CT_1, CT_2, CT_11] }
         cost: { pool: ammunition, amount: 1 }
         # A variation of schicksalspunkte's `costs: { schip: 1 }`: the shot spends one Bolzen,
         # Pfeil or Kugel (Armbrüste, Bögen, Schleudern) from the pool `ammunition`. A thrown

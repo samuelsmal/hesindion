@@ -246,7 +246,7 @@ clauses:
           id: zielen
           steps: 2
           advancedBy: { action: zielen }
-          breaksOff: { action.attack: [hit, miss], loadout.weapon.kind: ranged }
+          breaksOff: { action.attack: [hit, miss, confirmedFumble], loadout.weapon.kind: ranged }
         ruling: zielen-interrupted
         # Two steps of +2 each: "bis zu einem Maximum von 4" is the process's cap, so a third
         # action buys nothing (the old `accumulates: { per: step, cap: 4 }`). The shot ends it

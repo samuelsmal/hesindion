@@ -268,4 +268,18 @@ final class CombatRollTests: XCTestCase {
         d.rolls = [9]
         XCTAssertEqual(layer.perform(.defend(kind: .pa), in: d).breakdowns.map(\.query.description), ["pa"])
     }
+
+    /// Ruling R74: a confirmed Patzer (`action.attack: confirmedFumble`) is a failed attack, so a
+    /// failed Sturmangriff (SA_62.ST3, "Sollte der Sturmangriff misslingen") and a failed
+    /// Unterlaufen (SA_172.U2, "Misslingt die AT") give the opponent a Passierschlag, as a miss does.
+    func testAConfirmedPatzerIsAFailedAttackForThePassierschlag() throws {
+        let e = try XCTUnwrap(Self.real, "run make rules-json")
+        for (rule, choice, clause) in [("SA_62", "choice.sturmangriff", "SA_62.ST3"), ("SA_172", "choice.unterlaufen", "SA_172.U2")] {
+            for outcome in ["miss", "confirmedFumble"] {
+                let s = hero(facts: [choice: true, "action.attack": .string(outcome)], owned: [rule: OwnedRule(level: 1)])
+                let tells = e.evaluate(Query("at"), in: s).texts.filter { $0.kind == .tell && $0.origin?.description == clause }
+                XCTAssertEqual(tells.map(\.audience), [.opponent], "\(clause) on \(outcome)")
+            }
+        }
+    }
 }

@@ -160,6 +160,38 @@ final class ProcessTests: XCTestCase {
         XCTAssertEqual(shot.situation.pools[.ammunition]?.current, 9)
     }
 
+    /// Ruling R74: a confirmed Patzer is a failed attack that was made (FK14 "gewöhnliches
+    /// Misslingen"): the combat roll states `action.attack: confirmedFumble`, and the shot still
+    /// empties the crossbow (LZ2) and spends a bolt (LZ7).
+    func testAConfirmedPatzerStillEmptiesTheWeaponAndSpendsABolt() throws {
+        let layer = try real()
+        var s = Self.situation(facts: crossbow.merging(["item.armbrust1.loaded": true]) { $1 },
+                               base: ["fk(with: Leichte Armbrust)": 12])
+        s.pools[.ammunition] = PoolState(current: 10, max: 20)
+        s.rolls = [20, 20]
+        let shot = layer.perform(.attack(with: "Leichte Armbrust"), in: s)
+        XCTAssertEqual(shot.situation.facts["action.attack"]?.value, "confirmedFumble")
+        XCTAssertEqual(shot.events.first { $0.kind == .itemChanged }?.origin, ref("ladezeiten.LZ2"))
+        XCTAssertEqual(shot.situation.items["armbrust1"]?.loaded, false)
+        XCTAssertEqual(shot.situation.pools[.ammunition]?.current, 9)
+    }
+
+    /// Ruling R74: a melee attack that ends in a confirmed Patzer breaks Laden off (LZ2).
+    func testAConfirmedPatzerInMeleeBreaksLadenOff() throws {
+        let layer = try real()
+        var s = layer.perform(.take(choice: "laden"), in: loading).situation
+        for (name, value) in ["loadout.weapon": JSONValue.string("Dolch"), "loadout.weapon.kind": "melee",
+                              "loadout.weapon.technique": "CT_3", "loadout.weapon.instance": "dolch1"] {
+            s.state(Fact(name: name, value: value, owner: .loadout))
+        }
+        s.base["at"] = 12
+        s.rolls = [20, 20]
+        let attack = layer.perform(.attack(with: "Dolch"), in: s)
+        XCTAssertEqual(attack.situation.facts["action.attack"]?.value, "confirmedFumble")
+        XCTAssertEqual(attack.events.filter { $0.kind == .brokenOff }.map(\.process), ["laden"])
+        XCTAssertNil(attack.situation.processes["laden"])
+    }
+
     // MARK: - Zielen (the fixture's shape)
 
     /// Two steps of +2, the third buys nothing; the progress is the fact `process.zielen` the
@@ -193,6 +225,21 @@ final class ProcessTests: XCTestCase {
         XCTAssertEqual(shot.events.filter { $0.kind == .brokenOff }.map(\.process), ["zielen"])
         XCTAssertNil(shot.situation.processes["zielen"])
         XCTAssertEqual(bonus(shot.situation), [])
+    }
+
+    /// Ruling R74: a shot that ends in a confirmed Patzer is the shot "bis zu" which Zielen lasts:
+    /// it breaks the process off as a hit or a miss does.
+    func testAConfirmedPatzerEndsZielen() {
+        let layer = ActionLayer(book: Self.state)
+        var s = Self.situation(facts: ["loadout.weapon": "Kurzbogen", "loadout.weapon.kind": "ranged",
+                                       "loadout.weapon.instance": "bogen1"], base: ["fk(with: Kurzbogen)": 14])
+        s = layer.perform(.take(choice: "zielen"), in: s).situation
+        XCTAssertEqual(s.processes["zielen"]?.progress, 1)
+        s.rolls = [20, 20]
+        let shot = layer.perform(.attack(with: "Kurzbogen"), in: s)
+        XCTAssertEqual(shot.situation.facts["action.attack"]?.value, "confirmedFumble")
+        XCTAssertEqual(shot.events.filter { $0.kind == .brokenOff }.map(\.process), ["zielen"])
+        XCTAssertNil(shot.situation.processes["zielen"])
     }
 
     /// An action that cannot be paid (no Aktion left) is not taken: the process does not advance.

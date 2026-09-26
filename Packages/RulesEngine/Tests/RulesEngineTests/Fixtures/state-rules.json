@@ -170,7 +170,8 @@
            "fact": "action.attack",
            "in": [
             "hit",
-            "miss"
+            "miss",
+            "confirmedFumble"
            ]
           },
           {

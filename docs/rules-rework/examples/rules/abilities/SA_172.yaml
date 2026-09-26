@@ -50,7 +50,7 @@ clauses:
         # The old offer's `requires: { opponent.reach: { longer_than: loadout.reach } }`.
         # FORMAT: offering it only against a longer weapon is a UI choice: against an equal
         # or shorter one it gains nothing and still risks a Passierschlag.
-      - when: { choice.unterlaufen: true, action.attack: miss }
+      - when: { choice.unterlaufen: true, action.attack: [miss, confirmedFumble] }
         tell: { to: opponent, text: passierschlag }
 
   - id: U3
