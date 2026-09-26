@@ -611,6 +611,26 @@ extension PipelineTests {
         XCTAssertEqual(schip.result, 8)
     }
 
+    func testAValueBoundActsAfterTheCapsOverASumWhateverTheRuleOrder() throws {
+        // Fix round 1: pl-bound sorts before pl-cap, yet its GS 0 holds after the Zustand cap's +1
+        // (Schmerz III −3 and Müdigkeit III −3 on GS).
+        let gs = engine.evaluate(Query("gs"), in: situation(owned: ["pl-cap": 1, "pl-bound": 4, "pl-hurt": 3, "pl-tired": 3],
+                                                           base: ["gs": 8]))
+        XCTAssertEqual(lines(gs, from: "pl-cap.Z3").map(\.value), [1])
+        XCTAssertEqual(gs.lines.last?.origin, ref("pl-bound.B4"))
+        XCTAssertEqual(gs.result, 0)
+    }
+
+    func testOnTheRealRulesAHandlungsunfaehigHeroInPlatteHasGS0() throws {
+        // Fix round 1: STATE_8.H2 "Ihre GS fällt auf 0", Belastung III's GS −3 beside it.
+        let url = Repo.url("build/rules/rules.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { throw XCTSkip("run make rules-json") }
+        let real = Engine(book: try RuleBook.load(from: url))
+        let gs = real.evaluate(Query("gs"), in: situation(owned: ["STATE_8": 1], base: ["gs": 8, "level(rule: COND_1)": 3]))
+        XCTAssertTrue(gs.lines.contains { $0.origin == ref("COND_1.B3") && $0.value == -3 })
+        XCTAssertEqual(gs.result, 0)
+    }
+
     func testACapWithAMaxAndAFloorBoundTheResult() throws {
         let fk = engine.evaluate(Query("fk"), in: situation(owned: ["pl-cap": 1], facts: ["gmFact.sicht": 4],
                                                            base: ["fk": 5]))

@@ -26,6 +26,10 @@ clauses:
     text: Ihre GS fällt auf 0 und sie kann keine Aktionen oder Verteidigungen ausführen.
     effects:
       - set: { to: gs, value: 0 }
+      - cap: { to: gs, min: 0, max: 0 }
+        # Task 33 fix round 1: "Ihre GS fällt auf 0" after every other line, as COND_6.SZ5's
+        # Stufe IV: the `set` applies before the phase's `add`s (plan Task 22), so Belastung's GS −3
+        # in Platte would still count.
       - forbid: { what: { action: any } }
         because: Handlungsunfähig
       - forbid: { what: { defence: [pa, aw] } }

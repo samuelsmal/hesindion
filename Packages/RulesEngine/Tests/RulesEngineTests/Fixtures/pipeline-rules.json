@@ -338,6 +338,16 @@
   ],
   "gs": [
    {
+    "clause": "B4",
+    "index": 0,
+    "rule": "pl-bound"
+   },
+   {
+    "clause": "B4",
+    "index": 1,
+    "rule": "pl-bound"
+   },
+   {
     "clause": "Z3",
     "index": 0,
     "rule": "pl-cap"
@@ -1457,6 +1467,82 @@
    "source": {
     "book": "Regelwerk",
     "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/pl"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "B4",
+        "index": 0,
+        "rule": "pl-bound"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "number": 0
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "set",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "B4",
+        "index": 1,
+        "rule": "pl-bound"
+       },
+       "payload": {
+        "max": {
+         "number": 0
+        },
+        "min": {
+         "number": 0
+        },
+        "to": [
+         {
+          "name": "gs"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "B4",
+     "text": "Ab Stufe IV GS 0."
+    }
+   ],
+   "id": "pl-bound",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Gebunden",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
     "hash": null,
     "page": 1,
     "url": "https://example.invalid/pl"

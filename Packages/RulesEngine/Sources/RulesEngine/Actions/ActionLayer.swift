@@ -914,15 +914,16 @@ extension Evaluation {
 
 extension Evaluation {
     /// Task 33: a `gain` of `id` that a firing `suppress` lets pass carries the suppress's decided
-    /// rulings, when the suppress names another `gain` of `id` in the book but not this one. The
+    /// rulings, when the suppress names another `gain` of `id` whose rule applies, but not this one. The
     /// Schip's suppress of every Zustand's effects stops Schmerz IV's Handlungsunfähig, not the one
     /// Bewusstlos carries, and that it stands rests on schicksalspunkte.schip-lifts-incapacity
     /// (schmerz S10). As Task 31's `passedRulings` for the offers a manoeuvre forbid passes. A
     /// suppress fires when its rule applies and its `when` is yes; it needs no target that applies.
     func passedSuppressRulings(_ e: Effect, gaining id: String) -> [String] {
         let others = actionEffects().filter { o in
-            guard case .gain(let g) = o.payload, case .id(id) = g.rule else { return false }
-            return o.origin != e.origin
+            guard case .gain(let g) = o.payload, case .id(id) = g.rule, o.origin != e.origin else { return false }
+            // Fix round 1: only a gain whose rule applies here is one the suppress stops.
+            return applicability(of: o.origin.rule, depth: 0).applies
         }
         guard !others.isEmpty else { return [] }
         var out: [String] = []

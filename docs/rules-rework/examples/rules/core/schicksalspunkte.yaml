@@ -57,6 +57,13 @@ clauses:
         # FORMAT: switches off every effect of every Zustand for the round — the lines on
         # checks, the GS/INI penalties, and the Handlungsunfähig a Stufe IV carries. The
         # suppressed lines should still be listed, struck through, not vanish.
+      - when: { choice.schipZustandIgnorieren: true }
+        suppress: { line: { line: zustaende.Z5 } }
+        because: Schip, Zustand ignorieren
+        ruling: schip-lifts-incapacity
+        # Task 33 fix round 1: eight Zustandsstufen in sum carry Handlungsunfähig too (ruling
+        # schip-lifts-incapacity), but zustaende is a core rule, which the `ruleKind: condition`
+        # suppress above does not reach.
 
 rulings:
   - id: schip-ignore-belastung

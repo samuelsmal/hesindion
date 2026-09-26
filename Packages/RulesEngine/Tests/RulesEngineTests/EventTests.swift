@@ -118,14 +118,31 @@ final class EventTests: XCTestCase {
     func testAGainTheSchipSuppressLetsPassCarriesItsRulings() {
         // schmerz S10 (Task 33): the Schip stops a condition's gain of act-helpless, not a
         // state's; the state's gain carries the ruling that decided so, and nothing else does.
-        let s = situation(owned: ["act-out": 1], facts: ["choice.schipZustand": true])
+        // act-stunned applies (Stufe I) and its gain of act-helpless is the one the Schip stops.
+        let s = situation(owned: ["act-out": 1, "act-stunned": 1], facts: ["choice.schipZustand": true])
         let r = layer.perform(.settle, in: s)
         let gained = r.events.filter { $0.kind == .gained }
         XCTAssertEqual(gained.map(\.origin), [ref("act-out.O1")])
         XCTAssertEqual(gained.map(\.rulings), [["act-schip.lifts"]])
         // Without the Schip, no ruling.
-        let plain = layer.perform(.settle, in: situation(owned: ["act-out": 1]))
+        let plain = layer.perform(.settle, in: situation(owned: ["act-out": 1, "act-stunned": 1]))
         XCTAssertEqual(plain.events.filter { $0.kind == .gained }.map(\.rulings), [[]])
+        // Fix round 1: only another gain whose rule applies counts; act-stunned not held, no ruling.
+        let alone = layer.perform(.settle, in: situation(owned: ["act-out": 1], facts: ["choice.schipZustand": true]))
+        XCTAssertEqual(alone.events.filter { $0.kind == .gained }.map(\.rulings), [[]])
+    }
+
+    func testOnTheRealRulesTheSchipLiftsTheHandlungsunfaehigOfEightStufen() throws {
+        // Task 33 fix round 1 (ruling schicksalspunkte.schip-lifts-incapacity): Schmerz IV and
+        // Betäubung IV are eight Stufen (zustaende.Z5); with the Schip nothing gains STATE_8.
+        let url = Repo.url("build/rules/rules.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { throw XCTSkip("run make rules-json") }
+        let real = ActionLayer(engine: Engine(book: try RuleBook.load(from: url)))
+        let base = ["level(rule: COND_6)": 4, "level(rule: COND_2)": 4, "level(rule: COND_1)": 0]
+        let without = real.perform(.settle, in: situation(base: base))
+        XCTAssertTrue(without.events.contains { $0.kind == .gained && $0.rule == "STATE_8" })
+        let schip = real.perform(.settle, in: situation(facts: ["choice.schipZustandIgnorieren": true], base: base))
+        XCTAssertEqual(schip.events.filter { $0.kind == .gained && $0.rule == "STATE_8" }.map(\.origin), [])
     }
 
     func testTwoConditionsGainingOneStateGiveOneGainAndNoneWhenItIsHeld() {

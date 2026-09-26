@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 33 fix round 1: a value bound (GS 0 at Stufe IV) from a rule that sorts before the
+# Zustand cap (pl-cap.Z3): the bound still acts after the cap's sum (capPhase order).
+id: pl-bound
+name: Gebunden
+kind: condition
+levels: 4
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: B4
+    text: Ab Stufe IV GS 0.
+    effects:
+      - set: { to: gs, value: 0 }
+        when: { level: { atLeast: 4 } }
+      - cap: { to: gs, min: 0, max: 0 }
+        when: { level: { atLeast: 4 } }

@@ -848,9 +848,14 @@ extension Evaluation {
     ///   (Schmerz IV's GS 0).
     /// - A `cap` without `over`, and a `floor`, bound the value so far.
     ///
-    /// A suppressed `cap` or `floor` bounds nothing (Task 33).
+    /// A suppressed `cap` or `floor` bounds nothing (Task 33). The caps over a sum act first, then
+    /// the bounds of the value (Task 33 fix round 1): COND_6.SZ5's and STATE_8.H2's GS 0 hold after
+    /// the Zustand cap's correction, whatever the rule-id order.
     private func capPhase(_ state: inout PipelineState) {
-        for e in state.candidates where e.phase == .cap {
+        let bounds = state.candidates.filter { $0.phase == .cap }
+        let overSum = bounds.filter { if case .cap(let c) = $0.payload { c.over != nil } else { false } }
+        let ofValue = bounds.filter { e in !overSum.contains { $0.origin == e.origin } }
+        for e in overSum + ofValue {
             let low: ValueExpr?, high: ValueExpr?, over: RuleSelector?, kind: LineKind
             switch e.payload {
             case .cap(let c): (low, high, over, kind) = (c.min, c.max, c.over, .capped)
