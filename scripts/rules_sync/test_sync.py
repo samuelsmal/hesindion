@@ -19,6 +19,7 @@ from rules_sync import pages, sync
 from rules_sync.test_resolve import BASE, FIXTURES, FakeFetcher, _index, _rule
 
 D1 = datetime.date(2026, 9, 26)
+D2 = datetime.date(2026, 9, 27)
 
 SITE_ROOT = (FIXTURES / "site_root.html").read_text(encoding="utf-8")
 
@@ -88,6 +89,29 @@ source:
 clauses: []
 """
 
+# source.url points at a page ("d.html") that a later sync will no longer reach -- `pages.merge`
+# then keeps the page's old `kind`/`hash` and adds `gone: <date>`.
+SA_60_ON_A_PAGE_THAT_GOES_AWAY = """\
+id: SA_60
+name: Platzhalter Sechzig
+kind: specialAbility
+source:
+  url: https://dsa.ulisses-regelwiki.de/d.html
+  hash: sha256:old
+  checked: 2026-01-01
+clauses: []
+"""
+
+SA_61_NULL_HASH_ON_THE_SAME_PAGE = """\
+id: SA_61
+name: Platzhalter Einundsechzig
+kind: specialAbility
+source:
+  url: https://dsa.ulisses-regelwiki.de/d.html
+  hash: null
+clauses: []
+"""
+
 
 def site(with_kat_eins=True):
     out = {
@@ -99,6 +123,15 @@ def site(with_kat_eins=True):
         out[BASE + "kat_eins.html"] = _index([("Regel A", "a.html"), ("Regel B", "b.html")])
         out[BASE + "a.html"] = _rule("Regel A", "Text A")
         out[BASE + "b.html"] = _rule("Regel B", "Text B")
+    return out
+
+
+def site_with_d():
+    """`site()` plus one more rule page ("d.html"), linked from Kategorie Zwei. A later sync
+    against plain `site()` no longer reaches it, so it becomes a `gone` page in the registry."""
+    out = site()
+    out[BASE + "kat_zwei.html"] = _index([("Regel C", "c.html"), ("Regel D", "d.html")])
+    out[BASE + "d.html"] = _rule("Regel D", "Text D")
     return out
 
 
@@ -293,6 +326,55 @@ class AdoptIdsWhosePageIsNotARuleTests(unittest.TestCase):
         self.assertIn("is not a current rule page", out.getvalue())
         got = (self.rules_root / "abilities" / "SA_50.yaml").read_text(encoding="utf-8")
         self.assertEqual(got, SA_50_INDEX_SOURCE)
+
+
+class AdoptOnAGonePageTests(unittest.TestCase):
+    """A page that used to be a current `kind: rule` page but is no longer reachable keeps its
+    old `kind` and `hash` in the registry and gains `gone: <date>` (`pages.merge`). `adopt()`'s
+    `page.get("gone")` check must refuse it exactly like any other non-current page: `--adopt-ids`
+    reports and writes nothing, `--adopt` on a null-hash rule silently skips it."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.rules_root = self.dir / "rules"
+        (self.rules_root / "abilities").mkdir(parents=True)
+        (self.rules_root / "abilities" / "SA_60.yaml").write_text(
+            SA_60_ON_A_PAGE_THAT_GOES_AWAY, encoding="utf-8")
+        (self.rules_root / "abilities" / "SA_61.yaml").write_text(
+            SA_61_NULL_HASH_ON_THE_SAME_PAGE, encoding="utf-8")
+        self.pages_path = self.dir / "pages.yaml"
+        patcher = mock.patch.object(rulefiles, "ROOT", self.rules_root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        # First sync: d.html exists and is a current rule page.
+        first = sync.run(FakeFetcher(site_with_d()), self.pages_path, self.rules_root, today=D1)
+        self.assertEqual(first, 0)
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_adopt_ids_on_a_gone_page_is_refused_and_writes_nothing(self):
+        before = (self.rules_root / "abilities" / "SA_60.yaml").read_text(encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            # Second sync: the link to d.html is gone, so its page becomes `gone` in the registry.
+            status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                               adopt_ids=["SA_60"], today=D2)
+        self.assertEqual(status, 1)
+        self.assertIn("cannot adopt SA_60:", out.getvalue())
+        reg = pages.read(self.pages_path)
+        self.assertEqual(reg.pages["d.html"]["gone"], D2)
+        self.assertEqual(reg.pages["d.html"]["kind"], "rule")
+        after = (self.rules_root / "abilities" / "SA_60.yaml").read_text(encoding="utf-8")
+        self.assertEqual(before, after)
+
+    def test_adopt_all_skips_a_null_hash_rule_on_a_gone_page(self):
+        before = (self.rules_root / "abilities" / "SA_61.yaml").read_text(encoding="utf-8")
+        status = sync.run(FakeFetcher(site()), self.pages_path, self.rules_root,
+                           adopt_all=True, today=D2)
+        self.assertEqual(status, 0)
+        after = (self.rules_root / "abilities" / "SA_61.yaml").read_text(encoding="utf-8")
+        self.assertEqual(before, after)
 
 
 class AdoptFromSourceUrlOnlyTests(unittest.TestCase):
