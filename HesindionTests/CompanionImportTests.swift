@@ -21,7 +21,7 @@ struct CompanionImportTests {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("docs/sample_heros/\(name)")
+            .appendingPathComponent("specs/heroes/\(name)")
     }
 
     private var withBlock: URL { sample("Boronmir Siebenfeld von Greifenfurt (2026-09-24).json") }

@@ -53,8 +53,8 @@ Behaviour is identical. Spec §6's "chips" become `FieldRow`s, which is the sect
 | `scripts/companions/amend_export.py` | checks, `--fix`, block injection, CLI (new) |
 | `scripts/companions/test_companions.py`, `test_amend_export.py` | unittest (new) |
 | `specs/data/companion-block.schema.json` | JSON Schema of the block (new, documentation + contract) |
-| `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml` | Kupperus's build (new) |
-| `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` | fixed + block (new file in branch) |
+| `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml` | Kupperus's build (new) |
+| `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` | fixed + block (new file in branch) |
 | `Hesindion/Resources/UITestHeroCompanions.json` | UI fixture: UITestHero + block (new) |
 | `Hesindion/Models/Pet.swift` | new properties, `PetPurchase`, `adoptCompanionData`, `hasMightyBlow` |
 | `Hesindion/Services/CompanionData.swift` | decoding the block (new) |
@@ -66,7 +66,7 @@ Behaviour is identical. Spec §6's "chips" become `FieldRow`s, which is the sect
 | `Hesindion/Theme/Strings.swift` | strings |
 | `HesindionTests/CompanionImportTests.swift` | unit tests (new) |
 | `HesindionUITests/CompanionReimportFlowTests.swift` | UI test (new) |
-| `Makefile`, `AGENTS.md`, `CHANGELOG.md`, `docs/adr/0015-companion-data-in-optolith-export.md` | tooling + docs |
+| `Makefile`, `AGENTS.md`, `CHANGELOG.md`, `docs/adr/0016-companion-data-in-optolith-export.md` | tooling + docs |
 
 ---
 
@@ -758,7 +758,7 @@ if __name__ == "__main__":
 # <export>.companions.yaml against its Optolith export and inject the `hesindion`
 # block. FIX=1 first sets the export's own pet fields from the build; CHECK=1
 # validates without writing.
-#   make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+#   make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 companions:
 	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,)
 
@@ -784,12 +784,12 @@ git commit -m "feat(companions): check a companion build against its export and 
 **Goal:** Write Kupperus's 336-AP build as YAML. Run the tool with `--fix` on the 2026-09-24 Boronmir export, and create the UI fixture `UITestHeroCompanions.json`.
 
 **Files:**
-- Create: `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml`, `Hesindion/Resources/UITestHeroCompanions.json`
-- Modify (add to git): `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`
+- Create: `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml`, `Hesindion/Resources/UITestHeroCompanions.json`
+- Modify (add to git): `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`
 - Test: `scripts/companions/test_amend_export.py` (golden test)
 
 **Acceptance Criteria:**
-- [ ] `make companions CHECK=1 HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"` prints `ok: 1 companion(s)` after the fix.
+- [ ] `make companions CHECK=1 HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"` prints `ok: 1 companion(s)` after the fix.
 - [ ] The sample's Kupperus now has Körperbeherrschung 8, `Biss: AT 16 TP 1W6+3 RW kurz`, `at` 19, `pa` 14, `pro` 0, and a `hesindion` block with `ap.spent` 336.
 - [ ] `UITestHeroCompanions.json` is `UITestHero.json` plus the fix and the block. `UITestHero.json` is byte-identical to before (`git diff --quiet Hesindion/Resources/UITestHero.json`).
 - [ ] The golden test checks the committed sample with `--check`.
@@ -798,11 +798,11 @@ git commit -m "feat(companions): check a companion build against its export and 
 
 **Steps:**
 
-- [ ] **Step 1: Write the YAML** `docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml`:
+- [ ] **Step 1: Write the YAML** `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml`:
 
 ```yaml
 # Kupperus, Boronmir's Svellttaler Kaltblut — the build worked out on 2026-09-24.
-# Check and inject: make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+# Check and inject: make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 # Ruhiges Temperament and Reittier come with the breed (Aventurische Tiergefährten
 # p. 45; Kodex des Schwertes p. 155) and cost nothing.
 schemaVersion: 1
@@ -867,13 +867,13 @@ pets:
       tricks: [Aus, Fass I, Fass II, Komm]
 ```
 
-- [ ] **Step 2: Confirm the check catches the known errors.** Run `make companions CHECK=1 HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"`. It should exit 1 and report at least `talent Körperbeherrschung is 4, build says 8`, `at is 18, build says 19` and `notes: attack Biss unreadable`.
+- [ ] **Step 2: Confirm the check catches the known errors.** Run `make companions CHECK=1 HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"`. It should exit 1 and report at least `talent Körperbeherrschung is 4, build says 8`, `at is 18, build says 19` and `notes: attack Biss unreadable`.
 
-- [ ] **Step 3: Fix and inject.** Run `make companions FIX=1 HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"`, then the `CHECK=1` command again. It should print `ok: 1 companion(s)`. Inspect the result with:
+- [ ] **Step 3: Fix and inject.** Run `make companions FIX=1 HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"`, then the `CHECK=1` command again. It should print `ok: 1 companion(s)`. Inspect the result with:
 
 ```bash
 python3 -c "
-import json; d=json.load(open('docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json'))
+import json; d=json.load(open('specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json'))
 p=d['pets']['PET_1']; print(p['talents']); print(p['notes'][:140]); print(p['at'], p['pa'], p['pro'])
 print(d['hesindion']['pets']['PET_1']['ap'])"
 ```
@@ -884,7 +884,7 @@ The output should show `Körperbeherrschung 8`, `Biss: AT 16 TP 1W6+3 RW kurz`, 
 
 ```bash
 python3 scripts/companions/amend_export.py Hesindion/Resources/UITestHero.json \
-  --companions "docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml" \
+  --companions "specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml" \
   --fix --out Hesindion/Resources/UITestHeroCompanions.json
 git diff --quiet Hesindion/Resources/UITestHero.json && echo unchanged
 ```
@@ -895,7 +895,7 @@ The output should be `ok: …` and `unchanged`. (`Hesindion/Resources` is a sync
 
 ```python
     def test_boronmir_sample_is_consistent(self):
-        sample = os.path.join(HERE, "..", "..", "docs", "sample_heros",
+        sample = os.path.join(HERE, "..", "..", "specs", "heroes",
                               "Boronmir Siebenfeld von Greifenfurt (2026-09-24).json")
         result = self.run_cli(sample, "--check")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -906,8 +906,8 @@ The output should be `ok: …` and `unchanged`. (`Hesindion/Resources` is a sync
 - [ ] **Step 7: Commit**
 
 ```bash
-git add "docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json" \
-        "docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml" \
+git add "specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json" \
+        "specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.yaml" \
         Hesindion/Resources/UITestHeroCompanions.json scripts/companions/test_amend_export.py
 git commit -m "docs(sample): Kupperus's 336-AP build, fixed and injected into the Boronmir export"
 ```
@@ -965,7 +965,7 @@ struct CompanionImportTests {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("docs/sample_heros/\(name)")
+            .appendingPathComponent("specs/heroes/\(name)")
     }
 
     private var withBlock: URL { sample("Boronmir Siebenfeld von Greifenfurt (2026-09-24).json") }
@@ -1705,11 +1705,11 @@ git commit -m "feat(pets): show companion data; Mächtiger Schlag from the abili
 
 ### Task 8: Documentation
 
-**Goal:** CHANGELOG, ADR 0015, AGENTS.md and the spec reflect the feature and the recorded deviations.
+**Goal:** CHANGELOG, ADR 0016, AGENTS.md and the spec reflect the feature and the recorded deviations.
 
 **Files:**
 - Modify: `CHANGELOG.md` (`[Unreleased]`)
-- Create: `docs/adr/0015-companion-data-in-optolith-export.md` (from `docs/adr/0000-template.md`)
+- Create: `docs/adr/0016-companion-data-in-optolith-export.md` (from `docs/adr/0000-template.md`)
 - Modify: `AGENTS.md` (Build & Run target list, ~line 20-30)
 - Modify: `docs/plans/2026-09-24-companion-data-design.md` (§6 display, §7 API)
 
@@ -1717,15 +1717,15 @@ git commit -m "feat(pets): show companion data; Mächtiger Schlag from the abili
 - [ ] CHANGELOG `[Unreleased]` has:
   - under **Added**: companion data block + `make companions` tool; import of VW/RS/BE, advantages, abilities, training, tricks, purchases, AP; the re-import question
   - under **Fixed**: a companion's attacks no longer depend on `notes` prose when the block is present
-- [ ] ADR 0015 follows the template's headings. It records the decision (block under `hesindion` in the export, YAML source, tool checks and does not compute) and the alternatives rejected: in-app editing, a separate sidecar imported by the app, and Optolith's free-text fields.
+- [ ] ADR 0016 follows the template's headings. It records the decision (block under `hesindion` in the export, YAML source, tool checks and does not compute) and the alternatives rejected: in-app editing, a separate sidecar imported by the app, and Optolith's free-text fields.
 - [ ] AGENTS.md lists `make companions`, `make test-companions` and `make test-only`.
 - [ ] Spec §7 describes `companionConflicts` + `importHero(…keepingCompanionDataFor:)` in place of `PendingImport`. Spec §6 says FieldRows instead of chips.
 
-**Verify:** `grep -c 'companions' CHANGELOG.md AGENTS.md && test -f docs/adr/0015-companion-data-in-optolith-export.md && grep -n 'companionConflicts' docs/plans/2026-09-24-companion-data-design.md` → non-zero counts, the file exists, and a match
+**Verify:** `grep -c 'companions' CHANGELOG.md AGENTS.md && test -f docs/adr/0016-companion-data-in-optolith-export.md && grep -n 'companionConflicts' docs/plans/2026-09-24-companion-data-design.md` → non-zero counts, the file exists, and a match
 
 **Steps:**
 
-- [ ] **Step 1:** Read `docs/adr/0000-template.md` and `docs/adr/0014-rule-provenance-and-rule-sets.md`, then write ADR 0015 with the same headings. Status: Accepted, date 2026-09-24. Link the spec and plan.
+- [ ] **Step 1:** Read `docs/adr/0000-template.md` and `docs/adr/0014-rule-provenance-and-rule-sets.md`, then write ADR 0016 with the same headings. Status: Accepted, date 2026-09-24. Link the spec and plan.
 
 - [ ] **Step 2:** Add the CHANGELOG entries at the top of `### Added`, and create `### Fixed` under `[Unreleased]` if it is missing:
 
@@ -1753,8 +1753,8 @@ make test-only ONLY=<Target/Class>   # One test class or method
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CHANGELOG.md AGENTS.md docs/adr/0015-companion-data-in-optolith-export.md docs/plans/2026-09-24-companion-data-design.md
-git commit -m "docs: companion data — ADR 0015, changelog, make targets, spec as built"
+git add CHANGELOG.md AGENTS.md docs/adr/0016-companion-data-in-optolith-export.md docs/plans/2026-09-24-companion-data-design.md
+git commit -m "docs: companion data — ADR 0016, changelog, make targets, spec as built"
 ```
 
 ---

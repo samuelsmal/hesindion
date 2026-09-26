@@ -1,5 +1,5 @@
 # Kupperus, Boronmir's Svellttaler Kaltblut — the build worked out on 2026-09-24.
-# Check and inject: make companions HERO="docs/sample_heros/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
+# Check and inject: make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 # Ruhiges Temperament and Reittier come with the breed (Aventurische Tiergefährten
 # p. 45; Kodex des Schwertes p. 155) and cost nothing.
 schemaVersion: 1
