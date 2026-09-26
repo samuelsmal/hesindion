@@ -537,6 +537,64 @@ final class MatcherTests: XCTestCase {
         XCTAssertTrue(Verdict.conflict.passesTheTest)
     }
 
+    /// R78: a listed conflict's mismatches reduce to fingerprints (query, step, kind, a shape's tag;
+    /// no numbers), so the same mismatch with other numbers is the same fingerprint.
+    func testAMismatchsFingerprintIsItsQueryStepAndKind() {
+        let a = ConflictFingerprint(Mismatch(kind: .total, query: "pa", detail: "step 2: expected total -1, got 1"))
+        let b = ConflictFingerprint(Mismatch(kind: .total, query: "pa", detail: "step 2: expected total -1, got 7"))
+        XCTAssertEqual(a, b)
+        XCTAssertEqual(a, ConflictFingerprint(query: "pa", step: 2, kind: "total"))
+        XCTAssertEqual(ConflictFingerprint(Mismatch.shape("paid event: field of", "x")),
+                       ConflictFingerprint(query: nil, step: nil, kind: "unsupportedShape", shape: "paid event: field of"))
+        XCTAssertNotEqual(a, ConflictFingerprint(Mismatch(kind: .total, query: "pa", detail: "step 3: expected total -1, got 1")))
+    }
+
+    /// R78: a listed conflict whose mismatches match its snapshot stays `conflict`; one with a
+    /// mismatch outside it fails; one whose snapshot names a fingerprint that no longer occurs
+    /// stays `conflict`, and the diff reports the gone fingerprint.
+    func testAListedConflictFailsWhenItsMismatchesGrowBeyondItsFingerprints() throws {
+        let s = try situation("{}")
+        let t1 = ConflictRef(file: "test.yaml", id: "T.1")
+        let total = Mismatch(kind: .total, query: "at", detail: "expected total 1, got 0")
+        let result = Mismatch(kind: .result, query: "at", detail: "expected result 17, got 16")
+        let snapshot = ConflictSnapshot(conflicts: [t1.description: [ConflictFingerprint(total), ConflictFingerprint(result)]])
+        // Same set: conflict, nothing new, nothing gone.
+        XCTAssertEqual(Verdict.of(s, mismatches: [total, result], hits: [], book: nil, conflicts: listed, snapshot: snapshot), .conflict)
+        XCTAssertEqual(snapshot.diff(t1, [total, result]), ConflictSnapshot.Diff(new: [], gone: []))
+        // Grown set: failed, the new fingerprint named.
+        let offer = Mismatch(kind: .missingOffer, detail: "expected formation offered")
+        XCTAssertEqual(Verdict.of(s, mismatches: [total, result, offer], hits: [], book: nil, conflicts: listed, snapshot: snapshot), .failed)
+        XCTAssertEqual(snapshot.diff(t1, [total, result, offer]).new, [ConflictFingerprint(offer)])
+        // Shrunk set: still a conflict, the gone fingerprint reported.
+        XCTAssertEqual(Verdict.of(s, mismatches: [total], hits: [], book: nil, conflicts: listed, snapshot: snapshot), .conflict)
+        XCTAssertEqual(snapshot.diff(t1, [total]), ConflictSnapshot.Diff(new: [], gone: [ConflictFingerprint(result)]))
+        // A listed conflict the snapshot does not know: every mismatch is new.
+        XCTAssertEqual(Verdict.of(s, mismatches: [total], hits: [], book: nil, conflicts: listed, snapshot: ConflictSnapshot()), .failed)
+        // Without a snapshot (record mode, the log round trip) nothing is checked.
+        XCTAssertEqual(Verdict.of(s, mismatches: [total, offer], hits: [], book: nil, conflicts: listed), .conflict)
+    }
+
+    /// R78: the report names grown and shrunk conflicts, and snapshot entries for situations no
+    /// longer listed; recording keeps other files' entries and drops a run file's passing ones.
+    func testTheFingerprintsReportAndRecord() {
+        let t1 = ConflictRef(file: "a.yaml", id: "1"), t2 = ConflictRef(file: "a.yaml", id: "2")
+        let t3 = ConflictRef(file: "b.yaml", id: "3")
+        let total = Mismatch(kind: .total, query: "at", detail: ""), legal = Mismatch(kind: .legal, query: "pa", detail: "")
+        var snapshot = ConflictSnapshot(conflicts: [t1.description: [ConflictFingerprint(total)],
+                                                    t2.description: [ConflictFingerprint(total)],
+                                                    t3.description: [ConflictFingerprint(legal)],
+                                                    "a.yaml 9": [ConflictFingerprint(legal)]])
+        var report = HarnessReport()
+        report.fingerprints(t1, snapshot.diff(t1, [total, legal]))
+        report.fingerprints(t2, snapshot.diff(t2, []))
+        XCTAssertEqual(report.conflictsGrown, ["a.yaml 1": ["pa: legal"]])
+        XCTAssertEqual(report.conflictsShrunk, ["a.yaml 2": ["at: total"]])
+        XCTAssertEqual(snapshot.unlisted([t1, t2, t3], files: ["a.yaml"]), ["a.yaml 9"])
+        snapshot.record([t1: [total, legal], t2: []], listed: [t1, t2, t3], files: ["a.yaml"])
+        XCTAssertEqual(snapshot.conflicts, [t1.description: [ConflictFingerprint(total), ConflictFingerprint(legal)].sorted(),
+                                            t3.description: [ConflictFingerprint(legal)]])
+    }
+
     /// R42: a situation whose only mismatches are unsupported shapes is `unsupported`, with the
     /// shape tags; one with a real mismatch besides is judged on it.
     func testOnlyUnsupportedShapesMakeASituationUnsupported() throws {

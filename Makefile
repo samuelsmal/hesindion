@@ -202,8 +202,13 @@ rules-json:
 # `make test-rules-engine RULES_FILES=kampfwerte,lebensenergie`; unset (the default) or
 # `RULES_FILES=all` runs every file, `RULES_FILES=none` skips it. It writes
 # build/rules/harness-report.json.
+# A situation listed in MIGRATION.md's "Expectation conflicts for the owner" is checked against its
+# fingerprints in docs/rules-rework/examples/conflict-fingerprints.json (query, step, mismatch kind;
+# ruling R78): a mismatch outside them fails, fingerprints that no longer occur are printed.
+# `make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1` re-records the snapshot from the run (only
+# the RULES_FILES run; other files' entries are kept); review its diff and commit it.
 test-rules-engine: rules-json
-	RULES_FILES=$(RULES_FILES) swift test --package-path Packages/RulesEngine
+	RULES_FILES=$(RULES_FILES) RECORD_CONFLICT_FINGERPRINTS=$(RECORD_CONFLICT_FINGERPRINTS) swift test --package-path Packages/RulesEngine
 
 # The engine tests' hand-made books: the rule files in Packages/RulesEngine/Tests/FixtureRules/mini
 # .../pipeline, .../actions, .../checks, .../state, .../melee, .../sheet and .../damage, compiled by rulec into Tests/RulesEngineTests/Fixtures/mini-rules.json,

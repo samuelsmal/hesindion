@@ -1,0 +1,669 @@
+{
+  "conflicts" : {
+    "boronmir-neu.yaml 19.1" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "missingOffer"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "boronmir-neu.yaml 19.10" : [
+      {
+        "kind" : "missingOffer"
+      }
+    ],
+    "boronmir-neu.yaml 19.12" : [
+      {
+        "kind" : "missingEvent"
+      }
+    ],
+    "boronmir-neu.yaml 19.2" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "boronmir-neu.yaml 19.4" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "notOffered reason undecidable"
+      }
+    ],
+    "boronmir-neu.yaml 19.8" : [
+      {
+        "kind" : "total",
+        "query" : "check.modifier(talent: TAL_8)"
+      },
+      {
+        "kind" : "wrongValue",
+        "query" : "check.modifier(talent: TAL_8)"
+      },
+      {
+        "kind" : "missingEvent",
+        "step" : 1
+      }
+    ],
+    "boronmir-neu.yaml 19.9" : [
+      {
+        "kind" : "missingText"
+      },
+      {
+        "kind" : "missingLine",
+        "query" : "wundschwelle"
+      },
+      {
+        "kind" : "total",
+        "query" : "wundschwelle"
+      }
+    ],
+    "boronmir-sf.yaml 14.1" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "boronmir-sf.yaml 14.12" : [
+      {
+        "kind" : "legal"
+      }
+    ],
+    "boronmir-sf.yaml 14.13" : [
+      {
+        "kind" : "missingLine",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      }
+    ],
+    "boronmir-sf.yaml 14.16" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "boronmir-sf.yaml 14.17" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "result",
+        "query" : "pa"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "boronmir-sf.yaml 14.19" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "boronmir-sf.yaml 14.20" : [
+      {
+        "kind" : "result",
+        "query" : "pa",
+        "step" : 1
+      },
+      {
+        "kind" : "total",
+        "query" : "pa",
+        "step" : 1
+      }
+    ],
+    "boronmir-sf.yaml 14.21" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "boronmir-sf.yaml 14.6" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "boronmir-sf.yaml 14.7" : [
+      {
+        "kind" : "legal"
+      }
+    ],
+    "boronmir-sf.yaml 14.8" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "finte.yaml 8.7" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "finte.yaml 8.8" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "kampfreflexe.yaml 12.3" : [
+      {
+        "kind" : "missingLine",
+        "query" : "ini"
+      },
+      {
+        "kind" : "total",
+        "query" : "ini"
+      }
+    ],
+    "kampfreflexe.yaml 12.4" : [
+      {
+        "kind" : "missingLine",
+        "query" : "ini"
+      },
+      {
+        "kind" : "total",
+        "query" : "ini"
+      }
+    ],
+    "kampfreflexe.yaml 12.5" : [
+      {
+        "kind" : "missingLine",
+        "query" : "ini"
+      }
+    ],
+    "kampfsituationen.yaml 17.10" : [
+      {
+        "kind" : "total",
+        "query" : "pa(with: weapon)"
+      }
+    ],
+    "kampfsituationen.yaml 17.11" : [
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa(with: weapon)"
+      }
+    ],
+    "kampfsituationen.yaml 17.14" : [
+      {
+        "kind" : "total",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "pa(with: weapon)"
+      }
+    ],
+    "kampfsituationen.yaml 17.15" : [
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      }
+    ],
+    "kampfsituationen.yaml 17.16" : [
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      }
+    ],
+    "kampfsituationen.yaml 17.17" : [
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "kampfsituationen.yaml 17.18" : [
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "kampfsituationen.yaml 17.20" : [
+      {
+        "kind" : "total",
+        "query" : "pa(with: shield)"
+      }
+    ],
+    "kampfsituationen.yaml 17.22" : [
+      {
+        "kind" : "unexpectedText"
+      }
+    ],
+    "kampfwerte.yaml 16.12" : [
+      {
+        "kind" : "base",
+        "query" : "ini",
+        "step" : 2
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "step query key kept",
+        "step" : 2
+      }
+    ],
+    "kampfwerte.yaml 16.20" : [
+      {
+        "kind" : "result",
+        "query" : "leCurrent"
+      },
+      {
+        "kind" : "missingEvent"
+      }
+    ],
+    "kampfwerte.yaml 16.21" : [
+      {
+        "kind" : "legal",
+        "query" : "pa(with: Peitschen)"
+      }
+    ],
+    "kampfwerte.yaml 16.5" : [
+      {
+        "kind" : "base",
+        "query" : "pa(with: shield)"
+      }
+    ],
+    "kampfwerte.yaml 16.9" : [
+      {
+        "kind" : "missingOffer"
+      }
+    ],
+    "kupperus-und-waffen.yaml 18.1" : [
+      {
+        "kind" : "missingEvent"
+      },
+      {
+        "kind" : "missingText"
+      },
+      {
+        "kind" : "missingText",
+        "step" : 1
+      },
+      {
+        "kind" : "missingText",
+        "step" : 2
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "event field of"
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "offered field requires"
+      }
+    ],
+    "kupperus-und-waffen.yaml 18.13" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "kupperus-und-waffen.yaml 18.2" : [
+      {
+        "kind" : "missingEvent"
+      }
+    ],
+    "kupperus-und-waffen.yaml 18.3" : [
+      {
+        "kind" : "missingText",
+        "step" : 1
+      },
+      {
+        "kind" : "missingText",
+        "step" : 2
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "event field instead_of"
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "event field of"
+      },
+      {
+        "kind" : "wrongOffer"
+      }
+    ],
+    "kupperus-und-waffen.yaml 18.4" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "lebensenergie.yaml 15.16" : [
+      {
+        "kind" : "missingOffer"
+      },
+      {
+        "kind" : "wrongBecause"
+      }
+    ],
+    "lebensenergie.yaml 15.2" : [
+      {
+        "kind" : "wrongValue",
+        "query" : "leMax"
+      },
+      {
+        "kind" : "wrongVia",
+        "query" : "leMax"
+      }
+    ],
+    "lebensenergie.yaml 15.7" : [
+      {
+        "kind" : "total",
+        "query" : "gs",
+        "step" : 1
+      },
+      {
+        "kind" : "missingOffer"
+      }
+    ],
+    "mehrfache-verteidigung.yaml V4" : [
+      {
+        "kind" : "wrongVia",
+        "query" : "aw"
+      }
+    ],
+    "mehrfache-verteidigung.yaml V5" : [
+      {
+        "kind" : "wrongVia",
+        "query" : "pa"
+      }
+    ],
+    "probe-fernkampf.yaml 21.4" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "probe-fernkampf.yaml 21.5b" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "probe-fernkampf.yaml 21.6" : [
+      {
+        "kind" : "missingLine",
+        "query" : "fk(with: Kurzbogen)",
+        "step" : 4
+      },
+      {
+        "kind" : "total",
+        "query" : "fk(with: Kurzbogen)",
+        "step" : 4
+      },
+      {
+        "kind" : "process",
+        "step" : 1
+      },
+      {
+        "kind" : "process",
+        "step" : 2
+      },
+      {
+        "kind" : "process",
+        "step" : 3
+      },
+      {
+        "kind" : "process",
+        "step" : 4
+      }
+    ],
+    "probe-fertigkeiten.yaml 22.4" : [
+      {
+        "kind" : "dice",
+        "query" : "check.dice",
+        "step" : 1
+      }
+    ],
+    "probe-fertigkeiten.yaml 22.5" : [
+      {
+        "kind" : "dice",
+        "query" : "check.dice",
+        "step" : 1
+      }
+    ],
+    "probe-fertigkeiten.yaml 22.7" : [
+      {
+        "kind" : "dice",
+        "query" : "check.dice",
+        "step" : 1
+      },
+      {
+        "kind" : "missingOffer",
+        "query" : "check.dice",
+        "step" : 1
+      },
+      {
+        "kind" : "wrongValue",
+        "query" : "check.fp",
+        "step" : 1
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "offered field open",
+        "step" : 1
+      },
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "offered field togetherWith",
+        "step" : 1
+      }
+    ],
+    "probe-magie.yaml 20.7" : [
+      {
+        "kind" : "missingEvent"
+      },
+      {
+        "kind" : "missingOffer"
+      }
+    ],
+    "probe-magie.yaml 20.8" : [
+      {
+        "kind" : "missingEvent",
+        "query" : "aspCurrent",
+        "step" : 1
+      },
+      {
+        "kind" : "checkResult",
+        "query" : "check.fp",
+        "step" : 1
+      },
+      {
+        "kind" : "missingEvent",
+        "query" : "leCurrent",
+        "step" : 1
+      },
+      {
+        "kind" : "missingEvent",
+        "step" : 1
+      }
+    ],
+    "reichweite.yaml RW.15" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "reiterkampf.yaml 5.5" : [
+      {
+        "kind" : "missingEvent"
+      }
+    ],
+    "reiterkampf.yaml 5.6" : [
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "reiterkampf.yaml 5.8" : [
+      {
+        "kind" : "total",
+        "query" : "pa"
+      }
+    ],
+    "schmerz.yaml S3" : [
+      {
+        "kind" : "missingOffer"
+      }
+    ],
+    "sturmangriff.yaml 10.7" : [
+      {
+        "kind" : "legal"
+      }
+    ],
+    "trefferzonen.yaml TZ.10" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ],
+    "trefferzonen.yaml TZ.11" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ],
+    "trefferzonen.yaml TZ.12" : [
+      {
+        "kind" : "missingEvent",
+        "step" : 1
+      }
+    ],
+    "trefferzonen.yaml TZ.13" : [
+      {
+        "kind" : "missingEvent",
+        "step" : 3
+      }
+    ],
+    "trefferzonen.yaml TZ.14" : [
+      {
+        "kind" : "missingEvent",
+        "step" : 1
+      },
+      {
+        "kind" : "unexpectedQuestion"
+      }
+    ],
+    "trefferzonen.yaml TZ.4" : [
+      {
+        "kind" : "wrongVia",
+        "query" : "at"
+      }
+    ],
+    "trefferzonen.yaml TZ.5" : [
+      {
+        "kind" : "wrongVia",
+        "query" : "at"
+      }
+    ],
+    "trefferzonen.yaml TZ.6" : [
+      {
+        "kind" : "wrongVia",
+        "query" : "at"
+      }
+    ],
+    "trefferzonen.yaml TZ.9" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ],
+    "wuchtschlag.yaml 9.8" : [
+      {
+        "kind" : "legal"
+      }
+    ]
+  }
+}

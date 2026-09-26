@@ -11,7 +11,8 @@ enum Verdict: Equatable {
     /// It mismatched, and every mismatch is explained by these open rulings of its static
     /// `pending` list, met by its run, on live effects (R41, R46).
     case pending([String])
-    /// It mismatched and is listed in MIGRATION's "Expectation conflicts for the owner" (R43).
+    /// It mismatched and is listed in MIGRATION's "Expectation conflicts for the owner" (R43),
+    /// and (when a snapshot is checked) every mismatch is one of its recorded fingerprints (R78).
     case conflict
     /// It needs the action layer (`action: <need>`), or its only mismatches are unsupported
     /// shapes (`shape: <tag>`, R42).
@@ -21,19 +22,25 @@ enum Verdict: Equatable {
 
     /// A match passes. Otherwise, in order: only unsupported shapes (R42, and R69 for a listed
     /// conflict); a listed conflict (R43); pending when open rulings it hit explain every mismatch (R41, R46); else failed.
+    ///
+    /// Ruling R78: with a `snapshot`, a listed conflict that has a mismatch outside its recorded
+    /// fingerprints is failed (a new mismatch inside a listed situation is a regression, not the
+    /// listed conflict). nil checks nothing (record mode, the log round trip).
     static func of(_ s: CompiledSituation, mismatches: [Mismatch], hits: [OpenHit], book: RuleBook?,
-                   conflicts: Set<ConflictRef>, expectationMissing: Set<ConflictRef> = []) -> Verdict {
+                   conflicts: Set<ConflictRef>, expectationMissing: Set<ConflictRef> = [],
+                   snapshot: ConflictSnapshot? = nil) -> Verdict {
         guard !mismatches.isEmpty else { return .passed }
         let real = mismatches.filter { $0.kind != .unsupportedShape }
+        let ref = ConflictRef(file: s.file, id: s.id)
+        let conflict: Verdict = snapshot.map { $0.diff(ref, mismatches).new.isEmpty } == false ? .failed : .conflict
         // Ruling R73: a listed conflict whose listed reason is a missing expectation is a conflict
         // on the shape "no expectation".
-        let ref = ConflictRef(file: s.file, id: s.id)
         if real.isEmpty, mismatches.allSatisfy({ $0.shape == "no expectation" }), conflicts.contains(ref),
-           expectationMissing.contains(ref) { return .conflict }
+           expectationMissing.contains(ref) { return conflict }
         // Ruling R69: a listed conflict is a conflict when a comparable part mismatches; with
         // unsupported shapes alone it stays unsupported.
         if real.isEmpty { return .unsupported(mismatches.compactMap { $0.shape.map { "shape: \($0)" } }.distinct()) }
-        if conflicts.contains(ConflictRef(file: s.file, id: s.id)) { return .conflict }
+        if conflicts.contains(ref) { return conflict }
         let explaining = Explainer.explaining(hits, real, pending: s.pending, book: book, situation: s.engineSituation)
         return explaining.map { .pending($0) } ?? .failed
     }
@@ -94,6 +101,88 @@ enum Conflicts {
             }
         }
         return out
+    }
+}
+
+/// Ruling R78: one mismatch of a listed conflict, reduced to what stays put while the engine
+/// does: its query, its step (`step N:` at the head of the detail), its kind and, for an
+/// unsupported shape, the shape's tag. No numbers: another value in the same place is the same
+/// fingerprint, a mismatch of another kind or in another query is a new one.
+struct ConflictFingerprint: Codable, Hashable, Comparable, CustomStringConvertible {
+    var query: String?
+    var step: Int?
+    var kind: String
+    var shape: String?
+
+    init(query: String?, step: Int?, kind: String, shape: String? = nil) {
+        self.query = query; self.step = step; self.kind = kind; self.shape = shape
+    }
+
+    init(_ m: Mismatch) {
+        var step: Int?
+        if m.detail.hasPrefix("step "), let n = Int(m.detail.dropFirst(5).prefix { $0.isNumber }),
+           m.detail.dropFirst(5 + String(n).count).hasPrefix(":") { step = n }
+        self.init(query: m.query, step: step, kind: m.kind.rawValue, shape: m.shape)
+    }
+
+    var description: String {
+        (query.map { "\($0): " } ?? "") + (step.map { "step \($0): " } ?? "") + kind + (shape.map { " \($0)" } ?? "")
+    }
+
+    static func < (a: Self, b: Self) -> Bool { a.description < b.description }
+}
+
+/// Ruling R78: the committed snapshot of every listed conflict's fingerprints
+/// (`docs/rules-rework/examples/conflict-fingerprints.json`, keyed `"<file> <id>"`). The harness
+/// checks each listed conflict against it; `RECORD_CONFLICT_FINGERPRINTS=1` rewrites it from the run.
+struct ConflictSnapshot: Codable, Equatable {
+    static let path = "docs/rules-rework/examples/conflict-fingerprints.json"
+
+    var conflicts: [String: [ConflictFingerprint]] = [:]
+
+    /// A listed conflict's run against its snapshot: fingerprints it has that the snapshot does
+    /// not (a failure) and fingerprints the snapshot has that it no longer shows (reported).
+    struct Diff: Equatable {
+        var new: [ConflictFingerprint]
+        var gone: [ConflictFingerprint]
+    }
+
+    func diff(_ ref: ConflictRef, _ mismatches: [Mismatch]) -> Diff {
+        let recorded = Set(conflicts[ref.description] ?? [])
+        let now = Set(mismatches.map(ConflictFingerprint.init))
+        return Diff(new: now.subtracting(recorded).sorted(), gone: recorded.subtracting(now).sorted())
+    }
+
+    /// Snapshot entries of the run files (`files`; nil: every file) whose situation is no longer listed.
+    func unlisted(_ listed: Set<ConflictRef>, files: Set<String>?) -> [String] {
+        let names = Set(listed.map(\.description))
+        return conflicts.keys.filter { key in
+            !names.contains(key) && files.map { $0.contains(String(key.split(separator: " ").first ?? "")) } ?? true
+        }.sorted()
+    }
+
+    /// Record mode: every run listed conflict's fingerprints (`run`, empty when it passes, which
+    /// drops it); entries of the run files that are no longer listed are dropped; other files'
+    /// entries are kept (`RULES_FILES`).
+    mutating func record(_ run: [ConflictRef: [Mismatch]], listed: Set<ConflictRef>, files: Set<String>?) {
+        for key in unlisted(listed, files: files) { conflicts[key] = nil }
+        for (ref, mismatches) in run {
+            let prints = Set(mismatches.map(ConflictFingerprint.init)).sorted()
+            conflicts[ref.description] = prints.isEmpty ? nil : prints
+        }
+    }
+
+    static func load(from url: URL) throws -> ConflictSnapshot? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return try JSONDecoder().decode(ConflictSnapshot.self, from: Data(contentsOf: url))
+    }
+
+    func write(to url: URL) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        var data = try encoder.encode(self)
+        data.append(0x0A)
+        try data.write(to: url)
     }
 }
 
@@ -165,6 +254,13 @@ struct HarnessReport: Encodable {
     var conflictsPassing: [String] = []
     /// Listed conflicts that are no compiled situation (`file id`).
     var conflictsUnknown: [String] = []
+    /// R78: listed conflicts with mismatches outside their snapshot (failed), by `file id`.
+    var conflictsGrown: [String: [String]] = [:]
+    /// R78: listed conflicts whose snapshot names fingerprints that no longer occur (reported:
+    /// re-record the snapshot so it stays honest), by `file id`.
+    var conflictsShrunk: [String: [String]] = [:]
+    /// R78: snapshot entries of situations that are no longer listed.
+    var fingerprintsUnlisted: [String] = []
     /// Situations whose action part cannot run yet but whose query expectations ran and were
     /// compared (Task 26 extra 8): a mismatch there decides the verdict.
     var queriesCompared: [String] = []
@@ -212,6 +308,12 @@ struct HarnessReport: Encodable {
         }
         files[s.file] = counts
         summary = Self.line(passed.count, failed.count, pending.count, conflict.count, unsupported.count)
+    }
+
+    /// R78: records a listed conflict's diff against the snapshot.
+    mutating func fingerprints(_ ref: ConflictRef, _ diff: ConflictSnapshot.Diff) {
+        if !diff.new.isEmpty { conflictsGrown[ref.description] = diff.new.map(\.description) }
+        if !diff.gone.isEmpty { conflictsShrunk[ref.description] = diff.gone.map(\.description) }
     }
 
     static func line(_ p: Int, _ f: Int, _ n: Int, _ c: Int, _ u: Int) -> String {

@@ -8,6 +8,11 @@ import XCTest
 /// `RULES_FILES=kampfwerte,lebensenergie` keeps those situations files (Phase C goes one domain
 /// at a time); `RULES_FILES=none` skips the harness; unset or `all` runs every file. A name that
 /// is no situations file fails the test.
+///
+/// Ruling R78: every listed conflict is checked against its recorded fingerprints
+/// (`ConflictSnapshot.path`); a mismatch outside them fails the situation, and fingerprints that
+/// no longer occur are printed and reported. `RECORD_CONFLICT_FINGERPRINTS=1` rewrites the
+/// snapshot from the run (the run files' entries only) instead of checking it.
 final class SituationsHarnessTests: XCTestCase {
     func testEverySituation() throws {
         let filter = FileFilter(ProcessInfo.processInfo.environment["RULES_FILES"])
@@ -28,13 +33,27 @@ final class SituationsHarnessTests: XCTestCase {
         if listed?.isEmpty == true { XCTFail("MIGRATION.md's conflicts section lists no situation") }
         let conflicts = Set(listed ?? [])
         let missing = Self.expectationMissing(all)
+        let recording = !(ProcessInfo.processInfo.environment["RECORD_CONFLICT_FINGERPRINTS"] ?? "").isEmpty
+        let snapshotURL = Repo.url(ConflictSnapshot.path)
+        let stored = try ConflictSnapshot.load(from: snapshotURL)
+        if stored == nil && !recording {
+            XCTFail("no conflict fingerprints at \(ConflictSnapshot.path): run make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1")
+        }
+        let snapshot = recording ? nil : (stored ?? ConflictSnapshot())
+        var recorded: [ConflictRef: [Mismatch]] = [:]
+        let runFiles = Set(all.situations.map(\.file).filter(filter.keeps))
 
         var report = HarnessReport()
         let known = Set(all.situations.map { ConflictRef(file: $0.file, id: $0.id) })
         report.conflictsUnknown = (listed ?? []).filter { !known.contains($0) }.map(\.description)
         var failures: [(CompiledSituation, [Mismatch])] = []
         for s in all.situations where filter.keeps(s.file) {
-            let judged = Self.judge(s, engine: engine, conflicts: conflicts, expectationMissing: missing)
+            let judged = Self.judge(s, engine: engine, conflicts: conflicts, expectationMissing: missing, snapshot: snapshot)
+            let ref = ConflictRef(file: s.file, id: s.id)
+            if conflicts.contains(ref) {
+                recorded[ref] = judged.mismatches
+                if let snapshot { report.fingerprints(ref, snapshot.diff(ref, judged.mismatches)) }
+            }
             switch judged.path {
             case .combat: report.combatRun.append(s.id)
             case .state: report.stateRun.append(s.id)
@@ -48,11 +67,28 @@ final class SituationsHarnessTests: XCTestCase {
         report.stateChangeUnsupported = all.situations.filter { filter.keeps($0.file) && !ActionRunner.canRun($0)
             && !CombatRunner.canRun($0, book: engine.book) && !StateRunner.canRun($0, book: engine.book) && !$0.expect.isEmpty
             && Self.expectsStateChange($0) }.map(\.id)
+        if recording {
+            var updated = stored ?? ConflictSnapshot()
+            updated.record(recorded, listed: conflicts, files: filter.names == nil ? nil : runFiles)
+            try updated.write(to: snapshotURL)
+            print("conflict fingerprints recorded: \(ConflictSnapshot.path) (\(updated.conflicts.count) conflicts)")
+        } else if let snapshot {
+            report.fingerprintsUnlisted = snapshot.unlisted(conflicts, files: filter.names == nil ? nil : runFiles)
+        }
         try report.write(to: Repo.url("build/rules/harness-report.json"))
         print(report.summary)
         report.fileLines.forEach { print($0) }
+        for (ref, gone) in report.conflictsShrunk.sorted(by: { $0.key < $1.key }) {
+            print("conflict fingerprints no longer occurring: \(ref): \(gone.joined(separator: "; ")) (re-record: RECORD_CONFLICT_FINGERPRINTS=1)")
+        }
+        for key in report.fingerprintsUnlisted {
+            print("conflict fingerprints of a situation no longer listed: \(key) (re-record: RECORD_CONFLICT_FINGERPRINTS=1)")
+        }
         for (s, mismatches) in failures {
-            XCTFail("situation \(s.id) (\(s.file)):\n" + mismatches.map { "  - \($0)" }.joined(separator: "\n"))
+            let grown = report.conflictsGrown[ConflictRef(file: s.file, id: s.id).description]
+            let head = grown.map { "listed conflict \(s.id) (\(s.file)) has mismatches outside its fingerprints (R78): \($0.joined(separator: "; "))" }
+                ?? "situation \(s.id) (\(s.file))"
+            XCTFail(head + ":\n" + mismatches.map { "  - \($0)" }.joined(separator: "\n"))
         }
     }
 
@@ -70,10 +106,10 @@ final class SituationsHarnessTests: XCTestCase {
     /// Runs one situation the way the harness does and gives its verdict (the harness test and
     /// the log round trip, Task 29, both use it).
     static func judge(_ s: CompiledSituation, engine: Engine, conflicts: Set<ConflictRef>,
-                      expectationMissing: Set<ConflictRef> = []) -> Judged {
+                      expectationMissing: Set<ConflictRef> = [], snapshot: ConflictSnapshot? = nil) -> Judged {
         func verdict(_ mismatches: [Mismatch], _ hits: [OpenHit]) -> Verdict {
             Verdict.of(s, mismatches: mismatches, hits: hits, book: engine.book, conflicts: conflicts,
-                       expectationMissing: expectationMissing)
+                       expectationMissing: expectationMissing, snapshot: snapshot)
         }
         // Ruling R73: a situation that expects nothing at all (trefferzonen TZ.9–TZ.11: dice, no
         // expect key) is the shape "no expectation", never a pass.

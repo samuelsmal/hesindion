@@ -29,6 +29,7 @@ make rules-check   # rulec: validate the new-format rule and situation files aga
 make rules-json    # rulec: compile the new-format rules and situations to build/rules/*.json
 make test-rulec    # The rulec compiler's own tests (validation, compilation, the reach index)
 make test-rules-engine  # Packages/RulesEngine's situations harness (RULES_FILES=a,b filters; unset runs every situation)
+make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1  # Re-record docs/rules-rework/examples/conflict-fingerprints.json, each listed conflict's mismatches (query, step, kind); commit it with the MIGRATION change. Without it a listed conflict with a mismatch outside its snapshot fails (R78)
 ```
 
 - **Deployment target:** iOS 26.0+
