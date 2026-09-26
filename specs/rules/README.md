@@ -298,7 +298,9 @@ crawl first reached it, breadth-first), its `kind`, and for a rule page a `hash`
 text with the date that hash was first seen (`fetched`). `kind` is `index` for a page of links —
 one with the site's sub-menu anchors, one of its selection pages (`zauberauswahl.html` and its
 kind), or one whose content is mostly links — `broken` for a page whose fetched HTML had no text
-(rendered client-side, or kept outside `#main`; `detail` says why), and `rule` otherwise. The crawl
+(rendered client-side, or kept outside `#main`) or that is the site's search page (its answer for
+a URL it has no page at; the name it searched for is in the query) — `detail` says which — and
+`rule` otherwise. The crawl
 follows the sub-menu anchors and every same-site page link inside `#main`, on every page it fetches,
 rule pages included. `gone: <date>` marks a page an earlier sync found and this one did not (the
 site answered 404, or nothing links to it any more); it keeps its last `kind` and `hash`. `make rules-sync` writes it —

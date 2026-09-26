@@ -67,8 +67,17 @@ ROOT_MENU_SELECTOR = "ul.sf-menu.level_1 > li > a"
 #: The site's selection widget (`zauberauswahl.html`, `talentauswahl.html`, ... -- 32 cached
 #: pages on 2026-09-26): a filter bar and one block per first letter around a grid of plain links.
 #: No rule page carries it. Its filter bar lists every publication, so the link-text share
-#: below cannot see these pages as the listings they are (0.16--0.75 on the cached ones).
+#: below cannot see these pages as the listings they are (0.07--0.75 on the cached ones). The
+#: LISTING_LINKS floor still applies: `geodenritualauswahl.html`, with 2 links, stays `rule`.
 SELECTION_GRID_SELECTOR = ".body_einzeln"
+
+#: The site's search module. A detail URL the site does not know (`vorteil.html?vorteil=<a name
+#: it has no page for>`) is answered with the search page for that name, whose results link
+#: spelling variants of it: 101 such answers in the first content-link crawl of 2026-09-27, and
+#: the module on no other page. Recorded as `broken`, never followed.
+SEARCH_SELECTOR = ".mod_search"
+SEARCH_DETAIL = ("the site answered with its search page: it has no page at this URL "
+                 "(the page it searched for is in the query)")
 
 #: A page with no `a.ulSubMenu` is still an index when its content container is a list of links:
 #: at least LISTING_LINKS same-site links whose text is at least LISTING_SHARE of the container's
@@ -305,7 +314,9 @@ def is_listing(html: str) -> bool:
 def classify_page(html: str) -> tuple[str, str]:
     """`("rule", text)`, `("index", "")` or `("broken", reason)`.
 
-    Three signals, in this order:
+    First, a page carrying the site's search module (`SEARCH_SELECTOR`) is
+    `("broken", SEARCH_DETAIL)`: the site's answer for a URL it has no page at.
+    Then three signals, in this order:
 
     * **The page publishes `a.ulSubMenu` anchors** -> it is an index. This has
       to come first, because it is the only signal that covers *every* index on
@@ -330,6 +341,9 @@ def classify_page(html: str) -> tuple[str, str]:
     correct, and index pages are parsed on their own path here precisely
     because of it.
     """
+    container = _container(BeautifulSoup(html, "html.parser"))
+    if container is not None and container.select_one(SEARCH_SELECTOR):
+        return "broken", SEARCH_DETAIL
     if index_anchors(html) or is_listing(html):
         return "index", ""
     try:
@@ -439,9 +453,12 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
             # Not fatal: a page that carries no rule text and no anchors is a
             # property of this site (Task 5 fix round 4 found five of them),
             # not a failure of the crawl.
+            # Nor is anything on it followed: an empty page links nowhere, and a search page's
+            # results are spelling variants of a name, not the site's own links.
             result.problems.append(Problem(False, f"{url}: {detail}"))
             result.pages[url] = CrawledPage(url, "broken", page_title(html), None, trail, detail)
-        elif kind == "rule":
+            continue
+        if kind == "rule":
             result.pages[url] = CrawledPage(url, "rule", page_title(html), hash_html(html), trail)
         else:
             result.pages[url] = CrawledPage(url, "index", page_title(html), None, trail)

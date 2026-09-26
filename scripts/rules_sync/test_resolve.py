@@ -303,6 +303,37 @@ class ListingClassifyTests(unittest.TestCase):
         self.assertEqual(resolve.classify_page(html)[0], "rule")
 
 
+def _search(links):
+    """What the site answers for a detail URL it does not know: its search page, whose results
+    link spelling variants of the name."""
+    anchors = "".join(f'<div class="even"><a href="{h}">{t}</a> Treffer im Regeltext</div>' for t, h in links)
+    return (f'<html><head><base href="{BASE}"><title>Suche - DSA Regel-Wiki</title></head><body>'
+            f'<div id="main"><div class="mod_search block"><form action="suche.html">'
+            f'<input name="keywords"></form>{anchors}</div></div></body></html>')
+
+
+class SearchPageTests(unittest.TestCase):
+    def test_the_sites_search_page_is_broken_and_says_why(self):
+        kind, detail = resolve.classify_page(_search([("x", "x.html?x=a"), ("y", "x.html?x=b"), ("z", "z.html")]))
+        self.assertEqual(kind, "broken")
+        self.assertIn("search page", detail)
+
+    def test_a_search_pages_results_are_not_followed(self):
+        site = {
+            BASE: (FIXTURES / "site_root.html").read_text(encoding="utf-8"),
+            BASE + "kat_eins.html": _grid([("Eins", "x.html?x=Eins"), ("Zwei", "x.html?x=Zwei"),
+                                           ("Unbekannt", "x.html?x=Unbekannt")]),
+            BASE + "x.html?x=Eins": _rule("Eins", "Text Eins"),
+            BASE + "x.html?x=Zwei": _rule("Zwei", "Text Zwei"),
+            BASE + "x.html?x=Unbekannt": _search([("eins", "x.html?x=eins")]),
+            BASE + "kat_zwei.html": _index([]),
+        }
+        got = resolve.crawl(FakeFetcher(site))
+        self.assertFalse(got.fatal_problems, got.problems)
+        self.assertEqual(got.pages[BASE + "x.html?x=Unbekannt"].kind, "broken")
+        self.assertNotIn(BASE + "x.html?x=eins", got.pages)
+
+
 class ContentLinksTests(unittest.TestCase):
     def test_keeps_the_query_byte_for_byte_and_skips_what_is_not_a_page(self):
         html = _listing([
