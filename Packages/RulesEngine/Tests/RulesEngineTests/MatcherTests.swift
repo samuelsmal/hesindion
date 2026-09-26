@@ -883,6 +883,53 @@ final class MatcherTests: XCTestCase {
         XCTAssertNil(Conflicts.parse("## Other\n- situations/a.yaml 1.2", order: order))
     }
 
+    /// R77: the section is split into `###` category subsections; every id under any of them is
+    /// listed, none from the section before or after, and a subsection's intro adds none.
+    func testTheConflictsSubsectionsAreAllRead() {
+        let md = """
+        ## Something before
+        - situations/a.yaml 9.9: not a conflict.
+        ## Expectation conflicts for the owner
+
+        Three categories (R77); the fingerprints are in conflict-fingerprints.json.
+
+        ### (a) The expectation is wrong per the rule text
+
+        - situations/a.yaml 1.2: expects something.
+
+        ### (b) Input convention
+
+        The owner restates the bases.
+
+        - situations/b.yaml 5.6, c.yaml 17.3: folded bases.
+
+        ### (c) Rule data not written
+
+        - situations/a.yaml 1.4: no rule.
+        ## Reviews reset by hand edits
+        - situations/a.yaml 1.3: not a conflict.
+        """
+        XCTAssertEqual(Conflicts.parse(md, order: [:])?.map(\.description), ["a.yaml 1.2", "b.yaml 5.6", "c.yaml 17.3", "a.yaml 1.4"])
+        XCTAssertEqual(Conflicts.categories(md).map(\.heading),
+                       ["(a) The expectation is wrong per the rule text", "(b) Input convention", "(c) Rule data not written"])
+    }
+
+    /// R77: MIGRATION.md's conflicts section has the three category subsections, each listing
+    /// situations, and every listed conflict is under one of them.
+    func testMIGRATIONsConflictsAreInTheThreeCategories() throws {
+        let md = try String(contentsOf: Repo.url("docs/rules-rework/examples/MIGRATION.md"), encoding: .utf8)
+        let categories = Conflicts.categories(md)
+        XCTAssertEqual(categories.map { String($0.heading.prefix(3)) }, ["(a)", "(b)", "(c)"])
+        let all = try XCTUnwrap(Conflicts.parse(md, order: [:]))
+        var inCategories: [ConflictRef] = []
+        for c in categories {
+            let ids = Conflicts.parse(Conflicts.section + "\n" + c.body, order: [:]) ?? []
+            XCTAssertFalse(ids.isEmpty, c.heading)
+            inCategories += ids
+        }
+        XCTAssertEqual(Set(all), Set(inCategories))
+    }
+
     /// `RULES_FILES=kampfwerte,lebensenergie` keeps those files; unset, empty or `all` keeps all.
     func testTheFileFilter() {
         XCTAssertEqual(FileFilter(nil).keeps("kampfwerte.yaml"), true)

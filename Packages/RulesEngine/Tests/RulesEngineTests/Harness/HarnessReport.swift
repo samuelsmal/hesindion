@@ -53,8 +53,8 @@ struct ConflictRef: Hashable, Encodable, CustomStringConvertible {
     var description: String { "\(file) \(id)" }
 }
 
-/// The situations MIGRATION.md's "Expectation conflicts for the owner" lists: every id after a
-/// `<file>.yaml` (`situations/boronmir-sf.yaml 14.13`, `kampfsituationen.yaml 17.3, 17.22`),
+/// The situations MIGRATION.md's "Expectation conflicts for the owner" lists (in any of its `###`
+/// category subsections, R77): every id after a `<file>.yaml` (`situations/boronmir-sf.yaml 14.13`, `kampfsituationen.yaml 17.3, 17.22`),
 /// ranges (`15.4–15.8`) expanded in the file's order.
 enum Conflicts {
     static let section = "## Expectation conflicts for the owner"
@@ -70,6 +70,20 @@ enum Conflicts {
             out.formUnion(parse(section + "\n- " + entry, order: order) ?? [])
         }
         return out
+    }
+
+    /// Ruling R77: the section's `###` subsections (the three categories: the expectation wrong
+    /// per the rule text, the input convention of R66, rule data not written), each heading with
+    /// its text up to the next subsection. `parse` reads every id of the section, whatever
+    /// subsection it is in.
+    static func categories(_ markdown: String) -> [(heading: String, body: String)] {
+        guard let start = markdown.range(of: section) else { return [] }
+        let rest = markdown[start.upperBound...]
+        let body = String(rest.range(of: "\n## ").map { rest[..<$0.lowerBound] } ?? rest)
+        return body.components(separatedBy: "\n### ").dropFirst().map { part in
+            let heading = part.prefix { $0 != "\n" }
+            return (String(heading).trimmingCharacters(in: .whitespaces), String(part.dropFirst(heading.count)))
+        }
     }
 
     /// nil when the section is missing.
