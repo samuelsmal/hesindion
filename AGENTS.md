@@ -28,6 +28,9 @@ make test-rules-review  # The review tool's tests and RULINGS.md --check
 make rules-check   # rulec: validate the new-format rule and situation files against the vocabulary
 make rules-json    # rulec: compile the new-format rules and situations to build/rules/*.json
 make test-rulec    # The rulec compiler's own tests (validation, compilation, the reach index)
+make rules-sync    # Crawl https://dsa.ulisses-regelwiki.de/ into specs/rules/pages.yaml (needs network; MAX_AGE=0 refetches all; ADOPT=1 writes the page hash into every rule file with none, ADOPT=<ids> re-adopts named ones)
+make rules-coverage  # How many rule-website pages are new, changed, unhashed, drafted or reviewed, per category (offline; LIST=<status> lists one status's pages, CHECK=1 fails on a changed page or an unknown rule source)
+make test-rules-sync  # scripts/rules_sync's own tests (Python unittest)
 make test-rules-engine  # Packages/RulesEngine's situations harness (RULES_FILES=a,b filters; unset runs every situation)
 make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1  # Re-record specs/rules/conflict-fingerprints.json, each listed conflict's mismatches (query, step, kind); commit it with the MIGRATION change. Without it a listed conflict with a mismatch outside its snapshot fails (R78)
 make companions HERO="<export.json>"  # Check <export>.companions.yaml and inject the hesindion block (FIX=1 rewrites the export's pet fields, CHECK=1 only checks)

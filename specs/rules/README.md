@@ -289,6 +289,47 @@ in the file moves, and an edit that would change more than that is refused — a
 regenerated after it, so `git diff` is the record of the session. The edits are in `rulefiles.py`, tested by
 `make test-rules-review` (which also runs `rulings.py --check`).
 
+## Pages and coverage
+
+[`specs/rules/pages.yaml`](pages.yaml) is every page of <https://dsa.ulisses-regelwiki.de/>,
+crawled from the site's own top menu: its URL (relative to the site root), title, its place in the
+site's index trail (`in:`), its `kind` (`rule`, `index` or `broken` — a rule page whose fetched HTML
+had no text, rendered client-side or kept outside `#main`), and for a rule page a `hash` of its
+normalised text with the date that hash was first seen (`fetched`). `make rules-sync` writes it —
+needs network, about one page a second; the default resumes a run that stopped partway through the
+same day, `MAX_AGE=0` refetches everything. **The only field a person edits by hand is `skip`**: on
+one page, or as a reason keyed by an index-trail prefix at the top of the file (`Wege der
+Vereinigungen - ab 18 Jahre: not part of the app` skips the whole category) — a sync keeps every
+`skip` it finds.
+
+A rule file's `source.url` names the page it was drafted from, and **that URL must be a key
+`pages.yaml` knows**. `make rules-coverage` (offline: reads `pages.yaml` and the rule files only,
+never the network) lists one that isn't as "rules with an unknown page", with up to five near-title
+candidates from the crawl beside it — never a resolution to trust without reading the page.
+
+`rules-coverage`'s per-category table gives every `kind: rule` page one status, first match wins,
+in this order:
+
+1. `gone` — the crawl no longer finds the page.
+2. `skipped` — its own `skip`, or a trail prefix's.
+3. `new` — no rule file names it yet.
+4. `changed` — a rule names it with a hash that no longer matches the page's current one.
+5. `unhashed` — a rule names it and has never been given a hash.
+6. `reviewed` — every rule naming it has been reviewed.
+7. `drafted` — named and hashed, but not every rule naming it is reviewed.
+
+`kind: index` and `kind: broken` pages are counted on their own line, never inside a status.
+`LIST=<status>` (`make rules-coverage LIST=new`) prints one status's page keys and titles;
+`CHECK=1` exits 1 on a `changed` page or a rule with an unknown page, for a script or a hook.
+
+**The reprocess loop**, when a page's rule text moved out from under a drafted rule: `make
+rules-sync` refetches and re-hashes the site; `make rules-coverage` now shows that rule's page as
+`changed`, and names the rule ids to reprocess; reprocess the rule file against the new page text;
+`make rules-sync ADOPT=<id>` (or a comma-separated list) writes the fresh hash and today's date
+into that rule's `source.hash`/`source.checked`, which is what moves it out of `changed`. `ADOPT=1`
+instead adopts every rule whose hash is still null — the one-time baseline a freshly drafted rule
+needs before it can ever show `changed` at all.
+
 ## What waits for an agent
 
 `make rules-queue` prints it; `make rules-agent` starts Claude Code on it (interactive, so you can
