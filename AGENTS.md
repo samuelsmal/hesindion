@@ -206,7 +206,7 @@ Keep `docs/` current with the state of the project:
 
 - Update or create documentation when adding major features or changing architecture
 - Plans live in `docs/plans/`, ADRs in `docs/adr/`
-- Sample data lives in `specs/heroes/`
+- Sample data lives in `specs/heroes/`. Boronmir and Robak are real Optolith exports; Ingra (Zwergin, Geweihte des Ingerimm) and Lyssandra (Halbelfe, Gildenmagierin) are synthetic, built from Boronmir's export shape with values from the Optolith data, to cover what the real ones do not (other species, blessings and liturgies, no purchased AsP/KaP, a ranged weapon, SA_884). `SampleHeroImportTests` expects the rule's value, never the importer's; a known importer bug sits in `withKnownIssue`
 
 ## Data Policy
 
