@@ -805,6 +805,26 @@ enum DSAStrings {
         "bleeding.log":                 "Bleeding: 1 SP",
         "state.blutend.removal":        "After 7−QS rounds (Selbstbeherrschung). Heilkunde Wunden +2 (1 action) shortens it by QS/2 rounds.",
         "rulesEngine.unavailable":      "Rules not loaded",
+        // Breakdown sheet (sheet cut-over design §5)
+        "owner.sheet":                  "Hero sheet",
+        "owner.loadout":                "Loadout",
+        "owner.player":                 "Player",
+        "owner.gm":                     "GM",
+        "owner.round":                  "Round",
+        "owner.roll":                   "Roll",
+        "owner.derived":                "derived",
+        "reason.conditionFalse":        "Condition not met",
+        "reason.unknownFact":           "Info missing",
+        "reason.openRuling":            "Ruling open",
+        "reason.requirementNotMet":     "Requirement missing",
+        "reason.forbidden":             "not allowed",
+        "reason.suppressed":            "suppressed",
+        "reason.replaced":              "replaced",
+        "reason.overridden":            "overridden",
+        "reason.rulesetOff":            "Focus rule off",
+        "reason.outOfContext":          "not in this situation",
+        "breakdown.notApplied":         "Not applied (%d)",
+        "breakdown.auslegung":          "Ruling %@",
     ]
 
     private static let translations: [String: String] = [
@@ -1802,6 +1822,26 @@ enum DSAStrings {
         "bleeding.heilkunde.effect":    "verkürzt um QS/2 KR",
         "bleeding.log":                 "Blutend: 1 SP",
         "rulesEngine.unavailable":      "Regeln nicht geladen",
+        // Breakdown sheet (sheet cut-over design §5)
+        "owner.sheet":                  "Heldenbogen",
+        "owner.loadout":                "Ausrüstung",
+        "owner.player":                 "Spieler",
+        "owner.gm":                     "Meister",
+        "owner.round":                  "Runde",
+        "owner.roll":                   "Wurf",
+        "owner.derived":                "abgeleitet",
+        "reason.conditionFalse":        "Bedingung nicht erfüllt",
+        "reason.unknownFact":           "Angabe fehlt",
+        "reason.openRuling":            "Auslegung offen",
+        "reason.requirementNotMet":     "Voraussetzung fehlt",
+        "reason.forbidden":             "nicht erlaubt",
+        "reason.suppressed":            "unterdrückt",
+        "reason.replaced":              "ersetzt",
+        "reason.overridden":            "überstimmt",
+        "reason.rulesetOff":            "Fokusregel aus",
+        "reason.outOfContext":          "nicht in dieser Lage",
+        "breakdown.notApplied":         "Nicht angewandt (%d)",
+        "breakdown.auslegung":          "Auslegung %@",
     ]
 }
 

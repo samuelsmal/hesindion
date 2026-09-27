@@ -291,6 +291,13 @@ public struct RuleBook: Sendable {
     /// The effect at `origin`, top-level or nested.
     public func effect(at origin: EffectOrigin) -> Effect? { byOrigin[origin] }
 
+    /// The decided answer of a ruling, qualified `RULE.id` (a rule's own) or `shared.id`
+    /// (`rules/rulings.yaml`); nil when the id is unknown or the ruling is still open.
+    public func rulingAnswer(_ qualified: String) -> String? {
+        guard let ruling = rulings[qualified], ruling.status == .decided else { return nil }
+        return ruling.answer?.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// The effects the reach index lists under `target` or under `"*"`, each once, merged in
     /// the compiler's sort key (`compile._ref_key`: rule id, clause id, then int indices before
     /// string ones). That is not clause order within a rule; chaining (R28) uses `Rule.clauses`.

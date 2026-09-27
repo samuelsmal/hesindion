@@ -91,4 +91,12 @@ final class HeroSheetTests: XCTestCase {
         XCTAssertTrue(b.notApplied.contains { $0.origin == ClauseRef(rule: "trefferzonen", clause: "TZ8") && $0.reason == .rulesetOff },
                       "\(b.notApplied.map { "\($0.origin) \($0.reason)" })")
     }
+
+    /// `schilde.shield-bonus-raufen` is the decided ruling `pa(with: weapon)` rests on for a
+    /// bare-handed Raufen parry with a shield (kampfwerte.yaml 16.16-ish, `ruling:` on SCH1).
+    func testRulingAnswerLooksUpADecidedRulingByItsQualifiedId() {
+        let answer = Self.book.rulingAnswer("schilde.shield-bonus-raufen")
+        XCTAssertEqual(answer, "Yes: unarmed is the hand the hero fights with; the shield covers him either way.")
+        XCTAssertNil(Self.book.rulingAnswer("schilde.no-such-ruling"))
+    }
 }

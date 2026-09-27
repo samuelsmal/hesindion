@@ -1,5 +1,14 @@
 import SwiftUI
 import SwiftData
+import RulesEngine
+
+/// What `BreakdownSheet` shows: one base value, with the title it should show above the result
+/// (sheet cut-over design §5).
+private struct BreakdownItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let value: SheetValue
+}
 
 // MARK: - HeroDetailView
 
@@ -28,9 +37,49 @@ struct HeroDetailView: View {
     @State private var activeSpellIsLiturgy: Bool = false
     @State private var showRecordedStats = false
     @State private var weaponInfo: WeaponInfoTarget?
+    @State private var breakdown: BreakdownItem?
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
+    }
+
+    /// Every base value of this hero, from the rules engine (sheet cut-over design §2); nil
+    /// while the rules are not loaded (`RulesEngineStore.shared`), which the sheet then shows as
+    /// `L("rulesEngine.unavailable")` instead of a number.
+    private var sheetValues: SheetValues? { SheetValues.of(hero) }
+
+    /// A base value's display text: its result, "–" when the engine could not give one (R12),
+    /// or `rulesEngine.unavailable` when the engine is not loaded at all (`v == nil`).
+    private func sheetValueText(_ v: SheetValue?) -> String {
+        guard let v else { return L("rulesEngine.unavailable") }
+        return v.result.map(String.init) ?? "–"
+    }
+
+    /// A `FieldRow`-shaped base value (LE, Wundschwelle, INI, AW, GS): a button that opens its
+    /// breakdown, identified `sheet.value.<key>`.
+    @ViewBuilder private func sheetValueRow(_ key: String, label: String, _ v: SheetValue?) -> some View {
+        Button {
+            if let v { breakdown = BreakdownItem(title: L(label), value: v) }
+        } label: {
+            FieldRow(label: label, value: sheetValueText(v))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("sheet.value.\(key)")
+    }
+
+    /// A compact AT/PA chip (combat techniques, weapons, shields): same button, a caption-sized
+    /// abbreviation instead of a full row.
+    @ViewBuilder private func sheetValueChip(_ key: String, abbrev: String, title: String, _ v: SheetValue?) -> some View {
+        Button {
+            if let v { breakdown = BreakdownItem(title: title, value: v) }
+        } label: {
+            HStack(spacing: 4) {
+                Text(abbrev).font(.dsaBody(.caption))
+                Text(sheetValueText(v)).font(.dsaMono(.caption, emphasis: true))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("sheet.value.\(key)")
     }
 
     var body: some View {
@@ -184,6 +233,11 @@ struct HeroDetailView: View {
         .sheet(item: $weaponInfo) { target in
             WeaponInfoSheet(hero: hero, name: target.name)
                 .presentationCornerRadius(0)
+        }
+        .sheet(item: $breakdown) { item in
+            if let book = RulesEngineStore.shared?.engine.book {
+                BreakdownSheet(title: item.title, value: item.value, book: book)
+            }
         }
         .fullScreenCover(isPresented: $showHeroSettings) {
             HeroSettingsView(hero: hero) { showHeroSettings = false }
@@ -440,30 +494,7 @@ struct HeroDetailView: View {
     @ViewBuilder private var derivedValuesSection: some View {
         if let dv = hero.derivedValues {
             CollapsibleSection(L("derivedValues")) {
-                if dv.lebensenergie.max > 0 {
-                    interactiveDerivedRow(
-                        label: "lebensenergie",
-                        primary: "\(dv.lebensenergie.current) / \(dv.lebensenergie.max)",
-                        subfields: []
-                    ) {
-                        activeCommand = AppCommand(
-                            id: UUID(),
-                            name: "lebensenergie",
-                            subparameter: nil,
-                            input: .integerAmount(
-                                label: L("current"),
-                                min: 0,
-                                max: dv.lebensenergie.max,
-                                initial: dv.lebensenergie.current
-                            ),
-                            execute: { result in
-                                if case .integerAmount(let v) = result {
-                                    dv.lebensenergie.current = v
-                                }
-                            }
-                        )
-                    }
-                }
+                leRow(dv)
                 if dv.schicksalspunkte.max > 0 {
                     interactiveDerivedRow(
                         label: "schicksalspunkte",
@@ -538,17 +569,51 @@ struct HeroDetailView: View {
                 }
                 if dv.seelenkraft.max > 0 { FieldRow(label: "seelenkraft", value: "\(dv.seelenkraft.max)") }
                 if dv.zaehigkeit.max > 0 { FieldRow(label: "zähigkeit", value: "\(dv.zaehigkeit.max)") }
-                if dv.ausweichen.max > 0 {
-                    FieldRow(label: "ausweichen", value: hero.belastungPenalty != 0 ? "\(dv.ausweichen.max) (\(hero.belastungPenalty))" : "\(dv.ausweichen.max)")
-                }
-                if dv.initiative.max > 0 {
-                    FieldRow(label: "initiative", value: hero.totalIniPenalty != 0 ? "\(dv.initiative.max) (\(hero.totalIniPenalty))" : "\(dv.initiative.max)")
-                }
-                if dv.geschwindigkeit.max > 0 {
-                    FieldRow(label: "geschwindigkeit", value: hero.totalGsPenalty != 0 ? "\(dv.geschwindigkeit.max) (\(hero.totalGsPenalty))" : "\(dv.geschwindigkeit.max)")
-                }
-                if dv.wundschwelle.max > 0 { FieldRow(label: "wundschwelle", value: "\(dv.wundschwelle.max)") }
+                sheetValueRow("aw", label: "ausweichen", sheetValues?.aw)
+                sheetValueRow("iniBase", label: "initiative", sheetValues?.iniBase)
+                sheetValueRow("gs", label: "geschwindigkeit", sheetValues?.gs)
+                sheetValueRow("wundschwelle", label: "wundschwelle", sheetValues?.wundschwelle)
             }
+        }
+    }
+
+    /// LE current stays session state (edited by the pencil swipe, as before); LE max is the
+    /// engine's `leMax`, opened by a tap on the value (sheet cut-over design §3, §4).
+    @ViewBuilder private func leRow(_ dv: DerivedValues) -> some View {
+        let leMax = sheetValues?.leMax
+        SwipeActionRow(actions: [SwipeAction(icon: "pencil", color: .groupPersonalData) {
+            activeCommand = AppCommand(
+                id: UUID(),
+                name: "lebensenergie",
+                subparameter: nil,
+                input: .integerAmount(
+                    label: L("current"),
+                    min: 0,
+                    max: leMax?.result ?? dv.lebensenergie.current,
+                    initial: dv.lebensenergie.current
+                ),
+                execute: { result in
+                    if case .integerAmount(let v) = result {
+                        dv.lebensenergie.current = v
+                    }
+                }
+            )
+        }]) {
+            HStack {
+                Text(L("lebensenergie")).font(.body)
+                Spacer()
+                Button {
+                    if let leMax { breakdown = BreakdownItem(title: L("lebensenergie"), value: leMax) }
+                } label: {
+                    Text("\(dv.lebensenergie.current) / \(sheetValueText(leMax))")
+                        .font(.dsaMono(.body, emphasis: true))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("sheet.value.leMax")
+            }
+            .padding(.leading, 24)
+            .padding(.trailing, 12)
+            .padding(.vertical, 6)
         }
     }
 
@@ -847,18 +912,9 @@ struct HeroDetailView: View {
                         )
 
                         HStack(spacing: 12) {
-                            Text("AT").font(.dsaBody(.caption))
-                            if hero.belastungPenalty != 0 {
-                                Text("\(ct.at) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
-                            } else {
-                                Text("\(ct.at)").font(.dsaMono(.caption, emphasis: true))
-                            }
-                            Text("PA").font(.dsaBody(.caption))
-                            if ct.pa > 0 && hero.belastungPenalty != 0 {
-                                Text("\(ct.pa) (\(hero.belastungPenalty))").font(.dsaMono(.caption, emphasis: true))
-                            } else {
-                                Text("\(ct.pa)").font(.dsaMono(.caption, emphasis: true))
-                            }
+                            let pair = sheetValues?.technique(ct.ruleId)
+                            sheetValueChip("at.\(ct.ruleId)", abbrev: "AT", title: "\(ct.name) AT", pair?.at)
+                            sheetValueChip("pa.\(ct.ruleId)", abbrev: "PA", title: "\(ct.name) PA", pair?.pa)
                             Spacer()
                         }
                         .padding(.leading, 24)
@@ -967,11 +1023,13 @@ struct HeroDetailView: View {
                         SubfieldBlock(label: w.name, subfields: [
                             ("combatTechnique", RulesDatabase.shared.lookup(id: w.combatTechniqueId)?.name ?? w.combatTechniqueId),
                             ("damage", w.damage),
-                            ("AT", "\(w.at)"),
-                            ("PA", "\(w.pa)"),
                             ("reach", w.reach),
                             ("weight", String(format: "%.2f st", w.weight))
-                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) })
+                        ], info: WeaponInfoButton(name: w.name) { weaponInfo = WeaponInfoTarget(name: w.name) }) {
+                            let pair = sheetValues?.weapon(w)
+                            sheetValueRow("weapon.at.\(w.name)", label: "AT", pair?.at)
+                            sheetValueRow("weapon.pa.\(w.name)", label: "PA", pair?.pa)
+                        }
                     }
                 }
             }
@@ -1011,12 +1069,14 @@ struct HeroDetailView: View {
                     ) {
                         SubfieldBlock(label: s.name, subfields: [
                             ("damage", s.damage),
-                            ("AT", "\(s.at)"),
-                            ("PA", "\(s.pa)"),
                             ("reach", s.reach),
                             ("SP", "\(s.structurePoints)"),
                             ("weight", String(format: "%.2f st", s.weight))
-                        ], info: WeaponInfoButton(name: s.name) { weaponInfo = WeaponInfoTarget(name: s.name) })
+                        ], info: WeaponInfoButton(name: s.name) { weaponInfo = WeaponInfoTarget(name: s.name) }) {
+                            let pair = sheetValues?.shield(s)
+                            sheetValueRow("shield.at.\(s.name)", label: "AT", pair?.at)
+                            sheetValueRow("shield.pa.\(s.name)", label: "PA", pair?.pa)
+                        }
                     }
                 }
             }

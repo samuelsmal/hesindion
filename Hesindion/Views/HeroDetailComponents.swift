@@ -240,6 +240,21 @@ struct SubfieldBlock: View {
     let subfields: [(String, String)]
     /// An ⓘ at the end of the heading — the weapon rows' way to the rules text.
     var info: WeaponInfoButton? = nil
+    /// Rows shown between the heading and `subfields` — the AT/PA breakdown buttons on a
+    /// weapon or shield row (sheet cut-over design §5), nothing for every other caller.
+    private let extra: AnyView
+
+    init<Extra: View>(
+        label: String,
+        subfields: [(String, String)],
+        info: WeaponInfoButton? = nil,
+        @ViewBuilder extra: () -> Extra = { EmptyView() }
+    ) {
+        self.label = label
+        self.subfields = subfields
+        self.info = info
+        self.extra = AnyView(extra())
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -250,6 +265,8 @@ struct SubfieldBlock: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+
+            extra
 
             ForEach(subfields, id: \.0) { key, val in
                 VStack(spacing: 0) {
