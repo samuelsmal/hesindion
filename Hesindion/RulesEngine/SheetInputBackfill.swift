@@ -15,7 +15,9 @@ enum SheetInputBackfill {
         for w in hero.meleeWeapons {
             guard let ct = techniques[w.combatTechniqueId] else { continue }
             if w.atModifier == nil { w.atModifier = w.at - ct.at; changed = true }
-            if w.paModifier == nil { w.paModifier = w.pa - ct.pa; changed = true }
+            // ct.pa == 0 is the import's no-parry marker (parseCombatTechniques), not a real
+            // technique PA the fold used — deriving against it would read a stale weapon.pa.
+            if w.paModifier == nil && ct.pa != 0 { w.paModifier = w.pa - ct.pa; changed = true }
         }
         if let ct = techniques["CT_10"] {
             for s in hero.shields where s.atModifier == nil {

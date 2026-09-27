@@ -28,4 +28,22 @@ final class SheetInputBackfillTests: XCTestCase {
         XCTAssertEqual(hero.derivedValues?.speciesLE, 5)
         XCTAssertFalse(SheetInputBackfill.fill(hero), "idempotent")
     }
+
+    /// `parseCombatTechniques` stores `pa == 0` for a no-parry technique (e.g. CT_6
+    /// Kettenwaffen) as a marker, not a real technique PA the import's fold used — so a
+    /// weapon on such a technique cannot have its PA-Mod derived from `weapon.pa - ct.pa`.
+    func testTheBackfillLeavesPAModifierNilOnANoParryTechnique() throws {
+        let context = ModelContext(try TestData.makeContainer())
+        let hero = Hero(name: "Test")
+        context.insert(hero)
+        let ct = CombatTechnique(ruleId: "CT_6", name: "Kettenwaffen", value: 6, at: 6, pa: 0)
+        hero.combatTechniques.append(ct)
+        let weapon = MeleeWeapon(name: "Morgenstern", combatTechniqueId: "CT_6",
+                                  damage: "1W6+2", at: 8, pa: 3, reach: "Mittel", weight: 3)
+        hero.meleeWeapons.append(weapon)
+
+        XCTAssertTrue(SheetInputBackfill.fill(hero))
+        XCTAssertEqual(weapon.atModifier, weapon.at - ct.at)
+        XCTAssertNil(weapon.paModifier)
+    }
 }
