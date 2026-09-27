@@ -32,7 +32,9 @@ authored corpus today: `KSF_Sturmangriff.html`, the percent-encoded
 under a category path. No rule about ids or names produces all three, and a
 resolver that special-cases the third has not solved the problem. So every URL
 here comes from an `href` the site itself publishes, under an anchor text the
-site itself writes, and is carried through byte for byte.
+site itself writes, and is carried through as the site wrote it but for its spelling:
+`check.canonical_url` gives the spellings the site serves one page under (`ö`/`%C3%B6`,
+`(`/`%28`, a query's `%20`/`+`) one key.
 """
 from __future__ import annotations
 
@@ -88,6 +90,11 @@ SEARCH_DETAIL = ("the site answered with its search page: it has no page at this
 #: The cut sits in that gap; 0.5 would have taken four pages of rule text with it.
 LISTING_LINKS = 3
 LISTING_SHARE = 0.7
+#: A page with `a.ulSubMenu` anchors is a rule page when its content container has rule text of
+#: its own, less than this share of it link text. Calibrated on the 107 menu pages of 2026-09-27
+#: whose container normalised to text: the extended-combat menu page (headings and its menu inside
+#: `#main`) has 0.61, the highest page with rule text 0.47.
+MENU_LINK_SHARE = 0.5
 
 #: Guard rails on the crawl. Pages reached through content links sit deeper than the index
 #: trails (4 below a top category on 2026-09-26); MAX_PAGES is a stop against a redesign or a
@@ -239,7 +246,7 @@ def _container(soup):
 def _page_link(href: str, base: str) -> "str | None":
     """The canonical URL an href in the content names, or `None` when it names no page of this
     site: empty, a fragment, `mailto:`/`javascript:`, off-site, or not an `.html` path (a PDF, an
-    image). The query string is kept exactly as the site wrote it."""
+    image). The query string is kept as the site wrote it, spelled by `canonical_url`."""
     href = (href or "").strip()
     if not href or href.startswith("#") or href.lower().startswith(_NOT_A_PAGE):
         return None
@@ -257,7 +264,8 @@ def _anchor_text(anchor) -> str:
 def content_links(html: str, page_url: str) -> list[tuple[str, str]]:
     """The `(anchor text, absolute URL)` of every same-site page linked from the content
     container (`#main`, else `<main>`), in document order, first anchor per URL. Joined against
-    `page_base`, never rebuilt: an href is carried through byte for byte, query included."""
+    `page_base`, never rebuilt: an href is carried through as written, query included, spelled
+    by `canonical_url`."""
     soup = BeautifulSoup(html, "html.parser")
     container = _container(soup)
     if container is None:
@@ -302,6 +310,22 @@ def link_text_share(html: str) -> float:
     return link_chars / text_chars if text_chars else 0.0
 
 
+def _anchor_text_share(html: str) -> float:
+    """How much of the content container's normalised text is anchor text, whatever the anchor
+    links to; 0.0 for a container with no text."""
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style"]):
+        tag.decompose()
+    for widget in soup.select(_DYNAMIC_WIDGET_SELECTOR):
+        widget.decompose()
+    container = _container(soup)
+    try:
+        text_chars = len(normalise_html(html))
+    except (ContentContainerEmpty, ContentContainerNotFound):
+        return 0.0
+    return sum(len(_anchor_text(a)) for a in container.find_all("a")) / text_chars
+
+
 def is_listing(html: str) -> bool:
     """A content container that is a list of links (Ruling R4, calibrated -- see LISTING_SHARE):
     the site's selection grid, or at least LISTING_LINKS links making up LISTING_SHARE of the text."""
@@ -318,14 +342,18 @@ def classify_page(html: str) -> tuple[str, str]:
     `("broken", SEARCH_DETAIL)`: the site's answer for a URL it has no page at.
     Then three signals, in this order:
 
-    * **The page publishes `a.ulSubMenu` anchors** -> it is an index. This has
-      to come first, because it is the only signal that covers *every* index on
-      this site. Most of them have an empty `#main` with the link list outside
-      it, but not all: the extended-combat category publishes its links
-      **inside** `#main`, above its sub-category headings, so it normalises to
-      text and the container test alone calls it a rule page. It was found this
-      way -- the first live run reported all 74 rules in that group unresolved
-      and named the page it had misread.
+    * **The page publishes `a.ulSubMenu` anchors** -> it is an index, unless its
+      container has rule text of its own (less than `MENU_LINK_SHARE` of it
+      anchor text): then it is a rule page as well, hashed, and the crawl still
+      follows its menu. This has to come first, because it is the only signal
+      that covers *every* index on this site. Most of them have an empty
+      `#main` with the link list outside it, but not all: the extended-combat
+      category publishes its links **inside** `#main`, above its sub-category
+      headings, so it normalises to text and the container test alone calls it
+      a rule page. It was found this way -- the first live run reported all 74
+      rules in that group unresolved and named the page it had misread. And
+      some menu pages carry the rules their sub-pages share (`GR_Zustand.html`,
+      `Kampfregeln.html`): 105 of them on 2026-09-27.
     * **Its content container is a list of links** (`is_listing`) -> an index.
       The site's selection pages (`zauberauswahl.html` and its kind) publish
       hundreds of plain links in `#main` and no `a.ulSubMenu`; read as rule
@@ -344,7 +372,14 @@ def classify_page(html: str) -> tuple[str, str]:
     container = _container(BeautifulSoup(html, "html.parser"))
     if container is not None and container.select_one(SEARCH_SELECTOR):
         return "broken", SEARCH_DETAIL
-    if index_anchors(html) or is_listing(html):
+    if index_anchors(html):
+        if is_listing(html) or _anchor_text_share(html) >= MENU_LINK_SHARE:
+            return "index", ""
+        try:
+            return "rule", normalise_html(html)
+        except (ContentContainerEmpty, ContentContainerNotFound):
+            return "index", ""
+    if is_listing(html):
         return "index", ""
     try:
         return "rule", normalise_html(html)

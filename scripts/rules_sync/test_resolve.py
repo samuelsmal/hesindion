@@ -114,6 +114,24 @@ class ClassifyPageTests(unittest.TestCase):
         self.assertTrue(normalise_html(html), "this page does yield text, unlike its siblings")
         self.assertEqual(resolve.classify_page(html)[0], "index")
 
+    def test_a_menu_page_with_rule_text_of_its_own_is_a_rule_page(self):
+        # GR_Zustand.html (18 menu anchors) carries the rules every Zustand shares, and
+        # Kampfregeln.html 12139 characters of text: 105 menu pages of 2026-09-27 had text of
+        # their own that no hash watched.
+        html = _index([("Belastung", "Sta_Belastung.html"), ("Furcht", "Sta_Furcht.html")],
+                      main=f"<h1>Zustände</h1><p>{LONG}</p>")
+        kind, text = resolve.classify_page(html)
+        self.assertEqual(kind, "rule")
+        self.assertIn("Regeltext", text)
+
+    def test_a_menu_page_that_is_mostly_its_links_stays_an_index(self):
+        # SF_Erweitertekampfstilsonderfertigkeiten.html: headings and its menu inside #main,
+        # 0.61 of the text link text; the closest page with rule text had 0.47.
+        links = [(f"Kampftechnik {n}", f"kt{n}.html") for n in range(8)]
+        menu = "".join(f'<a class="ulSubMenu" href="{h}">{t}</a>' for t, h in links)
+        html = _index(links, main=f"<h1>Erweitert</h1><p>Alle (ungefiltert)</p>{menu}")
+        self.assertEqual(resolve.classify_page(html)[0], "index")
+
 
 # ── the site-wide crawl (new) ────────────────────────────────────────────────
 
