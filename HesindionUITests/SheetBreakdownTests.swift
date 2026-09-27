@@ -22,7 +22,9 @@ final class SheetBreakdownTests: XCTestCase {
                 || app.staticTexts.matching(identifier: "breakdown.line.0").firstMatch.exists,
             "The breakdown has no lines"
         )
-        XCTAssertTrue(app.buttons["breakdown.notApplied"].exists, "The Nicht-angewandt fold is missing")
+        // `CombatDisclosureSection`'s own convention: the fold's tap target carries
+        // "<identifier>.toggle", the container the bare identifier.
+        XCTAssertTrue(app.buttons["breakdown.notApplied.toggle"].exists, "The Nicht-angewandt fold is missing")
 
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = "60-sheet-le-breakdown"

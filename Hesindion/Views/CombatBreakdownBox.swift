@@ -7,6 +7,17 @@ struct BreakdownRow: Identifiable {
     let value: String
     let source: String
     var tint: Color = .primary
+    /// A second, smaller line under `source` — the facts a line read and, when it rests on a
+    /// ruling, the Auslegung mark (sheet cut-over design §5). `nil` for every combat calculation's
+    /// own rows, which show none and render exactly as before.
+    var detail: String? = nil
+    /// Tapped when `detail` is shown, to toggle an Auslegung mark's answer inline. `nil` when
+    /// there is nothing to expand.
+    var onTapDetail: (() -> Void)? = nil
+    /// Overrides the row's own `combat.breakdown.row.<source>` identifier — `BreakdownSheet` needs
+    /// `breakdown.line.<n>` instead, in source order, which a rule name repeated across two lines
+    /// (two base terms of one derive) would otherwise collide on.
+    var identifierOverride: String? = nil
 
     /// A signed contribution, tinted by its sign the way the AT breakdown does.
     ///
@@ -45,6 +56,9 @@ struct CombatBreakdownBox: View {
     /// Section heading above the box. `nil` places the box bare, for a caller
     /// that has already labelled the section.
     var sectionLabel: String? = nil
+    /// `breakdown.result` for `BreakdownSheet`'s total; every combat caller leaves this nil, as
+    /// before.
+    var totalIdentifier: String? = nil
 
     /// The common shape: a base value, a modifier line each, a total.
     init(
@@ -67,12 +81,14 @@ struct CombatBreakdownBox: View {
         rows: [BreakdownRow],
         totalValue: String,
         totalSource: String,
-        sectionLabel: String? = nil
+        sectionLabel: String? = nil,
+        totalIdentifier: String? = nil
     ) {
         self.rows = rows
         self.totalValue = totalValue
         self.totalSource = totalSource
         self.sectionLabel = sectionLabel
+        self.totalIdentifier = totalIdentifier
     }
 
     var body: some View {
@@ -83,13 +99,14 @@ struct CombatBreakdownBox: View {
 
             VStack(spacing: 0) {
                 ForEach(rows) { row in
-                    Self.row(value: row.value, source: row.source, tint: row.tint)
+                    Self.row(row)
                 }
 
                 // The sum, inside the same box rather than welded under it.
                 HStack {
                     Text(totalValue)
                         .font(.dsaMono(.body, emphasis: true))
+                        .accessibilityIdentifier(totalIdentifier ?? "")
                     Spacer()
                     Text(totalSource)
                         .font(.dsaBody(.caption2))
@@ -104,15 +121,28 @@ struct CombatBreakdownBox: View {
         }
     }
 
+    /// A row built straight from its value/source/tint — every combat caller's shape, unchanged.
     static func row(value: String, source: String, tint: Color) -> some View {
-        HStack {
-            Text(value)
-                .font(.dsaMono(.caption, emphasis: true))
-                .foregroundStyle(tint)
-            Spacer()
-            Text(source)
-                .font(.dsaBody(.caption2))
-                .foregroundStyle(.secondary)
+        row(BreakdownRow(value: value, source: source, tint: tint))
+    }
+
+    static func row(_ row: BreakdownRow) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(row.value)
+                    .font(.dsaMono(.caption, emphasis: true))
+                    .foregroundStyle(row.tint)
+                Spacer()
+                Text(row.source)
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+            }
+            if let detail = row.detail {
+                Text(detail)
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+                    .onTapGesture { row.onTapDetail?() }
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -124,6 +154,6 @@ struct CombatBreakdownBox: View {
         // keeps both texts individually queryable, so nothing that already
         // asserts on them breaks.
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("combat.breakdown.row.\(source)")
+        .accessibilityIdentifier(row.identifierOverride ?? "combat.breakdown.row.\(row.source)")
     }
 }

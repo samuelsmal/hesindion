@@ -825,6 +825,14 @@ enum DSAStrings {
         "reason.outOfContext":          "not in this situation",
         "breakdown.notApplied":         "Not applied (%d)",
         "breakdown.auslegung":          "Ruling %@",
+        "fact.species.le":              "Species base LE",
+        "fact.hero.purchased.le":       "purchased LE",
+        "fact.level":                   "level",
+        "fact.loadout.weapon":          "weapon",
+        "fact.loadout.shield":          "shield",
+        "fact.loadout.armour":          "armour",
+        "fact.loadout.armour.belastung": "armour encumbrance",
+        "fact.loadout.armour.extraPenalty": "armour's extra penalty",
     ]
 
     private static let translations: [String: String] = [
@@ -1842,6 +1850,14 @@ enum DSAStrings {
         "reason.outOfContext":          "nicht in dieser Lage",
         "breakdown.notApplied":         "Nicht angewandt (%d)",
         "breakdown.auslegung":          "Auslegung %@",
+        "fact.species.le":              "LE-Grundwert (Spezies)",
+        "fact.hero.purchased.le":       "gekaufte LE",
+        "fact.level":                   "Stufe",
+        "fact.loadout.weapon":          "Waffe",
+        "fact.loadout.shield":          "Schild",
+        "fact.loadout.armour":          "Rüstung",
+        "fact.loadout.armour.belastung": "Belastung der Rüstung",
+        "fact.loadout.armour.extraPenalty": "zusätzliche Erschwernis der Rüstung",
     ]
 }
 
