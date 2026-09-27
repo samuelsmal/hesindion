@@ -16,6 +16,9 @@ final class Shield {
     /// two Rabenschnäbel share one. Nil for heroes imported before it was kept;
     /// `Hero.equipmentEntry(forLoadoutNamed:)` then falls back to the name.
     var templateId: String? = nil
+    /// The item's AT-Mod, unfolded (sheet cut-over, SchemaV5). nil until the import or
+    /// `SheetInputBackfill` sets it. The engine reads this, not `at`.
+    var atModifier: Int? = nil
 
     init(name: String, damage: String, at: Int, pa: Int, paModifier: Int = 0, note: String = "", reach: String, structurePoints: Int, weight: Double) {
         self.name = name

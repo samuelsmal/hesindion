@@ -658,6 +658,7 @@ struct OptolithImportService {
                         weight: weight
                     ))
                     shields.last?.templateId = template.isEmpty ? nil : template
+                    shields.last?.atModifier = atMod
                 } else {
                     let ctVal = ctValues[ctId] ?? 6
                     let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
@@ -686,6 +687,8 @@ struct OptolithImportService {
                         weight: weight
                     ))
                     weapons.last?.templateId = item["template"] as? String
+                    weapons.last?.atModifier = atMod
+                    weapons.last?.paModifier = paMod
                 }
 
             case 2:
@@ -944,7 +947,7 @@ struct OptolithImportService {
         let schipBase = 3
         let schicksalspunkte = MutableResourceValue(current: schipBase, bonus: 0, max: schipBase)
 
-        return DerivedValues(
+        let derivedValues = DerivedValues(
             lebensenergie: lebensenergie,
             astralenergie: astralenergie,
             karmaenergie: karmaenergie,
@@ -956,6 +959,8 @@ struct OptolithImportService {
             wundschwelle: wundschwelle,
             schicksalspunkte: schicksalspunkte
         )
+        derivedValues.speciesLE = speciesLP
+        return derivedValues
     }
 
     // MARK: - Talent Category Mapping

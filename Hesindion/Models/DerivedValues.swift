@@ -43,6 +43,8 @@ final class DerivedValues {
     var geschwindigkeit: ResourceValue
     var wundschwelle: ComputedValue
     var schicksalspunkte: MutableResourceValue
+    /// The species' LE-Grundwert; nil until the import or the back-fill sets it.
+    var speciesLE: Int? = nil
 
     init(
         lebensenergie: LifeEnergyValue,
