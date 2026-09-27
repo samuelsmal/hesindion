@@ -94,10 +94,12 @@ clauses:
         forbid: { what: { defence: shieldParry } }
         because: gegen Angriffe von der Seite des Waffenarms schützt der Schild nicht
         ruling: mounted-attack-side
-        # Rests on the open ruling mounted-attack-side (the old `open_ruling`), so it applies
-        # nothing until it is answered. The side is the GM's call per attack (`gmFact.attackSide`,
-        # the old `attack.from: weaponArmSide`).
-        # FORMAT: needs the side an attack comes from — a question to the player, not modelled today.
+        # The side is the GM's call per attack (`gmFact.attackSide`, the old `attack.from:
+        # weaponArmSide`). Ruling mounted-attack-side (a): mounted, the defence screen asks one
+        # side question in place of the "von hinten" toggle — vorne / Schildarm / Waffenarm /
+        # hinten, default vorne. Waffenarm is `gmFact.attackSide: weaponArm` (this forbid);
+        # hinten is `gmFact.fromBehind: true`, which the two effects below and
+        # angriff-von-hinten.AH1 read (no shield parry, no passive bonus, −4).
       - when: { hero.mounted: true, not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
         forbid: { what: { defence: shieldParry } }
         because: beritten schützt der Schild nicht gegen Angriffe von hinten
@@ -416,31 +418,23 @@ rulings:
       −1 per 5 full SP; on a failure the rider falls (Sturzschaden).
 
   - id: mounted-attack-side
-    status: open
+    status: decided
     question: >
       RK5: mounted, a shield blocks only attacks from the front and the shield-arm side; an attack
       from the weapon-arm side can only be parried with the weapon or dodged. How does the app
       learn which side an attack on a mounted hero comes from?
-    context: >
-      Raised by the owner when answering angriff-von-hinten.mounted-from-behind-shield: "when
-      mounted the player is not guided to determine from which side the attack is occurring".
-      The app asks one side question, "von hinten" (the gm.fact fromBehind on the defence screen,
-      CombatDefenseSetupView), on foot and mounted alike; from behind, mounted, the shield parry
-      and its passive bonus are now gone (decided). The weapon-arm side is never asked, so the
-      shield parry is offered against it (RK5 is shown as text only). On foot no side but behind
-      matters. The side is the GM's call, per attack, like "von hinten". Which arm is the shield
-      arm is the hero's: the loadout knows the shield hand.
-    situations: [kampfsituationen 17.10]
-    options:
-      a: { says: "Mounted, the defence screen replaces the 'von hinten' toggle with one side question: vorne / Schildarm / Waffenarm / hinten, default vorne.", app: "one picker on the mounted defence screen; Waffenarm drops the shield parry (RK5), hinten also its passive bonus and adds −4 (AH1)" }
-      b: { says: "Keep 'von hinten' and add a second toggle 'von der Waffenarmseite' on the mounted defence screen.", app: "one more toggle; the two exclude each other" }
-      c: { says: "Text only: the shield parry reminds that it is not allowed from the weapon-arm side.", app: "a reminder line on the mounted shield parry" }
-    recommended: a
-    whyRecommended: >
-      the four sides are one fact with four values, and a picker asks it once and cannot be set
-      contradictorily; defaulting to vorne keeps the common case one tap, and the rule's effect
-      becomes a named line instead of a reminder the player must apply in their head
-    answer: a
+    answer: >
+      Mounted, the defence screen replaces the 'von hinten' toggle with one side question:
+      vorne / Schildarm / Waffenarm / hinten, default vorne.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [RK5]
+    notes: >
+      One picker on the mounted defence screen. Waffenarm (`gmFact.attackSide: weaponArm`) drops
+      the shield parry (RK5); hinten (`gmFact.fromBehind: true`, the fact the "von hinten" toggle
+      states on foot) also drops the shield's passive bonus and adds −4 (angriff-von-hinten.AH1,
+      ruling angriff-von-hinten.mounted-from-behind-shield). The side is the GM's call, per
+      attack; which arm holds the shield is the loadout's. On foot the toggle stays as it is:
+      no side but behind matters there.
 
   - id: rk7-reiten
     status: decided

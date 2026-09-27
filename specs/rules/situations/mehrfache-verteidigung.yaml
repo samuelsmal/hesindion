@@ -33,7 +33,7 @@ situations:
     name: A dodge after a parry — the penalty carries across kinds
     round: { defencesMade: 1 }                  # pa
     expect:
-      aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
+      aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }   # MV4 (what round.defencesMade counts) is `none`
     appToday: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
     conflict:
       category: a
@@ -43,8 +43,8 @@ situations:
         counts"); no effect comes from it, so no line can carry it in `via` (as kampfwerte
         16.12's KW11). The −3 matches.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: V5
@@ -52,7 +52,7 @@ situations:
     loadout: { hero.mounted: false }            # on foot, as the header says (R61)
     round: { defencesMade: 1 }                  # a dodge against a ranged attack
     expect:
-      pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1, via: [mehrfache-verteidigung.MV4] }] }
+      pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }   # MV4 (what round.defencesMade counts) is `none`
     appToday: 0 — wrong (counted per kind)
     conflict:
       category: a
@@ -62,8 +62,8 @@ situations:
         counts"); no effect comes from it, so no line can carry it in `via` (as kampfwerte
         16.12's KW11). The −3 matches.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: V6

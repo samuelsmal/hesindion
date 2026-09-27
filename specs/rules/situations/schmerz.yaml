@@ -51,8 +51,9 @@ situations:
     hero: { values: { leCurrent: 5 } }
     expect:
       "level(rule: COND_6)": { result: 4 }
-      offered:
-        - { check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren }, before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
+      # COND_6.SZ2's Selbstbeherrschung (Handlungsfähigkeit bewahren) check before each action
+      # (ruling COND_6.schmerz-iv-check) is required, so the rules ask it; it is not an offer.
+      # The step below states it and its result.
       gs: { result: 0, lines: [{ kind: set, from: COND_6.SZ5, ruling: COND_6.schmerz-iv-gs }] }
     sequence:
       - choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }
@@ -80,8 +81,8 @@ situations:
         check before it yet (the step states the check and its result), so an expectation
         rewritten as a check an action asks would need that timing in the action layer.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: S4

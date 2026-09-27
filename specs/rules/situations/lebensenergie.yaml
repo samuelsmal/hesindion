@@ -54,8 +54,9 @@ situations:
       leMax:
         total: 33
         lines:
-          - { value: 35, from: lebensenergie.LE3 }         # 5 + 2 × 15
-          - { value: -2, from: DISADV_28.NL1, via: [lebensenergie.LE3] }   # "−1 pro Stufe"
+          - { value: 5, from: lebensenergie.LE3 }          # Grundwert, Mensch (a derive shows its terms, as 15.1)
+          - { value: 30, from: lebensenergie.LE3 }         # 2 × KO 15
+          - { value: -2, from: DISADV_28.NL1 }             # "−1 pro Stufe"; an `add` that reads no target has no `via`
     appToday: 35 — Niedrige Lebenskraft is ignored (computeDerivedValues reads only ADV_25; catalog DISADV_28 todo) — wrong
     conflict:
       category: a
@@ -68,8 +69,8 @@ situations:
         which 15.1 expects without a `via`), so nothing puts LE3 in its `via`. The total 33
         matches.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
@@ -134,9 +135,8 @@ situations:
     expect:
       "level(rule: COND_6)": { result: 4 }
       events: [{ gained: STATE_8, from: COND_6.SZ5, via: [ADV_49.ZH3] }]   # Handlungsunfähig
-      offered:
-        - { check: { talent: Selbstbeherrschung, application: Handlungsfähigkeit bewahren, fw: 9, attributes: [MU 14, MU 14, KO 15] },
-            before: each_action, from: COND_6.SZ2, ruling: COND_6.schmerz-iv-check }
+      # COND_6.SZ2's Selbstbeherrschung (Handlungsfähigkeit bewahren) check before each action
+      # (ruling COND_6.schmerz-iv-check) is asked by the rules, not offered: the step below.
     sequence:
       - choose: { check.kind: talent, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren }   # COND_6.SZ2's check
         rolls: { check.result: success }   # after the check is passed
@@ -287,9 +287,12 @@ situations:
     expect:
       offered:
         - { choice: aufstehen, from: STATE_10.L4, costs: action }   # the old `action: aufstehen`
-        - { check: { talent: Körperbeherrschung, application: Kampfmanöver, fw: 8, attributes: [GE 14, GE 14, KO 15] },
-            from: STATE_10.L4, optional: true }
-      notApplied: [{ rule: ADV_75, because: "betrifft nur Betäubung und Berauscht (ADV_75.SW1)" }]
+      # The Körperbeherrschung (Kampfmanöver) check is not offered on its own: L4 offers
+      # `choice.passierschlagVermeiden` beside the stand-up, and the check runs once the hero
+      # stands up with it chosen.
+      # ADV_75 affects only Betäubung and Berauscht (ADV_75.SW1); an effect has one `because`, and
+      # SW1's is the alcohol one (15.19), which it shows whenever its `when` fails
+      notApplied: [{ rule: ADV_75, because: "nur durch Alkohol verursacht" }]
     appToday: no stand-up action; the player removes Liegend by hand (liegend 7.6). Not wrong about ADV_75, which the app ignores (catalog todo)
     conflict:
       category: a
@@ -304,8 +307,8 @@ situations:
         (15.19), and the hero without Betäubung or Berauscht fails the same `when`
         (`hero.has: COND_2 | COND_9`).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "15.17"

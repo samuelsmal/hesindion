@@ -56,9 +56,8 @@ New, all open:
 - `zaubermodifikationen.cost-off-table`: what do Erzwingen and Kosten senken do to a cost that
   is not on the table (Armatrutz "4/8/16 AsP", Balsam "1 AsP pro LeP")? The recommendation is
   that a step means ×2 or ÷2 for any amount, rounded up, at least 1 AsP.
-- `SA_74.vp-sequence`: is the Selbstbeherrschung check rolled before the spell check or after
-  it? The recommendation is before, as a gate, the way Reiterkampf's orders put the Reiten
-  check first.
+- `SA_74.vp-sequence` (b, decided 2026-09-27): the Selbstbeherrschung check is rolled before the
+  spell check, as a gate, the way Reiterkampf's orders put the Reiten check first.
 
 Reused: `round-up`, for the half cost.
 
@@ -121,8 +120,7 @@ Every `# FORMAT:` note in the two files, sorted by whether the set already has t
 - A casting time in Aktionen is a multi-round action. The app already has one, and
   `costs: action` exists (reiterkampf).
 - Selbstbeherrschung before the cast is `requires_check` gating an offer, as Reiterkampf's
-  orders do. **If `vp-sequence` is answered "after" instead, this becomes new**: one check
-  overturning another's result.
+  orders do. `vp-sequence` was answered "before" (b), so no check overturns another's result.
 - A check with no Anwendungsgebiet is as DISADV_37.SE1.
 
 Three new concepts in two rules, and all three are about resources and actions, which the melee

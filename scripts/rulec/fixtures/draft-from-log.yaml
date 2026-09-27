@@ -74,13 +74,13 @@ situations:
       sheet:
         hero.purchased.le: 0
       values:
-        "at(with: Großschild)": 6
+        "at(with: Großschild)": 12
         "at(with: Langschwert)": 14
         "at(with: Rabenschnabel)": 16
         aw: 7
-        "pa(with: Großschild)": 13
-        "pa(with: Langschwert)": 11
-        "pa(with: Rabenschnabel)": 11
+        "pa(with: Großschild)": 7
+        "pa(with: Langschwert)": 8
+        "pa(with: Rabenschnabel)": 9
     loadout:
       armour: "Plattenrüstung"
       armour.belastung: 3
@@ -108,13 +108,14 @@ situations:
             value: -1
           - from: SA_862.F2
             value: 2
+            ruling: [SA_862.formation-mounted]
           - from: at-pa-modifikatoren.M1
             value: 0
             via: [ITEMTPL_19.RS0]
       pa:
-        # also shown: 11 base (sheet)
+        # also shown: 9 base (sheet)
         total: 1
-        result: 12
+        result: 10
         lines:
           - from: SA_41.G1
             value: 1

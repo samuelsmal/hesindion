@@ -61,18 +61,18 @@ Three things these rules add to the set:
 
 ## Rulings
 
-New, all open:
+New, all decided on 2026-09-27:
 
-- `SA_862.formation-mounted`: can riders form a Formation? The recommendation is no, as decided
-  for Plänkler-Formation.
-- `SA_862.formation-and-plaenkler`: can a fighter stand in both a Formation and a
-  Plänkler-Formation and add +2 and +1? The recommendation is one at a time.
-- `ADV_54.eisern-scope`: without the Trefferzonen Fokusregel, does Eisern do anything? The
-  recommendation follows Verweichlicht: it works only through the Fokusregel, and the sheet
-  says so.
-- `DISADV_37.schlechte-eigenschaft-check`: what does the app offer for the Willenskraft check?
-  The recommendation is a "Beherrschen" action on the disadvantage that opens the check with its
-  cause and the GM's modifier.
+- `SA_862.formation-mounted` (a): riders cannot form a Formation, as decided for
+  Plänkler-Formation.
+- `SA_862.formation-and-plaenkler`: against the recommendation, the two stack (+2 and +1), and
+  either can come from a companion who holds the SF, at any point in the fight. The owner adds
+  that "it's even more complicated than that"; nothing beyond the stacking is written down.
+- `ADV_54.eisern-scope` (a): as Verweichlicht, Eisern works only through the Fokusregel. With it
+  off, the sheet keeps the Wundschwelle and Eisern's line, marked "wirkt nur mit Fokusregel
+  Trefferzonen".
+- `DISADV_37.schlechte-eigenschaft-check` (c): text only, against the recommendation. The GM calls
+  for the Willenskraft check and the player rolls it from the talent list; SE1 is shown as text.
 
 Reused: `COND_1.belastung-reach` (Willenskraft is not hindered by Belastung), `ADV_49` Zäher Hund
 on the Schmerz line.
@@ -95,15 +95,17 @@ LE 37, Wundschwelle 9. The derivation is in the file's header. Rule files:
 
 Already in README's table (example 14): a formation is only ever offered to its holder (19.3).
 
-Waiting on an open ruling:
+Resting on the rulings decided on 2026-09-27:
 
-- **Formation mounted:** the app shows AT 20 on Kupperus. That is right only because it has no
-  Formation to add (19.4, `formation-mounted`).
-- **Formation and Plänkler-Formation:** neither is offered (19.5, `formation-and-plaenkler`).
-- **Eisern without Trefferzonen:** the sheet shows Wundschwelle 9 with no note (19.9,
-  `eisern-scope`).
-- **The check for Schlechte Eigenschaft:** what to offer, and where (19.10–19.12,
-  `schlechte-eigenschaft-check`).
+- **Formation mounted:** the app shows AT 20 on Kupperus. The rules give 19 with the Großschild's
+  −1 on the main weapon (19.4, `formation-mounted`); no Formation is added mounted.
+- **Formation and Plänkler-Formation:** neither is offered; the two should stack (19.5,
+  `formation-and-plaenkler`).
+- **Eisern without Trefferzonen:** the sheet shows Wundschwelle 9 with no note; it should say
+  "wirkt nur mit Fokusregel Trefferzonen" (19.9, `eisern-scope`).
+- **The check for Schlechte Eigenschaft:** the app is right to offer nothing (19.10,
+  `schlechte-eigenschaft-check`, c); SE4's GM modifier (19.11) and SE2's log line (19.12) still
+  apply to the Willenskraft check the player rolls.
 
 Confirmed correct: Wundschwelle 9 (⌈KO/2⌉ + Eisern, `DerivedValueFormulas.wundschwelle`) and the
 Wundeffekt multiples that use it (19.7, 19.8).

@@ -122,7 +122,7 @@ situations:
           lines: [{ value: 3, from: schilde.SCH1 }]                     # Großschild
         - defence: shieldParry
           result: 13
-          base: { value: 7, from: schilde.SCH3, via: [kampfwerte.KW2] }     # the Schilde PA
+          base: { value: 7, from: kampfwerte.KW2 }                          # the Schilde PA (KW2's derive)
           lines: [{ value: 6, from: schilde.SCH3, formula: "2 × 3" }]
     appToday: >
       11 and 13 — same numbers, but neither shows where it comes from: the passive +3 is added
@@ -138,8 +138,8 @@ situations:
         line, which the entry expects too. A base from SCH3 would be a clause that computes
         no base. The result 13 and the weapon parry (11: base 8 from KW2, SCH1 +3) match.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "16.6"
@@ -179,7 +179,7 @@ situations:
     gm: { gmFact.incomingAttack: ranged, gmFact.incomingMissile: pfeil }
     expect:
       offered:
-        - { defence: shieldParry, result: 13, from: schilde.SCH6 }   # +1 with the Fokusregel: ITEMTPL_29.GR2, 18.14
+        - { defence: shieldParry, result: 13, from: schilde.SCH3 }   # SCH3 offers it (SCH6 is `none`); +1 with the Fokusregel: ITEMTPL_29.GR2, 18.14
         - { defence: aw, result: 7 }
       notOffered:
         - { defence: weaponParry, because: schilde.SCH8 }
@@ -197,8 +197,8 @@ situations:
         offered by SCH3 (`choice: shieldParry`), with the result 13. The dodge (7) and the
         weapon parry refused by SCH8 match.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- In armour -----------------------------------------------------------------------------
@@ -254,13 +254,22 @@ situations:
         KW11 is a `none` clause ("built into KW10's encoding": the W6 is the stored
         `roll.ini` KW10's derive reads), so no line or base comes from it, and "the W6 is
         kept" is the fact `roll.ini` staying 4, which no expect key says.
-      review:
-        verdict: backToAgent
-        by: "@samuelsmal"
-        date: 2026-09-27
-        note: >
-          Correct, but note that the INI value, once rolled for a combat does not change within
-          said combat, it stays fixed.
+
+        Agent pass 2026-09-27, on the owner's note ("the INI value, once rolled for a combat
+        does not change within said combat, it stays fixed"): the encoding keeps the roll fixed
+        — the W6 is `roll.ini`, stated once per fight and never rolled again — but not the
+        value, because the page names Belastung as the exception. KW10: "Diese gilt bis zum
+        Ende des Kampfes und nur besondere Situationen verändern den Wert noch"; KW11: "Die
+        Initiative gilt für den gesamten Kampf und wird nicht jede Kampfrunde neu
+        ausgewürfelt. Nur besondere Situationen wie der Zustand Belastung kann die Initiative
+        noch verändern." So with the plate taken off mid-fight the INI goes from 17 to 18 (14 +
+        4, no Belastung line), which is what step 2 expects and what the engine gives. If the
+        table's reading is that the INI stays 17 all the same, that is a house rule against
+        KW11's text: it would need a ruling on kampfwerte.KW11 and a change to KW10's encoding
+        (the Belastung line frozen at the roll), and step 2's result would become 17. Nothing
+        is changed until the owner decides. What stays a conflict either way is step 2's
+        `from: kampfwerte.KW11` and `kept: { w6: 4 }`: KW11 is `none` (no line comes from it)
+        and `kept` is no query key.
 
   # --- The page's own example (Carolan and Arbosch), not Boronmir ------------------------------
 
@@ -342,11 +351,13 @@ situations:
 
   - id: "16.20"
     name: LE falls to 0
-    hero: { values: { leCurrent: 4 } }
+    hero: { values: { leCurrent: 4, rs: 0 } }   # no armour (the header): RS 0 (R61)
     rolls: { hit.tp: 6 }
     expect:
       leCurrent: { result: -2 }           # or 0 — the Sterben rule's question
-      events: [{ gained: imSterben, from: schaden.S8 }]
+      # No Sterben rule to gain (no page to draft it from): schaden.S8 tells the player "Ab 0
+      # Lebenspunkten liegt ein Held im Sterben." once the LE is 0 or below. Not a `texts`
+      # entry: the texts are the query's, read before the hit, at LE 4.
     appToday: LE clamped at 0 (CombatDamageViews); no "im Sterben" state
     conflict:
       category: c
@@ -362,8 +373,8 @@ situations:
         unstated input is an expectation conflict). The comment's "or 0" is the question the
         missing Sterben rule would answer.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Not Boronmir: the one technique whose AT is not MU ------------------------------------
@@ -385,8 +396,8 @@ situations:
         file, not written"; the Regelwerk's Peitschen page is not drafted), so nothing
         forbids the parry. The AT (KtW 10 from KW1, FF 11 → +1 from KW6) matches.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Not Boronmir: a Schadensbonus ---------------------------------------------------------

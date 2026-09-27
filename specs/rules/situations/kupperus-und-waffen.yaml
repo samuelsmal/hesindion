@@ -132,21 +132,31 @@ situations:
         (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
         rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
         pool, `actions`, is the hero's; no event field says what it replaces).
-      review:
-        verdict: backToAgent
-        by: "@samuelsmal"
-        date: 2026-09-27
-        note: >
-          Note that the values of the companion were originally not part of the structured
-          export of Optolith. We have now changed that and provided a tool to add the values
-          outselves to the json. Now the values should be importable.
+
+        Agent pass 2026-09-27, on the owner's note (the companion's values are now in the
+        export, with a tool to add them, so they should be importable): agreed, and the decided
+        ruling svellttaler-kaltblut.mount-profile-data already says so — "the export's own
+        numbers overriding" the profile. `make companions` writes Kupperus's values into the
+        export's `hesindion` block, and the app's import can read them from there. It does not
+        change what this entry is about. The Niederreiten attack is RK13's order, and its AT
+        and TP are data: from the export where present, else SK3's profile row. Either way no
+        clause makes a line of them, so the event comes from RK13, with the row's source in
+        `via`, not `from: SK3, via: [RK13]`. Two things follow from the note that the rule data
+        cannot do alone. (1) The engine and the harness read no hero file (`heroFile:` is a
+        pointer for readers), and no input states a mount's attack row, so the export's numbers
+        cannot override SK3's in a situation; that needs an engine input (a stated
+        `mount.attacks`, as a stated base overrides a derive). (2) Kupperus's own values in the
+        2026-09-24 export (`Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`: Niederreiten
+        AT 19, TP 2W6+7; Tritt AT 19, TP 1W6+8; KK 28) are not the breed's (AT 15, TP 2W6+6; KK
+        25), which this file and its `heroFile` still use. Moving the file to them changes
+        18.1's AT and TP and MS2's Kraftakt −3 (KK 28: −⌈8/2⌉ = −4) — an expectation change
+        only the owner can allow. The mismatches (a)–(d) above are unchanged.
 
   - id: "18.2"
     name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
-    hero: { creatures: {} }
+    hero: { creatures: { elenviner-vollblut: true } }
     # the old `mount: { profile }`: Elenviner Vollblut — Tritt AT 16 TP 1W6+6, Biss AT 13,
-    # Niederreiten AT 15 TP 2W6+4 (https://dsa.ulisses-regelwiki.de/Best_Elenviner_Vollblut.html);
-    # no profile file yet
+    # Niederreiten AT 15 TP 2W6+4 (creatures/elenviner-vollblut.yaml, drafted for this situation)
     loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
     choose: { choice.order: niederreiten, action.gait: galopp, action.runUp: 4 }
     expect:
@@ -160,8 +170,8 @@ situations:
         states its attack lines (`mount.hasAttack`) or values; RK13's offer is unknown and
         the numbers cannot come from the rules.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "18.3"
@@ -170,9 +180,11 @@ situations:
     opponent: { onFoot: true, size: mittel }
     choose: { choice.order: mountAttack, choice.mountAttack: Tritt, check.kind: talent, check.talent: TAL_6, check.application: Kampfmanöver }
     expect:
-      offered: [{ choice: order, options: [mountAttack], from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK12], ruling: svellttaler-kaltblut.mount-own-attack }]
+      # SK3's own offer carries the order; RK12 supplies its action and Reiten check (below)
+      offered: [{ choice: order, options: [mountAttack], from: svellttaler-kaltblut.SK3, ruling: svellttaler-kaltblut.mount-own-attack }]
       events:
-        - { paid: { pool: actions, amount: 1 }, of: hero, instead_of: hero attack, from: reiterkampf.RK12, ruling: svellttaler-kaltblut.mount-own-attack }   # the old `costs`
+        # the old `costs`; the action is the hero's, in place of his own attack (not an event field)
+        - { paid: { pool: actions, amount: 1 }, from: reiterkampf.RK12, ruling: svellttaler-kaltblut.mount-own-attack }
         - { check: { talent: TAL_6, with: Kampfmanöver }, from: reiterkampf.RK12, ruling: svellttaler-kaltblut.mount-own-attack }                            # the old `checks_first`
         - { check: { attack: Tritt, by: mount, at: 15, tp: 1W6+7 }, from: svellttaler-kaltblut.SK3 }                                                        # the old `attack` and `on_hit.tp`
       "check.modifier(talent: TAL_6)":
@@ -188,10 +200,10 @@ situations:
         opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
         expect:
           "opponent.check.modifier": { total: -3, lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }] }
-          texts: [{ opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS1, ruling: round-up }]
+          texts: [{ opponent: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS1 }]
       - rolls: { check.result: failure }                                                # the old `on_check_failure`
         expect:
-          texts: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
+          texts: [{ player: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht.", from: reiterkampf.RK12 }]
     appToday: >
       offered beside the hero's own attack, straight to the roll: no Reiten check (so no +1 from
       Ruhiges Temperament either), no action named, and Boronmir may still attack — wrong. AT 15, TP 1W6+7 same; the Mächtiger Schlag
@@ -233,8 +245,8 @@ situations:
         rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
         pool, `actions`, is the hero's; no event field says what it replaces).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "18.4"
@@ -246,7 +258,7 @@ situations:
       # the old `on_hit: { tp: none }`: the parried Tritt rolls no damage — no expect key says
       # "no roll" (MIGRATION.md, expectation conflicts)
       texts:
-        - { opponent: { check: Kraftakt, modifier: -3, on_failure: STATE_10 }, from: maechtiger-schlag.MS3, ruling: round-up }
+        - { opponent: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS3 }
     appToday: the note says a parry does not help — same, with −2 — wrong
     conflict:
       category: a
@@ -262,8 +274,8 @@ situations:
         situations/kupperus-und-waffen.yaml 18.4: expects `on_hit: { tp: none }` (the
         parried Tritt rolls no damage). No expect key says "no roll"; it is a comment.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Rabenschnabel -------------------------------------------------------------------------
@@ -414,7 +426,7 @@ situations:
     opponent: { shield: none }
     gm: { gmFact.iniTie: true }                                                          # the old `opponent: { ini: tie }`
     expect:
-      texts: [{ order: opponent acts first, from: ITEMTPL_29.GR3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }]
+      texts: [{ gm: "Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu.", from: ITEMTPL_29.GR3 }]
     appToday: not modelled
     conflict:
       category: a
@@ -424,8 +436,8 @@ situations:
         ("Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu."); `order` is no
         audience, as the structured tells of 18.1, 18.3 and 18.4.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "18.14"

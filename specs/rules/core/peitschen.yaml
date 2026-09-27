@@ -1,0 +1,64 @@
+# DRAFT FORMAT — see ../README.md.
+id: peitschen
+name: Kampftechnik Peitschen
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/kampftechnik.html?kampftechnik=Peitschen
+  book: Aventurische Rüstkammer
+  page: 122
+  checked: 2026-09-27
+  hash: sha256:05eaf5cc8c368baa616b94584fde47dca4b4c29445fce016defc30fc3213ce5e
+reviewed: null
+# The page also cites Aventurisches Kompendium p. 227, Kodex der Magie p. 95 and Rüstkammer des
+# Dornenreiches p. 14. Drafted in the agent pass of 2026-09-27 for the rule data conflict
+# kampfwerte 16.21 names ("Mit Peitschen ist keine Parade möglich", out of scope until then:
+# kampfwerte's header). Only PT5 is encoded; the rest is shown as text. Peitschen's FF for the AT
+# is kampfwerte's (KW6, KW21's table).
+
+clauses:
+  - id: PT1
+    text: "Kampftechnikkategorie: Nahkampf"
+    none: the technique's category; kampfwerte.KW21's table already lists Peitschen
+
+  - id: PT2
+    text: >
+      Besonderheiten: Da sie wegen der nur schwer kontrollierbaren Bewegungen kaum abzuwehren
+      sind, ist die Parade gegen Peitschen um –2 erschwert.
+    unencoded: >
+      a penalty on the defender's parry against an attack with a Peitsche. With the hero
+      attacking, it is the opponent's parry (the GM's number); with the hero defending, it needs
+      the attacker's technique, which nothing asks for today. Not drafted in this pass.
+
+  - id: PT3
+    text: >
+      Schilde können darüber hinaus gegen Peitschen nur ihren einfachen Bonus auf die
+      Verteidigung nutzen.
+    unencoded: >
+      would suppress the doubling of schilde.SCH3 against a Peitsche; it needs the attacker's
+      technique as PT2 does. Not drafted in this pass.
+
+  - id: PT4
+    text: Angriffe mit Peitschen gelten bereits ab einem Ergebnis von 19 als Patzer.
+    unencoded: >
+      a wider Patzer range for the hero's own attack. The attack roll's Patzer range is not a
+      value any rule changes yet. Not drafted in this pass.
+
+  - id: PT5
+    text: Mit Peitschen ist keine Parade möglich.
+    effects:
+      - when: { loadout.weapon.technique: [CT_8, Peitschen] }
+        forbid: { what: { defence: weaponParry } }
+        because: mit Peitschen ist keine Parade möglich
+        # CT_8 is Peitschen (kampfwerte.KW21's `kampfwerte.kampftechnik`); a situation may name
+        # the technique (kampfwerte 16.21: `weapon.technique: Peitschen`). A shield parry or a
+        # dodge stays possible.
+
+  - id: PT6
+    text: "Leiteigenschaft: Fingerfertigkeit Steigerungsfaktor: B"
+    none: kampfwerte's (KW21's table, KW6 for the AT); the Steigerungsfaktor is a purchase cost
+
+  - id: PT7
+    text: >
+      Publikation(en): Aventurische Rüstkammer, Seite 122 Aventurisches Kompendium, Seite 227
+      Kodex der Magie, Seite 95 Rüstkammer des Dornenreiches, Seite 14
+    none: where the page comes from

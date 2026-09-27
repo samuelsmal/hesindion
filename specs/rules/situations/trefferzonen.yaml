@@ -59,7 +59,8 @@ situations:
     expect:
       at:
         total: -1      # −4 + 2 = −2, / 2 = −1
-        lines: [{ value: -1, was: -4, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
+        # STATE_13 is the fact TZ5's own `replace` reads, not a clause in `via`
+        lines: [{ value: -1, was: -4, from: trefferzonen.TZ5, via: [SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
     appToday: 0 (halves first, then eases) — wrong
     conflict:
       category: a
@@ -74,8 +75,8 @@ situations:
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.5"
@@ -87,7 +88,8 @@ situations:
     expect:
       at:
         total: -4      # −10 + 2 = −8, / 2 = −4
-        lines: [{ value: -4, was: -10, from: trefferzonen.TZ5, via: [STATE_13, SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
+        # STATE_13 is the fact TZ5's own `replace` reads, not a clause in `via`
+        lines: [{ value: -4, was: -10, from: trefferzonen.TZ5, via: [SA_160.GA1], ruling: [trefferzonen.surprised-then-halved, SA_160.halving-by-manoeuvre] }]
       texts: [{ opponent: noDefence, from: STATE_13.UE1 }]
     appToday: −3 (halves first, then eases) — wrong; no "no defence" note
     conflict:
@@ -103,8 +105,8 @@ situations:
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.6"
@@ -115,7 +117,7 @@ situations:
     expect:
       at:
         total: -6
-        lines: [{ value: -6, was: -8, from: trefferzonen.TZ5, via: [STATE_13] }]
+        lines: [{ value: -6, was: -8, from: trefferzonen.TZ5 }]   # the easing is TZ5's own `replace`, reading STATE_13
     appToday: same
     conflict:
       category: a
@@ -130,8 +132,8 @@ situations:
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.7"
@@ -268,7 +270,8 @@ situations:
     sequence:
       - rolls: { check.result: failure }   # the old `on_failure`
         expect:
-          events: [{ damage: { formula: 1W3+1 }, from: trefferzonen.TZ11 }]
+          # TZ8's `onFailure` holds the Wundeffekt; the torso's 1W3+1 SP is a `tell` to the player
+          events: [{ logged: "Wundeffekt Torso: zusätzlich 1W3+1 SP.", from: trefferzonen.TZ8 }]
     appToday: same
     conflict:
       category: a
@@ -301,8 +304,8 @@ situations:
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.13"
@@ -318,7 +321,7 @@ situations:
           "check.modifier(talent: TAL_8)": { total: -1, lines: [{ value: -1, from: trefferzonen.TZ8 }] }
       - rolls: { check.result: failure }   # the old `on_failure`
         expect:
-          events: [{ gained: STATE_10, from: trefferzonen.TZ11 }]
+          events: [{ gained: STATE_10, from: trefferzonen.TZ8 }]   # TZ8's `onFailure`, reading TZ11's table
     appToday: same
     conflict:
       category: a
@@ -351,24 +354,26 @@ situations:
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.14"
     name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
     rulesets: [fokus.trefferzonen]
     hero: { values: { sp: 7 } }
-    loadout: { weapon: Schwert, shield: Schild, other: shield, weaponHand: rechts, twoHanded: false }   # the old `loadout: { right: Schwert, left: Schild }`
+    # the old `loadout: { right: Schwert, left: Schild }`; the Schwert as an instance TZ8's `item` can change (R61)
+    loadout: { weapon: Schwert, weapon.instance: schwert1, shield: Schild, other: shield, weaponHand: rechts, twoHanded: false }
     rolls: { hit.zone: arme, hit.side: rechts }
     choose: { check.kind: talent, check.talent: TAL_8, check.application: Störungen ignorieren }
-    expect:
-      questions: []  # the loadout says which hand holds the Schwert (the old `asked: []`)
+    # The loadout says which hand holds the Schwert, so the hand is not asked (the old `asked:
+    # []`). Not `questions: []`: the check's Probe still asks for MU and Selbstbeherrschung's FW,
+    # and the hit's stages for the armour, the LE basis and the mount, none of which this file states.
     sequence:
       - rolls: { check.result: failure }   # the old `fail: [Selbstbeherrschung]`
         expect:
           # the old `loadout: { right: null, left: Schild }` and `log: "Schwert fallen gelassen"`
-          events: [{ itemChanged: { weapon: Schwert, held: false }, from: trefferzonen.TZ11, ruling: trefferzonen.wundeffekt-arm-drop }]
+          events: [{ itemChanged: { weapon: Schwert, held: false }, from: trefferzonen.TZ8, ruling: trefferzonen.wundeffekt-arm-drop }]
     appToday: a reminder; the Schwert stays in hand
     conflict:
       category: a
@@ -401,8 +406,8 @@ situations:
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "TZ.15"

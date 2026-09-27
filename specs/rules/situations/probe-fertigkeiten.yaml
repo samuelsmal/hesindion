@@ -168,11 +168,13 @@ situations:
       - choose: { choice.reroll: ADV_4, choice.rerollDie: 1 }
         rolls: { roll.reroll: 3 }
         expect:
-          dice: [{ die: 1, rolled: [18, 3], counts: 3, from: ADV_4.B2 }]
+          dice: [{ die: 1, rolled: [18, 3], counts: 3, from: ADV_4.B1 }]   # the reroll is B1's one effect
           spent: [0, 5, 3]
-          check.fp: { total: 1, lines: [{ value: 0, from: fertigkeitsproben.FP5 }, { value: 1, kind: floored, from: fertigkeitsproben.QS2 }] }
+          # FP5's derive shows its terms (as lebensenergie 15.1): FW 8, −8 spent; QS2 floors 0 to 1
+          check.fp: { total: 1, lines: [{ value: 8, from: fertigkeitsproben.FP5 }, { value: -8, from: fertigkeitsproben.FP5 }, { value: 1, kind: floored, from: fertigkeitsproben.QS2 }] }
           qs: 1
-          offered: [{ reroll: schicksalspunkte.neuer-wurf, togetherWith: ADV_4.B1, from: ADV_4.B7, open: "schicksalspunkte Neuer Wurf is not written yet" }]
+          # A Schip's Neuer Wurf stays allowed before or after the Begabung (ADV_4.B7, `none`), but
+          # schicksalspunkte's Neuer Wurf is not written, so nothing offers it yet.
     appToday: >
       a failure; the Schip reroll is offered (it would be, before or after a Begabung, B7), the
       Begabung is not
@@ -211,8 +213,8 @@ situations:
         per-term lines. 22.8's run shows FP5 the same way (4 and −5). The step's `dice`
         counts, `spent` [0, 5, 3] and `qs` 1 match.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "22.8"

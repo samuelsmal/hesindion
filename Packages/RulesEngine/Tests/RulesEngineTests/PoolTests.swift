@@ -288,18 +288,17 @@ final class PoolTests: XCTestCase {
         let after = s.applying(r.events)
         XCTAssertEqual(after.pools[.asp]?.current, 0)
         XCTAssertEqual(after.pools[.le]?.current, 24)
-        // 20.8: a failure. VP3 rests on the open ruling SA_74.vp-sequence, so it applies nothing
-        // and shows its clause and the question; ZM12 stays suppressed: nothing is paid (pending).
+        // 20.8: a failure. VP3 rests on the decided ruling SA_74.vp-sequence: half the cost (4),
+        // AsP first (3), the rest from LE (1); ZM12 stays suppressed.
         f["check.result"] = "failure"
         let failed = real.perform(.cast(spell: "SPELL_21", modifications: []),
                                   in: situation(owned: ["SA_74": 1], facts: f, base: ["spell.cost": 8], pools: pools))
-        XCTAssertEqual(paid(failed), [])
-        XCTAssertTrue(failed.notApplied.contains { $0.origin == ClauseRef("SA_74.VP3")! && $0.reason == .openRuling })
-        XCTAssertTrue(failed.texts.contains { $0.kind == .openRuling && $0.ruling == "SA_74.vp-sequence" })
-        // 20.7's offer of split.le rests on the same open ruling: not offered on the real rules
-        // (the fixture test above shows its max, 7).
+        XCTAssertEqual(paid(failed).map(\.pool), [.asp, .le])
+        XCTAssertEqual(paid(failed).map(\.amount), [3, 1])
+        XCTAssertEqual(paid(failed).map(\.origin), [ClauseRef("SA_74.VP3"), ClauseRef("SA_74.VP3")])
+        // 20.7's offer of split.le rests on the same decided ruling: offered on the real rules.
         let offers = real.engine.offers(in: situation(owned: ["SA_74": 1], facts: ["check.kind": "spell"],
                                                       base: ["spell.cost": 8], pools: pools))
-        XCTAssertNil(offers.first { $0.choice == "split.le" })
+        XCTAssertEqual(offers.first { $0.choice == "split.le" }?.origin, ClauseRef("SA_74.VP1"))
     }
 }

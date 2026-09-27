@@ -70,10 +70,10 @@ clauses:
         # no verb sets a check's result, so the failed Selbstbeherrschung forbids the spell check,
         # as fertigkeitsproben.FP2 forbids a check that cannot succeed; the procedure reads the
         # forbidden cast as failed (see MIGRATION.md, "Notes for the engine tasks").
-        # FORMAT: one check deciding the outcome of *another* check (the spell's). The set has
-        # checks that gate an offer (reiterkampf's orders: Reiten before the order happens) but
-        # none that overturns a roll already made — which it is, if the Selbstbeherrschung
-        # comes after the spell check (ruling vp-sequence, option a).
+        # Ruling vp-sequence (b): the Selbstbeherrschung is rolled first, as a gate, once the LeP
+        # are announced — the way reiterkampf's orders put the Reiten check before the order.
+        # On a failure the spell fails without its own check (VP3's half cost, AsP first); on a
+        # success the spell is rolled as usual. No check overturns a roll already shown.
         # `application: null`: the page names none; Handlungsfähigkeit bewahren and Störungen
         # ignorieren are both plausible, and only a Fertigkeitsspezialisierung depends on it.
         # Belastung does not reach Selbstbeherrschung (COND_1.belastung-reach); Schmerz does.
@@ -88,8 +88,8 @@ clauses:
         ruling: [vp-sequence, round-up]
         # AsP until empty, the rest from LE (`fallThrough`, plan A.6); half, rounded up
         # (`onFailure: 0.5`). The old `when: { check_failed: VP2 }` is the cast failed with LeP
-        # chosen, which VP2's failed Selbstbeherrschung makes it. Whether a spell check that
-        # failed on its own also pays this way is what vp-sequence asks, so the effect rests on it.
+        # chosen, which VP2's failed Selbstbeherrschung makes it. A spell check that fails on its
+        # own after a passed Selbstbeherrschung pays the same way (ruling vp-sequence, b).
         # "wie sonst" points at zaubermodifikationen.ZM12's half cost. The LeP the player chose
         # in VP1 do not matter any more: the half is paid AsP first.
         # FORMAT: an ordered fallback between pools (AsP, then LE), part of the `split` concept.
@@ -104,26 +104,18 @@ clauses:
 
 rulings:
   - id: vp-sequence
-    status: open
+    status: decided
     question: >
       When is the Selbstbeherrschung check rolled — before the spell check, or after it, when
       the LeP are paid? And does a caster whose spell check failed need it to pay part of the
       half cost with LeP?
-    context: >
-      The page puts the pain at paying ("Dies ist ausgesprochen schmerzhaft"), and paying is
-      step 5 of the Spruchzauberei page, after the check (step 4). But "Misslingt diese,
-      misslingt auch der Zauber" reads as if the spell's outcome were still open. VP3 then says
-      the half cost is paid AsP first, then LE — with no word on a check. The app has no
-      Verbotene Pforten (catalog SA_74 todo) and charges no AsP at all
-      (zaubermodifikationen.ZM12).
-    situations: [probe-magie 20.7, probe-magie 20.8]
-    options:
-      a: { says: "After: roll the spell; if it succeeds and LeP are to be paid, roll Selbstbeherrschung. Failing it turns the success into a failure (half cost, AsP first). A failed spell check pays its half cost as VP3 says, AsP first then LE, with no Selbstbeherrschung.", app: "the LeP choice is made before the roll; the Selbstbeherrschung check opens after a successful spell check; the result screen can still turn to 'misslungen'" }
-      b: { says: "Before: announce the LeP, roll Selbstbeherrschung first; on a failure the spell fails without its own check (half cost, AsP first). On a success roll the spell as usual.", app: "Selbstbeherrschung is rolled first, as a gate; the spell check only opens after it" }
-    recommended: b
-    whyRecommended: >
-      the caster commits to the LeP before casting, and "misslingt auch der Zauber" is simplest
-      as a gate before the spell check, the way reiterkampf's orders put the Reiten check before
-      the order; it avoids a result that changes after it is shown, and needs no new concept of
-      one check overturning another
-    answer: b
+    answer: >
+      Before: announce the LeP, roll Selbstbeherrschung first; on a failure the spell fails
+      without its own check (half cost, AsP first). On a success roll the spell as usual.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [VP1, VP2, VP3]
+    notes: >
+      Selbstbeherrschung is rolled first, as a gate; the spell check only opens after it. The
+      caster commits to the LeP before casting (VP1's choice), and no result changes after it is
+      shown. A spell check that fails after a passed Selbstbeherrschung pays VP3's half cost,
+      AsP first, then LE, with no second Selbstbeherrschung.

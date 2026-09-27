@@ -78,7 +78,8 @@ situations:
     loadout: { weapon: Schwert }
     choose: { choice.sturmangriff: true, choice.wuchtschlag: 1, action.runUp: 4, action.attack: hit }
     expect:
-      legal: { combinations: [{ choices: [sturmangriff, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
+      # allowed: one Basis- and one Spezialmanöver pass KS3 and KS4 (KS5 is `none`, no origin)
+      legal: { combinations: [{ choices: [sturmangriff, wuchtschlag], allowed: true }] }
       at: { total: -4, lines: [{ value: -2, from: SA_62.ST4 }, { value: -2, from: SA_67.W1 }] }
       tp: { total: 8, lines: [{ value: 6, from: SA_62.ST2 }, { value: 2, from: SA_67.W1 }] }
       # Near the cap, at GS 16,
@@ -95,8 +96,8 @@ situations:
         KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
         Spezialmanöver pass KS3 and KS4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "10.8"

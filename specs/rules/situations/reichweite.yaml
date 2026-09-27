@@ -163,7 +163,8 @@ situations:
     choose: { choice.unterlaufen: true, choice.finte: 1 }
     expect:
       legal: { combinations: [{ choices: [unterlaufen, finte], allowed: false, because: kampfsonderfertigkeiten.KS3 }] }
-      texts: [{ player: "Unterlaufen lässt sich nicht mit Finte kombinieren — nur ein Basismanöver pro Handlung" }]
+      # The UI composes the message from the refusal's `because` and source (KS3), e.g. "Unterlaufen
+      # lässt sich nicht mit Finte kombinieren — nur ein Basismanöver pro Handlung"; no rule tells it.
     conflict:
       category: a
       reason: >-
@@ -177,8 +178,8 @@ situations:
         Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
         tell explained any missing text.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "RW.16"

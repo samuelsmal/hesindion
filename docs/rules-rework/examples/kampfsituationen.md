@@ -76,7 +76,8 @@ Per the page:
   `CombatDefenseSetupView`, `DefenseRoute.parryPossible`, `Hero.passiveShieldPABonus`. Boronmir on
   Kupperus: shield parry 12 and weapon parry 10 today; no shield parry and weapon parry 7 by the
   page and ruling `mounted-from-behind-shield` (17.10). From the weapon-arm side the app never asks
-  at all (open ruling `reiterkampf.mounted-attack-side`).
+  at all; per ruling `reiterkampf.mounted-attack-side` (a) the mounted defence screen asks one side
+  question, vorne / Schildarm / Waffenarm / hinten, in place of the "von hinten" toggle.
 - **Mounted, a Passierschlag from a fighter on foot damages the hero.** RK11 makes the mount the
   target; per ruling `reiterkampf.passierschlag-on-mount` the take-damage screen offers "Reittier
   getroffen", the SP go to the mount's LE and RK10's Reiten check follows (17.9).
@@ -126,9 +127,9 @@ Decided (@samuelsmal, 2026-09-24), in the rule files:
   shield. 17.14
 - `groessenkategorie.mounted-size` (a): a rider is his own size. 17.22, 17.23
 - `reiterkampf.passierschlag-on-mount` (b): "Reittier getroffen" on the take-damage screen. 17.9
-
-Open: `reiterkampf.mounted-attack-side` — how the app learns which side an attack on a mounted hero
-comes from (RK5's weapon-arm side). Raised by the owner with `mounted-from-behind-shield`.
+- `reiterkampf.mounted-attack-side` (a, 2026-09-27): mounted, one side picker (vorne / Schildarm /
+  Waffenarm / hinten, default vorne) replaces the "von hinten" toggle. Raised by the owner with
+  `mounted-from-behind-shield`. 17.10
 
 ## Surprises
 

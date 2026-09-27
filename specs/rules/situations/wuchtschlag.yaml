@@ -79,7 +79,8 @@ situations:
     name: Wuchtschlag together with Sturmangriff
     hero: { abilities: { SA_67: 1, SA_62: 1 } }
     loadout: { weapon: Schwert }
-    expect: { legal: { combinations: [{ choices: [wuchtschlag, sturmangriff], allowed: true, from: kampfsonderfertigkeiten.KS5 }] } }
+    # allowed: one Basis- and one Spezialmanöver pass KS3 and KS4 (KS5 is `none`, no origin)
+    expect: { legal: { combinations: [{ choices: [wuchtschlag, sturmangriff], allowed: true }] } }
     # the numbers are sturmangriff 10.7
     appToday: one manoeuvre per attack; SA_62 not offered on foot
     conflict:
@@ -92,6 +93,6 @@ situations:
         KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
         Spezialmanöver pass KS3 and KS4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27

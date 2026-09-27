@@ -13,9 +13,9 @@
 # empty heading "Mehr Verteidigungen für Meisterpersonen (Optionale Regel)" (mehrfache-
 # verteidigung); the shield sentences of the Parade paragraph (schilde.SCH12); the worked
 # example, "4. Schaden" and "Geringe Lebensenergie" (schaden).
-# Out of scope: that Peitschen have no parry at all ("Mit Peitschen ist keine Parade möglich",
-# the technique's page) — a `forbid: { defence: weaponParry }` for a Peitschen technique or
-# equipment file, not written.
+# That Peitschen have no parry at all ("Mit Peitschen ist keine Parade möglich", the technique's
+# page) is peitschen.PT5's `forbid: { defence: weaponParry }` (drafted 2026-09-27, kampfwerte
+# 16.21).
 id: kampfwerte
 name: Kampfwerte (AT, PA, AW, FK, INI)
 kind: core
@@ -75,8 +75,8 @@ clauses:
             - { of: ktw.current, per: 2, round: up }
             - { of: technique.leit, above: 8, per: 3, round: down }
         # Rounding from KW4; `technique.leit` is the value of the technique's Leiteigenschaft
-        # (KW21), the higher of two where it names two (KW7) — resolved by the loadout. That Peitschen have no parry at all is out of scope here
-        # (see the header); nothing encodes it.
+        # (KW21), the higher of two where it names two (KW7) — resolved by the loadout. That Peitschen have no parry at all is
+        # peitschen.PT5's (see the header).
 
   - id: KW3
     text: |

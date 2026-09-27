@@ -8,7 +8,7 @@ source:
   page: 176
   checked: 2026-09-27
   hash: sha256:b9f9e67ca3551ca543a1ed43f1d62a728e9dbd153a687237a38b098feb767ae8
-reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+reviewed: null
 # The page also cites Aventurisches Bestiarium II p. 118 (Sikaryan-Durst, SE9).
 #
 # The hero file names the Eigenschaft by `sid`, Optolith's select option (Data/de-DE/
@@ -19,8 +19,9 @@ reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # lookupSelectOption) and lists "Schlechte Eigenschaft (Autoritätsglaube)" on the sheet.
 #
 # What the app can do: nothing it computes changes. The trigger is the GM's to see, the
-# consequence is roleplay. What it can offer is the Willenskraft check SE1 calls for, with SE4's
-# GM modifier, so the player does not have to go looking for it.
+# consequence is roleplay. The GM calls for the Willenskraft check SE1 names and the player rolls
+# it from the talent list (ruling schlechte-eigenschaft-check, c); SE4's GM modifier and SE2's
+# log line apply to that check.
 
 clauses:
   - id: SE1
@@ -28,20 +29,15 @@ clauses:
       In jeder Situation, in der der Held mit einem potenziellen Auslöser seiner Schlechten
       Eigenschaft konfrontiert wird, muss er eine Probe auf Willenskraft bestehen, um sich zu
       beherrschen.
-    effects:
-      - when: { gmFact.trigger: DISADV_37 }
-        check: { of: { talent: TAL_23 } }
-        ruling: schlechte-eigenschaft-check
-        # FORMAT: a check the rule *offers*, not a modifier on one; its trigger is a GM fact
-        # the app cannot see. Willenskraft is TAL_23; the check's cause is this rule and the
-        # hero's Eigenschaft (`option`, the old `cause: { rule: DISADV_37, option: sid }`),
-        # which its line carries. What the app offers (an action on the sheet, a hint, text
-        # only) is the open ruling; until it is answered this applies nothing.
-        # No Anwendungsgebiet (the old `application: null`): none of Willenskraft's
-        # Anwendungsgebiete (Bedrohungen, Bekehren & Überzeugen, Betören, Einschüchtern,
-        # Überreden standhalten) is "sich beherrschen", so no Fertigkeitsspezialisierung counts.
-        # Belastung does not reach it (COND_1.belastung-reach: not a movement talent); Schmerz
-        # and the other Zustände on every check do.
+    unencoded: >
+      ruling schlechte-eigenschaft-check (c): text only. The trigger is the GM's to see; the GM
+      says to roll, and the player rolls Willenskraft (TAL_23) from the talent list. The app
+      offers no check of its own; the sheet shows this text. SE2's log line and SE4's GM
+      modifier apply to that Willenskraft check once the trigger is stated.
+    # No Anwendungsgebiet: none of Willenskraft's Anwendungsgebiete (Bedrohungen, Bekehren &
+    # Überzeugen, Betören, Einschüchtern, Überreden standhalten) is "sich beherrschen", so no
+    # Fertigkeitsspezialisierung counts. Belastung does not reach it (COND_1.belastung-reach: not
+    # a movement talent); Schmerz and the other Zustände on every check do.
 
   - id: SE2
     text: >
@@ -126,26 +122,17 @@ clauses:
 
 rulings:
   - id: schlechte-eigenschaft-check
-    status: open
+    status: decided
     question: >
       The GM says a trigger is present (for Boronmir: a superior's order that makes no sense).
       What does the app offer for the Willenskraft check SE1 calls for?
-    context: >
-      The trigger is the GM's to see and the consequence is roleplay; the check is the only
-      mechanical part. Today the sheet lists "Schlechte Eigenschaft (Autoritätsglaube)" with the
-      rule text behind a swipe (HeroDetailView.disadvantagesSection, lookupActions); nothing
-      offers the check, and a Willenskraft check opened from the talent list does not mention
-      the Eigenschaft (TalentProbeModal.hints). The GM's modifier (SE4) is an input either way.
-    situations: [boronmir-neu 19.10, boronmir-neu 19.11, boronmir-neu 19.12]
-    options:
-      a: { says: "A 'Beherrschen' action on the disadvantage opens the Willenskraft check, titled with the Eigenschaft and its trigger text (SE6), with the GM's modifier as its own line; a failure is logged.", app: "an action on the sheet's disadvantage row → TalentProbeModal for Willenskraft with a cause and a GM stepper; log line on failure" }
-      b: { says: "A hint on every Willenskraft check: 'Schlechte Eigenschaft (Autoritätsglaube): Probe zum Beherrschen'.", app: "a SkillCheckHint in TalentProbeModal for TAL_23, like Aufmerksamkeit's" }
-      c: { says: "Text only: the sheet shows the rule; the player rolls Willenskraft from the talent list.", app: "as today" }
-    recommended: a
-    whyRecommended: >
-      the check has a cause, and a check that carries its cause is what DISADV_57 and SA_40 already
-      need (a check knows why it is rolled); starting from the disadvantage puts it where the
-      player looks when the GM says "Autoritätsglaube!", and the log keeps the result. A hint on
-      every Willenskraft check (b) would show on the checks it has nothing to do with, the
-      mistake the app made with Aufmerksamkeit (boronmir-sf 14.15)
-    answer: c
+    answer: >
+      Text only: the sheet shows the rule; the player rolls Willenskraft from the talent list.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [SE1]
+    notes: >
+      As the app does today: the sheet lists "Schlechte Eigenschaft (Autoritätsglaube)" with the
+      rule text behind a swipe (HeroDetailView.disadvantagesSection). The owner, on boronmir-neu
+      19.10: "That is part of the game-play. The GM says to roll a check and the player does so."
+      So SE1 is unencoded (shown as text) and offers no check. SE4's GM modifier and SE2's log
+      line still apply to the Willenskraft check once the GM states the trigger.

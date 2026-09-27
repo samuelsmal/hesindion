@@ -198,7 +198,7 @@ situations:
       offered: [{ choice: split.le, max: 7, from: SA_74.VP1 }]    # at least 1 AsP stays AsP
       events:
         - { check: { talent: TAL_8, with: null }, from: SA_74.VP2, ruling: SA_74.vp-sequence }   # the old `checks_first`
-        - { paid: { pool: asp, amount: 3 }, from: [zaubermodifikationen.ZM12, SA_74.VP1] }
+        - { paid: { pool: asp, amount: 3 }, from: SA_74.VP1 }   # VP1's split cost; ZM12's AsP-only cost is suppressed
         - { paid: { pool: le, amount: 5 }, from: SA_74.VP1 }
         - { after: { aspCurrent: 0, leCurrent: 24, conditions: {} } }      # 24 > 21.75: no Schmerz yet
       notApplied: [{ rule: trefferzonen, clause: TZ8, reason: "LeP aufgewendet, kein Schaden" }]
@@ -229,8 +229,8 @@ situations:
         `notApplied` match. In a throwaway run with vp-sequence and cost-off-table taken as
         decided, (a) and (c) match and only (b) remains.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "20.8"
@@ -245,7 +245,7 @@ situations:
             - paid:
                 amount: 4                  # half of 8
                 pools: [{ asp: 3 }, { le: 1 }]    # AsP first, the rest from LE
-              from: [SA_74.VP3, zaubermodifikationen.ZM12]
+              from: SA_74.VP3              # "wie sonst die Hälfte": ZM12 is the clause it points at, suppressed by VP1
               ruling: round-up
             - { after: { aspCurrent: 0, leCurrent: 28 } }
     appToday: not offered; nothing charged
@@ -273,6 +273,6 @@ situations:
         match (the failed Selbstbeherrschung forbids the cast from VP2, resting on
         vp-sequence; VP3 pays 3 AsP and 1 LeP) and only (a) remains.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27

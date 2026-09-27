@@ -20,9 +20,12 @@
 #
 # No armour unless stated. In his Plattenrüstung, Belastung I (Belastungsgewöhnung II) adds −1
 # AT/PA/AW on foot, nothing mounted (belastung.md, reiterkampf.RK7); those lines are left out below
-# because none of these rules touches them. Also left out: the Großschild's "−1 AT auf die
-# Hauptwaffe" (ITEMTPL_29.GR1, example 18), which none of these rules touches either.
-# `total` is the change; the value after it is in the comment.
+# because none of these rules touches them. The Großschild's "−1 AT auf die Hauptwaffe"
+# (ITEMTPL_29.GR1, example 18) is a line wherever he carries it and attacks with the main weapon
+# (17.14). The item's PA/AT modifiers (at-pa-modifikatoren.M1) and the shield's bonus
+# (schilde.SCH1 +3 on a weapon parry, SCH3 +6 on the shield parry) are lines too, after the
+# unfolded bases below (R66).
+# `total` is the sum of the lines after the base; the value after it is in the comment.
 #
 # The per-item values above are the base values `at(with: …)` / `pa(with: …)`; Kupperus (the old
 # file-level `mount`) is `mount.gs`, his size groß a comment (no rule here reads it: the rider is
@@ -38,12 +41,15 @@
 
 hero:
   values:
+    # Unfolded (R66, conflicts 17.10–17.20): the technique's value without the item's AT/PA
+    # modifiers (at-pa-modifikatoren.M1) and the shield's bonus (schilde.SCH1, SCH3), which the
+    # rules add as lines of their own. The values the header derives above are these plus lines.
     "at(with: Rabenschnabel)": 16
     "at(with: Langschwert)": 14
-    "at(with: Großschild)": 6
-    "pa(with: Rabenschnabel)": 8
-    "pa(with: Langschwert)": 8
-    "pa(with: Großschild)": 13
+    "at(with: Großschild)": 12                    # 10 + 2; M1 −6 is a line → 6
+    "pa(with: Rabenschnabel)": 9                  # 7 + 2; M1 −1 is a line → 8
+    "pa(with: Langschwert)": 8                    # 6 + 2 + 0
+    "pa(with: Großschild)": 7                     # 5 + 2; SCH3 +6 is a line → 13
     aw: 7
     mount.gs: 12
 
@@ -185,12 +191,13 @@ situations:
     gm: { gmFact.fromBehind: true, gmFact.incomingAttack: melee }
     expect:
       "pa(with: weapon)":
-        # base 8: the Großschild's passive +3 does not apply
-        total: -1                                                             # 8 → 7
+        # base 9: the Großschild's passive +3 does not apply
+        total: -2                                                             # 9 → 7
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 1, from: SA_661.GS2 }
           - { value: -4, from: angriff-von-hinten.AH1 }
+          - { value: -1, from: at-pa-modifikatoren.M1 }                       # the Rabenschnabel's PA −1
         notApplied:
           - { rule: schilde, clause: SCH1, reason: reiterkampf.RK5, ruling: angriff-von-hinten.mounted-from-behind-shield }
       notOffered:
@@ -203,7 +210,8 @@ situations:
           - { value: -4, from: angriff-von-hinten.AH1 }
     appToday: shield parry offered at 12, weapon parry 10 — wrong; AW 3 right
     # From the weapon-arm side instead (not behind): no −4, and the shield parry is still not
-    # offered (RK5) — how the app learns the side is the open reiterkampf.mounted-attack-side.
+    # offered (RK5) — the side picker of the decided reiterkampf.mounted-attack-side
+    # (`gmFact.attackSide: weaponArm`).
     conflict:
       category: b
       reason: >-
@@ -224,8 +232,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.11"
@@ -233,8 +241,8 @@ situations:
     loadout: { weapon: Langschwert, reach: mittel, shield: Großschild, other: shield, shield.size: gross, hero.mounted: false }   # on foot, as the name says (R61)
     gm: { gmFact.fromBehind: true, gmFact.incomingAttack: melee }
     expect:
-      "pa(with: shield)": { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 13 → 9
-      "pa(with: weapon)": { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }   # 11 → 7
+      "pa(with: shield)": { total: 2, lines: [{ value: -4, from: angriff-von-hinten.AH1 }, { value: 6, from: schilde.SCH3 }] }   # 7 + 6 = 13 → 9
+      "pa(with: weapon)": { total: -1, lines: [{ value: -4, from: angriff-von-hinten.AH1 }, { value: 3, from: schilde.SCH1 }] }   # 8 + 3 = 11 → 7
       aw: { total: -4, lines: [{ value: -4, from: angriff-von-hinten.AH1 }] }          # 7 → 3
     appToday: same
     conflict:
@@ -257,8 +265,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.12"
@@ -290,8 +298,8 @@ situations:
     expect:
       # The Großschild's row (BU3) reaches only rolls with the shield (ruling
       # beengte-umgebung.beengt-shield-carried): 17.15, 17.17.
-      at: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }            # 14 → 10
-      "pa(with: weapon)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }     # 11 → 7
+      at: { total: -5, lines: [{ value: -4, from: beengte-umgebung.BU2 }, { value: -1, from: ITEMTPL_29.GR1 }] }   # 14 → 9 (GR1: the Großschild's −1 AT on the main weapon)
+      "pa(with: weapon)": { total: -1, lines: [{ value: -4, from: beengte-umgebung.BU2 }, { value: 3, from: schilde.SCH1 }] }     # 8 + 3 = 11 → 7
     appToday: same
     conflict:
       category: b
@@ -329,8 +337,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.15"
@@ -339,7 +347,7 @@ situations:
     gm: { gmFact.beengt: true }
     choose: { action.defence: shieldParry, action.with: shield }
     expect:
-      "pa(with: shield)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
+      "pa(with: shield)": { total: 2, lines: [{ value: -4, from: beengte-umgebung.BU3 }, { value: 6, from: schilde.SCH3 }] }       # 7 + 6 = 13 → 9
     appToday: −4, but from the Langschwert's reach (mittel), not the shield's row — right by coincidence
     conflict:
       category: b
@@ -361,8 +369,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.16"
@@ -371,7 +379,7 @@ situations:
     gm: { gmFact.beengt: true }
     choose: { action.defence: shieldParry, action.with: shield }
     expect:
-      "pa(with: shield)": { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU3 }] }       # 13 → 9
+      "pa(with: shield)": { total: 2, lines: [{ value: -4, from: beengte-umgebung.BU3 }, { value: 6, from: schilde.SCH3 }] }       # 7 + 6 = 13 → 9
     appToday: 0 — wrong (the main piece is bare hands, kurz; Situation.loadoutReach)
     conflict:
       category: b
@@ -393,8 +401,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.17"
@@ -403,7 +411,7 @@ situations:
     gm: { gmFact.beengt: true }
     choose: { action.with: shield }                                           # the old `attack: { with: Großschild }`
     expect:
-      at: { total: -6, lines: [{ value: -6, from: beengte-umgebung.BU3 }] }             # 6 → 0
+      at: { total: -12, lines: [{ value: -6, from: beengte-umgebung.BU3 }, { value: -6, from: at-pa-modifikatoren.M1 }] }   # 12 − 6 = 6 → 0
     appToday: >
       no shield attack is offered (beidhaendiger-kampf); where the app does roll AT with the
       shield (a Passierschlag named for it, PassierschlagRoll) the shield's reach is kurz and
@@ -428,8 +436,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.18"
@@ -439,7 +447,7 @@ situations:
     choose: { action.with: weapon }
     expect:
       at: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }             # 16 → 12
-      pa: { total: -4, lines: [{ value: -4, from: beengte-umgebung.BU2 }] }             # 8 → 4
+      pa: { total: -5, lines: [{ value: -4, from: beengte-umgebung.BU2 }, { value: -1, from: at-pa-modifikatoren.M1 }] }   # 9 − 1 = 8 → 4
       aw: { total: 0 }                                                                  # 7
     appToday: same
     conflict:
@@ -462,8 +470,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Größenkategorie ----------------------------------------------------------------------
@@ -484,7 +492,7 @@ situations:
     expect:
       offered: [{ defence: shieldParry }, { defence: aw }]
       notOffered: [{ defence: weaponParry, because: groessenkategorie.GK4 }]
-      "pa(with: shield)": { total: 0 }                                                           # 13
+      "pa(with: shield)": { total: 6, lines: [{ value: 6, from: schilde.SCH3 }] }               # 7 + 6 = 13
     appToday: same (SizeCategoryRules.allowedDefenses; the weapon list shows only the shield)
     conflict:
       category: b
@@ -506,8 +514,8 @@ situations:
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.21"
@@ -530,7 +538,8 @@ situations:
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 2, from: SA_661.GS1 }                                    # raises vorteilhafte-position.VP1
-      texts: []          # no defence restriction: Boronmir is mittel (ruling groessenkategorie.mounted-size)
+      # No defence restriction: Boronmir is mittel (ruling groessenkategorie.mounted-size). Not a
+      # `texts: []`: every query shows the `*` tell kampfsonderfertigkeiten.KS2 ("passiv — wirkt immer").
     appToday: same (AT 20; nothing said about the opponent's defence)
     conflict:
       category: a
@@ -541,8 +550,8 @@ situations:
         kampfsonderfertigkeiten.KS2's "passiv — wirkt immer" (regeneration.R7's tell is
         gated on the Regenerationsphase since fix round 1). The lines and total match.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "17.23"

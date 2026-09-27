@@ -207,15 +207,16 @@ final class DamageChainTests: XCTestCase {
         XCTAssertEqual(start.state.stages.attributes.map { $0.lines.filter { $0.origin == ref("trefferzonen.TZ8") }.count }, [1, 1, 1])
     }
 
-    /// On the real book Eisern rests on the open ruling eisern-scope: it adds nothing (the
-    /// clause and the ruling's question are shown), so the Wundschwelle is 8 and 8 SP are one.
-    func testOnTheRealBookEisernRestsOnItsOpenRuling() throws {
+    /// On the real book Eisern's +1 rests on the decided ruling eisern-scope: the Wundschwelle is
+    /// 9 (8 from KO 15, Eisern's line carrying the ruling), so 8 SP are below it and ask no check
+    /// (boronmir-neu 19.7).
+    func testOnTheRealBookEisernRaisesTheWundschwelle() throws {
         let engine = try engine(Self.real)
         let r = DamageChain.run(hit: nil, zone: "torso", in: hero(base: ["sp": 8], owned: boronmir), engine: engine)
-        XCTAssertEqual(r.wundschwelle.result, 8)
-        XCTAssertTrue(r.wundschwelle.texts.contains { $0.kind == .openRuling && $0.ruling == "ADV_54.eisern-scope" })
-        XCTAssertEqual(r.situation.facts["hit.overWundschwelle"]?.value, 1)
-        XCTAssertEqual(r.checks.map(\.origin), [ref("trefferzonen.TZ8")])
+        XCTAssertEqual(r.wundschwelle.result, 9)
+        XCTAssertTrue(r.wundschwelle.lines.contains { $0.origin == ref("ADV_54.E1") && $0.rulings.contains("ADV_54.eisern-scope") })
+        XCTAssertEqual(r.situation.facts["hit.overWundschwelle"]?.value, 0)
+        XCTAssertEqual(r.checks, [])
     }
 
     /// trefferzonen TZ.12: 12 SP on the torso at Wundschwelle 6 (the sheet's) are two multiples:

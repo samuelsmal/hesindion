@@ -55,7 +55,8 @@ situations:
 
   - id: "5.5"
     name: Mounted, dodging by jumping off
-    loadout: { hero.mounted: true }
+    # the Kriegspferd in the mount slot, as an instance RK6's `item` can change (R61)
+    loadout: { hero.mounted: true, mount: Kriegspferd, mount.instance: kriegspferd1 }
     opponent: { onFoot: false }
     choose: { choice.jumpOff: true }
     expect:
@@ -75,8 +76,8 @@ situations:
         and a slot without a stated instance cannot be changed: the engine asks for
         `loadout.mount.instance` (ItemStateTests, Task 28). The offer and AW 0 match.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "5.6"
@@ -91,10 +92,11 @@ situations:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 2, from: SA_661.GS1 }                            # raises vorteilhafte-position.VP1
       pa:
-        total: 3
+        total: 2
         lines:
           - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
           - { value: 1, from: SA_661.GS2 }
+          - { value: -1, from: at-pa-modifikatoren.M1 }                # the Rabenschnabel's PA −1 on the generic pa 8
       aw:
         total: 0
         lines:
@@ -110,8 +112,8 @@ situations:
         totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
         Rabenschnabel's parry with its Mod folded in.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "5.7"
@@ -133,7 +135,7 @@ situations:
     loadout: { weapon: Rabenschnabel, hero.mounted: false }
     expect:
       at: { total: 0 }
-      pa: { total: 0 }
+      pa: { total: -1, lines: [{ value: -1, from: at-pa-modifikatoren.M1 }] }   # the Rabenschnabel's PA −1 on the generic pa 8
       notApplied:
         - { rule: SA_661, reason: not mounted }
     appToday: same
@@ -146,8 +148,8 @@ situations:
         totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
         Rabenschnabel's parry with its Mod folded in.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "5.9"

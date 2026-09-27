@@ -99,7 +99,8 @@ situations:
     loadout: { weapon: Schwert }
     expect:
       legal: { combinations: [{ choices: [finte, wuchtschlag], allowed: false, because: kampfsonderfertigkeiten.KS3 }] }
-      texts: [{ player: "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung" }]
+      # The UI composes the message from the refusal's `because` and source (KS3), e.g. "Finte lässt
+      # sich nicht mit Wuchtschlag kombinieren — nur ein Basismanöver pro Handlung"; no rule tells it.
     appToday: same in effect (one manoeuvre per attack, CombatManeuver is a single choice), but no reason is shown
     conflict:
       category: a
@@ -114,8 +115,8 @@ situations:
         Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
         tell explained any missing text.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "8.9"

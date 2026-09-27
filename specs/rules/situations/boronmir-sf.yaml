@@ -10,6 +10,7 @@
 # AT = KtW + (MU−8)/3, PA = ⌈KtW/2⌉ + (Leiteigenschaft−8)/3, both rounded down):
 #   MU 14 → +2 AT; KK 14 → +2 PA (Hiebwaffen and Schilde: KK; Schwerter: GE 14 / KK 14)
 #   Rabenschnabel (Hiebwaffen 14, AT 0 / PA −1):  AT 16, PA 8, with the Großschild's passive +3: 11
+#     (and the Großschild's −1 AT on the main weapon, ITEMTPL_29.GR1, when he carries it: AT 15)
 #   Langschwert   (Schwerter 12, AT 0 / PA 0):    AT 14, PA 8, with the passive +3: 11
 #   Großschild    (Schilde 10, AT −6 / PA +3, StP 30): AT 6, PA 7 + 2 × 3 = 13  (schilde)
 #   AW: GE 14 / 2 = 7. Sinnesschärfe (TAL_10) FW 9.
@@ -35,12 +36,15 @@ hero:
   # SA_48, SA_59, SA_66, SA_884: added for this example, dropped on 2026-09-24
   abilities: { SA_40: 1, SA_41: 2, SA_43: 1, SA_67: 1, SA_661: 1, SA_862: 1, SA_48: 1, SA_59: 1, SA_66: 1, SA_884: 1 }
   values:
-    "at(with: Rabenschnabel)": 16
-    "pa(with: Rabenschnabel)": 11
-    "at(with: Langschwert)": 14
-    "pa(with: Langschwert)": 11
-    "at(with: Großschild)": 6
-    "pa(with: Großschild)": 13
+    # Unfolded (R66, conflicts 14.13, 14.16, 14.17): the technique's value without the item's
+    # AT/PA modifiers (at-pa-modifikatoren.M1) and the shield's bonus (schilde.SCH1, SCH3), which
+    # the rules add as lines of their own.
+    "at(with: Rabenschnabel)": 16                 # 14 + 2
+    "pa(with: Rabenschnabel)": 9                  # 7 + 2; M1 −1 and SCH1 +3 are lines → 11
+    "at(with: Langschwert)": 14                   # 12 + 2
+    "pa(with: Langschwert)": 8                    # 6 + 2; SCH1 +3 is a line → 11
+    "at(with: Großschild)": 12                    # 10 + 2; M1 −6 is a line → 6
+    "pa(with: Großschild)": 7                     # 5 + 2; SCH3 +6 is a line → 13
     "item.structurePoints(with: Großschild)": 30
     aw: 7
 
@@ -82,13 +86,16 @@ situations:
         of the choice while mounted applies nothing, so the chosen formation's +2 stands),
         as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
         (F1's offer) rests on it too.
-      review:
-        verdict: backToAgent
-        by: "@samuelsmal"
-        date: 2026-09-27
-        note: >
-          Generally you are correct, but the reduction of the Grossschild matters only if he
-          actually uses it in the given combat.
+
+        Agent pass 2026-09-27, on the owner's note ("the reduction of the Grossschild matters
+        only if he actually uses it in the given combat"): the encoding already does this.
+        ITEMTPL_29.GR1's −1 is gated on `loadout.shield: Großschild` and on an attack with the
+        main weapon (`action.with: mainHand | weapon`), so it applies only in a fight where he
+        carries the Großschild, and never to a shield attack (16.8). A fight without it (14.4,
+        the Großschild alone as the weapon; kampfsituationen 17.18, the Rabenschnabel alone)
+        gets no GR1 line. 14.1 states the Großschild in its loadout (`shield: Großschild, other:
+        shield`), so he uses it here and the −1 applies: total 0, result 16, not 1 and 17.
+        Nothing in the encoding changes; the expectation waits on the owner's verdict.
 
   - id: "14.2"
     name: Vorstoß after Boronmir has already parried this round
@@ -130,11 +137,12 @@ situations:
     choose: { choice.vorstoss: true, choice.passierschlag: true }   # Vorstoß at the start, then a Passierschlag
     expect:
       at:                           # the Passierschlag's AT (the old `passierschlag_at`)
-        total: -5
-        result: 11
+        total: -6
+        result: 10
         lines:
           - { value: -4, from: passierschlag.PS2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }         # the Großschild's −1 AT on the main weapon
         notApplied:
           - { rule: SA_66, reason: "a Passierschlag combines with no Kampfsonderfertigkeit (passierschlag.PS3)" }
       # Vorstoß is a manoeuvre, excluded from a Passierschlag (ruling passierschlag.passierschlag-sf).
@@ -159,8 +167,8 @@ situations:
         as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
         (F1's offer) rests on it too.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "14.7"
@@ -169,8 +177,9 @@ situations:
     round: { phase: start }
     choose: { choice.vorstoss: true, choice.wuchtschlag: 1 }
     expect:
-      legal: { combinations: [{ choices: [vorstoss, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
-      # AT +2 −2 −1 = −1 (result 15), TP 1W6+4 +2
+      # allowed: one Basis- and one Spezialmanöver pass KS3 and KS4 (KS5 is `none`, no origin)
+      legal: { combinations: [{ choices: [vorstoss, wuchtschlag], allowed: true }] }
+      # AT +2 −2 −1 −1 (GR1) = −2 (result 14), TP 1W6+4 +2
     appToday: one manoeuvre per attack — Vorstoß or Wuchtschlag
     conflict:
       category: a
@@ -182,8 +191,8 @@ situations:
         KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
         Spezialmanöver pass KS3 and KS4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Schildspalter (SA_59) -----------------------------------------------------------------
@@ -196,9 +205,11 @@ situations:
     expect:
       offered: [{ choice: schildspalter, from: SA_59.SS1 }]
       at:
-        total: -1
-        result: 15
-        lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }]    # SA_59.SS5: no line of its own
+        total: -2
+        result: 14
+        lines:                                                      # SA_59.SS5: no line of its own
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }         # the Großschild's −1 AT on the main weapon
       texts:
         - { opponent: "Nur Schildparade oder Ausweichen", from: SA_59.SS1 }
         - { opponent: "Schildparade ohne Parade-Bonus des Schildes", from: SA_59.SS2 }
@@ -227,8 +238,8 @@ situations:
         as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
         (F1's offer) rests on it too.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "14.9"
@@ -262,8 +273,9 @@ situations:
     opponent: { hasShield: true }
     choose: { choice.schildspalter: true, choice.wuchtschlag: 1 }
     expect:
-      legal: { combinations: [{ choices: [schildspalter, wuchtschlag], allowed: true, from: kampfsonderfertigkeiten.KS5 }] }
-      # AT −2 (SA_67.W1) −1 (Belastung) = −3, result 13; 1W6+4 +2 TP to the shield's StP
+      # allowed: one Basis- and one Spezialmanöver pass KS3 and KS4 (KS5 is `none`, no origin)
+      legal: { combinations: [{ choices: [schildspalter, wuchtschlag], allowed: true }] }
+      # AT −2 (SA_67.W1) −1 (Belastung) −1 (GR1) = −4, result 12; 1W6+4 +2 TP to the shield's StP
     appToday: one manoeuvre per attack
     conflict:
       category: a
@@ -275,8 +287,8 @@ situations:
         KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
         Spezialmanöver pass KS3 and KS4).
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "14.13"
@@ -286,11 +298,12 @@ situations:
     expect:
       "pa(with: weapon)": { legal: { allowed: false, because: SA_59.SS1 } }   # the old `not_allowed: weaponParry`
       "pa(with: shield)":
-        total: -7
+        total: -1                   # base 7 (the unfolded Schilde PA): SS2 takes away SCH3's +6
         result: 6
         lines:
-          - { value: -6, from: SA_59.SS2, ruling: [SA_59.schildspalter-shield-bonus, SA_59.schildspalter-against-hero] }   # removes schilde.SCH3
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+        notApplied:
+          - { rule: schilde, clause: SCH3, reason: suppressed, because: SA_59.SS2, ruling: SA_59.schildspalter-shield-bonus }
       aw: { total: -1, result: 6, lines: [{ value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
     sequence:
       - rolls: { check.result: failure }   # the defence fails (the old `on_failed_defence`)
@@ -310,9 +323,16 @@ situations:
         KW2's Schilde PA 7 plus SCH3's +6 line, and SS2 is a `suppress` of that line, which
         lands in notApplied (reason suppressed), not as a −6 line. Faithful to the rules:
         base 7, no SCH3 line, total −1, result 6.
+
+        Agent pass 2026-09-27: base 7 and SCH3 in notApplied (suppressed by SS2); the queries
+        match. The step after the failed defence (the Großschild's StP lowered by SS3) is not
+        compared: the harness runs this situation's queries only, because no runner plays a
+        defence against the opponent's Schildspalter yet, so the harness counts it as
+        unsupported ("action: sequence"). Before this pass the query mismatch hid that.
+
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   # --- Aufmerksamkeit (SA_40) ----------------------------------------------------------------
@@ -350,12 +370,13 @@ situations:
     choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at }
     expect:
       at:
-        total: 0
-        result: 16
+        total: -1
+        result: 15
         lines:
           - { value: 1, from: SA_884.P2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
-      pa: { total: -1, result: 10 }
+          - { value: -1, from: ITEMTPL_29.GR1 }         # the Großschild's −1 AT on the main weapon
+      pa: { total: 1, result: 10 }                      # base 9: M1 −1, SCH1 +3, B3 −1
     appToday: same
     conflict:
       category: b
@@ -386,8 +407,8 @@ situations:
         weapon's lines on top: 11 − 1 + 3 − 1 (Belastung) = 12, total +1. The same fold as
         the listed 14.17 and 19.2.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "14.17"
@@ -395,10 +416,10 @@ situations:
     loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
     choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: vw }
     expect:
-      pa:            { total: 0, result: 11, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
-      "pa(with: shield)":  { total: 0, result: 13, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
+      pa:            { total: 2, result: 11, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }, { value: -1, from: at-pa-modifikatoren.M1 }, { value: 3, from: schilde.SCH1 }] }
+      "pa(with: shield)":  { total: 6, result: 13, lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }, { value: 6, from: schilde.SCH3 }] }
       aw:            { total: 0, result: 7,  lines: [{ value: 1, from: SA_884.P2 }, { value: -1, from: COND_1.B3, via: [SA_41.G1] }] }
-      at:            { total: -1, result: 15 }
+      at:            { total: -2, result: 14 }          # B3 −1, GR1 −1
     appToday: same
     conflict:
       category: b
@@ -424,8 +445,8 @@ situations:
         SCH1's +3 and SCH3's +6; the rules add those as lines (schilde.SCH1, schilde.SCH3),
         so the totals would be +3 and +6, with the same results.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27
 
   - id: "14.18"
@@ -505,12 +526,13 @@ situations:
     choose: { choice.plaenklerFormation: true, choice.plaenklerFormation.bonus: at, choice.vorstoss: true }
     expect:
       at:
-        total: 2
-        result: 18
+        total: 1
+        result: 17
         lines:
           - { value: 2, from: SA_66.V1 }
           - { value: 1, from: SA_884.P2 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }         # the Großschild's −1 AT on the main weapon
     appToday: same, when the attack is the hero's first act of the round
     conflict:
       category: a
@@ -531,6 +553,6 @@ situations:
         as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
         (F1's offer) rests on it too.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-27

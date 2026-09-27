@@ -10,7 +10,7 @@ source:
   page: 126
   checked: 2026-09-26
   hash: sha256:0ee595443ec5ddd2d8f1608a0d529b94e1afbdf853bb88fe5d06ccb538b7cc67
-reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+reviewed: null
 # Pages 126–127; the wiki also lists Kodex des Schwertes pp. 295–296.
 #
 # Plänkler-Formation (SA_884) made larger: five fighters instead of three, in front and behind as
@@ -34,9 +34,8 @@ clauses:
         forbid: { what: { choice: formation } }
         because: "nur zu Fuß: die Formation steht Schulter an Schulter"
         ruling: formation-mounted
-      - forbid: { what: { choice: [formation, plaenklerFormation] }, together: true }
-        because: "ein Kämpfer steht in einer Formation, nicht in zweien"
-        ruling: formation-and-plaenkler
+        # Formation and Plänkler-Formation stack (ruling formation-and-plaenkler): nothing
+        # forbids the two toggles together, and F2's +2 and SA_884.P2's +1 add up.
 
   - id: F2
     text: >
@@ -83,48 +82,35 @@ clauses:
 
 rulings:
   - id: formation-mounted
-    status: open
+    status: decided
     question: >
       Can riders form a Formation — may Boronmir take its +2 while fighting from Kupperus?
-    context: >
-      The page does not say. For Plänkler-Formation the owner decided "not while mounted"
-      (SA_884.plaenkler-mounted): half a Schritt apart is shoulder to shoulder, which horses
-      cannot do, and riders have Berittene Lanzenformation (SA_865) of their own. Formation's
-      spacing is the same half Schritt, in front and behind as well. Mounted, Boronmir already
-      takes Vorteilhafte Position +2 and Golgariten-Stil +2 AT against foot fighters (reiterkampf
-      5.6); the app knows nothing of Formation, so today there is no toggle at all.
-    situations: [boronmir-neu 19.4]
-    options:
-      a: { says: "Not while mounted, as Plänkler-Formation.", app: "the toggle is off and disabled while the hero is mounted, with the reason; mounting mid-fight ends the formation" }
-      b: { says: "Mounted too, if every fighter in it is mounted.", app: "a second fact on the toggle, 'alle beritten', that the player states" }
-      c: { says: "Mounted too, without condition.", app: "the toggle ignores whether the hero is mounted" }
-    recommended: a
-    whyRecommended: >
-      the spacing is the same as Plänkler-Formation's, and deciding the two the same way keeps one
-      rule for "formations stand on foot"; the riders' formation is a separate SF
-    answer: a
+    answer: >
+      Not while mounted, as Plänkler-Formation.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [F1]
+    notes: >
+      The same spacing as Plänkler-Formation (half a Schritt), so the same answer as
+      SA_884.plaenkler-mounted; riders have Berittene Lanzenformation (SA_865) of their own. The
+      toggle is off and disabled while the hero is mounted, with the reason; mounting mid-fight
+      ends the formation (F1's forbid). Mounted, Boronmir keeps Vorteilhafte Position +2 and
+      Golgariten-Stil +2 AT against foot fighters (boronmir-neu 19.4).
 
   - id: formation-and-plaenkler
-    status: open
+    status: decided
     question: >
       Can one fighter stand in a Formation and a Plänkler-Formation at once, and take both
       bonuses (+2 and +1)?
-    context: >
-      Neither page says. Both describe the fighters standing around the holder, half a Schritt
-      apart, and a fighter has one place in the line. Boronmir dropped Plänkler-Formation when
-      he took Formation, so the question arises when a companion holds Plänkler-Formation
-      (SA_884.P4 lets Boronmir stand in it without the SF). The app offers Plänkler-Formation only
-      to its holder (CombatSetupView, `hero.hasPlaenklerFormation`) and has no Formation.
-    situations: [boronmir-neu 19.5]
-    options:
-      a: { says: "One formation at a time: the fighter stands in one of them, the player picks which.", app: "the two toggles exclude each other; turning one on turns the other off, with the reason" }
-      b: { says: "Both, if the fighter is placed for both: +2 and +1 add up.", app: "two independent toggles" }
-    recommended: a
-    whyRecommended: >
-      both SFs describe one line or block of fighters around one holder; a fighter standing in
-      two at once is not something either page pictures, and stacking would make Plänkler-Formation
-      a free +1 on top of the larger one
     answer: >
       It's even more complicated than that, but they stack, and they can come from different
       heros. Thus it should also be possible to enter that other heros can give the bonus
       because they have a formation. Note that this can change throughout the fight.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [F1, F2, F4]
+    notes: >
+      Read as: the two toggles are independent, and F2's +2 and SA_884.P2's +1 add up (the forbid
+      of both together is gone). Either formation can be one a companion holds: F4 and SA_884.P4
+      enable the rule for a hero without the SF when the player states that an ally has it
+      (`ally.has`), and each toggle's span is `whileFormed`, set and cleared at any point in the
+      fight. "Even more complicated" is not written down; nothing here models more than one
+      Formation of the same kind at once.
