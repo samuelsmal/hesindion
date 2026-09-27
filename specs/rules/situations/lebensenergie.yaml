@@ -67,6 +67,10 @@ situations:
         contradicts it. NL1 is an `add` to `leMax` that reads no target (as ADV_25.HL1,
         which 15.1 expects without a `via`), so nothing puts LE3 in its `via`. The total 33
         matches.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
 
@@ -155,6 +159,10 @@ situations:
         since Task 33 fix round 1, its bound; −11 before): that is the engine gap in "Open
         questions" (a gain is not withdrawn when its `when` stops holding), not this
         entry's.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "15.8"
     name: In Plattenrüstung, LP 9, Betäubung III from a blow and Furcht I — eight Stufen?

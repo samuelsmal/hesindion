@@ -94,6 +94,10 @@ situations:
         KS4's limits); an allowed combination has no refusing entry and no effect comes from
         KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
         Spezialmanöver pass KS3 and KS4).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "10.8"
     name: Unarmed (Raufen — on the list)

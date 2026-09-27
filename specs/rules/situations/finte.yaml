@@ -113,6 +113,10 @@ situations:
         situation's `legal.combinations` already checks (and which passes: SA_62.ST4, KS3).
         Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
         tell explained any missing text.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "8.9"
     name: Finte on horseback

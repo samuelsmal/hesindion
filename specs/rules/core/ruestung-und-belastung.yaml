@@ -8,7 +8,7 @@ source:
   page: 237
   checked: 2026-09-27
   hash: sha256:82bf43acfab9e0edfedf6bcf18a5aca4e24058c9a6fc52fda724679e48a501f2
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: A0

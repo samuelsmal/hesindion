@@ -8,7 +8,7 @@ source:
   page: 238
   checked: 2026-09-27
   hash: sha256:f9b8881b7e64a92a02dc28148dcffcbadbfe1a5e775ecfd4406a5f058d4be060
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Active when the GM says so for this attack (`gmFact.vorteilhaftePosition`, the old
 # `gm.fact: advantageousPosition, span: attack`: a GM fact is stated per attack), or when another

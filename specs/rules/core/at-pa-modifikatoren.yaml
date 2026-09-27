@@ -11,7 +11,7 @@ source:
   page: 366
   checked: 2026-09-26
   hash: sha256:8e316402317708b98e7c80d4b80912d9c06d2f97cd77b7f754c3b3703694234b
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: M1

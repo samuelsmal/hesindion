@@ -9,7 +9,7 @@ source:
   page: 32
   checked: 2026-09-26
   hash: sha256:62cba62b2193bcdf1ae5f245f27433b290f529baf796c72eac3035715fde8d6b               # filled in by the drift check
-reviewed: null             # { by, date } once a person has read every clause against the page
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }             # { by, date } once a person has read every clause against the page
 
 # Where a Stufe comes from. Not a clause of this page: armour is `core/ruestung-und-belastung`
 # (A1 derives `level(rule: COND_1)` from the armour worn, `belastung.source: armour`), carried

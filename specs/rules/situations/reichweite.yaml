@@ -176,6 +176,10 @@ situations:
         situation's `legal.combinations` already checks (and which passes: SA_62.ST4, KS3).
         Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
         tell explained any missing text.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "RW.16"
     name: Mounted, Unterlaufen — a Basismanöver stays available on horseback

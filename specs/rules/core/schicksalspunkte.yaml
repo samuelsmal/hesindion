@@ -12,7 +12,7 @@ source:
   page: 29
   checked: 2026-09-26
   hash: sha256:6a48dfc5d041ec79f5ded9346037918359a370052818b9710704cb99ad3f9f4a
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: SP1

@@ -8,7 +8,7 @@ source:
   page: 169
   checked: 2026-09-27
   hash: sha256:13078582034cae0e09a75168d67778cb3d1a6e1fa173d35cb17ba3e837e4cd8f
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Works on Schmerz from every source — the LP thresholds (COND_6.SZ3), a Patzer, a spell: the
 # page says "des Zustands Schmerz", not "durch Lebenspunkte".

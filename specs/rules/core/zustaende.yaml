@@ -9,7 +9,7 @@ source:
   page: 31
   checked: 2026-09-27
   hash: sha256:25d8ee806081d332e3b979f2aa1a788a1e26d62be79c22e17e5c2488b0b44a7f
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: Z1

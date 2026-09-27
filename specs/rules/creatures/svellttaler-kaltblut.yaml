@@ -15,7 +15,7 @@ source:
   page: 45
   checked: 2026-09-26
   hash: sha256:858ea02015802d63ecc71577e03bf6442bc53ac69e3317dc98a6eb79865b2195
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Boronmir's Kupperus (hero file `pets.PET_1`, type "Svellttaler Kaltblut"). The export's numbers
 # match the page. It has no VW (`pa` absent), no RS (`pro` absent), no Größenkategorie and no
@@ -265,8 +265,10 @@ rulings:
     status: decided
     question: >
       The profile gives LeP 75 but Schmerz thresholds of 49, 33, 16 and 5 LeP. Which count?
-    answer: The printed thresholds, 49/33/16/5.
-    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    answer: >
+      Let's use the printed thresholds to determine the applied percentages. The total LeP of the
+      mount can change and thus also the Schmerz thresholds
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
     appliesTo: [SK10]
     notes: >
       Answered against the recommendation (b, computed from LeP 75 by the core rule: about 56, 37,

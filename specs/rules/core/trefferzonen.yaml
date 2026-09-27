@@ -18,7 +18,7 @@ source:
   page: 128
   checked: 2026-09-26
   hash: sha256:148668de6f1c31bf493bbaea7265096743ef33caaccb1522db9095c459baab42
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: TZ1

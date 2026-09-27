@@ -8,7 +8,7 @@ source:
   page: 36
   checked: 2026-09-26
   hash: sha256:686e50f6655035a1f9aa1401c27ef5f9642bd8d390c3a9fdec3d71442eb3759a
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Who can be liegend: the hero (stated, or answered "ja" when Handlungsunfähig starts — ruling
 # handlungsunfaehig-liegend, asked by STATE_8.H3) and the opponent (stated per attack on the

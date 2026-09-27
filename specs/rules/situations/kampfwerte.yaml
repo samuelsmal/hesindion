@@ -137,6 +137,10 @@ situations:
         +2), from KW2; SCH3 offers the choice and adds the doubled bonus (+6) as its own
         line, which the entry expects too. A base from SCH3 would be a clause that computes
         no base. The result 13 and the weapon parry (11: base 8 from KW2, SCH1 +3) match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "16.6"
     name: Langschwert and Großschild — attacking with the Langschwert
@@ -192,6 +196,10 @@ situations:
         the default; "Reviews reset by hand edits": schilde.SCH6); the shield parry is
         offered by SCH3 (`choice: shieldParry`), with the result 13. The dodge (7) and the
         weapon parry refused by SCH8 match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- In armour -----------------------------------------------------------------------------
 
@@ -246,6 +254,13 @@ situations:
         KW11 is a `none` clause ("built into KW10's encoding": the W6 is the stored
         `roll.ini` KW10's derive reads), so no line or base comes from it, and "the W6 is
         kept" is the fact `roll.ini` staying 4, which no expect key says.
+      review:
+        verdict: backToAgent
+        by: "@samuelsmal"
+        date: 2026-09-27
+        note: >
+          Correct, but note that the INI value, once rolled for a combat does not change within
+          said combat, it stays fixed.
 
   # --- The page's own example (Carolan and Arbosch), not Boronmir ------------------------------
 
@@ -346,6 +361,10 @@ situations:
         No source states that the hero wears none, so the input is not filled in (R61: an
         unstated input is an expectation conflict). The comment's "or 0" is the question the
         missing Sterben rule would answer.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Not Boronmir: the one technique whose AT is not MU ------------------------------------
 
@@ -365,6 +384,10 @@ situations:
         header: "a `forbid: { defence: weaponParry }` for a Peitschen technique or equipment
         file, not written"; the Regelwerk's Peitschen page is not drafted), so nothing
         forbids the parry. The AT (KtW 10 from KW1, FF 11 → +1 from KW6) matches.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Not Boronmir: a Schadensbonus ---------------------------------------------------------
 

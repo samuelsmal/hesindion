@@ -210,6 +210,10 @@ situations:
         shape lebensenergie 15.2 expects for LE3 (35), which is listed above against 15.1's
         per-term lines. 22.8's run shows FP5 the same way (4 and −5). The step's `dice`
         counts, `spent` [0, 5, 3] and `qs` 1 match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "22.8"
     name: Schwimmen FW 4, Doppel-1 — the check would have failed

@@ -50,6 +50,10 @@ situations:
         derive (plan Task 22, phase 1), so KW10 is overridden and the total is the Belastung
         lines alone (−3; −2). KW10 also adds the W6 `roll.ini`, which neither states.
         `iniBase` (14) matches.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "12.4"
     name: Kampfreflexe I and a Lederrüstung's extra −1 INI
@@ -72,6 +76,10 @@ situations:
         derive (plan Task 22, phase 1), so KW10 is overridden and the total is the Belastung
         lines alone (−3; −2). KW10 also adds the W6 `roll.ini`, which neither states.
         `iniBase` (14) matches.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "12.5"
     name: Kampfreflexe II, mounted

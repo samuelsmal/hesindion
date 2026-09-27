@@ -9,7 +9,7 @@ source:
   page: 238
   checked: 2026-09-27
   hash: sha256:35fd637077845c74b4774ae44e29cc2e2e772880146d9ee10cd45823c2526816
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # Also Kodex des Schwertes p. 75. Whether an attack comes from behind is the GM's call, one
 # answer per attack (the app's gm.fact fromBehind, span attack). Melee attacks only (ruling
 # from-behind-ranged).

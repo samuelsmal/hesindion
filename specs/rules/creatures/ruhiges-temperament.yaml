@@ -11,7 +11,7 @@ source:
   page: 118
   checked: 2026-09-27
   hash: sha256:040fc691da57c23319c350610c8f24f8be994e5b7ad79bced7ca9c7d6cb4e9fa
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # Kupperus has it through his profile (svellttaler-kaltblut.SK5). The Optolith export has no
 # field for an animal's Vorteile. Only the free-text `skills` has it, and only when the player
 # types it in: Kupperus's says "Mächtiger Schlag, Ruhiges Temperament" since the 2026-09-24

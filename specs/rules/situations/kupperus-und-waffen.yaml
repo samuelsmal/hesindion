@@ -261,6 +261,10 @@ situations:
 
         situations/kupperus-und-waffen.yaml 18.4: expects `on_hit: { tp: none }` (the
         parried Tritt rolls no damage). No expect key says "no roll"; it is a comment.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Rabenschnabel -------------------------------------------------------------------------
 
@@ -419,6 +423,10 @@ situations:
         opponent acts first, from: ITEMTPL_29.GR3 }]`. GR3's `tell` is plain text to the GM
         ("Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu."); `order` is no
         audience, as the structured tells of 18.1, 18.3 and 18.4.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "18.14"
     name: Großschild parry against an arrow, and against a thrown spear

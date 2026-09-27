@@ -13,7 +13,7 @@ source:
   page: 127                 # "Seite 127ff"
   checked: 2026-09-26
   hash: sha256:67645ea875c4b205e90037b468f399d6c6d4326d17b3b2fdce76f99a2d7af245
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Relation to the core rule: without this Fokusregel a hero wears one armour, helmet included,
 # and it protects every zone fully (ruestung-und-belastung, ruling several-armour-pieces).

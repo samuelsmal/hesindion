@@ -145,6 +145,10 @@ situations:
         −1 (its row, ITEMTPL_19.RS0) is at-pa-modifikatoren.M1's line after the base, so the
         totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
         Rabenschnabel's parry with its Mod folded in.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "5.9"
     name: What a rider may do

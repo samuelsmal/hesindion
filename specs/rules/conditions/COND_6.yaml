@@ -9,7 +9,7 @@ source:
   page: 34
   checked: 2026-09-26
   hash: sha256:7d026d682357618f208834341df9cd06100986006b22ca51a12c90a30fde032b
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Where a Stufe comes from: the LP thresholds (SZ3 derives `level(rule: COND_6)` from the current
 # LeP) or a Stufe stated on the sheet (a Patzer, a wound effect, a spell: the hero's

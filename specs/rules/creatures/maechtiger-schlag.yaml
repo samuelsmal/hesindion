@@ -17,7 +17,7 @@ source:
   page: 126
   checked: 2026-09-26
   hash: sha256:37a6abbac7d9aba678da62d1abb1c98122ff246cb7a496ea938129e647c41fee
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # The page lists thirteen books; Aventurisches Bestiarium p. 7 is the first, Aventurische
 # Tiergefährten p. 126 the one Kupperus's profile comes from.
 #

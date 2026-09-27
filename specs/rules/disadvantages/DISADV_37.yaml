@@ -8,7 +8,7 @@ source:
   page: 176
   checked: 2026-09-27
   hash: sha256:b9f9e67ca3551ca543a1ed43f1d62a728e9dbd153a687237a38b098feb767ae8
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # The page also cites Aventurisches Bestiarium II p. 118 (Sikaryan-Durst, SE9).
 #
 # The hero file names the Eigenschaft by `sid`, Optolith's select option (Data/de-DE/
@@ -148,4 +148,4 @@ rulings:
       player looks when the GM says "Autoritätsglaube!", and the log keeps the result. A hint on
       every Willenskraft check (b) would show on the checks it has nothing to do with, the
       mistake the app made with Aufmerksamkeit (boronmir-sf 14.15)
-    answer: null
+    answer: c

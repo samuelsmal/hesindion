@@ -12,7 +12,7 @@ source:
   page: 367
   checked: 2026-09-26
   hash: sha256:0bf962a5ca376351fbb48a39ea19ef08ac403dd15ff56e745913842e91863304
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # The page also lists Aventurische Rüstkammer p. 83 (Optolith's source for the Waffenvorteil and
 # -nachteil, US25208), Aventurisches Götterwirken p. 233, Straßenstaub & Halsabschneider p. 28 and
 # Archiv der Ausrüstung p. 125. Optolith (de-DE and univ Equipment.yaml) has the same numbers and

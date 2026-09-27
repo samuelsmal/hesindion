@@ -9,7 +9,7 @@ source:
   page: 169
   checked: 2026-09-27
   hash: sha256:3e95fdcfe10caa0a1fb92ab1840b79b5b1f625fffa30b99119c528e0769d1517
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: VR1

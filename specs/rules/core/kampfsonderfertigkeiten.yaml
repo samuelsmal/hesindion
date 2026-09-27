@@ -11,7 +11,7 @@ source:
   page: null          # the wiki page gives none
   checked: 2026-09-26
   hash: sha256:72b8e8e6d9d30f883ba0088203999b6aaad0c9e1abe9d712d63b616ed2fb7110
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: KS1

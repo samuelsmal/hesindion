@@ -256,6 +256,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.12"
     name: Boronmir attacks a human from behind
@@ -324,6 +328,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.15"
     name: The same corridor, parrying with the Großschild
@@ -352,6 +360,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.16"
     name: The Langschwert dropped; Raufen and the Großschild, parrying with the shield
@@ -380,6 +392,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.17"
     name: A shield bash with the Großschild in the corridor
@@ -411,6 +427,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.18"
     name: The corridor with the Rabenschnabel alone; and dodging
@@ -441,6 +461,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Größenkategorie ----------------------------------------------------------------------
 
@@ -481,6 +505,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.21"
     name: An Oger attacks; the Rabenschnabel alone

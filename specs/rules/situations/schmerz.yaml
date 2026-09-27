@@ -79,6 +79,10 @@ situations:
         SZ5 on the failed check match. Beside the shape: no action of the engine asks SZ2's
         check before it yet (the step states the check and its result), so an expectation
         rewritten as a check an action asks would need that timing in the action layer.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: S4
     name: LP 23 of 30 — just above three quarters

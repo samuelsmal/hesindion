@@ -13,7 +13,7 @@ source:
   page: 229 ff.        # the multiple-defence paragraphs themselves are p. 232 (Optolith's Vinsalt-Stil text)
   checked: 2026-09-26
   hash: sha256:b26ff1bca0a84ec762f7f6561bde350636ada7ddf39055fd773022408a7f4f33
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 clauses:
   - id: MV1

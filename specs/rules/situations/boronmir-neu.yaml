@@ -355,6 +355,12 @@ situations:
         as lebensenergie 15.7 and 15.16), and it rests on the open ruling
         schlechte-eigenschaft-check, so it is not asked either. The queries (`check.fw` 9,
         `check.modifier` 0, COND_1.B3 not applied) match.
+      review:
+        verdict: backToAgent
+        by: "@samuelsmal"
+        date: 2026-09-27
+        note: >
+          That is part of the game-play. The GM says to roll a check and the player does so.
 
   - id: "19.11"
     name: The order comes from his Komtur — the GM makes it 2 harder — and Boronmir has Schmerz II
@@ -399,3 +405,7 @@ situations:
         Schlechte Eigenschaft's name ("Autoritätsglaube: "), which no rule composes: the
         names are SE6's display table (`readBy: display`), and SE2's text names none. The
         origin and the logged event match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27

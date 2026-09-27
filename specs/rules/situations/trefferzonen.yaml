@@ -129,6 +129,10 @@ situations:
         (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.7"
     name: Torso of a winzig opponent — the aiming penalty replaces the size modifier
@@ -180,6 +184,10 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.10"
     name: A goblin (klein) hits the medium hero — the page's own case
@@ -208,6 +216,10 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.11"
     name: A goblin (klein) hits a Zwerg hero (klein in the app)
@@ -236,6 +248,10 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Wundeffekte (TZ8–TZ11) ---------------------------------------------------------------
 
@@ -284,6 +300,10 @@ situations:
         origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.13"
     name: 5 SP on a leg — below the Wundschwelle; then 6 SP
@@ -330,6 +350,10 @@ situations:
         origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.14"
     name: 7 SP on the right arm, which holds a one-handed Schwert; the check fails
@@ -376,6 +400,10 @@ situations:
         origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.15"
     name: The hero is Überrascht — defending against the surprise action
