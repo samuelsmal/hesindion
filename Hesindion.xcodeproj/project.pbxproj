@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30B2F64000000E630FD /* MarkdownUI */; };
 		BABE7EFD2F6576EC006A2898 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30D2F64000000E630FD /* SnapshotTesting */; };
+		CA0100000000000000000001 /* RulesEngine in Frameworks */ = {isa = PBXBuildFile; productRef = CA0100000000000000000002 /* RulesEngine */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */,
+				CA0100000000000000000001 /* RulesEngine in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +136,7 @@
 			name = Hesindion;
 			packageProductDependencies = (
 				BA48A30B2F64000000E630FD /* MarkdownUI */,
+				CA0100000000000000000002 /* RulesEngine */,
 			);
 			productName = Hesindion;
 			productReference = BA48A18A2F485F1D00E630FD /* Hesindion.app */;
@@ -220,6 +223,7 @@
 			packageReferences = (
 				BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				CA0100000000000000000003 /* XCLocalSwiftPackageReference "Packages/RulesEngine" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BA48A18B2F485F1D00E630FD /* Products */;
@@ -618,6 +622,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		CA0100000000000000000003 /* XCLocalSwiftPackageReference "Packages/RulesEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RulesEngine;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -647,6 +658,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
 			productName = SnapshotTesting;
+		};
+		CA0100000000000000000002 /* RulesEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RulesEngine;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

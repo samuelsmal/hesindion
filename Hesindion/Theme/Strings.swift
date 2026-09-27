@@ -804,6 +804,7 @@ enum DSAStrings {
         "bleeding.heilkunde.effect":    "shortens by QS/2 rounds",
         "bleeding.log":                 "Bleeding: 1 SP",
         "state.blutend.removal":        "After 7−QS rounds (Selbstbeherrschung). Heilkunde Wunden +2 (1 action) shortens it by QS/2 rounds.",
+        "rulesEngine.unavailable":      "Rules not loaded",
     ]
 
     private static let translations: [String: String] = [
@@ -1800,6 +1801,7 @@ enum DSAStrings {
         "bleeding.heilkunde":           "Heilkunde Wunden +2 (1 Aktion)",
         "bleeding.heilkunde.effect":    "verkürzt um QS/2 KR",
         "bleeding.log":                 "Blutend: 1 SP",
+        "rulesEngine.unavailable":      "Regeln nicht geladen",
     ]
 }
 

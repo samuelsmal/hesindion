@@ -12,6 +12,8 @@ SAMPLE_HEROES = specs/heroes
 # Optolith source data the rules database is built from (not in this repo).
 DSA_DATA ?= ../../dsa_companion_data/Data
 RULES_DB = Hesindion/Resources/rules.db
+RULES_JSON = Hesindion/Resources/rules.json
+CHECKS_JSON = Hesindion/Resources/checks.json
 
 # Physical devices
 PHYSICAL_DEVICE_NAME = Karl
@@ -25,7 +27,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db companions test-companions
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db require-rules-json companions test-companions
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -37,7 +39,15 @@ require-rules-db:
 		exit 1; \
 	fi
 
-build: require-rules-db
+# rules.json and checks.json are build products too (the rules engine's book and the Probe table,
+# docs/plans/2026-09-27-sheet-cutover-design.md §2): gitignored, copied in by make rules-json.
+require-rules-json:
+	@if [ ! -f '$(RULES_JSON)' ] || [ ! -f '$(CHECKS_JSON)' ]; then \
+		echo "rules.json missing: run make rules-json"; \
+		exit 1; \
+	fi
+
+build: require-rules-db require-rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -59,7 +69,7 @@ launch:
 
 run: install launch
 
-build-iphone: require-rules-db
+build-iphone: require-rules-db require-rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -103,7 +113,7 @@ share-heros-iphone: boot-iphone
 	cp "$(SAMPLE_HEROES)/"*.json "$(APP_DATA)/Documents/"
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
-deploy: require-rules-db
+deploy: require-rules-db require-rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -116,7 +126,7 @@ deploy: require-rules-db
 
 deploy-ipad: deploy-kombucha
 
-deploy-kombucha: require-rules-db
+deploy-kombucha: require-rules-db require-rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -213,6 +223,8 @@ rules-check:
 
 rules-json:
 	$(RULEC) build --out ../build/rules
+	cp build/rules/rules.json $(RULES_JSON)
+	cp build/rules/checks.json $(CHECKS_JSON)
 
 # Rule-website page tracking (docs/adr/0017-rule-website-page-tracking.md).
 RULES_SYNC = cd scripts && uv run --with requests --with beautifulsoup4 --with pyyaml python
@@ -279,7 +291,7 @@ rules-engine-fixture:
 # simulators on the boot screen at once). NO clones, NO extra boots.
 NO_CLONE = -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1
 
-test: rules-db boot
+test: rules-db rules-json boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -290,7 +302,7 @@ test: rules-db boot
 		$(NO_CLONE) \
 		test
 
-test-ui: rules-db boot
+test-ui: rules-db rules-json boot
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -319,7 +331,7 @@ test-only: boot
 # injected with the TEST_RUNNER_ prefix (xcodebuild strips it before launch);
 # a plain host env var never reaches the simulator process. Valid values are
 # all/failed/missing/never — "all" force-records every snapshot.
-test-ui-record: rules-db boot
+test-ui-record: rules-db rules-json boot
 	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -333,7 +345,7 @@ test-ui-record: rules-db boot
 # Re-record only a specific test (class or method) — narrows the blast radius of
 # a re-record so unrelated baselines aren't rewritten.
 #   make test-ui-record-only ONLY=HesindionTests/SomeSnapshotTests
-test-ui-record-only: rules-db boot
+test-ui-record-only: rules-db rules-json boot
 	TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \

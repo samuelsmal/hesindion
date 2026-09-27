@@ -4,6 +4,8 @@ scripts/build_rules_db/rules.db-shm
 scripts/build_rules_db/rules.db-wal
 Hesindion/Resources/*.tmp
 Hesindion/Resources/rules.db
+Hesindion/Resources/rules.json
+Hesindion/Resources/checks.json
 
 # Claude Code local settings
 .claude/settings.local.json
