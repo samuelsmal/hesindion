@@ -32,8 +32,14 @@ struct PassierschlagRoll {
     private var weapon: MeleeWeapon? { hero.meleeWeapons.first { $0.name == weaponName } }
     private var shield: Shield? { weapon == nil ? hero.shields.first { $0.name == weaponName } : nil }
 
+    /// The base the roll starts from, without Belastung: `lines` already adds
+    /// that line back through `ModifierEngine` (`SharedModifiers.encumbrance`).
     var rawAT: Int {
-        weapon?.at ?? shield?.at ?? (hero.combatTechniques.first { $0.name == Self.raufen }?.at ?? 0)
+        let sv = SheetValues.of(hero)
+        if let weapon { return sv?.weapon(weapon).at.withoutBelastung ?? 0 }
+        if let shield { return sv?.shield(shield).at.withoutBelastung ?? 0 }
+        let raufen = hero.combatTechniques.first { $0.name == Self.raufen }
+        return raufen.flatMap { sv?.technique($0.ruleId).at.withoutBelastung } ?? 0
     }
 
     var damageFormula: String { weapon?.damage ?? shield?.damage ?? "1W6" }

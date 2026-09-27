@@ -100,9 +100,13 @@ final class SheetValuesTests: XCTestCase {
                 got["at(\(ct.ruleId))"] = (v.technique(ct.ruleId).at, ct.at)
                 if ct.pa > 0 { got["pa(\(ct.ruleId))"] = (v.technique(ct.ruleId).pa, ct.pa) }
             }
+            // `Hero.passiveShieldPABonus` is gone (no reader left once every
+            // roll read `SheetValues`); the shield's own `paModifier` is the
+            // same number.
+            let shieldPABonus = hero.shields.first { $0.name == hero.selectedShieldName }?.paModifier ?? 0
             for w in hero.meleeWeapons {
                 got["at(\(w.name))"] = (v.weapon(w).at, w.at)
-                got["pa(\(w.name))"] = (v.weapon(w).pa, w.pa + hero.passiveShieldPABonus)
+                got["pa(\(w.name))"] = (v.weapon(w).pa, w.pa + shieldPABonus)
             }
             func number(_ key: String) -> Int? {
                 let e = got[key]!.engine

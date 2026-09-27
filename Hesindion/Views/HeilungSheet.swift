@@ -10,7 +10,7 @@ struct HeilungSheet: View {
     @State private var amount: Int = 1
 
     private var currentLE: Int { hero.derivedValues?.lebensenergie.current ?? 0 }
-    private var maxLE: Int { hero.derivedValues?.lebensenergie.max ?? 0 }
+    private var maxLE: Int { SheetValues.of(hero)?.leMax.result ?? 0 }
     private var newLE: Int { Swift.min(currentLE + amount, maxLE) }
 
     var body: some View {

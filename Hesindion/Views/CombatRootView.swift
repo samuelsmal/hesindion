@@ -176,7 +176,7 @@ struct CombatRootView: View {
                     Text("INI")
                         .font(.dsaBody(.caption))
                         .foregroundStyle(.white)
-                    Text("\(rolledInitiative ?? hero.derivedValues?.initiative.value ?? 0)")
+                    Text("\(rolledInitiative ?? SheetValues.of(hero)?.iniBase.result ?? 0)")
                         .font(.dsaHeading(.title3))
                         .foregroundStyle(.white)
                 }
@@ -229,7 +229,9 @@ struct CombatRootView: View {
             .dsaBox(.raised)
             .sheet(isPresented: $showInitiativeSheet) {
                 CombatInitiativeSheet(
-                    heroBaseINI: (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty,
+                    // No Swift line sits between this base and the d6, so it
+                    // takes the engine's full result (Belastung included).
+                    heroBaseINI: SheetValues.of(hero)?.iniBase.result ?? 0,
                     mountBaseINI: hero.mount.flatMap { pet in
                         Int(pet.initiative.split(separator: "+").first ?? "")
                     },
@@ -552,10 +554,12 @@ struct CombatRootView: View {
                     } else if hasShield {
                         step = .weaponSelection(.angriff)
                     } else if let w = hero.selectedWeapon {
-                        step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
+                        let baseAT = SheetValues.of(hero)?.weapon(w).at.withoutBelastung ?? 0
+                        step = .announcement(.angriff, name: w.name, baseAT: baseAT, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
                     } else if hero.selectedWeaponName == "Raufen" {
                         let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-                        step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
+                        let baseAT = raufen.flatMap { SheetValues.of(hero)?.technique($0.ruleId).at.withoutBelastung } ?? 0
+                        step = .announcement(.angriff, name: "Raufen", baseAT: baseAT, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
                     } else {
                         step = .loadoutEquipment
                     }
@@ -1029,14 +1033,15 @@ struct CombatRootView: View {
     @ViewBuilder
     private var lpBar: some View {
         if let dv = hero.derivedValues {
+            let maxLP = SheetValues.of(hero)?.leMax.result ?? 0
             LPBarView(
                 current: dv.lebensenergie.current,
-                max: dv.lebensenergie.max
+                max: maxLP
             ) {
                 guard dv.lebensenergie.current > 0 else { return }
                 dv.lebensenergie.current -= 1
             } onIncrement: {
-                guard dv.lebensenergie.current < dv.lebensenergie.max else { return }
+                guard dv.lebensenergie.current < maxLP else { return }
                 dv.lebensenergie.current += 1
             }
         }

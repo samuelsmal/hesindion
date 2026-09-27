@@ -266,28 +266,11 @@ final class Hero {
     }
 
     /// Belastung penalty applied to AT, PA, AW, INI, GS. Equals negative effectiveBE.
+    /// Still read at the roll (`CombatWeaponSelectionView`'s badge beside the
+    /// AT/PA chip): the base itself is `SheetValues.withoutBelastung` now, so
+    /// this is the amount the roll's own modifier line adds back.
     var belastungPenalty: Int {
         -effectiveBE
-    }
-
-    /// Sum of direct INI modifiers from equipped armor (independent of BE).
-    var armorIniModifier: Int {
-        armors.filter(\.isEquipped).reduce(0) { $0 + $1.iniModifier }
-    }
-
-    /// Sum of direct GS modifiers from equipped armor (independent of BE).
-    var armorGsModifier: Int {
-        armors.filter(\.isEquipped).reduce(0) { $0 + $1.gsModifier }
-    }
-
-    /// Total INI penalty: Belastung + direct armor modifiers.
-    var totalIniPenalty: Int {
-        belastungPenalty + armorIniModifier
-    }
-
-    /// Total GS penalty: Belastung + direct armor modifiers.
-    var totalGsPenalty: Int {
-        belastungPenalty + armorGsModifier
     }
 
     // MARK: - Listing order
@@ -638,11 +621,6 @@ final class Hero {
         }
     }
 
-    /// Passive shield PA bonus applied to main weapon parade.
-    var passiveShieldPABonus: Int {
-        selectedShield?.paModifier ?? 0
-    }
-
     /// Off-hand weapon (only if off-hand is a melee weapon, not a shield).
     var selectedOffHandWeapon: MeleeWeapon? {
         guard let name = selectedOffHandName else { return nil }
@@ -694,6 +672,13 @@ final class Hero {
     /// Split out from `schmerzLevel` so the aftermath screen can say where a
     /// level came from — this one goes when the hero is healed, and there is
     /// nothing to switch off — without a second copy of the thresholds.
+    ///
+    /// Still the stored LE max, not the engine's: `Hero` is `nonisolated`
+    /// (the SwiftData `@Model` macro), so it cannot call the `@MainActor`
+    /// engine itself, and threading a `leMax` parameter through here would
+    /// have to reach every caller of `schmerzLevel`/`effectiveSchmerzLevel`/
+    /// `level(of:)`/`hasState(_:)` — the whole Zustand-query surface, not
+    /// this one base value. Left for the domain that switches Zustände.
     var lebenspunkteSchmerzLevel: Int {
         guard let dv = derivedValues else { return 0 }
         let current = dv.lebensenergie.current
@@ -1020,11 +1005,15 @@ enum CommandInput {
 // MARK: - Hero Command Registry
 
 extension Hero {
-    var commandRegistry: [AppCommand] {
+    /// `leMax` comes from the caller (`SheetValues.of(hero)?.leMax.result`):
+    /// `Hero` is a SwiftData model, `nonisolated` by its own macro, so it
+    /// cannot call the `@MainActor` engine itself.
+    func commandRegistry(leMax: Int) -> [AppCommand] {
         var commands: [AppCommand] = []
 
         if let dv = derivedValues {
-            if dv.lebensenergie.max > 0 {
+            let maxLP = leMax
+            if maxLP > 0 {
                 commands.append(AppCommand(
                     id: UUID(),
                     name: "lebensenergie",
@@ -1032,7 +1021,7 @@ extension Hero {
                     input: .integerAmount(
                         label: L("current"),
                         min: 0,
-                        max: dv.lebensenergie.max,
+                        max: maxLP,
                         initial: dv.lebensenergie.current
                     ),
                     execute: { result in

@@ -120,11 +120,14 @@ struct WeaponInfoSheet: View {
     /// The hero's own numbers — what the rows elsewhere show, repeated so the
     /// sheet can be read on its own.
     private var heroRows: [(String, String)] {
+        let sv = SheetValues.of(hero)
         if let w = hero.meleeWeapons.first(where: { $0.name == name }) {
-            return [(L("tp"), w.damage), ("AT", "\(w.at)"), ("PA", "\(w.pa)"), (L("reach"), w.reach)]
+            let pair = sv?.weapon(w)
+            return [(L("tp"), w.damage), ("AT", "\(pair?.at.result ?? 0)"), ("PA", "\(pair?.pa.result ?? 0)"), (L("reach"), w.reach)]
         }
         if let s = hero.shields.first(where: { $0.name == name }) {
-            return [(L("tp"), s.damage), ("AT", "\(s.at)"), ("PA", "\(s.pa)"), (L("reach"), s.reach)]
+            let pair = sv?.shield(s)
+            return [(L("tp"), s.damage), ("AT", "\(pair?.at.result ?? 0)"), ("PA", "\(pair?.pa.result ?? 0)"), (L("reach"), s.reach)]
         }
         if let r = hero.rangedWeapons.first(where: { $0.name == name }) {
             return [(L("tp"), r.damage), ("FK", "\(r.at)"), (L("range"), r.range)]

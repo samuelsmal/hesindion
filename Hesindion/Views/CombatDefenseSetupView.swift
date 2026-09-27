@@ -19,19 +19,22 @@ enum DefenseRoute {
     /// list, which shows only the shield then.
     static func next(_ action: CombatAction, hero: Hero, size: CreatureSize, lines: [ModifierLine]) -> CombatStep {
         let total = lines.reduce(0) { $0 + $1.value }
+        let sv = SheetValues.of(hero)
         if action == .ausweichen {
-            let aw = hero.derivedValues?.ausweichen.value ?? 0
+            let aw = sv?.aw.withoutBelastung ?? 0
             return .execution(.ausweichen, name: "Ausweichen", attributeValue: aw + total, damageFormula: nil, note: nil, modifierLines: lines)
         }
         guard parryPossible(hero: hero, size: size) else { return .defenseSetup(.ausweichen) }
         if hero.isDualWielding || hero.selectedShield != nil { return .weaponSelection(.parieren) }
         if let w = hero.selectedWeapon {
             // The grip's −1 is a modifier line, so the base must not carry it too.
-            return .execution(.parieren, name: w.name, attributeValue: w.pa + hero.passiveShieldPABonus + total, damageFormula: nil, note: nil, modifierLines: lines)
+            let pa = sv?.weapon(w).pa.withoutBelastung ?? 0
+            return .execution(.parieren, name: w.name, attributeValue: pa + total, damageFormula: nil, note: nil, modifierLines: lines)
         }
         if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-            return .execution(.parieren, name: "Raufen", attributeValue: (raufen?.pa ?? 0) + total, damageFormula: nil, note: nil, modifierLines: lines)
+            let pa = raufen.flatMap { sv?.technique($0.ruleId).pa.withoutBelastung } ?? 0
+            return .execution(.parieren, name: "Raufen", attributeValue: pa + total, damageFormula: nil, note: nil, modifierLines: lines)
         }
         return .weaponSelection(.parieren)
     }
@@ -40,12 +43,14 @@ enum DefenseRoute {
     /// when the weapon list decides it per piece (a shield, two weapons, or no
     /// weapon chosen yet) or no parry is possible against this size.
     static func baseValue(_ action: CombatAction, hero: Hero, size: CreatureSize) -> Int? {
-        if action == .ausweichen { return hero.derivedValues?.ausweichen.value ?? 0 }
+        let sv = SheetValues.of(hero)
+        if action == .ausweichen { return sv?.aw.withoutBelastung ?? 0 }
         guard parryPossible(hero: hero, size: size) else { return nil }
         if hero.isDualWielding || hero.selectedShield != nil { return nil }
-        if let w = hero.selectedWeapon { return w.pa + hero.passiveShieldPABonus }
+        if let w = hero.selectedWeapon { return sv?.weapon(w).pa.withoutBelastung ?? 0 }
         if hero.selectedWeaponName == "Raufen" {
-            return hero.combatTechniques.first { $0.name == "Raufen" }?.pa ?? 0
+            let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
+            return raufen.flatMap { sv?.technique($0.ruleId).pa.withoutBelastung } ?? 0
         }
         return nil
     }

@@ -33,7 +33,7 @@ struct CombatDamageOutcomeBox: View {
 
     private var lifePoints: (current: Int, max: Int)? {
         guard let dv = hero.derivedValues else { return nil }
-        return (dv.lebensenergie.current, dv.lebensenergie.max)
+        return (dv.lebensenergie.current, SheetValues.of(hero)?.leMax.result ?? 0)
     }
 
     var body: some View {

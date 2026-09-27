@@ -15,6 +15,11 @@ final class CombatBleedingTests: XCTestCase {
         hero = Hero(name: "Test")
         context.insert(hero)
         hero.derivedValues = TestData.derivedValues(lp: 30)
+        // `LogEntry.reverse`'s clamp now reads `SheetValues.leMax` (KO×2 +
+        // species.le + purchased — lebensenergie.LE3): KO 0 and speciesLE 30
+        // give the same 30 this fixture's stored `lebensenergie.max` used to be.
+        hero.derivedValues?.speciesLE = 30
+        hero.attributes = Attributes(mu: 8, kl: 8, inValue: 8, ch: 8, ff: 8, ge: 8, ko: 0, kk: 8)
     }
 
     private func result(qs: Int, succeeded: Bool, critical: Bool = false, fumble: Bool = false) -> SkillCheckResult {

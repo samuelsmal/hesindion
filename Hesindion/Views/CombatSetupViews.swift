@@ -219,8 +219,11 @@ struct CombatInitiativeRollView: View {
     @State private var d6Result: Int? = nil
     @State private var animTask: Task<Void, Never>? = nil
 
+    // The INI roll adds no other Swift line (no `ModifierEngine` step sits
+    // between this base and the d6), so it takes the engine's full result,
+    // Belastung and the armour's extra penalty already included.
     private var heroBaseINI: Int {
-        (hero.derivedValues?.initiative.value ?? 0) + hero.totalIniPenalty
+        SheetValues.of(hero)?.iniBase.result ?? 0
     }
 
     private var mountBaseINI: Int? {

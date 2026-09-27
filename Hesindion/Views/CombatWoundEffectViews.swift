@@ -253,14 +253,19 @@ struct WoundEffectDamageControl: View {
 
 // MARK: - CombatWundschwelleRow
 
-/// Where the hit stands against the hero's Wundschwelle — shown whether or not the
-/// Trefferzonen focus rule is on.
+/// Where the hit stands against the hero's Wundschwelle.
 ///
 /// The comparison used to live inside `CombatWoundEffectPanel`, which only appears
-/// with that focus rule *and* a rolled zone, so with the rule off the take-damage
-/// screen never mentioned the Wundschwelle at all: the player had to remember the
-/// number and do the comparison in their head (issue #23). The threshold is a
-/// property of the hero, not of the focus rule, so it is stated either way.
+/// with the Trefferzonen focus rule *and* a rolled zone, so with the rule off the
+/// take-damage screen never mentioned the Wundschwelle at all: the player had to
+/// remember the number and do the comparison in their head (issue #23). This row
+/// said it either way — until the sheet cut-over: the rules catalog models
+/// Wundschwelle itself as part of the Trefferzonen ruleset (`trefferzonen.TZ8`,
+/// DSA 5's core rulebook has none without that chapter), so
+/// `SheetValues.wundschwelle.result` is `nil` without the Fokusregel and
+/// `CombatTakeDamageView` does not show this row at all then (task 7 controller
+/// ruling R8) — issue #23's guarantee now holds only for a hero who plays with
+/// Trefferzonen.
 ///
 /// What *follows* from reaching it stays where it belongs — the zone Wundeffekt is
 /// still the focus rule's business, and this row says so rather than implying an

@@ -40,30 +40,34 @@ struct CombatLoadoutPicker: View {
     }
 
     var items: [Item] {
+        let sv = SheetValues.of(hero)
         var items: [Item] = []
         for w in hero.meleeWeaponsInOrder {
             let technique = CombatTechniqueID(rawValue: w.combatTechniqueId)
             let isTwoHanded = technique?.isTwoHandedOnly ?? false
+            let pair = sv?.weapon(w)
             items.append(Item(
                 name: w.name,
-                detail: "AT \(w.at) / PA \(w.pa)",
+                detail: "AT \(pair?.at.result ?? 0) / PA \(pair?.pa.result ?? 0)",
                 note: note((mountedActive && isTwoHanded) ? "(\(L("mounted")))" : nil, damaged: w.name),
                 icon: WeaponIcon.forTechnique(technique),
                 isShield: false, isRaufen: false, isTwoHandedOnly: isTwoHanded
             ))
         }
         for s in hero.shieldsInOrder {
+            let pair = sv?.shield(s)
             items.append(Item(
                 name: s.name,
-                detail: "AT \(s.at) / PA \(s.pa)",
+                detail: "AT \(pair?.at.result ?? 0) / PA \(pair?.pa.result ?? 0)",
                 note: note(s.note.isEmpty ? nil : s.note, damaged: s.name),
                 icon: .system("shield.fill"),
                 isShield: true, isRaufen: false, isTwoHandedOnly: false
             ))
         }
+        let raufenPair = raufen.map { sv?.technique($0.ruleId) }.flatMap { $0 }
         items.append(Item(
             name: "Raufen",
-            detail: "AT \(raufen?.at ?? 0) / PA \(raufen?.pa ?? 0)",
+            detail: "AT \(raufenPair?.at.result ?? 0) / PA \(raufenPair?.pa.result ?? 0)",
             note: nil,
             icon: WeaponIcon.forTechnique(.raufen),
             isShield: false, isRaufen: true, isTwoHandedOnly: false

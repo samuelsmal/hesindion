@@ -13,12 +13,21 @@ final class CombatDefenseSetupTests: XCTestCase {
     override func setUpWithError() throws {
         context = ModelContext(try TestData.makeContainer())
         hero = Hero(name: "Test")
+        // The base values now come from the engine (`SheetValues`), which needs
+        // real attributes and a KtW to compute from — GE 12 gives AW 6 (KW3:
+        // ceil(GE/2)), MU/KK 14 give the "3 volle Punkte über 8" +2 bonus
+        // (KW1/KW2) that the fixture numbers below are built around.
+        hero.attributes = Attributes(mu: 14, kl: 8, inValue: 8, ch: 8, ff: 8, ge: 12, ko: 8, kk: 14)
         context.insert(hero)
     }
 
     override func tearDown() { context = nil; hero = nil }
 
     private func armWithSword() {
+        // KtW 12 (Schwerter, leit GE/KK — KK 14 is the higher one here): AT 12 + 2
+        // = 14, PA 6 + 2 = 8 (KW1/KW2), matching this file's original fixture
+        // numbers now that they come from the engine instead of the stored `at`/`pa`.
+        hero.combatTechniques.append(CombatTechnique(ruleId: "CT_12", name: "Schwerter", value: 12, at: 0, pa: 0))
         hero.meleeWeapons.append(MeleeWeapon(name: "Schwert", combatTechniqueId: "CT_12", damage: "1W6+4", at: 12, pa: 8, reach: "Mittel", weight: 1.6))
         hero.selectedWeaponName = "Schwert"
     }

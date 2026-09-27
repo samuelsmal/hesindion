@@ -17,7 +17,7 @@ struct RegenerierenSheet: View {
     private var totalMod: Int { baseMod + userModifier }
     private var healing: Int { Swift.max(0, (d6Result ?? 0) + totalMod) }
     private var currentLE: Int { hero.derivedValues?.lebensenergie.current ?? 0 }
-    private var maxLE: Int { hero.derivedValues?.lebensenergie.max ?? 0 }
+    private var maxLE: Int { SheetValues.of(hero)?.leMax.result ?? 0 }
     private var newLE: Int { Swift.min(currentLE + healing, maxLE) }
 
     var body: some View {

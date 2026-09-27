@@ -14,6 +14,18 @@ struct CombatAttackChoiceView: View {
     private var isDualWield: Bool { hero.isDualWielding }
     private var hasShield: Bool { hero.selectedShield != nil }
 
+    /// The AT a roll from this screen will start from — the base without
+    /// Belastung, since `ModifierEngine` (via `SharedModifiers.encumbrance`)
+    /// adds that line again at the roll.
+    private func rollAT(_ w: MeleeWeapon) -> Int {
+        SheetValues.of(hero)?.weapon(w).at.withoutBelastung ?? 0
+    }
+
+    private func rollAT(raufen: CombatTechnique?) -> Int {
+        guard let raufen else { return 0 }
+        return SheetValues.of(hero)?.technique(raufen.ruleId).at.withoutBelastung ?? 0
+    }
+
     /// Check if current weapon is eligible for two-handed grip.
     /// Not applicable to Dolche (CT_1) or Fechtwaffen (CT_3).
     private var canUseTwoHanded: Bool {
@@ -137,10 +149,10 @@ struct CombatAttackChoiceView: View {
             // The weapon's own damage, unadjusted: the announcement screen owns
             // every bonus, the grip's +1 included. Adding it here too gave a
             // two-handed attack +2 TP for a button that promises +1.
-            step = .announcement(.angriff, name: w.name, baseAT: w.at, damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
+            step = .announcement(.angriff, name: w.name, baseAT: rollAT(w), damageFormula: w.damage, isOffHand: false, secondAttack: nil, isMountCharge: false)
         } else if hero.selectedWeaponName == "Raufen" {
             let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
-            step = .announcement(.angriff, name: "Raufen", baseAT: raufen?.at ?? 0, damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
+            step = .announcement(.angriff, name: "Raufen", baseAT: rollAT(raufen: raufen), damageFormula: "1W6", isOffHand: false, secondAttack: nil, isMountCharge: false)
         }
     }
 
@@ -153,7 +165,7 @@ struct CombatAttackChoiceView: View {
             if let w = hero.selectedWeapon {
                 choiceButton(
                     title: w.name,
-                    subtitle: "AT \(w.at) · TP \(w.damage)",
+                    subtitle: "AT \(rollAT(w)) · TP \(w.damage)",
                     icon: "hand.raised.fill"
                 ) {
                     proceedSingleAttack()
@@ -162,7 +174,7 @@ struct CombatAttackChoiceView: View {
                 let raufen = hero.combatTechniques.first { $0.name == "Raufen" }
                 choiceButton(
                     title: "Raufen",
-                    subtitle: "AT \(raufen?.at ?? 0) · TP 1W6",
+                    subtitle: "AT \(rollAT(raufen: raufen)) · TP 1W6",
                     icon: "hand.raised.fill"
                 ) {
                     proceedSingleAttack()
@@ -265,13 +277,13 @@ struct CombatAttackChoiceView: View {
             let bonusLabel = damageBonus >= 0 ? "+\(damageBonus)" : "\(damageBonus)"
             choiceButton(
                 title: L("sturmangriffPferd"),
-                subtitle: "\(w.name) · AT \(w.at) · TP \(w.damage) \(bonusLabel)",
+                subtitle: "\(w.name) · AT \(rollAT(w)) · TP \(w.damage) \(bonusLabel)",
                 icon: "bolt.fill"
             ) {
                 let successStep = CombatStep.announcement(
                     .angriff,
                     name: w.name,
-                    baseAT: w.at,
+                    baseAT: rollAT(w),
                     damageFormula: w.damage,
                     isOffHand: false,
                     secondAttack: nil,
@@ -1106,6 +1118,30 @@ struct CombatWeaponSelectionView: View {
     private var weaponParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.weaponParry) }
     private var shieldParryBlocked: Bool { action == .parieren && !allowedDefenses.contains(.shieldParry) }
 
+    /// This screen's rows feed a roll (an attack's announcement, or a
+    /// defence's execution straight from here): the base is without
+    /// Belastung, since `ModifierEngine` adds that line again at the roll.
+    private func rollAT(_ w: MeleeWeapon) -> Int {
+        SheetValues.of(hero)?.weapon(w).at.withoutBelastung ?? 0
+    }
+    private func rollPA(_ w: MeleeWeapon) -> Int {
+        SheetValues.of(hero)?.weapon(w).pa.withoutBelastung ?? 0
+    }
+    private func rollAT(raufen: CombatTechnique?) -> Int {
+        guard let raufen else { return 0 }
+        return SheetValues.of(hero)?.technique(raufen.ruleId).at.withoutBelastung ?? 0
+    }
+    private func rollPA(raufen: CombatTechnique?) -> Int {
+        guard let raufen else { return 0 }
+        return SheetValues.of(hero)?.technique(raufen.ruleId).pa.withoutBelastung ?? 0
+    }
+    private func rollAT(_ s: Shield) -> Int {
+        SheetValues.of(hero)?.shield(s).at.withoutBelastung ?? 0
+    }
+    private func rollPA(_ s: Shield) -> Int {
+        SheetValues.of(hero)?.shield(s).pa.withoutBelastung ?? 0
+    }
+
     private var headerLabel: String {
         switch action {
         case .angriff:    return L("attack")
@@ -1160,7 +1196,7 @@ struct CombatWeaponSelectionView: View {
                         weaponRow(
                             name: w.name,
                             statLabel: statLabel,
-                            baseValue: action == .angriff ? w.at : (w.pa + hero.passiveShieldPABonus),
+                            baseValue: action == .angriff ? rollAT(w) : rollPA(w),
                             damageFormula: action == .angriff ? w.damage : nil,
                             note: nil,
                             isOffHand: false
@@ -1171,7 +1207,7 @@ struct CombatWeaponSelectionView: View {
                         weaponRow(
                             name: "Raufen",
                             statLabel: statLabel,
-                            baseValue: action == .angriff ? (raufen?.at ?? 0) : ((raufen?.pa ?? 0) + hero.passiveShieldPABonus),
+                            baseValue: action == .angriff ? rollAT(raufen: raufen) : rollPA(raufen: raufen),
                             damageFormula: action == .angriff ? "1W6" : nil,
                             note: nil,
                             isOffHand: false
@@ -1184,7 +1220,7 @@ struct CombatWeaponSelectionView: View {
                         weaponRow(
                             name: offW.name,
                             statLabel: statLabel,
-                            baseValue: action == .angriff ? offW.at : offW.pa,
+                            baseValue: action == .angriff ? rollAT(offW) : rollPA(offW),
                             damageFormula: action == .angriff ? offW.damage : nil,
                             note: hero.offHandPenalty != 0 ? "\(L("offHandPenalty")): \(hero.offHandPenalty)" : nil,
                             isOffHand: true
@@ -1197,7 +1233,7 @@ struct CombatWeaponSelectionView: View {
                         weaponRow(
                             name: s.name,
                             statLabel: statLabel,
-                            baseValue: action == .angriff ? s.at : s.pa,
+                            baseValue: action == .angriff ? rollAT(s) : rollPA(s),
                             damageFormula: action == .angriff ? s.damage : nil,
                             note: action == .parieren && !s.note.isEmpty ? s.note : nil,
                             isOffHand: false
@@ -1237,7 +1273,7 @@ struct CombatWeaponSelectionView: View {
                 // here — the engine is not asked twice for them.
                 let otherWeapon: MeleeWeapon? = isOffHand ? hero.selectedWeapon : hero.selectedOffHandWeapon
                 let otherName = otherWeapon?.name ?? "?"
-                let otherBaseAT = otherWeapon?.at ?? 0
+                let otherBaseAT = otherWeapon.map(rollAT) ?? 0
                 let otherOffHandPenalty = isOffHand ? 0 : hero.offHandPenalty
                 let otherAT = otherBaseAT + hero.dualAttackPenalty + otherOffHandPenalty
                 let otherDmg = otherWeapon?.damage

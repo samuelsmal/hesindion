@@ -112,7 +112,10 @@ struct CombatTakeDamageView: View {
 
     private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
 
-    private var wundschwelle: Int { hero.derivedValues?.wundschwelle.max ?? 0 }
+    /// `nil` (no Trefferzonen Fokusregel) means "no Wundschwelle" — the same
+    /// path today's code takes for `wundschwelle == 0`: the row/panel below
+    /// hide themselves on that same `> 0` gate.
+    private var wundschwelle: Int { SheetValues.of(hero)?.wundschwelle.result ?? 0 }
 
     private var multiple: Int {
         WoundEffectResolver.multiple(damage: effectiveDamage, wundschwelle: wundschwelle)

@@ -1,13 +1,21 @@
 import XCTest
 
 /// The Wundschwelle on the take-damage screen, with the Trefferzonen Fokus-Regel
-/// **off** (issue #23).
+/// **off** (issue #23; reversed by the sheet cut-over, design §4/R8 — see below).
 ///
 /// The comparison used to live only inside the Wundeffekt panel, which needs that
 /// focus rule and a rolled zone, so a player not using the rule had to remember
-/// their threshold and do the arithmetic in their head. Both tests launch with the
-/// rule switched off — `UITestSeed` turns it on for everybody otherwise — because
-/// that is the configuration where the screen said nothing.
+/// their threshold and do the arithmetic in their head. Issue #23 put a
+/// stand-alone row on screen for that case. The Wundschwelle base value now
+/// comes from the rules engine (`SheetValues.wundschwelle`), and the catalog
+/// models Wundschwelle itself as part of the Trefferzonen ruleset
+/// (`trefferzonen.TZ8`) — DSA 5's core rulebook has no Wundschwelle without
+/// that chapter — so `wundschwelle.result` is `nil` without the Fokusregel, and
+/// the take-damage screen hides the row on that `nil` exactly as it already did
+/// for a computed `0` (task 7 controller ruling R8). Issue #23's guarantee no
+/// longer holds for a hero who does not play with Trefferzonen; the first two
+/// tests below now check the row's *absence*. `UITestSeed` turns the rule on
+/// for everybody otherwise, so both tests switch it off explicitly.
 final class WundschwelleFlowTests: XCTestCase {
 
     /// Comfortably past any starting hero's Wundschwelle (ceil(KO / 2)).
@@ -41,10 +49,15 @@ final class WundschwelleFlowTests: XCTestCase {
             .firstMatch
     }
 
-    /// Without the focus rule there are no zone chips at all — and that used to take
-    /// the Wundschwelle with it.
+    /// Without the focus rule there are no zone chips at all, and — since the
+    /// catalog models Wundschwelle itself as part of the Trefferzonen ruleset
+    /// (`trefferzonen.TZ8`) — the engine now has no Wundschwelle to show either
+    /// (`SheetValues.wundschwelle.result` is `nil`). The row hides on that
+    /// `nil` exactly as it already did for a computed `0` (design R8), so
+    /// issue #23's guarantee ("shown whether or not the focus rule is on")
+    /// no longer holds for this case.
     @MainActor
-    func testWundschwelleIsShownWithoutTheFokusRule() {
+    func testWundschwelleIsHiddenWithoutTheFokusRule() {
         continueAfterFailure = false
         let app = launchTakeDamage()
 
@@ -53,36 +66,28 @@ final class WundschwelleFlowTests: XCTestCase {
             "Zone chips should not appear with the Trefferzonen rule off"
         )
 
-        let row = app.descendants(matching: .any)["combat.takeDamage.wundschwelle"]
-        XCTAssertTrue(
-            row.waitForExistence(timeout: UITest.timeout),
-            "The Wundschwelle row must be on screen whether or not the focus rule is on"
-        )
-
-        // At 0 TP it states where the hit stands, which is the whole point: the
-        // threshold is a number the player should not have to remember.
-        XCTAssertTrue(
-            text(app, containing: "Wundschwelle").exists,
-            "The row should name the Wundschwelle"
+        XCTAssertFalse(
+            app.descendants(matching: .any)["combat.takeDamage.wundschwelle"].exists,
+            "Without the Fokusregel the engine has no Wundschwelle, so the row must not appear"
         )
         captureScreenshot(app, named: "28-wundschwelle-below")
     }
 
-    /// Past the threshold the row says so, and says what is missing before a
-    /// Wundeffekt — rather than implying an effect the rule is not providing.
+    /// Without the focus rule there is nothing to reach either: no row, no
+    /// "erreicht" text and no Wundeffekt panel, however much damage is entered.
     @MainActor
-    func testWundschwelleReachedIsAnnouncedAndZoneEffectsAreExplained() {
+    func testNoWundschwelleIsAnnouncedWithoutTheFokusRule() {
         continueAfterFailure = false
         let app = launchTakeDamage()
         enterTP(app, times: Self.damagePastThreshold)
 
-        XCTAssertTrue(
-            text(app, containing: "Wundschwelle erreicht").waitForExistence(timeout: UITest.timeout),
-            "Reaching the Wundschwelle must be stated on screen"
+        XCTAssertFalse(
+            text(app, containing: "Wundschwelle erreicht").exists,
+            "There is nothing to reach without the Fokusregel"
         )
-        XCTAssertTrue(
-            text(app, containing: "Fokusregel Trefferzonen").exists,
-            "With the rule off, the row should say why no Wundeffekt follows"
+        XCTAssertFalse(
+            app.descendants(matching: .any)["combat.takeDamage.wundschwelle"].exists,
+            "The row stays hidden regardless of how much damage is entered"
         )
         XCTAssertFalse(
             app.descendants(matching: .any)["combat.woundEffectPanel"].exists,

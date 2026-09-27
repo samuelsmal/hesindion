@@ -308,7 +308,7 @@ struct HeroDetailView: View {
     }
 
     private var filteredCommands: [AppCommand] {
-        let all = hero.commandRegistry
+        let all = hero.commandRegistry(leMax: SheetValues.of(hero)?.leMax.result ?? 0)
         guard !commandQuery.isEmpty else {
             return all.sorted { $0.displayName < $1.displayName }
         }

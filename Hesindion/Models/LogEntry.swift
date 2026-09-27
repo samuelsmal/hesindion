@@ -60,7 +60,7 @@ struct CombatActionPayload: Codable, Reversible {
     func reverse(on hero: Hero) {
         guard let dv = hero.derivedValues else { return }
         let reversed = dv.lebensenergie.current - lpChange
-        dv.lebensenergie.current = min(max(reversed, 0), dv.lebensenergie.max)
+        dv.lebensenergie.current = min(max(reversed, 0), SheetValues.of(hero)?.leMax.result ?? 0)
     }
 }
 
@@ -71,7 +71,7 @@ struct HealingPayload: Codable, Reversible {
     func reverse(on hero: Hero) {
         guard let dv = hero.derivedValues else { return }
         let reversed = dv.lebensenergie.current - lpRestored
-        dv.lebensenergie.current = min(max(reversed, 0), dv.lebensenergie.max)
+        dv.lebensenergie.current = min(max(reversed, 0), SheetValues.of(hero)?.leMax.result ?? 0)
     }
 }
 
@@ -82,7 +82,7 @@ struct RestPayload: Codable, Reversible {
     func reverse(on hero: Hero) {
         guard let dv = hero.derivedValues else { return }
         let reversed = dv.lebensenergie.current - lpRestored
-        dv.lebensenergie.current = min(max(reversed, 0), dv.lebensenergie.max)
+        dv.lebensenergie.current = min(max(reversed, 0), SheetValues.of(hero)?.leMax.result ?? 0)
     }
 }
 
