@@ -76,8 +76,21 @@ final class SheetValues {
     }
 
     /// A shield's own AT and its shield parry, with that shield carried, queried by slot.
+    ///
+    /// kampfwerte.KW1's MU term is guarded on the *weapon slot's* technique
+    /// (`loadout.weapon.technique`), not on the piece the query is `with:` — confirmed
+    /// correct by kampfwerte 16.8 (a passing situation), whose loadout keeps a real
+    /// weapon in the slot even while attacking with the shield. Before the player has
+    /// chosen a loadout there may be no weapon selected at all (the preparation
+    /// screen, task 7 fix round 1): an empty slot leaves that guard unresolved and
+    /// drops the MU term from the shield's own AT. The shield is always a known,
+    /// non-Peitschen technique — filling the slot with it when it is otherwise empty
+    /// resolves the guard without changing what "with: shield" itself means to any
+    /// other clause (`action.with` stays `shield`).
     func shield(_ sh: Shield) -> Pair {
-        let s = sheet.with(shield: HeroSheetMapping.engineName(sh.name, template: sh.templateId, book: engine.book))
+        let name = HeroSheetMapping.engineName(sh.name, template: sh.templateId, book: engine.book)
+        var s = sheet.with(shield: name)
+        if s.loadout.weapon == nil { s = s.with(weapon: name) }
         return Pair(at: value("at(with: shield)", in: s), pa: value("pa(with: shield)", in: s))
     }
 }

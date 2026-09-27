@@ -45,6 +45,27 @@ final class SheetValuesTests: XCTestCase {
         XCTAssertEqual(shieldParry.withoutBelastung, 13, "\(shieldParry.breakdown.shownLines)")
     }
 
+    /// Task 7 fix round 1: the loadout picker (`CombatLoadoutPicker`) shows a shield's own AT
+    /// before the player has chosen a loadout at all — no weapon selected yet. kampfwerte.KW1's
+    /// MU term is guarded on the weapon slot's technique, which an empty slot leaves unresolved
+    /// (Packages/RulesEngine/Tests/RulesEngineTests/HeroSheetTests.swift traces why); `shield(_:)`
+    /// fills the empty slot with the shield itself, which is always a known, non-Peitschen
+    /// technique. Regression test for `CombatViewSnapshotTests.testPreparation`'s Großschild row.
+    func testTheShieldsOwnATStillCarriesTheMUBonusWithNoWeaponSelected() throws {
+        let hero = try SampleHeroes.importHero(named: "Boronmir Siebenfeld von Greifenfurt")
+        let grossschild = try XCTUnwrap(hero.shields.first { $0.name == "Großschild" })
+        hero.selectedWeaponName = nil
+        hero.selectedOffHandName = nil
+        hero.selectedShieldName = nil
+        XCTAssertNil(hero.selectedWeapon, "this is the case the bug needs: no weapon in hand")
+
+        let at = try XCTUnwrap(SheetValues.of(hero)).shield(grossschild).at
+        XCTAssertEqual(at.result, 6, "\(at.breakdown.shownLines)")
+        XCTAssertTrue(at.breakdown.lines.contains { $0.origin?.rule == "at-pa-modifikatoren" },
+                      "the Großschild's own -6 atMod should still be the only line")
+        XCTAssertEqual(at.breakdown.base?.value, 12, "the MU bonus (KW1) must still be in the base")
+    }
+
     /// Without the Trefferzonen Fokusregel the engine has no Wundschwelle (trefferzonen.TZ8).
     func testTheWundschwelleNeedsTheTrefferzonenFokusregel() throws {
         let hero = try SampleHeroes.importHero(named: "Boronmir Siebenfeld von Greifenfurt")

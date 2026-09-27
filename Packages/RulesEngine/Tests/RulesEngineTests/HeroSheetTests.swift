@@ -67,6 +67,73 @@ final class HeroSheetTests: XCTestCase {
         XCTAssertEqual(result("at", shielded), 15)
     }
 
+    /// Task 7 fix round 1: the app's loadout picker queries a shield's own AT with
+    /// `at(with: shield)` while the hero has not (yet) selected a main weapon — the
+    /// preparation screen, before the player has tapped anything in the loadout
+    /// picker. kampfwerte.KW1's MU term (`{ of: attr.MU, above: 8, per: 3, round:
+    /// down }`) is guarded `when: { not: { loadout.weapon.technique: CT_8 } }`, which
+    /// reads the *weapon slot*, not the piece the query is about — confirmed correct
+    /// by kampfwerte 16.8 (a passing situation), whose loadout keeps a real weapon
+    /// (Langschwert) in the slot even while attacking with the shield.
+    func testTheShieldsOwnATNeedsAKnownWeaponSlotForKW1sMUTerm() {
+        // (a) weapon slot = Rabenschnabel (the hero's real main weapon), at(with: shield):
+        // loadout.weapon.technique resolves (CT_5, Hiebwaffen — not CT_8), so KW1's MU term
+        // fires. kampfwerte 16.8's own numbers (KtW 10 Schilde + MU 14 → +2 = 12, then
+        // ITEMTPL_29.GR0's item.atMod -6 = 6) apply unchanged: the weapon named does not
+        // matter to the shield's own value, only that one is known.
+        let a = Self.boronmir(loadout: .init(weapon: "Rabenschnabel", shield: "Großschild"),
+                              items: [Self.rabenschnabel, Self.grossschild])
+        let ba = Engine(book: Self.book).evaluate(Query("at(with: shield)"), in: Situation(sheet: a))
+        XCTAssertEqual(ba.result, 6, "\(ba.shownLines)")
+        XCTAssertEqual(ba.base?.value, 12, "\(ba.base as Any)")
+        XCTAssertTrue(ba.base?.origin?.rule == "kampfwerte" && ba.base?.origin?.clause == "KW1")
+        XCTAssertTrue(ba.notApplied.contains { $0.origin == ClauseRef(rule: "ITEMTPL_29", clause: "GR1") },
+                      "\(ba.notApplied)")
+
+        // (b) weapon slot empty (no main weapon selected yet), at(with: shield): the query's
+        // own `with: shield` only derives `loadout.weapon.technique` when `with` names a
+        // technique the hero has a KtW in (Loadout.combatFacts); "shield" is a slot keyword,
+        // not a technique, so `ktw("shield", …)` fails to resolve and the derived fact is
+        // never synthesised. With no stated `loadout.weapon` either, KW1's guard cannot
+        // resolve `not: unknown`, and the MU term does not fire: base 10, result 4 — the
+        // preparation-screen bug (task 7, CombatViewSnapshotTests.testPreparation).
+        let b = Self.boronmir(loadout: .init(shield: "Großschild"), items: [Self.grossschild])
+        let bb = Engine(book: Self.book).evaluate(Query("at(with: shield)"), in: Situation(sheet: b))
+        XCTExpectFailure("KW1's MU `when` reads the weapon slot, not the piece being attacked with — owner decision pending (a rules-catalog change, not app code)") {
+            XCTAssertEqual(bb.result, 6, "\(bb.shownLines)")
+        }
+        XCTAssertEqual(bb.result, 4, "confirms the bug's actual number: \(bb.shownLines)")
+
+        // (c) weapon slot still empty, but the query is plain `at` with `action.with` stated
+        // directly as the shield's own name (Großschild) — kampfwerte 16.8's own query form
+        // (its `choose: { action.with: Großschild }`). This does not touch `loadout.weapon`
+        // either, so it is exactly as unresolved as (b): same base 10, same result 4. Naming
+        // the shield in `action.with` only changes *what* is being attacked with (the query's
+        // subject); it does not make the weapon slot known.
+        var c = Situation(sheet: b)
+        c.state(Fact(name: "action.with", value: .string("Großschild"), owner: .player))
+        let bc = Engine(book: Self.book).evaluate(Query("at"), in: c)
+        XCTExpectFailure("action.with names the piece attacked with, not the weapon slot KW1's guard reads — this query form does not resolve loadout.weapon.technique either") {
+            XCTAssertEqual(bc.result, 6, "\(bc.shownLines)")
+        }
+        XCTAssertEqual(bc.result, 4, "confirms: naming action.with does not populate loadout.weapon: \(bc.shownLines)")
+
+        // (d) weapon slot filled with the shield's own name (Großschild is in `items` already,
+        // with technique CT_10 via its template): loadout.weapon.technique resolves to CT_10,
+        // not CT_8, so the MU term fires. Confirms a same-named filler works.
+        let dSheet = b.with(weapon: "Großschild")
+        let bd = Engine(book: Self.book).evaluate(Query("at(with: shield)"), in: Situation(sheet: dSheet))
+        XCTAssertEqual(bd.result, 6, "\(bd.shownLines)")
+
+        // (e) weapon slot filled with a synthetic "Raufen" item (technique CT_9, no template —
+        // every hero can fight bare-handed): also resolves loadout.weapon.technique to CT_9.
+        var eSheet = b
+        eSheet.items.append(.init(name: "Raufen", technique: "CT_9"))
+        eSheet = eSheet.with(weapon: "Raufen")
+        let be = Engine(book: Self.book).evaluate(Query("at(with: shield)"), in: Situation(sheet: eSheet))
+        XCTAssertEqual(be.result, 6, "\(be.shownLines)")
+    }
+
     func testPlateGivesOneBelastungLineAfterBelastungsgewoehnung() {
         let plate = Self.boronmir(
             loadout: .init(weapon: "Rabenschnabel", armour: "Plattenrüstung", armourBelastung: 3),
