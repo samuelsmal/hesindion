@@ -10,7 +10,7 @@ source:
   page: 126
   checked: 2026-09-26
   hash: sha256:0ee595443ec5ddd2d8f1608a0d529b94e1afbdf853bb88fe5d06ccb538b7cc67
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # Pages 126–127; the wiki also lists Kodex des Schwertes pp. 295–296.
 #
 # Plänkler-Formation (SA_884) made larger: five fighters instead of three, in front and behind as

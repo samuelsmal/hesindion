@@ -159,6 +159,14 @@ situations:
         since Task 33 fix round 1, its bound; −11 before): that is the engine gap in "Open
         questions" (a gain is not withdrawn when its `when` stops holding), not this
         entry's.
+
+        Agent pass 2026-09-27, on the owner's agreement: the `offered` mismatch is already
+        gone (nothing in `expect` names a check as offered). The remaining mismatch (`gs`
+        step 1, total −3 expected vs −8) is the engine gap named above, tracked in "Open
+        questions", not something this entry's `expect` can fix without hiding a real gap
+        behind a wrong number. `make test-rules-engine` still lists it, matching
+        conflict-fingerprints.json's entry for it, so nothing changes here; it keeps its
+        verdict for the owner.
       review:
         verdict: agreed
         by: "@samuelsmal"

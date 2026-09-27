@@ -243,7 +243,7 @@ situations:
     sequence:
       - expect: { ini: { result: 17 } }                    # 14 + 4 − 1
       - event: { COND_1: 0 }                               # the plate taken off
-        expect: { ini: { result: 18, from: kampfwerte.KW11, kept: { w6: 4 } } }
+        expect: { ini: { result: 18 } }                    # 14 + 4, the same roll.ini, no Belastung line
     appToday: stays 17 — wrong (Hero.activeCombatInitiative stores the total, not its parts)
     conflict:
       category: a
@@ -270,6 +270,13 @@ situations:
         is changed until the owner decides. What stays a conflict either way is step 2's
         `from: kampfwerte.KW11` and `kept: { w6: 4 }`: KW11 is `none` (no line comes from it)
         and `kept` is no query key.
+
+        Agent pass 2026-09-27, on the owner's agreement: step 2's `expect` drops `from` and
+        `kept`, keeping `result: 18`.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
 
   # --- The page's own example (Carolan and Arbosch), not Boronmir ------------------------------
 

@@ -1,15 +1,5 @@
 {
   "conflicts" : {
-    "boronmir-sf.yaml 14.1" : [
-      {
-        "kind" : "result",
-        "query" : "at"
-      },
-      {
-        "kind" : "total",
-        "query" : "at"
-      }
-    ],
     "boronmir-sf.yaml 14.19" : [
       {
         "kind" : "result",
@@ -30,42 +20,6 @@
     "finte.yaml 8.7" : [
       {
         "kind" : "missingText"
-      }
-    ],
-    "kampfwerte.yaml 16.12" : [
-      {
-        "kind" : "base",
-        "query" : "ini",
-        "step" : 2
-      },
-      {
-        "kind" : "unsupportedShape",
-        "shape" : "step query key kept",
-        "step" : 2
-      }
-    ],
-    "kupperus-und-waffen.yaml 18.1" : [
-      {
-        "kind" : "missingEvent"
-      },
-      {
-        "kind" : "missingText"
-      },
-      {
-        "kind" : "missingText",
-        "step" : 1
-      },
-      {
-        "kind" : "missingText",
-        "step" : 2
-      },
-      {
-        "kind" : "unsupportedShape",
-        "shape" : "event field of"
-      },
-      {
-        "kind" : "unsupportedShape",
-        "shape" : "offered field requires"
       }
     ],
     "lebensenergie.yaml 15.7" : [

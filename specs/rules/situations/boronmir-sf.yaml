@@ -60,11 +60,12 @@ situations:
     expect:
       offered: [{ choice: vorstoss, from: SA_66.V3 }]
       at:
-        total: 1
-        result: 17
+        total: 0
+        result: 16
         lines:
           - { value: 2, from: SA_66.V1 }
           - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }         # the Großschild's −1 AT on the main weapon
       pa: { legal: { allowed: false, span: round, because: SA_66.V2 } }    # until the round ends
       aw: { legal: { allowed: false, span: round, because: SA_66.V2 } }
     appToday: same, when the attack is the hero's first act of the round
@@ -96,6 +97,13 @@ situations:
         gets no GR1 line. 14.1 states the Großschild in its loadout (`shield: Großschild, other:
         shield`), so he uses it here and the −1 applies: total 0, result 16, not 1 and 17.
         Nothing in the encoding changes; the expectation waits on the owner's verdict.
+
+        Agent pass 2026-09-27, on the owner's agreement: `expect.at` now carries the GR1 line,
+        total 0, result 16.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
 
   - id: "14.2"
     name: Vorstoß after Boronmir has already parried this round

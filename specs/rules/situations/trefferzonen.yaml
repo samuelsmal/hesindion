@@ -186,6 +186,15 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+
+        Agent pass 2026-09-27, on the owner's agreement: the vocabulary has no query or
+        `expect` key for "the zone a stated die resolves to" — `hit.zone`/`hit.side` are
+        facts a situation states (`rolls: { hit.zone: … }`, as every other situation naming a
+        zone does), never a target `TZ2`'s `ask: { fact: hit.zone, who: roll }` produces for
+        a query to read, and the engine does not roll a die and look it up on a table either
+        (the gap this entry's reason and "Open questions" both name). Writing an expectation
+        needs that vocabulary and engine work first; nothing in `specs/rules/` can hold it
+        today. Left for the owner: it keeps its verdict.
       review:
         verdict: agreed
         by: "@samuelsmal"
@@ -218,6 +227,11 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+
+        Agent pass 2026-09-27, on the owner's agreement: as TZ.9 — no `expect` key holds "the
+        zone a stated die resolves to" (hit.zone/hit.side are facts a situation states, not a
+        target a query reads), and the engine does not roll a die onto a table either. Left
+        for the owner: it keeps its verdict.
       review:
         verdict: agreed
         by: "@samuelsmal"
@@ -250,6 +264,11 @@ situations:
         the mittel table (TZ4a): die 4 → torso. The owner must restore these expectations (a
         key for the zone and side a stated die gives). The engine does not resolve a zone
         from a die either (see "Open questions").
+
+        Agent pass 2026-09-27, on the owner's agreement: as TZ.9 — no `expect` key holds "the
+        zone a stated die resolves to" (hit.zone/hit.side are facts a situation states, not a
+        target a query reads), and the engine does not roll a die onto a table either. Left
+        for the owner: it keeps its verdict.
       review:
         verdict: agreed
         by: "@samuelsmal"

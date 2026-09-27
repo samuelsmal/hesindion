@@ -63,11 +63,11 @@ situations:
     opponent: { onFoot: true, size: mittel }
     choose: { choice.order: niederreiten, action.gait: galopp, action.runUp: 4, check.kind: talent, check.talent: TAL_6, check.application: Kampfmanöver }
     expect:
-      offered: [{ choice: order, options: [niederreiten], from: reiterkampf.RK13, requires: [SA_43.BK1] }]
+      offered: [{ choice: order, options: [niederreiten], from: reiterkampf.RK13 }]
       events:
-        - { paid: { pool: actions, amount: 1 }, of: hero, from: reiterkampf.RK12 }                  # the old `costs`
+        - { paid: { pool: actions, amount: 1 }, from: reiterkampf.RK12 }                  # the old `costs`
         - { check: { talent: TAL_6, with: Kampfmanöver }, from: reiterkampf.RK12 }               # the old `checks_first`
-        - { check: { attack: Niederreiten, by: mount, at: 15, tp: 2W6+6 }, from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13] }   # the old `attack` and `on_hit.tp`
+        - { check: { attack: Niederreiten, by: mount, at: 15, tp: 2W6+6 }, from: reiterkampf.RK13, via: [svellttaler-kaltblut.SK3] }   # the old `attack` and `on_hit.tp`
       "check.modifier(talent: TAL_6)":
         total: 1
         lines:
@@ -75,7 +75,7 @@ situations:
         notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
       "opponent.pa": { legal: { allowed: false, because: reiterkampf.RK13 } }                   # the old `opponent_may_only: [aw]`
       texts:
-        - { mount: runs on at GS 12 to the end of the KR; turning it costs Boronmir 1 action, from: reiterkampf.RK13 }   # the old `after`
+        - { player: "Das Pferd rennt mit voller GS bis zum Ende der KR weiter; es wieder auf den Fußkämpfer zu wenden kostet 1 Aktion.", from: reiterkampf.RK13 }   # the old `after`
     sequence:
       - choose: { action.attack: hit }                                                  # the old `on_attack_success`: Kupperus's attack hit
         opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
@@ -84,10 +84,10 @@ situations:
             total: -3
             lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }]          # −⌈(25 − 20)/2⌉
           texts:
-            - { opponent: { check: Kraftakt, on_failure: STATE_10 }, from: maechtiger-schlag.MS1 }
+            - { opponent: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS1 }
       - rolls: { check.result: failure }                                                # the old `on_check_failure`
         expect:
-          texts: [{ order: not carried out, nothing worse, from: reiterkampf.RK12 }]
+          texts: [{ player: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht.", from: reiterkampf.RK12 }]
     appToday: >
       AT 15 and TP 2W6+6 — the AT by luck: the app reads the first attack parsed from the notes,
       Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag note says −2 (Int
@@ -151,6 +151,16 @@ situations:
         25), which this file and its `heroFile` still use. Moving the file to them changes
         18.1's AT and TP and MS2's Kraftakt −3 (KK 28: −⌈8/2⌉ = −4) — an expectation change
         only the owner can allow. The mismatches (a)–(d) above are unchanged.
+
+        Agent pass 2026-09-27, on the owner's agreement: (a) the Niederreiten event now reads
+        `from: reiterkampf.RK13, via: [svellttaler-kaltblut.SK3]`; (c) the three `texts` entries
+        are now the rules' own plain tells, as 18.3 and 18.4 already are (RK13's, MS1's,
+        RK12's); (d) `offered.requires` and the paid event's `of` are dropped, matching 18.3.
+        (b) is 18.3's, already resolved there.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
 
   - id: "18.2"
     name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
