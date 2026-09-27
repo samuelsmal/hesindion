@@ -48,7 +48,7 @@
     {
       "id": 6,
       "subject": "Task 6: The breakdown sheet and the hero sheet",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** `HeroDetailView` shows every base value from `SheetValues`, a tap opens `BreakdownSheet` with the lines, facts and owners, *Auslegung* marks and the not-applied list, and the \"(−BE)\" suffixes are gone.\n\n**Files:**\n- Create: `Hesindion/Views/BreakdownSheet.swift`\n- Modify: `Hesindion/Views/HeroDetailView.swift` (LE :443–461, AW/INI/GS/WS :542–550, techniques :851–860, weapons :970–971, shields :1014–1015)\n- Modify: `Hesindion/Theme/Strings.swift`\n- Test: `HesindionUITests/SheetBreakdownTests.swift`\n\n**Acceptance Criteria:**\n- [ ] LE max, Wundschwelle, INI, AW, GS, each technique's AT/PA, each weapon's and shield's AT/PA on the sheet read `SheetValues` (`result`, Belastung included); none reads `DerivedValues.ausweichen/initiative/wundschwelle`, `lebensenergie.max`, `CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `belastungPenalty`, `totalIniPenalty` or `totalGsPenalty`\n- [ ] Each value is a button (`accessibilityIdentifier` `sheet.value.<key>`, e.g. `sheet.value.leMax`) that opens `BreakdownSheet` at `.medium` detent\n- [ ] `BreakdownSheet` shows: the result; one row per line with value, rule name and clause id (`Kampfwerte · KW1`), `via` rule names; per line its facts as `<label> <value> · <owner>`; a mark `Auslegung <id>` per ruling, which expands to the ruling's `answer` text from the book; a folded `Nicht angewandt (n)` section with rule name and reason\n- [ ] When `SheetValues.of(hero)` is nil, each value shows `L(\"rulesEngine.unavailable\")`\n- [ ] UI test: tapping LE opens the sheet with at least one line, and the \"Nicht angewandt\" header exists; a screenshot is attached under the next free number in `docs/screenshots/`\n\n**Verify:** `make test-ui` → `** TEST SUCCEEDED **`\n\nFull steps with code: docs/plans/2026-09-27-sheet-cutover-plan.md (Task 6).\n\n```json:metadata\n{\"files\": [\"Hesindion/Views/BreakdownSheet.swift\", \"Hesindion/Views/HeroDetailView.swift\", \"Hesindion/Theme/Strings.swift\", \"HesindionUITests/SheetBreakdownTests.swift\", \"Packages/RulesEngine/Sources/RulesEngine/Model/Rule.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"every base value on HeroDetailView reads SheetValues; no stored derived value or BE suffix read\", \"each value is a button sheet.value.<key> opening BreakdownSheet at medium detent\", \"BreakdownSheet shows result, lines with rule name and clause, via, facts with owner, Auslegung marks with answer, folded Nicht angewandt list\", \"nil SheetValues shows rulesEngine.unavailable\", \"UI test opens LE breakdown and attaches a screenshot\"], \"modelTier\": \"standard\"}\n```",
       "blockedBy": [
         5
@@ -113,5 +113,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-27T18:38:33"
+  "lastUpdated": "2026-09-27T21:18:16"
 }
