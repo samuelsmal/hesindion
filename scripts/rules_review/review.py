@@ -472,9 +472,12 @@ def welcome_text(by, you, unrev, agent, sweep=None, missing=(), conflicts=0):
              f"{unrev} rule{'s' * (unrev != 1)} not reviewed, {agent} for the agent.\n\n")
     t.append("How a review goes\n", style="bold")
     for step in (
-        "Press n. It jumps to the next thing that needs you: an open ruling first, then a "
-        "conflict to decide, then a rule nobody has reviewed yet. If n would leave a rule with "
-        "rulings still open, it asks first.",
+        "Answering a ruling or deciding a conflict jumps you straight to the next one open in "
+        "the same rule. Once none are left there, it moves you to the next rule that needs you "
+        "and leaves the choice of what to open to you, instead of picking one of its items.",
+        "Press n for the same thing on demand: the next open ruling, then a conflict to decide, "
+        "then a rule nobody has reviewed yet. If n would leave a rule with rulings or conflicts "
+        "still open, it asks first.",
         "A conflict is a situation the engine does not meet: the card says why, from the rule "
         "text. Press enter: agree (the agent then changes what the reason names and marks it "
         "resolved), send it back to the agent with what is wrong, or mark it resolved.",
@@ -725,7 +728,9 @@ class Review(App):
         self.refresh_table(self.current.id if self.current else None)
 
     def action_next(self):
-        """The next thing that needs you: an open ruling first, then a rule to review."""
+        """The next thing that needs you: an open ruling first, then a conflict, then a rule to
+        review. Within a rule, this walks its own open rulings then its undecided conflicts one
+        at a time, so you never have to scroll down to a situation yourself."""
         pushed = False
         if self.current:
             card = self.focused_card()
@@ -741,37 +746,30 @@ class Review(App):
         ids = [r.id for r in todo]
         at = ids.index(self.current.id) if self.current and self.current.id in ids else -1
         card = self.focused_card()
-        # stay on this rule while it still has an open ruling after the focused one
-        if self.current and self.current.to_answer:
-            opens = self.current.to_answer
-            if card and card.kind == "ruling" and card.target in opens:
-                later = opens[opens.index(card.target) + 1:]
+        # step through this rule's own open rulings, then its undecided conflicts, one at a time
+        if self.current:
+            items = self.current.to_answer + self.current.conflicts_in("owner")
+            if items:
+                target = card.target if card and card.kind in ("ruling", "situation") else None
+                later = items[items.index(target) + 1:] if target in items else items
                 if later:
                     self._focus_card(lambda c: c.target is later[0])
                     return
-            elif not (card and card.kind == "ruling"):
-                self._focus_card(lambda c: c.target is opens[0])
-                return
-        # then on its conflicts to decide
-        if self.current and (conflicts := self.current.conflicts_in("owner")):
-            if card and card.kind == "situation" and card.target in conflicts:
-                later = conflicts[conflicts.index(card.target) + 1:]
-                if later:
-                    self._focus_card(lambda c: c.target is later[0])
-                    return
-            elif not self.current.to_answer:
-                self._focus_card(lambda c: c.target is conflicts[0])
-                return
         rule = todo[(at + 1) % len(todo)]
-        left = self.current.to_answer if self.current and rule is not self.current else []
+        left = (self.current.to_answer + self.current.conflicts_in("owner")) \
+               if self.current and rule is not self.current else []
         if not left:
             return self._jump(rule)
         text = Text()
-        text.append(f"{self.current.id} still has {len(left)} open ruling{'s' * (len(left) > 1)}:"
+        text.append(f"{self.current.id} still has {len(left)} open item{'s' * (len(left) > 1)}:"
                     "\n\n", style="bold")
-        for r in left:
-            text.append(f"  • {r.id}: ", style="bold")
-            text.append(one_line(r.data.get("question", "")) + "\n")
+        for x in left:
+            if isinstance(x, rf.Ruling):
+                text.append(f"  • ruling {x.id}: ", style="bold")
+                text.append(one_line(x.data.get("question", "")) + "\n")
+            else:
+                text.append(f"  • conflict {x.id}: ", style="bold")
+                text.append(one_line(x.name) + "\n")
         text.append(f"\nMove on to {rule.id} anyway? They stay open, and n comes back to them "
                     "later.\n\n")
         text.append("y moves on · n or escape stays and goes to the first of them", style="dim")
@@ -786,12 +784,36 @@ class Review(App):
         self.push_screen(Confirm(text), done)
 
     def _jump(self, rule):
-        if FILTERS[self.filter] not in ("needs you", "conflicts", "all") or rule not in self.visible():
-            self.filter, self.query_text = 0, ""
-            self.query_one("#search", Input).value = ""
+        self._ensure_visible(rule)
         self.refresh_table(rule.id)
         opens = rule.to_answer or rule.conflicts_in("owner")
         self._focus_after(lambda c: c.target is opens[0] if opens else c.kind == "clause")
+
+    def _ensure_visible(self, rule):
+        if FILTERS[self.filter] not in ("needs you", "conflicts", "all") or rule not in self.visible():
+            self.filter, self.query_text = 0, ""
+            self.query_one("#search", Input).value = ""
+
+    def _advance_from(self, rule, item):
+        """Where to land once `item` — a ruling or a conflict's situation — stops needing you:
+        the next open item in the same rule, focused directly, or, once the rule has none left,
+        the next rule in the queue, shown plainly so you read it and decide what to do rather
+        than being dropped onto one of its items. Returns (focus, land_on) for save()."""
+        items = rule.to_answer + rule.conflicts_in("owner")
+        later = items[items.index(item) + 1:] if item in items else []
+        if later:
+            nxt = later[0]
+            kind = "ruling" if isinstance(nxt, rf.Ruling) else "situation"
+            return (lambda c: c.kind == kind and c.target.id == nxt.id), None
+        todo = [r for r in self.rules if r.to_answer] + \
+               [r for r in self.rules if r.needs_you and not r.to_answer]
+        ids = [r.id for r in todo]
+        if rule.id in ids:
+            nxt_rule = todo[(ids.index(rule.id) + 1) % len(todo)]
+            if nxt_rule.id != rule.id:
+                self._ensure_visible(nxt_rule)
+                return None, nxt_rule.id
+        return None, None
 
     def action_back(self):
         """Back to where n came from, answered or not: to look again, or change an answer."""
@@ -854,10 +876,14 @@ class Review(App):
                 return
             if verdict == "backToAgent":
                 return self.send_back(s)
+            if verdict:
+                focus, land_on = self._advance_from(self.current, s)
+            else:                  # taking the verdict off reopens it here, nowhere to advance to
+                focus, land_on = (lambda c: c.kind == "situation" and c.target.id == s.id), None
             self.save(lambda: rf.set_conflict_review(Path("situations") / f"{s.file}.yaml", s.id,
                                                      verdict or None, self.by),
                       f"{s.id}: {verdict or 'verdict taken off'}",
-                      focus=lambda c: c.kind == "situation" and c.target.id == s.id)
+                      focus=focus, land_on=land_on)
         self.push_screen(VerdictChoice(s), done)
 
     def send_back(self, s):
@@ -869,10 +895,11 @@ class Review(App):
         def done(values):
             if values is None or not values[0].strip():
                 return
+            focus, land_on = self._advance_from(self.current, s)
             self.save(lambda: rf.set_conflict_review(Path("situations") / f"{s.file}.yaml", s.id,
                                                      "backToAgent", self.by, values[0]),
                       f"{s.id}: sent back to the agent — `make rules-agent` starts the pass",
-                      focus=lambda c: c.kind == "situation" and c.target.id == s.id)
+                      focus=focus, land_on=land_on)
         self.push_screen(Ask(f"Send conflict {s.file} {s.id} back to the agent", body,
                              [("what is wrong / what to do", one_line(old))]), done)
 
@@ -884,10 +911,14 @@ class Review(App):
             if kind == "flag":
                 self.flag(self.current, r)
                 return
+            if value.strip():
+                focus, land_on = self._advance_from(self.current, r)
+            else:                  # an empty answer reopens the ruling, nowhere to advance to
+                focus, land_on = (lambda c: c.kind == "ruling" and c.target.id == r.id), None
             self.save(lambda: rf.set_answer(r.path, r.id, value),
                       f"{r.id}: answer saved — it now waits for the agent pass"
                       if value.strip() else f"{r.id}: reopened",
-                      focus=lambda c: c.kind == "ruling" and c.target.id == r.id)
+                      focus=focus, land_on=land_on)
 
         if not r.data.get("options"):
             return self.answer_in_words(r, done)
@@ -967,10 +998,15 @@ class Review(App):
                 self.notify(f"No clause or ruling {', '.join(unknown)} in {rule.id}",
                             severity="error")
                 return
+            if isinstance(item, rf.Ruling):
+                focus, land_on = self._advance_from(rule, item)
+            else:
+                focus = (lambda c: c.kind == kind and c.target.id == item.id) \
+                    if item is not None else None
+                land_on = None
             self.save(lambda: rf.set_agent_pass(rule.path, self.by, note, ids),
                       f"{rule.id}: sent back to the agent — `make rules-agent` starts the pass",
-                      focus=(lambda c: c.kind == kind and c.target.id == item.id)
-                      if item is not None else None)
+                      focus=focus, land_on=land_on)
 
         self.push_screen(Ask(f"Send {rule.id} {rule.name} back to the agent", body,
                              [("what is wrong / what to do", one_line(ap.get("note", ""))),
@@ -995,17 +1031,17 @@ class Review(App):
 
     # writing
 
-    def save(self, edit, message, focus=None):
+    def save(self, edit, message, focus=None, land_on=None):
         try:
             edit()
         except rf.EditRefused as e:
             self.notify(str(e), severity="error", timeout=10)
             return
-        self.after_write(message, focus)
+        self.after_write(message, focus, land_on)
 
-    def after_write(self, message, focus=None):
+    def after_write(self, message, focus=None, land_on=None):
         err = regenerate_index()
-        self.reload()
+        self.reload(keep=land_on)
         if focus:
             self._focus_after(focus)
         if err:
