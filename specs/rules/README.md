@@ -289,6 +289,70 @@ in the file moves, and an edit that would change more than that is refused — a
 regenerated after it, so `git diff` is the record of the session. The edits are in `rulefiles.py`, tested by
 `make test-rules-review` (which also runs `rulings.py --check`).
 
+## Pages and coverage
+
+Why it works this way: [ADR-0017](../../docs/adr/0017-rule-website-page-tracking.md).
+
+[`specs/rules/pages.yaml`](pages.yaml) is every page of <https://dsa.ulisses-regelwiki.de/>,
+crawled from the site's own top menu: its URL (relative to the site root, query string and all,
+spelled one way — the site serves one page under `ö`, `%C3%B6` and `%c3%b6`, under `(` and `%28`, and a
+query's `%20` is its `+`, so the key escapes non-ASCII as UTF-8, leaves `()!*'` bare and writes a
+query's space as `+`; the same spelling is applied to a rule file's `source.url` before it is looked up,
+and `pages.yaml` itself is re-keyed that way when it is read), title, its place in the site's trail (`in:` — the anchor texts by which the
+crawl first reached it, breadth-first), its `kind`, and for a rule page a `hash` of its normalised
+text with the date that hash was first seen (`fetched`). `kind` is `index` for a page of links —
+one with the site's sub-menu anchors and no rule text of its own (half or more of its `#main` text
+is link text), one of its selection pages (`zauberauswahl.html` and its kind), or one whose content
+is mostly links — `broken` for a page whose fetched HTML had no text
+(rendered client-side, or kept outside `#main`) or that is the site's search page (its answer for
+a URL it has no page at; the name it searched for is in the query) — `detail` says which — and
+`rule` otherwise — a page with sub-menu anchors and rule text of its own (`GR_Zustand.html`,
+`Kampfregeln.html`) included; the crawl follows its menu all the same. The crawl
+follows the sub-menu anchors and every same-site page link inside `#main`, on every page it fetches,
+rule pages included. `gone: <date>` marks a page an earlier sync found and this one did not (the
+site answered 404, or nothing links to it any more); it keeps its last `kind` and `hash`. `make rules-sync` writes it —
+needs network, about one page a second; the default resumes a run that stopped partway through the
+same day, `MAX_AGE=0` refetches everything. **The only field a person edits by hand is `skip`**: on
+one page, or as a reason keyed by an index-trail prefix at the top of the file — a sync keeps every
+`skip` it finds. The file skips one: `Wege der Vereinigungen - ab 18 Jahre`, the whole category
+(ignored for now, not part of the app). A trail prefix, not the `WdV` URL prefix: the category's
+pages mostly have no `WdV` in their URL, and the two `WdV` pages outside its trail are an index and
+a broken page, which no status counts anyway.
+
+A rule file's `source.url` names the page it was drafted from, and **that URL must be a key
+`pages.yaml` knows**. `make rules-coverage` (offline: reads `pages.yaml` and the rule files only,
+never the network) lists one that isn't as "rules with an unknown page", with up to five near-title
+candidates from the crawl beside it — never a resolution to trust without reading the page. A URL
+`pages.yaml` knows but that is no current rule page — an `index`, a `broken` or a `gone` page — is
+listed under "rules on a non-rule page", with the rule id, the page key and its kind.
+
+`rules-coverage`'s per-category table gives every `kind: rule` page one status, first match wins,
+in this order:
+
+1. `gone` — the crawl no longer finds the page.
+2. `skipped` — its own `skip`, or a trail prefix's.
+3. `new` — no rule file names it yet.
+4. `changed` — a rule names it as its `source.url` with a hash that no longer matches the page's
+   current one.
+5. `unhashed` — a rule names it as its `source.url` and has never been given a hash.
+6. `reviewed` — every rule naming it has been reviewed.
+7. `drafted` — named and hashed, but not every rule naming it is reviewed.
+
+A page a rule names only in `source.also` carries no hash of its own (`source.hash` is the
+`source.url` page's), so it is `reviewed` or `drafted` by the rules naming it, never `changed` or
+`unhashed`. `kind: index` and `kind: broken` pages are counted on their own line, never inside a
+status. `LIST=<status>` (`make rules-coverage LIST=new`) prints one status's page keys and titles;
+`CHECK=1` exits 1 on a `changed` page, a rule with an unknown page, or a rule on a non-rule page,
+for a script or a hook.
+
+**The reprocess loop**, when a page's rule text moved out from under a drafted rule: `make
+rules-sync` refetches and re-hashes the site; `make rules-coverage` now shows that rule's page as
+`changed`, and names the rule ids to reprocess; reprocess the rule file against the new page text;
+`make rules-sync ADOPT=<id>` (or a comma-separated list) writes the fresh hash and today's date
+into that rule's `source.hash`/`source.checked`, which is what moves it out of `changed`. `ADOPT=1`
+instead adopts every rule whose hash is still null — the one-time baseline a freshly drafted rule
+needs before it can ever show `changed` at all.
+
 ## What waits for an agent
 
 `make rules-queue` prints it; `make rules-agent` starts Claude Code on it (interactive, so you can

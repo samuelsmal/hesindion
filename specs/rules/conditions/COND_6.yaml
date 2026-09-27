@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Schmerz.html
   book: Regelwerk
   page: 34
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:7d026d682357618f208834341df9cd06100986006b22ca51a12c90a30fde032b
 reviewed: null
 
 # Where a Stufe comes from: the LP thresholds (SZ3 derives `level(rule: COND_6)` from the current

@@ -10,8 +10,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/rabenschnabel.html
   book: Regelwerk
   page: 367
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:0bf962a5ca376351fbb48a39ea19ef08ac403dd15ff56e745913842e91863304
 reviewed: null
 # The page also lists Aventurische Rüstkammer p. 83 (Optolith's source for the Waffenvorteil and
 # -nachteil, US25208), Aventurisches Götterwirken p. 233, Straßenstaub & Halsabschneider p. 28 and

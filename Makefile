@@ -25,7 +25,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-engine rules-engine-fixture require-rules-db companions test-companions
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db companions test-companions
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -213,6 +213,26 @@ rules-check:
 
 rules-json:
 	$(RULEC) build --out ../build/rules
+
+# Rule-website page tracking (docs/adr/0017-rule-website-page-tracking.md).
+RULES_SYNC = cd scripts && uv run --with requests --with beautifulsoup4 --with pyyaml python
+
+test-rules-sync:
+	$(RULES_SYNC) -m unittest discover -s rules_sync -t . -p 'test_*.py' -v
+
+# Crawl every page of the rule website into specs/rules/pages.yaml (about one page a second; a
+# first run takes long, a re-run the same day resumes from .cache/). MAX_AGE=0 refetches all.
+# ADOPT=1 writes the page hash into every rule file that has none; ADOPT=SA_40,ADV_4 into those;
+# ADOPT=0 (or unset) adopts nothing.
+rules-sync:
+	$(RULES_SYNC) -m rules_sync sync $(if $(MAX_AGE),--max-age-hours $(MAX_AGE),) \
+		$(if $(filter 1,$(ADOPT)),--adopt,$(if $(filter-out 0,$(ADOPT)),--adopt-ids $(ADOPT),))
+
+# How many rule-website pages are processed, per category; which rules to reprocess. Offline.
+# LIST=new (or skipped, drafted, …) lists one status's pages; CHECK=1 fails on changed pages,
+# rules whose page is unknown, and rules on a non-rule page (index, broken or gone).
+rules-coverage:
+	$(RULES_SYNC) -m rules_sync coverage $(if $(LIST),--list $(LIST),) $(if $(CHECK),--check,)
 
 # The new rules engine (Packages/RulesEngine): pure Swift, runs on macOS without a simulator.
 # The situations harness (SituationsHarnessTests) runs the situations files RULES_FILES names:

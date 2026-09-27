@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Furcht.html
   book: Regelwerk (3. Auflage)
   page: 33
-  checked: 2026-09-25
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:b39ba5542cc0a1d7af7f4791e8bfda7ca6fcf9c2f7ced4db72fa3c637f9d6ee5
 reviewed: null
 
 clauses:

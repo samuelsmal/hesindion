@@ -23,8 +23,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Nahkampf.html
   book: Regelwerk (4. überarb. Auflage)
   page: 229
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:b26ff1bca0a84ec762f7f6561bde350636ada7ddf39055fd773022408a7f4f33
 reviewed: null
 
 clauses:

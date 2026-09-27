@@ -12,8 +12,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Vorsto%C3%9F.html
   book: Regelwerk
   page: 250
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:8aaec7188a51e2b11ff11505e5065a8c6a3541e5a6d6587248ae99133ad00d9c
 reviewed: null
 
 clauses:

@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/allgemeine_magische_sonderfertigkeit.html?sonderfertigkeit=Verbotene+Pforten
   book: Regelwerk
   page: 285
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:cf0044aa1533109f1bd490f14abe71969460f5af23f4c0b6347d848a32cbbee7
 reviewed: null
 # The page also cites Kodex der Magie p. 322. Machtvolle Verbotene Pforten (SA_302, Magisch
 # erweitert) builds on it and is not drafted.

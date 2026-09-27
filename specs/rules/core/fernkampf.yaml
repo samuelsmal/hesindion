@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Fernkampf.html
   book: Regelwerk
   page: "241 ff."      # as the page cites it: "Regelwerk (3. überarb. Aufl.), Seite 241ff"
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:d94b7ad85e55f3ca0c9e7977ed398eb66b9d86bcbc74bdd204694d033038a1e1
 reviewed: null
 # FORMAT: one rule assembled from several pages (as trefferzonen): the Deckung sentences (FK8)
 # are on the subpage "Größenkategorie im Fernkampf" (Kodex des Schwertes p. 80), not on this

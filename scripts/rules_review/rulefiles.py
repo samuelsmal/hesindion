@@ -446,6 +446,49 @@ def set_reviewed(path, by, date=None):
                    {"by": by, "date": date})
 
 
+def set_source_hash(path, digest, date=None):
+    """Record the hash of the page the rule was checked against, and the day it was."""
+    path = ROOT / path
+    lines = _read(path)
+    rng = key_range(lines, "source")
+    if rng is None:
+        raise EditRefused("no source block")
+    start, end = rng
+    if lines[start].split("#", 1)[0].strip() != "source:":
+        raise EditRefused("source is a flow mapping; edit it by hand")
+    child = indent(lines[start + 1])
+    date = date or datetime.date.today()
+    new_lines = list(lines)
+
+    # `block_end` can include trailing blank or comment lines after the mapping's own lines;
+    # back off those so an inserted `hash:` lands inside the block, not after it.
+    while end > start + 1 and (not new_lines[end - 1].strip()
+                                or new_lines[end - 1].lstrip().startswith("#")):
+        end -= 1
+
+    def put(key, value):
+        nonlocal end
+        at = next((i for i in range(start + 1, end)
+                   if indent(new_lines[i]) == child and new_lines[i].strip().startswith(f"{key}:")), None)
+        text = " " * child + f"{key}: {value}"
+        if at is None:
+            new_lines.insert(end, text)
+            end += 1
+            return
+        if m := re.search(r"\s+#.*$", new_lines[at]):
+            text += m.group(0)
+        new_lines[at] = text
+
+    put("checked", date.isoformat())
+    put("hash", digest)
+
+    def expect(data):
+        data["source"]["checked"] = date
+        data["source"]["hash"] = digest
+
+    _write_checked(path, lines, new_lines, expect)
+
+
 def set_agent_pass(path, by, note, about=(), date=None):
     """Flag a rule for another agent pass, with what the agent should look at: `about` narrows it
     to clause and ruling ids."""

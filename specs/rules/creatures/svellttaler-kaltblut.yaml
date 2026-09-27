@@ -13,8 +13,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Best_Svellttaler_Kaltblut.html
   book: Aventurische Tiergefährten
   page: 45
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:858ea02015802d63ecc71577e03bf6442bc53ac69e3317dc98a6eb79865b2195
 reviewed: null
 
 # Boronmir's Kupperus (hero file `pets.PET_1`, type "Svellttaler Kaltblut"). The export's numbers

@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_VerbessertesUnterlaufen.html
   book: Aventurisches Kompendium
   page: 156
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:a7d611c7f87321944e4d02b9221b93423d48bba2e45e200b077f751f634093fb
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:

@@ -11,8 +11,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Heldenerschaffung/schritt-12-basiswerte-berechnen.html
   book: Regelwerk (4. Auflage)
   page: 56
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:9caef4544c987076afaaae2f1cd80294c1828e0bd9a1cfa0b8b7d47486aa655c
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:

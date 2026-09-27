@@ -23,3 +23,4 @@ DerivedData/
 
 # Python bytecode (scripts/)
 __pycache__/
+.cache/

@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/St_Bewusstlos.html
   book: Regelwerk
   page: 34
-  checked: 2026-09-25
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:0a14d4898ef4f49d376035b66d750bbd1610d6638777db8acc57b7dac6108787
 reviewed: null
 
 clauses:

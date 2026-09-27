@@ -6,8 +6,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Begabung
   book: Regelwerk
   page: 163
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:2caf04937c85d8cb6acf1f21ab7ef91e506c8fa909eb4fcef96720d22859c8cb
 reviewed: null
 # Probe example 22. Optolith: `max: 3`, selectOptionCategories SKILLS, SPELLS, LITURGICAL_CHANTS;
 # the hero file names the Fertigkeit by `sid` (e.g. "TAL_10"), one instance per Fertigkeit.

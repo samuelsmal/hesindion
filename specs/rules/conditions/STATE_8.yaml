@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Handlungsunf%C3%A4hig.html
   book: Regelwerk
   page: 36
-  checked: 2026-09-25
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:9f352e69225fd0c99d3177672b629405951e8f559c4c9069a97ee1bdc464699e
 reviewed: null
 
 clauses:

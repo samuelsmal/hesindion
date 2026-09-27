@@ -8,8 +8,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/KSF_Beih%C3%A4ndigerKampf.html   # the wiki's own spelling
   book: Regelwerk (4. Auflage)
   page: 246–247
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:f17d3f9b3c06106a0636d9cdca00556cc9671c75b093df862b7392850e502737
 reviewed: null
 
 clauses:

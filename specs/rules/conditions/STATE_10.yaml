@@ -6,8 +6,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sta_Liegend.html
   book: Regelwerk
   page: 36
-  checked: 2026-09-23
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:686e50f6655035a1f9aa1401c27ef5f9642bd8d390c3a9fdec3d71442eb3759a
 reviewed: null
 
 # Who can be liegend: the hero (stated, or answered "ja" when Handlungsunfähig starts — ruling

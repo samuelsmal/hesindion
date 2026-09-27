@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<body id="top">
+<div id="wrapper">
+  <header id="header"><nav>Startseite &gt; Platzhalter-Regel (neues Layout)</nav></header>
+  <div id="main">
+    <div id="article-501" class="mod_article container">
+      <div class="ce_text block">
+        <p>Platzhalter-Regeltext für den Dynamik-Test. Er bleibt über jeden Aufruf gleich.</p>
+      </div>
+      <!-- Same widget, accidentally rendered *inside* #main this time --
+           the explicit selector strip must catch it regardless of where a
+           page puts it, not just rely on #main scoping. -->
+      <div class="t4c_quickcontact_form">
+        <form class="ce_form block">
+          <div class="widget widget-captcha mandatory">
+            <span id="captcha_text_502" class="captcha_text">Was ist die Summe aus 9 und 1?</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <footer id="footer">Platzhalter Verlag GmbH, Revision 4, Impressum</footer>
+</div>
+</body>
+</html>

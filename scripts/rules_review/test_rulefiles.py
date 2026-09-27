@@ -119,6 +119,55 @@ class EditTests(unittest.TestCase):
         self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
 
 
+BLOCK = """\
+id: SA_2
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_X.html
+  checked: 2026-09-24
+  hash: null               # filled in by the drift check
+reviewed: null
+clauses: []
+"""
+
+
+class SourceHashTests(unittest.TestCase):
+    # Same pattern as EditTests: an absolute temp path (`ROOT / abs` is `abs`).
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "SA_2.yaml"
+        self.path.write_text(BLOCK, encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def test_writes_hash_and_checked_keeps_the_comment(self):
+        rf.set_source_hash(self.path, "sha256:" + "a" * 64, DAY)
+        new = self.path.read_text(encoding="utf-8").splitlines()
+        changed = [l for l in difflib.ndiff(BLOCK.splitlines(), new) if l[:2] in ("+ ", "- ")]
+        # ndiff pairs each removal with its replacement rather than grouping all removals
+        # first, so compare as a set: the point is that only these lines change.
+        self.assertEqual(set(changed), {
+            "-   checked: 2026-09-24",
+            "-   hash: null               # filled in by the drift check",
+            "+   checked: 2026-09-23",
+            "+   hash: sha256:" + "a" * 64 + "               # filled in by the drift check",
+        })
+
+    def test_a_missing_hash_line_is_added_to_the_block(self):
+        self.path.write_text(BLOCK.replace("  hash: null               # filled in by the drift check\n", ""),
+                             encoding="utf-8")
+        rf.set_source_hash(self.path, "sha256:" + "b" * 64, DAY)
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(data["source"]["hash"], "sha256:" + "b" * 64)
+        self.assertEqual(data["reviewed"], None)
+
+    def test_flow_source_is_refused(self):
+        self.path.write_text(RULE, encoding="utf-8")      # RULE's source is a flow mapping
+        with self.assertRaises(rf.EditRefused):
+            rf.set_source_hash(self.path, "sha256:" + "c" * 64, DAY)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+
 class RulecCheckTests(unittest.TestCase):
     """The edits the tool makes are one-hunk diffs, and the file still compiles under rulec's own
     checker (scripts/rulec) after each of them."""

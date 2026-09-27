@@ -9,8 +9,8 @@ source:
   book: Regelwerk     # inferred: the page lists no Publikation(en); the text is the Regelwerk's
                       # "Kampfsonderfertigkeiten" chapter (~p. 246)
   page: null          # the wiki page gives none
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:72b8e8e6d9d30f883ba0088203999b6aaad0c9e1abe9d712d63b616ed2fb7110
 reviewed: null
 
 clauses:

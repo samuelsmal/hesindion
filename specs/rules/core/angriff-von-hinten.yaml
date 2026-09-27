@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-AngriffVonHinten.html
   book: Regelwerk
   page: 238
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:35fd637077845c74b4774ae44e29cc2e2e772880146d9ee10cd45823c2526816
 reviewed: null
 # Also Kodex des Schwertes p. 75. Whether an attack comes from behind is the GM's call, one
 # answer per attack (the app's gm.fact fromBehind, span attack). Melee attacks only (ruling

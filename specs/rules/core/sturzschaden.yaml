@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Sturzschaden.html
   book: Regelwerk (3. überarb. Aufl.)
   page: 340
-  checked: 2026-09-25
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:c278b7a6cacbc75e4abea60353d0a02fe720efd8520a079f3eb4dfe19ff35919
 reviewed: null
 
 clauses:

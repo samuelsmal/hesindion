@@ -21,8 +21,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/grundregeln/fertigkeitsproben.html
   book: Kodex des Schwertes    # as the wiki page names it; the rules are the Regelwerk's too
   page: 15
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:6fbc745b996cfc2c7ab3b9cd06a44f19f7b1f7fbe970608fe6d29bbbf1e8cd26
 reviewed: null
 
 clauses:

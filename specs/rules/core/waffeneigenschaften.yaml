@@ -9,8 +9,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Waffeneigenschaften.html
   book: Aventurische Rüstkammer
   page: 56
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-26
+  hash: sha256:69e5744490065771caf9d2174414d1d4cbc2cf145c5eed1bb34b4b6a3bece884
 reviewed: null
 # FORMAT: the gated clauses live in other files (every weapon's Waffenvorteil/-nachteil). Each
 # names the ruleset in its own `when`; this file only defines it. The alternative, a file-level

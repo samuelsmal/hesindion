@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/Spezielle_Fernkampfregeln.html
   book: Regelwerk
   page: "245 f."
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:0f4a730c4309ac1790e7703a62cce7f237f8baf61628e9b0d953c5585fef253e
 reviewed: null
 # The subpage Spezielle_Fernkampfregeln/ladezeiten.html returned an empty article; the parent
 # page carries the text. The Ladezeit is weapon data: Optolith's `reloadTime` (Kurzbogen 1,

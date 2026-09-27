@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/GR_Kampf-BeengteUmgebung.html
   book: Regelwerk
   page: 238
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:67fb521d7233c55dbc4d30eba0f742731e483f1c443e5c432e1b7d22cc77424d
 reviewed: null
 # Also Kodex des Schwertes p. 74. The same table is on the status Eingeengt (STATE_6, Regelwerk
 # p. 35f), which the app uses as the switch. Optolith's STATE_6 text adds "Talentanwendungen
