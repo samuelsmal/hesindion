@@ -7,8 +7,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Hohe%20Lebenskraft%20I-VII
   book: Regelwerk
   page: 166
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:8351161dcba6be955d009c67f4bc6edef8d12c071f3d24ee761a640a02c1884d
 reviewed: { by: "@samuelsmal", date: 2026-09-24 }
 
 clauses:

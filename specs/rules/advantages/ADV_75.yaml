@@ -6,8 +6,8 @@ source:
   url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Schnell%20wieder%20auf%20den%20Beinen
   book: Kneipen & Tavernen (Meisterschirmbegleitheft)
   page: 13
-  checked: 2026-09-24
-  hash: null
+  checked: 2026-09-27
+  hash: sha256:ab0df51486462a627eb6bd78cd31a43f3fb0f120d1b9676d4bddce9fae56109f
 reviewed: null
 
 # Despite the name, this advantage has nothing to do with standing up from Liegend (STATE_10.L4):
