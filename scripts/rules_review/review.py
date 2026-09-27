@@ -24,6 +24,8 @@ import sys
 import webbrowser
 from pathlib import Path
 
+import yaml
+
 import rulefiles as rf
 
 from rich.console import Group
@@ -81,6 +83,11 @@ def editor_command(path, line):
 
 def one_line(text):
     return " ".join(str(text).split())
+
+
+def _yaml_block(value):
+    return yaml.safe_dump(value, allow_unicode=True, sort_keys=False,
+                          default_flow_style=False).rstrip()
 
 
 def status_cell(rule):
@@ -247,7 +254,13 @@ def situation_card(s):
     if state == "owner":
         t.append("\nenter to give your verdict · a to send it back to the agent · e to edit",
                  style="yellow")
-    return Card(t, kind="situation", target=s, path=Path("situations") / f"{s.file}.yaml",
+    parts = [t]
+    for label, value in (("hero", s.hero), ("choose", s.choose), ("sequence", s.sequence)):
+        if value:
+            parts.append(Text(f"{label}:", style="bold dim"))
+            parts.append(Syntax(_yaml_block(value), "yaml", theme="ansi_dark",
+                                background_color="default", word_wrap=True))
+    return Card(Group(*parts), kind="situation", target=s, path=Path("situations") / f"{s.file}.yaml",
                 line=s.line)
 
 

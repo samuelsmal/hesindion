@@ -73,6 +73,9 @@ class Situation:
     appToday: str | None
     refs: set
     conflict: dict | None = None   # the engine does not meet it (R60): category, reason, review
+    hero: dict | None = None       # this situation's hero block (attributes, values, …)
+    choose: dict | None = None     # what the player picks: check, choices
+    sequence: list | None = None   # steps after the first roll, if any
 
     @property
     def diverges(self):
@@ -251,7 +254,8 @@ def _load_situations():
             n = item_line(lines, str(s["id"]), (0, len(lines)))
             out.append(Situation(file=path.stem, id=str(s["id"]), name=s.get("name", ""),
                                  line=n + 1, appToday=s.get("appToday"), refs=_refs(s),
-                                 conflict=s.get("conflict")))
+                                 conflict=s.get("conflict"), hero=s.get("hero"),
+                                 choose=s.get("choose"), sequence=s.get("sequence")))
     return out
 
 
