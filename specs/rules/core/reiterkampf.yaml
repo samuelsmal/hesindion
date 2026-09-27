@@ -10,7 +10,7 @@ source:
   page: 239f.
   checked: 2026-09-26
   hash: sha256:6738b2923e6ca81762c9f04efc705c6e9219050640cb6a9c379641c871f052cd
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # Every clause below applies only while the hero is mounted: the old header
 # `applies_when: { hero.mounted: true }` is `hero.mounted: true` in each effect's `when` (a core
@@ -440,7 +440,7 @@ rulings:
       the four sides are one fact with four values, and a picker asks it once and cannot be set
       contradictorily; defaulting to vorne keeps the common case one tap, and the rule's effect
       becomes a named line instead of a reminder the player must apply in their head
-    answer: null
+    answer: a
 
   - id: rk7-reiten
     status: decided

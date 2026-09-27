@@ -295,6 +295,10 @@ situations:
         same effects. An effect has one `because`; SW1's tells carry the alcohol one
         (15.19), and the hero without Betäubung or Berauscht fails the same `when`
         (`hero.has: COND_2 | COND_9`).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "15.17"
     name: Betäubung II after a night of Premer Feuer, with Schnell wieder auf den Beinen

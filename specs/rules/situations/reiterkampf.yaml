@@ -74,6 +74,10 @@ situations:
         its instance (only `hero.mounted`; the header's "Kriegspferd" is the mount's kind),
         and a slot without a stated instance cannot be changed: the engine asks for
         `loadout.mount.instance` (ItemStateTests, Task 28). The offer and AW 0 match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "5.6"
     name: Golgarite with a Rabenschnabel, mounted against a fighter on foot
@@ -105,6 +109,10 @@ situations:
         −1 (its row, ITEMTPL_19.RS0) is at-pa-modifikatoren.M1's line after the base, so the
         totals are 2 and −1. The file names no weapon values; nothing states that 8 is the
         Rabenschnabel's parry with its Mod folded in.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "5.7"
     name: Golgarite with a Schwert, mounted against a fighter on foot

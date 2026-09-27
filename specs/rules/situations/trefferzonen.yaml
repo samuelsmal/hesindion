@@ -73,6 +73,10 @@ situations:
         (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.5"
     name: Head, Gezielter Angriff, the opponent überrascht
@@ -98,6 +102,10 @@ situations:
         (STATE_13.UE1's new `require … enables` lets the opponent's status reach the hero's
         attack, so UE1's tell `noDefence` shows), and the harness names a replaced line that
         a multiply then scaled with the value it had before either (`was: −4`, TZ.4).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "TZ.6"
     name: Arms, no SF, the opponent überrascht — no halving, no order question

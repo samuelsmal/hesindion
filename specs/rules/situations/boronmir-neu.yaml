@@ -96,6 +96,10 @@ situations:
         "+3"), and ruling R66 reads a base keyed by the item in hand as that base, with the
         weapon's lines on top: 11 − 1 + 3 − 1 (Belastung) = 12, total +1. The same fold as
         the listed 14.17 and 19.2.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "19.2"
     name: In Formation on foot, the formation takes +2 VW — weapon parry, shield parry, dodge
@@ -129,6 +133,10 @@ situations:
         situations/boronmir-neu.yaml 19.2: the same as 14.17 for Formation's +2 VW: `pa`
         result 12 and `pa(with: shield)` result 14 with totals 1 come from folded bases 11 /
         13; the rules give SCH1's +3 and SCH3's +6 as lines of their own.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "19.3"
     name: A companion without the SF, standing in Boronmir's formation
@@ -176,6 +184,10 @@ situations:
         of the choice while mounted applies nothing, so the chosen formation's +2 stands),
         as does its `notOffered formation because SA_862.F1`; 19.1's offer of the formation
         (F1's offer) rests on it too.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "19.5"
     name: A companion holds Plänkler-Formation, Boronmir holds Formation — one line, not two
@@ -274,6 +286,10 @@ situations:
         origin and the `damage` event, `check.modifier(talent: TAL_8)` is −2 against the
         expected −1 `via: [ADV_54.E1]`: E1's +1 rests on the open ruling
         ADV_54.eisern-scope, so it applies nothing and the Wundschwelle is 8 (⌊17 / 8⌋ = 2).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "19.9"
     name: Trefferzonen not played — 12 SP
@@ -304,6 +320,10 @@ situations:
         Vorteil um 1."); (c) the text `{ player: "wirkt nur mit Fokusregel Trefferzonen",
         ruling: ADV_54.eisern-scope }`: no clause tells this; it is the answer the open
         ruling would give, and the text shown for that ruling is E1's own.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   # --- Schlechte Eigenschaft: Autoritätsglaube (DISADV_37, sid 2) -------------------------------
 

@@ -10,7 +10,7 @@ source:
   page: 126
   checked: 2026-09-26
   hash: sha256:0ee595443ec5ddd2d8f1608a0d529b94e1afbdf853bb88fe5d06ccb538b7cc67
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 # Pages 126–127; the wiki also lists Kodex des Schwertes pp. 295–296.
 #
 # Plänkler-Formation (SA_884) made larger: five fighters instead of three, in front and behind as
@@ -102,7 +102,7 @@ rulings:
     whyRecommended: >
       the spacing is the same as Plänkler-Formation's, and deciding the two the same way keeps one
       rule for "formations stand on foot"; the riders' formation is a separate SF
-    answer: null
+    answer: a
 
   - id: formation-and-plaenkler
     status: open
@@ -124,4 +124,7 @@ rulings:
       both SFs describe one line or block of fighters around one holder; a fighter standing in
       two at once is not something either page pictures, and stacking would make Plänkler-Formation
       a free +1 on top of the larger one
-    answer: null
+    answer: >
+      It's even more complicated than that, but they stack, and they can come from different
+      heros. Thus it should also be possible to enter that other heros can give the bonus
+      because they have a formation. Note that this can change throughout the fight.

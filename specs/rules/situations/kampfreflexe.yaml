@@ -95,3 +95,7 @@ situations:
         not apply; no source states that the hero wears none (R61). reiterkampf 5.17 and
         kupperus-und-waffen 18.15, which state the Plattenrüstung, get the line. `iniBase`
         (RK1 12 + KR1 2) matches.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27

@@ -8,7 +8,7 @@ source:
   page: 132
   checked: 2026-09-27
   hash: sha256:3ef7f85fea8089db4abf95c734d6e37b56c79d92f8e67e033014f7872115452a
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 
 # The Wundschwelle is defined in the Trefferzonen Fokusregel (trefferzonen.TZ8: "Die
 # Wundschwelle entspricht dem halben KO-Wert", rounded up per ADR-0006 and the page's own
@@ -60,4 +60,4 @@ rulings:
       Wundschwelle traits behave alike; a player who paid 5 AP is told why nothing happens rather
       than left to wonder; and it keeps the comparison row the app already has, which does no
       harm with the Fokusregel off
-    answer: null
+    answer: a

@@ -132,6 +132,14 @@ situations:
         (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
         rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
         pool, `actions`, is the hero's; no event field says what it replaces).
+      review:
+        verdict: backToAgent
+        by: "@samuelsmal"
+        date: 2026-09-27
+        note: >
+          Note that the values of the companion were originally not part of the structured
+          export of Optolith. We have now changed that and provided a tool to add the values
+          outselves to the json. Now the values should be importable.
 
   - id: "18.2"
     name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
@@ -151,6 +159,10 @@ situations:
         Vollblut's AT 15 and TP 2W6+4. There is no profile file for that horse, so nothing
         states its attack lines (`mount.hasAttack`) or values; RK13's offer is unknown and
         the numbers cannot come from the rules.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "18.3"
     name: Kupperus kicks (Tritt) while Boronmir rides
@@ -220,6 +232,10 @@ situations:
         (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
         rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
         pool, `actions`, is the hero's; no event field says what it replaces).
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "18.4"
     name: The foot soldier parries Kupperus's Tritt with a shield, successfully

@@ -14,7 +14,7 @@ source:
   page: 152
   checked: 2026-09-26
   hash: sha256:4c8cf2820179ae92289bdb0193e811705e574efd28cdeab5e5be14b5d83be8c3
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
 clauses:
   - id: GA1
     text: >

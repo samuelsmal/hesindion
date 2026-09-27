@@ -223,6 +223,10 @@ situations:
         these were counted pending on reiterkampf.mounted-attack-side (RK5's first effect,
         live while `hero.mounted` was unstated); 17.11 now states it (R61), and the ruling
         explains none of these numbers.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.11"
     name: On foot, Langschwert and Großschild, attacked from behind
@@ -508,6 +512,10 @@ situations:
         that no `tell` is shown, but every query shows the `*` tell that holds:
         kampfsonderfertigkeiten.KS2's "passiv — wirkt immer" (regeneration.R7's tell is
         gated on the Regenerationsphase since fix round 1). The lines and total match.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "17.23"
     name: On foot, a mounted knight attacks Boronmir (Langschwert and Großschild)

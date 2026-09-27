@@ -228,6 +228,10 @@ situations:
         (3 AsP and 5 LeP, from VP1), the `after` (AsP 0, LE 24, no Zustand) and TZ8's
         `notApplied` match. In a throwaway run with vp-sequence and cost-off-table taken as
         decided, (a) and (c) match and only (b) remains.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
 
   - id: "20.8"
     name: The same, Selbstbeherrschung fails
@@ -268,3 +272,7 @@ situations:
         vp-sequence is open. In the throwaway run with the rulings decided, (b) and (c)
         match (the failed Selbstbeherrschung forbids the cast from VP2, resting on
         vp-sequence; VP3 pays 3 AsP and 1 LeP) and only (a) remains.
+      review:
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-27
