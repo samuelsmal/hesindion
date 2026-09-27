@@ -43,6 +43,13 @@
 			);
 			target = BA48A1892F485F1D00E630FD /* Hesindion */;
 		};
+		BA48A6012F90000000E630FD /* Exceptions for "HesindionTests" folder in "HesindionTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Snapshots/__Snapshots__,
+			);
+			target = BA48A2042F4A000000E630FD /* HesindionTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -56,6 +63,9 @@
 		};
 		BA48A2012F4A000000E630FD /* HesindionTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BA48A6012F90000000E630FD /* Exceptions for "HesindionTests" folder in "HesindionTests" target */,
+			);
 			path = HesindionTests;
 			sourceTree = "<group>";
 		};
@@ -148,6 +158,7 @@
 			buildPhases = (
 				BA48A2032F4A000000E630FD /* Sources */,
 				BA48A2022F4A000000E630FD /* Frameworks */,
+				BA48A6022F90000000E630FD /* Resources */,
 			);
 			buildRules = (
 			);
@@ -246,6 +257,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BA48A4052F70000000E630FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA48A6022F90000000E630FD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (

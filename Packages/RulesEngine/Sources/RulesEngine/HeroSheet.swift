@@ -52,13 +52,17 @@ public struct HeroSheet: Codable, Hashable, Sendable {
     public var speciesGS: Int?
     public var items: [Item]
     public var loadout: Loadout
+    /// The optional rulesets the group plays with (`fokus.trefferzonen`), the fact `rulesets`.
+    /// Always stated, so an empty list means none is on rather than unknown.
+    public var rulesets: [String]
 
     public init(owned: [String: OwnedRule], attributes: [String: Int], techniques: [String: Int],
                 talents: [String: Int], purchasedLE: Int, speciesLE: Int?, speciesGS: Int?,
-                items: [Item], loadout: Loadout) {
+                items: [Item], loadout: Loadout, rulesets: [String] = []) {
         self.owned = owned; self.attributes = attributes; self.techniques = techniques
         self.talents = talents; self.purchasedLE = purchasedLE; self.speciesLE = speciesLE
         self.speciesGS = speciesGS; self.items = items; self.loadout = loadout
+        self.rulesets = rulesets
     }
 
     /// This sheet with `slot` holding `item` (nil empties it): a weapon's own values on the sheet
@@ -87,6 +91,7 @@ extension Situation {
         for (t, v) in sheet.talents { state("fw.\(t)", .int(v), .sheet) }
         state("hero.purchased.le", .int(sheet.purchasedLE), .sheet)
         if let le = sheet.speciesLE { state("species.le", .int(le), .sheet) }
+        state("rulesets", .array(sheet.rulesets.map(JSONValue.string)), Vocabulary.owner(ofFact: "rulesets") ?? .gm)
 
         let l = sheet.loadout
         if let w = l.weapon { state("loadout.weapon", .string(w), .loadout) }

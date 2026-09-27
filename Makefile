@@ -27,7 +27,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db require-rules-json companions test-companions
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db require-rules-json companions test-companions hero-sheet-fixtures
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -259,6 +259,12 @@ rules-coverage:
 # the RULES_FILES run; other files' entries are kept); review its diff and commit it.
 test-rules-engine: rules-json
 	RULES_FILES=$(RULES_FILES) RECORD_CONFLICT_FINGERPRINTS=$(RECORD_CONFLICT_FINGERPRINTS) swift test --package-path Packages/RulesEngine
+
+# hero.py's view of every sample hero, for HeroSheetMappingTests (the app's mapping must state the
+# same facts). Rerun after a change to specs/heroes or scripts/rulec/hero.py, and commit the JSON.
+HERO_SHEET_FIXTURES = HesindionTests/Fixtures/HeroSheets
+hero-sheet-fixtures:
+	cd scripts && uv run --with pyyaml python -m rulec.hero_sheet_fixtures ../specs/heroes ../$(HERO_SHEET_FIXTURES)
 
 # The engine tests' hand-made books: the rule files in Packages/RulesEngine/Tests/FixtureRules/mini
 # .../pipeline, .../actions, .../checks, .../state, .../melee, .../sheet and .../damage, compiled by rulec into Tests/RulesEngineTests/Fixtures/mini-rules.json,

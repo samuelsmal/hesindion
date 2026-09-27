@@ -1,0 +1,298 @@
+{
+ "facts": [
+  {
+   "name": "attr.KO",
+   "owner": "sheet",
+   "value": 15
+  },
+  {
+   "name": "attr.MU",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "attr.KL",
+   "owner": "sheet",
+   "value": 12
+  },
+  {
+   "name": "attr.IN",
+   "owner": "sheet",
+   "value": 13
+  },
+  {
+   "name": "attr.CH",
+   "owner": "sheet",
+   "value": 13
+  },
+  {
+   "name": "attr.FF",
+   "owner": "sheet",
+   "value": 11
+  },
+  {
+   "name": "attr.GE",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "attr.KK",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "ktw.CT_10",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "ktw.CT_12",
+   "owner": "sheet",
+   "value": 12
+  },
+  {
+   "name": "ktw.CT_3",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "ktw.CT_5",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "ktw.CT_9",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "fw.TAL_10",
+   "owner": "sheet",
+   "value": 9
+  },
+  {
+   "name": "fw.TAL_13",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_15",
+   "owner": "sheet",
+   "value": 5
+  },
+  {
+   "name": "fw.TAL_17",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_18",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_19",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_20",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_23",
+   "owner": "sheet",
+   "value": 9
+  },
+  {
+   "name": "fw.TAL_24",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_27",
+   "owner": "sheet",
+   "value": 5
+  },
+  {
+   "name": "fw.TAL_28",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_29",
+   "owner": "sheet",
+   "value": 1
+  },
+  {
+   "name": "fw.TAL_3",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_30",
+   "owner": "sheet",
+   "value": 6
+  },
+  {
+   "name": "fw.TAL_33",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_34",
+   "owner": "sheet",
+   "value": 7
+  },
+  {
+   "name": "fw.TAL_35",
+   "owner": "sheet",
+   "value": 7
+  },
+  {
+   "name": "fw.TAL_36",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_38",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_4",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_40",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_41",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_49",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_5",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "fw.TAL_50",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_51",
+   "owner": "sheet",
+   "value": 1
+  },
+  {
+   "name": "fw.TAL_52",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_55",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_59",
+   "owner": "sheet",
+   "value": 1
+  },
+  {
+   "name": "fw.TAL_6",
+   "owner": "sheet",
+   "value": 12
+  },
+  {
+   "name": "fw.TAL_8",
+   "owner": "sheet",
+   "value": 9
+  },
+  {
+   "name": "fw.TAL_9",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "hero.purchased.le",
+   "owner": "sheet",
+   "value": 0
+  }
+ ],
+ "id": "H_1790264827957",
+ "owned": {
+  "ADV_25": {
+   "level": 2
+  },
+  "ADV_36": {
+   "level": 4
+  },
+  "ADV_44": {
+   "level": 2
+  },
+  "ADV_49": {
+   "level": 1
+  },
+  "ADV_54": {
+   "level": 1
+  },
+  "DISADV_33": {
+   "level": 1,
+   "option": 5
+  },
+  "DISADV_34": {
+   "level": 2,
+   "option": "Ordensregeln, Boronkirche"
+  },
+  "DISADV_35": {
+   "level": 1
+  },
+  "DISADV_37": {
+   "level": 1,
+   "option": 2
+  },
+  "DISADV_50": {
+   "level": 1,
+   "option": 1,
+   "option2": "Familienverpflichtung"
+  },
+  "SA_27": {
+   "level": 1,
+   "option": 9
+  },
+  "SA_29": {
+   "level": 4,
+   "option": 8
+  },
+  "SA_40": {
+   "level": 1
+  },
+  "SA_41": {
+   "level": 2
+  },
+  "SA_43": {
+   "level": 1
+  },
+  "SA_661": {
+   "level": 1
+  },
+  "SA_67": {
+   "level": 1
+  },
+  "SA_862": {
+   "level": 1
+  }
+ }
+}

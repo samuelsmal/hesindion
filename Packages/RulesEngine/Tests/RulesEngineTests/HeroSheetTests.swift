@@ -75,4 +75,20 @@ final class HeroSheetTests: XCTestCase {
         let belastung = b.lines.filter { $0.origin?.rule == "COND_1" }
         XCTAssertEqual(belastung.map(\.value), [-1])
     }
+
+    /// The Wundschwelle's derive belongs to the Trefferzonen Fokusregel (trefferzonen.TZ8): on,
+    /// it is ⌈KO 15 / 2⌉ 8 plus Eisern's 1; off, there is no base and TZ8 says why.
+    func testTheWundschwelleFollowsTheTrefferzonenRuleset() {
+        var on = Self.boronmir()
+        on.rulesets = ["fokus.trefferzonen"]
+        XCTAssertEqual(Situation(sheet: on).facts["rulesets"]?.value, .array([.string("fokus.trefferzonen")]))
+        XCTAssertEqual(result("wundschwelle", on), 9)
+
+        let off = Self.boronmir()
+        XCTAssertEqual(Situation(sheet: off).facts["rulesets"]?.value, .array([]))
+        let b = Engine(book: Self.book).evaluate(Query("wundschwelle"), in: Situation(sheet: off))
+        XCTAssertNil(b.result)
+        XCTAssertTrue(b.notApplied.contains { $0.origin == ClauseRef(rule: "trefferzonen", clause: "TZ8") && $0.reason == .rulesetOff },
+                      "\(b.notApplied.map { "\($0.origin) \($0.reason)" })")
+    }
 }
