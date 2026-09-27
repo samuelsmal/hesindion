@@ -629,7 +629,8 @@ class CommandTests(unittest.TestCase):
                                     "--situations", str(d / "situations"), "--out", str(out)])
         self.assertEqual(code, 0, text)
         self.assertEqual(text.splitlines(), [f"wrote {out / 'rules.json'} (5 rules)",
-                                             f"wrote {out / 'situations.json'} (2 situations, 1 pending)"])
+                                             f"wrote {out / 'situations.json'} (2 situations, 1 pending)",
+                                             f"wrote {out / 'checks.json'} (0 checks)"])
         obj = json.loads((out / "situations.json").read_text())
         self.assertEqual(obj["vocabularyVersion"], vocab.load().version)
         self.assertEqual([(s["id"], s["pending"]) for s in obj["situations"]],

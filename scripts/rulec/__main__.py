@@ -1,10 +1,12 @@
 """rulec's command line: `check` validates the rule and situations files, `build` compiles them to
-`rules.json` and `situations.json`.
+`rules.json`, `situations.json` and `checks.json`.
 
 `--rules` is the root of the rules (`specs/rules/`, see `layout`). The situations default to its
 `situations` directory and are skipped when that does not exist; a `--situations` directory given
 explicitly must exist. The Probe table (the root's `checks.yaml`, `--checks`; Task 34) is checked
-when it exists and goes into situations.json as `checks`."""
+when it exists and goes into situations.json as `checks`, and, alongside it, into its own
+`checks.json` (`{"checks": …}`, the same table) — the package's `CheckTable` reads that file
+without decoding a whole situations.json."""
 import argparse
 import sys
 from pathlib import Path
@@ -74,6 +76,9 @@ def main(argv=None):
             compile.write(compile._jsonable({"vocabularyVersion": v.version, "situations": compiled,
                                                      "checks": table}), spath)
             print(f"wrote {spath} ({len(compiled)} situations, {n_pending} pending)")
+            cpath = a.out / "checks.json"
+            compile.write({"checks": compile._jsonable(table)}, cpath)
+            print(f"wrote {cpath} ({len(table)} checks)")
         return 0
     n_cl = sum(len(r["clauses"]) for r in book.values())
     n_ef = sum(len(c.get("effects", [])) for r in book.values() for c in r["clauses"])

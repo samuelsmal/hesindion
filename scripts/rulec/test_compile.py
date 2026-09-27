@@ -461,6 +461,21 @@ rulings: []
         self.assertIn("clause can never fire: C.C1", buf.getvalue())
         self.assertFalse((out / "rules.json").exists())
 
+    def test_build_writes_checks_json_equal_to_the_situations_checks(self):
+        d = write_tree({"A": A, "B": B})
+        (d / "situations").mkdir()
+        (d / "checks.yaml").write_text("TAL_1: { attributes: [MU, KL, IN], hinderedByBelastung: true }\n")
+        out = Path(tempfile.mkdtemp())
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = main(["build", "--rules", str(d), "--out", str(out)])
+        self.assertEqual(code, 0, buf.getvalue())
+        checks = json.loads((out / "checks.json").read_text(encoding="utf-8"))
+        situations = json.loads((out / "situations.json").read_text(encoding="utf-8"))
+        self.assertEqual(checks, {"checks": situations["checks"]})
+        self.assertEqual(checks, {"checks": {"TAL_1": {"attributes": ["MU", "KL", "IN"],
+                                                         "hinderedByBelastung": True}}})
+
 
 if __name__ == "__main__":
     unittest.main()
