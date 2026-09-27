@@ -170,6 +170,14 @@ struct HeroDetailView: View {
                 )
             }
 
+            if let target = weaponInfo {
+                WeaponInfoSheet(hero: hero, name: target.name) { weaponInfo = nil }
+            }
+
+            if let item = breakdown, let book = RulesEngineStore.shared?.engine.book {
+                BreakdownSheet(title: item.title, value: item.value, book: book) { breakdown = nil }
+            }
+
         }
         .background {
             Button("") {
@@ -228,15 +236,6 @@ struct HeroDetailView: View {
                     previousSelection: nil
                 )
                 .presentationCornerRadius(0)
-            }
-        }
-        .sheet(item: $weaponInfo) { target in
-            WeaponInfoSheet(hero: hero, name: target.name)
-                .presentationCornerRadius(0)
-        }
-        .sheet(item: $breakdown) { item in
-            if let book = RulesEngineStore.shared?.engine.book {
-                BreakdownSheet(title: item.title, value: item.value, book: book)
             }
         }
         .fullScreenCover(isPresented: $showHeroSettings) {

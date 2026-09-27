@@ -16,67 +16,40 @@ struct WeaponInfoTarget: Identifiable, Equatable {
 struct WeaponInfoSheet: View {
     let hero: Hero
     let name: String
-    @Environment(\.dismiss) private var dismiss
+    var onDismiss: () -> Void
 
     private var entry: EquipmentEntry? { hero.equipmentEntry(forLoadoutNamed: name) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    section(L("weapon.info.hero"), rows: heroRows)
-                    if let entry {
-                        section(L("weapon.info.template"), rows: templateRows(entry))
-                        if let deity = hero.consecratedDeity(ofLoadoutNamed: name) {
-                            Text(String(format: L("weapon.consecratedTo"), deity))
-                                .font(.dsaHeading(.body))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.dsaDark)
-                                .dsaBox(.flush)
-                                .accessibilityIdentifier("weapon.info.consecrated")
-                        }
-                        text(L("weapon.advantage"), entry.advantage, id: "advantage")
-                        text(L("weapon.disadvantage"), entry.disadvantage, id: "disadvantage")
-                        text(L("weapon.note"), entry.note, id: "note")
-                    }
+        DSAModal(
+            title: name,
+            accent: combatAccent,
+            onScrimTap: onDismiss,
+            onClose: onDismiss,
+            scrolls: true
+        ) {
+            section(L("weapon.info.hero"), rows: heroRows)
+            if let entry {
+                section(L("weapon.info.template"), rows: templateRows(entry))
+                if let deity = hero.consecratedDeity(ofLoadoutNamed: name) {
+                    Text(String(format: L("weapon.consecratedTo"), deity))
+                        .font(.dsaHeading(.body))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.dsaDark)
+                        .dsaBox(.flush)
+                        .accessibilityIdentifier("weapon.info.consecrated")
                 }
-                .padding(16)
+                text(L("weapon.advantage"), entry.advantage, id: "advantage")
+                text(L("weapon.disadvantage"), entry.disadvantage, id: "disadvantage")
+                text(L("weapon.note"), entry.note, id: "note")
             }
         }
-        .background(Color(UIColor.systemBackground))
     }
 
     // MARK: - Pieces
-
-    private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L("weapon.info.title"))
-                    .font(.dsaBody(.caption))
-                    .foregroundStyle(.white.opacity(0.8))
-                Text(name)
-                    .font(.dsaHeading(.headline))
-                    .foregroundStyle(.white)
-            }
-            Spacer()
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.dsaBody(.body))
-                    .foregroundStyle(.white)
-            }
-            .buttonStyle(.dsaMotion)
-            .accessibilityLabel(L("close"))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .background(combatAccent)
-        .dsaBox(.raised)
-    }
 
     private func section(_ title: String, rows: [(String, String)]) -> some View {
         VStack(alignment: .leading, spacing: 0) {

@@ -91,30 +91,32 @@ struct CombatLoadoutPicker: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            let all = items
+        ZStack {
+            VStack(spacing: 0) {
+                let all = items
 
-            if !hero.meleeWeapons.isEmpty {
-                combatSectionLabel(L("meleeWeapons.label"))
-                ForEach(all.filter { !$0.isShield && !$0.isRaufen }, id: \.name) { row($0) }
+                if !hero.meleeWeapons.isEmpty {
+                    combatSectionLabel(L("meleeWeapons.label"))
+                    ForEach(all.filter { !$0.isShield && !$0.isRaufen }, id: \.name) { row($0) }
+                }
+
+                if !hero.shields.isEmpty {
+                    combatSectionLabel(L("shields.label"))
+                    ForEach(all.filter(\.isShield), id: \.name) { row($0) }
+                }
+
+                combatSectionLabel(L("unarmed.label"))
+                ForEach(all.filter(\.isRaufen), id: \.name) { row($0) }
+
+                if !hero.rangedWeapons.isEmpty {
+                    combatSectionLabel(L("fernkampf.rangedWeapons.label"))
+                    ForEach(hero.rangedWeaponsInOrder, id: \.name) { rangedRow($0) }
+                }
             }
 
-            if !hero.shields.isEmpty {
-                combatSectionLabel(L("shields.label"))
-                ForEach(all.filter(\.isShield), id: \.name) { row($0) }
+            if let target = weaponInfo {
+                WeaponInfoSheet(hero: hero, name: target.name) { weaponInfo = nil }
             }
-
-            combatSectionLabel(L("unarmed.label"))
-            ForEach(all.filter(\.isRaufen), id: \.name) { row($0) }
-
-            if !hero.rangedWeapons.isEmpty {
-                combatSectionLabel(L("fernkampf.rangedWeapons.label"))
-                ForEach(hero.rangedWeaponsInOrder, id: \.name) { rangedRow($0) }
-            }
-        }
-        .sheet(item: $weaponInfo) { target in
-            WeaponInfoSheet(hero: hero, name: target.name)
-                .presentationCornerRadius(0)
         }
     }
 

@@ -4,55 +4,33 @@ import RulesEngine
 /// One value's breakdown (sheet cut-over design §5): the result, each line with its origin, the
 /// facts it read and who stated them, its Auslegung marks, and the rules that did not apply. Built
 /// on the app's own calculation grammar — `CombatBreakdownBox`/`BreakdownRow`, `CombatDisclosureSection`
-/// — and the header/`ScrollView` shape of the app's other sheets (`WeaponInfoSheet`, `HeilungSheet`),
-/// not system `List`/`DisclosureGroup` chrome.
+/// — inside the app's own in-app modal (`DSAModal`, task 6b), not a system sheet: a system sheet
+/// rounds its corners, and the dice modal (`SkillCheckModal`) does not.
 struct BreakdownSheet: View {
     let title: String
     let value: SheetValue
     let book: RuleBook
-    @Environment(\.dismiss) private var dismiss
+    var onDismiss: () -> Void
     /// The one Auslegung mark currently expanded to its answer, at most one at a time (a ruling's
     /// qualified id).
     @State private var openRuling: String?
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    CombatBreakdownBox(
-                        rows: rows,
-                        totalValue: value.result.map(String.init) ?? "–",
-                        totalSource: title,
-                        totalIdentifier: "breakdown.result"
-                    )
-                    notAppliedSection
-                }
-                .padding(16)
-            }
+        DSAModal(
+            title: title,
+            accent: .groupRulebook,
+            onScrimTap: onDismiss,
+            onClose: onDismiss,
+            scrolls: true
+        ) {
+            CombatBreakdownBox(
+                rows: rows,
+                totalValue: value.result.map(String.init) ?? "–",
+                totalSource: title,
+                totalIdentifier: "breakdown.result"
+            )
+            notAppliedSection
         }
-        .background(Color(UIColor.systemBackground))
-    }
-
-    private var header: some View {
-        HStack {
-            Text(title)
-                .font(.dsaHeading(.headline))
-                .foregroundStyle(.white)
-            Spacer()
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.dsaBody(.body))
-                    .foregroundStyle(.white)
-            }
-            .buttonStyle(.dsaMotion)
-            .accessibilityLabel(L("close"))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .background(Color.groupRulebook)
-        .dsaBox(.raised)
     }
 
     /// One `BreakdownRow` per shown line, in order: the value signed (the base parts too), the
