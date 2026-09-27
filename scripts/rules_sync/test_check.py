@@ -225,6 +225,40 @@ class RuleSourceTests(unittest.TestCase):
         self.assertEqual(check.canonical_url("KSF_Vorsto%C3%9F.html#x"),
                           "https://dsa.ulisses-regelwiki.de/KSF_Vorsto%C3%9F.html")
 
+    def test_canonical_url_gives_equivalent_spellings_one_key(self):
+        # Pairs the crawl of 2026-09-27 found under two keys, with the same hash under each.
+        same = [
+            ("s.html?sonderfertigkeit=Göttliche+Alchimie+I-II",
+             "s.html?sonderfertigkeit=G%C3%B6ttliche+Alchimie+I-II"),
+            ("s.html?sonderfertigkeit=Bindung+%28Feen%29", "s.html?sonderfertigkeit=Bindung+(Feen)"),
+            ("vorteil.html?vorteil=Z%C3%A4her%20Hund", "vorteil.html?vorteil=Z%C3%A4her+Hund"),
+            ("vorteil.html?vorteil=Z%c3%a4her Hund", "vorteil.html?vorteil=Z%C3%A4her+Hund"),
+            ("KSF_Vorsto%C3%9F.html", "KSF_Vorstoß.html"),
+            # NFD "o" + combining diaeresis is the NFC "ö".
+            ("Sta_Betört.html", "Sta_Bet%C3%B6rt.html"),
+        ]
+        for left, right in same:
+            with self.subTest(left=left):
+                self.assertEqual(check.canonical_url(left), check.canonical_url(right))
+        self.assertEqual(check.canonical_url("s.html?sonderfertigkeit=Bindung+%28Feen%29"),
+                          "https://dsa.ulisses-regelwiki.de/s.html?sonderfertigkeit=Bindung+(Feen)")
+        self.assertEqual(check.canonical_url("vorteil.html?vorteil=Z%C3%A4her%20Hund"),
+                          "https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Z%C3%A4her+Hund")
+
+    def test_canonical_url_keeps_escapes_that_carry_meaning(self):
+        # A decoded %2F, %26, %3D or %2B would split or join a query value; a path's space
+        # stays %20, since + in a path is a plus.
+        for url in ("s.html?s=R+I%2FII%2FIII+(D%C3%A4monen)", "s.html?s=A%26B%3DC%2BD",
+                    "Zwei%20W%C3%B6rter.html", "a+b.html"):
+            with self.subTest(url=url):
+                self.assertEqual(check.canonical_url(url), check.BASE_URL + url)
+        self.assertEqual(check.canonical_url("s.html?s=a%2fb"), check.BASE_URL + "s.html?s=a%2Fb")
+        self.assertEqual(check.canonical_url("Zwei Wörter.html"),
+                          check.BASE_URL + "Zwei%20W%C3%B6rter.html")
+
+    def test_canonical_url_leaves_an_escape_that_is_no_utf_8_alone(self):
+        self.assertEqual(check.canonical_url("s.html?s=%E4rger"), check.BASE_URL + "s.html?s=%E4rger")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import re
 import time
+import unicodedata
 from pathlib import Path
 from typing import NamedTuple
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import requests
 import yaml
@@ -44,9 +46,41 @@ class PageMissing(requests.HTTPError):
     -- the crawl notes it and leaves the page out, so `pages.merge` marks a known page `gone`."""
 
 
+#: A run of percent escapes, decoded together so that a UTF-8 sequence decodes as one character.
+_ESCAPES_RE = re.compile(r"(?:%[0-9A-Fa-f]{2})+")
+#: The ASCII characters an escape is decoded to: RFC 3986's unreserved ones, the sub-delims
+#: that split nothing on this site, and the space (written back as `+` or `%20`). `/ ? & = + ; # %` stay escaped: decoding one could split a
+#: query value or join two.
+_DECODED = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~()!*' ")
+
+
+def _escape(char: str) -> str:
+    return "".join(f"%{b:02X}" for b in char.encode("utf-8"))
+
+
+def _decode_escapes(match: "re.Match") -> str:
+    run = match.group(0)
+    try:
+        text = bytes.fromhex(run.replace("%", "")).decode("utf-8")
+    except UnicodeDecodeError:
+        return run.upper()
+    return "".join(c if c in _DECODED or ord(c) > 127 else _escape(c) for c in text)
+
+
+def _canonical_part(part: str, space: str) -> str:
+    text = unicodedata.normalize("NFC", _ESCAPES_RE.sub(_decode_escapes, part))
+    return "".join(space if c == " " else _escape(c) if ord(c) > 127 else c for c in text)
+
+
 def canonical_url(url: str) -> str:
-    """`url` joined against the site root, fragment dropped, otherwise unchanged."""
-    return urljoin(BASE_URL, url.strip()).partition("#")[0]
+    """`url` joined against the site root, fragment dropped, and spelled one way: the site
+    serves the same page under `ö`, `o\u0308`, `%C3%B6` and `%c3%b6`, and under `(`/`%28`, and a
+    query's `%20` is its `+`. Non-ASCII is escaped as NFC UTF-8, the unreserved characters and
+    `()!*'` are not, a query's space is `+` and a path's `%20`. Every other escape (`%2F`,
+    `%26`, `%2B`, …) is kept, hex in upper case, and so is an escape that is no UTF-8."""
+    parts = urlsplit(urljoin(BASE_URL, url.strip()))
+    return urlunsplit((parts.scheme, parts.netloc, _canonical_part(parts.path, "%20"),
+                       _canonical_part(parts.query, "+"), ""))
 
 
 class Fetcher:

@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 
 from rulec import layout
-from rules_sync.check import BASE_URL
+from rules_sync.check import BASE_URL, canonical_url
 
 PATH = layout.ROOT / layout.PAGES
 FIELDS = ("title", "in", "kind", "hash", "fetched", "skip", "gone", "detail")
@@ -74,9 +74,27 @@ def merge(old: Registry, crawl, today: datetime.date) -> Registry:
     return new
 
 
+def _canonical_pages(entries: dict) -> dict:
+    """`entries` keyed by `canonical_url`'s spelling. Where two keys spell one page, a current
+    entry wins over a gone one, then one with its own `skip`, then the first key; a `skip` on
+    the losing entry is kept."""
+    groups: dict[str, list] = {}
+    for key in sorted(entries, key=str):
+        groups.setdefault(key_of(canonical_url(str(key))), []).append(entries[key])
+    out = {}
+    for key, group in groups.items():
+        entry = dict(min(group, key=lambda e: (bool(e.get("gone")), not e.get("skip"))))
+        skip = next((e["skip"] for e in group if e.get("skip")), None)
+        if skip and not entry.get("skip"):
+            entry["skip"] = skip
+        out[key] = entry
+    return out
+
+
 def load(text: str) -> Registry:
     doc = yaml.safe_load(text) or {}
-    return Registry(doc.get("synced"), dict(doc.get("skip") or {}), dict(doc.get("pages") or {}))
+    return Registry(doc.get("synced"), dict(doc.get("skip") or {}),
+                    _canonical_pages(dict(doc.get("pages") or {})))
 
 
 def _line(value) -> str:

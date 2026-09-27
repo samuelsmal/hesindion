@@ -81,6 +81,20 @@ class FileTests(unittest.TestCase):
         self.assertEqual(pages.dump(pages.load(text)), text)
         self.assertEqual(pages.load(text).pages["s.html"]["title"], title)
 
+    def test_load_spells_every_key_one_way_and_keeps_one_entry_per_page(self):
+        # pages.yaml of 2026-09-27 held 195 pages under two spellings; a merge against it
+        # would mark every old spelling gone.
+        text = (pages.HEADER + "synced: 2026-09-27\nskip: {}\npages:\n"
+                "  a.html?x=Bindung+%28Feen%29: {title: B, in: K / B, kind: rule, hash: 'sha256:1', fetched: 2026-09-26}\n"
+                "  a.html?x=Bindung+(Feen): {title: B, in: K / B, kind: rule, hash: 'sha256:1', fetched: 2026-09-27, skip: own}\n"
+                "  b.html?x=Z%C3%A4h%20Hund: {title: Z, in: K / Z, kind: rule, hash: 'sha256:2', fetched: 2026-09-26, gone: 2026-09-27}\n"
+                "  b.html?x=Zäh+Hund: {title: Z, in: K / Z, kind: rule, hash: 'sha256:2', fetched: 2026-09-26}\n")
+        got = pages.load(text).pages
+        self.assertEqual(sorted(got), ["a.html?x=Bindung+(Feen)", "b.html?x=Z%C3%A4h+Hund"])
+        # A page's own skip is kept; a current entry wins over a gone one.
+        self.assertEqual(got["a.html?x=Bindung+(Feen)"]["skip"], "own")
+        self.assertNotIn("gone", got["b.html?x=Z%C3%A4h+Hund"])
+
     def test_pages_yaml_is_not_a_rule_file(self):
         self.assertNotIn(layout.ROOT / "pages.yaml", layout.rule_files(layout.ROOT))
 
