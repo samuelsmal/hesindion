@@ -214,7 +214,7 @@ rules-check:
 rules-json:
 	$(RULEC) build --out ../build/rules
 
-# Rule-website page tracking (docs/plans/2026-09-26-rules-page-tracking-plan.md).
+# Rule-website page tracking (docs/adr/0017-rule-website-page-tracking.md).
 RULES_SYNC = cd scripts && uv run --with requests --with beautifulsoup4 --with pyyaml python
 
 test-rules-sync:

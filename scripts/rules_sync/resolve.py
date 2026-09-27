@@ -13,7 +13,7 @@ Kept unchanged (bodies and docstrings): `index_anchors`, `page_base`,
 `INDEX_ANCHOR_SELECTOR`, `Problem`, `_same_site` -- all of it is generic
 page parsing and crawl bookkeeping that has nothing to do with which five
 groups the branch was scoped to. `classify_page` gained a third signal in the
-final fix wave (Ruling R4): a content container that is a list of links.
+final fix wave (ADR-0017): a content container that is a list of links.
 
 Not ported (owner's ruling): `GROUP_INDEX_TRAIL`, `follow_trail`,
 `COMBAT_GROUPS`, the three per-rule identity signals (`confirm_identity`,
@@ -83,7 +83,7 @@ SEARCH_DETAIL = ("the site answered with its search page: it has no page at this
 
 #: A page with no `a.ulSubMenu` is still an index when its content container is a list of links:
 #: at least LISTING_LINKS same-site links whose text is at least LISTING_SHARE of the container's
-#: normalised text. Calibrated on the 4582 cached `rule` pages of 2026-09-26 (final-fix-report.md):
+#: normalised text. Calibrated on the 4582 cached `rule` pages of 2026-09-26 (ADR-0017):
 #: outside the selection grid, the share runs continuously from 0 to 0.625 on pages that carry
 #: rule text (tables of weapons or special abilities, optional rules), then jumps to 0.78 and
 #: 0.85 on the two overview pages (`Heldenerschaffung.html`, `Spezielle_Nahkampfregeln.html`).
@@ -327,7 +327,7 @@ def _anchor_text_share(html: str) -> float:
 
 
 def is_listing(html: str) -> bool:
-    """A content container that is a list of links (Ruling R4, calibrated -- see LISTING_SHARE):
+    """A content container that is a list of links (ADR-0017, calibrated -- see LISTING_SHARE):
     the site's selection grid, or at least LISTING_LINKS links making up LISTING_SHARE of the text."""
     links, link_chars, text_chars, grid = _listing_counts(html)
     if links < LISTING_LINKS:
@@ -357,7 +357,7 @@ def classify_page(html: str) -> tuple[str, str]:
     * **Its content container is a list of links** (`is_listing`) -> an index.
       The site's selection pages (`zauberauswahl.html` and its kind) publish
       hundreds of plain links in `#main` and no `a.ulSubMenu`; read as rule
-      pages, they hid every spell, liturgy and talent behind them (Ruling R4).
+      pages, they hid every spell, liturgy and talent behind them (ADR-0017).
     * **Otherwise, what `normalise_html` says.** Text -> a rule page.
       `ContentContainerEmpty` with no anchors either -> a page with no rule text
       and nothing to resolve from, reported rather than recorded (the site has
@@ -431,7 +431,7 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
     answers 404/410 for (`PageMissing`: left out, so `pages.merge` marks a known one gone), and a
     top category that carries rule text but links on (noted; its links are followed).
 
-    Controller ruling R1: a root that cannot be fetched (`requests.RequestException`)
+    ADR-0017: a root that cannot be fetched (`requests.RequestException`)
     or that has no top menu (`root_categories` raising `LookupError`) is a fatal
     `Problem` naming the root URL and the reason -- the crawl returns its (empty)
     `SiteCrawl` rather than raising, the same as any other fatal crawl problem.
@@ -457,7 +457,7 @@ def crawl(fetcher, root_url: str = BASE_URL, *, max_depth: int = MAX_DEPTH,
     # Cross-references (content links other than a listing page's own list) wait here, first
     # finding kept, until no index edge has anything left to offer: a page's trail is the site's
     # own index trail wherever it has one. Crawling them in plain breadth-first order moved 650
-    # of the 5230 pages of 2026-09-26 into another top category (final-fix-report.md).
+    # of the 5230 pages of 2026-09-26 into another top category (ADR-0017).
     pending: dict[str, tuple[int, tuple[str, ...]]] = {}
     while queue or pending:
         if not queue:

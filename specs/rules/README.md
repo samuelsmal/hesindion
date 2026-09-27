@@ -291,6 +291,8 @@ regenerated after it, so `git diff` is the record of the session. The edits are 
 
 ## Pages and coverage
 
+Why it works this way: [ADR-0017](../../docs/adr/0017-rule-website-page-tracking.md).
+
 [`specs/rules/pages.yaml`](pages.yaml) is every page of <https://dsa.ulisses-regelwiki.de/>,
 crawled from the site's own top menu: its URL (relative to the site root, query string and all,
 spelled one way — the site serves one page under `ö`, `%C3%B6` and `%c3%b6`, under `(` and `%28`, and a

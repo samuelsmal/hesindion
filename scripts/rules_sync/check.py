@@ -31,7 +31,7 @@ BASE_URL = "https://dsa.ulisses-regelwiki.de/"
 DELAY = 1.0
 HEADERS = {"User-Agent": "DSA-Companion-Scraper/1.0"}
 
-#: Controller ruling R5: a timeout, a dropped connection, a 5xx or a 429 is tried again, up to
+#: ADR-0017: a timeout, a dropped connection, a 5xx or a 429 is tried again, up to
 #: this many attempts in all, pausing `DELAY * attempt` before each one.
 ATTEMPTS = 3
 #: Seconds to wait for one response. An unknown detail URL is redirected (302) to the site's

@@ -240,7 +240,7 @@ class CrawlTests(unittest.TestCase):
         got = resolve.crawl(FakeFetcher(self.site()), max_pages=3)
         self.assertTrue(any(p.fatal and "stopped" in p.detail for p in got.problems))
 
-    # Controller ruling R1: a root that cannot be fetched, or has no top menu,
+    # ADR-0017: a root that cannot be fetched, or has no top menu,
     # is a fatal Problem naming the root URL and the reason -- crawl() must
     # not raise either exception itself.
 
@@ -290,8 +290,8 @@ LONG = "Ein ganz gewöhnlicher Regeltext mit vielen Wörtern darin. " * 6
 
 
 class ListingClassifyTests(unittest.TestCase):
-    """Ruling R4: a page whose content container is a list of links is an index, though it
-    carries no `a.ulSubMenu`. Calibrated on the cached site (final-fix-report.md)."""
+    """ADR-0017: a page whose content container is a list of links is an index, though it
+    carries no `a.ulSubMenu`. Calibrated on the cached site (ADR-0017)."""
 
     def test_a_page_that_is_all_links_is_an_index(self):
         html = _listing([("Eins", "x.html?x=Eins"), ("Zwei", "x.html?x=Zwei"), ("Drei", "x.html?x=Drei")])

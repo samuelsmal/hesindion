@@ -98,7 +98,7 @@ class ScriptedSession:
 
 
 class RetryTests(unittest.TestCase):
-    """Controller ruling R5: a transient failure is retried, up to three attempts in all, with a
+    """ADR-0017: a transient failure is retried, up to three attempts in all, with a
     growing pause; a page the site says is not there is its own exception; anything else fails."""
 
     def setUp(self):
