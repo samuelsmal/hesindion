@@ -43,13 +43,14 @@ final class SheetBreakdownTests: XCTestCase {
         )
     }
 
-    /// Fix round 1: `DSAModal`'s `scrolls` panel used to always claim its height cap, so
-    /// expanding "Nicht angewandt" — which grows the LE breakdown well past it — must
-    /// still fit the screen (the close button stays reachable) and let the fold's last
-    /// row be scrolled to, rather than the panel silently overflowing or the switch to
-    /// a scrolling layout losing the fold's own open/closed state.
+    /// Fix rounds 1 and 2: `DSAModal`'s `scrolls` panel is exactly as tall as its content
+    /// while that fits — its bottom edge sits right under the collapsed "Nicht angewandt"
+    /// fold, the last thing in it, like the dice modal — and once expanding the fold grows
+    /// the content past the cap, the panel stops at the cap (the close button stays
+    /// reachable) and the fold's last row can be scrolled to, without the switch to a
+    /// scrolling layout losing the fold's own open/closed state.
     @MainActor
-    func testExpandingNotAppliedFitsTheScreenAndScrollsToTheLastRow() throws {
+    func testThePanelHugsShortContentAndCapsAndScrollsLongContent() throws {
         continueAfterFailure = false
         let app = UITest.launch()
 
@@ -59,6 +60,18 @@ final class SheetBreakdownTests: XCTestCase {
 
         let toggle = app.buttons["breakdown.notApplied.toggle"]
         XCTAssertTrue(toggle.waitForExistence(timeout: UITest.timeout), "The Nicht-angewandt fold is missing")
+        let panel = app.otherElements["modal.panel"]
+        XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "The modal panel has no identifier")
+
+        // Hug: the collapsed fold is the content's last row; below it only the content's
+        // own 16pt padding (and the box's border) may remain, not the rest of the cap.
+        let gap = panel.frame.maxY - toggle.frame.maxY
+        XCTAssertLessThanOrEqual(
+            gap, 40,
+            "The panel does not hug its content: its bottom is \(gap)pt below the last row "
+                + "(panel \(panel.frame), fold \(toggle.frame))"
+        )
+
         toggle.tap()
 
         let close = app.buttons["modal.close"]
@@ -72,6 +85,15 @@ final class SheetBreakdownTests: XCTestCase {
             Thread.sleep(forTimeInterval: 0.1)
         }
         XCTAssertTrue(closeReachable, "The close button is not reachable once the fold is expanded")
+
+        // Cap: `DSAModal` caps the content at 60% of the screen; the header (≈50pt) and
+        // the box's border come on top of that.
+        let cap = app.windows.firstMatch.frame.height * 0.6
+        let headerAllowance: CGFloat = 70
+        XCTAssertLessThanOrEqual(
+            panel.frame.height, cap + headerAllowance,
+            "The expanded panel exceeds its cap: \(panel.frame.height)pt > \(cap) + \(headerAllowance)"
+        )
 
         // The fold's own content, not the hero sheet behind it — `scrollUntilHittable`
         // would find that one instead, since it is the wider scroll view on screen.

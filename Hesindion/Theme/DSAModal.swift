@@ -47,6 +47,10 @@ struct DSAModal<Content: View>: View {
             content
         }
         .padding(16)
+        // Report the content's *ideal* height, not the space it was offered: without
+        // this, whatever height the parent proposes (the full-screen scrim's ZStack
+        // proposes all of it) is what gets measured and filled.
+        .fixedSize(horizontal: false, vertical: true)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { newHeight in
             scrollableContentHeight = newHeight
         }
@@ -67,17 +71,20 @@ struct DSAModal<Content: View>: View {
                         ScrollView { measuredContent }
                             .frame(height: cap)
                     } else {
-                        // The safety cap here is a no-op once `scrollableContentHeight`
-                        // has settled (it's already `<= cap`, by the branch condition);
-                        // it only clips the rare single frame right after content has
-                        // just grown past the cap but the measurement above hasn't
-                        // caught up yet, so the panel never visibly overshoots the
-                        // screen even for that one frame. `alignment: .top` matters:
-                        // `.frame(maxHeight:)` centres oversized content by default, so
-                        // without it that one frame shows a clipped *middle* slice
-                        // instead of the top.
+                        // A definite height — the content's own, measured above — so the
+                        // panel hugs it. (Not `.frame(maxHeight: cap)`, which this used to
+                        // be: a max-only frame is flexible up to its max, and
+                        // the scrim's ZStack proposes the whole screen, so the panel always
+                        // filled to `cap` however short the content.) `min(_, cap)` clips
+                        // the rare single frame right after content has grown past the cap
+                        // but before the branch above has switched; `alignment: .top` makes
+                        // that clip show the top, not a middle slice. Before the first
+                        // measurement (0) the height is left to the fixed-size content itself.
                         measuredContent
-                            .frame(maxHeight: cap, alignment: .top)
+                            .frame(
+                                height: scrollableContentHeight > 0 ? min(scrollableContentHeight, cap) : nil,
+                                alignment: .top
+                            )
                             .clipped()
                     }
                 } else {
@@ -90,6 +97,11 @@ struct DSAModal<Content: View>: View {
             .frame(maxWidth: 420)
             .background(Color(UIColor.systemBackground))
             .dsaBox(.raised)
+            // The panel as one container, so a UI test can read its frame (the hug check
+            // in `SheetBreakdownTests`); `.contain` keeps every control inside it
+            // individually reachable, exactly as before.
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("modal.panel")
             .padding(24)
         }
     }
