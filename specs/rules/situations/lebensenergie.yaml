@@ -68,9 +68,13 @@ situations:
         contradicts it. NL1 is an `add` to `leMax` that reads no target (as ADV_25.HL1,
         which 15.1 expects without a `via`), so nothing puts LE3 in its `via`. The total 33
         matches.
+
+        Agent pass 2026-09-28, on the owner's agreement: `expect` already matches — the base
+        is the two lines (5 and 30, from `lebensenergie.LE3`) and DISADV_28.NL1's −2 carries
+        no `via`. Nothing changes.
       review:
-        verdict: agreed
-        by: "@samuelsmal"
+        verdict: resolved
+        by: "@agent"
         date: 2026-09-28
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
