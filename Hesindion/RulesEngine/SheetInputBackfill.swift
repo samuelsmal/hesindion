@@ -4,7 +4,7 @@ import SwiftData
 /// Fills the inputs SchemaV5 added (`atModifier`, `paModifier`, `speciesLE`) for heroes imported
 /// before them, from the folded values the import stored: a weapon's AT/PA minus its technique's,
 /// a shield's AT minus the Schilde technique's, LE base minus twice KO. Writes nothing it cannot
-/// derive. Runs at launch until SchemaV6 drops the folded values (sheet cut-over plan, Task 11).
+/// derive. Runs at launch until SchemaV7 drops the folded values (sheet cut-over plan, Task 11).
 enum SheetInputBackfill {
     /// - Returns: `true` if anything changed. Idempotent.
     @discardableResult

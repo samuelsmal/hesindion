@@ -1,5 +1,9 @@
 import SwiftData
 
+/// Not the app's migration path: `HesindionApp` opens its store with the plain
+/// `ModelContainer(for: Hero.self, HeroStateEntry.self)` call and no migration plan, so SwiftData
+/// migrates the live models by inference. `SchemaV6MigrationTests` proves a pre-SchemaV6 store
+/// opens through that same call. This plan is kept as the record of the schema versions.
 enum HesindionMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [SchemaV1.self, SchemaV2.self, SchemaV3.self, SchemaV4.self, SchemaV5.self, SchemaV6.self]

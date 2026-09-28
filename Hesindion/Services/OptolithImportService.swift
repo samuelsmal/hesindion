@@ -177,6 +177,7 @@ struct OptolithImportService {
         let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
         let existing = try context.fetch(descriptor)
         let result: HeroImportResult
+        let imported: Hero
 
         if let hero = existing.first {
             replaceHeroData(
@@ -200,6 +201,7 @@ struct OptolithImportService {
                 context: context
             )
             hero.lastImportedAt = .now
+            imported = hero
             result = .updated(heroName: heroName)
         } else {
             let hero = Hero(
@@ -231,8 +233,11 @@ struct OptolithImportService {
             hero.liturgies = liturgies
             hero.lastImportedAt = .now
             context.insert(hero)
+            imported = hero
             result = .created(heroName: heroName)
         }
+
+        seedFullLebensenergie(imported)
 
         do {
             try context.save()
@@ -240,6 +245,20 @@ struct OptolithImportService {
             throw OptolithImportError.saveFailed(error.localizedDescription)
         }
         return result
+    }
+
+    // MARK: - Lebensenergie
+
+    /// A fresh import (and a re-import) leaves the hero at full LE, where "full" is the rules
+    /// engine's `leMax` — it includes Hohe Lebenskraft (ADV_25), which `computeDerivedValues`
+    /// no longer adds. The stored max is what `Hero.lebenspunkteSchmerzLevel` divides by, so it
+    /// takes the engine's value too. Falls back to the computed value when the rules are not
+    /// loaded (`SheetValues.of` is nil).
+    private func seedFullLebensenergie(_ hero: Hero) {
+        guard let dv = hero.derivedValues,
+              let leMax = SheetValues.of(hero)?.leMax.result else { return }
+        dv.lebensenergie.max = leMax
+        dv.lebensenergie.current = leMax
     }
 
     // MARK: - Upsert
@@ -875,10 +894,10 @@ struct OptolithImportService {
         let ko = attributes.ko
         let kk = attributes.kk
 
-        // LE: base = species base LP + KO * 2. Hohe Lebenskraft (ADV_25) is no longer added
-        // here — the rules engine's `leMax` (kampfwerte's ADV_25 term) is what the sheet
-        // shows; this stored value is read only by `Hero.lebenspunkteSchmerzLevel`/
-        // `schmerzBreakdown` until domain 4 (design §4, sheet cut-over).
+        // LE: base = species base LP + KO * 2. Hohe Lebenskraft (ADV_25) is not added here;
+        // `seedFullLebensenergie` overwrites max and current with the rules engine's `leMax`
+        // (which has it) once the hero is built. This value is only the fallback when the
+        // rules are not loaded.
         let speciesLP = Self.speciesBaseLP[raceId] ?? 5
         let leBase = speciesLP + ko * 2
         let leMax = leBase + purchasedLP

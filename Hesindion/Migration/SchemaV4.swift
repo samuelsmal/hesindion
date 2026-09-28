@@ -24,7 +24,6 @@ enum SchemaV4: VersionedSchema {
             LogEntry.self,
             Adventure.self,
             WeatherDay.self,
-            HeroStateEntry.self,
         ]
     }
 }

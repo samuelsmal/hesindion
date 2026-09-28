@@ -22,9 +22,6 @@ enum SchemaV3: VersionedSchema {
             Language.self,
             HeroSpell.self,
             LogEntry.self,
-            HeroStateEntry.self,
-            Adventure.self,
-            WeatherDay.self,
         ]
     }
 }

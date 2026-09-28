@@ -129,6 +129,27 @@ struct HeroImportTests {
         #expect(exp.level == "Erfahren")
     }
 
+    /// A fresh import and a re-import leave the hero at full LE, where full is the rules engine's
+    /// `leMax` (37: base 35 + Hohe Lebenskraft II), stored as both max and current.
+    @Test func importSeedsFullLebensenergieFromTheEngine() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        let hero = try #require(try context.fetch(FetchDescriptor<Hero>()).first)
+        let leMax = try #require(SheetValues.of(hero)?.leMax.result)
+        #expect(leMax == 37)
+        #expect(hero.derivedValues?.lebensenergie.max == leMax)
+        #expect(hero.derivedValues?.lebensenergie.current == leMax)
+
+        hero.derivedValues?.lebensenergie.current = 10
+        try OptolithImportService().importHero(from: sampleBoronmirURL, context: context)
+        let reimported = try #require(try context.fetch(FetchDescriptor<Hero>()).first)
+        #expect(SheetValues.of(reimported)?.leMax.result == 37)
+        #expect(reimported.derivedValues?.lebensenergie.max == 37)
+        #expect(reimported.derivedValues?.lebensenergie.current == 37)
+    }
+
     @Test func importUpsertReplacesSameHero() throws {
         let container = try makeContainer()
         let context = ModelContext(container)
