@@ -17,7 +17,7 @@ source:
   page: 133
   checked: 2026-09-28
   hash: sha256:fe33283abdcdde809eed631298bfbba7bc1e61672717efd73882dd33e4df7784
-reviewed: null
+reviewed: { by: "@samuelsmal", date: 2026-09-28 }
 
 clauses:
   - id: G1

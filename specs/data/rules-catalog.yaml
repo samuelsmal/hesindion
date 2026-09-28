@@ -948,7 +948,11 @@
 - { id: DISADV_53, name: "Wilde Magie", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_54, name: "Zauberanfällig", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_55, name: "Zerbrechlich", group: "Nachteil", status: todo, why: not yet read }
-- { id: DISADV_56, name: "Gläsern", group: "Nachteil", status: todo, why: "Wundschwelle -1 was byHand (DerivedValueFormulas.wundschwelle) until the sheet cut-over Task 9 deleted that formula; the rules engine has no DISADV_56 rule file yet (only ADV_54/Eisern does, specs/rules/advantages/ADV_54.yaml), so this is a real gap, not a move. No sample hero carries the trait." }
+- id: DISADV_56
+  name: "Gläsern"
+  group: "Nachteil"
+  status: engine
+  note: "Wundschwelle −1 — specs/rules/disadvantages/DISADV_56.yaml (G1), a line in SheetValues.wundschwelle's breakdown (needs the Trefferzonen Fokusregel, trefferzonen.TZ8). Was a real gap (no rule file) since the sheet cut-over Task 9 deleted the Swift Wundschwelle formula; a hero with Gläsern got a Wundschwelle that was too high."
 - { id: DISADV_58, name: "Instabiler Zauberer", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_60, name: "Schwache Zaubermelodien", group: "Nachteil", status: todo, why: not yet read }
