@@ -55,6 +55,12 @@
       ]
     },
     {
+      "id": "6b",
+      "subject": "Task 6b: breakdown + weapon info as DSAModal",
+      "status": "completed",
+      "description": "**Goal:** BreakdownSheet and WeaponInfoSheet open as the app's own DSAModal overlay (owner instruction 2026-09-27). Complete — see ledger; brief in the SDD workspace."
+    },
+    {
       "id": 7,
       "subject": "Task 7: Every other reader of a base value",
       "status": "completed",
@@ -113,5 +119,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-28T00:05:27"
+  "lastUpdated": "2026-09-28T06:30:37"
 }
