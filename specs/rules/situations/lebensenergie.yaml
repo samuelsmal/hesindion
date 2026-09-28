@@ -69,9 +69,9 @@ situations:
         which 15.1 expects without a `via`), so nothing puts LE3 in its `via`. The total 33
         matches.
       review:
-        verdict: resolved
-        by: "@agent"
-        date: 2026-09-27
+        verdict: agreed
+        by: "@samuelsmal"
+        date: 2026-09-28
 
   # --- Schmerz and Zäher Hund (COND_6.SZ3, SZ5; ADV_49) --------------------------------------------
 
