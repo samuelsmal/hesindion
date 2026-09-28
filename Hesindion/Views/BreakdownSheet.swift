@@ -14,6 +14,10 @@ struct BreakdownSheet: View {
     /// The one Auslegung mark currently expanded to its answer, at most one at a time (a ruling's
     /// qualified id).
     @State private var openRuling: String?
+    /// Owned here, not by `notAppliedSection`'s `CombatDisclosureSection`, so expanding the fold
+    /// survives `DSAModal` remounting it under a different parent once the content grows past
+    /// the scroll cap (see `CombatDisclosureSection.expandedOverride`).
+    @State private var notAppliedExpanded = false
 
     var body: some View {
         DSAModal(
@@ -77,19 +81,24 @@ struct BreakdownSheet: View {
     /// The folded "Nicht angewandt (n)" list, in the app's own disclosure styling (shut by
     /// default, like the announcement's opponent section) rather than a system `DisclosureGroup`.
     private var notAppliedSection: some View {
-        CombatDisclosureSection(
+        let items = Array(value.breakdown.notApplied.enumerated())
+        return CombatDisclosureSection(
             title: String(format: L("breakdown.notApplied"), value.breakdown.notApplied.count),
-            identifier: "breakdown.notApplied"
+            identifier: "breakdown.notApplied",
+            expandedOverride: $notAppliedExpanded
         ) {
             VStack(spacing: 0) {
-                ForEach(Array(value.breakdown.notApplied.enumerated()), id: \.offset) { _, n in
-                    notAppliedRow(n)
+                ForEach(items, id: \.offset) { i, n in
+                    notAppliedRow(n, isLast: i == items.count - 1)
                 }
             }
         }
     }
 
-    private func notAppliedRow(_ n: RulesEngine.NotApplied) -> some View {
+    /// `isLast` tags the fold's final row `breakdown.notApplied.lastRow`, whatever the
+    /// count — a UI test scrolling the fold open needs a fixed target to scroll to
+    /// without knowing how many rules did not apply.
+    private func notAppliedRow(_ n: RulesEngine.NotApplied, isLast: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("\(ruleName(n.origin.rule)) · \(n.origin.clause)").font(.dsaBody(.body))
             Text(L("reason.\(n.reason.rawValue)")).font(.dsaBody(.caption2)).foregroundStyle(.secondary)
@@ -98,6 +107,7 @@ struct BreakdownSheet: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .dsaRowDivider()
+        .accessibilityIdentifier(isLast ? "breakdown.notApplied.lastRow" : "")
     }
 }
 

@@ -23,13 +23,34 @@ struct DSAModal<Content: View>: View {
     /// the first callers to pass one, since a full-content panel needs a way
     /// out beyond the scrim).
     var onClose: (() -> Void)? = nil
-    /// `true` puts `content` in a leading-aligned `ScrollView`, capped so the
-    /// panel never exceeds the screen, for content that can run long
-    /// (`BreakdownSheet`'s rows, `WeaponInfoSheet`'s Vorteil/Nachteil/Hinweis).
-    /// `false` — the default — keeps the fixed, centred `VStack` every
+    /// `true` puts `content` in a leading-aligned `VStack` that hugs it when it fits and
+    /// scrolls, capped so the panel never exceeds the screen, when it doesn't
+    /// (`BreakdownSheet`'s rows, `WeaponInfoSheet`'s Vorteil/Nachteil/Hinweis can run
+    /// long). `false` — the default — keeps the fixed, centred `VStack` every
     /// confirmation caller already renders.
     var scrolls: Bool = false
     @ViewBuilder var content: Content
+
+    /// The `scrolls` content's own measured height, via `onGeometryChange` (iOS 17+ —
+    /// the classic `GeometryReader` + `PreferenceKey` + `onPreferenceChange` dance never
+    /// fired at all here, leaving this stuck at its initial value no matter what content
+    /// actually measured). Starts at 0 — "assume it fits" — so the first paint is the
+    /// plain, hugging layout; content long enough to matter is reached only by a later
+    /// state change (expanding the not-applied fold), by which point the real height is
+    /// already known.
+    @State private var scrollableContentHeight: CGFloat = 0
+
+    /// The one live copy of `content`, wrapped and measured the same way regardless of
+    /// which branch below renders it.
+    private var measuredContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content
+        }
+        .padding(16)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { newHeight in
+            scrollableContentHeight = newHeight
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -41,13 +62,24 @@ struct DSAModal<Content: View>: View {
                 header
 
                 if scrolls {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 12) {
-                            content
-                        }
-                        .padding(16)
+                    let cap = UIScreen.main.bounds.height * 0.6
+                    if scrollableContentHeight > cap {
+                        ScrollView { measuredContent }
+                            .frame(height: cap)
+                    } else {
+                        // The safety cap here is a no-op once `scrollableContentHeight`
+                        // has settled (it's already `<= cap`, by the branch condition);
+                        // it only clips the rare single frame right after content has
+                        // just grown past the cap but the measurement above hasn't
+                        // caught up yet, so the panel never visibly overshoots the
+                        // screen even for that one frame. `alignment: .top` matters:
+                        // `.frame(maxHeight:)` centres oversized content by default, so
+                        // without it that one frame shows a clipped *middle* slice
+                        // instead of the top.
+                        measuredContent
+                            .frame(maxHeight: cap, alignment: .top)
+                            .clipped()
                     }
-                    .frame(maxHeight: UIScreen.main.bounds.height * 0.6)
                 } else {
                     VStack(spacing: 12) {
                         content

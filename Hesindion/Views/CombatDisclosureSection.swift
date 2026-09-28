@@ -17,16 +17,33 @@ struct CombatDisclosureSection<Content: View>: View {
     /// Open on first appearance. Shut is the right default for a section that is
     /// usually empty; a section carrying something is worth opening.
     var startsExpanded: Bool = false
+    /// An externally-owned expand/collapse flag, for a caller whose own layout can
+    /// remount this section under a structurally different parent — `DSAModal`'s
+    /// `scrolls` panel switches between an unscrolled stack and one wrapped in a
+    /// `ScrollView` once measured content outgrows its cap, and each branch is its
+    /// own instance, so this section's default internal `@State` would reset to
+    /// closed the moment expanding it grew the content past the cap and switched
+    /// the panel to the other branch. `nil` — every other caller — keeps this
+    /// section's own state.
+    var expandedOverride: Binding<Bool>? = nil
     @ViewBuilder let content: () -> Content
 
     @State private var isExpanded: Bool?
 
-    private var expanded: Bool { isExpanded ?? startsExpanded }
+    private var expanded: Bool { expandedOverride?.wrappedValue ?? isExpanded ?? startsExpanded }
+
+    private func toggle() {
+        if let expandedOverride {
+            expandedOverride.wrappedValue.toggle()
+        } else {
+            isExpanded = !expanded
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(DSAAnimation.standard) { isExpanded = !expanded }
+                withAnimation(DSAAnimation.standard) { toggle() }
             } label: {
                 HStack(spacing: 8) {
                     Text(title)

@@ -43,6 +43,56 @@ final class SheetBreakdownTests: XCTestCase {
         )
     }
 
+    /// Fix round 1: `DSAModal`'s `scrolls` panel used to always claim its height cap, so
+    /// expanding "Nicht angewandt" — which grows the LE breakdown well past it — must
+    /// still fit the screen (the close button stays reachable) and let the fold's last
+    /// row be scrolled to, rather than the panel silently overflowing or the switch to
+    /// a scrolling layout losing the fold's own open/closed state.
+    @MainActor
+    func testExpandingNotAppliedFitsTheScreenAndScrollsToTheLastRow() throws {
+        continueAfterFailure = false
+        let app = UITest.launch()
+
+        let le = app.buttons["sheet.value.leMax"]
+        XCTAssertTrue(app.scrollUntilHittable(le), "LE max is not on the hero sheet")
+        le.tap()
+
+        let toggle = app.buttons["breakdown.notApplied.toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: UITest.timeout), "The Nicht-angewandt fold is missing")
+        toggle.tap()
+
+        let close = app.buttons["modal.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: UITest.timeout), "Close button missing after expanding")
+        // The fold's expand/collapse is animated (`DSAAnimation.standard`, 0.2s), so an
+        // immediate `isHittable` can catch mid-transition geometry; poll instead of
+        // asserting on the very first check.
+        var closeReachable = false
+        for _ in 0..<20 {
+            if close.isHittable { closeReachable = true; break }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        XCTAssertTrue(closeReachable, "The close button is not reachable once the fold is expanded")
+
+        // The fold's own content, not the hero sheet behind it — `scrollUntilHittable`
+        // would find that one instead, since it is the wider scroll view on screen.
+        let section = app.otherElements["breakdown.notApplied"]
+        let lastRow = app.otherElements["breakdown.notApplied.lastRow"]
+        let lastRowText = app.staticTexts.matching(identifier: "breakdown.notApplied.lastRow").firstMatch
+        var reachedLastRow = false
+        for _ in 0..<15 {
+            if (lastRow.exists && lastRow.isHittable) || (lastRowText.exists && lastRowText.isHittable) {
+                reachedLastRow = true
+                break
+            }
+            guard section.exists else { break }
+            section.swipeUp()
+        }
+        XCTAssertTrue(reachedLastRow, "The fold's last not-applied row could not be scrolled to")
+        XCTAssertTrue(close.isHittable, "The close button is no longer reachable after scrolling")
+
+        close.tap()
+    }
+
     /// The ⓘ on a melee weapon row opens `WeaponInfoSheet` as the same in-app modal.
     @MainActor
     func testTappingWeaponInfoOpensItsModal() throws {
