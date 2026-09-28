@@ -420,3 +420,41 @@ situations:
         verdict: resolved
         by: "@agent"
         date: 2026-09-27
+
+  # --- Gläsern (DISADV_56) — Eisern's mirror on the Wundschwelle -------------------------------
+  # A hero without ADV_54 (Boronmir owns it, per the file header) but with DISADV_56 instead — the
+  # same KO 15, so the same trefferzonen.TZ8 base as 19.6/19.9, with Gläsern's −1 rather than
+  # Eisern's +1. Drafted because no rule file replaced the Swift Wundschwelle formula's Gläsern
+  # line after the sheet cut-over deleted it (Task 9): a hero with Gläsern currently gets a
+  # Wundschwelle that is too high (owner report). DISADV_56.G1 cites ADV_54's own eisern-scope
+  # ruling rather than opening a new one (see the rule file).
+
+  - id: "19.13"
+    name: A hero with Gläsern instead of Eisern — Wundschwelle one lower than without it
+    hero: { advantages: {}, disadvantages: { DISADV_56: true } }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    rulesets: [fokus.trefferzonen]
+    expect:
+      wundschwelle:
+        total: 7
+        lines:
+          - { value: 8, from: trefferzonen.TZ8 }          # ⌈KO 15 / 2⌉, the same base as 19.6
+          - { value: -1, from: DISADV_56.G1, ruling: ADV_54.eisern-scope }
+    appToday: >
+      8 — too high by 1: no rule file replaces the Swift Wundschwelle formula's Gläsern line,
+      deleted in the sheet cut-over (Task 9), so a hero with Gläsern gets the plain
+      trefferzonen.TZ8 base with no −1 at all (owner report)
+
+  - id: "19.14"
+    name: The same hero, Trefferzonen not played — Gläsern's −1 alone
+    hero: { advantages: {}, disadvantages: { DISADV_56: true } }
+    loadout: { weapon: Rabenschnabel, shield: Großschild, other: shield, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    rulesets: []
+    expect:
+      # TZ8's derive (⌈KO/2⌉) is off with the Fokusregel: Gläsern's −1 alone (ruling
+      # ADV_54.eisern-scope, a), the mirror of 19.9 for Eisern
+      wundschwelle: { total: -1, lines: [{ value: -1, from: DISADV_56.G1, ruling: ADV_54.eisern-scope }] }
+      texts: [{ player: "wirkt nur mit Fokusregel Trefferzonen", from: DISADV_56.G1 }]
+    appToday: >
+      the take-damage screen shows no Wundschwelle comparison at all with Trefferzonen off
+      (CombatWundschwelleRow, `wundschwelle > 0`); with it on, Gläsern is still missing (19.13)

@@ -112,7 +112,7 @@ final class ItemStateTests: XCTestCase {
     /// over time round-trips through JSON.
     func testTheCompiledSituationsDecodeAndTheStateRoundTrips() throws {
         let all = try XCTUnwrap(try CompiledSituations.load(from: Repo.url("build/rules/situations.json")), "run make rules-json")
-        XCTAssertEqual(all.situations.count, 309)
+        XCTAssertEqual(all.situations.count, 311)
         let s = try XCTUnwrap(all.situations.first { $0.id == "21.8" }).situation
         XCTAssertEqual(s.items, ["kurzbogen1": ItemState(loaded: false)])
         XCTAssertEqual(s.fact("loadout.weapon.loaded")?.value, .bool(false))

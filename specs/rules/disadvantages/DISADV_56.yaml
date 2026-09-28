@@ -1,0 +1,43 @@
+# DRAFT FORMAT — see ../README.md.
+# Gläsern is ADV_54 (Eisern)'s mirror, named in that file's own comment: the Wundschwelle −1
+# where Eisern is +1 ("Gläsern (DISADV_56, −1) is its mirror; the two cannot meet on one hero
+# in practice, but nothing on this page forbids it"). Drafted because the sheet cut-over deleted
+# the Swift Wundschwelle formula (Task 9) with no rule file to replace this disadvantage's line —
+# a hero with Gläsern currently gets a Wundschwelle that is too high (owner report).
+# G1's scope question — what the −1 does with the Trefferzonen Fokusregel off — is the one
+# ADV_54.E1 already asked and the owner already decided (eisern-scope, 2026-09-27); the page
+# text here reads the same as Eisern's (silent on the Fokusregel either way), so G1 cites that
+# ruling directly rather than opening a new one, as SA_161.GS1 cites SA_160.halving-by-manoeuvre.
+id: DISADV_56
+name: Gläsern
+kind: disadvantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/nachteil.html?nachteil=Gl%C3%A4sern
+  book: Aventurisches Kompendium
+  page: 133
+  checked: 2026-09-28
+  hash: sha256:fe33283abdcdde809eed631298bfbba7bc1e61672717efd73882dd33e4df7784
+reviewed: null
+
+clauses:
+  - id: G1
+    text: Die Wundschwelle des Helden sinkt durch den Nachteil um 1.
+    effects:
+      - add: { to: wundschwelle, value: -1 }
+        ruling: ADV_54.eisern-scope
+        # The mirror of ADV_54.E1 (+1): same line in the Wundschwelle breakdown
+        # ("8 (halbe KO, trefferzonen.TZ8) − 1 (Gläsern)"), read against the same base.
+      - when: { not: { rulesets: fokus.trefferzonen } }
+        tell: { to: player, text: "wirkt nur mit Fokusregel Trefferzonen" }
+        ruling: ADV_54.eisern-scope
+        # Ruling ADV_54.eisern-scope (a): with the Fokusregel off, Gläsern's line stays on the
+        # sheet with this note, exactly as Eisern's does (E1's own second effect).
+    # The same question as ADV_54's; the ruling lives there and covers both.
+
+  - id: G2
+    text: "Voraussetzung: Keine"
+    none: no prerequisite
+
+  - id: G3
+    text: "AP-Wert: -3 Abenteuerpunkte"
+    none: cost, not a rule at the table
