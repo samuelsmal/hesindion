@@ -15,8 +15,8 @@ final class CombatDefenseSetupTests: XCTestCase {
         hero = Hero(name: "Test")
         // The base values now come from the engine (`SheetValues`), which needs
         // real attributes and a KtW to compute from — GE 12 gives AW 6 (KW3:
-        // ceil(GE/2)), MU/KK 14 give the "3 volle Punkte über 8" +2 bonus
-        // (KW1/KW2) that the fixture numbers below are built around.
+        // ceil(GE/2)), MU/KK 14 give the per-3-points-above-8 bonus of
+        // kampfwerte.KW1/KW2 (+2) that the fixture numbers below are built around.
         hero.attributes = Attributes(mu: 14, kl: 8, inValue: 8, ch: 8, ff: 8, ge: 12, ko: 8, kk: 14)
         context.insert(hero)
     }

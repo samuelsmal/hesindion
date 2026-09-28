@@ -35,7 +35,7 @@
 1. The engine reads no talent table (`CheckAttributes.swift` in the harness says so). `rulec` also writes `build/rules/checks.json`, the package gets a public `CheckTable`, and the app bundles `checks.json` beside `rules.json`.
 2. Only three items have a rule file (`ITEMTPL_19`, `_29`, `_35`). An item whose template has one enters the engine under the **rule's name** (the rules' `when`s compare names, `ITEMTPL_29.GR1`); any other item enters under its own name with `item.<name>.technique/atMod/paMod` stated.
 3. `MeleeWeapon` stores no AT/PA-Mod (the import folds it into `at`/`pa`), `Shield` no AT-Mod, and heroes imported before ADR-0006 have no `speciesId`. New stored **inputs** (`MeleeWeapon.atModifier/paModifier`, `Shield.atModifier`, `DerivedValues.speciesLE`) are added in SchemaV5 and back-filled at launch from the old folded values.
-4. Because the back-fill reads them, the old folded fields (`CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus/max`) are deleted in SchemaV7 (Task 11), after the owner confirms every device ran a build with SchemaV6. Every other deletion of spec §4 is in Task 9 (SchemaV6).
+4. Because the back-fill reads them, the old folded fields (`CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus`) are deleted in SchemaV7 (Task 11), after the owner confirms every device ran a build with SchemaV6. Every other deletion of spec §4 is in Task 9 (SchemaV6). **Amendment (ruling R24):** `LifeEnergyValue.max` is not among them — `Hero.lebenspunkteSchmerzLevel`, `Hero.schmerzBreakdown` and `CombatAftermathView` still read the stored LE max for Schmerz, and the import still writes it (ruling R21) — so Task 11 keeps `max` and drops only `base`/`bonus`, until domain 4 moves Schmerz onto the engine's `leMax`.
 5. The app and the package both define `Situation`. In an app file that imports `RulesEngine`, write `RulesEngine.Situation` for the engine's and `Hesindion.Situation` for the app's. App test classes that call `SheetValues` or `TalentBelastung` (both `@MainActor`) are marked `@MainActor`.
 
 ---
@@ -1567,13 +1567,13 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 11: SchemaV7 — drop the folded fields (after every device ran V6)
 
-**Goal:** The folded values the back-fill read (`CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus/max`) and `SheetInputBackfill` itself are deleted, once the owner confirms every device launched a build with SchemaV6.
+**Goal:** The folded values the back-fill read — `CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus` — and `SheetInputBackfill` itself are deleted, once the owner confirms every device launched a build with SchemaV6. **Amendment (ruling R24):** `LifeEnergyValue.max` is **kept**, not deleted, and the import keeps writing it (ruling R21) — `Hero.lebenspunkteSchmerzLevel` (`Hero.swift:685`), `Hero.schmerzBreakdown` (`Hero.swift:722`) and `CombatAftermathView.swift:364` still read the stored LE max for Schmerz, and nothing in this task or an earlier one gives them another source. It leaves with the folded fields only once domain 4 moves Schmerz onto the engine's `leMax` and rewrites those three readers.
 
 > **USER-ORDERED GATE — NON-SKIPPABLE.** This task was requested by the user in the current conversation. It MUST NOT be closed by walking around it, by declaring it "verified inline", or by substituting a cheaper check. Close only after every item in `acceptanceCriteria` has been re-validated independently, with output captured.
 
 **Files:**
-- Modify: `Hesindion/Models/CombatTechnique.swift`, `Hesindion/Models/MeleeWeapon.swift`, `Hesindion/Models/Shield.swift`, `Hesindion/Models/DerivedValues.swift`
-- Modify: `Hesindion/Services/OptolithImportService.swift`
+- Modify: `Hesindion/Models/CombatTechnique.swift`, `Hesindion/Models/MeleeWeapon.swift`, `Hesindion/Models/Shield.swift`, `Hesindion/Models/DerivedValues.swift` (drops `LifeEnergyValue.base/bonus` only — `max` and `current` stay)
+- Modify: `Hesindion/Services/OptolithImportService.swift` (the fold on `CombatTechnique`/`MeleeWeapon`/`Shield` goes; the write of `dv.lebensenergie.max = leMax` stays, per R21)
 - Delete: `Hesindion/RulesEngine/SheetInputBackfill.swift`, `HesindionTests/SheetInputBackfillTests.swift`
 - Modify: `Hesindion/ContentView.swift`
 - Create: `Hesindion/Migration/SchemaV7.swift`; modify `MigrationPlan.swift`
@@ -1582,29 +1582,29 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Acceptance Criteria:**
 - [ ] The owner confirmed in the conversation that every device (iPhone, iPad, "Karl", "Kombucha") ran a SchemaV6 build (quote the confirmation in the task's close note)
 - [ ] Before deleting: `testTheEngineAgreesWithTheStoredValuesExceptTheNamedDifferences` is rewritten to literal expected numbers per hero, taken from a passing run on the V6 code (print them, paste them)
-- [ ] The listed properties are gone; `LifeEnergyValue` keeps `purchased` and `current`; `SchemaV7` with lightweight `migrateV6toV7`; a V6 store fixture opens with V7 and keeps LE current and the weapons' `atModifier`/`paModifier`
-- [ ] `SheetInputBackfill` and its call are gone; the import no longer folds
+- [ ] `CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus` and `SheetInputBackfill` are gone; `LifeEnergyValue` keeps `purchased`, `current` **and `max`** (R24 — Schmerz still reads it); `SchemaV7` with lightweight `migrateV6toV7`; a V6 store fixture opens with V7 and keeps LE current, LE max and the weapons' `atModifier`/`paModifier`
+- [ ] `SheetInputBackfill` and its call are gone; the import no longer folds AT/PA, but still writes `dv.lebensenergie.max` (R21) — `lebenspunkteSchmerzLevel`, `schmerzBreakdown` and `CombatAftermathView` read the same value they did before this task
 - [ ] `make test` and `make test-ui` pass
 
-**Verify:** `make test && make test-ui` → both `** TEST SUCCEEDED **`; `grep -rn "SheetInputBackfill\|\.lebensenergie\.base\|ct\.at\b" Hesindion` → no match
+**Verify:** `make test && make test-ui` → both `** TEST SUCCEEDED **`; `grep -rn "SheetInputBackfill\|\.lebensenergie\.base\b\|\.lebensenergie\.bonus\b\|ct\.at\b" Hesindion` → no match; `grep -n "lebensenergie.max" Hesindion/Models/Hero.swift Hesindion/Views/CombatAftermathView.swift Hesindion/Services/OptolithImportService.swift` → still present in all three
 
 **Steps:**
 
 - [ ] **Step 1:** Ask the owner for the confirmation; do nothing else in this task until it is given.
 - [ ] **Step 2:** Freeze the old-vs-new test into literals (run it, print each hero's values, paste them as expected numbers, run again → PASS). Commit.
-- [ ] **Step 3:** Make a V6 store fixture exactly as Task 9 Step 1 made the V5 one; add the V6→V7 migration test (PASS on V6 code).
-- [ ] **Step 4:** Delete the fields, the back-fill, the fold; add SchemaV7 and its stage; run `make test && make test-ui` → PASS.
+- [ ] **Step 3:** Make a V6 store fixture exactly as Task 9 Step 1 made the V5 one; add the V6→V7 migration test (PASS on V6 code, keeping LE max in the fixture's expectations).
+- [ ] **Step 4:** Delete `CombatTechnique.at/pa`, `MeleeWeapon.at/pa`, `Shield.at/pa`, `LifeEnergyValue.base/bonus` and the back-fill/fold; **leave `LifeEnergyValue.max` and the import's write of it in place** (R24); add SchemaV7 and its stage; run `make test && make test-ui` → PASS.
 - [ ] **Step 5: Commit.**
 
 ```bash
 git add Hesindion HesindionTests
-git commit -m "refactor(model): SchemaV7 drops the folded AT/PA and LE values; the back-fill is done
+git commit -m "refactor(model): SchemaV7 drops the folded AT/PA and LE base/bonus; LE max stays (R24)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ```json:metadata
-{"files": ["Hesindion/Models/CombatTechnique.swift", "Hesindion/Models/MeleeWeapon.swift", "Hesindion/Models/Shield.swift", "Hesindion/Models/DerivedValues.swift", "Hesindion/Services/OptolithImportService.swift", "Hesindion/RulesEngine/SheetInputBackfill.swift", "HesindionTests/SheetInputBackfillTests.swift", "Hesindion/ContentView.swift", "Hesindion/Migration/SchemaV7.swift", "Hesindion/Migration/MigrationPlan.swift", "HesindionTests/SheetValuesTests.swift"], "verifyCommand": "make test && make test-ui", "acceptanceCriteria": ["owner confirmed every device ran a SchemaV6 build, quoted in the close note", "old-vs-new test frozen to literal numbers before deletion", "folded properties gone; SchemaV7 lightweight; V6 fixture opens with V7 keeping LE current and item modifiers", "SheetInputBackfill and the fold removed", "make test and make test-ui pass"], "modelTier": "standard", "userGate": true, "tags": ["user-gate"], "gateScope": "owner confirms every device launched a SchemaV6 build before the folded fields are dropped"}
+{"files": ["Hesindion/Models/CombatTechnique.swift", "Hesindion/Models/MeleeWeapon.swift", "Hesindion/Models/Shield.swift", "Hesindion/Models/DerivedValues.swift", "Hesindion/Services/OptolithImportService.swift", "Hesindion/RulesEngine/SheetInputBackfill.swift", "HesindionTests/SheetInputBackfillTests.swift", "Hesindion/ContentView.swift", "Hesindion/Migration/SchemaV7.swift", "Hesindion/Migration/MigrationPlan.swift", "HesindionTests/SheetValuesTests.swift"], "verifyCommand": "make test && make test-ui", "acceptanceCriteria": ["owner confirmed every device ran a SchemaV6 build, quoted in the close note", "old-vs-new test frozen to literal numbers before deletion", "CombatTechnique/MeleeWeapon/Shield at/pa and LifeEnergyValue.base/bonus gone; LifeEnergyValue keeps purchased, current and max (R24); SchemaV7 lightweight; V6 fixture opens with V7 keeping LE current, LE max and item modifiers", "SheetInputBackfill and the AT/PA fold removed; the import still writes lebensenergie.max (R21)", "make test and make test-ui pass"], "modelTier": "standard", "userGate": true, "tags": ["user-gate"], "gateScope": "owner confirms every device launched a SchemaV6 build before the folded fields are dropped"}
 ```
 
 ---

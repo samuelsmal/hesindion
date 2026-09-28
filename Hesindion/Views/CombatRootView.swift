@@ -1033,16 +1033,20 @@ struct CombatRootView: View {
     @ViewBuilder
     private var lpBar: some View {
         if let dv = hero.derivedValues {
-            let maxLP = SheetValues.of(hero)?.leMax.result ?? 0
+            // `maxLP` is `nil` while the rules engine has not loaded or cannot resolve
+            // `leMax`; `LPBarView` then shows `rulesEngine.unavailable` and disables both
+            // buttons, and `LEWrite.stepped` returning `nil` here is the defence behind
+            // that disable, not the only thing stopping the write (final review item 1).
+            let maxLP = SheetValues.of(hero)?.leMax.result
             LPBarView(
                 current: dv.lebensenergie.current,
                 max: maxLP
             ) {
-                guard dv.lebensenergie.current > 0 else { return }
-                dv.lebensenergie.current -= 1
+                guard let next = LEWrite.stepped(current: dv.lebensenergie.current, by: -1, leMax: maxLP) else { return }
+                dv.lebensenergie.current = next
             } onIncrement: {
-                guard dv.lebensenergie.current < maxLP else { return }
-                dv.lebensenergie.current += 1
+                guard let next = LEWrite.stepped(current: dv.lebensenergie.current, by: 1, leMax: maxLP) else { return }
+                dv.lebensenergie.current = next
             }
         }
     }

@@ -41,13 +41,19 @@ require-rules-db:
 
 # rules.json and checks.json are build products too (the rules engine's book and the Probe table,
 # docs/plans/2026-09-27-sheet-cutover-design.md §2): gitignored, copied in by make rules-json.
+# `build`, `build-iphone`, `deploy` and `deploy-kombucha` depend on `rules-json` itself, not on
+# this existence check: an existence check only catches a missing file, not a vocabulary bump
+# that leaves an already-present rules.json stale, which `RulesEngineStore.shared` then refuses
+# to load (nil), and the app it ships shows `rulesEngine.unavailable` everywhere. Kept for a
+# target that must not run rulec (there is none today, but a future one is not the emergency
+# require-rules-db already is for rules.db, so the cheap check stays available).
 require-rules-json:
 	@if [ ! -f '$(RULES_JSON)' ] || [ ! -f '$(CHECKS_JSON)' ]; then \
 		echo "rules.json missing: run make rules-json"; \
 		exit 1; \
 	fi
 
-build: require-rules-db require-rules-json
+build: require-rules-db rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -69,7 +75,7 @@ launch:
 
 run: install launch
 
-build-iphone: require-rules-db require-rules-json
+build-iphone: require-rules-db rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -113,7 +119,7 @@ share-heros-iphone: boot-iphone
 	cp "$(SAMPLE_HEROES)/"*.json "$(APP_DATA)/Documents/"
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
-deploy: require-rules-db require-rules-json
+deploy: require-rules-db rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -126,7 +132,7 @@ deploy: require-rules-db require-rules-json
 
 deploy-ipad: deploy-kombucha
 
-deploy-kombucha: require-rules-db require-rules-json
+deploy-kombucha: require-rules-db rules-json
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \

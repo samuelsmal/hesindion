@@ -17,8 +17,11 @@ struct RegenerierenSheet: View {
     private var totalMod: Int { baseMod + userModifier }
     private var healing: Int { Swift.max(0, (d6Result ?? 0) + totalMod) }
     private var currentLE: Int { hero.derivedValues?.lebensenergie.current ?? 0 }
-    private var maxLE: Int { SheetValues.of(hero)?.leMax.result ?? 0 }
-    private var newLE: Int { Swift.min(currentLE + healing, maxLE) }
+    /// `nil` while the rules engine has not loaded or cannot resolve `leMax` for this hero
+    /// (final review item 1): the confirm button then disables and the result box shows
+    /// `L("rulesEngine.unavailable")` instead of clamping the write against an assumed 0.
+    private var maxLE: Int? { SheetValues.of(hero)?.leMax.result }
+    private var newLE: Int? { LEWrite.healed(current: currentLE, amount: healing, leMax: maxLE) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -124,9 +127,15 @@ struct RegenerierenSheet: View {
             Text(formulaStr)
                 .font(.dsaHeading(.body))
                 .fontDesign(.monospaced)
-            Text("\(currentLE) + \(healing) → \(newLE) / \(maxLE) LP")
-                .font(.dsaMono(.caption, emphasis: true))
-                .foregroundStyle(.secondary)
+            Group {
+                if let maxLE, let newLE {
+                    Text("\(currentLE) + \(healing) → \(newLE) / \(maxLE) LP")
+                } else {
+                    Text(L("rulesEngine.unavailable"))
+                }
+            }
+            .font(.dsaMono(.caption, emphasis: true))
+            .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -134,8 +143,11 @@ struct RegenerierenSheet: View {
         .dsaBox(.flush)
     }
 
+    // Disabled while `leMax` is unknown, so there is nothing this button can write
+    // (final review item 1).
     private var confirmButton: some View {
         Button {
+            guard let newLE else { return }
             let actualHealing = newLE - currentLE
             if actualHealing > 0 {
                 let entry = LogEntry.create(
@@ -150,13 +162,14 @@ struct RegenerierenSheet: View {
         } label: {
             Image(systemName: "checkmark")
                 .font(.dsaHeading(.title2))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(newLE == nil ? Color.dsaDisabledLabel : Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.groupPersonalData)
+                .background(newLE == nil ? Color.dsaDisabled : Color.groupPersonalData)
                 .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
+        .disabled(newLE == nil)
     }
 
     // MARK: - Animation & Rolling

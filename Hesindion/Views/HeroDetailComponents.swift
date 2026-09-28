@@ -289,11 +289,18 @@ struct SubfieldBlock: View {
 
 struct LPBarView: View {
     let current: Int
-    let max: Int
+    /// `nil` while the rules engine has not loaded or cannot resolve this maximum (final
+    /// review item 1): the bar then shows `L("rulesEngine.unavailable")` instead of "x / 0"
+    /// and disables both buttons — before this fix only the increment's own `current < max`
+    /// guard read the unknown-as-0 maximum; the decrement's `current > 0` guard did not, so
+    /// it kept firing and wrote LE down while the app showed no maximum at all.
+    let max: Int?
     var accent: Color = Color.groupCombat
     var label: String = "lifePoints.short"
     let onDecrement: () -> Void
     let onIncrement: () -> Void
+
+    private var isAvailable: Bool { max != nil }
 
     var body: some View {
         // One control, built like `DSAStepper`: the bar owns the border and the
@@ -307,7 +314,8 @@ struct LPBarView: View {
                     .frame(width: 44, height: 48)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
+            .buttonStyle(DSASegmentPressStyle(tint: isAvailable ? accent : Color.dsaDisabled, foreground: .white))
+            .disabled(!isAvailable)
 
             rule
 
@@ -315,11 +323,13 @@ struct LPBarView: View {
                 ZStack(alignment: .leading) {
                     Rectangle()
                         .fill(current == 0 ? Color.dsaDark : Color(UIColor.systemGray5))
-                    let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
-                    Rectangle()
-                        .fill(barColor)
-                        .frame(width: geo.size.width * fraction)
-                    Text("\(L(label))   \(current) / \(max)")
+                    if let max {
+                        let fraction = max > 0 ? CGFloat(current) / CGFloat(max) : 0
+                        Rectangle()
+                            .fill(barColor)
+                            .frame(width: geo.size.width * fraction)
+                    }
+                    Text(isAvailable ? "\(L(label))   \(current) / \(max ?? 0)" : L("rulesEngine.unavailable"))
                         .font(.dsaHeading(.body))
                         .foregroundStyle(textColor)
                         .frame(maxWidth: .infinity)
@@ -335,7 +345,8 @@ struct LPBarView: View {
                     .frame(width: 44, height: 48)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(DSASegmentPressStyle(tint: accent, foreground: .white))
+            .buttonStyle(DSASegmentPressStyle(tint: isAvailable ? accent : Color.dsaDisabled, foreground: .white))
+            .disabled(!isAvailable)
         }
         .fixedSize(horizontal: false, vertical: true)
         .dsaBox(.raised)
@@ -348,6 +359,7 @@ struct LPBarView: View {
     }
 
     private var barColor: Color {
+        guard let max else { return .dsaDisabled }
         if current == 0 { return .dsaDark }
         if current <= 5 { return Color(red: 0x8B/255.0, green: 0x00/255.0, blue: 0x00/255.0) }
         if max > 0 && current < max / 4 { return Color(red: 0xCC/255.0, green: 0x22/255.0, blue: 0x00/255.0) }
@@ -357,6 +369,7 @@ struct LPBarView: View {
     }
 
     private var textColor: Color {
+        guard let max else { return Color.dsaDisabledLabel }
         if current == 0 { return .white }
         if max > 0 && current >= max * 3 / 4 { return .white }
         return .primary

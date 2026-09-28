@@ -12,7 +12,12 @@ struct CombatLoadoutPicker: View {
     let mountedActive: Bool
     @Binding var selected: Set<String>
     @Binding var selectedRanged: String?
-    @State private var weaponInfo: WeaponInfoTarget?
+    /// Opens `WeaponInfoSheet` on the caller's own root `ZStack` (as `HeroDetailView` does),
+    /// not on a `ZStack` of the picker's own: the picker sits inside a `ScrollView`/`VStack`
+    /// (`CombatSetupView`, `CombatLoadoutEquipmentView`), so an overlay layered here instead
+    /// is bounded by the picker's own laid-out height and scrolls with the page rather than
+    /// covering the whole screen (final review item 2).
+    let onInfo: (WeaponInfoTarget) -> Void
 
     /// One selectable thing, with everything the rows and the rules need.
     struct Item {
@@ -91,31 +96,25 @@ struct CombatLoadoutPicker: View {
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                let all = items
+        VStack(spacing: 0) {
+            let all = items
 
-                if !hero.meleeWeapons.isEmpty {
-                    combatSectionLabel(L("meleeWeapons.label"))
-                    ForEach(all.filter { !$0.isShield && !$0.isRaufen }, id: \.name) { row($0) }
-                }
-
-                if !hero.shields.isEmpty {
-                    combatSectionLabel(L("shields.label"))
-                    ForEach(all.filter(\.isShield), id: \.name) { row($0) }
-                }
-
-                combatSectionLabel(L("unarmed.label"))
-                ForEach(all.filter(\.isRaufen), id: \.name) { row($0) }
-
-                if !hero.rangedWeapons.isEmpty {
-                    combatSectionLabel(L("fernkampf.rangedWeapons.label"))
-                    ForEach(hero.rangedWeaponsInOrder, id: \.name) { rangedRow($0) }
-                }
+            if !hero.meleeWeapons.isEmpty {
+                combatSectionLabel(L("meleeWeapons.label"))
+                ForEach(all.filter { !$0.isShield && !$0.isRaufen }, id: \.name) { row($0) }
             }
 
-            if let target = weaponInfo {
-                WeaponInfoSheet(hero: hero, name: target.name) { weaponInfo = nil }
+            if !hero.shields.isEmpty {
+                combatSectionLabel(L("shields.label"))
+                ForEach(all.filter(\.isShield), id: \.name) { row($0) }
+            }
+
+            combatSectionLabel(L("unarmed.label"))
+            ForEach(all.filter(\.isRaufen), id: \.name) { row($0) }
+
+            if !hero.rangedWeapons.isEmpty {
+                combatSectionLabel(L("fernkampf.rangedWeapons.label"))
+                ForEach(hero.rangedWeaponsInOrder, id: \.name) { rangedRow($0) }
             }
         }
     }
@@ -124,7 +123,7 @@ struct CombatLoadoutPicker: View {
     /// not inside it, so tapping it opens the rules without picking the weapon.
     private func infoButton(_ name: String, selected: Bool) -> some View {
         WeaponInfoButton(name: name, tint: selected ? .white : .secondary) {
-            weaponInfo = WeaponInfoTarget(name: name)
+            onInfo(WeaponInfoTarget(name: name))
         }
         .padding(.trailing, 4)
         .padding(.bottom, 4)

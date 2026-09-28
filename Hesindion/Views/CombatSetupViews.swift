@@ -95,108 +95,119 @@ struct CombatSetupView: View {
 
     @State private var selected: Set<String> = []
     @State private var selectedRanged: String? = nil
+    /// Lifted to this screen's own root `ZStack` (below), not the picker's — a modal is a
+    /// sibling of the layout, not a child of a panel (AGENTS.md's design rule; final review
+    /// item 2, `CombatLoadoutPicker`'s doc comment).
+    @State private var weaponInfo: WeaponInfoTarget?
 
     var body: some View {
-        VStack(spacing: 0) {
-            combatScreenHeader(
-                title: L("combatSetup"),
-                onDismiss: onDismiss
-            )
+        ZStack {
+            VStack(spacing: 0) {
+                combatScreenHeader(
+                    title: L("combatSetup"),
+                    onDismiss: onDismiss
+                )
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    CombatArmorPicker(hero: hero)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        CombatArmorPicker(hero: hero)
 
-                    CombatLoadoutPicker(
-                        hero: hero,
-                        mountedActive: mountedActive,
-                        selected: $selected,
-                        selectedRanged: $selectedRanged
-                    )
-
-                    // Plänkler-Formation
-                    if hero.hasPlaenklerFormation {
-                        combatSectionLabel(L("formation.label"))
-
-                        DSAToggleRow(
-                            title: L("plaenkler"),
-                            isOn: $plaenklerActive,
-                            accent: combatAccent,
-                            identifier: "combat.setup.plaenkler"
+                        CombatLoadoutPicker(
+                            hero: hero,
+                            mountedActive: mountedActive,
+                            selected: $selected,
+                            selectedRanged: $selectedRanged,
+                            onInfo: { weaponInfo = $0 }
                         )
 
-                        if plaenklerActive {
-                            HStack(spacing: 8) {
-                                ForEach(PlaenklerBonus.allCases, id: \.self) { bonus in
-                                    let isSelected = plaenklerBonus == bonus
-                                    Button { plaenklerBonus = bonus } label: {
-                                        Text(bonus == .at ? L("plaenklerAT") : L("plaenklerAW"))
-                                            .font(.dsaBody(.caption))
-                                            .foregroundStyle(isSelected ? .white : .primary)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                            .dsaBox(.flush)
+                        // Plänkler-Formation
+                        if hero.hasPlaenklerFormation {
+                            combatSectionLabel(L("formation.label"))
+
+                            DSAToggleRow(
+                                title: L("plaenkler"),
+                                isOn: $plaenklerActive,
+                                accent: combatAccent,
+                                identifier: "combat.setup.plaenkler"
+                            )
+
+                            if plaenklerActive {
+                                HStack(spacing: 8) {
+                                    ForEach(PlaenklerBonus.allCases, id: \.self) { bonus in
+                                        let isSelected = plaenklerBonus == bonus
+                                        Button { plaenklerBonus = bonus } label: {
+                                            Text(bonus == .at ? L("plaenklerAT") : L("plaenklerAW"))
+                                                .font(.dsaBody(.caption))
+                                                .foregroundStyle(isSelected ? .white : .primary)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
+                                                .dsaBox(.flush)
+                                        }
+                                        .buttonStyle(.dsaMotion)
+                                        .accessibilityIdentifier("combat.setup.plaenkler.\(bonus.rawValue)")
                                     }
-                                    .buttonStyle(.dsaMotion)
-                                    .accessibilityIdentifier("combat.setup.plaenkler.\(bonus.rawValue)")
                                 }
+                                .dsaOptionGroup()
+                                .padding(.top, 4)
                             }
-                            .dsaOptionGroup()
-                            .padding(.top, 4)
+                        }
+
+                        // Mount toggle
+                        if hero.hasMount {
+                            combatSectionLabel(L("mount.label"))
+
+                            let mountName = hero.mount?.name ?? L("mount")
+                            DSAToggleRow(
+                                title: "\(L("mounted")) (\(mountName))",
+                                isOn: $mountedActive,
+                                accent: combatAccent,
+                                identifier: "combat.setup.mounted"
+                            )
+                        }
+
+                        // Beengte Umgebung toggle
+                        combatSectionLabel(L("beengteUmgebung.label"))
+
+                        DSAToggleRow(
+                            title: L("beengteUmgebung"),
+                            isOn: $beengteUmgebungActive,
+                            accent: combatAccent,
+                            identifier: "combat.setup.beengteUmgebung"
+                        )
+
+                        CombatActionButton(
+                            title: L("continue"),
+                            identifier: "combat.setup.continue",
+                            isEnabled: !selected.isEmpty
+                        ) {
+                            CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
+                            step = .initiativeRoll
                         }
                     }
-
-                    // Mount toggle
-                    if hero.hasMount {
-                        combatSectionLabel(L("mount.label"))
-
-                        let mountName = hero.mount?.name ?? L("mount")
-                        DSAToggleRow(
-                            title: "\(L("mounted")) (\(mountName))",
-                            isOn: $mountedActive,
-                            accent: combatAccent,
-                            identifier: "combat.setup.mounted"
-                        )
-                    }
-
-                    // Beengte Umgebung toggle
-                    combatSectionLabel(L("beengteUmgebung.label"))
-
-                    DSAToggleRow(
-                        title: L("beengteUmgebung"),
-                        isOn: $beengteUmgebungActive,
-                        accent: combatAccent,
-                        identifier: "combat.setup.beengteUmgebung"
-                    )
-
-                    CombatActionButton(
-                        title: L("continue"),
-                        identifier: "combat.setup.continue",
-                        isEnabled: !selected.isEmpty
-                    ) {
-                        CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
-                        step = .initiativeRoll
-                    }
+                    .adaptiveContentWidth()
+                    .padding(.bottom, 16)
                 }
-                .adaptiveContentWidth()
-                .padding(.bottom, 16)
             }
-        }
-        .onAppear {
-            let current = CombatLoadoutPicker.load(from: hero)
-            selected = current.selected
-            selectedRanged = current.ranged
-        }
-        // A two-handed weapon cannot be swung from the saddle, so mounting up has
-        // to be able to take one out of the hero's hands rather than leave the
-        // screen showing a selection the rules forbid.
-        .onChange(of: mountedActive) {
-            guard mountedActive else { return }
-            let forbidden = hero.meleeWeapons
-                .filter { CombatTechniqueID(rawValue: $0.combatTechniqueId)?.isTwoHandedOnly ?? false }
-                .map(\.name)
-            selected.subtract(forbidden)
+            .onAppear {
+                let current = CombatLoadoutPicker.load(from: hero)
+                selected = current.selected
+                selectedRanged = current.ranged
+            }
+            // A two-handed weapon cannot be swung from the saddle, so mounting up has
+            // to be able to take one out of the hero's hands rather than leave the
+            // screen showing a selection the rules forbid.
+            .onChange(of: mountedActive) {
+                guard mountedActive else { return }
+                let forbidden = hero.meleeWeapons
+                    .filter { CombatTechniqueID(rawValue: $0.combatTechniqueId)?.isTwoHandedOnly ?? false }
+                    .map(\.name)
+                selected.subtract(forbidden)
+            }
+
+            if let target = weaponInfo {
+                WeaponInfoSheet(hero: hero, name: target.name) { weaponInfo = nil }
+            }
         }
     }
 }
@@ -429,41 +440,51 @@ struct CombatLoadoutEquipmentView: View {
 
     @State private var selected: Set<String> = []
     @State private var selectedRanged: String? = nil
+    /// Lifted to this screen's own root `ZStack` (below), not the picker's — see
+    /// `CombatLoadoutPicker`'s doc comment (final review item 2).
+    @State private var weaponInfo: WeaponInfoTarget?
 
     var body: some View {
-        VStack(spacing: 0) {
-            combatScreenHeader(
-                title: L("selectEquipment"),
-                onBack: { step = .root },
-                onDismiss: onDismiss
-            )
+        ZStack {
+            VStack(spacing: 0) {
+                combatScreenHeader(
+                    title: L("selectEquipment"),
+                    onBack: { step = .root },
+                    onDismiss: onDismiss
+                )
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    CombatLoadoutPicker(
-                        hero: hero,
-                        mountedActive: mountedActive,
-                        selected: $selected,
-                        selectedRanged: $selectedRanged
-                    )
+                ScrollView {
+                    VStack(spacing: 0) {
+                        CombatLoadoutPicker(
+                            hero: hero,
+                            mountedActive: mountedActive,
+                            selected: $selected,
+                            selectedRanged: $selectedRanged,
+                            onInfo: { weaponInfo = $0 }
+                        )
 
-                    CombatActionButton(
-                        title: L("continue"),
-                        identifier: "combat.loadout.continue",
-                        isEnabled: !selected.isEmpty
-                    ) {
-                        CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
-                        step = .root
+                        CombatActionButton(
+                            title: L("continue"),
+                            identifier: "combat.loadout.continue",
+                            isEnabled: !selected.isEmpty
+                        ) {
+                            CombatLoadoutPicker.apply(selected: selected, ranged: selectedRanged, to: hero)
+                            step = .root
+                        }
                     }
+                    .adaptiveContentWidth()
+                    .padding(.bottom, 16)
                 }
-                .adaptiveContentWidth()
-                .padding(.bottom, 16)
             }
-        }
-        .onAppear {
-            let current = CombatLoadoutPicker.load(from: hero)
-            selected = current.selected
-            selectedRanged = current.ranged
+            .onAppear {
+                let current = CombatLoadoutPicker.load(from: hero)
+                selected = current.selected
+                selectedRanged = current.ranged
+            }
+
+            if let target = weaponInfo {
+                WeaponInfoSheet(hero: hero, name: target.name) { weaponInfo = nil }
+            }
         }
     }
 }

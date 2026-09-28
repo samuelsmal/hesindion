@@ -260,8 +260,7 @@ struct WoundEffectDamageControl: View {
 /// take-damage screen never mentioned the Wundschwelle at all: the player had to
 /// remember the number and do the comparison in their head (issue #23). This row
 /// said it either way — until the sheet cut-over: the rules catalog models
-/// Wundschwelle itself as part of the Trefferzonen ruleset (`trefferzonen.TZ8`,
-/// DSA 5's core rulebook has none without that chapter), so
+/// Wundschwelle itself as part of the Trefferzonen ruleset (`trefferzonen.TZ8`), so
 /// `SheetValues.wundschwelle.result` is `nil` without the Fokusregel and
 /// `CombatTakeDamageView` does not show this row at all then (task 7 controller
 /// ruling R8) — issue #23's guarantee now holds only for a hero who plays with

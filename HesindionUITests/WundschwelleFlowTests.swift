@@ -9,8 +9,7 @@ import XCTest
 /// stand-alone row on screen for that case. The Wundschwelle base value now
 /// comes from the rules engine (`SheetValues.wundschwelle`), and the catalog
 /// models Wundschwelle itself as part of the Trefferzonen ruleset
-/// (`trefferzonen.TZ8`) — DSA 5's core rulebook has no Wundschwelle without
-/// that chapter — so `wundschwelle.result` is `nil` without the Fokusregel, and
+/// (`trefferzonen.TZ8`), so `wundschwelle.result` is `nil` without the Fokusregel, and
 /// the take-damage screen hides the row on that `nil` exactly as it already did
 /// for a computed `0` (task 7 controller ruling R8). Issue #23's guarantee no
 /// longer holds for a hero who does not play with Trefferzonen; the first two
