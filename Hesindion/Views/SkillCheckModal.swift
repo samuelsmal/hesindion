@@ -11,6 +11,9 @@ struct SkillCheckConfig {
     let accentColor: Color
     let modifierLines: [ModifierLine]
     let logKind: String
+    /// Lines "Belastung nicht anwenden" (sheet cut-over design §6) switched off for this check:
+    /// shown struck through, adding nothing to `modifierLines`.
+    var struckLines: [ModifierLine] = []
 }
 
 // MARK: - SkillCheckResult
@@ -33,6 +36,10 @@ struct SkillCheckModal: View {
     var onResult: ((SkillCheckResult) -> Void)? = nil
     var initialModifier: Int = 0
     var hints: [SkillCheckHint] = []
+    /// Shown above the calculation, before the dice are rolled — the talent check's "Vor der
+    /// Probe" row (sheet cut-over design §6), built by the caller so this modal stays generic
+    /// about what it shows. Hidden once a result exists, like the modifier steppers.
+    var preRoll: (() -> AnyView)? = nil
 
     @Environment(\.modelContext) private var modelContext
     @State private var modifiers: [Int]
@@ -49,7 +56,8 @@ struct SkillCheckModal: View {
         onResult: ((SkillCheckResult) -> Void)? = nil,
         previewFinalRolls: [Int]? = nil,
         initialModifier: Int = 0,
-        hints: [SkillCheckHint] = []
+        hints: [SkillCheckHint] = [],
+        preRoll: (() -> AnyView)? = nil
     ) {
         self.config = config
         self.hero = hero
@@ -57,6 +65,7 @@ struct SkillCheckModal: View {
         self.onResult = onResult
         self.initialModifier = initialModifier
         self.hints = hints
+        self.preRoll = preRoll
         _modifiers = State(initialValue: [initialModifier, initialModifier, initialModifier])
         _finalRolls = State(initialValue: previewFinalRolls)
     }
@@ -121,6 +130,12 @@ struct SkillCheckModal: View {
         let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
 
         VStack(spacing: 0) {
+            // "Vor der Probe" (sheet cut-over design §6): before the roll only.
+            if !hasResult, let preRoll {
+                preRoll()
+                    .padding(.bottom, 8)
+            }
+
             // Attribute boxes
             HStack(spacing: 0) {
                 ForEach(0..<3, id: \.self) { i in
@@ -149,6 +164,30 @@ struct SkillCheckModal: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background((line.value < 0 ? Color.groupCombat : config.accentColor).opacity(0.1))
+                .dsaRowDivider()
+            }
+
+            // Struck lines: "Belastung nicht anwenden" (sheet cut-over design §6) kept on
+            // screen, but crossed out, and adding nothing to `engineMod`.
+            ForEach(config.struckLines) { line in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.dsaBody(.caption2))
+                            .foregroundStyle(Color.groupCombat)
+                        Text("\(line.source): \(line.value >= 0 ? "+" : "")\(line.value)")
+                            .font(.dsaBody(.caption2))
+                            .foregroundStyle(Color.groupCombat)
+                            .strikethrough()
+                        Spacer()
+                    }
+                    Text(L("vorDerProbe.struckBy"))
+                        .font(.dsaBody(.caption2))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.groupCombat.opacity(0.1))
                 .dsaRowDivider()
             }
 

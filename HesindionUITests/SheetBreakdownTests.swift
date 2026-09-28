@@ -142,4 +142,44 @@ final class SheetBreakdownTests: XCTestCase {
             "The close button did not dismiss the weapon info modal"
         )
     }
+
+    /// "Vor der Probe" (sheet cut-over design §6): with the seeded hero's armour equipped, a
+    /// hindered talent's check shows the reminder row, and "Belastung nicht anwenden" strikes
+    /// the line without removing it.
+    @MainActor
+    func testVorDerProbeShowsTheBelastungReminderAndTheOffSwitchStrikesTheLine() throws {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", freshCombat: true)
+
+        // Equip the Plattenrüstung on the preparation screen — the same toggle
+        // `CombatPreparationFlowTests` uses — then leave combat: the write is to the
+        // hero, not the session, so it holds once we are back on the sheet.
+        let armour = app.buttons["combat.armor.Plattenrüstung"]
+        XCTAssertTrue(armour.waitForExistence(timeout: UITest.timeout), "The armour is not on the preparation screen")
+        armour.tap()
+        XCTAssertTrue(app.staticTexts["RS 6"].waitForExistence(timeout: UITest.timeout), "The armour did not equip")
+
+        app.buttons["combat.close"].tap()
+
+        let field = app.openCommandPalette()
+        XCTAssertTrue(field.waitForExistence(timeout: UITest.timeout), "Command palette did not open")
+        field.typeText("Kraftakt")
+        let probe = app.button(containing: "Kraftakt")
+        XCTAssertTrue(probe.waitForExistence(timeout: UITest.timeout), "Kraftakt's Probe command is not offered")
+        probe.tap()
+
+        let row = app.otherElements["vorDerProbe.row"]
+        XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "The Vor-der-Probe row did not show")
+
+        let ignore = app.buttons["vorDerProbe.ignore"]
+        XCTAssertTrue(ignore.exists, "No \"Belastung nicht anwenden\" toggle")
+        ignore.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["vom Spieler abgeschaltet"].waitForExistence(timeout: UITest.timeout),
+            "The struck line's caption did not show"
+        )
+
+        captureScreenshot(app, named: "62-vor-der-probe-row")
+    }
 }

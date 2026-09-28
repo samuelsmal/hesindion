@@ -833,6 +833,14 @@ enum DSAStrings {
         "fact.loadout.armour":          "armour",
         "fact.loadout.armour.belastung": "armour encumbrance",
         "fact.loadout.armour.extraPenalty": "armour's extra penalty",
+        // "Vor der Probe" (sheet cut-over design §6)
+        "vorDerProbe.label":            "Before the check",
+        "vorDerProbe.summary":          "Belastung %@: %d · %@",
+        "vorDerProbe.putDown":          "Put down for this check only",
+        "vorDerProbe.ignore":           "Do not apply Belastung",
+        "vorDerProbe.zaehlt":           "Belastung counts",
+        "vorDerProbe.loadout":          "Change equipment",
+        "vorDerProbe.struckBy":         "switched off by the player",
     ]
 
     private static let translations: [String: String] = [
@@ -1858,6 +1866,14 @@ enum DSAStrings {
         "fact.loadout.armour":          "Rüstung",
         "fact.loadout.armour.belastung": "Belastung der Rüstung",
         "fact.loadout.armour.extraPenalty": "zusätzliche Erschwernis der Rüstung",
+        // "Vor der Probe" (sheet cut-over design §6)
+        "vorDerProbe.label":            "Vor der Probe",
+        "vorDerProbe.summary":          "Belastung %@: %d · %@",
+        "vorDerProbe.putDown":          "Für diese Probe abgelegt",
+        "vorDerProbe.ignore":           "Belastung nicht anwenden",
+        "vorDerProbe.zaehlt":           "Belastung zählt",
+        "vorDerProbe.loadout":          "Ausrüstung ändern",
+        "vorDerProbe.struckBy":         "vom Spieler abgeschaltet",
     ]
 }
 
