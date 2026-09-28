@@ -1,6 +1,6 @@
 # Domain 1 cut-over: the sheet's derived values — design
 
-**Status:** design, approved in conversation 2026-09-27; awaiting review of this document.
+**Status:** implemented 2026-09-28; the folded fields leave in SchemaV7: plan Task 11.
 **Parent:** [`2026-09-24-rules-engine-design.md`](2026-09-24-rules-engine-design.md) §9, step 1
 (ADR-0015). The rules in scope are the sweep [`specs/rules/sweeps/sheet.yaml`](../../specs/rules/sweeps/sheet.yaml).
 **Replaces:** the stored derived values and the Swift formulas for LE, Wundschwelle, INI, AW, GS
