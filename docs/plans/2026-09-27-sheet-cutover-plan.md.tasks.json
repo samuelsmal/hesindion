@@ -94,7 +94,7 @@
     {
       "id": 10,
       "subject": "Task 10: Documents",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** AGENTS.md, the CHANGELOG and the spec say that domain 1 has switched and how.\n\n**Files:**\n- Modify: `AGENTS.md` (the paragraph at :114 \"A new declarative rules engine is being built beside this one…\", the `DerivedValueFormulas`/`DerivedValueRepair` mentions, the `make` target list near the top)\n- Modify: `CHANGELOG.md` (`[Unreleased]`)\n- Modify: `docs/plans/2026-09-27-sheet-cutover-design.md` (status line)\n\n**Acceptance Criteria:**\n- [ ] AGENTS.md: the rules-engine paragraph says the sheet domain (LE, Wundschwelle, INI, AW, GS, AT/PA) reads the engine through `HeroSheetMapping` → `HeroSheet` → `SheetValues`, that roll screens take `withoutBelastung` until domain 2, that `HeroSheet` has no session state until domain 4, the \"Vor der Probe\" principle, and that `rules.json`/`checks.json` are build products (`make rules-json`, `require-rules-json`); `make hero-sheet-fixtures` is in the target list\n- [ ] CHANGELOG `[Unreleased]` has an \"Added\"/\"Changed\" entry naming the breakdown sheet, the talent-check Belastung with its three choices, and every intended difference from Task 5 by rule\n- [ ] The spec's status line reads `implemented <date>; the folded fields leave in SchemaV7: plan Task 11`\n- [ ] No DSA rule prose added (Data Policy)\n\n**Verify:** `git diff --stat HEAD~1 -- AGENTS.md CHANGELOG.md docs/plans` shows the three files; `make test-rules-review` passes (it checks `RULINGS.md`, untouched but cheap to confirm)\n\nFull steps with code: docs/plans/2026-09-27-sheet-cutover-plan.md (Task 10).\n\n```json:metadata\n{\"files\": [\"AGENTS.md\", \"CHANGELOG.md\", \"docs/plans/2026-09-27-sheet-cutover-design.md\"], \"verifyCommand\": \"make test-rules-review\", \"acceptanceCriteria\": [\"AGENTS.md rules paragraph describes the wired sheet domain, withoutBelastung, no session state, Vor der Probe, rules.json/checks.json build products, hero-sheet-fixtures target\", \"CHANGELOG names breakdown sheet, talent Belastung choices and every intended difference by rule\", \"spec status line updated\", \"no DSA rule prose\"], \"modelTier\": \"mechanical\"}\n```",
       "blockedBy": [
         9
@@ -119,5 +119,5 @@
       ]
     }
   ],
-  "lastUpdated": "2026-09-28T21:09:05"
+  "lastUpdated": "2026-09-28T21:25:20"
 }
