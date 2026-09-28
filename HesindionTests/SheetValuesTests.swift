@@ -105,17 +105,29 @@ final class SheetValuesTests: XCTestCase {
             "Ingra Tochter der Ilpetta": [],
             "Lyssandra Silberhaar": [],
         ]
+        // Task 9 deleted `DerivedValues.ausweichen`/`.initiative`/`.wundschwelle` (and the
+        // import's ADV_25 LE-bonus variable), so these four can no longer be read off `dv`.
+        // Frozen from the stored values on the pre-deletion code, which this test already
+        // proved equal to the engine's (`make test-only
+        // ONLY=HesindionTests/SheetValuesTests`, 2026-09-28) — comparing against a literal
+        // here is exactly as strong as comparing against the property was.
+        let frozen: [String: (leMax: Int, wundschwelle: Int, iniBase: Int, aw: Int)] = [
+            "Boronmir Siebenfeld von Greifenfurt": (leMax: 37, wundschwelle: 9, iniBase: 14, aw: 7),
+            "Robak Arkanjeff": (leMax: 31, wundschwelle: 7, iniBase: 13, aw: 6),
+            "Ingra Tochter der Ilpetta": (leMax: 38, wundschwelle: 8, iniBase: 12, aw: 6),
+            "Lyssandra Silberhaar": (leMax: 27, wundschwelle: 6, iniBase: 13, aw: 7),
+        ]
         for name in HeroSheetMappingTests.heroes {
             let hero = try SampleHeroes.importHero(named: name)
             // The Wundschwelle is the Trefferzonen Fokusregel's (trefferzonen.TZ8).
             hero.setFokusRule(.trefferzonen, active: true)
             let v = try XCTUnwrap(SheetValues.of(hero))
-            let dv = try XCTUnwrap(hero.derivedValues)
+            let f = try XCTUnwrap(frozen[name])
             var got: [String: (engine: SheetValue, stored: Int)] = [
-                "leMax": (v.leMax, dv.lebensenergie.max),
-                "wundschwelle": (v.wundschwelle, dv.wundschwelle.max),
-                "iniBase": (v.iniBase, dv.initiative.max),
-                "aw": (v.aw, dv.ausweichen.max),
+                "leMax": (v.leMax, f.leMax),
+                "wundschwelle": (v.wundschwelle, f.wundschwelle),
+                "iniBase": (v.iniBase, f.iniBase),
+                "aw": (v.aw, f.aw),
             ]
             for ct in hero.combatTechniques {
                 got["at(\(ct.ruleId))"] = (v.technique(ct.ruleId).at, ct.at)

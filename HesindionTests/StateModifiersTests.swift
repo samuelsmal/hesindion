@@ -81,10 +81,7 @@ final class StateModifiersTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
             zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
-            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
             geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
             schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
         XCTAssertEqual(hero.effectiveSchmerzLevel, 2)
         XCTAssertEqual(hero.schmerzPenalty, -2)
@@ -175,10 +172,7 @@ final class StateModifiersTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
             zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
-            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
             geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
             schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
     }
 

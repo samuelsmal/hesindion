@@ -4,7 +4,7 @@ import SwiftData
 
 final class DerivedValueRepairTests: XCTestCase {
 
-    /// Hero with KO 11, GE 13, MU 12 and the OLD truncated values stored.
+    /// Hero with KO 11, GE 13, MU 12 and a stored `DerivedValues`.
     private func makeStaleHero() -> Hero {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(
@@ -18,29 +18,11 @@ final class DerivedValueRepairTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 1, bonus: 0, max: 1),
             zaehigkeit: ResourceValue(base: 1, bonus: 0, max: 1),
-            ausweichen: ComputedValue(value: 6, bonus: 0, max: 6),      // stale: 13/2 = 6
-            initiative: ComputedValue(value: 12, bonus: 0, max: 12),    // stale: 25/2 = 12
             geschwindigkeit: ResourceValue(base: 8, bonus: 0, max: 8),
-            wundschwelle: ComputedValue(value: 5, bonus: 0, max: 5),    // stale: 11/2 = 5
             schicksalspunkte: MutableResourceValue(current: 3, bonus: 0, max: 3)
         )
         ctx.insert(hero)
         return hero
-    }
-
-    func testRepairCorrectsAllThree() {
-        let hero = makeStaleHero()
-        XCTAssertTrue(DerivedValueRepair.repair(hero))
-        XCTAssertEqual(hero.derivedValues?.wundschwelle.max, 6)
-        XCTAssertEqual(hero.derivedValues?.ausweichen.max, 7)
-        XCTAssertEqual(hero.derivedValues?.initiative.max, 13)
-    }
-
-    func testRepairIsIdempotent() {
-        let hero = makeStaleHero()
-        XCTAssertTrue(DerivedValueRepair.repair(hero))
-        XCTAssertFalse(DerivedValueRepair.repair(hero), "second run must report no change")
-        XCTAssertEqual(hero.derivedValues?.wundschwelle.max, 6)
     }
 
     func testRepairLeavesLifeAndResourcesAlone() {
@@ -89,10 +71,7 @@ final class DerivedValueRepairTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 1, bonus: 0, max: 1),
             zaehigkeit: ResourceValue(base: 1, bonus: 0, max: 1),
-            ausweichen: ComputedValue(value: 6, bonus: 0, max: 6),
-            initiative: ComputedValue(value: 12, bonus: 0, max: 12),
             geschwindigkeit: ResourceValue(base: storedGS, bonus: 0, max: storedGS),
-            wundschwelle: ComputedValue(value: 6, bonus: 0, max: 6),
             schicksalspunkte: MutableResourceValue(current: 3, bonus: 0, max: 3)
         )
         ctx.insert(hero)

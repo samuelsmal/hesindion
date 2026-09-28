@@ -21,6 +21,10 @@ enum SchemaV2: VersionedSchema {
             Pet.self,
             Language.self,
             HeroSpell.self,
+            HeroStateEntry.self,
+            LogEntry.self,
+            Adventure.self,
+            WeatherDay.self,
         ]
     }
 }

@@ -307,7 +307,10 @@ enum RuleEvaluator {
             guard let entry = catalog.statuses[id] else { continue }
             let reason: NotApplied.Reason
             switch entry.status {
-            case .implemented:   continue
+            // `engine`-owned rules are applied — by the rules engine, on the sheet,
+            // not by this evaluator — so they belong with `implemented`, not the
+            // not-applied list.
+            case .implemented, .engine: continue
             case .byHand:        reason = .byHand
             case .noRollEffect:  reason = .noRollEffect
             case .todo:          reason = .todo

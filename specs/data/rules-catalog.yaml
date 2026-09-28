@@ -2,11 +2,17 @@
 # One entry per rule id in rules.db (weapon templates, ITEMTPL_, optionally).
 # The build fails on a missing or unknown id,
 # an unknown status, a byHand pointer that does not resolve, a byHand without
-# note, a todo without why, a noRollEffect without note, a name or group that
-# does not match rules.db, a duplicate id, or counts that differ from
-# rules-catalog.snapshot.json.
+# note, a todo without why, a noRollEffect without note, an engine without
+# note, a name or group that does not match rules.db, a duplicate id, or
+# counts that differ from rules-catalog.snapshot.json.
 #
-# status: implemented | byHand | noRollEffect | todo
+# status: implemented | byHand | noRollEffect | todo | engine
+#
+# engine: the declarative rules engine (Packages/RulesEngine, specs/rules/) applies this
+# rule as part of a sheet cut-over domain (docs/plans/2026-09-27-sheet-cutover-design.md);
+# this catalog and RuleEvaluator.swift (the domains a roll still asks Swift about) no
+# longer own it. `note` names the specs/rules/ file. Added by the sheet cut-over Task 9,
+# which moved LE max, Wundschwelle, INI, AW and GS off this catalog.
 #
 # Entries with a status other than todo live in the block at the top of the file.
 
@@ -526,9 +532,14 @@
 - id: ADV_25
   name: "Hohe Lebenskraft"
   group: "Vorteil"
-  status: byHand
-  pointer: { file: Hesindion/Services/OptolithImportService.swift, symbol: hoheLebenskraftBonus }
-  note: "+1 LeP per tier on import."
+  status: engine
+  note: "+1 LE max per tier — specs/rules/advantages/ADV_25.yaml (HL1), a line in SheetValues.leMax's breakdown. Was byHand (OptolithImportService.hoheLebenskraftBonus) until the sheet cut-over Task 9 deleted that computation; the stored lebensenergie.max no longer includes it (design §4, a known exception until domain 4)."
+
+- id: DISADV_28
+  name: "Niedrige Lebenskraft"
+  group: "Nachteil"
+  status: engine
+  note: "−1 LE max per tier — specs/rules/disadvantages/DISADV_28.yaml (NL1), a line in SheetValues.leMax's breakdown, the mirror of ADV_25. Was `todo`; the sheet cut-over Task 9 names this an intended difference from the old app (design §4) — the app never applied it before."
 
 - id: ADV_26
   name: "Hohe Seelenkraft"
@@ -561,16 +572,14 @@
 - id: ADV_54
   name: "Eisern"
   group: "Vorteil"
-  status: byHand
-  pointer: { file: Hesindion/Engine/DerivedValueFormulas.swift, symbol: wundschwelle }
-  note: "Wundschwelle +1."
+  status: engine
+  note: "Wundschwelle +1 — specs/rules/advantages/ADV_54.yaml (E1), a line in SheetValues.wundschwelle's breakdown (needs the Trefferzonen Fokusregel, trefferzonen.TZ8). Was byHand (DerivedValueFormulas.wundschwelle) until the sheet cut-over Task 9 deleted that formula and the stored wundschwelle property."
 
-- id: DISADV_56
-  name: "Gläsern"
-  group: "Nachteil"
-  status: byHand
-  pointer: { file: Hesindion/Engine/DerivedValueFormulas.swift, symbol: wundschwelle }
-  note: "Wundschwelle −1."
+- id: SA_51
+  name: "Kampfreflexe"
+  group: "Kampf"
+  status: engine
+  note: "INI Basiswert +1 per tier — specs/rules/abilities/SA_51.yaml (KR1), a line in SheetValues.iniBase's breakdown. Was `todo`; the sheet cut-over Task 9 names this an intended difference from the old app (design §4) — the app never applied it before."
 
 - id: COND_1
   name: "Belastung"
@@ -912,7 +921,6 @@
 - { id: DISADV_25, name: "Nachtblind", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_26, name: "Niedrige Astralkraft", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_27, name: "Niedrige Karmalkraft", group: "Nachteil", status: todo, why: not yet read }
-- { id: DISADV_28, name: "Niedrige Lebenskraft", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_29, name: "Niedrige Seelenkraft", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_30, name: "Niedrige Zähigkeit", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_31, name: "Pech", group: "Nachteil", status: todo, why: not yet read }
@@ -940,6 +948,7 @@
 - { id: DISADV_53, name: "Wilde Magie", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_54, name: "Zauberanfällig", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_55, name: "Zerbrechlich", group: "Nachteil", status: todo, why: not yet read }
+- { id: DISADV_56, name: "Gläsern", group: "Nachteil", status: todo, why: "Wundschwelle -1 was byHand (DerivedValueFormulas.wundschwelle) until the sheet cut-over Task 9 deleted that formula; the rules engine has no DISADV_56 rule file yet (only ADV_54/Eisern does, specs/rules/advantages/ADV_54.yaml), so this is a real gap, not a move. No sample hero carries the trait." }
 - { id: DISADV_58, name: "Instabiler Zauberer", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_59, name: "Kleine Zauberauswahl", group: "Nachteil", status: todo, why: not yet read }
 - { id: DISADV_60, name: "Schwache Zaubermelodien", group: "Nachteil", status: todo, why: not yet read }
@@ -1397,7 +1406,6 @@
 - { id: LANG_49, name: "Dschuku", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_50, name: "Hammerschlag", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_50, name: "Goropo", group: "Sonderfertigkeit", status: todo, why: not yet read }
-- { id: SA_51, name: "Kampfreflexe", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_51, name: "Hoch-Gryphonisch", group: "Sonderfertigkeit", status: todo, why: not yet read }
 - { id: SA_52, name: "Klingenfänger", group: "Kampf", status: todo, why: not yet read }
 - { id: LANG_52, name: "Khami", group: "Sonderfertigkeit", status: todo, why: not yet read }

@@ -340,6 +340,17 @@ final class RuleEvaluatorTests: XCTestCase {
                                            NotApplied(ruleId: "ADV_1", name: "Eins", reason: .noRollEffect)])
     }
 
+    /// `engine` (the sheet cut-over's status for a rule the declarative rules engine
+    /// now applies, Task 9) is applied — elsewhere, on the sheet — so it belongs beside
+    /// `implemented` here, not in the not-applied list.
+    func testAnOwnedEngineRuleIsNotListedAsNotApplied() {
+        own("ADV_54")
+        let statuses = [CatalogEntry(id: "ADV_54", name: "Eisern", status: .engine, note: "x",
+                                     pointer: nil, reviewedBy: nil, reviewedOn: nil)]
+        let e = evaluate([], statuses: statuses, Situation(hero: hero, domain: .meleeAttack))
+        XCTAssertTrue(e.notApplied.isEmpty)
+    }
+
     func testOpponentLinesAndTheReviewedFlagTravel() {
         let rules = [rule("STATE_x", name: "Liegend", reviewed: true,
                           [passive([.meleeAttack], when: .opponentState("liegend"), [.opponentAdd(target: .vw, value: -2)])])]

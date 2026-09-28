@@ -105,10 +105,7 @@ final class HeroLoadoutSlotTests: XCTestCase {
                 astralenergie: nil, karmaenergie: nil,
                 seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
                 zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-                ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
-                initiative: ComputedValue(value: 0, bonus: 0, max: 0),
                 geschwindigkeit: ResourceValue(base: gs, bonus: 0, max: gs),
-                wundschwelle: ComputedValue(value: 6, bonus: 0, max: 6),
                 schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
         }
         return hero

@@ -149,10 +149,7 @@ final class HeroStateTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
             zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
-            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
             geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            wundschwelle: ComputedValue(value: 0, bonus: 0, max: 0),
             schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
         XCTAssertTrue(hurt.effectiveSchmerzLevel > 0, "precondition: Schmerz active")
         XCTAssertTrue(hurt.hasIgnorableZustand, "Schmerz is suppressible by the Schip")

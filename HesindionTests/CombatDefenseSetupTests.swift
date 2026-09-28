@@ -72,10 +72,7 @@ final class CombatDefenseSetupTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 1, bonus: 0, max: 1),
             zaehigkeit: ResourceValue(base: 1, bonus: 0, max: 1),
-            ausweichen: ComputedValue(value: 6, bonus: 0, max: 6),
-            initiative: ComputedValue(value: 12, bonus: 0, max: 12),
             geschwindigkeit: ResourceValue(base: 8, bonus: 0, max: 8),
-            wundschwelle: ComputedValue(value: 5, bonus: 0, max: 5),
             schicksalspunkte: MutableResourceValue(current: 3, bonus: 0, max: 3)
         )
         let step = DefenseRoute.next(.ausweichen, hero: hero, size: .mittel, lines: [line(-4)])

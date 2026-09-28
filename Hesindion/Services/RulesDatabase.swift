@@ -57,6 +57,9 @@ enum CatalogStatus: String, CaseIterable {
     case noRollEffect
     /// Not read yet.
     case todo
+    /// The declarative rules engine (`Packages/RulesEngine`) applies it as part of a
+    /// sheet cut-over domain; this catalog and `RuleEvaluator` no longer own it.
+    case engine
 
     var labelKey: String { "catalog.status.\(rawValue)" }
 }

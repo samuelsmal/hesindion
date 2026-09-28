@@ -72,6 +72,15 @@ class ValidateTests(unittest.TestCase):
         entries = [entry(status="noRollEffect", why=None), entry(id="SA_2", name="Zweite")]
         self.assertIn("SA_1: noRollEffect without note", catalog.validate(entries, RULES, self.root))
 
+    def test_engine_needs_a_note(self):
+        entries = [entry(status="engine", why=None), entry(id="SA_2", name="Zweite")]
+        self.assertIn("SA_1: engine without note", catalog.validate(entries, RULES, self.root))
+
+    def test_engine_with_a_note_has_no_problems(self):
+        entries = [entry(status="engine", why=None, note="the rules engine applies it"),
+                   entry(id="SA_2", name="Zweite")]
+        self.assertEqual(catalog.validate(entries, RULES, self.root), [])
+
     def test_a_non_mapping_entry_is_a_problem_not_a_crash(self):
         problems = catalog.validate([None, "SA_1"], RULES, self.root)
         self.assertIn("entry 0: not a mapping", problems)
@@ -204,7 +213,7 @@ class SnapshotTests(unittest.TestCase):
         entries = [entry(), entry(id="SA_2", name="Zweite", status="byHand", note="x",
                                   pointer={"file": "a", "symbol": "b"})]
         counts = catalog.status_counts(entries)
-        self.assertEqual(counts, {"implemented": 0, "byHand": 1, "noRollEffect": 0, "todo": 1})
+        self.assertEqual(counts, {"implemented": 0, "byHand": 1, "noRollEffect": 0, "todo": 1, "engine": 0})
         catalog.write_snapshot(counts, self.path)
         self.assertEqual(catalog.check_snapshot(counts, self.path), [])
 
@@ -319,7 +328,7 @@ class ImportCatalogTests(unittest.TestCase):
                                 update_snapshot=True,
                                 vocabulary_path=VOCABULARY_PATH)
         snap = json.loads(self.snapshot_path.read_text())
-        self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2})
+        self.assertEqual(snap, {"implemented": 0, "byHand": 0, "noRollEffect": 0, "todo": 2, "engine": 0})
 
     def test_the_source_hash_is_stored(self):
         self._write_catalog(

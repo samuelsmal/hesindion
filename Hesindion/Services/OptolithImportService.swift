@@ -170,8 +170,7 @@ struct OptolithImportService {
             purchasedLP: purchasedLP,
             purchasedAE: purchasedAE,
             purchasedKP: purchasedKP,
-            advantages: activatables.advantages,
-            disadvantages: activatables.disadvantages
+            advantages: activatables.advantages
         )
 
         // Upsert: check for existing hero by name
@@ -868,25 +867,23 @@ struct OptolithImportService {
         purchasedLP: Int,
         purchasedAE: Int,
         purchasedKP: Int,
-        advantages: [HeroTrait],
-        disadvantages: [HeroTrait]
+        advantages: [HeroTrait]
     ) -> DerivedValues {
         let mu = attributes.mu
         let kl = attributes.kl
         let inVal = attributes.inValue
-        let ge = attributes.ge
         let ko = attributes.ko
         let kk = attributes.kk
 
-        // LE: base = species base LP + KO * 2
+        // LE: base = species base LP + KO * 2. Hohe Lebenskraft (ADV_25) is no longer added
+        // here — the rules engine's `leMax` (kampfwerte's ADV_25 term) is what the sheet
+        // shows; this stored value is read only by `Hero.lebenspunkteSchmerzLevel`/
+        // `schmerzBreakdown` until domain 4 (design §4, sheet cut-over).
         let speciesLP = Self.speciesBaseLP[raceId] ?? 5
         let leBase = speciesLP + ko * 2
-        let hoheLebenskraftBonus = advantages
-            .filter { $0.ruleId == "ADV_25" }
-            .reduce(0) { $0 + ($1.tier ?? 1) }
-        let leMax = leBase + purchasedLP + hoheLebenskraftBonus
+        let leMax = leBase + purchasedLP
         let lebensenergie = LifeEnergyValue(
-            base: leBase, bonus: hoheLebenskraftBonus, purchased: purchasedLP,
+            base: leBase, bonus: 0, purchased: purchasedLP,
             max: leMax, current: leMax
         )
 
@@ -924,24 +921,12 @@ struct OptolithImportService {
         let zkMax = zkBase + hoheZaehigkeitBonus
         let zaehigkeit = ResourceValue(base: zkBase, bonus: hoheZaehigkeitBonus, max: zkMax)
 
-        // INI = ceil((MU + GE) / 2)
-        let iniValue = DerivedValueFormulas.initiative(mu: mu, ge: ge)
-        let initiative = ComputedValue(value: iniValue, bonus: 0, max: iniValue)
-
-        // AW = ceil(GE / 2)
-        let awValue = DerivedValueFormulas.ausweichen(ge: ge)
-        let ausweichen = ComputedValue(value: awValue, bonus: 0, max: awValue)
-
         // GS by species (Menschen/Elfen/Halbelfen 8, Zwerge 6). Falls back to the human
         // value for a species outside the pinned source, which is the documented status
         // quo for the species tables above (ADR-0006) rather than a new guess.
         let gs = DerivedValueFormulas.geschwindigkeit(speciesId: raceId)
             ?? DerivedValueFormulas.geschwindigkeitFallback
         let geschwindigkeit = ResourceValue(base: gs, bonus: 0, max: gs)
-
-        // WS = ceil(KO / 2), ± Eisern / Gläsern
-        let ws = DerivedValueFormulas.wundschwelle(ko: ko, advantages: advantages, disadvantages: disadvantages)
-        let wundschwelle = ComputedValue(value: ws.base, bonus: ws.bonus, max: ws.base + ws.bonus)
 
         // Schicksalspunkte: base 3 for Mensch
         let schipBase = 3
@@ -953,10 +938,7 @@ struct OptolithImportService {
             karmaenergie: karmaenergie,
             seelenkraft: seelenkraft,
             zaehigkeit: zaehigkeit,
-            ausweichen: ausweichen,
-            initiative: initiative,
             geschwindigkeit: geschwindigkeit,
-            wundschwelle: wundschwelle,
             schicksalspunkte: schicksalspunkte
         )
         derivedValues.speciesLE = speciesLP

@@ -1,7 +1,7 @@
 import SwiftData
 
-enum SchemaV3: VersionedSchema {
-    static var versionIdentifier = Schema.Version(3, 0, 0)
+enum SchemaV6: VersionedSchema {
+    static var versionIdentifier = Schema.Version(6, 0, 0)
 
     static var models: [any PersistentModel.Type] {
         [
@@ -22,9 +22,9 @@ enum SchemaV3: VersionedSchema {
             Language.self,
             HeroSpell.self,
             LogEntry.self,
-            HeroStateEntry.self,
             Adventure.self,
             WeatherDay.self,
+            HeroStateEntry.self,
         ]
     }
 }

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import yaml
 
-STATUSES = ("implemented", "byHand", "noRollEffect", "todo")
+STATUSES = ("implemented", "byHand", "noRollEffect", "todo", "engine")
 REQUIRED = ("id", "name", "group", "status")
 # The design's §4 entry fields.
 KNOWN_KEYS = {
@@ -142,6 +142,8 @@ def validate(entries: list[dict], rules: dict[str, str], repo_root: Path,
             problems.append(f"{rid}: todo without why")
         if status == "noRollEffect" and not e.get("note"):
             problems.append(f"{rid}: noRollEffect without note")
+        if status == "engine" and not e.get("note"):
+            problems.append(f"{rid}: engine without note")
         if status == "implemented":
             clauses = e.get("clauses")
             if not isinstance(clauses, list) or not clauses:

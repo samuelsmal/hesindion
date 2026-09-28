@@ -49,30 +49,4 @@ enum DerivedValueFormulas {
     /// The value a hero gets when their species is unknown. Named rather than spelled `8`
     /// at the call site, so the fallback is greppable and its one justification lives here.
     static let geschwindigkeitFallback = 8
-
-    /// Wundschwelle = ceil(KO / 2), modified by Eisern (ADV_54, +1) and Gläsern (DISADV_56, −1).
-    ///
-    /// Both traits are `max: 1` and untiered in the ruleset, so they apply once regardless
-    /// of how often they appear on the hero.
-    static func wundschwelle(
-        ko: Int,
-        advantages: [HeroTrait],
-        disadvantages: [HeroTrait]
-    ) -> (base: Int, bonus: Int) {
-        let base = Int(ceil(Double(ko) / 2.0))
-        var bonus = 0
-        if advantages.contains(where: { $0.ruleId == "ADV_54" }) { bonus += 1 }
-        if disadvantages.contains(where: { $0.ruleId == "DISADV_56" }) { bonus -= 1 }
-        return (base, bonus)
-    }
-
-    /// Ausweichen = ceil(GE / 2).
-    static func ausweichen(ge: Int) -> Int {
-        Int(ceil(Double(ge) / 2.0))
-    }
-
-    /// Initiative = ceil((MU + GE) / 2).
-    static func initiative(mu: Int, ge: Int) -> Int {
-        Int(ceil(Double(mu + ge) / 2.0))
-    }
 }

@@ -17,12 +17,6 @@ struct ResourceValue: Codable {
     var max: Int
 }
 
-struct ComputedValue: Codable {
-    var value: Int
-    var bonus: Int
-    var max: Int
-}
-
 struct MutableResourceValue: Codable {
     var current: Int
     var bonus: Int
@@ -38,10 +32,7 @@ final class DerivedValues {
     var karmaenergie: MutableResourceValue?
     var seelenkraft: ResourceValue
     var zaehigkeit: ResourceValue
-    var ausweichen: ComputedValue
-    var initiative: ComputedValue
     var geschwindigkeit: ResourceValue
-    var wundschwelle: ComputedValue
     var schicksalspunkte: MutableResourceValue
     /// The species' LE-Grundwert; nil until the import or the back-fill sets it.
     var speciesLE: Int? = nil
@@ -52,10 +43,7 @@ final class DerivedValues {
         karmaenergie: MutableResourceValue?,
         seelenkraft: ResourceValue,
         zaehigkeit: ResourceValue,
-        ausweichen: ComputedValue,
-        initiative: ComputedValue,
         geschwindigkeit: ResourceValue,
-        wundschwelle: ComputedValue,
         schicksalspunkte: MutableResourceValue
     ) {
         self.lebensenergie = lebensenergie
@@ -63,10 +51,7 @@ final class DerivedValues {
         self.karmaenergie = karmaenergie
         self.seelenkraft = seelenkraft
         self.zaehigkeit = zaehigkeit
-        self.ausweichen = ausweichen
-        self.initiative = initiative
         self.geschwindigkeit = geschwindigkeit
-        self.wundschwelle = wundschwelle
         self.schicksalspunkte = schicksalspunkte
     }
 }

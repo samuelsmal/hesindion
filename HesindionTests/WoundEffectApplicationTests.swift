@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import Foundation
 @testable import Hesindion
 
 /// Defence-side Trefferzonen rules: Wundschwelle multiples, the Selbstbeherrschung
@@ -21,10 +22,7 @@ final class WoundEffectApplicationTests: XCTestCase {
             astralenergie: nil, karmaenergie: nil,
             seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
             zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            ausweichen: ComputedValue(value: 0, bonus: 0, max: 0),
-            initiative: ComputedValue(value: 0, bonus: 0, max: 0),
             geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
-            wundschwelle: ComputedValue(value: ws, bonus: 0, max: ws),
             schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
         return hero
     }
@@ -338,11 +336,18 @@ final class WoundEffectApplicationTests: XCTestCase {
     // can cancel or compound. Belastungsgewöhnung (SA_41) is deliberately absent here:
     // it reduces Belastung, not RS or damage.
 
+    /// ceil(KO/2), ± Eisern (ADV_54) / Gläsern (DISADV_56) — the arithmetic a shared
+    /// `DerivedValueFormulas` helper (deleted, Task 9) used to give the import and the
+    /// launch repair. The sheet cut-over (Task 9) moved that computation to the rules
+    /// engine (`SheetValues.wundschwelle`, specs/rules/advantages/ADV_54.yaml) and
+    /// deleted the shared formula; this comparison is pure `WoundEffectResolver` math
+    /// with no reader of the engine, so it keeps its own copy of the arithmetic rather
+    /// than reaching into the engine for a literal.
     private func wundschwelle(ko: Int, adv: [String] = [], disadv: [String] = []) -> Int {
-        let t = { (id: String) in HeroTrait(ruleId: id, name: id, tier: nil, sid: nil) }
-        let ws = DerivedValueFormulas.wundschwelle(
-            ko: ko, advantages: adv.map(t), disadvantages: disadv.map(t))
-        return ws.base + ws.bonus
+        var ws = Int(ceil(Double(ko) / 2.0))
+        if adv.contains("ADV_54") { ws += 1 }
+        if disadv.contains("DISADV_56") { ws -= 1 }
+        return ws
     }
 
     func testEisernRaisesTheThresholdSoArmouredHeroEscapesTheEffect() {
