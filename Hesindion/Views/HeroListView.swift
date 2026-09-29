@@ -2,8 +2,6 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
-private let yamlType = UTType(importedAs: "public.yaml")
-
 enum SidebarSelection: Hashable {
     case rulebook
     case adventure(PersistentIdentifier)
@@ -60,7 +58,7 @@ struct HeroListView: View {
         }
         .fileImporter(
             isPresented: $isShowingFilePicker,
-            allowedContentTypes: [.json, yamlType]
+            allowedContentTypes: [.json]
         ) { result in
             switch result {
             case .success(let url):

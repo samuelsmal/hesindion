@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **Importing a companion build file says what it is** (issue #42). The import dialog no longer offers YAML files — no hero export is YAML, and the only YAML beside an export was the old companion build file — and a `<export>.companions.json` picked instead of the export now fails with "This is a companion build file, not a hero export" instead of "The file is not a valid Optolith export. Missing hero name."
 - **Niedrige Lebenskraft (`DISADV_28`) lowers LE.** It was `todo` and never applied; the rules engine's LE max (`SheetValues`, on the sheet) now carries its line, the mirror of Hohe Lebenskraft's.
 - **Kampfreflexe (`SA_51`) raises INI Basiswert.** It was `todo` and never applied; the rules engine's INI (`SheetValues.iniBase`) now carries its `+1 per tier` line (`SA_51.KR1`).
 - **A Peitsche's AT now rolls off FF, not MU.** `kampfwerte.KW6` (situation 16.21) is the Peitschen technique's own AT term; the app had folded the general MU-based term in instead. The rules engine's `at(with: CT_8)` corrects it — Boronmir's Peitschen AT is 7, was 8 (his FF and MU bonuses happen to differ; every other sample hero's happen to match, so only he shows it).

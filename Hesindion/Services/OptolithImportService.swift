@@ -6,6 +6,9 @@ import SwiftData
 enum OptolithImportError: LocalizedError {
     case fileReadFailed
     case invalidFormat(String)
+    /// A `<export>.companions.json` build file (scripts/companions/), which sits
+    /// beside the hero export and is easy to pick instead of it (issue #42).
+    case companionBuildFile
     case saveFailed(String)
 
     var errorDescription: String? {
@@ -14,6 +17,8 @@ enum OptolithImportError: LocalizedError {
             "The file could not be read. Please check that the file is accessible and try again."
         case .invalidFormat(let detail):
             "The file is not a valid Optolith export. \(detail)"
+        case .companionBuildFile:
+            "This is a companion build file, not a hero export. Import the hero's Optolith export instead; `make companions` adds the companion data to it."
         case .saveFailed(let detail):
             "The hero could not be saved. \(detail)"
         }
@@ -88,6 +93,9 @@ struct OptolithImportService {
             throw OptolithImportError.invalidFormat(error.localizedDescription)
         }
 
+        if root["name"] == nil, root["schemaVersion"] != nil, root["pets"] is [String: Any] {
+            throw OptolithImportError.companionBuildFile
+        }
         guard let heroName = root["name"] as? String, !heroName.isEmpty else {
             throw OptolithImportError.invalidFormat("Missing hero name.")
         }

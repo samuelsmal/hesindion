@@ -162,6 +162,23 @@ struct CompanionImportTests {
         #expect(pet.attacks == [PetAttack(name: "Tritt", at: 19, damage: "1W6+8", reach: "mittel")])
     }
 
+    /// Issue #42: the companion build file sits beside the export and is easy to
+    /// pick instead of it. The import says what the file is, not only that it failed.
+    @Test func companionBuildFileIsNamedAsSuch() throws {
+        let context = ModelContext(try makeContainer())
+        let build = sample("Boronmir Siebenfeld von Greifenfurt (2026-09-24).companions.json")
+
+        let error = #expect(throws: OptolithImportError.self) {
+            try OptolithImportService().importHero(from: build, context: context)
+        }
+
+        guard case .companionBuildFile = error else {
+            Issue.record("expected .companionBuildFile, got \(String(describing: error))")
+            return
+        }
+        #expect(try context.fetch(FetchDescriptor<Hero>()).isEmpty)
+    }
+
     /// Issue #42: a plain export first, then the same hero with the block.
     @Test func reimportAddsTheBlockToAPlainHero() throws {
         let context = ModelContext(try makeContainer())
