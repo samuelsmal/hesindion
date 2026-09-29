@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """Check a companion build against its Optolith export and inject it.
 
-    amend_export.py <export.json> [--companions X.yaml] [--out Y.json] [--check] [--fix]
+    amend_export.py <export.json> [--companions X.json] [--out Y.json] [--check] [--fix]
+    amend_export.py <export.json> --init [--companions X.json]
 
-Reads <export>.companions.yaml by default. Writes the `hesindion` block
+Reads <export>.companions.json by default. A `comment` key anywhere in that
+file is a note for the reader: it is dropped before any check. Writes the `hesindion` block
 (docs/plans/2026-09-24-companion-data-design.md §4) only when every check
 passes; --fix first sets the export's own pet fields from the build.
+
+--init writes a first build file from the export's own pet fields and leaves the
+export alone. Every part of a build is optional: what it leaves out comes from the
+export (attacks, AP) or stays empty (purchases, advantages, abilities, training,
+tricks), and only what it states is checked.
 """
 import argparse
 import json
 import os
 import re
 import sys
-
-import yaml
 
 from companions import BuildError, normalise
 
@@ -46,13 +51,54 @@ def main_attack(pet, values):
     return next((a for a in values["attacks"] if a["name"] == pet.get("attack")), None)
 
 
+def export_int(pet, key):
+    value = str(pet.get(key, "")).strip()
+    return int(value) if value.isdigit() else None
+
+
+def export_attacks(pet):
+    """The attacks the export itself states: its `notes` lines, and its main attack
+    (`attack`/`at`/`dp`/`reach`) when the notes do not have it."""
+    attacks = [{"name": m.group(1), "at": int(m.group(2)), "tp": m.group(3), "rw": m.group(4)}
+               for m in ATTACK_LINE.finditer(pet.get("notes", ""))]
+    name, at = pet.get("attack"), export_int(pet, "at")
+    tp, rw = str(pet.get("dp", "")), str(pet.get("reach", "")).lower()
+    if name and all(a["name"] != name for a in attacks) and at is not None and TP.fullmatch(tp) and rw in RW:
+        attacks.append({"name": name, "at": at, "tp": tp, "rw": rw})
+    return attacks
+
+
+def init_build(export):
+    """A first build file from the export's own pet fields: the values only, which
+    pass the check as they are. Purchases, AP and the lists are for a person to add."""
+    pets = {}
+    for pet in export.get("pets", {}).values():
+        values = {}
+        attributes = {k: export_int(pet, v) for k, v in EXPORT_ATTRIBUTES.items()}
+        if any(v is not None for v in attributes.values()):
+            values["attributes"] = {k: v for k, v in attributes.items() if v is not None}
+        for export_key, value_key in (("lp", "lep"), ("mov", "gs"), ("pa", "vw"), ("pro", "rs")):
+            if export_int(pet, export_key) is not None:
+                values[value_key] = export_int(pet, export_key)
+        if pet.get("ini"):
+            values["ini"] = str(pet["ini"])
+        values["attacks"] = export_attacks(pet)
+        values["talents"] = {t: v for _, t, v in parse_talents(pet.get("talents", "")) if t is not None}
+        pets[pet.get("name")] = {"values": values}
+    return {"comment": "Written by amend_export.py --init from the Optolith export. Optional, add by hand: "
+                       "breed, base, ap.total, purchases, values.be, values.advantages, values.abilities, "
+                       "values.training, values.tricks.",
+            "schemaVersion": 1, "pets": pets}
+
+
 def expected_fields(values, ap_total):
     """Export field -> expected string, for the fields present in the build."""
     fields = {EXPORT_ATTRIBUTES[k]: str(v) for k, v in values.get("attributes", {}).items()}
     for export_key, value_key in (("lp", "lep"), ("ini", "ini"), ("mov", "gs"), ("pa", "vw"), ("pro", "rs")):
         if values.get(value_key) is not None:
             fields[export_key] = str(values[value_key])
-    fields["totalAp"] = fields["spentAp"] = str(ap_total)
+    if ap_total is not None:
+        fields["totalAp"] = fields["spentAp"] = str(ap_total)
     return fields
 
 
@@ -72,11 +118,10 @@ def check_attacks(name, values):
 
 def check_values(name, values, ap_total):
     """Hand-written type checks for the fields the app's CompanionData decodes
-    (docs/plans/2026-09-24-companion-data-design.md §4). YAML is untyped enough
-    that a bad build can sail through here unless every field is checked by
-    hand: YAML 1.1 reads a bare `No` as the boolean `False`, a single scalar
-    is valid where a list is expected, and `bool` is a subtype of `int` in
-    Python so an `isinstance(x, int)` check alone lets `True`/`False` through.
+    (docs/plans/2026-09-24-companion-data-design.md §4). A hand-edited file can
+    put a single string where a list is expected, and `bool` is a subtype of
+    `int` in Python, so an `isinstance(x, int)` check alone lets `true`/`false`
+    through.
     """
     errors = []
     for key in VALUE_INTS:
@@ -92,8 +137,8 @@ def check_values(name, values, ap_total):
             continue
         for item in items:
             if not isinstance(item, str) or isinstance(item, bool):
-                errors.append(f"{name}: values.{key} item {item} is not a string (quote it in YAML)")
-    if ap_total is None or isinstance(ap_total, bool) or not isinstance(ap_total, int):
+                errors.append(f"{name}: values.{key} item {item} is not a string")
+    if ap_total is not None and (isinstance(ap_total, bool) or not isinstance(ap_total, int)):
         errors.append(f"{name}: ap.total {ap_total!r} must be an integer")
     return errors
 
@@ -107,7 +152,8 @@ def check_export(name, pet, values, ap_total):
             errors.append(f"{name}: {key} is {pet.get(key)}, build says {expected}")
     attack = main_attack(pet, values)
     if attack is None:
-        errors.append(f"{name}: attack {pet.get('attack')!r} is not in values.attacks")
+        if pet.get("attack"):
+            errors.append(f"{name}: attack {pet.get('attack')!r} is not in values.attacks")
     else:
         if str(pet.get("at")) != str(attack["at"]):
             errors.append(f"{name}: at is {pet.get('at')}, build says {attack['at']}")
@@ -115,7 +161,7 @@ def check_export(name, pet, values, ap_total):
             errors.append(f"{name}: dp is {pet.get('dp')}, build says {attack['tp']}")
     talents = values.get("talents", {})
     seen = set()
-    for _, talent, value in parse_talents(pet.get("talents", "")):
+    for _, talent, value in parse_talents(pet.get("talents", "") if "talents" in values else ""):
         if talent is None:
             continue
         seen.add(talent)
@@ -142,7 +188,9 @@ def fix_export(pet, values, ap_total):
     attack = main_attack(pet, values)
     if attack is not None:
         pet["at"], pet["dp"] = str(attack["at"]), attack["tp"]
-    talents = values.get("talents", {})
+    if "talents" not in values:
+        return fix_notes(pet, values)
+    talents = values["talents"]
     parts, seen = [], set()
     for part, talent, _ in parse_talents(pet.get("talents", "")):
         if talent in talents:
@@ -152,6 +200,10 @@ def fix_export(pet, values, ap_total):
             parts.append(part)
     parts += [f"{t} {v}" for t, v in talents.items() if t not in seen]
     pet["talents"] = ", ".join(parts)
+    fix_notes(pet, values)
+
+
+def fix_notes(pet, values):
     notes = pet.get("notes", "")
     for attack in values["attacks"]:
         loose = re.compile(re.escape(attack["name"]) + r":\s*AT.*?RW\s+[A-Za-z]+", re.S)
@@ -162,8 +214,18 @@ def fix_export(pet, values, ap_total):
     pet["notes"] = notes
 
 
+def strip_comments(value):
+    """The build without its `comment` keys, at any depth."""
+    if isinstance(value, dict):
+        return {k: strip_comments(v) for k, v in value.items() if k != "comment"}
+    if isinstance(value, list):
+        return [strip_comments(v) for v in value]
+    return value
+
+
 def amend(export, companions, fix=False):
     """Check every companion; on success add export['hesindion']. Returns errors."""
+    companions = strip_comments(companions)
     errors, block = [], {}
     by_name = {}
     for key, pet in export.get("pets", {}).items():
@@ -176,6 +238,8 @@ def amend(export, companions, fix=False):
             continue
         pet = export["pets"][keys[0]]
         values = dict(build.get("values", {}))
+        if "attacks" not in values:
+            values["attacks"] = export_attacks(pet)
         for key in VALUE_LISTS:
             values.setdefault(key, [])
         ap_total = build.get("ap", {}).get("total")
@@ -186,8 +250,11 @@ def amend(export, companions, fix=False):
             except BuildError as error:
                 errors.append(f"{name}: {error}")
         spent = sum(p["ap"] for p in purchases)
-        if spent != ap_total:
-            errors.append(f"{name}: purchases sum to {spent} AP, ap.total is {ap_total}")
+        if "purchases" in build:
+            if ap_total is None:
+                ap_total = spent
+            elif spent != ap_total:
+                errors.append(f"{name}: purchases sum to {spent} AP, ap.total is {ap_total}")
         ko = values.get("attributes", {}).get("ko")
         bought = sum(p["count"] for p in purchases if p["kind"] == "buy")
         if ko is not None and bought > ko:
@@ -197,8 +264,12 @@ def amend(export, companions, fix=False):
         if fix:
             fix_export(pet, values, ap_total)
         errors += check_export(name, pet, values, ap_total)
+        if ap_total is None:  # the build states no AP: the export's own, 0 when it has none
+            ap = {"total": export_int(pet, "totalAp") or 0, "spent": export_int(pet, "spentAp") or 0}
+        else:
+            ap = {"total": ap_total, "spent": spent if "purchases" in build else ap_total}
         block[keys[0]] = {"name": name, "breed": build.get("breed"),
-                          "ap": {"total": ap_total, "spent": spent},
+                          "ap": ap,
                           "purchases": purchases, "values": values}
     if not errors:
         export.pop("hesindion", None)
@@ -213,12 +284,22 @@ def main(argv=None):
     parser.add_argument("--out")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--fix", action="store_true")
+    parser.add_argument("--init", action="store_true")
     args = parser.parse_args(argv)
-    companions_path = args.companions or os.path.splitext(args.export)[0] + ".companions.yaml"
+    companions_path = args.companions or os.path.splitext(args.export)[0] + ".companions.json"
     with open(args.export, encoding="utf-8") as f:
         export = json.load(f)
+    if args.init:
+        if os.path.exists(companions_path):
+            print(f"{companions_path} already exists", file=sys.stderr)
+            return 1
+        build = init_build(export)
+        with open(companions_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(build, ensure_ascii=False, indent=2) + "\n")
+        print(f"ok: {len(build['pets'])} companion(s) written to {companions_path}")
+        return 0
     with open(companions_path, encoding="utf-8") as f:
-        companions = yaml.safe_load(f)
+        companions = json.load(f)
     errors = amend(export, companions, fix=args.fix)
     for error in errors:
         print(error, file=sys.stderr)

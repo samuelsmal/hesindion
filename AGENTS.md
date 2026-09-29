@@ -33,7 +33,7 @@ make rules-coverage  # How many rule-website pages are new, changed, unhashed, d
 make test-rules-sync  # scripts/rules_sync's own tests (Python unittest)
 make test-rules-engine  # Packages/RulesEngine's situations harness (RULES_FILES=a,b filters; unset runs every situation)
 make test-rules-engine RECORD_CONFLICT_FINGERPRINTS=1  # Re-record specs/rules/conflict-fingerprints.json, each listed conflict's mismatches (query, step, kind); commit it with the MIGRATION change. Without it a listed conflict with a mismatch outside its snapshot fails (R78)
-make companions HERO="<export.json>"  # Check <export>.companions.yaml and inject the hesindion block (FIX=1 rewrites the export's pet fields, CHECK=1 only checks)
+make companions HERO="<export.json>"  # Check <export>.companions.json and inject the hesindion block (FIX=1 rewrites the export's pet fields, CHECK=1 only checks, INIT=1 writes a first build file from the export)
 make test-companions   # The companion tool's tests (Python unittest)
 make hero-sheet-fixtures  # Regenerate HesindionTests/Fixtures/HeroSheets from hero.py's view of specs/heroes; rerun after a change to either and commit the JSON
 make test-only ONLY=<Target/Class>   # One test class or method

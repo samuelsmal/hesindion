@@ -140,6 +140,43 @@ struct CompanionImportTests {
         #expect(pet.attributes.kk == 27)
     }
 
+    /// The block `amend_export.py` writes for a build that states values only
+    /// (`--init`): no purchases, no lists, AP from the export.
+    @Test func importReadsAMinimalBlock() throws {
+        var root = try #require(JSONSerialization.jsonObject(with: plainReexport()) as? [String: Any])
+        root["hesindion"] = ["schemaVersion": 1, "pets": ["PET_1": [
+            "name": "Kupperus", "breed": NSNull(),
+            "ap": ["total": 0, "spent": 0], "purchases": [Any](),
+            "values": ["vw": 14,
+                       "attacks": [["name": "Tritt", "at": 19, "tp": "1W6+8", "rw": "mittel"]],
+                       "advantages": [Any](), "abilities": [Any](), "training": [Any](), "tricks": [Any]()],
+        ]]]
+        let context = ModelContext(try makeContainer())
+
+        try OptolithImportService().importHero(from: JSONSerialization.data(withJSONObject: root), context: context)
+
+        let pet = try kupperus(context)
+        #expect(pet.hasCompanionData)
+        #expect(pet.defense == 14)
+        #expect(pet.purchases.isEmpty)
+        #expect(pet.attacks == [PetAttack(name: "Tritt", at: 19, damage: "1W6+8", reach: "mittel")])
+    }
+
+    /// Issue #42: a plain export first, then the same hero with the block.
+    @Test func reimportAddsTheBlockToAPlainHero() throws {
+        let context = ModelContext(try makeContainer())
+        let service = OptolithImportService()
+        try service.importHero(from: try plainReexport(), context: context)
+        #expect(try !kupperus(context).hasCompanionData)
+
+        try service.importHero(from: withBlock, context: context)
+
+        let pet = try kupperus(context)
+        #expect(pet.hasCompanionData)
+        #expect(pet.defense == 14)
+        #expect(pet.purchases.count == 19)
+    }
+
     @Test func discardDropsTheAddedFields() throws {
         let context = ModelContext(try makeContainer())
         let service = OptolithImportService()

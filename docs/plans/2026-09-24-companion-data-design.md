@@ -2,6 +2,13 @@
 
 **Status:** Approved in chat 2026-09-24, spec for review.
 **Date:** 2026-09-24
+**Amended 2026-09-29 (issue #42):** the build file is JSON, `<export>.companions.json`, not YAML.
+A `.companions.yaml` sat beside the export and the app's file picker accepted it, so the player could
+pick it instead of the export and got "not a valid Optolith export". The format is otherwise the same;
+a YAML comment is now a `comment` key, at any level, that the tool drops before it checks. The YAML
+example in §3 still shows the structure. Every part of a build except the pet's name is optional: `--init`
+(`make companions INIT=1`) writes a build with the export's own values, and a build without `purchases` or
+`ap` takes the block's AP from the export's `totalAp`/`spentAp`; without `attacks`, from the export's notes.
 
 ## 1. The problem
 
@@ -21,7 +28,7 @@ Kupperus's 336-AP build (Boronmir's Svellttaler Kaltblut) showed what that costs
 
 ## 2. Decisions
 
-1. **The companion's build is a hand-written YAML file next to the export.** It holds the
+1. **The companion's build is a hand-written JSON file next to the export** (YAML until 2026-09-29). It holds the
    breed, the base values, every purchase with its AP, and the final values.
 2. **A local tool checks the build and injects it into the Optolith JSON** under a top-level
    key Optolith does not use: `hesindion`. The tool does not compute final values. Rule effects
@@ -36,7 +43,7 @@ Kupperus's 336-AP build (Boronmir's Svellttaler Kaltblut) showed what that costs
 
 ## 3. The companion file
 
-`<export basename>.companions.yaml`, next to the export. It has one entry per pet, keyed by the
+`<export basename>.companions.json`, next to the export. It has one entry per pet, keyed by the
 pet's `name` in the export.
 
 ```yaml
@@ -122,11 +129,11 @@ decode the sample's block.
 ## 5. The tool
 
 `scripts/companions/amend_export.py`, run as `make companions HERO="<export.json>"`. It reads
-`<export>.companions.yaml` unless `--companions` names another file.
+`<export>.companions.json` unless `--companions` names another file.
 
 **Checks.** It reports all of them, and each one names the pet, the field and the expected value:
 
-1. Every YAML pet name matches exactly one export pet, and no export pet is matched twice.
+1. Every build pet name matches exactly one export pet, and no export pet is matched twice.
 2. Every `raise` has `to > from` and a known target. Its price is recomputed.
    `buy: lep` has `count ≤ values.attributes.ko` (hero rule: bought LeP ≤ KO).
 3. Σ purchases = `ap.total`. If the export has `totalAp`/`spentAp`, both equal `ap.total`.
@@ -234,7 +241,7 @@ new fixture this feature adds.
 
 - **The 2026-09-24 Boronmir export** gets Körperbeherrschung 8, `Biss: AT 16 TP 1W6+3`, `at` 19
   and `pa` 14 via `--fix`, and the `hesindion` block from the tool.
-- **`… (2026-09-24).companions.yaml`** holds Kupperus's build: 336 AP, as in the chat of
+- **`… (2026-09-24).companions.json`** holds Kupperus's build: 336 AP, as in the chat of
   2026-09-24. The list is below.
 - **`Hesindion/Resources/UITestHero.json`** stays as it is, and a new stripped fixture joins it.
 

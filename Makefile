@@ -107,7 +107,7 @@ share-heros: boot
 		exit 1; \
 	fi
 	@mkdir -p "$(IPAD_APP_DATA)/Documents"
-	cp "$(SAMPLE_HEROES)/"*.json "$(IPAD_APP_DATA)/Documents/"
+	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' ! -name '*.companions.json' -exec cp {} "$(IPAD_APP_DATA)/Documents/" \;
 	@echo "Copied sample heros to $(IPAD_APP_DATA)/Documents/"
 
 share-heros-iphone: boot-iphone
@@ -116,7 +116,7 @@ share-heros-iphone: boot-iphone
 		exit 1; \
 	fi
 	@mkdir -p "$(APP_DATA)/Documents"
-	cp "$(SAMPLE_HEROES)/"*.json "$(APP_DATA)/Documents/"
+	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' ! -name '*.companions.json' -exec cp {} "$(APP_DATA)/Documents/" \;
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
 deploy: require-rules-db rules-json
@@ -152,12 +152,13 @@ test-rules-db:
 	python3 -m unittest discover -s scripts/build_rules_db -p 'test_*.py' -v
 
 # Companion builds (docs/plans/2026-09-24-companion-data-design.md): check
-# <export>.companions.yaml against its Optolith export and inject the `hesindion`
+# <export>.companions.json against its Optolith export and inject the `hesindion`
 # block. FIX=1 first sets the export's own pet fields from the build; CHECK=1
-# validates without writing.
+# validates without writing; INIT=1 writes a first build file from the export's
+# own pet fields (every other part of a build is optional) and leaves the export alone.
 #   make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
 companions:
-	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,)
+	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,) $(if $(INIT),--init,)
 
 test-companions:
 	python3 -m unittest discover -s scripts/companions -p 'test_*.py' -v

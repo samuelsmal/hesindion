@@ -2,7 +2,11 @@
 
 ## Status
 
-Accepted, 2026-09-24.
+Accepted, 2026-09-24. Amended 2026-09-29 (issue #42): the build file is JSON
+(`<export>.companions.json`), not YAML. A `.companions.yaml` next to the export was easy to pick in the
+app's file picker instead of the export, and the import then failed with "not a valid Optolith export".
+The YAML comments became `comment` keys, which the tool drops before it checks. Every part of a build
+except the pet's name is now optional, and `make companions INIT=1` writes a first build from the export.
 
 ## Context
 
@@ -21,14 +25,14 @@ another importer feature" rather than a choice about where authored data lives.
 
 ## Decision
 
-**A companion's build is a hand-written YAML file next to the export**
-(`<export>.companions.yaml`), one entry per pet, holding the breed, the base stat block, every
+**A companion's build is a hand-written JSON file next to the export**
+(`<export>.companions.json`), one entry per pet, holding the breed, the base stat block, every
 purchase with its AP and the final values the app should use.
 
 **A local Python tool (`scripts/companions/`, `make companions HERO=<export>`) checks that file
 against the Optolith export and, once every check passes, writes a `hesindion` block into the
 export** under a top-level key Optolith does not use. The tool checks; it does not compute. Final
-values are hand-authored in the YAML, and rule effects that would change them (Kampftier's
+values are hand-authored in the build file, and rule effects that would change them (Kampftier's
 +20 % LeP, Heldenwuchs) are the player's and GM's call, not something the tool derives. What the
 tool does check: every purchase's AP against the Kat C column, the purchases summing to the
 stated total, every attack's shape, and the export's own fields (attributes, `lp`, `ini`, `mov`,
@@ -52,7 +56,7 @@ fields from the old pet onto the new one before the old one is deleted. `HeroLis
 ## Considered Alternatives
 
 - **Edit companion data in the app.** Rejected for this feature. The build is authored once from
-  a printed stat block and a purchase list; an in-app editor would duplicate the YAML file's job
+  a printed stat block and a purchase list; an in-app editor would duplicate the build file's job
   with none of its review trail (a purchase list is a diff a person can check against the AP
   total by hand) and would still need the same checks re-implemented in Swift. Out of scope per
   the design's §10, not ruled out forever.
@@ -69,7 +73,7 @@ fields from the old pet onto the new one before the old one is deleted. `HeroLis
 
 ## Consequences
 
-- A companion's build is reviewable as a diff (`<export>.companions.yaml`), checked by `make
+- A companion's build is reviewable as a diff (`<export>.companions.json`), checked by `make
   companions` and `make test-companions` before it ever reaches the app — `make test-companions`
   is the repo's Python test target, the way the rest of `scripts/` is exercised (`make test-only
   ONLY=<Target/Class>` is the xcodebuild one, for a single Swift test class or method).
