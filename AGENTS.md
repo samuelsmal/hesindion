@@ -8,6 +8,10 @@ iOS companion app for DSA (Das Schwarze Auge / The Dark Eye) tabletop RPG sessio
 
 **Rules reference:** All DSA 5 rules can be looked up at https://dsa.ulisses-regelwiki.de/ — use this for verifying game mechanics (combat formulas, AT/PA, special abilities, etc.).
 
+## Principles
+
+- **Rules and their application are explicit to the player.** The player must always be able to tell why something happens. When the app applies a rule — a modifier, a status effect, a reduction of LeP or AsP, any value it writes by itself — it tells the player which rule caused the change. In practice: a computed value shows its parts and its result (`CombatBreakdownBox`); a change the app writes by itself is announced with amount and cause ("LeP −1 (Blutend)"), as a toast when no screen of its own shows it; a follow-up the app does not apply (an opponent's check, a GM decision) is stated when it becomes due; a rule that can apply but did not is shown as not applied, with the reason, and a GM-decided bonus is an explicit choice. A change that applies a rule without saying so is a bug. See **ADR-0018**
+
 ## Build & Run
 
 This is an Xcode project (no SPM package, no CocoaPods). Open `Hesindion.xcodeproj` in Xcode.
