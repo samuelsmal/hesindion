@@ -211,16 +211,14 @@ final class RulesCatalogTests: XCTestCase {
     }
 
     /// Sheet cut-over Task 9: LE max, Wundschwelle and INI Basiswert moved off this
-    /// catalog and onto the declarative rules engine for these four ids, which is what
-    /// the `engine` status says. Gläsern (`DISADV_56`) shared the deleted Swift symbol
-    /// but has no rules-engine implementation yet, so it is honestly `todo`, not `engine`
-    /// — a real, if untested (no sample hero carries it), gap.
+    /// catalog and onto the declarative rules engine for these ids, which is what the
+    /// `engine` status says. Gläsern (`DISADV_56`) joined them when its rule file
+    /// (`specs/rules/disadvantages/DISADV_56.yaml`, the Wundschwelle's −1) was drafted.
     func testTheSheetCutoverEngineIdsHaveTheEngineStatus() throws {
         try requireDatabase()
-        for id in ["ADV_25", "ADV_54", "SA_51", "DISADV_28"] {
+        for id in ["ADV_25", "ADV_54", "SA_51", "DISADV_28", "DISADV_56"] {
             XCTAssertEqual(RulesDatabase.shared.lookupCatalogEntry(ruleId: id)?.status, .engine, id)
         }
-        XCTAssertEqual(RulesDatabase.shared.lookupCatalogEntry(ruleId: "DISADV_56")?.status, .todo, "DISADV_56")
     }
 
     /// The bundled database must be built from the committed catalog. Editing
