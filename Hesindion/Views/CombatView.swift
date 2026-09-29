@@ -195,6 +195,8 @@ struct CombatView: View {
     @State private var dualAttackPenaltyActive: Bool = false
     @State private var twoHandedGripActive: Bool = false
     @State private var roundNumber: Int = 1
+    /// What the last step to a new Kampfrunde changed by itself (issue #35).
+    @State private var roundStartToast: DSAToastContent? = nil
     @State private var plaenklerActive: Bool = false
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
@@ -670,6 +672,10 @@ struct CombatView: View {
             if isDown && mountedActive { mountedActive = false }
         }
         .onChange(of: roundNumber) { old, new in
+            // Read before anything below writes: the toast reports the
+            // difference, and `persistCombatState` moves `activeCombatRound`.
+            let isEndOfRound = Self.isEndOfRound(hero: hero, from: old, to: new)
+            let before = RoundStartSnapshot(hero: hero, round: old)
             // Blutend: 1 SP at the end of each Kampfrunde, logged. Only the
             // next-round button counts — "Neu" sets the count back to 1.
             if let entry = Self.roundBleedingEntry(hero: hero, from: old, to: new, combatId: combatId) {
@@ -690,6 +696,14 @@ struct CombatView: View {
             // never parries again for the rest of the fight.
             hero.beginCombatRound()
             persistCombatState()
+            // ADR-0018: what the step wrote by itself, with amount and cause.
+            if isEndOfRound {
+                let changes = RoundStartChange.between(before, RoundStartSnapshot(hero: hero, round: new))
+                roundStartToast = changes.isEmpty ? nil : DSAToastContent(
+                    title: String(format: L("roundStart.title"), new),
+                    lines: changes.map(\.text)
+                )
+            }
         }
         .onChange(of: step.persistenceKey) { _, newKey in
             if !step.preservesAnnouncedZone {
@@ -727,6 +741,7 @@ struct CombatView: View {
                 step = .root
             }
         }
+        .dsaToast($roundStartToast)
         } // SplitContentLayout
     }
 
@@ -737,7 +752,7 @@ struct CombatView: View {
     /// round already persisted on the hero (`activeCombatRound == new`) —
     /// neither is the end of a round.
     static func roundBleedingEntry(hero: Hero, from old: Int, to new: Int, combatId: UUID) -> LogEntry? {
-        guard new > old, new != hero.activeCombatRound else { return nil }
+        guard isEndOfRound(hero: hero, from: old, to: new) else { return nil }
         let lpBefore = hero.derivedValues?.lebensenergie.current ?? 0
         guard hero.endOfRoundBleeding() > 0 else { return nil }
         let lpAfter = hero.derivedValues?.lebensenergie.current ?? 0
@@ -755,6 +770,14 @@ struct CombatView: View {
             ),
             hero: hero
         )
+    }
+
+    /// Whether the round count moving from `old` to `new` is the end of
+    /// Kampfrunde `old` — the next-round button — rather than new initiative
+    /// (back to 1) or the restore of a saved session (to the round already
+    /// persisted on the hero). Read it before `persistCombatState` runs.
+    static func isEndOfRound(hero: Hero, from old: Int, to new: Int) -> Bool {
+        new > old && new != hero.activeCombatRound
     }
 
     /// Whether a situational toggle (Beritten, Kampf im Wasser) reaching the

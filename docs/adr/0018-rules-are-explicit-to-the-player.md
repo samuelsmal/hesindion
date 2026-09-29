@@ -56,6 +56,8 @@ rule caused the change.
 ## Consequences
 
 - Every new screen or flow that applies a rule needs a place to name that rule. Reviews check this.
-- The app needs a toast component in the neobrutalist style; it has none today.
+- The app needs a toast component in the neobrutalist style. `DSAToast` (`.dsaToast`) is that component,
+  added for #35; the round-start toast in `CombatView` is its first use.
 - Rule names and causes add UI text to `Strings.swift`.
-- #35, #41 and #43 are the first follow-ups under this principle.
+- #35, #41 and #43 are the first follow-ups under this principle. #35 is done: the next-round button
+  announces every change it writes by itself.

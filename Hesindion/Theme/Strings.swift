@@ -804,6 +804,14 @@ enum DSAStrings {
         "bleeding.heilkunde":           "Heilkunde Wunden +2 (1 action)",
         "bleeding.heilkunde.effect":    "shortens by QS/2 rounds",
         "bleeding.log":                 "Bleeding: 1 SP",
+        // Round-start toast (issue #35, ADR-0018)
+        "roundStart.title":             "Combat round %d",
+        "roundStart.bleedingLoss":      "LeP −%d (Blutend)",
+        "roundStart.lebenspunkteSchmerz": "Schmerz +%d (life points)",
+        "roundStart.bleedingEnded":     "Blutend ends",
+        "roundStart.temporarySchmerzEnded": "Schmerz −%d (Patzer over)",
+        "roundStart.jamEnded":          "Jam over",
+        "roundStart.noDefenseEnded":    "Zu konzentriert over — defence possible again",
         "state.blutend.removal":        "After 7−QS rounds (Selbstbeherrschung). Heilkunde Wunden +2 (1 action) shortens it by QS/2 rounds.",
         "rulesEngine.unavailable":      "Rules not loaded",
         // Breakdown sheet (sheet cut-over design §5)
@@ -1839,6 +1847,14 @@ enum DSAStrings {
         "bleeding.heilkunde":           "Heilkunde Wunden +2 (1 Aktion)",
         "bleeding.heilkunde.effect":    "verkürzt um QS/2 KR",
         "bleeding.log":                 "Blutend: 1 SP",
+        // Round-start toast (issue #35, ADR-0018)
+        "roundStart.title":             "Kampfrunde %d",
+        "roundStart.bleedingLoss":      "LeP −%d (Blutend)",
+        "roundStart.lebenspunkteSchmerz": "Schmerz +%d (Lebenspunkte)",
+        "roundStart.bleedingEnded":     "Blutend endet",
+        "roundStart.temporarySchmerzEnded": "Schmerz −%d (Patzer vorbei)",
+        "roundStart.jamEnded":          "Ladehemmung vorbei",
+        "roundStart.noDefenseEnded":    "Zu konzentriert vorbei — Verteidigung wieder möglich",
         "rulesEngine.unavailable":      "Regeln nicht geladen",
         // Breakdown sheet (sheet cut-over design §5)
         "owner.sheet":                  "Heldenbogen",
