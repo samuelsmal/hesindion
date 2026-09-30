@@ -82,4 +82,41 @@ final class CombatAnnouncementViewSnapshotTests: XCTestCase {
 
         assertAllVariants(of: view, named: "mountCharge")
     }
+
+    /// A mounted weapon attack by a rider with Berittener Kampf (issue #39):
+    /// the maneuver list offers no Sturmangriff zu Pferd. That is the mount's
+    /// command, behind a Reiten check, not a maneuver of the weapon.
+    @MainActor
+    func testMountedWeaponAttack() throws {
+        let container = try TestData.makeContainer()
+        let hero = try TestData.importBoronmir(into: container)
+
+        let view = CombatAnnouncementView(
+            hero: hero,
+            action: .angriff,
+            weaponName: "Rabenschnabel",
+            baseAT: 12,
+            damageFormula: "1W6+5",
+            isOffHand: false,
+            mountedActive: true,
+            waterDepth: .none,
+            isMountCharge: false,
+            beengteUmgebungActive: false,
+            schipIgnoreZustandThisRound: false,
+            secondAttack: nil,
+            step: .constant(.root),
+            activeManeuver: .constant(.normal),
+            vorstossActiveThisRound: .constant(false),
+            announcedZone: .constant(nil),
+            dualAttackPenaltyActive: false,
+            twoHandedGripActive: false,
+            plaenklerActive: false,
+            plaenklerBonus: .at,
+            opponent: .constant(OpponentProfile()),
+            onDismiss: {}
+        )
+        .modelContainer(container)
+
+        assertAllVariants(of: view, named: "mountedWeaponAttack")
+    }
 }
