@@ -388,7 +388,7 @@ struct CombatAnnouncementView: View {
         isMountCharge ? L("sturmangriffPferd") : L("announcement")
     }
 
-    private var availableManeuvers: [CombatManeuver] {
+    var availableManeuvers: [CombatManeuver] {
         var maneuvers: [CombatManeuver] = [.normal]
         if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
         // One entry per tier the hero has, not only the highest: Wuchtschlag II
@@ -401,7 +401,8 @@ struct CombatAnnouncementView: View {
         }
         if hero.hasVorstoss { maneuvers.append(.vorstoss) }
         if hero.hasSchildspalter { maneuvers.append(.schildspalter) }
-        if mountedActive && hero.hasBerittenerKampf { maneuvers.append(.sturmangriff) }
+        // No Sturmangriff zu Pferd here (issue #39): it is a command to the
+        // horse behind a Reiten check, reached from the mount's own button.
         // Everyone may strike a Passierschlag (GRW); it goes to its own screen.
         // Not from a dual-attack announcement: the Passierschlag is one blow
         // with one weapon, and choosing it here would leave the round flagged

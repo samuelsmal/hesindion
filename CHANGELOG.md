@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **A mounted weapon attack no longer offers "Sturmangriff zu Pferd" as a maneuver** (issue #39). The charge is a command to the horse and needs a Reiten check, so it is not one of the weapon attack's maneuvers. It stays in the mount's attacks, where its button goes through the Reiten check first.
 - **Every opponent size on the attack screen shows what it does to the AT** (issue #38). Only "Winzig" showed its "AT −4", so its box was taller than the other four; "Klein", "Mittel", "Groß" and "Riesig" now show "AT ±0" (GRW_groessenkategorie GK3), and every size box in a row has the same height, also when a size name wraps at a large text size.
 - **The mounted charge's damage shows its calculation, and half an odd GS rounds up.** The damage box showed one "+8 Sturmangriff zu Pferd" line; it now shows RK14's two parts, "+2 Sturmangriff zu Pferd" and "+6 Sturmangriff zu Pferd: ½ GS Kupperus (12)" — the horse's GS, not the rider's. Half the GS rounded down (GS 11 gave +5); it now rounds up (ruling `shared.round-up`, ADR-0006), and the line says "aufgerundet" when it does.
 - **The mounted charge's announcement names the charge** (issue #32). "Sturmangriff zu Pferd" hides the maneuver list, and the header still said "Ansage" over the weapon name, so nothing on the screen said which maneuver was chosen. The header now reads "Sturmangriff zu Pferd", the weapon below it.
