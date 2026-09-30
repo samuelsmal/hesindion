@@ -24,7 +24,8 @@ final class StringsCoverageTests: XCTestCase {
     func testScreenKeysAreLocalized() {
         for key in [
             "fokus.section", "fokus.trefferzonen.name", "fokus.trefferzonen.subtitle",
-            "trefferzone.section", "trefferzone.none", "trefferzone.roll",
+            "trefferzone.section", "trefferzone.random", "trefferzone.randomHint", "trefferzone.roll",
+            "trefferzone.rollAfterHit", "trefferzone.rollPrompt", "trefferzone.rolledResult",
             "trefferzone.targetSurprised",
             "trefferzone.sfHalves.melee", "trefferzone.sfHalves.ranged",
             "trefferzone.woundEffect", "trefferzone.threshold",

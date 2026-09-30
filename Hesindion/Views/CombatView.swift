@@ -484,6 +484,7 @@ struct CombatView: View {
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     announcedZone: announcedZone,
+                    opponentBodyPlan: opponent.bodyPlan,
                     step: $step,
                     onDismiss: onDismiss,
                     combatId: combatId,

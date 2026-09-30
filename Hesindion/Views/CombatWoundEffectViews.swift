@@ -29,7 +29,7 @@ struct CombatHitZoneRow: View {
                 }),
             targetIsSurprised: .constant(false),
             zones: [.kopf, .torso, .arme, .beine],
-            allowsNoZone: false,
+            offersRandomZone: false,
             isSettled: isDisabled,
             accessory: AnyView(rollButton)
         )

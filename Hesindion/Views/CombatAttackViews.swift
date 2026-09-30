@@ -365,7 +365,6 @@ struct CombatAnnouncementView: View {
     }
     @State private var selectedManeuver: CombatManeuver = .normal
     @State private var targetZone: HitZone? = nil
-    @State private var showingZoneRoll = false
     /// The weapon's own offers the player took (catalog `ITEMTPL_` ids, e.g.
     /// the Rabenschnabel's Dornenspitze). Announced into every `situation(_:)`.
     @State private var weaponOffers: Set<String> = []
@@ -505,7 +504,10 @@ struct CombatAnnouncementView: View {
 
                     // Trefferzone (Fokus-Regel). The zones on offer are the
                     // opponent's, not the hero's: a four-legged opponent has no
-                    // Arme, and a 1W20 against them lands on their own table.
+                    // Arme. Not aiming is "Zufällig": the 1W20 on their own table
+                    // is rolled after the hit lands (trefferzonen.TZ2), on the
+                    // opponent-defence screen — not here, where a rolled zone
+                    // was charged the Zonenaufschlag of an aimed one (issue #34).
                     if zonesActive, opponent.bodyPlanKind != .keineZonen, selectedManeuver != .passierschlag {
                         CombatZonePicker(
                             selection: $targetZone,
@@ -514,8 +516,7 @@ struct CombatAnnouncementView: View {
                             showsPenalty: true,
                             showsSurprisedToggle: true,
                             hasSonderfertigkeit: hero.hasGezielterAngriff,
-                            sfHalvesKey: "trefferzone.sfHalves.melee",
-                            accessory: AnyView(rollZoneButton)
+                            sfHalvesKey: "trefferzone.sfHalves.melee"
                         )
                     }
 
@@ -577,31 +578,6 @@ struct CombatAnnouncementView: View {
             opponent.reset()
             // A weapon offer is aimed at an opponent's armour: it goes with them.
             weaponOffers = []
-        }
-        .overlay {
-            if showingZoneRoll {
-                DSADiceRevealModal(
-                    title: L("trefferzone.section"),
-                    sides: 20,
-                    accent: combatAccent,
-                    result: { rolls in
-                        AnyView(
-                            HitZoneTableView(
-                                plan: opponent.bodyPlan,
-                                roll: rolls.first,
-                                accent: combatAccent
-                            )
-                        )
-                    },
-                    onConfirm: { rolls in
-                        if let roll = rolls.first {
-                            targetZone = HitZoneTable.lookup(roll, plan: opponent.bodyPlan).zone
-                        }
-                        showingZoneRoll = false
-                    },
-                    onCancel: { showingZoneRoll = false }
-                )
-            }
         }
     }
 
@@ -857,26 +833,6 @@ struct CombatAnnouncementView: View {
             .buttonStyle(.dsaMotion)
             .accessibilityIdentifier(identifier(option))
         }
-    }
-
-    /// The other way of answering "where did it land": 1W20 on the opponent's
-    /// own table. The receiving side has had this since the rule went in; the
-    /// attacking side could only ever declare a zone and pay its Zonenaufschlag.
-    private var rollZoneButton: some View {
-        Button { showingZoneRoll = true } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "dice.fill")
-                Text(L("trefferzone.roll"))
-            }
-            .font(.dsaHeading(.caption))
-            .foregroundStyle(targetZone == nil ? Color.white : Color.dsaDisabledLabel)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(targetZone == nil ? combatAccent : Color(UIColor.secondarySystemBackground))
-            .dsaBox(.flush)
-        }
-        .buttonStyle(.dsaMotion)
-        .accessibilityIdentifier("combat.zone.roll")
     }
 
     /// Everything this attack is evaluated against, for whichever domain asks.

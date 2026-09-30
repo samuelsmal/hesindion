@@ -24,7 +24,12 @@ final class LandscapeScrollFlowTests: XCTestCase {
     func testNeueAktionIsReachableInLandscapeOnTheDamageScreen() {
         continueAfterFailure = false
 
-        let app = UITest.launch(path: "combat", diceScript: Self.plainRoll, orientation: .landscapeLeft)
+        // Without Trefferzonen: an unaimed hit would first ask for its zone roll
+        // (issue #34) and hold "Neue Aktion" back, which is not what this tests.
+        let app = UITest.launch(
+            path: "combat", diceScript: Self.plainRoll,
+            fokusRulesOff: ["trefferzonen"], orientation: .landscapeLeft
+        )
 
         // --- Drive a plain attack through to the opponent-defence/damage
         // screen, the same route `DamageBreakdownFlowTests` uses.

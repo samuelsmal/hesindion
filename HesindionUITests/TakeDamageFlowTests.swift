@@ -105,7 +105,8 @@ final class TakeDamageFlowTests: XCTestCase {
     // MARK: - The zone is named, not optional
 
     /// With the Fokus-Regel on, a hit landed somewhere: the GM names the zone or
-    /// it is rolled. "Keine Zone" is an offence-side choice and must not appear.
+    /// it is rolled here. "Zufällig" is the attacker's choice not to aim and must
+    /// not appear on the receiving side.
     @MainActor
     func testNoZoneChipIsNotOfferedWhenTakingDamage() {
         continueAfterFailure = false
@@ -115,8 +116,8 @@ final class TakeDamageFlowTests: XCTestCase {
             "Zone chips missing"
         )
         XCTAssertFalse(
-            app.buttons["combat.zone.none"].exists,
-            #""Keine Zone" must not be offered when the hero takes a hit"#
+            app.buttons["combat.zone.random"].exists,
+            #""Zufällig" must not be offered when the hero takes a hit"#
         )
     }
 

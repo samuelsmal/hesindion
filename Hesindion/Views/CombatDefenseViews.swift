@@ -36,6 +36,8 @@ struct CombatOpponentDefenseView: View {
     /// Trefferzone announced for this attack, if any. Read-only here — the app has no
     /// opponent model to apply the wound effect to (see `WoundEffectReminderCard`).
     var announcedZone: HitZone? = nil
+    /// The target's Trefferzonentabelle, for the 1W20 an unaimed hit rolls (TZ2).
+    var opponentBodyPlan: BodyPlan = .humanoid(.mittel)
     @Binding var step: CombatStep
     var onDismiss: () -> Void
     let combatId: UUID
@@ -50,6 +52,9 @@ struct CombatOpponentDefenseView: View {
     /// How the opponent's Selbstbeherrschung check went, per the player. `nil`
     /// while the card is still asking.
     @State private var woundEffectProbePassed: Bool? = nil
+    /// The 1W20 of an unaimed hit, once rolled. `nil` for an aimed one.
+    @State private var zoneRoll: Int? = nil
+    @State private var showingZoneRoll = false
     @State private var damageDisplayRolls: [Int] = []
     @State private var damageFinalRolls: [Int]? = nil
     @State private var damageAnimTask: Task<Void, Never>? = nil
@@ -215,10 +220,17 @@ struct CombatOpponentDefenseView: View {
                         .padding(.top, 8)
                 }
 
+                // An unaimed hit's zone is rolled now, the hit being in
+                // (trefferzonen.TZ2) — and said to be rolled, with the die, so the
+                // player can tell it from a zone they aimed at (ADR-0018).
+                if showDamage {
+                    landedZoneSection
+                }
+
                 // Nothing is applied — the opponent has no LP to subtract from
                 // (ADR-0005) — but the extra damage is settled here and belongs
                 // in the calculation below.
-                if showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone {
+                if showDamage, let zone = landedZone.zone {
                     WoundEffectReminderCard(
                         zone: zone,
                         extraDamage: $woundEffectDamage,
@@ -250,7 +262,8 @@ struct CombatOpponentDefenseView: View {
                 // time, which reads as though the question were optional — and
                 // leaving without answering it drops a Wundeffekt that has
                 // already been announced, silently, out of the reported total.
-                if showDamage, damageFormula == nil || damageFinalRolls != nil, !woundEffectPending {
+                if showDamage, damageFormula == nil || damageFinalRolls != nil, !woundEffectPending,
+                   !landedZone.isAwaitingRoll {
                     neueAktionButton
                 }
             }
@@ -267,6 +280,29 @@ struct CombatOpponentDefenseView: View {
             if let total = appliedTotal, !hasLoggedDamage {
                 hasLoggedDamage = true
                 logDamageDealt(total)
+            }
+        }
+        .overlay {
+            if showingZoneRoll {
+                DSADiceRevealModal(
+                    title: L("trefferzone.section"),
+                    sides: 20,
+                    accent: combatAccent,
+                    result: { rolls in
+                        AnyView(
+                            HitZoneTableView(
+                                plan: opponentBodyPlan,
+                                roll: rolls.first,
+                                accent: combatAccent
+                            )
+                        )
+                    },
+                    onConfirm: { rolls in
+                        zoneRoll = rolls.first
+                        showingZoneRoll = false
+                    },
+                    onCancel: { showingZoneRoll = false }
+                )
             }
         }
     }
@@ -456,12 +492,50 @@ struct CombatOpponentDefenseView: View {
     /// opponent's check unanswered, or a failed check whose extra damage has not
     /// been settled.
     private var woundEffectPending: Bool {
-        guard showDamage, hero.isFokusRuleActive(.trefferzonen), let zone = announcedZone else {
-            return false
-        }
+        guard showDamage, let zone = landedZone.zone else { return false }
         guard let passed = woundEffectProbePassed else { return true }
         guard !passed, case .extraDamage = WoundEffectCatalog.effect(for: zone).kind else { return false }
         return woundEffectDamage == nil
+    }
+
+    // MARK: - Trefferzone of the landed hit
+
+    private var landedZone: LandedHitZone {
+        LandedHitZone.resolve(
+            rulesActive: hero.isFokusRuleActive(.trefferzonen),
+            plan: opponentBodyPlan,
+            aimed: announcedZone,
+            roll: zoneRoll
+        )
+    }
+
+    /// Nothing for an aimed hit — its zone is the one on the reminder card.
+    @ViewBuilder
+    private var landedZoneSection: some View {
+        switch landedZone {
+        case .awaitingRoll:
+            VStack(alignment: .leading, spacing: 8) {
+                combatSectionLabel(L("trefferzone.section"))
+                Text(L("trefferzone.rollPrompt"))
+                    .font(.dsaBody(.caption2))
+                    .foregroundStyle(.secondary)
+                CombatActionButton(
+                    title: L("trefferzone.rollAfterHit"),
+                    icon: "dice.fill",
+                    identifier: "combat.hitZone.roll"
+                ) { showingZoneRoll = true }
+            }
+            .padding(.top, 8)
+        case .rolled(let hit, let roll):
+            let side = hit.side.map { " (\(L($0.nameKey)))" } ?? ""
+            Text(String(format: L("trefferzone.rolledResult"), L(hit.zone.nameKey) + side, roll))
+                .font(.dsaBody(.caption))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
+                .accessibilityIdentifier("combat.hitZone.rolled")
+        case .aimed, .notApplicable:
+            EmptyView()
+        }
     }
 
     // MARK: - Neue Aktion
