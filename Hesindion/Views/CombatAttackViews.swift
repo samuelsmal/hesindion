@@ -703,7 +703,7 @@ struct CombatAnnouncementView: View {
             captioned(L("opponent.size")) {
                 CreatureSizeChipRow(
                     size: $opponent.size,
-                    detail: { $0 == .winzig ? "AT −4" : nil },
+                    detail: CreatureSizeChipRow.attackDetail,
                     identifierPrefix: "combat.opponent.size"
                 )
             }

@@ -223,6 +223,13 @@ struct CreatureSizeChipRow: View {
     var detail: (CreatureSize) -> String? = { _ in nil }
     let identifierPrefix: String
 
+    /// What a target of this size costs the hero's melee attack
+    /// (GRW_groessenkategorie GK3): winzig −4, every other size nothing. The
+    /// announcement prints it on every chip, ±0 included (issue #38).
+    static func attackDetail(_ size: CreatureSize) -> String {
+        size == .winzig ? "AT −4" : "AT ±0"
+    }
+
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) { chips }
@@ -246,7 +253,9 @@ struct CreatureSizeChipRow: View {
                     }
                 }
                 .foregroundStyle(selected ? .white : .primary)
-                .frame(maxWidth: .infinity, minHeight: 22)
+                // Fills the row's height, so a size name that wraps does not
+                // leave its neighbours shorter.
+                .frame(maxWidth: .infinity, minHeight: 22, maxHeight: .infinity)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
                 .background(selected ? combatAccent : Color(UIColor.secondarySystemBackground))
