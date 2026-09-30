@@ -27,6 +27,11 @@ struct CombatExecutionView: View {
     let roundNumber: Int
     let beengteUmgebungActive: Bool
     @Binding var step: CombatStep
+    /// One step back in the attack flow (issue #40): to the announcement, or
+    /// to the attack choice for a mount's own attack. `nil` keeps this screen's
+    /// own target — the weapon list for a parry, the root for a dodge, and the
+    /// weapon list for the second blow of a dual attack.
+    var onBack: (() -> Void)? = nil
     /// Called once when a *defence* is set up on this screen, so the round can
     /// count it. The count drives Mehrfache Verteidigung for the **next**
     /// defence — this one was already modified with the count as it stood.
@@ -100,7 +105,11 @@ struct CombatExecutionView: View {
             // Header
             HStack {
                 Button {
-                    step = action == .ausweichen ? .root : .weaponSelection(action)
+                    if let onBack {
+                        onBack()
+                    } else {
+                        step = action == .ausweichen ? .root : .weaponSelection(action)
+                    }
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.dsaBody(.body))

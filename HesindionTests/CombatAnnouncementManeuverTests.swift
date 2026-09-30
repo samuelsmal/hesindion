@@ -42,6 +42,7 @@ final class CombatAnnouncementManeuverTests: XCTestCase {
             plaenklerActive: false,
             plaenklerBonus: .at,
             opponent: .constant(OpponentProfile()),
+            onBack: {},
             onDismiss: {}
         )
     }

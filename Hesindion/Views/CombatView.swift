@@ -236,6 +236,37 @@ struct CombatView: View {
     /// model to apply the wound effect to, so this only carries the zone from the
     /// announcement/setup step to the post-hit damage screen for the read-only reminder card.
     @State private var announcedZone: HitZone? = nil
+    /// Where the attack flow's back button goes (issue #40). Cleared at the root.
+    @State private var backStack = CombatBackStack()
+
+    /// `$step` for the attack flow's screens: each step they leave is recorded,
+    /// so back returns to the screen the player actually came from.
+    private var attackFlowStep: Binding<CombatStep> {
+        Binding(
+            get: { step },
+            set: { next in
+                backStack.advance(from: step, vorstossActiveThisRound: vorstossActiveThisRound)
+                step = next
+            }
+        )
+    }
+
+    /// The back action for a screen that serves the attack and the defences:
+    /// `nil` for a defence, which keeps the screen's own target.
+    private func attackBack(for action: CombatAction) -> (() -> Void)? {
+        action == .angriff ? { goBack() } : nil
+    }
+
+    /// One step back in the attack flow, with Vorstoß as it was when that
+    /// step opened. The root when nothing is recorded.
+    private func goBack() {
+        guard let entry = backStack.back() else {
+            step = .root
+            return
+        }
+        vorstossActiveThisRound = entry.vorstossActiveThisRound
+        step = entry.step
+    }
 
     /// The round's flags as one value, for the screens that roll a defence.
     private var situation: CombatSituation {
@@ -314,7 +345,7 @@ struct CombatView: View {
             case .root:
                 CombatRootView(
                     hero: hero,
-                    step: $step,
+                    step: attackFlowStep,
                     rolledInitiative: $rolledInitiative,
                     roundNumber: $roundNumber,
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
@@ -336,7 +367,7 @@ struct CombatView: View {
             case .attackChoice:
                 CombatAttackChoiceView(
                     hero: hero,
-                    step: $step,
+                    step: attackFlowStep,
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
                     twoHandedGripActive: $twoHandedGripActive,
                     mountedActive: mountedActive,
@@ -358,11 +389,12 @@ struct CombatView: View {
                 CombatWeaponSelectionView(
                     action: action,
                     hero: hero,
-                    step: $step,
+                    step: attackFlowStep,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
                     situation: situation,
                     opponent: opponent,
+                    onBack: attackBack(for: action),
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -380,7 +412,7 @@ struct CombatView: View {
                     beengteUmgebungActive: beengteUmgebungActive,
                     schipIgnoreZustandThisRound: schipIgnoreZustandThisRound,
                     secondAttack: secondAttack,
-                    step: $step,
+                    step: attackFlowStep,
                     activeManeuver: $activeManeuver,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     announcedZone: $announcedZone,
@@ -389,6 +421,7 @@ struct CombatView: View {
                     plaenklerActive: plaenklerActive,
                     plaenklerBonus: plaenklerBonus,
                     opponent: $opponent,
+                    onBack: goBack,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -408,7 +441,8 @@ struct CombatView: View {
                     combatId: combatId,
                     roundNumber: roundNumber,
                     beengteUmgebungActive: beengteUmgebungActive,
-                    step: $step,
+                    step: attackFlowStep,
+                    onBack: attackBack(for: action),
                     onDefenseAttempted: {
                         if action == .ausweichen { dodgesThisRound += 1 } else { parriesThisRound += 1 }
                     },
@@ -436,7 +470,7 @@ struct CombatView: View {
                 CombatMountPreCheckView(
                     hero: hero,
                     onSuccess: onSuccess,
-                    step: $step,
+                    step: attackFlowStep,
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -581,7 +615,7 @@ struct CombatView: View {
             case .spellCasting(let spell, let startRound, let totalRounds, let modifierLines):
                 CombatRootView(
                     hero: hero,
-                    step: $step,
+                    step: attackFlowStep,
                     rolledInitiative: $rolledInitiative,
                     roundNumber: $roundNumber,
                     dualAttackPenaltyActive: $dualAttackPenaltyActive,
@@ -623,8 +657,8 @@ struct CombatView: View {
                     step = .root
                 case .defenseSetup:
                     step = .root
-                case .announcement(let action, _, _, _, _, _, _):
-                    step = .weaponSelection(action)
+                case .announcement, .weaponSelection(.angriff), .execution(.angriff, _, _, _, _, _, _, _, _, _):
+                    goBack()
                 case .mountPreCheck:
                     step = .attackChoice
                 case .mountDamage:
@@ -709,6 +743,11 @@ struct CombatView: View {
         .onChange(of: step.persistenceKey) { _, newKey in
             if !step.preservesAnnouncedZone {
                 announcedZone = nil
+            }
+            // The second blow of a dual attack opens after the first one is
+            // rolled: nothing before it is a step to go back to.
+            if newKey == "root" || newKey == "dualAttackSecond" {
+                backStack.clear(vorstossActiveThisRound: vorstossActiveThisRound)
             }
             if newKey == "root" {
                 // An interaction is over, and the next one may well be with

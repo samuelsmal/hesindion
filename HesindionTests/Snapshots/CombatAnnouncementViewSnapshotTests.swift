@@ -39,6 +39,7 @@ final class CombatAnnouncementViewSnapshotTests: XCTestCase {
             plaenklerActive: false,
             plaenklerBonus: .at,
             opponent: .constant(opponent),
+            onBack: {},
             onDismiss: {}
         )
         .modelContainer(container)
@@ -76,6 +77,7 @@ final class CombatAnnouncementViewSnapshotTests: XCTestCase {
             plaenklerActive: false,
             plaenklerBonus: .at,
             opponent: .constant(OpponentProfile()),
+            onBack: {},
             onDismiss: {}
         )
         .modelContainer(container)
@@ -113,6 +115,7 @@ final class CombatAnnouncementViewSnapshotTests: XCTestCase {
             plaenklerActive: false,
             plaenklerBonus: .at,
             opponent: .constant(OpponentProfile()),
+            onBack: {},
             onDismiss: {}
         )
         .modelContainer(container)

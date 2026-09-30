@@ -381,17 +381,22 @@ final class FumbleTableFlowTests: XCTestCase {
                   "A damaged weapon should cost the attack 2")
 
         // --- And the loadout picker marks it, which is where the player picks
-        // what to fight with and so the one place the badge has to be. Back from
-        // an attack roll is the weapon list, and back from that is the root.
+        // what to fight with and so the one place the badge has to be. Back goes
+        // one step at a time (issue #40): the announcement, the grip choice, the root.
         app.buttons["combat.back"].tap()
         XCTAssertTrue(
-            app.buttons["combat.weaponRow.Langschwert"].waitForExistence(timeout: UITest.timeout),
-            "Back from the attack roll should land on the weapon list"
+            app.descendants(matching: .any)["combat.announcement.atBreakdown"].waitForExistence(timeout: UITest.timeout),
+            "Back from the attack roll should land on the announcement"
+        )
+        app.buttons["combat.back"].tap()
+        XCTAssertTrue(
+            app.button(containing: "Einhändig").waitForExistence(timeout: UITest.timeout),
+            "Back from the announcement should land on the grip choice"
         )
         app.buttons["combat.back"].tap()
         XCTAssertTrue(
             app.buttons["combat.parry"].waitForExistence(timeout: UITest.timeout),
-            "Back from the weapon list should land on the combat root"
+            "Back from the grip choice should land on the combat root"
         )
 
         let changeLoadout = app.button(containing: "Ausrüstung wechseln")

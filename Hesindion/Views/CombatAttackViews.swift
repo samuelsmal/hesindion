@@ -44,6 +44,7 @@ struct CombatAttackChoiceView: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.dsaMotion)
+                .accessibilityIdentifier("combat.back")
                 Spacer()
                 Text(L("attack"))
                     .font(.dsaHeading(.headline))
@@ -354,6 +355,9 @@ struct CombatAnnouncementView: View {
     /// `CombatView` clears it again on the way back to the root, so a defence
     /// rolled from there does not inherit this announcement's answers either.
     @Binding var opponent: OpponentProfile
+    /// One step back: to the screen this announcement was reached from — the
+    /// root, the attack choice or the weapon list (issue #40).
+    var onBack: () -> Void
     var onDismiss: () -> Void
 
     /// The reach of the weapon being announced — the one named in the header, not
@@ -415,7 +419,7 @@ struct CombatAnnouncementView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = .weaponSelection(action) } label: {
+                Button(action: onBack) {
                     Image(systemName: "chevron.left")
                         .font(.dsaBody(.body))
                         .foregroundStyle(.white)
@@ -1072,6 +1076,9 @@ struct CombatWeaponSelectionView: View {
     /// And who the defence is against: a parry is modified by the other side as
     /// well as by the round (GRW_vorteilhaftePosition reads `onFoot`).
     let opponent: OpponentProfile
+    /// One step back in the attack flow (issue #40). `nil` for a defence, which
+    /// goes back to the root.
+    var onBack: (() -> Void)? = nil
     var onDismiss: () -> Void
 
     /// What the attacker's size leaves a parry (`SizeCategoryRules`). Only a
@@ -1119,7 +1126,7 @@ struct CombatWeaponSelectionView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button { step = dualAttackPenaltyActive && action == .angriff ? .attackChoice : .root } label: {
+                Button { if let onBack { onBack() } else { step = .root } } label: {
                     Image(systemName: "chevron.left")
                         .font(.dsaBody(.body))
                         .foregroundStyle(.white)

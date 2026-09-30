@@ -188,9 +188,9 @@ final class WeaponStyleFlowTests: XCTestCase {
         )
 
         // --- Back to the root: the announcement, and with it the opponent, is over.
+        // One step at a time (issue #40): the attack choice it came from, then the root.
         app.buttons["combat.back"].tap()
-        let weaponRow = app.buttons["combat.weaponRow.Rabenschnabel"]
-        XCTAssertTrue(weaponRow.waitForExistence(timeout: UITest.timeout), "The back button did not reach the weapon list")
+        XCTAssertTrue(heroWeapon.waitForExistence(timeout: UITest.timeout), "The back button did not reach the attack choice")
         app.buttons["combat.back"].tap()
 
         // --- Parry. Nobody has said anything about the one swinging now.
