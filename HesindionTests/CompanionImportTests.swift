@@ -67,6 +67,24 @@ struct CompanionImportTests {
         #expect(pet.hasMightyBlow)
     }
 
+    /// The build's `values.gs` (12, +25 % for Schnell = 15) reaches the export's
+    /// `mov` through `make companions`, and the import reads `mov` as the pet's GS.
+    /// The Sturmangriff zu Pferd's ½ GS line uses that value, not the breed's 12.
+    @Test func mountedChargeUsesTheCompanionGS() throws {
+        let context = ModelContext(try makeContainer())
+        try OptolithImportService().importHero(from: withBlock, context: context)
+        let hero = try #require(try context.fetch(FetchDescriptor<Hero>()).first)
+        #expect(hero.mount?.name == "Kupperus")
+        #expect(hero.mount?.speed == 15)
+
+        var charge = Situation(hero: hero, domain: .damage)
+        charge.maneuver = .sturmangriff
+        charge.round.mounted = true
+        let lines = DamageModifiers.lines(situation: charge)
+        #expect(lines.first { $0.source == L("source.sturmangriff") }?.value == 2)
+        #expect(lines.first { $0.source == String(format: L("source.sturmangriff.halfGSRoundedUp"), "Kupperus", 15) }?.value == 8)
+    }
+
     @Test func importWithoutBlockKeepsTodaysParsing() throws {
         let context = ModelContext(try makeContainer())
         try OptolithImportService().importHero(from: withoutBlock, context: context)
