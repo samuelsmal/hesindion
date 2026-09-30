@@ -31,6 +31,10 @@ struct CombatOpponentDefenseView: View {
     /// Fokusregel. A multiplier row that says only "Auswirkung auf den Schaden"
     /// tells the reader what they can already see.
     var criticalDamageSource: String? = nil
+    /// A rule that acts on the opponent after the attack (issue #41). The
+    /// defence the GM names here decides it: a card beside the damage on a
+    /// hit, a toast on a parry or a dodge, since those leave the screen.
+    var followUp: AttackFollowUp? = nil
     var isRangedAttack: Bool = false
     var rangedDefensePenalty: Int = 0
     /// Trefferzone announced for this attack, if any. Read-only here — the app has no
@@ -39,6 +43,8 @@ struct CombatOpponentDefenseView: View {
     /// The target's Trefferzonentabelle, for the 1W20 an unaimed hit rolls (TZ2).
     var opponentBodyPlan: BodyPlan = .humanoid(.mittel)
     @Binding var step: CombatStep
+    /// Shows the follow-up's toast on the combat screen, which outlives this one.
+    var onFollowUpToast: (DSAToastContent) -> Void = { _ in }
     var onDismiss: () -> Void
     let combatId: UUID
     let roundNumber: Int
@@ -154,9 +160,15 @@ struct CombatOpponentDefenseView: View {
 
                 // Outcome buttons (only while damage section is not shown)
                 if !showDamage {
+                    // Said before the GM picks: a parry does not avoid it.
+                    if let followUp, followUp.avoidedByDodge {
+                        infoBox(String(format: L("followUp.dodgeOnly"), followUp.name))
+                    }
+
                     // Pariert
                     Button {
                         logOpponentDefense(outcome: "parried")
+                        if let followUp { onFollowUpToast(followUp.toast(after: .parried)) }
                         step = .root
                     } label: {
                         HStack(spacing: 6) {
@@ -175,6 +187,7 @@ struct CombatOpponentDefenseView: View {
                     // Ausgewichen
                     Button {
                         logOpponentDefense(outcome: "dodged")
+                        if let followUp { onFollowUpToast(followUp.toast(after: .dodged)) }
                         step = .root
                     } label: {
                         HStack(spacing: 6) {
@@ -252,6 +265,12 @@ struct CombatOpponentDefenseView: View {
                     .padding(.top, 8)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("combat.dealDamage.breakdown")
+                }
+
+                // Due once the hit is in: the opponent's check, stated, not rolled.
+                if showDamage, let followUp {
+                    followUpCard(followUp)
+                        .padding(.top, 8)
                 }
 
                 // Last, because it leaves the screen. It used to sit inside the
@@ -549,6 +568,28 @@ struct CombatOpponentDefenseView: View {
     }
 
     // MARK: - Info box helper
+
+    private func followUpCard(_ followUp: AttackFollowUp) -> some View {
+        VStack(spacing: 0) {
+            combatSectionLabel(L("followUp.section"))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(followUp.name)
+                    .font(.dsaHeading(.headline))
+                    .foregroundStyle(combatAccent)
+                ForEach(followUp.lines, id: \.self) { line in
+                    Text(line)
+                        .font(.dsaBody(.subheadline))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DSALayout.contentPadding)
+            .background(Color(UIColor.systemBackground))
+            .dsaBox(.raised, stroke: combatAccent)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("combat.dealDamage.followUp")
+        }
+    }
 
     private func infoBox(_ text: String, icon: String = "info.circle.fill") -> some View {
         HStack(spacing: 6) {

@@ -37,7 +37,7 @@ final class CombatDefenseSetupTests: XCTestCase {
     func testParryWithAWeaponRollsItsPAPlusTheLines() {
         armWithSword()
         let step = DefenseRoute.next(.parieren, hero: hero, size: .mittel, lines: [line(2)])
-        if case .execution(let action, let name, let value, _, _, let lines, _, _, _, _) = step {
+        if case .execution(let action, let name, let value, _, _, let lines, _, _, _, _, _) = step {
             XCTAssertEqual(action, .parieren)
             XCTAssertEqual(name, "Schwert")
             XCTAssertEqual(value, 10)
@@ -76,7 +76,7 @@ final class CombatDefenseSetupTests: XCTestCase {
             schicksalspunkte: MutableResourceValue(current: 3, bonus: 0, max: 3)
         )
         let step = DefenseRoute.next(.ausweichen, hero: hero, size: .mittel, lines: [line(-4)])
-        if case .execution(let action, _, let value, _, _, _, _, _, _, _) = step {
+        if case .execution(let action, _, let value, _, _, _, _, _, _, _, _) = step {
             XCTAssertEqual(action, .ausweichen)
             XCTAssertEqual(value, 2)
         } else {
@@ -128,7 +128,7 @@ final class CombatDefenseSetupTests: XCTestCase {
 
     func testADodgeIsAlwaysPossible() {
         let step = DefenseRoute.next(.ausweichen, hero: hero, size: .riesig, lines: [])
-        if case .execution(.ausweichen, _, _, _, _, _, _, _, _, _) = step {} else {
+        if case .execution(.ausweichen, _, _, _, _, _, _, _, _, _, _) = step {} else {
             XCTFail("expected .execution, got \(step.persistenceKey)")
         }
     }

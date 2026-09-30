@@ -112,7 +112,7 @@ string as an ⓘ line on the attack screen.
 | Finding | Where | Basis |
 |---|---|---|
 | Niederreiten takes the AT of the **first** parsed attack, not the Niederreiten line: an Elenviner Vollblut attacks at 16 instead of 15 (Kupperus is right by luck, Tritt is also 15) | `CombatAttackViews.niederreitenButton` (`mount.attacks.first?.at`) | page (RK13) |
-| Mächtiger Schlag's Kraftakt penalty is floored: Kupperus −2, the page −3 (its own example rounds KK 23 to −2) | `CombatAttackViews` (`(kk - 20) / 2`), string `mightyBlow` | page |
+| ~~Mächtiger Schlag's Kraftakt penalty is floored: Kupperus −2, the page −3 (its own example rounds KK 23 to −2)~~ Fixed (issue #41): −3 | `AttackFollowUp.mightyBlowPenalty` | page |
 | The Schadensbonus (L+S) is never added: a Rabenschnabel with KK 15 does 1W6+4, not 1W6+5 (18.17). The code says no export carries the threshold, but the hero file has `primaryThreshold` on every weapon. At KK 14 Boronmir is at the threshold himself, so the app's 1W6+4 is right for him | `OptolithImportService.parseItems`, `FumbleEffectResolver` comment | page (Kampftechniken) |
 | The Großschild's "−1 AT on the main weapon" is not applied: Boronmir's Rabenschnabel and Langschwert AT are 1 too high whenever the shield is carried | `OptolithImportService.shieldNote`, `MeleeModifiers` | page (Regelwerk table note) |
 | Waffenvorteile and -nachteile are applied always; they belong to the Fokusregel Waffeneigenschaften, which the app does not have | catalog `ITEMTPL_19`, `WeaponFumbleExtras`, `FokusRule` | page (Waffeneigenschaften); ruling `rabenschnabel-waffeneigenschaft` |

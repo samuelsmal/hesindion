@@ -22,6 +22,9 @@ struct CombatExecutionView: View {
     /// What the announcement did to the opponent's defence, carried through to
     /// the screen where the GM needs it.
     var opponentDefenseModifiers: [ModifierLine] = []
+    /// A rule that acts on the opponent after the attack, passed on to the
+    /// opponent-defence screen, where the defence decides it (issue #41).
+    var followUp: AttackFollowUp? = nil
     let secondAttackStep: CombatStep?
     let combatId: UUID
     let roundNumber: Int
@@ -263,7 +266,8 @@ struct CombatExecutionView: View {
                         modifierLines: modifierLines,
                         damageLines: damageLines,
                         damageMultiplier: damageMultiplier,
-                        opponentDefenseModifiers: opponentDefenseModifiers
+                        opponentDefenseModifiers: opponentDefenseModifiers,
+                        followUp: followUp
                     )
                 } else {
                     step = .opponentDefense(
@@ -275,7 +279,8 @@ struct CombatExecutionView: View {
                         damageLines: damageLines,
                         damageMultiplier: damageMultiplier,
                         opponentDefenseModifiers: opponentDefenseModifiers,
-                        criticalDamageSource: outcome == .kritischerErfolg ? L("critical.hit") : nil
+                        criticalDamageSource: outcome == .kritischerErfolg ? L("critical.hit") : nil,
+                        followUp: followUp
                     )
                 }
             } label: {

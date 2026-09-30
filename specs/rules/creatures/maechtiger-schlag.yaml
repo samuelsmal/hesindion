@@ -45,6 +45,10 @@ clauses:
         # Liegend — not modelled on the take-damage side today.
         # "Gelungene Attacke": the AT roll succeeded, before any defence — MS3 says what a
         # defence changes.
+        # The app (issue #41): the mount's attack carries an AttackFollowUp to the opponent-
+        # defence screen; nothing shows on a missed AT. "Treffer geht durch" shows it as a card
+        # beside the damage. The opponent's size is not asked on the mount's attack path, so the
+        # size condition is a line of the text ("Nur gegen Gegner der Größe mittel oder kleiner").
 
   - id: MS2
     text: >
@@ -62,8 +66,11 @@ clauses:
         # the sign, as the page's examples do.
         # Rounded up: the page's own example settles it — "bei einer KK von 23 um -2, bei einer
         # von 26 um -3" (23: 1.5 → 2) — so no ruling is needed; it agrees with rulings.yaml
-        # round-up / ADR-0006. Kupperus, KK 25: −⌈2.5⌉ = −3. The app floors it, (kk − 20) / 2 in
-        # Int: −2 (CombatAttackViews.mountAttackSection and niederreitenButton, `mightyBlow`).
+        # round-up / ADR-0006. Kupperus, KK 25: −⌈2.5⌉ = −3 (AttackFollowUp.mightyBlowPenalty;
+        # it floored to −2 before issue #41).
+        # The KK is the creature's that has the SF and strikes — the mount, never the rider. The
+        # app's line names it: "Kupperus: KK 25, die Hälfte der 5 Punkte über 20, aufgerundet"
+        # (AttackFollowUp.mightyBlow(creature:kk:)).
 
   - id: MS3
     text: >
@@ -78,8 +85,9 @@ clauses:
       - when: { choice.order: [mountAttack, niederreiten], opponent.defence: [pa, shieldParry] }
         tell: { to: opponent, text: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)" }
         # The old structured `tell` with `whatever_the_parry: true`.
-        # A parried blow does no damage but still asks for the Kraftakt check. The app's note
-        # says so ("Parade hilft nicht — nur Ausweichen schützt vollständig").
+        # A parried blow does no damage but still asks for the Kraftakt check. The app says so
+        # before the GM picks the defence, and "Pariert" shows the check as a toast. "Ausgewichen"
+        # shows "Mächtiger Schlag nicht angewandt: Der Gegner ist ausgewichen." (issue #41).
 
   - id: MS4
     text: "Voraussetzungen: Wesen verfügt automatisch über die SF"

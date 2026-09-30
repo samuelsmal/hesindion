@@ -22,7 +22,7 @@ enum CombatStep {
     /// bonuses on top of it, carried apart all the way to the roll so the damage
     /// screen can print every part. Folding them into the string here is what
     /// made the manoeuvre bonus unaccountable — and, twice, double-counted.
-    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
+    case execution(CombatAction, name: String, attributeValue: Int, damageFormula: String?, note: String?, modifierLines: [ModifierLine]? = nil, secondAttack: (name: String, at: Int, damage: String?)? = nil, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], followUp: AttackFollowUp? = nil)
     case dualAttackSecond(name: String, attributeValue: Int, damageFormula: String?)
     indirect case mountPreCheck(onSuccess: CombatStep)
     case mountDamage
@@ -44,12 +44,12 @@ enum CombatStep {
     /// which the states a fight set can be switched off again. Skipped entirely
     /// when there is nothing to switch off (`CombatAftermath.isEmpty`).
     case aftermath
-    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil)
+    case opponentDefense(weaponName: String, damageFormula: String?, isCriticalHit: Bool, criticalDamage: CriticalDamage, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], criticalDamageSource: String? = nil, followUp: AttackFollowUp? = nil)
     case fumbleChoice(action: CombatAction, weaponName: String, isShieldParry: Bool)
     /// The optional "Kritische Erfolge" table (ADR-0011). `table: nil` means the
     /// screen has to ask which defence this was — the app knows the hero parried,
     /// not whether the incoming attack was melee or ranged.
-    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [])
+    case criticalSuccess(table: CriticalSuccessTableType?, action: CombatAction, weaponName: String, damageFormula: String?, modifierLines: [ModifierLine]?, isRangedAttack: Bool = false, rangedDefensePenalty: Int = 0, damageLines: [ModifierLine] = [], damageMultiplier: CriticalDamage = .unchanged, opponentDefenseModifiers: [ModifierLine] = [], followUp: AttackFollowUp? = nil)
     /// `weaponName`/`isOffHand` are what the announcement named; the
     /// critical-parry routes leave them out and strike with the main weapon.
     case passierschlag(weaponName: String? = nil, isOffHand: Bool = false)
@@ -195,8 +195,10 @@ struct CombatView: View {
     @State private var dualAttackPenaltyActive: Bool = false
     @State private var twoHandedGripActive: Bool = false
     @State private var roundNumber: Int = 1
-    /// What the last step to a new Kampfrunde changed by itself (issue #35).
-    @State private var roundStartToast: DSAToastContent? = nil
+    /// What the last step to a new Kampfrunde changed by itself (issue #35), or
+    /// an attack's follow-up after the opponent parried or dodged (issue #41).
+    /// Held here, not on the screen, because both outlive the step that set them.
+    @State private var toast: DSAToastContent? = nil
     @State private var plaenklerActive: Bool = false
     @State private var plaenklerBonus: PlaenklerBonus = .at
     @State private var mountedActive: Bool = false
@@ -425,7 +427,7 @@ struct CombatView: View {
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
-            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
+            case .execution(let action, let name, let attrValue, let dmgFormula, let note, let modifierLines, let secondAttack, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let followUp):
                 CombatExecutionView(
                     hero: hero,
                     action: action,
@@ -437,6 +439,7 @@ struct CombatView: View {
                     damageLines: damageLines,
                     damageMultiplier: damageMultiplier,
                     opponentDefenseModifiers: opponentDefenseModifiers,
+                    followUp: followUp,
                     secondAttackStep: secondAttack.map { .dualAttackSecond(name: $0.name, attributeValue: $0.at, damageFormula: $0.damage) },
                     combatId: combatId,
                     roundNumber: roundNumber,
@@ -503,7 +506,7 @@ struct CombatView: View {
                 // open already settled. The identity has to change with the step.
                 .id("takeDamage-\(prefilledTP ?? -1)-\(source ?? "")-\(thenIncomingHit)")
                 .transition(.move(edge: .trailing))
-            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource):
+            case .opponentDefense(let name, let dmg, let isCrit, let criticalDamage, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let criticalDamageSource, let followUp):
                 CombatOpponentDefenseView(
                     hero: hero,
                     weaponName: name,
@@ -515,11 +518,13 @@ struct CombatView: View {
                     opponentDefenseModifiers: opponentDefenseModifiers,
                     damageMultiplier: damageMultiplier,
                     criticalDamageSource: criticalDamageSource,
+                    followUp: followUp,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     announcedZone: announcedZone,
                     opponentBodyPlan: opponent.bodyPlan,
                     step: $step,
+                    onFollowUpToast: { toast = $0 },
                     onDismiss: onDismiss,
                     combatId: combatId,
                     roundNumber: roundNumber
@@ -537,7 +542,7 @@ struct CombatView: View {
                     roundNumber: roundNumber
                 )
                 .transition(.move(edge: .trailing))
-            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers):
+            case .criticalSuccess(let table, let action, let name, let dmg, let mods, let isRanged, let rangedPenalty, let damageLines, let damageMultiplier, let opponentDefenseModifiers, let followUp):
                 CombatCriticalSuccessView(
                     hero: hero,
                     requestedTable: table,
@@ -548,6 +553,7 @@ struct CombatView: View {
                     damageLines: damageLines,
                     damageMultiplier: damageMultiplier,
                     opponentDefenseModifiers: opponentDefenseModifiers,
+                    followUp: followUp,
                     isRangedAttack: isRanged,
                     rangedDefensePenalty: rangedPenalty,
                     step: $step,
@@ -657,7 +663,7 @@ struct CombatView: View {
                     step = .root
                 case .defenseSetup:
                     step = .root
-                case .announcement, .weaponSelection(.angriff), .execution(.angriff, _, _, _, _, _, _, _, _, _):
+                case .announcement, .weaponSelection(.angriff), .execution(.angriff, _, _, _, _, _, _, _, _, _, _):
                     goBack()
                 case .mountPreCheck:
                     step = .attackChoice
@@ -734,7 +740,7 @@ struct CombatView: View {
             // ADR-0018: what the step wrote by itself, with amount and cause.
             if isEndOfRound {
                 let changes = RoundStartChange.between(before, RoundStartSnapshot(hero: hero, round: new))
-                roundStartToast = changes.isEmpty ? nil : DSAToastContent(
+                toast = changes.isEmpty ? nil : DSAToastContent(
                     title: String(format: L("roundStart.title"), new),
                     lines: changes.map(\.text)
                 )
@@ -781,7 +787,7 @@ struct CombatView: View {
                 step = .root
             }
         }
-        .dsaToast($roundStartToast)
+        .dsaToast($toast)
         } // SplitContentLayout
     }
 

@@ -128,7 +128,7 @@ clauses:
         # "empfohlen" ones are suggestions for a player's own animal, not part of the profile.
         # The export's `skills` is free text, read into Pet.specialSkills. Since the 2026-09-24
         # export it says "Mächtiger Schlag, Ruhiges Temperament" because the player typed both.
-        # The app finds Mächtiger Schlag by substring (CombatAttackViews, mightyBlowNote) and
+        # The app finds Mächtiger Schlag by substring (Pet.hasMightyBlow) and
         # shows the whole string as an ⓘ line on the attack screen. It does not recognise Ruhiges
         # Temperament, and an export only has it when a player types it in.
 

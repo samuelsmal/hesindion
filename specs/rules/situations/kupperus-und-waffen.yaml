@@ -90,8 +90,8 @@ situations:
           texts: [{ player: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht.", from: reiterkampf.RK12 }]
     appToday: >
       AT 15 and TP 2W6+6 — the AT by luck: the app reads the first attack parsed from the notes,
-      Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag note says −2 (Int
-      division floors) — wrong. The Reiten check has no lines. Mounted, Belastung I leaves no line
+      Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag: on "Treffer geht durch"
+      a card says Kraftakt −3 from Kupperus's KK 25 (AttackFollowUp.mightyBlow, issue #41) — same. The Reiten check has no lines. Mounted, Belastung I leaves no line
       anyway, but Ruhiges Temperament is missing: total 0 instead of +1 — wrong. The export's
       `skills` names it, and the app shows it only as the ⓘ text on the attack screen. Offered
       without checking SA_43 (Boronmir has it) and without asking the run-up.
@@ -217,7 +217,7 @@ situations:
     appToday: >
       offered beside the hero's own attack, straight to the roll: no Reiten check (so no +1 from
       Ruhiges Temperament either), no action named, and Boronmir may still attack — wrong. AT 15, TP 1W6+7 same; the Mächtiger Schlag
-      note says −2 — wrong
+      follow-up says Kraftakt −3 from Kupperus's KK 25 — same
     conflict:
       category: a
       reason: >-
@@ -269,7 +269,9 @@ situations:
       # "no roll" (MIGRATION.md, expectation conflicts)
       texts:
         - { opponent: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS3 }
-    appToday: the note says a parry does not help — same, with −2 — wrong
+    appToday: >
+      "Pariert" shows a toast: Kraftakt −3 from Kupperus's KK 25, misslingt sie: Liegend; the
+      screen said before the choice that a parry does not avoid it — same (issue #41)
     conflict:
       category: a
       reason: >-

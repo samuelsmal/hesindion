@@ -192,17 +192,6 @@ struct CombatAttackChoiceView: View {
 
             // Regular mount attacks (Hufschlag, Tritt, etc.) — exclude Niederreiten (has dedicated button below)
             ForEach(mount.attacks.filter { $0.name != "Niederreiten" }, id: \.name) { attack in
-                let mightyBlowNote: String? = {
-                    guard mount.hasMightyBlow else { return nil }
-                    let kk = mount.attributes.kk
-                    let penalty = (kk - 20) / 2
-                    if penalty > 0 {
-                        return String(format: L("mightyBlow"), penalty)
-                    } else {
-                        return L("mightyBlowNoPenalty")
-                    }
-                }()
-
                 choiceButton(
                     title: "\(mount.name): \(attack.name)",
                     subtitle: "AT \(attack.at) · TP \(attack.damage)",
@@ -213,8 +202,9 @@ struct CombatAttackChoiceView: View {
                         name: "\(mount.name): \(attack.name)",
                         attributeValue: attack.at,
                         damageFormula: attack.damage,
-                        note: mightyBlowNote,
-                        modifierLines: nil
+                        note: nil,
+                        modifierLines: nil,
+                        followUp: mightyBlowFollowUp(mount: mount)
                     )
                 }
             }
@@ -240,20 +230,6 @@ struct CombatAttackChoiceView: View {
         let niederreitenAttack = mount.attacks.first { $0.name == "Niederreiten" }
         let niederreitenDamage = niederreitenAttack?.damage ?? mount.damage
 
-        let mightyBlowNote: String? = {
-            guard mount.hasMightyBlow else { return nil }
-            let kk = mount.attributes.kk
-            let penalty = (kk - 20) / 2
-            if penalty > 0 {
-                return String(format: L("mightyBlow"), penalty)
-            } else {
-                return L("mightyBlowNoPenalty")
-            }
-        }()
-        let niederreitenNote = [L("niederreiten.info"), mightyBlowNote]
-            .compactMap { $0 }
-            .joined(separator: "\n")
-
         return choiceButton(
             title: L("niederreiten"),
             subtitle: "AT \(niederreitenAT) · TP \(niederreitenDamage)",
@@ -264,11 +240,20 @@ struct CombatAttackChoiceView: View {
                 name: "\(mount.name): \(L("niederreiten"))",
                 attributeValue: niederreitenAT,
                 damageFormula: niederreitenDamage,
-                note: niederreitenNote,
-                modifierLines: nil
+                note: L("niederreiten.info"),
+                modifierLines: nil,
+                followUp: mightyBlowFollowUp(mount: mount)
             )
             step = .mountPreCheck(onSuccess: successStep)
         }
+    }
+
+    /// The mount's own attack carries its Mächtiger Schlag to the opponent-defence
+    /// screen, which states it for the defence the GM names (issue #41). The
+    /// penalty is the mount's KK: the mount has the SF and strikes.
+    private func mightyBlowFollowUp(mount: Pet) -> AttackFollowUp? {
+        guard mount.hasMightyBlow else { return nil }
+        return .mightyBlow(creature: mount.name, kk: mount.attributes.kk)
     }
 
     @ViewBuilder

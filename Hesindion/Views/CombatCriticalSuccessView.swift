@@ -26,6 +26,8 @@ struct CombatCriticalSuccessView: View {
     /// damage screen names each rule separately.
     var damageMultiplier: CriticalDamage = .unchanged
     var opponentDefenseModifiers: [ModifierLine] = []
+    /// Passed on to the opponent-defence screen (issue #41).
+    var followUp: AttackFollowUp? = nil
     let isRangedAttack: Bool
     let rangedDefensePenalty: Int
     @Binding var step: CombatStep
@@ -517,7 +519,8 @@ struct CombatCriticalSuccessView: View {
                     // that a multiplier affects the damage.
                     criticalDamageSource: resolution == .basicRule
                         ? table.map { L($0.basicRuleKey) }
-                        : category?.title
+                        : category?.title,
+                    followUp: followUp
                 )
             }
         } else {
