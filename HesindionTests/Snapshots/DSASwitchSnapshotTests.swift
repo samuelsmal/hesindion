@@ -12,9 +12,9 @@ final class DSASwitchSnapshotTests: XCTestCase {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 16) {
-                    DSASwitch(isOn: .constant(false), label: "Aus")
-                    DSASwitch(isOn: .constant(true), label: "An")
-                    DSASwitch(isOn: .constant(true), label: "Magie", accent: .groupMagic)
+                    DSASwitch(isOn: .constant(false))
+                    DSASwitch(isOn: .constant(true))
+                    DSASwitch(isOn: .constant(true), accent: .groupMagic)
                 }
                 DSAToggleRow(title: "Ziel ist überrascht", isOn: .constant(false), detail: "+2")
                 DSAToggleRow(

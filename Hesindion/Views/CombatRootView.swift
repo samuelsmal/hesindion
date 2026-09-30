@@ -1161,7 +1161,6 @@ struct CombatArmorManagementSheet: View {
             )
         }
         .buttonStyle(.dsaMotion)
-        .dsaToggleAccessibility(isOn: armor.isEquipped)
     }
 }
 

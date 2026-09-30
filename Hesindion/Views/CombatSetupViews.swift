@@ -71,7 +71,6 @@ struct CombatArmorPicker: View {
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier("combat.armor.\(armor.name)")
-        .dsaToggleAccessibility(isOn: armor.isEquipped)
     }
 }
 

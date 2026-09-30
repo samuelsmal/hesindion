@@ -805,9 +805,6 @@ enum DSAStrings {
         "wundschwelle.rollZone":        "Roll the hit zone to get the wound effect.",
         "trefferzone.probe":            "Check: %@ %d",
         "trefferzone.dropWeapon":       "Drop weapon",
-        // DSASwitch / DSAToggleRow, the VoiceOver value
-        "switch.on":                    "On",
-        "switch.off":                   "Off",
         "trefferzone.reminderTitle":    "Hit zone: %@",
         "bleeding.rollDuration":        "Duration: roll Selbstbeherrschung",
         "bleeding.roundsLeft":          "%d KR left · 1 SP at the end of each round",
@@ -1859,9 +1856,6 @@ enum DSAStrings {
         "wundschwelle.rollZone":        "Trefferzone auswürfeln, um den Wundeffekt zu bestimmen.",
         "trefferzone.probe":            "Probe: %@ %d",
         "trefferzone.dropWeapon":       "Waffe ablegen",
-        // DSASwitch / DSAToggleRow, the VoiceOver value
-        "switch.on":                    "An",
-        "switch.off":                   "Aus",
         "trefferzone.reminderTitle":    "Trefferzone: %@",
         "bleeding.rollDuration":        "Dauer: Selbstbeherrschung würfeln",
         "bleeding.roundsLeft":          "noch %d KR · 1 SP am Ende jeder KR",

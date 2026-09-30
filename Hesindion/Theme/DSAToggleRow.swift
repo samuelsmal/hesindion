@@ -36,19 +36,7 @@ struct DSAToggleRow: View {
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier(identifier ?? "")
-        .dsaToggleAccessibility(isOn: isOn)
-    }
-}
-
-extension View {
-    /// What VoiceOver and the UI tests read from an on/off control: a switch
-    /// (`.isToggle`, so XCUITest lists it under `switches`), "An" or "Aus", and
-    /// `.isSelected` when on. For a caller that owns the tap around a
-    /// `DSAToggleRowLabel`, as `DSAToggleRow` and `DSASwitch` do themselves.
-    func dsaToggleAccessibility(isOn: Bool) -> some View {
-        self
-            .accessibilityValue(L(isOn ? "switch.on" : "switch.off"))
-            .accessibilityAddTraits(isOn ? [.isToggle, .isSelected] : .isToggle)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
 

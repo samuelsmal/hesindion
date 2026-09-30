@@ -43,10 +43,6 @@ shadow, as in the reference. The height scales with Dynamic Type
 what the reference Switch is, and it is what makes the control read as a switch
 and not as a second kind of button. This is the one round control in the app.
 
-**VoiceOver reads a switch.** The row, the stand-alone switch and the armour
-rows carry the `.isToggle` trait and the value "An"/"Aus"
-(`dsaToggleAccessibility(isOn:)`). They keep `.isSelected` when on.
-
 ## Consequences
 
 - A screen now says "picked" with a fill and "on" with a switch, and the two
@@ -60,7 +56,4 @@ rows carry the `.isToggle` trait and the value "An"/"Aus"
   purpose.
 - Issue #37 also asks for a check of the other controls against
   neobrutalism.dev/docs. That check is not part of this decision.
-- XCUITest lists an element with `.isToggle` under `switches`, not `buttons`.
-  A UI test finds an on/off row with `app.switches["<identifier>"]`; the 30
-  existing lookups changed from `app.buttons`.
 - Snapshot baselines with on/off rows are recorded again.

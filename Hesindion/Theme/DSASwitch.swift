@@ -15,20 +15,13 @@ import SwiftUI
 /// track height scales with Dynamic Type and the rest keeps those proportions.
 struct DSASwitch: View {
     @Binding var isOn: Bool
-    /// What the switch turns on, for VoiceOver. A switch beside its own text
-    /// uses `DSAToggleRow`, which reads the title.
-    let label: String
     var accent: Color = .groupCombat
-    var identifier: String? = nil
 
     var body: some View {
         Button { isOn.toggle() } label: {
             DSASwitchTrack(isOn: isOn, accent: accent)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(label)
-        .dsaToggleAccessibility(isOn: isOn)
-        .accessibilityIdentifier(identifier ?? "")
     }
 }
 
@@ -60,6 +53,5 @@ struct DSASwitchTrack: View {
             }
             .frame(width: width, height: height)
             .animation(DSAAnimation.standard, value: isOn)
-            .accessibilityHidden(true)
     }
 }

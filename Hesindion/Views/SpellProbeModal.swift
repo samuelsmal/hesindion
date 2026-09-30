@@ -245,7 +245,7 @@ struct SpellProbeModal: View {
             Text(label)
                 .font(.dsaBody(.caption))
             Spacer()
-            DSASwitch(isOn: isOn, label: label, accent: .groupMagic)
+            DSASwitch(isOn: isOn, accent: .groupMagic)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
