@@ -381,6 +381,13 @@ struct CombatAnnouncementView: View {
 
     private var zonesActive: Bool { hero.isFokusRuleActive(.trefferzonen) }
 
+    /// A mounted charge hides the maneuver list (the charge is the maneuver),
+    /// so the header is the only place left to name it (issue #32). The
+    /// subtitle stays the weapon: it is still the one that hits.
+    private var headerTitle: String {
+        isMountCharge ? L("sturmangriffPferd") : L("announcement")
+    }
+
     private var availableManeuvers: [CombatManeuver] {
         var maneuvers: [CombatManeuver] = [.normal]
         if hero.finteTier > 0 { maneuvers.append(.finte(tier: hero.finteTier)) }
@@ -416,7 +423,7 @@ struct CombatAnnouncementView: View {
                 .accessibilityIdentifier("combat.back")
                 Spacer()
                 VStack(spacing: 1) {
-                    Text(L("announcement"))
+                    Text(headerTitle)
                         .font(.dsaHeading(.headline))
                         .foregroundStyle(.white)
                     Text(weaponName)

@@ -45,4 +45,41 @@ final class CombatAnnouncementViewSnapshotTests: XCTestCase {
 
         assertAllVariants(of: view, named: "winzigTarget")
     }
+
+    /// A mounted charge (issue #32): the header names the maneuver, the
+    /// subtitle the weapon. The maneuver list is hidden, so the header was
+    /// the only place left to say it, and it said "Ansage".
+    @MainActor
+    func testMountCharge() throws {
+        let container = try TestData.makeContainer()
+        let hero = try TestData.importBoronmir(into: container)
+
+        let view = CombatAnnouncementView(
+            hero: hero,
+            action: .angriff,
+            weaponName: "Rabenschnabel",
+            baseAT: 12,
+            damageFormula: "1W6+5",
+            isOffHand: false,
+            mountedActive: true,
+            waterDepth: .none,
+            isMountCharge: true,
+            beengteUmgebungActive: false,
+            schipIgnoreZustandThisRound: false,
+            secondAttack: nil,
+            step: .constant(.root),
+            activeManeuver: .constant(.normal),
+            vorstossActiveThisRound: .constant(false),
+            announcedZone: .constant(nil),
+            dualAttackPenaltyActive: false,
+            twoHandedGripActive: false,
+            plaenklerActive: false,
+            plaenklerBonus: .at,
+            opponent: .constant(OpponentProfile()),
+            onDismiss: {}
+        )
+        .modelContainer(container)
+
+        assertAllVariants(of: view, named: "mountCharge")
+    }
 }
