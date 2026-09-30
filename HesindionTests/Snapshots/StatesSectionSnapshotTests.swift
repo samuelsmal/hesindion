@@ -18,7 +18,7 @@ final class StatesSectionSnapshotTests: XCTestCase {
         // inside HeroDetailView). With a bare `.device` layout the rows' action backgrounds
         // would greedily expand to fill the screen.
         let view = ScrollView {
-            StatesSectionView(hero: hero)
+            StatesSectionView(hero: hero) {}
                 .frame(width: 380)
                 .padding()
         }

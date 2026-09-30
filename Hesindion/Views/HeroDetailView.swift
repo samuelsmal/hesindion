@@ -38,6 +38,7 @@ struct HeroDetailView: View {
     @State private var showRecordedStats = false
     @State private var weaponInfo: WeaponInfoTarget?
     @State private var breakdown: BreakdownItem?
+    @State private var showStatePicker = false
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -176,6 +177,10 @@ struct HeroDetailView: View {
 
             if let item = breakdown, let book = RulesEngineStore.shared?.engine.book {
                 BreakdownSheet(title: item.title, value: item.value, book: book) { breakdown = nil }
+            }
+
+            if showStatePicker {
+                StatePickerSheet(hero: hero) { showStatePicker = false }
             }
 
         }
@@ -647,7 +652,7 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var statesSection: some View {
         CollapsibleSection(L("states.section")) {
-            StatesSectionView(hero: hero)
+            StatesSectionView(hero: hero) { showStatePicker = true }
         }
     }
 

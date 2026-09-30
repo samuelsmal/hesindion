@@ -5,13 +5,14 @@ import SwiftData
 /// list of `SwipeActionRow`s (matching advantages/talents/spells), with swipe-left to remove
 /// and tap to open the `StateDetailSheet`. Derived (Schmerz/Belastung) and implied-only states
 /// expose no swipe action — they can't be removed by hand. A trailing "+ Zustand hinzufügen"
-/// button opens `StatePickerSheet`.
+/// button calls `onAdd`: the parent screen shows `StatePickerSheet` over its whole screen.
 ///
 /// The compact chip strip (`StatesStrip`) is used by `CombatRootView`'s STATUS section instead.
 struct StatesSectionView: View {
     @Bindable var hero: Hero
+    /// The "+ Zustand hinzufügen" row.
+    var onAdd: () -> Void
 
-    @State private var showPicker = false
     @State private var detailState: StateSelection?
 
     /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
@@ -47,11 +48,6 @@ struct StatesSectionView: View {
             addRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .sheet(isPresented: $showPicker) {
-            StatePickerSheet(hero: hero)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
         .sheet(item: $detailState) { selection in
             StateDetailSheet(hero: hero, def: selection.def)
                 .presentationCornerRadius(0)
@@ -72,7 +68,7 @@ struct StatesSectionView: View {
 
     private var addRow: some View {
         Button {
-            showPicker = true
+            onAdd()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus")

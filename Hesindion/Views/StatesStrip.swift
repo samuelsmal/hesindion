@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 /// A wrapping strip of `StateChip`s drawn from `hero.activeStates`, plus implied states
-/// and a trailing "+" chip that opens `StatePickerSheet`. The COMBAT STATUS strip:
+/// and a trailing "+" chip that calls `onAdd` (the parent shows `StatePickerSheet`). The COMBAT STATUS strip:
 /// compact and glanceable, tap a chip → `StateDetailSheet` (removal happens there via
 /// "Entfernen"); derived/implied chips rendered distinct and non-removable. No long-press.
 ///
@@ -12,8 +12,9 @@ struct StatesStrip: View {
     @Bindable var hero: Hero
     /// Background accent for "live" (manually-tracked) chips.
     var accent: Color = .groupCombat
+    /// The "+" chip. The parent shows `StatePickerSheet` over its whole screen.
+    var onAdd: () -> Void
 
-    @State private var showPicker = false
     @State private var detailState: StateSelection?
 
     /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
@@ -58,11 +59,6 @@ struct StatesStrip: View {
             addChip
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .sheet(isPresented: $showPicker) {
-            StatePickerSheet(hero: hero)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
         .sheet(item: $detailState) { selection in
             StateDetailSheet(hero: hero, def: selection.def)
                 .presentationCornerRadius(0)
@@ -72,7 +68,7 @@ struct StatesStrip: View {
 
     private var addChip: some View {
         Button {
-            showPicker = true
+            onAdd()
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "plus")

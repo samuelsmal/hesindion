@@ -1,12 +1,18 @@
 import SwiftUI
 import SwiftData
 
-/// Sheet for adding player states to a hero. Two searchable sections (Zustände, Status)
-/// drawn from `StateCatalog.manuallyAddable`. Tapping a Status toggles it on; tapping a
-/// Zustand reveals an inline I–IV stepper. All writes go through `hero.setStateLevel`.
+/// The "Zustand hinzufügen" panel: a `DSAModal` with a search field and two sections
+/// (Zustände, Status) drawn from `StateCatalog.manuallyAddable`. Tapping a Status toggles
+/// it on; tapping a Zustand's I–IV sets that level. All writes go through
+/// `hero.setStateLevel`.
+///
+/// A modal, not a system sheet (#33): the caller hangs it on its whole screen, like
+/// `WeaponInfoSheet`, so the scrim covers the screen.
 struct StatePickerSheet: View {
     @Bindable var hero: Hero
-    @Environment(\.dismiss) private var dismiss
+    var accent: Color = .groupCombat
+    var onDismiss: () -> Void
+
     @State private var query: String = ""
 
     private var zustaende: [StateDefinition] {
@@ -23,32 +29,71 @@ struct StatePickerSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if !zustaende.isEmpty {
-                    Section(L("states.zustaende.section")) {
-                        ForEach(zustaende) { def in
-                            zustandRow(def)
-                        }
-                    }
-                }
-                if !statuses.isEmpty {
-                    Section(L("states.status.section")) {
-                        ForEach(statuses) { def in
-                            statusRow(def)
-                        }
+        DSAModal(
+            title: L("states.add"),
+            accent: accent,
+            onScrimTap: onDismiss,
+            onClose: onDismiss,
+            scrolls: true
+        ) {
+            searchField
+            if !zustaende.isEmpty {
+                section(L("states.zustaende.section")) {
+                    ForEach(zustaende) { def in
+                        zustandRow(def)
+                            .dsaRowDivider()
                     }
                 }
             }
-            .searchable(text: $query, prompt: L("states.search.prompt"))
-            .navigationTitle(L("states.add"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L("close")) { dismiss() }
+            if !statuses.isEmpty {
+                section(L("states.status.section")) {
+                    ForEach(statuses) { def in
+                        statusRow(def)
+                            .dsaRowDivider()
+                    }
                 }
             }
         }
+    }
+
+    // MARK: - Pieces
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField(L("states.search.prompt"), text: $query)
+                .font(.dsaBody(.body))
+                .autocorrectionDisabled()
+                .accessibilityIdentifier("states.picker.search")
+            if !query.isEmpty {
+                Button {
+                    query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.dsaMotion)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(UIColor.secondarySystemBackground))
+        .dsaBox(.flush)
+    }
+
+    private func section<Rows: View>(_ title: String, @ViewBuilder rows: () -> Rows) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.dsaHeading(.caption))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .dsaRowDivider()
+            rows()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsaBox(.flush)
     }
 
     // MARK: - Rows
@@ -59,7 +104,7 @@ struct StatePickerSheet: View {
             HStack(spacing: 10) {
                 Image(systemName: def.iconSystemName)
                     .font(.dsaBody(.body))
-                    .foregroundStyle(level > 0 ? Color.groupCombat : .secondary)
+                    .foregroundStyle(level > 0 ? accent : .secondary)
                     .frame(width: 24)
                 Text(L(def.nameKey))
                     .font(.dsaBody(.body))
@@ -67,7 +112,7 @@ struct StatePickerSheet: View {
                 if level > 0 {
                     Text(StateCatalog.roman(level))
                         .font(.dsaMono(.body, emphasis: true))
-                        .foregroundStyle(Color.groupCombat)
+                        .foregroundStyle(accent)
                 }
             }
             // Inline I–IV stepper: tap a number to set that level; tap the active one to clear.
@@ -81,14 +126,16 @@ struct StatePickerSheet: View {
                             .foregroundStyle(level == lvl ? .white : .primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
-                            .background(level == lvl ? Color.groupCombat : Color(UIColor.secondarySystemBackground))
+                            .background(level == lvl ? accent : Color(UIColor.secondarySystemBackground))
                             .dsaBox(.flush)
                     }
                     .buttonStyle(.dsaMotion)
+                    .accessibilityIdentifier("states.picker.\(def.id).\(lvl)")
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     @ViewBuilder private func statusRow(_ def: StateDefinition) -> some View {
@@ -99,7 +146,7 @@ struct StatePickerSheet: View {
             HStack(spacing: 10) {
                 Image(systemName: def.iconSystemName)
                     .font(.dsaBody(.body))
-                    .foregroundStyle(isOn ? Color.groupCombat : .secondary)
+                    .foregroundStyle(isOn ? accent : .secondary)
                     .frame(width: 24)
                 Text(L(def.nameKey))
                     .font(.dsaBody(.body))
@@ -107,10 +154,13 @@ struct StatePickerSheet: View {
                 Spacer()
                 Image(systemName: isOn ? "checkmark.square.fill" : "square")
                     .font(.dsaBody(.body))
-                    .foregroundStyle(isOn ? Color.groupCombat : .secondary)
+                    .foregroundStyle(isOn ? accent : .secondary)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.dsaMotion)
-        .padding(.vertical, 4)
+        .accessibilityIdentifier("states.picker.\(def.id)")
     }
 }
