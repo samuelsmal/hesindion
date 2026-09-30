@@ -66,19 +66,17 @@ struct TalentProbeModal: View {
         return belastung.lines
     }
 
-    private var hints: [SkillCheckHint] {
-        var result: [SkillCheckHint] = []
-        // Aufmerksamkeit (SA_40) eases the *Sinnesschärfe* check that avoids being
-        // surprised — TAL_10. TAL_8 is Selbstbeherrschung, so the hint was
-        // offered on every wound-effect probe in combat, where it does not apply.
-        if hero.hasAufmerksamkeit && talent.ruleId == Talent.sinnesschaerfeRuleId {
-            result.append(SkillCheckHint(
-                icon: "info.circle.fill",
-                text: L("aufmerksamkeitHint"),
-                color: accent
-            ))
-        }
-        return result
+    /// Aufmerksamkeit (SA_40) eases the *Sinnesschärfe* check that avoids being surprised —
+    /// TAL_10, not TAL_8 (Selbstbeherrschung, the wound-effect probe). The GM decides whether a
+    /// check is one of those, so the +2 is a switch that starts off (issue #43), not a hint the
+    /// player has to add by hand.
+    static func gmBonus(hero: Hero, talent: Talent) -> ModifierLine? {
+        guard hero.hasAufmerksamkeit, talent.ruleId == Talent.sinnesschaerfeRuleId else { return nil }
+        return ModifierLine(
+            value: 2,
+            source: L("aufmerksamkeit.surprise"),
+            ruleId: CombatAbility.aufmerksamkeit.rawValue
+        )
     }
 
     var body: some View {
@@ -98,7 +96,6 @@ struct TalentProbeModal: View {
                 onDismiss: onDismiss,
                 onResult: { result in onRolled?(result.succeeded); onResult?(result) },
                 initialModifier: initialModifier,
-                hints: hints,
                 preRoll: showVorDerProbe ? {
                     AnyView(
                         VorDerProbeRow(
@@ -109,7 +106,8 @@ struct TalentProbeModal: View {
                             onOpenLoadout: { showLoadoutSheet = true }
                         )
                     )
-                } : nil
+                } : nil,
+                gmBonus: Self.gmBonus(hero: hero, talent: talent)
             )
             // The app's loadout picker today is a screen inside the combat-preparation flow
             // (`CombatArmorPicker`, in `CombatSetupView`), not a standalone one this floating

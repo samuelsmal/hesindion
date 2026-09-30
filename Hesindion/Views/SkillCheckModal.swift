@@ -40,8 +40,12 @@ struct SkillCheckModal: View {
     /// Probe" row (sheet cut-over design §6), built by the caller so this modal stays generic
     /// about what it shows. Hidden once a result exists, like the modifier steppers.
     var preRoll: (() -> AnyView)? = nil
+    /// A bonus the GM decides (ADR-0018 §4), shown as a switch that starts off: counted only once
+    /// the player turns it on, and read as "not applied" otherwise (issue #43).
+    var gmBonus: ModifierLine? = nil
 
     @Environment(\.modelContext) private var modelContext
+    @State private var gmBonusApplied = false
     @State private var modifiers: [Int]
     @State private var displayRolls = [Int](repeating: 1, count: 3)
     @State private var finalRolls: [Int]? = nil
@@ -57,7 +61,9 @@ struct SkillCheckModal: View {
         previewFinalRolls: [Int]? = nil,
         initialModifier: Int = 0,
         hints: [SkillCheckHint] = [],
-        preRoll: (() -> AnyView)? = nil
+        preRoll: (() -> AnyView)? = nil,
+        gmBonus: ModifierLine? = nil,
+        previewGMBonusApplied: Bool = false
     ) {
         self.config = config
         self.hero = hero
@@ -66,6 +72,8 @@ struct SkillCheckModal: View {
         self.initialModifier = initialModifier
         self.hints = hints
         self.preRoll = preRoll
+        self.gmBonus = gmBonus
+        _gmBonusApplied = State(initialValue: previewGMBonusApplied)
         _modifiers = State(initialValue: [initialModifier, initialModifier, initialModifier])
         _finalRolls = State(initialValue: previewFinalRolls)
     }
@@ -127,7 +135,7 @@ struct SkillCheckModal: View {
         let rolls = finalRolls ?? displayRolls
         let hasResult = finalRolls != nil
         let fr = finalRolls ?? [0, 0, 0]
-        let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
+        let targets = currentTargets
 
         VStack(spacing: 0) {
             // "Vor der Probe" (sheet cut-over design §6): before the roll only.
@@ -150,8 +158,8 @@ struct SkillCheckModal: View {
                 }
             }
 
-            // Modifier lines from engine
-            ForEach(config.modifierLines) { line in
+            // Modifier lines from engine, and the GM bonus once it is switched on
+            ForEach(activeLines) { line in
                 HStack(spacing: 8) {
                     Image(systemName: line.value < 0 ? "exclamationmark.triangle.fill" : "info.circle.fill")
                         .font(.dsaBody(.caption2))
@@ -168,7 +176,7 @@ struct SkillCheckModal: View {
             }
 
             // Struck lines: "Belastung nicht anwenden" (sheet cut-over design §6) kept on
-            // screen, but crossed out, and adding nothing to `engineMod`.
+            // screen, but crossed out, and adding nothing to the target.
             ForEach(config.struckLines) { line in
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
@@ -191,6 +199,20 @@ struct SkillCheckModal: View {
                 .dsaRowDivider()
             }
 
+            // The GM-decided bonus: off until the player turns it on, and locked with the
+            // steppers once the dice are rolled, so the choice stays readable.
+            if let gmBonus {
+                DSAToggleRow(
+                    title: gmBonus.source,
+                    isOn: $gmBonusApplied,
+                    accent: config.accentColor,
+                    detail: "+\(gmBonus.value)",
+                    subtitle: L(gmBonusApplied ? "gmBonus.applied" : "gmBonus.notApplied"),
+                    identifier: "skillCheck.gmBonus"
+                )
+                .disabled(hasResult)
+            }
+
             // Hints
             ForEach(hints) { hint in
                 HStack(spacing: 8) {
@@ -210,6 +232,14 @@ struct SkillCheckModal: View {
                 // edge, which is why this one came out with three borders. The
                 // tint carries the meaning; the divider carries the boundary.
                 .dsaRowDivider()
+            }
+
+            // The value each die must meet, after every modifier above (ADR-0018 §1).
+            HStack(spacing: 0) {
+                ForEach(0..<3, id: \.self) { i in
+                    targetBox(value: targets[i])
+                        .accessibilityIdentifier("skillCheck.target.\(i)")
+                }
             }
 
             // Dice row — tap to roll; once failed with Schips available, tap to
@@ -241,7 +271,7 @@ struct SkillCheckModal: View {
             // Result boxes
             HStack(spacing: 0) {
                 ForEach(0..<3, id: \.self) { i in
-                    let excess = fr[i] - (config.checkAttributes[i].value + modifiers[i] + engineMod)
+                    let excess = fr[i] - targets[i]
                     resultBox(value: excess > 0 ? -excess : 0)
                 }
             }
@@ -370,6 +400,19 @@ struct SkillCheckModal: View {
             .dsaBox(.flush, stroke: selected ? Color.dsaSchipGold : Color.clear)
     }
 
+    private func targetBox(value: Int) -> some View {
+        VStack(spacing: 4) {
+            Text(L("skillCheck.target"))
+                .font(.dsaBody(.caption))
+            Text("\(value)")
+                .font(.dsaHeading(.title3))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color(UIColor.systemBackground))
+        .dsaBox(.flush)
+    }
+
     private func resultBox(value: Int) -> some View {
         Text("\(value)")
             .font(.dsaBody(.body))
@@ -383,9 +426,9 @@ struct SkillCheckModal: View {
     // MARK: - Summary Bar
 
     private func summaryText(rolls: [Int], result: CheckResult) -> String {
-        let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
+        let targets = currentTargets
         let excesses = (0..<3).map { i -> Int in
-            let excess = rolls[i] - (config.checkAttributes[i].value + modifiers[i] + engineMod)
+            let excess = rolls[i] - targets[i]
             return excess > 0 ? excess : 0
         }
         let remaining = config.skillValue - excesses.reduce(0, +)
@@ -430,12 +473,30 @@ struct SkillCheckModal: View {
         return !schipUsed && schipsRemaining > 0
     }
 
+    /// The engine's lines, plus the GM bonus while it is switched on.
+    private var activeLines: [ModifierLine] {
+        config.modifierLines + (gmBonusApplied ? gmBonus.map { [$0] } ?? [] : [])
+    }
+
+    private var currentTargets: [Int] {
+        Self.targetValues(
+            attributes: config.checkAttributes.map(\.value),
+            steppers: modifiers,
+            lines: activeLines
+        )
+    }
+
+    /// The value each die must meet: its attribute, its own stepper, and every modifier line —
+    /// a line applies to all three attributes.
+    static func targetValues(attributes: [Int], steppers: [Int], lines: [ModifierLine]) -> [Int] {
+        let lineTotal = lines.reduce(0) { $0 + $1.value }
+        return zip(attributes, steppers).map { $0 + $1 + lineTotal }
+    }
+
     private func computeResult(rolls: [Int]) -> CheckResult {
-        let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
-        let attrValues = (0..<3).map { config.checkAttributes[$0].value + modifiers[$0] + engineMod }
         let outcome = SkillCheckEngine.evaluate(
             rolls: rolls,
-            attributeValues: attrValues,
+            attributeValues: currentTargets,
             skillPoints: config.skillValue
         )
         switch outcome {
@@ -525,9 +586,9 @@ struct SkillCheckModal: View {
         case .qs(let n): qs = n; succeeded = n > 0; isCritSuccess = false; isCritFailure = false
         }
 
-        let engineMod = config.modifierLines.reduce(0) { $0 + $1.value }
+        let targets = currentTargets
         let excesses = (0..<3).map { i -> Int in
-            let excess = rolls[i] - (config.checkAttributes[i].value + modifiers[i] + engineMod)
+            let excess = rolls[i] - targets[i]
             return excess > 0 ? excess : 0
         }
         let remaining = config.skillValue - excesses.reduce(0, +)
