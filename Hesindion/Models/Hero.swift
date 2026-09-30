@@ -925,9 +925,15 @@ final class Hero {
         mount?.speed ?? 0
     }
 
-    /// Sturmangriff bonus damage: +2 + (horse GS / 2).
+    /// Half the horse's GS for the Sturmangriff zu Pferd (RK14), rounded up
+    /// (ruling `shared.round-up`, ADR-0006): GS 11 → 6.
+    var sturmangriffHalfMountGS: Int {
+        Int(ceil(Double(mountGS) / 2))
+    }
+
+    /// Sturmangriff bonus damage: +2 + ⌈horse GS / 2⌉.
     var sturmangriffDamageBonus: Int {
-        2 + (mountGS / 2)
+        2 + sturmangriffHalfMountGS
     }
 
     /// True if hero has a mount (pet with initiative).

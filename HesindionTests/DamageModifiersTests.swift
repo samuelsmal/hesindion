@@ -120,8 +120,38 @@ final class DamageModifiersTests: XCTestCase {
 
     // MARK: - Sturmangriff
 
-    /// +2 plus half the mount's GS. Only for the charge itself.
+    /// +2 plus half the mount's GS (RK14), as two lines, so the player sees
+    /// where the bonus comes from. Only for the charge itself.
     func testSturmangriffAddsTwoPlusHalfTheMountsSpeed() {
+        let rider = riderWithMount(speed: 12)
+        XCTAssertEqual(rider.sturmangriffDamageBonus, 8)
+
+        var charge = Situation(hero: rider, domain: .damage)
+        charge.maneuver = .sturmangriff
+        charge.round.mounted = true
+        let lines = DamageModifiers.lines(situation: charge)
+        XCTAssertEqual(lines.first { $0.source == L("source.sturmangriff") }?.value, 2)
+        XCTAssertEqual(lines.first { $0.source == String(format: L("source.sturmangriff.halfGS"), "Kupperus", 12) }?.value, 6)
+
+        var walk = Situation(hero: rider, domain: .damage)
+        walk.round.mounted = true
+        XCTAssertTrue(DamageModifiers.lines(situation: walk).allSatisfy { !$0.source.contains(L("source.sturmangriff")) })
+    }
+
+    /// An odd GS rounds up (ruling `shared.round-up`): GS 11 → +6, not +5.
+    func testSturmangriffRoundsHalfAnOddSpeedUp() {
+        let rider = riderWithMount(speed: 11)
+        XCTAssertEqual(rider.sturmangriffDamageBonus, 8)
+
+        var charge = Situation(hero: rider, domain: .damage)
+        charge.maneuver = .sturmangriff
+        charge.round.mounted = true
+        let half = DamageModifiers.lines(situation: charge)
+            .first { $0.source == String(format: L("source.sturmangriff.halfGSRoundedUp"), "Kupperus", 11) }
+        XCTAssertEqual(half?.value, 6)
+    }
+
+    private func riderWithMount(speed: Int) -> Hero {
         let rider = Hero(name: "Rider")
         context.insert(rider)
         rider.pets = [
@@ -129,20 +159,11 @@ final class DamageModifiersTests: XCTestCase {
                 petId: "PET_1", name: "Kupperus", size: 1.9, type: "Pferd",
                 attributes: PetAttributes(mu: 12, kl: 10, inValue: 12, ch: 12, ff: 8, ge: 15, ko: 24, kk: 25),
                 lifeEnergy: 75, spirit: 0, toughness: 0,
-                initiative: "14+1W6", speed: 12,
+                initiative: "14+1W6", speed: speed,
                 attack: "Niederreiten", damage: "2W6+6", reach: "Mittel",
                 actions: 1, talents: "", skills: "", notes: ""
             )
         ]
-        XCTAssertEqual(rider.sturmangriffDamageBonus, 2 + 12 / 2)
-
-        var charge = Situation(hero: rider, domain: .damage)
-        charge.maneuver = .sturmangriff
-        charge.round.mounted = true
-        XCTAssertEqual(DamageModifiers.lines(situation: charge).first { $0.source == L("source.sturmangriff") }?.value, 8)
-
-        var walk = Situation(hero: rider, domain: .damage)
-        walk.round.mounted = true
-        XCTAssertNil(DamageModifiers.lines(situation: walk).first { $0.source == L("source.sturmangriff") })
+        return rider
     }
 }

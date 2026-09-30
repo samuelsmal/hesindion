@@ -24,9 +24,17 @@ enum DamageModifiers {
             lines.append(ModifierLine(value: 1, source: L("source.twoHandedGrip")))
         }
 
-        // Sturmangriff zu Pferd: +2 and half the mount's GS.
-        if situation.maneuver == .sturmangriff, situation.hero.sturmangriffDamageBonus != 0 {
-            lines.append(ModifierLine(value: situation.hero.sturmangriffDamageBonus, source: L("source.sturmangriff")))
+        // Sturmangriff zu Pferd: +2 and half the mount's GS, as two lines so
+        // the box shows where the bonus comes from — the horse's GS, not the rider's.
+        if situation.maneuver == .sturmangriff {
+            lines.append(ModifierLine(value: 2, source: L("source.sturmangriff")))
+            if let mount = situation.hero.mount, situation.hero.sturmangriffHalfMountGS != 0 {
+                let key = mount.speed % 2 == 0 ? "source.sturmangriff.halfGS" : "source.sturmangriff.halfGSRoundedUp"
+                lines.append(ModifierLine(
+                    value: situation.hero.sturmangriffHalfMountGS,
+                    source: String(format: L(key), mount.name, mount.speed)
+                ))
+            }
         }
 
         lines += ModifierEngine.shared.evaluation(situation).lines.map(\.modifierLine)
