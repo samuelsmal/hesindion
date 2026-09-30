@@ -154,7 +154,7 @@ final class SheetBreakdownTests: XCTestCase {
         // Equip the Plattenrüstung on the preparation screen — the same toggle
         // `CombatPreparationFlowTests` uses — then leave combat: the write is to the
         // hero, not the session, so it holds once we are back on the sheet.
-        let armour = app.switches["combat.armor.Plattenrüstung"]
+        let armour = app.buttons["combat.armor.Plattenrüstung"]
         XCTAssertTrue(armour.waitForExistence(timeout: UITest.timeout), "The armour is not on the preparation screen")
         armour.tap()
         XCTAssertTrue(app.staticTexts["RS 6"].waitForExistence(timeout: UITest.timeout), "The armour did not equip")
@@ -171,7 +171,7 @@ final class SheetBreakdownTests: XCTestCase {
         let row = app.otherElements["vorDerProbe.row"]
         XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "The Vor-der-Probe row did not show")
 
-        let ignore = app.switches["vorDerProbe.ignore"]
+        let ignore = app.buttons["vorDerProbe.ignore"]
         XCTAssertTrue(ignore.exists, "No \"Belastung nicht anwenden\" toggle")
         ignore.tap()
 

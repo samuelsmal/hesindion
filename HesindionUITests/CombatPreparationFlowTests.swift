@@ -38,7 +38,7 @@ final class CombatPreparationFlowTests: XCTestCase {
         continueAfterFailure = false
         let app = launchFresh()
 
-        let armour = app.switches["combat.armor.Plattenrüstung"]
+        let armour = app.buttons["combat.armor.Plattenrüstung"]
         XCTAssertTrue(armour.exists, "The armour is not on the preparation screen")
 
         XCTAssertTrue(app.staticTexts["RS 0"].exists, "Nothing is worn yet")
@@ -55,14 +55,14 @@ final class CombatPreparationFlowTests: XCTestCase {
     func testPreparationScreenshot() {
         continueAfterFailure = false
         let app = launchFresh()
-        app.switches["combat.armor.Plattenrüstung"].tap()
+        app.buttons["combat.armor.Plattenrüstung"].tap()
         // Wait for the total to catch up, or the capture lands mid-press and the
         // row it was taken for is halfway through its animation.
         XCTAssertTrue(app.staticTexts["RS 6"].waitForExistence(timeout: UITest.timeout))
 
         // Switched on, so the shot shows the *choice* the formation is: +1 AT or
         // +1 VW, one or the other, made once per fight.
-        let formation = app.switches["combat.setup.plaenkler"]
+        let formation = app.buttons["combat.setup.plaenkler"]
         XCTAssertTrue(app.scrollUntilHittable(formation), "No Plänkler-Formation section")
         formation.tap()
         XCTAssertTrue(app.buttons["combat.setup.plaenkler.at"].waitForExistence(timeout: UITest.timeout))
@@ -156,7 +156,7 @@ final class CombatPreparationFlowTests: XCTestCase {
         continueAfterFailure = false
         let app = launchFresh()
 
-        let toggle = app.switches["combat.setup.plaenkler"]
+        let toggle = app.buttons["combat.setup.plaenkler"]
         XCTAssertTrue(app.scrollUntilHittable(toggle), "No Plänkler-Formation section")
         toggle.tap()
 

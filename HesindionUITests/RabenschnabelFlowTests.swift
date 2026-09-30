@@ -21,7 +21,7 @@ final class RabenschnabelFlowTests: XCTestCase {
         let oneHanded = app.button(containing: "Einhändig")
         if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
 
-        let spike = app.switches["combat.attack.weaponOffer.ITEMTPL_19"]
+        let spike = app.buttons["combat.attack.weaponOffer.ITEMTPL_19"]
         XCTAssertTrue(spike.waitForExistence(timeout: UITest.timeout), "No Dornenspitze toggle")
         XCTAssertTrue(spike.label.contains("Dornenspitze"), "got \(spike.label)")
         XCTAssertFalse(app.descendants(matching: .any)["combat.announcement.opponentRS"].exists,

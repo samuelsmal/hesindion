@@ -47,6 +47,64 @@ make test-only ONLY=<Target/Class>   # One test class or method
 - **Device families:** iPhone and iPad
 - **No external dependencies** — uses only Apple frameworks
 
+## Guidelines
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
 ### Testing
 
 **Always run one xcodebuild-backed target at a time, and never widen the destination set.** The `NO_CLONE` flags in the Makefile pin every test run to the single named simulator; test parallelisation otherwise clones the device and boots several simulators at once.
@@ -64,7 +122,7 @@ Two test targets:
 
 The app launches into an empty store, so UI tests use a **debug-only seed**: `UITestSeed` (`Hesindion/UITestSeed.swift`) reacts to the `-uitest-seed-hero` launch argument by wiping a *separate* store file, importing the bundled `Hesindion/Resources/UITestHero.json` (the `specs/heroes` Boronmir export with the base64 avatars stripped — 3.1 MB → 8 KB, since the resource ships in Release builds too), switching the Trefferzonen Fokus-Regel on and leaving a combat session open (so `CombatView` resumes at the combat root). It is guarded twice — `#if DEBUG` and the launch argument — and never touches the store a real user's app writes to. A second argument, `-uitest-fokus <comma-separated raw FokusRule values>`, switches further Fokus-Regeln on for a test that needs them (`UITest.launch(fokusRules:)`). A third, `-uitest-shield` (`UITest.launch(shield:)`), equips the hero's shield: with a shield in the loadout a parry goes through the weapon list rather than straight to the roll, and that is the path the defence tests are about. UI tests also reuse the existing `DebugLaunch` hooks (`debug load_default path combat`) for navigation.
 
-Elements the UI tests drive carry `.accessibilityIdentifier`s (`heroSettings.fokusRules`, `commandPalette.search`, `combat.zone.<zone>`, `combat.woundEffectPanel`, `combat.woundEffectReminder`, `combat.takeDamage.increaseTP`, `combat.opponent.onFoot` (the announcement's "fights on foot" toggle), `combat.execution.breakdown` (the execution screen's calculation box, which the UI tests scope their row assertions to), `combat.execution.*`). Prefer adding an identifier to an existing element over reshaping a view for a test. An on/off row (`DSAToggleRow`, `DSASwitch`, the armour rows) is a switch to XCUITest, so a test finds it with `app.switches["<identifier>"]`, not `app.buttons` (ADR-0019).
+Elements the UI tests drive carry `.accessibilityIdentifier`s (`heroSettings.fokusRules`, `commandPalette.search`, `combat.zone.<zone>`, `combat.woundEffectPanel`, `combat.woundEffectReminder`, `combat.takeDamage.increaseTP`, `combat.opponent.onFoot` (the announcement's "fights on foot" toggle), `combat.execution.breakdown` (the execution screen's calculation box, which the UI tests scope their row assertions to), `combat.execution.*`). Prefer adding an identifier to an existing element over reshaping a view for a test.
 
 Four known intermittent failures — none of them regressions:
 
@@ -184,6 +242,10 @@ The UI follows a **Neo-Brutalist** design theme.
 ## Documentation Requirements
 
 When making changes, keep the following up to date:
+
+### Don't do
+
+- No VoiceOver is necessary. In order to use the app the user has to actually see it.
 
 ### CHANGELOG
 

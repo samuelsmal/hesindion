@@ -43,14 +43,14 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         longReach.tap()
 
         // 2. Vorteilhafte Position: +2 AT.
-        let position = app.switches["combat.attack.advantageousPosition"]
+        let position = app.buttons["combat.attack.advantageousPosition"]
         XCTAssertTrue(position.waitForExistence(timeout: UITest.timeout), "Position toggle missing")
         position.tap()
 
         // 2b. And the target is on the ground. The penalty for that is *theirs*,
         //     on their defence — the rules give the attacker nothing for it — so
         //     it must not turn up in the hero's AT.
-        let prone = app.switches["combat.attack.prone"]
+        let prone = app.buttons["combat.attack.prone"]
         XCTAssertTrue(prone.waitForExistence(timeout: UITest.timeout), "Prone toggle missing")
         XCTAssertTrue(app.scrollUntilHittable(prone), "Could not reach the prone toggle")
         prone.tap()
@@ -72,7 +72,7 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(kopf), "Could not reach the zone picker")
         kopf.tap()
 
-        let surprised = app.switches["combat.zone.surprised"]
+        let surprised = app.buttons["combat.zone.surprised"]
         XCTAssertTrue(surprised.waitForExistence(timeout: UITest.timeout), "Surprise toggle missing")
         XCTAssertTrue(app.scrollUntilHittable(surprised), "Could not reach the surprise toggle")
         surprised.tap()
@@ -201,7 +201,7 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(large), "Could not reach the size chips")
         large.tap()
 
-        let prone = app.switches["combat.attack.prone"]
+        let prone = app.buttons["combat.attack.prone"]
         XCTAssertTrue(app.scrollUntilHittable(prone), "Could not reach the prone toggle")
         prone.tap()
 
