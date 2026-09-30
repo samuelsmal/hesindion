@@ -61,7 +61,7 @@ struct CombatArmorPicker: View {
         Button {
             armor.isEquipped.toggle()
         } label: {
-            // Equipped is the fill, like every other option (ADR-0010).
+            // Equipped is an on/off option, so it shows the switch (ADR-0019).
             DSAToggleRowLabel(
                 title: armor.name,
                 isOn: armor.isEquipped,
@@ -71,6 +71,7 @@ struct CombatArmorPicker: View {
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier("combat.armor.\(armor.name)")
+        .dsaToggleAccessibility(isOn: armor.isEquipped)
     }
 }
 

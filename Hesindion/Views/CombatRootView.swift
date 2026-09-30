@@ -1151,10 +1151,8 @@ struct CombatArmorManagementSheet: View {
         Button {
             armor.isEquipped.toggle()
         } label: {
-            // Equipped is the fill, like every other option (ADR-0010). This row
-            // was the last `checkmark.circle` left, so on the setup screen the
-            // Plattenrüstung showed a ring while "Beritten" two sections down
-            // showed a fill.
+            // Equipped is an on/off option, so it shows the switch like every
+            // other one (ADR-0019).
             DSAToggleRowLabel(
                 title: armor.name,
                 isOn: armor.isEquipped,
@@ -1163,6 +1161,7 @@ struct CombatArmorManagementSheet: View {
             )
         }
         .buttonStyle(.dsaMotion)
+        .dsaToggleAccessibility(isOn: armor.isEquipped)
     }
 }
 

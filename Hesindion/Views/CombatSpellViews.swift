@@ -315,9 +315,7 @@ struct CombatSpellSetupView: View {
             Text(label)
                 .font(.dsaBody(.caption))
             Spacer()
-            Toggle("", isOn: isOn)
-                .labelsHidden()
-                .tint(.groupMagic)
+            DSASwitch(isOn: isOn, label: label, accent: .groupMagic)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)

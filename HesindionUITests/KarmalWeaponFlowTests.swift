@@ -46,7 +46,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
     func testAnOrdinaryWeaponIsNotAskedAboutDemons() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: false)
-        XCTAssertFalse(app.buttons["combat.attack.daemon"].exists)
+        XCTAssertFalse(app.switches["combat.attack.daemon"].exists)
     }
 
     /// And only when the table plays with the rule.
@@ -54,16 +54,16 @@ final class KarmalWeaponFlowTests: XCTestCase {
     func testTheQuestionNeedsTheRule() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: true, rule: false)
-        XCTAssertFalse(app.buttons["combat.attack.daemon"].exists)
+        XCTAssertFalse(app.switches["combat.attack.daemon"].exists)
     }
 
     @MainActor
     func testAConsecratedWeaponIsAskedAboutDemons() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: true)
-        XCTAssertTrue(app.buttons["combat.attack.daemon"].exists)
+        XCTAssertTrue(app.switches["combat.attack.daemon"].exists)
         XCTAssertFalse(
-            app.buttons["combat.attack.opposingDeity"].exists,
+            app.switches["combat.attack.opposingDeity"].exists,
             "The follow-up only matters once the target is a demon"
         )
     }
@@ -77,7 +77,7 @@ final class KarmalWeaponFlowTests: XCTestCase {
     func testAnOrdinaryDemonDoesNotDoubleTheDamage() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: true)
-        app.buttons["combat.attack.daemon"].tap()
+        app.switches["combat.attack.daemon"].tap()
 
         XCTAssertFalse(
             app.staticTexts["×2"].exists,
@@ -89,8 +89,8 @@ final class KarmalWeaponFlowTests: XCTestCase {
     func testTheOpposingDeityDoublesTheDamage() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: true)
-        app.buttons["combat.attack.daemon"].tap()
-        let opposing = app.buttons["combat.attack.opposingDeity"]
+        app.switches["combat.attack.daemon"].tap()
+        let opposing = app.switches["combat.attack.opposingDeity"]
         XCTAssertTrue(opposing.waitForExistence(timeout: UITest.timeout), "No opposing-deity row")
         opposing.tap()
 
@@ -127,8 +127,8 @@ final class KarmalWeaponFlowTests: XCTestCase {
         if oneHanded.waitForExistence(timeout: UITest.probeTimeout) { oneHanded.tap() }
 
         openOpponentSection(app)
-        app.buttons["combat.attack.daemon"].tap()
-        app.buttons["combat.attack.opposingDeity"].tap()
+        app.switches["combat.attack.daemon"].tap()
+        app.switches["combat.attack.opposingDeity"].tap()
 
         let weiter = app.buttons["combat.announcement.continue"]
         XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")
@@ -173,8 +173,8 @@ final class KarmalWeaponFlowTests: XCTestCase {
     func testTheDoublingReachesTheReportedTotal() {
         continueAfterFailure = false
         let app = launchAnnouncement(consecrated: true)
-        app.buttons["combat.attack.daemon"].tap()
-        app.buttons["combat.attack.opposingDeity"].tap()
+        app.switches["combat.attack.daemon"].tap()
+        app.switches["combat.attack.opposingDeity"].tap()
 
         let weiter = app.buttons["combat.announcement.continue"]
         XCTAssertTrue(app.scrollUntilHittable(weiter), "Could not reach Weiter")

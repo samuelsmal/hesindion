@@ -1,20 +1,17 @@
 import SwiftUI
 
-/// A full-width boolean option, shown active by its **fill**.
+/// A full-width on/off option, shown by a **switch** on the right (ADR-0019).
 ///
-/// The app had grown two unrelated ways of saying "this option is on". Single-
-/// select pickers — Manöver, Trefferzone, Gegner-Reichweite — fill the chosen
-/// row with the accent and turn its label white. Boolean toggles instead kept a
-/// neutral row and put a `checkmark.square.fill` on the left. Both appear on the
-/// *same screen*: on the announcement, "Torso" is red-filled while "Ziel ist
-/// überrascht" one row below is a tickbox.
+/// The row itself stays neutral whether the option is on or off. A filled row
+/// means "this one of several is picked" — Manöver, Trefferzone, Gegner-
+/// Reichweite — and an on/off option is not a pick: it was the same fill until
+/// issue #37, so "Ziel ist überrascht" read as a fifth Trefferzone under
+/// "Torso". The switch is the neobrutalism reference's own control for it.
 ///
-/// One treatment now, and it is the fill: the checkbox is a control borrowed
-/// from a system list, and it says "on" in a whisper on a screen where
-/// everything else says it in a shout.
+/// The whole row is the tap target, not only the switch.
 ///
-/// `detail` is the modifier the option contributes ("+2"), shown on the right so
-/// the row reads as label-then-consequence like the manoeuvre rows do.
+/// `detail` is the modifier the option contributes ("+2"), shown before the
+/// switch so the row reads as label, consequence, state.
 struct DSAToggleRow: View {
     let title: String
     @Binding var isOn: Bool
@@ -22,7 +19,7 @@ struct DSAToggleRow: View {
     var detail: String? = nil
     var subtitle: String? = nil
     /// Icon shown ahead of the title. Not a state indicator — it does not change
-    /// with `isOn`; the fill carries that.
+    /// with `isOn`; the switch carries that.
     var icon: String? = nil
     var identifier: String? = nil
 
@@ -39,7 +36,19 @@ struct DSAToggleRow: View {
         }
         .buttonStyle(.dsaMotion)
         .accessibilityIdentifier(identifier ?? "")
-        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .dsaToggleAccessibility(isOn: isOn)
+    }
+}
+
+extension View {
+    /// What VoiceOver and the UI tests read from an on/off control: a switch
+    /// (`.isToggle`, so XCUITest lists it under `switches`), "An" or "Aus", and
+    /// `.isSelected` when on. For a caller that owns the tap around a
+    /// `DSAToggleRowLabel`, as `DSAToggleRow` and `DSASwitch` do themselves.
+    func dsaToggleAccessibility(isOn: Bool) -> some View {
+        self
+            .accessibilityValue(L(isOn ? "switch.on" : "switch.off"))
+            .accessibilityAddTraits(isOn ? [.isToggle, .isSelected] : .isToggle)
     }
 }
 
@@ -65,15 +74,12 @@ struct DSAToggleRowLabel: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(isOn ? .dsaHeading(.body) : .dsaBody(.body))
+                    .font(.dsaBody(.body))
                     .multilineTextAlignment(.leading)
                 if let subtitle {
                     Text(subtitle)
                         .font(.dsaBody(.caption))
-                        // Not `.secondary`: on the filled row that would be a
-                        // grey on the accent. A single opacity step reads on
-                        // both grounds.
-                        .opacity(0.75)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }
             }
@@ -82,12 +88,13 @@ struct DSAToggleRowLabel: View {
                 Text(detail)
                     .font(.dsaMono(.caption, emphasis: true))
             }
+            DSASwitchTrack(isOn: isOn, accent: accent)
         }
-        .foregroundStyle(isOn ? Color.white : Color.primary)
+        .foregroundStyle(Color.primary)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .background(isOn ? accent : Color(UIColor.systemBackground))
-        .dsaBox(.flush, stroke: isOn ? accent : Color.dsaBorder)
+        .background(Color(UIColor.systemBackground))
+        .dsaBox(.flush)
     }
 }

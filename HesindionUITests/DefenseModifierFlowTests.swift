@@ -155,10 +155,10 @@ final class DefenseModifierFlowTests: XCTestCase {
         XCTAssertTrue(dodge.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         dodge.tap()
 
-        let fromBehind = app.buttons["combat.defense.fromBehind"]
+        let fromBehind = app.switches["combat.defense.fromBehind"]
         XCTAssertTrue(fromBehind.waitForExistence(timeout: UITest.timeout), "Defence screen not shown")
-        XCTAssertTrue(app.buttons["combat.defense.advantageousPosition"].exists, "No Vorteilhafte Position toggle")
-        XCTAssertFalse(app.buttons["combat.defense.onFoot"].exists, "The on-foot question is for a rider only")
+        XCTAssertTrue(app.switches["combat.defense.advantageousPosition"].exists, "No Vorteilhafte Position toggle")
+        XCTAssertFalse(app.switches["combat.defense.onFoot"].exists, "The on-foot question is for a rider only")
         fromBehind.tap()
 
         let setupBox = app.descendants(matching: .any)["combat.defense.breakdown"]

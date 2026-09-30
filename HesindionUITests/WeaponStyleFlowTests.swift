@@ -43,7 +43,7 @@ final class WeaponStyleFlowTests: XCTestCase {
         let app = launchMountedAnnouncement()
 
         // Mounted, so the question is asked; it is the rider's half of the rule.
-        let onFoot = app.buttons["combat.opponent.onFoot"]
+        let onFoot = app.switches["combat.opponent.onFoot"]
         XCTAssertTrue(
             onFoot.waitForExistence(timeout: UITest.timeout),
             "A mounted hero must be asked whether the opponent fights on foot"
@@ -175,7 +175,7 @@ final class WeaponStyleFlowTests: XCTestCase {
         heroWeapon.tap()
 
         openOpponentSection(app)
-        let onFoot = app.buttons["combat.opponent.onFoot"]
+        let onFoot = app.switches["combat.opponent.onFoot"]
         XCTAssertTrue(onFoot.waitForExistence(timeout: UITest.timeout), "No on-foot toggle")
         XCTAssertTrue(app.scrollUntilHittable(onFoot), "Could not reach the on-foot toggle")
         onFoot.tap()

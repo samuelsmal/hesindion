@@ -58,9 +58,8 @@ struct CombatZonePicker: View {
             .dsaOptionGroup(isSettled: isSettled)
 
             if showsSurprisedToggle {
-                // Filled when on, like the zone chip directly above it. It was
-                // the tickbox one row under a red-filled "Torso" — the same
-                // screen saying "selected" two different ways.
+                // A switch, not a fill: the zone chips directly above are a
+                // pick, and a filled row here read as one more zone (ADR-0019).
                 // What being surprised *does* — the Zonenaufschlag eases by 2
                 // (`HitZoneModifiers.penalty`) — rather than a bare statement of
                 // fact the player has to look up.

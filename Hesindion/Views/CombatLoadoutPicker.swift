@@ -140,8 +140,9 @@ struct CombatLoadoutPicker: View {
                 selected.insert(item.name)
             }
         } label: {
-            // In hand is the fill (ADR-0010), like the armour two sections up and
-            // every manoeuvre and chip in combat. These rows were the last ring
+            // In hand is the fill (ADR-0010), like every manoeuvre and chip in
+            // combat: the hands are picked from the weapons, so this is a pick,
+            // not an on/off option (ADR-0019). These rows were the last ring
             // left in the flow, so the preparation screen said "selected" two
             // different ways on one screen.
             HStack(spacing: 12) {

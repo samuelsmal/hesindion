@@ -3,6 +3,8 @@
 ## Status
 
 Accepted. Extends [ADR-0009](0009-shadow-scale-scope-and-square-corners.md).
+"One activation treatment: the fill" is superseded for on/off options by
+[ADR-0019](0019-on-off-options-use-the-switch.md); picks keep the fill.
 
 ## Context
 
