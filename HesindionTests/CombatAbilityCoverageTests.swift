@@ -59,6 +59,7 @@ final class CombatAbilityCoverageTests: XCTestCase {
             .gezielterSchuss: "Gezielter Schuss",
             .golgaritenStil: "Golgariten-Stil",
             .plaenklerFormation: "Plänkler-Formation",
+            .formation: "Formation",
         ]
         XCTAssertEqual(expected.count, CombatAbility.allCases.count, "An ability has no expected name")
         for ability in CombatAbility.allCases {

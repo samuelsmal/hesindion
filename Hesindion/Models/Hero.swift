@@ -118,6 +118,10 @@ final class Hero {
     var activeCombatInitiative: Int?
     var activeCombatPlaenkler: Bool = false
     var activeCombatPlaenklerBonus: String?   // "at" or "aw"
+    /// Formation (SA_862), stored as Plänkler-Formation is; read both through
+    /// `activeCombatFormations`.
+    var activeCombatFormation: Bool = false
+    var activeCombatFormationBonus: String?   // "at" or "aw"
     var activeCombatMounted: Bool = false
     // Deprecated: replaced by the eingeengt status (HeroStateEntry); retained to avoid a SwiftData migration.
     var activeCombatBeengt: Bool = false
@@ -206,6 +210,8 @@ final class Hero {
         self.activeCombatInitiative = nil
         self.activeCombatPlaenkler = false
         self.activeCombatPlaenklerBonus = nil
+        self.activeCombatFormation = false
+        self.activeCombatFormationBonus = nil
         self.activeCombatMounted = false
     }
 
@@ -945,10 +951,30 @@ final class Hero {
     /// Whether the preparation screen has anything *situational* to ask about.
     ///
     /// No longer a routing gate — the screen is where the loadout is chosen, so
-    /// every hero sees it — but the formation and mount sections still appear
-    /// only for a hero who has either.
+    /// every hero sees it, and the formation section too (an ally's formation
+    /// counts, issue #44) — but the mount section appears only with a mount.
     var needsCombatSetup: Bool {
         hasPlaenklerFormation || hasMount
+    }
+
+    /// The formations of the running fight (issue #44): kind → agreed bonus.
+    var activeCombatFormations: [FormationKind: FormationBonus] {
+        get {
+            var formations: [FormationKind: FormationBonus] = [:]
+            if activeCombatFormation {
+                formations[.formation] = FormationBonus(rawValue: activeCombatFormationBonus ?? "") ?? .at
+            }
+            if activeCombatPlaenkler {
+                formations[.plaenkler] = FormationBonus(rawValue: activeCombatPlaenklerBonus ?? "") ?? .at
+            }
+            return formations
+        }
+        set {
+            activeCombatFormation = newValue[.formation] != nil
+            activeCombatFormationBonus = newValue[.formation]?.rawValue
+            activeCombatPlaenkler = newValue[.plaenkler] != nil
+            activeCombatPlaenklerBonus = newValue[.plaenkler]?.rawValue
+        }
     }
 
     /// Clears persisted combat session so re-entering starts fresh.
@@ -958,6 +984,8 @@ final class Hero {
         activeCombatInitiative = nil
         activeCombatPlaenkler = false
         activeCombatPlaenklerBonus = nil
+        activeCombatFormation = false
+        activeCombatFormationBonus = nil
         activeCombatMounted = false
         activeCombatWater = ""
         // The Patzertabelle's temporary effects last a few rounds of *this*

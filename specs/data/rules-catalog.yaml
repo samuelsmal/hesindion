@@ -391,7 +391,7 @@
   status: implemented
   reviewed: null
   sources: [{ kind: optolith, src: US25007, page: 129 }]
-  note: "The formation agrees on +1 AT oder +1 VW for the fight. CombatSetupView asks which; CombatSituation.chosenOptions carries the answer to the evaluator (option 0 AT, option 1 VW) until step 3 stores choices by rule id. The page adds that only one fighter needs the ability for all to profit; the app offers the bonus to the owner only, which is what the setup toggle asked before."
+  note: "The formation agrees on +1 AT oder +1 VW. CombatFormationPicker asks which, on the preparation screen and from the combat root's Formation chip; CombatSituation.chosenOptions carries the answer to the evaluator (option 0 AT, option 1 VW) until step 3 stores choices by rule id. Only one fighter needs the ability for all to profit (P4): CombatSituation.alliedRuleIds lets the evaluator apply it to a hero without it, and the line reads 'Plänkler-Formation (Verbündeter)'. Not while mounted (ruling plaenkler-mounted): the picker is disabled, and mounting ends the formation with a toast. Stacks with Formation (SA_862, ruling formation-and-plaenkler)."
   cost: 10
   clauses:
     - kind: offer
@@ -400,6 +400,22 @@
         - choice:
             - { add: { target: at, value: 1 } }
             - { add: { target: vw, value: 1 } }
+
+- id: SA_862
+  name: "Formation"
+  group: "Kampf"
+  status: implemented
+  reviewed: null
+  sources: [{ kind: optolith, src: US25007, page: 126 }]
+  note: "Plänkler-Formation (SA_884) made larger: five fighters, +2 AT oder +2 VW (specs/rules/abilities/SA_862.yaml, reviewed). The same path as SA_884: CombatFormationPicker asks, CombatSituation.chosenOptions carries the answer, CombatSituation.alliedRuleIds applies an ally's formation (F4, line 'Formation (Verbündeter)'). Not while mounted (ruling formation-mounted). Stacks with SA_884 (ruling formation-and-plaenkler)."
+  cost: 20
+  clauses:
+    - kind: offer
+      domains: [meleeAttack, meleeParry, meleeDodge]
+      effects:
+        - choice:
+            - { add: { target: at, value: 2 } }
+            - { add: { target: vw, value: 2 } }
 
 - id: SA_67
   name: "Wuchtschlag"
@@ -2237,7 +2253,6 @@
 - { id: SA_859, name: "Geschosshersteller", group: "Allgemein", status: todo, why: not yet read }
 - { id: SA_860, name: "Auflaufen", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_861, name: "Spießgespann", group: "Kampf", status: todo, why: not yet read }
-- { id: SA_862, name: "Formation", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_863, name: "Angetäuschter Angriff", group: "Kampf (erweitert)", status: todo, why: not yet read }
 - { id: SA_864, name: "Ausfall", group: "Kampf", status: todo, why: not yet read }
 - { id: SA_865, name: "Berittene Lanzenformation", group: "Kampf", status: todo, why: not yet read }

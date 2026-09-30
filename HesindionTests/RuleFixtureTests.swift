@@ -333,12 +333,17 @@ final class RuleFixtureTests: XCTestCase {
 
     // MARK: - Plänkler-Formation (SA_884)
 
-    private func formation(_ domain: RuleDomain, bonus: PlaenklerBonus?) -> Situation {
+    private func formation(_ domain: RuleDomain, bonus: FormationBonus?) -> Situation {
+        formed(domain, bonus.map { [.plaenkler: $0] } ?? [:])
+    }
+
+    private func formed(_ domain: RuleDomain, _ formations: [FormationKind: FormationBonus]) -> Situation {
         var s = Situation(hero: hero, domain: domain)
-        s.round.plaenklerActive = bonus != nil
-        s.round.plaenklerBonus = bonus ?? .at
+        s.round.formations = formations
         return s
     }
+
+    private func source(_ ruleId: String, in lines: [ModifierLine]) -> String? { lines.first { $0.ruleId == ruleId }?.source }
 
     func testPlaenklerFormationIsAnOfferUntilTheFormationDecides() {
         own("SA_884", "Plänkler-Formation")
@@ -362,8 +367,58 @@ final class RuleFixtureTests: XCTestCase {
         XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: .aw))))
     }
 
-    func testWithoutTheAbilityTheFormationSettingDoesNothing() {
-        XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: .at))))
+    /// SA_884.P4: one fighter with the SF is enough for the whole line. A hero
+    /// without it who stands in an ally's formation gets the bonus, and the line
+    /// says whose it is.
+    func testAnAllysPlaenklerFormationAppliesAndIsNamedAsTheAllys() {
+        let attack = lines(formation(.meleeAttack, bonus: .at))
+        XCTAssertEqual(value("SA_884", in: attack), 1)
+        XCTAssertEqual(source("SA_884", in: attack), String(format: L("formation.allySource"), "Plänkler-Formation"))
+    }
+
+    func testWithoutTheAbilityNoFormationIsOffered() {
+        XCTAssertFalse(evaluation(formation(.meleeAttack, bonus: nil)).offers.contains { $0.ruleId == "SA_884" })
+        XCTAssertNil(value("SA_884", in: lines(formation(.meleeAttack, bonus: nil))))
+    }
+
+    func testTheOwnersLineCarriesTheAbilitysNameAlone() {
+        own("SA_884", "Plänkler-Formation")
+        XCTAssertEqual(source("SA_884", in: lines(formation(.meleeAttack, bonus: .at))), "Plänkler-Formation")
+    }
+
+    // MARK: - Formation (SA_862)
+
+    func testFormationIsAnOfferOfPlusTwoUntilTheFormationDecides() {
+        own("SA_862", "Formation")
+        let e = evaluation(formed(.meleeAttack, [:]))
+        guard case .choice(let options)? = e.offers.first(where: { $0.ruleId == "SA_862" })?.shape else { return XCTFail("not a choice") }
+        XCTAssertEqual(options, [.add(target: .at, value: 2, per: nil), .add(target: .vw, value: 2, per: nil)])
+        XCTAssertEqual(reason("SA_862", in: e), .offerNotTaken)
+    }
+
+    func testFormationGivesTwoOnTheChosenHalf() {
+        own("SA_862", "Formation")
+        XCTAssertEqual(value("SA_862", in: lines(formed(.meleeAttack, [.formation: .at]))), 2)
+        XCTAssertNil(value("SA_862", in: lines(formed(.meleeParry, [.formation: .at]))))
+        XCTAssertEqual(value("SA_862", in: lines(formed(.meleeParry, [.formation: .aw]))), 2)
+        XCTAssertEqual(value("SA_862", in: lines(formed(.meleeDodge, [.formation: .aw]))), 2)
+        XCTAssertNil(value("SA_862", in: lines(formed(.meleeAttack, [.formation: .aw]))))
+    }
+
+    /// Ruling SA_862.formation-and-plaenkler: the two formations stack.
+    func testFormationAndPlaenklerFormationStack() {
+        own("SA_862", "Formation")
+        own("SA_884", "Plänkler-Formation")
+        let attack = lines(formed(.meleeAttack, [.formation: .at, .plaenkler: .at]))
+        XCTAssertEqual(value("SA_862", in: attack), 2)
+        XCTAssertEqual(value("SA_884", in: attack), 1)
+    }
+
+    /// SA_862.F4: an ally's Formation, for a hero without the SF.
+    func testAnAllysFormationAppliesAndIsNamedAsTheAllys() {
+        let parry = lines(formed(.meleeParry, [.formation: .aw]))
+        XCTAssertEqual(value("SA_862", in: parry), 2)
+        XCTAssertEqual(source("SA_862", in: parry), String(format: L("formation.allySource"), "Formation"))
     }
 
     // MARK: - Wuchtschlag (SA_67)

@@ -18,8 +18,9 @@ struct CombatRootView: View {
     @Binding var schipIgnoreZustandThisRound: Bool
     @Binding var mountedActive: Bool
     @Binding var waterDepth: WaterDepth
-    let plaenklerActive: Bool
-    let plaenklerBonus: PlaenklerBonus
+    /// The formations the hero stands in — a binding: they form and break
+    /// mid-fight, through the Formation chip (issue #44).
+    @Binding var formations: [FormationKind: FormationBonus]
     /// The other side, for the defence cost printed under the buttons. A plain
     /// value, not a binding: the root reads the opponent, it never states
     /// anything about them — the announcement and the defence screen do.
@@ -30,6 +31,7 @@ struct CombatRootView: View {
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
     @State private var showStatePicker = false
+    @State private var showFormationPicker = false
     @State private var stateDetail: StateDefinition?
     /// The Blutend probe whose modal is up, with the result it has so far.
     @State private var bleedingSession: BleedingProbeSession? = nil
@@ -56,8 +58,7 @@ struct CombatRootView: View {
             parriesThisRound: parriesThisRound,
             dodgesThisRound: dodgesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
-            plaenklerActive: plaenklerActive,
-            plaenklerBonus: plaenklerBonus,
+            formations: formations,
             water: waterDepth
         )
     }
@@ -396,6 +397,27 @@ struct CombatRootView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("combat.mounted.toggle")
                 }
+
+                // Formation and Plänkler-Formation (issue #44): what stands, and a
+                // tap to form, break or change it mid-fight.
+                Button { showFormationPicker = true } label: {
+                    let summary = FormationKind.summary(formations)
+                    HStack(spacing: 6) {
+                        Image(systemName: summary == nil ? "person.3" : "person.3.fill")
+                            .font(.dsaBody(.caption))
+                        Text(summary ?? L("formation.none"))
+                            .font(.dsaMono(.caption, emphasis: true))
+                    }
+                    .foregroundStyle(summary == nil ? .secondary : Color.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(summary == nil ? Color(UIColor.secondarySystemBackground) : combatAccent)
+                    .dsaBox(.flush, stroke: summary == nil ? Color.dsaBorder : combatAccent)
+                }
+                .buttonStyle(.dsaMotion)
+                .padding(.top, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("combat.formation.chip")
 
                 // Kampf im Wasser (Regelwerk 239) — a three-way chip row, like the
                 // manoeuvre and reach chips elsewhere: the depth is a round
@@ -877,6 +899,16 @@ struct CombatRootView: View {
         .overlay {
             if showStatePicker {
                 StatePickerSheet(hero: hero, accent: combatAccent) { showStatePicker = false }
+            }
+            if showFormationPicker {
+                DSAModal(
+                    title: L("formation"),
+                    accent: combatAccent,
+                    onScrimTap: { showFormationPicker = false },
+                    onClose: { showFormationPicker = false }
+                ) {
+                    CombatFormationPicker(hero: hero, formations: $formations, mounted: mountedActive)
+                }
             }
             if let def = stateDetail {
                 StateDetailSheet(hero: hero, def: def) { stateDetail = nil }

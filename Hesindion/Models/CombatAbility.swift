@@ -23,5 +23,6 @@ enum CombatAbility: String, CaseIterable {
     case gezielterAngriff     = "SA_160"
     case gezielterSchuss      = "SA_161"
     case golgaritenStil       = "SA_661"
+    case formation            = "SA_862"
     case plaenklerFormation   = "SA_884"
 }

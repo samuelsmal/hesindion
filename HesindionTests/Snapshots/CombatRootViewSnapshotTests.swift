@@ -30,8 +30,7 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             schipIgnoreZustandThisRound: .constant(false),
             mountedActive: .constant(false),
             waterDepth: .constant(.none),
-            plaenklerActive: false,
-            plaenklerBonus: .at,
+            formations: .constant([:]),
             opponent: OpponentProfile(),
             onDismiss: {}
         )
@@ -62,8 +61,7 @@ final class CombatRootViewSnapshotTests: XCTestCase {
             schipIgnoreZustandThisRound: .constant(false),
             mountedActive: .constant(false),
             waterDepth: .constant(.none),
-            plaenklerActive: false,
-            plaenklerBonus: .at,
+            formations: .constant([:]),
             opponent: OpponentProfile(),
             onDismiss: {}
         )

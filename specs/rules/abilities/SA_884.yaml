@@ -70,7 +70,8 @@ clauses:
         # and P2's line come `via: [SA_884.P4]` (situation boronmir-sf 14.18).
         # FORMAT: `ally.has` — an ally's ability the app cannot see; the player states it
         # ("in einer Plänkler-Formation"), and the line cites SA_884 without the hero owning it.
-        # Today only an owner is offered the toggle (CombatSetupView, hero.hasPlaenklerFormation).
+        # The app offers the toggle to every hero (CombatFormationPicker, issue #44); a hero
+        # without the SF reads it as an ally's, and the line says "(Verbündeter)".
 
   - id: P5
     text: "Voraussetzungen: keine"
@@ -98,6 +99,5 @@ rulings:
       Half a Schritt to the left and right is shoulder to shoulder, which horses cannot do; riders
       have a formation of their own, Berittene Lanzenformation (AKO II p. 125, up to 3 Schritt
       apart, with lances, at a gallop). The toggle is off and disabled while the hero is mounted,
-      with the reason; mounting mid-fight ends the formation. The app today applies the bonus
-      mounted too (CombatSituation.chosenOptions; the catalog's SA_884 clause has no mounted
-      condition), on top of Vorteilhafte Position and Golgariten-Stil.
+      with the reason; mounting mid-fight ends the formation. The app does both since issue #44
+      (CombatFormationPicker, CombatView's onChange(of: mountedActive) with a toast).

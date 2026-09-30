@@ -39,8 +39,7 @@ final class CombatAnnouncementManeuverTests: XCTestCase {
             announcedZone: .constant(nil),
             dualAttackPenaltyActive: false,
             twoHandedGripActive: false,
-            plaenklerActive: false,
-            plaenklerBonus: .at,
+            formations: [:],
             opponent: .constant(OpponentProfile()),
             onBack: {},
             onDismiss: {}

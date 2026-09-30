@@ -61,11 +61,11 @@ final class CombatPreparationFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["RS 6"].waitForExistence(timeout: UITest.timeout))
 
         // Switched on, so the shot shows the *choice* the formation is: +1 AT or
-        // +1 VW, one or the other, made once per fight.
-        let formation = app.buttons["combat.setup.plaenkler"]
+        // +1 VW, one or the other, for as long as the formation stands.
+        let formation = app.buttons["combat.formation.plaenkler"]
         XCTAssertTrue(app.scrollUntilHittable(formation), "No Plänkler-Formation section")
         formation.tap()
-        XCTAssertTrue(app.buttons["combat.setup.plaenkler.at"].waitForExistence(timeout: UITest.timeout))
+        XCTAssertTrue(app.buttons["combat.formation.plaenkler.at"].waitForExistence(timeout: UITest.timeout))
 
         captureScreenshot(app, named: "37-combat-preparation")
     }
@@ -156,14 +156,14 @@ final class CombatPreparationFlowTests: XCTestCase {
         continueAfterFailure = false
         let app = launchFresh()
 
-        let toggle = app.buttons["combat.setup.plaenkler"]
+        let toggle = app.buttons["combat.formation.plaenkler"]
         XCTAssertTrue(app.scrollUntilHittable(toggle), "No Plänkler-Formation section")
         toggle.tap()
 
         XCTAssertTrue(
-            app.buttons["combat.setup.plaenkler.at"].waitForExistence(timeout: UITest.timeout),
+            app.buttons["combat.formation.plaenkler.at"].waitForExistence(timeout: UITest.timeout),
             "Switching the formation on must ask which half of it is taken"
         )
-        XCTAssertTrue(app.buttons["combat.setup.plaenkler.aw"].exists)
+        XCTAssertTrue(app.buttons["combat.formation.plaenkler.aw"].exists)
     }
 }

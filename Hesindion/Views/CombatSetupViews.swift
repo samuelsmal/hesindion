@@ -87,8 +87,7 @@ struct CombatArmorPicker: View {
 struct CombatSetupView: View {
     let hero: Hero
     @Binding var step: CombatStep
-    @Binding var plaenklerActive: Bool
-    @Binding var plaenklerBonus: PlaenklerBonus
+    @Binding var formations: [FormationKind: FormationBonus]
     @Binding var mountedActive: Bool
     @Binding var beengteUmgebungActive: Bool
     var onDismiss: () -> Void
@@ -120,38 +119,10 @@ struct CombatSetupView: View {
                             onInfo: { weaponInfo = $0 }
                         )
 
-                        // Plänkler-Formation
-                        if hero.hasPlaenklerFormation {
-                            combatSectionLabel(L("formation.label"))
-
-                            DSAToggleRow(
-                                title: L("plaenkler"),
-                                isOn: $plaenklerActive,
-                                accent: combatAccent,
-                                identifier: "combat.setup.plaenkler"
-                            )
-
-                            if plaenklerActive {
-                                HStack(spacing: 8) {
-                                    ForEach(PlaenklerBonus.allCases, id: \.self) { bonus in
-                                        let isSelected = plaenklerBonus == bonus
-                                        Button { plaenklerBonus = bonus } label: {
-                                            Text(bonus == .at ? L("plaenklerAT") : L("plaenklerAW"))
-                                                .font(.dsaBody(.caption))
-                                                .foregroundStyle(isSelected ? .white : .primary)
-                                                .frame(maxWidth: .infinity)
-                                                .padding(.vertical, 10)
-                                                .background(isSelected ? combatAccent : Color(UIColor.secondarySystemBackground))
-                                                .dsaBox(.flush)
-                                        }
-                                        .buttonStyle(.dsaMotion)
-                                        .accessibilityIdentifier("combat.setup.plaenkler.\(bonus.rawValue)")
-                                    }
-                                }
-                                .dsaOptionGroup()
-                                .padding(.top, 4)
-                            }
-                        }
+                        // Formation and Plänkler-Formation — every hero: an ally's
+                        // formation counts too (issue #44).
+                        combatSectionLabel(L("formation.label"))
+                        CombatFormationPicker(hero: hero, formations: $formations, mounted: mountedActive)
 
                         // Mount toggle
                         if hero.hasMount {

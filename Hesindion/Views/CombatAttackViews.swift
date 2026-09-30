@@ -331,8 +331,7 @@ struct CombatAnnouncementView: View {
     @Binding var announcedZone: HitZone?
     let dualAttackPenaltyActive: Bool
     let twoHandedGripActive: Bool
-    let plaenklerActive: Bool
-    let plaenklerBonus: PlaenklerBonus
+    let formations: [FormationKind: FormationBonus]
     /// The other side of the fight, as far as the app has been told. Owned by
     /// `CombatView` so that the screens resolving *this* swing — the roll, the
     /// opponent's defence, the damage — all read the same answers. Cleared here
@@ -841,8 +840,7 @@ struct CombatAnnouncementView: View {
         s.round.dualAttackActive = dualAttackPenaltyActive
         s.round.beengteUmgebung = beengteUmgebungActive
         s.round.twoHandedGrip = twoHandedGripActive
-        s.round.plaenklerActive = plaenklerActive
-        s.round.plaenklerBonus = plaenklerBonus
+        s.round.formations = formations
         s.opponents = OpponentRoster([opponent])
         s.loadoutName = weaponName
         s.maneuver = selectedManeuver

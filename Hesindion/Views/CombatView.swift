@@ -199,8 +199,8 @@ struct CombatView: View {
     /// an attack's follow-up after the opponent parried or dodged (issue #41).
     /// Held here, not on the screen, because both outlive the step that set them.
     @State private var toast: DSAToastContent? = nil
-    @State private var plaenklerActive: Bool = false
-    @State private var plaenklerBonus: PlaenklerBonus = .at
+    /// The formations the hero stands in (issue #44), each with its agreed bonus.
+    @State private var formations: [FormationKind: FormationBonus] = [:]
     @State private var mountedActive: Bool = false
     /// Kampf im Wasser (Regelwerk 239): how deep the hero is standing, a round
     /// situation like `mountedActive`.
@@ -281,8 +281,7 @@ struct CombatView: View {
             parriesThisRound: parriesThisRound,
             dodgesThisRound: dodgesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
-            plaenklerActive: plaenklerActive,
-            plaenklerBonus: plaenklerBonus,
+            formations: formations,
             water: waterDepth
         )
     }
@@ -325,8 +324,7 @@ struct CombatView: View {
                 CombatSetupView(
                     hero: hero,
                     step: $step,
-                    plaenklerActive: $plaenklerActive,
-                    plaenklerBonus: $plaenklerBonus,
+                    formations: $formations,
                     mountedActive: $mountedActive,
                     beengteUmgebungActive: beengteUmgebungBinding,
                     onDismiss: onDismiss
@@ -360,8 +358,7 @@ struct CombatView: View {
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
                     waterDepth: $waterDepth,
-                    plaenklerActive: plaenklerActive,
-                    plaenklerBonus: plaenklerBonus,
+                    formations: $formations,
                     opponent: opponent,
                     onDismiss: onDismiss
                 )
@@ -420,8 +417,7 @@ struct CombatView: View {
                     announcedZone: $announcedZone,
                     dualAttackPenaltyActive: dualAttackPenaltyActive,
                     twoHandedGripActive: twoHandedGripActive,
-                    plaenklerActive: plaenklerActive,
-                    plaenklerBonus: plaenklerBonus,
+                    formations: formations,
                     opponent: $opponent,
                     onBack: goBack,
                     onDismiss: onDismiss
@@ -634,8 +630,7 @@ struct CombatView: View {
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
                     waterDepth: $waterDepth,
-                    plaenklerActive: plaenklerActive,
-                    plaenklerBonus: plaenklerBonus,
+                    formations: $formations,
                     opponent: opponent,
                     onDismiss: onDismiss,
                     castingSpell: (spell: spell, startRound: startRound, totalRounds: totalRounds, modifierLines: modifierLines)
@@ -701,7 +696,16 @@ struct CombatView: View {
         // `onAppear` finds `activeCombatId` set, skips preparation, and jumps
         // straight to `.root` with `temporarySchmerzActive`/`isRangedWeaponJammed`
         // switched on (they gate on `activeCombatId != nil`).
-        .onChange(of: mountedActive) { _, _ in
+        .onChange(of: mountedActive) { _, isMounted in
+            // Rulings SA_862.formation-mounted, SA_884.plaenkler-mounted: a rider
+            // stands in no formation. Mounting ends it, and the toast says so.
+            if isMounted, let dissolved = FormationKind.dissolvedByMounting(formations) {
+                formations = [:]
+                toast = dissolved
+            }
+            if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
+        }
+        .onChange(of: formations) { _, _ in
             if Self.shouldPersistSituationChange(activeCombatId: hero.activeCombatId) { persistCombatState() }
         }
         .onChange(of: waterDepth) { _, _ in
@@ -777,10 +781,7 @@ struct CombatView: View {
                 combatId = existingId
                 roundNumber = hero.activeCombatRound
                 rolledInitiative = hero.activeCombatInitiative
-                plaenklerActive = hero.activeCombatPlaenkler
-                if let bonus = hero.activeCombatPlaenklerBonus {
-                    plaenklerBonus = bonus == "at" ? .at : .aw
-                }
+                formations = hero.activeCombatFormations
                 mountedActive = hero.activeCombatMounted
                 waterDepth = WaterDepth(rawValue: hero.activeCombatWater) ?? .none
                 // Beengte Umgebung restores automatically via the `eingeengt` status (SwiftData).
@@ -839,8 +840,7 @@ struct CombatView: View {
         hero.activeCombatId = combatId
         hero.activeCombatRound = roundNumber
         hero.activeCombatInitiative = rolledInitiative
-        hero.activeCombatPlaenkler = plaenklerActive
-        hero.activeCombatPlaenklerBonus = plaenklerBonus == .at ? "at" : "aw"
+        hero.activeCombatFormations = formations
         hero.activeCombatMounted = mountedActive
         hero.activeCombatWater = waterDepth.rawValue
         // Beengte Umgebung is the `eingeengt` status now and persists itself; no field to write.

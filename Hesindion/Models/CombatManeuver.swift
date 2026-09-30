@@ -101,13 +101,6 @@ extension CombatManeuver {
     }
 }
 
-// MARK: - Plänkler Bonus
-
-enum PlaenklerBonus: String, CaseIterable {
-    case at
-    case aw
-}
-
 // MARK: - Weapon Reach
 
 enum WeaponReach: String, CaseIterable {

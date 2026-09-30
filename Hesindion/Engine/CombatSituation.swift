@@ -25,8 +25,8 @@ struct CombatSituation: Equatable {
     var parriesThisRound: Int = 0
     var dodgesThisRound: Int = 0
     var schipDefenseBoost: Bool = false
-    var plaenklerActive: Bool = false
-    var plaenklerBonus: PlaenklerBonus = .at
+    /// The formations the hero stands in, each with its agreed bonus (issue #44).
+    var formations: [FormationKind: FormationBonus] = [:]
     /// Regelwerk 239, Kampf im Wasser: hüfthoch is AT/PA −2, unter Wasser −6.
     var water: WaterDepth = .none
 
@@ -71,10 +71,13 @@ struct CombatSituation: Equatable {
     }
 
     /// The fight-long choices as the catalog names them: rule id → option.
-    /// Plänkler-Formation (SA_884) is the only one until step 3 stores choices
-    /// by rule id; its option 0 is AT, option 1 the Verteidigungswert.
+    /// The formations are the only ones until step 3 stores choices by rule
+    /// id; option 0 is AT, option 1 the Verteidigungswert.
     var chosenOptions: [String: Int] {
-        guard plaenklerActive else { return [:] }
-        return [CombatAbility.plaenklerFormation.rawValue: plaenklerBonus == .at ? 0 : 1]
+        Dictionary(uniqueKeysWithValues: formations.map { ($0.key.ruleId, $0.value.optionIndex) })
     }
+
+    /// Rules the hero need not own: a formation stands whether the SF is the
+    /// hero's or an ally's (SA_862.F4, SA_884.P4).
+    var alliedRuleIds: Set<String> { Set(formations.keys.map(\.ruleId)) }
 }

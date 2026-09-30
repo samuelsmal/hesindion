@@ -151,8 +151,12 @@ enum RuleEvaluator {
                                  owned: [String: Int], choices: [String: Int], announced: [String: Int],
                                  into out: inout Evaluation, modifications: inout [Modification]) {
         let ownedTier = owned[rule.id]
-        if rule.needsOwnership && ownedTier == nil { return }
+        // An ally's formation is the one rule that applies to a hero without it
+        // (SA_862.F4, SA_884.P4); its lines say whose it is.
+        let viaAlly = rule.needsOwnership && ownedTier == nil && s.round.alliedRuleIds.contains(rule.id)
+        if rule.needsOwnership && ownedTier == nil && !viaAlly { return }
         let tier = ownedTier ?? 1
+        let name = viaAlly ? String(format: L("formation.allySource"), rule.name) : rule.name
 
         if let gate = rule.appliesWith {
             switch test(gate, s) {
@@ -189,7 +193,7 @@ enum RuleEvaluator {
             case .offer:
                 if case .choice(let options)? = clause.effects.first {
                     if let chosen = choices[rule.id], options.indices.contains(chosen) {
-                        landed = apply([options[chosen]], tier: tier, label: rule.name, rule, s, &out, &modifications) || landed
+                        landed = apply([options[chosen]], tier: tier, label: name, rule, s, &out, &modifications) || landed
                     } else {
                         out.offers.append(RuleOffer(ruleId: rule.id, name: rule.name, shape: .choice(options), reviewed: rule.reviewed))
                         reasons.append(.offerNotTaken)
