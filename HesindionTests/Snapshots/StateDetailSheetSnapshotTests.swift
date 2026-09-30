@@ -15,7 +15,7 @@ final class StateDetailSheetSnapshotTests: XCTestCase {
         hero.setStateLevel("furcht", level: 3)
 
         let def = StateCatalog.definition(for: "furcht")!
-        let view = StateDetailSheet(hero: hero, def: def)
+        let view = StateDetailSheet(hero: hero, def: def) {}
             .modelContainer(container)
 
         assertAllVariants(of: view, named: "state_detail_furcht_III")
@@ -31,7 +31,7 @@ final class StateDetailSheetSnapshotTests: XCTestCase {
         hero.derivedValues?.lebensenergie.current = 1
 
         let def = StateCatalog.definition(for: "schmerz")!
-        let view = StateDetailSheet(hero: hero, def: def)
+        let view = StateDetailSheet(hero: hero, def: def) {}
             .modelContainer(container)
 
         assertAllVariants(of: view, named: "state_detail_schmerz_derived")
@@ -46,7 +46,7 @@ final class StateDetailSheetSnapshotTests: XCTestCase {
         hero.setStateLevel("liegend", level: 1)
 
         let def = StateCatalog.definition(for: "liegend")!
-        let view = StateDetailSheet(hero: hero, def: def)
+        let view = StateDetailSheet(hero: hero, def: def) {}
             .modelContainer(container)
 
         assertAllVariants(of: view, named: "state_detail_liegend")

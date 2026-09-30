@@ -39,6 +39,7 @@ struct HeroDetailView: View {
     @State private var weaponInfo: WeaponInfoTarget?
     @State private var breakdown: BreakdownItem?
     @State private var showStatePicker = false
+    @State private var stateDetail: StateDefinition?
 
     private var colorScheme: HeroColorScheme {
         HeroColorScheme.scheme(for: hero)
@@ -181,6 +182,10 @@ struct HeroDetailView: View {
 
             if showStatePicker {
                 StatePickerSheet(hero: hero) { showStatePicker = false }
+            }
+
+            if let def = stateDetail {
+                StateDetailSheet(hero: hero, def: def) { stateDetail = nil }
             }
 
         }
@@ -652,7 +657,11 @@ struct HeroDetailView: View {
 
     @ViewBuilder private var statesSection: some View {
         CollapsibleSection(L("states.section")) {
-            StatesSectionView(hero: hero) { showStatePicker = true }
+            StatesSectionView(
+                hero: hero,
+                onAdd: { showStatePicker = true },
+                onSelect: { stateDetail = $0 }
+            )
         }
     }
 

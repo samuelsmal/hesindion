@@ -30,6 +30,7 @@ struct CombatRootView: View {
     @State private var showInitiativeSheet = false
     @State private var showArmorSheet = false
     @State private var showStatePicker = false
+    @State private var stateDetail: StateDefinition?
     /// The Blutend probe whose modal is up, with the result it has so far.
     @State private var bleedingSession: BleedingProbeSession? = nil
     /// The action a handlungsunfähig hero has reached for, waiting on the
@@ -311,7 +312,12 @@ struct CombatRootView: View {
 
                 // Active player states strip (Schmerz, Belastung, Furcht, Liegend, …),
                 // addable mid-combat via the picker, tappable to the detail sheet.
-                StatesStrip(hero: hero, accent: combatAccent) { showStatePicker = true }
+                StatesStrip(
+                    hero: hero,
+                    accent: combatAccent,
+                    onAdd: { showStatePicker = true },
+                    onSelect: { stateDetail = $0 }
+                )
                     .padding(.top, 4)
 
                 // Blutend has its own panel: the clock, and the probes that set
@@ -871,6 +877,9 @@ struct CombatRootView: View {
         .overlay {
             if showStatePicker {
                 StatePickerSheet(hero: hero, accent: combatAccent) { showStatePicker = false }
+            }
+            if let def = stateDetail {
+                StateDetailSheet(hero: hero, def: def) { stateDetail = nil }
             }
             if let request = permissionRequest {
                 DSAModal(title: L("incapacitated.confirm.title"), accent: combatAccent) {

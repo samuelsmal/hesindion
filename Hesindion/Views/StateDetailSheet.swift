@@ -1,8 +1,9 @@
 import SwiftUI
 import SwiftData
 
-/// Detail / management sheet for a single player state, presented when a `StateChip`
-/// is tapped.
+/// Detail / management panel for a single player state, presented when a `StateChip`
+/// or a state row is tapped. A `DSAModal`, not a system sheet: the caller hangs it on
+/// its whole screen, like `StatePickerSheet`.
 ///
 /// Three variants, driven by the catalog definition:
 ///   - **Zustand** (leveled): a I–IV stepper writing `hero.setStateLevel`, an effect
@@ -19,8 +20,7 @@ import SwiftData
 struct StateDetailSheet: View {
     @Bindable var hero: Hero
     let def: StateDefinition
-
-    @Environment(\.dismiss) private var dismiss
+    var onDismiss: () -> Void
 
     private var isZustand: Bool { def.kind == .zustand }
     private var isDerived: Bool { StateCatalog.derivedIDs.contains(def.id) }
@@ -39,9 +39,20 @@ struct StateDetailSheet: View {
     /// Live level read from the hero (derived states report their computed level).
     private var level: Int { hero.level(of: def.id) }
 
+    /// Name, and the level for a Zustand: "Furcht II".
+    private var title: String {
+        guard isZustand, level > 0 else { return L(def.nameKey) }
+        return "\(L(def.nameKey)) \(StateCatalog.roman(level))"
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        DSAModal(
+            title: title,
+            accent: accent,
+            onScrimTap: onDismiss,
+            onClose: onDismiss,
+            scrolls: true
+        ) {
             VStack(alignment: .leading, spacing: 16) {
                 levelControl
                 temporarySchmerzNote
@@ -54,42 +65,7 @@ struct StateDetailSheet: View {
                     removeButton
                 }
             }
-            .padding(16)
-            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color(UIColor.systemBackground))
-    }
-
-    // MARK: - Header (icon + name + level + close)
-
-    private var header: some View {
-        HStack(spacing: 10) {
-            Image(systemName: def.iconSystemName)
-                .font(.dsaHeading(.headline))
-            Text(L(def.nameKey))
-                .font(.dsaHeading(.headline))
-            if isZustand, level > 0 {
-                Text(StateCatalog.roman(level))
-                    .font(.dsaMono(.headline, emphasis: true))
-            }
-            Spacer()
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.dsaHeading(.headline))
-                    .foregroundStyle(.white)
-            }
-            .buttonStyle(.dsaMotion)
-            .accessibilityLabel(L("close"))
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 16)
-        .padding(.vertical, DSALayout.headerVerticalPadding)
-        .frame(maxWidth: .infinity)
-        .background(accent)
-        .dsaBox(.raised)
     }
 
     // MARK: - Level control (stepper / on-off indicator)
@@ -272,7 +248,7 @@ struct StateDetailSheet: View {
     private var removeButton: some View {
         Button {
             hero.setStateLevel(def.id, level: 0)
-            dismiss()
+            onDismiss()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "trash.fill")

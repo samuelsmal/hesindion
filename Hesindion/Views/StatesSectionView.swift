@@ -3,7 +3,7 @@ import SwiftData
 
 /// The "Zustände & Status" content for the hero detail: active states render as a vertical
 /// list of `SwipeActionRow`s (matching advantages/talents/spells), with swipe-left to remove
-/// and tap to open the `StateDetailSheet`. Derived (Schmerz/Belastung) and implied-only states
+/// and tap to call `onSelect` (the parent shows `StateDetailSheet`). Derived (Schmerz/Belastung) and implied-only states
 /// expose no swipe action — they can't be removed by hand. A trailing "+ Zustand hinzufügen"
 /// button calls `onAdd`: the parent screen shows `StatePickerSheet` over its whole screen.
 ///
@@ -12,14 +12,8 @@ struct StatesSectionView: View {
     @Bindable var hero: Hero
     /// The "+ Zustand hinzufügen" row.
     var onAdd: () -> Void
-
-    @State private var detailState: StateSelection?
-
-    /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
-    private struct StateSelection: Identifiable {
-        let def: StateDefinition
-        var id: String { def.id }
-    }
+    /// A tapped row. The parent shows `StateDetailSheet` over its whole screen.
+    var onSelect: (StateDefinition) -> Void
 
     /// Implied states (e.g. bewusstlos ⇒ liegend) not already explicitly active —
     /// shown for context but not manually removable.
@@ -48,11 +42,6 @@ struct StatesSectionView: View {
             addRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .sheet(item: $detailState) { selection in
-            StateDetailSheet(hero: hero, def: selection.def)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
     }
 
     private func stateRow(def: StateDefinition, level: Int, removable: Bool, muted: Bool = false) -> some View {
@@ -62,7 +51,7 @@ struct StatesSectionView: View {
         return SwipeActionRow(actions: actions) {
             StateRowContent(def: def, level: level, muted: muted)
                 .contentShape(Rectangle())
-                .onTapGesture { detailState = StateSelection(def: def) }
+                .onTapGesture { onSelect(def) }
         }
     }
 
