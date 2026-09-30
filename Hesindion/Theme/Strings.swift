@@ -168,6 +168,8 @@ enum DSAStrings {
         "colorScheme":          "Color Scheme",
         "colorSchemeAutomatic": "Automatic (from profession)",
         "close":                "Close",
+        "sidebar.hide":         "Hide sidebar",
+        "sidebar.show":         "Show sidebar",
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unknown Talent",
@@ -1004,6 +1006,8 @@ enum DSAStrings {
         "colorScheme":          "Farbschema",
         "colorSchemeAutomatic": "Automatisch (aus Profession)",
         "close":                "Schließen",
+        "sidebar.hide":         "Seitenleiste ausblenden",
+        "sidebar.show":         "Seitenleiste einblenden",
         // TalentProbe
         "probe":                "Probe",
         "unknownTalent":        "Unbekanntes Talent",

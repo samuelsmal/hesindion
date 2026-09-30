@@ -11,6 +11,7 @@ enum SidebarSelection: Hashable {
 
 struct HeroListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Query(sort: \Hero.name) private var heroes: [Hero]
     @Query(sort: \Adventure.createdAt, order: .reverse) private var adventures: [Adventure]
 
@@ -22,6 +23,7 @@ struct HeroListView: View {
     @State private var importResult: HeroImportResult?
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
+    @State private var isSidebarVisible = true
 
     /// A re-import waiting on the companion question: the file, the pets still to
     /// ask about (in `petsInOrder` order) and the ones already kept.
@@ -35,22 +37,7 @@ struct HeroListView: View {
     private var appVersion: String { AppVersion.display }
 
     var body: some View {
-        NavigationSplitView {
-            sidebarContent
-                .safeAreaInset(edge: .bottom) {
-                    sidebarFooter
-                }
-                .navigationTitle("Hesindion")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        Text("Hesindion")
-                            .font(.dsaHeading(.title2))
-                    }
-                }
-        } detail: {
-            detailContent
-        }
+        navigationLayout
         .onChange(of: selection) { oldValue, newValue in
             if case .rule = newValue, oldValue != nil {
                 previousSelection = oldValue
@@ -126,6 +113,105 @@ struct HeroListView: View {
                 handleURL(url)
             }
             #endif
+        }
+    }
+
+    // MARK: - Layout
+
+    /// iPad draws its own two columns; iPhone keeps `NavigationSplitView`.
+    ///
+    /// On iOS 26 the split view's sidebar is a floating glass panel: round
+    /// corners, a system toggle, and the detail pane showing through behind it
+    /// — none of which a split-view setting turns off, and all of which the
+    /// design language rules out. In compact width the split view is a plain
+    /// list with a push, so there it stays.
+    @ViewBuilder
+    private var navigationLayout: some View {
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                if isSidebarVisible {
+                    sidebarColumn
+                        .frame(width: 320)
+                        .transition(.move(edge: .leading))
+                } else {
+                    sidebarRail
+                }
+                detailContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .background(Color(UIColor.systemBackground))
+        } else {
+            NavigationSplitView {
+                sidebarContent
+                    .safeAreaInset(edge: .bottom) {
+                        sidebarFooter
+                    }
+                    .navigationTitle("Hesindion")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Hesindion")
+                                .font(.dsaHeading(.title2))
+                        }
+                    }
+            } detail: {
+                detailContent
+            }
+        }
+    }
+
+    /// The iPad sidebar: a dark header bar with the app name and the toggle,
+    /// the list, the footer, and a border on the right edge.
+    private var sidebarColumn: some View {
+        VStack(spacing: 0) {
+            sidebarHeader {
+                Text("Hesindion")
+                    .font(.dsaHeading(.title2))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 0)
+            }
+            sidebarContent
+            sidebarFooter
+        }
+        .columnEdge()
+    }
+
+    /// The hidden sidebar leaves a rail with the toggle, so the way back is
+    /// always in the same place.
+    private var sidebarRail: some View {
+        VStack(spacing: 0) {
+            sidebarHeader { EmptyView() }
+            Spacer(minLength: 0)
+        }
+        .frame(width: 60)
+        .background(Color(UIColor.systemBackground))
+        .columnEdge()
+    }
+
+    private func sidebarHeader<Title: View>(@ViewBuilder title: () -> Title) -> some View {
+        HStack(spacing: 12) {
+            title()
+            Button {
+                withAnimation(DSAAnimation.standard) { isSidebarVisible.toggle() }
+            } label: {
+                Image(systemName: "sidebar.left")
+                    .font(.dsaBody(.title3))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel(L(isSidebarVisible ? "sidebar.hide" : "sidebar.show"))
+            // The name the split view's own toggle had, which
+            // `DesignSystemScreenshotTests` taps to collapse the sidebar.
+            .accessibilityIdentifier("ToggleSidebar")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, DSALayout.headerVerticalPadding)
+        .frame(maxWidth: .infinity)
+        .background(Color.dsaDark.ignoresSafeArea(edges: .top))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.dsaBorder)
+                .frame(height: DSALayout.border)
         }
     }
 
@@ -400,6 +486,19 @@ struct HeroListView: View {
     private func showError(_ message: String) {
         importError = message
         isShowingError = true
+    }
+}
+
+private extension View {
+    /// The border between the sidebar (or its rail) and the detail, down the
+    /// whole height of the screen.
+    func columnEdge() -> some View {
+        overlay(alignment: .trailing) {
+            Rectangle()
+                .fill(Color.dsaBorder)
+                .frame(width: DSALayout.border)
+                .ignoresSafeArea()
+        }
     }
 }
 

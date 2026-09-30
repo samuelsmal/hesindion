@@ -22,15 +22,12 @@ final class DesignSystemScreenshotTests: XCTestCase {
         )
     }
 
-    /// On the pinned 11-inch iPad in portrait the split view lays the sidebar
-    /// over the detail pane, covering the attribute column.
+    /// On the pinned 11-inch iPad in portrait the sidebar column takes 320pt
+    /// of the width, so the hero detail is captured with the sidebar hidden.
     ///
-    /// Collapsing it is best-effort and deliberately test-side only: the
-    /// alternative — starting the split view at `.detailOnly` via a launch
-    /// argument — changes how `NavigationSplitView` is constructed for every
-    /// user and broke two `HeroListViewSnapshotTests`. Better framing is not
-    /// worth a production rendering change, so if the toggle is not reachable
-    /// the capture simply includes the sidebar.
+    /// Best-effort: the app's own toggle (`HeroListView.sidebarHeader`) keeps
+    /// the `ToggleSidebar` identifier of the split view's toggle it replaced.
+    /// If it is not reachable, the capture simply includes the sidebar.
     @MainActor
     private func collapseSidebar(_ app: XCUIApplication) {
         let toggle = app.buttons["ToggleSidebar"]

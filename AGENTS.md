@@ -54,7 +54,7 @@ make test-only ONLY=<Target/Class>   # One test class or method
 ```bash
 make test          # everything in the scheme: HesindionTests + HesindionUITests
 make test-ui       # HesindionTests only (unit + swift-snapshot-testing)
-make screenshots   # HesindionUITests only, exporting attachments to docs/screenshots/
+make screenshots   # HesindionUITests only, exporting attachments to docs/screenshots/ (ONLY=<class> for one class)
 ```
 
 Two test targets:

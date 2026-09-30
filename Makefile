@@ -381,6 +381,8 @@ SCREENSHOT_DIR = docs/screenshots
 SCREENSHOT_RESULT = $(DERIVED_DATA)/screenshots.xcresult
 SCREENSHOT_EXPORT = $(DERIVED_DATA)/screenshot-export
 
+# `make screenshots ONLY=HesindionUITests/DesignSystemScreenshotTests` runs one
+# class (or method) and refreshes only its screenshots.
 screenshots: boot
 	rm -rf '$(SCREENSHOT_RESULT)' '$(SCREENSHOT_EXPORT)'
 	xcodebuild \
@@ -392,7 +394,7 @@ screenshots: boot
 		-destination 'platform=iOS Simulator,name=$(IPAD_NAME)' \
 		-resultBundlePath '$(SCREENSHOT_RESULT)' \
 		$(NO_CLONE) \
-		test -only-testing:HesindionUITests
+		test -only-testing:$(or $(ONLY),HesindionUITests)
 	xcrun xcresulttool export attachments \
 		--path '$(SCREENSHOT_RESULT)' \
 		--output-path '$(SCREENSHOT_EXPORT)'
