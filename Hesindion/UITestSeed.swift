@@ -71,6 +71,14 @@ enum UITestSeed {
         return Int(args[index + 1])
     }
 
+    /// `-uitest-mount-le 5` sets the seeded mount's current LeP. Kupperus has 137,
+    /// and Schmerz IV (handlungsunfähig) starts at 5 or fewer (issue #48).
+    static let mountLEArgument = "-uitest-mount-le"
+
+    private static var requestedMountLE: Int? {
+        argument(after: mountLEArgument).flatMap(Int.init)
+    }
+
     private static var requestedFokusRules: [FokusRule] {
         rules(for: fokusArgument)
     }
@@ -256,6 +264,10 @@ enum UITestSeed {
         if let tier = requestedWuchtschlagTier,
            let index = hero.combatSpecialAbilities.firstIndex(where: { $0.ruleId == "SA_67" }) {
             hero.combatSpecialAbilities[index].tier = tier
+        }
+
+        if let le = requestedMountLE {
+            hero.mount?.currentLifeEnergy = le
         }
 
         // Drop the hero straight into a running fight: re-entering combat resumes at

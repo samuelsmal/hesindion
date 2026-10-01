@@ -77,9 +77,8 @@ For Kupperus (profile 75 LeP, 137 LeP after Heldenwuchs, Kampftier and 16 bought
 2. **`Situation(creature:)`** states the owned rules, the base values, and the current LE as the `le`
    pool. COND_6 then applies without change. A base value from the sheet overrides the hero's derives
    (`lebensenergie`'s LE from species and KO), as the pipeline already does when a base exists.
-3. **No breed rule:** SZ3 does not apply to a creature, so the Stufe is unknown and the engine asks
-   for it (a question, spec §11). The engine does not use the hero's fractions.
-4. **The link.** `Situation(sheet:mount:)` evaluates the mount's situation, then states three facts in
+3. **No breed rule:** the creature's Stufe is 0 in the engine (SZ3 is the hero's); `MountValues.hasBreedRule` is false, and the app shows the rule as not applied (§6.7).
+4. **The link.** `Engine.mountFacts(in:)` evaluates the mount's situation, then the app states three facts in
    the hero's situation, owner `derived`: `mount.gs` (the mount's `gs` result), `mount.schmerz` (the
    Stufe the mount has, before Zähes Tier) and `mount.handlungsunfaehig`. A stated fact has priority
    over the breed's `provide mount.gs`, so RK14 reads the current GS. Each fact keeps a reference to
@@ -109,7 +108,7 @@ A situation file gets a `mount:` section, for example
 `situations/reiterkampf.yaml` and `situations/kupperus-und-waffen.yaml` move into that section, so
 cases 5.10, 5.11 and 18.8 also test the link, with unchanged expected values. New situations: Kupperus
 at 137, 89, 90, 60, 61, 29, 30 and 5 LeP, with and without Zähes Tier (Stufe, GS, AT, VW); a mount
-without a breed rule (a question); an RK14 case with a mount at Schmerz II.
+without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmerz II (reiterkampf.yaml "5.18"; 5.12 was taken).
 
 ## 6. App
 
@@ -136,8 +135,7 @@ without a breed rule (a question); an RK14 case with a mount at Schmerz II.
    applied: "Schmerz Kupperus: Schwellen unbekannt (kein Bestiarium-Eintrag)".
 8. **Companion sheet** (`HeroDetailView`): GS, VW and the AT of each attack show the engine's results;
    a tap opens the breakdown.
-9. `FactLabel` gets labels for the three facts ("GS Kupperus", "Schmerz Kupperus", "Kupperus
-   handlungsunfähig").
+9. `FactLabel` gets labels for the three facts. They name the role ("GS Reittier", "Schmerz Reittier", "Reittier handlungsunfähig"), since `FactLabel` has no mount name.
 
 ## 7. Tests
 

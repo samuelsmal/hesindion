@@ -66,4 +66,23 @@ final class ActionPerRoundFlowTests: XCTestCase {
         XCTAssertFalse(allow.waitForExistence(timeout: UITest.probeTimeout),
                        "The next round's attack asked the GM")
     }
+
+    /// Issue #48: Kupperus at 5 LeP is handlungsunfähig; the mount's actions say why they are shut.
+    @MainActor
+    func testAMountAtSchmerzIVShutsItsActions() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", mounted: true, mountLE: 5)
+
+        let attack = app.button(containing: "Angriff")
+        XCTAssertTrue(attack.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        attack.tap()
+
+        let reason = app.descendants(matching: .any)["combat.mount.blockedReason"]
+        XCTAssertTrue(reason.waitForExistence(timeout: UITest.timeout),
+                      "Nothing says why the mount's actions are shut")
+        let tritt = app.button(containing: "Kupperus: Tritt")
+        XCTAssertTrue(tritt.exists, "No Tritt offered")
+        XCTAssertFalse(tritt.isEnabled, "The mount's Tritt is open at Schmerz IV")
+        captureScreenshot(app, named: "67-mount-schmerz-iv")
+    }
 }

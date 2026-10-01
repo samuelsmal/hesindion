@@ -53,6 +53,7 @@ enum UITest {
         mounted: Bool = false,
         plaenkler: String? = nil,
         states: [String] = [],
+        mountLE: Int? = nil,
         orientation: UIDeviceOrientation = .portrait
     ) -> XCUIApplication {
         XCUIDevice.shared.orientation = orientation
@@ -113,6 +114,10 @@ enum UITest {
         // taps in the state picker for every level.
         if !states.isEmpty {
             app.launchArguments += ["-uitest-state", states.joined(separator: ",")]
+        }
+        // The mount's current LeP — 5 of Kupperus's 137 is Schmerz IV.
+        if let mountLE {
+            app.launchArguments += ["-uitest-mount-le", "\(mountLE)"]
         }
         app.launch()
         return app
