@@ -1214,16 +1214,28 @@ struct HeroDetailView: View {
                             ("AK", "\(pet.actions)")
                         ])
 
-                        if let v = mountValues, let status = v.statusText(name: pet.name) {
-                            Button {
-                                breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
-                            } label: {
-                                Text(status).font(.dsaBody(.caption2))
+                        if let v = mountValues {
+                            HStack(spacing: 16) {
+                                Button {
+                                    breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
+                                } label: {
+                                    companionValue("GS", v.gs.result, id: "pet.gs.value.\(pet.name)")
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("pet.gs.\(pet.name)")
+                                if let status = v.statusText(name: pet.name) {
+                                    Button {
+                                        breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
+                                    } label: {
+                                        Text(status).font(.dsaBody(.caption2))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityIdentifier("pet.schmerz.\(pet.name)")
+                                }
+                                Spacer()
                             }
-                            .buttonStyle(.plain)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
-                            .accessibilityIdentifier("pet.schmerz.\(pet.name)")
                         }
 
                         if pet.hasCompanionData {
@@ -1256,6 +1268,7 @@ struct HeroDetailView: View {
                     companionValue("VW", vw.result, id: "pet.defense.\(pet.name)")
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("pet.defense.\(pet.name)")
             } else {
                 companionValue("VW", pet.defense, id: "pet.defense.\(pet.name)")
             }
