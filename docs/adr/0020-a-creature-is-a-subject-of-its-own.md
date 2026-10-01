@@ -27,7 +27,7 @@ A creature is evaluated as a subject of its own, with the same rules the hero is
 - `Engine.mountFacts(in:)` evaluates the mount's situation and states three facts in the hero's
   situation, owner `derived`: `mount.gs`, `mount.schmerz` (the Stufe the mount has, before Zähes
   Tier) and `mount.handlungsunfaehig`. RK14 (Sturmangriff zu Pferd) reads the current GS from them.
-  The breakdowns stay with `MountFacts`/`MountValues` (a `Fact` holds none): the companion sheet's GS, VW and status buttons open them. The Sturmangriff TP line has no tap.
+  The breakdowns stay with `MountFacts`/`MountValues` (a `Fact` holds none): the companion sheet's GS, VW and status buttons open them, and the combat root's Schmerz line opens the Stufe's breakdown (issue #51). The Sturmangriff TP line has no tap.
 - The app side is `PetSheetMapping` (the only code that knows `Pet` and `CreatureSheet`) and
   `MountValues`.
 

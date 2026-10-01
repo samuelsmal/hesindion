@@ -130,11 +130,14 @@ without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmer
    reason line gives the cause ("Kupperus: Schmerz IV — handlungsunfähig"), identifier
    `combat.mount.blockedReason`.
 6. **Combat root.** Below the mount name: "Schmerz II · GS 13", identifier `combat.mount.schmerz`.
-   Nothing at Stufe 0.
+   Nothing at Stufe 0. A tap opens the Stufe's own breakdown, `level(rule: COND_6)`
+   (`MountValues.schmerzValue`, issue #51): the breed clause's threshold lines with their Auslegung
+   mark, then Zähes Tier's `levelAs` line. Its result is the Stufe the mount acts at. A mount
+   without a breed rule has no breakdown, so its line is not tappable.
 7. **A mount without a breed rule.** The app uses the base GS and AT and shows the rule as not
    applied: "Schmerz Kupperus: Schwellen unbekannt (kein Bestiarium-Eintrag)".
 8. **Companion sheet** (`HeroDetailView`): GS, VW and the AT of each attack show the engine's results;
-   a tap opens the breakdown. The sheet's "AT" is still the export's free-text `pet.attack` (the sheet lists no
+   a tap opens the breakdown. The status line opens the Stufe's breakdown, as at the combat root (issue #51). The sheet's "AT" is still the export's free-text `pet.attack` (the sheet lists no
    per-attack AT); the engine's per-attack AT is shown on the combat attack picker.
 9. `FactLabel` gets labels for the three facts. They name the role ("GS Reittier", "Schmerz Reittier", "Reittier handlungsunfähig"), since `FactLabel` has no mount name.
 

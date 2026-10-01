@@ -71,8 +71,8 @@ enum UITestSeed {
         return Int(args[index + 1])
     }
 
-    /// `-uitest-mount-le 5` sets the seeded mount's current LeP. Kupperus has 137,
-    /// and Schmerz IV (handlungsunfähig) starts at 5 or fewer (issue #48).
+    /// `-uitest-mount-le 5` sets the seeded mount's current LeP. The seeded Kupperus has 75
+    /// (the export carries no `hesindion` block), and Schmerz IV (handlungsunfähig) starts at 5 or fewer (issue #48).
     static let mountLEArgument = "-uitest-mount-le"
 
     private static var requestedMountLE: Int? {

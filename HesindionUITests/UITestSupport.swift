@@ -115,7 +115,7 @@ enum UITest {
         if !states.isEmpty {
             app.launchArguments += ["-uitest-state", states.joined(separator: ",")]
         }
-        // The mount's current LeP — 5 of Kupperus's 137 is Schmerz IV.
+        // The mount's current LeP — 5 of the seeded Kupperus's 75 is Schmerz IV.
         if let mountLE {
             app.launchArguments += ["-uitest-mount-le", "\(mountLE)"]
         }
