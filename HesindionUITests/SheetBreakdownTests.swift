@@ -63,13 +63,16 @@ final class SheetBreakdownTests: XCTestCase {
         let panel = app.otherElements["modal.panel"]
         XCTAssertTrue(panel.waitForExistence(timeout: UITest.timeout), "The modal panel has no identifier")
 
-        // Hug: the collapsed fold is the content's last row; below it only the content's
-        // own 16pt padding (and the box's border) may remain, not the rest of the cap.
-        let gap = panel.frame.maxY - toggle.frame.maxY
+        // Hug: the collapsed "Mehr Infos" fold, under "Nicht angewandt", is the content's last
+        // row; below it only the content's own 16pt padding (and the box's border) may remain,
+        // not the rest of the cap.
+        let last = app.buttons["breakdown.moreInfo.toggle"]
+        XCTAssertTrue(last.exists, "The Mehr-Infos fold is missing")
+        let gap = panel.frame.maxY - last.frame.maxY
         XCTAssertLessThanOrEqual(
             gap, 40,
             "The panel does not hug its content: its bottom is \(gap)pt below the last row "
-                + "(panel \(panel.frame), fold \(toggle.frame))"
+                + "(panel \(panel.frame), fold \(last.frame))"
         )
 
         toggle.tap()
@@ -161,6 +164,7 @@ final class SheetBreakdownTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
         XCTAssertTrue(app.staticTexts["breakdown.intro"].exists, "Nothing says how the thresholds count")
         XCTAssertEqual(app.staticTexts["breakdown.result"].label, "Stufe II", "The result is not the Stufe")
+        XCTAssertTrue(app.buttons["breakdown.moreInfo.toggle"].exists, "The clause ids have no Mehr-Infos fold")
         XCTAssertTrue(
             app.descendants(matching: .any)["breakdown.line.0"].exists,
             "The breakdown has no lines"

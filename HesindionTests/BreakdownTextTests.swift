@@ -51,6 +51,33 @@ final class BreakdownTextTests: XCTestCase {
         XCTAssertFalse(first.contains(L("owner.derived")), first)
     }
 
+    /// Only the first threshold shows the LeP read and the Auslegung mark; the rows below
+    /// repeat neither.
+    func testALineRepeatsNoFactAndNoMarkOfTheLineAbove() throws {
+        let d = details(try schmerz(le: 60))
+        for line in d[1...3] {
+            XCTAssertFalse(line!.contains("LeP 60"), line!)
+            XCTAssertFalse(line!.contains(L("breakdown.auslegung")), line!)
+        }
+    }
+
+    /// The rule name shows once per run of lines from the same rule, without the clause id.
+    func testTheSourceIsTheRuleNameOncePerRun() throws {
+        let sources = BreakdownText.sources(for: try schmerz(le: 60), book: book)
+        let breed = book.rules["svellttaler-kaltblut"]!.name, tough = book.rules["zaehes-tier"]!.name
+        XCTAssertEqual(sources, [breed, "", "", "", tough])
+    }
+
+    /// "Mehr Infos": each clause, rule and ruling id once.
+    func testTheReferencesListEachClauseAndRulingOnce() throws {
+        let refs = BreakdownText.references(for: try schmerz(le: 60), book: book)
+        let breed = book.rules["svellttaler-kaltblut"]!.name
+        XCTAssertEqual(refs.filter { $0 == "\(breed) · SK10" }.count, 1, "\(refs)")
+        XCTAssertEqual(refs.filter { $0.contains("svellttaler-kaltblut.svellttaler-schmerz-thresholds") }.count, 1,
+                       "\(refs)")
+        XCTAssertEqual(Set(refs).count, refs.count, "\(refs)")
+    }
+
     func testTheRulingMarkHidesItsIdUntilOpened() throws {
         let b = try schmerz(le: 60)
         let shut = try XCTUnwrap(details(b)[0])

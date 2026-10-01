@@ -21,6 +21,8 @@ struct BreakdownSheet: View {
     /// survives `DSAModal` remounting it under a different parent once the content grows past
     /// the scroll cap (see `CombatDisclosureSection.expandedOverride`).
     @State private var notAppliedExpanded = false
+    /// The "Mehr Infos" fold's state, held here for the same reason.
+    @State private var moreInfoExpanded = false
 
     var body: some View {
         DSAModal(
@@ -44,16 +46,19 @@ struct BreakdownSheet: View {
                 totalIdentifier: "breakdown.result"
             )
             notAppliedSection
+            moreInfoSection
         }
     }
 
     /// One `BreakdownRow` per shown line, in order: the value signed (the base parts too), the
-    /// source `Rule name · clause`, and as the row's `detail` what `BreakdownText` says of it — a
-    /// threshold, the facts it read, its Auslegung mark (tappable to expand the ruling's answer).
+    /// rule's name once per run of its lines, and as the row's `detail` what `BreakdownText` says
+    /// of it — a threshold, the facts it read, its Auslegung mark (tappable to expand the ruling's
+    /// answer). Clause and ruling ids are under "Mehr Infos".
     private var rows: [BreakdownRow] {
         let details = BreakdownText.details(for: value.breakdown, book: book, openRuling: openRuling)
+        let sources = BreakdownText.sources(for: value.breakdown, book: book)
         return value.breakdown.shownLines.enumerated().map { i, line in
-            var row = BreakdownRow.signed(line.value, origin(line))
+            var row = BreakdownRow.signed(line.value, sources[i])
             row.detail = details[i]
             row.identifierOverride = "breakdown.line.\(i)"
             if let ruling = line.ruling {
@@ -63,15 +68,32 @@ struct BreakdownSheet: View {
         }
     }
 
-    /// A line's origin, its clause id, and the rules it rests `via` (a useLevel, a replace); a
-    /// value the sheet or the player stated instead names its `owner` (design §5).
-    private func origin(_ line: Line) -> String {
-        guard let o = line.origin else { return L("owner.\((line.owner ?? .sheet).rawValue)") }
-        let via = line.via.map { ruleName($0.rule) }
-        return "\(ruleName(o.rule)) · \(o.clause)" + (via.isEmpty ? "" : " (\(via.joined(separator: ", ")))")
-    }
-
     private func ruleName(_ id: String) -> String { book.rules[id]?.name ?? id }
+
+    /// The folded "Mehr Infos" list: the clause and ruling ids the lines rest on (issue #51), kept
+    /// out of the rows so that a row does not repeat them.
+    @ViewBuilder
+    private var moreInfoSection: some View {
+        let references = BreakdownText.references(for: value.breakdown, book: book)
+        if !references.isEmpty {
+            CombatDisclosureSection(
+                title: L("breakdown.moreInfo"),
+                identifier: "breakdown.moreInfo",
+                expandedOverride: $moreInfoExpanded
+            ) {
+                VStack(spacing: 0) {
+                    ForEach(references, id: \.self) { reference in
+                        Text(reference)
+                            .font(.dsaBody(.caption))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .dsaRowDivider()
+                    }
+                }
+            }
+        }
+    }
 
     /// The folded "Nicht angewandt (n)" list, in the app's own disclosure styling (shut by
     /// default, like the announcement's opponent section) rather than a system `DisclosureGroup`.
