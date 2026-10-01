@@ -872,6 +872,10 @@ enum DSAStrings {
         "fact.loadout.armour":          "armour",
         "fact.loadout.armour.belastung": "armour encumbrance",
         "fact.loadout.armour.extraPenalty": "armour's extra penalty",
+        "fact.mount.gs":                "GS mount",
+        "fact.mount.schmerz":           "Schmerz mount",
+        "fact.mount.handlungsunfaehig": "mount incapacitated",
+        "fact.subject":                 "subject",
         // "Vor der Probe" (sheet cut-over design §6)
         "vorDerProbe.label":            "Before the check",
         "vorDerProbe.summary":          "Belastung %@: %d · %@",
@@ -1944,6 +1948,10 @@ enum DSAStrings {
         "fact.loadout.armour":          "Rüstung",
         "fact.loadout.armour.belastung": "Belastung der Rüstung",
         "fact.loadout.armour.extraPenalty": "zusätzliche Erschwernis der Rüstung",
+        "fact.mount.gs":                "GS Reittier",
+        "fact.mount.schmerz":           "Schmerz Reittier",
+        "fact.mount.handlungsunfaehig": "Reittier handlungsunfähig",
+        "fact.subject":                 "Subjekt",
         // "Vor der Probe" (sheet cut-over design §6)
         "vorDerProbe.label":            "Vor der Probe",
         "vorDerProbe.summary":          "Belastung %@: %d · %@",

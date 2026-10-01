@@ -44,5 +44,9 @@ enum FactLabel {
         "loadout.armour": "fact.loadout.armour",
         "loadout.armour.belastung": "fact.loadout.armour.belastung",
         "loadout.armour.extraPenalty": "fact.loadout.armour.extraPenalty",
+        "mount.gs": "fact.mount.gs",
+        "mount.schmerz": "fact.mount.schmerz",
+        "mount.handlungsunfaehig": "fact.mount.handlungsunfaehig",
+        "subject": "fact.subject",
     ]
 }

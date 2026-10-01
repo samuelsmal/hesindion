@@ -42,6 +42,13 @@ final class FactLabelTests: XCTestCase {
         XCTAssertEqual(FactLabel.label("loadout.armour.extraPenalty", book: book), L("fact.loadout.armour.extraPenalty"))
     }
 
+    func testTheMountFactsHaveLabels() {
+        XCTAssertEqual(FactLabel.label("mount.gs", book: nil), L("fact.mount.gs"))
+        XCTAssertEqual(FactLabel.label("mount.schmerz", book: nil), L("fact.mount.schmerz"))
+        XCTAssertEqual(FactLabel.label("mount.handlungsunfaehig", book: nil), L("fact.mount.handlungsunfaehig"))
+        XCTAssertEqual(FactLabel.label("subject", book: nil), L("fact.subject"))
+    }
+
     func testAnUnknownFactShowsItsRawName() {
         XCTAssertEqual(FactLabel.label("some.unknown.fact", book: book), "some.unknown.fact")
     }

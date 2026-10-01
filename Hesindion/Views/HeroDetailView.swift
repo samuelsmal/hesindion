@@ -1203,18 +1203,31 @@ struct HeroDetailView: View {
                             ("KK", "\(pet.attributes.kk)")
                         ])
 
+                        let mountValues = pet === hero.mount ? MountValues.of(pet) : nil
                         SubfieldBlock(label: L("combat"), subfields: [
                             ("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)"),
                             ("INI", pet.initiative),
-                            ("GS", "\(pet.speed)"),
+                            ("GS", mountValues?.gs.result.map(String.init) ?? "\(pet.speed)"),
                             ("AT", pet.attack),
                             ("TP", pet.damage),
                             ("RW", pet.reach),
                             ("AK", "\(pet.actions)")
                         ])
 
+                        if let v = mountValues, let status = v.statusText(name: pet.name) {
+                            Button {
+                                breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
+                            } label: {
+                                Text(status).font(.dsaBody(.caption2))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .accessibilityIdentifier("pet.schmerz.\(pet.name)")
+                        }
+
                         if pet.hasCompanionData {
-                            companionBlock(pet)
+                            companionBlock(pet, mountValues: mountValues)
                         }
 
                         if !pet.talents.isEmpty {
@@ -1234,9 +1247,18 @@ struct HeroDetailView: View {
         }
     }
 
-    @ViewBuilder private func companionBlock(_ pet: Pet) -> some View {
+    @ViewBuilder private func companionBlock(_ pet: Pet, mountValues: MountValues?) -> some View {
         HStack(spacing: 16) {
-            companionValue("VW", pet.defense, id: "pet.defense.\(pet.name)")
+            if let vw = mountValues?.vw {
+                Button {
+                    breakdown = BreakdownItem(title: "VW \(pet.name)", value: vw)
+                } label: {
+                    companionValue("VW", vw.result, id: "pet.defense.\(pet.name)")
+                }
+                .buttonStyle(.plain)
+            } else {
+                companionValue("VW", pet.defense, id: "pet.defense.\(pet.name)")
+            }
             companionValue("RS", pet.armor, id: "pet.armor.\(pet.name)")
             companionValue("BE", pet.encumbrance, id: "pet.encumbrance.\(pet.name)")
             Spacer()
