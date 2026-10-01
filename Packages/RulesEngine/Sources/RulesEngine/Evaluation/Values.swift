@@ -50,10 +50,16 @@ public struct ValueResult: Hashable, Sendable {
     /// The contributors of every target read (R26), each once, in reading order.
     public var via: [ClauseRef]
     public var depthExceeded: Bool
+    /// A step proportion's threshold: for `max(0, of − above) × times / per` at most 1, the largest
+    /// whole `above` at which it gives 1 — `of − per / times` rounded down, or below `of` when
+    /// it rounds up (issue #51: "Schwelle I: LeP ≤ 89"). nil for any other value, and when `above`
+    /// is a plain number (nothing to compare).
+    public var threshold: Int?
 
     public init(value: Int?, used: [FactUse] = [], unknown: [UnknownFact] = [], via: [ClauseRef] = [],
-                depthExceeded: Bool = false) {
+                depthExceeded: Bool = false, threshold: Int? = nil) {
         self.value = value; self.used = used; self.unknown = unknown; self.via = via; self.depthExceeded = depthExceeded
+        self.threshold = threshold
     }
 }
 
@@ -96,6 +102,11 @@ public enum Values {
         let mins = p.min.map { t.bound($0, resolve) }
         let maxes = p.max.map { t.bound($0, resolve) }
         guard let of, let per, let above, per != 0 else { return nil }
+        if p.min == nil, p.max == .number(1), p.times > 0, per > 0, !p.above.isNumber {
+            // Rounded down, the step needs a whole 1 (`above ≤ of − per/times`); rounded up, any
+            // amount above 0 (`above < of`).
+            t.threshold = int(p.round == .down ? round(of - per / p.times, .down) : round(of, .up) - 1)
+        }
         var x = round(Swift.max(0, of - above) * p.times / per, p.round)
         if let mins {
             guard let mins else { return nil }
@@ -248,6 +259,8 @@ struct Trace {
     var depthExceeded = false
     /// The `provide` the last table read came from.
     var provider: EffectOrigin?
+    /// A step proportion's threshold (`ValueResult.threshold`).
+    var threshold: Int?
 
     init(situation: Situation, level: Int?, rule: String?, depth: Int) {
         self.situation = situation; self.level = level; self.rule = rule; self.depth = depth
@@ -304,6 +317,7 @@ struct Trace {
     }
 
     func result(_ value: Int?) -> ValueResult {
-        ValueResult(value: value, used: used, unknown: unknown, via: via, depthExceeded: depthExceeded)
+        ValueResult(value: value, used: used, unknown: unknown, via: via, depthExceeded: depthExceeded,
+                    threshold: threshold)
     }
 }

@@ -72,6 +72,9 @@ public struct TargetRef: Codable, Hashable, Sendable, CustomStringConvertible {
 public indirect enum Operand: Codable, Hashable, Sendable {
     case number(Double), fact(String), target(TargetRef), sum([Operand])
 
+    /// A plain number, which reads nothing.
+    var isNumber: Bool { if case .number = self { true } else { false } }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyKey.self)
         let key = try c.onlyKey("an operand")

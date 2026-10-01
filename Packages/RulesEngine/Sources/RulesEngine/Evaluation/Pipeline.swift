@@ -352,7 +352,7 @@ extension Evaluation {
             guard computed(results, of: e, used: used, via: via, &state, d.sum) else { continue }
             parts += results.map { r in
                 Line(value: r.value!, kind: .base, origin: e.origin.clauseRef, via: (via + r.via).uniqued(),
-                     rulings: decided(e), facts: (used + r.used).uniqued())
+                     rulings: decided(e), facts: (used + r.used).uniqued(), threshold: r.threshold)
             }
         }
         guard let first = parts.first else { return }

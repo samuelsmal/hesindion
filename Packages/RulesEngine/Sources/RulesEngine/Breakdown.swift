@@ -67,13 +67,17 @@ public struct Line: Codable, Hashable, Sendable {
     /// MU bonus). Empty for any other line. A `suppress` of a derive drops its parts; a `replace`
     /// of one gives a single `.replaced` part (R35).
     public var parts: [Line]
+    /// A step's threshold (issue #51): for a 0-or-1 proportion term over a fact (`above: leCurrent`,
+    /// `max: 1`), the largest whole value of that fact at which the term gives 1
+    /// (`ValueResult.threshold`). nil for any other line.
+    public var threshold: Int?
 
     public init(value: Int, kind: LineKind, origin: ClauseRef? = nil, via: [ClauseRef] = [], rulings: [String] = [],
                 facts: [FactUse] = [], owner: Owner? = nil, note: String? = nil, was: Int? = nil, now: Int? = nil,
-                term: String? = nil, parts: [Line] = []) {
+                term: String? = nil, parts: [Line] = [], threshold: Int? = nil) {
         self.value = value; self.kind = kind; self.origin = origin; self.via = via; self.rulings = rulings
         self.facts = facts; self.owner = owner; self.note = note; self.was = was; self.now = now
-        self.term = term; self.parts = parts
+        self.term = term; self.parts = parts; self.threshold = threshold
     }
 
     /// The first decided ruling the line rests on.

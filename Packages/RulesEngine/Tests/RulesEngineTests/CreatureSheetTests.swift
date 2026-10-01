@@ -28,6 +28,26 @@ final class CreatureSheetTests: XCTestCase {
         XCTAssertFalse(m.handlungsunfaehig)
     }
 
+    /// Issue #51: each threshold term's line carries the LeP at or below which it gives its Stufe,
+    /// scaled to the mount's max LeP (ruling svellttaler-kaltblut.svellttaler-schmerz-thresholds).
+    func testEachThresholdLineCarriesItsLeP() {
+        let at137 = engine.mountFacts(in: Situation(creature: Self.kupperus(le: 60))).schmerzBreakdown
+        XCTAssertEqual(at137.base?.parts.map(\.threshold), [89, 60, 29, 5])
+        XCTAssertEqual(at137.base?.parts.map(\.value), [1, 1, 0, 0])
+
+        var printed = Self.kupperus(le: 49)
+        printed.leMax = 75
+        let at75 = engine.mountFacts(in: Situation(creature: printed)).schmerzBreakdown
+        XCTAssertEqual(at75.base?.parts.map(\.threshold), [49, 33, 16, 5])
+        XCTAssertEqual(at75.base?.parts.map(\.value), [1, 0, 0, 0])   // 49 is the threshold itself
+    }
+
+    /// Only a 0-or-1 step over a fact has a threshold: a sum term like Belastung's has none.
+    func testALineThatIsNoStepHasNoThreshold() {
+        let gs = engine.mountFacts(in: Situation(creature: Self.kupperus(le: 60))).gs
+        XCTAssertTrue(gs.shownLines.allSatisfy { $0.threshold == nil })
+    }
+
     func testWithoutZaehesTierTheGSFallsByTheFullStufe() {
         let m = engine.mountFacts(in: Situation(creature: Self.kupperus(le: 60, advantages: [])))
         XCTAssertEqual(m.schmerz, 2)
