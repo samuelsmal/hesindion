@@ -60,6 +60,13 @@ final class MountValuesTests: XCTestCase {
                        String(format: L("mount.schmerz.noThresholds"), "Kupperus"))
     }
 
+    func testTheAttackNamesItsSchmerzLine() throws {
+        let hurt = try XCTUnwrap(MountValues.of(kupperus(le: 60, advantages: [])))
+        XCTAssertEqual(MountValues.schmerzNote(hurt.at(with: "Tritt")), String(format: L("mount.at.schmerzNote"), -2))
+        let well = try XCTUnwrap(MountValues.of(kupperus(le: 137)))
+        XCTAssertNil(MountValues.schmerzNote(well.at(with: "Tritt")))
+    }
+
     func testHealingTheMountLowersTheStufe() throws {
         let pet = kupperus(le: 29)
         XCTAssertEqual(MountValues.of(pet)?.schmerz, 3)
