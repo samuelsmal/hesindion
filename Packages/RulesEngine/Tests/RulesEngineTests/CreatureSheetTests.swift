@@ -30,7 +30,15 @@ final class CreatureSheetTests: XCTestCase {
 
     func testWithoutZaehesTierTheGSFallsByTheFullStufe() {
         let m = engine.mountFacts(in: Situation(creature: Self.kupperus(le: 60, advantages: [])))
+        XCTAssertEqual(m.schmerz, 2)
         XCTAssertEqual(m.gs.result, 13)
+    }
+
+    func testAtFullLeThereIsNoSchmerz() {
+        let m = engine.mountFacts(in: Situation(creature: Self.kupperus(le: 137)))
+        XCTAssertEqual(m.schmerz, 0)
+        XCTAssertEqual(m.gs.result, 15)
+        XCTAssertFalse(m.handlungsunfaehig)
     }
 
     func testAt5LePTheMountIsHandlungsunfaehig() {

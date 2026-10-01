@@ -47,17 +47,13 @@ extension Situation {
 public struct MountFacts: Sendable {
     public let gs: Breakdown
     /// The `level(rule: COND_6)` breakdown. Its result is the Stufe the mount *acts at* (after
-    /// Zähes Tier's `levelAs` line); the Stufe it *has* is that line's `was`, or the base line
-    /// without Zähes Tier.
+    /// Zähes Tier's `levelAs` line); its `base` is the Stufe it *has*.
     public let schmerzBreakdown: Breakdown
     public let handlungsunfaehig: Bool
 
     /// The Stufe the mount has, before Zähes Tier (ruling ADV_49.zaeher-hund-counts: `useLevel`
-    /// changes the Stufe acted at only).
-    public var schmerz: Int {
-        let lines = schmerzBreakdown.lines
-        return lines.first { $0.kind == .levelAs }?.was ?? lines.first { $0.kind == .base }?.value ?? 0
-    }
+    /// changes the Stufe acted at only). 0 without Schmerz.
+    public var schmerz: Int { schmerzBreakdown.base?.value ?? 0 }
 
     public var facts: [Fact] {
         var out: [Fact] = []
