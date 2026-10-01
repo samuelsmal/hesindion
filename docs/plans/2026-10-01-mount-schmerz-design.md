@@ -132,7 +132,10 @@ without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmer
 6. **Combat root.** Below the mount name: "Schmerz II · GS 13", identifier `combat.mount.schmerz`.
    Nothing at Stufe 0. A tap opens the Stufe's own breakdown, `level(rule: COND_6)`
    (`MountValues.schmerzValue`, issue #51): the breed clause's threshold lines with their Auslegung
-   mark, then Zähes Tier's `levelAs` line. Its result is the Stufe the mount acts at. A mount
+   mark, then Zähes Tier's `levelAs` line. Each threshold line carries its LeP (`Line.threshold`,
+   from the step term: `of − per/times` rounded down, or below `of` for a term that rounds up), and
+   `BreakdownText` words it ("Schwelle I: LeP ≤ 89 – erreicht"); a sentence above the lines
+   (`MountValues.schmerzIntro`) gives the mount's LeP and says how the thresholds count. Its result is the Stufe the mount acts at. A mount
    without a breed rule has no breakdown, so its line is not tappable.
 7. **A mount without a breed rule.** The app uses the base GS and AT and shows the rule as not
    applied: "Schmerz Kupperus: Schwellen unbekannt (kein Bestiarium-Eintrag)".

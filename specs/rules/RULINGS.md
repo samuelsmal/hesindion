@@ -200,7 +200,7 @@ Why a: the table is powers of two, so "one Stufe" and "×2 / ÷2" agree wherever
 | `svellttaler-kaltblut` | mount-profile-data | A table of Bestiarium profiles keyed by the pet's type, the export's own numbers overriding it; a pet whose type is not in the table falls back to the export, and what the export lacks the player enters on the pet (VW, RS, size, Vorteile). | @samuelsmal, 2026-09-24 |
 | `svellttaler-kaltblut` | mount-own-attack | An order like any other (RK12): it takes the rider's action and a Reiten (Kampfmanöver) check. | @samuelsmal, 2026-09-24 |
 | `svellttaler-kaltblut` | niederreiten-without-profile | No Niederreiten line, no Niederreiten order. | @samuelsmal, 2026-09-24 |
-| `svellttaler-kaltblut` | svellttaler-schmerz-thresholds | Let's use the printed thresholds to determine the applied percentages. The total LeP of the mount can change and thus also the Schmerz thresholds | @samuelsmal, 2026-09-27 |
+| `svellttaler-kaltblut` | svellttaler-schmerz-thresholds | The printed thresholds are fractions of the printed LeP. A mount with more or fewer max LeP has its thresholds scaled by the same fraction: 49 of 75 LeP is 89 of 137. "5 LeP or fewer" is not scaled. | @samuelsmal, 2026-09-27 |
 | `DISADV_37` | schlechte-eigenschaft-check | Text only: the sheet shows the rule; the player rolls Willenskraft from the talent list. | @samuelsmal, 2026-09-27 |
 | `DISADV_57` | verweichlicht-scope | Only the Wundeffekt checks of the Trefferzonen Fokusregel. Without it the disadvantage has no effect. | @samuelsmal, 2026-09-24 |
 | `ITEMTPL_19` | rabenschnabel-waffeneigenschaft | Only with the Fokusregel, like every weapon's Waffenvorteil and -nachteil. | @samuelsmal, 2026-09-24 |

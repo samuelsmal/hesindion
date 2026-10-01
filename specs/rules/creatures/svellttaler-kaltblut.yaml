@@ -266,8 +266,9 @@ rulings:
     question: >
       The profile gives LeP 75 but Schmerz thresholds of 49, 33, 16 and 5 LeP. Which count?
     answer: >
-      Let's use the printed thresholds to determine the applied percentages. The total LeP of the
-      mount can change and thus also the Schmerz thresholds
+      The printed thresholds are fractions of the printed LeP. A mount with more or fewer max LeP
+      has its thresholds scaled by the same fraction: 49 of 75 LeP is 89 of 137. "5 LeP or fewer"
+      is not scaled.
     decided: { by: "@samuelsmal", date: 2026-09-27 }
     appliesTo: [SK10, elenviner-vollblut.EV10]
     notes: >
