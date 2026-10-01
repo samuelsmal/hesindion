@@ -1,4 +1,5 @@
 import Foundation
+import RulesEngine
 
 /// Every TP bonus the app can work out for itself, in one place.
 ///
@@ -16,6 +17,7 @@ enum DamageModifiers {
 
     /// TP bonuses for a melee attack: the two the Swift side still makes, then
     /// what the catalog says for the `damage` domain.
+    @MainActor
     static func lines(situation: Situation) -> [ModifierLine] {
         precondition(situation.domain == .damage, "damage lines want the damage domain")
         var lines: [ModifierLine] = []
@@ -24,21 +26,34 @@ enum DamageModifiers {
             lines.append(ModifierLine(value: 1, source: L("source.twoHandedGrip")))
         }
 
-        // Sturmangriff zu Pferd: +2 and half the mount's GS, as two lines so
-        // the box shows where the bonus comes from — the horse's GS, not the rider's.
-        if situation.maneuver == .sturmangriff {
-            lines.append(ModifierLine(value: 2, source: L("source.sturmangriff")))
-            if let mount = situation.hero.mount, situation.hero.sturmangriffHalfMountGS != 0 {
-                let key = mount.speed % 2 == 0 ? "source.sturmangriff.halfGS" : "source.sturmangriff.halfGSRoundedUp"
-                lines.append(ModifierLine(
-                    value: situation.hero.sturmangriffHalfMountGS,
-                    source: String(format: L(key), mount.name, mount.speed)
-                ))
-            }
+        // Sturmangriff zu Pferd (RK14): one line from the engine, the mount's current GS in it
+        // (issue #48). A tap on the line's GS opens the mount's breakdown (CombatRootView).
+        if situation.maneuver == .sturmangriff, let line = sturmangriffLine(hero: situation.hero) {
+            lines.append(line)
         }
 
         lines += ModifierEngine.shared.evaluation(situation).lines.map(\.modifierLine)
         return lines
+    }
+
+    /// RK14's TP line for a hit with the Sturmangriff zu Pferd, evaluated by the engine with the
+    /// mount's facts (`MountValues`). nil without a mount, without the rules, or when RK14 does
+    /// not apply (no Berittener Kampf).
+    @MainActor
+    static func sturmangriffLine(hero: Hero) -> ModifierLine? {
+        guard let mount = hero.mount, let values = MountValues.of(mount),
+              let store = RulesEngineStore.shared else { return nil }
+        let charge = RulesEngine.Situation(sheet: HeroSheetMapping.sheet(for: hero)).stating(values.facts.facts + [
+            Fact(name: "hero.mounted", value: .bool(true), owner: .loadout),
+            Fact(name: "choice.order", value: .string("sturmangriffZuPferd"), owner: .player),
+            Fact(name: "action.gait", value: .string("galopp"), owner: .player),
+            Fact(name: "action.attack", value: .string("hit"), owner: .player),
+        ])
+        let rk14 = store.engine.evaluate(Query("tp"), in: charge).lines
+            .filter { $0.origin?.rule == "reiterkampf" && $0.origin?.clause == "RK14" }
+        guard !rk14.isEmpty, let gs = values.gs.result else { return nil }
+        return ModifierLine(value: rk14.reduce(0) { $0 + $1.value },
+                            source: String(format: L("source.sturmangriff.rk14"), mount.name, gs))
     }
 
     static func total(_ lines: [ModifierLine]) -> Int {

@@ -259,7 +259,7 @@ struct CombatAttackChoiceView: View {
     @ViewBuilder
     private func sturmangriffZuPferdButton(mount: Pet) -> some View {
         if hero.hasBerittenerKampf, let w = hero.selectedWeapon {
-            let damageBonus = hero.sturmangriffDamageBonus
+            let damageBonus = DamageModifiers.sturmangriffLine(hero: hero)?.value ?? 0
             let bonusLabel = damageBonus >= 0 ? "+\(damageBonus)" : "\(damageBonus)"
             choiceButton(
                 title: L("sturmangriffPferd"),

@@ -38,12 +38,12 @@ final class MountSelectionTests: XCTestCase {
 
         hero.pets = [brummel, alrik]
         XCTAssertEqual(hero.mount?.name, "Alrik", "by name, so the answer does not depend on the store")
-        XCTAssertEqual(hero.mountGS, 7)
+        XCTAssertEqual(hero.mount?.speed, 7)
 
         // The same two animals handed back the other way round.
         hero.pets = [alrik, brummel]
         XCTAssertEqual(hero.mount?.name, "Alrik")
-        XCTAssertEqual(hero.mountGS, 7)
+        XCTAssertEqual(hero.mount?.speed, 7)
     }
 
     /// A pet with no initiative is not a mount — `hasMount` always said so. It no
@@ -57,7 +57,7 @@ final class MountSelectionTests: XCTestCase {
 
         XCTAssertTrue(hero.hasMount)
         XCTAssertEqual(hero.mount?.name, "Kupperus")
-        XCTAssertEqual(hero.mountGS, 9)
+        XCTAssertEqual(hero.mount?.speed, 9)
     }
 
     func testAHeroWithNoRideableAnimalHasNoMount() throws {
@@ -67,6 +67,5 @@ final class MountSelectionTests: XCTestCase {
 
         XCTAssertFalse(hero.hasMount)
         XCTAssertNil(hero.mount)
-        XCTAssertEqual(hero.mountGS, 0)
     }
 }

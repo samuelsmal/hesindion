@@ -947,22 +947,6 @@ final class Hero {
     var hasGezielterAngriff: Bool { has(.gezielterAngriff) }
     var hasGezielterSchuss: Bool { has(.gezielterSchuss) }
 
-    /// Horse GS for Sturmangriff damage.
-    var mountGS: Int {
-        mount?.speed ?? 0
-    }
-
-    /// Half the horse's GS for the Sturmangriff zu Pferd (RK14), rounded up
-    /// (ruling `shared.round-up`, ADR-0006): GS 11 → 6.
-    var sturmangriffHalfMountGS: Int {
-        Int(ceil(Double(mountGS) / 2))
-    }
-
-    /// Sturmangriff bonus damage: +2 + ⌈horse GS / 2⌉.
-    var sturmangriffDamageBonus: Int {
-        2 + sturmangriffHalfMountGS
-    }
-
     /// True if hero has a mount (pet with initiative).
     var hasMount: Bool {
         mount != nil

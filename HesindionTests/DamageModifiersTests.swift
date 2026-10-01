@@ -120,45 +120,48 @@ final class DamageModifiersTests: XCTestCase {
 
     // MARK: - Sturmangriff
 
-    /// +2 plus half the mount's GS (RK14), as two lines, so the player sees
-    /// where the bonus comes from. Only for the charge itself.
-    func testSturmangriffAddsTwoPlusHalfTheMountsSpeed() {
+    /// RK14 from the engine: 2 + ⌈GS/2⌉ of the mount, one line, its GS the mount's current one.
+    func testSturmangriffIsRK14WithTheMountsGS() throws {
+        try XCTSkipIf(RulesEngineStore.shared == nil, "rules.json unavailable")
         let rider = riderWithMount(speed: 12)
-        XCTAssertEqual(rider.sturmangriffDamageBonus, 8)
-
+        rider.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_43", name: "Berittener Kampf"))
         var charge = Situation(hero: rider, domain: .damage)
         charge.maneuver = .sturmangriff
         charge.round.mounted = true
-        let lines = DamageModifiers.lines(situation: charge)
-        XCTAssertEqual(lines.first { $0.source == L("source.sturmangriff") }?.value, 2)
-        XCTAssertEqual(lines.first { $0.source == String(format: L("source.sturmangriff.halfGS"), "Kupperus", 12) }?.value, 6)
+        let line = DamageModifiers.lines(situation: charge).first { $0.source.hasPrefix(L("source.sturmangriff")) }
+        XCTAssertEqual(line?.value, 8)
+        XCTAssertEqual(line?.source, String(format: L("source.sturmangriff.rk14"), "Kupperus", 12))
+    }
 
+    func testSturmangriffWithAMountInPain() throws {
+        try XCTSkipIf(RulesEngineStore.shared == nil, "rules.json unavailable")
+        let rider = riderWithMount(speed: 15, type: "Svellttaler Kaltblut", lifeEnergy: 137, current: 60)
+        rider.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_43", name: "Berittener Kampf"))
+        var charge = Situation(hero: rider, domain: .damage)
+        charge.maneuver = .sturmangriff
+        charge.round.mounted = true
+        let line = DamageModifiers.lines(situation: charge).first { $0.source.hasPrefix(L("source.sturmangriff")) }
+        XCTAssertEqual(line?.value, 9)            // 2 + ⌈13/2⌉: GS 15, Schmerz II
+        XCTAssertEqual(line?.source, String(format: L("source.sturmangriff.rk14"), "Kupperus", 13))
+    }
+
+    func testNoSturmangriffLineWithoutTheCharge() throws {
+        try XCTSkipIf(RulesEngineStore.shared == nil, "rules.json unavailable")
+        let rider = riderWithMount(speed: 12)
+        rider.combatSpecialAbilities.append(HeroTrait(ruleId: "SA_43", name: "Berittener Kampf"))
         var walk = Situation(hero: rider, domain: .damage)
         walk.round.mounted = true
         XCTAssertTrue(DamageModifiers.lines(situation: walk).allSatisfy { !$0.source.contains(L("source.sturmangriff")) })
     }
 
-    /// An odd GS rounds up (ruling `shared.round-up`): GS 11 → +6, not +5.
-    func testSturmangriffRoundsHalfAnOddSpeedUp() {
-        let rider = riderWithMount(speed: 11)
-        XCTAssertEqual(rider.sturmangriffDamageBonus, 8)
-
-        var charge = Situation(hero: rider, domain: .damage)
-        charge.maneuver = .sturmangriff
-        charge.round.mounted = true
-        let half = DamageModifiers.lines(situation: charge)
-            .first { $0.source == String(format: L("source.sturmangriff.halfGSRoundedUp"), "Kupperus", 11) }
-        XCTAssertEqual(half?.value, 6)
-    }
-
-    private func riderWithMount(speed: Int) -> Hero {
+    private func riderWithMount(speed: Int, type: String = "Pferd", lifeEnergy: Int = 40, current: Int? = nil) -> Hero {
         let rider = Hero(name: "Rider")
         context.insert(rider)
         rider.pets = [
             Pet(
-                petId: "PET_1", name: "Kupperus", size: 1.9, type: "Pferd",
+                petId: "PET_1", name: "Kupperus", size: 1.9, type: type,
                 attributes: PetAttributes(mu: 12, kl: 10, inValue: 12, ch: 12, ff: 8, ge: 15, ko: 24, kk: 25),
-                lifeEnergy: 75, spirit: 0, toughness: 0,
+                lifeEnergy: lifeEnergy, currentLifeEnergy: current, spirit: 0, toughness: 0,
                 initiative: "14+1W6", speed: speed,
                 attack: "Niederreiten", damage: "2W6+6", reach: "Mittel",
                 actions: 1, talents: "", skills: "", notes: ""
