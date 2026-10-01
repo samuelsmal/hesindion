@@ -1205,15 +1205,17 @@ struct HeroDetailView: View {
                         ])
 
                         let mountValues = pet === hero.mount ? MountValues.of(pet) : nil
+                        // Issue #52: the mount's AT is per attack, in its own row below.
+                        let atPerAttack = mountValues != nil && !pet.attacks.isEmpty
                         SubfieldBlock(label: L("combat"), subfields: [
                             ("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)"),
                             ("INI", pet.initiative),
                             ("GS", mountValues?.gs.result.map(String.init) ?? "\(pet.speed)"),
-                            ("AT", pet.attack),
+                            atPerAttack ? nil : ("AT", pet.attack),
                             ("TP", pet.damage),
                             ("RW", pet.reach),
                             ("AK", "\(pet.actions)")
-                        ])
+                        ].compactMap { $0 })
 
                         if let v = mountValues {
                             HStack(spacing: 16) {
@@ -1245,6 +1247,10 @@ struct HeroDetailView: View {
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
+
+                            if atPerAttack {
+                                mountAttacks(pet, values: v)
+                            }
                         }
 
                         if pet.hasCompanionData {
@@ -1266,6 +1272,28 @@ struct HeroDetailView: View {
                 }
             }
         }
+    }
+
+    /// The engine's AT for each of the mount's attacks, Schmerz included (issue #52); a tap opens
+    /// its breakdown, as GS and VW do.
+    private func mountAttacks(_ pet: Pet, values: MountValues) -> some View {
+        HStack(spacing: 16) {
+            Text("AT").font(.dsaBody(.caption)).foregroundStyle(.secondary)
+            ForEach(pet.attacks, id: \.name) { attack in
+                if let at = values.at(with: attack.name) {
+                    Button {
+                        breakdown = BreakdownItem(title: "AT \(attack.name) \(pet.name)", value: at)
+                    } label: {
+                        companionValue(attack.name, at.result, id: "pet.at.value.\(pet.name).\(attack.name)")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
+                }
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder private func companionBlock(_ pet: Pet, mountValues: MountValues?) -> some View {

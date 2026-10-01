@@ -189,6 +189,28 @@ final class SheetBreakdownTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
     }
 
+    /// Issue #52: the companion sheet lists the mount's attacks with the engine's AT. At Schmerz II
+    /// the Tritt is 13, not the export's 15, and a tap opens its breakdown.
+    @MainActor
+    func testTappingTheMountsAttackOnTheSheetOpensItsBreakdown() throws {
+        continueAfterFailure = false
+        let app = UITest.launch(mountLE: 30)
+
+        let tritt = app.buttons["pet.at.Kupperus.Tritt"]
+        XCTAssertTrue(app.scrollUntilHittable(tritt), "The mount's Tritt is not on the hero sheet")
+        XCTAssertEqual(app.staticTexts["pet.at.value.Kupperus.Tritt"].label, "13", "The AT does not include Schmerz II")
+        XCTAssertTrue(app.buttons["pet.at.Kupperus.Biss"].exists, "The mount's Biss is not listed")
+        captureScreenshot(app, named: "69-mount-attacks-on-sheet")
+        tritt.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["breakdown.result"].waitForExistence(timeout: UITest.timeout),
+            "The breakdown sheet did not open"
+        )
+        XCTAssertTrue(app.staticTexts["AT Tritt Kupperus"].exists, "The breakdown is not the Tritt's AT")
+        XCTAssertEqual(app.staticTexts["breakdown.result"].label, "13", "The breakdown's result is not the AT")
+    }
+
     /// "Vor der Probe" (sheet cut-over design §6): with the seeded hero's armour equipped, a
     /// hindered talent's check shows the reminder row, and "Belastung nicht anwenden" strikes
     /// the line without removing it.
