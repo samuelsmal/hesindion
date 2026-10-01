@@ -244,7 +244,8 @@ struct CombatAttackChoiceView: View {
     private func niederreitenButton(mount: Pet, values: MountValues?, blocked: Bool) -> some View {
         let niederreitenAttack = mount.attacks.first { $0.name == "Niederreiten" }
         let engineAT = values?.at(with: "Niederreiten")
-        let niederreitenAT = engineAT?.result ?? niederreitenAttack?.at ?? mount.attacks.first?.at ?? 0
+        let niederreitenAT = engineAT?.result ?? niederreitenAttack?.at
+            ?? mount.attacks.first.flatMap { values?.at(with: $0.name)?.result ?? $0.at } ?? 0
         let niederreitenDamage = niederreitenAttack?.damage ?? mount.damage
 
         return choiceButton(

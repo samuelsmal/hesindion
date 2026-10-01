@@ -47,6 +47,12 @@ final class MountValues {
     func statusText(name: String) -> String? {
         guard hasBreedRule else { return String(format: L("mount.schmerz.noThresholds"), name) }
         guard schmerz > 0, let gs = gs.result else { return nil }
+        let actsAt = facts.schmerzBreakdown.result
+        if let actsAt, actsAt != schmerz {
+            // Zähes Tier: the mount acts at a lower Stufe than it has (ADR-0018: say so).
+            let as_ = actsAt > 0 ? StateCatalog.roman(actsAt) : L("mount.schmerz.asNone")
+            return String(format: L("mount.schmerz.statusShift"), StateCatalog.roman(schmerz), as_, gs)
+        }
         return String(format: L("mount.schmerz.status"), StateCatalog.roman(schmerz), gs)
     }
 
