@@ -142,12 +142,17 @@ clauses:
 
   - id: EV10
     text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
-    unencoded: >
-      the printed thresholds, as the Kaltblut's SK10 (ruling
-      svellttaler-kaltblut.svellttaler-schmerz-thresholds: the printed thresholds count). That
-      ruling was answered for the Kaltblut; whether it holds for every horse with the same
-      printed numbers (here LeP 70, where ¾, ½, ¼ would be 52, 35, 17) is the owner's to confirm
-      before SK10's effects are copied here.
+    effects:
+      - when: { subject: creature }
+        derive:
+          to: "level(rule: COND_6)"
+          sum:
+            - { of: leMax, above: leCurrent, times: 3.3333333333333335, per: leMax, round: down, max: 1 }
+            - { of: leMax, above: leCurrent, times: 1.8918918918918919, per: leMax, round: down, max: 1 }
+            - { of: leMax, above: leCurrent, times: 1.2962962962962963, per: leMax, round: down, max: 1 }
+            - { of: 6, above: leCurrent, max: 1 }
+        ruling: svellttaler-kaltblut.svellttaler-schmerz-thresholds
+        # As svellttaler-kaltblut.SK10, for the profile's 70 LeP: times = 70/21, 70/37, 70/54.
 
   - id: EV11
     text: |

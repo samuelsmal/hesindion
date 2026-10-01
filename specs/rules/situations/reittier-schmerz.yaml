@@ -1,0 +1,112 @@
+# Issue #48 — a mount in pain. DRAFT FORMAT — see ../README.md.
+# Each situation's subject is the mount (`sheet: { subject: creature }`), Kupperus by his
+# 2026-09-24 build (specs/heroes/…companions.json): LeP 137, GS 15 (Schnell), VW 14,
+# Tritt AT 19. His breed prints "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger" for
+# 75 LeP; ruling svellttaler-kaltblut.svellttaler-schmerz-thresholds scales them to 137:
+# ≤ 89.5, ≤ 60.3, ≤ 29.2, and ≤ 5 unscaled.
+
+hero:
+  creatures: { svellttaler-kaltblut: true }
+  sheet: { subject: creature }
+  values: { leMax: 137, gs: 15, vw: 14, "at(with: Tritt)": 19 }
+
+situations:
+  - id: mount.1
+    name: Unhurt — no Schmerz
+    hero: { values: { leCurrent: 137 } }
+    expect:
+      "level(rule: COND_6)": { result: 0 }
+      gs: { result: 15 }
+
+  - id: mount.2
+    name: 90 LeP — just above the first threshold (89.5)
+    hero: { values: { leCurrent: 90 } }
+    expect:
+      "level(rule: COND_6)": { result: 0 }
+
+  - id: mount.3
+    name: 89 LeP — Schmerz I
+    hero: { values: { leCurrent: 89 } }
+    expect:
+      "level(rule: COND_6)": { result: 1, lines: [{ from: svellttaler-kaltblut.SK10, ruling: svellttaler-kaltblut.svellttaler-schmerz-thresholds }] }
+      gs: { result: 14, lines: [{ value: -1, from: COND_6.SZ5 }] }
+      vw: { result: 13 }
+      "at(with: Tritt)": { result: 18 }
+
+  - id: mount.4
+    name: 61 LeP — still Schmerz I
+    hero: { values: { leCurrent: 61 } }
+    expect:
+      "level(rule: COND_6)": { result: 1 }
+
+  - id: mount.5
+    name: 60 LeP — Schmerz II
+    hero: { values: { leCurrent: 60 } }
+    expect:
+      "level(rule: COND_6)": { result: 2 }
+      gs: { result: 13 }
+
+  - id: mount.6
+    name: 30 LeP — still Schmerz II
+    hero: { values: { leCurrent: 30 } }
+    expect:
+      "level(rule: COND_6)": { result: 2 }
+
+  - id: mount.7
+    name: 29 LeP — Schmerz III
+    hero: { values: { leCurrent: 29 } }
+    expect:
+      "level(rule: COND_6)": { result: 3 }
+      gs: { result: 12 }
+
+  - id: mount.8
+    name: 75 LeP profile, exactly 49 LeP — Schmerz I (the printed threshold itself)
+    hero: { values: { leMax: 75, leCurrent: 49 } }
+    expect:
+      "level(rule: COND_6)": { result: 1 }
+
+  - id: mount.9
+    name: 5 LeP — Schmerz IV, GS 0, Handlungsunfähig
+    hero: { values: { leCurrent: 5 } }
+    expect:
+      "level(rule: COND_6)": { result: 4 }
+      gs: { result: 0 }
+      events: [{ gained: STATE_8, from: COND_6.SZ5 }]
+
+  - id: mount.10
+    name: −3 LeP — still Schmerz IV
+    hero: { values: { leCurrent: -3 } }
+    expect:
+      "level(rule: COND_6)": { result: 4 }
+      gs: { result: 0 }
+
+  - id: mount.11
+    name: Zähes Tier at 60 LeP — has II, acts at I
+    hero: { creatures: { svellttaler-kaltblut: true, zaehes-tier: true }, values: { leCurrent: 60 } }
+    expect:
+      "level(rule: COND_6)": { result: 1, lines: [{ kind: levelAs, value: 1, from: zaehes-tier.ZT1 }] }
+      gs: { result: 14, lines: [{ value: -1, from: COND_6.SZ5, via: [zaehes-tier.ZT1] }] }
+
+  - id: mount.12
+    name: The hero owns the breed — the breed gives the hero no Schmerz
+    hero: { sheet: { subject: hero }, values: { leMax: 40, leCurrent: 26 } }
+    expect:
+      "level(rule: COND_6)": { result: 1, lines: [{ from: COND_6.SZ3 }] }
+
+  - id: mount.13
+    name: Zähes Tier at 89 LeP — Stufe I counts as none
+    hero: { creatures: { svellttaler-kaltblut: true, zaehes-tier: true }, values: { leCurrent: 89 } }
+    expect:
+      gs: { result: 15 }
+
+  - id: mount.14
+    name: Zähes Tier at 5 LeP — Handlungsunfähig nevertheless
+    hero: { creatures: { svellttaler-kaltblut: true, zaehes-tier: true }, values: { leCurrent: 5 } }
+    expect:
+      events: [{ gained: STATE_8, from: COND_6.SZ5, via: [zaehes-tier.ZT3] }]
+
+  - id: mount.15
+    name: Elenviner Vollblut, 70 LeP profile, 49 LeP — Schmerz I
+    hero: { creatures: { elenviner-vollblut: true }, values: { leMax: 70, leCurrent: 49 } }
+    expect:
+      "level(rule: COND_6)": { result: 1, lines: [{ from: elenviner-vollblut.EV10 }] }

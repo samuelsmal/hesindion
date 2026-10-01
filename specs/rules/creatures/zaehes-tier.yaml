@@ -1,0 +1,61 @@
+# DRAFT FORMAT — see ../README.md.
+# A Tiervorteil, kind `creature`: the animal version of Zäher Hund (ADV_49). Its owner is the
+# animal; it acts in the animal's own evaluation (the mount as subject, issue #48), where
+# `hero.levelOf.COND_6` is the animal's Stufe.
+id: zaehes-tier
+name: Zähes Tier
+kind: creature
+group: Vorteile (Tiere)
+source:
+  url: https://dsa.ulisses-regelwiki.de/vor-und-nachteile/tiervor-und-nachteile/vorteile-tiere/zaehes-tier.html
+  book: Aventurische Tiergefährten
+  page: 120
+  checked: 2026-10-01
+  hash: sha256:3fdc0630bfbe8a8f7e4bbace07461cf7f5b6ce2e41001fb9a9071c18e9350908
+reviewed: null
+# Kupperus bought it (companions.json, 12 AP).
+
+clauses:
+  - id: ZT1
+    text: >
+      Regel: Dieser Vorteil sorgt dafür, dass das Tier die Auswirkungen der höchsten Stufe des
+      Zustands Schmerz ignorieren darf. Es erleidet lediglich die Auswirkungen der nächstniedrigeren
+      Stufe.
+    effects:
+      - when: { hero.levelOf.COND_6: [2, 3] }
+        useLevel: { rule: COND_6, as: "level - 1" }
+        ruling: ADV_49.zaeher-hund-counts
+
+  - id: ZT2
+    text: >
+      Wenn es also beispielsweise drei Stufen Schmerz erlitten hat, gelten für das Tier nur die
+      Auswirkungen von Stufe II.
+    none: the page's own example of ZT1 (reittier-schmerz mount.11 is the same rule at II)
+
+  - id: ZT3
+    text: Bei Schmerz Stufe IV wird das Tier dennoch Handlungsunfähig.
+    effects:
+      - when: { hero.levelOf.COND_6: 4 }
+        useLevel: { rule: COND_6, as: level }
+
+  - id: ZT4
+    text: Schmerz Stufe I wird so behandelt, als hätte es keine Stufe Schmerz.
+    effects:
+      - when: { hero.levelOf.COND_6: 1 }
+        useLevel: { rule: COND_6, as: 0 }
+        ruling: ADV_49.zaeher-hund-counts
+
+  - id: ZT5
+    text: >
+      Dieser Vorteil lässt sich mit dem Vorteil Zäher Hund kombinieren, wenn dieser bei dem Tier als
+      automatischer oder empfohlener Vorteil aufgeführt ist.
+    unencoded: >
+      no animal in the app has Zäher Hund; how two useLevels on COND_6 combine is open until one does
+
+  - id: ZT6
+    text: "Voraussetzungen: kein Nachteil Zerbrechlich oder Zerbrechliches Tier"
+    none: purchase prerequisite of the animal
+
+  - id: ZT7
+    text: "AP-Wert: 12 Abenteuerpunkte"
+    none: cost

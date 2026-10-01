@@ -170,22 +170,22 @@ clauses:
   - id: SK10
     text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
     effects:
-      - when: { mount.leCurrent: { atMost: 49 } }
-        add: { to: "mount.level(rule: COND_6)", value: 1 }
+      - when: { subject: creature }
+        derive:
+          to: "level(rule: COND_6)"
+          sum:
+            - { of: leMax, above: leCurrent, times: 2.8846153846153846, per: leMax, round: down, max: 1 }
+            - { of: leMax, above: leCurrent, times: 1.7857142857142858, per: leMax, round: down, max: 1 }
+            - { of: leMax, above: leCurrent, times: 1.2711864406779663, per: leMax, round: down, max: 1 }
+            - { of: 6, above: leCurrent, max: 1 }
         ruling: svellttaler-schmerz-thresholds
-      - when: { mount.leCurrent: { atMost: 33 } }
-        add: { to: "mount.level(rule: COND_6)", value: 1 }
-        ruling: svellttaler-schmerz-thresholds
-      - when: { mount.leCurrent: { atMost: 16 } }
-        add: { to: "mount.level(rule: COND_6)", value: 1 }
-        ruling: svellttaler-schmerz-thresholds
-      - when: { mount.leCurrent: { atMost: 5 } }
-        add: { to: "mount.level(rule: COND_6)", value: 1 }
-        ruling: svellttaler-schmerz-thresholds
-        # One Stufe Schmerz per threshold crossed (the old `per: threshold_crossed` over
-        # `mount.lep: { at_most: [49, 33, 16, 5] }`): the mount's current LeP at or below each.
-        # The app keeps the mount's LeP (Pet.currentLifeEnergy) but has no Zustände for it, so
-        # nothing applies this today.
+        # The printed thresholds are fractions of the profile's 75 LeP, scaled to the mount's own
+        # max LeP (ruling svellttaler-schmerz-thresholds): Stufe I at LeP ≤ 49/75 × leMax, i.e.
+        # once (leMax − LeP) ≥ 26/75 × leMax; times = 75/26, 75/42, 75/59. Compared exactly, as
+        # COND_6.schmerz-thresholds for the hero; the engine's rounding snaps 0.9999999999 to 1
+        # (Values.round), which reittier-schmerz mount.8 (exactly 49 of 75) holds. "5 LeP oder
+        # weniger" is not scaled: COND_6.SZ3's own term. Only for the creature as subject
+        # (`subject: creature`): a hero who owns the profile gets no Schmerz from it (mount.12).
 
   - id: SK11
     text: |
@@ -269,10 +269,11 @@ rulings:
       Let's use the printed thresholds to determine the applied percentages. The total LeP of the
       mount can change and thus also the Schmerz thresholds
     decided: { by: "@samuelsmal", date: 2026-09-27 }
-    appliesTo: [SK10]
+    appliesTo: [SK10, elenviner-vollblut.EV10]
     notes: >
-      Answered against the recommendation (b, computed from LeP 75 by the core rule: about 56, 37,
-      18 and 5). The printed 49/33/16 are ¾, ½ and ¼ of 65 LeP, so either they or the LeP are a
-      misprint; the profile's own thresholds win, and a profile carries its thresholds as data. So
-      Kupperus at 55 LeP has no Schmerz yet, where the core rule would give one Stufe. The app keeps
-      the mount's LeP (Pet.currentLifeEnergy, MountHealingSheet) but gives it no Schmerz at all.
+      The printed 49/33/16 are fractions of the profile's 75 LeP (they are ¾, ½, ¼ of 65, so the
+      profile's LeP or its thresholds are a misprint; the owner's answer keeps the printed
+      fractions). A mount whose max LeP grew (Kupperus: 137 after Heldenwuchs, Kampftier and 16
+      bought) has its thresholds scaled: ≤ 89.5, ≤ 60.3, ≤ 29.2; "5 LeP oder weniger" stays. The
+      owner confirmed on 2026-10-01 that the same holds for every horse with printed thresholds
+      (elenviner-vollblut.EV10: 49/70, 33/70, 16/70). Issue #48.

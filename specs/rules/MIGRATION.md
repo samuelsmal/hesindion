@@ -1645,6 +1645,7 @@ verdict now lets the agent do it.
 - ladezeiten.LZ2, LZ7 (Task 36 fix round 1, ruling R74): Laden's melee `breaksOff`, the shot's emptying of the weapon (LZ2) and the spent Pfeil, Bolzen or Kugel (LZ7) read `action.attack: [hit, miss, confirmedFumble]` (was `[hit, miss]`)
 - SA_62.ST3 (Task 36 fix round 1, ruling R74; review reset, was reviewed by @samuelsmal): the Passierschlag after a failed Sturmangriff reads `action.attack: [miss, confirmedFumble]` (was `miss`): "Sollte der Sturmangriff misslingen" covers a confirmed Patzer
 - SA_172.U2 (Task 36 fix round 1, ruling R74): the Passierschlag after a failed Unterlaufen reads `action.attack: [miss, confirmedFumble]` (was `miss`): "Misslingt die AT" covers a confirmed Patzer
+- svellttaler-kaltblut.SK10 (issue #48): the four `add: { to: "mount.level(rule: COND_6)" }` (a target nothing read) are one `derive` of `level(rule: COND_6)` for the creature as subject, its printed thresholds scaled to the mount's max LeP (ruling svellttaler-schmerz-thresholds, notes corrected); elenviner-vollblut.EV10 encoded the same way; zaehes-tier newly drafted; COND_6.SZ3 `when: { subject: hero }`, SZ5 reaches `vw`.
 
 ## Open questions
 
