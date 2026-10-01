@@ -52,6 +52,14 @@ final class MountValuesTests: XCTestCase {
         XCTAssertEqual(v.gs.result, 15)
     }
 
+    func testTheStatusLineNamesTheStufeAndTheGS() throws {
+        XCTAssertNil(MountValues.of(kupperus(le: 137))?.statusText(name: "Kupperus"))
+        XCTAssertEqual(MountValues.of(kupperus(le: 60, advantages: []))?.statusText(name: "Kupperus"),
+                       String(format: L("mount.schmerz.status"), "II", 13))
+        XCTAssertEqual(MountValues.of(kupperus(le: 10, type: "Pferd"))?.statusText(name: "Kupperus"),
+                       String(format: L("mount.schmerz.noThresholds"), "Kupperus"))
+    }
+
     func testHealingTheMountLowersTheStufe() throws {
         let pet = kupperus(le: 29)
         XCTAssertEqual(MountValues.of(pet)?.schmerz, 3)

@@ -27,7 +27,7 @@ enum DamageModifiers {
         }
 
         // Sturmangriff zu Pferd (RK14): one line from the engine, the mount's current GS in it
-        // (issue #48). A tap on the line's GS opens the mount's breakdown (CombatRootView).
+        // (issue #48).
         if situation.maneuver == .sturmangriff, let line = sturmangriffLine(hero: situation.hero) {
             lines.append(line)
         }

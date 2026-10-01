@@ -300,6 +300,14 @@ struct CombatRootView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
 
+                    if let status = MountValues.of(mount)?.statusText(name: mount.name) {
+                        Text(status)
+                            .font(.dsaBody(.caption2))
+                            .foregroundStyle(combatAccent)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("combat.mount.schmerz")
+                    }
+
                     LPBarView(
                         current: mount.currentLifeEnergy,
                         max: mount.lifeEnergy,

@@ -187,22 +187,27 @@ struct CombatAttackChoiceView: View {
     // MARK: - Mount attack section
 
     private func mountAttackSection(mount: Pet) -> some View {
-        VStack(spacing: 8) {
+        let values = MountValues.of(mount)
+        let blocked = values?.handlungsunfaehig ?? false
+        return VStack(spacing: 8) {
             combatSectionLabel(L("mountAttacksGroup"))
 
             // Regular mount attacks (Hufschlag, Tritt, etc.) — exclude Niederreiten (has dedicated button below)
             ForEach(mount.attacks.filter { $0.name != "Niederreiten" }, id: \.name) { attack in
+                let engineAT = values?.at(with: attack.name)
+                let at = engineAT?.result ?? attack.at
                 choiceButton(
                     title: "\(mount.name): \(attack.name)",
-                    subtitle: "AT \(attack.at) · TP \(attack.damage)",
-                    icon: "pawprint.fill"
+                    subtitle: "AT \(at) · TP \(attack.damage)",
+                    icon: "pawprint.fill",
+                    disabled: blocked
                 ) {
                     step = .execution(
                         .angriff,
                         name: "\(mount.name): \(attack.name)",
-                        attributeValue: attack.at,
+                        attributeValue: at,
                         damageFormula: attack.damage,
-                        note: nil,
+                        note: MountValues.schmerzNote(engineAT),
                         modifierLines: nil,
                         followUp: mightyBlowFollowUp(mount: mount)
                     )
@@ -210,10 +215,21 @@ struct CombatAttackChoiceView: View {
             }
 
             // Niederreiten
-            niederreitenButton(mount: mount)
+            niederreitenButton(mount: mount, values: values, blocked: blocked)
 
             // Sturmangriff zu Pferd (requires Berittener Kampf)
-            sturmangriffZuPferdButton(mount: mount)
+            sturmangriffZuPferdButton(mount: mount, blocked: blocked)
+
+            if blocked {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text(String(format: L("mount.blocked.handlungsunfaehig"), mount.name))
+                }
+                .font(.dsaBody(.caption2))
+                .foregroundStyle(combatAccent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("combat.mount.blockedReason")
+            }
 
             // Mount special skills note
             if !mount.specialSkills.isEmpty {
@@ -225,22 +241,24 @@ struct CombatAttackChoiceView: View {
         }
     }
 
-    private func niederreitenButton(mount: Pet) -> some View {
-        let niederreitenAT = mount.attacks.first?.at ?? 0
+    private func niederreitenButton(mount: Pet, values: MountValues?, blocked: Bool) -> some View {
         let niederreitenAttack = mount.attacks.first { $0.name == "Niederreiten" }
+        let engineAT = values?.at(with: "Niederreiten")
+        let niederreitenAT = engineAT?.result ?? niederreitenAttack?.at ?? mount.attacks.first?.at ?? 0
         let niederreitenDamage = niederreitenAttack?.damage ?? mount.damage
 
         return choiceButton(
             title: L("niederreiten"),
             subtitle: "AT \(niederreitenAT) · TP \(niederreitenDamage)",
-            icon: "figure.equestrian.sports"
+            icon: "figure.equestrian.sports",
+            disabled: blocked
         ) {
             let successStep = CombatStep.execution(
                 .angriff,
                 name: "\(mount.name): \(L("niederreiten"))",
                 attributeValue: niederreitenAT,
                 damageFormula: niederreitenDamage,
-                note: L("niederreiten.info"),
+                note: [L("niederreiten.info"), MountValues.schmerzNote(engineAT)].compactMap { $0 }.joined(separator: "\n"),
                 modifierLines: nil,
                 followUp: mightyBlowFollowUp(mount: mount)
             )
@@ -257,14 +275,15 @@ struct CombatAttackChoiceView: View {
     }
 
     @ViewBuilder
-    private func sturmangriffZuPferdButton(mount: Pet) -> some View {
+    private func sturmangriffZuPferdButton(mount: Pet, blocked: Bool) -> some View {
         if hero.hasBerittenerKampf, let w = hero.selectedWeapon {
-            let damageBonus = DamageModifiers.sturmangriffLine(hero: hero)?.value ?? 0
-            let bonusLabel = damageBonus >= 0 ? "+\(damageBonus)" : "\(damageBonus)"
+            // No line (e.g. the rules are not loaded): no bonus label, not a "+0" that looks applied (ADR-0018).
+            let bonusLabel = DamageModifiers.sturmangriffLine(hero: hero).map { $0.value >= 0 ? " +\($0.value)" : " \($0.value)" } ?? ""
             choiceButton(
                 title: L("sturmangriffPferd"),
-                subtitle: "\(w.name) · AT \(rollAT(w)) · TP \(w.damage) \(bonusLabel)",
-                icon: "bolt.fill"
+                subtitle: "\(w.name) · AT \(rollAT(w)) · TP \(w.damage)\(bonusLabel)",
+                icon: "bolt.fill",
+                disabled: blocked
             ) {
                 let successStep = CombatStep.announcement(
                     .angriff,
@@ -280,7 +299,7 @@ struct CombatAttackChoiceView: View {
         }
     }
 
-    private func choiceButton(title: String, subtitle: String?, icon: String, action: @escaping () -> Void) -> some View {
+    private func choiceButton(title: String, subtitle: String?, icon: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -307,6 +326,8 @@ struct CombatAttackChoiceView: View {
             .dsaBox(.raised)
         }
         .buttonStyle(.dsaMotion)
+        .disabled(disabled)
+        .opacity(disabled ? 0.45 : 1)
     }
 }
 
