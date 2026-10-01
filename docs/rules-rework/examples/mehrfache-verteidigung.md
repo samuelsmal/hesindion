@@ -56,10 +56,8 @@ The rules as draft YAML: [`mehrfache-verteidigung`](../../../specs/rules/core/me
 
 Where the app is wrong, independent of the open rulings:
 
-- **Parries and dodges are counted apart** (`CombatSituation.defensesSoFar`, fed by
-  `CombatView`'s `parriesThisRound` / `dodgesThisRound`). MV4 carries the penalty across every
-  kind: a dodge after a parry is −3, not 0 (V4, V5, V7). The catalog note on
-  `GRW_mehrfacheVerteidigung` states the per-kind counting as intended.
+- ~~**Parries and dodges are counted apart**~~ — fixed in issue #45: `CombatSituation` has one
+  counter, `defensesThisRound`, for every kind, so a dodge after a parry is −3 (V4, V5, V7).
 - **A defence at 0 or below is never blocked** (`CombatRootView.defenseBlocked`); MV3 takes that
   kind away (V9). The value is the one the defence would be rolled against, after every modifier
   (decided ruling `zero-value`), so the Schip +4 keeps it alive (V10).

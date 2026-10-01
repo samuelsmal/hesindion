@@ -482,8 +482,7 @@ enum DSAStrings {
         "flucht.gsLiegend":             "GS 1 — %@",
 
         // Multiple Defenses
-        "defense.nthParry":             "%d. parry \u{00B7} %d",
-        "defense.nthDodge":             "%d. dodge \u{00B7} %d",
+        "defense.nth":                  "%d. defense \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Free Strike",
@@ -1335,8 +1334,7 @@ enum DSAStrings {
         "flucht.gsLiegend":             "GS 1 — %@",
 
         // Multiple Defenses
-        "defense.nthParry":             "%d. Parade \u{00B7} %d",
-        "defense.nthDodge":             "%d. Ausweichen \u{00B7} %d",
+        "defense.nth":                  "%d. Verteidigung \u{00B7} %d",
 
         // Passierschlag
         "passierschlag":                "Passierschlag",

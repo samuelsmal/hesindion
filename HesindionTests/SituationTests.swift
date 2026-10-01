@@ -49,14 +49,14 @@ final class SituationTests: XCTestCase {
         }
     }
 
-    func testDefencesThisRoundFollowTheDomain() {
+    /// Parries and dodges share one count (mehrfache-verteidigung.MV4, issue #45).
+    func testDefencesThisRoundIsTheSameForAParryAndADodge() {
         var s = Situation(hero: hero, domain: .meleeParry)
-        s.round.parriesThisRound = 2
-        s.round.dodgesThisRound = 1
+        s.round.defensesThisRound = 2
         XCTAssertEqual(s.defencesThisRound, 2)
         var dodge = Situation(hero: hero, domain: .meleeDodge)
         dodge.round = s.round
-        XCTAssertEqual(dodge.defencesThisRound, 1)
+        XCTAssertEqual(dodge.defencesThisRound, 2)
     }
 
     // MARK: - OpponentProfile: the old flags are the new facts

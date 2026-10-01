@@ -16,14 +16,14 @@ struct CombatSituation: Equatable {
     var dualAttackActive: Bool = false
     var beengteUmgebung: Bool = false
     var twoHandedGrip: Bool = false
-    /// Parries already made this round, and dodges already made this round —
-    /// **counted apart**. Mehrfache Verteidigung is per defence type: having
-    /// parried twice does not make the round's first dodge any harder.
+    /// Defences already made this round, parries and dodges **together**:
+    /// "Die Erschwernisse von vorherigen Verteidigungen in einer Kampfrunde
+    /// übertragen sich auf alle Verteidigungsarten" (mehrfache-verteidigung.MV4,
+    /// issue #45). A dodge after a parry is the second defence.
     ///
-    /// Each counts the defences *before* the one being set up, so the first of
-    /// either kind is unmodified.
-    var parriesThisRound: Int = 0
-    var dodgesThisRound: Int = 0
+    /// It counts the defences *before* the one being set up, so the round's
+    /// first defence is unmodified.
+    var defensesThisRound: Int = 0
     var schipDefenseBoost: Bool = false
     /// The formations the hero stands in, each with its agreed bonus (issue #44).
     var formations: [FormationKind: FormationBonus] = [:]
@@ -63,11 +63,6 @@ struct CombatSituation: Equatable {
         situation.itemInHand = itemInHand
 
         return ModifierEngine.shared.evaluate(context: situation)
-    }
-
-    /// Defences of this kind already made this round.
-    func defensesSoFar(isAusweichen: Bool) -> Int {
-        isAusweichen ? dodgesThisRound : parriesThisRound
     }
 
     /// The fight-long choices as the catalog names them: rule id → option.

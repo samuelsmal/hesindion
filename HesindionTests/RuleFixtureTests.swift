@@ -40,21 +40,20 @@ final class RuleFixtureTests: XCTestCase {
     private func value(_ ruleId: String, in lines: [ModifierLine]) -> Int? { lines.first { $0.ruleId == ruleId }?.value }
     private func reason(_ ruleId: String, in e: Evaluation) -> NotApplied.Reason? { e.notApplied.first { $0.ruleId == ruleId }?.reason }
 
-    private func defence(_ domain: RuleDomain, parries: Int = 0, dodges: Int = 0) -> Situation {
+    private func defence(_ domain: RuleDomain, made: Int = 0) -> Situation {
         var s = Situation(hero: hero, domain: domain)
-        s.round.parriesThisRound = parries
-        s.round.dodgesThisRound = dodges
+        s.round.defensesThisRound = made
         return s
     }
 
     // MARK: - Mehrfache Verteidigung (GRW)
 
-    func testMehrfacheVerteidigungIsMinusThreePerDefenceOfTheSameKind() {
+    func testMehrfacheVerteidigungIsMinusThreePerDefenceOfAnyKind() {
         XCTAssertNil(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry))))
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, parries: 1))), -3)
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, parries: 3))), -9)
-        XCTAssertNil(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeDodge, parries: 2))), "the first dodge is free however often the hero parried")
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeDodge, dodges: 1))), -3)
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, made: 1))), -3)
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, made: 3))), -9)
+        XCTAssertNil(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeDodge))))
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeDodge, made: 2))), -6, "a dodge after two parries is the third defence (MV4)")
     }
 
     // MARK: - Vinsalt-Stil (SA_923)
@@ -62,16 +61,16 @@ final class RuleFixtureTests: XCTestCase {
     func testVinsaltStilSetsTheStepToTwoWithAFechtwaffeInHand() {
         own("SA_923", "Vinsalt-Stil")
         arm("Rapier", technique: "CT_4", reach: "Mittel")
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, parries: 1))), -2)
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, parries: 2))), -4)
-        XCTAssertTrue(evaluation(defence(.meleeParry, parries: 1)).applied.contains("SA_923"))
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, made: 1))), -2)
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, made: 2))), -4)
+        XCTAssertTrue(evaluation(defence(.meleeParry, made: 1)).applied.contains("SA_923"))
     }
 
     func testVinsaltStilNeedsItsWeaponAndSomethingToModify() {
         own("SA_923", "Vinsalt-Stil")
         arm("Langschwert", technique: "CT_12", reach: "Lang")
-        let sword = evaluation(defence(.meleeParry, parries: 1))
-        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, parries: 1))), -3)
+        let sword = evaluation(defence(.meleeParry, made: 1))
+        XCTAssertEqual(value("GRW_mehrfacheVerteidigung", in: lines(defence(.meleeParry, made: 1))), -3)
         XCTAssertEqual(reason("SA_923", in: sword), .conditionFalse)
         arm("Rapier", technique: "CT_4", reach: "Mittel")
         XCTAssertEqual(reason("SA_923", in: evaluation(defence(.meleeParry))), .modifiedRuleNotInEffect, "no second defence yet")

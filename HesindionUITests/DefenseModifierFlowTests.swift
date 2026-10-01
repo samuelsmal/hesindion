@@ -1,6 +1,7 @@
 import XCTest
 
-/// Mehrfache Verteidigung end to end (issue #20).
+/// Mehrfache Verteidigung end to end (issue #20; parries and dodges share one
+/// count since issue #45).
 ///
 /// The hero is seeded **with a shield**, which is the part that mattered: a
 /// loadout with a shield sends Parieren through the weapon list, and that screen
@@ -36,14 +37,14 @@ final class DefenseModifierFlowTests: XCTestCase {
         let parryButton = app.buttons["combat.parry"]
         XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
         XCTAssertTrue(
-            parryButton.label.contains("2. Parade"),
-            "The Parieren button did not announce the second parry: \(parryButton.label)"
+            parryButton.label.contains("2. Verteidigung"),
+            "The Parieren button did not announce the second defence: \(parryButton.label)"
         )
-        // Parries and dodges are counted apart, so the dodge is still on its
-        // first and says nothing.
-        XCTAssertFalse(
-            app.buttons["combat.dodge"].label.contains("Ausweichen \u{00B7}"),
-            "A parry made the first dodge of the round more difficult"
+        // Parries and dodges share one count, so the dodge is the second
+        // defence too.
+        XCTAssertTrue(
+            app.buttons["combat.dodge"].label.contains("2. Verteidigung"),
+            "The Ausweichen button did not announce the second defence: \(app.buttons["combat.dodge"].label)"
         )
         captureScreenshot(app, named: "24-defense-second-costs")
 
@@ -72,14 +73,14 @@ final class DefenseModifierFlowTests: XCTestCase {
 
         let parryButton = app.buttons["combat.parry"]
         XCTAssertTrue(parryButton.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
-        XCTAssertTrue(parryButton.label.contains("2. Parade"), "Penalty not pending")
+        XCTAssertTrue(parryButton.label.contains("2. Verteidigung"), "Penalty not pending")
 
         let nextRound = app.buttons["combat.nextRound"]
         XCTAssertTrue(nextRound.exists, "No next-round control on the combat root")
         nextRound.tap()
 
         XCTAssertFalse(
-            app.buttons["combat.parry"].label.contains("Parade \u{00B7}"),
+            app.buttons["combat.parry"].label.contains("Verteidigung \u{00B7}"),
             "The new round still carries the last round's defences"
         )
 
@@ -88,6 +89,29 @@ final class DefenseModifierFlowTests: XCTestCase {
             app.staticTexts["Mehrfache Verteidigung"].exists,
             "The first parry of the new round was penalised"
         )
+    }
+
+    /// Issue #45: a parry makes the round's next dodge harder. "Die
+    /// Erschwernisse von vorherigen Verteidigungen in einer Kampfrunde
+    /// übertragen sich auf alle Verteidigungsarten" (MV4).
+    @MainActor
+    func testADodgeAfterAParryIsAtMinusThree() {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", diceScript: Self.plainRoll, shield: true)
+
+        parry(app, expectingWeaponList: true)
+        rollAndReturnToRoot(app)
+
+        let dodge = app.buttons["combat.dodge"]
+        XCTAssertTrue(dodge.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        dodge.tap()
+        continueDefense(app)
+
+        let rollBox = app.descendants(matching: .any)["combat.execution.breakdown"]
+        XCTAssertTrue(rollBox.waitForExistence(timeout: UITest.timeout), "No dodge calculation")
+        let row = rollBox.descendants(matching: .any)["combat.breakdown.row.Mehrfache Verteidigung"]
+        XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "The dodge after a parry was not penalised")
+        XCTAssertTrue(row.staticTexts["-3"].exists, "The dodge after a parry should cost 3")
     }
 
     /// A roll far beyond any plausible PA, so the parry fails outright without

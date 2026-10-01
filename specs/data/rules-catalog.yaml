@@ -28,7 +28,7 @@
   reviewed: null
   sources:
     - { kind: book, title: "Regelwerk", page: 232 }
-  note: "−3 per defence already made this round, parries and dodges counted apart (CombatSituation.parriesThisRound / dodgesThisRound). Vinsalt-Stil (SA_923) sets the step to −2. The buttons' preview (CombatSituation.pendingMultipleDefensePenalty) still says −3; step 3 reads it off the evaluation."
+  note: "−3 per defence already made this round, parries and dodges counted together (CombatSituation.defensesThisRound, MV4, issue #45). Vinsalt-Stil (SA_923) sets the step to −2. The buttons' preview (CombatSituation.pendingMultipleDefensePenalty) still says −3; step 3 reads it off the evaluation."
   clauses:
     - kind: passive
       domains: [meleeParry, meleeDodge]

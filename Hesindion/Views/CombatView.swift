@@ -227,11 +227,9 @@ struct CombatView: View {
         )
     }
     @State private var activeManeuver: CombatManeuver = .normal
-    /// Parries and dodges are counted apart: Mehrfache Verteidigung applies per
-    /// defence type, so a round's first dodge is unmodified however often the
-    /// hero has already parried.
-    @State private var parriesThisRound: Int = 0
-    @State private var dodgesThisRound: Int = 0
+    /// Parries and dodges share one count: Mehrfache Verteidigung carries across
+    /// every kind of defence (issue #45), so a dodge after a parry is at −3.
+    @State private var defensesThisRound: Int = 0
     @State private var schipDefenseBoostActive: Bool = false
     @State private var schipIgnoreZustandThisRound: Bool = false
     /// Trefferzone announced for the attack currently in flight. The app has no opponent
@@ -278,8 +276,7 @@ struct CombatView: View {
             dualAttackActive: dualAttackPenaltyActive,
             beengteUmgebung: beengteUmgebungActive,
             twoHandedGrip: twoHandedGripActive,
-            parriesThisRound: parriesThisRound,
-            dodgesThisRound: dodgesThisRound,
+            defensesThisRound: defensesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
             formations: formations,
             water: waterDepth
@@ -352,8 +349,7 @@ struct CombatView: View {
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     beengteUmgebungActive: beengteUmgebungBinding,
-                    parriesThisRound: $parriesThisRound,
-                    dodgesThisRound: $dodgesThisRound,
+                    defensesThisRound: $defensesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
@@ -442,9 +438,7 @@ struct CombatView: View {
                     beengteUmgebungActive: beengteUmgebungActive,
                     step: attackFlowStep,
                     onBack: attackBack(for: action),
-                    onDefenseAttempted: {
-                        if action == .ausweichen { dodgesThisRound += 1 } else { parriesThisRound += 1 }
-                    },
+                    onDefenseAttempted: { defensesThisRound += 1 },
                     onDismiss: onDismiss
                 )
                 .transition(.move(edge: .trailing))
@@ -624,8 +618,7 @@ struct CombatView: View {
                     twoHandedGripActive: $twoHandedGripActive,
                     vorstossActiveThisRound: $vorstossActiveThisRound,
                     beengteUmgebungActive: beengteUmgebungBinding,
-                    parriesThisRound: $parriesThisRound,
-                    dodgesThisRound: $dodgesThisRound,
+                    defensesThisRound: $defensesThisRound,
                     schipDefenseBoostActive: $schipDefenseBoostActive,
                     schipIgnoreZustandThisRound: $schipIgnoreZustandThisRound,
                     mountedActive: $mountedActive,
@@ -730,8 +723,7 @@ struct CombatView: View {
             twoHandedGripActive = false
             vorstossActiveThisRound = false
             activeManeuver = .normal
-            parriesThisRound = 0
-            dodgesThisRound = 0
+            defensesThisRound = 0
             schipDefenseBoostActive = false
             schipIgnoreZustandThisRound = false
             announcedZone = nil

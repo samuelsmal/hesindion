@@ -432,7 +432,6 @@ open ruling are listed in the write-ups, not here.
 | 2, 10 | Sturmangriff (SA_62) is never offered on foot; the app's one Sturmangriff is the mounted order | `CombatManeuver.sturmangriff` | ruling two-sturmangriffe |
 | 2 | The mounted Sturmangriff rounds the mount's GS/2 down | `Hero.sturmangriffDamageBonus` | ruling round-up, ADR-0006 |
 | 2 | The mounted dodge −2 names no rule | `DefenseModifiers.mountedDodgePenalty` (`rules: []`) | page |
-| 3 | Parries and dodges are counted separately for the multiple-defence penalty; the page counts every earlier defence | `CombatSituation.defensesSoFar`, `CombatView` | page |
 | 3 | A defence whose value has dropped to 0 or below is never blocked (the value after every modifier, the Schip +4 included) | `CombatRootView.defenseBlocked` | page; ruling zero-value |
 | 3 | Verteidigungshaltung (SA_65) does not exist | catalog `todo` | page |
 | 3 | The Schip +4 on a defence names no rule | `DefenseModifiers.schipDefenseBoost` (`rules: []`) | page |

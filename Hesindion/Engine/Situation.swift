@@ -188,8 +188,8 @@ struct Situation {
 
     var checkDomain: CheckDomain? { domain.checkDomain }
     var opponent: OpponentProfile { opponents.current }
-    /// Defences of this domain's kind already made this round.
-    var defencesThisRound: Int { round.defensesSoFar(isAusweichen: domain == .meleeDodge) }
+    /// Defences of any kind already made this round.
+    var defencesThisRound: Int { round.defensesThisRound }
 }
 
 extension Situation {

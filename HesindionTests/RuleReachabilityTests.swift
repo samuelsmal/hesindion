@@ -400,8 +400,7 @@ final class RuleReachabilityTests: XCTestCase {
         case .situationBeengt:
             s.round.beengteUmgebung = true
         case .situationDefencesThisRound(let min):
-            s.round.parriesThisRound = min
-            s.round.dodgesThisRound = min
+            s.round.defensesThisRound = min
         case .situationTargetZone(let zones):
             s.targetHitZone = zones.first
         case .situationWater(let depths):

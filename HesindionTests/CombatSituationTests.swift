@@ -43,46 +43,34 @@ final class CombatSituationTests: XCTestCase {
     /// The first defence of a round is unmodified. The count is incremented as a
     /// defence is *rolled*, so while the first one is being set up it is still 0.
     func testFirstDefenceOfTheRoundIsUnpenalised() {
-        let l = lines(CombatSituation(parriesThisRound: 0))
+        let l = lines(CombatSituation(defensesThisRound: 0))
         XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: l))
     }
 
     func testSecondDefenceIsAtMinusThreeAndItIsCumulative() {
-        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 1))), -3)
-        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 2))), -6)
-        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(parriesThisRound: 3))), -9)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 1))), -3)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 2))), -6)
+        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 3))), -9)
     }
 
-    // MARK: - Parade and Ausweichen are counted apart
+    // MARK: - Parade and Ausweichen share one count (issue #45)
 
-    /// Mehrfache Verteidigung is tracked per defence *type*: parries and dodges
-    /// have their own counts, so the round's first dodge is unmodified however
-    /// often the hero has already parried, and the other way round.
-    func testParriesDoNotMakeTheFirstDodgeHarder() {
-        let parriedTwice = CombatSituation(parriesThisRound: 2, dodgesThisRound: 0)
-        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(parriedTwice)), -6,
-                       "the third parry is at -6")
-        XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(parriedTwice, isAusweichen: true)),
-                     "the first dodge of the round is unmodified")
-    }
-
-    func testDodgesDoNotMakeTheFirstParryHarder() {
-        let dodgedTwice = CombatSituation(parriesThisRound: 0, dodgesThisRound: 2)
-        XCTAssertEqual(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(dodgedTwice, isAusweichen: true)), -6)
-        XCTAssertNil(value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(dodgedTwice)))
-    }
-
-    func testEachKindCountsItsOwnDefensesSoFar() {
-        let s = CombatSituation(parriesThisRound: 1, dodgesThisRound: 3)
-        XCTAssertEqual(s.defensesSoFar(isAusweichen: false), 1)
-        XCTAssertEqual(s.defensesSoFar(isAusweichen: true), 3)
-    }
-
-    /// A dodge accumulates the same way a parry does, on its own count.
-    func testTheDodgeAccumulatesOnItsOwnCount() {
+    /// Mehrfache Verteidigung counts every defence of the round, whatever its
+    /// kind: "Die Erschwernisse von vorherigen Verteidigungen in einer
+    /// Kampfrunde übertragen sich auf alle Verteidigungsarten" (MV4).
+    func testAParryMakesTheNextDodgeHarder() {
         XCTAssertEqual(
-            value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(dodgesThisRound: 2), isAusweichen: true)),
-            -6)
+            value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 1), isAusweichen: true)),
+            -3, "a dodge after one parry is the second defence")
+        XCTAssertEqual(
+            value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 1))),
+            -3, "a parry after one parry is the second defence as well")
+    }
+
+    func testADodgeMakesTheNextParryHarder() {
+        XCTAssertEqual(
+            value(ofRule: "GRW_mehrfacheVerteidigung", in: lines(CombatSituation(defensesThisRound: 2))),
+            -6, "a parry after two dodges is the third defence")
     }
 
     /// What the buttons print before you commit to another defence:
@@ -91,8 +79,8 @@ final class CombatSituationTests: XCTestCase {
     /// preview can never disagree with what gets charged.
     func testPendingPenaltyMatchesWhatTheNextDefenceWillCost() {
         XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation())), 0)
-        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(parriesThisRound: 1))), -3)
-        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(parriesThisRound: 2))), -6)
+        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(defensesThisRound: 1))), -3)
+        XCTAssertEqual(CombatRootView.pendingDefensePenalty(in: lines(CombatSituation(defensesThisRound: 2))), -6)
     }
 
     // MARK: - The lines the weapon list used to lose
@@ -103,7 +91,7 @@ final class CombatSituationTests: XCTestCase {
         let situation = CombatSituation(
             dualAttackActive: true,
             twoHandedGrip: true,
-            parriesThisRound: 1,
+            defensesThisRound: 1,
             schipDefenseBoost: true
         )
         let l = lines(situation)

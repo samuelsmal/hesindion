@@ -208,12 +208,11 @@ final class RuleEvaluatorTests: XCTestCase {
                                             [.add(target: .vw, value: -3, per: .defencesThisRound)])])]
         var s = Situation(hero: hero, domain: .meleeParry)
         XCTAssertEqual(reason("GRW_x", in: evaluate(rules, s)), .conditionFalse, "the first parry is unmodified")
-        s.round.parriesThisRound = 2
+        s.round.defensesThisRound = 2
         XCTAssertEqual(line("GRW_x", in: evaluate(rules, s)), -6)
         var dodge = Situation(hero: hero, domain: .meleeDodge)
-        dodge.round.parriesThisRound = 2
-        dodge.round.dodgesThisRound = 1
-        XCTAssertEqual(line("GRW_x", in: evaluate(rules, dodge)), -3, "dodges are counted apart")
+        dodge.round.defensesThisRound = 2
+        XCTAssertEqual(line("GRW_x", in: evaluate(rules, dodge)), -6, "parries and dodges share one count")
     }
 
     func testAFixedTierOfferIgnoresTheOwnedTier() {
@@ -260,7 +259,7 @@ final class RuleEvaluatorTests: XCTestCase {
                                                    [.modifyRule(id: "GRW_x", target: .vw, add: 1, set: nil, multiply: nil)])])
         func parries(_ count: Int) -> Situation {
             var s = Situation(hero: hero, domain: .meleeParry)
-            s.round.parriesThisRound = count
+            s.round.defensesThisRound = count
             return s
         }
         XCTAssertEqual(line("GRW_x", in: evaluate([base, setsTheStep], parries(1))), -2)

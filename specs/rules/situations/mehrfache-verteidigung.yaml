@@ -34,7 +34,7 @@ situations:
     round: { defencesMade: 1 }                  # pa
     expect:
       aw: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }   # MV4 (what round.defencesMade counts) is `none`
-    appToday: 0 — wrong (parries and dodges are counted apart, CombatSituation.defensesSoFar)
+    appToday: same                              # issue #45: one count for parries and dodges
     conflict:
       category: a
       reason: >-
@@ -53,7 +53,7 @@ situations:
     round: { defencesMade: 1 }                  # a dodge against a ranged attack
     expect:
       pa: { total: -3, lines: [{ value: -3, from: mehrfache-verteidigung.MV1 }] }   # MV4 (what round.defencesMade counts) is `none`
-    appToday: 0 — wrong (counted per kind)
+    appToday: same                              # issue #45: one count for parries and dodges
     conflict:
       category: a
       reason: >-
@@ -80,7 +80,7 @@ situations:
     round: { defencesMade: 2 }                  # pa, aw
     expect:
       pa: { total: -4, lines: [{ value: -4, from: mehrfache-verteidigung.MV1, via: [SA_923.VS1], ruling: kampfstil-techniques }] }   # changed by VS1
-    appToday: −2 — wrong (only the one earlier parry is counted, not the dodge)
+    appToday: same                              # issue #45: the dodge counts too
 
   - id: V8
     name: Vinsalt-Stil with a Schwert

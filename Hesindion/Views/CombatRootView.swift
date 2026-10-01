@@ -12,8 +12,7 @@ struct CombatRootView: View {
     @Binding var twoHandedGripActive: Bool
     @Binding var vorstossActiveThisRound: Bool
     @Binding var beengteUmgebungActive: Bool
-    @Binding var parriesThisRound: Int
-    @Binding var dodgesThisRound: Int
+    @Binding var defensesThisRound: Int
     @Binding var schipDefenseBoostActive: Bool
     @Binding var schipIgnoreZustandThisRound: Bool
     @Binding var mountedActive: Bool
@@ -55,8 +54,7 @@ struct CombatRootView: View {
             dualAttackActive: dualAttackPenaltyActive,
             beengteUmgebung: beengteUmgebungActive,
             twoHandedGrip: twoHandedGripActive,
-            parriesThisRound: parriesThisRound,
-            dodgesThisRound: dodgesThisRound,
+            defensesThisRound: defensesThisRound,
             schipDefenseBoost: schipDefenseBoostActive,
             formations: formations,
             water: waterDepth
@@ -109,9 +107,10 @@ struct CombatRootView: View {
         permissionRequest = GMPermissionRequest(perform: perform)
     }
 
-    /// "2. Parade · −3" under the button that charges it, so the cost of
-    /// defending again is known before the next screen. Each button counts its
-    /// own kind: parries and dodges are tracked apart.
+    /// "2. Verteidigung · −3" under the button that charges it, so the cost of
+    /// defending again is known before the next screen. Both buttons show the
+    /// same count: parries and dodges are counted together (issue #45), so a
+    /// dodge after a parry is the second defence, not the first dodge.
     ///
     /// Read off `buildDefenseModifiers(isAusweichen:)` — the same lines the
     /// defence screen hands to the roll (`GRW_mehrfacheVerteidigung`), built
@@ -120,10 +119,10 @@ struct CombatRootView: View {
     /// SA_923) is a `modifyRule` on that same line, so the button can no longer
     /// print a number the roll does not charge.
     private func defenseCostSubtitle(isAusweichen: Bool) -> String? {
-        let made = situation.defensesSoFar(isAusweichen: isAusweichen)
+        let made = situation.defensesThisRound
         guard made > 0 else { return nil }
         return String(
-            format: L(isAusweichen ? "defense.nthDodge" : "defense.nthParry"),
+            format: L("defense.nth"),
             made + 1,
             Self.pendingDefensePenalty(in: buildDefenseModifiers(isAusweichen: isAusweichen))
         )
