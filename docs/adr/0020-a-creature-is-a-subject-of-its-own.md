@@ -22,12 +22,12 @@ A creature is evaluated as a subject of its own, with the same rules the hero is
   the current LE.
 - `Situation(creature:)` states those, plus the sheet fact `subject`, and `COND_6` then applies to
   the creature without change. `SZ3` only applies to the hero (`subject` is the hero); the breed
-  rule (`svellttaler-kaltblut.SZ10`, `elenviner-vollblut.EV10`) supplies the creature's thresholds,
+  rule (`svellttaler-kaltblut.SK10`, `elenviner-vollblut.EV10`) supplies the creature's thresholds,
   scaled to its LE, and `zaehes-tier` shifts the Stufe by one.
 - `Engine.mountFacts(in:)` evaluates the mount's situation and states three facts in the hero's
   situation, owner `derived`: `mount.gs`, `mount.schmerz` (the Stufe the mount has, before Zähes
   Tier) and `mount.handlungsunfaehig`. RK14 (Sturmangriff zu Pferd) reads the current GS from them.
-  Each fact keeps a reference to the mount's breakdown, so a tap shows where it comes from.
+  The breakdowns stay with `MountFacts`/`MountValues` (a `Fact` holds none): the companion sheet's GS, VW and status buttons open them. The Sturmangriff TP line has no tap.
 - The app side is `PetSheetMapping` (the only code that knows `Pet` and `CreatureSheet`) and
   `MountValues`.
 

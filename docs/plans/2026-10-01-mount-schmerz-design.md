@@ -51,7 +51,7 @@ For Kupperus (profile 75 LeP, 137 LeP after Heldenwuchs, Kampftier and 16 bought
 
 ## 4. Rule files
 
-1. **Zähes Tier** gets a rule file under `specs/rules/advantages/` with the page hash, encoded as
+1. **Zähes Tier** gets a rule file under `specs/rules/creatures/zaehes-tier.yaml` (id `zaehes-tier`, kind creature) with the page hash, encoded as
    ADV_49 with `useLevel`: the effects of Stufe − 1, none at Stufe I, Handlungsunfähig still at IV.
 2. **svellttaler-kaltblut.SK10** loses its four `add: { to: "mount.level(rule: COND_6)" }` effects
    (a target nothing reads). It `suppress`es COND_6.SZ3's line and `derive`s `level(rule: COND_6)` for
@@ -81,8 +81,8 @@ For Kupperus (profile 75 LeP, 137 LeP after Heldenwuchs, Kampftier and 16 bought
 4. **The link.** `Engine.mountFacts(in:)` evaluates the mount's situation, then the app states three facts in
    the hero's situation, owner `derived`: `mount.gs` (the mount's `gs` result), `mount.schmerz` (the
    Stufe the mount has, before Zähes Tier) and `mount.handlungsunfaehig`. A stated fact has priority
-   over the breed's `provide mount.gs`, so RK14 reads the current GS. Each fact keeps a reference to
-   the mount's breakdown, for display.
+   over the breed's `provide mount.gs`, so RK14 reads the current GS. The breakdowns stay with
+   `MountFacts`/`MountValues` (a `Fact` holds none), for display.
 
 ### Vocabulary
 
@@ -121,8 +121,8 @@ without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmer
    gives `gs`, `schmerz`, `handlungsunfaehig`, `vw` and `at(with:)`, each with its breakdown.
 3. **Sturmangriff zu Pferd TP.** `DamageModifiers` drops its two Swift lines and reads the RK14 line
    from an engine evaluation of `tp` with `choice.order: sturmangriffZuPferd`, `action.gait: galopp`,
-   `action.attack: hit` and the `mount.*` facts. A tap opens `BreakdownSheet`, which shows the mount's
-   GS breakdown (15 − 2 Schmerz II = 13). `Hero.mountGS`, `sturmangriffHalfMountGS` and
+   `action.attack: hit` and the `mount.*` facts. The TP line has no tap (not implemented): the mount's GS breakdown
+   (15 − 2 Schmerz II = 13) opens from the companion sheet's GS button instead. `Hero.mountGS`, `sturmangriffHalfMountGS` and
    `sturmangriffDamageBonus` go; the button subtitle reads the engine's value.
 4. **The mount's AT** (Tritt, Biss, Niederreiten) comes from `MountValues.at(with:)`, not from
    `PetAttack.at`. The announcement box shows the Schmerz line.
@@ -134,7 +134,8 @@ without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmer
 7. **A mount without a breed rule.** The app uses the base GS and AT and shows the rule as not
    applied: "Schmerz Kupperus: Schwellen unbekannt (kein Bestiarium-Eintrag)".
 8. **Companion sheet** (`HeroDetailView`): GS, VW and the AT of each attack show the engine's results;
-   a tap opens the breakdown.
+   a tap opens the breakdown. The sheet's "AT" is still the export's free-text `pet.attack` (the sheet lists no
+   per-attack AT); the engine's per-attack AT is shown on the combat attack picker.
 9. `FactLabel` gets labels for the three facts. They name the role ("GS Reittier", "Schmerz Reittier", "Reittier handlungsunfähig"), since `FactLabel` has no mount name.
 
 ## 7. Tests
