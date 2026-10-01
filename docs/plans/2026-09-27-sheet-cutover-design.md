@@ -109,6 +109,13 @@ A tap on a value opens a half-height sheet:
 - an *Auslegung* mark on a line resting on a ruling: the ruling id, and a tap shows its answer;
 - a folded "Nicht angewandt" list with each reason.
 
+Issue #51 changed the rows so that a player can read them: a row shows the rule name only, and only
+when the row above has another one; a fact or an Auslegung mark the row above showed is not
+repeated; the mark reads "Auslegung ▸" and a tap shows the answer. A step line's threshold reads
+"Schwelle I: LeP ≤ 89 – erreicht", and a Stufe's result reads "Stufe I (hat II)" (`BreakdownText`).
+The clause ids, the `via` rules and the ruling ids are in a folded "Mehr Infos" list under
+"Nicht angewandt", so every line's origin is still on the screen.
+
 The same view serves the talent check (§6) and, later, the combat screens.
 
 ## 6. Before a check: the reminder ("Vor der Probe")
