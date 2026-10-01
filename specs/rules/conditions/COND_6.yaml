@@ -48,7 +48,8 @@ clauses:
       Lebenspunkte wieder über diese Begrenzungen, verschwindet damit auch die entsprechende
       Stufe Schmerz. Sinkt sie auf 5 oder weniger, erhält er eine weitere Stufe Schmerz.
     effects:
-      - derive:
+      - when: { subject: hero }
+        derive:
           to: "level(rule: COND_6)"
           sum:
             - { of: leMax, above: leCurrent, times: 4, per: leMax, round: down, max: 3 }
@@ -62,6 +63,9 @@ clauses:
         # A `derive` (phase base), so the Stufe the hero has is known before Zäher Hund's
         # `useLevel` (phase level) acts on it. "Steigen die Lebenspunkte wieder über diese
         # Begrenzungen" needs nothing more: the derive follows the current LeP.
+        # Issue #48: the fractions are the hero's ("ein Held"). A creature has its own thresholds
+        # ("Schmerz +1 bei", Aufbau der Kreaturenbeschreibung), which its profile derives
+        # (svellttaler-kaltblut.SK10, elenviner-vollblut.EV10).
 
   - id: SZ4
     text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.
@@ -80,10 +84,13 @@ clauses:
       # `level: [1, 2, 3]`: Stufe I to III (a list is a set of values, not a range; the old
       # `[1, 3]` left Stufe II out, as in COND_1.B3).
       - when: { level: [1, 2, 3] }
-        add: { to: [at, pa, aw, fk, check.modifier, gs], value: -1, per: level }
+        add: { to: [at, pa, aw, fk, check.modifier, gs, vw], value: -1, per: level }
         # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies (`check.modifier`), as
         # COND_2.BT3. Not INI — an INI roll is not a Probe, and unlike Belastung the page does
         # not list INI.
+        # `vw` is a creature's Verteidigung: "Sonstige Erschwernisse, etwa durch einen Zustand
+        # oder Status, senken den VW aber wie üblich" (Aufbau der Kreaturenbeschreibung). The
+        # hero has no `vw`.
       - when: { level: { atLeast: 4 } }
         gain: { rule: STATE_8 }
         ruling: schmerz-iv-check

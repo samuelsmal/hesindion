@@ -73,7 +73,7 @@ public enum Vocabulary {
         "leCurrent", "leMax", "level", "pa", "regeneration.asp",
         "regeneration.kap", "regeneration.le", "rs", "schips", "sp",
         "spell.castingTime", "spell.cost", "spell.costPerInterval", "spell.duration", "spell.range",
-        "tp", "wundschwelle",
+        "tp", "vw", "wundschwelle",
     ]
     public static let targetPrefixes = ["opponent.", "mount.", "ally."]
     public static let facts: [String: Owner] = [
@@ -147,6 +147,9 @@ public enum Vocabulary {
         "loadout.weapon.strung": .loadout,
         "loadout.weapon.technique": .loadout,
         "loadout.weaponHand": .loadout,
+        "mount.gs": .derived,
+        "mount.handlungsunfaehig": .derived,
+        "mount.schmerz": .derived,
         "opponent.has": .gm,
         "option": .sheet,
         "query.result": .derived,
@@ -162,6 +165,7 @@ public enum Vocabulary {
         "round.previousDefenceCrit": .round,
         "rulesets": .gm,
         "species.le": .sheet,
+        "subject": .sheet,
         "technique.leit": .loadout,
     ]
     public static let factFamilies: [String: Owner] = [

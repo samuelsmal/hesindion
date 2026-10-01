@@ -205,4 +205,36 @@ final class ConditionTests: XCTestCase {
         XCTAssertGreaterThan(file.situations.count, 300)
         XCTAssertTrue(file.situations.contains { $0.owned.values.contains { $0.option2 != nil } })
     }
+
+    // Issue #48: COND_6.SZ3's fractions are the hero's ("ein Held"); a creature has its own.
+    func testTheHerosFractionsGiveACreatureNoSchmerz() {
+        let engine = Engine(book: HeroSheetTests.book)
+        let creature = Situation(owned: [:],
+                                 facts: [Fact(name: "subject", value: .string("creature"), owner: .sheet)],
+                                 base: ["leMax": 40], pools: [.le: PoolState(current: 10, max: 40)])
+        XCTAssertEqual(engine.evaluate(Query("level(rule: COND_6)"), in: creature).result ?? 0, 0)
+    }
+
+    func testAnUnstatedSubjectIsTheHero() {
+        let engine = Engine(book: HeroSheetTests.book)
+        let hero = Situation(owned: [:], facts: [], base: ["leMax": 40],
+                             pools: [.le: PoolState(current: 10, max: 40)])
+        XCTAssertEqual(engine.evaluate(Query("level(rule: COND_6)"), in: hero).result, 3)
+    }
+
+    func testSchmerzLowersTheVW() {
+        let engine = Engine(book: HeroSheetTests.book)
+        let s = Situation(owned: [:], facts: [], base: ["leMax": 40, "vw": 14],
+                          pools: [.le: PoolState(current: 20, max: 40)])
+        XCTAssertEqual(engine.evaluate(Query("vw"), in: s).result, 12)
+    }
+
+    func testTheMountFactsAreDerived() {
+        XCTAssertEqual(Vocabulary.owner(ofFact: "mount.gs"), .derived)
+        XCTAssertEqual(Vocabulary.owner(ofFact: "mount.schmerz"), .derived)
+        XCTAssertEqual(Vocabulary.owner(ofFact: "mount.handlungsunfaehig"), .derived)
+        XCTAssertEqual(Vocabulary.owner(ofFact: "mount.iniBase"), .sheet)
+        XCTAssertEqual(Vocabulary.owner(ofFact: "subject"), .sheet)
+        XCTAssertTrue(Vocabulary.targets.contains("vw"))
+    }
 }

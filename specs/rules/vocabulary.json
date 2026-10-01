@@ -451,6 +451,18 @@
       "owner": "loadout",
       "type": "string"
     },
+    "mount.gs": {
+      "owner": "derived",
+      "type": "int"
+    },
+    "mount.handlungsunfaehig": {
+      "owner": "derived",
+      "type": "bool"
+    },
+    "mount.schmerz": {
+      "owner": "derived",
+      "type": "int"
+    },
     "opponent.has": {
       "owner": "gm",
       "type": "ruleId"
@@ -510,6 +522,10 @@
     "species.le": {
       "owner": "sheet",
       "type": "int"
+    },
+    "subject": {
+      "owner": "sheet",
+      "type": "string"
     },
     "technique.leit": {
       "owner": "loadout",
@@ -871,6 +887,9 @@
       "contexts": [
         "with"
       ]
+    },
+    "vw": {
+      "contexts": []
     },
     "wundschwelle": {
       "contexts": []
