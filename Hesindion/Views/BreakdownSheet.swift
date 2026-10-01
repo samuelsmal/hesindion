@@ -10,6 +10,9 @@ struct BreakdownSheet: View {
     let title: String
     let value: SheetValue
     let book: RuleBook
+    /// A sentence above the lines that says what the value is about (issue #51: the mount's LeP
+    /// and how its thresholds count). nil for none.
+    var intro: String? = nil
     var onDismiss: () -> Void
     /// The one Auslegung mark currently expanded to its answer, at most one at a time (a ruling's
     /// qualified id).
@@ -27,9 +30,16 @@ struct BreakdownSheet: View {
             onClose: onDismiss,
             scrolls: true
         ) {
+            if let intro {
+                Text(intro)
+                    .font(.dsaBody(.caption))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("breakdown.intro")
+            }
             CombatBreakdownBox(
                 rows: rows,
-                totalValue: value.result.map(String.init) ?? "–",
+                totalValue: BreakdownText.total(of: value.breakdown),
                 totalSource: title,
                 totalIdentifier: "breakdown.result"
             )
@@ -38,34 +48,19 @@ struct BreakdownSheet: View {
     }
 
     /// One `BreakdownRow` per shown line, in order: the value signed (the base parts too), the
-    /// source `Rule name · clause`, the facts it read and its Auslegung mark (if any) as the
-    /// row's `detail`, tappable to expand the ruling's answer.
+    /// source `Rule name · clause`, and as the row's `detail` what `BreakdownText` says of it — a
+    /// threshold, the facts it read, its Auslegung mark (tappable to expand the ruling's answer).
     private var rows: [BreakdownRow] {
-        value.breakdown.shownLines.enumerated().map { i, line in
+        let details = BreakdownText.details(for: value.breakdown, book: book, openRuling: openRuling)
+        return value.breakdown.shownLines.enumerated().map { i, line in
             var row = BreakdownRow.signed(line.value, origin(line))
-            row.detail = detail(for: line)
+            row.detail = details[i]
             row.identifierOverride = "breakdown.line.\(i)"
             if let ruling = line.ruling {
                 row.onTapDetail = { openRuling = (openRuling == ruling ? nil : ruling) }
             }
             return row
         }
-    }
-
-    /// The facts a line read (`KO 13 · Heldenbogen`) and, when it rests on a ruling, the Auslegung
-    /// mark — expanded to the ruling's decided answer while it is the open one.
-    private func detail(for line: Line) -> String? {
-        var parts = line.facts.map {
-            "\(FactLabel.label($0.name, book: book)) \($0.value.display) · \(L("owner.\($0.owner.rawValue)"))"
-        }
-        if let ruling = line.ruling {
-            var mark = String(format: L("breakdown.auslegung"), ruling)
-            if openRuling == ruling, let answer = book.rulingAnswer(ruling) {
-                mark += ": \(answer)"
-            }
-            parts.append(mark)
-        }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     /// A line's origin, its clause id, and the rules it rests `via` (a useLevel, a replace); a
@@ -108,18 +103,5 @@ struct BreakdownSheet: View {
         .padding(.vertical, 8)
         .dsaRowDivider()
         .accessibilityIdentifier(isLast ? "breakdown.notApplied.lastRow" : "")
-    }
-}
-
-private extension JSONValue {
-    var display: String {
-        switch self {
-        case .int(let i): "\(i)"
-        case .double(let d): "\(d)"
-        case .string(let s): s
-        case .bool(let b): L(b ? "yes" : "no")
-        case .null: "–"
-        default: "…"
-        }
     }
 }

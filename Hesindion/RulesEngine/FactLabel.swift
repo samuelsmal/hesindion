@@ -48,5 +48,6 @@ enum FactLabel {
         "mount.schmerz": "fact.mount.schmerz",
         "mount.handlungsunfaehig": "fact.mount.handlungsunfaehig",
         "subject": "fact.subject",
+        "hero.leCurrent": "fact.hero.leCurrent",
     ]
 }

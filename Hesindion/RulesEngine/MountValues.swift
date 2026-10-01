@@ -45,6 +45,11 @@ final class MountValues {
         sheet.attacks[attack] == nil ? nil : value("at(with: \(attack))")
     }
 
+    /// The sentence above `schmerzValue`'s breakdown: the mount's LeP, and how its thresholds count.
+    func schmerzIntro(name: String) -> String {
+        String(format: L("mount.schmerz.breakdownIntro"), name, sheet.leCurrent, sheet.leMax)
+    }
+
     /// The root's line under the mount's name: its Stufe and current GS, or that its thresholds
     /// are unknown (ADR-0018: a rule that cannot apply says why). nil when nothing is wrong.
     func statusText(name: String) -> String? {

@@ -34,7 +34,7 @@ struct CombatRootView: View {
     @State private var showFormationPicker = false
     @State private var stateDetail: StateDefinition?
     /// The mount's name and Stufe of Schmerz whose breakdown is open (issue #51).
-    @State private var mountSchmerz: (String, SheetValue)?
+    @State private var mountSchmerz: (name: String, value: SheetValue, intro: String)?
     /// The Blutend probe whose modal is up, with the result it has so far.
     @State private var bleedingSession: BleedingProbeSession? = nil
     /// The action a handlungsunfähig hero has reached for, waiting on the
@@ -311,7 +311,9 @@ struct CombatRootView: View {
                         // Issue #51: a tap opens the Stufe's breakdown. Without a breed rule
                         // there is none; the line itself says why.
                         if values.hasBreedRule {
-                            Button { mountSchmerz = (mount.name, values.schmerzValue) } label: { line }
+                            Button {
+                                mountSchmerz = (mount.name, values.schmerzValue, values.schmerzIntro(name: mount.name))
+                            } label: { line }
                                 .buttonStyle(.plain)
                                 .accessibilityIdentifier("combat.mount.schmerz")
                         } else {
@@ -961,8 +963,9 @@ struct CombatRootView: View {
             if let def = stateDetail {
                 StateDetailSheet(hero: hero, def: def) { stateDetail = nil }
             }
-            if let (name, value) = mountSchmerz, let book = RulesEngineStore.shared?.engine.book {
-                BreakdownSheet(title: "Schmerz \(name)", value: value, book: book) { mountSchmerz = nil }
+            if let item = mountSchmerz, let book = RulesEngineStore.shared?.engine.book {
+                BreakdownSheet(title: "Schmerz \(item.name)", value: item.value, book: book,
+                               intro: item.intro) { mountSchmerz = nil }
             }
             if let request = permissionRequest {
                 let spent = request.reason == .actionSpent

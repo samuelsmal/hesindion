@@ -159,6 +159,8 @@ final class SheetBreakdownTests: XCTestCase {
             "The breakdown sheet did not open"
         )
         XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
+        XCTAssertTrue(app.staticTexts["breakdown.intro"].exists, "Nothing says how the thresholds count")
+        XCTAssertEqual(app.staticTexts["breakdown.result"].label, "Stufe II", "The result is not the Stufe")
         XCTAssertTrue(
             app.descendants(matching: .any)["breakdown.line.0"].exists,
             "The breakdown has no lines"

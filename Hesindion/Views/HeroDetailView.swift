@@ -8,6 +8,7 @@ private struct BreakdownItem: Identifiable {
     let id = UUID()
     let title: String
     let value: SheetValue
+    var intro: String? = nil
 }
 
 // MARK: - HeroDetailView
@@ -177,7 +178,7 @@ struct HeroDetailView: View {
             }
 
             if let item = breakdown, let book = RulesEngineStore.shared?.engine.book {
-                BreakdownSheet(title: item.title, value: item.value, book: book) { breakdown = nil }
+                BreakdownSheet(title: item.title, value: item.value, book: book, intro: item.intro) { breakdown = nil }
             }
 
             if showStatePicker {
@@ -1228,7 +1229,8 @@ struct HeroDetailView: View {
                                     // there is none; the line itself says why.
                                     if v.hasBreedRule {
                                         Button {
-                                            breakdown = BreakdownItem(title: "Schmerz \(pet.name)", value: v.schmerzValue)
+                                            breakdown = BreakdownItem(title: "Schmerz \(pet.name)", value: v.schmerzValue,
+                                                                      intro: v.schmerzIntro(name: pet.name))
                                         } label: {
                                             Text(status).font(.dsaBody(.caption2))
                                         }
