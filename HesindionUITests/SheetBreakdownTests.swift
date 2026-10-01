@@ -143,6 +143,46 @@ final class SheetBreakdownTests: XCTestCase {
         )
     }
 
+    /// Issue #51: Kupperus at 30 LeP has Schmerz II (of 75 or 137). A tap on the line under its name at
+    /// the combat root opens the Stufe's breakdown, not the GS one.
+    @MainActor
+    func testTappingTheMountsSchmerzAtTheRootOpensItsBreakdown() throws {
+        continueAfterFailure = false
+        let app = UITest.launch(path: "combat", mounted: true, mountLE: 30)
+
+        let line = app.buttons["combat.mount.schmerz"]
+        XCTAssertTrue(line.waitForExistence(timeout: UITest.timeout), "The mount's Schmerz line is not a button")
+        line.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["breakdown.result"].waitForExistence(timeout: UITest.timeout),
+            "The breakdown sheet did not open"
+        )
+        XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["breakdown.line.0"].exists,
+            "The breakdown has no lines"
+        )
+        captureScreenshot(app, named: "68-mount-schmerz-breakdown")
+    }
+
+    /// Issue #51: the same breakdown from the companion sheet's status line.
+    @MainActor
+    func testTappingTheMountsSchmerzOnTheSheetOpensItsBreakdown() throws {
+        continueAfterFailure = false
+        let app = UITest.launch(mountLE: 30)
+
+        let line = app.buttons["pet.schmerz.Kupperus"]
+        XCTAssertTrue(app.scrollUntilHittable(line), "The mount's Schmerz line is not on the hero sheet")
+        line.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["breakdown.result"].waitForExistence(timeout: UITest.timeout),
+            "The breakdown sheet did not open"
+        )
+        XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
+    }
+
     /// "Vor der Probe" (sheet cut-over design §6): with the seeded hero's armour equipped, a
     /// hindered talent's check shows the reminder row, and "Belastung nicht anwenden" strikes
     /// the line without removing it.

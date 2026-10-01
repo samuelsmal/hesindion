@@ -35,6 +35,9 @@ final class MountValues {
 
     var gs: SheetValue { SheetValue(breakdown: facts.gs) }
     var schmerz: Int { facts.schmerz }
+    /// The Stufe's own breakdown (issue #51): the breed's thresholds, then Zähes Tier's line. Its
+    /// result is the Stufe the mount acts at, not `schmerz`.
+    var schmerzValue: SheetValue { SheetValue(breakdown: facts.schmerzBreakdown) }
     var handlungsunfaehig: Bool { facts.handlungsunfaehig }
     var vw: SheetValue? { sheet.vw == nil ? nil : value("vw") }
 

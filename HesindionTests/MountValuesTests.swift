@@ -74,6 +74,20 @@ final class MountValuesTests: XCTestCase {
         XCTAssertNil(MountValues.schmerzNote(well.at(with: "Tritt")))
     }
 
+    /// Issue #51: the Stufe's own breakdown, for the tap on the status line: the breed's scaled
+    /// thresholds with their Auslegung mark, then Zähes Tier's line; its result is the Stufe acted at.
+    func testTheSchmerzBreakdownShowsTheThresholdsAndZaehesTier() throws {
+        let v = try XCTUnwrap(MountValues.of(kupperus(le: 60)))
+        XCTAssertEqual(v.schmerzValue.result, 1)
+        let lines = v.schmerzValue.breakdown.shownLines
+        let thresholds = lines.filter { $0.origin?.rule == "svellttaler-kaltblut" }
+        XCTAssertEqual(thresholds.reduce(0) { $0 + $1.value }, 2)
+        XCTAssertTrue(thresholds.allSatisfy { $0.ruling == "svellttaler-kaltblut.svellttaler-schmerz-thresholds" })
+        let shift = try XCTUnwrap(lines.first { $0.kind == .levelAs })
+        XCTAssertEqual(shift.origin?.rule, "zaehes-tier")
+        XCTAssertEqual(shift.value, -1)
+    }
+
     func testHealingTheMountLowersTheStufe() throws {
         let pet = kupperus(le: 29)
         XCTAssertEqual(MountValues.of(pet)?.schmerz, 3)

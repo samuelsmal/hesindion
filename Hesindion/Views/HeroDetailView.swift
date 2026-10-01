@@ -1224,13 +1224,20 @@ struct HeroDetailView: View {
                                 .buttonStyle(.plain)
                                 .accessibilityIdentifier("pet.gs.\(pet.name)")
                                 if let status = v.statusText(name: pet.name) {
-                                    Button {
-                                        breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
-                                    } label: {
+                                    // Issue #51: the Stufe's own breakdown. Without a breed rule
+                                    // there is none; the line itself says why.
+                                    if v.hasBreedRule {
+                                        Button {
+                                            breakdown = BreakdownItem(title: "Schmerz \(pet.name)", value: v.schmerzValue)
+                                        } label: {
+                                            Text(status).font(.dsaBody(.caption2))
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityIdentifier("pet.schmerz.\(pet.name)")
+                                    } else {
                                         Text(status).font(.dsaBody(.caption2))
+                                            .accessibilityIdentifier("pet.schmerz.\(pet.name)")
                                     }
-                                    .buttonStyle(.plain)
-                                    .accessibilityIdentifier("pet.schmerz.\(pet.name)")
                                 }
                                 Spacer()
                             }
