@@ -112,6 +112,8 @@ final class TrefferzonenScreenshotTests: XCTestCase {
 
             XCTAssertLessThan(attempt, 5, "Five attack rolls in a row failed to land")
             app.button(containing: "Neue Aktion").tap()
+            // One attack per Kampfrunde (issue #47): the next swing is next round's.
+            app.buttons["combat.nextRound"].tap()
         }
 
         XCTAssertTrue(reminder.exists, "Wound-effect reminder card not shown")

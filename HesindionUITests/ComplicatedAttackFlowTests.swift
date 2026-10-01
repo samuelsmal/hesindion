@@ -236,6 +236,11 @@ final class ComplicatedAttackFlowTests: XCTestCase {
         XCTAssertTrue(app.scrollUntilHittable(newAction), "No way back to the combat root")
         newAction.tap()
 
+        // One attack per Kampfrunde (issue #47): the next one is next round's.
+        let nextRound = app.buttons["combat.nextRound"]
+        XCTAssertTrue(nextRound.waitForExistence(timeout: UITest.timeout), "Combat root not shown")
+        nextRound.tap()
+
         // --- The next announcement knows nothing about anybody.
         goToAnnouncement(app)
 

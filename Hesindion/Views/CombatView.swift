@@ -629,7 +629,7 @@ struct CombatView: View {
                     castingSpell: (spell: spell, startRound: startRound, totalRounds: totalRounds, modifierLines: modifierLines)
                 )
             case .spellExecution(let spell, let modifierLines):
-                CombatSpellExecutionView(hero: hero, spell: spell, modifierLines: modifierLines, step: $step, onDismiss: onDismiss)
+                CombatSpellExecutionView(hero: hero, spell: spell, modifierLines: modifierLines, step: $step, onDismiss: onDismiss, roundNumber: roundNumber)
                     .transition(.move(edge: .trailing))
             }
         }

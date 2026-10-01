@@ -386,6 +386,7 @@ struct CombatSpellExecutionView: View {
     let modifierLines: [ModifierLine]
     @Binding var step: CombatStep
     var onDismiss: () -> Void
+    let roundNumber: Int
 
     private var spellDetail: SpellDetail? {
         RulesDatabase.shared.lookup(id: spell.ruleId)?.spellDetail
@@ -491,7 +492,7 @@ struct CombatSpellExecutionView: View {
                         // screen opened and left again casts nothing.
                         // `Hero.beginOwnAction` guards itself, so the Schip
                         // reroll's second call writes nothing.
-                        hero.beginOwnAction()
+                        hero.beginOwnAction(inRound: roundNumber)
                     },
                     hints: costHints
                 )

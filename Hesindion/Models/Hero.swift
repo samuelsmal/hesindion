@@ -165,6 +165,11 @@ final class Hero {
     /// Zu konzentriert: no defences until the hero's next own action.
     var activeCombatNoDefense: Bool = false
 
+    /// The Kampfrunde whose Aktion the hero has spent — an attack, a shot, a
+    /// spell or a Flucht (issue #47). 0 when none is spent. An absolute round
+    /// number like the clocks above, read through `hasSpentAction(inRound:)`.
+    var activeCombatActionRound: Int = 0
+
     /// Status Blutend: rounds still left on the clock, or `nil` when the status
     /// was never rolled with a known duration ("Blutend" applied without a
     /// probe — `setStateLevel` directly — still costs the SP each round, it
@@ -512,11 +517,23 @@ final class Hero {
         activeCombatStumble = false
     }
 
-    /// The hero's own next action lifts "Zu konzentriert" — the action, again,
-    /// being the roll, not the screen that offers it.
-    func beginOwnAction() {
+    /// The hero's own action, at its roll: it spends the round's one Aktion
+    /// (issue #47) and lifts "Zu konzentriert" — the action, again, being the
+    /// roll, not the screen that offers it.
+    ///
+    /// Guarded like `consumeStumble`: a Schicksalspunkt reroll calls this again
+    /// for the same roll.
+    func beginOwnAction(inRound round: Int) {
+        if activeCombatActionRound != round { activeCombatActionRound = round }
         guard activeCombatNoDefense else { return }
         activeCombatNoDefense = false
+    }
+
+    /// Whether the hero's one Aktion of Kampfrunde `round` is spent.
+    /// "Innerhalb einer Kampfrunde darf jeder Beteiligte eine Aktion,
+    /// Verteidigungen (eine oder mehrere) und eine freie Aktion ausführen."
+    func hasSpentAction(inRound round: Int) -> Bool {
+        activeCombatActionRound > 0 && activeCombatActionRound == round
     }
 
     /// A new Kampfrunde lifts it too.
@@ -539,7 +556,11 @@ final class Hero {
     /// The shift is what the counter lost, so the remaining rounds are preserved;
     /// a clock that had already run out is cleared rather than dragged into the
     /// new count as a negative.
+    ///
+    /// The spent Aktion is not a clock: new initiative is a new order of the
+    /// fight, so the hero has an Aktion again.
     func rebaseCombatClocks(fromRound oldRound: Int, toRound newRound: Int) {
+        activeCombatActionRound = 0
         let shift = oldRound - newRound
         if temporarySchmerzLevels > 0 {
             if temporarySchmerzLastRound < oldRound {
@@ -997,6 +1018,7 @@ final class Hero {
         activeCombatStumble = false
         activeCombatJamUntilRound = 0
         activeCombatNoDefense = false
+        activeCombatActionRound = 0
         bleedingRoundsLeft = nil
     }
 

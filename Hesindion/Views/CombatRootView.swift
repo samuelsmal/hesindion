@@ -41,8 +41,12 @@ struct CombatRootView: View {
     /// One tap on a shut action, kept until the answer comes back.
     private struct GMPermissionRequest: Identifiable {
         let id = UUID()
+        /// The rule that shut it, which picks the question.
+        let reason: Reason
         /// What the button would have done.
         let perform: () -> Void
+
+        enum Reason { case incapacitated, actionSpent }
     }
 
     /// The flags this round is in, as one value — the same one the weapon list
@@ -104,8 +108,29 @@ struct CombatRootView: View {
     /// dialog.
     private func guarded(_ perform: @escaping () -> Void) {
         guard actionsBlocked else { return perform() }
-        permissionRequest = GMPermissionRequest(perform: perform)
+        permissionRequest = GMPermissionRequest(reason: .incapacitated, perform: perform)
     }
+
+    /// One Aktion per Kampfrunde (issue #47): an attack, a shot, a spell or a
+    /// Flucht spends it at the roll, and a defence does not. Some Wesen have
+    /// more than one, and the GM may allow another, so the buttons read as
+    /// shut and ask (`guardedAction`) rather than refuse.
+    private var actionSpent: Bool {
+        hero.hasSpentAction(inRound: roundNumber)
+    }
+
+    /// `guarded`, and then the spent Aktion's own question. The two are
+    /// different rules, so a hero who is both handlungsunfähig and has acted
+    /// is asked both, one after the other.
+    private func guardedAction(_ perform: @escaping () -> Void) {
+        guarded {
+            guard actionSpent else { return perform() }
+            permissionRequest = GMPermissionRequest(reason: .actionSpent, perform: perform)
+        }
+    }
+
+    /// The four actions' look: dark while either rule shuts them.
+    private var actionsShut: Bool { actionsBlocked || actionSpent }
 
     /// "2. Verteidigung · −3" under the button that charges it, so the cost of
     /// defending again is known before the next screen. Both buttons show the
@@ -519,7 +544,7 @@ struct CombatRootView: View {
                     Spacer()
                     if currentRound >= casting.totalRounds {
                         Button(L("continue")) {
-                            guarded {
+                            guardedAction {
                                 step = .spellExecution(spell: casting.spell, modifierLines: casting.modifierLines)
                             }
                         }
@@ -568,7 +593,7 @@ struct CombatRootView: View {
             VStack(spacing: 8) {
                 // Angriff -- primary (filled)
                 Button {
-                  guarded {
+                  guardedAction {
                     let isDualWield = hero.isDualWielding
                     let hasShield = hero.selectedShield != nil
                     let canTwoHand: Bool = {
@@ -598,10 +623,10 @@ struct CombatRootView: View {
                         Text(L("attack"))
                     }
                     .font(.dsaHeading(.title3))
-                    .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : .white)
+                    .foregroundStyle(actionsShut ? Color.dsaDisabledLabel : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(actionsBlocked ? Color.dsaDisabled : combatAccent)
+                    .background(actionsShut ? Color.dsaDisabled : combatAccent)
                     .dsaBox(.flush)
                 }
                 .buttonStyle(.dsaMotion)
@@ -617,10 +642,11 @@ struct CombatRootView: View {
                     // modifier the evaluator can express, so the entry point
                     // itself is shut, same as a Ladehemmung.
                     let underwater = waterDepth == .unterWasser
-                    // Two of the three refuse outright; the status asks first.
-                    let rangedShut = jammed || underwater || actionsBlocked
+                    // Two of the three refuse outright; the status asks first, as a
+                    // spent Aktion does.
+                    let rangedShut = jammed || underwater || actionsShut
                     Button {
-                        guarded { step = .fernkampfSetup }
+                        guardedAction { step = .fernkampfSetup }
                     } label: {
                         VStack(spacing: 2) {
                             HStack(spacing: 6) {
@@ -652,35 +678,35 @@ struct CombatRootView: View {
                 // Zaubern (only if hero has AE)
                 if let ae = hero.derivedValues?.astralenergie, ae.max > 0 {
                     Button {
-                        guarded { step = .spellSelection }
+                        guardedAction { step = .spellSelection }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "wand.and.stars")
                             Text(L("castSpell"))
                         }
                         .font(.dsaHeading(.title3))
-                        .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : Color.groupMagic)
+                        .foregroundStyle(actionsShut ? Color.dsaDisabledLabel : Color.groupMagic)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(actionsBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                        .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : Color.groupMagic)
+                        .background(actionsShut ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                        .dsaBox(.flush, stroke: actionsShut ? Color.dsaBorder : Color.groupMagic)
                     }
                     .buttonStyle(.dsaMotion)
                 }
 
                 // Flucht is an action like any other, and was stranded between
                 // the bookkeeping buttons.
-                Button { guarded { step = .flucht } } label: {
+                Button { guardedAction { step = .flucht } } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "figure.run")
                         Text(L("flucht"))
                     }
                     .font(.dsaHeading(.title3))
-                    .foregroundStyle(actionsBlocked ? Color.dsaDisabledLabel : combatAccent)
+                    .foregroundStyle(actionsShut ? Color.dsaDisabledLabel : combatAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(actionsBlocked ? Color.dsaDisabled : Color(UIColor.systemBackground))
-                    .dsaBox(.flush, stroke: actionsBlocked ? Color.dsaBorder : combatAccent)
+                    .background(actionsShut ? Color.dsaDisabled : Color(UIColor.systemBackground))
+                    .dsaBox(.flush, stroke: actionsShut ? Color.dsaBorder : combatAccent)
                 }
                 .buttonStyle(.dsaMotion)
                 .accessibilityIdentifier("combat.flucht")
@@ -688,6 +714,10 @@ struct CombatRootView: View {
                 if actionsBlocked {
                     defenseBlockedReason(L("incapacitated.noActions"))
                         .accessibilityIdentifier("combat.incapacitated.reason")
+                }
+                if actionSpent {
+                    defenseBlockedReason(String(format: L("action.spent.reason"), roundNumber + 1))
+                        .accessibilityIdentifier("combat.action.spentReason")
                 }
 
 
@@ -913,15 +943,16 @@ struct CombatRootView: View {
                 StateDetailSheet(hero: hero, def: def) { stateDetail = nil }
             }
             if let request = permissionRequest {
-                DSAModal(title: L("incapacitated.confirm.title"), accent: combatAccent) {
-                    Text(L("incapacitated.confirm.message"))
+                let spent = request.reason == .actionSpent
+                DSAModal(title: L(spent ? "action.spent.confirm.title" : "incapacitated.confirm.title"), accent: combatAccent) {
+                    Text(L(spent ? "action.spent.confirm.message" : "incapacitated.confirm.message"))
                         .font(.dsaBody(.subheadline))
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     DSAModalButton(
-                        title: L("incapacitated.confirm.allow"),
+                        title: L(spent ? "action.spent.confirm.allow" : "incapacitated.confirm.allow"),
                         accent: combatAccent,
-                        identifier: "combat.incapacitated.allow"
+                        identifier: spent ? "combat.action.spent.allow" : "combat.incapacitated.allow"
                     ) {
                         let perform = request.perform
                         permissionRequest = nil
@@ -932,7 +963,7 @@ struct CombatRootView: View {
                         title: L("cancel"),
                         accent: combatAccent,
                         filled: false,
-                        identifier: "combat.incapacitated.cancel"
+                        identifier: spent ? "combat.action.spent.cancel" : "combat.incapacitated.cancel"
                     ) {
                         permissionRequest = nil
                     }

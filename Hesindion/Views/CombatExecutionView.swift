@@ -740,7 +740,7 @@ struct CombatExecutionView: View {
         guard !hasConsumedFumbleEffects else { return }
         hasConsumedFumbleEffects = true
         hero.consumeStumble()
-        if action == .angriff { hero.beginOwnAction() }
+        if action == .angriff { hero.beginOwnAction(inRound: roundNumber) }
     }
 
     private func logRollIfNeeded() {

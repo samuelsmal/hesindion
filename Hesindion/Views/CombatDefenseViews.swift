@@ -1540,6 +1540,9 @@ struct CombatFluchtView: View {
                     },
                     onRolled: { succeeded in
                         outcome = succeeded ? .success : .failure
+                        // Flucht is a movement, and a movement is the round's
+                        // Aktion (issue #47). Spent at the roll, as an attack is.
+                        hero.beginOwnAction(inRound: roundNumber)
                     },
                     initialModifier: -opponentCount,
                     accent: combatAccent

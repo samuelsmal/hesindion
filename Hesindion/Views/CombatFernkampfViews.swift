@@ -877,7 +877,7 @@ struct CombatFernkampfExecutionView: View {
         guard !hasConsumedFumbleEffects else { return }
         hasConsumedFumbleEffects = true
         hero.consumeStumble()
-        hero.beginOwnAction()
+        hero.beginOwnAction(inRound: roundNumber)
     }
 
     // MARK: - Logging

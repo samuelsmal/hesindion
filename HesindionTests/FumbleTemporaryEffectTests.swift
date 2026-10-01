@@ -204,7 +204,7 @@ final class FumbleTemporaryEffectTests: XCTestCase {
 
     func testZuKonzentriertLastsUntilTheNextOwnActionAndIsClearedWithTheSession() {
         hero.activeCombatNoDefense = true
-        hero.beginOwnAction()
+        hero.beginOwnAction(inRound: 1)
         XCTAssertFalse(hero.activeCombatNoDefense)
 
         hero.activeCombatNoDefense = true
