@@ -1,11 +1,42 @@
 import SwiftUI
 import SwiftData
 
+/// What a delete is about, once asked for and before it is confirmed. A combat
+/// carries the entries it wrote, gathered when the button is pressed, so the
+/// confirmation can say how many go and the delete cannot drift from what was shown.
+///
+/// It lives outside the panel because the confirmation does: a modal drawn inside
+/// the log panel is bounded by it, and in landscape that is a third of the screen
+/// — the panel wraps the title over three lines and stacks the buttons in a
+/// column. `SplitContentLayout` owns the state and draws the modal over the whole
+/// layout, which is where every other modal in the app sits (see `HeroDetailView`).
+enum LogDeletion {
+    case entry(LogEntry)
+    case combat(id: UUID, entries: [LogEntry])
+
+    var entries: [LogEntry] {
+        switch self {
+        case .entry(let entry): [entry]
+        case .combat(_, let entries): entries
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .entry:
+            "Eintrag löschen?"
+        case .combat(_, let entries):
+            "Kampf löschen? (\(entries.count) \(entries.count == 1 ? "Eintrag" : "Einträge"))"
+        }
+    }
+}
+
 struct LogPanelView: View {
     @Bindable var hero: Hero
-    @Environment(\.modelContext) private var modelContext
+    /// Set by the trash buttons; the confirmation and the delete itself belong to
+    /// the layout above, so the modal is not boxed into the panel's width.
+    @Binding var pendingDeletion: LogDeletion?
 
-    @State private var entryToDelete: LogEntry?
     @State private var collapsedCombats: Set<UUID> = []
 
     private var sortedEntries: [LogEntry] {
@@ -15,7 +46,7 @@ struct LogPanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Protokoll")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .padding(.horizontal, DSALayout.contentPadding)
                 .padding(.vertical, DSALayout.headerVerticalPadding)
 
@@ -31,28 +62,8 @@ struct LogPanelView: View {
         }
         .overlay(alignment: .leading) {
             Rectangle()
-                .frame(width: DSALayout.primaryBorder)
+                .frame(width: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
-        }
-        .confirmationDialog(
-            "Eintrag löschen?",
-            isPresented: Binding(
-                get: { entryToDelete != nil },
-                set: { if !$0 { entryToDelete = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Löschen", role: .destructive) {
-                if let entry = entryToDelete {
-                    deleteEntry(entry)
-                }
-                entryToDelete = nil
-            }
-            Button("Abbrechen", role: .cancel) {
-                entryToDelete = nil
-            }
-        } message: {
-            Text("Die Auswirkung wird rückgängig gemacht.")
         }
     }
 
@@ -74,7 +85,7 @@ struct LogPanelView: View {
                             Button(role: .destructive) {
                                 let captured = entry
                                 Task { @MainActor in
-                                    entryToDelete = captured
+                                    pendingDeletion = .entry(captured)
                                 }
                             } label: {
                                 Label("Löschen", systemImage: "trash")
@@ -93,16 +104,16 @@ struct LogPanelView: View {
     private func sessionHeaderRow(date: Date, rate: Double?, talentCount: Int) -> some View {
         HStack(spacing: 6) {
             Text("SITZUNG")
-                .font(.system(.caption2, weight: .black))
+                .font(.dsaHeading(.caption2))
             Text(date, format: .dateTime.day().month(.abbreviated))
-                .font(.system(.caption, weight: .bold))
+                .font(.dsaBody(.caption))
             Spacer()
             if let rate {
                 Circle()
                     .fill(Color.successRateColor(rate))
                     .frame(width: 8, height: 8)
                 Text("\(Int((rate * 100).rounded()))% (\(talentCount))")
-                    .font(.system(.caption, design: .monospaced).weight(.bold))
+                    .font(.dsaMono(.caption, emphasis: true).weight(.bold))
             }
         }
         .foregroundStyle(.secondary)
@@ -118,38 +129,65 @@ struct LogPanelView: View {
 
     // MARK: - Combat Header Row
 
+    /// The header carries the delete for the whole combat: its rows can be
+    /// collapsed, and a collapsed combat has nothing left to swipe, so deleting a
+    /// finished fight had no entry point at all (issue #13). The trash is a plain
+    /// visible button rather than a swipe for the same reason.
     private func combatHeaderRow(combatId: UUID, totalRounds: Int, totalLP: Int) -> some View {
         let isCollapsed = collapsedCombats.contains(combatId)
         let lpString = totalLP >= 0 ? "+\(totalLP)" : "\(totalLP)"
 
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                if isCollapsed {
-                    collapsedCombats.remove(combatId)
-                } else {
-                    collapsedCombats.insert(combatId)
+        return HStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    if isCollapsed {
+                        collapsedCombats.remove(combatId)
+                    } else {
+                        collapsedCombats.insert(combatId)
+                    }
                 }
+            } label: {
+                HStack {
+                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "bolt.fill")
+                        .foregroundStyle(Color.groupCombat)
+                    Text("Kampf — \(totalRounds) Runden, \(lpString) LP")
+                        .font(.dsaBody(.subheadline))
+                    Spacer()
+                }
+                .contentShape(Rectangle())
             }
-        } label: {
-            HStack {
-                Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+            .buttonStyle(.dsaMotion)
+
+            Button {
+                pendingDeletion = .combat(id: combatId, entries: entries(ofCombat: combatId))
+            } label: {
+                Image(systemName: "trash")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                Image(systemName: "bolt.fill")
                     .foregroundStyle(Color.groupCombat)
-                Text("Kampf — \(totalRounds) Runden, \(lpString) LP")
-                    .font(.system(.subheadline, weight: .bold))
-                Spacer()
+                    .padding(.leading, 10)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel("Kampf löschen")
+            .accessibilityIdentifier("log.deleteCombat")
         }
-        .buttonStyle(.plain)
         .padding(.horizontal, DSALayout.contentPadding)
         .padding(.vertical, 8)
     }
 
+    private func entries(ofCombat combatId: UUID) -> [LogEntry] {
+        LogEntry.entries(ofCombat: combatId, in: sortedEntries)
+    }
+
     // MARK: - Entry Row
 
+    /// The trailing trash is the same affordance the combat header has. The swipe
+    /// stays, but it was the only way in, and in a narrow side panel it is easy to
+    /// miss and easy to lose to the panel's own drag (issue #13).
     private func entryRow(_ entry: LogEntry, indented: Bool = false) -> some View {
         HStack(spacing: 8) {
             Image(systemName: iconName(for: entry.kind))
@@ -157,14 +195,28 @@ struct LogPanelView: View {
                 .frame(width: 20)
 
             Text(entryDescription(entry))
-                .font(.system(.subheadline))
+                .font(.dsaBody(.subheadline))
                 .lineLimit(1)
 
             Spacer()
 
             Text(entry.timestamp, style: .time)
-                .font(.system(.caption))
+                .font(.dsaBody(.caption))
                 .foregroundStyle(.secondary)
+
+            Button {
+                pendingDeletion = .entry(entry)
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 8)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel("Eintrag löschen")
+            .accessibilityIdentifier("log.deleteEntry")
         }
         .padding(.horizontal, DSALayout.contentPadding)
         .padding(.leading, indented ? 16 : 0)
@@ -293,6 +345,9 @@ struct LogPanelView: View {
             }
             let sp = p.damageTaken ?? 0
             return "Patzer — \(sp) SP"
+        case .criticalSuccess:
+            let result = p.criticalTableResult ?? p.outcome ?? ""
+            return result.isEmpty ? "Kritischer Erfolg" : "Kritischer Erfolg: \(result)"
         case .schipUsed:
             let action = p.schipAction ?? ""
             switch action {
@@ -311,6 +366,8 @@ struct LogPanelView: View {
         case .flucht:
             let success = p.outcome == "success" ? "gelungen" : "misslungen"
             return "Flucht — \(success)"
+        case .bleeding:
+            return L("bleeding.log")
         case .opponentDefense:
             switch p.outcome {
             case "parried": return "\(weapon) — Gegner pariert"
@@ -419,10 +476,4 @@ struct LogPanelView: View {
         }
     }
 
-    // MARK: - Deletion
-
-    private func deleteEntry(_ entry: LogEntry) {
-        entry.reversible()?.reverse(on: hero)
-        modelContext.delete(entry)
-    }
 }

@@ -1,0 +1,241 @@
+# Example 22 (probe) — Fertigkeitsproben, Begabung, Fertigkeitsspezialisierung. Same conventions
+# as belastung.yaml. DRAFT FORMAT — see ../README.md.
+#
+# A generic hero, not Boronmir:
+#   KL 12, IN 14, GE 12, KO 13, KK 12
+#   Sinnesschärfe (TAL_10, KL/IN/IN → 12/14/14) FW 8
+#     ADV_4 Begabung, sid TAL_10
+#     SA_9 Fertigkeitsspezialisierung, sid TAL_10, sid2 2 (Suchen)
+#   Schwimmen (TAL_7, GE/KO/KK → 12/13/12) FW 4
+# `rolls` are the three W20 in attribute order. A check expectation gives
+#   eew:  the effective attributes (fertigkeitsproben.FM1)
+#   fw:   the pool, with its lines (SA_9.FS1 adds here, not to eew)
+#   spent: points spent per die (FP3); fp: what is left; qs: from the table (QS1)
+#   dice: when a die was rerolled, both rolls and which one counts (ADV_4.B2)
+#
+# Re-keyed under spec §10.1 (plan Task 13); no expected value changed:
+#   `check: { talent, application }` (input)  → `choose: { check.kind: talent, check.talent: TAL_…,
+#                                                 check.application }`
+#   `talents: { Sinnesschärfe, Schwimmen }`     → `talents: { TAL_10, TAL_7 }` (the facts `fw.TAL_…`)
+#   `SA_9: [{ sid, sid2 }]`                     → `SA_9: { sid, sid2 }` (the one instance)
+#   `gm: { modifier }`                          → `gm: { gmFact.checkModifier }` (fertigkeitsproben.FM2)
+#   `eew`                                       → the query `check.attribute` (`values`, one per
+#                                                 Teilprobe, and its `lines`; `legal`)
+#   `fw`                                        → the query `check.fw(talent: TAL_…)`
+#   `fp` / `qs` with a `from` or `lines`        → the queries `check.fp` / `check.qs` (`total`,
+#                                                 `lines`); a plain `fp: n` / `qs: n` stays
+#   a line's `set: 1` (QS2)                     → `value: 1, kind: floored` (QS2 is a floor)
+#   `result`                                    → the situation-level `result` (the result stage)
+#                                                 and `success`
+#   `forbidden: { check: true, because }`       → `check.attribute`'s `legal`
+#   `text`                                      → `texts`
+#   `choose: { reroll: { die }, result }` and   → a `sequence` step: the top-level `rolls` and
+#   `before_reroll`                               `expect` are the state before the reroll (the old
+#                                                 `before_reroll`); the step states the player's die
+#                                                 (`choose: { choice.reroll: ADV_4, choice.rerollDie }`)
+#                                                 and the new face (`rolls: { roll.reroll }`), and
+#                                                 its `expect` is the state after (with `dice`)
+#   `together_with`                             → `togetherWith`
+
+hero:
+  attributes: { KL: 12, IN: 14, GE: 12, KO: 13, KK: 12 }
+  talents: { TAL_10: 8, TAL_7: 4 }                 # Sinnesschärfe, Schwimmen
+  advantages: { ADV_4: { sid: TAL_10 } }
+  abilities: { SA_9: { sid: TAL_10, sid2: 2 } }
+
+situations:
+
+  - id: "22.1"
+    name: Sinnesschärfe (Suchen) — the specialisation applies
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Suchen }
+    rolls: [15, 16, 10]
+    expect:
+      check.attribute: { values: [12, 14, 14] }
+      "check.fw(talent: TAL_10)": { total: 10, lines: [{ value: 8, from: fertigkeitsproben.FP3 }, { value: 2, from: SA_9.FS1, ruling: SA_9.spezialisierung-when }] }
+      spent: [3, 2, 0]
+      fp: 5
+      check.qs: { total: 2, lines: [{ value: 2, from: fertigkeitsproben.QS1 }] }
+      offered: [{ reroll: ADV_4.B1 }]
+    appToday: >
+      FW 8, FP 3, QS 1 — wrong. The check has no application (TalentProbeModal, Situation), no
+      rule adds to the FW, and the sheet shows the SF as "Fertigkeitsspezialisierung: 2" (the raw
+      sid2, OptolithImportService: displaySid = sid2) — read from the code; no sample hero has it
+
+  - id: "22.2"
+    name: Sinnesschärfe (Wahrnehmen) — the specialisation does not apply
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    rolls: [15, 16, 10]
+    expect:
+      "check.fw(talent: TAL_10)": { total: 8 }
+      fp: 3
+      qs: 1
+      notApplied: [{ rule: SA_9, reason: "Spezialisierung Suchen, Probe auf Wahrnehmen (SA_9.FS1)" }]
+    appToday: FP 3, QS 1 — right, but without saying why the specialisation is not there
+
+  - id: "22.3"
+    name: Suchen, the GM makes it 1 harder — +2 on the FW is not a +2 Erleichterung
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Suchen }
+    gm: { gmFact.checkModifier: -1 }
+    rolls: [13, 18, 9]
+    expect:
+      check.attribute: { values: [11, 13, 13], lines: [{ value: -1, from: fertigkeitsproben.FM2, source: gm }] }
+      "check.fw(talent: TAL_10)": { total: 10, lines: [{ value: 2, from: SA_9.FS1 }] }
+      spent: [2, 5, 0]
+      fp: 3
+      qs: 1
+      # Taken as an Erleichterung instead (+2 −1 = +1 on each attribute, FW 8): eew 13/15/15,
+      # spent 0/3/0, FP 5, QS 2 — a different result on the same dice.
+    appToday: >
+      FW 8, FP 1, QS 1 without the SF. A player who adds the +2 by hand can only do it through the
+      modifier steppers (SkillCheckModal.modifiers), which gives QS 2 — wrong
+
+  - id: "22.4"
+    name: Begabung — the 19 is rolled again and counts as 11
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    rolls: [5, 19, 12]
+    expect:                                        # before the reroll (the old `before_reroll`)
+      spent: [0, 5, 0]
+      fp: 3
+      qs: 1
+    sequence:
+      - choose: { choice.reroll: ADV_4, choice.rerollDie: 2 }
+        rolls: { roll.reroll: 11 }
+        expect:
+          dice: [{ die: 2, rolled: [19, 11], counts: 11, from: ADV_4.B2 }]
+          spent: [0, 0, 0]
+          fp: 8
+          qs: 3
+    appToday: >
+      no Begabung at all (catalog ADV_4 todo); QS 1. The only reroll is the Schip, offered on a
+      failure only (SkillCheckModal.isRerollEligible), so nothing is offered on this success
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
+
+  - id: "22.5"
+    name: Begabung — the reroll is worse, the old die stays
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    rolls: [5, 19, 12]
+    sequence:
+      - choose: { choice.reroll: ADV_4, choice.rerollDie: 2 }
+        rolls: { roll.reroll: 20 }
+        expect:
+          dice: [{ die: 2, rolled: [19, 20], counts: 19, from: ADV_4.B2 }]
+          fp: 3
+          qs: 1
+          result: { kind: regular }       # the rerolled 20 does not count, so no second 20
+    appToday: not offered
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
+
+  - id: "22.6"
+    name: Doppel-20 — no Begabung
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    rolls: [20, 20, 7]
+    expect:
+      result: { success: false, kind: patzer, from: fertigkeitsproben.PZ1 }
+      notOffered: [{ reroll: ADV_4.B1, because: ADV_4.B5 }]
+    appToday: Patzer — right; nothing offered, right (for want of the advantage)
+
+  - id: "22.7"
+    name: A failure turned into a success with 0 FP by the Begabung
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    rolls: [18, 19, 17]
+    expect:                                        # before the reroll (the old `before_reroll`)
+      spent: [6, 5, 3]
+      fp: -6
+      success: false
+    sequence:
+      - choose: { choice.reroll: ADV_4, choice.rerollDie: 1 }
+        rolls: { roll.reroll: 3 }
+        expect:
+          dice: [{ die: 1, rolled: [18, 3], counts: 3, from: ADV_4.B1 }]   # the reroll is B1's one effect
+          spent: [0, 5, 3]
+          # FP5's derive shows its terms (as lebensenergie 15.1): FW 8, −8 spent; QS2 floors 0 to 1
+          check.fp: { total: 1, lines: [{ value: 8, from: fertigkeitsproben.FP5 }, { value: -8, from: fertigkeitsproben.FP5 }, { value: 1, kind: floored, from: fertigkeitsproben.QS2 }] }
+          qs: 1
+          # A Schip's Neuer Wurf stays allowed before or after the Begabung (ADV_4.B7, `none`), but
+          # schicksalspunkte's Neuer Wurf is not written, so nothing offers it yet.
+    appToday: >
+      a failure; the Schip reroll is offered (it would be, before or after a Begabung, B7), the
+      Begabung is not
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-fertigkeiten.yaml 22.4, 22.5, 22.7: expect the rerolled die `from:
+        ADV_4.B2` (`dice: [{ die, rolled, counts, from: ADV_4.B2 }]`). Begabung is one
+        `reroll` effect (plan A.4: `reroll: { die: { dice: any }, keep: better, max: 1, per:
+        action }`), on ADV_4.B1, the clause that makes the offer (22.1 expects `offered: [{
+        reroll: ADV_4.B1 }]`, 22.6 `notOffered: [{ reroll: ADV_4.B1 }]`); B2's die choice
+        and `keep: better` are that effect's payload, so B2 is `none`. The rerolled line's
+        origin is ADV_4.B1. One effect cannot come from two clauses, so either these three
+        or 22.1/22.6 disagree with the encoding; the owner decides which clause holds the
+        reroll.
+
+        situations/probe-fertigkeiten.yaml 22.7: expects the Schip reroll offered `from:
+        ADV_4.B7`, `togetherWith: ADV_4.B1`. Real: B7 grants no reroll of its own (it only
+        allows a Schip before or after the Begabung), and the Schip's Neuer Wurf is not
+        written (schicksalspunkte says so in its header), so no effect offers it. Also
+        plan-mandated by A.8 (`allow` → nothing), so B7 is `none`. The entry keeps its own
+        `open:` note.
+
+        situations/probe-fertigkeiten.yaml 22.7 (Task 34: every remaining mismatch; the two
+        entries above name the first two): (a) the dice `from: ADV_4.B2` (the reroll is
+        B1's); (b) the Schip reroll `offered … from: ADV_4.B7`, which nothing offers; (c)
+        that expected offer's `togetherWith: ADV_4.B1` and `open: …` fields, which no offer
+        models and which cannot be compared while the offer itself is missing (reported as
+        unsupported shapes; R69 makes the verdict rest on (a), (b) and (d)); (d) the step's
+        `check.fp` line `{ value: 0, from: fertigkeitsproben.FP5 }`. FP5 (Kodex des
+        Schwertes p. 15, "Hast du Punkte übrig …") is the derive `check.fp = check.fw −
+        check.spent`, and the engine shows a derive's `sum` terms as the base's parts: FW 8
+        (via FP3) and −8 (spent 0 + 5 + 3 after the reroll to 3). Their sum 0 and the step's
+        total 1 (QS2's floor from 0 to 1, which matches) are right; one FP5 line of 0 is the
+        shape lebensenergie 15.2 expects for LE3 (35), which is listed above against 15.1's
+        per-term lines. 22.8's run shows FP5 the same way (4 and −5). The step's `dice`
+        counts, `spent` [0, 5, 3] and `qs` 1 match.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "22.8"
+    name: Schwimmen FW 4, Doppel-1 — the check would have failed
+    choose: { check.kind: talent, check.talent: TAL_7 }
+    rolls: [1, 1, 17]
+    expect:
+      check.attribute: { values: [12, 13, 12] }
+      spent: [0, 0, 5]
+      result: { success: true, kind: kritischerErfolg, from: fertigkeitsproben.KR1 }
+      check.fp: { total: 8, lines: [{ value: 8, from: TAL_7.critical, ruling: fertigkeitsproben.crit-qs }] }   # FP = doppelter FW
+      qs: 3
+      texts: [{ player: "Der Held schwimmt die Strecke in Bestzeit." }]
+    appToday: QS 6 for every Kritischer Erfolg (SkillCheckEngine), and no talent text — wrong under the recommended reading
+
+  - id: "22.9"
+    name: An Erschwernis that takes an attribute to 0
+    choose: { check.kind: talent, check.talent: TAL_10, check.application: Wahrnehmen }
+    gm: { gmFact.checkModifier: -12 }
+    expect:
+      check.attribute: { values: [0, 2, 2], legal: { allowed: false, because: fertigkeitsproben.FP2 } }
+    appToday: >
+      the check can be rolled (SkillCheckModal/SkillCheckEngine have no guard for an effective
+      attribute of 0 or less) — wrong

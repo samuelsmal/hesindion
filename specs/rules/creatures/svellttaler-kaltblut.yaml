@@ -1,0 +1,278 @@
+# DRAFT FORMAT — see ../README.md.
+# A Bestiarium stat block, kind `creature` (the draft's `creatureProfile`). Unlike a rule it is
+# mostly data other rules read: Reiterkampf needs the mount's INI base (RK1), GS (RK14, RK15), its
+# Niederreiten line (RK13) and its LeP (RK10). The stat block's lines are clauses as usual; the
+# values are repeated under `provides:` (the old `profile:`) so a rule can name them
+# (mount.iniBase, mount.gs, the Niederreiten line). A situation owns it as the hero's mount
+# (`hero: { creatures: { svellttaler-kaltblut: true } }`). Whether profiles belong with the rules at all, or with the
+# equipment data (Optolith has no bestiary), is a format question.
+id: svellttaler-kaltblut
+name: Svellttaler Kaltblut
+kind: creature
+source:
+  url: https://dsa.ulisses-regelwiki.de/Best_Svellttaler_Kaltblut.html
+  book: Aventurische Tiergefährten
+  page: 45
+  checked: 2026-09-26
+  hash: sha256:858ea02015802d63ecc71577e03bf6442bc53ac69e3317dc98a6eb79865b2195
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Boronmir's Kupperus (hero file `pets.PET_1`, type "Svellttaler Kaltblut"). The export's numbers
+# match the page. It has no VW (`pa` absent), no RS (`pro` absent), no Größenkategorie and no
+# Sonderregel. Its Vorteile and SF are only in `skills`, free text the player types into
+# Optolith ("Mächtiger Schlag, Ruhiges Temperament" since the 2026-09-24 export); the app reads neither `pa` nor `pro` in any case
+# (OptolithImportService.parsePets, Pet). Its attacks come only from the free-text `notes`,
+# parsed by a regex (OptolithImportService.parsePetAttacks); the structured `attack`/`dp`/`at`/
+# `reach` fields hold one attack (Niederreiten) and `at` is not read.
+provides:
+  attributes: { MU: 12, KL: 10, IN: 12, CH: 12, FF: 8, GE: 15, KO: 24, KK: 25 }
+  lep: 75
+  ini: { base: 14, dice: 1W6 }
+  vw: 7
+  sk: 0
+  zk: 0
+  gs: 12
+  rs: 0
+  be: 0
+  actions: 1
+  size: gross
+  attacks:
+    - { name: Tritt, at: 15, tp: 1W6+7, reach: mittel }
+    - { name: Biss, at: 12, tp: 1W6+2, reach: kurz }
+    - { name: Niederreiten, at: 15, tp: 2W6+6, reach: mittel }
+  advantages: [ruhiges-temperament]
+  abilities: [maechtiger-schlag]
+
+clauses:
+  - id: SK1
+    text: |
+      Größe: 2,40 bis 3,00 Schritt lang; 1,80 bis 2,00 Schritt Schulterhöhe
+      Gewicht: 750 bis 900 Stein
+    none: description; the export's `size` (1.9) is the Schulterhöhe and nothing reads it
+
+  - id: SK2
+    text: |
+      MU 12 KL 10 (t) IN 12 CH 12 FF 8 GE 15 KO 24 KK 25
+      LeP 75 AsP – KaP – INI 14+1W6 VW 7 SK 0 ZK 0 GS 12
+    effects:
+      - provide: { name: mount.iniBase, value: 14 }
+        ruling: mount-profile-data
+      - provide: { name: mount.gs, value: 12 }
+        ruling: mount-profile-data
+      - provide: { name: mount.lep, value: 75 }
+        ruling: mount-profile-data
+      - provide: { name: mount.vw, value: 7 }
+        ruling: mount-profile-data
+      - provide: { name: mount.kk, value: 25 }
+        ruling: mount-profile-data
+        # Read by reiterkampf.RK1 (INI base), RK14 and RK15 (GS), RK10 (LeP), maechtiger-schlag.MS2
+        # (KK). The app has all but VW: Pet.initiative "14+1W6" (the base parsed off the front,
+        # CombatSetupViews.mountBaseINI), Pet.speed, Pet.lifeEnergy, Pet.attributes.kk.
+
+  - id: SK3
+    text: |
+      Tritt: AT 15 TP 1W6+7 RW mittel
+      Biss: AT 12 TP 1W6+2 RW kurz
+      Niederreiten: AT 15 TP 2W6+6 RW mittel
+    effects:
+      - provide:
+          name: mount.attacks
+          value:
+            - { name: Tritt, at: 15, tp: 1W6+7, reach: mittel }
+            - { name: Biss, at: 12, tp: 1W6+2, reach: kurz }
+            - { name: Niederreiten, at: 15, tp: 2W6+6, reach: mittel }
+        ruling: [mount-profile-data, niederreiten-without-profile]
+        # The Niederreiten line is what reiterkampf.RK13 reads ("mit seinem entsprechenden
+        # Attackewert in Niederreiten", "Der Schaden ist der Beschreibung des jeweiligen
+        # Reittiers zu entnehmen").
+      - when: { hero.mounted: true }
+        offer: { choice: order, options: [mountAttack] }
+        ruling: mount-own-attack
+        # An order (reiterkampf.RK12, the old `via: reiterkampf.RK12`): instead of the rider's own
+        # attack, 1 action and a Reiten (Kampfmanöver) check, both RK12's effects on
+        # `choice.order`; no gallop or run-up, unlike RK13.
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        offer: { choice: mountAttack, options: [Tritt, Biss] }
+        ruling: mount-own-attack
+        # Which attack (the old `attacks: [Tritt, Biss]`).
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        check: { of: { attack: choice.mountAttack, with: mount } }
+        ruling: mount-own-attack
+        # The mount attacks with the line picked, AT and TP from `mount.attacks` above.
+        # FORMAT: an attack made by someone other than the hero, on the hero's screen.
+
+  - id: SK4
+    text: |
+      RS/BE: 0/0
+      Aktionen: 1
+    effects:
+      - provide: { name: mount.rs, value: 0, readBy: display }
+        ruling: [mount-profile-data, mount-own-attack]
+      - provide: { name: mount.actions, value: 1, readBy: display }
+        ruling: [mount-profile-data, mount-own-attack]
+        # RS matters for reiterkampf.RK10 (SP = TP − RS; the player enters the SP today,
+        # CombatMountDamageView). Aktionen 1: the horse acts only on the rider's order (RK12,
+        # ruling mount-own-attack).
+
+  - id: SK5
+    text: >
+      Vorteile/Nachteile: Ruhiges Temperament, (empfohlen: Geduldig) / (empfohlen: Einzelgänger)
+      Sonderfertigkeiten: Mächtiger Schlag
+    effects:
+      - require: { that: { hero.has: svellttaler-kaltblut }, enables: true, for: { rule: ruhiges-temperament } }
+        ruling: mount-profile-data
+      - require: { that: { hero.has: svellttaler-kaltblut }, enables: true, for: { rule: maechtiger-schlag } }
+        ruling: mount-profile-data
+        # The old `grants: { rules: [ruhiges-temperament, maechtiger-schlag] }`: the profile
+        # switches on the animal's Vorteil and SF, whose lines then carry `via: [SK5]`.
+        # "empfohlen" ones are suggestions for a player's own animal, not part of the profile.
+        # The export's `skills` is free text, read into Pet.specialSkills. Since the 2026-09-24
+        # export it says "Mächtiger Schlag, Ruhiges Temperament" because the player typed both.
+        # The app finds Mächtiger Schlag by substring (Pet.hasMightyBlow) and
+        # shows the whole string as an ⓘ line on the attack screen. It does not recognise Ruhiges
+        # Temperament, and an export only has it when a player types it in.
+
+  - id: SK6
+    text: >
+      Talente: Einschüchtern 2, Klettern (keine Probe erlaubt; Pferde können nicht klettern),
+      Körperbeherrschung 4, Kraftakt 8, Schwimmen 4, Selbstbeherrschung 4, Sinnesschärfe 4,
+      Verbergen 2, Willenskraft 3
+    none: the animal's own checks; the app shows them as text (Pet.talents) and rolls none
+
+  - id: SK7
+    text: |
+      Anzahl: 1 oder 2W6+2 (Herde)
+      Größenkategorie: groß
+      Typus: Tier, nicht humanoid
+    effects:
+      - provide: { name: mount.size, value: gross }
+      - provide: { name: mount.type, value: [tier, nichtHumanoid] }
+        # groß: an opponent defending against Kupperus's own attacks cannot parry with a weapon,
+        # only with a shield or by dodging (groessenkategorie.GK4; catalog GRW_groessenkategorie,
+        # SizeCategoryRules.allowedDefenses; whether Boronmir riding it counts as groß too is
+        # groessenkategorie.mounted-size). Nicht humanoid: Kupperus
+        # defends at full VW however often it is attacked (the Nahkampf page's "Nichthumanoide
+        # Wesen"), which only the GM needs.
+
+  - id: SK8
+    text: "Beute: 400 Rationen Fleisch, Fell (25 Silbertaler)"
+    none: loot
+
+  - id: SK9
+    text: >
+      Kampfverhalten: Svellttaler Kaltblüter sind besonnen und ergreifen nie panisch die Flucht.
+      Sie warten gewöhnlich geduldig, bis sich eine Chance zur Flucht ergibt, und suchen dann
+      das Weite. In der Zwischenzeit machen sie sich ihre Körpermasse zunutze, indem sie mit
+      Niederreiten-Angriffen eine Schneise bahnen.
+      Flucht: siehe Kampfverhalten
+    none: how the GM plays an unridden animal; shown as text (the export copies it into `notes`)
+
+  - id: SK10
+    text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
+    effects:
+      - when: { mount.leCurrent: { atMost: 49 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 33 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 16 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+      - when: { mount.leCurrent: { atMost: 5 } }
+        add: { to: "mount.level(rule: COND_6)", value: 1 }
+        ruling: svellttaler-schmerz-thresholds
+        # One Stufe Schmerz per threshold crossed (the old `per: threshold_crossed` over
+        # `mount.lep: { at_most: [49, 33, 16, 5] }`): the mount's current LeP at or below each.
+        # The app keeps the mount's LeP (Pet.currentLifeEnergy) but has no Zustände for it, so
+        # nothing applies this today.
+
+  - id: SK11
+    text: |
+      Tierkunde (domestizierte Tiere):
+      QS 1: Svellttaler Kaltblüter können meist auch von Reitanfängern sicher geritten werden, da sie sich auch von unerwarteten Gesten nicht beunruhigen lassen.
+      QS 2: Viele Militärstrategien wurden in direktem Bezug auf das Svellttaler Kaltblut entwickelt, da seine körperliche Ruhe selbst langwierige Manöver zulässt, ohne dass solche Vorhaben je am Tier scheitern würden.
+      QS 3+: Einige Exemplare ziehen überwiegende Einsamkeit dem Stress des Gruppenlebens vor. Was bei anderen Pferden Anlass zur Sorge wäre, ist hier demnach nicht ungewöhnlich.
+      Jagd: –2
+    none: lore for a Tierkunde check and a hunting modifier; neither is a check the hero makes on this animal in combat
+
+  - id: SK12
+    name: Packesel
+    text: "Sonderregeln: Packesel: Svellttaler Kaltblüter können ein Gewicht von bis zu 210 Stein tragen."
+    effects:
+      - set: { to: mount.carryingCapacity, value: 210 }
+        # The app computes every pet's capacity as KK × 2 (Pet.carryingCapacity: 50 for
+        # Kupperus) and adds it to the hero's (Hero.totalCarryingCapacity).
+
+rulings:
+  - id: mount-profile-data
+    status: decided
+    question: >
+      Reiterkampf and the mount's own rules need values the Optolith export does not carry for
+      Kupperus: VW 7, RS 0, Größenkategorie groß, the Vorteil Ruhiges Temperament (+1 on Reiten).
+      Where should the app get a mount's profile from?
+    answer: >
+      A table of Bestiarium profiles keyed by the pet's type, the export's own numbers overriding
+      it; a pet whose type is not in the table falls back to the export, and what the export lacks
+      the player enters on the pet (VW, RS, size, Vorteile).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SK2, SK3, SK4, SK5, SK7, ruhiges-temperament.RT1]
+    notes: >
+      Profile files like this one, looked up by Pet.type ("Svellttaler Kaltblut"); the export's
+      numbers are the player's and win where present (Kupperus's LeP 75, INI, GS, attacks). The
+      notes regex (OptolithImportService.parsePetAttacks) becomes the fallback for a pet with no
+      profile, and such a pet gets editable fields for VW, RS, size and Vorteile; nothing is applied
+      until they are filled in. What reads the values: RK1 (INI base), RK13 (Niederreiten AT and
+      TP), RK14/RK15 (GS), RK10 (LeP; RS for the SP), Ruhiges Temperament (the rider's Reiten
+      checks), Mächtiger Schlag (KK), Größenkategorie (the opponent's defence against the mount's
+      attacks). The app today reads neither the export's `pa` nor `pro` and knows no animal Vorteile.
+      Since the 2026-09-24 export, Kupperus's free-text `skills` names Ruhiges Temperament
+      (typed by the player); the app shows that text but applies nothing from it, and a profile
+      stays the source that does not depend on what a player happened to type.
+
+  - id: mount-own-attack
+    status: decided
+    question: >
+      While Boronmir rides, may Kupperus attack with Tritt or Biss, and what does it cost?
+    answer: >
+      An order like any other (RK12): it takes the rider's action and a Reiten (Kampfmanöver) check.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SK3, SK4, reiterkampf.RK12]
+    notes: >
+      Tritt and Biss go through the Reiten check (CombatMountPreCheckView) like Niederreiten,
+      without the gallop question, and replace Boronmir's own attack; on a failed check the order is
+      not carried out and nothing worse happens (RK12). No Kampftier training is asked. The app
+      today lists them beside the hero's own attack and goes straight to the roll
+      (CombatAttackViews.mountAttackSection).
+
+  - id: niederreiten-without-profile
+    status: decided
+    question: >
+      RK13 lets the mount attack "mit seinem entsprechenden Attackewert in Niederreiten". Can a
+      rider order Niederreiten from a mount whose profile has no Niederreiten line?
+    answer: No Niederreiten line, no Niederreiten order.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SK3, reiterkampf.RK13]
+    notes: >
+      RK13 takes both the AT and the damage from the mount's own Niederreiten values; without them
+      the order has no numbers, so the button is hidden. The horses on the wiki all list one; a
+      pony, a mule or a custom animal may not. The app today always offers the order and, with no
+      line, takes the first parsed attack's AT and the export's `dp`
+      (CombatAttackViews.niederreitenButton). That it takes the first attack even when a
+      Niederreiten line exists is a separate error (kupperus-und-waffen 18.2).
+
+  - id: svellttaler-schmerz-thresholds
+    status: decided
+    question: >
+      The profile gives LeP 75 but Schmerz thresholds of 49, 33, 16 and 5 LeP. Which count?
+    answer: >
+      Let's use the printed thresholds to determine the applied percentages. The total LeP of the
+      mount can change and thus also the Schmerz thresholds
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [SK10]
+    notes: >
+      Answered against the recommendation (b, computed from LeP 75 by the core rule: about 56, 37,
+      18 and 5). The printed 49/33/16 are ¾, ½ and ¼ of 65 LeP, so either they or the LeP are a
+      misprint; the profile's own thresholds win, and a profile carries its thresholds as data. So
+      Kupperus at 55 LeP has no Schmerz yet, where the core rule would give one Stufe. The app keeps
+      the mount's LeP (Pet.currentLifeEnergy, MountHealingSheet) but gives it no Schmerz at all.

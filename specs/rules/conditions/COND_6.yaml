@@ -1,0 +1,160 @@
+# DRAFT FORMAT — see ../README.md.
+id: COND_6
+name: Schmerz
+kind: condition
+levels: 4
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_Schmerz.html
+  book: Regelwerk
+  page: 34
+  checked: 2026-09-26
+  hash: sha256:7d026d682357618f208834341df9cd06100986006b22ca51a12c90a30fde032b
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Where a Stufe comes from: the LP thresholds (SZ3 derives `level(rule: COND_6)` from the current
+# LeP) or a Stufe stated on the sheet (a Patzer, a wound effect, a spell: the hero's
+# `conditions: { COND_6: n }`). Zäher Hund (ADV_49) changes the Stufe whose *effects* apply
+# (`useLevel`), never the Stufe the hero has (ruling ADV_49.zaeher-hund-counts): `level` in the
+# `when`s below is the Stufe acted at, `hero.levelOf.COND_6` the Stufe the hero has.
+
+clauses:
+  - id: SZ1
+    text: >
+      Durch Verletzungen, Gifte, Zauber und andere Unannehmlichkeiten kann ein Held Schmerzen
+      erleiden, die ihn im schlimmsten Falle handlungsunfähig machen.
+    none: introduction
+
+  - id: SZ2
+    text: >
+      Um trotz immenser Schmerzen (Stufe IV) handlungsfähig zu bleiben, ist eine Probe auf
+      Selbstbeherrschung (Handlungsfähigkeit bewahren) nötig.
+    effects:
+      - when: { level: { atLeast: 4 } }
+        check:
+          of: { talent: TAL_8, with: Handlungsfähigkeit bewahren }
+          onSuccess:
+            - gain: { rule: STATE_8, levels: -1, span: action }
+        ruling: schmerz-iv-check
+        # Selbstbeherrschung (TAL_8), rolled before each action the hero wants to take (ruling
+        # schmerz-iv-check; the old `before: action` is the check procedure's, spec §6). The
+        # hero is Handlungsunfähig at Stufe IV (SZ5); a success lifts it for that one action,
+        # taken at −4 (SZ5), a failure leaves it (the old `on_failure: gain`, now SZ5's gain).
+
+  - id: SZ3
+    text: >
+      Durch den Verlust von Lebenspunkten kommt es öfters vor, dass ein Held Stufen dieses
+      Zustands erhält. Sind die Lebenspunkte auf Dreiviertel, die Hälfte oder ein Viertel der
+      Gesamt-Lebensenergie gesunken, erhält der Held jeweils eine Stufe Schmerz. Steigen die
+      Lebenspunkte wieder über diese Begrenzungen, verschwindet damit auch die entsprechende
+      Stufe Schmerz. Sinkt sie auf 5 oder weniger, erhält er eine weitere Stufe Schmerz.
+    effects:
+      - derive:
+          to: "level(rule: COND_6)"
+          sum:
+            - { of: leMax, above: leCurrent, times: 4, per: leMax, round: down, max: 3 }
+            - { of: 6, above: leCurrent, max: 1 }
+        ruling: schmerz-thresholds
+        # One Stufe per threshold reached (the old `sets: … count(lp <= le*3/4, lp <= le/2,
+        # lp <= le/4, lp <= 5)`), as one base line. The first term is ⌊4 × (LE − LeP) / LE⌋,
+        # at most 3: it counts the quarters of LE lost, and LeP ≤ ¾ LE, ≤ ½ LE, ≤ ¼ LE are exactly
+        # LE − LeP ≥ ¼, ½, ¾ LE (compared exactly, ruling schmerz-thresholds: LE 30 gives
+        # Schmerz I at 22 LP, not 23). The second is max(0, 6 − LeP), at most 1: LeP ≤ 5.
+        # A `derive` (phase base), so the Stufe the hero has is known before Zäher Hund's
+        # `useLevel` (phase level) acts on it. "Steigen die Lebenspunkte wieder über diese
+        # Begrenzungen" needs nothing more: the derive follows the current LeP.
+
+  - id: SZ4
+    text: Ist nichts anderes genannt, verliert der Held nach jeweils 4 Stunden eine Stufe des Zustands.
+    unencoded: >
+      the app does not keep time outside combat rounds; shown as text on the Schmerz chip. Would
+      be a `gain: { rule: COND_6, levels: -1 }` every 4 hours, for the Stufen not from the LP
+      thresholds (SZ3 goes with healing, not with time)
+
+  - id: SZ5
+    text: |
+      Stufe I: leichte Schmerzen, alle Proben –1, GS –1
+      Stufe II: ablenkende Schmerzen, alle Proben –2, GS –2
+      Stufe III: starke Schmerzen, alle Proben –3, GS –3
+      Stufe IV: Handlungsunfähig, ansonsten alle Proben –4
+    effects:
+      # `level: [1, 2, 3]`: Stufe I to III (a list is a set of values, not a range; the old
+      # `[1, 3]` left Stufe II out, as in COND_1.B3).
+      - when: { level: [1, 2, 3] }
+        add: { to: [at, pa, aw, fk, check.modifier, gs], value: -1, per: level }
+        # "alle Proben": AT, PA, AW, FK, talents, spells, liturgies (`check.modifier`), as
+        # COND_2.BT3. Not INI — an INI roll is not a Probe, and unlike Belastung the page does
+        # not list INI.
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: STATE_8 }
+        ruling: schmerz-iv-check
+        # Handlungsunfähig (STATE_8) at Stufe IV; the passed Selbstbeherrschung check of SZ2
+        # lifts it for one action (the old `unless: { check_passed: SZ2 }`).
+      - when: { level: { atLeast: 4 }, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
+        add: { to: [at, pa, aw, fk, check.modifier], value: -4 }
+        ruling: schmerz-iv-check
+        # "ansonsten alle Proben –4": with SZ2's check passed (the old `check_passed: SZ2`).
+      - when: { level: { atLeast: 4 } }
+        set: { to: gs, value: 0 }
+        ruling: schmerz-iv-gs
+        # Passed check or not, the hero cannot move at Stufe IV; speaking stays possible.
+        # A value set, not a modifier (like STATE_10's GS 1), so the Zustand cap
+        # (zustaende.Z3) does not reach it.
+      - when: { level: { atLeast: 4 } }
+        cap: { to: gs, min: 0, max: 0 }
+        ruling: schmerz-iv-gs
+        # Task 33: "cannot move" is GS 0 after every other line. A `set` applies before the
+        # phase's `add`s (plan Task 22), so Belastung's GS −3 in Platte would still count
+        # (schmerz S12: GS −3); this bound holds the value at 0 whatever else reaches GS.
+
+rulings:
+  - id: schmerz-thresholds
+    status: decided
+    question: >
+      "Auf Dreiviertel, die Hälfte oder ein Viertel der Gesamt-Lebensenergie gesunken" — is the
+      hero's LP compared with the exact fraction, or is the fraction rounded first (ADR-0006
+      rounds up)?
+    answer: >
+      Exact: Schmerz when LP is at or below the fraction itself.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SZ3]
+    notes: >
+      LE 30: Schmerz I starts at 22 LP (22.5), not 23. Nothing is computed that needs rounding,
+      so ADR-0006 does not reach it. The app already compares this way
+      (Hero.lebenspunkteSchmerzLevel, `current <= maxLP * 3 / 4`, equal to the exact comparison
+      for whole LP).
+
+  - id: schmerz-iv-check
+    status: decided
+    question: >
+      Stufe IV needs a Selbstbeherrschung (Handlungsfähigkeit bewahren) check to stay able to
+      act. When is it rolled, and how long does a success hold?
+    answer: >
+      Before each action the hero wants to take.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SZ2, SZ5]
+    notes: >
+      Answered against the recommendation (once, when Stufe IV is reached). A success holds for
+      that one action, taken at −4; a failure means the hero cannot take it (Handlungsunfähig).
+      The app needs a check prompt before each action of a hero at Schmerz IV. Today it has no
+      such check: the hero is Handlungsunfähig outright (StateCatalog schmerz,
+      handlungsunfaehigAtLevel: 4), and only the Schip "Zustand ignorieren" gives a round back.
+      Moving is not an action this check can buy (ruling schmerz-iv-gs).
+
+  - id: schmerz-iv-gs
+    status: decided
+    question: >
+      A hero who passes the Stufe IV check has "alle Proben –4". The page gives GS −1/−2/−3 for
+      Stufen I–III and no GS for Stufe IV. What is their GS penalty?
+    answer: >
+      The hero cannot move (GS 0), but can still speak.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SZ5]
+    notes: >
+      The owner's own answer, none of the offered options (GS −4, none, GS −3). At Stufe IV the
+      hero's GS is 0 whether or not the Selbstbeherrschung check passed; a passed check buys an
+      action at −4 (schmerz-iv-check), never movement. Speaking is always possible. GS 0 is a
+      value set, not a line to cap, so the Zustand cap (zustaende.cap-scope) does not change it.
+      With Zäher Hund, a passed check makes the hero act as Stufe III, GS 0 included: GS −3
+      (ADV_49.zaeher-hund-iv).
+      The app applies no Schmerz to GS at any Stufe (Hero.effectiveGeschwindigkeit,
+      Hero.totalGsPenalty).

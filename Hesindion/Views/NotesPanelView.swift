@@ -7,7 +7,7 @@ struct NotesPanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Notizen")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .padding(.horizontal, DSALayout.contentPadding)
                 .padding(.vertical, DSALayout.headerVerticalPadding)
 
@@ -27,7 +27,7 @@ struct NotesPanelView: View {
         }
         .overlay(alignment: .leading) {
             Rectangle()
-                .frame(width: DSALayout.primaryBorder)
+                .frame(width: DSALayout.border)
                 .foregroundStyle(Color.dsaBorder)
         }
     }

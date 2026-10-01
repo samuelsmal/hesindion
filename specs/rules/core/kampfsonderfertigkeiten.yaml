@@ -1,0 +1,92 @@
+# DRAFT FORMAT — see ../README.md.
+# The general rule every manoeuvre file leans on: how many Kampfsonderfertigkeiten one action
+# may use. Settles the shared ruling manoeuvre-combination (rulings.yaml).
+id: kampfsonderfertigkeiten
+name: Passive, Basis- und Spezialmanöver
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html
+  book: Regelwerk     # inferred: the page lists no Publikation(en); the text is the Regelwerk's
+                      # "Kampfsonderfertigkeiten" chapter (~p. 246)
+  page: null          # the wiki page gives none
+  checked: 2026-09-26
+  hash: sha256:72b8e8e6d9d30f883ba0088203999b6aaad0c9e1abe9d712d63b616ed2fb7110
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: KS1
+    text: >
+      Um den Kampf mit mehr Alternativen und Details zu versehen, werden sogenannte
+      Kampfsonderfertigkeiten verwendet. Sie sind einzeln erlernbar, solange man die
+      Voraussetzungen erfüllt und die notwendigen AP aufbringt.
+    none: introduction; buying SF is the hero editor's, not a roll
+
+  - id: KS2
+    text: >
+      Passive Kampfsonderfertigkeiten modifizieren ohne aktives Handeln des Kämpfers bestimmte
+      Werte oder bieten andere, passive Erleichterungen. Hat ein Held mehrere passive
+      Kampfsonderfertigkeiten, kann er sie alle gleichzeitig nutzen.
+    effects:
+      - tell: { to: player, text: "passiv — wirkt immer" }
+        # The combat screen lists the hero's passive SF as such, so the player sees they are
+        # already counted and need no choice.
+      # Every passive SF's own lines apply together; none takes a manoeuvre slot. That is the
+      # engine's default for a rule with no `manoeuvre` key (the old `apply: always` had no
+      # effect of its own). The marker is the SF file's top-level `passive: true` (SA_40, SA_41,
+      # SA_43, SA_65, SA_152, SA_173, SA_661, SA_884, maechtiger-schlag); a passive SF is not a
+      # manoeuvre and has no `manoeuvre.kind`.
+
+  - id: KS3
+    text: >
+      Basismanöver sind Sonderfertigkeiten, die einen Angriff oder eine Verteidigung ermöglichen
+      oder modifizieren. Sie gehören oftmals zu den üblichen Tricks, die geübte Kämpfer
+      beherrschen. Ein Kämpfer kann jeweils immer nur ein Basismanöver für seine Handlung wählen.
+    effects:
+      - limit: { per: action, what: { manoeuvre: { kind: basismanoever } }, max: 1 }
+        because: nur ein Basismanöver pro Handlung
+        # Finte and Wuchtschlag, or Unterlaufen and Finte, never on one attack. A second
+        # Basismanöver is not offered once one is chosen.
+
+  - id: KS4
+    text: >
+      Spezialmanöver sind weniger übliche Sonderfertigkeiten, die kompliziertere Handlungen im
+      Kampf ermöglichen. Auch von diesen kann ein Kämpfer für seine Handlung im Kampf jeweils nur
+      eine wählen.
+    effects:
+      - limit: { per: action, what: { manoeuvre: { kind: spezialmanoever } }, max: 1 }
+        because: nur ein Spezialmanöver pro Handlung
+
+  - id: KS5
+    text: >
+      Insgesamt darf er also pro Handlung maximal ein Basismanöver und ein Spezialmanöver
+      kombinieren.
+    none: >
+      the sum of KS3 and KS4, whose two limits (one Basismanöver, one Spezialmanöver per action)
+      are this sentence; each manoeuvre is its own offer (a `choice.<name>` of its SF), so the two
+      pickers need no effect. The exceptions live on the excluding rules as `forbid … together`
+      or `forbid` with their own `because`: SA_62.ST4, SA_172.U3, passierschlag.PS3,
+      reiterkampf.RK3, beidhaendiger-kampf.ZW6. Ruling manoeuvre-combination: the UI shows each
+      manoeuvre's kind (its SF's `manoeuvre.kind`), and an excluded one stays visible, disabled,
+      with that `because` and its source, never silently missing
+    # The old effects: two pickers (an offer), the kind shown on each manoeuvre (a show) and a
+    # message turning another rule's exclusion into "<Manöver A> lässt sich nicht mit
+    # <Manöver B> kombinieren (<Quelle>)" (a forbid + tell). None changed a value or a legality of
+    # its own.
+
+  - id: KS6
+    text: >
+      Ein Held muss die Sonderfertigkeit nur einmal kaufen, danach beherrscht er sie für alle
+      Kampftechniken, für die die Sonderfertigkeit eingesetzt werden kann. Ist eine
+      Sonderfertigkeit mit „alle“ versehen, so ist ihr Einsatz unabhängig von einer bestimmten
+      Kampftechnik.
+    none: >
+      read as a use restriction ("für die die Sonderfertigkeit eingesetzt werden kann"), as the
+      decided shared ruling sf-technique-lists has it: each SF's own list is gated in its file
+      (`require: loadout…technique`, with the ruling); one marked „alle“ is not.
+
+  - id: KS7
+    text: >
+      Kampfsonderfertigkeiten, die nur eingesetzt werden können, wenn du mit einer passenden
+      Fokusregel spielst, sind extra durch ein Fokusregel-Symbol hervorgehoben. Ein BK steht für
+      Bewaffneten Kampfstil, ein WK für Waffenlosen Kampfstil.
+    none: how the wiki marks SF; the Fokusregel switch is trefferzonen's and waffeneigenschaften's

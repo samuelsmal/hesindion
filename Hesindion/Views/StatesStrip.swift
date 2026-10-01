@@ -2,8 +2,9 @@ import SwiftUI
 import SwiftData
 
 /// A wrapping strip of `StateChip`s drawn from `hero.activeStates`, plus implied states
-/// and a trailing "+" chip that opens `StatePickerSheet`. The COMBAT STATUS strip:
-/// compact and glanceable, tap a chip → `StateDetailSheet` (removal happens there via
+/// and a trailing "+" chip. The COMBAT STATUS strip: compact and glanceable. The "+" chip
+/// calls `onAdd` and a tapped chip calls `onSelect`; the parent shows `StatePickerSheet` or
+/// `StateDetailSheet` (removal happens there via
 /// "Entfernen"); derived/implied chips rendered distinct and non-removable. No long-press.
 ///
 /// The hero detail uses swipe-to-remove rows (`StatesSectionView`) instead of this strip.
@@ -12,15 +13,10 @@ struct StatesStrip: View {
     @Bindable var hero: Hero
     /// Background accent for "live" (manually-tracked) chips.
     var accent: Color = .groupCombat
-
-    @State private var showPicker = false
-    @State private var detailState: StateSelection?
-
-    /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
-    private struct StateSelection: Identifiable {
-        let def: StateDefinition
-        var id: String { def.id }
-    }
+    /// The "+" chip. The parent shows `StatePickerSheet` over its whole screen.
+    var onAdd: () -> Void
+    /// A tapped chip. The parent shows `StateDetailSheet` over its whole screen.
+    var onSelect: (StateDefinition) -> Void
 
     /// Implied states (e.g. bewusstlos ⇒ liegend) that aren't already explicitly active,
     /// rendered as non-removable derived-style chips.
@@ -41,7 +37,7 @@ struct StatesStrip: View {
                     level: entry.level,
                     isDerived: derived,
                     accent: accent,
-                    onTap: { detailState = StateSelection(def: entry.def) }
+                    onTap: { onSelect(entry.def) }
                 )
             }
 
@@ -51,42 +47,32 @@ struct StatesStrip: View {
                     level: 1,
                     isDerived: true,
                     accent: accent,
-                    onTap: { detailState = StateSelection(def: def) }
+                    onTap: { onSelect(def) }
                 )
             }
 
             addChip
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .sheet(isPresented: $showPicker) {
-            StatePickerSheet(hero: hero)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
-        .sheet(item: $detailState) { selection in
-            StateDetailSheet(hero: hero, def: selection.def)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
     }
 
     private var addChip: some View {
         Button {
-            showPicker = true
+            onAdd()
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "plus")
-                    .font(.system(.caption, weight: .bold))
+                    .font(.dsaBody(.caption))
                 Text(L("states.add"))
-                    .font(.system(.caption, design: .monospaced, weight: .black))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .fixedSize()
             }
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color(UIColor.secondarySystemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: DSALayout.secondaryBorder))
+            .dsaBox(.flush)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }

@@ -1,0 +1,20 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23 (extra 1): a levelled rule suppressing its own alternative derive.
+id: pl-alt
+name: Wechsel
+kind: condition
+levels: 3
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Stufe nach A.
+    effects:
+      - derive: { to: "level(rule: pl-alt)", sum: [{ of: gmFact.altA }] }
+  - id: A2
+    text: Im Modus B nach B statt nach A.
+    effects:
+      - suppress: { line: { line: pl-alt.A1 } }
+        when: { gmFact.altMode: true }
+      - derive: { to: "level(rule: pl-alt)", sum: [{ of: gmFact.altB }] }
+        when: { gmFact.altMode: true }

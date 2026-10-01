@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25 fix 1: a second condition that gains the same state at Stufe IV (COND_1.B4 and COND_2.BT4).
+id: act-heavy
+name: Beladen
+kind: condition
+levels: 4
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: B4
+    text: Ab Stufe IV handlungsunfähig.
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: act-helpless }

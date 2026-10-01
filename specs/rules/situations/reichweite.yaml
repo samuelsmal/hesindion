@@ -1,0 +1,197 @@
+# Example 5 — Reichweite. Same conventions as belastung.yaml. DRAFT FORMAT — see ../README.md.
+# A line that another rule lowered carries `was:` — the value before — so the breakdown can
+# show "Reichweite −4 → −2 (Unterlaufen I)".
+# The weapons (the old file-level `weapons`), stated in each situation's `loadout` as
+# `weapon`, `weapon.technique` and `reach`:
+#   Dolch    Dolche (CT_3)          kurz
+#   Schwert  Schwerter (CT_12)      mittel
+#   Speer    Stangenwaffen (CT_13)  lang
+#   Hände    Raufen (CT_9)          kurz
+# The opponent's reach is `opponent.reach`. The announced Unterlaufen is `choice.unterlaufen`
+# (the old `manoeuvre: unterlaufen`); "on a miss" is `action.attack: miss`. Whether two
+# manoeuvres combine is the situation's `legal.combinations` (the old `excludes`,
+# `not_combinable`); what the player is told is `texts` (the old `told`).
+
+hero: { values: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8 } }
+
+situations:
+
+  # --- The matrix (reichweite.RW3) ---------------------------------------------------------
+
+  - id: "RW.1"
+    name: Dolch against a Schwert
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: mittel }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
+    appToday: same
+
+  - id: "RW.2"
+    name: Dolch against a Speer
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: lang }
+    expect:
+      at: { total: -4, lines: [{ value: -4, from: reichweite.RW3 }] }
+    appToday: same
+
+  - id: "RW.3"
+    name: Schwert against a Speer
+    loadout: { weapon: Schwert, weapon.technique: CT_12, reach: mittel }
+    opponent: { reach: lang }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
+    appToday: same
+
+  - id: "RW.4"
+    name: Speer against a Dolch — the longer weapon gets nothing
+    loadout: { weapon: Speer, weapon.technique: CT_13, reach: lang }
+    opponent: { reach: kurz }
+    expect:
+      at: { total: 0 }
+    appToday: same
+
+  - id: "RW.5"
+    name: Bare hands against a Schwert
+    loadout: { weapon: Hände, weapon.technique: CT_9, reach: kurz }
+    opponent: { reach: mittel }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] }
+    appToday: same
+
+  - id: "RW.6"
+    name: Parrying with a Dolch against a Speer — reach costs AT only
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: lang }
+    # the old `check: pa` is the query
+    expect:
+      pa: { total: 0 }
+    appToday: same
+
+  # --- Unterlaufen (SA_172) ----------------------------------------------------------------
+
+  - id: "RW.7"
+    name: Dolch against a Speer, Unterlaufen I — one step ignored
+    hero: { abilities: { SA_172: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: lang }
+    choose: { choice.unterlaufen: true, action.attack: miss }
+    expect:
+      offered: [{ choice: unterlaufen, from: SA_172.U2, ruling: sf-technique-lists }]   # Dolche is on U6's list
+      at: { total: -2, lines: [{ value: -2, was: -4, from: reichweite.RW3, via: [SA_172.U1] }] }
+      texts: [{ opponent: passierschlag, from: SA_172.U2 }]      # on the miss (the old `on_miss.tell`)
+    appToday: Unterlaufen is not implemented; AT −4
+
+  - id: "RW.8"
+    name: Dolch against a Speer, Unterlaufen II — both steps ignored
+    hero: { abilities: { SA_172: 2 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: lang }
+    choose: { choice.unterlaufen: true }
+    expect:
+      at: { total: 0, lines: [{ value: 0, was: -4, from: reichweite.RW3, via: [SA_172.U1] }] }
+    appToday: AT −4
+
+  - id: "RW.9"
+    name: Schwert against a Speer, Unterlaufen I
+    hero: { abilities: { SA_172: 1 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12, reach: mittel }
+    opponent: { reach: lang }
+    choose: { choice.unterlaufen: true }
+    expect:
+      at: { total: 0, lines: [{ value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }] }
+    appToday: AT −2
+
+  - id: "RW.10"
+    name: Dolch against a Dolch — nothing to unterlaufen
+    hero: { abilities: { SA_172: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: kurz }
+    expect:
+      notOffered: [{ choice: unterlaufen, because: SA_172.U2 }]
+
+  - id: "RW.11"
+    name: Unterlaufen only for the announced attack
+    hero: { abilities: { SA_172: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: mittel }
+    sequence:
+      - { choose: { choice.unterlaufen: true }, expect: { at: { total: 0 } } }
+      - { choose: { choice.unterlaufen: false }, expect: { at: { total: -2, lines: [{ value: -2, from: reichweite.RW3 }] } } }   # the old `manoeuvre: none`
+
+  - id: "RW.12"
+    name: Unterlaufen against an opponent with Auf Distanz halten
+    hero: { abilities: { SA_172: 2 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: lang, has: SA_152, level.SA_152: 2 }     # the old `abilities: { SA_152: 2 }`
+    choose: { choice.unterlaufen: true }
+    expect:
+      at:
+        total: -2
+        lines:
+          - { value: 0, was: -4, from: reichweite.RW3, via: [SA_172.U1] }
+          - { value: -2, from: SA_152.AD1, ruling: SA_172.auf-distanz-halten }
+    appToday: Unterlaufen and Auf Distanz halten do not exist; AT −4
+
+  # --- Combining (SA_172.U3, SA_173) -------------------------------------------------------
+
+  - id: "RW.13"
+    name: Unterlaufen with Sturmangriff (a Spezialmanöver), without Verbessertes Unterlaufen
+    hero: { abilities: { SA_172: 1, SA_62: 1 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12, reach: mittel }
+    opponent: { reach: lang }
+    expect:
+      legal: { combinations: [{ choices: [unterlaufen, sturmangriff], allowed: false, because: SA_172.U3 }] }
+
+  - id: "RW.14"
+    name: Unterlaufen with Sturmangriff, with Verbessertes Unterlaufen
+    hero: { abilities: { SA_172: 1, SA_173: 1, SA_62: 1 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12, reach: mittel }
+    opponent: { reach: lang }
+    choose: { choice.unterlaufen: true, choice.sturmangriff: true, action.runUp: 4 }
+    expect:
+      at:
+        total: -2
+        lines:
+          - { value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }
+          - { value: -2, from: SA_62.ST4 }
+
+  - id: "RW.15"
+    name: Unterlaufen with Finte — two Basismanöver
+    hero: { abilities: { SA_172: 1, SA_48: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3, reach: kurz }
+    opponent: { reach: mittel }
+    choose: { choice.unterlaufen: true, choice.finte: 1 }
+    expect:
+      legal: { combinations: [{ choices: [unterlaufen, finte], allowed: false, because: kampfsonderfertigkeiten.KS3 }] }
+      # The UI composes the message from the refusal's `because` and source (KS3), e.g. "Unterlaufen
+      # lässt sich nicht mit Finte kombinieren — nur ein Basismanöver pro Handlung"; no rule tells it.
+    conflict:
+      category: a
+      reason: >-
+        situations/finte.yaml 8.7, 8.8, situations/reichweite.yaml RW.15 (Task 31): expect
+        `texts` entries such as "Finte lässt sich nicht mit Wuchtschlag kombinieren — nur
+        ein Basismanöver pro Handlung". No rule tells this: it is the message the UI
+        composes from the refusing entry's `because` and source
+        (kampfsonderfertigkeiten.KS5's note and ruling manoeuvre-combination: "an excluded
+        one stays visible, disabled, with that `because` and its source"), which each
+        situation's `legal.combinations` already checks (and which passes: SA_62.ST4, KS3).
+        Before Task 31 these counted pending on ladezeiten.laengere-handlungen, whose `*`
+        tell explained any missing text.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "RW.16"
+    name: Mounted, Unterlaufen — a Basismanöver stays available on horseback
+    hero: { abilities: { SA_172: 1 } }
+    loadout: { weapon: Schwert, weapon.technique: CT_12, reach: mittel, hero.mounted: true }
+    opponent: { reach: lang, onFoot: true }
+    choose: { choice.unterlaufen: true }
+    expect:
+      offered: [{ choice: unterlaufen, kind: basismanoever, ruling: reiterkampf.mounted-manoeuvres }]
+      at:
+        total: 2
+        lines:
+          - { value: 0, was: -2, from: reichweite.RW3, via: [SA_172.U1] }
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }

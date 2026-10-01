@@ -22,12 +22,12 @@ struct DiceRollSheet: View {
         VStack(spacing: 0) {
             // Header
             Text(L("diceRoll"))
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 8) {
                 configSection
@@ -77,41 +77,26 @@ struct DiceRollSheet: View {
         onIncrement: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button(action: onDecrement) {
-                    Image(systemName: "arrow.down")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(isRolled ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(isRolled ? Color.gray : Color.groupPersonalData)
-                }
-                .buttonStyle(.plain)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
+            DSAStepper(
+                decrementIcon: "arrow.down",
+                incrementIcon: "arrow.up",
+                tint: isRolled ? Color.dsaDisabled : Color.groupPersonalData,
+                iconColor: isRolled ? .white : .black,
+                onDecrement: onDecrement,
+                onIncrement: onIncrement
+            ) {
                 Text(displayValue ?? "\(value ?? 0)")
-                    .font(.system(.title3, weight: .black))
+                    .font(.dsaHeading(.title3))
                     .fontDesign(.monospaced)
-                    .frame(minWidth: 48)
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
-
-                Button(action: onIncrement) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(isRolled ? Color.white : Color.black)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(isRolled ? Color.gray : Color.groupPersonalData)
-                }
-                .buttonStyle(.plain)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
             }
-            .fixedSize(horizontal: false, vertical: true)
 
             Text(label)
-                .font(.system(.caption2, weight: .bold))
+                .font(.dsaBody(.caption2))
                 .foregroundStyle(.secondary)
-                .padding(.top, 2)
+                // Clear the stepper's shadow, which draws outside its bounds and
+                // reserves no layout space — a 2pt gap put the caption under it.
+                .padding(.top, DSALayout.shadowOffset + 4)
         }
     }
 
@@ -122,20 +107,20 @@ struct DiceRollSheet: View {
             HStack(spacing: 8) {
                 ForEach(Array((rollResults ?? displayValues).enumerated()), id: \.offset) { _, value in
                     Text("\(value)")
-                        .font(.system(.largeTitle, weight: .black))
+                        .font(.dsaHeading(.largeTitle))
                         .fontDesign(.monospaced)
                 }
             }
             if !isRolled {
                 Text(L("tapToRoll"))
-                    .font(.system(.caption2, weight: .semibold))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .background(!isRolled ? Color.groupPersonalData.opacity(DSAAnimation.animatingBackgroundOpacity) : Color(UIColor.systemBackground))
-        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+        .dsaBox(.flush)
     }
 
     // MARK: - Result Summary
@@ -152,12 +137,12 @@ struct DiceRollSheet: View {
         }
 
         return Text(formulaStr)
-            .font(.system(.body, weight: .black))
+            .font(.dsaHeading(.body))
             .fontDesign(.monospaced)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(Color(UIColor.systemBackground))
-            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+            .dsaBox(.flush)
     }
 
     // MARK: - Confirm
@@ -177,14 +162,14 @@ struct DiceRollSheet: View {
             dismiss()
         } label: {
             Image(systemName: "checkmark")
-                .font(.system(.title2, weight: .bold))
+                .font(.dsaHeading(.title2))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.groupPersonalData)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.raised)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Animation & Rolling

@@ -1,0 +1,30 @@
+# The rules behind the first domain to switch to the new engine (design §9, step 1): the derived
+# values on the sheet — LE, Wundschwelle, INI Basiswert, AT/PA/AW with their breakdown.
+# `make rules-review SWEEP=sheet` shows only these, and `make rules-sweep SWEEP=sheet` lists them
+# with what each still needs.
+#
+# No `hero`: the sweep is a domain, not a hero, so it holds only the rules listed here. The
+# shared rulings (rulings.yaml) are always in. Schmerz, Regeneration and the other rules the
+# lebensenergie situations also reach belong to later domains (Zustände, damage).
+name: Sheet (domain 1)
+
+rules:
+  # AT, PA, AW, FK, INI
+  kampfwerte: AT, PA, AW and INI derived from the technique and the attributes
+  at-pa-modifikatoren: the weapon's AT/PA-Mod, a line after the base (R66)
+  schilde: the shield's passive PA bonus, and the shield parry's base
+  ITEMTPL_19: Rabenschnabel — its AT/PA-Mod
+  ITEMTPL_29: Großschild — its AT/PA-Mod and shield bonus
+  ITEMTPL_35: Langschwert — its AT/PA-Mod
+  SA_51: Kampfreflexe — INI
+  # Belastung on the sheet values
+  ruestung-und-belastung: the armour's Belastung
+  COND_1: Belastung's lines on AT, PA, AW and INI
+  SA_41: Belastungsgewöhnung — lowers that Belastung
+  # LE and Wundschwelle
+  lebensenergie: LE Basiswert
+  ADV_25: Hohe Lebenskraft — LE
+  DISADV_28: Niedrige Lebenskraft — LE
+  trefferzonen: the Wundschwelle's derive, under the Fokusregel
+  ADV_54: Eisern — the Wundschwelle
+  DISADV_56: Gläsern — the Wundschwelle

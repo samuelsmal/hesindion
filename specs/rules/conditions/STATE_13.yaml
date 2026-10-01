@@ -1,0 +1,68 @@
+# DRAFT FORMAT — see ../README.md.
+id: STATE_13
+name: Überrascht
+kind: state                # a Status: binary, no Stufen (the old `kind: status`)
+ruleset: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Sta_%C3%9Cberrascht.html
+  book: Regelwerk
+  page: 36
+  checked: 2026-09-26
+  hash: sha256:b56d65632cc10ad623cca704a2bada501bd22025295ea21b98e290504baaa836
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: UE1
+    text: >
+      Die üblichen Kampfhandlungen gehen davon aus, dass alle Parteien ihre Gegner sehen oder
+      wahrnehmen. Allerdings gibt es Situationen wie beispielsweise Hinterhalte, in denen man
+      überrascht ist. Gegen überraschte Personen darf eine Aktion ausgeführt werden, gegen die
+      keine Verteidigung genutzt werden darf. Erst danach beginnt die reguläre Kampfrunde.
+    effects:
+      - require: { that: { opponent.has: STATE_13 }, enables: true }
+        # Task 32: the opponent's Überrascht acts on the hero, who does not have it (as SA_152.AD1's
+        # Auf Distanz halten): the tell below reaches the hero's attack. Every effect of this clause
+        # is gated on who has the status, so the hero's own forbid and gain stay off.
+      - when: { opponent.has: STATE_13, query.target: [at, fk] }
+        tell: { to: opponent, text: noDefence }
+        # Opponent side, display only (ADR-0005): "Der Gegner darf sich nicht verteidigen."
+        # The old `opponent.state: ueberrascht` / `check: [at, fk]`.
+      - when: { hero.has: STATE_13 }
+        forbid: { what: { defence: [pa, aw] } }
+        because: überrascht — gegen die Überraschungsaktion ist keine Verteidigung erlaubt
+        ruling: hero-no-defence
+        # Set on the combat-setup screen (the old `hero.state: ueberrascht`). The old `until:
+        # surpriseActionResolved` is the status itself: the forbid holds while the hero has it,
+        # and the effect below clears it.
+      - when: { hero.has: STATE_13, round.phase: start }
+        gain: { rule: STATE_13, levels: -1 }
+        ruling: hero-no-defence
+        # "Erst danach beginnt die reguläre Kampfrunde": the status clears when the INI roll
+        # starts the regular round (ruling hero-no-defence).
+    # The Trefferzonen easing (−2 on the aiming penalty) is trefferzonen.TZ5, not this page's.
+
+rulings:
+  - id: hero-no-defence
+    status: decided
+    question: >
+      While the hero is Überrascht, the surprising side's one action cannot be defended against.
+      Should the app block the hero's defences, or remind?
+    answer: >
+      Parade and Ausweichen are disabled, with the reason, while Überrascht is set; the status
+      clears when the regular Kampfrunde starts.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [UE1]
+    notes: >
+      The owner chose b and asked how the status gets set: yes, at the combat-setup screen. It
+      already holds the fight's other opening facts as toggles (Plänkler-Formation, mounted,
+      Beengte Umgebung; CombatSetupViews), so "Überrascht (Hinterhalt)" is one more there,
+      pre-set when the hero already carries STATE_13 from the states screen. Which side is
+      surprised is the GM's call, or a failed Sinnesschärfe (Hinterhalt entdecken), with SA_40's
+      +2 (ruling SA_40.aufmerksamkeit-when); the app does not roll it for the player. Since the
+      surprise action comes before the regular Kampfrunde, the flow must put it before the INI
+      roll: with the toggle on, setup leads to the surprising side's one action (Parade and
+      Ausweichen disabled with the reason, as "Zu konzentriert" does today through
+      activeCombatNoDefense and CombatRootView), and moving on to the INI roll clears STATE_13.
+      Today the hero's Überrascht is a reminder only (StateCatalog.ueberrascht has no modifier),
+      and nothing in combat setup asks for it. The opponent's Überrascht is a separate fact, asked
+      per attack on the opponent profile (OpponentProfile.surprisedStateId, CombatZonePicker).

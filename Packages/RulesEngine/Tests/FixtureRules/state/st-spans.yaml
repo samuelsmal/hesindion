@@ -1,0 +1,27 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: choices and Stufen that last a span: the action, the round, the fight, while
+# formed, until cleared.
+id: st-spans
+name: Spannen der Zeit
+kind: core
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: P1
+    text: Ansagen für die Runde, den Kampf, die Formation, die Aktion.
+    effects:
+      - offer: { choice: vorstoss, span: round }
+      - offer: { choice: wut, span: fight }
+      - offer: { choice: formation, span: whileFormed }
+      - offer: { choice: finte, span: action }
+  - id: P2
+    text: Gestärkt für die Runde, erhitzt für den Kampf, verflucht bis zur Aufhebung, gefasst für die Aktion.
+    effects:
+      - when: { choice.brace: true }
+        gain: { rule: st-braced, levels: 1, span: round }
+      - when: { choice.heat: true }
+        gain: { rule: st-heated, levels: 1, span: fight }
+      - when: { choice.curse: true }
+        gain: { rule: st-cursed, levels: 1, span: untilCleared }
+      - when: { choice.calm: true }
+        gain: { rule: st-heated, levels: -1, span: action }

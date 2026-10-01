@@ -1,0 +1,28 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: offers with a span and costs, and what makes them illegal.
+id: pl-moves
+name: Vorstoß
+kind: specialAbility
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: M1
+    text: Vorstoß zu Beginn der Runde.
+    effects:
+      - offer: { choice: vorstoss, span: round }
+        when: { round.phase: start }
+  - id: M2
+    text: Nur mit Schwertern.
+    effects:
+      - require: { that: { loadout.weapon.technique: [CT_3] } }
+  - id: M3
+    text: Doppelangriff für eine Aktion.
+    effects:
+      - offer: { choice: doppel, costs: [{ cost: { pool: actions, amount: 1 } }] }
+  - id: M4
+    text: Nicht beritten, nicht mit Schmerzen.
+    effects:
+      - forbid: { what: { choice: [doppel] } }
+        when: { hero.mounted: true }
+      - require: { that: { not: { hero.has: pl-pain } }, for: { choice: [doppel] } }

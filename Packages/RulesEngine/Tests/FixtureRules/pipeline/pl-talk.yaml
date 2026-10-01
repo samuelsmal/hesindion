@@ -1,0 +1,28 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: tell, ask, an unencoded clause.
+id: pl-talk
+name: Hinweise
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: T1
+    text: Achtung, Meister.
+    effects:
+      - tell: { text: "Achtung.", to: gm }
+        when: { gmFact.alarm: true }
+  - id: T2
+    text: Deckung fragen.
+    effects:
+      - ask: { fact: target.cover, who: gm, options: [keine, teilweise] }
+  - id: T3
+    text: Ein Satz, den die App nicht abbilden kann.
+    unencoded: the app keeps no days
+  - id: T4
+    text: Lauter Hinweis.
+    effects:
+      - tell: { text: "Lauter Hinweis.", to: player }
+  - id: T5
+    text: INI +1.
+    effects:
+      - add: { to: ini, value: 1 }

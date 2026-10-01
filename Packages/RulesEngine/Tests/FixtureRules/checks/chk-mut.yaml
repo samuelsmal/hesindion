@@ -1,0 +1,11 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: a state the check effect of chk-wille gains.
+id: chk-mut
+name: chk-mut
+kind: state
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: S1
+    text: Ein Status.
+    none: a state only

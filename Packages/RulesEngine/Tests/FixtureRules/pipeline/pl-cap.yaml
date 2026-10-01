@@ -1,0 +1,21 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: the Zustand cap over the condition lines (zustaende.Z3), a max cap, a floor.
+id: pl-cap
+name: Grenzen
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: Z3
+    text: Zustände höchstens −5.
+    effects:
+      - cap: { to: [at, gs], over: { ruleKind: condition }, min: -5 }
+  - id: K1
+    text: Bei Sicht IV höchstens 0.
+    effects:
+      - cap: { to: fk, max: 0 }
+        when: { gmFact.sicht: 4 }
+  - id: F1
+    text: SP nicht unter 0.
+    effects:
+      - floor: { to: sp, min: 0 }

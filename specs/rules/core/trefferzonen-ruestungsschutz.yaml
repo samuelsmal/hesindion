@@ -1,0 +1,260 @@
+# DRAFT FORMAT — see ../README.md.
+id: trefferzonen-ruestungsschutz
+name: Trefferzonen-Rüstungsschutz
+kind: core
+ruleset: fokus.trefferzonen-rs
+# The old header keys: `fokus: { theme: Kampf, level: 2 }` is RS1's text (a Fokusregel Stufe II,
+# Kampf) and `ruleset:`; `requires_ruleset: [fokus.trefferzonen]` is RS1's `require` (ruling
+# requires-trefferzonen); `replaces: [ruestung-und-belastung.A1]` is RS4's `suppress` of A1,
+# whose Belastung and extra penalties RS4 computes anew while this rule set is on.
+source:
+  url: https://dsa.ulisses-regelwiki.de/Fokus_TreffzonenRS.html
+  book: Aventurische Rüstkammer
+  page: 127                 # "Seite 127ff"
+  checked: 2026-09-26
+  hash: sha256:67645ea875c4b205e90037b468f399d6c6d4326d17b3b2fdce76f99a2d7af245
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Relation to the core rule: without this Fokusregel a hero wears one armour, helmet included,
+# and it protects every zone fully (ruestung-und-belastung, ruling several-armour-pieces).
+
+clauses:
+  - id: RS1
+    text: >
+      Die vorliegende Regel ist eine Fokusregel der Stufe II für den Themenkomplex Kampf. Bei
+      Komplettrüstungen, wie sie im Regelwerk auf Seite 374 vorgestellt wurden, sind alle
+      Trefferzonen durch den vollen Rüstungsschutz der getragenen Rüstung geschützt. Es spielt
+      dabei keine Rolle, ob der Held einen Helm trägt oder nicht, oder ob einige Rüstungsteile
+      nur einen kleinen Teil einer Zone schützen. Allerdings kann es geschehen, dass ein Held
+      keinen Helm trägt, dafür aber seine Lederrüstung mit Metallarmschienen kombiniert.
+      Hierdurch weisen die verschiedenen Trefferzonen einen unterschiedlichen Rüstungsschutz auf.
+    effects:
+      - require: { that: { rulesets: fokus.trefferzonen } }
+        because: Trefferzonen-Rüstungsschutz setzt die Trefferzonen-Regeln voraus
+        ruling: requires-trefferzonen
+        # The old header `requires_ruleset: [fokus.trefferzonen]` (A.8: a rule-level `require`
+        # in the first clause): the Stufe II Fokusregel needs the Stufe I one.
+    # Otherwise the clause restates the core rule this Fokusregel replaces, and the case it is for.
+
+  # sic: "angegeben Preismultiplikator". One line per paragraph or bullet of the page.
+  - id: RS2
+    text: |
+      Die nun vorgestellte Fokusregel unterscheidet RS in den verschiedenen Trefferzonen, abhängig von Helm, Rüstung und Rüstungsteil, abhängig vom Rüstungsteil, das in der Zone getragen wird. Mit dieser Regel lassen sich zudem verschiedene Rüstungsarten kombinieren.
+      In den nachfolgenden Tabellen findest du eine Übersicht über die in der Aventurischen Rüstkammer und dem Regelwerk vorgestellten Rüstungen mitsamt der Werte, die sie in dieser Fokusregel haben.
+      Die Komplettrüstungen werden dabei in die einzelnen Zonen aufgespalten. Sie schützen nur die Zone, für die sie erworben wurden, aber man kann auch für die übrigen Zonen entsprechende Rüstungsteile (wie Beinlinge oder Helme) dazukaufen.
+      Der Preis der einzelnen Teile hängt jeweils von den Kosten der Komplettrüstung im Verhältnis zum Schutzbereich ab. Möchte ein Spieler beispielsweise seinen Kopf mit einem Helm aus Leder schützen, schaut er sich die Kosten der Lederrüstung an und multipliziert sie mit dem in der Tabelle angegeben Preismultiplikator für die Zone Kopf.
+      Werden die einzelnen Rüstungsteile getragen, so verleihen sie dem Helden in der angegebenen Zone RS. Hierbei muss darauf geachtet werden, dass am linken Arm oder Bein auch eine Rüstung mit anderem RS als am rechten Arm oder Bein getragen werden kann.
+    effects:
+      - set: { to: rs, value: { of: hit.zoneRs } }
+        # The RS a hit meets is that of the zone hit: `hit.zoneRs` is the `rs(zone: …)` of
+        # `hit.zone` and, for an arm or leg, `hit.side` (trefferzonen.TZ4c). The old
+        # `when: { event: hitTaken }` is carried by `hit.zone`, which exists only for a hit, and
+        # the old `set: { value: hit.rs, to: "armour.rs(hit.zone)" }` sets the `rs` that
+        # schaden.S1 subtracts. Each zone's `rs(zone: kopf | torso | armLinks | armRechts |
+        # beinLinks | beinRechts)` is the RS of the piece worn there (the loadout's
+        # `loadout.armourPiece.<zone>`), 0 without one.
+        # "Sie schützen nur die Zone, für die sie erworben wurden": a piece counts in its own zone
+        # and nowhere else, so a zone no piece covers has RS 0 (ruling pieces-from-other-armours
+        # is about which pieces may fill the other zones).
+        # FORMAT: RS becomes a function of the zone hit — six zones for a humanoid, left and
+        # right counted apart. The hero's armour stops being one item and becomes a loadout.
+      - when: { not: { loadout.armourPiece.kopf: null } }
+        derive: { to: "rs(zone: kopf)", sum: [{ of: loadout.armourPiece.kopf.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.kopf: null }
+        derive: { to: "rs(zone: kopf)", sum: [0] }
+      - when: { not: { loadout.armourPiece.torso: null } }
+        derive: { to: "rs(zone: torso)", sum: [{ of: loadout.armourPiece.torso.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.torso: null }
+        derive: { to: "rs(zone: torso)", sum: [0] }
+      - when: { not: { loadout.armourPiece.armLinks: null } }
+        derive: { to: "rs(zone: armLinks)", sum: [{ of: loadout.armourPiece.armLinks.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.armLinks: null }
+        derive: { to: "rs(zone: armLinks)", sum: [0] }
+      - when: { not: { loadout.armourPiece.armRechts: null } }
+        derive: { to: "rs(zone: armRechts)", sum: [{ of: loadout.armourPiece.armRechts.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.armRechts: null }
+        derive: { to: "rs(zone: armRechts)", sum: [0] }
+      - when: { not: { loadout.armourPiece.beinLinks: null } }
+        derive: { to: "rs(zone: beinLinks)", sum: [{ of: loadout.armourPiece.beinLinks.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.beinLinks: null }
+        derive: { to: "rs(zone: beinLinks)", sum: [0] }
+      - when: { not: { loadout.armourPiece.beinRechts: null } }
+        derive: { to: "rs(zone: beinRechts)", sum: [{ of: loadout.armourPiece.beinRechts.rs }] }
+        ruling: pieces-from-other-armours
+      - when: { loadout.armourPiece.beinRechts: null }
+        derive: { to: "rs(zone: beinRechts)", sum: [0] }
+        # Task 32: each zone's RS, "Werden die einzelnen Rüstungsteile getragen, so verleihen sie
+        # dem Helden in der angegebenen Zone RS": the RS of the piece worn there (its armour's row,
+        # ruestung-und-belastung.A2, unless an equipment row or the situation says otherwise), a
+        # piece of any armour (ruling pieces-from-other-armours); 0 with the zone stated empty
+        # (`loadout.armourPiece.<zone>: null`). An unstated zone is asked.
+
+  - id: RS3
+    text: |
+      Ein Held kann eine einzige Rüstung beliebig mit einem einzigen Helm sowie zusätzlichen Rüstungsteilen an Armen und Beinen kombinieren.
+      Ein Held kann keine zwei Helme miteinander kombinieren.
+      Jede Arm- und Bein-Zone kann mit einem Rüstungsteil ausgestattet werden. Kein Held kann aber mehr als ein Rüstungsteil in einer Zone tragen.
+      Rüstungen lassen sich grundsätzlich nicht miteinander kombinieren, es sei denn, in der Beschreibung der Rüstung steht das Gegenteil. Dann sind dort auch die genaueren Regeln dazu erklärt.
+      Es ist auch möglich, unterschiedliche Arten von Rüstungsteilen in Arm- und Beinzonen zu tragen. So kann ein Held am linken Arm Kettenhandschuhe tragen, am rechten Arm eine Metallarmschiene und an den Beinen Lederbeinschienen.
+    effects:
+      - forbid: { what: { loadout: [secondArmour, secondHelmet, secondPieceInZone] } }
+        because: eine Rüstung, ein Helm und je Zone höchstens ein Rüstungsteil
+        ruling: pieces-from-other-armours
+        # The old `forbid: { loadout: { armour: { count: { max: 1 } }, helmet: { count: { max:
+        # 1 } }, perZone: { max: 1 } } }`: legality over the armour loadout, like
+        # reiterkampf.RK4 over weapons — a second armour (torso piece), a second helmet, a second
+        # piece in one arm or leg zone.
+        # "unterschiedliche Arten von Rüstungsteilen": a limb slot takes any piece, not one
+        # armour's set (ruling pieces-from-other-armours).
+
+  # sic: "beispielweise"
+  - id: RS3a
+    text: >
+      Rüstungseigenschaften gelten prinzipiell nur für die Zone, die von der jeweiligen Rüstung
+      bedeckt ist. Sollten sich Rüstungsvor- und nachteile auf Handlungen auswirken, die
+      unabhängig von einer Zone sind, gelten diese Effekte sobald eine einzige Zone damit belegt
+      ist (beispielweise die Proben bei Kettenhemden treten auf, sobald auch nur eine Armzone mit
+      einem Kettenhemd-Teil ausgestattet ist).
+    none: >
+      Rüstungseigenschaften (Rüstungsvor- und -nachteile, Aventurische Rüstkammer) are their own
+      Fokusregel, not drafted, and the app has none. When they are drafted, a zone-bound property
+      keys on `hit.zone` and a zone-independent one applies as soon as any one zone carries the
+      piece.
+
+  - id: RS4
+    text: >
+      Bislang wurde die Belastung durch die Komplettrüstung angegeben. Da nun ein Held in einigen
+      Zonen unterschiedliche Mengen an RS aufweisen kann – manchmal sogar auch an bestimmten Zonen
+      keinen RS besitzt – muss auch die Belastung neu berechnet werden. Dies gilt auch für die
+      zusätzlichen Abzüge auf INI und GS.
+      Um die BE und die zusätzlichen Abzüge zu ermitteln, müssen die einzelnen RS-Werte der
+      Trefferzonen ermittelt, mit dem Faktor aus der Tabelle RS-Faktoren multipliziert und dann
+      die einzelnen Ergebnisse addiert werden. Anschließend kann man anhand der Tabelle Belastung
+      und zusätzliche Abzüge und dem Ergebnis der Berechnung ablesen, welche BE und welche
+      zusätzlichen Abzüge ein Held erleidet.
+      RS-Faktoren: linkes Bein ×2, rechtes Bein ×2, linker Arm ×2, rechter Arm ×2, Torso ×5, Kopf ×1.
+      Belastung und zusätzliche Abzüge: 0 → BE 0; 1–14 → 0, –1 GS, –1 INI; 15–28 → 1; 29–42 → 1,
+      –1 GS, –1 INI; 43–56 → 2; 57–70 → 2, –1 GS, –1 INI; 71–84 → 3; 85–98 → 4; 99–112 → 5;
+      113–126 → 6; 127–140 → 7; 141–154 → 8; usw.
+    effects:
+      - suppress: { line: { line: ruestung-und-belastung.A1 } }
+        because: mit Trefferzonen-Rüstungsschutz werden BE und zusätzliche Abzüge aus den Zonen neu berechnet
+        # The old header `replaces: [ruestung-und-belastung.A1]`: the complete armour's
+        # Belastung and extra GS/INI penalty give way to this computation.
+      - derive:
+          to: armourScore
+          sum:
+            - { of: "rs(zone: kopf)" }
+            - { of: "rs(zone: torso)", times: 5 }
+            - { of: "rs(zone: armLinks)", times: 2 }
+            - { of: "rs(zone: armRechts)", times: 2 }
+            - { of: "rs(zone: beinLinks)", times: 2 }
+            - { of: "rs(zone: beinRechts)", times: 2 }
+        ruling: [be-sentence, pieces-from-other-armours]
+        # The RS of each zone times its RS-Faktor, summed (the old `sum(armour.rs[zone] *
+        # factor[zone])`). It rests on be-sentence (this sum is BE's one computation: RS5's 0.1
+        # for a single limb does not enter it) and on pieces-from-other-armours (the zones' pieces
+        # may come from different armours; Task 32, situations TZ.22, TZ.26).
+      - derive: { to: "level(rule: COND_1)", sum: ["table(trefferzonen-ruestungsschutz.RS4.belastung, armourScore)"] }
+        ruling: be-sentence
+        # BE has this one computation; RS5's "Gleiches gilt auch für BE" adds no second (ruling
+        # be-sentence).
+      - add: { to: [gs, ini], value: "table(trefferzonen-ruestungsschutz.RS4.extra, armourScore)" }
+        # The band's zusätzliche Abzüge (the old `band(…).extra`). Check: a complete armour of
+        # RS r scores 14r, which lands on the core table's Belastung and extra for every armour
+        # in it (Leder 42 → 1 and −1; Platte 84 → 3; Gestech 98 → 4; Turnier 112 → 5) — the two
+        # rules agree.
+      - provide:
+          name: trefferzonen-ruestungsschutz.RS4.belastung
+          value: { "0": 0, "1-14": 0, "15-28": 1, "29-42": 1, "43-56": 2, "57-70": 2, "71-84": 3, "85-98": 4, "99-112": 5, "113-126": 6, "127-140": 7, "141-154": 8 }
+      - provide:
+          name: trefferzonen-ruestungsschutz.RS4.extra
+          value: { "0": 0, "1-14": -1, "15-28": 0, "29-42": -1, "43-56": 0, "57-70": -1, "71-84": 0, "85-98": 0, "99-112": 0, "113-126": 0, "127-140": 0, "141-154": 0 }
+        # The table "Belastung und zusätzliche Abzüge" as the page prints it, one band per 14
+        # points, up to 141–154. The page's "usw." (a score above 154) has no row: the lookup
+        # gives the engine's "Regel konnte nicht angewandt werden" text there.
+
+  # sic: "Kombinationenzu"
+  - id: RS5
+    text: |
+      Möchte ein Spieler den Preis für eine einzelne Arm- oder Beinzone wissen, so muss er statt einem Preismultiplikator von 0,2 einen von 0,1 benutzen. Gleiches gilt auch für BE.
+      Um das Gewicht einer Rüstung aus Kombinationenzu ermitteln, können die Multiplikatoren des Preises ebenso auf das Gewicht der Komplettrüstung angewandt werden.
+      Zonenmultiplikatoren
+      Zone | Preis-/Gewichtsmultiplikator
+      Torso | x 0,5
+      Arme | x 0,2
+      Beine | x 0,2
+      Kopf | x 0,1
+    none: price and weight; its one sentence on BE changes nothing (ruling be-sentence)
+
+  # sic: the page's spacing ("125 S /2,5 Stn", "12, 5 Stn") is kept.
+  - id: RS6
+    text: |
+      Gewicht und Preis von Zonenrüstungen
+      Rüstung | Preis/Gewicht Torso | Preis/Gewicht Arme | Preis/Gewicht Beine | Preis/Gewicht Kopf
+      Iryanrüstung | 125 S /2,5 Stn | 50 S / 1 Stn | 50 S / 1 Stn | 25 S / 0,5 Stn
+      Kettenhemd | 125 S / 5 Stn | 50 S /2 Stn | 50 S / 2 Stn | 25 S / 1 Stn
+      Kettenrüstung | 125 S / 6 Stn | 50 S / 2,4 Stn | 50 S / 2,4 Stn | 25 S / 1,2 Stn
+      Krötenhaut | 100 S / 2,5 Stn | 40 S / 1 Stn | 40 S / 1 Stn | 20 S / 0,5 Stn
+      Lederharnisch | 75 S / 3 Stn | 30 S / 1,2 Stn | 30 S / 1,2 Stn | 15 S / 0,6 Stn
+      Lederrüstung | 75 S / 3 Stn | 30 S / 1,2 Stn | 30 S / 1,2 Stn | 15 S / 0,6 Stn
+      Leichte Platte | 200 S / 7,5 Stn | 80 S / 3 Stn | 80 S / 3 Stn | 40 S /1,5 Stn
+      Plattenrüstung | 375 S / 12, 5 Stn | 150 S / 5 Stn | 150 S / 5 Stn | 75 S / 2,5 Stn
+      Schuppenpanzer | 200 S / 9 Stn | 80 S / 3,6 Stn | 80 S / 3,6 Stn | 40 S / 1,8 Stn
+      Schuppenrüstung | 200 S / 9 Stn | 80 S / 3,6 Stn | 80 S / 3,6 Stn | 40 S / 1,8 Stn
+      Spiegelpanzer | 175 S / 6,5 Stn | 70 S / 2,6 Stn | 70 S / 2,6 Stn | 35 S / 1,3 Stn
+      Stoffrüstung | 37,5 S / 1,5 Stn | 15 S / 0,6 Stn | 15 S / 0,6 Stn | 7,5 S / 0,3 Stn
+      Tuchrüstung | 37,5 S / 1,5 Stn | 15 S / 0,6 Stn | 15 S / 0,6 Stn | 7,5 S / 0,3 Stn
+    none: price and weight — RS5's multipliers applied to each complete armour; nothing the app computes
+
+rulings:
+  - id: requires-trefferzonen
+    status: decided
+    question: >
+      Can a group play Trefferzonen-Rüstungsschutz (Fokusregel Stufe II) without the
+      Trefferzonen-Regeln (Stufe I)?
+    answer: >
+      It requires Trefferzonen: the switch is only offered while Trefferzonen is on.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [RS1]
+    notes: >
+      RS by zone only matters when a hit has a zone, which only the Trefferzonen-Regeln give; the
+      page does not say so itself. The app has one Fokusregel switch today
+      (FokusRule.trefferzonen); this is a second, shown only while the first is on. Turning
+      Trefferzonen off turns this one off with it.
+
+  - id: be-sentence
+    status: decided
+    question: >
+      RS5 says a single arm or leg zone uses a multiplier of 0.1 instead of 0.2 for price, and
+      "Gleiches gilt auch für BE". RS4 computes BE by the RS-factor table. Does the 0.1/0.2
+      sentence change BE at all?
+    answer: >
+      BE comes only from RS4's RS-factor table; the sentence is about price and weight.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [RS4, RS5]
+    notes: >
+      One computation, no rounding. RS4 already halves a single limb's share by counting left and
+      right apart (×2 each), and agrees with the core table for every complete armour.
+
+  - id: pieces-from-other-armours
+    status: decided
+    question: >
+      RS3 allows one armour, one helmet and "zusätzliche Rüstungsteile" on arms and legs, but
+      says armours cannot be combined. Is the arm or leg part of a *different* complete armour
+      (bought per zone, as the page describes) a Rüstungsteil — so Kettenrüstung on the torso
+      with Lederrüstung arm pieces is allowed?
+    answer: >
+      Yes: a zone piece of any armour counts as a Rüstungsteil for its zone; only the torso piece
+      is 'the armour'.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [RS2, RS3, RS4]
+    notes: >
+      Each zone offers every armour type (RS6 prices every complete armour per zone so its parts
+      can be bought on their own); "Rüstungen lassen sich … nicht kombinieren" limits the torso
+      to one armour, as RS3's `forbid` already says. Left and right limbs may differ.

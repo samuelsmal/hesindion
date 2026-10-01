@@ -1,0 +1,50 @@
+# DRAFT FORMAT — see ../README.md.
+id: vorteilhafte-position
+name: Vorteilhafte Position
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Kampf-VorteilhaftePosition.html
+  book: Regelwerk
+  page: 238
+  checked: 2026-09-27
+  hash: sha256:f9b8881b7e64a92a02dc28148dcffcbadbfe1a5e775ecfd4406a5f058d4be060
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Active when the GM says so for this attack (`gmFact.vorteilhaftePosition`, the old
+# `gm.fact: advantageousPosition, span: attack`: a GM fact is stated per attack), or when another
+# rule grants it (reiterkampf.RK2: mounted against a fighter on foot, whose `require … enables`
+# gives VP1's lines `via: [reiterkampf.RK2]`). The old header `applies_when` is each effect's
+# `when`: this is a core rule, so it applies to everyone, and a rule-level `require` would forbid
+# the query instead of switching the lines off.
+
+clauses:
+  - id: VP1
+    text: >
+      Wer sich als Kämpfer in einer vorteilhaften Position befindet, bekommt Erleichterungen von
+      jeweils 2 auf Attacke und Verteidigungen. Als vorteilhafte Position kann ein Felsen oder
+      Tisch dienen, aber auch die Steigung eines Hügels, den seine Gegner hinaufstürmen. Die
+      vorteilhafte Position kann auch beim Schwimmen, beim Klettern in der Takelage eines
+      Schiffes, beim Fliegen usw. entstehen.
+    # The second and third sentences are examples of what the GM may call a vorteilhafte
+    # Position — the GM fact in the `when`; they add nothing to the numbers.
+    effects:
+      - when: { any: [{ gmFact.vorteilhaftePosition: true }, { hero.mounted: true, opponent.onFoot: true }] }
+        add: { to: at, value: 2 }
+        # SA_661.GS1 adds its +2 as a line of its own under the same condition.
+      - when: { any: [{ gmFact.vorteilhaftePosition: true }, { hero.mounted: true, opponent.onFoot: true }] }
+        add: { to: [pa, aw], value: 2 }
+
+  - id: VP2
+    text: >
+      Um während eines Kampfes in eine vorteilhafte Position zu gelangen, beispielsweise den
+      erwähnten Tisch, sind mindestens 1 Aktion und je nach Situation eine gelungene Probe auf
+      Körperbeherrschung (Kampfmanöver) notwendig. Bei einer misslungenen Probe erleidet der
+      Kämpfer keine zusätzlichen Nachteile. Bei einem Patzer kann der Meister dem Gegner einen
+      Passierschlag zugestehen.
+    unencoded: getting into position is the GM's call and happens outside a roll; shown as text on the toggle
+
+  - id: VP3
+    text: >
+      Bei bestimmten Situationen kann der Meister statt der Probe auf Körperbeherrschung
+      (Kampfmanöver) auch andere Talente bestimmen.
+    unencoded: which talent VP2's check uses is the GM's call, outside any roll of ours; shown as text on the toggle with VP2

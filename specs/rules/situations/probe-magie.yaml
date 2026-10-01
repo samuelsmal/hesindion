@@ -1,0 +1,278 @@
+# Example 20 — Probe: Zaubermodifikationen and Verbotene Pforten. Same conventions as
+# belastung.yaml. DRAFT FORMAT — see ../README.md.
+# Open rulings named without a prefix live in the rule's own file.
+#
+# A generic caster, not from a hero file: a Gildenmagierin with
+#   MU 13, KL 14, IN 13, CH 12, KO 12 → LE 5 + 2 × 12 = 29, AsP 30 (max and current unless stated)
+#   Schmerz thresholds for LE 29 (COND_6.SZ3): ¾ = 21.75 → LE 21 or less is Schmerz I
+#   Selbstbeherrschung FW 6; Verbotene Pforten (SA_74)
+#   Ignifaxius (SPELL_21) FW 9 → 2 modifications:  8 AsP, 2 Aktionen, 16 Schritt, sofort
+#   Flim Flam  (SPELL_13) FW 8 → 2 modifications:  2 AsP + 1 AsP pro Stunde, 1 Aktion, 8 Schritt, (A)
+#   Armatrutz  (SPELL_3)  FW 8 → 2 modifications:  4/8/16 AsP for RS 1/2/3, 1 Aktion, selbst
+# The spell values are rules.db spell_details; "16 m" there is 16 Schritt.
+# No armour, no Zustände, no maintained spells unless stated.
+#
+# `spell:` gives the spell's parameters after the modifications, each with the lines that moved
+# it. `charge:` is what leaves which pool after the cast.
+#
+# Re-keyed under spec §10.1 (plan Task 14); no expected value changed:
+#   `species: R_1`, `le: 29`, `asp: 30`       → `values: { leMax: 29, leCurrent: 29, aspMax: 30,
+#                                               aspCurrent: 30 }` (the species is the comment above)
+#   `talents: { Selbstbeherrschung }`        → `talents: { TAL_8 }`; `spells` are the facts `fw.SPELL_…`
+#   `hero: { asp: n }`                       → `hero: { values: { aspCurrent: n } }`
+#   `cast: { spell, modifications, … }`      → `choose: { check.kind: spell, check.spell: SPELL_…,
+#                                               choice.spellModification.<name>: true }`
+#                                               (`formel_weglassen` → `…formelWeglassen`)
+#   the spell's data (8 AsP, 2 Aktionen, …)  → the base values of the queries `spell.cost`,
+#                                               `spell.castingTime`, `spell.range` (`values`), and
+#                                               the facts `spell.duration`, `spell.interval` (minutes)
+#   a check that succeeds / `fail: [check]`  → `rolls: { check.result: success | failure }`
+#   `fail: [Selbstbeherrschung]`             → a `sequence` step `rolls: { check.result: failure }`
+#                                               (the Selbstbeherrschung check VP2 asks for)
+#   `maintain: { hours: 3 }`                 → a `sequence` step `advanceClock: { minutes: 180 }`
+#                                               (plan Task 28's game clock)
+#   `check: { modifier }`                    → the query `check.modifier(spell: SPELL_…)`; a
+#                                               line's `term` names the modification
+#   `spell: { cost, castingTime, range }`    → the queries `spell.cost`, `spell.castingTime`,
+#                                               `spell.range` (`result`); `cost.base` is
+#                                               `spell.cost`, `cost.perInterval` `spell.costPerInterval`
+#   a line `{ from: 8, to: 16, from_rule }`  → `{ value: 16, was: 8, from }` (as reichweite.yaml)
+#   `charge: { asp: n, from }`               → `events: [{ paid: { pool: asp, amount: n }, from }]`;
+#                                               a split or fall-through keeps its `amount` and `pools`
+#   `choose: { payWithLeP: n }`, `choice:     → `choose: { choice.split.le: n }`, `choice: split.le`
+#     payWithLeP`                              (plan Task 25: a split reads `choice.split.<pool>`)
+#   `choice: formelWeglassen` etc.           → `choice: spellModification.formelWeglassen`
+#   `checks_first`                           → an `events` entry `{ check: { talent: TAL_8, … } }`
+#                                               (as reiterkampf.yaml)
+#   `after: { asp, le, conditions }`         → an `events` entry `{ after: { aspCurrent, leCurrent,
+#                                               conditions } }` (as lebensenergie.yaml)
+#   `cast: { outcome: failed, from, ruling }`→ the situation-level `result: { success: false, … }`
+#   `open: <ruling>`                         → `texts: [{ ruling: <ruling> }]`
+#   `notApplied: [{ rule: trefferzonen.TZ8 }]`→ `{ rule: trefferzonen, clause: TZ8 }`
+
+hero:
+  attributes: { MU: 13, KL: 14, IN: 13, CH: 12, KO: 12 }
+  values: { leMax: 29, leCurrent: 29, aspMax: 30, aspCurrent: 30 }
+  talents: { TAL_8: 6 }                               # Selbstbeherrschung
+  abilities: { SA_74: 1 }
+  spells: { SPELL_21: 9, SPELL_13: 8, SPELL_3: 8 }    # Ignifaxius, Flim Flam, Armatrutz
+
+situations:
+
+  # --- Modifications (zaubermodifikationen) ----------------------------------------------------
+
+  - id: "20.1"
+    name: Ignifaxius, no modification, the check succeeds
+    hero: { values: { spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose: { check.kind: spell, check.spell: SPELL_21 }
+    rolls: { check.result: success }
+    expect:
+      offered: [{ choice: spellModification, max: 2, from: zaubermodifikationen.ZM1 }]
+      "check.modifier(spell: SPELL_21)": { total: 0, lines: [] }
+      spell.cost: { result: 8 }
+      spell.castingTime: { result: 2 }
+      spell.range: { result: 16 }
+      events: [{ paid: { pool: asp, amount: 8 }, from: zaubermodifikationen.ZM12 }]
+    appToday: >
+      check 0, right; the cast is 2 Aktionen, right (CombatSpellViews.castingActions). No AsP are
+      charged: baseCost is Int("8 AsP"), nil for every spell — wrong. The modal shows "max 2
+      Modifikationen" as text only
+
+  - id: "20.2"
+    name: Ignifaxius with Erzwingen and Zauberdauer erhöhen, the check succeeds
+    hero: { values: { spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose:
+      check.kind: spell
+      check.spell: SPELL_21
+      choice.spellModification.erzwingen: true
+      choice.spellModification.zauberdauerErhoehen: true
+    rolls: { check.result: success }
+    expect:
+      "check.modifier(spell: SPELL_21)":
+        total: 2
+        lines:
+          - { value: 1, from: zaubermodifikationen.ZM11, term: Erzwingen }
+          - { value: 1, from: zaubermodifikationen.ZM11, term: Zauberdauer erhöhen }
+      spell.cost: { result: 16, lines: [{ value: 16, was: 8, from: zaubermodifikationen.ZM11, via: [zaubermodifikationen.ZM8] }] }
+      spell.castingTime: { result: 4, lines: [{ value: 4, was: 2, from: zaubermodifikationen.ZM11, via: [zaubermodifikationen.ZM8] }] }
+      events: [{ paid: { pool: asp, amount: 16 } }]
+      # A critical success would charge 8 (section 4: half the cost); not drafted here.
+    appToday: >
+      neither modification can be chosen (no picker; Situation.spellModifications is never set,
+      so MagicModifiers.spellMods never fires); check 0, 2 Aktionen, nothing charged — wrong
+
+  - id: "20.3"
+    name: Ignifaxius with Kosten senken and Reichweite erhöhen, the check fails
+    hero: { values: { spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose:
+      check.kind: spell
+      check.spell: SPELL_21
+      spell.duration: sofort
+      choice.spellModification.kostenSenken: true
+      choice.spellModification.reichweiteErhoehen: true
+    rolls: { check.result: failure }                  # the old `fail: [check]`
+    expect:
+      "check.modifier(spell: SPELL_21)":
+        total: -2
+        lines:
+          - { value: -1, from: zaubermodifikationen.ZM11, term: Kosten senken }
+          - { value: -1, from: zaubermodifikationen.ZM11, term: Reichweite erhöhen }
+      spell.cost: { result: 4 }
+      spell.range: { result: 32 }
+      events: [{ paid: { pool: asp, amount: 2 }, from: zaubermodifikationen.ZM12, ruling: round-up }]   # half of the modified 4
+    appToday: not offered; nothing charged (the app would charge half of 8, rounded up, if baseCost parsed)
+
+  - id: "20.4"
+    name: Ignifaxius at FW 9 — a third modification, a repeat, and the cost both ways
+    hero: { values: { spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose:
+      check.kind: spell
+      check.spell: SPELL_21
+      choice.spellModification.erzwingen: true
+      choice.spellModification.zauberdauerSenken: true
+      choice.spellModification.formelWeglassen: true    # the old `formel_weglassen: true`
+    expect:
+      notOffered:
+        - { choice: spellModification.formelWeglassen, because: zaubermodifikationen.ZM1, ruling: zaubermodifikationen.omit-counts }   # the third, with option a
+        - { choice: spellModification.kostenSenken, because: zaubermodifikationen.ZM2 }    # Kosten already moved by Erzwingen
+        - { choice: spellModification.zauberdauerErhoehen, because: zaubermodifikationen.ZM2 }
+        - { choice: spellModification.erzwingen, because: zaubermodifikationen.ZM6 }       # no repeat
+      "check.modifier(spell: SPELL_21)": { total: 0, lines: [{ value: 1, from: zaubermodifikationen.ZM11, term: Erzwingen }, { value: -1, from: zaubermodifikationen.ZM11, term: Zauberdauer senken }] }
+      spell.cost: { result: 16 }
+      spell.castingTime: { result: 1 }
+    appToday: >
+      "Formel weglassen" is a toggle at any FW and adds −2 on top; nothing else is offered, and
+      nothing counts toward the limit — waits on omit-counts for the Formel, wrong for the rest
+
+  - id: "20.5"
+    name: Flim Flam with Kosten senken, kept up for three hours
+    hero: { values: { spell.cost: 2, spell.castingTime: 1, spell.range: 8 } }   # Flim Flam
+    choose:
+      check.kind: spell
+      check.spell: SPELL_13
+      spell.duration: aufrechterhaltend
+      spell.interval: 60                              # the old `interval: 1h` (pro Stunde)
+      spell.maintained: true
+      choice.spellModification.kostenSenken: true
+    rolls: { check.result: success }
+    expect:
+      "check.modifier(spell: SPELL_13)": { total: -1, lines: [{ value: -1, from: zaubermodifikationen.ZM11, term: Kosten senken }] }
+      spell.cost: { result: 1 }                       # the old `cost.base`
+      spell.costPerInterval: { result: 1 }            # the old `cost.perInterval`
+      # 2 → 1; the upkeep, one step below, would be ½ — not under 1 AsP (ZM5)
+      events: [{ paid: { pool: asp, amount: 1 }, from: zaubermodifikationen.ZM12 }]   # the old `at: cast`
+      # Failed instead: half of (1 + 1) = 1 AsP (ZM12, "Grundkosten + die Kosten für die erste Zeiteinheit").
+    sequence:
+      - advanceClock: { minutes: 180 }                # the old `maintain: { hours: 3 }`
+        expect:
+          events: [{ paid: { pool: asp, amount: 3 }, over: { minutes: 180 }, from: zaubermodifikationen.ZM5 }]   # the old `over: 3h`
+    appToday: >
+      no modification; nothing charged at the cast or for upkeep. Keeping it up only adds the
+      −1 to other casts if the player sets the "aufrechterhaltene Zauber" stepper by hand
+      (MagicModifiers.maintainedSpells)
+
+  - id: "20.6"
+    name: Armatrutz for RS 2 (8 AsP) with Kosten senken
+    hero: { values: { spell.cost: 8, spell.castingTime: 1 } }   # Armatrutz at RS 2: 8 of "4/8/16 AsP"
+    choose:
+      check.kind: spell
+      check.spell: SPELL_3
+      choice.rs: 2                                    # the old `cast: { choose: { rs: 2 } }`
+      choice.spellModification.kostenSenken: true
+    rolls: { check.result: success }
+    expect:
+      texts: [{ ruling: zaubermodifikationen.cost-off-table }]   # the old `open:`
+      "check.modifier(spell: SPELL_3)": { total: -1 }
+      spell.cost: { result: 4 }            # with option a: the step applies to the chosen amount
+      events: [{ paid: { pool: asp, amount: 4 } }]
+    appToday: not offered; nothing charged
+
+  # --- Verbotene Pforten (SA_74) ---------------------------------------------------------------
+
+  - id: "20.7"
+    name: Ignifaxius with 3 AsP left — 3 AsP and 5 LeP, Selbstbeherrschung passes
+    hero: { values: { aspCurrent: 3, spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose: { check.kind: spell, check.spell: SPELL_21, choice.split.le: 5 }
+    rolls: { check.result: success }                  # the spell check and Selbstbeherrschung
+    expect:
+      offered: [{ choice: split.le, max: 7, from: SA_74.VP1 }]    # at least 1 AsP stays AsP
+      events:
+        - { check: { talent: TAL_8, with: null }, from: SA_74.VP2, ruling: SA_74.vp-sequence }   # the old `checks_first`
+        - { paid: { pool: asp, amount: 3 }, from: SA_74.VP1 }   # VP1's split cost; ZM12's AsP-only cost is suppressed
+        - { paid: { pool: le, amount: 5 }, from: SA_74.VP1 }
+        - { after: { aspCurrent: 0, leCurrent: 24, conditions: {} } }      # 24 > 21.75: no Schmerz yet
+      notApplied: [{ rule: trefferzonen, clause: TZ8, reason: "LeP aufgewendet, kein Schaden" }]
+    appToday: >
+      Verbotene Pforten does not exist (catalog SA_74 todo). The cast is offered at 3 AsP
+      although it costs 8, and nothing is charged at all — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-magie.yaml 20.7 (plan-mandated: A.6 puts the split on SA_74's
+        `cost`, so the payment's origin is VP1): expects the 3 AsP `from:
+        [zaubermodifikationen.ZM12, SA_74.VP1]`. One `paid` event has one origin. With LeP
+        chosen, SA_74.VP1 suppresses ZM12's AsP-only cost and pays the whole cost with its
+        own `split` cost, so the AsP come from VP1 and ZM12 is in `notApplied` (suppressed).
+        The owner decides whether the expectation names VP1 alone, or whether a split cost
+        should keep ZM12 as its origin (with VP1 in `via`), which no verb expresses.
+
+        situations/probe-magie.yaml 20.7 (Task 35: every remaining mismatch; the entry above
+        names (b)): (a) `offered: [{ choice: split.le, max: 7, from: SA_74.VP1 }]`: VP1's
+        offer rests on the open ruling SA_74.vp-sequence (the original draft put it there,
+        `offer.ruling`), so it applies nothing and shows its clause and question; the offer
+        is missing while the ruling is open (see Open questions, Task 35). (b) the 3 AsP
+        `from: [zaubermodifikationen.ZM12, SA_74.VP1]`, one event with one origin (above).
+        (c) the event `{ check: { talent: TAL_8, with: null }, from: SA_74.VP2, ruling:
+        SA_74.vp-sequence }`: since Task 35 a cast asks the talent checks gated on what it
+        states, but VP2's check rests on vp-sequence (open) and is not asked. The payments
+        (3 AsP and 5 LeP, from VP1), the `after` (AsP 0, LE 24, no Zustand) and TZ8's
+        `notApplied` match. In a throwaway run with vp-sequence and cost-off-table taken as
+        decided, (a) and (c) match and only (b) remains.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "20.8"
+    name: The same, Selbstbeherrschung fails
+    hero: { values: { aspCurrent: 3, spell.cost: 8, spell.castingTime: 2, spell.range: 16 } }   # Ignifaxius
+    choose: { check.kind: spell, check.spell: SPELL_21, choice.split.le: 5 }
+    sequence:
+      - rolls: { check.result: failure }              # the old `fail: [Selbstbeherrschung]`
+        expect:
+          result: { success: false, from: SA_74.VP2, ruling: SA_74.vp-sequence }   # the old `cast: { outcome: failed }`
+          events:
+            - paid:
+                amount: 4                  # half of 8
+                pools: [{ asp: 3 }, { le: 1 }]    # AsP first, the rest from LE
+              from: SA_74.VP3              # "wie sonst die Hälfte": ZM12 is the clause it points at, suppressed by VP1
+              ruling: round-up
+            - { after: { aspCurrent: 0, leCurrent: 28 } }
+    appToday: not offered; nothing charged
+    conflict:
+      category: a
+      reason: >-
+        situations/probe-magie.yaml 20.8: expects the half cost `from: [SA_74.VP3,
+        zaubermodifikationen.ZM12]`. VP3's `cost` ("wie sonst die Hälfte") is its own
+        effect, and ZM12 is suppressed by VP1 once LeP are chosen, so the payments come from
+        VP3 alone; ZM12 is the clause VP3's text points at, not an origin. A third option:
+        ZM12 derives its failure-cost basis (half of the cost plus the first interval) into
+        a target that VP3's `cost` reads, so that ZM12 joins the payment's `via` by ruling
+        R26 (a value that reads a target operand carries the rules whose lines changed it);
+        that would also close VP3's gap of paying half of `spell.cost` only.
+
+        situations/probe-magie.yaml 20.8 (Task 35: every remaining mismatch; the entry above
+        names (a)): (a) the half cost `from: [SA_74.VP3, zaubermodifikationen.ZM12]`
+        (above). (b) the `after` AsP 0 and LE 28: got 3 and 29, nothing is paid: VP3's cost
+        rests on the open ruling vp-sequence (whether a spell check that failed on its own
+        pays this way), and ZM12's cost is suppressed by VP1 once LeP are chosen. (c)
+        `result: { success: false, from: SA_74.VP2, ruling: SA_74.vp-sequence }`, compared
+        since Task 35 (the cast's spell check, run as the step's roll states it): the cast
+        fails, but no clause names the failure, since VP2's check is not asked while
+        vp-sequence is open. In the throwaway run with the rulings decided, (b) and (c)
+        match (the failed Selbstbeherrschung forbids the cast from VP2, resting on
+        vp-sequence; VP3 pays 3 AsP and 1 LeP) and only (a) remains.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27

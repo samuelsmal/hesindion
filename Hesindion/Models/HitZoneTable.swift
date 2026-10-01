@@ -1,6 +1,30 @@
 import Foundation
 
-enum CreatureSize { case klein, mittel, gross, riesig }
+/// Größenkategorie (Regelwerk). `winzig` has no Trefferzonen table of its own;
+/// `tableSize` is the one it rolls on.
+enum CreatureSize: String, CaseIterable, Identifiable {
+    case winzig, klein, mittel, gross, riesig
+
+    var id: String { rawValue }
+    var nameKey: String { "creatureSize.\(rawValue)" }
+
+    /// The size a Trefferzonen table is looked up by: nothing is printed for
+    /// winzig, so it uses the klein tables.
+    var tableSize: CreatureSize { self == .winzig ? .klein : self }
+}
+
+extension BodyPlan {
+    /// The same plan with its size as the tables key it (`CreatureSize.tableSize`).
+    var tableKeyed: BodyPlan {
+        switch self {
+        case .humanoid(let size):              .humanoid(size.tableSize)
+        case .vierbeinig(let size):            .vierbeinig(size.tableSize)
+        case .sechsbeinigMitSchwanz(let size): .sechsbeinigMitSchwanz(size.tableSize)
+        case .fangarme(let size):              .fangarme(size.tableSize)
+        case .keineZonen:                      .keineZonen
+        }
+    }
+}
 
 /// Body plans with a published Trefferzonen table.
 enum BodyPlan: Equatable {
@@ -26,6 +50,32 @@ enum HitZoneTable {
         let zone: HitZone
     }
 
+    /// One row of a published table, for screens that show the table rather than
+    /// only its answer.
+    struct Row: Identifiable {
+        let lower: Int
+        let upper: Int
+        let zone: HitZone
+
+        var id: Int { lower }
+        var rangeText: String { lower == upper ? "\(lower)" : "\(lower)–\(upper)" }
+        func covers(_ roll: Int) -> Bool { roll >= lower && roll <= upper }
+    }
+
+    /// The published table for `plan`, in printed order.
+    static func rows(for plan: BodyPlan) -> [Row] {
+        ranges(for: plan).map { Row(lower: $0.lower, upper: $0.upper, zone: $0.zone) }
+    }
+
+    /// The distinct zones this plan has, in printed order — what a picker should
+    /// offer when the target is *not* another person. A four-legged opponent has
+    /// no Arme, and offering them meant aiming at something the table cannot
+    /// return.
+    static func zones(for plan: BodyPlan) -> [HitZone] {
+        var seen: Set<HitZone> = []
+        return ranges(for: plan).compactMap { seen.insert($0.zone).inserted ? $0.zone : nil }
+    }
+
     /// Resolve a 1W20 roll against a body plan. Rolls outside 1...20 are clamped.
     static func lookup(_ roll: Int, plan: BodyPlan) -> HitZoneHit {
         let clamped = min(max(roll, 1), 20)
@@ -40,8 +90,9 @@ enum HitZoneTable {
 
     /// Unlisted size combinations fall back to the nearest published table
     /// (`.gross` for six-limbed, `.mittel` for the rest) rather than trapping.
+    /// Winzig rolls on the klein table (`CreatureSize.tableSize`).
     private static func ranges(for plan: BodyPlan) -> [ZoneRange] {
-        switch plan {
+        switch plan.tableKeyed {
         case .humanoid(.klein):   humanoidKlein
         case .humanoid(.gross), .humanoid(.riesig): humanoidGross
         case .humanoid:           humanoidMittel

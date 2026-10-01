@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30B2F64000000E630FD /* MarkdownUI */; };
 		BABE7EFD2F6576EC006A2898 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = BA48A30D2F64000000E630FD /* SnapshotTesting */; };
+		CA0100000000000000000001 /* RulesEngine in Frameworks */ = {isa = PBXBuildFile; productRef = CA0100000000000000000002 /* RulesEngine */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +43,13 @@
 			);
 			target = BA48A1892F485F1D00E630FD /* Hesindion */;
 		};
+		BA48A6012F90000000E630FD /* Exceptions for "HesindionTests" folder in "HesindionTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Snapshots/__Snapshots__,
+			);
+			target = BA48A2042F4A000000E630FD /* HesindionTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -55,6 +63,9 @@
 		};
 		BA48A2012F4A000000E630FD /* HesindionTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BA48A6012F90000000E630FD /* Exceptions for "HesindionTests" folder in "HesindionTests" target */,
+			);
 			path = HesindionTests;
 			sourceTree = "<group>";
 		};
@@ -71,6 +82,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BABE7EFC2F6576EC006A2898 /* MarkdownUI in Frameworks */,
+				CA0100000000000000000001 /* RulesEngine in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,6 +134,7 @@
 				BA48A1862F485F1D00E630FD /* Sources */,
 				BA48A1872F485F1D00E630FD /* Frameworks */,
 				BA48A1882F485F1D00E630FD /* Resources */,
+				BA48A5002F80000000E630FD /* Bundle CHANGELOG.md */,
 			);
 			buildRules = (
 			);
@@ -133,6 +146,7 @@
 			name = Hesindion;
 			packageProductDependencies = (
 				BA48A30B2F64000000E630FD /* MarkdownUI */,
+				CA0100000000000000000002 /* RulesEngine */,
 			);
 			productName = Hesindion;
 			productReference = BA48A18A2F485F1D00E630FD /* Hesindion.app */;
@@ -144,6 +158,7 @@
 			buildPhases = (
 				BA48A2032F4A000000E630FD /* Sources */,
 				BA48A2022F4A000000E630FD /* Frameworks */,
+				BA48A6022F90000000E630FD /* Resources */,
 			);
 			buildRules = (
 			);
@@ -219,6 +234,7 @@
 			packageReferences = (
 				BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				CA0100000000000000000003 /* XCLocalSwiftPackageReference "Packages/RulesEngine" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BA48A18B2F485F1D00E630FD /* Products */;
@@ -247,7 +263,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA48A6022F90000000E630FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BA48A5002F80000000E630FD /* Bundle CHANGELOG.md */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 0;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/CHANGELOG.md",
+			);
+			name = "Bundle CHANGELOG.md";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/CHANGELOG.md",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The in-app Changelog screen reads CHANGELOG.md out of the bundle. Copy\n# the canonical one at the repo root rather than keeping a second copy under\n# Hesindion/Resources/, which is a synchronized group and so bundled\n# automatically — that copy silently fell eleven commits behind.\nset -euo pipefail\n/bin/cp -f \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BA48A1862F485F1D00E630FD /* Sources */ = {
@@ -414,7 +457,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -430,7 +473,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.Hesindion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -449,7 +492,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -465,7 +508,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.Hesindion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -483,11 +526,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -503,11 +546,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -522,11 +565,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -541,11 +584,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TBCJC928A5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = "0.5.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = org.savoba.HesindionUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -597,6 +640,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		CA0100000000000000000003 /* XCLocalSwiftPackageReference "Packages/RulesEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RulesEngine;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		BA48A30A2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -626,6 +676,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BA48A30C2F64000000E630FD /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
 			productName = SnapshotTesting;
+		};
+		CA0100000000000000000002 /* RulesEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RulesEngine;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

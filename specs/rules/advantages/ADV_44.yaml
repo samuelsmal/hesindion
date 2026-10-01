@@ -1,0 +1,71 @@
+# DRAFT FORMAT — see ../README.md.
+id: ADV_44
+name: Verbesserte Regeneration (Lebensenergie)
+kind: advantage
+levels: 3
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Verbesserte%20Regeneration%20(Lebensenergie)%20I-III
+  book: Regelwerk
+  page: 169
+  checked: 2026-09-27
+  hash: sha256:3e95fdcfe10caa0a1fb92ab1840b79b5b1f625fffa30b99119c528e0769d1517
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: VR1
+    # The page's sentence ends in a comma (checked in the HTML: "…wenn er regeneriert,</p>");
+    # the Optolith text ends in a full stop. Nothing appears to be missing — kept verbatim.
+    text: Für jede Stufe des Vorteils bekommt der Held 1 zusätzlichen Punkt dazu, wenn er regeneriert,
+    effects:
+      - add: { to: regeneration.le, value: level }
+        ruling: [vr-scope, vr-halving]
+        # "wenn er regeneriert": when regeneration fails outright (a storm, tied to a horse's back,
+        # Vergiftet or Krank — regeneration.R6, R7) he does not regenerate, and gets nothing.
+        # The target is the LeP regained in one Regenerationsphase (regeneration.R4): only there
+        # (ruling vr-scope), and only for LeP. `before: regeneration.R6` is the phase order: an
+        # `add` runs before R6's `multiply` halves the result (ruling vr-halving). When
+        # regeneration fails outright, regeneration.R6 and R7 suppress this line with a
+        # `because` (situations 15.11, 15.12): "wenn er regeneriert" lives there, not here.
+        # FORMAT: one effect resting on two rulings (when it applies, and in which order) — the
+        # other files only ever name one.
+
+  - id: VR2
+    text: "Voraussetzung: Kein Nachteil Schlechte Regeneration (Lebensenergie)"
+    none: purchase prerequisite, not a rule at the table
+
+  - id: VR3
+    text: "AP-Wert: 10 Abenteuerpunkte (pro Stufe)"
+    none: cost, not a rule at the table
+
+rulings:
+  - id: vr-scope
+    status: decided
+    question: >
+      "Wenn er regeneriert" — only in a Regenerationsphase (a rest of 6 hours or more,
+      regeneration.R2), or whenever the hero regains LeP (a healing potion, a spell, Heilkunde
+      Wunden)?
+    answer: >
+      Only in a Regenerationsphase, once per phase (so up to twice a day).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [VR1]
+    notes: >
+      "Regenerieren" is the Regeneration chapter's term for the 1W6 per Regenerationsphase;
+      potions and spells "heilen" and state their own amounts. The app already does this: the
+      bonus is added on the Regenerieren sheet (RegenerierenSheet,
+      Hero.verbessertRegenerationLEBonus), not on the healing sheet (HeilungSheet).
+
+  - id: vr-halving
+    status: decided
+    question: >
+      In a poor camp ("unruhig, nass oder kalt") regeneration is halved (regeneration.R6). Is the
+      advantage's bonus halved with it, or added after the halving?
+    answer: >
+      Halve the whole result: (1W6 + modifiers + Verbesserte Regeneration) / 2, rounded up.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [VR1, regeneration.R6]
+    notes: >
+      The page halves "die Regeneration", the result after every modifier; the advantage is one
+      more Bonus in that sum. Boronmir (Stufe II) rolling 3 in a wet camp regains
+      (3 + 2) / 2 = 3 (rounded up, ruling round-up). The app does not halve at all
+      (RegenerierenSheet has no environment): it needs an environment picker, with the halving
+      as its own line after the bonus.

@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# The brief's useLevel example: Belastung, lowered by SA_41.
+id: COND_1
+name: Belastung
+kind: condition
+levels: 4
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: B3
+    text: AT, PA, AW −Stufe.
+    effects:
+      - add: { to: [at, pa, aw], value: -1 * level }

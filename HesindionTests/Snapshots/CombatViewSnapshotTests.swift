@@ -7,13 +7,13 @@ import SwiftData
 final class CombatViewSnapshotTests: XCTestCase {
 
     @MainActor
-    func testArmorSelection() throws {
+    func testPreparation() throws {
         let container = try TestData.makeContainer()
         let hero = try TestData.importBoronmir(into: container)
 
         let view = CombatView(hero: hero, onDismiss: {})
             .modelContainer(container)
 
-        assertAllVariants(of: view, named: "armorSelection")
+        assertAllVariants(of: view, named: "preparation")
     }
 }

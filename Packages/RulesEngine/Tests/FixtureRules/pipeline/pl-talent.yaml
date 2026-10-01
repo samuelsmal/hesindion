@@ -1,0 +1,11 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+id: pl-talent
+name: Talent
+kind: talent
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: T1
+    text: Probe +1.
+    effects:
+      - add: { to: check.modifier, value: 1 }

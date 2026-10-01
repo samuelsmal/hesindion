@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23 (extra 2): a level whose derive cannot be computed and lacks no fact.
+id: pl-broken
+name: Kaputt
+kind: condition
+levels: 3
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: B1
+    text: Stufe nach Tabelle.
+    effects:
+      - derive: { to: "level(rule: pl-broken)", sum: ["table(pl.table, attr.KO)"] }
+  - id: B2
+    text: AsP-Maximum −1.
+    effects:
+      - add: { to: aspMax, value: -1 }

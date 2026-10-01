@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Fix round 1 (R38): a level derived from a target whose own when is open.
+id: pl-weak
+name: Schwäche
+kind: condition
+levels: 3
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: W1
+    text: Stufe = Tragkraft / 10.
+    effects:
+      - derive: { to: "level(rule: pl-weak)", sum: [{ of: carryingCapacity, per: 10, round: down }] }
+  - id: W2
+    text: AT −Stufe.
+    effects:
+      - add: { to: at, value: -1 * level }

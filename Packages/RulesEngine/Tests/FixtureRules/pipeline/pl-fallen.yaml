@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 33: a condition that holds GS at 0 at Stufe IV whatever else reaches it (COND_6.SZ5's
+# Schmerz IV), a bound the Schip's suppress of every condition's lines lifts with the rest.
+id: pl-fallen
+name: Gestürzt
+kind: condition
+levels: 4
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: F4
+    text: Ab Stufe IV GS 0.
+    effects:
+      - set: { to: gs, value: 0 }
+        when: { level: { atLeast: 4 } }
+      - cap: { to: gs, min: 0, max: 0 }
+        when: { level: { atLeast: 4 } }

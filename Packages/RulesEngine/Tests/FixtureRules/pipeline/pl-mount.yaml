@@ -1,0 +1,15 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R35: a base-phase alternative gated by a when (reiterkampf.RK1 on kampfwerte.KW9).
+id: pl-mount
+name: Beritten
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: M1
+    text: Beritten gilt der Wert des Reittiers.
+    effects:
+      - suppress: { line: { line: pl-kampfwerte.I1 } }
+        when: { hero.mounted: true }
+      - derive: { to: regeneration.kap, sum: [{ of: mount.kap }] }
+        when: { hero.mounted: true }

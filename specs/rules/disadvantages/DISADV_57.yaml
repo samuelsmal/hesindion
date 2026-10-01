@@ -1,0 +1,62 @@
+# DRAFT FORMAT — see ../README.md.
+id: DISADV_57
+name: Verweichlicht
+kind: disadvantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/nachteil.html?nachteil=Verweichlicht
+  book: Aventurisches Kompendium
+  page: 133
+  checked: 2026-09-27
+  hash: sha256:f0c75fc9ded92a5e5d621484ecb27e2003225c72439dc10d63e3f35ee3ceb2eb
+reviewed: null
+
+clauses:
+  - id: VW1
+    text: >
+      Bei der Probe auf Selbstbeherrschung (Handlungsfähigkeit bewahren oder Störungen
+      ignorieren) bei Wundeffekten bekommt die Heldin eine Erschwernis von 2.
+    effects:
+      - when:
+          check.talent: TAL_8              # Selbstbeherrschung
+          check.application: [Handlungsfähigkeit bewahren, Störungen ignorieren]
+          gmFact.cause: woundEffect
+        add: { to: check.modifier, value: -2 }
+        ruling: verweichlicht-scope
+      - when: { rulesets: fokus.trefferzonen }
+        tell: { to: player, text: "Verweichlicht: Selbstbeherrschung bei Wundeffekten −2." }
+        because: braucht die Fokusregel Trefferzonen
+        ruling: verweichlicht-scope
+        # The ruling's notes: with Trefferzonen off "the hero sheet must show that the
+        # disadvantage needs the Fokusregel". A `tell` reaches every query and the sheet; with
+        # the Fokusregel off it is not applied (conditionFalse) with this `because` (situation
+        # 13.4). Task 30.
+        # FORMAT: gated on *why* the check is rolled (a Wundeffekt), not only on which talent —
+        # a Selbstbeherrschung check for any other reason is untouched. The cause has to travel
+        # with the check.
+
+  - id: VW2
+    text: "Voraussetzung: Keine"
+    none: no prerequisite
+
+  - id: VW3
+    text: "AP-Wert: -3 Abenteuerpunkte"
+    none: cost, not a rule at the table (the ruling verweichlicht-scope leans on it)
+
+rulings:
+  - id: verweichlicht-scope
+    status: decided
+    question: >
+      Which checks are "Probe auf Selbstbeherrschung … bei Wundeffekten"? Only the checks the
+      Trefferzonen Fokusregel's Wundeffekte call for, or every Selbstbeherrschung check a wound
+      causes?
+    answer: >
+      Only the Wundeffekt checks of the Trefferzonen Fokusregel. Without it the disadvantage has
+      no effect.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [VW1]
+    notes: >
+      "Wundeffekte" is a defined term of that Fokusregel; a wider reading would make the
+      disadvantage stronger than its −3 AP. So Blutend's check (BleedingRules) and a critical
+      hit's aftermath are untouched. The app already applies the −2 only there
+      (situation.woundEffect); what it lacks is saying so: with Trefferzonen off the hero sheet
+      must show that the disadvantage needs the Fokusregel.

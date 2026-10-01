@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: a condition the Zustand cap sums.
+id: pl-hurt
+name: Schmerzen
+kind: condition
+levels: 4
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: C1
+    text: AT und GS −Stufe.
+    effects:
+      - add: { to: [at, gs], value: -1 * level }
+  - id: C4
+    text: Ab Stufe IV GS 0.
+    effects:
+      - set: { to: gs, value: 0 }
+        when: { level: { atLeast: 4 } }

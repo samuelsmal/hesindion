@@ -11,6 +11,10 @@ enum DSAAnimation {
     /// Standard animation for collapsible sections, swipe resets, and step transitions.
     static let standard: Animation = .easeOut(duration: 0.2)
 
+    /// The press "move into the shadow" (ADR-0008). Short enough to feel like a
+    /// physical press rather than an animation.
+    static let press: Animation = .easeOut(duration: 0.07)
+
     // MARK: - Opacity
 
     /// Opacity for the "dice tumbling" background tint.

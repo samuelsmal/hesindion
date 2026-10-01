@@ -53,12 +53,12 @@ struct SwipeActionRow<Content: View>: View {
                             action.action()
                         } label: {
                             Image(systemName: action.icon)
-                                .font(.system(.title3, weight: .bold))
+                                .font(.dsaHeading(.title3))
                                 .foregroundStyle(.white)
                                 .frame(width: 56)
                                 .frame(maxHeight: .infinity)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                         .background(action.color)
                     }
                 }
@@ -127,7 +127,7 @@ struct DefaultSwipeContent: View {
             Text(L(label)).font(.body)
             Spacer()
             if !value.isEmpty {
-                Text(value).font(.system(.body, design: .monospaced))
+                Text(value).font(.dsaMono(.body, emphasis: true))
             }
         }
         .padding(.leading, 24)

@@ -1,0 +1,146 @@
+# DRAFT FORMAT — see ../README.md.
+# Only the LeP side is encoded in these examples; AsP and KaP follow the same clauses and are
+# left for a hero who has them (Boronmir has neither).
+id: regeneration
+name: Regeneration
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Regeneration.html
+  book: Regelwerk (3. überarb. Aufl.)
+  page: 339
+  checked: 2026-09-26
+  hash: sha256:355bad879a8aa9b10447901c9f2a9f514d755e7b3da4225718b1ebb149059ab6
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: R1
+    text: >
+      Wenn ein Held Lebens-, Astral- und/oder Karmapunkte verloren hat, kann er in der nächsten
+      Regenerationsphase versuchen, Punkte zurückzugewinnen.
+    none: introduction
+
+  - id: R2
+    text: Eine Regenerationsphase ist eine Ruhe- und Schlafphase von mindestens 6 Stunden Dauer.
+    effects:
+      - offer: { choice: regenerationsphase }
+        # The app's Regenerieren sheet (RegenerierenSheet) is this action, offered outside a
+        # fight only (the sheet is not a combat screen).
+
+  - id: R3
+    text: Pro Tag können bis zu zwei Regenerationsphasen genutzt werden.
+    unencoded: the app keeps no days; shown as text on the Regenerieren sheet
+
+  - id: R4
+    text: >
+      Die Grundregeneration beträgt 1W6. Ein Held würfelt für jede reduzierte Energie einzeln,
+      verrechnet das Ergebnis mit den Mali und Boni seiner augenblicklichen Situation und addiert
+      dann den Wert zu seiner Energie. Negative Ergebnisse werden als 0 gewertet.
+    effects:
+      - derive: { to: regeneration.le, sum: [{ of: roll.regeneration }] }
+        # The 1W6 as rolled, one roll per reduced energy (only LeP in these examples). The
+        # situational lines are T1's and ADV_44.VR1's own effects on the same target.
+      - when: { choice.regenerationsphase: true }
+        restore: { pool: le, amount: { of: regeneration.le } }
+        # "addiert dann den Wert zu seiner Energie": taking the Regenerationsphase (R2's offer)
+        # raises LE by the phase's result, held at the maximum by R5 (ruling R64, Task 30).
+      - floor: { to: regeneration.le, min: 0 }
+        # A floor runs in the cap phase, after R6's halving (the page: "Negative Ergebnisse
+        # werden als 0 gewertet").
+        # FORMAT: a rolled value with its own breakdown — the roll, then situational lines, then
+        # a floor. Like a check, but the result is added to a resource, not compared.
+
+  - id: R5
+    text: >
+      Kein Held kann Punkte über den Höchstwert seiner Lebens-, Astral- oder Karmapunkte hinaus
+      ansammeln.
+    effects:
+      - cap: { to: leCurrent, max: { of: leMax } }
+
+  - id: R6
+    text: >
+      In der Regenerationsphase muss das Ausruhen allerdings auch möglich sein. Ist die Umgebung
+      unruhig, nass oder kalt, halbiert sich die Regeneration. Bei besonders schlechten
+      Bedingungen wie in einem Sturm oder auf einen Pferderücken gebunden fällt die Regeneration
+      ganz aus.
+    effects:
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.environment, who: player, options: [ruhig, "unruhig, nass oder kalt", "Sturm, auf ein Pferd gebunden"] }
+        # "Wie ist die Umgebung?" Asked on the Regenerationsphase's value only (Task 32 fix round 1,
+        # as R7's tell): ungated, every query asked it.
+      - when: { choice.environment: "unruhig, nass oder kalt" }
+        multiply: { to: regeneration.le, by: 0.5, round: up }
+        ruling: [round-up, ADV_44.vr-halving]
+        # round-up (rulings.yaml) is decided for every halving the rules do not settle.
+      - when: { choice.environment: "Sturm, auf ein Pferd gebunden" }
+        set: { to: regeneration.le, value: 0 }
+        # No roll, and no bonus: the hero does not regenerate (ADV_44.VR1 "wenn er regeneriert").
+        # A `set` applies before the phase's `add`s, so the bonus and T1's rows are suppressed
+        # outright (situation 15.11: notApplied ADV_44.VR1 because R6).
+      - when: { choice.environment: "Sturm, auf ein Pferd gebunden" }
+        suppress: { line: { rule: ADV_44 } }
+        because: fällt ganz aus (Sturm, auf ein Pferd gebunden)
+      - when: { choice.environment: "Sturm, auf ein Pferd gebunden" }
+        suppress: { line: { line: regeneration.T1 } }
+        because: fällt ganz aus (Sturm, auf ein Pferd gebunden)
+
+  - id: R7
+    text: >
+      Helden, die unter dem Status Vergiftet oder Krank leiden, können nicht durch die
+      Regenerationsphase regenerieren, so lange die Wirkung des Giftes oder der Krankheit anhält.
+      Heilkräuter, die gegen Gifte und Krankheiten wirken oder Lebenspunkte regenerieren, wirken
+      in den Regenerationsphasen dennoch.
+    effects:
+      - when: { hero.has: [STATE_15, STATE_9] }
+        set: { to: regeneration.le, value: 0 }
+      - when: { hero.has: [STATE_15, STATE_9] }
+        suppress: { line: { rule: ADV_44 } }
+        because: Vergiftet oder Krank, keine Regeneration
+        # As in R6: the bonus is not added to a regeneration that does not happen (15.12).
+      - when: { hero.has: [STATE_15, STATE_9] }
+        suppress: { line: { line: regeneration.T1 } }
+        because: Vergiftet oder Krank, keine Regeneration
+        # The app knows both statuses (StateCatalog vergiftet, krank) and even says so on their
+        # chips ("keine normale Regeneration"), but the Regenerieren sheet does not read them.
+        # The table (T1) says "keine LeP-Regeneration"; the text says no regeneration at all.
+        # Only LeP matter for these examples, so the difference is left for an AsP/KaP example.
+      - when: { any: [{ choice.regenerationsphase: true }, { query.target: regeneration.le }] }
+        tell: { to: player, text: "Heilkräuter wirken dennoch." }
+        # "in den Regenerationsphasen": shown with the Regenerationsphase (R2's choice, or its
+        # value `regeneration.le`), not on every query (Task 31 fix round 1: kampfsituationen 17.22).
+
+  - id: T1
+    text: |
+      Situation | Regeneration
+      Grundregeneration für 6 Stunden Schlaf | 1W6 LeP/AsP/ KaP
+      Schlechter Lagerplatz, misslungene Probe auf Wildnisleben (Lagersuche) | –1 LeP/AsP/KaP
+      Unterbrechung der Nachtruhe (z.B. Wache halten/Ruhestörung) | –1 LeP/AsP/KaP
+      Längere Unterbrechung der Nachtruhe (z.B. Hundswache, nächtlicher Überfall) | –2 LeP/AsP/KaP
+      Held ist erkrankt/vergiftet | keine LeP-Regeneration
+      Gute Unterkunft (Einzelzimmer Reisegasthof) | +1 LeP/AsP/KaP
+      Schlechte Umgebung (feucht, kalt) | Regeneration von LeP, AsP und KaP halbiert
+      Furchtbare Umgebung (extrem schlechtes Wetter) | Regeneration von LeP, AsP und KaP fällt aus
+      Pro volle 2 Stein Eisen am Körper (siehe Bann des Eisens Seite 256 im Regelwerk) | –1 AsP
+    effects:
+      # "Lagerplatz und Nacht?" — any number of the rows apply, so one question per row, asked on
+      # the Regenerationsphase's value only (Task 32 fix round 1).
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.schlechterLagerplatz, who: player }
+      - when: { choice.schlechterLagerplatz: true }
+        add: { to: regeneration.le, value: -1 }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.unterbrechung, who: player }
+      - when: { choice.unterbrechung: true }
+        add: { to: regeneration.le, value: -1 }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.laengereUnterbrechung, who: player }
+      - when: { choice.laengereUnterbrechung: true }
+        add: { to: regeneration.le, value: -2 }
+      - when: { query.target: regeneration.le }
+        ask: { fact: choice.guteUnterkunft, who: player }
+      - when: { choice.guteUnterkunft: true }
+        add: { to: regeneration.le, value: 1 }
+        # The erkrankt/vergiftet, halved and none rows restate R6 and R7. The iron row is AsP only.
+        # FORMAT: a table whose rows are named lines on one rolled value; the text above says
+        # the same things in prose. One clause for the table, the prose clauses carry the logic.
+        # Today the sheet has one free "Modifikator" stepper (RegenerierenSheet.userModifier):
+        # the number is right if the player adds correctly, but no line names its row.

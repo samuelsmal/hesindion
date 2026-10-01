@@ -1,0 +1,15 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: zaubermodifikationen.ZM12's shape: the cast's AsP, half on a failure.
+id: chk-magie
+name: Zauberkosten
+kind: core
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: M1
+    text: Die Kosten in AsP; misslingt der Zauber, die Hälfte.
+    effects:
+      - when: { check.kind: spell, check.result: success }
+        cost: { pool: asp, amount: 8 }
+      - when: { check.kind: spell, check.result: failure }
+        cost: { pool: asp, amount: 7, onFailure: 0.5 }

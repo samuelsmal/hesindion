@@ -1,0 +1,103 @@
+{
+  "conflicts" : {
+    "boronmir-sf.yaml 14.19" : [
+      {
+        "kind" : "result",
+        "query" : "at"
+      },
+      {
+        "kind" : "total",
+        "query" : "at"
+      }
+    ],
+    "boronmir-sf.yaml 14.20" : [
+      {
+        "kind" : "total",
+        "query" : "pa",
+        "step" : 1
+      }
+    ],
+    "finte.yaml 8.7" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "lebensenergie.yaml 15.7" : [
+      {
+        "kind" : "total",
+        "query" : "gs",
+        "step" : 1
+      }
+    ],
+    "probe-fernkampf.yaml 21.4" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "probe-fernkampf.yaml 21.5b" : [
+      {
+        "kind" : "missingText"
+      }
+    ],
+    "probe-fernkampf.yaml 21.6" : [
+      {
+        "kind" : "missingLine",
+        "query" : "fk(with: Kurzbogen)",
+        "step" : 4
+      },
+      {
+        "kind" : "total",
+        "query" : "fk(with: Kurzbogen)",
+        "step" : 4
+      },
+      {
+        "kind" : "process",
+        "step" : 1
+      },
+      {
+        "kind" : "process",
+        "step" : 2
+      },
+      {
+        "kind" : "process",
+        "step" : 3
+      },
+      {
+        "kind" : "process",
+        "step" : 4
+      }
+    ],
+    "probe-fertigkeiten.yaml 22.4" : [
+      {
+        "kind" : "dice",
+        "query" : "check.dice",
+        "step" : 1
+      }
+    ],
+    "probe-fertigkeiten.yaml 22.5" : [
+      {
+        "kind" : "dice",
+        "query" : "check.dice",
+        "step" : 1
+      }
+    ],
+    "trefferzonen.yaml TZ.10" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ],
+    "trefferzonen.yaml TZ.11" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ],
+    "trefferzonen.yaml TZ.9" : [
+      {
+        "kind" : "unsupportedShape",
+        "shape" : "no expectation"
+      }
+    ]
+  }
+}

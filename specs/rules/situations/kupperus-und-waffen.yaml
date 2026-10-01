@@ -1,0 +1,501 @@
+# Example 18 — Kupperus and Boronmir's weapons. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+# Open rulings named without a prefix live in ../rulings.yaml or in the rule's own file.
+#
+# The hero is Boronmir as of the 2026-09-24 export (specs/heroes/Boronmir Siebenfeld von
+# Greifenfurt.json), in his Plattenrüstung, with the values derived as
+# boronmir-neu.yaml derives them:
+#   MU 14, GE 14, KK 14; Hiebwaffen 14, Schwerter 12, Schilde 10; Reiten (TAL_6) FW 12.
+#   Rabenschnabel AT 16 (KtW 14 + (MU 14 − 8)/3 = 2), Langschwert AT 14 (12 + 2), before any
+#   line below.
+#   INI base ⌈(MU 14 + GE 14)/2⌉ = 14. GS 8 (Mensch).
+#   Belastung: Plattenrüstung III, Belastungsgewöhnung II → I: −1 on foot (COND_1.B3 via
+#   SA_41.G1); mounted, RK7 lowers it to 0 on Kampfproben and Reiten (ruling rk7-reiten), so
+#   no Belastung line on horseback.
+# Schadensbonus (L+S): +1 TP per point of the Leiteigenschaft above the weapon's threshold, from
+#   the Kampftechniken page (https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/kampftechniken.html).
+#   It is schaden.S3 (core/schaden.yaml).
+#   Rabenschnabel KK 14 → KK 14: +0. Langschwert GE/KK 15 → max(14, 14) = 14: +0. So neither
+#   of his weapons gets a Schadensbonus now; 18.17 keeps the case for a hero above the
+#   threshold (KK 15, Boronmir's value before 2026-09-24), where the app is still wrong.
+# Kupperus (pets.PET_1, Svellttaler Kaltblut): INI 14+1W6, GS 12, KK 25, Tritt AT 15 TP 1W6+7,
+#   Biss AT 12 TP 1W6+2, Niederreiten AT 15 TP 2W6+6, Mächtiger Schlag, Ruhiges Temperament.
+#   The export's free-text `skills` names both ("Mächtiger Schlag, Ruhiges Temperament").
+# "Fokusregel Waffeneigenschaften on" is written `rulesets: [fokus.waffeneigenschaften]` (the
+#   old `hero: { rulesets }`).
+# Every situation states its loadout in full, as the file-level `hero` holds none (the old
+#   file-level `armour` and `loadout`): Rabenschnabel (mittel) and Großschild (groß) in the
+#   Plattenrüstung (Belastung 3, no extra) unless it says otherwise; mounted is `hero.mounted`.
+# Kupperus is owned as the mount's profile (`creatures: { svellttaler-kaltblut }`, the old
+#   `mount: { profile }`), his INI Basiswert and GS stated as the base values `mount.iniBase` and
+#   `mount.gs`.
+# An order is `choice.order` (the old `order:`; `mount_attack` is `mountAttack`), the mount's
+#   attack `choice.mountAttack`, the gait `action.gait`, the run-up `action.runUp`. The Reiten
+#   (Kampfmanöver) check before an order (the old `checks_first`) is an `events` entry and the
+#   query `check.modifier(talent: TAL_6)`; the action it costs (the old `costs`) a `paid` event;
+#   the mount's attack (the old `attack: { by: mount }`, `on_hit`) an `events` entry with its AT
+#   and TP. What the opponent may not do (the old `opponent_may_only`) is the opponent's query's
+#   `legal`; the opponent's Kraftakt modifier the query `opponent.check.modifier`; what anyone is
+#   told `texts`. "On a hit" is `action.attack: hit`; a TP formula is a comment. `formula` in a
+#   line is a comment.
+
+heroFile: "../../heroes/Boronmir Siebenfeld von Greifenfurt.json"
+hero:
+  abilities: { SA_41: 2, SA_43: 1, SA_661: 1 }
+  creatures: { svellttaler-kaltblut: true }
+  attributes: { KK: 14 }
+  talents: { TAL_6: 12 }                    # Reiten
+  values:
+    "at(with: Rabenschnabel)": 16
+    "at(with: Langschwert)": 14
+    ini: 14
+    gs: 8
+    mount.iniBase: 14
+    mount.gs: 12
+
+situations:
+
+  # --- Kupperus ------------------------------------------------------------------------------
+
+  - id: "18.1"
+    name: Boronmir orders Kupperus to ride down a foot soldier
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true, size: mittel }
+    choose: { choice.order: niederreiten, action.gait: galopp, action.runUp: 4, check.kind: talent, check.talent: TAL_6, check.application: Kampfmanöver }
+    expect:
+      offered: [{ choice: order, options: [niederreiten], from: reiterkampf.RK13 }]
+      events:
+        - { paid: { pool: actions, amount: 1 }, from: reiterkampf.RK12 }                  # the old `costs`
+        - { check: { talent: TAL_6, with: Kampfmanöver }, from: reiterkampf.RK12 }               # the old `checks_first`
+        - { check: { attack: Niederreiten, by: mount, at: 15, tp: 2W6+6 }, from: reiterkampf.RK13, via: [svellttaler-kaltblut.SK3] }   # the old `attack` and `on_hit.tp`
+      "check.modifier(talent: TAL_6)":
+        total: 1
+        lines:
+          - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
+        notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
+      "opponent.pa": { legal: { allowed: false, because: reiterkampf.RK13 } }                   # the old `opponent_may_only: [aw]`
+      texts:
+        - { player: "Das Pferd rennt mit voller GS bis zum Ende der KR weiter; es wieder auf den Fußkämpfer zu wenden kostet 1 Aktion.", from: reiterkampf.RK13 }   # the old `after`
+    sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_attack_success`: Kupperus's attack hit
+        opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
+        expect:
+          "opponent.check.modifier":
+            total: -3
+            lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }]          # −⌈(25 − 20)/2⌉
+          texts:
+            - { opponent: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS1 }
+      - rolls: { check.result: failure }                                                # the old `on_check_failure`
+        expect:
+          texts: [{ player: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht.", from: reiterkampf.RK12 }]
+    appToday: >
+      AT 15 and TP 2W6+6 — the AT by luck: the app reads the first attack parsed from the notes,
+      Tritt, which is also 15 (18.2). AW-only note: same. Mächtiger Schlag: on "Treffer geht durch"
+      a card says Kraftakt −3 from Kupperus's KK 25 (AttackFollowUp.mightyBlow, issue #41) — same. The Reiten check has no lines. Mounted, Belastung I leaves no line
+      anyway, but Ruhiges Temperament is missing: total 0 instead of +1 — wrong. The export's
+      `skills` names it, and the app shows it only as the ⓘ text on the attack screen. Offered
+      without checking SA_43 (Boronmir has it) and without asking the run-up.
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.1: expects the mount's Niederreiten attack
+        (AT 15, TP 2W6+6) `from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK13]`, now an
+        `events` entry. The rules make it RK13's `check` of the mount's Niederreiten line,
+        whose values are SK3's provided data, so the event comes from RK13; the AT and TP
+        are data, not lines.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.1: every `formula:` (a TP formula or a
+        computation, e.g. "2 + 12/2", "1W6+4 +9", "−⌈(25 − 20)/2⌉") is a comment: no line or
+        query key holds a formula. (Task 32: the two situations this entry named beside 18.1
+        pass: schaden.S3 with nothing above the Schadensschwelle gives no line and is
+        `conditionFalse`, and the opponent's stated RS is the base of `opponent.rs`.)
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3 (Task 31 fix round 2: every remaining
+        mismatch). Since fix round 2 the Reiten check's ruling (R71), the Kraftakt −3
+        (maechtiger-schlag.MS2 reads `mount.kk`), GK4's `via` SK7, the mount's Tritt (R72)
+        and RK12's failure text match. What remains: (a) the Niederreiten attack is expected
+        `from: SK3, via: [RK13]`; the engine's is RK13's check, via SK3's profile row (the
+        18.1 entry above); (b) 18.3's order is expected `via: [RK12]`, while SK3's own offer
+        carries it (the 18.3 entry above); (c) the structured texts (RK13's `mount`, MS1's
+        `opponent: { check, … }`, RK12's `order: not carried out`) against the rules' plain
+        tells (the 18.1, 18.3, 18.4 entry above): RK12's tell "Der Befehl wird nicht
+        ausgeführt; weitere Folgen hat das nicht." is now shown on the failed check; (d)
+        unmodelled fields, which are comments: 18.1's `offered.requires: [SA_43.BK1]`
+        (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
+        rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
+        pool, `actions`, is the hero's; no event field says what it replaces).
+
+        Agent pass 2026-09-27, on the owner's note (the companion's values are now in the
+        export, with a tool to add them, so they should be importable): agreed, and the decided
+        ruling svellttaler-kaltblut.mount-profile-data already says so — "the export's own
+        numbers overriding" the profile. `make companions` writes Kupperus's values into the
+        export's `hesindion` block, and the app's import can read them from there. It does not
+        change what this entry is about. The Niederreiten attack is RK13's order, and its AT
+        and TP are data: from the export where present, else SK3's profile row. Either way no
+        clause makes a line of them, so the event comes from RK13, with the row's source in
+        `via`, not `from: SK3, via: [RK13]`. Two things follow from the note that the rule data
+        cannot do alone. (1) The engine and the harness read no hero file (`heroFile:` is a
+        pointer for readers), and no input states a mount's attack row, so the export's numbers
+        cannot override SK3's in a situation; that needs an engine input (a stated
+        `mount.attacks`, as a stated base overrides a derive). (2) Kupperus's own values in the
+        2026-09-24 export (`Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`: Niederreiten
+        AT 19, TP 2W6+7; Tritt AT 19, TP 1W6+8; KK 28) are not the breed's (AT 15, TP 2W6+6; KK
+        25), which this file and its `heroFile` still use. Moving the file to them changes
+        18.1's AT and TP and MS2's Kraftakt −3 (KK 28: −⌈8/2⌉ = −4) — an expectation change
+        only the owner can allow. The mismatches (a)–(d) above are unchanged.
+
+        Agent pass 2026-09-27, on the owner's agreement: (a) the Niederreiten event now reads
+        `from: reiterkampf.RK13, via: [svellttaler-kaltblut.SK3]`; (c) the three `texts` entries
+        are now the rules' own plain tells, as 18.3 and 18.4 already are (RK13's, MS1's,
+        RK12's); (d) `offered.requires` and the paid event's `of` are dropped, matching 18.3.
+        (b) is 18.3's, already resolved there.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "18.2"
+    name: Niederreiten on an Elenviner Vollblut — Tritt listed first with a different AT
+    hero: { creatures: { elenviner-vollblut: true } }
+    # the old `mount: { profile }`: Elenviner Vollblut — Tritt AT 16 TP 1W6+6, Biss AT 13,
+    # Niederreiten AT 15 TP 2W6+4 (creatures/elenviner-vollblut.yaml, drafted for this situation)
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    choose: { choice.order: niederreiten, action.gait: galopp, action.runUp: 4 }
+    expect:
+      events: [{ check: { attack: Niederreiten, by: mount, at: 15, tp: 2W6+4 }, from: reiterkampf.RK13 }]   # the old `attack` and `on_hit`
+    appToday: AT 16 — wrong (CombatAttackViews.niederreitenButton takes `mount.attacks.first?.at`); TP 2W6+4 same
+    conflict:
+      category: c
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.2: expects Niederreiten with an Elenviner
+        Vollblut's AT 15 and TP 2W6+4. There is no profile file for that horse, so nothing
+        states its attack lines (`mount.hasAttack`) or values; RK13's offer is unknown and
+        the numbers cannot come from the rules.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "18.3"
+    name: Kupperus kicks (Tritt) while Boronmir rides
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true, size: mittel }
+    choose: { choice.order: mountAttack, choice.mountAttack: Tritt, check.kind: talent, check.talent: TAL_6, check.application: Kampfmanöver }
+    expect:
+      # SK3's own offer carries the order; RK12 supplies its action and Reiten check (below)
+      offered: [{ choice: order, options: [mountAttack], from: svellttaler-kaltblut.SK3, ruling: svellttaler-kaltblut.mount-own-attack }]
+      events:
+        # the old `costs`; the action is the hero's, in place of his own attack (not an event field)
+        - { paid: { pool: actions, amount: 1 }, from: reiterkampf.RK12, ruling: svellttaler-kaltblut.mount-own-attack }
+        - { check: { talent: TAL_6, with: Kampfmanöver }, from: reiterkampf.RK12, ruling: svellttaler-kaltblut.mount-own-attack }                            # the old `checks_first`
+        - { check: { attack: Tritt, by: mount, at: 15, tp: 1W6+7 }, from: svellttaler-kaltblut.SK3 }                                                        # the old `attack` and `on_hit.tp`
+      "check.modifier(talent: TAL_6)":
+        total: 1
+        lines:
+          - { value: 1, from: ruhiges-temperament.RT1, via: [svellttaler-kaltblut.SK5], ruling: svellttaler-kaltblut.mount-profile-data }
+        notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower mounted (reiterkampf.RK7, ruling rk7-reiten): none" }]
+      # the old `not_asked: [{ gait: galopp, runUp: 4, reason: "only Niederreiten needs them
+      # (reiterkampf.RK13)" }]`: no expect key says "not asked" (MIGRATION.md, expectation conflicts)
+      "opponent.pa(with: weapon)": { legal: { allowed: false, because: groessenkategorie.GK4, via: [svellttaler-kaltblut.SK7] } }   # the old `opponent_may_only: [shieldParry, aw]`: a groß attacker
+    sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_attack_success`: Kupperus's Tritt hit
+        opponent: { check.talent: TAL_5 }                                               # the opponent's Kraftakt
+        expect:
+          "opponent.check.modifier": { total: -3, lines: [{ value: -3, from: maechtiger-schlag.MS2, ruling: round-up }] }
+          texts: [{ opponent: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS1 }]
+      - rolls: { check.result: failure }                                                # the old `on_check_failure`
+        expect:
+          texts: [{ player: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht.", from: reiterkampf.RK12 }]
+    appToday: >
+      offered beside the hero's own attack, straight to the roll: no Reiten check (so no +1 from
+      Ruhiges Temperament either), no action named, and Boronmir may still attack — wrong. AT 15, TP 1W6+7 same; the Mächtiger Schlag
+      follow-up says Kraftakt −3 from Kupperus's KK 25 — same
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.3: expects `not_asked: [{ gait: galopp,
+        runUp: 4 }]` (a mount attack does not ask for gait or run-up). No expect key says
+        "not asked" (`questions: []` would assert that nothing at all is asked); it is a
+        comment.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.3: expects the mount-attack order offered
+        `from: svellttaler-kaltblut.SK3, via: [reiterkampf.RK12]`. SK3's own offer carries
+        it; the profile is owned (`creatures`), so no enabling `require` in RK12 could add a
+        `via` (enabling only applies to a rule that does not apply otherwise). RK12 supplies
+        the order's Aktion and Reiten check, which the offered entry does not show.
+
+        situations/kupperus-und-waffen.yaml 18.1, 18.3 (Task 31 fix round 2: every remaining
+        mismatch). Since fix round 2 the Reiten check's ruling (R71), the Kraftakt −3
+        (maechtiger-schlag.MS2 reads `mount.kk`), GK4's `via` SK7, the mount's Tritt (R72)
+        and RK12's failure text match. What remains: (a) the Niederreiten attack is expected
+        `from: SK3, via: [RK13]`; the engine's is RK13's check, via SK3's profile row (the
+        18.1 entry above); (b) 18.3's order is expected `via: [RK12]`, while SK3's own offer
+        carries it (the 18.3 entry above); (c) the structured texts (RK13's `mount`, MS1's
+        `opponent: { check, … }`, RK12's `order: not carried out`) against the rules' plain
+        tells (the 18.1, 18.3, 18.4 entry above): RK12's tell "Der Befehl wird nicht
+        ausgeführt; weitere Folgen hat das nicht." is now shown on the failed check; (d)
+        unmodelled fields, which are comments: 18.1's `offered.requires: [SA_43.BK1]`
+        (RK13's offer reads `hero.has: SA_43`; no offered key names a clause a condition
+        rests on) and the paid events' `of: hero` and `instead_of: hero attack` (a payment's
+        pool, `actions`, is the hero's; no event field says what it replaces).
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "18.4"
+    name: The foot soldier parries Kupperus's Tritt with a shield, successfully
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true, size: mittel, defence: shieldParry, defenceResult: success }   # the old `defence: { kind, result }`
+    choose: { choice.order: mountAttack, choice.mountAttack: Tritt }
+    expect:
+      # the old `on_hit: { tp: none }`: the parried Tritt rolls no damage — no expect key says
+      # "no roll" (MIGRATION.md, expectation conflicts)
+      texts:
+        - { opponent: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)", from: maechtiger-schlag.MS3 }
+    appToday: >
+      "Pariert" shows a toast: Kraftakt −3 from Kupperus's KK 25, misslingt sie: Liegend; the
+      screen said before the choice that a parry does not avoid it — same (issue #41)
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.1, 18.3, 18.4: the `texts` entries keep the
+        old structured tells (`{ opponent: { check: Kraftakt, on_failure: STATE_10 } }`, `{
+        mount: … }`, `{ order: not carried out, nothing worse }`). The rules' `tell`s are
+        plain text to an audience (opponent or player): maechtiger-schlag.MS1/MS3 "Probe auf
+        Kraftakt … Status Liegend (STATE_10)", reiterkampf.RK13's to the player, RK12's "Der
+        Befehl wird nicht ausgeführt …". Matching them needs the owner to say whether a text
+        expectation compares audience and source only.
+
+        situations/kupperus-und-waffen.yaml 18.4: expects `on_hit: { tp: none }` (the
+        parried Tritt rolls no damage). No expect key says "no roll"; it is a comment.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  # --- Rabenschnabel -------------------------------------------------------------------------
+
+  - id: "18.5"
+    name: Rabenschnabel, Dornenspitze, on foot, against a knight in plate (RS 6)
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    opponent: { rs: 6, armour: worn }
+    choose: { choice.dornenspitze: true, action.with: mainHand }
+    expect:
+      offered: [{ choice: dornenspitze, from: ITEMTPL_19.RS2 }]
+      at:
+        total: -2
+        result: 14
+        lines:
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }
+    sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_hit`
+        expect:
+          tp: { total: 0, notApplied: [{ rule: schaden, clause: S3, reason: "KK 14, not above the threshold 14" }] }   # 1W6+4
+          "opponent.rs": { total: -2, result: 4, lines: [{ value: -2, from: ITEMTPL_19.RS2, ruling: [ITEMTPL_19.rabenschnabel-waffeneigenschaft, ITEMTPL_19.dornenspitze-rs] }] }
+    appToday: >
+      AT 15 — no Großschild −1, wrong. TP 1W6+4: same (the app never adds a Schadensbonus, and
+      at KK 14 there is none; 18.17). The Dornenspitze toggle and the RS −2 note ("nur gegen RS
+      6 oder mehr"): same.
+
+  - id: "18.6"
+    name: Dornenspitze against a creature with natural RS 6, and against a Kettenhemd (RS 4)
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { choice.dornenspitze: true, action.attack: hit }                           # the old `on_hit`
+    sequence:
+      - opponent: { rs: 6, armour: natural }
+        expect:
+          "opponent.rs": { total: 0 }
+          notApplied: [{ rule: ITEMTPL_19, clause: RS2, reason: "natural armour, not a Rüstung", ruling: ITEMTPL_19.dornenspitze-rs }]
+      - opponent: { rs: 4, armour: worn }
+        expect:
+          "opponent.rs": { total: 0 }
+          notApplied: [{ rule: ITEMTPL_19, clause: RS2, reason: RS below 6 }]
+    appToday: >
+      the same note, "nur gegen RS 6 oder mehr", in both cases; the GM decides — same as text
+      against the Kettenhemd; against natural RS 6 the note invites the −2 — wrong (it should
+      read "Rüstung mit RS 6 oder mehr")
+
+  - id: "18.7"
+    name: Rabenschnabel without the Fokusregel Waffeneigenschaften
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true }
+    choose: { action.attack: hit }                                                      # the old `on_hit`
+    expect:
+      offered: []   # no Dornenspitze
+      tp: { total: 0 }   # 1W6+4: 18.9 without its RS3 line; no Schadensbonus at KK 14
+      notApplied:
+        - { rule: ITEMTPL_19, clause: RS2, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+        - { rule: ITEMTPL_19, clause: RS3, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+        - { rule: ITEMTPL_19, clause: RS4, reason: Fokusregel Waffeneigenschaften off, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+    appToday: >
+      all three always on — the app has no such Fokusregel (FokusRule): Dornenspitze offered,
+      Betäubung on a Patzer — wrong. TP 1W6+5 (the RS3 +1 applied without the Fokusregel) — wrong
+
+  - id: "18.8"
+    name: Rabenschnabel, Dornenspitze, on the Sturmangriff zu Pferd
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true, rs: 6, armour: worn }
+    choose: { choice.order: sturmangriffZuPferd, action.gait: galopp, choice.dornenspitze: true, action.attack: hit }   # on the hit (the old `on_hit`)
+    expect:
+      tp:
+        total: 9                                                                      # 1W6+4 +9
+        lines:
+          - { value: 1, from: ITEMTPL_19.RS3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+          - { value: 8, from: reiterkampf.RK14 }                                         # 2 + 12/2
+      "opponent.rs": { total: -2, lines: [{ value: -2, from: ITEMTPL_19.RS2, ruling: [ITEMTPL_19.rabenschnabel-waffeneigenschaft, ITEMTPL_19.dornenspitze-rs] }] }
+    appToday: TP +9 — same (RK14's 2 + 12/2 = 8 has nothing to round); the RS note same
+
+  - id: "18.9"
+    name: Rabenschnabel, mounted on Kupperus, against a foot soldier
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    opponent: { onFoot: true }
+    choose: { action.with: mainHand }
+    expect:
+      at:
+        total: 3
+        result: 19
+        lines:
+          - { value: 2, from: vorteilhafte-position.VP1, via: [reiterkampf.RK2] }
+          - { value: 2, from: SA_661.GS1 }                                               # raises vorteilhafte-position.VP1
+          - { value: -1, from: ITEMTPL_29.GR1 }
+        notApplied: [{ rule: COND_1, clause: B3, reason: "Belastung I, one lower for Kampfproben mounted (reiterkampf.RK7): none" }]
+    sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_hit`
+        expect:
+          tp:
+            total: 1                                                                  # 1W6+4 +1
+            lines:
+              - { value: 1, from: ITEMTPL_19.RS3, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+    appToday: AT 20 (no Großschild −1) — wrong; TP 1W6+5 — same
+
+  - id: "18.10"
+    name: Rabenschnabel, confirmed Patzer on an attack
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { action.attack: confirmedFumble }
+    expect:
+      events: [{ gained: COND_2, levels: 1, from: ITEMTPL_19.RS4, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }]   # the old `conditions: { COND_2: 1 }`; besides the Patzer table's result
+    appToday: same (WeaponFumbleExtras), but also without the Fokusregel (18.7)
+
+  # --- Langschwert and Großschild ------------------------------------------------------------
+
+  - id: "18.11"
+    name: Langschwert, on foot, with the Großschild on the arm
+    loadout: { weapon: Langschwert, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { action.with: mainHand }
+    expect:
+      at:
+        total: -2
+        result: 12
+        lines:
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR1 }
+    sequence:
+      - choose: { action.attack: hit }                                                  # the old `on_hit`
+        expect:
+          tp: { total: 0, notApplied: [{ rule: schaden, clause: S3, reason: "max(GE 14, KK 14) = 14, not above 15" }] }   # 1W6+4
+    appToday: AT 13 (no Großschild −1) — wrong; TP same
+
+  - id: "18.12"
+    name: GS on foot with the Großschild
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    expect:
+      gs:
+        total: -2
+        result: 6
+        lines:
+          - { value: -1, from: COND_1.B3, via: [SA_41.G1] }
+          - { value: -1, from: ITEMTPL_29.GR4, ruling: ITEMTPL_19.rabenschnabel-waffeneigenschaft }
+    appToday: GS 7, no Großschild line (Hero.totalGsPenalty is Belastung and armour only) — wrong with the Fokusregel on
+
+  - id: "18.13"
+    name: Same INI as an opponent without a Großschild
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    opponent: { shield: none }
+    gm: { gmFact.iniTie: true }                                                          # the old `opponent: { ini: tie }`
+    expect:
+      texts: [{ gm: "Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu.", from: ITEMTPL_29.GR3 }]
+    appToday: not modelled
+    conflict:
+      category: a
+      reason: >-
+        situations/kupperus-und-waffen.yaml 18.13 (Task 31): expects `texts: [{ order:
+        opponent acts first, from: ITEMTPL_29.GR3 }]`. GR3's `tell` is plain text to the GM
+        ("Gleiche INI: der Gegner des Großschildträgers schlägt zuerst zu."); `order` is no
+        audience, as the structured tells of 18.1, 18.3 and 18.4.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "18.14"
+    name: Großschild parry against an arrow, and against a thrown spear
+    rulesets: [fokus.waffeneigenschaften]
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { action.defence: shieldParry }
+    # the old `incoming: pfeil|wurfspeer` is the GM's `gmFact.incomingAttack: ranged` and
+    # `gmFact.incomingMissile` (ITEMTPL_29.GR2)
+    sequence:
+      - gm: { gmFact.incomingAttack: ranged, gmFact.incomingMissile: pfeil }
+        expect: { pa: { lines: [{ value: 1, from: ITEMTPL_29.GR2 }] } }   # after the shield's doubled +3 (schilde)
+      - gm: { gmFact.incomingAttack: ranged, gmFact.incomingMissile: wurfspeer }
+        expect: { notApplied: [{ rule: ITEMTPL_29, clause: GR2, reason: not a Pfeil or Bolzen }] }
+    appToday: '"+1 PA vs. Fernkampf" as the shield''s note in both cases, never added'
+
+  # --- Kupperus's other values -----------------------------------------------------------------
+
+  - id: "18.15"
+    name: Initiative, mounted on Kupperus
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0, hero.mounted: true }
+    expect:
+      iniBase: { lines: [{ value: 14, from: reiterkampf.RK1, via: [svellttaler-kaltblut.SK2] }] }   # Kupperus's 14+1W6
+      ini: { lines: [{ value: 0, ruling: reiterkampf.rider-ini }] }                     # the old `ini_belastung: { total: 0 }`
+    appToday: same — 14, no Belastung (CombatSetupViews.mountBaseINI parses "14+1W6")
+
+  - id: "18.16"
+    name: What Kupperus can carry
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    expect:
+      "mount.carryingCapacity": { total: 210, lines: [{ value: 210, from: svellttaler-kaltblut.SK12 }] }   # the old `mount_carrying_capacity`
+    appToday: 50 (Pet.carryingCapacity = KK × 2), added to Boronmir's own (Hero.totalCarryingCapacity) — wrong
+
+  # --- The Schadensbonus, above the threshold ----------------------------------------------------
+
+  - id: "18.17"
+    name: Rabenschnabel in the hands of a hero with KK 15, on foot
+    # Boronmir's KK was 15 until the 2026-09-24 export; at KK 14 he no longer reaches the
+    # Schadensbonus (18.5), so this situation keeps the case with its own KK. It is the one
+    # where the app's missing Schadensbonus shows.
+    hero: { attributes: { KK: 15 } }
+    loadout: { weapon: Rabenschnabel, reach: mittel, shield: Großschild, other: shield, shield.size: gross, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    choose: { action.attack: hit }                                                      # the old `on_hit`
+    expect:
+      tp: { total: 1, lines: [{ value: 1, from: schaden.S3 }] }                           # 1W6+4 +1; KK 15 − 14
+    appToday: >
+      TP 1W6+4 — no Schadensbonus, wrong. OptolithImportService.parseItems does not read the
+      item's `primaryThreshold` (`{ threshold: 14 }` in the hero file), and FumbleEffectResolver
+      says no export carries it

@@ -1,0 +1,446 @@
+# DRAFT FORMAT — see ../README.md.
+# One file for the chapter, one clause per exception it lists. Whether a chapter this varied
+# should be one file is an open format question (reiterkampf.md, Q7); written as one to see.
+id: reiterkampf
+name: Reiterkampf
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Reiterkampf.html
+  book: Regelwerk (3. überarb. Aufl.)
+  page: 239f.
+  checked: 2026-09-26
+  hash: sha256:6738b2923e6ca81762c9f04efc705c6e9219050640cb6a9c379641c871f052cd
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Every clause below applies only while the hero is mounted: the old header
+# `applies_when: { hero.mounted: true }` is `hero.mounted: true` in each effect's `when` (a core
+# rule applies to everyone, and a rule-level `require` would forbid the query instead of
+# switching the exceptions off).
+# An order (RK12–RK15, and the mount's own attacks, svellttaler-kaltblut.SK3) is the one choice
+# `choice.order`, its value the order given (niederreiten, sturmangriffZuPferd, flucht,
+# mountAttack); the gait asked for is `action.gait`, a change of gait `action.gaitChange`.
+
+clauses:
+  - id: RK0
+    text: >
+      In denmeisten Hinsichten unterscheidet sich der Kampf vom Pferd aus wenig vom Nah- und
+      Fernkampf zu Fuß. Jedoch ist das Reittier unter dem Reiter ein lebendes Wesen mit eigenem
+      Willen, das im dichten Gedränge der Schlacht beherrscht werden will.
+
+      Grundsätzlich gelten beim Reiterkampf die gleichen Regeln wie bei einem Kampf Mann gegen
+      Mann. Folgende Ausnahmen gibt es jedoch:
+    # sic: "denmeisten" is the page's. The second paragraph opens the page's "Ablauf des
+    # Reiterkampfs" section; the list it introduces is RK1–RK15.
+    none: >
+      framing — every rule not listed below applies unchanged on horseback. This is also the
+      justification for the `hero.mounted: true` every effect below carries: it switches the
+      exceptions on, never the ordinary rules off
+
+  - id: RK1
+    text: Der Reiter verwendet zur Initiativ-Bestimmung den INI-Basiswert des Pferdes.
+    effects:
+      - when: { hero.mounted: true }
+        suppress: { line: { line: kampfwerte.KW9 } }
+        because: beritten gilt der INI-Basiswert des Pferdes
+        ruling: rider-ini
+      - when: { hero.mounted: true }
+        derive: { to: iniBase, sum: [{ of: mount.iniBase }] }
+        ruling: rider-ini
+        # A value *source* swap, not a modifier (the old `replace: { value: ini.base, with:
+        # mount.ini.base }`): the hero's own base (KW9) is set aside and the mount's is the base,
+        # a line from RK1. Kampfreflexe still adds to it (SA_51.kampfreflexe-mounted).
+      - when: { hero.mounted: true, query.target: ini }
+        useLevel: { rule: COND_1, as: 0 }
+        ruling: rider-ini
+        # The rider's Belastung does not reach the mount's base (ruling rider-ini): on the
+        # initiative, Belastung acts as Stufe 0 — a zero-valued line citing rider-ini, which
+        # belastung 3.1, kampfreflexe 12.5 and reiterkampf 5.17 expect.
+
+  - id: RK2
+    text: Ein Reiter gilt gegen Fußkämpfer als in vorteilhafter Position.
+    effects:
+      - when: { hero.mounted: true, opponent.onFoot: true }
+        require: { that: { hero.mounted: true, opponent.onFoot: true }, enables: true, for: { rule: vorteilhafte-position } }
+        # The +2s are Vorteilhafte Position's lines, cited to it *via* RK2 (the old `grants`).
+        # vorteilhafte-position.VP1's own `when` carries the same condition, since a core rule
+        # applies to everyone; this effect is what gives its lines `via: [reiterkampf.RK2]`.
+
+  - id: RK3
+    text: >
+      Vom Reittier aus können keine Spezialmanöver eingesetzt werden (es sei denn, das Manöver
+      ist extra für den Reiterkampf gedacht). Allerdings sind Basismanöver möglich.
+    effects:
+      - when: { hero.mounted: true }
+        forbid: { what: { manoeuvre: { kind: spezialmanoever, mountedCombat: false } } }
+        because: vom Reittier aus keine Spezialmanöver
+        ruling: mounted-manoeuvres
+
+  - id: RK4
+    text: Der Einsatz von Zweihandwaffen ist vom Pferderücken nicht möglich.
+    effects:
+      - when: { hero.mounted: true, loadout.twoHanded: true }
+        forbid: { what: { loadout: weapon } }
+        because: Zweihandwaffen sind vom Pferderücken nicht möglich
+        # The old `forbid: { loadout: { twoHandedOnly: true } }`: `loadout.twoHanded` is the main
+        # weapon being a two-handed one.
+
+  - id: RK5
+    text: >
+      Mit Schilden lassen sich nur Angriffe von vorne und der Seite des Schildarms blocken.
+      Angriffe von der Seite des Waffenarms kann man nur mit der dort geführten Waffe parieren
+      oder ihnen ausweichen.
+    effects:
+      - when: { hero.mounted: true, gmFact.attackSide: weaponArm }
+        forbid: { what: { defence: shieldParry } }
+        because: gegen Angriffe von der Seite des Waffenarms schützt der Schild nicht
+        ruling: mounted-attack-side
+        # The side is the GM's call per attack (`gmFact.attackSide`, the old `attack.from:
+        # weaponArmSide`). Ruling mounted-attack-side (a): mounted, the defence screen asks one
+        # side question in place of the "von hinten" toggle — vorne / Schildarm / Waffenarm /
+        # hinten, default vorne. Waffenarm is `gmFact.attackSide: weaponArm` (this forbid);
+        # hinten is `gmFact.fromBehind: true`, which the two effects below and
+        # angriff-von-hinten.AH1 read (no shield parry, no passive bonus, −4).
+      - when: { hero.mounted: true, not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
+        forbid: { what: { defence: shieldParry } }
+        because: beritten schützt der Schild nicht gegen Angriffe von hinten
+        ruling: angriff-von-hinten.mounted-from-behind-shield
+      - when: { hero.mounted: true, not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
+        suppress: { line: { line: schilde.SCH1 } }
+        because: Großschild (passiv) — von hinten, beritten
+        ruling: angriff-von-hinten.mounted-from-behind-shield
+        # From behind, the one side the app already asks (angriff-von-hinten's GM fact): the
+        # shield is not between the attacker and the rider, so no shield parry, and the weapon
+        # parry loses the shield's passive bonus (schilde.SCH1), shown as not applied. Decided
+        # (angriff-von-hinten.mounted-from-behind-shield); moved here from angriff-von-hinten.AH1
+        # (the old `from: reiterkampf.RK5`).
+        # App gap: the app does not know which side an attack comes from; until it asks, shown as
+        # text on the shield parry. From behind is encoded through the app's one side question,
+        # angriff-von-hinten.AH1 (ruling angriff-von-hinten.mounted-from-behind-shield).
+
+  - id: RK6
+    text: >
+      Paraden sind vom Rücken eines Reittiers aus wie gewohnt möglich, das Ausweichen auf
+      Reittieren ist immer um 2 erschwert, es sei denn, man springt vom Reittier herunter. In
+      diesem Fall kann die Erschwernis ignoriert werden.
+    effects:
+      - when: { hero.mounted: true, not: { choice.jumpOff: true } }
+        add: { to: aw, value: -2 }
+        # The old `check: aw` is the target.
+      - when: { hero.mounted: true, query.target: aw }
+        offer: { choice: jumpOff, default: false }
+        # Offered on the dodge (the old `on: aw`).
+      - when: { hero.mounted: true, choice.jumpOff: true }
+        item: { instance: { loadout: mount }, change: { ridden: false } }
+        # The old `then: { hero.mounted: false }`: after jumping off, the hero is on foot.
+
+  - id: RK7
+    text: >
+      Allgemein gilt, dass Rüstungen zu Pferde weniger behindern, da das Pferd einen Teil des
+      Gewichtes trägt. Daher gilt die Belastung für Kampfproben vom Pferderücken aus als um 1
+      reduziert.
+    effects:
+      - when: { hero.mounted: true, any: [{ query.target: [at, pa, aw, fk] }, { query.target: check.modifier, check.talent: TAL_6 }] }
+        useLevel: { rule: COND_1, lowerBy: 1, min: 0 }
+        ruling: [rk7-reiten, mounted-jouster]
+        # The Kampfproben: AT, PA, AW, FK and (ruling rk7-reiten) Reiten (TAL_6), each asked as
+        # the query's target (the old `check: [at, pa, aw, fk, { talent: Reiten }]`). Not INI or
+        # GS, which are no Kampfproben (belastung 3.1).
+        # The old `penalty_only`: the Stufe is lowered for these queries only, so the penalty on
+        # the check falls, while the Stufe itself (`level(rule: COND_1)`, and COND_1.B4's
+        # Handlungsunfähig at IV) is untouched (mounted-jouster).
+
+  - id: RK8
+    text: >
+      Proben auf Reiten (Kampfmanöver) sind immer dann notwendig, wenn das Pferd verletzt oder
+      ihm ein besonderer Befehl erteilt wird oder es vom Schritt zum Trab oder Galopp wechseln
+      soll.
+    effects:
+      - when: { hero.mounted: true, action.gaitChange: true }
+        check: { of: { talent: TAL_6, with: Kampfmanöver } }
+        # Reiten (TAL_6), Kampfmanöver, on a change of gait (the old `on: gaitChange`). The other
+        # two occasions carry their own check: the mount hurt is RK10's (with its modifier and
+        # the fall), an order is RK12's (for every order, RK13–RK15 and the mount's attacks).
+
+  - id: RK9
+    text: >
+      Das Wechseln von Schritt zu Trab zu Galopp kann mit einer freien Aktion ausgeführt werden
+      (sowohl vom Helden als auch vom Tier wird diese freie Aktion verbraucht).
+    effects:
+      - when: { hero.mounted: true, action.gaitChange: true }
+        cost: { pool: freeActions, amount: 1 }
+        # The hero's free action. The mount's own free action (the old `of: [hero, mount]`) is
+        # not counted: the engine keeps no action pool for the mount (its Aktionen 1 are spent on
+        # the rider's orders, svellttaler-kaltblut.SK4).
+
+  - id: RK10
+    text: >
+      Wird das Reittier im Kampf verletzt und erleidet SP, dann muss eine Probe auf Reiten
+      (Kampfmanöver) abgelegt werden, ansonsten stürzt der Reiter (siehe auch Sturzschaden). Für
+      jeweils 5 volle SP ist die Probe um 1 erschwert.
+    effects:
+      - when: { hero.mounted: true, any: [{ gmFact.mountTakesSP: true }, { choice.mountHit: true }] }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          modifier: { of: hit.mountSp, per: 5, times: -1, round: down }
+          onFailure:
+            - tell: { to: player, text: "Der Reiter stürzt vom Pferd (Sturzschaden: wie ein Sturz aus 2 Schritt Höhe, im Galopp aus 3)." }
+        ruling: passierschlag-on-mount
+        # The old `event: mountTakesSP` is the GM's `gmFact.mountTakesSP`, or RK11's
+        # "Reittier getroffen" (ruling passierschlag-on-mount: the SP go to the mount, then
+        # this check). −1 per 5 full SP: `hit.mountSp` is the mount's SP from this hit, stated
+        # on the take-damage screen (the old `mount.spTaken`; not `hit.sp`, which is the rider's); "full" rounds the count down before the sign, as trefferzonen.TZ8's
+        # "per full Wundschwelle" (7 SP → −1). A failure is the fall (the old `on_failure: { rule: sturzschaden }`):
+        # its damage is core/sturzschaden.yaml (drafted from the wiki page the text links),
+        # whose dice the engine does not roll, so the rider is told.
+
+  - id: RK11
+    text: Im Fall von Passierschlägen, können Fußkämpfer nur das Reittier angreifen, nicht aber den Reiter.
+    effects:
+      - when: { hero.mounted: true, gmFact.incomingAttack: passierschlag }
+        offer: { choice: mountHit, default: false }
+        ruling: passierschlag-on-mount
+        # "Reittier getroffen" (the old `label`), on the take-damage screen (the old `on`), when
+        # the hero suffers a Passierschlag (the old `event: passierschlagSuffered`).
+      - when: { hero.mounted: true, choice.mountHit: true }
+        suppress: { line: { line: [schaden.S1, schaden.S2] } }
+        because: der Passierschlag trifft das Reittier, nicht den Reiter
+        # Neither the rider's SP (schaden.S1, computed from his RS; trefferzonen.TZ8 reads them)
+        # nor his LeP loss (schaden.S2): the hit is the mount's. The mount's SP are stated as
+        # `hit.mountSp`, which RK10 reads.
+        ruling: passierschlag-on-mount
+      - when: { hero.mounted: true, choice.mountHit: true }
+        tell: { to: player, text: "Die SP gehen auf die LeP des Reittiers." }
+        ruling: passierschlag-on-mount
+        # The old `then: { damage.to: mount }`: no LeP for the rider (the suppress), the mount's
+        # LE takes the SP (the tell; the mount's LE is not an engine pool).
+        # The player ticks it when the attacker is on foot (the app does not know; ADR-0005). The
+        # SP go to the mount's LE (Pet.currentLifeEnergy), and RK10's Reiten check follows from
+        # mountTakesSP.
+        # FORMAT: an offer that changes whose LE the damage screen writes to.
+
+  - id: RK12
+    text: >
+      Statt eines eigenen Angriffs kann der Reiter auch dem Pferd mit einer Aktion einen Befehl
+      geben. Dazu ist eine Probe auf Reiten (Kampfmanöver) notwendig. Ist die Probe misslungenen
+      wird der Befehl nicht ausgeführt, der Reiter erleidet aber keine weiterführenden
+      Konsequenzen.
+    # sic: "misslungenen" is the page's typo for "misslungen".
+    effects:
+      - when: { hero.mounted: true, choice.order: [niederreiten, sturmangriffZuPferd, flucht] }
+        cost: { pool: actions, amount: 1 }
+        # "Statt eines eigenen Angriffs … mit einer Aktion" (the old `costs: action`).
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        cost: { pool: actions, amount: 1 }
+        ruling: svellttaler-kaltblut.mount-own-attack
+        # Ruling R71 (Task 31 fix round 2): the mount's own attack is an order like any other
+        # (the ruling's `appliesTo` names RK12), so its Aktion and check rest on the ruling.
+      - when: { hero.mounted: true, choice.order: [niederreiten, flucht] }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+        ruling: svellttaler-kaltblut.mount-own-attack
+        # The old `defines: { action: order, … requires_check }`: every order is an Aktion and a
+        # Reiten (Kampfmanöver) check; on a failure the order is not carried out and nothing
+        # worse follows. RK13–RK15 and svellttaler-kaltblut.SK3 offer the orders. The
+        # Sturmangriff zu Pferd's check is RK14's own, whose text names it; the Aktion (the cost
+        # above) is every order's.
+
+  - id: RK13
+    name: Niederreiten
+    text: >
+      Wenn ein Reiter den Befehl zum Niederreiten gibt, dann wird das Reittier eine Attacke mit
+      seinem entsprechenden Attackewert in Niederreiten ausführen. Es benötigt dazu mindestens 4
+      Schritt Anlauf und muss sich im Galopp befinden. Der Schaden ist der Beschreibung des
+      jeweiligen Reittiers zu entnehmen. Gegen einen solchen Angriff kann man als Verteidigung
+      nur Ausweichen einsetzen. Das Pferd macht keinen Halt und rennt mit voller GS bis zum Ende
+      der KR weiter. Hierdurch benötigt der Reiter 1 Aktion, um sein Pferd zu wenden, um wieder
+      auf den Fußkämpfer zu zureiten.
+    effects:
+      - when: { hero.mounted: true, hero.has: SA_43, action.runUp: { atLeast: 4 }, action.gait: galopp, mount.hasAttack: Niederreiten }
+        offer: { choice: order, options: [niederreiten] }
+        ruling: svellttaler-kaltblut.niederreiten-without-profile
+        # The old `requires`: this text never names the SF; the hero.has rests on SA_43.BK1's
+        # "beispielsweise Niederreiten" (only RK14's text names Berittener Kampf itself).
+        # `mount.hasAttack` is the names of the mount's attack lines (svellttaler-kaltblut.SK3):
+        # no Niederreiten line, no order. The Aktion and the Reiten (Kampfmanöver) check every
+        # Befehl needs are RK12's, not repeated here.
+      - when: { hero.mounted: true, choice.order: niederreiten }
+        check: { of: { attack: Niederreiten, with: mount } }
+        # The mount attacks with its own Niederreiten line: AT and TP from its profile
+        # (svellttaler-kaltblut.SK3), the old `attack: { by: mount, value, damage }`.
+      - when: { hero.mounted: true, choice.order: niederreiten }
+        forbid: { what: { defence: [opponent.weaponParry, opponent.shieldParry] } }
+        because: gegen Niederreiten nur Ausweichen
+        # The old `opponent_may_only: [aw]`.
+      - when: { hero.mounted: true, choice.order: niederreiten }
+        tell: { to: player, text: "Das Pferd rennt mit voller GS bis zum Ende der KR weiter; es wieder auf den Fußkämpfer zu wenden kostet 1 Aktion." }
+        # The old `after`: the mount does not stop, and turning it back on the foot fighter
+        # costs the rider 1 Aktion — in practice the next round's.
+        # FORMAT: an action cost that falls after the order, on a later round; the app keeps
+        # no such carry-over.
+
+  - id: RK14
+    name: Sturmangriff zu Pferd
+    text: >
+      Möchte der Reiter einen Gegner mit einem Sturmangriff angreifen, muss dazu der Befehl
+      Sturmangriff zu Pferd erteilt werden. Der Sturmangriff zu Pferd kann nur im Galopp
+      ausgeführt werden. Nach der Probe auf Reiten (Kampfmanöver) wird eine Attacke ausgeführt
+      (dies kostet keine zusätzliche Aktion, sondern ist Teil des Befehls). Pferd und Reiter
+      verringern ihre Geschwindigkeit nach erfolgtem Angriff nicht automatisch. Außerdem kann ein
+      solcher Angriff nicht mit einer Waffe pariert werden, nur eine Parade mit einem Schild oder
+      Ausweichen sind möglich. Ist der Sturmangriff erfolgreich, steigen die TP um 2 + GS/2 des
+      Reittiers. Um diesen Befehl zu geben, benötigt man die SF Berittener Kampf.
+    effects:
+      - when: { hero.mounted: true, hero.has: SA_43, action.gait: galopp }
+        offer: { choice: order, options: [sturmangriffZuPferd] }
+        ruling: two-sturmangriffe
+        # The attack is the hero's own, part of the order, and costs no further Aktion (the old
+        # `attack: { by: hero }`).
+      - when: { hero.mounted: true, choice.order: sturmangriffZuPferd }
+        check:
+          of: { talent: TAL_6, with: Kampfmanöver }
+          onFailure:
+            - tell: { to: player, text: "Der Befehl wird nicht ausgeführt; weitere Folgen hat das nicht." }
+        ruling: two-sturmangriffe
+        # "Nach der Probe auf Reiten (Kampfmanöver) wird eine Attacke ausgeführt": RK14's own
+        # check (RK12 checks the other orders); on a failure, RK12's "keine weiterführenden
+        # Konsequenzen".
+      - when: { hero.mounted: true, choice.order: sturmangriffZuPferd }
+        forbid: { what: { defence: [opponent.weaponParry] } }
+        because: gegen den Sturmangriff zu Pferd nur Parade mit dem Schild oder Ausweichen
+        ruling: two-sturmangriffe
+        # The old `opponent_may_only: [shieldParry, aw]`.
+      - when: { hero.mounted: true, choice.order: sturmangriffZuPferd, action.attack: hit }
+        add: { to: tp, value: { of: [mount.gs, 4], per: 2, round: up } }
+        ruling: [two-sturmangriffe, round-up]
+        # 2 + GS/2 of the mount, as ⌈(GS + 4)/2⌉ = 2 + ⌈GS/2⌉ (the old `on_hit` formula
+        # "2 + mount.gs / 2"): GS 12 → 8, GS 11 → 8.
+        # not encoded: movement state — "Pferd und Reiter verringern ihre Geschwindigkeit
+        # nach erfolgtem Angriff nicht automatisch."; the app keeps no gait after the attack.
+
+  - id: RK15
+    name: Flucht
+    text: >
+      Bei einer Flucht mit dem Pferd ist wie bei jedem Befehl eine Probe auf Reiten
+      (Kampfmanöver) notwendig. Die Probe ist um die Anzahl der Gegner in Angriffsdistanz
+      erschwert. Wenn die Probe gelingt, darf das Pferd sich GS Schritt weit bewegen. Bei seiner
+      Bewegung muss es darauf achten, ob es weitere Passierschläge bekommt, wenn es sich durch
+      die Angriffsdistanz von Gegnern bewegt.
+    effects:
+      - when: { hero.mounted: true }
+        offer: { choice: order, options: [flucht] }
+        # The Reiten (Kampfmanöver) check "wie bei jedem Befehl" is RK12's.
+      - when: { hero.mounted: true, choice.order: flucht, check.talent: TAL_6 }
+        add: { to: check.modifier, value: -1, per: gmFact.opponentsInReach }
+        # −1 per opponent in Angriffsdistanz, which the GM states (the old `opponentsInReach`).
+      - when: { hero.mounted: true, choice.order: flucht, check.talent: TAL_6, check.result: success }
+        tell: { to: player, text: "Das Pferd darf sich GS Schritt weit bewegen; Passierschläge beim Durchqueren der Angriffsdistanz von Gegnern beachten." }
+        # The old `on_success: { move: mount.gs }`: the engine keeps no position.
+
+rulings:
+  - id: mounted-manoeuvres
+    status: decided
+    question: >
+      Which Spezialmanöver count as "extra für den Reiterkampf gedacht" and stay available on
+      horseback?
+    answer: >
+      Only the ones the rules mark as such. Basismanöver stay available; every other
+      Spezialmanöver is unavailable while mounted.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    appliesTo: [RK3]
+    notes: >
+      needs a `mountedCombat` marker on each manoeuvre's rule file. SA_59, SA_62, SA_66, SA_160
+      and SA_161 carry `manoeuvre: { kind: spezialmanoever, mountedCombat: false }`; none is
+      marked true yet.
+
+  - id: two-sturmangriffe
+    status: decided
+    question: The app has one Sturmangriff. Is the mounted order the SF Sturmangriff (SA_62)?
+    answer: >
+      No. "Sturmangriff zu Pferd" is an order that exists only on this page (RK14) and needs
+      Berittener Kampf. SA_62 is a separate Spezialmanöver, on foot only (RK3).
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    appliesTo: [RK14]
+
+  - id: rider-ini
+    status: decided
+    question: >
+      The rider rolls initiative from the mount's INI base (RK1). Does the rider's own
+      Belastung still come off it?
+    answer: >
+      The mount's INI base as it is — the horse moves, not the rider.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [RK1]
+    notes: >
+      A hero in plate has INI −3 on foot and 0 on the horse (belastung 3.1, reiterkampf 5.17). The
+      app already does this (CombatSetupViews.mountBaseINI). It leaves RK1 a swap with one
+      exception: the rider's Kampfreflexe still adds to the mount's base
+      (SA_51.kampfreflexe-mounted, b), a skill of the rider's, where Belastung is the rider's gear
+      weighing on a value the horse now supplies.
+
+  - id: mounted-jouster
+    status: decided
+    question: >
+      A rider in Gestechrüstung has Belastung IV, which is Handlungsunfähig. RK7 lowers Belastung
+      by 1 for Kampfproben. Is a mounted jouster able to act, or Handlungsunfähig regardless?
+    answer: >
+      With Belastungsgewöhnung at the right Stufe they can act. Other rules, GM decisions or
+      house rules may lower it further.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    appliesTo: [RK7, COND_1.B4]
+    notes: >
+      Read as: RK7 lowers the penalty on a Kampfprobe, it does not lift the Stufe IV state; SA_41
+      does, because it lowers the Stufe itself. "GM decisions or house rules" means a Belastung
+      level must be adjustable by the GM and by a house-rule set, with the adjustment shown as
+      its own line — an input for the design (ADR-0014's rule sets).
+
+  - id: passierschlag-on-mount
+    status: decided
+    question: >
+      RK11: a foot fighter's Passierschlag hits the mount, never the rider. What should the app
+      do when a mounted hero takes a Passierschlag (fleeing, RK15; a failed Sturmangriff)?
+    answer: >
+      The take-damage screen offers 'Reittier getroffen': SP go to the mount's LE, then RK10's
+      Reiten check.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [RK11, RK10]
+    notes: >
+      The app already tracks the mount's LE (Pet.currentLifeEnergy, MountHealingSheet), but the
+      take-damage screen only ever damages the hero, so today the Passierschlag's SP go to
+      Boronmir (kampfsituationen 17.9). Whether the attacker is on foot is the player's to say
+      (ADR-0005): the toggle is that answer. RK10 then asks for the Reiten (Kampfmanöver) check,
+      −1 per 5 full SP; on a failure the rider falls (Sturzschaden).
+
+  - id: mounted-attack-side
+    status: decided
+    question: >
+      RK5: mounted, a shield blocks only attacks from the front and the shield-arm side; an attack
+      from the weapon-arm side can only be parried with the weapon or dodged. How does the app
+      learn which side an attack on a mounted hero comes from?
+    answer: >
+      Mounted, the defence screen replaces the 'von hinten' toggle with one side question:
+      vorne / Schildarm / Waffenarm / hinten, default vorne.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [RK5]
+    notes: >
+      One picker on the mounted defence screen. Waffenarm (`gmFact.attackSide: weaponArm`) drops
+      the shield parry (RK5); hinten (`gmFact.fromBehind: true`, the fact the "von hinten" toggle
+      states on foot) also drops the shield's passive bonus and adds −4 (angriff-von-hinten.AH1,
+      ruling angriff-von-hinten.mounted-from-behind-shield). The side is the GM's call, per
+      attack; which arm holds the shield is the loadout's. On foot the toggle stays as it is:
+      no side but behind matters there.
+
+  - id: rk7-reiten
+    status: decided
+    question: >
+      Reiten is a talent hindered by Belastung. Is a Reiten (Kampfmanöver) check made while
+      mounted a Kampfprobe, so that RK7 lowers the rider's Belastung by 1 for it?
+    answer: Yes. Mounted, the hero gets the reduction for the talent check.
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    appliesTo: [RK7, RK8]

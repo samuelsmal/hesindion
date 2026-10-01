@@ -1,0 +1,24 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R28: the ADV_49 ZH1/ZH3 pattern.
+id: pl-tough
+name: Zäher Hund
+kind: advantage
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: counts
+    question: Which Stufe?
+    answer: The lower one.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: Z1
+    text: Wirkt wie eine Stufe weniger.
+    effects:
+      - useLevel: { rule: pl-pain, as: level - 1 }
+        when: { all: [{ hero.levelOf.pl-pain: 4 }, { check.result: success }] }
+        ruling: counts
+  - id: Z3
+    text: Stufe IV bleibt.
+    effects:
+      - useLevel: { rule: pl-pain, as: level }
+        when: { hero.levelOf.pl-pain: 4 }

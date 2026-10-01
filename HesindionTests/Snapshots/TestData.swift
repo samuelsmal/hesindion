@@ -22,7 +22,7 @@ enum TestData {
             .deletingLastPathComponent()    // TestData.swift → Snapshots/
             .deletingLastPathComponent()    // Snapshots/ → HesindionTests/
             .deletingLastPathComponent()    // HesindionTests/ → project root
-            .appendingPathComponent("docs/sample_heros/Boronmir Siebenfeld von Greifenfurt.json")
+            .appendingPathComponent("specs/heroes/Boronmir Siebenfeld von Greifenfurt.json")
     }
 
     static func importBoronmir(into container: ModelContainer) throws -> Hero {
@@ -55,5 +55,17 @@ enum TestData {
     static func makeDiceRollLogEntry(for hero: Hero) -> LogEntry {
         let payload = DiceRollPayload(count: 3, sides: 6, results: [4, 2, 6], total: 12)
         return LogEntry.create(kind: "diceRoll", payload: payload, hero: hero)
+    }
+
+    /// A minimal `DerivedValues` with only Lebensenergie populated — current == max == `lp`,
+    /// no bonus/purchased. Everything else is zeroed, the way `HeroStateTests` builds one.
+    static func derivedValues(lp: Int) -> DerivedValues {
+        DerivedValues(
+            lebensenergie: LifeEnergyValue(base: lp, bonus: 0, purchased: 0, max: lp, current: lp),
+            astralenergie: nil, karmaenergie: nil,
+            seelenkraft: ResourceValue(base: 0, bonus: 0, max: 0),
+            zaehigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            geschwindigkeit: ResourceValue(base: 0, bonus: 0, max: 0),
+            schicksalspunkte: MutableResourceValue(current: 0, bonus: 0, max: 0))
     }
 }

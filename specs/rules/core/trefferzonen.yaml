@@ -1,0 +1,436 @@
+# DRAFT FORMAT — see ../README.md.
+# One file for the Fokusregel page, one clause per rule it states (as reiterkampf.yaml).
+id: trefferzonen
+name: Trefferzonen-Regeln
+kind: core
+catalogId: GRW_zonenaufschlag    # the current catalog holds only the aiming penalty
+# FORMAT: the rule set a rule belongs to. `core` is always on; `fokus.<slug>` only when the
+# group plays that Fokusregel (the app's Hero.fokusRules / FokusRule enum today); a house rule
+# would be `house.<slug>`. Every clause of this file is off unless the set is on, so the flag
+# lives on the file, not on each effect. A rule file of *another* set may also belong here
+# (SA_160 exists only for this set — see its file).
+ruleset: fokus.trefferzonen
+# The old `fokus: { theme: Kampf, level: 1 }`: a Fokusregel Stufe I for the Themenkomplex Kampf
+# (TZ1's text); `ruleset:` is its switch.
+source:
+  url: https://dsa.ulisses-regelwiki.de/Fokus_TrefferzonenRegeln.html
+  book: Aventurisches Kompendium 1    # "Seite 128ff"; the page also names Trefferzonen Set, Seite 5
+  page: 128
+  checked: 2026-09-26
+  hash: sha256:148668de6f1c31bf493bbaea7265096743ef33caaccb1522db9095c459baab42
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: TZ1
+    text: >
+      Die vorliegende Regel ist eine Fokusregel der Stufe I für den Themenkomplex Kampf. Die
+      Regeln zu Trefferzonen sind dazu gedacht, Treffer an verschiedenen Körperteilen mit
+      unterschiedlichen Konsequenzen zu belegen.
+    none: declares the rule set; see `ruleset`
+
+  - id: TZ2
+    text: >
+      Wie beim Kampf ohne Trefferzonen wird zuerst ein Angriff, also eine Attacke oder ein
+      Fernkampfangriff, ausgeführt. Wenn der Angriff gelungen ist, kann das Ziel eine
+      Verteidigung nutzen. Misslingt die Verteidigung, wird jedoch nicht gleich der Schaden
+      bestimmt, sondern es wird erst festgelegt, an welchem Körperteil das Ziel getroffen wird.
+      Dies wird durch einen Wurf mit 1W20 festgelegt. Die nachfolgenden Tabellen geben darüber
+      Auskunft, wo genau der Treffer erfolgt. Je nach Art des Wesens gelten unterschiedliche
+      Wahrscheinlichkeiten. Wir haben die häufigsten Arten aufgelistet, es mag jedoch Wesen
+      geben, die andere Körperformen und damit andere Wahrscheinlichkeiten der Trefferlokation
+      aufweisen.
+    effects:
+      - when: { choice.targetZone: none }
+        ask: { fact: hit.zone, who: roll }
+        # A hit with no zone announced (the old `zone: unannounced`; TZ5's offer defaults to
+        # `none`): the zone is rolled. Dice come in, the engine never rolls (spec §6): the app
+        # rolls 1W20 and looks the result up in the table TZ3 picks among TZ4–TZ4j (the old
+        # `roll: { dice: 1W20, on: { tables, chosenBy: TZ3 }, sets: hit.zone }`), and states
+        # `hit.zone` (and `hit.side`, TZ4c). The old `event: hitLanded` is the take-damage or hit
+        # screen that asks. An aimed hit's zone is the one aimed at.
+
+  - id: TZ3
+    text: >
+      Die meisten Humanoiden verfügen über folgende Trefferzonen: Kopf, Torso, linker Arm,
+      rechter Arm, linkes Bein und rechtes Bein. Bei Wesen wie den Achaz kommt noch der Schwanz
+      hinzu. Aber auch hier gilt, dass es Wesen geben kann, die von diesen Standardzonen
+      abweichen, z. B., weil sie mehr als zwei Arme aufweisen. Ein kleiner Gegner muss zudem
+      gegen einen mittelgroßen Helden auf der Tabelle
+      für große Humanoide würfeln, ein großer Gegner gegen einen mittelgroßen Helden auf der
+      Tabelle für kleine Humanoide.
+    effects:
+      - provide: { name: trefferzonen.TZ3, value: { "-2": winzig, "-1": klein, "0": mittel, "1": gross, "2": riesig }, readBy: roll }
+        ruling: relative-size-table
+        # The old `table_for: { size: "mittel + (target.size - attacker.size)", clampTo:
+        # target.bodyPlan.sizes }`: the size of the table, keyed by the size steps the target is
+        # larger than the attacker. A gap past the body plan's tables lands on its nearest one.
+        # Equal sizes → mittel; attacker one size smaller → one table larger, one size larger →
+        # one table smaller. The page's two pairs are the humanoid cases of it (klein vs mittel →
+        # groß, groß vs mittel → klein). A difference past the tables a body plan has lands on
+        # the nearest one (a humanoid has klein–groß only).
+        # FORMAT: which table is keyed on both sides' sizes — a lookup key computed from two
+        # facts, one of them the other side's.
+
+  # The ten hit-zone tables, one clause each (TZ4, TZ4a–TZ4b, TZ4d–TZ4j), rows as the page
+  # prints them (pattern regeneration.T1); TZ4c is the parity sentence between them. Each table
+  # provides its rows as data under `tables.<bodyPlan>.<size>`, which TZ3 picks from and TZ2
+  # rolls on. Zone keys are TZ11's (kopf, torso, arme, beine). The app holds the same tables in
+  # HitZoneTable (Hesindion/Models/HitZoneTable.swift).
+  # FORMAT: a clause whose only effect is data other clauses look up (`provides: tables.*`); a
+  # range such as "1-6" is a key, not a number. `readBy: roll`: the app rolls on these tables
+  # (and on TZ3's choice among them, TZ4c's side) when TZ2 asks for `hit.zone`; no rule reads
+  # them through `table(...)`, so the build counts them reachable by that declaration.
+  - id: TZ4
+    text: |
+      Humanoid, Größenkategorie klein
+      Ergebnis | Zone
+      1-6 | Kopf
+      7-10 | Torso
+      11-18 | Arme
+      19-20 | Beine
+    effects:
+      - provide: { name: tables.humanoid.klein, value: { "1-6": kopf, "7-10": torso, "11-18": arme, "19-20": beine }, readBy: roll }
+
+  - id: TZ4a
+    text: |
+      Humanoid, Größenkategorie mittel
+      Ergebnis | Zone
+      1-2 | Kopf
+      3-12 | Torso
+      13-16 | Arme
+      17-20 | Beine
+    effects:
+      - provide: { name: tables.humanoid.mittel, value: { "1-2": kopf, "3-12": torso, "13-16": arme, "17-20": beine }, readBy: roll }
+
+  - id: TZ4b
+    text: |
+      Humanoid, Größenkategorie groß
+      Ergebnis | Zone
+      1-2 | Kopf
+      3-6 | Torso
+      7-16 | Arme
+      17-20 | Beine
+    effects:
+      - provide: { name: tables.humanoid.gross, value: { "1-2": kopf, "3-6": torso, "7-16": arme, "17-20": beine }, readBy: roll }
+
+  - id: TZ4c
+    text: >
+      Ein gerades Ergebnis ist ein Treffer der rechten Arm- oder Beinzone, ein ungerades Ergebnis
+      trifft die linke Seite.
+    effects:
+      - when: { hit.zone: [arme, beine] }
+        provide: { name: trefferzonen.TZ4c, value: { odd: links, even: rechts }, readBy: roll }
+        # The old `sets: { hit.side: …, of: TZ2.roll }`: the side by the zone die's parity, which
+        # the app reads off the die it rolled for TZ2 and states as `hit.side` (a roll fact).
+        # TZ8's arm Wundeffekt (ruling wundeffekt-arm-drop, through `hit.heldInHand`) and the
+        # per-side RS of trefferzonen-ruestungsschutz.RS2 (`hit.zoneRs`) read it.
+
+  - id: TZ4d
+    text: |
+      Nicht humanoid, vierbeinig, Größenkategorie klein (z. B. Ziege)
+      Ergebnis | Zone
+      1-4 | Kopf
+      5-12 | Torso
+      13-16 | vordere Beine
+      17-20 | hintere Beine
+    effects:
+      - provide: { name: tables.vierbeinig.klein, value: { "1-4": kopf, "5-12": torso, "13-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
+
+  - id: TZ4e
+    text: |
+      Nicht humanoid, vierbeinig, Größenkategorie mittel (z. B. Wolf)
+      Ergebnis | Zone
+      1-4 | Kopf
+      5-10 | Torso
+      11-16 | vordere Beine
+      17-20 | hintere Beine
+    effects:
+      - provide: { name: tables.vierbeinig.mittel, value: { "1-4": kopf, "5-10": torso, "11-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
+
+  - id: TZ4f
+    text: |
+      Nicht humanoid, vierbeinig, Größenkategorie groß (z. B. Rind)
+      Ergebnis | Zone
+      1-5 | Kopf
+      6-11 | Torso
+      12-16 | vordere Beine
+      17-20 | hintere Beine
+    effects:
+      - provide: { name: tables.vierbeinig.gross, value: { "1-5": kopf, "6-11": torso, "12-16": vordereBeine, "17-20": hintereBeine }, readBy: roll }
+        # Kupperus's table (svellttaler-kaltblut.SK7: groß, Tier, nicht humanoid).
+
+  - id: TZ4g
+    text: |
+      Nicht humanoid, sechs Gliedmaßen und Schwanz, Größenkategorie groß (z. B. Tatzelwurm)
+      Ergebnis | Zone
+      1-4 | Kopf
+      5-12 | Torso
+      13-14 | vordere Gliedmaßen
+      15-16 | mittlere Gliedmaßen (z. B. Beine oder Flügel)
+      17-18 | hintere Gliedmaßen
+      19-20 | Schwanz
+    effects:
+      - provide: { name: tables.sechsGliedmassen.gross, value: { "1-4": kopf, "5-12": torso, "13-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz }, readBy: roll }
+
+  - id: TZ4h
+    text: |
+      Nicht humanoid, sechs Gliedmaßen und Schwanz, Größenkategorie riesig (z. B. Drachen)
+      Ergebnis | Zone
+      1-2 | Kopf
+      3-10 | Torso
+      11-14 | vordere Gliedmaßen
+      15-16 | mittlere Gliedmaßen (z. B. Beine oder Flügel)
+      17-18 | hintere Gliedmaßen
+      19-20 | Schwanz
+    effects:
+      - provide: { name: tables.sechsGliedmassen.riesig, value: { "1-2": kopf, "3-10": torso, "11-14": vordereGliedmassen, "15-16": mittlereGliedmassen, "17-18": hintereGliedmassen, "19-20": schwanz }, readBy: roll }
+
+  - id: TZ4i
+    text: |
+      Nicht humanoid, Fangarme, Größenkategorie mittel bis riesig (z. B. Krakenmolch)
+      Ergebnis | Zone
+      1-2 | Torso
+      3-6 | Kopf
+      | Der Rest der Zahlen verteilt sich gleichmäßig auf die Fangarme, Überschüsse werden auf den Torso aufgeschlagen.
+    effects:
+      - provide: { name: tables.fangarme.mittelBisRiesig, value: { "1-2": torso, "3-6": kopf, "7-20": { splitEvenly: fangarme, overflow: torso } }, readBy: roll }
+        # How many Fangarme there are is the creature's profile's; the fourteen numbers 7–20 are
+        # dealt out evenly, one range per arm, and the remainder goes back on the torso.
+
+  # sic: "Nicht Humanoid" with a capital H, as the page prints it.
+  - id: TZ4j
+    text: |
+      Nicht Humanoid, keine unterschiedlichen Zonen (z. B. Riesenamöbe)
+      Ergebnis | Zone
+      1-20 | Körper
+    effects:
+      - provide: { name: tables.keineZonen, value: { "1-20": koerper }, readBy: roll }
+        # One zone: no Wundeffekt row for it (TZ11).
+      - when: { opponent.bodyPlan: keineZonen }
+        forbid: { what: { choice: targetZone } }
+        because: das Wesen hat keine unterschiedlichen Zonen
+        # Nothing to aim at (TZ5's offer has no zones to list; situation TZ.18).
+
+  - id: TZ5
+    text: >
+      Es ist möglich, gezielt Körperteile anzugreifen. Solche gezielten Schläge und Schüsse sind,
+      wie in der unten aufgeführten Tabelle Erschwernisse beim Anvisieren von Trefferzonen
+      beschrieben, erschwert. Wenn das Opfer den Status Überrascht erlitten hat (siehe Regelwerk
+      Seite 36), ist die Erschwernis in jeder Zone um 2 gesenkt. Besitzt ein Held die
+      Sonderfertigkeit Gezielter Angriff bzw. Gezielter Schuss, sind die Erschwernisse halbiert.
+      Die Erschwernisse ersetzen die Modifikatoren der Größenkategorie (siehe Regelwerk Seite
+      239).
+    effects:
+      - when: { query.target: [at, fk] }
+        offer: { choice: targetZone, default: none }
+        # Every hero, with or without the SF; the halving is SA_160.GA1 / SA_161.GS1's
+        # (ruling SA_160.halving-by-manoeuvre). The old `on: [at, fk]` is the `when`; the old
+        # `zones: target.zones`: the zones listed are those of the opponent's body plan (its
+        # TZ4–TZ4j table). `none` (the default) is no zone announced (TZ2 rolls it).
+      - when: { not: { choice.targetZone: none } }
+        add: { to: [at, fk], value: "table(trefferzonen.TZ6, choice.targetZone)" }
+        ruling: SA_160.halving-by-manoeuvre
+        # Task 32: the aiming line rests on SA_160's ruling halving-by-manoeuvre, whose appliesTo
+        # names this clause: this page's "Besitzt ein Held die Sonderfertigkeit … sind die
+        # Erschwernisse halbiert" is read as the announced manoeuvre, so without it (not announced,
+        # refused on horseback or beside Unterlaufen) the penalty stands in full (TZ.16, TZ.17,
+        # TZ.27).
+        # The aiming line. The old effect id `TZ5.aim` is gone: SA_160.GA1 and SA_161.GS1 name
+        # the clause (`line: trefferzonen.TZ5`), as does the easing below.
+      - when: { not: { choice.targetZone: none }, opponent.has: STATE_13 }
+        replace: { line: { line: trefferzonen.TZ5 }, with: "table(trefferzonen.TZ5.eased, choice.targetZone)" }
+        ruling: surprised-then-halved
+        # The old `raise: { line: TZ5.aim, by: 2, max: 0, before: [SA_160.GA1, SA_161.GS1] }`
+        # (the old `opponent.state: ueberrascht` is `opponent.has: STATE_13`). The aiming line
+        # is replaced by its value eased by 2 (TZ6's rows + 2, none above 0, provided below), so
+        # it keeps its origin and shows `was:`. Ease first, then halve: `replace` is phase 4 and
+        # the halving (`multiply`) phase 5, which is the old `before:`. Kopf −10 + 2 = −8 → −4,
+        # Torso −4 + 2 = −2 → −1.
+      - provide: { name: trefferzonen.TZ5.eased, value: { kopf: -8, torso: -2, arme: -6, beine: -6 } }
+        # "ist die Erschwernis in jeder Zone um 2 gesenkt": TZ6's rows, each 2 easier (max 0).
+      - when: { not: { choice.targetZone: none } }
+        suppress: { line: { line: [groessenkategorie.GK3, fernkampf.FK6] } }
+        because: die Erschwernisse der Trefferzone ersetzen die Modifikatoren der Größenkategorie
+        ruling: zone-replaces-size
+        # The old `replaces: [groessenkategorie.GK3.at, fernkampf.zielgroesse]`: the melee size
+        # modifier (GK3) and the ranged target-size modifier (fernkampf.FK6, the app's
+        # RangedModifiers.groesse, −8 winzig to +8 riesig; see ruling zone-replaces-size) are
+        # listed under "nicht angewendet" with this clause as the reason.
+
+  - id: TZ6
+    text: |
+      Erschwernisse beim Anvisieren von Trefferzonen (Humanoid, Größenkategorie klein bis groß)
+      Trefferzone | Modifikator auf AT oder FK
+      Kopf | -10
+      Torso | -4
+      Arme | -8
+      Beine | -8
+    effects:
+      - provide: { name: trefferzonen.TZ6, value: { kopf: -10, torso: -4, arme: -8, beine: -8 } }
+        # The table TZ5's aiming line reads; the errata note (TZ12) confirms Kopf −10.
+
+  - id: TZ7
+    text: >
+      Ein Held muss über das Wissen verfügen, dass ein Wesen eine solche empfindliche Stelle
+      aufweist, was meist durch eine Probe auf Tierkunde herausgefunden werden kann und bei dem
+      Wesen angegeben ist. Weiß er dies nicht, kann er die Stelle nicht anvisieren. Auch diese
+      Stellen lassen sich durch die Regeln für gezielte Angriffe treffen. Je nach Größe der
+      Stelle, aber auch je nach Erreichbarkeit für den Helden, sind diese Zonen mehr oder weniger
+      schwer zu treffen. Die Erschwernisse liegen in einem Bereich von –2 bis –8, dies ist bei den
+      jeweiligen Wesen beschrieben. Sollte es dem Held gelingen, die empfindliche Stelle zu
+      treffen, so tritt nicht nur wie gewohnt Schaden durch den Angriff auf, sondern ebenso die
+      Folgen entsprechenden Regel für das Wesen.
+    unencoded: >
+      creatures are not modelled; a GM could state the penalty as a number, but nothing asks for
+      it today. The gate ("Weiß er dies nicht, kann er die Stelle nicht anvisieren") would sit on
+      the same offer as the penalty.
+
+  - id: TZ8
+    text: >
+      Ein Wundeffekt kann immer eintreten, wenn ein Held mindestens so viele Schadenspunkte durch
+      eine Verletzung erlitten hat, wie seine Wundschwelle beträgt. Die Wundschwelle entspricht
+      dem halben KO-Wert. Immer, wenn dieser Wert oder ein Vielfaches davon bei einem Treffer als
+      Schadenspunkte verursacht wird, erleidet das Opfer Wundeffekte. Wurde ein Vielfaches der
+      Wundschwelle an Schaden angerichtet, so ist die darauffolgende Probe um den Wert des
+      Vielfachen erschwert.
+    effects:
+      - derive: { to: wundschwelle, sum: [{ of: attr.KO, per: 2, round: up }] }
+        # "Die Wundschwelle entspricht dem halben KO-Wert": ⌈KO/2⌉ (ADR-0006, and TZ9's own
+        # example: KO 11 → 6). ADV_54.E1 (Eisern) adds its line to this breakdown.
+      - when: { hit.overWundschwelle: { atLeast: 1 } }
+        check:
+          of: { talent: TAL_8, with: "table(trefferzonen.TZ11.application, hit.zone)" }
+          modifier: { of: hit.sp, per: wundschwelle, times: -1, round: down }
+          onFailure:
+            - when: { hit.zone: [kopf, beine] }
+              gain: { rule: "table(trefferzonen.TZ11.effect, hit.zone)" }
+              # Kopf: one Stufe Betäubung (COND_2); Beine: Status Liegend (STATE_10).
+            - when: { hit.zone: arme, hit.heldInHand: weapon, not: { loadout.twoHanded: true } }
+              item: { instance: { loadout: weapon }, change: { held: false } }
+              ruling: wundeffekt-arm-drop
+            - when: { hit.zone: arme, hit.heldInHand: other }
+              item: { instance: { loadout: other }, change: { held: false } }
+              ruling: wundeffekt-arm-drop
+              # Arme: the one-handed weapon or item in the hit hand leaves the hand, as a
+              # Patzer's does (Hero.unequipFromLoadout). `hit.heldInHand` is what the hand on
+              # `hit.side` (TZ4c) holds — `weapon`, `other`, `shield` or nothing — from the
+              # loadout's `loadout.weaponHand`; when the loadout does not say which hand holds
+              # what, it is unknown and the engine asks (the old `askIf: handUnknown`). A shield
+              # (`shield`) and a two-handed weapon stay (the old `unless: [twoHanded, shield]`).
+            - when: { hit.zone: torso }
+              tell: { to: player, text: "Wundeffekt Torso: zusätzlich 1W3+1 SP." }
+              # Torso's "Zusätzlich 1W3+1 SP" has no dice value form (A.4, an open question in
+              # MIGRATION.md); the player is told and rolls it, as reiterkampf.RK10 tells the fall.
+        # The Wundeffekt check (TZ10: Selbstbeherrschung, TAL_8), asked when the SP reach the
+        # Wundschwelle: `hit.overWundschwelle` is the number of whole Wundschwellen in the SP,
+        # ⌊hit.sp / wundschwelle⌋ (the old `hit.sp: { min: hero.wundschwelle }`, a comparison
+        # of two facts). Its application is TZ11's by zone; the check is harder by the multiple
+        # (−1 per full Wundschwelle, rounded down before the sign: 7 SP at 6 → −1, 13 → −2).
+        # On a failure the zone's Wundeffekt (TZ11) follows. The old `event: hitTaken` is carried
+        # by `hit.sp`, which exists only for a hit.
+    # The Wundschwelle comparison itself is core in the app, only the zone effect is this
+    # Fokusregel's (AGENTS.md, CombatWundschwelleRow / CombatWoundEffectPanel); whether it counts
+    # with the Fokusregel off is ADV_54's open ruling eisern-scope.
+
+  - id: TZ9
+    text: >
+      Bei einer KO von 11 und damit einer Wundschwelle von 6 würde ein Abenteurer also bei 6
+      Schadenspunkten eine um 1 erschwerte Probe ablegen müssen, bei 12 eine um 2 erschwerte
+      Probe, bei 18 eine um 3 erschwerte Probe.
+    none: the worked example; situations TZ.12–TZ.13
+
+  - id: TZ10
+    text: >
+      Gegen den Wundeffekt kann man sich mit einer Probe auf Selbstbeherrschung
+      (Handlungsfähigkeit bewahren oder Störungen ignorieren) zur Wehr setzen, je nachdem, wo man
+      getroffen wurde. Gelingt die Probe, geschieht nichts. Es muss nur eine Probe abgelegt
+      werden, egal wie viele Wundeffekte erzielt wurden.
+    none: carried by TZ8's `check` (one check, whatever the multiple)
+
+  - id: TZ11
+    text: |
+      Kopf: Eine Stufe Betäubung — Selbstbeherrschung (Handlungsfähigkeit bewahren)
+      Torso: Zusätzlich 1W3+1 SP — Selbstbeherrschung (Handlungsfähigkeit bewahren)
+      Arme: Held lässt in dieser Hand gehaltene Objekte los. Dies kann dazu führen, dass eine Einhandwaffe oder ein anderer Gegenstand zu Boden fällt. Waffen, die mit zwei Händen gehalten werden, und Schilde sind davon nicht betroffen. — Selbstbeherrschung (Störungen ignorieren)
+      Beine: Held geht zu Boden und erleidet den Status Liegend. — Selbstbeherrschung (Störungen ignorieren)
+    effects:
+      - provide: { name: trefferzonen.TZ11.application, value: { kopf: Handlungsfähigkeit bewahren, torso: Handlungsfähigkeit bewahren, arme: Störungen ignorieren, beine: Störungen ignorieren } }
+        # The Selbstbeherrschung application by zone, TZ8's check reads it.
+      - provide: { name: trefferzonen.TZ11.effect, value: { kopf: COND_2, beine: STATE_10 } }
+        # The rule gained by zone, TZ8's `gain` reads it: Kopf one Stufe Betäubung (COND_2),
+        # Beine Status Liegend (STATE_10). Arme (let go of what the hand holds, ruling
+        # wundeffekt-arm-drop) and Torso (zusätzlich 1W3+1 SP, no dice form) gain no rule: they
+        # are TZ8's `item` and `tell` on the failed check.
+
+  - id: TZ12
+    text: >
+      Anmerkung: Die Erschwernisse beim Anvisieren der Trefferzonen "Kopf" werden im Trefferzonen
+      Set fälschlicher Weise mit -8 statt -10 angegeben.
+    none: errata; TZ6 already carries −10
+
+rulings:
+  - id: relative-size-table
+    status: decided
+    question: >
+      TZ3 names two pairs — a small attacker against a medium hero rolls on the large table, a
+      large attacker against a medium hero on the small table. Is the table always chosen by the
+      two sizes relative to each other, or by the target's own size?
+    answer: >
+      Relative: the table follows the size difference, attacker against target, with mittel for
+      equal sizes.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [TZ3]
+    notes: >
+      The damage screen asks for the attacker's size (OpponentProfile.size exists); the hero's own
+      size matters only through the difference. A Zwerg hit by a goblin rolls on the mittel table
+      (TZ.11). Today the app picks by the target's own size only: an attack on an opponent uses
+      the opponent's size (CombatAttackViews, `opponent.bodyPlan`), damage on the hero the hero's
+      (CombatDamageViews, `hero.bodyPlan`), and the attacker's size is never consulted. It also
+      sizes Zwerge, Gnome and Halblinge as klein (HitZoneSizes.klein), so a Zwerg hit by a human
+      correctly rolls on the klein table. A difference beyond the tables a body plan has uses the
+      nearest one (a winzig attacker against a mittel human: groß).
+
+  - id: surprised-then-halved
+    status: decided
+    question: >
+      TZ5: against an überrascht opponent the aiming penalty is 2 lower, and Gezielter
+      Angriff/Schuss halves it. In which order?
+    answer: >
+      Ease by 2, then halve — the order the page states them in.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [TZ5, SA_160.GA1, SA_161.GS1]
+    notes: >
+      Kopf −4, Torso −1, Arme/Beine −3; no rounding arises. The app halves first, then eases
+      (HitZoneModifiers.penalty; the catalog note on GRW_zonenaufschlag says so on purpose), so
+      every surprised aimed attack with the SF is 1 too easy today.
+
+  - id: zone-replaces-size
+    status: decided
+    question: >
+      TZ5: the aiming penalties replace the Größenkategorie modifiers (Regelwerk p. 239). Does
+      that cover only the melee size modifier, or also the ranged target-size modifier?
+    answer: >
+      Both the melee and the ranged size modifier are replaced.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [TZ5]
+    notes: >
+      While a zone is aimed at, GRW_groessenkategorie (melee, winzig −4 AT) and
+      RangedModifiers.groesse (−8 winzig to +8 riesig) are both listed as "nicht angewendet". The
+      app applies both alongside an aimed attack today: a Torso shot at a groß target is 0
+      instead of −4.
+
+  - id: wundeffekt-arm-drop
+    status: decided
+    question: >
+      TZ11, Arme: the hero lets go of what that hand holds (not two-handed weapons, not shields).
+      Should the app take it out of the hand, or remind?
+    answer: >
+      Ask which hand was hit if unclear, then take the one-handed weapon or item in it out of the
+      loadout, as the Patzer effects do.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [TZ11, TZ4c, TZ8]
+    notes: >
+      The roll's parity says which arm (TZ4c: odd left, even right); what the app does not know
+      is which hand holds what, so it asks when the loadout does not say. The Patzer effects
+      already take a weapon out of the hand and remember the slot (Hero.unequipFromLoadout). Today
+      the app shows a reminder (WoundEffectCatalog, `.reminder` for .arme).

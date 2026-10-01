@@ -1,0 +1,62 @@
+# DRAFT FORMAT — see ../README.md.
+id: reichweite
+name: Nahkampfreichweite
+kind: core
+catalogId: GRW_reichweite     # the id the current catalog uses
+source:
+  url: https://dsa.ulisses-regelwiki.de/Nahkampf/nahkampfreichweite.html
+  book: Regelwerk
+  page: "230 f."       # as the page cites it: "Regelwerk (4. Auflage), Seite 230 f."
+  checked: 2026-09-27
+  hash: sha256:709380d2cf599436b126b26bac3ef0316a67dbad750de9a47f8ca7cca730d8ca
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+
+# Reach steps, shortest first. A "Stufe" of reach disadvantage (SA_172) is one step.
+# The derived fact `reach.gap` counts along it: how many steps the opponent's reach
+# (`opponent.reach`) is longer than the hero's (`loadout.reach`), negative when the hero's is
+# longer (the old `per: { steps: [loadout.reach, opponent.reach] }` and `longer_than`).
+provides: { reach: [kurz, mittel, lang] }
+
+clauses:
+  - id: RW1
+    text: >
+      Alle Nahkampfwaffen besitzen eine Reichweite. Diese leitet sich aus der Länge der Waffe ab
+      und bestimmt die damit verbundenen Vor- und Nachteile. Nahkampfwaffen sind in die
+      Kategorien kurz, mittel und lang eingeteilt.
+    none: >
+      defines the scale; a weapon's reach is equipment data (Optolith's item templates, or the
+      hero sheet). The hero's side is the weapon in the hand (bare hands kurz); the opponent's
+      is stated by the player.
+
+  - id: RW2
+    # The two "[…]" are the reach sentences RW3 carries ("Außerdem erleiden kurze Waffen …"
+    # and "Im Kampf gegen Waffen mit der Reichweite lang …").
+    text: |
+      Kurze Waffe — Vorteil: Kurze Waffen erleiden in beengter Umgebung keine Abzüge auf Attacke und Parade.
+      Mittlere Waffe — Vorteil: Mittlere Waffen erleiden weniger Erschwernisse durch beengter Umgebung als lange Waffen. […] Nachteil: […] Sie erleiden bei beengter Umgebung eine Erschwernis von -4 auf Attacke und Parade.
+      Lange Waffe — Nachteil: Lange Waffen erleiden bei beengter Umgebung eine Erschwernis von -8 auf Attacke und Parade.
+    none: the Beengte Umgebung rule (GRW_beengteUmgebung) carries these; not part of this example
+
+  - id: RW3
+    text: |
+      Kurze Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite mittel erleiden sie eine Erschwernis von -2 auf Attacke. Gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -4 auf ihre Attacke.
+      Mittlere Waffe — Vorteil: […] Außerdem erleiden kurze Waffen Erschwernisse gegen mittlere Waffen.
+      Mittlere Waffe — Nachteil: Im Kampf gegen Waffen mit der Reichweite lang erleiden sie eine Erschwernis von -2 auf ihre Attacke.
+      Lange Waffe — Vorteil: Kurze und mittlere Waffen erleiden Erschwernisse gegen lange Waffen.
+    effects:
+      - when: { reach.gap: { atLeast: 1 } }
+        add: { to: at, value: { of: reach.gap, times: -2 } }
+        # −2 per reach step the opponent is longer: kurz/mittel −2, kurz/lang −4,
+        # mittel/lang −2 — the page's matrix, written as a rate. The matrix (RW4) is the check.
+        # The old `check: at` is the target. The rate is the value (not a `per`), so that
+        # SA_172.U1's `replace` of this clause can lower the step count.
+
+  - id: RW4
+    # The page's table: a row is one weapon, a column ("Gegen") the weapon it fights, the cell
+    # says who pays.
+    text: |
+      Gegen | Kurz | Mittel | Lang
+      Kurz | keine Nachteile | -2 AT für kurz | -4 AT für kurz
+      Mittel | -2 AT für kurz | keine Nachteile | -2 AT für mittel
+      Lang | -4 AT für kurz | -2 AT für mittel | keine Nachteile
+    none: the same numbers as RW3, as a table; situations RW.1–RW.4 check the rate against it

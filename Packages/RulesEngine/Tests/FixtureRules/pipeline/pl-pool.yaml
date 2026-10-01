@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Fix round 1 (R38): an open when on the input of a derived level.
+id: pl-pool
+name: Tragkraft
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: P1
+    text: Erschöpft −10.
+    effects:
+      - add: { to: carryingCapacity, value: -10 }
+        when: { gmFact.drain: true }

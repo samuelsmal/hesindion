@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# An operand's rule on an open ruling (ADV_54.E1 on the Wundschwelle).
+id: me-iron
+name: Eisern
+kind: advantage
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: E1
+    text: Wundschwelle +1.
+    effects:
+      - add: { to: wundschwelle, value: 1 }
+        ruling: scope
+rulings:
+  - id: scope
+    question: Nur mit Trefferzonen?
+    answer: null

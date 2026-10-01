@@ -1,0 +1,267 @@
+{
+ "facts": [
+  {
+   "name": "attr.KK",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "attr.KO",
+   "owner": "sheet",
+   "value": 13
+  },
+  {
+   "name": "attr.GE",
+   "owner": "sheet",
+   "value": 12
+  },
+  {
+   "name": "attr.FF",
+   "owner": "sheet",
+   "value": 12
+  },
+  {
+   "name": "attr.CH",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "attr.IN",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "attr.KL",
+   "owner": "sheet",
+   "value": 15
+  },
+  {
+   "name": "attr.MU",
+   "owner": "sheet",
+   "value": 13
+  },
+  {
+   "name": "ktw.CT_13",
+   "owner": "sheet",
+   "value": 14
+  },
+  {
+   "name": "ktw.CT_9",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_10",
+   "owner": "sheet",
+   "value": 7
+  },
+  {
+   "name": "fw.TAL_15",
+   "owner": "sheet",
+   "value": 7
+  },
+  {
+   "name": "fw.TAL_16",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_17",
+   "owner": "sheet",
+   "value": 5
+  },
+  {
+   "name": "fw.TAL_18",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_19",
+   "owner": "sheet",
+   "value": 5
+  },
+  {
+   "name": "fw.TAL_20",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_21",
+   "owner": "sheet",
+   "value": 7
+  },
+  {
+   "name": "fw.TAL_23",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_26",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_27",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_32",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_33",
+   "owner": "sheet",
+   "value": 8
+  },
+  {
+   "name": "fw.TAL_34",
+   "owner": "sheet",
+   "value": 5
+  },
+  {
+   "name": "fw.TAL_36",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "fw.TAL_38",
+   "owner": "sheet",
+   "value": 6
+  },
+  {
+   "name": "fw.TAL_39",
+   "owner": "sheet",
+   "value": 4
+  },
+  {
+   "name": "fw.TAL_4",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_40",
+   "owner": "sheet",
+   "value": 10
+  },
+  {
+   "name": "fw.TAL_41",
+   "owner": "sheet",
+   "value": 1
+  },
+  {
+   "name": "fw.TAL_42",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_43",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_44",
+   "owner": "sheet",
+   "value": 1
+  },
+  {
+   "name": "fw.TAL_46",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "fw.TAL_56",
+   "owner": "sheet",
+   "value": 6
+  },
+  {
+   "name": "fw.TAL_7",
+   "owner": "sheet",
+   "value": 2
+  },
+  {
+   "name": "fw.TAL_8",
+   "owner": "sheet",
+   "value": 3
+  },
+  {
+   "name": "hero.purchased.le",
+   "owner": "sheet",
+   "value": 0
+  }
+ ],
+ "id": "H_1714139225991",
+ "owned": {
+  "ADV_0": {
+   "level": 1,
+   "option": "Ritter des Walsach"
+  },
+  "ADV_1": {
+   "level": 1
+  },
+  "ADV_14": {
+   "level": 1
+  },
+  "ADV_42": {
+   "level": 2
+  },
+  "ADV_50": {
+   "level": 1
+  },
+  "ADV_67": {
+   "level": 1
+  },
+  "DISADV_33": {
+   "level": 1,
+   "option": 1
+  },
+  "DISADV_37": {
+   "level": 1,
+   "option": 8
+  },
+  "DISADV_50": {
+   "level": 2,
+   "option": 8
+  },
+  "SA_22": {
+   "level": 1,
+   "option": "Festum"
+  },
+  "SA_250": {
+   "level": 1,
+   "option": "SPELL_29"
+  },
+  "SA_27": {
+   "level": 1,
+   "option": 9
+  },
+  "SA_29": {
+   "level": 1,
+   "option": 9
+  },
+  "SA_323": {
+   "level": 1
+  },
+  "SA_328": {
+   "level": 1
+  },
+  "SA_414": {
+   "level": 1,
+   "option": 397
+  },
+  "SA_70": {
+   "level": 1,
+   "option": "SPELL_36"
+  },
+  "SA_76": {
+   "level": 1
+  },
+  "SA_78": {
+   "level": 1
+  },
+  "SA_83": {
+   "level": 1
+  }
+ }
+}

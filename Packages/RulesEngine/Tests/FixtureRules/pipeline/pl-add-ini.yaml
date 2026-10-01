@@ -1,0 +1,11 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+id: pl-add-ini
+name: INI plus
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: I1
+    text: INI-Basis +1.
+    effects:
+      - add: { to: iniBase, value: 1 }

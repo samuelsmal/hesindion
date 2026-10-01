@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+id: SA_41
+name: Belastungsgewöhnung
+kind: specialAbility
+levels: 2
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: table-shift
+    question: How far?
+    answer: One Stufe per Stufe.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: G1
+    text: Belastung um die Stufe niedriger.
+    effects:
+      - useLevel: { rule: COND_1, lowerBy: level, min: 0 }
+        ruling: table-shift

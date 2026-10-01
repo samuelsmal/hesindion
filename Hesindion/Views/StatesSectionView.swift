@@ -3,22 +3,17 @@ import SwiftData
 
 /// The "Zustände & Status" content for the hero detail: active states render as a vertical
 /// list of `SwipeActionRow`s (matching advantages/talents/spells), with swipe-left to remove
-/// and tap to open the `StateDetailSheet`. Derived (Schmerz/Belastung) and implied-only states
+/// and tap to call `onSelect` (the parent shows `StateDetailSheet`). Derived (Schmerz/Belastung) and implied-only states
 /// expose no swipe action — they can't be removed by hand. A trailing "+ Zustand hinzufügen"
-/// button opens `StatePickerSheet`.
+/// button calls `onAdd`: the parent screen shows `StatePickerSheet` over its whole screen.
 ///
 /// The compact chip strip (`StatesStrip`) is used by `CombatRootView`'s STATUS section instead.
 struct StatesSectionView: View {
     @Bindable var hero: Hero
-
-    @State private var showPicker = false
-    @State private var detailState: StateSelection?
-
-    /// Identifiable wrapper so `.sheet(item:)` can present the detail for a tapped state.
-    private struct StateSelection: Identifiable {
-        let def: StateDefinition
-        var id: String { def.id }
-    }
+    /// The "+ Zustand hinzufügen" row.
+    var onAdd: () -> Void
+    /// A tapped row. The parent shows `StateDetailSheet` over its whole screen.
+    var onSelect: (StateDefinition) -> Void
 
     /// Implied states (e.g. bewusstlos ⇒ liegend) not already explicitly active —
     /// shown for context but not manually removable.
@@ -47,16 +42,6 @@ struct StatesSectionView: View {
             addRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .sheet(isPresented: $showPicker) {
-            StatePickerSheet(hero: hero)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
-        .sheet(item: $detailState) { selection in
-            StateDetailSheet(hero: hero, def: selection.def)
-                .presentationCornerRadius(0)
-                .presentationDetents([.large])
-        }
     }
 
     private func stateRow(def: StateDefinition, level: Int, removable: Bool, muted: Bool = false) -> some View {
@@ -66,17 +51,17 @@ struct StatesSectionView: View {
         return SwipeActionRow(actions: actions) {
             StateRowContent(def: def, level: level, muted: muted)
                 .contentShape(Rectangle())
-                .onTapGesture { detailState = StateSelection(def: def) }
+                .onTapGesture { onSelect(def) }
         }
     }
 
     private var addRow: some View {
         Button {
-            showPicker = true
+            onAdd()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
                 Text(L("states.add"))
                     .font(.body)
                 Spacer()
@@ -88,7 +73,7 @@ struct StatesSectionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsaMotion)
     }
 }
 
@@ -103,12 +88,12 @@ private struct StateRowContent: View {
         let value = StateCatalog.levelValueText(for: def, level: level)
         HStack(spacing: 8) {
             Image(systemName: def.iconSystemName)
-                .font(.system(.body, weight: .bold))
+                .font(.dsaBody(.body))
                 .frame(width: 22)
             Text(L(def.nameKey)).font(.body)
             Spacer()
             if !value.isEmpty {
-                Text(value).font(.system(.body, design: .monospaced))
+                Text(value).font(.dsaMono(.body, emphasis: true))
             }
         }
         .foregroundStyle(muted ? Color.secondary : Color.primary)

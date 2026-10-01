@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hesindion/companion-block.schema.json",
+  "title": "Hesindion companion block (root key `hesindion` of an Optolith export)",
+  "description": "Written by scripts/companions/amend_export.py; read by CompanionData.parse. See docs/plans/2026-09-24-companion-data-design.md §4.",
+  "type": "object",
+  "required": ["schemaVersion", "pets"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "pets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "ap", "purchases", "values"],
+        "properties": {
+          "name": { "type": "string" },
+          "breed": { "type": ["string", "null"] },
+          "ap": {
+            "type": "object", "required": ["total", "spent"],
+            "properties": { "total": { "type": "integer" }, "spent": { "type": "integer" } }
+          },
+          "purchases": {
+            "type": "array",
+            "items": {
+              "type": "object", "required": ["kind", "ap"],
+              "properties": {
+                "kind": { "enum": ["advantage", "training", "trick", "ability", "raise", "buy"] },
+                "name": { "type": "string" },
+                "target": { "type": "string" },
+                "ap": { "type": "integer", "minimum": 0 },
+                "from": { "type": "integer" },
+                "to": { "type": "integer" },
+                "count": { "type": "integer", "minimum": 1 }
+              }
+            }
+          },
+          "values": {
+            "type": "object",
+            "required": ["attacks", "advantages", "abilities", "training", "tricks"],
+            "properties": {
+              "attributes": { "type": "object", "additionalProperties": { "type": "integer" } },
+              "lep": { "type": "integer" },
+              "ini": { "type": "string" },
+              "gs": { "type": "integer" },
+              "vw": { "type": "integer" },
+              "rs": { "type": "integer" },
+              "be": { "type": "integer" },
+              "talents": { "type": "object", "additionalProperties": { "type": "integer" } },
+              "attacks": {
+                "type": "array",
+                "items": {
+                  "type": "object", "required": ["name", "at", "tp", "rw"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "at": { "type": "integer" },
+                    "tp": { "type": "string", "pattern": "^\\d+W\\d+([+-]\\d+)?$" },
+                    "rw": { "enum": ["kurz", "mittel", "lang"] }
+                  }
+                }
+              },
+              "advantages": { "type": "array", "items": { "type": "string" } },
+              "abilities": { "type": "array", "items": { "type": "string" } },
+              "training": { "type": "array", "items": { "type": "string" } },
+              "tricks": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

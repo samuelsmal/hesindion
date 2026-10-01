@@ -1,0 +1,1867 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "C1",
+    "index": 0,
+    "rule": "me-charge"
+   },
+   {
+    "clause": "C4",
+    "index": 0,
+    "rule": "me-charge"
+   },
+   {
+    "clause": "C5",
+    "index": 0,
+    "rule": "me-charge"
+   },
+   {
+    "clause": "K3",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "S3",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "W8",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "F1",
+    "index": 0,
+    "rule": "me-finte"
+   },
+   {
+    "clause": "H2",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H3",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H3",
+    "index": 1,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H4",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H7",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "H8",
+    "index": 0,
+    "rule": "me-horse"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "me-line"
+   },
+   {
+    "clause": "L1",
+    "index": 1,
+    "rule": "me-line"
+   },
+   {
+    "clause": "L1",
+    "index": 2,
+    "rule": "me-line"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 0,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 1,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 2,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "L4",
+    "index": 3,
+    "rule": "me-prone"
+   },
+   {
+    "clause": "R12",
+    "index": 0,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R12",
+    "index": 1,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R12",
+    "index": 2,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R2",
+    "index": 0,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R3",
+    "index": 0,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R6",
+    "index": 0,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "R6",
+    "index": 1,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "W4",
+    "index": 0,
+    "rule": "me-weapon"
+   },
+   {
+    "clause": "W1",
+    "index": 0,
+    "rule": "me-wucht"
+   }
+  ],
+  "at": [
+   {
+    "clause": "R3",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "S9",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "Z5",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "Z6",
+    "index": 0,
+    "rule": "me-core"
+   },
+   {
+    "clause": "P1",
+    "index": 0,
+    "rule": "me-position"
+   }
+  ],
+  "aw": [
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "me-core"
+   }
+  ],
+  "gs": [
+   {
+    "clause": "R1",
+    "index": 2,
+    "rule": "me-rider"
+   }
+  ],
+  "iniBase": [
+   {
+    "clause": "R1",
+    "index": 0,
+    "rule": "me-rider"
+   }
+  ],
+  "opponent.pa": [
+   {
+    "clause": "G4",
+    "index": 0,
+    "rule": "me-core"
+   }
+  ],
+  "pa": [
+   {
+    "clause": "Z3",
+    "index": 0,
+    "rule": "me-core"
+   }
+  ],
+  "tp": [
+   {
+    "clause": "R1",
+    "index": 1,
+    "rule": "me-rider"
+   },
+   {
+    "clause": "W3",
+    "index": 0,
+    "rule": "me-weapon"
+   }
+  ],
+  "wundschwelle": [
+   {
+    "clause": "E1",
+    "index": 0,
+    "rule": "me-iron"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C1",
+        "index": 0,
+        "rule": "me-charge"
+       },
+       "payload": {
+        "choice": "sturmangriff"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "C1",
+     "text": "Sturmangriff."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C4",
+        "index": 0,
+        "rule": "me-charge"
+       },
+       "payload": {
+        "together": true,
+        "what": {
+         "ids": [
+          "finte"
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": null
+      }
+     ],
+     "id": "C4",
+     "text": "Nicht mit Finte."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "C5",
+        "index": 0,
+        "rule": "me-charge"
+       },
+       "payload": {
+        "choice": "zone"
+       },
+       "phase": "player",
+       "ruling": [
+        "me-charge.aim"
+       ],
+       "verb": "offer",
+       "when": {
+        "fact": "choice.sturmangriff",
+        "is": true
+       }
+      }
+     ],
+     "id": "C5",
+     "text": "Beim Sturmangriff eine Zone anvisieren."
+    }
+   ],
+   "id": "me-charge",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "spezialmanoever"
+   },
+   "name": "Sturmangriff",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-charge.aim",
+     "question": "Zielen beim Sturmangriff?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": "nur ein Basismanöver pro Handlung",
+       "origin": {
+        "clause": "K3",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "max": {
+         "number": 1
+        },
+        "per": "action",
+        "what": {
+         "ids": [
+          {
+           "kind": "basismanoever"
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "limit",
+       "when": null
+      }
+     ],
+     "id": "K3",
+     "text": "Nur ein Basismanöver pro Handlung."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R3",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "reach.gap"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": -2
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "atLeast": 1,
+        "fact": "reach.gap"
+       }
+      }
+     ],
+     "id": "R3",
+     "text": "Je Stufe Reichweite −2 AT."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z3",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "pa"
+         },
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "round.doubleAttack",
+          "is": true
+         },
+         {
+          "not": {
+           "fact": "action.defence",
+           "is": "shieldParry"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "id": "Z3",
+     "text": "Beidhändig −2 auf AT und alle Verteidigungen."
+    },
+    {
+     "effects": [
+      {
+       "because": "GS 4",
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "for": {
+         "ids": [
+          "finte"
+         ],
+         "kind": "choice"
+        },
+        "that": {
+         "atLeast": 4,
+         "fact": "hero.gs"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "Sturmangriff nur mit GS 4."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W8",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "modifier": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "hit.sp"
+          },
+          "per": {
+           "target": {
+            "name": "wundschwelle"
+           }
+          },
+          "round": "down",
+          "times": -1
+         }
+        },
+        "of": {
+         "ids": [
+          "TAL_8"
+         ],
+         "kind": "talent"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": null
+      }
+     ],
+     "id": "W8",
+     "text": "Wundeffekt je volle Wundschwelle −1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z5",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -10
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.zone",
+        "is": "kopf"
+       }
+      }
+     ],
+     "id": "Z5",
+     "text": "Kopf −10."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S9",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "line": {
+         "ids": [
+          "me-core.R3"
+         ],
+         "kind": "line"
+        }
+       },
+       "phase": "lines",
+       "ruling": [
+        "me-core.quiet"
+       ],
+       "verb": "suppress",
+       "when": {
+        "fact": "gmFact.quiet",
+        "is": true
+       }
+      }
+     ],
+     "id": "S9",
+     "text": "Leise."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "name": "loadout.shield.technique",
+        "readBy": "loadout",
+        "value": "CT_10"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S3",
+     "text": "Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G4",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "opponent.weaponParry"
+         ],
+         "kind": "defence"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "all": [
+         {
+          "fact": "choice.order",
+          "is": "flucht"
+         },
+         {
+          "fact": "mount.size",
+          "is": "gross"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "G4",
+     "text": "Gegen einen großen Angreifer nur Schild oder Ausweichen."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "Z6",
+        "index": 0,
+        "rule": "me-core"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "choice.order",
+        "is": "flucht"
+       }
+      }
+     ],
+     "id": "Z6",
+     "text": "Auf der Flucht −1 AT."
+    }
+   ],
+   "id": "me-core",
+   "kind": "core",
+   "name": "Nahkampf",
+   "provides": {
+    "reach": [
+     "kurz",
+     "mittel",
+     "lang"
+    ]
+   },
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-core.quiet",
+     "question": "Leise?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "F1",
+        "index": 0,
+        "rule": "me-finte"
+       },
+       "payload": {
+        "choice": "finte"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "F1",
+     "text": "Finte."
+    }
+   ],
+   "id": "me-finte",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "basismanoever"
+   },
+   "name": "Finte",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H2",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.iniBase",
+        "value": 14
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "H2",
+     "text": "INI 14+1W6."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H4",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.actions",
+        "readBy": "display",
+        "value": 1
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "H4",
+     "text": "Aktionen 1."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H3",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.attacks",
+        "value": [
+         {
+          "at": 15,
+          "name": "Tritt",
+          "tp": "1W6+7"
+         }
+        ]
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "H3",
+        "index": 1,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "choice.mountAttack"
+         ],
+         "kind": "attack",
+         "with": "mount"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "choice.order",
+          "is": "flucht"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "H3",
+     "text": "Tritt: AT 15 TP 1W6+7"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H7",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "name": "mount.size",
+        "value": "gross"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "H7",
+     "text": "Größenkategorie: groß"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "H8",
+        "index": 0,
+        "rule": "me-horse"
+       },
+       "payload": {
+        "choice": "order",
+        "options": [
+         "sturm"
+        ]
+       },
+       "phase": "player",
+       "ruling": [
+        "me-horse.storm"
+       ],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "H8",
+     "text": "Der Befehl zum Sturm."
+    }
+   ],
+   "id": "me-horse",
+   "kind": "creature",
+   "name": "Kaltblut",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "ja",
+     "id": "me-horse.storm",
+     "question": "Sturm?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "E1",
+        "index": 0,
+        "rule": "me-iron"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "wundschwelle"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [
+        "me-iron.scope"
+       ],
+       "verb": "add",
+       "when": null
+      }
+     ],
+     "id": "E1",
+     "text": "Wundschwelle +1."
+    }
+   ],
+   "id": "me-iron",
+   "kind": "advantage",
+   "name": "Eisern",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": null,
+     "id": "me-iron.scope",
+     "question": "Nur mit Trefferzonen?",
+     "status": "open"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "me-line"
+       },
+       "payload": {
+        "choice": "line"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 1,
+        "rule": "me-line"
+       },
+       "payload": {
+        "choice": "skirmish"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 2,
+        "rule": "me-line"
+       },
+       "payload": {
+        "together": true,
+        "what": {
+         "ids": [
+          "line",
+          "skirmish"
+         ],
+         "kind": "choice"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "me-line.both"
+       ],
+       "verb": "forbid",
+       "when": null
+      }
+     ],
+     "id": "L1",
+     "text": "Formation."
+    }
+   ],
+   "id": "me-line",
+   "kind": "specialAbility",
+   "name": "Formation",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": null,
+     "id": "me-line.both",
+     "question": "Beide zugleich?",
+     "status": "open"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "P1",
+        "index": 0,
+        "rule": "me-position"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": 2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "any": [
+         {
+          "fact": "gmFact.vorteilhaftePosition",
+          "is": true
+         },
+         {
+          "fact": "hero.mounted",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "P1",
+     "text": "Vorteilhafte Position +2 AT."
+    }
+   ],
+   "id": "me-position",
+   "kind": "core",
+   "name": "Vorteilhafte Position",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "text": "liegt",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      }
+     ],
+     "id": "L1",
+     "text": "Man liegt."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 0,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "choice": "aufstehen",
+        "costs": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "L4",
+           "index": "0.costs.0",
+           "rule": "me-prone"
+          },
+          "payload": {
+           "amount": {
+            "number": 1
+           },
+           "pool": "actions"
+          },
+          "phase": "action",
+          "ruling": [],
+          "verb": "cost",
+          "when": null
+         }
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 1,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "levels": -1,
+        "rule": "me-prone"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.has",
+          "is": "me-prone"
+         },
+         {
+          "fact": "choice.aufstehen",
+          "is": true
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 2,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "choice": "passierschlagVermeiden",
+        "default": false
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.has",
+        "is": "me-prone"
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 3,
+        "rule": "me-prone"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "TAL_4"
+         ],
+         "kind": "talent",
+         "with": "Kampfmanöver"
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "L4",
+           "index": "3.onFailure.0",
+           "rule": "me-prone"
+          },
+          "payload": {
+           "text": "passierschlag",
+           "to": "opponent"
+          },
+          "phase": "player",
+          "ruling": [],
+          "verb": "tell",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.has",
+          "is": "me-prone"
+         },
+         {
+          "fact": "choice.aufstehen",
+          "is": true
+         },
+         {
+          "fact": "choice.passierschlagVermeiden",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "L4",
+     "text": "Aufstehen kostet 1 Aktion; eine Probe vermeidet den Passierschlag."
+    }
+   ],
+   "id": "me-prone",
+   "kind": "state",
+   "name": "Liegend",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-26",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R2",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "enables": true,
+        "for": {
+         "ids": [
+          "me-position"
+         ],
+         "kind": "rule"
+        },
+        "that": {
+         "fact": "hero.mounted",
+         "is": true
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "require",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "R2",
+     "text": "Beritten in vorteilhafter Position."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R1",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "mount.iniBase"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "iniBase"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R1",
+        "index": 1,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "tp"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "mount.gs"
+          },
+          "per": {
+           "number": 2
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R1",
+        "index": 2,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "fact": "mount.actions"
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "R1",
+     "text": "Beritten gilt der INI-Basiswert des Pferdes."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "choice": "jumpOff",
+        "default": false
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 1,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "change": {
+         "ridden": false
+        },
+        "instance": {
+         "ids": [
+          "mount"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "item",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "choice.jumpOff",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "R6",
+     "text": "Abspringen."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R12",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "choice": "order",
+        "options": [
+         "flucht"
+        ]
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R12",
+        "index": 1,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "amount": {
+         "number": 1
+        },
+        "pool": "actions"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "cost",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "choice.order",
+          "in": [
+           "flucht"
+          ]
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R12",
+        "index": 2,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "of": {
+         "ids": [
+          "TAL_6"
+         ],
+         "kind": "talent",
+         "with": "Kampfmanöver"
+        },
+        "onFailure": [
+         {
+          "because": null,
+          "origin": {
+           "clause": "R12",
+           "index": "2.onFailure.0",
+           "rule": "me-rider"
+          },
+          "payload": {
+           "text": "Der Befehl wird nicht ausgeführt.",
+           "to": "player"
+          },
+          "phase": "player",
+          "ruling": [],
+          "verb": "tell",
+          "when": null
+         }
+        ]
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "check",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "choice.order",
+          "in": [
+           "flucht"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "id": "R12",
+     "text": "Ein Befehl kostet eine Aktion und eine Probe auf Reiten."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R3",
+        "index": 0,
+        "rule": "me-rider"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          {
+           "kind": "spezialmanoever"
+          }
+         ],
+         "kind": "manoeuvre"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "me-rider.mounted"
+       ],
+       "verb": "forbid",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "R3",
+     "text": "Beritten keine Spezialmanöver."
+    }
+   ],
+   "id": "me-rider",
+   "kind": "core",
+   "name": "Reiterkampf",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "Basismanöver ja",
+     "id": "me-rider.mounted",
+     "question": "Welche Manöver beritten?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W3",
+        "index": 0,
+        "rule": "me-weapon"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "tp"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "rulesets",
+          "is": "fokus.waffeneigenschaften"
+         },
+         {
+          "fact": "hero.mounted",
+          "is": true
+         }
+        ]
+       }
+      }
+     ],
+     "id": "W3",
+     "text": "Beritten +1 TP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W4",
+        "index": 0,
+        "rule": "me-weapon"
+       },
+       "payload": {
+        "levels": 1,
+        "rule": "me-horse"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "all": [
+         {
+          "fact": "rulesets",
+          "is": "fokus.waffeneigenschaften"
+         },
+         {
+          "fact": "action.attack",
+          "is": "confirmedFumble"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "W4",
+     "text": "Nach einem Patzer Betäubung."
+    }
+   ],
+   "id": "me-weapon",
+   "kind": "equipment",
+   "name": "Rabenschnabel",
+   "provides": {
+    "reach": "mittel",
+    "technique": "CT_5"
+   },
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "W1",
+        "index": 0,
+        "rule": "me-wucht"
+       },
+       "payload": {
+        "choice": "wuchtschlag"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "W1",
+     "text": "Wuchtschlag."
+    }
+   ],
+   "id": "me-wucht",
+   "kind": "specialAbility",
+   "manoeuvre": {
+    "kind": "basismanoever"
+   },
+   "name": "Wuchtschlag",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/me"
+   }
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "ja",
+   "id": "me-charge.aim",
+   "question": "Zielen beim Sturmangriff?",
+   "status": "decided"
+  },
+  {
+   "answer": "ja",
+   "id": "me-core.quiet",
+   "question": "Leise?",
+   "status": "decided"
+  },
+  {
+   "answer": "ja",
+   "id": "me-horse.storm",
+   "question": "Sturm?",
+   "status": "decided"
+  },
+  {
+   "answer": null,
+   "id": "me-iron.scope",
+   "question": "Nur mit Trefferzonen?",
+   "status": "open"
+  },
+  {
+   "answer": null,
+   "id": "me-line.both",
+   "question": "Beide zugleich?",
+   "status": "open"
+  },
+  {
+   "answer": "Basismanöver ja",
+   "id": "me-rider.mounted",
+   "question": "Welche Manöver beritten?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "5421054a0963fb343aa2eaa10115e14e5df15575ca2638b817d3bdc3051e5fad",
+ "vocabularyVersion": 1
+}

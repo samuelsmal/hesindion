@@ -87,6 +87,9 @@ enum WoundEffectResolver {
 
     /// The Selbstbeherrschung probe is harder by 1 per multiple of the Wundschwelle.
     /// Rules example: Wundschwelle 6 → −1 at 6 SP, −2 at 12, −3 at 18.
+    /// This is only the Wundschwelle part: whoever opens a probe with this modifier
+    /// must also pass `isWoundEffectProbe: true` (or use `Situation.woundEffectProbe`),
+    /// or catalog rules like Verweichlicht (DISADV_57) silently do not apply.
     static func probeModifier(damage: Int, wundschwelle: Int) -> Int {
         -multiple(damage: damage, wundschwelle: wundschwelle)
     }
@@ -96,6 +99,26 @@ enum WoundEffectResolver {
         count: Int, sides: Int, flat: Int, using generator: inout G
     ) -> Int {
         DiceRoller.roll(count: count, sides: sides, using: &generator).reduce(0, +) + flat
+    }
+
+    /// Rolls the Wundeffekt's own damage for `zone`, or nil where the effect is
+    /// not a damage one.
+    ///
+    /// Separate from `apply` so the roll is made explicitly, its result shown, and
+    /// confirm — the same adjudication every other roll on the screen gets. Uses
+    /// the no-generator `DiceRoller` entry point so a UI test can script it.
+    static func rollExtraDamage(for zone: HitZone) -> Int? {
+        guard case .extraDamage(let count, let sides, let flat) = WoundEffectCatalog.effect(for: zone).kind
+        else { return nil }
+        return DiceRoller.roll(count: count, sides: sides).reduce(0, +) + flat
+    }
+
+    /// "1W3+1" — what the zone's extra damage rolls, for a screen that has to say
+    /// what it is about to roll or what a number entered by hand stands for.
+    static func extraDamageFormula(for zone: HitZone) -> String {
+        guard case .extraDamage(let count, let sides, let flat) = WoundEffectCatalog.effect(for: zone).kind
+        else { return "" }
+        return flat == 0 ? "\(count)W\(sides)" : "\(count)W\(sides)+\(flat)"
     }
 
     /// The one LP figure written on confirm: the hit plus any Torso extra damage.
@@ -140,7 +163,7 @@ enum WoundEffectResolver {
     /// Selbstbeherrschung is a DSA 5 basic ability every hero has, so there is no
     /// "hero cannot resist" case — an absent talent row is a data anomaly, and the
     /// probe falls back to Fertigkeitswert 0 rather than auto-applying the effect.
-    /// An unrolled probe (`nil`) means the GM has not adjudicated yet: nothing applies.
+    /// An unrolled probe (`nil`) means it has not been rolled yet: nothing applies.
     static func effectApplies(threatens: Bool, probeSucceeded: Bool?) -> Bool {
         guard threatens else { return false }
         return probeSucceeded == false
@@ -153,13 +176,19 @@ enum WoundEffectResolver {
     /// Extra damage can never appear without the hit's `effectiveDamage`: it is
     /// additive in `totalDamage`, and it is only rolled at all when `effectApplies`
     /// is true for a real `zoneHit` — never in isolation.
+    /// `preRolledExtraDamage` is the figure already rolled and shown on the
+    /// panel. When present it is used as-is; `apply` still runs for its other
+    /// consequences (states, statuses) but its own roll is discarded, so the
+    /// number written to LP is always the number that was shown.
     static func confirmDamage(
-        zoneHit: HitZoneHit?, effectApplies: Bool, effectiveDamage: Int, hero: Hero
+        zoneHit: HitZoneHit?, effectApplies: Bool, effectiveDamage: Int, hero: Hero,
+        preRolledExtraDamage: Int? = nil
     ) -> (extraDamage: Int?, totalDamage: Int) {
         var extra: Int? = nil
         if let hit = zoneHit, effectApplies {
             apply(hit.zone, to: hero, extraDamage: &extra)
         }
+        if let preRolled = preRolledExtraDamage { extra = preRolled }
         return (extra, totalDamage(effective: effectiveDamage, extra: extra))
     }
 }

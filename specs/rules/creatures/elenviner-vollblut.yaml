@@ -1,0 +1,169 @@
+# DRAFT FORMAT — see ../README.md.
+# A Bestiarium stat block, kind `creature`, written as svellttaler-kaltblut.yaml is (see its header
+# for the format). Drafted in the agent pass of 2026-09-27 for the rule data conflict
+# kupperus-und-waffen 18.2 names: a mount whose Tritt (AT 16) is listed before its Niederreiten
+# (AT 15), so that RK13 must read the Niederreiten line, not the first attack. The decided rulings
+# it rests on are the Kaltblut's: svellttaler-kaltblut.mount-profile-data (a profile keyed by the
+# pet's type, the export's numbers overriding it), mount-own-attack and
+# niederreiten-without-profile. They were asked about Kupperus but answer for any mount profile.
+id: elenviner-vollblut
+name: Elenviner Vollblut
+kind: creature
+source:
+  url: https://dsa.ulisses-regelwiki.de/Best_Elenviner_Vollblut.html
+  book: Aventurische Tiergefährten
+  page: 40
+  checked: 2026-09-27
+  hash: sha256:35ccb846723e6631ef05716a977ef59f6ca4eb6928225c8dbfd1c6f25028213e
+reviewed: null
+
+provides:
+  attributes: { MU: 11, KL: 11, IN: 12, CH: 13, FF: 8, GE: 14, KO: 22, KK: 24 }
+  lep: 70
+  ini: { base: 14, dice: 1W6 }
+  vw: 7
+  sk: 0
+  zk: 0
+  gs: 14
+  rs: 0
+  be: 0
+  actions: 1
+  size: gross
+  attacks:
+    - { name: Tritt, at: 16, tp: 1W6+6, reach: mittel }
+    - { name: Biss, at: 13, tp: 1W6+2, reach: kurz }
+    - { name: Niederreiten, at: 15, tp: 2W6+4, reach: mittel }
+  abilities: [maechtiger-schlag]
+
+clauses:
+  - id: EV1
+    text: |
+      Größe: 2,30 bis 2,80 Schritt lang; 1,60 bis 1,80 Schritt Schulterhöhe
+      Gewicht: 450 bis 550 Stein
+    none: description; nothing reads it
+
+  - id: EV2
+    text: |
+      MU 11 KL 11 (t) IN 12 CH 13 FF 8 GE 14 KO 22 KK 24
+      LeP 70 AsP – KaP – INI 14+1W6 VW 7 SK 0 ZK 0 GS 14
+    effects:
+      - provide: { name: mount.iniBase, value: 14 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+      - provide: { name: mount.gs, value: 14 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+      - provide: { name: mount.lep, value: 70 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+      - provide: { name: mount.vw, value: 7 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+      - provide: { name: mount.kk, value: 24 }
+        ruling: svellttaler-kaltblut.mount-profile-data
+        # Read by reiterkampf.RK1 (INI base), RK14 and RK15 (GS), RK10 (LeP),
+        # maechtiger-schlag.MS2 (KK), as the Kaltblut's SK2.
+
+  - id: EV3
+    text: |
+      Tritt: AT 16 TP 1W6+6 RW mittel
+      Biss: AT 13 TP 1W6+2 RW kurz
+      Niederreiten: AT 15 TP 2W6+4 RW mittel
+    effects:
+      - provide:
+          name: mount.attacks
+          value:
+            - { name: Tritt, at: 16, tp: 1W6+6, reach: mittel }
+            - { name: Biss, at: 13, tp: 1W6+2, reach: kurz }
+            - { name: Niederreiten, at: 15, tp: 2W6+4, reach: mittel }
+        ruling: [svellttaler-kaltblut.mount-profile-data, svellttaler-kaltblut.niederreiten-without-profile]
+        # RK13 reads the Niederreiten line by name, AT 15, not the first line's AT 16
+        # (kupperus-und-waffen 18.2; the app takes `mount.attacks.first?.at`).
+      - when: { hero.mounted: true }
+        offer: { choice: order, options: [mountAttack] }
+        ruling: svellttaler-kaltblut.mount-own-attack
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        offer: { choice: mountAttack, options: [Tritt, Biss] }
+        ruling: svellttaler-kaltblut.mount-own-attack
+      - when: { hero.mounted: true, choice.order: mountAttack }
+        check: { of: { attack: choice.mountAttack, with: mount } }
+        ruling: svellttaler-kaltblut.mount-own-attack
+        # As the Kaltblut's SK3: an order (reiterkampf.RK12), 1 action and a Reiten
+        # (Kampfmanöver) check, the line picked from `mount.attacks` above.
+
+  - id: EV4
+    text: |
+      RS/BE: 0/0
+      Aktionen: 1
+    effects:
+      - provide: { name: mount.rs, value: 0, readBy: display }
+        ruling: [svellttaler-kaltblut.mount-profile-data, svellttaler-kaltblut.mount-own-attack]
+      - provide: { name: mount.actions, value: 1, readBy: display }
+        ruling: [svellttaler-kaltblut.mount-profile-data, svellttaler-kaltblut.mount-own-attack]
+
+  - id: EV5
+    text: >
+      Vorteile/Nachteile: Sprungsicher, (empfohlen: Schnell) / (empfohlen: Nervös)
+      Sonderfertigkeiten: Mächtiger Schlag, (empfohlen: Trittsicher (Gelände des
+      Ausbildungsorts))
+    effects:
+      - require: { that: { hero.has: elenviner-vollblut }, enables: true, for: { rule: maechtiger-schlag } }
+        ruling: svellttaler-kaltblut.mount-profile-data
+        # As the Kaltblut's SK5: the profile switches on the animal's SF. Sprungsicher is not
+        # drafted (no rule file), so it applies nothing; "empfohlen" ones are suggestions for a
+        # player's own animal, not part of the profile.
+
+  - id: EV6
+    text: >
+      Talente: Einschüchtern 3, Klettern (keine Probe erlaubt; Pferde können nicht klettern),
+      Körperbeherrschung 5, Kraftakt 8, Schwimmen 4, Selbstbeherrschung 5, Sinnesschärfe 6,
+      Verbergen 1, Willenskraft 3
+    none: the animal's own checks; shown as text, none rolled
+
+  - id: EV7
+    text: |
+      Anzahl: 1 oder 2W6+2 (Herde)
+      Größenkategorie: groß
+      Typus: Tier, nicht humanoid
+    effects:
+      - provide: { name: mount.size, value: gross }
+      - provide: { name: mount.type, value: [tier, nichtHumanoid] }
+        # groß: an opponent defending against the horse's own attacks cannot parry with a weapon
+        # (groessenkategorie.GK4), as the Kaltblut's SK7.
+
+  - id: EV8
+    text: "Beute: 300 Rationen Fleisch, Fell (23 Silbertaler)"
+    none: loot
+
+  - id: EV9
+    text: >
+      Kampfverhalten: Elenviner Vollblüter flüchten immer, solange sie keine gegenteiligen
+      Befehle erhalten. Können sie nicht fliehen oder werden sie erschreckt, treten sie nach vorne
+      oder hinten aus. Sie ziehen es vor zu treten und beißen nur, wenn ihr Gegner sich ohnehin
+      direkt vor ihrem Maul befindet.
+      Flucht: siehe Kampfverhalten
+    none: how the GM plays an unridden animal; shown as text
+
+  - id: EV10
+    text: "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger"
+    unencoded: >
+      the printed thresholds, as the Kaltblut's SK10 (ruling
+      svellttaler-kaltblut.svellttaler-schmerz-thresholds: the printed thresholds count). That
+      ruling was answered for the Kaltblut; whether it holds for every horse with the same
+      printed numbers (here LeP 70, where ¾, ½, ¼ would be 52, 35, 17) is the owner's to confirm
+      before SK10's effects are copied here.
+
+  - id: EV11
+    text: |
+      Tierkunde (domestizierte Tiere):
+      QS 1: Elenviner Vollblüter treten im Schreck oft aus, weshalb man sich ihnen langsam und nicht von hinten nähern sollte.
+      QS 2: Sie werden gerne verwöhnt und merken sich die Gesichter der Leute, die sie für harte Arbeit ausgiebig belohnen.
+      QS 3+: Elenviner Vollblüter mögen Katzen nicht besonders und scheuen in deren Nähe. Interessanterweise wird diese Abneigung durch Katzen nicht erwidert.
+      Jagd: –2
+    none: lore for a Tierkunde check and a hunting modifier; neither is a check the hero makes on this animal in combat
+
+  - id: EV12
+    name: Packesel
+    text: "Sonderregeln: Packesel: Elenviner Vollblüter können ein Gewicht von bis zu 160 Stein tragen."
+    effects:
+      - set: { to: mount.carryingCapacity, value: 160 }
+
+  - id: EV13
+    text: "Publikation: Aventurische Tiergefährten, Seite 40"
+    none: where the page comes from

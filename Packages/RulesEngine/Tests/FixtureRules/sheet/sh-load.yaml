@@ -1,0 +1,28 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: Belastung (COND_1): a levelled condition whose Stufe the armour derives, capped at IV,
+# and its Stufe IV state.
+id: sh-load
+name: Last
+kind: condition
+levels: 4
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: jouster
+    question: Does the rider's relief lift Stufe IV?
+    answer: No.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: L1
+    text: AT, AW −Stufe.
+    effects:
+      - when: { level: [1, 2, 3] }
+        add: { to: [at, aw], value: -1, per: level }
+      - when: { level: [1, 2, 3], check.kind: [spell, liturgy] }
+        add: { to: check.modifier, value: -1, per: level }
+  - id: L4
+    text: Stufe IV, handlungsunfähig.
+    effects:
+      - when: { level: { atLeast: 4 } }
+        gain: { rule: sh-helpless }
+        ruling: jouster

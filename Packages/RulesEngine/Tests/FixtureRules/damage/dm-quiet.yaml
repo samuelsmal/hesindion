@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32 fix round 1: regeneration.R6's suppress of T1, whose asks are gated on the
+# Regenerationsphase's value.
+id: dm-quiet
+name: Ruhe
+kind: core
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: Q1
+    text: Lagerplatz?
+    effects:
+      - when: { query.target: gs }
+        ask: { fact: choice.lager, who: player }
+  - id: Q2
+    text: Sturm.
+    effects:
+      - when: { choice.sturm: true }
+        suppress: { line: { line: dm-quiet.Q1 } }

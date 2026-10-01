@@ -20,7 +20,7 @@ final class CommandRegistryStatesTests: XCTestCase {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)
 
-        let command = hero.commandRegistry.first {
+        let command = hero.commandRegistry(leMax: SheetValues.of(hero)?.leMax.result ?? 0).first {
             $0.name == "Zustand" && $0.subparameter == L("state.furcht.name")
         }
         let cmd = try XCTUnwrap(command, "Expected a Zustand command for Furcht")
@@ -41,7 +41,7 @@ final class CommandRegistryStatesTests: XCTestCase {
         let ctx = try makeContext()
         let hero = Hero(name: "Test"); ctx.insert(hero)
 
-        let command = hero.commandRegistry.first {
+        let command = hero.commandRegistry(leMax: SheetValues.of(hero)?.leMax.result ?? 0).first {
             $0.name == "Status" && $0.subparameter == L("state.liegend.name")
         }
         let cmd = try XCTUnwrap(command, "Expected a Status command for Liegend")
@@ -63,7 +63,7 @@ final class CommandRegistryStatesTests: XCTestCase {
         let hero = Hero(name: "Test"); ctx.insert(hero)
 
         let derivedKeys = [L("source.schmerz"), L("source.belastung")]
-        let offending = hero.commandRegistry.filter {
+        let offending = hero.commandRegistry(leMax: SheetValues.of(hero)?.leMax.result ?? 0).filter {
             (($0.name == "Zustand") || ($0.name == "Status")) &&
             $0.subparameter.map { derivedKeys.contains($0) } == true
         }

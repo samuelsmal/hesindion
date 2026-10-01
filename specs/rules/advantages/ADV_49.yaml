@@ -1,0 +1,115 @@
+# DRAFT FORMAT — see ../README.md.
+id: ADV_49
+name: Zäher Hund
+kind: advantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Z%C3%A4her%20Hund
+  book: Regelwerk
+  page: 169
+  checked: 2026-09-27
+  hash: sha256:13078582034cae0e09a75168d67778cb3d1a6e1fa173d35cb17ba3e837e4cd8f
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# Works on Schmerz from every source — the LP thresholds (COND_6.SZ3), a Patzer, a spell: the
+# page says "des Zustands Schmerz", not "durch Lebenspunkte".
+# `useLevel` on COND_6: `as` is evaluated at COND_6's own Stufe ("level - 1"), and changes only
+# the Stufe whose effects apply; the Stufe the hero has (`hero.levelOf.COND_6`, the base of
+# `level(rule: COND_6)`) stays, for zustaende.Z3/Z5 and the chip (ruling zaeher-hund-counts).
+
+clauses:
+  - id: ZH1
+    text: >
+      Dieser Vorteil sorgt dafür, dass der Held die Auswirkungen der höchsten Stufe des Zustands
+      Schmerz ignorieren darf. Er erleidet lediglich die Auswirkungen der nächstniedrigeren Stufe.
+    effects:
+      - when: { hero.levelOf.COND_6: [2, 3] }
+        useLevel: { rule: COND_6, as: "level - 1" }
+        ruling: zaeher-hund-counts
+        # The breakdown shows the line as "Schmerz III, wirkt wie II (Zäher Hund): −2", citing
+        # COND_6.SZ5 via ADV_49.ZH1. Stufe I is ZH4. The old `keeps: { condition_level: level }`
+        # is what `useLevel` means: the Stufe the hero has is kept.
+      - when: { hero.levelOf.COND_6: 4, check.talent: TAL_8, check.application: Handlungsfähigkeit bewahren, check.result: success }
+        useLevel: { rule: COND_6, as: "level - 1" }
+        ruling: zaeher-hund-iv
+        # Stufe IV with COND_6.SZ2's check passed (the old ZH3 `check_passed: COND_6.SZ2`,
+        # `as: 3`): the −4 and the GS 0 are effects of the highest Stufe, which ZH1 ignores
+        # (ruling zaeher-hund-iv), so the hero acts as Stufe III: checks −3, GS −3. Before the
+        # check, ZH3's keep holds Stufe IV.
+
+  - id: ZH2
+    text: >
+      Wenn ein Held also beispielsweise drei Stufen Schmerz erlitten hat, gelten für ihn nur die
+      Auswirkungen von Stufe II.
+    none: the page's own example of ZH1 (situation 15.6 is this case)
+
+  - id: ZH3
+    text: Bei Schmerz Stufe IV wird der Held dennoch handlungsunfähig.
+    effects:
+      - when: { hero.levelOf.COND_6: 4 }
+        useLevel: { rule: COND_6, as: level }
+        # The old `keep: { rule: COND_6.SZ5, level: 4, part: handlungsunfaehig }` (A.2: `keep` →
+        # `useLevel`): at Stufe IV Zäher Hund keeps the Stufe acted at, so COND_6.SZ5's
+        # Handlungsunfähig holds "dennoch", via ADV_49.ZH3 (lebensenergie 15.7). `as: level` is
+        # evaluated at COND_6's level as ZH1 leaves it (useLevels chain in clause order): IV
+        # before the check, III after a pass (ZH1's second effect), so the keep never undoes
+        # ZH1. The Selbstbeherrschung check of COND_6.SZ2 is offered as for anyone.
+
+  - id: ZH4
+    text: Schmerz Stufe I wird so behandelt, als hätte der Held keine Stufe Schmerz.
+    effects:
+      - when: { hero.levelOf.COND_6: 1 }
+        useLevel: { rule: COND_6, as: 0 }
+        ruling: zaeher-hund-counts
+        # No line at all; "nicht angewandt: Schmerz I — Zäher Hund" in the not-applied list.
+
+  - id: ZH5
+    text: "Voraussetzung: Kein Nachteil Zerbrechlich"
+    none: purchase prerequisite, not a rule at the table
+
+  - id: ZH6
+    text: "AP-Wert: 20 Abenteuerpunkte"
+    none: cost, not a rule at the table
+
+rulings:
+  - id: zaeher-hund-counts
+    status: decided
+    question: >
+      Does Zäher Hund lower the Stufe of Schmerz the hero *has* — the one counted for the −5 cap
+      (zustaende.Z3), for "eight Stufen make you Handlungsunfähig" (zustaende.Z5) and shown on the
+      chip — or only the Stufe whose *effects* apply?
+    answer: >
+      Effects only. The hero keeps every Stufe for Z3/Z5 and the chip ('Schmerz III, wirkt wie
+      II'); ZH4 means Stufe I gives no lines. Schmerz has only four Stufen (COND_6 levels: 4), so
+      the Stufe the hero has never goes past IV.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [ZH1, ZH4, COND_6.SZ5, zustaende.Z5]
+    notes: >
+      The owner answered "Effects only, but there are only four levels of pain / Schmerz": option
+      a, with the reminder that the Stufe kept is at most IV — the LP thresholds (COND_6.SZ3) and
+      whatever sets Schmerz directly (a Patzer, a spell) add up to IV and no further, so Zäher Hund
+      never has a "Stufe V" to lower, and the most Schmerz contributes to the eight-Stufen count
+      is 4. The page speaks of effects ("die Auswirkungen der höchsten Stufe … ignorieren"; three
+      Stufen "erlitten" give "nur die Auswirkungen von Stufe II"). The app lowers the Stufe itself
+      (Hero.effectiveSchmerzLevel = raw − 1 feeds level(of:), activeStates, totalZustandLevels and
+      the chip; StateModifiers.penaltyDefinitions labels the line with the lowered Stufe and cites
+      only COND_6). So Boronmir in Plattenrüstung (Belastung I, with Belastungsgewöhnung II) with
+      Schmerz III, Betäubung III and Furcht I has 8 Stufen and is Handlungsunfähig; the app counts
+      7 (lebensenergie 15.8).
+
+  - id: zaeher-hund-iv
+    status: decided
+    question: >
+      At Schmerz IV the hero is "dennoch handlungsunfähig". If he passes the Selbstbeherrschung
+      check that keeps him able to act (COND_6.SZ2), what does Zäher Hund leave him with: Stufe
+      III's effects (all checks −3, GS −3) or Stufe IV's (all checks −4)?
+    answer: >
+      Stufe III's effects: checks −3, GS −3.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [ZH3, COND_6.SZ5]
+    notes: >
+      ZH3's "dennoch" names only the Handlungsunfähigkeit as surviving the advantage; the −4, and
+      whatever COND_6.schmerz-iv-gs gives Stufe IV for movement, are effects of the highest Stufe,
+      which ZH1 ignores. After a passed SZ2 check the line reads "Schmerz IV, wirkt wie III (Zäher
+      Hund)": checks −3, GS −3. The app has no SZ2 check (StateCatalog schmerz
+      handlungsunfaehigAtLevel 4) and skips Zäher Hund at IV (Hero.effectiveSchmerzLevel returns 4
+      before subtracting).

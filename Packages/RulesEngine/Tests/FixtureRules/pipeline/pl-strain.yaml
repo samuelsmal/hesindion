@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R34: a levelled rule the hero does not own, whose level derives from a fact.
+id: pl-strain
+name: Anspannung
+kind: condition
+levels: 3
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: D1
+    text: Stufe nach Anspannung.
+    effects:
+      - derive: { to: "level(rule: pl-strain)", sum: [{ of: gmFact.strain }] }
+  - id: D2
+    text: RS −Stufe.
+    effects:
+      - add: { to: rs, value: -1, per: level }
