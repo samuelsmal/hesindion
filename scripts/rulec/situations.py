@@ -174,13 +174,14 @@ class _File:
         base = self.hero_file(doc)
         if "hero" in doc:
             base = _merge(base, self.hero(doc["hero"], _line(doc, "hero")))
+        file_mount = self.hero(doc["mount"], _line(doc, "mount")) if "mount" in doc else None
         file_rulesets = doc.get("rulesets")
         items = doc.get("situations") or []
         if not isinstance(items, list):
             self.err("wrong type for field situations", _line(doc, "situations"))
             return
         for s in items:
-            compiled = self.situation(s, base, file_rulesets, _line(doc, "situations"))
+            compiled = self.situation(s, base, file_rulesets, _line(doc, "situations"), file_mount)
             if compiled is not None:
                 out.append(compiled)
 
@@ -255,7 +256,7 @@ class _File:
         return layer
 
     # --- one situation ------------------------------------------------------------------------
-    def situation(self, s, base, file_rulesets, line):
+    def situation(self, s, base, file_rulesets, line, file_mount=None):
         if not isinstance(s, dict):
             self.err("a situation is a mapping", line)
             return None
@@ -276,6 +277,17 @@ class _File:
         # name (`check.application`), so the id becomes the name the Probe table gives it.
         owned = {rid: ({**e, "option2": checks_mod.application_name(self.ctx.checks, e.get("option"), e["option2"])}
                        if "option2" in e else e) for rid, e in owned.items()}
+        # Issue #48: the mount is a subject of its own; the harness evaluates it apart and the hero
+        # reads its facts. Its rulings count toward `pending` below, but it owns nothing of the hero's.
+        mount, m_owned = None, {}
+        if "mount" in s or file_mount is not None:
+            m_layer = _merge(file_mount or _empty_layer(), self.hero(s["mount"], _line(s, "mount"))) if "mount" in s else file_mount
+            m_owned = {rid: e for m in m_layer["owned"].values() for rid, e in m.items()}
+            m_facts = {"subject": {"name": "subject", "value": "creature", "owner": "sheet"}}
+            for name, n in m_layer["sheet"].items():
+                m_facts[name] = {"name": name, "value": n, "owner": "sheet"}
+            mount = {"owned": m_owned, "facts": [m_facts[k] for k in sorted(m_facts)],
+                     "base": dict(m_layer["values"])}
         facts = {}
         for key, prefix in FACT_MAPS.items():
             for name, n in layer[key].items():
@@ -339,7 +351,7 @@ class _File:
             seen.add(target)
             for ref in ctx.reach.get(target, []):
                 rule = ctx.book.get(ref["rule"])
-                if rule is None or not (ref["rule"] in owned or ref["rule"] in named or rule.get("kind") == "core"):
+                if rule is None or not (ref["rule"] in owned or ref["rule"] in m_owned or ref["rule"] in named or rule.get("kind") == "core"):
                     continue
                 e = ctx.effects.get((ref["rule"], ref["clause"], ref["index"]))
                 if e is not None:
@@ -351,6 +363,7 @@ class _File:
             "owned": owned,
             "facts": [facts[k] for k in sorted(facts)],
             "base": dict(layer["values"]),
+            "mount": mount,
             "rolls": rolls,
             "sequence": _plain(s.get("sequence") or []),
             "expect": expect,

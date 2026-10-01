@@ -19,6 +19,9 @@ struct CompiledSituation: Decodable {
     var name: String?
     /// The hero, its facts, the sheet's base values and the dice: what the engine reads.
     var situation: Situation
+    /// The mount's own situation (issue #48): a creature, evaluated as its own subject; the hero
+    /// reads its facts (`Engine.mountFacts(in:)`). nil without a `mount` section.
+    var mount: Situation?
     /// The dice, in order (a `rolls` list); roll facts (`rolls: {check.result: …}`) are facts.
     var rolls: [Int]
     /// The action layer's steps, not validated before Task 28.
@@ -34,7 +37,7 @@ struct CompiledSituation: Decodable {
     /// The situation's `conflict` field, compiled (R60, R77): nil when it has none.
     var conflict: SituationConflict?
 
-    private enum CodingKeys: String, CodingKey { case id, file, name, rolls, sequence, expect, expectSituation, pending, conflict }
+    private enum CodingKeys: String, CodingKey { case id, file, name, mount, rolls, sequence, expect, expectSituation, pending, conflict }
 
     /// The situation the engine runs on. Situations state the current LE and AsP as `base`
     /// values (`leCurrent`, `aspCurrent`), not as `pools`; the pools are filled from them, the
@@ -50,9 +53,16 @@ struct CompiledSituation: Decodable {
            let flag = CheckAttributes.hinderedByBelastung[talent] {
             out.facts["check.hinderedByBelastung"] = Fact(name: "check.hinderedByBelastung", value: flag, owner: .derived)
         }
+        return Self.withPools(out)
+    }
+
+    /// `s` with its pools filled from its `leCurrent` / `aspCurrent` base values (the hero's and
+    /// the mount's alike).
+    static func withPools(_ s: Situation) -> Situation {
+        var out = s
         for pool in Pool.allCases where out.pools[pool] == nil {
-            guard let target = pool.currentTarget, let current = situation.base[target] else { continue }
-            let max = situation.base[target.replacingOccurrences(of: "Current", with: "Max")] ?? current
+            guard let target = pool.currentTarget, let current = s.base[target] else { continue }
+            let max = s.base[target.replacingOccurrences(of: "Current", with: "Max")] ?? current
             out.pools[pool] = PoolState(current: current, max: max)
         }
         return out
@@ -64,6 +74,7 @@ struct CompiledSituation: Decodable {
         file = try c.decode(String.self, forKey: .file)
         name = try c.decodeIfPresent(String.self, forKey: .name)
         situation = try Situation(from: decoder)
+        mount = try c.decodeIfPresent(Situation.self, forKey: .mount)
         rolls = try c.decodeIfPresent([Int].self, forKey: .rolls) ?? []
         sequence = try c.decodeIfPresent([JSONValue].self, forKey: .sequence) ?? []
         expect = try c.decodeIfPresent([QueryExpectation].self, forKey: .expect) ?? []

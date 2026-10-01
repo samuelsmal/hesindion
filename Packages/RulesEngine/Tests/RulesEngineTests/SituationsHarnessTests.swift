@@ -106,6 +106,11 @@ final class SituationsHarnessTests: XCTestCase {
     /// the log round trip, Task 29, both use it).
     static func judge(_ s: CompiledSituation, engine: Engine, conflicts: Set<ConflictRef>,
                       expectationMissing: Set<ConflictRef> = [], snapshot: ConflictSnapshot? = nil) -> Judged {
+        var s = s
+        if let mount = s.mount {
+            // Issue #48: the mount is evaluated as its own subject; the hero reads its facts.
+            s.situation = s.situation.stating(engine.mountFacts(in: CompiledSituation.withPools(mount)).facts)
+        }
         func verdict(_ mismatches: [Mismatch], _ hits: [OpenHit]) -> Verdict {
             Verdict.of(s, mismatches: mismatches, hits: hits, book: engine.book, conflicts: conflicts,
                        expectationMissing: expectationMissing, snapshot: snapshot)

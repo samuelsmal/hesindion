@@ -717,6 +717,7 @@
   "situationFileKeys": [
     "heroFile",
     "hero",
+    "mount",
     "rulesets",
     "situations"
   ],
@@ -724,6 +725,7 @@
     "id",
     "name",
     "hero",
+    "mount",
     "loadout",
     "choose",
     "gm",

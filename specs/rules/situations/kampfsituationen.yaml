@@ -28,7 +28,7 @@
 # `total` is the sum of the lines after the base; the value after it is in the comment.
 #
 # The per-item values above are the base values `at(with: …)` / `pa(with: …)`; Kupperus (the old
-# file-level `mount`) is `mount.gs`, his size groß a comment (no rule here reads it: the rider is
+# file-level `mount`) is the file-level `mount` section's `gs`, his size groß a comment (no rule here reads it: the rider is
 # his own size, ruling groessenkategorie.mounted-size). Each situation states its loadout
 # (`weapon`, `shield`, `other: shield`, the weapon's `reach`, the shield's size), mounted as
 # `hero.mounted`. A Passierschlag is `choice.passierschlag` (the old `attack: passierschlag`).
@@ -51,7 +51,8 @@ hero:
     "pa(with: Langschwert)": 8                    # 6 + 2 + 0
     "pa(with: Großschild)": 7                     # 5 + 2; SCH3 +6 is a line → 13
     aw: 7
-    mount.gs: 12
+
+mount: { values: { gs: 12, leMax: 40, leCurrent: 40 } }   # a Kriegspferd, unhurt
 
 situations:
 

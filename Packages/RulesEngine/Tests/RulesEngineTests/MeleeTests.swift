@@ -107,7 +107,12 @@ final class MeleeTests: XCTestCase {
         let b = engine.evaluate(Query("iniBase"), in: situation(facts: ["hero.mounted": true], base: ["mount.iniBase": 12]))
         XCTAssertEqual(b.result, 12)
         XCTAssertEqual(b.base?.facts.first { $0.name == "mount.iniBase" }?.owner, .sheet)
-        let tp = engine.evaluate(Query("tp"), in: situation(facts: ["hero.mounted": true], base: ["mount.gs": 11]))
+    }
+
+    /// Issue #48: `mount.gs` is a derived fact (the mount's own subject derives it); stated as a
+    /// fact, `me-rider.R1` reads it.
+    func testTheMountsGSIsAStatedDerivedFact() throws {
+        let tp = engine.evaluate(Query("tp"), in: situation(facts: ["hero.mounted": true, "mount.gs": 11]))
         XCTAssertEqual(lines(tp, from: "me-rider.R1").map(\.value), [6])
     }
 

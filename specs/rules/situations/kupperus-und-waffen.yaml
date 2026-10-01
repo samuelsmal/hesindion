@@ -27,8 +27,9 @@
 #   file-level `armour` and `loadout`): Rabenschnabel (mittel) and Großschild (groß) in the
 #   Plattenrüstung (Belastung 3, no extra) unless it says otherwise; mounted is `hero.mounted`.
 # Kupperus is owned as the mount's profile (`creatures: { svellttaler-kaltblut }`, the old
-#   `mount: { profile }`), his INI Basiswert and GS stated as the base values `mount.iniBase` and
-#   `mount.gs`.
+#   `mount: { profile }`), his INI Basiswert stated as the base value `mount.iniBase`; his GS and LE are
+#   the file-level `mount` section's values (issue #48: the mount is a subject of its own, the hero
+#   reads its `mount.gs`).
 # An order is `choice.order` (the old `order:`; `mount_attack` is `mountAttack`), the mount's
 #   attack `choice.mountAttack`, the gait `action.gait`, the run-up `action.runUp`. The Reiten
 #   (Kampfmanöver) check before an order (the old `checks_first`) is an `events` entry and the
@@ -51,7 +52,8 @@ hero:
     ini: 14
     gs: 8
     mount.iniBase: 14
-    mount.gs: 12
+
+mount: { creatures: { svellttaler-kaltblut: true }, values: { gs: 12, leMax: 75, leCurrent: 75 } }
 
 situations:
 

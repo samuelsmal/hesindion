@@ -396,14 +396,11 @@ extension Evaluation {
         for name in names.sorted() where !["level", "option"].contains(name) && s.fact(name) == nil && !s.unstated.contains(name) {
             // Task 31 (R61): a fact nobody states is the value a rule that applies provides under
             // its name (the owned mount's profile: svellttaler-kaltblut.SK2's `mount.iniBase`),
-            // whose clause joins `via`; else the value the sheet states under that name
-            // (reiterkampf's `mount.gs`, a sheet value).
+            // whose clause joins `via`; else the value the sheet states under that name.
             if let d = providedFact(name, depth: depth), let v = d.value {
                 s.facts[name] = Fact(name: name, value: v, owner: .derived)
                 sources[name] = d
-            } else if let v = situation.base[name], name == "mount.gs" || Vocabulary.owner(ofFact: name) == .sheet {
-                // `mount.gs` is `derived` since issue #48 (a creature's profile derives it), but a
-                // sheet that states it as a base value (reiterkampf) is still read.
+            } else if let v = situation.base[name], Vocabulary.owner(ofFact: name) == .sheet {
                 s.facts[name] = Fact(name: name, value: .int(v), owner: .sheet)
             }
         }

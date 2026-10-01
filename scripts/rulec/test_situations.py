@@ -314,6 +314,38 @@ situations:
 """
 
 
+class MountTests(unittest.TestCase):
+    def test_a_mount_section_compiles_to_the_mounts_own_situation(self):
+        s = ok({"a.yaml": """
+mount: { creatures: { svellttaler-kaltblut: true }, values: { gs: 12, leMax: 75, leCurrent: 75 } }
+situations:
+  - id: m.1
+    loadout: { hero.mounted: true }
+    expect: { tp: { total: 0 } }
+"""})["m.1"]
+        m = s["mount"]
+        self.assertEqual(m["owned"], {"svellttaler-kaltblut": {"level": 1}})
+        self.assertEqual(m["base"], {"gs": 12, "leMax": 75, "leCurrent": 75})
+        self.assertIn({"name": "subject", "value": "creature", "owner": "sheet"}, m["facts"])
+        self.assertNotIn("svellttaler-kaltblut", s["owned"])
+
+    def test_a_situations_mount_is_merged_over_the_files(self):
+        s = ok({"a.yaml": """
+mount: { values: { gs: 12, leMax: 40 } }
+situations:
+  - id: m.1
+    mount: { values: { gs: 15 } }
+    expect: { tp: { total: 0 } }
+  - id: m.2
+    expect: { tp: { total: 0 } }
+"""})
+        self.assertEqual(s["m.1"]["mount"]["base"], {"gs": 15, "leMax": 40})
+        self.assertEqual(s["m.2"]["mount"]["base"], {"gs": 12, "leMax": 40})
+
+    def test_no_mount_section_is_no_mount(self):
+        self.assertIsNone(one("    expect: { tp: { total: 0 } }\n")["mount"])
+
+
 class HeroTests(unittest.TestCase):
     def setUp(self):
         self.s = ok({"a.yaml": HERO_MERGE})
@@ -414,7 +446,7 @@ class SectionTests(unittest.TestCase):
                 "      offered: [{ choice: formation, from: SA_1.T1 }]\n"
                 "      fp: 3\n")
         self.assertEqual(s, {
-            "id": "S", "file": "a.yaml", "name": "Eins", "owned": {}, "facts": [], "base": {},
+            "id": "S", "file": "a.yaml", "name": "Eins", "owned": {}, "facts": [], "base": {}, "mount": None,
             "rolls": [], "sequence": [],
             "expect": [{"query": "at", "total": 1, "result": 15, "legal": True}],
             "expectSituation": {"offered": [{"choice": "formation", "from": "SA_1.T1"}], "fp": 3},

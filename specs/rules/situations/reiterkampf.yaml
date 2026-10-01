@@ -1,7 +1,8 @@
 # Example 2 — Reiterkampf. Same conventions as belastung.yaml. No armour unless stated.
 # DRAFT FORMAT — see ../README.md.
 # The mount is a Kriegspferd with GS 12 and INI Basiswert 12 (the old file-level `mount`), stated
-# as the base values of `mount.gs` and `mount.iniBase`. Mounted is `hero.mounted` in the
+# as the base value `mount.iniBase` and the file-level `mount`'s `gs` (the mount is its own
+# subject, issue #48). Mounted is `hero.mounted` in the
 # situation's `loadout`.
 # An order is `choice.order` (the old `order:`), the gait asked for `action.gait` (the old
 # `gait:`); an announced manoeuvre is `choice.<name>` (the old `manoeuvre:`), the run-up
@@ -11,7 +12,8 @@
 # (the old `opponent_may_only`) is the opponent's query's `legal`; what is not selectable a
 # situation-level `legal.loadout`.
 
-hero: { values: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, gsNatural: 8, mount.gs: 12, mount.iniBase: 12 } }
+hero: { values: { at: 14, pa: 8, aw: 7, ini: 12, gs: 8, gsNatural: 8, mount.iniBase: 12 } }
+mount: { values: { gs: 12, leMax: 40, leCurrent: 40 } }   # a Kriegspferd, unhurt; no profile rule
 
 situations:
 
@@ -183,7 +185,8 @@ situations:
 
   - id: "5.11"
     name: Sturmangriff zu Pferd, mount GS 11 — rounding
-    hero: { abilities: { SA_43: 1 }, values: { mount.gs: 11 } }
+    hero: { abilities: { SA_43: 1 } }
+    mount: { values: { gs: 11 } }
     loadout: { hero.mounted: true }
     choose: { choice.order: sturmangriffZuPferd, action.gait: galopp, action.attack: hit }
     expect:
@@ -248,3 +251,12 @@ situations:
       iniBase: { lines: [{ value: 12, from: reiterkampf.RK1 }] }     # the mount's
       ini: { lines: [{ value: 0, ruling: reiterkampf.rider-ini }] }   # the old `ini_belastung: { total: 0 }`: no Belastung on the mount's base
     appToday: same
+
+  - id: "5.18"
+    name: Sturmangriff zu Pferd, Kupperus at 60 LeP — the mount's current GS (issue #48)
+    hero: { abilities: { SA_43: 1 } }
+    mount: { creatures: { svellttaler-kaltblut: true }, values: { gs: 15, leMax: 137, leCurrent: 60 } }
+    loadout: { hero.mounted: true }
+    choose: { choice.order: sturmangriffZuPferd, action.gait: galopp, action.attack: hit }
+    expect:
+      tp: { total: 9, lines: [{ value: 9, from: reiterkampf.RK14, ruling: round-up }] }   # 2 + ⌈13/2⌉, GS 15 − 2 Schmerz II
