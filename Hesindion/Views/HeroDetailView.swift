@@ -1193,6 +1193,10 @@ struct HeroDetailView: View {
                         }
                         .padding(.horizontal, 12)
 
+                        if pet === hero.mount, let v = MountValues.of(pet) {
+                            mountStatusLine(pet, values: v)
+                        }
+
                         SubfieldBlock(label: L("attributes"), subfields: [
                             ("MU", "\(pet.attributes.mu)"),
                             ("KL", "\(pet.attributes.kl)"),
@@ -1205,56 +1209,10 @@ struct HeroDetailView: View {
                         ])
 
                         let mountValues = pet === hero.mount ? MountValues.of(pet) : nil
-                        // Issue #52: the mount's AT and TP are per attack, one row each below.
-                        let atPerAttack = mountValues != nil && !pet.attacks.isEmpty
-                        SubfieldBlock(label: L("combat"), subfields: [
-                            ("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)"),
-                            ("INI", pet.initiative),
-                            ("GS", mountValues?.gs.result.map(String.init) ?? "\(pet.speed)"),
-                            atPerAttack ? nil : ("AT", pet.attack),
-                            atPerAttack ? nil : ("TP", pet.damage),
-                            ("RW", pet.reach),
-                            ("AK", "\(pet.actions)")
-                        ].compactMap { $0 })
-
-                        if let v = mountValues {
-                            HStack(spacing: 16) {
-                                Button {
-                                    breakdown = BreakdownItem(title: "GS \(pet.name)", value: v.gs)
-                                } label: {
-                                    companionValue("GS", v.gs.result, id: "pet.gs.value.\(pet.name)")
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityIdentifier("pet.gs.\(pet.name)")
-                                if let status = v.statusText(name: pet.name) {
-                                    // Issue #51: the Stufe's own breakdown. Without a breed rule
-                                    // there is none; the line itself says why.
-                                    if v.hasBreedRule {
-                                        Button {
-                                            breakdown = BreakdownItem(title: "Schmerz \(pet.name)", value: v.schmerzValue,
-                                                                      intro: v.schmerzIntro(name: pet.name))
-                                        } label: {
-                                            Text(status).font(.dsaBody(.caption2))
-                                        }
-                                        .buttonStyle(.plain)
-                                        .accessibilityIdentifier("pet.schmerz.\(pet.name)")
-                                    } else {
-                                        Text(status).font(.dsaBody(.caption2))
-                                            .accessibilityIdentifier("pet.schmerz.\(pet.name)")
-                                    }
-                                }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-
-                            if atPerAttack {
-                                mountAttacks(pet, values: v)
-                            }
-                        }
+                        petCombatBlock(pet, mountValues: mountValues)
 
                         if pet.hasCompanionData {
-                            companionBlock(pet, mountValues: mountValues)
+                            companionBlock(pet)
                         }
 
                         if !pet.talents.isEmpty {
@@ -1274,59 +1232,136 @@ struct HeroDetailView: View {
         }
     }
 
-    /// One row per mount attack: its name, the engine's AT, Schmerz included, and its TP (issue #52).
-    /// A tap on the AT opens its breakdown, as GS and VW do.
-    private func mountAttacks(_ pet: Pet, values: MountValues) -> some View {
-        VStack(spacing: 4) {
-            ForEach(pet.attacks, id: \.name) { attack in
-                HStack(spacing: 16) {
-                    Text(attack.name).font(.dsaBody(.body))
-                    Spacer()
-                    if let at = values.at(with: attack.name) {
-                        Button {
-                            breakdown = BreakdownItem(title: "AT \(attack.name) \(pet.name)", value: at)
-                        } label: {
-                            companionValue("AT", at.result, id: "pet.at.value.\(pet.name).\(attack.name)")
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
+    /// The mount's Schmerz under its LP bar. Issue #51: a tap opens the Stufe's breakdown; without a
+    /// breed rule there is none, and the line itself says why.
+    @ViewBuilder private func mountStatusLine(_ pet: Pet, values v: MountValues) -> some View {
+        if let status = v.statusText(name: pet.name) {
+            Group {
+                if v.hasBreedRule {
+                    Button {
+                        breakdown = BreakdownItem(title: "Schmerz \(pet.name)", value: v.schmerzValue,
+                                                  intro: v.schmerzIntro(name: pet.name))
+                    } label: {
+                        Text(status).font(.dsaBody(.caption2))
                     }
-                    HStack(spacing: 4) {
-                        Text("TP").font(.dsaBody(.caption)).foregroundStyle(.secondary)
-                        Text(attack.damage)
-                            .font(.dsaMono(.body, emphasis: true))
-                            .accessibilityIdentifier("pet.tp.value.\(pet.name).\(attack.name)")
-                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(status).font(.dsaBody(.caption2))
                 }
             }
+            .accessibilityIdentifier("pet.schmerz.\(pet.name)")
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.top, 6)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
     }
 
-    @ViewBuilder private func companionBlock(_ pet: Pet, mountValues: MountValues?) -> some View {
-        HStack(spacing: 16) {
-            if let vw = mountValues?.vw {
-                Button {
-                    breakdown = BreakdownItem(title: "VW \(pet.name)", value: vw)
-                } label: {
-                    companionValue("VW", vw.result, id: "pet.defense.\(pet.name)")
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("pet.defense.\(pet.name)")
+    /// A pet's "Kampf" block. For the mount, GS, VW and the AT of each attack are the engine's
+    /// results, Schmerz included, and a tap opens their breakdown (issues #48, #52); every other
+    /// pet shows its stored values.
+    @ViewBuilder private func petCombatBlock(_ pet: Pet, mountValues v: MountValues?) -> some View {
+        // Issue #52: the mount's AT and TP are per attack, one row each.
+        let perAttack = v != nil && !pet.attacks.isEmpty
+        VStack(spacing: 0) {
+            Text(L("combat")).font(.dsaBody(.body))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+
+            petRow("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)")
+            petRow("INI", pet.initiative)
+            if let gs = v?.gs {
+                petBreakdownRow("GS", gs, title: "GS \(pet.name)",
+                                id: "pet.gs.\(pet.name)", valueId: "pet.gs.value.\(pet.name)")
             } else {
-                companionValue("VW", pet.defense, id: "pet.defense.\(pet.name)")
+                petRow("GS", "\(pet.speed)")
             }
-            companionValue("RS", pet.armor, id: "pet.armor.\(pet.name)")
-            companionValue("BE", pet.encumbrance, id: "pet.encumbrance.\(pet.name)")
-            Spacer()
-            Text("\(pet.apSpent ?? 0) / \(pet.apTotal ?? 0) AP")
-                .font(.dsaMono(.caption, emphasis: true))
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("pet.ap.\(pet.name)")
+            if let vw = v?.vw {
+                petBreakdownRow("VW", vw, title: "VW \(pet.name)",
+                                id: "pet.defense.\(pet.name)", valueId: "pet.defense.\(pet.name)")
+            } else if pet.hasCompanionData {
+                petRow("VW", pet.defense.map(String.init) ?? "–", valueId: "pet.defense.\(pet.name)")
+            }
+            if pet.hasCompanionData {
+                petRow("RS", pet.armor.map(String.init) ?? "–", valueId: "pet.armor.\(pet.name)")
+                petRow("BE", pet.encumbrance.map(String.init) ?? "–", valueId: "pet.encumbrance.\(pet.name)")
+            }
+            if !perAttack {
+                petRow("AT", pet.attack)
+                petRow("TP", pet.damage)
+            }
+            petRow("RW", pet.reach)
+            petRow("AK", "\(pet.actions)")
+            if let v, perAttack {
+                ForEach(pet.attacks, id: \.name) { attack in
+                    mountAttackRow(pet, attack, at: v.at(with: attack.name))
+                }
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+    }
+
+    /// One mount attack: its name, the engine's AT (a tap opens its breakdown) and its TP (issue #52).
+    private func mountAttackRow(_ pet: Pet, _ attack: PetAttack, at: SheetValue?) -> some View {
+        petRowFrame {
+            Text(attack.name).font(.body).foregroundStyle(.secondary)
+            Spacer()
+            Button {
+                if let at { breakdown = BreakdownItem(title: "AT \(attack.name) \(pet.name)", value: at) }
+            } label: {
+                petValue("AT", at?.result.map(String.init) ?? "\(attack.at)",
+                         id: "pet.at.value.\(pet.name).\(attack.name)")
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
+            petValue("TP", attack.damage, id: "pet.tp.value.\(pet.name).\(attack.name)")
+                .frame(minWidth: 96, alignment: .trailing)
+        }
+    }
+
+    /// A row of `petCombatBlock`, drawn like `SubfieldBlock`'s rows.
+    private func petRow(_ label: String, _ value: String, valueId: String? = nil) -> some View {
+        petRowFrame {
+            Text(L(label)).font(.body).foregroundStyle(.secondary)
+            Spacer()
+            Text(value).font(.dsaMono(.body, emphasis: true))
+                .accessibilityIdentifier(valueId ?? "")
+        }
+    }
+
+    /// A `petRow` whose value opens its breakdown.
+    private func petBreakdownRow(_ label: String, _ value: SheetValue, title: String,
+                                 id: String, valueId: String) -> some View {
+        Button {
+            breakdown = BreakdownItem(title: title, value: value)
+        } label: {
+            petRow(label, value.result.map(String.init) ?? "–", valueId: valueId)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(id)
+    }
+
+    private func petRowFrame<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 16) { content() }
+                .padding(.leading, 24)
+                .padding(.trailing, 12)
+                .padding(.vertical, 6)
+            Divider()
+        }
+    }
+
+    private func petValue(_ label: String, _ value: String, id: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label).font(.dsaBody(.caption)).foregroundStyle(.secondary)
+            Text(value).font(.dsaMono(.body, emphasis: true))
+                .accessibilityIdentifier(id)
+        }
+    }
+
+    /// The build's AP and lists, from the export's `hesindion` block.
+    @ViewBuilder private func companionBlock(_ pet: Pet) -> some View {
+        petRow("AP", "\(pet.apSpent ?? 0) / \(pet.apTotal ?? 0)", valueId: "pet.ap.\(pet.name)")
 
         if !pet.advantages.isEmpty {
             FieldRow(label: "petAdvantages", value: pet.advantages.joined(separator: ", "))
@@ -1339,15 +1374,6 @@ struct HeroDetailView: View {
         }
         if !pet.tricks.isEmpty {
             FieldRow(label: "petTricks", value: pet.tricks.joined(separator: ", "))
-        }
-    }
-
-    private func companionValue(_ label: String, _ value: Int?, id: String) -> some View {
-        HStack(spacing: 4) {
-            Text(label).font(.dsaBody(.caption)).foregroundStyle(.secondary)
-            Text(value.map(String.init) ?? "–")
-                .font(.dsaMono(.body, emphasis: true))
-                .accessibilityIdentifier(id)
         }
     }
 }
