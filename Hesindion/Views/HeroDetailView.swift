@@ -1205,14 +1205,14 @@ struct HeroDetailView: View {
                         ])
 
                         let mountValues = pet === hero.mount ? MountValues.of(pet) : nil
-                        // Issue #52: the mount's AT is per attack, in its own row below.
+                        // Issue #52: the mount's AT and TP are per attack, one row each below.
                         let atPerAttack = mountValues != nil && !pet.attacks.isEmpty
                         SubfieldBlock(label: L("combat"), subfields: [
                             ("LE", "\(pet.currentLifeEnergy)/\(pet.lifeEnergy)"),
                             ("INI", pet.initiative),
                             ("GS", mountValues?.gs.result.map(String.init) ?? "\(pet.speed)"),
                             atPerAttack ? nil : ("AT", pet.attack),
-                            ("TP", pet.damage),
+                            atPerAttack ? nil : ("TP", pet.damage),
                             ("RW", pet.reach),
                             ("AK", "\(pet.actions)")
                         ].compactMap { $0 })
@@ -1274,23 +1274,31 @@ struct HeroDetailView: View {
         }
     }
 
-    /// The engine's AT for each of the mount's attacks, Schmerz included (issue #52); a tap opens
-    /// its breakdown, as GS and VW do.
+    /// One row per mount attack: its name, the engine's AT, Schmerz included, and its TP (issue #52).
+    /// A tap on the AT opens its breakdown, as GS and VW do.
     private func mountAttacks(_ pet: Pet, values: MountValues) -> some View {
-        HStack(spacing: 16) {
-            Text("AT").font(.dsaBody(.caption)).foregroundStyle(.secondary)
+        VStack(spacing: 4) {
             ForEach(pet.attacks, id: \.name) { attack in
-                if let at = values.at(with: attack.name) {
-                    Button {
-                        breakdown = BreakdownItem(title: "AT \(attack.name) \(pet.name)", value: at)
-                    } label: {
-                        companionValue(attack.name, at.result, id: "pet.at.value.\(pet.name).\(attack.name)")
+                HStack(spacing: 16) {
+                    Text(attack.name).font(.dsaBody(.body))
+                    Spacer()
+                    if let at = values.at(with: attack.name) {
+                        Button {
+                            breakdown = BreakdownItem(title: "AT \(attack.name) \(pet.name)", value: at)
+                        } label: {
+                            companionValue("AT", at.result, id: "pet.at.value.\(pet.name).\(attack.name)")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
+                    HStack(spacing: 4) {
+                        Text("TP").font(.dsaBody(.caption)).foregroundStyle(.secondary)
+                        Text(attack.damage)
+                            .font(.dsaMono(.body, emphasis: true))
+                            .accessibilityIdentifier("pet.tp.value.\(pet.name).\(attack.name)")
+                    }
                 }
             }
-            Spacer()
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)

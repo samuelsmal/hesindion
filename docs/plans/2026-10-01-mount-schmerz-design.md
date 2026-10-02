@@ -140,9 +140,10 @@ without a breed rule (Stufe 0, no question); an RK14 case with a mount at Schmer
 7. **A mount without a breed rule.** The app uses the base GS and AT and shows the rule as not
    applied: "Schmerz Kupperus: Schwellen unbekannt (kein Bestiarium-Eintrag)".
 8. **Companion sheet** (`HeroDetailView`): GS, VW and the AT of each attack show the engine's results;
-   a tap opens the breakdown. The status line opens the Stufe's breakdown, as at the combat root (issue #51). Since issue #52 the sheet lists the mount's attacks (`Pet.attacks`) with the engine's AT for each,
-   in place of the export's free-text `pet.attack`, and a tap opens its breakdown. A pet that is not
-   the mount, or a mount with no parsed attacks, keeps the free-text "AT".
+   a tap opens the breakdown. The status line opens the Stufe's breakdown, as at the combat root (issue #51). Since issue #52 the sheet lists the mount's attacks (`Pet.attacks`), one row each with the engine's
+   AT and the attack's TP, in place of the export's free-text `pet.attack` and `pet.damage`; a tap on
+   the AT opens its breakdown. A pet that is not the mount, or a mount with no parsed attacks, keeps
+   the free-text "AT" and "TP".
 9. `FactLabel` gets labels for the three facts. They name the role ("GS Reittier", "Schmerz Reittier", "Reittier handlungsunfähig"), since `FactLabel` has no mount name.
 
 ## 7. Tests

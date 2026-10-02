@@ -189,8 +189,8 @@ final class SheetBreakdownTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Schmerz Kupperus"].exists, "The breakdown is not the mount's Schmerz")
     }
 
-    /// Issue #52: the companion sheet lists the mount's attacks with the engine's AT. At Schmerz II
-    /// the Tritt is 13, not the export's 15, and a tap opens its breakdown.
+    /// Issue #52: the companion sheet lists the mount's attacks, each with the engine's AT and its TP.
+    /// At Schmerz II the Tritt is 13, not the export's 15, and a tap opens its breakdown.
     @MainActor
     func testTappingTheMountsAttackOnTheSheetOpensItsBreakdown() throws {
         continueAfterFailure = false
@@ -199,6 +199,7 @@ final class SheetBreakdownTests: XCTestCase {
         let tritt = app.buttons["pet.at.Kupperus.Tritt"]
         XCTAssertTrue(app.scrollUntilHittable(tritt), "The mount's Tritt is not on the hero sheet")
         XCTAssertEqual(app.staticTexts["pet.at.value.Kupperus.Tritt"].label, "13", "The AT does not include Schmerz II")
+        XCTAssertEqual(app.staticTexts["pet.tp.value.Kupperus.Tritt"].label, "1W6+7", "The Tritt's TP is not on its row")
         XCTAssertTrue(app.buttons["pet.at.Kupperus.Biss"].exists, "The mount's Biss is not listed")
         captureScreenshot(app, named: "69-mount-attacks-on-sheet")
         tritt.tap()
