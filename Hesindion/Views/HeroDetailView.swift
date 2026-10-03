@@ -1193,6 +1193,9 @@ struct HeroDetailView: View {
                         }
                         .padding(.horizontal, 12)
 
+                        ForEach(Array(pet.importProblems.enumerated()), id: \.offset) { index, problem in
+                            PetImportProblemRow(problem: problem, identifier: "pet.problem.\(pet.name).\(index)")
+                        }
                         if pet === hero.mount, let v = MountValues.of(pet) {
                             mountStatusLine(pet, values: v)
                         }

@@ -56,13 +56,19 @@ struct HeroListView: View {
         .alert(
             importResultTitle,
             isPresented: Binding(
-                get: { importResult != nil },
+                get: { importResult != nil && importResult?.problems.isEmpty == true },
                 set: { if !$0 { importResult = nil } }
             )
         ) {
             Button(L("ok"), role: .cancel) {}
         } message: {
             Text(importResultMessage)
+        }
+        .overlay {
+            if let result = importResult, !result.problems.isEmpty {
+                ImportProblemsModal(title: importResultTitle, message: importResultMessage,
+                                    problems: result.problems) { importResult = nil }
+            }
         }
         .sheet(isPresented: $isShowingAdventureCreation) {
             NavigationStack {
