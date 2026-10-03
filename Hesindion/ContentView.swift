@@ -19,6 +19,7 @@ struct ContentView: View {
                 didRepair = true
                 DerivedValueRepair.repairAll(in: modelContext)
                 SheetInputBackfill.fillAll(in: modelContext)
+                PetSkillsRepair.repairAll(in: modelContext)
             }
     }
 }
