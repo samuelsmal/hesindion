@@ -28,7 +28,7 @@ final class ImportProblemsSnapshotTests: XCTestCase {
 
     func testMessage() {
         XCTAssertEqual(problems[1].fieldMessage,
-                       "Notizen: „Biss AT 156TP 1W6+3 RW kurz\" – \(L("pet.problem.badAttack"))")
+                       "Notizen: „Biss AT 156TP 1W6+3 RW kurz“ – \(L("pet.problem.badAttack"))")
         XCTAssertEqual(problems[1].message, "Kupperus · " + problems[1].fieldMessage)
     }
 }

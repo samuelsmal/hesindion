@@ -1,9 +1,9 @@
 import SwiftUI
 
 extension PetImportProblem {
-    /// "Notizen: „Biss AT 156TP …" – kein Angriff (…)", for a row under the pet's own name.
+    /// "Notizen: „Biss AT 156TP …“ – kein Angriff (…)", for a row under the pet's own name.
     var fieldMessage: String {
-        "\(field.rawValue): „\(text)\" – \(L("pet.problem.\(reason.rawValue)"))"
+        "\(field.rawValue): „\(text)“ – \(L("pet.problem.\(reason.rawValue)"))"
     }
 
     /// The same with the pet's name first, for the import's list of all pets.
