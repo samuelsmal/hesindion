@@ -1255,8 +1255,8 @@ struct HeroDetailView: View {
     /// results, Schmerz included, and a tap opens their breakdown (issues #48, #52); every other
     /// pet shows its stored values.
     @ViewBuilder private func petCombatBlock(_ pet: Pet, mountValues v: MountValues?) -> some View {
-        // Issue #52: the mount's AT and TP are per attack, one row each.
-        let perAttack = v != nil && !pet.attacks.isEmpty
+        let attackRows = Self.attackRows(of: pet, mountValues: v)
+        let perAttack = !attackRows.isEmpty
         VStack(spacing: 0) {
             Text(L("combat")).font(.dsaBody(.body))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1289,12 +1289,20 @@ struct HeroDetailView: View {
             }
             petRow("RW", pet.reach)
             petRow("AK", "\(pet.actions)")
-            if let v, perAttack {
-                ForEach(pet.attacks, id: \.name) { attack in
+            ForEach(attackRows, id: \.name) { attack in
+                if let v {
                     mountAttackRow(pet, attack, at: v.at(with: attack.name))
+                } else {
+                    storedAttackRow(pet, attack)
                 }
             }
         }
+    }
+
+    /// The attacks the Kampf block lists one row each: every pet's, the mount's with the engine's AT
+    /// (issues #52, #49). Empty means the general AT/TP pair. `mountValues` only decides the AT source.
+    static func attackRows(of pet: Pet, mountValues: MountValues?) -> [PetAttack] {
+        pet.attacks
     }
 
     /// One mount attack: its name, the engine's AT (a tap opens its breakdown) and its TP (issue #52).
@@ -1310,6 +1318,18 @@ struct HeroDetailView: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("pet.at.\(pet.name).\(attack.name)")
+            petValue("TP", attack.damage, id: "pet.tp.value.\(pet.name).\(attack.name)")
+                .frame(minWidth: 96, alignment: .trailing)
+        }
+    }
+
+    /// One attack of a pet without engine values: its stored AT and TP, laid out like
+    /// `mountAttackRow` but not tappable (issue #49).
+    private func storedAttackRow(_ pet: Pet, _ attack: PetAttack) -> some View {
+        petRowFrame {
+            Text(attack.name).font(.body).foregroundStyle(.secondary)
+            Spacer()
+            petValue("AT", "\(attack.at)", id: "pet.at.value.\(pet.name).\(attack.name)")
             petValue("TP", attack.damage, id: "pet.tp.value.\(pet.name).\(attack.name)")
                 .frame(minWidth: 96, alignment: .trailing)
         }
