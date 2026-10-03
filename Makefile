@@ -27,7 +27,7 @@ APP_PATH = $(DERIVED_DATA)/Build/Products/$(CONFIG)-iphonesimulator/$(SCHEME).ap
 APP_DATA = $(shell xcrun simctl get_app_container '$(DEVICE_ID)' $(BUNDLE_ID) data 2>/dev/null)
 IPAD_APP_DATA = $(shell xcrun simctl get_app_container '$(IPAD_ID)' $(BUNDLE_ID) data 2>/dev/null)
 
-.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db require-rules-json companions test-companions hero-sheet-fixtures
+.PHONY: build boot install launch run build-iphone boot-iphone install-iphone launch-iphone run-iphone clean share-heros share-heros-ipad deploy deploy-ipad deploy-kombucha test test-ui test-only test-ui-record test-ui-record-only screenshots rules-db test-rules-db rules-review rules-sweep rules-queue rules-agent test-rules-review test-rulec rules-check rules-json test-rules-sync rules-sync rules-coverage test-rules-engine rules-engine-fixture require-rules-db require-rules-json hero-sheet-fixtures
 
 # rules.db is a build product (gitignored, not committed — decided 2026-09-23). Every target
 # that ships the app depends on this and refuses to run without it; make rules-db builds it.
@@ -107,7 +107,7 @@ share-heros: boot
 		exit 1; \
 	fi
 	@mkdir -p "$(IPAD_APP_DATA)/Documents"
-	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' ! -name '*.companions.json' -exec cp {} "$(IPAD_APP_DATA)/Documents/" \;
+	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' -exec cp {} "$(IPAD_APP_DATA)/Documents/" \;
 	@echo "Copied sample heros to $(IPAD_APP_DATA)/Documents/"
 
 share-heros-iphone: boot-iphone
@@ -116,7 +116,7 @@ share-heros-iphone: boot-iphone
 		exit 1; \
 	fi
 	@mkdir -p "$(APP_DATA)/Documents"
-	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' ! -name '*.companions.json' -exec cp {} "$(APP_DATA)/Documents/" \;
+	find "$(SAMPLE_HEROES)" -maxdepth 1 -name '*.json' -exec cp {} "$(APP_DATA)/Documents/" \;
 	@echo "Copied sample heros to iPhone: $(APP_DATA)/Documents/"
 
 deploy: require-rules-db rules-json
@@ -150,18 +150,6 @@ clean:
 # The build script's own tests (validate, snapshot, import). Pure Python, seconds.
 test-rules-db:
 	python3 -m unittest discover -s scripts/build_rules_db -p 'test_*.py' -v
-
-# Companion builds (docs/plans/2026-09-24-companion-data-design.md): check
-# <export>.companions.json against its Optolith export and inject the `hesindion`
-# block. FIX=1 first sets the export's own pet fields from the build; CHECK=1
-# validates without writing; INIT=1 writes a first build file from the export's
-# own pet fields (every other part of a build is optional) and leaves the export alone.
-#   make companions HERO="specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json"
-companions:
-	python3 scripts/companions/amend_export.py '$(HERO)' $(if $(FIX),--fix,) $(if $(CHECK),--check,) $(if $(INIT),--init,)
-
-test-companions:
-	python3 -m unittest discover -s scripts/companions -p 'test_*.py' -v
 
 # Rebuild the bundled rules database from the Optolith YAML and the rules
 # catalog. Fails on a catalog problem (including a clause outside
