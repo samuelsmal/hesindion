@@ -30,7 +30,7 @@ final class SchemaV7MigrationTests: XCTestCase {
         XCTAssertEqual(pet.name, "Kupperus")
         XCTAssertEqual(pet.defense, 14)
         XCTAssertEqual(pet.attacks.count, 3)
-        // Task 4: XCTAssertEqual(pet.disadvantages, [])
-        // Task 4: XCTAssertEqual(pet.importProblems, [])
+        XCTAssertEqual(pet.disadvantages, [])
+        XCTAssertEqual(pet.importProblems, [])
     }
 }

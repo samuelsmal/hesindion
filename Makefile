@@ -327,7 +327,7 @@ test-ui: rules-db rules-json boot
 		test -only-testing:HesindionTests
 
 # Run one test class or method (no re-recording):
-#   make test-only ONLY=HesindionUITests/CompanionReimportFlowTests
+#   make test-only ONLY=HesindionUITests/SheetBreakdownTests
 test-only: boot
 	xcodebuild \
 		-project $(PROJECT) \

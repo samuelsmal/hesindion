@@ -1211,15 +1211,10 @@ struct HeroDetailView: View {
                         let mountValues = pet === hero.mount ? MountValues.of(pet) : nil
                         petCombatBlock(pet, mountValues: mountValues)
 
-                        if pet.hasCompanionData {
-                            companionBlock(pet)
-                        }
+                        companionBlock(pet)
 
                         if !pet.talents.isEmpty {
                             FieldRow(label: "talents", value: pet.talents)
-                        }
-                        if !pet.skills.isEmpty {
-                            FieldRow(label: "skills", value: pet.skills)
                         }
                         if !pet.notes.isEmpty {
                             FieldRow(label: "notes", value: pet.notes)
@@ -1279,12 +1274,14 @@ struct HeroDetailView: View {
             if let vw = v?.vw {
                 petBreakdownRow("VW", vw, title: "VW \(pet.name)",
                                 id: "pet.defense.\(pet.name)", valueId: "pet.defense.\(pet.name)")
-            } else if pet.hasCompanionData {
-                petRow("VW", pet.defense.map(String.init) ?? "–", valueId: "pet.defense.\(pet.name)")
+            } else if let defense = pet.defense {
+                petRow("VW", "\(defense)", valueId: "pet.defense.\(pet.name)")
             }
-            if pet.hasCompanionData {
-                petRow("RS", pet.armor.map(String.init) ?? "–", valueId: "pet.armor.\(pet.name)")
-                petRow("BE", pet.encumbrance.map(String.init) ?? "–", valueId: "pet.encumbrance.\(pet.name)")
+            if let armor = pet.armor {
+                petRow("RS", "\(armor)", valueId: "pet.armor.\(pet.name)")
+            }
+            if let encumbrance = pet.encumbrance {
+                petRow("BE", "\(encumbrance)", valueId: "pet.encumbrance.\(pet.name)")
             }
             if !perAttack {
                 petRow("AT", pet.attack)
@@ -1359,12 +1356,17 @@ struct HeroDetailView: View {
         }
     }
 
-    /// The build's AP and lists, from the export's `hesindion` block.
+    /// The pet's AP and lists, from Optolith's pet fields (issue #49).
     @ViewBuilder private func companionBlock(_ pet: Pet) -> some View {
-        petRow("AP", "\(pet.apSpent ?? 0) / \(pet.apTotal ?? 0)", valueId: "pet.ap.\(pet.name)")
+        if let total = pet.apTotal {
+            petRow("AP", "\(pet.apSpent ?? 0) / \(total)", valueId: "pet.ap.\(pet.name)")
+        }
 
         if !pet.advantages.isEmpty {
             FieldRow(label: "petAdvantages", value: pet.advantages.joined(separator: ", "))
+        }
+        if !pet.disadvantages.isEmpty {
+            FieldRow(label: "petDisadvantages", value: pet.disadvantages.joined(separator: ", "))
         }
         if !pet.abilities.isEmpty {
             FieldRow(label: "petAbilities", value: pet.abilities.joined(separator: ", "))

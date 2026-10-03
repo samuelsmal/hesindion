@@ -21,14 +21,7 @@ enum UITestSeed {
         ProcessInfo.processInfo.arguments.contains(launchArgument)
     }
 
-    /// `-uitest-seed-fixture UITestHeroCompanions` seeds from that bundled JSON
-    /// instead of `UITestHero` — the companion re-import test needs a hero whose
-    /// pet already carries the `hesindion` block.
-    static let fixtureArgument = "-uitest-seed-fixture"
-
-    /// `-uitest-reimport UITestHero` makes `HeroListView` import that bundled JSON
-    /// on appear, through the same path as the file picker, so the re-import
-    /// question can be driven without the system document browser.
+    /// `-uitest-reimport UITestHeroProblems` makes `HeroListView` import that bundled JSON on appear, through the same path as the file picker, so the import's problem modal can be driven without the system document browser (issue #49).
     static let reimportArgument = "-uitest-reimport"
 
     private static func argument(after key: String) -> String? {
@@ -238,9 +231,8 @@ enum UITestSeed {
     /// here looks at the portrait). To refresh it after the sample hero changes:
     /// re-copy the export and delete its top-level `avatar` key and each pet's.
     private static func populate(_ container: ModelContainer) throws {
-        let fixture = argument(after: fixtureArgument) ?? "UITestHero"
-        guard let url = Bundle.main.url(forResource: fixture, withExtension: "json") else {
-            fatalError("UITestSeed: \(fixture).json is missing from the app bundle")
+        guard let url = Bundle.main.url(forResource: "UITestHero", withExtension: "json") else {
+            fatalError("UITestSeed: UITestHero.json is missing from the app bundle")
         }
 
         let context = ModelContext(container)

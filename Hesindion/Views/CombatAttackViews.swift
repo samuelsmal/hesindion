@@ -231,9 +231,9 @@ struct CombatAttackChoiceView: View {
                 .accessibilityIdentifier("combat.mount.blockedReason")
             }
 
-            // Mount special skills note
-            if !mount.specialSkills.isEmpty {
-                Text("\u{24D8} \(mount.specialSkills)")
+            // Mount abilities note
+            if !mount.abilities.isEmpty {
+                Text("\u{24D8} \(mount.abilities.joined(separator: ", "))")
                     .font(.dsaBody(.caption2))
                     .foregroundStyle(combatAccent)
                     .padding(.top, 2)

@@ -25,15 +25,6 @@ struct HeroListView: View {
     @State private var isShowingAdventureCreation = false
     @State private var isSidebarVisible = true
 
-    /// A re-import waiting on the companion question: the file, the pets still to
-    /// ask about (in `petsInOrder` order) and the ones already kept.
-    private struct PendingReimport {
-        let data: Data
-        var remaining: [String]
-        var keep: Set<String> = []
-    }
-    @State private var pendingReimport: PendingReimport?
-
     private var appVersion: String { AppVersion.display }
 
     var body: some View {
@@ -76,32 +67,6 @@ struct HeroListView: View {
         .sheet(isPresented: $isShowingAdventureCreation) {
             NavigationStack {
                 AdventureCreationSheet()
-            }
-        }
-        .overlay {
-            if let name = pendingReimport?.remaining.first {
-                DSAModal(title: String(format: L("companion.reimport.title"), name),
-                         accent: .groupEquipment) {
-                    Text(L("companion.reimport.message"))
-                        .font(.dsaBody(.subheadline))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    DSAModalButton(title: L("companion.reimport.keep"), accent: .groupEquipment,
-                                   identifier: "companion.reimport.keep") {
-                        answerReimport(keep: true)
-                    }
-                    DSAOrDivider()
-                    DSAModalButton(title: L("companion.reimport.discard"), accent: .groupEquipment,
-                                   identifier: "companion.reimport.discard") {
-                        answerReimport(keep: false)
-                    }
-                    DSAModalButton(title: L("companion.reimport.cancel"), accent: .groupEquipment,
-                                   filled: false, identifier: "companion.reimport.cancel") {
-                        pendingReimport = nil
-                    }
-                }
-                .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("companion.reimport.modal")
             }
         }
         .onAppear {
@@ -436,31 +401,7 @@ struct HeroListView: View {
 
     private func handleURL(_ url: URL) {
         do {
-            let service = OptolithImportService()
-            let data = try service.readData(from: url)
-            let conflicts = try service.companionConflicts(in: data, context: modelContext)
-            if conflicts.isEmpty {
-                importResult = try service.importHero(from: data, context: modelContext)
-            } else {
-                pendingReimport = PendingReimport(data: data, remaining: conflicts)
-            }
-        } catch {
-            showError(error.localizedDescription)
-        }
-    }
-
-    private func answerReimport(keep: Bool) {
-        guard var pending = pendingReimport, let name = pending.remaining.first else { return }
-        if keep { pending.keep.insert(name) }
-        pending.remaining.removeFirst()
-        guard pending.remaining.isEmpty else {
-            pendingReimport = pending
-            return
-        }
-        pendingReimport = nil
-        do {
-            importResult = try OptolithImportService().importHero(from: pending.data, context: modelContext,
-                                                                  keepingCompanionDataFor: pending.keep)
+            importResult = try OptolithImportService().importHero(from: url, context: modelContext)
         } catch {
             showError(error.localizedDescription)
         }
@@ -469,18 +410,13 @@ struct HeroListView: View {
     /// A re-import replaces the hero with the same name in place, so without
     /// this the player could not tell it from adding a second hero.
     private var importResultTitle: String {
-        switch importResult {
-        case .updated: L("import.updated.title")
-        case .created, nil: L("import.created.title")
-        }
+        importResult?.kind == .updated ? L("import.updated.title") : L("import.created.title")
     }
 
     private var importResultMessage: String {
-        switch importResult {
-        case .updated(let name): String(format: L("import.updated.message"), name)
-        case .created(let name): String(format: L("import.created.message"), name)
-        case nil: ""
-        }
+        guard let importResult else { return "" }
+        let key = importResult.kind == .updated ? "import.updated.message" : "import.created.message"
+        return String(format: L(key), importResult.heroName)
     }
 
     private func showError(_ message: String) {

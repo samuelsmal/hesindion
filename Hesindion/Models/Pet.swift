@@ -19,18 +19,6 @@ struct PetAttack: Codable, Hashable {
     var reach: String
 }
 
-/// One entry of a companion's build, as `scripts/companions/amend_export.py`
-/// writes it (docs/plans/2026-09-24-companion-data-design.md §4).
-struct PetPurchase: Codable, Hashable {
-    var kind: String
-    var name: String?
-    var target: String?
-    var ap: Int
-    var from: Int?
-    var to: Int?
-    var count: Int?
-}
-
 @Model
 final class Pet {
     var petId: String
@@ -53,42 +41,25 @@ final class Pet {
     var skills: String
     var notes: String
     var attacks: [PetAttack] = []
-    var specialSkills: String = ""
 
-    // Companion data from the export's `hesindion` block. Optolith has no place
-    // for it; nil / empty when the export was not amended.
+    // Companion data from Optolith's pet fields (issue #49, PetTextFormat): PA is VW, RS is
+    // RS, the Sonderfertigkeiten and Notizen labels give the rest. nil / empty when absent.
     var defense: Int?
     var armor: Int?
     var encumbrance: Int?
     var advantages: [String] = []
+    var disadvantages: [String] = []
     var abilities: [String] = []
     var training: [String] = []
     var tricks: [String] = []
-    var purchases: [PetPurchase] = []
     var apTotal: Int?
     var apSpent: Int?
+    /// What the last import could not read; a clean re-import clears it.
+    var importProblems: [PetImportProblem] = []
 
-    var hasCompanionData: Bool { apTotal != nil }
-
-    /// The block's ability list when there is one, the free-text `skills` otherwise.
+    /// An ability item counts by its name, without its note.
     var hasMightyBlow: Bool {
-        abilities.contains("Mächtiger Schlag") || specialSkills.contains("Mächtiger Schlag")
-    }
-
-    /// Re-import without the block, and the player chose to keep the last one:
-    /// only what the block adds comes over, the export's own fields stay new.
-    func adoptCompanionData(from old: Pet) {
-        defense = old.defense
-        armor = old.armor
-        encumbrance = old.encumbrance
-        advantages = old.advantages
-        abilities = old.abilities
-        training = old.training
-        tricks = old.tricks
-        purchases = old.purchases
-        apTotal = old.apTotal
-        apSpent = old.apSpent
-        attacks = old.attacks
+        abilities.contains { PetTextFormat.itemName($0) == "Mächtiger Schlag" }
     }
 
     var carryingCapacity: Int { attributes.kk * 2 }
@@ -113,8 +84,7 @@ final class Pet {
         talents: String,
         skills: String,
         notes: String,
-        attacks: [PetAttack] = [],
-        specialSkills: String = ""
+        attacks: [PetAttack] = []
     ) {
         self.petId = petId
         self.name = name
@@ -136,6 +106,5 @@ final class Pet {
         self.skills = skills
         self.notes = notes
         self.attacks = attacks
-        self.specialSkills = specialSkills
     }
 }

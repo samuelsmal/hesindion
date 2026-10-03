@@ -2,7 +2,7 @@ import Foundation
 import RulesEngine
 
 /// `Pet` → `CreatureSheet` (issue #48): the only code that knows both. The breed is the creature
-/// rule whose name is the export's type (`Pet` has no breed field; #49 covers the import); the
+/// rule whose name is the export's type (`Pet` has no breed field); the
 /// animal advantages are the creature rules named in `Pet.advantages`.
 enum PetSheetMapping {
     /// nil `breed` when no creature rule has `Pet.type` as its name.
@@ -12,7 +12,7 @@ enum PetSheetMapping {
         let breed = creatures.first { $0.name == pet.type && $0.group == nil }?.id
         var owned: [String: OwnedRule] = [:]
         if let breed { owned[breed] = OwnedRule() }
-        for name in pet.advantages {
+        for name in pet.advantages.map(PetTextFormat.itemName) {
             if let rule = creatures.first(where: { $0.name == name && $0.group == "Vorteile (Tiere)" }) {
                 owned[rule.id] = OwnedRule()
             }

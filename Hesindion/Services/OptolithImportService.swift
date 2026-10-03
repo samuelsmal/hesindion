@@ -6,9 +6,6 @@ import SwiftData
 enum OptolithImportError: LocalizedError {
     case fileReadFailed
     case invalidFormat(String)
-    /// A `<export>.companions.json` build file (scripts/companions/), which sits
-    /// beside the hero export and is easy to pick instead of it (issue #42).
-    case companionBuildFile
     case saveFailed(String)
 
     var errorDescription: String? {
@@ -17,8 +14,6 @@ enum OptolithImportError: LocalizedError {
             "The file could not be read. Please check that the file is accessible and try again."
         case .invalidFormat(let detail):
             "The file is not a valid Optolith export. \(detail)"
-        case .companionBuildFile:
-            "This is a companion build file, not a hero export. Import the hero's Optolith export instead; `make companions` adds the companion data to it."
         case .saveFailed(let detail):
             "The hero could not be saved. \(detail)"
         }
@@ -28,10 +23,15 @@ enum OptolithImportError: LocalizedError {
 // MARK: - Result
 
 /// What an import did: added a new hero, or replaced the data of the hero
-/// with the same name (a re-import).
-enum HeroImportResult: Equatable {
-    case created(heroName: String)
-    case updated(heroName: String)
+/// with the same name (a re-import), and what of the pets it could not read.
+struct HeroImportResult: Equatable {
+    enum Kind: Equatable { case created, updated }
+    var kind: Kind
+    var heroName: String
+    var problems: [PetImportProblem] = []
+
+    static func created(heroName: String) -> HeroImportResult { .init(kind: .created, heroName: heroName) }
+    static func updated(heroName: String) -> HeroImportResult { .init(kind: .updated, heroName: heroName) }
 }
 
 // MARK: - Service
@@ -57,30 +57,12 @@ struct OptolithImportService {
     }
 
     @discardableResult
-    func importHero(from url: URL, context: ModelContext, keepingCompanionDataFor keep: Set<String> = []) throws -> HeroImportResult {
-        try importHero(from: try readData(from: url), context: context, keepingCompanionDataFor: keep)
-    }
-
-    /// Stored companions that have Hesindion companion data while their namesake in
-    /// `data` has none — a re-import of a plain Optolith export that would drop it.
-    /// Names in `petsInOrder` order; empty for a hero that is not stored yet.
-    func companionConflicts(in data: Data, context: ModelContext) throws -> [String] {
-        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let heroName = root["name"] as? String else { return [] }
-        let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
-        guard let hero = try context.fetch(descriptor).first else { return [] }
-        let newPets = root["pets"] as? [String: Any] ?? [:]
-        let companions = CompanionData.parse(root: root)
-        return hero.petsInOrder.filter(\.hasCompanionData).map(\.name).filter { name in
-            let keys = newPets.compactMap { key, value in
-                (value as? [String: Any])?["name"] as? String == name ? key : nil
-            }
-            return !keys.isEmpty && keys.allSatisfy { companions[$0] == nil }
-        }
+    func importHero(from url: URL, context: ModelContext) throws -> HeroImportResult {
+        try importHero(from: try readData(from: url), context: context)
     }
 
     @discardableResult
-    func importHero(from data: Data, context: ModelContext, keepingCompanionDataFor keep: Set<String> = []) throws -> HeroImportResult {
+    func importHero(from data: Data, context: ModelContext) throws -> HeroImportResult {
         let root: [String: Any]
         do {
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -93,9 +75,6 @@ struct OptolithImportService {
             throw OptolithImportError.invalidFormat(error.localizedDescription)
         }
 
-        if root["name"] == nil, root["schemaVersion"] != nil, root["pets"] is [String: Any] {
-            throw OptolithImportError.companionBuildFile
-        }
         guard let heroName = root["name"] as? String, !heroName.isEmpty else {
             throw OptolithImportError.invalidFormat("Missing hero name.")
         }
@@ -166,7 +145,7 @@ struct OptolithImportService {
 
         // Parse pets
         let petsJSON = root["pets"] as? [String: Any] ?? [:]
-        let pets = parsePets(petsJSON, companions: CompanionData.parse(root: root))
+        let pets = parsePets(petsJSON)
 
         // Compute derived values
         let purchasedLP = intFromAny(attrJSON["lp"]) ?? 0
@@ -184,7 +163,7 @@ struct OptolithImportService {
         // Upsert: check for existing hero by name
         let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
         let existing = try context.fetch(descriptor)
-        let result: HeroImportResult
+        var result: HeroImportResult
         let imported: Hero
 
         if let hero = existing.first {
@@ -205,7 +184,6 @@ struct OptolithImportService {
                 pets: pets,
                 spells: spells,
                 liturgies: liturgies,
-                keepingCompanionDataFor: keep,
                 context: context
             )
             hero.lastImportedAt = .now
@@ -252,6 +230,7 @@ struct OptolithImportService {
         } catch {
             throw OptolithImportError.saveFailed(error.localizedDescription)
         }
+        result.problems = imported.petsInOrder.flatMap(\.importProblems)
         return result
     }
 
@@ -288,7 +267,6 @@ struct OptolithImportService {
         pets: [Pet],
         spells: [HeroSpell],
         liturgies: [HeroSpell],
-        keepingCompanionDataFor keep: Set<String>,
         context: ModelContext
     ) {
         hero.avatar = avatar
@@ -336,11 +314,6 @@ struct OptolithImportService {
         if let old = hero.money { context.delete(old) }
         hero.money = money
 
-        for pet in pets where keep.contains(pet.name) && !pet.hasCompanionData {
-            if let old = hero.pets.first(where: { $0.name == pet.name && $0.hasCompanionData }) {
-                pet.adoptCompanionData(from: old)
-            }
-        }
         hero.pets.forEach { context.delete($0) }
         hero.pets = pets
 
@@ -806,14 +779,9 @@ struct OptolithImportService {
 
     // MARK: - Pets
 
-    private func parsePets(_ json: [String: Any], companions: [String: CompanionData]) -> [Pet] {
+    private func parsePets(_ json: [String: Any]) -> [Pet] {
         json.compactMap { key, value -> Pet? in
             guard let pet = value as? [String: Any] else { return nil }
-            let name = pet["name"] as? String ?? "?"
-            let type = pet["type"] as? String ?? ""
-            let avatar = parseAvatar(pet["avatar"])
-            let size = doubleFromAny(pet["size"]) ?? 0.0
-
             let attributes = PetAttributes(
                 mu: intFromAny(pet["cou"]) ?? 0,
                 kl: intFromAny(pet["sgc"]) ?? 0,
@@ -824,13 +792,13 @@ struct OptolithImportService {
                 ko: intFromAny(pet["con"]) ?? 0,
                 kk: intFromAny(pet["str"]) ?? 0
             )
-
+            let text = PetTextFormat.parse(pet)
             let result = Pet(
                 petId: key,
-                name: name,
-                avatar: avatar,
-                size: size,
-                type: type,
+                name: pet["name"] as? String ?? "?",
+                avatar: parseAvatar(pet["avatar"]),
+                size: doubleFromAny(pet["size"]) ?? 0.0,
+                type: pet["type"] as? String ?? "",
                 attributes: attributes,
                 lifeEnergy: intFromAny(pet["lp"]) ?? 0,
                 spirit: intFromAny(pet["spi"]) ?? 0,
@@ -843,25 +811,21 @@ struct OptolithImportService {
                 actions: intFromAny(pet["actions"]) ?? 1,
                 talents: pet["talents"] as? String ?? "",
                 skills: pet["skills"] as? String ?? "",
-                notes: pet["notes"] as? String ?? "",
-                attacks: parsePetAttacks(notes: pet["notes"] as? String ?? ""),
-                specialSkills: pet["skills"] as? String ?? ""
+                notes: text.notes,
+                attacks: text.attacks
             )
-            companions[key]?.apply(to: result)
+            result.defense = text.defense
+            result.armor = text.armor
+            result.encumbrance = text.encumbrance
+            result.advantages = text.advantages
+            result.disadvantages = text.disadvantages
+            result.abilities = text.abilities
+            result.training = text.training
+            result.tricks = text.tricks
+            result.apTotal = text.apTotal
+            result.apSpent = text.apSpent
+            result.importProblems = text.problems
             return result
-        }
-    }
-
-    /// Parses attack entries from pet notes. Format: "Name: AT \d+ TP \d+W\d+[+-]\d+ RW (kurz|mittel|lang)"
-    private func parsePetAttacks(notes: String) -> [PetAttack] {
-        let pattern = /([A-ZÄÖÜa-zäöüß]+):\s*AT\s+(\d+)\s+TP\s+(\d+W\d+(?:[+-]\d+)?)\s+RW\s+(kurz|mittel|lang)/
-        return notes.matches(of: pattern).map { match in
-            PetAttack(
-                name: String(match.1),
-                at: Int(match.2) ?? 0,
-                damage: String(match.3),
-                reach: String(match.4)
-            )
         }
     }
 
