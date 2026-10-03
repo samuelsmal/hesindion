@@ -197,4 +197,36 @@ struct PetTextFormatTests {
         ])
         #expect(r.notes == "Tritt: AT 15 TP 1W6+7 RW mittel Biss: AT 12 TP 1W6+2 RW kurz; Kampfverhalten: Svellttaler Kaltblüter sind besonnen.")
     }
+
+    // MARK: - Final review fixes (issue #49)
+
+    @Test func anEmptyOptolithATIsNotComparedWithTheList() {
+        let r = PetTextFormat.parse(pet([
+            "attack": "Niederreiten", "at": "", "dp": "2W6+7",
+            "notes": "Angriffe: Niederreiten AT 19 TP 2W6+7 RW mittel",
+        ]))
+        #expect(r.problems.isEmpty)
+    }
+
+    @Test func anEmptyOptolithTPIsNotComparedWithTheList() {
+        let r = PetTextFormat.parse(pet([
+            "attack": "Niederreiten", "at": "19", "dp": "",
+            "notes": "Angriffe: Niederreiten AT 19 TP 2W6+7 RW mittel",
+        ]))
+        #expect(r.problems.isEmpty)
+    }
+
+    @Test func spacesInTheOptolithTPDoNotMakeAMismatch() {
+        let r = PetTextFormat.parse(pet([
+            "attack": "Niederreiten", "at": "19", "dp": "2W6 + 7",
+            "notes": "Angriffe: Niederreiten AT 19 TP 2W6+7 RW mittel",
+        ]))
+        #expect(r.problems.isEmpty)
+    }
+
+    @Test func anAttackItemMayEndWithANote() {
+        let r = PetTextFormat.parse(pet(["notes": "Angriffe: Biss AT 16 TP 1W6+3 RW kurz (nur liegend)"]))
+        #expect(r.attacks == [PetAttack(name: "Biss", at: 16, damage: "1W6+3", reach: "kurz")])
+        #expect(r.problems.isEmpty)
+    }
 }

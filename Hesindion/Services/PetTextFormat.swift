@@ -115,7 +115,9 @@ enum PetTextFormat {
             }
         } else if !attackName.isEmpty,
                   let listed = r.attacks.first(where: { $0.name.caseInsensitiveCompare(attackName) == .orderedSame }),
-                  at != listed.at || dp.uppercased() != listed.damage {
+                  // Only the fields the player filled in are compared; "2W6 + 7" is "2W6+7".
+                  (at.map { $0 != listed.at } ?? false)
+                    || (!dp.isEmpty && dp.replacingOccurrences(of: " ", with: "").uppercased() != listed.damage) {
             problem(.angriff, "\(attackName) AT \(at.map(String.init) ?? "") TP \(dp)", .attackMismatch)
         }
         return r
@@ -171,8 +173,9 @@ enum PetTextFormat {
         return nil
     }
 
+    /// An attack item; a trailing note in parentheses is allowed and not kept (spec §3.1).
     private static func attack(_ item: String) -> PetAttack? {
-        guard let m = item.wholeMatch(of: attackPattern), let at = Int(m.2) else { return nil }
+        guard let m = itemName(item).wholeMatch(of: attackPattern), let at = Int(m.2) else { return nil }
         return PetAttack(name: String(m.1), at: at, damage: m.3.uppercased(), reach: m.4.lowercased())
     }
 
