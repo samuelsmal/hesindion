@@ -170,18 +170,22 @@ same method. A pet imported before the change keeps its stored values until the 
 1. `specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json` takes its content from
    `Boronmir Formattest_edit.json`, with the original hero name. Its `hesindion` block goes away,
    so the sample is a real Optolith export.
-2. `specs/heroes/Boronmir Siebenfeld von Greifenfurt.json` (the older export without labels) stays
-   unchanged. It is the test case for the problem path.
-3. Kupperus in `Hesindion/Resources/UITestHero.json` gets the same text, so the mount UI tests
-   (issues #48, #51, #52) keep their attacks.
+2. `specs/heroes/Boronmir Siebenfeld von Greifenfurt.json` (the older export without labels) gets
+   the new format **with its own values** (Tritt AT 15 TP 1W6+7, Biss AT 12 TP 1W6+2, Niederreiten
+   AT 15 TP 2W6+6, Sonderfertigkeiten: Mächtiger Schlag). `TestData.boronmirURL` and 22 test
+   files load it, and 11 of them expect these attacks. Amended 2026-10-03 during planning: the
+   first version kept this file unlabelled as the problem fixture, which would break those tests.
+3. Kupperus in `Hesindion/Resources/UITestHero.json` (a stripped copy of fixture 2) gets the same
+   text as fixture 2, so the mount UI tests (issues #48, #51, #52) keep their attacks and their
+   base values.
 4. The two `Boronmir Formattest*.json` files are deleted, and `make hero-sheet-fixtures` runs
    again.
 
 ### 5.5 Tests
 
 - `PetTextFormatTests`: one test per rule in §3.1–§3.3 and one per problem kind in §3.4.
-- Import tests on fixtures 1 and 2: fixture 1 gives the Kupperus values of §3.5 and no problems;
-  fixture 2 gives the expected problems.
+- Import tests on fixtures 1 and 2: each gives its Kupperus values and no problems. The problem
+  path is tested on a small export built inside the test from the old unlabelled text.
 - Snapshot tests of the problem modal and of the warning rows on the companion sheet.
 - The existing mount UI tests pass on the changed `UITestHero.json`.
 
