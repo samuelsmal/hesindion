@@ -13,7 +13,7 @@ source:
   checked: 2026-10-01
   hash: sha256:3fdc0630bfbe8a8f7e4bbace07461cf7f5b6ce2e41001fb9a9071c18e9350908
 reviewed: null
-# Kupperus bought it (companions.json, 12 AP).
+# Kupperus has it (Vorteile in his Optolith pet fields; 12 AP).
 
 clauses:
   - id: ZT1

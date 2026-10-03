@@ -2,6 +2,8 @@
 
 ## Status
 
+Superseded by ADR-0021, 2026-10-03 (issue #49).
+
 Accepted, 2026-09-24. Amended 2026-09-29 (issue #42): the build file is JSON
 (`<export>.companions.json`), not YAML. A `.companions.yaml` next to the export was easy to pick in the
 app's file picker instead of the export, and the import then failed with "not a valid Optolith export".

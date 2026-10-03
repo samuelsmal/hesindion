@@ -1,5 +1,7 @@
 # Companion Data — Design
 
+**Superseded 2026-10-03** by docs/plans/2026-10-03-companion-text-format-design.md (issue #49).
+
 **Status:** Approved in chat 2026-09-24, spec for review.
 **Date:** 2026-09-24
 **Amended 2026-09-29 (issue #42):** the build file is JSON, `<export>.companions.json`, not YAML.
