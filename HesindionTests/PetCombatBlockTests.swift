@@ -17,10 +17,10 @@ struct PetCombatBlockTests {
     @Test func aPetWithoutEngineValuesListsItsAttacks() {
         let attacks = [PetAttack(name: "Schnabel", at: 12, damage: "1W3", reach: "kurz"),
                        PetAttack(name: "Krallen", at: 10, damage: "1W2", reach: "kurz")]
-        #expect(HeroDetailView.attackRows(of: pet(attacks: attacks), mountValues: nil) == attacks)
+        #expect(HeroDetailView.attackRows(of: pet(attacks: attacks)) == attacks)
     }
 
     @Test func aPetWithNoAttacksKeepsTheGeneralPair() {
-        #expect(HeroDetailView.attackRows(of: pet(attacks: []), mountValues: nil).isEmpty)
+        #expect(HeroDetailView.attackRows(of: pet(attacks: [])).isEmpty)
     }
 }

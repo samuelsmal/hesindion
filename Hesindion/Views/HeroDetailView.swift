@@ -1258,7 +1258,7 @@ struct HeroDetailView: View {
     /// results, Schmerz included, and a tap opens their breakdown (issues #48, #52); every other
     /// pet shows its stored values.
     @ViewBuilder private func petCombatBlock(_ pet: Pet, mountValues v: MountValues?) -> some View {
-        let attackRows = Self.attackRows(of: pet, mountValues: v)
+        let attackRows = Self.attackRows(of: pet)
         let perAttack = !attackRows.isEmpty
         VStack(spacing: 0) {
             Text(L("combat")).font(.dsaBody(.body))
@@ -1292,7 +1292,8 @@ struct HeroDetailView: View {
             }
             petRow("RW", pet.reach)
             petRow("AK", "\(pet.actions)")
-            ForEach(attackRows, id: \.name) { attack in
+            // By position: two attacks may share a name.
+            ForEach(Array(attackRows.enumerated()), id: \.offset) { _, attack in
                 if let v {
                     mountAttackRow(pet, attack, at: v.at(with: attack.name))
                 } else {
@@ -1302,9 +1303,10 @@ struct HeroDetailView: View {
         }
     }
 
-    /// The attacks the Kampf block lists one row each: every pet's, the mount's with the engine's AT
-    /// (issues #52, #49). Empty means the general AT/TP pair. `mountValues` only decides the AT source.
-    static func attackRows(of pet: Pet, mountValues: MountValues?) -> [PetAttack] {
+    /// The attacks the Kampf block lists one row each, for every pet, not only the mount (issues #52,
+    /// #49). Empty means the general AT/TP pair. Which AT a row shows — the engine's for the mount,
+    /// the stored one otherwise — is `petCombatBlock`'s choice, not this list's.
+    static func attackRows(of pet: Pet) -> [PetAttack] {
         pet.attacks
     }
 
