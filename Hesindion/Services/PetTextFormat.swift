@@ -128,15 +128,22 @@ enum PetTextFormat {
         return trimmed[..<open].trimmingCharacters(in: .whitespaces)
     }
 
-    /// Splits on `separator` outside parentheses, trims each part, drops empty parts.
+    /// Splits on `separator` outside parentheses, trims each part, drops empty parts. When the
+    /// parentheses do not balance, nothing is protected: an unclosed `(` must not swallow the rest.
     static func split(_ text: String, on separator: Character) -> [String] {
-        var parts: [String] = []
-        var current = ""
         var depth = 0
         for ch in text {
             if ch == "(" { depth += 1 }
             if ch == ")" { depth = max(0, depth - 1) }
-            if ch == separator, depth == 0 {
+        }
+        let protected = depth == 0
+        var parts: [String] = []
+        var current = ""
+        depth = 0
+        for ch in text {
+            if ch == "(" { depth += 1 }
+            if ch == ")" { depth = max(0, depth - 1) }
+            if ch == separator, depth == 0 || !protected {
                 parts.append(current)
                 current = ""
             } else {

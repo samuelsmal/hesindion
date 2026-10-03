@@ -24,6 +24,20 @@ struct PetTextFormatTests {
         #expect(r.problems.isEmpty)
     }
 
+    @Test func unclosedParenthesisDoesNotSwallowTheRest() {
+        let r = PetTextFormat.parse(pet([
+            "skills": "Vorteile: Geduldig (nett; Nachteile: Schreckhaft; Tricks: Aus",
+        ]))
+        #expect(r.advantages == ["Geduldig (nett"])
+        #expect(r.disadvantages == ["Schreckhaft"])
+        #expect(r.tricks == ["Aus"])
+        #expect(r.problems.isEmpty)
+    }
+
+    @Test func splitWithUnbalancedParenthesesSplitsEverywhere() {
+        #expect(PetTextFormat.split("a (b, c", on: ",") == ["a (b", "c"])
+    }
+
     @Test func itemNameDropsTheNote() {
         #expect(PetTextFormat.itemName("Mächtiger Schlag (-4 auf Gegner Kraftakt)") == "Mächtiger Schlag")
         #expect(PetTextFormat.itemName("  Geduldig ") == "Geduldig")
