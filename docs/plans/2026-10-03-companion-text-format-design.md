@@ -94,6 +94,9 @@ Each of these is a `PetImportProblem`:
 5. Optolith's `attack` field names an attack from `Angriffe`, and its `at` or `dp` differs from
    that attack's AT or TP. An `attack` name that is not in `Angriffe` is not a problem: the list
    is the source, and Optolith's `attack` field is then ignored.
+6. A Notizen segment that is prose but contains attack-like text (`AT` and digits, then later
+   `TP`), for example the old `Tritt: AT 15 TP 1W6+7 RW mittel`. The attack is not read, and the
+   player must see that. Amended 2026-10-03 during planning.
 
 An unknown label in Notizen is not a problem. It is prose (`Kampfverhalten: …`).
 
@@ -130,7 +133,7 @@ reason. It replaces `CompanionData.swift` and `OptolithImportService.parsePetAtt
 
 ### 4.3 The problems reach the player
 
-1. `HeroImportResult` gets `problems: [PetImportProblem]`. After an import with problems,
+1. `HeroImportResult` gets `problems: [PetImportProblem]`. It becomes a struct (`kind`, `heroName`, `problems`) with `created(heroName:)` and `updated(heroName:)` factories. After an import with problems,
    `HeroListView` shows a `DSAModal` (a sibling in the root ZStack) that lists them, for example
    *Kupperus · Notizen · Angriffe: „Biss AT 156TP 1W6+3": TP fehlt*. It has one button, OK.
 2. `Pet.importProblems` stores the list. The companion sheet (`HeroDetailView.petsSection`)
@@ -146,7 +149,7 @@ identifiers (`import.problems.modal`, `pet.problem.<name>.<index>`).
 - App: `CompanionData.swift`, `parsePetAttacks`, `PetPurchase`, `Pet.purchases`,
   `Pet.specialSkills`, `hasCompanionData`, `adoptCompanionData`, `companionConflicts`, the
   `keepingCompanionDataFor` parameter, the re-import modal in `HeroListView` and its strings, and
-  the `-uitest-reimport` debug hook.
+  the `-uitest-seed-fixture` debug hook (`-uitest-reimport` stays for the problem UI test).
 - Tests: `CompanionReimportFlowTests`, the re-import cases in `CompanionImportTests`, and
   `Hesindion/Resources/UITestHeroCompanions.json`.
 - Tools: `scripts/companions/`, the `companions` and `test-companions` Makefile targets,
@@ -188,6 +191,8 @@ same method. A pet imported before the change keeps its stored values until the 
   path is tested on a small export built inside the test from the old unlabelled text.
 - Snapshot tests of the problem modal and of the warning rows on the companion sheet.
 - The existing mount UI tests pass on the changed `UITestHero.json`.
+- A UI test seeds `UITestHero` and re-imports `UITestHeroProblems.json` (the old unlabelled
+  text) through `-uitest-reimport`, and sees the problem modal.
 
 ### 5.6 Docs
 
