@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **A hero can be deleted again.** The sidebar rewrite in March dropped the list's swipe-to-delete, and no other screen deleted a hero, so an imported hero stayed in the app for good. Now a hero row in the sidebar swipes like the other deletable rows, and the trash opens the app's own modal ("Boronmir … löschen?"). To confirm deletes the hero with its log and its notes; "Abbrechen" keeps the hero.
+
 ## [0.6.0-rc.2] - 2026-10-10
 
 ### Fixed

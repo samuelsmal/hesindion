@@ -24,6 +24,8 @@ struct HeroListView: View {
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
     @State private var isSidebarVisible = true
+    /// Set by a hero row's swipe; the delete waits for the confirmation.
+    @State private var heroPendingDeletion: Hero?
 
     private var appVersion: String { AppVersion.display }
 
@@ -68,6 +70,11 @@ struct HeroListView: View {
             if let result = importResult, !result.problems.isEmpty {
                 ImportProblemsModal(title: importResultTitle, message: importResultMessage,
                                     problems: result.problems) { importResult = nil }
+            }
+        }
+        .overlay {
+            if let hero = heroPendingDeletion {
+                heroDeletionModal(hero)
             }
         }
         .sheet(isPresented: $isShowingAdventureCreation) {
@@ -258,11 +265,15 @@ struct HeroListView: View {
                         .listRowBackground(Color(UIColor.systemBackground))
                 } else {
                     ForEach(heroes, id: \.persistentModelID) { hero in
-                        HStack(spacing: 12) {
-                            heroAvatar(hero)
-                            Text(hero.name)
-                                .font(.dsaHeading(.title3))
-                            Spacer(minLength: 0)
+                        SwipeActionRow(actions: [
+                            SwipeAction(icon: "trash", color: .red) { heroPendingDeletion = hero }
+                        ]) {
+                            HStack(spacing: 12) {
+                                heroAvatar(hero)
+                                Text(hero.name)
+                                    .font(.dsaHeading(.title3))
+                                Spacer(minLength: 0)
+                            }
                         }
                         // Each hero keeps its own profession accent, so the
                         // sidebar carries the same identity the detail pane does.
@@ -317,6 +328,32 @@ struct HeroListView: View {
                 .background(Color.groupPersonalData.opacity(0.2))
                 .clipShape(Rectangle())
                 .dsaBox(.flush)
+        }
+    }
+
+    // MARK: - Deleting a hero
+
+    /// The app's own modal, not `.confirmationDialog` (see `DSAModal`). Every
+    /// relationship on `Hero` cascades, so the delete takes the log and the
+    /// notes with it.
+    private func heroDeletionModal(_ hero: Hero) -> some View {
+        DSAModal(title: String(format: L("heroDelete.title"), hero.name), accent: Color.groupCombat) {
+            Text(L("heroDelete.message"))
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(title: L("delete"), accent: Color.groupCombat, identifier: "heroDelete.confirm") {
+                if selection == .hero(hero.persistentModelID) {
+                    selection = nil
+                }
+                modelContext.delete(hero)
+                heroPendingDeletion = nil
+            }
+
+            DSAModalButton(title: L("cancel"), accent: Color.groupCombat, filled: false,
+                           identifier: "heroDelete.cancel") {
+                heroPendingDeletion = nil
+            }
         }
     }
 
