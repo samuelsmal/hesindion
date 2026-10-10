@@ -4,11 +4,38 @@ import RulesEngine
 /// One base value: the engine's breakdown, its result, and the result without the Belastung lines
 /// (`COND_1`), which is what a roll screen starts from until domain 2 moves Belastung to the engine
 /// (sheet cut-over design §4).
+///
+/// The number comes from `Engine.evaluateNumber`, which skips the legality phase and the offers,
+/// texts and questions — about half the work of a full evaluation. Every chip on the hero sheet
+/// and the loadout picker reads only the number, and an armour switch re-runs all of them. The
+/// full breakdown, with the complete not-applied list `BreakdownSheet` shows, is evaluated the
+/// first time `breakdown` is read and then kept.
 struct SheetValue {
-    let breakdown: Breakdown
-    var result: Int? { breakdown.result }
+    private let number: Breakdown
+    private let full: FullBreakdown
+
+    /// A value whose full breakdown is already known (`MountValues`).
+    init(breakdown: Breakdown) {
+        number = breakdown
+        full = FullBreakdown { breakdown }
+    }
+
+    init(number: Breakdown, full: @escaping () -> Breakdown) {
+        self.number = number
+        self.full = FullBreakdown(full)
+    }
+
+    var breakdown: Breakdown { full.value }
+    var result: Int? { number.result }
     var withoutBelastung: Int? {
-        result.map { r in r - breakdown.lines.filter { $0.origin?.rule == "COND_1" }.reduce(0) { $0 + $1.value } }
+        result.map { r in r - number.lines.filter { $0.origin?.rule == "COND_1" }.reduce(0) { $0 + $1.value } }
+    }
+
+    /// A class, so that the copies of one `SheetValue` share the one evaluation.
+    private final class FullBreakdown {
+        private let make: () -> Breakdown
+        lazy var value: Breakdown = make()
+        init(_ make: @escaping () -> Breakdown) { self.make = make }
     }
 }
 
@@ -47,7 +74,10 @@ final class SheetValues {
     private func value(_ query: String, in sheet: HeroSheet? = nil) -> SheetValue {
         let key = MemoKey(query: query, sheet: sheet ?? self.sheet)
         if let hit = memo[key] { return hit }
-        let v = SheetValue(breakdown: engine.evaluate(Query(query), in: RulesEngine.Situation(sheet: key.sheet)))
+        // The closure holds the engine and the situation, not `self`: `memo` keeps the value.
+        let engine = self.engine, situation = RulesEngine.Situation(sheet: key.sheet)
+        let v = SheetValue(number: engine.evaluateNumber(Query(query), in: situation),
+                           full: { engine.evaluate(Query(query), in: situation) })
         memo[key] = v
         return v
     }

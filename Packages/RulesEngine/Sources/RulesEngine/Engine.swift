@@ -18,6 +18,14 @@ public struct Engine: Sendable {
         evaluation(situation).breakdown(query, depth: 0)
     }
 
+    /// The number of `query` only: its base and lines, through the cap phase. No legality, no
+    /// offers, texts or questions, and so a not-applied list without their entries — about half
+    /// the work of `evaluate`, for a screen that shows the value and reads the full breakdown
+    /// only when the player opens it (`SheetValues`).
+    public func evaluateNumber(_ query: Query, in situation: Situation) -> Breakdown {
+        evaluation(situation).breakdown(query, depth: 0, through: .cap)
+    }
+
     /// The hero sheet (Task 30): the breakdown of no target, which only the effects every query
     /// sees reach (the reach index's `"*"`): the tells the player is shown whatever is asked, the
     /// offers, the questions, the unencoded clauses, and the entries of those that do not apply

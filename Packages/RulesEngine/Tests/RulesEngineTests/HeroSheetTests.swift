@@ -159,6 +159,26 @@ final class HeroSheetTests: XCTestCase {
                       "\(b.notApplied.map { "\($0.origin) \($0.reason)" })")
     }
 
+    /// `evaluateNumber` stops after the cap phase: the same result and lines as `evaluate` for
+    /// every sheet value, without the offers, texts and questions the sheet does not read.
+    func testEvaluateNumberGivesTheSameNumberAsEvaluate() {
+        var plate = Self.boronmir(
+            loadout: .init(weapon: "Rabenschnabel", shield: "Großschild", armour: "Plattenrüstung",
+                           armourBelastung: 3),
+            items: [Self.rabenschnabel, Self.grossschild])
+        plate.rulesets = ["fokus.trefferzonen"]
+        let engine = Engine(book: Self.book)
+        for q in ["at(with: weapon)", "pa(with: weapon)", "at(with: shield)", "pa(with: shield)",
+                  "at(with: CT_3)", "pa(with: CT_3)", "leMax", "wundschwelle", "iniBase", "aw", "gs"] {
+            let full = engine.evaluate(Query(q), in: Situation(sheet: plate))
+            let number = engine.evaluateNumber(Query(q), in: Situation(sheet: plate))
+            XCTAssertNotNil(number.result, q)
+            XCTAssertEqual(number.result, full.result, q)
+            XCTAssertEqual(number.lines, full.lines, q)
+            XCTAssertTrue(number.offers.isEmpty, q)
+        }
+    }
+
     /// `schilde.shield-bonus-raufen` is the decided ruling `pa(with: weapon)` rests on for a
     /// bare-handed Raufen parry with a shield (kampfwerte.yaml 16.16-ish, `ruling:` on SCH1).
     func testRulingAnswerLooksUpADecidedRulingByItsQualifiedId() {

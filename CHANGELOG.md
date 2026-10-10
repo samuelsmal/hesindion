@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **To switch armour on the preparation screen is fast again.** With Boronmir, a switch of the Plattenrüstung took about 1.5 s, because every AT/PA value on the hero sheet and in the loadout picker was evaluated again at about 30 ms each. Now it takes about 0.16 s in the simulator, for two reasons. First, the rules engine is compiled with optimisation in Debug builds too (`Packages/RulesEngine/Package.swift`), which makes it about five times faster. Second, a sheet value now evaluates only its number (`Engine.evaluateNumber`, which stops before the legality phase), and evaluates the full breakdown only when the player opens it.
+
 ## [0.6.0-rc.1] - 2026-10-10
 
 ### Added
