@@ -34,6 +34,29 @@ final class HeroDeletionFlowTests: XCTestCase {
         )
     }
 
+    /// The swipe row's own tap (it closes a swiped row) once took every tap, so
+    /// a tap on a hero row no longer opened the hero.
+    @MainActor
+    func testATapOnTheHeroRowStillOpensTheHero() {
+        continueAfterFailure = false
+        let app = UITest.launch()
+        let adventure = app.button(containing: UITest.adventureName)
+        XCTAssertTrue(adventure.waitForExistence(timeout: UITest.timeout), "Adventure not in the sidebar")
+        adventure.tap()
+
+        let row = app.button(containing: Self.heroName)
+        XCTAssertTrue(row.waitForExistence(timeout: UITest.timeout), "Hero not in the sidebar")
+        XCTAssertFalse(row.isSelected, "The hero is still open after the adventure was tapped")
+        row.tap()
+
+        let selected = NSPredicate(format: "isSelected == true")
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: row)], timeout: UITest.timeout),
+            .completed,
+            "A tap on the hero row did not open the hero"
+        )
+    }
+
     @MainActor
     func testCancelKeepsTheHero() {
         continueAfterFailure = false

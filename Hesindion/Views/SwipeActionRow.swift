@@ -70,6 +70,19 @@ struct SwipeActionRow<Content: View>: View {
                 .background(actions.last?.color ?? .gray)
 
                 foregroundContent
+                    // Only a swiped row takes a tap, to close it. A tap
+                    // modifier on the whole row took every tap, so a parent
+                    // `Button` (the sidebar's `sidebarRow`) never got one.
+                    .overlay {
+                        if settled {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    close()
+                                    settled = false
+                                }
+                        }
+                    }
                     .offset(x: offset)
                     .simultaneousGesture(
                         DragGesture(minimumDistance: 16)
@@ -106,12 +119,6 @@ struct SwipeActionRow<Content: View>: View {
             }
             .clipShape(Rectangle().inset(by: isClipped ? 0 : -100))
             .contentShape(Rectangle())
-            .onTapGesture {
-                if settled {
-                    close()
-                    settled = false
-                }
-            }
         }
     }
 
