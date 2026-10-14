@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **An adventure and one day of its weather can be deleted** (issue #54). Nothing in the app deleted either before. An adventure row in the sidebar swipes like a hero row, and the trash opens the app's own modal ("Die Sieben Gezeichneten löschen?"). To confirm deletes the adventure with all its weather; the heroes stay. A day in the weather timeline swipes the same way. When the deleted day was the newest, the adventure's date moves back to the day after the newest day left, so the next "Wetter hinzufügen" continues without a gap. When no day is left, the date stays. A day that no longer follows the day before it shows the time-jump divider.
+
+### Fixed
+
+- **A tap anywhere on a weather day opens its edit sheet.** The row had no fill, so a tap between its lines or right of its text hit nothing, and only a tap on the text opened the day.
+
 ## [0.6.0-rc.3] - 2026-10-10
 
 ### Fixed

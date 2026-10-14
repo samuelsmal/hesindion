@@ -37,4 +37,26 @@ final class Adventure {
         self.currentMonthRaw = startDate.month.rawValue
         self.currentYear = startDate.year
     }
+
+    /// Deletes one day of weather (issue #54).
+    ///
+    /// When the day was the newest, the current date moves back to the day after
+    /// the newest day left, so the next stretch continues without a gap. When no
+    /// day is left, the current date stays. The day after the deleted one is a
+    /// time jump exactly when it no longer follows the day before it.
+    func deleteWeatherDay(_ weatherDay: WeatherDay) {
+        let wasNewest = weatherDays.allSatisfy { $0.date.ordinal() <= weatherDay.date.ordinal() }
+        // Out of the array first: the context's delete reaches the inverse only on save.
+        weatherDays.removeAll { $0.persistentModelID == weatherDay.persistentModelID }
+        modelContext?.delete(weatherDay)
+
+        let remaining = weatherDays.sorted { $0.date.ordinal() < $1.date.ordinal() }
+        if wasNewest, let newest = remaining.last {
+            currentDate = newest.date.next()
+        }
+        if let successor = remaining.first(where: { $0.date.ordinal() > weatherDay.date.ordinal() }) {
+            let predecessor = remaining.last { $0.date.ordinal() < successor.date.ordinal() }
+            successor.isTimeJump = StretchPlanner.isGap(start: successor.date, after: predecessor?.date)
+        }
+    }
 }

@@ -8,6 +8,8 @@ struct AdventureDetailView: View {
     @State private var isShowingAddStretch = false
     @State private var isShowingRules = false
     @State private var editingDay: WeatherDay?
+    /// Set by a day row's swipe; the delete waits for the confirmation.
+    @State private var dayPendingDeletion: WeatherDay?
 
     private var sortedWeatherDays: [WeatherDay] {
         adventure.weatherDays.sorted { a, b in
@@ -49,6 +51,11 @@ struct AdventureDetailView: View {
         .sheet(item: $editingDay) { day in
             NavigationStack {
                 DayEditSheet(weatherDay: day)
+            }
+        }
+        .overlay {
+            if let day = dayPendingDeletion {
+                dayDeletionModal(day)
             }
         }
     }
@@ -185,8 +192,18 @@ struct AdventureDetailView: View {
                     if weatherDay.isTimeJump {
                         timeJumpDivider()
                     }
-                    Button { editingDay = weatherDay } label: { WeatherDayRow(weatherDay: weatherDay) }
-                        .buttonStyle(.dsaMotion)
+                    SwipeActionRow(actions: [
+                        SwipeAction(icon: "trash", color: .red) { dayPendingDeletion = weatherDay }
+                    ]) {
+                        // A tap, not a `Button`: the swipe row's drag runs beside the
+                        // child's gestures, and a button also fired at the end of a
+                        // swipe, so the edit sheet opened over the delete modal. A tap
+                        // gesture fails as soon as the finger moves.
+                        WeatherDayRow(weatherDay: weatherDay)
+                            .onTapGesture { editingDay = weatherDay }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityAddTraits(.isButton)
+                    }
                 }
             }
             .dsaBox(.raised, fill: Color(UIColor.systemBackground))
@@ -204,6 +221,24 @@ struct AdventureDetailView: View {
             Rectangle().fill(Color.groupAdventure).frame(height: 1)
         }
         .padding(.vertical, 8)
+    }
+
+    private func dayDeletionModal(_ day: WeatherDay) -> some View {
+        DSAModal(title: String(format: L("weatherDayDelete.title"), day.date.formatted()), accent: Color.groupAdventure) {
+            Text(L("weatherDayDelete.message"))
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(title: L("delete"), accent: Color.groupAdventure, identifier: "weatherDayDelete.confirm") {
+                adventure.deleteWeatherDay(day)
+                dayPendingDeletion = nil
+            }
+
+            DSAModalButton(title: L("cancel"), accent: Color.groupAdventure, filled: false,
+                           identifier: "weatherDayDelete.cancel") {
+                dayPendingDeletion = nil
+            }
+        }
     }
 
     // MARK: - Settings

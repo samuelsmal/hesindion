@@ -41,6 +41,9 @@ struct WeatherDayRow: View {
         }
         .padding(DSALayout.contentPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
+        // The whole row takes the tap, not only its text: the row has no fill,
+        // so a tap between the lines or right of them hit nothing.
+        .contentShape(Rectangle())
         // Rows are separated, not boxed. Each used to draw its own 2pt rectangle
         // and then pull the next one up by exactly that much to collapse the
         // seam — which still left a heavy black band between every day. One

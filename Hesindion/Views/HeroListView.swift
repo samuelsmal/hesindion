@@ -26,6 +26,8 @@ struct HeroListView: View {
     @State private var isSidebarVisible = true
     /// Set by a hero row's swipe; the delete waits for the confirmation.
     @State private var heroPendingDeletion: Hero?
+    /// Set by an adventure row's swipe; the delete waits for the confirmation.
+    @State private var adventurePendingDeletion: Adventure?
 
     private var appVersion: String { AppVersion.display }
 
@@ -75,6 +77,11 @@ struct HeroListView: View {
         .overlay {
             if let hero = heroPendingDeletion {
                 heroDeletionModal(hero)
+            }
+        }
+        .overlay {
+            if let adventure = adventurePendingDeletion {
+                adventureDeletionModal(adventure)
             }
         }
         .sheet(isPresented: $isShowingAdventureCreation) {
@@ -233,16 +240,20 @@ struct HeroListView: View {
                 .listRowBackground(Color(UIColor.systemBackground))
 
                 ForEach(adventures, id: \.persistentModelID) { adventure in
-                    HStack(spacing: 12) {
-                        Image(systemName: "cloud.sun")
-                            .font(.system(size: 16))
-                            .frame(width: 36, height: 36)
-                            .background(Color.groupAdventure.opacity(0.2))
-                            .clipShape(Rectangle())
-                            .dsaBox(.flush)
-                        Text(adventure.name)
-                            .font(.dsaHeading(.title3))
-                        Spacer(minLength: 0)
+                    SwipeActionRow(actions: [
+                        SwipeAction(icon: "trash", color: .red) { adventurePendingDeletion = adventure }
+                    ]) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "cloud.sun")
+                                .font(.system(size: 16))
+                                .frame(width: 36, height: 36)
+                                .background(Color.groupAdventure.opacity(0.2))
+                                .clipShape(Rectangle())
+                                .dsaBox(.flush)
+                            Text(adventure.name)
+                                .font(.dsaHeading(.title3))
+                            Spacer(minLength: 0)
+                        }
                     }
                     .sidebarRow(
                         accent: .groupAdventure,
@@ -353,6 +364,31 @@ struct HeroListView: View {
             DSAModalButton(title: L("cancel"), accent: Color.groupCombat, filled: false,
                            identifier: "heroDelete.cancel") {
                 heroPendingDeletion = nil
+            }
+        }
+    }
+
+    // MARK: - Deleting an adventure
+
+    /// The weather days cascade with the adventure. The heroes stay: their link
+    /// to it (`Hero.activeAdventure`) becomes nil.
+    private func adventureDeletionModal(_ adventure: Adventure) -> some View {
+        DSAModal(title: String(format: L("adventureDelete.title"), adventure.name), accent: Color.groupAdventure) {
+            Text(L("adventureDelete.message"))
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(title: L("delete"), accent: Color.groupAdventure, identifier: "adventureDelete.confirm") {
+                if selection == .adventure(adventure.persistentModelID) {
+                    selection = nil
+                }
+                modelContext.delete(adventure)
+                adventurePendingDeletion = nil
+            }
+
+            DSAModalButton(title: L("cancel"), accent: Color.groupAdventure, filled: false,
+                           identifier: "adventureDelete.cancel") {
+                adventurePendingDeletion = nil
             }
         }
     }
