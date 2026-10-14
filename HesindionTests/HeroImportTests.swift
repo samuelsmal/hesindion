@@ -35,7 +35,7 @@ struct HeroImportTests {
         let hero = try #require(heroes.first)
 
         // Identity
-        #expect(hero.name == "Boronmir Siebenfeld von Greifenfurt (2026-09-24)")
+        #expect(hero.name == "Boronmir Siebenfeld von Greifenfurt")
         #expect(hero.avatar != nil)
 
         // Attributes
