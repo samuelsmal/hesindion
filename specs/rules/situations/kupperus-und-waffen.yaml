@@ -148,7 +148,7 @@ situations:
         pointer for readers), and no input states a mount's attack row, so the export's numbers
         cannot override SK3's in a situation; that needs an engine input (a stated
         `mount.attacks`, as a stated base overrides a derive). (2) Kupperus's own values in the
-        2026-09-24 export (`Boronmir Siebenfeld von Greifenfurt (2026-09-24).json`: Niederreiten
+        2026-09-24 export (`PetImportTests.currentKupperus`: Niederreiten
         AT 19, TP 2W6+7; Tritt AT 19, TP 1W6+8; KK 28) are not the breed's (AT 15, TP 2W6+6; KK
         25), which this file and its `heroFile` still use. Moving the file to them changes
         18.1's AT and TP and MS2's Kraftakt −3 (KK 28: −⌈8/2⌉ = −4) — an expectation change

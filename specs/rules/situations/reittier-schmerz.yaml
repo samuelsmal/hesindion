@@ -1,6 +1,7 @@
 # Issue #48 — a mount in pain. DRAFT FORMAT — see ../README.md.
 # Each situation's subject is the mount (`sheet: { subject: creature }`), Kupperus by his
-# 2026-09-24 export (specs/heroes/Boronmir Siebenfeld von Greifenfurt (2026-09-24).json, Kupperus's pet fields): LeP 137, GS 15 (Schnell), VW 14,
+# 2026-09-24 export (Kupperus's pet fields, kept as PetImportTests.currentKupperus in
+# HesindionTests/PetImportTests.swift): LeP 137, GS 15 (Schnell), VW 14,
 # Tritt AT 19. His breed prints "Schmerz +1 bei: 49 LeP, 33 LeP, 16 LeP, 5 LeP oder weniger" for
 # 75 LeP; ruling svellttaler-kaltblut.svellttaler-schmerz-thresholds scales them to 137:
 # ≤ 89.5, ≤ 60.3, ≤ 29.2, and ≤ 5 unscaled.
