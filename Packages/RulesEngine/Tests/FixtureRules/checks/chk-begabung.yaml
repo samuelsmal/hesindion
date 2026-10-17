@@ -1,0 +1,20 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: ADV_4's shape: a reroll of one die per check on the chosen Fertigkeit, not on a Doppel-20.
+id: chk-begabung
+name: Begabung
+kind: advantage
+options: sid
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: B1
+    text: Einen W20 neu würfeln.
+    effects:
+      - when: { check.onOption: true }
+        reroll: { die: { dice: any }, keep: better, max: 1, per: action }
+  - id: B5
+    text: Nicht bei Doppel-20.
+    effects:
+      - when: { check.twenties: { atLeast: 2 } }
+        forbid: { what: { line: chk-begabung.B1 } }
+        because: "Doppel-20: Begabung nicht erlaubt"

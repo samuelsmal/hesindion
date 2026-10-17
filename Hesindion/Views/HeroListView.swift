@@ -2,8 +2,6 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
-private let yamlType = UTType(importedAs: "public.yaml")
-
 enum SidebarSelection: Hashable {
     case rulebook
     case adventure(PersistentIdentifier)
@@ -13,6 +11,7 @@ enum SidebarSelection: Hashable {
 
 struct HeroListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Query(sort: \Hero.name) private var heroes: [Hero]
     @Query(sort: \Adventure.createdAt, order: .reverse) private var adventures: [Adventure]
 
@@ -21,32 +20,19 @@ struct HeroListView: View {
     @State private var isShowingFilePicker = false
     @State private var importError: String?
     @State private var isShowingError = false
+    @State private var importResult: HeroImportResult?
     @State private var isShowingChangelog = false
     @State private var isShowingAdventureCreation = false
+    @State private var isSidebarVisible = true
+    /// Set by a hero row's swipe; the delete waits for the confirmation.
+    @State private var heroPendingDeletion: Hero?
+    /// Set by an adventure row's swipe; the delete waits for the confirmation.
+    @State private var adventurePendingDeletion: Adventure?
 
-    private var appVersion: String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "v\(version) (\(build))"
-    }
+    private var appVersion: String { AppVersion.display }
 
     var body: some View {
-        NavigationSplitView {
-            sidebarContent
-                .safeAreaInset(edge: .bottom) {
-                    sidebarFooter
-                }
-                .navigationTitle("Hesindion")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        Text("Hesindion")
-                            .font(.system(.title2, design: .default, weight: .black))
-                    }
-                }
-        } detail: {
-            detailContent
-        }
+        navigationLayout
         .onChange(of: selection) { oldValue, newValue in
             if case .rule = newValue, oldValue != nil {
                 previousSelection = oldValue
@@ -54,7 +40,7 @@ struct HeroListView: View {
         }
         .fileImporter(
             isPresented: $isShowingFilePicker,
-            allowedContentTypes: [.json, yamlType]
+            allowedContentTypes: [.json]
         ) { result in
             switch result {
             case .success(let url):
@@ -71,6 +57,33 @@ struct HeroListView: View {
         } message: {
             Text(importError ?? L("unknownError"))
         }
+        .alert(
+            importResultTitle,
+            isPresented: Binding(
+                get: { importResult != nil && importResult?.problems.isEmpty == true },
+                set: { if !$0 { importResult = nil } }
+            )
+        ) {
+            Button(L("ok"), role: .cancel) {}
+        } message: {
+            Text(importResultMessage)
+        }
+        .overlay {
+            if let result = importResult, !result.problems.isEmpty {
+                ImportProblemsModal(title: importResultTitle, message: importResultMessage,
+                                    problems: result.problems) { importResult = nil }
+            }
+        }
+        .overlay {
+            if let hero = heroPendingDeletion {
+                heroDeletionModal(hero)
+            }
+        }
+        .overlay {
+            if let adventure = adventurePendingDeletion {
+                adventureDeletionModal(adventure)
+            }
+        }
         .sheet(isPresented: $isShowingAdventureCreation) {
             NavigationStack {
                 AdventureCreationSheet()
@@ -80,6 +93,110 @@ struct HeroListView: View {
             if DebugLaunch.loadDefault, selection == nil, let first = heroes.first {
                 selection = .hero(first.persistentModelID)
             }
+            #if DEBUG
+            if let url = UITestSeed.reimportFixtureURL {
+                handleURL(url)
+            }
+            #endif
+        }
+    }
+
+    // MARK: - Layout
+
+    /// iPad draws its own two columns; iPhone keeps `NavigationSplitView`.
+    ///
+    /// On iOS 26 the split view's sidebar is a floating glass panel: round
+    /// corners, a system toggle, and the detail pane showing through behind it
+    /// — none of which a split-view setting turns off, and all of which the
+    /// design language rules out. In compact width the split view is a plain
+    /// list with a push, so there it stays.
+    @ViewBuilder
+    private var navigationLayout: some View {
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                if isSidebarVisible {
+                    sidebarColumn
+                        .frame(width: 320)
+                        .transition(.move(edge: .leading))
+                } else {
+                    sidebarRail
+                }
+                detailContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .background(Color(UIColor.systemBackground))
+        } else {
+            NavigationSplitView {
+                sidebarContent
+                    .safeAreaInset(edge: .bottom) {
+                        sidebarFooter
+                    }
+                    .navigationTitle("Hesindion")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Hesindion")
+                                .font(.dsaHeading(.title2))
+                        }
+                    }
+            } detail: {
+                detailContent
+            }
+        }
+    }
+
+    /// The iPad sidebar: a dark header bar with the app name and the toggle,
+    /// the list, the footer, and a border on the right edge.
+    private var sidebarColumn: some View {
+        VStack(spacing: 0) {
+            sidebarHeader {
+                Text("Hesindion")
+                    .font(.dsaHeading(.title2))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 0)
+            }
+            sidebarContent
+            sidebarFooter
+        }
+        .columnEdge()
+    }
+
+    /// The hidden sidebar leaves a rail with the toggle, so the way back is
+    /// always in the same place.
+    private var sidebarRail: some View {
+        VStack(spacing: 0) {
+            sidebarHeader { EmptyView() }
+            Spacer(minLength: 0)
+        }
+        .frame(width: 60)
+        .background(Color(UIColor.systemBackground))
+        .columnEdge()
+    }
+
+    private func sidebarHeader<Title: View>(@ViewBuilder title: () -> Title) -> some View {
+        HStack(spacing: 12) {
+            title()
+            Button {
+                withAnimation(DSAAnimation.standard) { isSidebarVisible.toggle() }
+            } label: {
+                Image(systemName: "sidebar.left")
+                    .font(.dsaBody(.title3))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.dsaMotion)
+            .accessibilityLabel(L(isSidebarVisible ? "sidebar.hide" : "sidebar.show"))
+            // The name the split view's own toggle had, which
+            // `DesignSystemScreenshotTests` taps to collapse the sidebar.
+            .accessibilityIdentifier("ToggleSidebar")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, DSALayout.headerVerticalPadding)
+        .frame(maxWidth: .infinity)
+        .background(Color.dsaDark.ignoresSafeArea(edges: .top))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.dsaBorder)
+                .frame(height: DSALayout.border)
         }
     }
 
@@ -87,23 +204,20 @@ struct HeroListView: View {
 
     @ViewBuilder
     private var sidebarContent: some View {
-        List(selection: $selection) {
+        List {
             Section {
                 HStack(spacing: 8) {
                     Image(systemName: "book.closed")
                     Text(L("rulebook"))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
+                    Spacer(minLength: 0)
                 }
-                    .font(.system(.title3, design: .default, weight: .bold))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.rulebook)
-                    .listRowBackground(
-                        selection == .rulebook
-                            ? Color.groupRulebook.opacity(0.35)
-                            : Color(UIColor.systemBackground)
-                    )
+                    .font(.dsaHeading(.title3))
+                    .sidebarRow(
+                        accent: .groupRulebook,
+                        isSelected: selection == .rulebook
+                    ) { selection = .rulebook }
             } header: {
                 sidebarSectionHeader(L("rulebook"), color: .groupRulebook)
             }
@@ -113,41 +227,38 @@ struct HeroListView: View {
                     isShowingAdventureCreation = true
                 } label: {
                     Label(L("newAdventure"), systemImage: "plus")
-                        .font(.system(.body, design: .default, weight: .bold))
+                        .font(.dsaHeading(.body))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.groupAdventure)
                         .foregroundStyle(.black)
-                        .overlay(
-                            Rectangle()
-                                .stroke(Color.dsaBorder, lineWidth: 3)
-                        )
+                        .dsaBox(.raised, fill: .groupAdventure)
                 }
-                .listRowInsets(EdgeInsets())
+                .buttonStyle(.dsaMotion)
+                // Room for the shadow: it draws outside the bounds and reserves
+                // no layout space, so a flush row would clip it (ADR-0008).
+                .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                 .listRowBackground(Color(UIColor.systemBackground))
 
                 ForEach(adventures, id: \.persistentModelID) { adventure in
-                    HStack(spacing: 12) {
-                        Image(systemName: "cloud.sun")
-                            .font(.system(size: 16))
-                            .frame(width: 36, height: 36)
-                            .background(Color.groupAdventure.opacity(0.2))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.dsaBorder, lineWidth: 2)
-                            )
-                        Text(adventure.name)
-                            .font(.system(.title3, design: .default, weight: .bold))
+                    SwipeActionRow(actions: [
+                        SwipeAction(icon: "trash", color: .red) { adventurePendingDeletion = adventure }
+                    ]) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "cloud.sun")
+                                .font(.system(size: 16))
+                                .frame(width: 36, height: 36)
+                                .background(Color.groupAdventure.opacity(0.2))
+                                .clipShape(Rectangle())
+                                .dsaBox(.flush)
+                            Text(adventure.name)
+                                .font(.dsaHeading(.title3))
+                            Spacer(minLength: 0)
+                        }
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .tag(SidebarSelection.adventure(adventure.persistentModelID))
-                    .listRowBackground(
-                        selection == .adventure(adventure.persistentModelID)
-                            ? Color.groupAdventure.opacity(0.35)
-                            : Color(UIColor.systemBackground)
-                    )
+                    .sidebarRow(
+                        accent: .groupAdventure,
+                        isSelected: selection == .adventure(adventure.persistentModelID)
+                    ) { selection = .adventure(adventure.persistentModelID) }
                 }
             } header: {
                 sidebarSectionHeader(L("adventures"), color: .groupAdventure)
@@ -155,7 +266,8 @@ struct HeroListView: View {
 
             Section {
                 importButton
-                    .listRowInsets(EdgeInsets())
+                    // Room for the shadow — see the newAdventure button above.
+                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 8, trailing: 16))
                     .listRowBackground(Color(UIColor.systemBackground))
 
                 if heroes.isEmpty {
@@ -164,19 +276,22 @@ struct HeroListView: View {
                         .listRowBackground(Color(UIColor.systemBackground))
                 } else {
                     ForEach(heroes, id: \.persistentModelID) { hero in
-                        HStack(spacing: 12) {
-                            heroAvatar(hero)
-                            Text(hero.name)
-                                .font(.system(.title3, design: .default, weight: .bold))
+                        SwipeActionRow(actions: [
+                            SwipeAction(icon: "trash", color: .red) { heroPendingDeletion = hero }
+                        ]) {
+                            HStack(spacing: 12) {
+                                heroAvatar(hero)
+                                Text(hero.name)
+                                    .font(.dsaHeading(.title3))
+                                Spacer(minLength: 0)
+                            }
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
-                        .tag(SidebarSelection.hero(hero.persistentModelID))
-                        .listRowBackground(
-                                selection == .hero(hero.persistentModelID)
-                                    ? HeroColorScheme.scheme(for: hero).accentColor.opacity(0.35)
-                                    : Color(UIColor.systemBackground)
-                            )
+                        // Each hero keeps its own profession accent, so the
+                        // sidebar carries the same identity the detail pane does.
+                        .sidebarRow(
+                            accent: HeroColorScheme.scheme(for: hero).accentColor,
+                            isSelected: selection == .hero(hero.persistentModelID)
+                        ) { selection = .hero(hero.persistentModelID) }
                     }
                 }
             } header: {
@@ -192,9 +307,9 @@ struct HeroListView: View {
         HStack(spacing: 0) {
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
             Text(title)
-                .font(.system(.subheadline, weight: .black))
+                .font(.dsaHeading(.subheadline))
                 .textCase(.uppercase)
                 .foregroundStyle(color)
                 .lineLimit(1)
@@ -202,7 +317,7 @@ struct HeroListView: View {
                 .padding(.horizontal, 8)
             Rectangle()
                 .fill(color)
-                .frame(height: DSALayout.secondaryBorder)
+                .frame(height: DSALayout.border)
         }
         .padding(.vertical, 4)
     }
@@ -215,21 +330,66 @@ struct HeroListView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 16))
                 .frame(width: size, height: size)
                 .background(Color.groupPersonalData.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.dsaBorder, lineWidth: 2)
-                )
+                .clipShape(Rectangle())
+                .dsaBox(.flush)
+        }
+    }
+
+    // MARK: - Deleting a hero
+
+    /// The app's own modal, not `.confirmationDialog` (see `DSAModal`). Every
+    /// relationship on `Hero` cascades, so the delete takes the log and the
+    /// notes with it.
+    private func heroDeletionModal(_ hero: Hero) -> some View {
+        DSAModal(title: String(format: L("heroDelete.title"), hero.name), accent: Color.groupCombat) {
+            Text(L("heroDelete.message"))
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(title: L("delete"), accent: Color.groupCombat, identifier: "heroDelete.confirm") {
+                if selection == .hero(hero.persistentModelID) {
+                    selection = nil
+                }
+                modelContext.delete(hero)
+                heroPendingDeletion = nil
+            }
+
+            DSAModalButton(title: L("cancel"), accent: Color.groupCombat, filled: false,
+                           identifier: "heroDelete.cancel") {
+                heroPendingDeletion = nil
+            }
+        }
+    }
+
+    // MARK: - Deleting an adventure
+
+    /// The weather days cascade with the adventure. The heroes stay: their link
+    /// to it (`Hero.activeAdventure`) becomes nil.
+    private func adventureDeletionModal(_ adventure: Adventure) -> some View {
+        DSAModal(title: String(format: L("adventureDelete.title"), adventure.name), accent: Color.groupAdventure) {
+            Text(L("adventureDelete.message"))
+                .font(.dsaBody(.subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            DSAModalButton(title: L("delete"), accent: Color.groupAdventure, identifier: "adventureDelete.confirm") {
+                if selection == .adventure(adventure.persistentModelID) {
+                    selection = nil
+                }
+                modelContext.delete(adventure)
+                adventurePendingDeletion = nil
+            }
+
+            DSAModalButton(title: L("cancel"), accent: Color.groupAdventure, filled: false,
+                           identifier: "adventureDelete.cancel") {
+                adventurePendingDeletion = nil
+            }
         }
     }
 
@@ -274,16 +434,13 @@ struct HeroListView: View {
             isShowingFilePicker = true
         } label: {
             Label(L("importHero"), systemImage: "square.and.arrow.down")
-                .font(.system(.body, design: .default, weight: .bold))
+                .font(.dsaHeading(.body))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.groupPersonalData)
                 .foregroundStyle(.black)
-                .overlay(
-                    Rectangle()
-                        .stroke(Color.dsaBorder, lineWidth: 3)
-                )
+                .dsaBox(.raised, fill: .groupPersonalData)
         }
+        .buttonStyle(.dsaMotion)
     }
 
     // MARK: - Sidebar Footer
@@ -291,14 +448,14 @@ struct HeroListView: View {
     private var sidebarFooter: some View {
         VStack(spacing: 4) {
             Text(appVersion)
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsaMono(.caption, emphasis: true))
                 .foregroundStyle(.tertiary)
 
             Button {
                 isShowingChangelog = true
             } label: {
                 Text("Changelog")
-                    .font(.system(.caption2))
+                    .font(.dsaBody(.caption2))
                     .foregroundStyle(.quaternary)
             }
             .sheet(isPresented: $isShowingChangelog) {
@@ -323,15 +480,40 @@ struct HeroListView: View {
 
     private func handleURL(_ url: URL) {
         do {
-            try OptolithImportService().importHero(from: url, context: modelContext)
+            importResult = try OptolithImportService().importHero(from: url, context: modelContext)
         } catch {
             showError(error.localizedDescription)
         }
     }
 
+    /// A re-import replaces the hero with the same name in place, so without
+    /// this the player could not tell it from adding a second hero.
+    private var importResultTitle: String {
+        importResult?.kind == .updated ? L("import.updated.title") : L("import.created.title")
+    }
+
+    private var importResultMessage: String {
+        guard let importResult else { return "" }
+        let key = importResult.kind == .updated ? "import.updated.message" : "import.created.message"
+        return String(format: L(key), importResult.heroName)
+    }
+
     private func showError(_ message: String) {
         importError = message
         isShowingError = true
+    }
+}
+
+private extension View {
+    /// The border between the sidebar (or its rail) and the detail, down the
+    /// whole height of the screen.
+    func columnEdge() -> some View {
+        overlay(alignment: .trailing) {
+            Rectangle()
+                .fill(Color.dsaBorder)
+                .frame(width: DSALayout.border)
+                .ignoresSafeArea()
+        }
     }
 }
 

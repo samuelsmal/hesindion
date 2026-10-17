@@ -1,0 +1,92 @@
+# Rulings that apply to more than one rule. A ruling about a single rule lives in that
+# rule's file instead. Effects that rest on a ruling name it: `ruling: <id>`.
+# DRAFT FORMAT — see ./README.md.
+
+- id: round-up
+  status: decided
+  question: >
+    Several pages halve a value ("die halbe GS") without saying how to round. Up or down?
+  answer: >
+    Round up, as ADR-0006 already decides for every DSA 5 fraction the rules do not settle
+    otherwise. Applies to both Sturmangriffe (SA_62 on foot, the mounted order in Reiterkampf).
+  decided: { by: "@samuelsmal", date: 2026-09-23 }
+  see: [docs/adr/0006-derived-value-rounding-and-repair.md]
+  appliesTo: [SA_62.ST2, reiterkampf.RK14, regeneration.R6]
+
+- id: kampfstil-techniques
+  status: decided
+  question: >
+    A Kampfstil lists combat techniques, sometimes narrowed to weapons. Does the style's effect
+    apply only while fighting with one of them?
+  answer: >
+    Only while the hero fights with a listed technique (and weapon, where narrowed).
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  appliesTo: [SA_661.GS1, SA_661.GS2, SA_661.GS3, SA_923.VS1, SA_923.VS2]
+  notes: >
+    A style is a way of fighting with particular weapons; applying it with any weapon would make
+    the narrowed lists meaningless. Golgariten-Stil applies with a Rabenschnabel, or a Großschild
+    from a mount: a Golgarite with a Schwert gets AT +2, PA +2 (the vorteilhafte Position alone),
+    not AT +4, PA +3 (reiterkampf 5.7). Vinsalt-Stil applies with an Armbrust, Fechtwaffe or
+    Zweihandschwert: with a Schwert the steps stay −3 (mehrfache-verteidigung V8). The catalog
+    already gates both styles this way. Every other Kampfstil is gated by its own list when it
+    gets a rule file.
+
+- id: tiered-manoeuvre-stufe
+  status: decided
+  question: >
+    A hero with a manoeuvre at Stufe III (Finte, Wuchtschlag): may they announce it at a lower
+    Stufe for a single attack?
+  answer: >
+    Any Stufe up to the owned one, chosen per attack.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  appliesTo: [SA_48.F1, SA_67.W1]
+  notes: >
+    The trade (AT for effect) is the decision the manoeuvre offers; forcing the top Stufe would
+    make a higher Stufe a handicap against strong defenders. Encoded as one offer per owned Stufe,
+    `offer: { choice: finte, options: [1, …, level] }` (gated on `level`), read as the player fact
+    `choice.finte` whose value is the Stufe announced; the effects count `per: choice.finte`
+    (SA_48.F1, SA_67.W1). The app offers every Wuchtschlag Stufe already, but only
+    the highest Finte Stufe (CombatAttackViews.availableManeuvers offers hero.finteTier): Finte
+    gains Stufe I/II rows (finte 8.3).
+
+- id: manoeuvre-combination
+  status: decided
+  question: >
+    Which manoeuvres can be combined on one attack: a Basismanöver with a Spezialmanöver
+    (Wuchtschlag + Sturmangriff)? Two Basismanöver (Finte + Wuchtschlag)?
+  answer: >
+    At most one Basismanöver and one Spezialmanöver per action, minus the exclusions a page
+    names (option a). The rule page says so (kampfsonderfertigkeiten.KS3–KS5). The UI must show
+    each manoeuvre's kind (Basismanöver, Spezialmanöver; passive SF as "wirkt immer"), and tell
+    the player when a combination is excluded, and why, instead of hiding it.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  see: [https://dsa.ulisses-regelwiki.de/grundregeln/kampfsonderfertigkeiten/passive-basis-und-spezialmanoever.html]
+  appliesTo: [kampfsonderfertigkeiten.KS5, SA_62.ST4, SA_59.SS1, SA_172.U3]
+  notes: >
+    The app allows exactly one manoeuvre per attack today (CombatAttackViews.selectedManeuver, a
+    single CombatManeuver). Finte + Wuchtschlag and Unterlaufen + Finte stay excluded (two
+    Basismanöver, KS3); Wuchtschlag + Sturmangriff, Wuchtschlag + Schildspalter and Wuchtschlag
+    + Vorstoß combine.
+
+- id: sf-technique-lists
+  status: decided
+  question: >
+    Every combat SF and manoeuvre lists "Kampftechniken" (Finte, Wuchtschlag, Sturmangriff,
+    Unterlaufen, Beidhändiger Kampf, Verteidigungshaltung, …). May its effect be used only while
+    the hero fights with a weapon of a listed technique, or does the list only say who may
+    learn it?
+  answer: >
+    Only with a listed technique; Raufen means unarmed. Not offered otherwise.
+  decided: { by: "@samuelsmal", date: 2026-09-24 }
+  appliesTo: [kampfsonderfertigkeiten.KS6, SA_48.F1, SA_48.F3, SA_67.W1, SA_67.W3, SA_62.ST1, SA_62.ST5, SA_66.V1, SA_66.V6, SA_59.SS1, SA_59.SS7, SA_172.U2, SA_172.U6, SA_42.BH1, SA_42.BH2, SA_65.VH2]
+  notes: >
+    kampfsonderfertigkeiten.KS6 contrasts „alle" (Einsatz independent of a technique) with a
+    list, and the Anmerkung on Finte, Beidhändiger Kampf and Verteidigungshaltung that later
+    books' techniques are added to the lists only matters if they restrict use. Each SF file
+    carries its list as `requires: loadout…technique`, and the offer checks the weapon in hand:
+    no Finte with a Morgenstern (finte 8.5), no Wuchtschlag or Sturmangriff with a Dolch
+    (wuchtschlag 9.5, sturmangriff 10.2), no Vorstoß with the Großschild, no Schildspalter with
+    a Langschwert (boronmir-sf 14.4, 14.10). An SF marked „alle" (SA_152, SA_40) is not gated.
+    The app checks no technique for any SF or manoeuvre today; the catalog note on SA_67 holds
+    that back on purpose until the loadout can name Raufen (issue #14), which this ruling now
+    needs. Kampfstile follow the same answer (kampfstil-techniques).

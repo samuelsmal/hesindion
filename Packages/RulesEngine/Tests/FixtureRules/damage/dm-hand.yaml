@@ -1,0 +1,17 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32: trefferzonen.TZ8's arm Wundeffekt reads what the hit hand holds (`hit.heldInHand`).
+id: dm-hand
+name: Hand
+kind: core
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: H1
+    text: Was die Hand hält.
+    effects:
+      - when: { hit.heldInHand: weapon }
+        add: { to: at, value: -1 }
+      - when: { hit.heldInHand: shield }
+        add: { to: at, value: -2 }
+      - when: { hit.heldInHand: other }
+        add: { to: at, value: -3 }

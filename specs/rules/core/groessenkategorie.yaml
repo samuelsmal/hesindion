@@ -1,0 +1,94 @@
+# DRAFT FORMAT — see ../README.md.
+id: groessenkategorie
+name: Größenkategorie
+kind: core
+catalogId: GRW_groessenkategorie
+source:
+  url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/groessenkategorie.html
+  book: Regelwerk
+  page: 239
+  checked: 2026-09-27
+  hash: sha256:237ef9b12535fae5699e27e64568d59da9fb9e0ab6bc8488f518fd4cb5c481e4
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+# Also Kodex des Schwertes p. 76. A melee rule. The ranged target-size modifier is a separate
+# rule (fernkampf.zielgroesse — not drafted; RangedModifiers.groesse in the app); the
+# Trefferzonen aiming penalty replaces this one (trefferzonen.TZ5, ruling
+# trefferzonen.zone-replaces-size).
+
+provides: { size: [winzig, klein, mittel, gross, riesig] }
+
+clauses:
+  - id: GK1
+    text: >
+      Jedes Wesen wird in eine der folgenden Größenkategorien eingeordnet: winzig, klein,
+      mittel, groß, riesig
+    none: >
+      defines the scale. The opponent's size is asked per interaction (OpponentProfile.size);
+      the hero is mittel unless the species says otherwise; a mount's size is the mount's
+      (Kupperus, a Svellttaler Kaltblut: groß — the pet data has no size field, only "size: 1.9",
+      the height in Schritt)
+
+  - id: GK2
+    text: >
+      Je nach Größe des Gegners gelten für einen Helden Modifikatoren auf Attacke oder
+      Einschränkungen auf die Wahl der Verteidigung.
+    none: >
+      says whose size counts — the opponent's: the target's when the hero attacks (GK3), the
+      attacker's when the hero defends (GK4). A rider is his own size, not the mount's; only the
+      mount's own attacks (Niederreiten, Tritt, Biss) come from a groß being. Its ruling
+      mounted-size sits on GK4's effects, the ones it decides.
+
+  - id: GK3
+    text: |
+      Winzig (Ratte, Kröte, Spatz): –4 AT
+      Klein (Rehkitz, Schaf, Ziege): +/–0 AT
+      Mittel (Mensch, Zwerg, Esel): +/–0 AT
+    effects:
+      - when: { opponent.size: winzig }
+        add: { to: at, value: -4 }
+        # trefferzonen.TZ5 replaces this line (the clause GK3): with a zone announced, it is
+        # dropped. The old `check: at` is the target.
+
+  - id: GK4
+    text: |
+      Groß (Oger, Troll, Rind): Nur Parade mit dem Schild oder Ausweichen zulässig
+      Riesig (Drache, Riese, Elefant): Nur Ausweichen zulässig
+    effects:
+      - when: { opponent.size: gross }
+        forbid: { what: { defence: weaponParry } }
+        because: gegen einen großen Gegner nur Parade mit dem Schild oder Ausweichen
+        ruling: mounted-size
+      - when: { opponent.size: riesig }
+        forbid: { what: { defence: [weaponParry, shieldParry] } }
+        because: gegen einen riesigen Gegner nur Ausweichen
+        ruling: mounted-size
+        # The old `side: opponent`: the opponent attacks and the hero defends, which the
+        # `defence` selector (the hero's pa) already says; the size is the attacker's.
+        # The forbidden defence is not offered, and the breakdown says why (GK4). Against a
+        # riesig attacker, mounted: the AW still carries reiterkampf.RK6's −2.
+      - when: { choice.order: [mountAttack, niederreiten], mount.size: gross }
+        forbid: { what: { defence: [opponent.weaponParry] } }
+        because: gegen einen großen Angreifer nur Parade mit dem Schild oder Ausweichen
+        ruling: mounted-size
+        # The mount's own attacks on the rider's order come from a groß being (ruling
+        # mounted-size; svellttaler-kaltblut.SK7 provides `mount.size`): the opponent may not
+        # parry them with a weapon. Niederreiten's own restriction (AW only) is reiterkampf.RK13's.
+
+rulings:
+  - id: mounted-size
+    status: decided
+    question: >
+      Does a rider count as the size of the mount? Boronmir on Kupperus (groß) attacks a
+      fighter on foot: may that fighter only shield-parry or dodge (GK4)? And when a mounted
+      opponent attacks Boronmir on foot, is he limited to his Großschild or AW?
+    answer: >
+      No: the rider is his own size; only the mount's own attacks (Niederreiten, Tritt, Biss) come
+      from a groß being.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [GK2, GK4]
+    notes: >
+      Reiterkampf gives the rider his edge another way — vorteilhafte Position against fighters on
+      foot (reiterkampf.RK2) — and restricts only the defence against the mount's Niederreiten
+      (RK13: AW only). No change in the app: the opponent's size is whatever the player picks on
+      the defence screen (CombatDefenseSetupView, SizeCategoryRules.allowedDefenses), mittel by
+      default for a mounted human; the defence screen may say so when the attacker is mounted.

@@ -1,0 +1,110 @@
+# Example 10 — Sturmangriff (SA_62), on foot. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# Already in reiterkampf.yaml and not repeated here:
+#   5.12 the plain case (GS 8: AT −2, TP +6)   5.13 rounding (GS 7: TP +6)
+#   5.14 in Platte (current GS 5: TP +5)       5.15 GS 3: not offered
+#   5.9  not offered on horseback (reiterkampf.RK3)
+# Open rulings named without a prefix live in ../rulings.yaml once added.
+# The announced Sturmangriff is `choice.sturmangriff` (the old `manoeuvre: sturmangriff`), the
+# run-up in Schritt `action.runUp` (the old `runUp`). "On a hit" / "on a miss" is
+# `action.attack: hit` / `miss`. GS: `gs` is the current GS, `gsNatural` the natural one (the old
+# `gs: { natural, current }`); unless a situation says otherwise both are 8. A TP formula is a
+# comment.
+
+hero: { values: { at: 14, pa: 8, aw: 7, gs: 8, gsNatural: 8 } }
+
+situations:
+
+  - id: "10.1"
+    name: Less than 4 Schritt run-up
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { action.runUp: 3 }
+    expect:
+      notOffered: [{ choice: sturmangriff, because: SA_62.ST1 }]
+    appToday: not offered at all on foot
+
+  - id: "10.2"
+    name: With a Dolch (Dolche — not on Sturmangriff's list)
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Dolch, weapon.technique: CT_3 }   # Dolche, as the name says (R61)
+    choose: { action.runUp: 4 }
+    expect:
+      notOffered: [{ choice: sturmangriff, because: SA_62.ST5, ruling: sf-technique-lists }]
+    appToday: same, but only because it is never offered on foot
+
+  - id: "10.3"
+    name: With Finte
+    hero: { abilities: { SA_62: 1, SA_48: 1 } }
+    loadout: { weapon: Schwert }
+    expect:
+      legal: { combinations: [{ choices: [sturmangriff, finte], allowed: false, because: SA_62.ST4 }] }
+
+  - id: "10.4"
+    name: The attack misses
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: miss }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
+      texts: [{ opponent: passierschlag, from: SA_62.ST3 }]     # on the miss
+    appToday: not offered at all on foot
+
+  - id: "10.5"
+    name: GS raised above the natural GS — the natural-GS cap binds
+    hero: { abilities: { SA_62: 1 }, values: { gs: 14, gsNatural: 8 } }   # current 14, natural 8
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
+    expect:
+      tp:                           # on the hit
+        total: 8
+        lines: [{ value: 8, from: SA_62.ST2, ruling: [SA_62.sturmangriff-gs, round-up] }]   # min(2 + ⌈14/2⌉, 10, 8)
+    note: 2 + 7 = 9 would be the uncapped bonus; the natural GS 8 caps it
+
+  - id: "10.6"
+    name: GS 20, natural 12 — the +10 cap binds
+    hero: { abilities: { SA_62: 1 }, values: { gs: 20, gsNatural: 12 } }  # current 20, natural 12
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
+    expect:
+      tp:                           # on the hit
+        total: 10
+        lines: [{ value: 10, from: SA_62.ST2 }]     # min(2 + ⌈20/2⌉, 10, 12)
+
+  - id: "10.7"
+    name: With Wuchtschlag I, GS 8
+    hero: { abilities: { SA_62: 1, SA_67: 1 } }
+    loadout: { weapon: Schwert }
+    choose: { choice.sturmangriff: true, choice.wuchtschlag: 1, action.runUp: 4, action.attack: hit }
+    expect:
+      # allowed: one Basis- and one Spezialmanöver pass KS3 and KS4 (KS5 is `none`, no origin)
+      legal: { combinations: [{ choices: [sturmangriff, wuchtschlag], allowed: true }] }
+      at: { total: -4, lines: [{ value: -2, from: SA_62.ST4 }, { value: -2, from: SA_67.W1 }] }
+      tp: { total: 8, lines: [{ value: 6, from: SA_62.ST2 }, { value: 2, from: SA_67.W1 }] }
+      # Near the cap, at GS 16,
+      # Sturmangriff alone is +10 and Wuchtschlag III's +6 adds on top: +16 (ruling
+      # SA_62.sturmangriff-cap-scope — the cap is on ST2's line only).
+    appToday: one manoeuvre per attack; SA_62 not offered on foot
+    conflict:
+      category: a
+      reason: >-
+        situations/boronmir-sf.yaml 14.7, 14.12, situations/sturmangriff.yaml 10.7,
+        situations/wuchtschlag.yaml 9.8 (Task 31): expect the combination `allowed: true,
+        from: kampfsonderfertigkeiten.KS5`. KS5 is a `none` clause (the sum of KS3's and
+        KS4's limits); an allowed combination has no refusing entry and no effect comes from
+        KS5, so nothing can carry its clause. `allowed: true` matches (one Basis- and one
+        Spezialmanöver pass KS3 and KS4).
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "10.8"
+    name: Unarmed (Raufen — on the list)
+    hero: { abilities: { SA_62: 1 } }
+    loadout: { weapon: null }
+    choose: { choice.sturmangriff: true, action.runUp: 4, action.attack: hit }
+    expect:
+      at: { total: -2, lines: [{ value: -2, from: SA_62.ST4 }] }
+      tp: { total: 6, lines: [{ value: 6, from: SA_62.ST2 }] }        # on the hit: 2 + ⌈8/2⌉

@@ -18,6 +18,8 @@ struct ContentView: View {
                 guard !didRepair else { return }
                 didRepair = true
                 DerivedValueRepair.repairAll(in: modelContext)
+                SheetInputBackfill.fillAll(in: modelContext)
+                PetSkillsRepair.repairAll(in: modelContext)
             }
     }
 }

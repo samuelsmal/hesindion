@@ -1,0 +1,79 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_41
+name: Belastungsgewöhnung
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+levels: 2
+passive: true                  # "(passiv)" on the page; kampfsonderfertigkeiten.KS2 lists it as "wirkt immer"
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Belastungsgew%C3%B6hnung.html
+  book: Regelwerk
+  page: 246
+  checked: 2026-09-26
+  hash: sha256:271a9935c020ef5d042872ab9bac15d0d52afe153133fa680e8d2c6d4cd3f424
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+
+clauses:
+  - id: G1
+    text: >
+      Diese SF sorgt dafür, dass für den Kämpfer die negativen Auswirkungen seiner Rüstung um
+      zwei Schritte pro Stufe der Belastungsgewöhnung in der BE-Spalte und der zusätzlichen
+      Abzüge der Rüstungen nach oben wandern. Eine Plattenrüstung würde also bei
+      Belastungsgewöhnung I nur noch behindern wie eine Kettenrüstung (was BE, GS und INI
+      angeht).
+    effects:
+      - useLevel: { rule: COND_1, lowerBy: level, min: 0 }
+        when: { belastung.source: armour }
+        ruling: table-shift
+        # `lowerBy: level` is SA_41's own Stufe: II lowers Belastung by 2 (plan Appendix A.2).
+        # FORMAT: modifies another rule's input (the level armour gives Belastung), not a check.
+        # The armour's extra GS/INI (ruestung-und-belastung.A1) is deliberately untouched.
+
+  - id: G2
+    text: Der RS bleibt selbstverständlich erhalten.
+    none: states that nothing else changes
+
+  - id: G3
+    text: "Voraussetzungen: Stufe I: KO 13; Stufe II, KO 15, Belastungsgewöhnung I"   # sic (comma after "Stufe II")
+    none: purchase prerequisite, not a rule at the table
+
+  - id: G4
+    text: "Kampftechniken: alle"
+    none: the SF is not tied to a Kampftechnik; nothing to gate on
+
+  - id: G5
+    text: "AP-Wert: Stufe I/II: 20/35 Abenteuerpunkte"
+    none: cost, not a rule at the table
+
+  - id: G6
+    text: |
+      Art | Rüstungsschutz | Belastung (Stufe) | zusätzliche Abzüge | Gewicht | Preis | Komplexität
+      Normale Kleidung, Felle oder nackt | 0 | 0 | keine | 1 Stn | unterschiedlich |
+      Schwere Kleidung, Winterkleidung | 1 | 0 | –1 GS, –1 INI | 2 Stn | unterschiedlich |
+      Stoffrüstung, Gambeson | 2 | 1 | keine | 3 Stn | 75 S | prim
+      Lederrüstung | 3 | 1 | –1 GS, –1 INI | 6 Stn | 150 S | einf
+      Kettenrüstung | 4 | 2 | keine | 12 Stn | 250 S | einf
+      Schuppenrüstung | 5 | 2 | –1 GS, –1 INI | 18 Stn | 400 S | einf
+      Plattenrüstung | 6 | 3 | keine | 25 Stn | 750 S | einf
+    none: >
+      the armour table repeated under the rule, with Gewicht, Preis and Komplexität; the rule
+      rows are ruestung-und-belastung.A2 (which also has Gestech- and Turnierrüstung, missing
+      here — ruling table-shift)
+
+rulings:
+  - id: table-shift
+    status: decided
+    question: >
+      Read literally, two rows up the armour table per Stufe moves both the Belastung and the
+      extra GS/INI penalty — so plate at Stufe II would land on leather and pick up leather's
+      −1 GS/−1 INI, which plate does not have. What does the shift mean?
+    answer: >
+      Each Stufe lowers the armour's Belastung by 1. An armour's extra GS/INI penalty is not
+      reduced and stays at the given reduction (e.g. −1 GS, −1 INI).
+    decided: { by: "@samuelsmal", date: 2026-09-23 }
+    appliesTo: [G1]
+    notes: >
+      This is what the app does today (Hero.effectiveBE). It also answers what the table cannot:
+      armours the SF page's table does not list (the Rüstung-und-Belastung table has Gestech-
+      4 and Turnierrüstung 5 — ruestung-und-belastung.A2 — and an import may bring anything;
+      −1 per Stufe holds for them too) and shifting past the top row.

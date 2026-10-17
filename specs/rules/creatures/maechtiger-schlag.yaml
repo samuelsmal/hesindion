@@ -1,0 +1,94 @@
+# DRAFT FORMAT — see ../README.md.
+# A Tierische Kampfsonderfertigkeit, kind `creature` (the draft's `creatureAbility`: the
+# vocabulary has one kind for a creature's rules). The wiki's overview
+# (https://dsa.ulisses-regelwiki.de/TSF_Kampfsonderfertigkeiten.html) says they work like any
+# Kampfsonderfertigkeit, but one without Kampftechniken cannot be learned by a hero. It has no
+# Optolith id (SA_226 "Befehl Mächtiger Schlag" is a different thing, a Tier-Befehl), so the file
+# is keyed by a slug. Its owner is a creature, not the hero: every effect is either the creature's
+# (Kupperus attacking for Boronmir) or its opponent's (a creature attacking Boronmir).
+id: maechtiger-schlag
+name: Mächtiger Schlag
+kind: creature
+group: Tierische Kampfsonderfertigkeiten
+passive: true      # the page's header "(passiv)", kept in MS1's text as SA_160.GA1 keeps "(Spezialmanöver)"
+source:
+  url: https://dsa.ulisses-regelwiki.de/SF_MaechtigerSchlag.html
+  book: Aventurische Tiergefährten
+  page: 126
+  checked: 2026-09-26
+  hash: sha256:37a6abbac7d9aba678da62d1abb1c98122ff246cb7a496ea938129e647c41fee
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+# The page lists thirteen books; Aventurisches Bestiarium p. 7 is the first, Aventurische
+# Tiergefährten p. 126 the one Kupperus's profile comes from.
+#
+# There is no creature ability "Niederreiten" on the wiki: the search finds only the Reiterkampf
+# order (reiterkampf.RK13), Berittener Kampf, Frontalangriff and the profiles that list a
+# Niederreiten attack. On a horse, Niederreiten is an attack line of the profile
+# (svellttaler-kaltblut.SK3), not a Sonderfertigkeit. (Überrennen and Trampeln are the creature
+# manoeuvres nearest to it; Kupperus has neither.)
+
+clauses:
+  - id: MS1
+    text: >
+      (passiv) Bei einer gelungenen Attacke müssen Gegner der Größenkategorien mittel und kleiner
+      eine Probe auf Kraftakt bestehen, ansonsten erhalten sie den Status Liegend.
+    effects:
+      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.size: [winzig, klein, mittel] }
+        tell: { to: opponent, text: "Probe auf Kraftakt; misslingt sie: Status Liegend (STATE_10)" }
+        # The creature's attack succeeded (the old `creature.attack: success`): the mount's
+        # attack on the rider's order (reiterkampf.RK13, svellttaler-kaltblut.SK3) hit — never
+        # the rider's own attack. The old
+        # structured `tell` (a Kraftakt check, Liegend on a failure) is its text, since the
+        # opponent's check is the GM's.
+        # Kupperus attacking: the opponent is the GM's, so this is a line on Kupperus's attack
+        # result (ADR-0005). A creature with it attacking Boronmir: his own Kraftakt check, then
+        # Liegend — not modelled on the take-damage side today.
+        # "Gelungene Attacke": the AT roll succeeded, before any defence — MS3 says what a
+        # defence changes.
+        # The app (issue #41): the mount's attack carries an AttackFollowUp to the opponent-
+        # defence screen; nothing shows on a missed AT. "Treffer geht durch" shows it as a card
+        # beside the damage. The opponent's size is not asked on the mount's attack path, so the
+        # size condition is a line of the text ("Nur gegen Gegner der Größe mittel oder kleiner").
+
+  - id: MS2
+    text: >
+      Die Probe ist für den Gegner um die Hälfte der Punkte erschwert, die die Körperkraft des
+      Wesens über 20 liegt (bei einer KK von 23 um -2, bei einer von 26 um -3 usw.).
+    effects:
+      - when: { choice.order: [mountAttack, niederreiten], action.attack: hit, opponent.check.talent: TAL_5, mount.kk: { above: 20 } }
+        add: { to: opponent.check.modifier, value: { of: mount.kk, above: 20, per: 2, times: -1, round: up } }
+        # The creature is the mount (the `when` gates on its attack on an order): its KK is the
+        # profile's `mount.kk` (svellttaler-kaltblut.SK2), not `creature.kk`, which nothing provides
+        # (Task 31 fix round 2).
+        ruling: round-up
+        # The old `opponent_add: { to: { check: Kraftakt }, value: "-(creature.kk - 20) / 2" }`:
+        # the opponent's Kraftakt (TAL_5) modifier (A.5), after the mount's attack hit. "Up" rounds the half away from zero, before
+        # the sign, as the page's examples do.
+        # Rounded up: the page's own example settles it — "bei einer KK von 23 um -2, bei einer
+        # von 26 um -3" (23: 1.5 → 2) — so no ruling is needed; it agrees with rulings.yaml
+        # round-up / ADR-0006. Kupperus, KK 25: −⌈2.5⌉ = −3 (AttackFollowUp.mightyBlowPenalty;
+        # it floored to −2 before issue #41).
+        # The KK is the creature's that has the SF and strikes — the mount, never the rider. The
+        # app's line names it: "Kupperus: KK 25, die Hälfte der 5 Punkte über 20, aufgerundet"
+        # (AttackFollowUp.mightyBlow(creature:kk:)).
+
+  - id: MS3
+    text: >
+      Dem Mächtigen Schlag kann man nur mittels Ausweichen komplett entgehen. Bei einer Parade,
+      gleich ob gelungen oder nicht, muss die Probe auf Kraftakt gewürfelt werden.
+    effects:
+      - when: { choice.order: [mountAttack, niederreiten], opponent.defence: aw, opponent.defenceResult: success }
+        suppress: { line: { line: maechtiger-schlag.MS1 } }
+        because: dem Mächtigen Schlag entgeht man nur durch Ausweichen komplett
+        # The old `cancels: MS1`, when the opponent dodges successfully (the old
+        # `action.defence: success`: the opponent's defence, stated by the GM).
+      - when: { choice.order: [mountAttack, niederreiten], opponent.defence: [pa, shieldParry] }
+        tell: { to: opponent, text: "Probe auf Kraftakt, gleich ob die Parade gelingt; misslingt sie: Status Liegend (STATE_10)" }
+        # The old structured `tell` with `whatever_the_parry: true`.
+        # A parried blow does no damage but still asks for the Kraftakt check. The app says so
+        # before the GM picks the defence, and "Pariert" shows the check as a toast. "Ausgewichen"
+        # shows "Mächtiger Schlag nicht angewandt: Der Gegner ist ausgewichen." (issue #41).
+
+  - id: MS4
+    text: "Voraussetzungen: Wesen verfügt automatisch über die SF"
+    none: a creature's innate ability; nothing to buy

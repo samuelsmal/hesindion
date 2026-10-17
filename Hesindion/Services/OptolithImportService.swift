@@ -20,6 +20,20 @@ enum OptolithImportError: LocalizedError {
     }
 }
 
+// MARK: - Result
+
+/// What an import did: added a new hero, or replaced the data of the hero
+/// with the same name (a re-import), and what of the pets it could not read.
+struct HeroImportResult: Equatable {
+    enum Kind: Equatable { case created, updated }
+    var kind: Kind
+    var heroName: String
+    var problems: [PetImportProblem] = []
+
+    static func created(heroName: String) -> HeroImportResult { .init(kind: .created, heroName: heroName) }
+    static func updated(heroName: String) -> HeroImportResult { .init(kind: .updated, heroName: heroName) }
+}
+
 // MARK: - Service
 
 struct OptolithImportService {
@@ -32,21 +46,23 @@ struct OptolithImportService {
 
     // MARK: - Public API
 
-    func importHero(from url: URL, context: ModelContext) throws {
+    func readData(from url: URL) throws -> Data {
         let didStart = url.startAccessingSecurityScopedResource()
         defer { if didStart { url.stopAccessingSecurityScopedResource() } }
-
-        let data: Data
         do {
-            data = try Data(contentsOf: url)
+            return try Data(contentsOf: url)
         } catch {
             throw OptolithImportError.fileReadFailed
         }
-
-        try importHero(from: data, context: context)
     }
 
-    func importHero(from data: Data, context: ModelContext) throws {
+    @discardableResult
+    func importHero(from url: URL, context: ModelContext) throws -> HeroImportResult {
+        try importHero(from: try readData(from: url), context: context)
+    }
+
+    @discardableResult
+    func importHero(from data: Data, context: ModelContext) throws -> HeroImportResult {
         let root: [String: Any]
         do {
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -141,13 +157,14 @@ struct OptolithImportService {
             purchasedLP: purchasedLP,
             purchasedAE: purchasedAE,
             purchasedKP: purchasedKP,
-            advantages: activatables.advantages,
-            disadvantages: activatables.disadvantages
+            advantages: activatables.advantages
         )
 
         // Upsert: check for existing hero by name
         let descriptor = FetchDescriptor<Hero>(predicate: #Predicate { $0.name == heroName })
         let existing = try context.fetch(descriptor)
+        var result: HeroImportResult
+        let imported: Hero
 
         if let hero = existing.first {
             replaceHeroData(
@@ -169,6 +186,9 @@ struct OptolithImportService {
                 liturgies: liturgies,
                 context: context
             )
+            hero.lastImportedAt = .now
+            imported = hero
+            result = .updated(heroName: heroName)
         } else {
             let hero = Hero(
                 name: heroName,
@@ -197,14 +217,35 @@ struct OptolithImportService {
             hero.languages = activatables.languages
             hero.spells = spells
             hero.liturgies = liturgies
+            hero.lastImportedAt = .now
             context.insert(hero)
+            imported = hero
+            result = .created(heroName: heroName)
         }
+
+        seedFullLebensenergie(imported)
 
         do {
             try context.save()
         } catch {
             throw OptolithImportError.saveFailed(error.localizedDescription)
         }
+        result.problems = imported.petsInOrder.flatMap(\.importProblems)
+        return result
+    }
+
+    // MARK: - Lebensenergie
+
+    /// A fresh import (and a re-import) leaves the hero at full LE, where "full" is the rules
+    /// engine's `leMax` — it includes Hohe Lebenskraft (ADV_25), which `computeDerivedValues`
+    /// no longer adds. The stored max is what `Hero.lebenspunkteSchmerzLevel` divides by, so it
+    /// takes the engine's value too. Falls back to the computed value when the rules are not
+    /// loaded (`SheetValues.of` is nil).
+    private func seedFullLebensenergie(_ hero: Hero) {
+        guard let dv = hero.derivedValues,
+              let leMax = SheetValues.of(hero)?.leMax.result else { return }
+        dv.lebensenergie.max = leMax
+        dv.lebensenergie.current = leMax
     }
 
     // MARK: - Upsert
@@ -458,12 +499,10 @@ struct OptolithImportService {
         )
     }
 
-    /// Check if a special ability is combat-related using the rules database.
-    /// Falls back to `false` (general SA) if the rule is not found.
+    /// Whether an ability belongs in `combatSpecialAbilities`: Optolith's group
+    /// says so. The effects table used to decide this and covered nine abilities.
     private func isCombatSpecialAbility(id: String) -> Bool {
-        guard let rule = rules.lookup(id: id) else { return false }
-        // The rules.db effects with scope "combat" indicate combat special abilities
-        return rule.effects.contains { $0.scope == "combat" }
+        CombatSpecialAbilityGroup.contains(groupId: rules.lookup(id: id)?.groupId)
     }
 
     // MARK: - Talents
@@ -617,6 +656,8 @@ struct OptolithImportService {
                         structurePoints: stp,
                         weight: weight
                     ))
+                    shields.last?.templateId = template.isEmpty ? nil : template
+                    shields.last?.atModifier = atMod
                 } else {
                     let ctVal = ctValues[ctId] ?? 6
                     let detail = rules.lookupCombatTechniqueDetail(ruleId: ctId)
@@ -644,6 +685,9 @@ struct OptolithImportService {
                         reach: reach,
                         weight: weight
                     ))
+                    weapons.last?.templateId = item["template"] as? String
+                    weapons.last?.atModifier = atMod
+                    weapons.last?.paModifier = paMod
                 }
 
             case 2:
@@ -675,6 +719,7 @@ struct OptolithImportService {
                     range: range,
                     weight: weight
                 ))
+                rangedWeapons.last?.templateId = item["template"] as? String
 
             case 4:
                 // Armor
@@ -737,11 +782,6 @@ struct OptolithImportService {
     private func parsePets(_ json: [String: Any]) -> [Pet] {
         json.compactMap { key, value -> Pet? in
             guard let pet = value as? [String: Any] else { return nil }
-            let name = pet["name"] as? String ?? "?"
-            let type = pet["type"] as? String ?? ""
-            let avatar = parseAvatar(pet["avatar"])
-            let size = doubleFromAny(pet["size"]) ?? 0.0
-
             let attributes = PetAttributes(
                 mu: intFromAny(pet["cou"]) ?? 0,
                 kl: intFromAny(pet["sgc"]) ?? 0,
@@ -752,13 +792,13 @@ struct OptolithImportService {
                 ko: intFromAny(pet["con"]) ?? 0,
                 kk: intFromAny(pet["str"]) ?? 0
             )
-
-            return Pet(
+            let text = PetTextFormat.parse(pet)
+            let result = Pet(
                 petId: key,
-                name: name,
-                avatar: avatar,
-                size: size,
-                type: type,
+                name: pet["name"] as? String ?? "?",
+                avatar: parseAvatar(pet["avatar"]),
+                size: doubleFromAny(pet["size"]) ?? 0.0,
+                type: pet["type"] as? String ?? "",
                 attributes: attributes,
                 lifeEnergy: intFromAny(pet["lp"]) ?? 0,
                 spirit: intFromAny(pet["spi"]) ?? 0,
@@ -771,23 +811,21 @@ struct OptolithImportService {
                 actions: intFromAny(pet["actions"]) ?? 1,
                 talents: pet["talents"] as? String ?? "",
                 skills: pet["skills"] as? String ?? "",
-                notes: pet["notes"] as? String ?? "",
-                attacks: parsePetAttacks(notes: pet["notes"] as? String ?? ""),
-                specialSkills: pet["skills"] as? String ?? ""
+                notes: text.notes,
+                attacks: text.attacks
             )
-        }
-    }
-
-    /// Parses attack entries from pet notes. Format: "Name: AT \d+ TP \d+W\d+[+-]\d+ RW (kurz|mittel|lang)"
-    private func parsePetAttacks(notes: String) -> [PetAttack] {
-        let pattern = /([A-ZÄÖÜa-zäöüß]+):\s*AT\s+(\d+)\s+TP\s+(\d+W\d+(?:[+-]\d+)?)\s+RW\s+(kurz|mittel|lang)/
-        return notes.matches(of: pattern).map { match in
-            PetAttack(
-                name: String(match.1),
-                at: Int(match.2) ?? 0,
-                damage: String(match.3),
-                reach: String(match.4)
-            )
+            result.defense = text.defense
+            result.armor = text.armor
+            result.encumbrance = text.encumbrance
+            result.advantages = text.advantages
+            result.disadvantages = text.disadvantages
+            result.abilities = text.abilities
+            result.training = text.training
+            result.tricks = text.tricks
+            result.apTotal = text.apTotal
+            result.apSpent = text.apSpent
+            result.importProblems = text.problems
+            return result
         }
     }
 
@@ -820,25 +858,23 @@ struct OptolithImportService {
         purchasedLP: Int,
         purchasedAE: Int,
         purchasedKP: Int,
-        advantages: [HeroTrait],
-        disadvantages: [HeroTrait]
+        advantages: [HeroTrait]
     ) -> DerivedValues {
         let mu = attributes.mu
         let kl = attributes.kl
         let inVal = attributes.inValue
-        let ge = attributes.ge
         let ko = attributes.ko
         let kk = attributes.kk
 
-        // LE: base = species base LP + KO * 2
+        // LE: base = species base LP + KO * 2. Hohe Lebenskraft (ADV_25) is not added here;
+        // `seedFullLebensenergie` overwrites max and current with the rules engine's `leMax`
+        // (which has it) once the hero is built. This value is only the fallback when the
+        // rules are not loaded.
         let speciesLP = Self.speciesBaseLP[raceId] ?? 5
         let leBase = speciesLP + ko * 2
-        let hoheLebenskraftBonus = advantages
-            .filter { $0.ruleId == "ADV_25" }
-            .reduce(0) { $0 + ($1.tier ?? 1) }
-        let leMax = leBase + purchasedLP + hoheLebenskraftBonus
+        let leMax = leBase + purchasedLP
         let lebensenergie = LifeEnergyValue(
-            base: leBase, bonus: hoheLebenskraftBonus, purchased: purchasedLP,
+            base: leBase, bonus: 0, purchased: purchasedLP,
             max: leMax, current: leMax
         )
 
@@ -876,37 +912,28 @@ struct OptolithImportService {
         let zkMax = zkBase + hoheZaehigkeitBonus
         let zaehigkeit = ResourceValue(base: zkBase, bonus: hoheZaehigkeitBonus, max: zkMax)
 
-        // INI = ceil((MU + GE) / 2)
-        let iniValue = DerivedValueFormulas.initiative(mu: mu, ge: ge)
-        let initiative = ComputedValue(value: iniValue, bonus: 0, max: iniValue)
-
-        // AW = ceil(GE / 2)
-        let awValue = DerivedValueFormulas.ausweichen(ge: ge)
-        let ausweichen = ComputedValue(value: awValue, bonus: 0, max: awValue)
-
-        // GS = 8 (Mensch base)
-        let geschwindigkeit = ResourceValue(base: 8, bonus: 0, max: 8)
-
-        // WS = ceil(KO / 2), ± Eisern / Gläsern
-        let ws = DerivedValueFormulas.wundschwelle(ko: ko, advantages: advantages, disadvantages: disadvantages)
-        let wundschwelle = ComputedValue(value: ws.base, bonus: ws.bonus, max: ws.base + ws.bonus)
+        // GS by species (Menschen/Elfen/Halbelfen 8, Zwerge 6). Falls back to the human
+        // value for a species outside the pinned source, which is the documented status
+        // quo for the species tables above (ADR-0006) rather than a new guess.
+        let gs = DerivedValueFormulas.geschwindigkeit(speciesId: raceId)
+            ?? DerivedValueFormulas.geschwindigkeitFallback
+        let geschwindigkeit = ResourceValue(base: gs, bonus: 0, max: gs)
 
         // Schicksalspunkte: base 3 for Mensch
         let schipBase = 3
         let schicksalspunkte = MutableResourceValue(current: schipBase, bonus: 0, max: schipBase)
 
-        return DerivedValues(
+        let derivedValues = DerivedValues(
             lebensenergie: lebensenergie,
             astralenergie: astralenergie,
             karmaenergie: karmaenergie,
             seelenkraft: seelenkraft,
             zaehigkeit: zaehigkeit,
-            ausweichen: ausweichen,
-            initiative: initiative,
             geschwindigkeit: geschwindigkeit,
-            wundschwelle: wundschwelle,
             schicksalspunkte: schicksalspunkte
         )
+        derivedValues.speciesLE = speciesLP
+        return derivedValues
     }
 
     // MARK: - Talent Category Mapping

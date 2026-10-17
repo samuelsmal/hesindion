@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R26: reads an operand whose base comes from a derive.
+id: pl-c
+name: Leser von AW
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: C1
+    text: LeP-Regeneration + AW / 4.
+    effects:
+      - add: { to: regeneration.le, value: { of: aw, per: 4, round: down } }

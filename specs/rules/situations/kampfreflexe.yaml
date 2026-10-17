@@ -1,0 +1,119 @@
+# Example 12 — Kampfreflexe. Same conventions as belastung.yaml.
+# DRAFT FORMAT — see ../README.md.
+#
+# `iniBase` is the hero sheet's INI Basiswert with its own breakdown (kampfwerte.KW9, the old
+# `derived.ini`); `ini` is what the initiative roll starts from before 1W6 (Basiswert plus
+# penalties such as Belastung).
+# The mount is a Kriegspferd with INI Basiswert 12 (the old file-level `mount`), stated as the
+# base value of `mount.iniBase`.
+# The INI Basiswert (MU+GE)/2 = 12 is KW9's derive from the attributes, not a stated value: a
+# stated `ini` would be taken before KW10's derive and hide it (conflicts 12.3, 12.4). The W6
+# of the initiative roll is `roll.ini`, stated where `ini` is queried.
+
+hero: { attributes: { MU: 12, GE: 12 }, values: { gs: 8, mount.iniBase: 12 } }
+
+situations:
+
+  - id: "12.1"
+    name: Kampfreflexe I
+    hero: { abilities: { SA_51: 1 } }
+    expect:
+      iniBase:
+        total: 13
+        lines:
+          - { value: 12, from: kampfwerte.KW9 }     # (MU+GE)/2, ADR-0006
+          - { value: 1, from: SA_51.KR1 }
+    appToday: 12 — Kampfreflexe is ignored (OptolithImportService, DerivedValueFormulas.initiative; catalog status todo) — wrong
+
+  - id: "12.2"
+    name: Kampfreflexe III
+    hero: { abilities: { SA_51: 3 } }
+    expect:
+      iniBase: { total: 15, lines: [{ value: 12, from: kampfwerte.KW9 }, { value: 3, from: SA_51.KR1 }] }
+    appToday: 12 — wrong
+
+  - id: "12.3"
+    name: Kampfreflexe II in Plattenrüstung
+    hero: { abilities: { SA_51: 2 } }
+    loadout: { armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    rolls: { roll.ini: 4 }                                # the W6 (KW10)
+    expect:
+      iniBase: { total: 14 }
+      ini:
+        total: 15                                         # 14 + 4 − 3
+        lines:
+          - { value: 14, from: kampfwerte.KW10, via: [kampfwerte.KW9, SA_51.KR1] }   # the Basiswert (the old `from: [derived.ini, SA_51.KR1]`)
+          - { value: 4, from: kampfwerte.KW10 }           # the W6
+          - { value: -3, from: COND_1.B3 }
+    appToday: 9 — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfreflexe.yaml 12.3, 12.4 (Task 31): expect `ini` from KW10's derive,
+        14 (13) `via: [KW9, SA_51.KR1]`. The file's hero states the sheet value `ini: 12`
+        (its comment: "INI Basiswert (MU+GE)/2 = 12"); a stated base is taken before any
+        derive (plan Task 22, phase 1), so KW10 is overridden and the total is the Belastung
+        lines alone (−3; −2). KW10 also adds the W6 `roll.ini`, which neither states.
+        `iniBase` (14) matches.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "12.4"
+    name: Kampfreflexe I and a Lederrüstung's extra −1 INI
+    hero: { abilities: { SA_51: 1 } }
+    loadout: { armour: Lederrüstung, armour.belastung: 1, armour.extraPenalty: -1 }
+    rolls: { roll.ini: 4 }                                # the W6 (KW10)
+    expect:
+      ini:
+        total: 15                                         # 13 + 4 − 1 − 1
+        lines:
+          - { value: 13, from: kampfwerte.KW10, via: [kampfwerte.KW9, SA_51.KR1] }   # the Basiswert (the old `from: [derived.ini, SA_51.KR1]`)
+          - { value: 4, from: kampfwerte.KW10 }           # the W6
+          - { value: -1, from: COND_1.B3 }
+          - { value: -1, from: ruestung-und-belastung.A1 }
+    appToday: 10 — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfreflexe.yaml 12.3, 12.4 (Task 31): expect `ini` from KW10's derive,
+        14 (13) `via: [KW9, SA_51.KR1]`. The file's hero states the sheet value `ini: 12`
+        (its comment: "INI Basiswert (MU+GE)/2 = 12"); a stated base is taken before any
+        derive (plan Task 22, phase 1), so KW10 is overridden and the total is the Belastung
+        lines alone (−3; −2). KW10 also adds the W6 `roll.ini`, which neither states.
+        `iniBase` (14) matches.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27
+
+  - id: "12.5"
+    name: Kampfreflexe II, mounted
+    hero: { abilities: { SA_51: 2 } }
+    # in his Plattenrüstung (Belastung III), as reiterkampf 5.17: the Belastung the mount's base
+    # does not take (ruling reiterkampf.rider-ini)
+    loadout: { hero.mounted: true, armour: Plattenrüstung, armour.belastung: 3, armour.extraPenalty: 0 }
+    rolls: { roll.ini: 4 }                                # the W6 (KW10)
+    expect:
+      iniBase:
+        total: 14
+        lines:
+          - { value: 12, from: reiterkampf.RK1 }             # the mount's
+          - { value: 2, from: SA_51.KR1, ruling: SA_51.kampfreflexe-mounted }
+      ini: { lines: [{ value: 0, ruling: reiterkampf.rider-ini }] }   # the old `ini_belastung: { total: 0 }`: no Belastung on the mount's base
+    appToday: 12 — the mount's base; Kampfreflexe ignored — wrong
+    conflict:
+      category: a
+      reason: >-
+        situations/kampfreflexe.yaml 12.5 (Task 31): expects `ini` to show reiterkampf.RK1's
+        zero line (ruling rider-ini: the rider's Belastung does not reach the mount's base).
+        RK1's `useLevel` sets Belastung's Stufe to 0, but 12.5 states no armour, so
+        Belastung's Stufe is unknown (the engine asks for `loadout.armour`) and COND_1 does
+        not apply; no source states that the hero wears none (R61). reiterkampf 5.17 and
+        kupperus-und-waffen 18.15, which state the Plattenrüstung, get the line. `iniBase`
+        (RK1 12 + KR1 2) matches.
+      review:
+        verdict: resolved
+        by: "@agent"
+        date: 2026-09-27

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Platzhalter-Übersichtsseite</title>
+    <style>.ce_text { margin: 0 0 12px; }</style>
+</head>
+<body>
+    <!-- Fix round 4 regression guard. Models the real shape found on the
+         live site's index/overview pages (sf_kampfsonderfertigkeiten.html,
+         Best_Tiere.html, ruestkammer.html, RS_Waffen.html, RS_Ruestung.html):
+         div#main is present but completely empty, and the page's actual
+         content sits outside it (here under #sub_header, exactly as
+         sf_kampfsonderfertigkeiten.html does). All placeholder text, no real
+         rule prose (Data Policy, AGENTS.md). -->
+    <div class="t4c_quickcontact_form">
+        <span id="captcha_text_107" class="captcha_text">Bitte addieren Sie 2 und 3.</span>
+    </div>
+    <header id="header"><nav><a href="index.html">Platzhalter-Navigation</a></nav></header>
+    <div id="sub_header">
+        <ul>
+            <li><a href="PH_Eins.html">Platzhalter-Eintrag Eins</a></li>
+            <li><a href="PH_Zwei.html">Platzhalter-Eintrag Zwei</a></li>
+            <li><a href="PH_Drei.html">Platzhalter-Eintrag Drei</a></li>
+        </ul>
+    </div>
+    <div id="main"></div>
+    <footer><p>Platzhalter-Fusszeile, kein echter Regeltext.</p></footer>
+    <script src="platzhalter.js"></script>
+</body>
+</html>

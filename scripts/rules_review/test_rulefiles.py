@@ -1,0 +1,310 @@
+"""The review tool's edits touch only the lines they mean to.
+
+    make test-rules-review
+"""
+
+import datetime
+import difflib
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+import yaml
+
+import rulefiles as rf
+
+# rulefiles put scripts/ on the path, so the compile-check test below can `import rulec`.
+
+from rulec import rules as rulec_rules   # noqa: E402
+from rulec import vocab                 # noqa: E402
+
+DAY = datetime.date(2026, 9, 23)
+
+RULE = """\
+# a comment at the top
+id: SA_1
+name: Beispiel
+kind: specialAbility
+source: { url: https://example.org, checked: 2026-09-23 }
+reviewed: null             # { by, date } once a person has read every clause
+# Optolith says page 249. The page wins.
+
+clauses:
+  - id: C1
+    text: >
+      Ein Satz.
+    effects:
+      - add: { to: at, value: -2 }
+        # FORMAT: a note that belongs to the clause
+
+rulings:
+  - id: first
+    status: open
+    question: Which?
+    options:
+      a: { says: "this", app: "no change" }
+      b: { says: "that", app: "a change" }
+    recommended: a
+    answer: null
+
+  - id: second
+    status: open
+    question: And this?
+    answer: >
+      An earlier answer
+      over two lines.
+"""
+
+
+class EditTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "SA_1.yaml"
+        self.path.write_text(RULE, encoding="utf-8")
+        self.shared = rf.SHARED
+        rf.SHARED = self.dir / "rulings.yaml"
+
+    def tearDown(self):
+        rf.SHARED = self.shared
+        shutil.rmtree(self.dir)
+
+    def changed_lines(self):
+        old, new = RULE.splitlines(), self.path.read_text(encoding="utf-8").splitlines()
+        return [l for l in new if l not in old], [l for l in old if l not in new]
+
+    def test_an_option_letter_replaces_null(self):
+        rf.set_answer(self.path, "first", "b")
+        added, removed = self.changed_lines()
+        self.assertEqual(added, ["    answer: b"])
+        self.assertEqual(removed, ["    answer: null"])
+
+    def test_own_words_replace_a_folded_answer(self):
+        rf.set_answer(self.path, "second", "Neither; " + "the GM decides " * 10)
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.assertTrue(data["rulings"][1]["answer"].startswith("Neither; the GM decides"))
+        self.assertIsNone(data["rulings"][0]["answer"])
+        self.assertNotIn("over two lines.", self.path.read_text(encoding="utf-8"))
+
+    def test_an_empty_answer_reopens(self):
+        rf.set_answer(self.path, "second", "")
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.assertIsNone(data["rulings"][1]["answer"])
+
+    def test_reviewed_keeps_the_comments(self):
+        rf.set_reviewed(self.path, "@someone", DAY)
+        text = self.path.read_text(encoding="utf-8")
+        self.assertIn('reviewed: { by: "@someone", date: 2026-09-23 }             # { by, date }', text)
+        self.assertIn("# Optolith says page 249. The page wins.", text)
+        rf.set_reviewed(self.path, None)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+    def test_a_flag_goes_after_reviewed_and_comes_off_cleanly(self):
+        rf.set_agent_pass(self.path, "@someone", "the options miss a case", ["C1", "first"], DAY)
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(data["agentPass"]["about"], ["C1", "first"])
+        self.assertEqual(data["agentPass"]["requested"], {"by": "@someone", "date": DAY})
+        rf.clear_agent_pass(self.path)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+    def test_a_shared_ruling_is_found_at_the_top_level(self):
+        rf.SHARED.write_text("- id: round-up\n  status: open\n  answer: null\n", encoding="utf-8")
+        rf.set_answer(rf.SHARED, "round-up", "a")
+        self.assertEqual(rf.SHARED.read_text(encoding="utf-8"),
+                         "- id: round-up\n  status: open\n  answer: a\n")
+
+    def test_an_unknown_ruling_is_refused(self):
+        with self.assertRaises(KeyError):
+            rf.set_answer(self.path, "third", "a")
+        self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+
+BLOCK = """\
+id: SA_2
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_X.html
+  checked: 2026-09-24
+  hash: null               # filled in by the drift check
+reviewed: null
+clauses: []
+"""
+
+
+class SourceHashTests(unittest.TestCase):
+    # Same pattern as EditTests: an absolute temp path (`ROOT / abs` is `abs`).
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "SA_2.yaml"
+        self.path.write_text(BLOCK, encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def test_writes_hash_and_checked_keeps_the_comment(self):
+        rf.set_source_hash(self.path, "sha256:" + "a" * 64, DAY)
+        new = self.path.read_text(encoding="utf-8").splitlines()
+        changed = [l for l in difflib.ndiff(BLOCK.splitlines(), new) if l[:2] in ("+ ", "- ")]
+        # ndiff pairs each removal with its replacement rather than grouping all removals
+        # first, so compare as a set: the point is that only these lines change.
+        self.assertEqual(set(changed), {
+            "-   checked: 2026-09-24",
+            "-   hash: null               # filled in by the drift check",
+            "+   checked: 2026-09-23",
+            "+   hash: sha256:" + "a" * 64 + "               # filled in by the drift check",
+        })
+
+    def test_a_missing_hash_line_is_added_to_the_block(self):
+        self.path.write_text(BLOCK.replace("  hash: null               # filled in by the drift check\n", ""),
+                             encoding="utf-8")
+        rf.set_source_hash(self.path, "sha256:" + "b" * 64, DAY)
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(data["source"]["hash"], "sha256:" + "b" * 64)
+        self.assertEqual(data["reviewed"], None)
+
+    def test_flow_source_is_refused(self):
+        self.path.write_text(RULE, encoding="utf-8")      # RULE's source is a flow mapping
+        with self.assertRaises(rf.EditRefused):
+            rf.set_source_hash(self.path, "sha256:" + "c" * 64, DAY)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), RULE)
+
+
+class RulecCheckTests(unittest.TestCase):
+    """The edits the tool makes are one-hunk diffs, and the file still compiles under rulec's own
+    checker (scripts/rulec) after each of them."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "SA_1.yaml"
+        self.path.write_text(RULE, encoding="utf-8")
+        (self.dir / "rulings.yaml").write_text("[]\n", encoding="utf-8")
+        self.vocab = vocab.load()
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def assert_compiles(self):
+        _, errors = rulec_rules.check(self.dir, self.vocab)
+        self.assertEqual([str(e) for e in errors], [])
+
+    def assert_one_hunk(self, before, after):
+        diff = list(difflib.unified_diff(before, after, lineterm="", n=0))
+        hunks = [l for l in diff if l.startswith("@@")]
+        self.assertEqual(len(hunks), 1, "\n".join(diff))
+
+    def test_review_answer_and_flag_are_one_hunk_and_still_compile(self):
+        self.assert_compiles()
+
+        before = self.path.read_text(encoding="utf-8").splitlines()
+        rf.set_reviewed(self.path, "@someone", DAY)
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
+
+        before = after
+        rf.set_answer(self.path, "first", "b")
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
+
+        before = after
+        rf.set_agent_pass(self.path, "@someone", "the options miss a case", ["C1"], DAY)
+        after = self.path.read_text(encoding="utf-8").splitlines()
+        self.assert_one_hunk(before, after)
+        self.assert_compiles()
+SITUATIONS = """\
+# a file comment
+situations:
+  - id: "1.1"
+    name: no conflict
+    expect: { at: { total: 1 } }
+
+  - id: "1.2"
+    name: a conflict
+    expect: { at: { total: 1 } }   # the expectation
+    conflict:
+      category: a
+      reason: >-
+        The base comes from KW2, not from SCH3.
+
+  # the next situation
+  - id: "1.3"
+    name: after
+"""
+
+
+class ConflictEditTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "a.yaml"
+        self.path.write_text(SITUATIONS, encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def conflict(self):
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        return next(s for s in data["situations"] if s["id"] == "1.2")["conflict"]
+
+    def test_a_verdict_is_added_under_the_conflict_and_nothing_else_moves(self):
+        rf.set_conflict_review(self.path, "1.2", "agreed", "@someone", date=DAY)
+        self.assertEqual(self.conflict()["review"], {"verdict": "agreed", "by": "@someone", "date": DAY})
+        new = self.path.read_text(encoding="utf-8").splitlines()
+        diff = [l for l in difflib.ndiff(SITUATIONS.splitlines(), new) if l[:1] in "+-"]
+        self.assertEqual(diff, ["+       review:", "+         verdict: agreed", '+         by: "@someone"',
+                                "+         date: 2026-09-23"])
+
+    def test_a_note_goes_with_back_to_agent_and_a_new_verdict_replaces_the_old(self):
+        rf.set_conflict_review(self.path, "1.2", "backToAgent", "@someone", "the reason misreads SCH3: " * 5, DAY)
+        self.assertTrue(self.conflict()["review"]["note"].startswith("the reason misreads SCH3:"))
+        rf.set_conflict_review(self.path, "1.2", "resolved", "@agent", date=DAY)
+        self.assertEqual(self.conflict()["review"], {"verdict": "resolved", "by": "@agent", "date": DAY})
+
+    def test_no_verdict_takes_the_review_off(self):
+        rf.set_conflict_review(self.path, "1.2", "agreed", "@someone", date=DAY)
+        rf.set_conflict_review(self.path, "1.2", None, "@someone")
+        self.assertEqual(self.path.read_text(encoding="utf-8"), SITUATIONS)
+
+    def test_a_situation_without_a_conflict_is_refused(self):
+        with self.assertRaises(rf.EditRefused):
+            rf.set_conflict_review(self.path, "1.1", "agreed", "@someone", date=DAY)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), SITUATIONS)
+
+
+class ModelTests(unittest.TestCase):
+    def test_every_conflict_loads_with_its_state_and_does_not_link_rules_by_its_reason(self):
+        situations = rf._load_situations()
+        conflicts = [s for s in situations if s.conflict]
+        self.assertTrue(conflicts)
+        for s in conflicts:
+            self.assertIn(s.conflict_state, ("owner", "backToAgent", "agreed", "resolved"))
+        s = next(s for s in situations if (s.file, s.id) == ("kampfwerte", "16.5"))
+        self.assertNotIn("derive", s.refs)             # a word of its reason only
+        self.assertIn("kampfwerte", s.refs)
+
+    def test_every_example_file_loads_with_its_lines(self):
+        for rule in rf.load():
+            self.assertIsNone(rule.error, rule.path)
+            lines = (rf.ROOT / rule.path).read_text(encoding="utf-8").splitlines()
+            for item in rule.clauses + rule.rulings:
+                self.assertIn(f"id: {item.id}", lines[item.line - 1], f"{rule.path}:{item.line}")
+
+
+class SweepTests(unittest.TestCase):
+    def test_every_sweep_loads_and_skips_what_it_says(self):
+        for path in rf.SWEEPS.glob("*.yaml"):
+            sweep = rf.load_sweep(path.stem)
+            self.assertTrue(sweep.wanted, path)
+            self.assertFalse(set(sweep.wanted) & set(sweep.skipped), path)
+
+    def test_boronmir_has_his_abilities_and_the_core_rules(self):
+        sweep = rf.load_sweep("boronmir")
+        self.assertEqual(sweep.wanted["SA_661"], "own special ability")
+        self.assertIn("reiterkampf", sweep.wanted)
+        self.assertNotIn("SA_27", sweep.wanted)
+        ids = {r.id for r in sweep.of(rf.load())}
+        self.assertIn("shared", ids)
+        self.assertNotIn("SA_923", ids)
+
+
+if __name__ == "__main__":
+    unittest.main()

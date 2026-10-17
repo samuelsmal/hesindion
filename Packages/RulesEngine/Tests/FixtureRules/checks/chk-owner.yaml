@@ -1,0 +1,22 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26 fix round 1 (R49): rule lines whose number is not a GM fact's value: a table keyed by a
+# GM fact, a player's fact.
+id: chk-owner
+name: Besitzer
+kind: core
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: O1
+    text: Nach Tabelle, wie der Meister die Lage sieht.
+    effects:
+      - provide: { name: chk-owner.lage, value: { "0-2": 1, "3+": 2 } }
+      - add: { to: ini, value: "table(chk-owner.lage, gmFact.lage)" }
+  - id: O2
+    text: So viel, wie der Spieler wählt.
+    effects:
+      - add: { to: ini, value: { of: choice.bonus } }
+  - id: O3
+    text: So viel, wie der Meister sagt.
+    effects:
+      - add: { to: ini, value: { of: gmFact.ini } }

@@ -41,7 +41,26 @@ final class Pet {
     var skills: String
     var notes: String
     var attacks: [PetAttack] = []
-    var specialSkills: String = ""
+
+    // Companion data from Optolith's pet fields (issue #49, PetTextFormat): PA is VW, RS is
+    // RS, the Sonderfertigkeiten and Notizen labels give the rest. nil / empty when absent.
+    var defense: Int?
+    var armor: Int?
+    var encumbrance: Int?
+    var advantages: [String] = []
+    var disadvantages: [String] = []
+    var abilities: [String] = []
+    var training: [String] = []
+    var tricks: [String] = []
+    var apTotal: Int?
+    var apSpent: Int?
+    /// What the last import could not read; a clean re-import clears it.
+    var importProblems: [PetImportProblem] = []
+
+    /// An ability item counts by its name, without its note.
+    var hasMightyBlow: Bool {
+        abilities.contains { PetTextFormat.itemName($0) == "Mächtiger Schlag" }
+    }
 
     var carryingCapacity: Int { attributes.kk * 2 }
 
@@ -65,8 +84,7 @@ final class Pet {
         talents: String,
         skills: String,
         notes: String,
-        attacks: [PetAttack] = [],
-        specialSkills: String = ""
+        attacks: [PetAttack] = []
     ) {
         self.petId = petId
         self.name = name
@@ -88,6 +106,5 @@ final class Pet {
         self.skills = skills
         self.notes = notes
         self.attacks = attacks
-        self.specialSkills = specialSkills
     }
 }

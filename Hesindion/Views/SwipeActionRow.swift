@@ -20,6 +20,10 @@ struct SwipeActionRow<Content: View>: View {
     @State private var offset: CGFloat = 0
     @State private var settled: Bool = false
     @State private var dragDirection: DragDirection = .undecided
+    /// The row clips only while it is swiped. A clip at rest cuts the outer
+    /// half of a sidebar row's left border (`sidebarRow`), and it stays on
+    /// until the close animation ends, so the content never slides back unclipped.
+    @State private var isClipped = false
 
     private var revealWidth: CGFloat { CGFloat(actions.count) * 56 }
     private let triggerThreshold: CGFloat = 120
@@ -48,17 +52,17 @@ struct SwipeActionRow<Content: View>: View {
                     Spacer()
                     ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
                         Button {
-                            withAnimation(DSAAnimation.standard) { offset = 0 }
+                            close()
                             settled = false
                             action.action()
                         } label: {
                             Image(systemName: action.icon)
-                                .font(.system(.title3, weight: .bold))
+                                .font(.dsaHeading(.title3))
                                 .foregroundStyle(.white)
                                 .frame(width: 56)
                                 .frame(maxHeight: .infinity)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsaMotion)
                         .background(action.color)
                     }
                 }
@@ -66,6 +70,19 @@ struct SwipeActionRow<Content: View>: View {
                 .background(actions.last?.color ?? .gray)
 
                 foregroundContent
+                    // Only a swiped row takes a tap, to close it. A tap
+                    // modifier on the whole row took every tap, so a parent
+                    // `Button` (the sidebar's `sidebarRow`) never got one.
+                    .overlay {
+                        if settled {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    close()
+                                    settled = false
+                                }
+                        }
+                    }
                     .offset(x: offset)
                     .simultaneousGesture(
                         DragGesture(minimumDistance: 16)
@@ -76,6 +93,7 @@ struct SwipeActionRow<Content: View>: View {
                                     let dy = abs(value.translation.height)
                                     if dx > dy * 1.5 && value.translation.width < 0 {
                                         dragDirection = .horizontal
+                                        isClipped = true
                                     } else if dy > dx {
                                         dragDirection = .vertical
                                     }
@@ -88,25 +106,25 @@ struct SwipeActionRow<Content: View>: View {
                                 defer { dragDirection = .undecided }
                                 guard !settled, dragDirection == .horizontal else { return }
                                 if -offset > triggerThreshold, let last = actions.last {
-                                    withAnimation(DSAAnimation.standard) { offset = 0 }
+                                    close()
                                     last.action()
                                 } else if -offset > revealWidth / 2 {
                                     withAnimation(DSAAnimation.standard) { offset = -revealWidth }
                                     settled = true
                                 } else {
-                                    withAnimation(DSAAnimation.standard) { offset = 0 }
+                                    close()
                                 }
                             }
                     )
             }
-            .clipped()
+            .clipShape(Rectangle().inset(by: isClipped ? 0 : -100))
             .contentShape(Rectangle())
-            .onTapGesture {
-                if settled {
-                    withAnimation(DSAAnimation.standard) { offset = 0 }
-                    settled = false
-                }
-            }
+        }
+    }
+
+    private func close() {
+        withAnimation(DSAAnimation.standard) { offset = 0 } completion: {
+            if offset == 0 { isClipped = false }
         }
     }
 
@@ -127,7 +145,7 @@ struct DefaultSwipeContent: View {
             Text(L(label)).font(.body)
             Spacer()
             if !value.isEmpty {
-                Text(value).font(.system(.body, design: .monospaced))
+                Text(value).font(.dsaMono(.body, emphasis: true))
             }
         }
         .padding(.leading, 24)

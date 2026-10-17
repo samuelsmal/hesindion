@@ -1,0 +1,1495 @@
+{
+ "reach": {
+  "*": [
+   {
+    "clause": "A1",
+    "index": 1,
+    "rule": "sh-armour"
+   },
+   {
+    "clause": "A1",
+    "index": 2,
+    "rule": "sh-armour"
+   },
+   {
+    "clause": "A0",
+    "index": 0,
+    "rule": "sh-axe"
+   },
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "S3",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "T1",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "T1",
+    "index": 1,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "T2",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "L4",
+    "index": 0,
+    "rule": "sh-load"
+   },
+   {
+    "clause": "R6",
+    "index": 1,
+    "rule": "sh-mount"
+   },
+   {
+    "clause": "N1",
+    "index": 0,
+    "rule": "sh-note"
+   },
+   {
+    "clause": "N2",
+    "index": 0,
+    "rule": "sh-note"
+   },
+   {
+    "clause": "R2",
+    "index": 0,
+    "rule": "sh-rest"
+   },
+   {
+    "clause": "R4",
+    "index": 1,
+    "rule": "sh-rest"
+   },
+   {
+    "clause": "S0",
+    "index": 0,
+    "rule": "sh-shield"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "sh-shield"
+   },
+   {
+    "clause": "S1",
+    "index": 0,
+    "rule": "sh-stun"
+   },
+   {
+    "clause": "R0",
+    "index": 0,
+    "rule": "sh-sword"
+   }
+  ],
+  "at": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "K1",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "K1",
+    "index": 1,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "K6",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "M1",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "sh-load"
+   }
+  ],
+  "aw": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L1",
+    "index": 0,
+    "rule": "sh-load"
+   },
+   {
+    "clause": "R6",
+    "index": 0,
+    "rule": "sh-mount"
+   }
+  ],
+  "check.modifier": [
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   },
+   {
+    "clause": "L1",
+    "index": 1,
+    "rule": "sh-load"
+   }
+  ],
+  "gs": [
+   {
+    "clause": "M2",
+    "index": 0,
+    "rule": "sh-kampf"
+   }
+  ],
+  "leCurrent": [
+   {
+    "clause": "R5",
+    "index": 0,
+    "rule": "sh-rest"
+   }
+  ],
+  "leMax": [
+   {
+    "clause": "R9",
+    "index": 0,
+    "rule": "sh-rest"
+   }
+  ],
+  "level": [
+   {
+    "clause": "A1",
+    "index": 0,
+    "rule": "sh-armour"
+   },
+   {
+    "clause": "G1",
+    "index": 0,
+    "rule": "sh-habit"
+   }
+  ],
+  "pa": [
+   {
+    "clause": "K2",
+    "index": 0,
+    "rule": "sh-kampf"
+   },
+   {
+    "clause": "M1",
+    "index": 1,
+    "rule": "sh-kampf"
+   }
+  ],
+  "regeneration.le": [
+   {
+    "clause": "R4",
+    "index": 0,
+    "rule": "sh-rest"
+   }
+  ]
+ },
+ "rules": [
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A1",
+        "index": 0,
+        "rule": "sh-armour"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "loadout.armour.belastung"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "level",
+         "rule": "sh-load"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      },
+      {
+       "because": "eine Rüstung zur Zeit",
+       "origin": {
+        "clause": "A1",
+        "index": 1,
+        "rule": "sh-armour"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "secondArmour"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "legality",
+       "ruling": [
+        "sh-armour.one"
+       ],
+       "verb": "forbid",
+       "when": null
+      },
+      {
+       "because": "der große Schild braucht die zweite Hand",
+       "origin": {
+        "clause": "A1",
+        "index": 2,
+        "rule": "sh-armour"
+       },
+       "payload": {
+        "what": {
+         "ids": [
+          "other"
+         ],
+         "kind": "loadout"
+        }
+       },
+       "phase": "legality",
+       "ruling": [],
+       "verb": "forbid",
+       "when": {
+        "fact": "loadout.shield.size",
+        "is": "gross"
+       }
+      }
+     ],
+     "id": "A1",
+     "text": "Belastung nach Rüstung."
+    }
+   ],
+   "id": "sh-armour",
+   "kind": "core",
+   "name": "Rüstung",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "One at a time.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "sh-armour.one",
+     "question": "Several armours?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "A0",
+        "index": 0,
+        "rule": "sh-axe"
+       },
+       "payload": {
+        "name": "loadout.weapon",
+        "value": "provides"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "A0",
+     "text": "Axt | AT/PA-Mod 0/0"
+    }
+   ],
+   "id": "sh-axe",
+   "kind": "equipment",
+   "name": "Axt",
+   "provides": {
+    "atMod": 0,
+    "paMod": 0,
+    "technique": "CT_5"
+   },
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "G1",
+        "index": 0,
+        "rule": "sh-habit"
+       },
+       "payload": {
+        "lowerBy": {
+         "level": {
+          "plus": 0,
+          "times": 1
+         }
+        },
+        "min": 0,
+        "rule": "sh-load"
+       },
+       "phase": "level",
+       "ruling": [
+        "sh-habit.shift"
+       ],
+       "verb": "useLevel",
+       "when": {
+        "fact": "belastung.source",
+        "is": "armour"
+       }
+      }
+     ],
+     "id": "G1",
+     "text": "Belastung um die Stufe niedriger."
+    }
+   ],
+   "id": "sh-habit",
+   "kind": "specialAbility",
+   "levels": 2,
+   "name": "Gewöhnung",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "One Stufe per Stufe.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "sh-habit.shift",
+     "question": "How far?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "id": "H1",
+     "none": "a state",
+     "text": "Keine Handlungen."
+    }
+   ],
+   "id": "sh-helpless",
+   "kind": "state",
+   "name": "Handlungsunfähig",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "K1",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "ktw.current"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "at"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "K1",
+        "index": 1,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 8,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.MU"
+           },
+           "per": {
+            "number": 3
+           },
+           "round": "down",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "at"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "not": {
+         "fact": "loadout.weapon.technique",
+         "is": "CT_8"
+        }
+       }
+      }
+     ],
+     "id": "K1",
+     "text": "AT = KtW + MU über 8 / 3."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "K6",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 8,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.FF"
+           },
+           "per": {
+            "number": 3
+           },
+           "round": "down",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "at"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": {
+        "fact": "loadout.weapon.technique",
+        "is": "CT_8"
+       }
+      }
+     ],
+     "id": "K6",
+     "text": "AT für Peitschen mit FF."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "K2",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "ktw.current"
+           },
+           "per": {
+            "number": 2
+           },
+           "round": "up",
+           "times": 1
+          }
+         },
+         {
+          "proportion": {
+           "above": 8,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "technique.leit"
+           },
+           "per": {
+            "number": 3
+           },
+           "round": "down",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "pa"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "K2",
+     "text": "PA = KtW / 2 + Leiteigenschaft über 8 / 3."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T1",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "kampfwerte.leiteigenschaft",
+        "readBy": "loadout",
+        "value": {
+         "Hiebwaffen": [
+          "KK"
+         ],
+         "Raufen": [
+          "GE",
+          "KK"
+         ],
+         "Schilde": [
+          "KK"
+         ],
+         "Schwerter": [
+          "GE",
+          "KK"
+         ]
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "T1",
+        "index": 1,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "kampfwerte.kampftechnik",
+        "readBy": "loadout",
+        "value": {
+         "CT_10": "Schilde",
+         "CT_12": "Schwerter",
+         "CT_5": "Hiebwaffen",
+         "CT_8": "Peitschen"
+        }
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "T1",
+     "text": "Leiteigenschaften."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "T2",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "kampfwerte.hoehereLeiteigenschaft",
+        "readBy": "loadout",
+        "value": true
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "T2",
+     "text": "Von zwei Leiteigenschaften die höhere."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "per": "item.atMod",
+        "to": [
+         {
+          "name": "at"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "M1",
+        "index": 1,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "per": "item.paMod",
+        "to": [
+         {
+          "name": "pa"
+         }
+        ],
+        "value": {
+         "number": 1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "action.defence",
+        "is": "weaponParry"
+       }
+      }
+     ],
+     "id": "M1",
+     "text": "AT/PA-Mod der Waffe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "M2",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "gs"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "loadout.shield.size",
+        "is": "gross"
+       }
+      }
+     ],
+     "id": "M2",
+     "text": "Großer Schild, −1 GS."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S3",
+        "index": 0,
+        "rule": "sh-kampf"
+       },
+       "payload": {
+        "name": "loadout.shield.technique",
+        "readBy": "loadout",
+        "value": "CT_10"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S3",
+     "text": "Aktiv mit dem Schild pariert man mit der Kampftechnik Schilde."
+    }
+   ],
+   "id": "sh-kampf",
+   "kind": "core",
+   "name": "Kampfwerte",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 0,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "at"
+         },
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "fact": "level",
+        "in": [
+         1,
+         2,
+         3
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "L1",
+        "index": 1,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "per": "level",
+        "to": [
+         {
+          "name": "check.modifier"
+         }
+        ],
+        "value": {
+         "number": -1
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "level",
+          "in": [
+           1,
+           2,
+           3
+          ]
+         },
+         {
+          "fact": "check.kind",
+          "in": [
+           "spell",
+           "liturgy"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "id": "L1",
+     "text": "AT, AW −Stufe."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "L4",
+        "index": 0,
+        "rule": "sh-load"
+       },
+       "payload": {
+        "rule": "sh-helpless"
+       },
+       "phase": "action",
+       "ruling": [
+        "sh-load.jouster"
+       ],
+       "verb": "gain",
+       "when": {
+        "atLeast": 4,
+        "fact": "level"
+       }
+      }
+     ],
+     "id": "L4",
+     "text": "Stufe IV, handlungsunfähig."
+    }
+   ],
+   "id": "sh-load",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Last",
+   "reviewed": null,
+   "rulings": [
+    {
+     "answer": "No.",
+     "decided": {
+      "by": "@fixture",
+      "date": "2026-09-25"
+     },
+     "id": "sh-load.jouster",
+     "question": "Does the rider's relief lift Stufe IV?",
+     "status": "decided"
+    }
+   ],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 0,
+        "rule": "sh-mount"
+       },
+       "payload": {
+        "to": [
+         {
+          "name": "aw"
+         }
+        ],
+        "value": {
+         "number": -2
+        }
+       },
+       "phase": "add",
+       "ruling": [],
+       "verb": "add",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "not": {
+           "fact": "choice.jumpOff",
+           "is": true
+          }
+         }
+        ]
+       }
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R6",
+        "index": 1,
+        "rule": "sh-mount"
+       },
+       "payload": {
+        "choice": "jumpOff",
+        "default": false
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": {
+        "all": [
+         {
+          "fact": "hero.mounted",
+          "is": true
+         },
+         {
+          "fact": "query.target",
+          "is": "aw"
+         }
+        ]
+       }
+      }
+     ],
+     "id": "R6",
+     "text": "Ausweichen zu Pferd −2, es sei denn, man springt ab."
+    }
+   ],
+   "id": "sh-mount",
+   "kind": "core",
+   "name": "Reiter",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "N1",
+        "index": 0,
+        "rule": "sh-note"
+       },
+       "payload": {
+        "text": "Absitzen kostet eine Aktion.",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "fact": "hero.mounted",
+        "is": true
+       }
+      }
+     ],
+     "id": "N1",
+     "text": "Absitzen kostet eine Aktion."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "N2",
+        "index": 0,
+        "rule": "sh-note"
+       },
+       "payload": {
+        "text": "Zu Fuß.",
+        "to": "player"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "tell",
+       "when": {
+        "fact": "hero.mounted",
+        "is": false
+       }
+      }
+     ],
+     "id": "N2",
+     "text": "Zu Fuß keine Hinweise."
+    }
+   ],
+   "id": "sh-note",
+   "kind": "core",
+   "name": "Hinweise",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R2",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "choice": "regenerationsphase"
+       },
+       "phase": "player",
+       "ruling": [],
+       "verb": "offer",
+       "when": null
+      }
+     ],
+     "id": "R2",
+     "text": "Eine Regenerationsphase."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R4",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "roll.regeneration"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 1
+          }
+         }
+        ],
+        "to": {
+         "name": "regeneration.le"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      },
+      {
+       "because": null,
+       "origin": {
+        "clause": "R4",
+        "index": 1,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "amount": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "regeneration.le"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "pool": "le"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "restore",
+       "when": {
+        "fact": "choice.regenerationsphase",
+        "is": true
+       }
+      }
+     ],
+     "id": "R4",
+     "text": "1W6 LeP."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R5",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "max": {
+         "proportion": {
+          "above": 0,
+          "max": null,
+          "min": null,
+          "of": {
+           "target": {
+            "name": "leMax"
+           }
+          },
+          "per": {
+           "number": 1
+          },
+          "round": "up",
+          "times": 1
+         }
+        },
+        "to": [
+         {
+          "name": "leCurrent"
+         }
+        ]
+       },
+       "phase": "cap",
+       "ruling": [],
+       "verb": "cap",
+       "when": null
+      }
+     ],
+     "id": "R5",
+     "text": "Nicht über den Höchstwert."
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R9",
+        "index": 0,
+        "rule": "sh-rest"
+       },
+       "payload": {
+        "sum": [
+         {
+          "proportion": {
+           "above": 0,
+           "max": null,
+           "min": null,
+           "of": {
+            "fact": "attr.KO"
+           },
+           "per": {
+            "number": 1
+           },
+           "round": "up",
+           "times": 2
+          }
+         }
+        ],
+        "to": {
+         "name": "leMax"
+        }
+       },
+       "phase": "base",
+       "ruling": [],
+       "verb": "derive",
+       "when": null
+      }
+     ],
+     "id": "R9",
+     "text": "LE-Höchstwert."
+    }
+   ],
+   "id": "sh-rest",
+   "kind": "core",
+   "name": "Regeneration",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S0",
+        "index": 0,
+        "rule": "sh-shield"
+       },
+       "payload": {
+        "name": "loadout.shield",
+        "value": "provides"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S0",
+     "text": "Schild | AT/PA-Mod -6/+3"
+    },
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "sh-shield"
+       },
+       "payload": {
+        "name": "loadout.shield.size",
+        "value": "gross"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "S1",
+     "text": "großer Schild"
+    }
+   ],
+   "id": "sh-shield",
+   "kind": "equipment",
+   "name": "Schild",
+   "provides": {
+    "atMod": -6,
+    "paMod": 3,
+    "technique": "Schilde"
+   },
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "S1",
+        "index": 0,
+        "rule": "sh-stun"
+       },
+       "payload": {
+        "rule": "sh-helpless"
+       },
+       "phase": "action",
+       "ruling": [],
+       "verb": "gain",
+       "when": {
+        "atLeast": 8,
+        "fact": "hero.conditionLevels"
+       }
+      }
+     ],
+     "id": "S1",
+     "text": "Acht Stufen machen handlungsunfähig."
+    }
+   ],
+   "id": "sh-stun",
+   "kind": "condition",
+   "levels": 4,
+   "name": "Betäubung",
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  },
+  {
+   "clauses": [
+    {
+     "effects": [
+      {
+       "because": null,
+       "origin": {
+        "clause": "R0",
+        "index": 0,
+        "rule": "sh-sword"
+       },
+       "payload": {
+        "name": "loadout.weapon",
+        "value": "provides"
+       },
+       "phase": "data",
+       "ruling": [],
+       "verb": "provide",
+       "when": null
+      }
+     ],
+     "id": "R0",
+     "text": "Schwert | AT/PA-Mod 0/-1"
+    }
+   ],
+   "id": "sh-sword",
+   "kind": "equipment",
+   "name": "Schwert",
+   "provides": {
+    "atMod": 0,
+    "paMod": -1,
+    "technique": "Schwerter"
+   },
+   "reviewed": null,
+   "rulings": [],
+   "source": {
+    "book": "Regelwerk",
+    "checked": "2026-09-25",
+    "hash": null,
+    "page": 1,
+    "url": "https://example.invalid/sh"
+   }
+  }
+ ],
+ "rulings": [
+  {
+   "answer": "One at a time.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "sh-armour.one",
+   "question": "Several armours?",
+   "status": "decided"
+  },
+  {
+   "answer": "One Stufe per Stufe.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "sh-habit.shift",
+   "question": "How far?",
+   "status": "decided"
+  },
+  {
+   "answer": "No.",
+   "decided": {
+    "by": "@fixture",
+    "date": "2026-09-25"
+   },
+   "id": "sh-load.jouster",
+   "question": "Does the rider's relief lift Stufe IV?",
+   "status": "decided"
+  }
+ ],
+ "vocabularySha256": "5421054a0963fb343aa2eaa10115e14e5df15575ca2638b817d3bdc3051e5fad",
+ "vocabularyVersion": 1
+}

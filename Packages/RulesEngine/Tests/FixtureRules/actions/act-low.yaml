@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25 (R39): a rule reading the current LE from the pool.
+id: act-low
+name: Erschöpft
+kind: core
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: L1
+    text: Unter 20 LeP AT −2.
+    effects:
+      - when: { hero.leCurrent: { below: 20 } }
+        add: { to: at, value: -2 }

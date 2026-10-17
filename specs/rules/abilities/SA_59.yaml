@@ -1,0 +1,143 @@
+# DRAFT FORMAT — see ../README.md.
+# Written from both sides: the hero splits an opponent's shield, and an opponent splits the
+# hero's (Boronmir's Großschild, StP 30). How a shield parries at all is `schilde`'s.
+# FORMAT: like STATE_10, one rule whose effects land on whichever side uses it.
+id: SA_59
+name: Schildspalter
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+manoeuvre: { kind: spezialmanoever, mountedCombat: false }
+# Not on horseback: reiterkampf.RK3, ruling reiterkampf.mounted-manoeuvres. Not on a double
+# attack: beidhaendiger-kampf.ZW6.
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Schildspalter.html
+  book: Regelwerk
+  page: 249
+  checked: 2026-09-26
+  hash: sha256:5067af68a00702f4d92778681fd7db7db69aa1e16b267239e8f2009b388917be
+reviewed: null
+# Optolith's text ends "Mehr zu Strukturpunkten siehe Seite 349"; the page does not have it.
+
+clauses:
+  - id: SS1
+    text: >
+      Hierzu wird eine Attacke gegen den Schild durchgeführt, gegen die der Gegner mit einer
+      Parade mit dem Schild oder Ausweichen verteidigen darf.
+    effects:
+      - offer: { choice: schildspalter }
+        ruling: [sf-technique-lists, manoeuvre-combination]
+      - when: { choice.schildspalter: true }
+        forbid: { what: { defence: [opponent.weaponParry] } }
+        because: gegen Schildspalter nur Schildparade oder Ausweichen
+        # The old offer's `opponent_may_only: [shieldParry, aw]`: what the opponent may not do.
+      - when: { choice.schildspalter: true }
+        tell: { to: opponent, text: "Nur Schildparade oder Ausweichen" }
+        # Opponents are not modelled (ADR-0005): printed on the announcement and the defence
+        # screen. Today the note says only "Schaden gegen Schild-SP" (CombatManeuver.infoText).
+      - when: { opponent.manoeuvre: schildspalter }
+        forbid: { what: { defence: weaponParry } }
+        because: gegen Schildspalter nur Schildparade oder Ausweichen
+        ruling: schildspalter-against-hero
+
+  - id: SS2
+    text: Für eine Parade mit dem Schild kann der Parade-Bonus des Schildes nicht genutzt werden.
+    effects:
+      - when: { choice.schildspalter: true }
+        tell: { to: opponent, text: "Schildparade ohne Parade-Bonus des Schildes" }
+      - when: { opponent.manoeuvre: schildspalter, action.defence: shieldParry }
+        suppress: { line: { line: schilde.SCH3 } }
+        ruling: [schildspalter-shield-bonus, schildspalter-against-hero]
+        # All of the doubled bonus (schildspalter-shield-bonus): Boronmir's Großschild 13 → 7.
+        # FORMAT: takes away another rule's line (the shield's doubled bonus, schilde.SCH3), rather
+        # than adding one.
+
+  - id: SS3
+    text: >
+      Misslingt die Parade oder das Ausweichen, wird der Schaden von den Strukturpunkten des
+      Schildes abgezogen. Fallen diese auf 0, ist der Schild zerstört.
+    effects:
+      - when: { choice.schildspalter: true, action.attack: hit }
+        tell: { to: opponent, text: "TP gehen auf die Strukturpunkte des Schildes; bei 0 ist er zerstört" }
+        # The damage roll is the attack's own (weapon TP, plus Wuchtschlag if combined under
+        # manoeuvre-combination). It is the GM's to subtract (ADR-0005).
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure }
+        item: { instance: { loadout: shield }, change: { structurePoints: { of: hit.tp, times: -1 } } }
+        ruling: schildspalter-against-hero
+        # The shield's current StP go down by the TP. "Misslingt die Parade oder das
+        # Ausweichen" is the defence roll's result (the old `action.defence: failed`).
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure }
+        suppress: { line: { line: [schaden.S1, schaden.S2] } }
+        because: die TP gehen auf die Strukturpunkte des Schildes, nicht auf die LeP
+        ruling: schildspalter-against-hero
+        # The old `damage: { …, not: le }`: nothing of this hit reaches the hero's LeP.
+      - when: { opponent.manoeuvre: schildspalter, check.result: failure, loadout.shield.structurePoints: { atMost: 0 } }
+        item: { instance: { loadout: shield }, change: { destroyed: true } }
+        ruling: schildspalter-against-hero
+        # "Fallen diese auf 0": read after the StP change above, as its event updates the fact;
+        # a destroyed shield leaves the loadout.
+        # The player states the opponent's manoeuvre with a toggle on the defence screen.
+        # FORMAT: damage to an item, not to the hero. Needs the shield's current StP, which the
+        # app does not keep yet (Shield.structurePoints is the maximum, shown on HeroDetailView).
+
+  - id: SS4
+    text: Dieses Spezialmanöver kann nur gegen Schildkämpfer eingesetzt werden.
+    effects:
+      - require: { that: { opponent.hasShield: true } }
+        # FORMAT: an opponent fact the app does not ask today (OpponentProfile has no shield).
+        # Asked like the opponent's reach, for as long as that opponent is fought.
+
+  - id: SS5
+    text: "Erschwernis: +/- 0"
+    none: no AT modifier — the attack is rolled at the hero's normal AT
+
+  - id: SS6
+    text: "Voraussetzungen: KK 13, Wuchtschlag I"
+    none: purchase prerequisites, not a roll
+
+  - id: SS7
+    text: "Kampftechniken: Hiebwaffen, Kettenwaffen, Zweihandhiebwaffen, Zweihandschwerter"
+    effects:
+      - require: { that: { loadout.weapon.technique: [CT_5, CT_6, CT_15, CT_16] } }
+        ruling: sf-technique-lists
+        # Boronmir: Rabenschnabel (Hiebwaffen) yes; Langschwert (Schwerter) and the Großschild
+        # (Schilde) no, under sf-technique-lists a. Optolith's list is the same.
+
+  - id: SS8
+    text: "AP-Wert: 15 Abenteuerpunkte"
+    none: purchase cost, not a roll
+
+rulings:
+  - id: schildspalter-shield-bonus
+    status: decided
+    question: >
+      Against Schildspalter, a shield parry is made without "der Parade-Bonus des Schildes".
+      A shield parry normally gets that bonus twice. Is all of it lost, or once?
+    answer: >
+      All of it: the parry is the bare Schilde value (Boronmir 7).
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SS2]
+    notes: >
+      A shield parry adds the Parade-Bonus twice (Parierwaffen und Schilde, Regelwerk p. 231;
+      schilde.SCH3); SS2 removes that line whole. Boronmir's Großschild (Parade-Bonus +3): shield
+      parry 13 − 6 = 7, before Belastung. The app computes the shield parry as base PA +
+      2 × paModifier at import (OptolithImportService, Shield.pa), so the −6 needs the bonus as
+      its own line to take away.
+  - id: schildspalter-against-hero
+    status: decided
+    question: >
+      When an opponent uses Schildspalter on the hero's shield, what should the defence screen
+      do — the weapon parry is not allowed, the shield parry loses its bonus, and on a failed
+      defence the TP go to the shield's Strukturpunkte, not the hero?
+    answer: >
+      A toggle 'Schildspalter' on the defence screen: weapon parry off, shield parry without its
+      bonus, and on a failed defence the TP are taken off the shield's current StP; at 0 the
+      shield is destroyed and leaves the loadout.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SS1, SS2, SS3]
+    notes: >
+      The consequences land on our side, as for the Passierschlag on the mount
+      (reiterkampf.passierschlag-on-mount), so the player states the opponent's manoeuvre (ADR-0005)
+      and the app does the rest. The app needs a current-StP field on Shield beside the maximum it
+      keeps today (Shield.structurePoints, from Optolith's stp), and a way to repair it. Today the
+      defence screen offers the weapon parry (Boronmir with the Rabenschnabel: 11) and the full
+      shield parry (13), and damage taken goes to the hero's LeP.

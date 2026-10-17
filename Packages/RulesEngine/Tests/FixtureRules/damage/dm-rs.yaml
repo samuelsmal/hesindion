@@ -1,0 +1,20 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32: trefferzonen-ruestungsschutz.RS1, a Fokusregel that needs another (a rule-level require).
+id: dm-rs
+name: Zonen-RS
+kind: core
+ruleset: fokus.dm2
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: R1
+    text: Setzt fokus.dm voraus.
+    effects:
+      - require: { that: { rulesets: fokus.dm } }
+        because: braucht fokus.dm
+        ruling: needs
+rulings:
+  - id: needs
+    question: Without fokus.dm?
+    answer: No.
+    decided: { by: "@fixture", date: 2026-09-26 }

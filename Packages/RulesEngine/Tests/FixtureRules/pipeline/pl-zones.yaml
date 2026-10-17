@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R35: the other derive, which suppresses the first (trefferzonen-ruestungsschutz.RS4).
+id: pl-zones
+name: Zonenrüstung
+kind: core
+ruleset: fokus.zones
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: Z1
+    text: Belastung nach Zonen statt nach Rüstung.
+    effects:
+      - suppress: { line: { line: pl-armour.A1 } }
+      - derive: { to: "level(rule: pl-load)", sum: [{ of: gmFact.zoneLoad }] }

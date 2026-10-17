@@ -1,0 +1,62 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_67
+name: Wuchtschlag
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+levels: 3
+manoeuvre: { kind: basismanoever }
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Wuchtschlag.html
+  book: Regelwerk
+  page: 250
+  checked: 2026-09-26
+  hash: sha256:c8879fc3fa907ba1f5185f6ce8c0bc721cb77671a5883168ecf9fbef024da9ba
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: W1
+    text: >
+      Die Attacke wird um -2 pro Stufe der Sonderfertigkeit erschwert. Bei Erfolg werden die
+      Trefferpunkte um 2 pro Stufe der Sonderfertigkeit erhöht.
+    effects:
+      # The manoeuvre is announced as `choice.wuchtschlag`, whose value is the Stufe announced:
+      # any Stufe up to the owned one (`level`), chosen per attack — one offer per owned Stufe.
+      - when: { level: 1 }
+        offer: { choice: wuchtschlag, options: [1] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 2 }
+        offer: { choice: wuchtschlag, options: [1, 2] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 3 }
+        offer: { choice: wuchtschlag, options: [1, 2, 3] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { choice.wuchtschlag: { atLeast: 1 } }
+        add: { to: at, value: -2, per: choice.wuchtschlag }
+        ruling: tiered-manoeuvre-stufe
+      - when: { choice.wuchtschlag: { atLeast: 1 }, action.attack: hit }
+        add: { to: tp, value: 2, per: choice.wuchtschlag }
+        ruling: tiered-manoeuvre-stufe
+
+  - id: W2
+    text: "Erschwernis: -2/-4/-6"
+    none: restates W1's AT cost per Stufe
+
+  - id: W3
+    text: >
+      Kampftechniken: Hiebwaffen, Kettenwaffen, Raufen, Schwerter, Stangenwaffen,
+      Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - require: { that: { loadout.weapon.technique: [CT_5, CT_6, CT_9, CT_12, CT_13, CT_15, CT_16] } }
+        ruling: sf-technique-lists
+        # Raufen is unarmed: the "weapon" is the hero's fists, which the loadout has no row for
+        # today (catalog note on SA_67, issue #14).
+
+  - id: W4
+    text: >
+      Voraussetzungen: Stufe I: KK 13; Stufe II: KK 15, Wuchtschlag I; Stufe III: KK 17,
+      Wuchtschlag II
+    none: purchase prerequisites, not a roll
+
+  - id: W5
+    text: "AP-Wert: Stufe I/II/III: 15/20/25 Abenteuerpunkte"
+    none: purchase cost, not a roll

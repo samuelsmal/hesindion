@@ -1,0 +1,11 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+id: pl-target
+name: Vorteilhafte Position
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: T1
+    text: AW +4.
+    effects:
+      - add: { to: aw, value: 4 }

@@ -1,0 +1,57 @@
+# DRAFT FORMAT — see ../README.md.
+id: ADV_54
+name: Eisern
+kind: advantage
+source:
+  url: https://dsa.ulisses-regelwiki.de/vorteil.html?vorteil=Eisern
+  book: Aventurisches Kompendium
+  page: 132
+  checked: 2026-09-27
+  hash: sha256:3ef7f85fea8089db4abf95c734d6e37b56c79d92f8e67e033014f7872115452a
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+# The Wundschwelle is defined in the Trefferzonen Fokusregel (trefferzonen.TZ8: "Die
+# Wundschwelle entspricht dem halben KO-Wert", rounded up per ADR-0006 and the page's own
+# example TZ9, KO 11 → 6). Eisern is a line in its breakdown, the way Kampfreflexe is a line in
+# INI's (SA_51). Gläsern (DISADV_56, −1) is its mirror; the two cannot meet on one hero in
+# practice, but nothing on this page forbids it.
+
+clauses:
+  - id: E1
+    text: Die Wundschwelle des Helden steigt durch den Vorteil um 1.
+    effects:
+      - add: { to: wundschwelle, value: 1 }
+        ruling: eisern-scope
+        # The breakdown: "8 (halbe KO 15, trefferzonen.TZ8) + 1 (Eisern)". Every comparison
+        # against the Wundschwelle (TZ8's multiples, the take-damage screen) reads the total.
+      - when: { not: { rulesets: fokus.trefferzonen } }
+        tell: { to: player, text: "wirkt nur mit Fokusregel Trefferzonen" }
+        ruling: eisern-scope
+        # Ruling eisern-scope (a): with the Fokusregel off, Eisern's line stays on the sheet with
+        # this note. The Wundschwelle's own derive is trefferzonen.TZ8's, which is off with the
+        # Fokusregel, so the engine's total is Eisern's +1 alone (boronmir-neu 19.9); the sheet
+        # keeps showing the Wundschwelle, as DISADV_57.verweichlicht-scope's note does.
+
+  - id: E2
+    text: "Voraussetzung: Keine"
+    none: no prerequisite
+
+  - id: E3
+    text: "AP-Wert: 5 Abenteuerpunkte"
+    none: cost, not a rule at the table
+
+rulings:
+  - id: eisern-scope
+    status: decided
+    question: >
+      The Wundschwelle is part of the Trefferzonen Fokusregel. With that Fokusregel off, does
+      Eisern do anything — and what does the hero sheet say about it?
+    answer: >
+      As Verweichlicht: Eisern acts only through the Fokusregel. With it off, the Wundschwelle
+      and Eisern's line stay on the sheet, marked 'wirkt nur mit Fokusregel Trefferzonen'.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [E1]
+    notes: >
+      The same reading as DISADV_57.verweichlicht-scope. The app shows a note on the Wundschwelle
+      breakdown and on Eisern when Trefferzonen is off; the damage screen's comparison row
+      (CombatWundschwelleRow) stays as it is. E1's `tell` is that note.

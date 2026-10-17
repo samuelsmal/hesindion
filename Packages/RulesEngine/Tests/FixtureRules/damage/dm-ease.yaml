@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32: trefferzonen.TZ5, whose clause offers the zone, adds the aiming line and replaces it
+# against an überrascht opponent.
+id: dm-ease
+name: Zielen
+kind: core
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: E1
+    text: Zielen.
+    effects:
+      - when: { query.target: at }
+        offer: { choice: zone, default: none }
+      - when: { not: { choice.zone: none } }
+        add: { to: at, value: -4 }
+      - when: { not: { choice.zone: none }, opponent.has: dm-state }
+        replace: { line: { line: dm-ease.E1 }, with: -2 }

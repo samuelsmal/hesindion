@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/state-rules.json (make rules-engine-fixture).
+# Task 28: a condition a span-limited gain gives (st-spans.P2).
+id: st-braced
+name: braced
+kind: condition
+levels: 4
+source: { url: https://example.invalid/state, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: C1
+    text: AT −Stufe.
+    effects:
+      - add: { to: at, value: -1 * level }

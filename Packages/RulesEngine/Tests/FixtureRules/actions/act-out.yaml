@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 33: a state that gains act-helpless too (STATE_2.BW3's Bewusstlos), which the Schip's
+# suppress of every condition's effects does not reach.
+id: act-out
+name: Ohnmächtig
+kind: state
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: O1
+    text: Dazu handlungsunfähig.
+    effects:
+      - gain: { rule: act-helpless }

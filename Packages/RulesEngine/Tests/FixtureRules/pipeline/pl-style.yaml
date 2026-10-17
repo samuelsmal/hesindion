@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: replace keeps per, targets and when (SA_923.VS1 on mehrfache-verteidigung.MV1).
+id: pl-style
+name: Verteidigungsstil
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: style
+    question: Which techniques?
+    answer: CT_1.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: VS1
+    text: Nur −2 je Verteidigung.
+    effects:
+      - replace: { line: { line: pl-defence.V1 }, with: -2 }
+        when: { loadout.weapon.technique: [CT_1] }
+        ruling: style

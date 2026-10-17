@@ -1,0 +1,27 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Ruling R64 (Task 30): the Regenerationsphase (regeneration.R2, R4, R5): an offered action whose
+# result raises LE, held at the maximum.
+id: sh-rest
+name: Regeneration
+kind: core
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: R2
+    text: Eine Regenerationsphase.
+    effects:
+      - offer: { choice: regenerationsphase }
+  - id: R4
+    text: 1W6 LeP.
+    effects:
+      - derive: { to: regeneration.le, sum: [{ of: roll.regeneration }] }
+      - when: { choice.regenerationsphase: true }
+        restore: { pool: le, amount: { of: regeneration.le } }
+  - id: R5
+    text: Nicht über den Höchstwert.
+    effects:
+      - cap: { to: leCurrent, max: { of: leMax } }
+  - id: R9
+    text: LE-Höchstwert.
+    effects:
+      - derive: { to: leMax, sum: [{ of: attr.KO, times: 2 }] }

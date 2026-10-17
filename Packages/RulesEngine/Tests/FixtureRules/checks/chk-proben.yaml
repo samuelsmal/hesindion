@@ -1,0 +1,56 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26: fertigkeitsproben's shape (FP2, FP3, FP5, QS1, QS2, FM2, KR1, KR2, PZ1), with nothing
+# resting on an open ruling.
+id: chk-proben
+name: Fertigkeitsproben
+kind: core
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: FP2
+    text: Ein EEW von 0 oder weniger, keine Probe.
+    effects:
+      - when: { query.target: check.attribute, query.result: { atMost: 0 } }
+        forbid: { what: { check: [talent, spell, liturgy] } }
+        because: "effektiver Eigenschaftswert 0 oder weniger: keine Probe möglich"
+  - id: FP3
+    text: Der FW gleicht aus.
+    effects:
+      - derive: { to: check.fw, sum: [{ of: fw.current }] }
+  - id: FP5
+    text: Was übrig bleibt, sind die FP.
+    effects:
+      - derive: { to: check.fp, sum: [{ of: check.fw }, { of: check.spent, times: -1 }] }
+  - id: QS1
+    text: FP zu QS.
+    effects:
+      - provide: { name: chk-proben.qs, value: { "0-3": 1, "4-6": 2, "7-9": 3, "10-12": 4, "13-15": 5, "16+": 6 } }
+      - when: { check.result: success }
+        derive: { to: check.qs, sum: ["table(chk-proben.qs, check.fp)"] }
+  - id: QS2
+    text: Mindestens 1 FP.
+    effects:
+      - when: { check.result: success }
+        floor: { to: check.fp, min: 1 }
+  - id: FM2
+    text: Der Meister erleichtert oder erschwert.
+    effects:
+      - when: { gmFact.checkModifier: { above: 0 } }
+        add: { to: check.modifier, value: { of: gmFact.checkModifier } }
+      - when: { gmFact.checkModifier: { below: 0 } }
+        add: { to: check.modifier, value: { of: 0, above: gmFact.checkModifier, times: -1 } }
+  - id: KR1
+    text: Doppel-1.
+    effects:
+      - when: { check.ones: { atLeast: 2 } }
+        tell: { to: gm, text: "Doppel-1" }
+  - id: KR2
+    text: Dreifach-1.
+    effects:
+      - when: { check.ones: { atLeast: 3 } }
+        tell: { to: gm, text: "Dreifach-1" }
+  - id: PZ1
+    text: Doppel-20, Dreifach-20.
+    effects:
+      - when: { check.twenties: { atLeast: 3 } }
+        tell: { to: gm, text: "Dreifach-20" }

@@ -1,0 +1,296 @@
+{
+  "combinators" : [
+    "all",
+    "any",
+    "not"
+  ],
+  "effects" : {
+    "add" : {
+      "args" : {
+        "per" : "enum:per",
+        "talentId" : "string",
+        "target" : "enum:target",
+        "value" : "int"
+      },
+      "required" : [
+        "target",
+        "value"
+      ]
+    },
+    "choice" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "list:effect"
+    },
+    "modifyRule" : {
+      "args" : {
+        "add" : "int",
+        "id" : "string",
+        "multiply" : "number",
+        "set" : "int",
+        "talentId" : "string",
+        "target" : "enum:target"
+      },
+      "required" : [
+        "id",
+        "target"
+      ]
+    },
+    "multiply" : {
+      "args" : {
+        "factor" : "number",
+        "talentId" : "string",
+        "target" : "enum:target"
+      },
+      "required" : [
+        "target",
+        "factor"
+      ]
+    },
+    "opponentAdd" : {
+      "args" : {
+        "target" : "enum:target",
+        "value" : "int"
+      },
+      "required" : [
+        "target",
+        "value"
+      ]
+    }
+  },
+  "enums" : {
+    "domain" : [
+      "meleeAttack",
+      "meleeParry",
+      "meleeDodge",
+      "rangedAttack",
+      "spellCasting",
+      "liturgyCasting",
+      "talentCheck",
+      "damage"
+    ],
+    "kind" : [
+      "passive",
+      "offer"
+    ],
+    "opponentType" : [
+      "demon"
+    ],
+    "per" : [
+      "tier",
+      "defencesThisRound"
+    ],
+    "reach" : [
+      "Kurz",
+      "Mittel",
+      "Lang"
+    ],
+    "size" : [
+      "winzig",
+      "klein",
+      "mittel",
+      "gross",
+      "riesig"
+    ],
+    "span" : [
+      "hero",
+      "opponent",
+      "attack",
+      "round"
+    ],
+    "target" : [
+      "at",
+      "pa",
+      "aw",
+      "vw",
+      "fk",
+      "tp",
+      "talent",
+      "rs"
+    ],
+    "tiers" : [
+      "owned"
+    ],
+    "water" : [
+      "huefthoch",
+      "unterWasser"
+    ],
+    "zone" : [
+      "kopf",
+      "torso",
+      "arme",
+      "beine",
+      "vordereBeine",
+      "mittlereGliedmassen",
+      "hintereBeine",
+      "schwanz",
+      "fangarme",
+      "koerper"
+    ]
+  },
+  "predicates" : {
+    "gm.fact" : {
+      "args" : {
+        "id" : "string",
+        "span" : "enum:span"
+      },
+      "required" : [
+        "id",
+        "span"
+      ]
+    },
+    "hero.fokusRule" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "string"
+    },
+    "hero.hasRule" : {
+      "args" : {
+        "id" : "string",
+        "minTier" : "int"
+      },
+      "required" : [
+        "id"
+      ]
+    },
+    "hero.state" : {
+      "args" : {
+        "id" : "string",
+        "minLevel" : "int"
+      },
+      "required" : [
+        "id"
+      ]
+    },
+    "loadout.reach" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "enum:reach"
+    },
+    "loadout.shield" : {
+      "args" : {
+        "item" : "string"
+      },
+      "required" : [
+
+      ]
+    },
+    "loadout.weapon" : {
+      "args" : {
+        "consecrated" : "bool",
+        "item" : "string",
+        "technique" : "strings"
+      },
+      "required" : [
+
+      ]
+    },
+    "opponent.onFoot" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ]
+    },
+    "opponent.reach" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "enum:reach"
+    },
+    "opponent.size" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "enum:size"
+    },
+    "opponent.state" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "string"
+    },
+    "opponent.type" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "enum:opponentType"
+    },
+    "situation.beengt" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ]
+    },
+    "situation.defencesThisRound" : {
+      "args" : {
+        "min" : "int"
+      },
+      "required" : [
+        "min"
+      ]
+    },
+    "situation.mounted" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ]
+    },
+    "situation.targetZone" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "list:zone"
+    },
+    "situation.water" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ],
+      "value" : "list:water"
+    },
+    "situation.woundEffect" : {
+      "args" : {
+
+      },
+      "required" : [
+
+      ]
+    }
+  },
+  "version" : 1
+}

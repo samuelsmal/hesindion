@@ -1,0 +1,16 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: a row naming its technique by id (ITEMTPL_19: `technique: CT_5`).
+id: sh-axe
+name: Axt
+kind: equipment
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+provides:
+  technique: CT_5
+  atMod: 0
+  paMod: 0
+clauses:
+  - id: A0
+    text: Axt | AT/PA-Mod 0/0
+    effects:
+      - provide: { name: loadout.weapon, value: provides }

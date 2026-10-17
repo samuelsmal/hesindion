@@ -24,78 +24,50 @@ enum SpellModification: Hashable {
     case omitFormula
 }
 
-// MARK: - ModifierContext
-
-struct ModifierContext {
-    let hero: Hero
-    let domain: CheckDomain
-
-    // Combat shared
-    var mounted: Bool = false
-    var schipIgnoreZustand: Bool = false
-    var dualAttackActive: Bool = false
-    var beengteUmgebung: Bool = false
-    var gottgefaellig: Bool = false
-
-    // Trefferzonen (Fokus-Regeln)
-    var targetHitZone: HitZone? = nil
-    /// GM-driven. The opponent is not modelled, so this cannot come from hero states.
-    var targetIsSurprised: Bool = false
-
-    // Melee specific
-    var opponentReach: WeaponReach? = nil
-    var maneuver: CombatManeuver = .normal
-    var isOffHand: Bool = false
-    var twoHandedGrip: Bool = false
-    var defenseCount: Int = 0
-    var schipDefenseBoost: Bool = false
-
-    // Ranged specific
-    var distanz: Int = 1
-    var groesse: Int = 2
-    var bewegungZiel: Int = 1
-    var bewegungSchuetze: Int = 0
-    var sicht: Int = 0
-    var kampfgetuemmel: Bool = false
-    var zielen: Int = 0
-    var vomPferd: Int = 0
-
-    // Magic specific
-    var maintainedSpellCount: Int = 0
-    var foreignTradition: Bool = false
-    var omitGesture: Bool = false
-    var omitFormula: Bool = false
-    var ironSteinCarried: Int = 0
-    var distractionLevel: Int = 0
-    var spellModifications: [SpellModification] = []
-
-    // Plaenkler
-    var plaenklerActive: Bool = false
-    var plaenklerBonus: PlaenklerBonus = .at
-}
-
 // MARK: - ModifierDefinition
 
 struct ModifierDefinition: Identifiable {
     let id: String
     let domains: Set<CheckDomain>
-    let evaluate: (ModifierContext) -> ModifierLine?
+    /// The catalog ids this definition stands for, so the migration test can
+    /// refuse a rule that is implemented on both sides. Empty only for a rule
+    /// with no catalog entry yet.
+    ///
+    /// A set in all but type: order and duplicates mean nothing, it is only
+    /// ever read as a membership test. It is a `var` rather than a `let` so
+    /// the synthesized memberwise init keeps the default — a `let` with a
+    /// default value is dropped from that init, and every call site without a
+    /// `rules:` argument would stop compiling.
+    var rules: [String] = []
+    let evaluate: (Situation) -> ModifierLine?
 }
 
 // MARK: - ModifierEngine
 
+/// The union of the Swift definitions still in migration and the catalog
+/// (design §7 step 2). When the Swift list is empty this becomes a thin
+/// wrapper around `RuleEvaluator`.
 struct ModifierEngine {
-    private let modifiers: [ModifierDefinition]
+    let definitions: [ModifierDefinition]
+    let catalog: RuleCatalog
 
-    init(modifiers: [ModifierDefinition]) {
-        self.modifiers = modifiers
+    init(modifiers: [ModifierDefinition], catalog: RuleCatalog = .bundled) {
+        self.definitions = modifiers
+        self.catalog = catalog
     }
 
-    func evaluate(context: ModifierContext) -> [ModifierLine] {
-        let lines = modifiers
-            .filter { $0.domains.contains(context.domain) }
-            .compactMap { $0.evaluate(context) }
-        return Self.applyingZustandCap(lines)
+    /// Everything the catalog says about this roll.
+    func evaluation(_ situation: Situation) -> Evaluation {
+        RuleEvaluator.evaluate(catalog: catalog, situation: situation)
+    }
+
+    /// The lines both sides produce, capped once.
+    func evaluate(context situation: Situation) -> [ModifierLine] {
+        let swift: [ModifierLine] = situation.checkDomain.map { domain in
+            definitions.filter { $0.domains.contains(domain) }.compactMap { $0.evaluate(situation) }
+        } ?? []
+        let catalogLines = evaluation(situation).lines.map(\.modifierLine)
+        return Self.applyingZustandCap(swift + catalogLines)
     }
 
     /// GR: the combined Zustand penalty is capped at −5. Encumbrance and Schmerz count
@@ -109,8 +81,8 @@ struct ModifierEngine {
         return lines + [ModifierLine(value: correction, source: L("source.zustandCap"), isZustand: false)]
     }
 
-    func totalModifier(context: ModifierContext) -> Int {
-        evaluate(context: context).reduce(0) { $0 + $1.value }
+    func totalModifier(context situation: Situation) -> Int {
+        evaluate(context: situation).reduce(0) { $0 + $1.value }
     }
 }
 
@@ -124,8 +96,8 @@ extension ModifierEngine {
         defs.append(contentsOf: MeleeModifiers.all)
         defs.append(contentsOf: DefenseModifiers.all)
         defs.append(contentsOf: RangedModifiers.all)
+        defs.append(contentsOf: FumbleModifiers.all)
         defs.append(contentsOf: MagicModifiers.all)
-        defs.append(contentsOf: HitZoneModifiers.all)
         return ModifierEngine(modifiers: defs)
     }()
 }

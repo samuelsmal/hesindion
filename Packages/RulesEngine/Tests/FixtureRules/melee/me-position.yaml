@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# A core rule another core rule enables (vorteilhafte-position.VP1 via reiterkampf.RK2).
+id: me-position
+name: Vorteilhafte Position
+kind: core
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: P1
+    text: Vorteilhafte Position +2 AT.
+    effects:
+      - when: { any: [{ gmFact.vorteilhaftePosition: true }, { hero.mounted: true }] }
+        add: { to: at, value: 2 }

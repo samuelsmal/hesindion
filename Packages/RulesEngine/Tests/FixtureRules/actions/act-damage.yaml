@@ -1,0 +1,18 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25 fix 1: schaden.S2 / trefferzonen.TZ8's shape: a hit's SP lower LE, and a hit over the
+# Wundschwelle gains a Wundeffekt. Paying LeP is neither.
+id: act-damage
+name: Schaden
+kind: core
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: D1
+    text: Die SP senken die LeP.
+    effects:
+      - add: { to: leCurrent, value: { of: sp, times: -1 } }
+  - id: D2
+    text: Über der Wundschwelle ein Wundeffekt.
+    effects:
+      - when: { hit.overWundschwelle: { atLeast: 1 } }
+        gain: { rule: act-stunned, levels: 1 }

@@ -17,54 +17,54 @@ struct MountHealingSheet: View {
         VStack(spacing: 0) {
             // Header
             Text("Reittier: Heilung")
-                .font(.system(.headline, weight: .black))
+                .font(.dsaHeading(.headline))
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.groupEquipment)
-                .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                .dsaBox(.flush)
 
             VStack(spacing: 16) {
                 // Mount name
                 Text(mount.name)
-                    .font(.system(.title3, weight: .bold))
+                    .font(.dsaHeading(.title3))
 
                 // +/- stepper
                 HStack(spacing: 0) {
                     Button { if amount > 1 { amount -= 1 } } label: {
                         Text("−")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.groupEquipment.opacity(0.3))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.raised)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
 
                     Text("\(amount)")
-                        .font(.system(.largeTitle, weight: .black))
+                        .font(.dsaHeading(.largeTitle))
                         .fontDesign(.monospaced)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(UIColor.systemBackground))
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                        .dsaBox(.raised)
 
                     Button { amount += 1 } label: {
                         Text("+")
-                            .font(.system(.title, weight: .bold))
+                            .font(.dsaHeading(.title))
                             .foregroundStyle(Color.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color.groupEquipment.opacity(0.3))
-                            .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 2))
+                            .dsaBox(.raised)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsaMotion)
                 }
 
                 // Preview
                 Text("\(currentLE) + \(amount) → \(newLE) / \(maxLE) LP")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.dsaMono(.caption, emphasis: true))
                     .foregroundStyle(.secondary)
 
                 // Confirm button
@@ -81,14 +81,14 @@ struct MountHealingSheet: View {
                     dismiss()
                 } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(.title2, weight: .bold))
+                        .font(.dsaHeading(.title2))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.groupEquipment)
-                        .overlay(Rectangle().stroke(Color.dsaBorder, lineWidth: 3))
+                        .dsaBox(.raised)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsaMotion)
             }
             .padding(16)
 

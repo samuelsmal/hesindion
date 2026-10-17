@@ -1,0 +1,14 @@
+# The source of Tests/RulesEngineTests/Fixtures/damage-rules.json (make rules-engine-fixture).
+# Task 32: SA_160, an SF that exists only inside an optional rule set: owned, it does nothing
+# while the set is off.
+id: dm-fokus
+name: Fokus-SF
+kind: specialAbility
+ruleset: fokus.dm
+source: { url: https://example.invalid/dm, book: Regelwerk, page: 1, checked: 2026-09-26, hash: null }
+reviewed: null
+clauses:
+  - id: F1
+    text: AT −1.
+    effects:
+      - add: { to: at, value: -1 }

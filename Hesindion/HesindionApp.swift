@@ -28,6 +28,8 @@ struct HesindionApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // nil in every normal launch, so the app follows the system.
+                .preferredColorScheme(DebugLaunch.appearance)
         }
         .modelContainer(sharedModelContainer)
     }

@@ -1,0 +1,77 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_48
+name: Finte
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+levels: 3
+manoeuvre: { kind: basismanoever }
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Finte.html
+  book: Regelwerk
+  page: 247
+  checked: 2026-09-26
+  hash: sha256:c936cb60f83f68bdb8eba120c2a2a742a33f3dca104108de2068f69d0119b18a
+reviewed: null
+
+clauses:
+  - id: F1
+    text: >
+      Der Angreifer kann mit diesem Manöver seine eigene Attacke pro Stufe der Sonderfertigkeit
+      um -1 erschweren, was beim Gelingen die Verteidigung des Gegners um -2 pro Stufe der
+      Sonderfertigkeit erschwert.
+    effects:
+      # The manoeuvre is announced as `choice.finte`, whose value is the Stufe announced: any
+      # Stufe up to the owned one (`level`), chosen per attack — one offer per owned Stufe.
+      - when: { level: 1 }
+        offer: { choice: finte, options: [1] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 2 }
+        offer: { choice: finte, options: [1, 2] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { level: 3 }
+        offer: { choice: finte, options: [1, 2, 3] }
+        ruling: [tiered-manoeuvre-stufe, sf-technique-lists]
+      - when: { choice.finte: { atLeast: 1 } }
+        add: { to: at, value: -1, per: choice.finte }
+        ruling: tiered-manoeuvre-stufe
+      - when: { choice.finte: { atLeast: 1 }, action.attack: hit }
+        add: { to: [opponent.pa, opponent.aw], value: -2, per: choice.finte }
+        ruling: tiered-manoeuvre-stufe
+        # "Verteidigung" — parry or dodge, whichever the opponent uses.
+        # FORMAT: `per: choice.finte` counts the Stufe the player announced, not `level` (the
+        # Stufe owned).
+
+  - id: F2
+    text: "Erschwernis: -1/-2/-3"
+    none: restates F1's AT cost per Stufe
+
+  - id: F3
+    text: >
+      Kampftechniken: Dolche, Fächer, Fechtwaffen, Hiebwaffen, Peitschen, Raufen, Schwerter,
+      Stangenwaffen, Zweihandhiebwaffen, Zweihandschwerter
+    effects:
+      - require: { that: { loadout.weapon.technique: [CT_3, CT_20, CT_4, CT_5, CT_8, CT_9, CT_12, CT_13, CT_15, CT_16] } }
+        ruling: sf-technique-lists
+        # Dolche, Fächer, Fechtwaffen, Hiebwaffen, Peitschen, Raufen, Schwerter, Stangenwaffen,
+        # Zweihandhiebwaffen, Zweihandschwerter. The page notes that techniques from later books
+        # were added to the list, so it can grow; Spießwaffen (CT_21) is not on it today.
+
+  - id: F4
+    text: >
+      Voraussetzungen: Stufe I: GE 13, Stufe II: GE 15, Finte I; Stufe III: GE 17, Finte II
+    none: purchase prerequisites, not a roll
+
+  - id: F5
+    text: >
+      Anmerkung: Neue Kampftechniken aus späteren Publikationen in die Liste der Kampftechniken
+      hinzugefügt. Als Quellenangabe sind (meist) die Publikationen der entsprechenden
+      Kampftechnik heranzuziehen.
+    none: an editor's note on F3's list
+
+  - id: F6
+    text: "AP-Wert: Stufe I/II/III: 15/20/25 Abenteuerpunkte"
+    none: purchase cost, not a roll
+
+# Excluded by: SA_62.ST4 (Sturmangriff cannot be combined with Finte); SA_152.AD2 (no
+# Basismanöver in a round with Auf Distanz halten announced); kampfsonderfertigkeiten.KS3 (one
+# Basismanöver per action, so not with Wuchtschlag or Unterlaufen). The exclusions live there.

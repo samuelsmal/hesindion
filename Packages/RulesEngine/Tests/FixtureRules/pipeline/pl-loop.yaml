@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# The depth guard: a target that reads itself.
+id: pl-loop
+name: Schleife
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: L1
+    text: TP + TP.
+    effects:
+      - add: { to: tp, value: { of: tp } }

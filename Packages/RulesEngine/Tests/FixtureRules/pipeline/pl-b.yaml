@@ -1,0 +1,12 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# R26: B reads the operand A raises.
+id: pl-b
+name: Leser
+kind: core
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: B1
+    text: Probe erschwert um je volle Wundschwelle SP.
+    effects:
+      - add: { to: check.modifier, value: { of: hit.sp, per: wundschwelle, round: down, times: -1 } }

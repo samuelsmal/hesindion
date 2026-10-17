@@ -1,9 +1,10 @@
 import Foundation
 
 /// Zonenaufschlag for targeted attacks (DSA 5 Fokus-Trefferzonenregeln).
+///
+/// The evaluator carries the rule (`GRW_zonenaufschlag`); `penalty` is the same table for the
+/// zone picker's chips until step 3 reads them off the evaluation.
 enum HitZoneModifiers {
-
-    static let all: [ModifierDefinition] = [zonenaufschlag]
 
     /// Base Zonenaufschlag per zone.
     ///
@@ -29,17 +30,5 @@ enum HitZoneModifiers {
         if hasSonderfertigkeit { value /= 2 }        // every base is even; asserted in tests
         if targetIsSurprised { value += 2 }          // 2 toward zero
         return min(value, 0)                         // never a bonus
-    }
-
-    static let zonenaufschlag = ModifierDefinition(
-        id: "zonenaufschlag",
-        domains: [.meleeAttack, .rangedAttack]
-    ) { ctx in
-        guard let zone = ctx.targetHitZone else { return nil }
-        let ruleId = ctx.domain == .rangedAttack ? "SA_161" : "SA_160"
-        let hasSF = ctx.hero.combatSpecialAbilities.contains { $0.ruleId == ruleId }
-        let value = penalty(for: zone, hasSonderfertigkeit: hasSF, targetIsSurprised: ctx.targetIsSurprised)
-        guard value != 0 else { return nil }
-        return ModifierLine(value: value, source: "\(L("modifier.trefferzone")): \(L(zone.nameKey))")
     }
 }

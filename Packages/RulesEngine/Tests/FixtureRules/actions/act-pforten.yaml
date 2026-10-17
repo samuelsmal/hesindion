@@ -1,0 +1,27 @@
+# The source of Tests/RulesEngineTests/Fixtures/actions-rules.json (make rules-engine-fixture).
+# Task 25: SA_74's shape: a split between AsP and LeP (at least 1 AsP) that suppresses the
+# ordinary cost, and on a failure half the cost, AsP first, then LeP.
+id: act-pforten
+name: Pforten
+kind: specialAbility
+source: { url: https://example.invalid/act, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: P1
+    text: LeP statt AsP, mindestens 1 AsP.
+    effects:
+      - when: { check.kind: spell }
+        offer: { choice: split.le }
+      - when: { hero.aspCurrent: 0 }
+        forbid: { what: { choice: split.le } }
+        because: "mindestens 1 AsP pro Zauber"
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: success }
+        cost: { pool: asp, amount: { of: spell.cost }, split: { pools: [asp, le], min: { asp: 1 } } }
+      - when: { choice.split.le: { atLeast: 1 } }
+        suppress: { line: { line: act-magie.M1 } }
+        because: "Pforten: die Kosten werden geteilt"
+  - id: P3
+    text: Misslingt er, die Hälfte, erst AsP, dann LeP.
+    effects:
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: failure }
+        cost: { pool: asp, amount: { of: spell.cost }, fallThrough: [le], onFailure: 0.5 }

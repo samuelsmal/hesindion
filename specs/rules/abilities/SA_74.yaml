@@ -1,0 +1,121 @@
+# DRAFT FORMAT — see ../README.md.
+# Probe (example 20): a magic SF that changes how a cast is paid for.
+id: SA_74
+name: Verbotene Pforten
+kind: specialAbility
+group: Allgemeine magische Sonderfertigkeiten
+source:
+  url: https://dsa.ulisses-regelwiki.de/allgemeine_magische_sonderfertigkeit.html?sonderfertigkeit=Verbotene+Pforten
+  book: Regelwerk
+  page: 285
+  checked: 2026-09-27
+  hash: sha256:cf0044aa1533109f1bd490f14abe71969460f5af23f4c0b6347d848a32cbbee7
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+# The page also cites Kodex der Magie p. 322. Machtvolle Verbotene Pforten (SA_302, Magisch
+# erweitert) builds on it and is not drafted.
+#
+# FORMAT: a cost split between two resource pools at the player's choice, with a minimum in one
+# pool (at least 1 AsP), and — on failure — a fixed order in which the pools pay (AsP first,
+# then LE). The set has one pool per price (a Schip for Schicksalspunkte, `costs: { schip: 1 }`)
+# and one rule that redirects *damage* to another creature's LE (reiterkampf.RK11 "Reittier
+# getroffen": whose LE the damage screen writes to). Neither splits one price across pools or
+# falls through from one pool to the next.
+# Paying LeP is not damage: no RS, no Wundschwelle, no Wundeffekt (a reading; the page says
+# "aufwenden", never "Schaden"). It lowers LE all the same, so Schmerz follows from the LE
+# thresholds (COND_6.SZ3) like any other loss.
+
+clauses:
+  - id: VP1
+    text: >
+      Ein Zauberer kann Anstelle von AsP auch LeP für die Zauberkosten aufwenden. Es muss jedoch
+      pro Zauber mindestens 1 AsP aufgewendet werden.
+    effects:
+      - when: { check.kind: spell }
+        offer: { choice: split.le }
+        ruling: vp-sequence
+        # The old `offer: { choice: payWithLeP, amount: { pool: le, min: 0, max:
+        # "spell.cost.effective - 1" } }`: the player's split is the fact `choice.split.le`
+        # (plan Task 25: `split` reads `choice.split.<pool>`), how many of the cost's points are
+        # LeP. Its bounds are the cost's `split` below: 0 up to the cost less VP1's 1 AsP.
+        # One LeP for one AsP (the page gives no rate). The rest of the cost, at least 1, is
+        # AsP, paid by the `split` cost below (zaubermodifikationen.ZM12's AsP-only cost is
+        # suppressed once LeP are chosen). With 0 AsP left, the SF cannot be used.
+      - when: { hero.aspCurrent: 0 }
+        forbid: { what: { choice: split.le } }
+        because: "mindestens 1 AsP pro Zauber"
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: success }
+        cost: { pool: asp, amount: { of: spell.cost }, split: { pools: [asp, le], min: { asp: 1 } } }
+        # The old `split: { charge: spell.cost.effective, pools: { le: choice.payWithLeP, asp:
+        # rest }, min: { asp: 1 } }` (plan A.6): the cost after the modifications, split between
+        # AsP and LeP at the player's choice, at least 1 AsP.
+      - when: { choice.split.le: { atLeast: 1 } }
+        suppress: { line: { line: zaubermodifikationen.ZM12 } }
+        because: "Verbotene Pforten: die Kosten werden geteilt (VP1) bzw. bei Misslingen nach VP3 gezahlt"
+        # ZM12's AsP-only cost gives way to VP1's split (and, on a failure, VP3's half), so the
+        # cost is paid once.
+
+  - id: VP2
+    text: >
+      Dies ist ausgesprochen schmerzhaft und erfordert daher eine Probe auf das Talent
+      Selbstbeherrschung. Misslingt diese, misslingt auch der Zauber.
+    effects:
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 } }
+        check:
+          of: { talent: TAL_8 }
+          onFailure:
+            - forbid: { what: { check: [spell] } }
+              because: "Selbstbeherrschung misslungen: der Zauber misslingt"
+        ruling: vp-sequence
+        # Selbstbeherrschung is TAL_8. The old `on_failure: { set: { cast.outcome: failed } }`:
+        # no verb sets a check's result, so the failed Selbstbeherrschung forbids the spell check,
+        # as fertigkeitsproben.FP2 forbids a check that cannot succeed; the procedure reads the
+        # forbidden cast as failed (see MIGRATION.md, "Notes for the engine tasks").
+        # Ruling vp-sequence (b): the Selbstbeherrschung is rolled first, as a gate, once the LeP
+        # are announced — the way reiterkampf's orders put the Reiten check before the order.
+        # On a failure the spell fails without its own check (VP3's half cost, AsP first); on a
+        # success the spell is rolled as usual. No check overturns a roll already shown.
+        # `application: null`: the page names none; Handlungsfähigkeit bewahren and Störungen
+        # ignorieren are both plausible, and only a Fertigkeitsspezialisierung depends on it.
+        # Belastung does not reach Selbstbeherrschung (COND_1.belastung-reach); Schmerz does.
+
+  - id: VP3
+    text: >
+      Der Zauberkundige muss dann wie sonst die Hälfte der Kosten aufbringen, wobei diese zuerst
+      von den AsP und, sollten diese nicht ausreichen, dann von seinen LE abgezogen werden.
+    effects:
+      - when: { check.kind: spell, choice.split.le: { atLeast: 1 }, check.result: failure }
+        cost: { pool: asp, amount: { of: spell.cost }, onFailure: 0.5, fallThrough: [le] }
+        ruling: [vp-sequence, round-up]
+        # AsP until empty, the rest from LE (`fallThrough`, plan A.6); half, rounded up
+        # (`onFailure: 0.5`). The old `when: { check_failed: VP2 }` is the cast failed with LeP
+        # chosen, which VP2's failed Selbstbeherrschung makes it. A spell check that fails on its
+        # own after a passed Selbstbeherrschung pays the same way (ruling vp-sequence, b).
+        # "wie sonst" points at zaubermodifikationen.ZM12's half cost. The LeP the player chose
+        # in VP1 do not matter any more: the half is paid AsP first.
+        # FORMAT: an ordered fallback between pools (AsP, then LE), part of the `split` concept.
+
+  - id: VP4
+    text: "Voraussetzung: MU 12"
+    none: purchase prerequisite, not a rule at the table
+
+  - id: VP5
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    none: purchase cost
+
+rulings:
+  - id: vp-sequence
+    status: decided
+    question: >
+      When is the Selbstbeherrschung check rolled — before the spell check, or after it, when
+      the LeP are paid? And does a caster whose spell check failed need it to pay part of the
+      half cost with LeP?
+    answer: >
+      Before: announce the LeP, roll Selbstbeherrschung first; on a failure the spell fails
+      without its own check (half cost, AsP first). On a success roll the spell as usual.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [VP1, VP2, VP3]
+    notes: >
+      Selbstbeherrschung is rolled first, as a gate; the spell check only opens after it. The
+      caster commits to the LeP before casting (VP1's choice), and no result changes after it is
+      shown. A spell check that fails after a passed Selbstbeherrschung pays VP3's half cost,
+      AsP first, then LE, with no second Selbstbeherrschung.

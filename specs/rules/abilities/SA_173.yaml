@@ -1,0 +1,40 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_173
+name: Verbessertes Unterlaufen
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+passive: true                  # "(passiv)" on the page; kampfsonderfertigkeiten.KS2 lists it as "wirkt immer"
+techniques: [Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter, Zweihandhiebwaffen, Zweihandschwerter]
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_VerbessertesUnterlaufen.html
+  book: Aventurisches Kompendium
+  page: 156
+  checked: 2026-09-26
+  hash: sha256:a7d611c7f87321944e4d02b9221b93423d48bba2e45e200b077f751f634093fb
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+
+clauses:
+  - id: VU1
+    text: Ein Abenteurer kann mit dieser SF das Manöver Unterlaufen mit Spezialmanövern kombinieren.
+    none: >
+      it lifts SA_172.U3's exclusion; the lift is written there (`unless: { hero.has: SA_173 }`),
+      so the exclusion and its exception are read in one place.
+    # The old `lifts: [SA_172.U3]` is a back-reference for the reader: the rule being lifted holds
+    # the condition (U3's `when: { not: { hero.has: SA_173 } }`), so a `suppress` of U3 here
+    # would say it twice. Same two-sided dependency as SA_43 ↔ reiterkampf orders.
+
+  - id: VU2
+    text: "Voraussetzungen: Unterlaufen I"
+    none: purchase prerequisite, not a roll
+
+  - id: VU3
+    text: >
+      Kampftechniken: Dolche, Fechtwaffen, Hiebwaffen, Kettenwaffen, Raufen, Schilde, Schwerter,
+      Zweihandhiebwaffen, Zweihandschwerter
+    none: >
+      the same list as SA_172.U6; the lift in U3 applies whenever Unterlaufen itself is usable,
+      so this list needs no gate of its own (sf-technique-lists decides U6, not this).
+
+  - id: VU4
+    text: "AP-Wert: 10 Abenteuerpunkte"
+    none: purchase cost, not a roll

@@ -1,0 +1,73 @@
+{
+  "planPath": "docs/plans/2026-09-14-rules-catalog-registry-plan.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Classify combat abilities by group, not by the effects table",
+      "status": "completed",
+      "description": "**Goal:** The importer files a Sonderfertigkeit as combat when Optolith's group says so, which fixes 217 of 226 combat abilities landing in the general list.\n\n**Files:**\n- Create: `Hesindion/Models/CombatSpecialAbilityGroup.swift`\n- Create: `HesindionTests/CombatSpecialAbilityGroupTests.swift`\n- Modify: `Hesindion/Services/RulesDatabase.swift` (`RuleDetail.groupId`, `lookup(id:)`, new `lookupGroupName`)\n- Modify: `Hesindion/Services/OptolithImportService.swift:461-467`\n- Modify: `Hesindion/Models/Hero.swift:433-445` (comment)\n- Modify: `CHANGELOG.md`\n\n**Acceptance Criteria:**\n- [ ] `CombatSpecialAbilityGroup` has four cases (3, 9, 10, 11) and a test checks each name against `rules.db`\n- [ ] After importing Boronmir, SA_884 is in `combatSpecialAbilities` and no general trait belongs to a combat group\n- [ ] `OptolithImportService` no longer reads `rule.effects`\n\n**Verify:** `make test-ui` → `** TEST SUCCEEDED **`\n\n**Steps:** write CombatSpecialAbilityGroupTests; add SpecialAbilityGroup enum; add groupId to RuleDetail and lookupGroupName; reclassify in importer; fix Hero comment; re-record HeroDetailView snapshots only if they fail; CHANGELOG; commit.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/CombatSpecialAbilityGroup.swift\", \"HesindionTests/CombatSpecialAbilityGroupTests.swift\", \"Hesindion/Services/RulesDatabase.swift\", \"Hesindion/Services/OptolithImportService.swift\", \"Hesindion/Models/Hero.swift\", \"CHANGELOG.md\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"SpecialAbilityGroup has four cases checked by name against rules.db\", \"Boronmir's SA_884 is filed as combat and no general trait is in a combat group\", \"OptolithImportService no longer reads rule.effects\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Beidhändiger Kampf by id",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** The one remaining name-matched ability gets its id, and the id is covered like the others.\n\n**Files:**\n- Modify: `Hesindion/Models/Hero.swift:295-301`\n- Modify: `Hesindion/Models/CombatAbility.swift`\n- Modify: `HesindionTests/CombatAbilityCoverageTests.swift:48-70`\n\n**Acceptance Criteria:**\n- [ ] `CombatAbility.beidhaendigerKampf == \"SA_42\"` and the name test expects \"Beidhändiger Kampf\"\n- [ ] `Hero.beidhaendigerKampfLevel` reads `tier(of: .beidhaendigerKampf)`; no `name.contains` in Hero.swift\n\n**Verify:** `make test-ui` → `** TEST SUCCEEDED **`; `grep -n \"name.contains\" Hesindion/Models/Hero.swift` → nothing\n\n**Steps:** extend expected names and add testBeidhaendigerKampfIsReadById; add case and wiring note; replace the property; run; commit.\n\n```json:metadata\n{\"files\": [\"Hesindion/Models/Hero.swift\", \"Hesindion/Models/CombatAbility.swift\", \"HesindionTests/CombatAbilityCoverageTests.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"CombatAbility.beidhaendigerKampf is SA_42 with its name tested\", \"beidhaendigerKampfLevel is read by id, no name matching remains\"], \"modelTier\": \"mechanical\"}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: The catalog module, tested without a database",
+      "status": "completed",
+      "description": "**Goal:** Pure Python functions that load a catalog, list every problem with it, count statuses, compare against a snapshot, and write the `catalog` table.\n\n**Files:**\n- Create: `scripts/build_rules_db/catalog.py`\n- Create: `scripts/build_rules_db/test_catalog.py`\n\n**Acceptance Criteria:**\n- [ ] `validate` reports missing entry, unknown id, duplicate, wrong name, unknown status, byHand without pointer, missing pointer file, missing symbol, todo without why\n- [ ] `check_snapshot` returns [] on equality and names \"backwards\"/\"grew\"/\"--update-snapshot\" on drift\n- [ ] `write_catalog_table` creates the table with one row per entry\n\n**Verify:** `python3 -m unittest discover -s scripts/build_rules_db -v` → `OK`, 9 tests\n\n**Steps:** write test_catalog.py; run to fail; write catalog.py; run; commit.\n\n```json:metadata\n{\"files\": [\"scripts/build_rules_db/catalog.py\", \"scripts/build_rules_db/test_catalog.py\"], \"verifyCommand\": \"python3 -m unittest discover -s scripts/build_rules_db -v\", \"acceptanceCriteria\": [\"validate reports all nine problem kinds\", \"check_snapshot distinguishes equality, backwards coverage and grown todo\", \"write_catalog_table writes one row per entry\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Remove the effects layer from the app",
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
+      "description": "**Goal:** Nothing in Swift reads the `effects` table any more, so the table can go in the next task without a red build in between.\n\n**Files:**\n- Delete: `Hesindion/Engine/RuleEffectModifiers.swift`\n- Modify: `Hesindion/Services/RulesDatabase.swift` (RuleEffect, RuleDetail.effects, lookupEffects)\n- Modify: `Hesindion/Views/RuleDetailView.swift:62-70, 101-125`\n- Modify: `Hesindion/Models/CombatAbility.swift` (Wiring removed)\n- Modify: `HesindionTests/CombatAbilityCoverageTests.swift:120-175`\n- Modify: `Hesindion/Theme/Strings.swift` (remove \"effects\")\n\n**Acceptance Criteria:**\n- [ ] `grep -rn \"RuleEffect\\|lookupEffects\\|\\.effects\\b\\|\\.wiring\\|Wiring\" Hesindion HesindionTests --include='*.swift'` prints nothing\n- [ ] CombatAbilityCoverageTests keeps id, name, either-list, tier and sample-hero tests; loses the three effects/wiring tests\n\n**Verify:** `make test-ui` → `** TEST SUCCEEDED **`; the grep → no output\n\n**Steps:** git rm RuleEffectModifiers; strip RuleEffect/lookupEffects/effects; drop the view's effects section and effectRow; replace CombatAbility.swift without Wiring; trim tests; run; commit.\n\n```json:metadata\n{\"files\": [\"Hesindion/Engine/RuleEffectModifiers.swift\", \"Hesindion/Services/RulesDatabase.swift\", \"Hesindion/Views/RuleDetailView.swift\", \"Hesindion/Models/CombatAbility.swift\", \"HesindionTests/CombatAbilityCoverageTests.swift\", \"Hesindion/Theme/Strings.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"No Swift source references RuleEffect, lookupEffects, .effects, .wiring or Wiring\", \"Coverage tests trimmed to the ones not about the effects table\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Build the catalog into rules.db, drop the effects table",
+      "status": "completed",
+      "blockedBy": [
+        3,
+        4
+      ],
+      "description": "**Goal:** `make rules-db` compiles `specs/data/rules-catalog.yaml` into a `catalog` table, fails on any catalog problem or snapshot drift, and the effects layer's files are gone.\n\n**Files:**\n- Create: `scripts/build_rules_db/scaffold_catalog.py`\n- Create: `specs/data/rules-catalog.yaml` (generated)\n- Create: `specs/data/rules-catalog.snapshot.json`\n- Modify: `scripts/build_rules_db/build_db.py` (args, schema, print_stats, main; delete import_effects/_insert_effect)\n- Modify: `Makefile` (rules-db target, DSA_DATA, RULES_DB)\n- Modify: `Hesindion/Resources/rules.db` (rebuilt)\n- Delete: `specs/data/rules.yaml`, `scripts/scrape_effects/`\n\n**Acceptance Criteria:**\n- [ ] `make rules-db` exits 0 and prints `catalog: implemented 0, byHand 0, noRollEffect 0, todo 2675`\n- [ ] `catalog` has 2675 rows and no `effects` table exists\n- [ ] Removing one catalog line makes `make rules-db` exit 1 naming the id with `no catalog entry`\n\n**Verify:** `make rules-db` → `Built Hesindion/Resources/rules.db successfully.`; `make test-ui` → `** TEST SUCCEEDED **`\n\n**Steps:** write and run scaffold; rewrite parse_args and schema; replace import_effects with import_catalog; Makefile target; rm rules.db then `make rules-db UPDATE_SNAPSHOT=1`; git rm rules.yaml and scrape_effects; prove the guard; run tests; commit.\n\n```json:metadata\n{\"files\": [\"scripts/build_rules_db/scaffold_catalog.py\", \"specs/data/rules-catalog.yaml\", \"specs/data/rules-catalog.snapshot.json\", \"scripts/build_rules_db/build_db.py\", \"Makefile\", \"Hesindion/Resources/rules.db\", \"specs/data/rules.yaml\", \"scripts/scrape_effects\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"make rules-db exits 0 with todo 2675\", \"catalog table has 2675 rows, effects table gone\", \"a missing catalog line fails the build by id\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: The app reads the catalog",
+      "status": "completed",
+      "blockedBy": [
+        5
+      ],
+      "description": "**Goal:** `RulesDatabase` exposes catalog entries and counts, the rule detail screen says what the app does with a rule, and the tests that do not depend on hand entries are in place.\n\n**Files:**\n- Modify: `Hesindion/Services/RulesDatabase.swift` (CatalogStatus, CatalogPointer, CatalogEntry, RuleDetail.catalog, lookupCatalogEntry, catalogEntries(status:), catalogStatusCounts, ruleIdsWithoutCatalogEntry)\n- Modify: `Hesindion/Views/RuleDetailView.swift`\n- Modify: `Hesindion/Theme/Strings.swift` (catalog.section, catalog.status.*)\n- Create: `HesindionTests/RulesCatalogTests.swift`\n\n**Acceptance Criteria:**\n- [ ] `lookupCatalogEntry(ruleId: \"SA_661\")?.status == .todo` and `ruleIdsWithoutCatalogEntry()` is empty\n- [ ] `RuleDetail.catalog` populated by `lookup(id:)`\n- [ ] Rule detail screen shows \"In Hesindion\" with status label and note\n- [ ] Four status labels localized in German\n\n**Verify:** `make test-ui` → `** TEST SUCCEEDED **`, RulesCatalogTests listed\n\n**Steps:** write RulesCatalogTests (entry, counts, pointers, labels); add types and queries; strings; view section; run; commit.\n\n```json:metadata\n{\"files\": [\"Hesindion/Services/RulesDatabase.swift\", \"Hesindion/Views/RuleDetailView.swift\", \"Hesindion/Theme/Strings.swift\", \"HesindionTests/RulesCatalogTests.swift\"], \"verifyCommand\": \"make test-ui\", \"acceptanceCriteria\": [\"Catalog entries and counts readable from RulesDatabase\", \"RuleDetail carries its catalog entry\", \"Rule screen shows the status\", \"Status labels localized\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: The rules the app already handles, recorded",
+      "status": "completed",
+      "blockedBy": [
+        6
+      ],
+      "description": "**Goal:** Every rule the app does something with today is `byHand` with a pointer that resolves, the snapshot says so, and the tests hold coverage at that floor.\n\n**Files:**\n- Modify: `specs/data/rules-catalog.yaml` (45 byHand entries)\n- Modify: `specs/data/rules-catalog.snapshot.json` (via UPDATE_SNAPSHOT=1)\n- Modify: `Hesindion/Resources/rules.db` (rebuilt)\n- Modify: `HesindionTests/RulesCatalogTests.swift` (floor, CombatAbility, states, sample hero)\n- Modify: `HesindionTests/CombatAbilityCoverageTests.swift` (remove sample-hero test)\n\n**Acceptance Criteria:**\n- [ ] `make rules-db UPDATE_SNAPSHOT=1` prints `catalog: implemented 0, byHand 45, noRollEffect 0, todo 2630`\n- [ ] Every CombatAbility case, ADV_5/25/26/27/44/49/54, DISADV_56 and the 25 StateCatalog states are byHand\n- [ ] No Sonderfertigkeit Boronmir carries is todo\n\n**Verify:** `make rules-db` → exit 0 with the counts above; `make test-ui` → `** TEST SUCCEEDED **`\n\n**Steps:** add four tests; run to fail; write the 21 rule entries and 25 state entries per the plan's table; grep CombatManeuver for schildspalter/vorstoss; `make rules-db UPDATE_SNAPSHOT=1`; run tests; commit.\n\n```json:metadata\n{\"files\": [\"specs/data/rules-catalog.yaml\", \"specs/data/rules-catalog.snapshot.json\", \"Hesindion/Resources/rules.db\", \"HesindionTests/RulesCatalogTests.swift\", \"HesindionTests/CombatAbilityCoverageTests.swift\"], \"verifyCommand\": \"make rules-db && make test-ui\", \"acceptanceCriteria\": [\"byHand 45, todo 2630 after rebuild\", \"every handled rule and state is byHand with a resolving pointer\", \"Boronmir carries no todo ability\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 8: Documentation",
+      "status": "completed",
+      "blockedBy": [
+        7
+      ],
+      "description": "**Goal:** `AGENTS.md` and the changelog describe the catalog, not the effects table.\n\n**Files:**\n- Modify: `AGENTS.md:85-86` and the Build & Run make block\n- Modify: `CHANGELOG.md`\n\n**Acceptance Criteria:**\n- [ ] `grep -n \"effects table\\|RuleEffectModifiers\\|wiring\" AGENTS.md` prints nothing\n- [ ] AGENTS.md says how to rebuild rules.db and what fails the build\n\n**Verify:** the grep → no output; `git diff --stat` shows only the two files\n\n**Steps:** replace the two bullets; add the make rules-db line; changelog Added and Removed; commit.\n\n```json:metadata\n{\"files\": [\"AGENTS.md\", \"CHANGELOG.md\"], \"verifyCommand\": \"grep -n 'effects table\\\\|RuleEffectModifiers\\\\|wiring' AGENTS.md; test $? -eq 1\", \"acceptanceCriteria\": [\"AGENTS.md no longer mentions the effects table, RuleEffectModifiers or wiring\", \"AGENTS.md documents make rules-db and the build checks\"], \"modelTier\": \"mechanical\"}\n```"
+    }
+  ],
+  "lastUpdated": "2026-09-14T14:47:24.464563+00:00"
+}

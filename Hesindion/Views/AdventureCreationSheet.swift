@@ -15,7 +15,7 @@ struct AdventureCreationSheet: View {
         Form {
             Section {
                 TextField(L("adventureName"), text: $name)
-                    .font(.system(.body, weight: .bold))
+                    .font(.dsaBody(.body))
             }
 
             Section {

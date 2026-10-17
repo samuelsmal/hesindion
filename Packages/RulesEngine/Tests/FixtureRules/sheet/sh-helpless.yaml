@@ -1,0 +1,10 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+id: sh-helpless
+name: Handlungsunfähig
+kind: state
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: H1
+    text: Keine Handlungen.
+    none: a state

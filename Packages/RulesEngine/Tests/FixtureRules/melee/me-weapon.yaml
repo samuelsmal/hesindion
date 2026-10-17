@@ -1,0 +1,19 @@
+# The source of Tests/RulesEngineTests/Fixtures/melee-rules.json (make rules-engine-fixture).
+# A weapon's Waffeneigenschaften under a Fokusregel (ITEMTPL_19.RS3, RS4).
+id: me-weapon
+name: Rabenschnabel
+kind: equipment
+source: { url: https://example.invalid/me, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+provides: { technique: CT_5, reach: mittel }
+clauses:
+  - id: W3
+    text: Beritten +1 TP.
+    effects:
+      - when: { rulesets: fokus.waffeneigenschaften, hero.mounted: true }
+        add: { to: tp, value: 1 }
+  - id: W4
+    text: Nach einem Patzer Betäubung.
+    effects:
+      - when: { rulesets: fokus.waffeneigenschaften, action.attack: confirmedFumble }
+        gain: { rule: me-horse, levels: 1 }

@@ -1,0 +1,34 @@
+# The source of Tests/RulesEngineTests/Fixtures/pipeline-rules.json (make rules-engine-fixture).
+# Task 23: legality on a defence (mehrfache-verteidigung): forbid, query.result, limit, require.
+id: pl-defence
+name: Verteidigung
+kind: specialAbility
+source: { url: https://example.invalid/pl, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+rulings:
+  - id: zero-value
+    question: Is a defence at 0 allowed?
+    answer: No.
+    decided: { by: "@fixture", date: 2026-09-25 }
+clauses:
+  - id: V1
+    text: Jede weitere Verteidigung −3; keine zweite gegen denselben Angriff.
+    effects:
+      - add: { to: [pa, aw], value: -3, per: round.defencesMade }
+        when: { round.defencesMade: { atLeast: 1 } }
+      - forbid: { what: { defence: [pa, aw] } }
+        when: { round.defendedThisAttack: true }
+  - id: V3
+    text: Bei 0 oder weniger keine Verteidigung.
+    effects:
+      - forbid: { what: { defence: [pa, aw] } }
+        when: { query.result: { atMost: 0 } }
+        ruling: zero-value
+  - id: V4
+    text: Nur eine Parade pro Runde.
+    effects:
+      - limit: { what: { defence: [pa] }, max: 1, per: round }
+  - id: V5
+    text: Ausweichen braucht Platz.
+    effects:
+      - require: { that: { gmFact.room: true }, for: { defence: [aw] } }

@@ -1,0 +1,96 @@
+# DRAFT FORMAT — see ../README.md.
+# Only the uses of Schicksalspunkte examples 3 and 4 need; the rest of the page is not written.
+# Deliberately partial: Menge, Erster, Neuer Wurf, Qualität verbessern, Schadenswurf wiederholen,
+# "Neben diesen Möglichkeiten …", Rückgewinnung and its table are not clauses yet — the file does
+# not cover the page until they are added.
+id: schicksalspunkte
+name: Schicksalspunkte
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Schicksalspunkte.html
+  book: Regelwerk
+  page: 29
+  checked: 2026-09-26
+  hash: sha256:6a48dfc5d041ec79f5ded9346037918359a370052818b9710704cb99ad3f9f4a
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: SP1
+    text: >
+      Für jede Probe kann nur jeweils 1 Schip eingesetzt werden. Es ist aber durchaus möglich,
+      einen Schip für Erster einzusetzen, dann einen Zustand zu ignorieren und anschließend bei
+      einer Fertigkeitsprobe Neuer Wurf einzusetzen. Als Anwendungen auf Proben gelten Neuer
+      Wurf, Qualität verbessern und Schadenswurf wiederholen. Sie können nur einmal für den Wurf
+      oder die Probe eingesetzt werden.
+    none: limits how Schips combine; the example uses below are not "Anwendungen auf Proben"
+
+  - id: SP-verteidigung
+    name: Verteidigung
+    text: >
+      Wer seine Verteidigung im Kampf stärken will, der gibt 1 Schip aus und erhält bis zum Ende
+      der aktuellen Kampfrunde einen Bonus von 4 auf alle Verteidigungen. Dies kann zu einem
+      beliebigen Zeitpunkt der Kampfrunde erfolgen (aber vor dem Würfeln der Verteidigung). Der
+      Bonus erhöht auch die Anzahl der maximalen Verteidigungen eines Helden, da bei mehreren
+      Verteidigungen sein Verteidigungswert erst später auf 0 sinkt.
+    effects:
+      - offer: { choice: schipVerteidigung, costs: [{ cost: { pool: schips, amount: 1 } }], span: round }
+        # "aber vor dem Würfeln der Verteidigung": the offer is part of the defence's breakdown,
+        # which is shown before its dice come in; once the roll is in, it is no longer offered.
+      - when: { choice.schipVerteidigung: true }
+        add: { to: [pa, aw], value: 4 }
+        ruling: SA_65.vh-stacking
+        # The ruling's `appliesTo` names this clause: the Schip's +4 stacks with
+        # Verteidigungshaltung's (mehrfache-verteidigung V12). It is decided, so the line applies
+        # as before and carries it.
+
+  - id: SP-zustand
+    name: Zustand ignorieren
+    text: >
+      Es kostet ebenfalls 1 Schip, alle Zustände, durch die man betroffen ist, für eine
+      Kampfrunde zu ignorieren.
+    effects:
+      - offer: { choice: schipZustandIgnorieren, costs: [{ cost: { pool: schips, amount: 1 } }], span: round }
+      - when: { choice.schipZustandIgnorieren: true }
+        suppress: { line: { ruleKind: condition } }
+        because: Schip, Zustand ignorieren
+        ruling: [schip-ignore-belastung, schip-lifts-incapacity]
+        # FORMAT: switches off every effect of every Zustand for the round — the lines on
+        # checks, the GS/INI penalties, and the Handlungsunfähig a Stufe IV carries. The
+        # suppressed lines should still be listed, struck through, not vanish.
+      - when: { choice.schipZustandIgnorieren: true }
+        suppress: { line: { line: zustaende.Z5 } }
+        because: Schip, Zustand ignorieren
+        ruling: schip-lifts-incapacity
+        # Task 33 fix round 1: eight Zustandsstufen in sum carry Handlungsunfähig too (ruling
+        # schip-lifts-incapacity), but zustaende is a core rule, which the `ruleKind: condition`
+        # suppress above does not reach.
+
+rulings:
+  - id: schip-ignore-belastung
+    status: decided
+    question: >
+      "Alle Zustände … ignorieren" — does that include Belastung?
+    answer: >
+      Yes — every Zustand, Belastung included, for one Kampfrunde.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [SP-zustand]
+    notes: >
+      The page makes no exception, and Belastung is a Zustand. The Belastung lines (checks, INI,
+      GS) are suppressed with the rest for the round; the armour's own extra penalties
+      (ruestung-und-belastung.A1) are not a Zustand and stay. The app exempts Belastung today
+      ("a Schip cannot will away gear-derived Belastung", SharedModifiers.encumbrance,
+      Hero.hasIgnorableZustand).
+
+  - id: schip-lifts-incapacity
+    status: decided
+    question: >
+      Does "Zustand ignorieren" also lift the Handlungsunfähig that a Zustand at Stufe IV, or
+      eight Zustandsstufen in sum, carries?
+    answer: >
+      Yes, for that Kampfrunde — it is carried by Zustände. It does not lift a Handlungsunfähig
+      stated outright or implied by a Status (Bewusstlos, Versteinert).
+    decided: { by: "@samuelsmal", date: 2026-09-20 }
+    notes: >
+      Recorded from the doc comment on Hero.isHandlungsunfaehigFromZustaende ("owner ruling,
+      2026-09-20").
+    appliesTo: [SP-zustand]

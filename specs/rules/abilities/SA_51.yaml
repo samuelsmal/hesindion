@@ -1,0 +1,54 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_51
+name: Kampfreflexe
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+levels: 3
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Kampfreflexe.html
+  book: Regelwerk
+  page: 248
+  checked: 2026-09-26
+  hash: sha256:b68f0e3d08a5d5f9ae300f683a2883ea8ddd4fc9c37fabdd4d802b58b7287f7b
+reviewed: { by: "@samuelsmal", date: 2026-09-24 }
+
+clauses:
+  - id: KR1
+    text: Der INI-Basiswert steigt um 1 pro Stufe der Sonderfertigkeit.
+    effects:
+      - add: { to: iniBase, value: level }
+        ruling: kampfreflexe-mounted
+        # FORMAT: modifies a *derived value* (the INI Basiswert on the hero sheet), not a check.
+        # It belongs in the value's own breakdown — "INI 12 = (MU+GE)/2 12 + Kampfreflexe II 2"
+        # — the way Eisern belongs in the Wundschwelle's (ADR-0006), and so reaches every INI roll.
+        # Mounted, RK1 swaps the base for the mount's and the SF still adds to it (ruling
+        # kampfreflexe-mounted), so the swap must come first: the old `after: reiterkampf.RK1` is
+        # the phase order (spec §5.2), where the base (and every `set`) comes before the adds.
+
+  - id: KR2
+    text: "Voraussetzungen: Stufe I: IN 13; Stufe II: IN 15, Kampfreflexe I; Stufe III: IN 17, Kampfreflexe II"
+    none: purchase prerequisites, not a roll
+
+  - id: KR3
+    text: "Kampftechniken: alle"
+    none: a passive ability on a derived value; no weapon is involved
+
+  - id: KR4
+    text: "AP-Wert: Stufe I/II/III: 10/15/20 Abenteuerpunkte"
+    none: purchase cost
+
+rulings:
+  - id: kampfreflexe-mounted
+    status: decided
+    question: >
+      Mounted, the rider rolls initiative from the mount's INI base (reiterkampf.RK1). Does
+      Kampfreflexe add to that base?
+    answer: >
+      Yes: the SF raises whatever base the hero rolls from.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [KR1, reiterkampf.RK1]
+    notes: >
+      Mounted INI = the mount's base + Stufe (kampfreflexe 12.5). Answered against the
+      recommendation, which had asked for reiterkampf.rider-ini (does the rider's Belastung still
+      reach the mount's base) to be answered the same way; that one was decided a (no), so the
+      mount's base takes the rider's Kampfreflexe but not their Belastung. The app ignores Kampfreflexe everywhere today.

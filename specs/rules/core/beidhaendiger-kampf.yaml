@@ -1,0 +1,171 @@
+# DRAFT FORMAT — see ../README.md.
+# The core rule for fighting with two weapons. Not the SF of the same name (SA_42), which only
+# lowers ZW3's penalty.
+id: beidhaendiger-kampf
+name: Beidhändiger Kampf (Grundregel)
+kind: core
+source:
+  url: https://dsa.ulisses-regelwiki.de/Spezielle_Nahkampfregeln/beidhaendiger-kampf.html
+  book: Regelwerk
+  page: 238
+  checked: 2026-09-27
+  hash: sha256:66254f0a1b7983c5f2c2ccdab2297c4997c2970d560a4fc658df496144ccaa88
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+
+clauses:
+  - id: ZW10
+    text: |
+      Als besondere Herausforderung an Koordination und Geschick gilt vielen Kriegern der Kampf mit zwei Waffen. Zahlreiche Kämpfer Aventuriens schwören hierbei auf zwei gleichartige Waffen wie zwei Dolche oder zwei Äxte, während andere Kämpfer eher Kombinationen beispielsweise aus einer Fechtwaffe und einem Parierdolch bevorzugen.
+      Zwei Waffen im Nahkampf
+      Einige Helden versprechen sich durch den Kampf mit zwei Nahkampfwaffen Vorteile. Der beidhändige Nahkampf ist allerdings nicht einfach, und nur ein geübter Kämpfer kann daraus größeren Nutzen ziehen.
+    none: flavour; the page's introduction before ZW1
+
+  - id: ZW1
+    text: >
+      Es dürfen keine Waffen verwendet werden, die man mit zwei Händen führen muss. Auch
+      Kettenwaffen können für beidhändigen Kampf nicht genutzt werden (außer in Kombination mit
+      einem Schild).
+    effects:
+      - when: { loadout.twoHanded: true }
+        forbid: { what: { loadout: other } }
+        because: keine Waffen, die man mit zwei Händen führen muss
+        # No second piece beside a weapon that needs both hands (`loadout.other` is the second
+        # piece: a weapon, a Parierwaffe or a shield).
+      - when: { any: [{ loadout.weapon.technique: CT_6 }, { loadout.other.technique: CT_6 }], not: { loadout.other: shield } }
+        forbid: { what: { loadout: other } }
+        because: Kettenwaffen im beidhändigen Kampf nur mit einem Schild
+        # Kettenwaffen is CT_6: with a Morgenstern the second piece may be a shield, not a
+        # second weapon (situation 11.10).
+      # Raufen in a hand is allowed, the default: each fist counts as one of the two weapons,
+      # fist and fist, or weapon and fist (ruling raufen-double-attack, on ZW2's offer). The fist
+      # in the off hand takes ZW4 like any other item. The old `allow` overrode the default that
+      # Raufen fills both hands; allowed is the default, so it has no effect of its own.
+
+  - id: ZW2
+    text: >
+      Der Held kann mit 1 Aktion mit beiden Waffen zuschlagen, muss für sie aber getrennt eine
+      Attacke der entsprechenden Kampftechniken würfeln. Das Ziel kann regulär Verteidigungen
+      gegen die einzelnen Angriffe verwenden. Für jeden Treffer werden die Trefferpunkte einzeln
+      bestimmt und mit RS und Lebensenergie des Getroffenen verrechnet.
+    effects:
+      - when: { not: { loadout.other: null } }
+        offer: { choice: doubleAttack, costs: [{ cost: { pool: actions, amount: 1 } }] }
+        ruling: raufen-double-attack
+        # With a second piece in hand (a fist counts, ruling raufen-double-attack). The double
+        # attack is the hero's Aktion: "mit 1 Aktion" (the old `costs: action`; ruling R23, as
+        # STATE_10.L4 and fernkampf.FK11 carry theirs). It is two rolls, the main hand's
+        # and then the off hand's, `at(with: mainHand)` and `at(with: offHand)`, each with its own
+        # breakdown and its own damage (the old `then`); making it sets `round.doubleAttack`,
+        # which ZW3 reads for the rest of the round.
+        # FORMAT: one action producing two separate rolls, each with its own breakdown and
+        # its own damage. An action shape, not a modifier.
+
+  - id: ZW3
+    text: >
+      Für beide Angriffe gilt eine Erschwernis von -2 auf die Attacke und alle Verteidigungen des
+      Angreifers in der laufenden Kampfrunde, da die Koordination und das ungewöhnliche Gewicht
+      stören, solange der Held mit beiden Waffen angreift. Die Erschwernis entfällt, wenn er pro
+      Kampfrunde nur eine Waffe im Angriff nutzt. Diese Erschwernis gilt nicht bei der
+      Verteidigung mit einem Schild, sehr wohl aber beim Angriff mit diesem. Durch die
+      Sonderfertigkeiten Beidhändiger Kampf I-II kann dieser Abzug gesenkt werden.
+    effects:
+      - when: { round.doubleAttack: true, not: { action.defence: shieldParry } }
+        add: { to: [at, pa, aw], value: -2 }
+        ruling: zw3-earlier-defences
+        # SA_42.BH1 lowers this line with an add of its own under the same `when`. "In der
+        # laufenden Kampfrunde" (the old `lasts: round`): `round.doubleAttack` is a round fact,
+        # true from the double attack to the end of the round.
+        # From the double attack on: a defence rolled earlier in the round is not charged.
+        # FORMAT: a penalty switched on by an action and lasting to the end of the round —
+        # a round-scoped fact written by the double attack, read by every later check.
+
+  - id: ZW4
+    text: >
+      Für die Waffe in der falschen Hand gilt eine zusätzliche Erschwernis von -4 auf Attacke
+      und Parade. Durch den Vorteil Beidhändig kann diese Erschwernis aufgehoben werden. Diese
+      Erschwernis gilt nicht bei der Verteidigung mit einem Schild, sehr wohl aber beim Angriff
+      mit diesem.
+    effects:
+      - when: { action.with: offHand, not: { action.defence: shieldParry } }
+        add: { to: [at, pa], value: -4 }
+        # ADV_5.V2 suppresses this clause's line; schilde.SCH5 too, for a shield parry.
+        # Not AW: a dodge is made with no weapon. Applies to every attack or parry made
+        # with the off-hand item, double attack or not.
+
+  - id: ZW5
+    text: Die beiden Attacken können gegen unterschiedliche Gegner in Angriffsdistanz ausgeführt werden.
+    none: the app does not track which opponent an attack goes to beyond the announcement; nothing to restrict
+
+  - id: ZW6
+    text: Als Kampfsonderfertigkeiten dürfen bei beiden Angriffen nur Basismanöver ausgeführt werden.
+    effects:
+      - when: { round.doubleAttack: true }
+        forbid: { what: { manoeuvre: { kind: spezialmanoever } } }
+        because: bei beidhändigem Angriff nur Basismanöver
+
+  - id: ZW7
+    text: >
+      Wer mit beidhändigem Kampf pariert, kann sich aussuchen, mit welcher Waffe er dies tun
+      möchte. Auch hier gelten die entsprechenden Abzüge von beidhändigem Kampf und Kampf mit der
+      falschen Hand.
+    effects:
+      - offer: { choice: parryWith, options: [mainHand, offHand] }
+        # The penalties are ZW3 and ZW4 themselves; this clause only makes both hands a choice.
+        # The hand picked is the parry's `with:` (`pa(with: offHand)`), which ZW4 reads as
+        # `action.with`.
+
+  - id: ZW8
+    text: >
+      Sollte der Kämpfer einen Patzer würfeln, so kann er keine zweite Attacke würfeln. Würfelt
+      er den Patzer erst bei der zweiten Attacke, dann gilt die erste dennoch als gelungen.
+    effects:
+      - when: { round.doubleAttack: true, roll.firstAttack: patzer }
+        forbid: { what: { attack: offHand } }
+        because: Patzer bei der ersten Attacke, keine zweite
+        # The second attack is the off hand's. A Patzer on the second leaves the first standing:
+        # nothing to encode.
+
+  - id: ZW9
+    text: >
+      Beispiel: Arbosch hat sich eine zweite Axt zugelegt. Sein Freund Geron hält wenig davon,
+      was ein Grund mehr für Arbosch ist, ihm zu beweisen, was für ein mächtiger Kämpfer er ist.
+      In einem Übungskampf greift Arbosch seinen Freund an. Er kann mit den beiden Äxten
+      gleichzeitig innerhalb einer Aktion zuschlagen, muss jedoch jeden Schlag einzeln als
+      Attacke auswürfeln. Der Attackewert des ersten Schlags mit seiner Rechten ist um -2
+      erschwert, da es nicht leicht ist, zwei Äxte gleichzeitig zu führen. Der Attackewert des
+      zweiten Schlages, den er mit seiner Linken ausführt, ist sogar um -6 erschwert, da Arbosch
+      Rechtshänder ist.
+    none: a worked example; it is situations/beidhaendiger-kampf.yaml 11.2
+
+rulings:
+  - id: zw3-earlier-defences
+    status: decided
+    question: >
+      ZW3's −2 reaches "alle Verteidigungen des Angreifers in der laufenden Kampfrunde". Does it
+      reach a defence the hero made earlier in the same round, before deciding on the double
+      attack?
+    answer: >
+      Only defences after the double attack in the same round.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [ZW3]
+    notes: >
+      "solange der Held mit beiden Waffen angreift" ties the penalty to the attacking; a defence
+      rolled before it was not hindered by it, and a parry already rolled cannot be re-rolled.
+      No round-start declaration. The app already does this (CombatView sets
+      dualAttackPenaltyActive when the double attack is chosen and clears it at the next round).
+
+  - id: raufen-double-attack
+    status: decided
+    question: >
+      Can Raufen (unarmed) be one or both of the two "Waffen" of a double attack — fist and fist,
+      or weapon and fist?
+    answer: >
+      Yes: each fist counts as a weapon — fist and fist, or weapon and fist, with the off-hand −4
+      on the other hand.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [ZW1, ZW2, ZW4, SA_42.BH1]
+    notes: >
+      SA_42's own technique list names Raufen, which would mean nothing if an unarmed double
+      attack were impossible. The app treats Raufen as both hands (CombatLoadoutPicker.canSelect:
+      Raufen only when nothing else is selected), so it must become selectable as the off-hand
+      item, and as both.

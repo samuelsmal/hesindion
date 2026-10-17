@@ -1,18 +1,44 @@
 import SwiftUI
 
 enum DSALayout {
+    /// Line height for the icon+value chips in the combat header, so two chips
+    /// with different SF Symbols come out the same height.
+    static let chipIconHeight: CGFloat = 18
+    /// Gap between a control and the caption naming it.
+    static let captionGap: CGFloat = 4
+    /// Side of a drawn weapon glyph, so the app's own icons sit at the same
+    /// weight as the SF Symbols they share a row with.
+    static let weaponIconSize: CGFloat = 20
+
     /// Horizontal padding for sections and content areas.
     static let horizontalPadding: CGFloat = 16
     /// Inner content padding (rows, cells).
     static let contentPadding: CGFloat = 12
     /// Vertical padding for headers (combat, modal, section).
     static let headerVerticalPadding: CGFloat = 14
-    /// Primary border width — highest emphasis elements.
-    static let primaryBorder: CGFloat = 3
-    /// Secondary border width — standard elements.
-    static let secondaryBorder: CGFloat = 2
-    /// Tertiary border width — compact/detail elements.
-    static let tertiaryBorder: CGFloat = 1
+    /// The one border width. Emphasis is carried by the shadow, not by a heavier
+    /// stroke, so there is a single weight — ADR-0008.
+    static let border: CGFloat = 2
+
+    /// The signature hard offset shadow: radius 0, colour = `dsaBorder`. Pressed
+    /// elements move by exactly this amount so they land flush in the space the
+    /// shadow occupied (ADR-0008).
+    ///
+    /// 5, not the reference's 4: at iPad scale a 4pt offset sits close enough to
+    /// the 2pt border to read as a thicker edge rather than as depth. The
+    /// reference is calibrated for CSS pixels on the web.
+    static let shadowOffset: CGFloat = 5
+
+    /// Corners are square, deliberately — a harder line than the reference's own
+    /// 5px radius, and what 272 of the app's 282 strokes already did before it
+    /// was written down (ADR-0009).
+    static let cornerRadius: CGFloat = 0
+
+    /// Divider between rows *inside* a `.dsaBox` — the replacement for the retired
+    /// 1pt border tier (ADR-0007). A divider, not a border: it never surrounds.
+    static let divider: CGFloat = 1
+    static let dividerOpacity: Double = 0.15
+
     /// Maximum content width on iPad.
     static let iPadMaxContentWidth: CGFloat = 700
     /// Proportional content fraction on iPad (1.0 - 2×0.06).

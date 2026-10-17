@@ -1,0 +1,81 @@
+# DRAFT FORMAT — see ../README.md.
+id: angriff-von-hinten
+name: Angriff von hinten
+kind: core
+catalogId: GRW_angriffVonHinten
+source:
+  url: https://dsa.ulisses-regelwiki.de/GR_Kampf-AngriffVonHinten.html
+  book: Regelwerk
+  page: 238
+  checked: 2026-09-27
+  hash: sha256:35fd637077845c74b4774ae44e29cc2e2e772880146d9ee10cd45823c2526816
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+# Also Kodex des Schwertes p. 75. Whether an attack comes from behind is the GM's call, one
+# answer per attack (the app's gm.fact fromBehind, span attack). Melee attacks only (ruling
+# from-behind-ranged).
+
+clauses:
+  - id: AH1
+    text: >
+      Gelegentlich kann es vorkommen, dass ein Kämpfer einen Gegner von hinten angreifen kann.
+      Wenn dies geschieht, so ist die Verteidigung des Gegners um -4 erschwert, da er den
+      Angriff nur schlecht sieht oder spät wahrnimmt.
+    effects:
+      # `side` (who attacks) is carried by the targets: the hero's `pa`/`aw` when the opponent
+      # attacks, `opponent.pa`/`opponent.aw` when the hero does. "Melee" is, for the hero's
+      # defence, the GM's `gmFact.incomingAttack` not being `ranged` (the same fact as
+      # schilde.SCH8), and for the hero's own attack `loadout.weapon.kind: melee`. The old
+      # `span: attack` is how long the GM fact holds: it is stated per attack.
+      - when: { not: { gmFact.incomingAttack: ranged }, gmFact.fromBehind: true }
+        add: { to: [pa, aw], value: -4 }
+        ruling: from-behind-ranged
+        # The hero defends against a melee attack: every defence, shield parry included. Against
+        # a shot from behind the question is not asked (FORMAT: the defence screen must know the
+        # attack is ranged — schilde.SCH8 needs the same fact).
+      - when: { loadout.weapon.kind: melee, gmFact.fromBehind: true }
+        add: { to: [opponent.pa, opponent.aw], value: -4 }
+        ruling: from-behind-ranged
+        # The hero attacks in melee: an opponent line, the GM subtracts it (ADR-0005). The
+        # ranged announcement does not ask it.
+      # Mounted from behind (ruling mounted-from-behind-shield): no shield parry and no passive
+      # shield bonus. Those two effects are reiterkampf.RK5's, which this rule's fact makes
+      # encodable; they live there, reading `gmFact.fromBehind`.
+
+rulings:
+  - id: from-behind-ranged
+    status: decided
+    question: >
+      Does the −4 apply to a defence against a ranged attack from behind (dodging, or a shield
+      parry against an arrow), and to the opponent's defence when the hero shoots from behind?
+    answer: >
+      Melee only: the defence against a melee attack from behind.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [AH1]
+    notes: >
+      The page is filed with the special melee rules in both books. The app asks the question on
+      the defence screen for any Parieren or Ausweichen (CombatDefenseSetupView), whatever the
+      attack was, so a dodge against an arrow from behind gets −4 today; it must ask only when
+      the attack is melee, which needs the same "Fernkampfangriff?" fact as schilde.SCH8. The
+      melee announcement (CombatAttackViews) already asks it for the hero's own attacks only.
+
+  - id: mounted-from-behind-shield
+    status: decided
+    question: >
+      Mounted, attacked from behind: RK5 says a shield blocks only attacks from the front and
+      the shield-arm side. Is the shield parry gone, and does the shield's passive PA bonus on a
+      weapon parry go with it?
+    answer: >
+      No shield parry, and no passive shield bonus on the weapon parry: the shield is not between
+      the attacker and the rider.
+    decided: { by: "@samuelsmal", date: 2026-09-24 }
+    appliesTo: [AH1, reiterkampf.RK5]
+    notes: >
+      RK5 names front and shield-arm side for the shield and the weapon-arm side for the weapon,
+      and says nothing of behind, so the weapon parry stays under the ordinary rules, without the
+      shield's bonus. The app offers the Großschild parry at −4 and adds the shield's PA modifier
+      to a weapon parry (Hero.passiveShieldPABonus) whether mounted or not: Boronmir on Kupperus
+      against a fighter on foot, from behind, gets shield parry 12 and weapon parry 10 today; he
+      should get no shield parry and weapon parry 7 (kampfsituationen 17.10). The owner asked on
+      answering how the player is guided to the side of an attack when mounted: the app asks
+      only "von hinten", and RK5's weapon-arm side is not asked at all. That is
+      reiterkampf.mounted-attack-side.

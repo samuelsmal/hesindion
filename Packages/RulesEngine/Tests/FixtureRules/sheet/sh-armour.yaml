@@ -1,0 +1,23 @@
+# The source of Tests/RulesEngineTests/Fixtures/sheet-rules.json (make rules-engine-fixture).
+# Task 30: ruestung-und-belastung.A1, the Stufe of sh-load the armour gives.
+id: sh-armour
+name: Rüstung
+kind: core
+source: { url: https://example.invalid/sh, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: A1
+    text: Belastung nach Rüstung.
+    effects:
+      - derive: { to: "level(rule: sh-load)", sum: [{ of: loadout.armour.belastung }] }
+      - forbid: { what: { loadout: secondArmour } }
+        because: eine Rüstung zur Zeit
+        ruling: one
+      - when: { loadout.shield.size: gross }
+        forbid: { what: { loadout: other } }
+        because: der große Schild braucht die zweite Hand
+rulings:
+  - id: one
+    question: Several armours?
+    answer: One at a time.
+    decided: { by: "@fixture", date: 2026-09-25 }

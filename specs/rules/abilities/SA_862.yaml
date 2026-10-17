@@ -1,0 +1,116 @@
+# DRAFT FORMAT — see ../README.md.
+id: SA_862
+name: Formation
+kind: specialAbility
+group: Kampfsonderfertigkeiten
+passive: true
+source:
+  url: https://dsa.ulisses-regelwiki.de/KSF_Formation.html
+  book: Aventurisches Kompendium II
+  page: 126
+  checked: 2026-09-26
+  hash: sha256:0ee595443ec5ddd2d8f1608a0d529b94e1afbdf853bb88fe5d06ccb538b7cc67
+reviewed: { by: "@samuelsmal", date: 2026-09-27 }
+# Pages 126–127; the wiki also lists Kodex des Schwertes pp. 295–296.
+#
+# Plänkler-Formation (SA_884) made larger: five fighters instead of three, in front and behind as
+# well as beside, +2 instead of +1. The clauses are SA_884's P1–P4 word for word except those
+# numbers, so the effects below read them the same way; where SA_884 decided something
+# (plaenkler-mounted), this file asks again rather than assume it carries over.
+
+clauses:
+  - id: F1
+    text: >
+      Ein Kämpfer mit dieser Sonderfertigkeit kann zusammen mit bis zu vier weiteren Kämpfern,
+      die sich maximal einen halben Schritt vor, hinter, links und rechts von ihm befinden
+      dürfen, eine Formation aufbauen.
+    effects:
+      - offer: { choice: formation, span: whileFormed }
+        ruling: formation-mounted
+        # As SA_884.P1: a fact the player states for as long as the formation stands, set and
+        # cleared at any point in the fight. Five fighters, ½ Schritt in every direction, is
+        # the player's to judge; shown as text beside the toggle.
+      - when: { hero.mounted: true }
+        forbid: { what: { choice: formation } }
+        because: "nur zu Fuß: die Formation steht Schulter an Schulter"
+        ruling: formation-mounted
+        # Formation and Plänkler-Formation stack (ruling formation-and-plaenkler): nothing
+        # forbids the two toggles together, and F2's +2 and SA_884.P2's +1 add up.
+
+  - id: F2
+    text: >
+      Alle Kämpfer, die durch diese SF eine Formation bilden, erhalten entweder +2 AT oder +2 VW.
+    effects:
+      - when: { choice.formation: true, choice.formation.bonus: at }
+        add: { to: at, value: 2 }
+        # AT as SA_884.P2 reads it: the melee attack value, whatever the weapon, not FK.
+      - when: { choice.formation: true, choice.formation.bonus: vw }
+        add: { to: [pa, aw], value: 2 }
+        # VW: every defence — weapon parry, shield parry, dodge (as SA_65.vh-scope).
+
+  - id: F3
+    text: >
+      Alle Beteiligten müssen sich bei der Bildung der Formationen auf einen der beiden Boni
+      einigen.
+    effects:
+      - when: { choice.formation: true }
+        offer: { choice: formation.bonus, options: [at, vw] }
+        # One answer for the whole formation, chosen when it forms (the old `when: formed`);
+        # changing it means re-forming.
+
+  - id: F4
+    text: >
+      Nur einer der Kämpfer benötigt die Sonderfertigkeit, damit alle davon profitieren. Verfügen
+      mehrere Kämpfer darüber, können auch entsprechend mehr Kämpfer die Vorteile nutzen.
+    effects:
+      - require: { that: { any: [{ hero.has: SA_862 }, { ally.has: SA_862 }] }, enables: true }
+        # As SA_884.P4: a companion without the SF standing in Boronmir's formation gets F2; the
+        # require enables the rule for a hero who does not own it (Task 31, boronmir-neu 19.3).
+        # FORMAT: `ally.has`, as in SA_884.
+
+  - id: F5
+    text: "Voraussetzungen: Kriegskunst 6"
+    none: purchase prerequisite (Boronmir has Kriegskunst 7), not a rule at the table
+
+  - id: F6
+    text: "Kampftechniken: alle"
+    none: no weapon restriction on F2
+
+  - id: F7
+    text: "AP-Wert: 20 Abenteuerpunkte"
+    none: purchase cost
+
+rulings:
+  - id: formation-mounted
+    status: decided
+    question: >
+      Can riders form a Formation — may Boronmir take its +2 while fighting from Kupperus?
+    answer: >
+      Not while mounted, as Plänkler-Formation.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [F1]
+    notes: >
+      The same spacing as Plänkler-Formation (half a Schritt), so the same answer as
+      SA_884.plaenkler-mounted; riders have Berittene Lanzenformation (SA_865) of their own. The
+      toggle is off and disabled while the hero is mounted, with the reason; mounting mid-fight
+      ends the formation (F1's forbid). Mounted, Boronmir keeps Vorteilhafte Position +2 and
+      Golgariten-Stil +2 AT against foot fighters (boronmir-neu 19.4).
+
+  - id: formation-and-plaenkler
+    status: decided
+    question: >
+      Can one fighter stand in a Formation and a Plänkler-Formation at once, and take both
+      bonuses (+2 and +1)?
+    answer: >
+      It's even more complicated than that, but they stack, and they can come from different
+      heros. Thus it should also be possible to enter that other heros can give the bonus
+      because they have a formation. Note that this can change throughout the fight.
+    decided: { by: "@samuelsmal", date: 2026-09-27 }
+    appliesTo: [F1, F2, F4]
+    notes: >
+      Read as: the two toggles are independent, and F2's +2 and SA_884.P2's +1 add up (the forbid
+      of both together is gone). Either formation can be one a companion holds: F4 and SA_884.P4
+      enable the rule for a hero without the SF when the player states that an ally has it
+      (`ally.has`), and each toggle's span is `whileFormed`, set and cleared at any point in the
+      fight. "Even more complicated" is not written down; nothing here models more than one
+      Formation of the same kind at once.

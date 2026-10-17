@@ -1,0 +1,13 @@
+# The source of Tests/RulesEngineTests/Fixtures/checks-rules.json (make rules-engine-fixture).
+# Task 26 fix round 1: a reroll once per round, which a check alone cannot count.
+id: chk-glueck
+name: Glück
+kind: core
+source: { url: https://example.invalid/chk, book: Regelwerk, page: 1, checked: 2026-09-25, hash: null }
+reviewed: null
+clauses:
+  - id: G1
+    text: Einmal je Kampfrunde einen Würfel neu.
+    effects:
+      - when: { check.kind: [talent, spell, liturgy], gmFact.glueck: true }
+        reroll: { die: { dice: any }, keep: second, max: 1, per: round }

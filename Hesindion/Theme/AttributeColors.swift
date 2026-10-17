@@ -26,10 +26,45 @@ extension Color {
     })
 
     /// Adaptive border for neo-brutalist strokes — black in light mode, white in dark mode.
+    /// Also the shadow colour: the reference uses `var(--border)` for both (ADR-0008).
     static let dsaBorder = Color(UIColor.label)
+
+    /// Modal scrim. The reference's `--overlay` is black at 0.8; with no elevation
+    /// and a flat surface, the scrim is the main cue that a modal is above the
+    /// content, so it carries more weight here than it would elsewhere.
+    static let dsaOverlay = Color.black.opacity(0.8)
+
+    /// Fill for a control that is disabled or already settled (ADR-0010).
+    ///
+    /// The page itself. A disabled surface gives up its **depth and its colour**
+    /// — never its contrast: it keeps the full-strength 2pt border and, via
+    /// `dsaDisabledLabel`, a full-strength label. This was
+    /// `UIColor.tertiarySystemFill`, a translucent grey that swallowed the white
+    /// labels sitting on it: the settled Wundeffekt controls were unreadable, and
+    /// a soft grey is the one thing the design language rules out outright.
+    static let dsaDisabled = Color(UIColor.systemBackground)
+
+    /// Label colour on a `dsaDisabled` surface. Deliberately not `.secondary`:
+    /// a settled entry is something you want to *read back*, so removing the
+    /// affordance must not remove the information.
+    static let dsaDisabledLabel = Color.primary
 
     /// Dark accent background used for stat badges and INI boxes.
     static let dsaDark = Color(white: 0.18)
+
+    /// Schips / fate points. Was three spellings of the same idea across the
+    /// combat and check screens (`0.6/0.5/0.0`, `#998000`, `#997F00`) — one gold
+    /// now (audit S5).
+    static let dsaSchipGold = Color(red: 0.6, green: 0.5, blue: 0.0)
+
+    /// A positive modifier or a landed result. Distinct from `groupEquipment`,
+    /// which is the *equipment group* hue; this is the darker "good outcome"
+    /// green that was copy-pasted as `0x2E7D32` into four combat files.
+    static let dsaPositive = Color(red: 0x2E / 255, green: 0x7D / 255, blue: 0x32 / 255)
+
+    /// A *critical* success — brighter than `dsaPositive`, which marks an ordinary
+    /// good outcome. Was `0x00c853` written out longhand in three combat files.
+    static let dsaCritical = Color(red: 0x00 / 255, green: 0xc8 / 255, blue: 0x53 / 255)
 
     static let attrMU = Color(red: 0xc5 / 255, green: 0x47 / 255, blue: 0x47 / 255)
     static let attrKL = Color(red: 0xa8 / 255, green: 0x5b / 255, blue: 0xd4 / 255)
@@ -50,7 +85,7 @@ extension Color {
         case "GE": .attrGE
         case "KO": .attrKO
         case "KK": .attrKK
-        default:   .yellow
+        default:   .groupPersonalData
         }
     }
 
